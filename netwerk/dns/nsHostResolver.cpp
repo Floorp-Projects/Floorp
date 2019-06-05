@@ -45,7 +45,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs.h"
-#include "mozilla/net/NetworkConnectivityService.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -599,6 +598,7 @@ nsresult nsHostResolver::Init() {
   LOG(("nsHostResolver::Init this=%p", this));
 
   mShutdown = false;
+  mNCS = NetworkConnectivityService::GetSingleton();
 
   // The preferences probably haven't been loaded from the disk yet, so we
   // need to register a callback that will set up the experiment once they
@@ -746,6 +746,8 @@ void nsHostResolver::Shutdown() {
     }
     // empty host database
     mRecordDB.Clear();
+
+    mNCS = nullptr;
   }
 
   ClearPendingQueue(pendingQHigh);
@@ -1241,15 +1243,12 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
     }
     bool sendAgain;
 
-    RefPtr<NetworkConnectivityService> ncs =
-        NetworkConnectivityService::GetSingleton();
-
     do {
       sendAgain = false;
       if ((TRRTYPE_AAAA == rectype) && gTRRService &&
           (gTRRService->DisableIPv6() ||
-           (gTRRService->CheckIPv6Connectivity() &&
-            ncs->GetIPv6() == nsINetworkConnectivityService::NOT_AVAILABLE))) {
+           (gTRRService->CheckIPv6Connectivity() && mNCS &&
+            mNCS->GetIPv6() == nsINetworkConnectivityService::NOT_AVAILABLE))) {
         break;
       }
       LOG(("TRR Resolve %s type %d\n", addrRec->host.get(), (int)rectype));
