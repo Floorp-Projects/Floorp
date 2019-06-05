@@ -1580,7 +1580,7 @@ static void StreamPages(PSLockRef aLock, SpliceableJSONWriter& aWriter) {
 
 static void locked_profiler_stream_json_for_this_process(
     PSLockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime,
-    bool aIsShuttingDown) {
+    bool aIsShuttingDown, bool aOnlyThreads = false) {
   LOG("locked_profiler_stream_json_for_this_process");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
@@ -1589,28 +1589,33 @@ static void locked_profiler_stream_json_for_this_process(
 
   ProfileBuffer& buffer = ActivePS::Buffer(aLock);
 
-  // Put shared library info
-  aWriter.StartArrayProperty("libs");
-  AppendSharedLibraries(aWriter);
-  aWriter.EndArray();
+  if (!aOnlyThreads) {
+    // Put shared library info
+    aWriter.StartArrayProperty("libs");
+    AppendSharedLibraries(aWriter);
+    aWriter.EndArray();
 
-  // Put meta data
-  aWriter.StartObjectProperty("meta");
-  { StreamMetaJSCustomObject(aLock, aWriter, aIsShuttingDown); }
-  aWriter.EndObject();
+    // Put meta data
+    aWriter.StartObjectProperty("meta");
+    { StreamMetaJSCustomObject(aLock, aWriter, aIsShuttingDown); }
+    aWriter.EndObject();
 
-  // Put page data
-  aWriter.StartArrayProperty("pages");
-  { StreamPages(aLock, aWriter); }
-  aWriter.EndArray();
+    // Put page data
+    aWriter.StartArrayProperty("pages");
+    { StreamPages(aLock, aWriter); }
+    aWriter.EndArray();
 
-  buffer.StreamProfilerOverheadToJSON(aWriter, CorePS::ProcessStartTime(),
-                                      aSinceTime);
-  buffer.StreamCountersToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
-  buffer.StreamMemoryToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
+    buffer.StreamProfilerOverheadToJSON(aWriter, CorePS::ProcessStartTime(),
+                                        aSinceTime);
+    buffer.StreamCountersToJSON(aWriter, CorePS::ProcessStartTime(),
+                                aSinceTime);
+    buffer.StreamMemoryToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
 
-  // Lists the samples for each thread profile
-  aWriter.StartArrayProperty("threads");
+    // Lists the samples for each thread profile
+    aWriter.StartArrayProperty("threads");
+  }
+
+  // if aOnlyThreads is true, the only output will be the threads array items.
   {
     ActivePS::DiscardExpiredDeadProfiledThreads(aLock);
     Vector<Pair<RegisteredThread*, ProfiledThreadData*>> threads =
@@ -1622,11 +1627,14 @@ static void locked_profiler_stream_json_for_this_process(
                                      CorePS::ProcessStartTime(), aSinceTime);
     }
   }
-  aWriter.EndArray();
 
-  aWriter.StartArrayProperty("pausedRanges");
-  { buffer.StreamPausedRangesToJSON(aWriter, aSinceTime); }
-  aWriter.EndArray();
+  if (!aOnlyThreads) {
+    aWriter.EndArray();
+
+    aWriter.StartArrayProperty("pausedRanges");
+    { buffer.StreamPausedRangesToJSON(aWriter, aSinceTime); }
+    aWriter.EndArray();
+  }
 
   double collectionEnd = profiler_time();
 
@@ -1641,7 +1649,8 @@ static void locked_profiler_stream_json_for_this_process(
 
 bool profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
                                            double aSinceTime,
-                                           bool aIsShuttingDown) {
+                                           bool aIsShuttingDown,
+                                           bool aOnlyThreads) {
   LOG("profiler_stream_json_for_this_process");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -1653,7 +1662,7 @@ bool profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
   }
 
   locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
-                                               aIsShuttingDown);
+                                               aIsShuttingDown, aOnlyThreads);
   return true;
 }
 
@@ -2375,24 +2384,34 @@ void profiler_shutdown() {
 }
 
 static bool WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
-                                     double aSinceTime, bool aIsShuttingDown) {
+                                     double aSinceTime, bool aIsShuttingDown,
+                                     bool aOnlyThreads = false) {
   LOG("WriteProfileToJSONWriter");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  aWriter.Start();
-  {
+  if (!aOnlyThreads) {
+    aWriter.Start();
+    {
+      if (!profiler_stream_json_for_this_process(
+              aWriter, aSinceTime, aIsShuttingDown, aOnlyThreads)) {
+        return false;
+      }
+
+      // Don't include profiles from other processes because this is a
+      // synchronous function.
+      aWriter.StartArrayProperty("processes");
+      aWriter.EndArray();
+    }
+    aWriter.End();
+  } else {
+    aWriter.StartBareList();
     if (!profiler_stream_json_for_this_process(aWriter, aSinceTime,
-                                               aIsShuttingDown)) {
+                                               aIsShuttingDown, aOnlyThreads)) {
       return false;
     }
-
-    // Don't include profiles from other processes because this is a
-    // synchronous function.
-    aWriter.StartArrayProperty("processes");
-    aWriter.EndArray();
+    aWriter.EndBareList();
   }
-  aWriter.End();
   return true;
 }
 
@@ -2402,12 +2421,12 @@ void profiler_set_process_name(const std::string& aProcessName) {
   CorePS::SetProcessName(lock, aProcessName);
 }
 
-UniquePtr<char[]> profiler_get_profile(double aSinceTime,
-                                       bool aIsShuttingDown) {
+UniquePtr<char[]> profiler_get_profile(double aSinceTime, bool aIsShuttingDown,
+                                       bool aOnlyThreads) {
   LOG("profiler_get_profile");
 
   SpliceableChunkedJSONWriter b;
-  if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown)) {
+  if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown, aOnlyThreads)) {
     return nullptr;
   }
   return b.WriteFunc()->CopyData();
