@@ -123,6 +123,10 @@ Array<char, nsThread::kRunnableNameBufSize> nsThread::sMainThreadRunnableName;
 uint32_t nsThread::sActiveThreads;
 uint32_t nsThread::sMaxActiveThreads;
 
+#ifdef EARLY_BETA_OR_EARLIER
+const uint32_t kTelemetryWakeupCountLimit = 100;
+#endif
+
 //-----------------------------------------------------------------------------
 // Because we do not have our own nsIFactory, we have to implement nsIClassInfo
 // somewhat manually.
@@ -600,6 +604,9 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mCanInvokeJS(false),
       mCurrentEvent(nullptr),
       mCurrentEventStart(TimeStamp::Now()),
+#ifdef EARLY_BETA_OR_EARLIER
+      mLastWakeupCheckTime(mCurrentEventStart),
+#endif
       mCurrentPerformanceCounter(nullptr) {
   mLastLongTaskEnd = mCurrentEventStart;
   mLastLongNonIdleTaskEnd = mCurrentEventStart;
@@ -620,6 +627,9 @@ nsThread::nsThread()
       mCanInvokeJS(false),
       mCurrentEvent(nullptr),
       mCurrentEventStart(TimeStamp::Now()),
+#ifdef EARLY_BETA_OR_EARLIER
+      mLastWakeupCheckTime(mCurrentEventStart),
+#endif
       mCurrentPerformanceCounter(nullptr) {
   mLastLongTaskEnd = mCurrentEventStart;
   mLastLongNonIdleTaskEnd = mCurrentEventStart;
@@ -1088,6 +1098,13 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     mScriptObserver->BeforeProcessTask(reallyWait);
   }
 
+#ifdef EARLY_BETA_OR_EARLIER
+  // Need to capture mayWaitForWakeup state before OnProcessNextEvent,
+  // since on the main thread OnProcessNextEvent ends up waiting for the new
+  // events.
+  bool mayWaitForWakeup = reallyWait && !mEvents->HasPendingEvent();
+#endif
+
   nsCOMPtr<nsIThreadObserver> obs = mEvents->GetObserverOnThread();
   if (obs) {
     obs->OnProcessNextEvent(this, reallyWait);
@@ -1111,6 +1128,28 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     *aResult = (event.get() != nullptr);
 
     if (event) {
+#ifdef EARLY_BETA_OR_EARLIER
+      if (mayWaitForWakeup && mThread) {
+        ++mWakeupCount;
+        if (mWakeupCount == kTelemetryWakeupCountLimit) {
+          TimeStamp now = TimeStamp::Now();
+          double ms = (now - mLastWakeupCheckTime).ToMilliseconds();
+          if (ms < 0) {
+            ms = 0;
+          }
+          const char* name = PR_GetThreadName(mThread);
+          if (!name) {
+            name = IsMainThread() ? "MainThread" : "(nameless thread)";
+          }
+          nsDependentCString key(name);
+          Telemetry::Accumulate(Telemetry::THREAD_WAKEUP, key,
+                                static_cast<uint32_t>(ms));
+          mLastWakeupCheckTime = now;
+          mWakeupCount = 0;
+        }
+      }
+#endif
+
       LOG(("THRD(%p) running [%p]\n", this, event.get()));
 
       // Delay event processing to encourage whoever dispatched this event
