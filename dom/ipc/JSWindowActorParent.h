@@ -44,6 +44,7 @@ class JSWindowActorParent final : public JSWindowActor {
   void Init(const nsAString& aName, WindowGlobalParent* aManager);
   void StartDestroy();
   void AfterDestroy();
+  CanonicalBrowsingContext* GetBrowsingContext(ErrorResult& aRv);
 
  protected:
   void SendRawMessage(const JSWindowActorMessageMeta& aMeta,
