@@ -275,9 +275,19 @@ mapping:
             - linux64-shippable
         pretty_name: firefox-${version}.tar.bz2.asc
         checksums_path: ${path_platform}/${locale}/firefox-${version}.tar.bz2.asc
-    target.dmg:
+    target.pkg:
         <<: *default
         description: "Main package installer for Mac OS X platforms"
+        all_locales: true
+        from:
+            - signing
+        only_for_platforms:
+            - macosx64-shippable
+        pretty_name: Firefox ${version}.pkg
+        checksums_path: ${path_platform}/${locale}/Firefox ${version}.pkg
+    target.dmg:
+        <<: *default
+        description: "Main package disk image for Mac OS X platforms"
         all_locales: true
         from:
             - repackage
