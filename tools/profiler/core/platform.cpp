@@ -2207,6 +2207,9 @@ static void PrintUsageThenExit(int aExitCode) {
       "\n"
       "  MOZ_PROFILER_HELP\n"
       "  If set to any value, prints this message.\n"
+#ifdef MOZ_BASE_PROFILER
+      "  Use MOZ_BASE_PROFILER_HELP for BaseProfiler help.\n"
+#endif
       "\n"
       "  MOZ_LOG\n"
       "  Enables logging. The levels of logging available are\n"
