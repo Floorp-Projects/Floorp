@@ -182,12 +182,19 @@ class ObserverRegistryTest {
     @Test
     fun `unregisterObservers unregisters all observers`() {
         val registry = ObserverRegistry<TestObserver>()
+        val activity = Robolectric.buildActivity(Activity::class.java).create().get()
+        val view = View(testContext)
 
         val observer1 = TestObserver()
         val observer2 = TestObserver()
+        val observer3 = TestObserver()
+        val observer4 = TestObserver()
 
         registry.register(observer1)
         registry.register(observer2)
+        registry.register(observer3, MockedLifecycleOwner(Lifecycle.State.CREATED))
+        registry.register(observer4, view)
+        activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
 
         assertFalse(observer1.notified)
         assertFalse(observer2.notified)
@@ -196,9 +203,13 @@ class ObserverRegistryTest {
 
         assertTrue(observer1.notified)
         assertTrue(observer2.notified)
+        assertTrue(observer3.notified)
+        assertTrue(observer4.notified)
 
         observer1.notified = false
         observer2.notified = false
+        observer3.notified = false
+        observer4.notified = false
 
         registry.unregisterObservers()
 
@@ -206,6 +217,60 @@ class ObserverRegistryTest {
 
         assertFalse(observer1.notified)
         assertFalse(observer2.notified)
+        assertFalse(observer3.notified)
+        assertFalse(observer4.notified)
+    }
+
+    @Test
+    fun `unregisterObservers clears references to all observers`() {
+        val registry = ObserverRegistry<TestObserver>()
+
+        val observer1 = TestObserver()
+        val observer2 = TestObserver()
+        val observer3 = TestObserver()
+        val observer4 = TestObserver()
+
+        registry.register(observer1)
+        registry.register(observer2)
+        registry.register(observer3, MockedLifecycleOwner(Lifecycle.State.CREATED))
+        registry.register(observer4, View(testContext))
+
+        registry.unregisterObservers()
+
+        assertFalse(registry.isObserved())
+    }
+
+    @Test
+    fun `unregister removes observers from observers map`() {
+        val registry = ObserverRegistry<String>()
+        val observer = "Observer"
+
+        registry.unregister(observer)
+        assertFalse(registry.isObserved())
+    }
+
+    @Test
+    fun `unregister removes observers from lifecycle observers map`() {
+        val registry = ObserverRegistry<String>()
+        val observer = "Observer"
+        val lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.CREATED)
+
+        registry.register(observer, lifecycleOwner)
+        registry.unregister(observer)
+
+        assertFalse(registry.isObserved())
+    }
+
+    @Test
+    fun `unregister removes observers from view observers map`() {
+        val registry = ObserverRegistry<String>()
+        val observer = "Observer"
+        val view = View(testContext)
+
+        registry.register(observer, view)
+        registry.unregister(observer)
+
+        assertFalse(registry.isObserved())
     }
 
     @Test
