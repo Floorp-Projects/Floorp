@@ -23,7 +23,7 @@ public class TestPasswordRecord {
         try {
             o = new ExtendedJSONObject("{" +
                     "\"hostname\": \"https://example.com\",\n" +
-                    "\"formSubmitURL\": \"https://example.com/login\",\n" +
+                    "\"formSubmitURL\": \"https://example.com\",\n" +
                     "\"httpRealm\": null,\n" +
                     "\"username\": \"johndoe\",\n" +
                     "\"password\": \"p4ssw0rd\",\n" +
