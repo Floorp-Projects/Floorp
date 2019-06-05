@@ -304,6 +304,7 @@ nsresult mozSpellChecker::GetPersonalDictionary(nsTArray<nsString>* aWordList) {
 
 nsresult mozSpellChecker::GetDictionaryList(
     nsTArray<nsString>* aDictionaryList) {
+  MOZ_ASSERT(aDictionaryList->IsEmpty());
   if (XRE_IsContentProcess()) {
     ContentChild* child = ContentChild::GetSingleton();
     child->GetAvailableDictionaries(*aDictionaryList);
@@ -322,27 +323,16 @@ nsresult mozSpellChecker::GetDictionaryList(
   for (int32_t i = 0; i < spellCheckingEngines.Count(); i++) {
     nsCOMPtr<mozISpellCheckingEngine> engine = spellCheckingEngines[i];
 
-    uint32_t count = 0;
-    char16_t** words = nullptr;
-    engine->GetDictionaryList(&words, &count);
-    for (uint32_t k = 0; k < count; k++) {
-      nsAutoString dictName;
-
-      dictName.Assign(words[k]);
-
+    nsTArray<nsString> dictNames;
+    engine->GetDictionaryList(dictNames);
+    for (auto& dictName : dictNames) {
       // Skip duplicate dictionaries. Only take the first one
       // for each name.
       if (dictionaries.Contains(dictName)) continue;
 
       dictionaries.PutEntry(dictName);
-
-      if (!aDictionaryList->AppendElement(dictName)) {
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      aDictionaryList->AppendElement(dictName);
     }
-
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
   }
 
   return NS_OK;
