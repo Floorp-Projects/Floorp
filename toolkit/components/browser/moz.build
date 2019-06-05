@@ -18,10 +18,13 @@ XPIDL_SOURCES += [
     'nsIWebBrowserChromeFocus.idl',
 ]
 
+XPIDL_SOURCES += [
+    'nsIWebBrowserPrint.idl',
+]
+
 if CONFIG['NS_PRINTING']:
     XPIDL_SOURCES += [
         'nsIPrintingPromptService.idl',
-        'nsIWebBrowserPrint.idl',
     ]
 
 XPIDL_MODULE = 'webBrowser_core'

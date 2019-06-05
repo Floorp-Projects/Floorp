@@ -12,6 +12,7 @@
 
 #include "nsGtkUtils.h"
 #include "nsIFileURL.h"
+#include "nsIGIOService.h"
 #include "nsIURI.h"
 #include "nsIWidget.h"
 #include "nsIFile.h"

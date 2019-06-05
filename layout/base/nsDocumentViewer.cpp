@@ -612,10 +612,12 @@ nsDocumentViewer::~nsDocumentViewer() {
     mDocument->Destroy();
   }
 
+#ifdef NS_PRINTING
   if (mPrintJob) {
     mPrintJob->Destroy();
     mPrintJob = nullptr;
   }
+#endif
 
   MOZ_RELEASE_ASSERT(mDestroyBlockedCount == 0);
   NS_ASSERTION(!mPresShell && !mPresContext,
