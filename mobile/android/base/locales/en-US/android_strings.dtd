@@ -110,6 +110,9 @@
 <!ENTITY bookmark_folder_updated "Folder updated">
 <!ENTITY bookmark_parent_folder "Parent Folder">
 <!ENTITY bookmark_add_folder "Add new folder">
+<!-- Localization note (bookmark_default_folder_title): Default title is used if user doesn't specify
+     one when he is creating a bookmark folder -->
+<!ENTITY bookmark_default_folder_title "(no title)">
 
 <!ENTITY reader_saved_offline "Saved offline">
 <!-- Localization note (reader_switch_to_bookmarks) : This
