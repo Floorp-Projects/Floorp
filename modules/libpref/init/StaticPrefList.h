@@ -5749,6 +5749,20 @@ VARCACHE_PREF(
 
 VARCACHE_PREF(
   Live,
+  "network.cookie.sameSite.laxByDefault",
+   network_cookie_sameSite_laxByDefault,
+  bool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "network.cookie.sameSite.noneRequiresSecure",
+   network_cookie_sameSite_noneRequiresSecure,
+  bool, false
+)
+
+VARCACHE_PREF(
+  Live,
   "network.cookie.thirdparty.sessionOnly",
    network_cookie_thirdparty_sessionOnly,
   bool, false
