@@ -26,6 +26,8 @@
 
 #include "jit/arm64/vixl/Cpu-vixl.h"
 
+#include "js-config.h"
+
 #if defined(__aarch64__) && (defined(__ANDROID__) || defined(__linux__))
 #include <sys/auxv.h>
 #define VIXL_USE_LINUX_HWCAP 1
@@ -201,7 +203,11 @@ CPUFeatures CPU::InferCPUFeaturesFromOS(
   static const size_t kFeatureBitCount =
       sizeof(kFeatureBits) / sizeof(kFeatureBits[0]);
 
+#ifdef JS_SIMULATOR_ARM64
+  unsigned long auxv = ~(0UL);  // Enable all features for the Simulator.
+#else
   unsigned long auxv = getauxval(AT_HWCAP);  // NOLINT(runtime/int)
+#endif
 
   VIXL_STATIC_ASSERT(kFeatureBitCount < (sizeof(auxv) * kBitsPerByte));
   for (size_t i = 0; i < kFeatureBitCount; i++) {

@@ -817,6 +817,11 @@ class MacroAssembler : public js::jit::Assembler {
     SingleEmissionCheckScope guard(this);
     fcvtzs(rd, vn, fbits);
   }
+  void Fjcvtzs(const Register& rd, const VRegister& vn) {
+    VIXL_ASSERT(!rd.IsZero());
+    SingleEmissionCheckScope guard(this);
+    fjcvtzs(rd, vn);
+  }
   void Fcvtzu(const Register& rd, const VRegister& vn, int fbits = 0) {
     VIXL_ASSERT(!rd.IsZero());
     SingleEmissionCheckScope guard(this);
