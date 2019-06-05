@@ -6,8 +6,6 @@ const AUTOPLAY_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/c
 
 const SLOW_AUTOPLAY_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "browser_autoplay_blocked_slow.sjs";
 
-const MUTED_AUTOPLAY_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "browser_autoplay_muted.html";
-
 const AUTOPLAY_PREF = "media.autoplay.default";
 const AUTOPLAY_PERM = "autoplay-media";
 
@@ -82,15 +80,15 @@ add_task(async function testMainViewVisible() {
     is(labels[0].textContent, labelText, "Correct value");
 
     let menulist = document.getElementById("identity-popup-popup-menulist");
-    Assert.equal(menulist.label, "Block Audio");
+    Assert.equal(menulist.label, "Block");
 
     await EventUtils.synthesizeMouseAtCenter(menulist, { type: "mousedown" });
-    await TestUtils.waitForCondition(() => {
-      return menulist.getElementsByTagName("menuitem")[0].label === "Allow Audio and Video";
+    await BrowserTestUtils.waitForCondition(() => {
+      return menulist.getElementsByTagName("menuitem")[0].label === "Allow";
     });
 
     let menuitem = menulist.getElementsByTagName("menuitem")[0];
-    Assert.equal(menuitem.getAttribute("label"), "Allow Audio and Video ");
+    Assert.equal(menuitem.getAttribute("label"), "Allow");
 
     menuitem.click();
     menulist.menupopup.hidePopup();
@@ -157,7 +155,6 @@ add_task(async function testChangingBlockingSettingDuringNavigation() {
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
 
   await BrowserTestUtils.withNewTab("about:home", async function(browser) {
-    await blockedIconHidden();
     await BrowserTestUtils.loadURI(browser, AUTOPLAY_PAGE);
     await blockedIconShown();
     Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.ALLOWED);
@@ -194,31 +191,5 @@ add_task(async function testSlowLoadingPage() {
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
 
-  Services.perms.removeAll();
-});
-
-add_task(async function testBlockedAll() {
-  Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED_ALL);
-
-  await BrowserTestUtils.withNewTab("about:home", async function(browser) {
-    await blockedIconHidden();
-    await BrowserTestUtils.loadURI(browser, MUTED_AUTOPLAY_PAGE);
-    await blockedIconShown();
-
-    await openIdentityPopup();
-
-    let menulist = document.getElementById("identity-popup-popup-menulist");
-    await EventUtils.synthesizeMouseAtCenter(menulist, { type: "mousedown" });
-    await TestUtils.waitForCondition(() => {
-      return menulist.getElementsByTagName("menuitem")[1].label === "Block Audio";
-    });
-
-    let menuitem = menulist.getElementsByTagName("menuitem")[0];
-    menuitem.click();
-    menulist.menupopup.hidePopup();
-    await closeIdentityPopup();
-    gBrowser.reload();
-    await blockedIconHidden();
-  });
   Services.perms.removeAll();
 });

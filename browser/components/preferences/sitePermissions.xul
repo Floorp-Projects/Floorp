@@ -32,10 +32,6 @@
   </keyset>
 
   <vbox class="contentPane">
-
-    <hbox align="center" id="setAutoplayPref" hidden="true">
-      <label data-l10n-id="permissions-autoplay-menu"/>
-    </hbox>
     <description id="permissionsText" control="url"/>
     <separator class="thin"/>
     <hbox align="start">
