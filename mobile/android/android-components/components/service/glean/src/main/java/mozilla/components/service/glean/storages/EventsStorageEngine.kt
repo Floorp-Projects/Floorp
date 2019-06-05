@@ -200,13 +200,19 @@ internal object EventsStorageEngine : StorageEngine {
      *
      * @return the list of events recorded in the requested store
      */
+    @Synchronized
     fun getSnapshot(storeName: String, clearStore: Boolean): List<RecordedEventData>? {
         // Rewrite all of the timestamps to they are relative to the first
         // timestamp
         val events = eventStores[storeName]?.let { store ->
-            val firstTimestamp = store[0].timestamp
-            store.map { event ->
-                event.copy(timestamp = event.timestamp - firstTimestamp)
+            if (store.size == 0) {
+                logger.error("Unexpectedly got empty event store")
+                null
+            } else {
+                val firstTimestamp = store[0].timestamp
+                store.map { event ->
+                    event.copy(timestamp = event.timestamp - firstTimestamp)
+                }
             }
         }
 
