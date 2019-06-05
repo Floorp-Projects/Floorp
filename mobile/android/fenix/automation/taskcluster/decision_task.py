@@ -170,10 +170,11 @@ if __name__ == "__main__":
         formatted_date = datetime.datetime.now().strftime('%y%V')
         ordered_groups_of_tasks = release('nightly', result.staging, '1.0.{}'.format(formatted_date))
     elif command == 'beta':
-        semver = re.compile(r'^\d+\.\d+\.\d+-beta\.\d+$')
+        semver = re.compile(r'^v\d+\.\d+\.\d+-beta\.\d+$')
         if not semver.match(result.tag):
-            raise ValueError('Github tag must be in beta semver format, e.g.: "1.0.0-beta.0')
-        ordered_groups_of_tasks = release('beta', False, result.tag)
+            raise ValueError('Github tag must be in beta semver format and prefixed with a "v", e.g.: "v1.0.0-beta.0"')
+        version = result.tag[1:]  # remove prefixed "v"
+        ordered_groups_of_tasks = release('beta', False, version)
     else:
         raise Exception('Unsupported command "{}"'.format(command))
 
