@@ -109,7 +109,7 @@ interface nsIEditorSpellCheck : nsISupports
    *
    * @see mozISpellCheckingEngine::GetDictionaryList
    */
-  void          GetDictionaryList([array, size_is(count)] out wstring dictionaryList, out uint32_t count);
+  Array<AString> GetDictionaryList();
 
   /**
    * @see mozSpellChecker::GetCurrentDictionary

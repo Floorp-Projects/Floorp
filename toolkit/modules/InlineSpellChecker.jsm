@@ -193,9 +193,7 @@ InlineSpellChecker.prototype = {
       curlang = this.mRemote.currentDictionary;
     } else if (this.mInlineSpellChecker) {
       var spellchecker = this.mInlineSpellChecker.spellChecker;
-      var o1 = {}, o2 = {};
-      spellchecker.GetDictionaryList(o1, o2);
-      list = o1.value;
+      list = spellchecker.GetDictionaryList();
       try {
         curlang = spellchecker.GetCurrentDictionary();
       } catch (e) {}

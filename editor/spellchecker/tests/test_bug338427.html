@@ -31,11 +31,10 @@ function init() {
     textarea.focus();
 
     onSpellCheck(textarea, function() {
-        var list = {}, count = {};
-        spellchecker.spellChecker.GetDictionaryList(list, count);
-        ok(count.value > 0, "At least one dictionary should be present");
+        var list = spellchecker.spellChecker.GetDictionaryList();
+        ok(list.length > 0, "At least one dictionary should be present");
 
-        var lang = list.value[0];
+        var lang = list[0];
         spellchecker.spellChecker.SetCurrentDictionary(lang);
 
         onSpellCheck(textarea, function() {
