@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="NormalThemeBase" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="NormalThemeBase" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
         <!-- Android system styling -->
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
@@ -77,7 +77,7 @@
 
     <style name="DialogStyleNormal" parent="DialogStyleLight"/>
 
-    <style name="PrivateThemeBase" parent="Theme.AppCompat.NoActionBar">
+    <style name="PrivateThemeBase" parent="Theme.MaterialComponents.NoActionBar.Bridge">
         <!-- Android system styling -->
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
