@@ -577,7 +577,7 @@ extern "C" {
 }
 
 impl RenderNotifier for CppNotifier {
-    fn clone(&self) -> Box<RenderNotifier> {
+    fn clone(&self) -> Box<dyn RenderNotifier> {
         Box::new(CppNotifier {
             window_id: self.window_id,
         })
@@ -1167,7 +1167,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 -> bool {
     assert!(unsafe { is_in_render_thread() });
 
-    let recorder: Option<Box<ApiRecordingReceiver>> = if unsafe { gfx_use_wrench() } {
+    let recorder: Option<Box<dyn ApiRecordingReceiver>> = if unsafe { gfx_use_wrench() } {
         let name = format!("wr-record-{}.bin", window_id.0);
         Some(Box::new(BinaryRecorder::new(&PathBuf::from(name))))
     } else {
