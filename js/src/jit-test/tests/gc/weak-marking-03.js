@@ -171,6 +171,56 @@ function nukeMarking() {
 if (this.enqueueMark)
   runtest(nukeMarking);
 
+// Similar to the above, but try to trigger a rehash of the weak keys table for
+// a zone, which previously invalidated an iterator (bug 1556430).
+function nukeMarking2() {
+  // Create a global in a different compartment, same zone, so the delegate and
+  // key can live in the same zone.
+  const g1 = newGlobal({sameZoneAs: this});
+
+  let vals = { maps: [], keys: [] };
+  for (const i of [,,,,,]) {
+    vals.maps.push(new WeakMap());
+    vals.keys.push(g1.eval("Object.create(null)"));
+  }
+  vals.val = Object.create(null);
+  for (const i in vals.maps) {
+    vals.maps[i].set(vals.keys[i], vals.val);
+  }
+  vals.val = null;
+  gc();
+
+  // Set up the sequence of marking events.
+
+  for (const map of vals.maps) {
+    enqueueMark(map);
+  }
+  enqueueMark("yield");
+  // We will nuke the key's delegate here.
+  for (const key of vals.keys) {
+    enqueueMark(key);
+  }
+  addMarkObservers([vals.keys[0]]);
+  enqueueMark("enter-weak-marking-mode");
+  vals = null;
+
+  // Okay, run through the GC now.
+  startgc(1000000);
+  assertEq(gcstate(), "Mark", "expected to yield after marking map");
+  print(getMarks()[0]);
+  const q = getMarkQueue();
+  // We should have marked the map and then yielded back here.
+  nukeCCW(q[q.length - 2]);
+  // Finish up the GC.
+  gcslice();
+
+  clearMarkQueue();
+  clearMarkObservers();
+}
+
+if (this.enqueueMark)
+  nukeMarking2();
+
 function transplantMarking() {
   const g1 = newGlobal({newCompartment: true});
 
