@@ -121,13 +121,13 @@ class LoginAutocompleteItem extends AutocompleteItem {
     });
 
     XPCOMUtils.defineLazyGetter(this, "comment", () => {
-      let comment = login.hostname;
+      let comment = login.origin;
       try {
-        let uri = Services.io.newURI(login.hostname);
+        let uri = Services.io.newURI(login.origin);
         // Fallback to handle file: URIs
-        comment = uri.displayHostPort || login.hostname;
+        comment = uri.displayHostPort || login.origin;
       } catch (ex) {
-        // Fallback to login.hostname set above.
+        // Fallback to login.origin set above.
       }
 
       return JSON.stringify({

@@ -14,7 +14,7 @@
  *       "id": 2,
  *       "hostname": "http://www.example.com",
  *       "httpRealm": null,
- *       "formSubmitURL": "http://www.example.com/submit-url",
+ *       "formSubmitURL": "http://www.example.com",
  *       "usernameField": "username_field",
  *       "passwordField": "password_field",
  *       "encryptedUsername": "...",
