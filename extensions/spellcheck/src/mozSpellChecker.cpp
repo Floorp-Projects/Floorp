@@ -155,17 +155,8 @@ nsresult mozSpellChecker::CheckWord(const nsAString& aWord, bool* aIsMisspelled,
   NS_ENSURE_SUCCESS(result, result);
   if (!correct) {
     if (aSuggestions) {
-      uint32_t count, i;
-      char16_t** words;
-
-      result = mSpellCheckingEngine->Suggest(aWord, &words, &count);
+      result = mSpellCheckingEngine->Suggest(aWord, *aSuggestions);
       NS_ENSURE_SUCCESS(result, result);
-      nsString* suggestions = aSuggestions->AppendElements(count);
-      for (i = 0; i < count; i++) {
-        suggestions[i].Assign(words[i]);
-      }
-
-      if (count) NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
     }
     *aIsMisspelled = true;
   }
