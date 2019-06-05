@@ -163,11 +163,11 @@ def arm_target(compiler, all_flags):
         // need to be too fine-grained.
         #if __ARM_NEON
         %FPU neon
-        #elif __ARM_VFPV2__
+        #elif __ARM_VFPV2__ || __ARM_FP == 12
         %FPU vfpv2
         #elif __ARM_VFPV3__
         %FPU vfpv3
-        #elif __ARM_VFPV4__
+        #elif __ARM_VFPV4__ || __ARM_FP == 14
         %FPU vfpv4
         #elif __ARM_FPV5__
         %FPU fp-armv8
@@ -181,7 +181,7 @@ def arm_target(compiler, all_flags):
     )
     # Metadata emitted by preprocessors such as GCC with LANG=ja_JP.utf-8 may
     # have non-ASCII characters. Treat the output as bytearray.
-    data = {}
+    data = {'fpu': None}  # fpu may not get a value from the preprocessor.
     for line in result.splitlines():
         if line.startswith(b'%'):
             k, _, v = line.partition(' ')
