@@ -112,24 +112,20 @@ class TestCases {
     await checkSyncFields(guid, { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
                                    syncChangeCounter: 2 });
 
-    await this.setAnno(guid, "random-anno", "random-value");
-    info(`Set anno on ${guid}`);
-    await checkSyncFields(guid, { syncChangeCounter: 3 });
-
     // Tagging a bookmark should update its change counter.
     await this.tagURI(testUri, ["test-tag"]);
     info(`Tagged bookmark ${guid}`);
-    await checkSyncFields(guid, { syncChangeCounter: 4 });
+    await checkSyncFields(guid, { syncChangeCounter: 3 });
 
     if ("setKeyword" in this) {
       await this.setKeyword(guid, "keyword");
       info(`Set keyword for bookmark ${guid}`);
-      await checkSyncFields(guid, { syncChangeCounter: 5 });
+      await checkSyncFields(guid, { syncChangeCounter: 4 });
     }
     if ("removeKeyword" in this) {
       await this.removeKeyword(guid, "keyword");
       info(`Removed keyword from bookmark ${guid}`);
-      await checkSyncFields(guid, { syncChangeCounter: 6 });
+      await checkSyncFields(guid, { syncChangeCounter: 5 });
     }
   }
 
@@ -244,11 +240,6 @@ class TestCases {
     let tombstoneGuids = sortBy(tombstones, "guid").map(({ guid }) => guid);
     Assert.equal(tombstoneGuids.length, 2);
     Assert.deepEqual(tombstoneGuids, [folder2, child2].sort(compareAscending));
-  }
-
-  // Annos don't have an async API, so we use the sync API for both tests.
-  async setAnno(guid, name, value) {
-    await setItemAnnotation(guid, name, value);
   }
 }
 
