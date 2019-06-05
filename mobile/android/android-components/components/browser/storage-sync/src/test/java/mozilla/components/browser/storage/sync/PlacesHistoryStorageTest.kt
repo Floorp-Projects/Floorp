@@ -6,6 +6,7 @@ package mozilla.components.browser.storage.sync
 
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
+import mozilla.appservices.places.InternalPanic
 import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
@@ -576,5 +577,36 @@ class PlacesHistoryStorageTest {
 
         val error = result as SyncStatus.Error
         assertEquals("test error", error.exception.message)
+    }
+
+    @Test(expected = InternalPanic::class)
+    fun `storage re-throws sync panics`() = runBlocking {
+        val exception = InternalPanic("test panic")
+        val conn = object : Connection {
+            override fun reader(): PlacesReaderConnection {
+                fail()
+                return mock()
+            }
+
+            override fun writer(): PlacesWriterConnection {
+                fail()
+                return mock()
+            }
+
+            override fun syncHistory(syncInfo: SyncAuthInfo) {
+                throw exception
+            }
+
+            override fun syncBookmarks(syncInfo: SyncAuthInfo) {
+                fail()
+            }
+
+            override fun close() {
+                fail()
+            }
+        }
+        val storage = MockingPlacesHistoryStorage(conn)
+        storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        fail()
     }
 }

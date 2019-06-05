@@ -6,7 +6,6 @@ package mozilla.components.browser.storage.sync
 
 import android.content.Context
 import kotlinx.coroutines.withContext
-import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.VisitObservation
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
@@ -174,13 +173,10 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
      * @return Sync status of OK or Error
      */
     override suspend fun sync(authInfo: AuthInfo): SyncStatus {
-        return try {
-            withContext(scope.coroutineContext) {
+        return withContext(scope.coroutineContext) {
+            syncAndHandleExceptions {
                 places.syncHistory(authInfo.into())
-                SyncStatus.Ok
             }
-        } catch (e: PlacesException) {
-            SyncStatus.Error(e)
         }
     }
 }

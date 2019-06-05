@@ -10,10 +10,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.withContext
+import mozilla.appservices.places.InternalPanic
+import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
 import mozilla.appservices.places.UrlParseFailed
 import mozilla.components.concept.storage.Storage
+import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
 
@@ -61,6 +64,27 @@ abstract class PlacesStorage(context: Context) : Storage, SyncableStore {
             block()
         } catch (e: UrlParseFailed) {
             logger.warn("Ignoring url exception while running $operation", e)
+        }
+    }
+
+    /**
+     * Runs a [syncBlock], re-throwing any panics that may be encountered.
+     * @return [SyncStatus.Ok] on success, or [SyncStatus.Error] on non-panic [PlacesException].
+     */
+    protected inline fun syncAndHandleExceptions(syncBlock: () -> Unit): SyncStatus {
+        return try {
+            logger.debug("Syncing...")
+            syncBlock()
+            logger.debug("Successfully synced.")
+            SyncStatus.Ok
+
+        // Order of these catches matters: InternalPanic extends PlacesException.
+        } catch (e: InternalPanic) {
+            logger.error("Places panic while syncing", e)
+            throw e
+        } catch (e: PlacesException) {
+            logger.error("Places exception while syncing", e)
+            SyncStatus.Error(e)
         }
     }
 }

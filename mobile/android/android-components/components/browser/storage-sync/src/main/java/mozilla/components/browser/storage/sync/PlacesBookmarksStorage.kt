@@ -12,7 +12,6 @@ import mozilla.appservices.places.BookmarkSeparator
 import mozilla.appservices.places.BookmarkTreeNode
 import mozilla.appservices.places.BookmarkUpdateInfo
 import mozilla.appservices.places.PlacesApi
-import mozilla.appservices.places.PlacesException
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
@@ -179,13 +178,10 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @return Sync status of OK or Error
      */
     override suspend fun sync(authInfo: AuthInfo): SyncStatus {
-        return try {
-            withContext(scope.coroutineContext) {
+        return withContext(scope.coroutineContext) {
+            syncAndHandleExceptions {
                 places.syncBookmarks(authInfo.into())
-                SyncStatus.Ok
             }
-        } catch (e: PlacesException) {
-            SyncStatus.Error(e)
         }
     }
 }
