@@ -453,11 +453,6 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
 
     if (aParent.IsInUncomposedDoc()) {
       SetIsInDocument();
-      // FIXME(emilio): This should probably be dependent on composed doc, not
-      // uncomposed.
-      if (mText.IsBidi()) {
-        aContext.OwnerDoc().SetBidiEnabled();
-      }
     } else {
       SetFlags(NODE_IS_IN_SHADOW_TREE);
       MOZ_ASSERT(aParent.IsContent() &&
@@ -465,6 +460,11 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
       ExtendedContentSlots()->mContainingShadow =
           aParent.AsContent()->GetContainingShadow();
     }
+
+    if (IsInComposedDoc() && mText.IsBidi()) {
+      aContext.OwnerDoc().SetBidiEnabled();
+    }
+
     // Clear the lazy frame construction bits.
     UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
   } else {
