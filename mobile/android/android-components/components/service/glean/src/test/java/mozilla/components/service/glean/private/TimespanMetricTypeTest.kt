@@ -3,6 +3,7 @@ package mozilla.components.service.glean.private
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
 import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import mozilla.components.service.glean.resetGlean
+import mozilla.components.service.glean.timing.TimingManager
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.Assert.assertFalse
@@ -159,10 +160,55 @@ class TimespanMetricTypeTest {
         )
 
         // This should have no effect
+        TimingManager.getElapsedNanos = { 0 }
         metric.start(this)
+        TimingManager.getElapsedNanos = { 50 }
         metric.stopAndSum(this)
 
         metric.setRawNanos(timespanNanos)
         assertEquals(timespanNanos, metric.testGetValue())
+    }
+
+    @Test
+    fun `test setRawNanos followed by other API`() {
+        val timespanNanos = 1200000000L
+
+        val metric = TimespanMetricType(
+            false,
+            "telemetry",
+            Lifetime.Ping,
+            "explicit_timespan",
+            listOf("store1"),
+            timeUnit = TimeUnit.Second
+        )
+
+        metric.setRawNanos(timespanNanos)
+        assertEquals(timespanNanos, metric.testGetValue())
+
+        TimingManager.getElapsedNanos = { 0 }
+        metric.start(this)
+        TimingManager.getElapsedNanos = { 50 }
+        metric.stopAndSum(this)
+        val value = metric.testGetValue()
+        assertTrue(timespanNanos < value)
+    }
+
+    @Test
+    fun `test sumRawNanos`() {
+        val timespanNanos = 1200000000L
+
+        val metric = TimespanMetricType(
+            false,
+            "telemetry",
+            Lifetime.Ping,
+            "explicit_timespan",
+            listOf("store1"),
+            timeUnit = TimeUnit.Second
+        )
+
+        metric.sumRawNanos(timespanNanos)
+        assertEquals(timespanNanos, metric.testGetValue())
+        metric.sumRawNanos(timespanNanos)
+        assertEquals(timespanNanos * 2, metric.testGetValue())
     }
 }

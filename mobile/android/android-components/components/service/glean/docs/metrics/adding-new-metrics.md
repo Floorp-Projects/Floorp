@@ -427,10 +427,14 @@ The time reported in the telemetry ping will be the sum of all of these
 timespans recorded during the lifetime of the ping.
 
 If the above `start`/`stopAndSum`/`cancel` API isn't practical to use from your
-application, you may use the alternative lower-level API `setRawNanos`. Unlike
-the above, this sets the value of the timespan directly, and does not sum it to
-the existing value, so use with caution if the span of the ping the metric is
-sent in may include multiple timings.
+application, such as using a third-party library that provides raw timespan
+values, you may use the alternative lower-level API `sumRawNanos` and `setRawNanos`.
+
+`sumRawNanos` adds the timespan to any existing timespans already recorded since the last time the ping was sent.
+
+`setRawNanos` directly sets the timespan value, erasing any timespans recorded since the last time the ping was sent.  
+Care should be taken using this if the ping lifetime might contain more than one timespan measurement.  
+To be safe, `setRawNanos` should generally be followed by sending a custom ping containing the timespan. 
 
 ```Kotlin
 import org.mozilla.yourApplication.GleanMetrics.Auth

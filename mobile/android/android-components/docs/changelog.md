@@ -26,7 +26,7 @@ permalink: /changelog/
     
 * **service-glean**
   * The length limit on labels in labeled metrics has been increased from 30 to 61 characters.  See [1556684](https://bugzilla.mozilla.org/show_bug.cgi?id=1556684).
-  * Timespan metrics have a new API for setting the timespan directly: `setRawNanos`.
+  * Timespan metrics have a new API for setting the timespan directly: `sumRawNanos` and `setRawNanos`.
 
 * **support-base**
   * Fixed multiple potential leaks in `ObserverRegistry` (used internally by many classes in other components like `SessionManager`, `EngineSession` and others).

@@ -140,7 +140,7 @@ internal open class TimespansStorageEngineImplementation(
         // Store the time unit: we'll need it when snapshotting.
         timeUnitsMap[timespanName] = timeUnit
 
-        super.recordMetric(metricData, elapsedNanos, timeUnit) { currentValue, newValue ->
+        super.recordMetric(metricData, elapsedNanos, timeUnit) { _, newValue ->
             newValue
         }
     }
