@@ -710,10 +710,10 @@ pub enum DebugCommand {
     ClearCaches(ClearCache),
     /// Invalidate GPU cache, forcing the update from the CPU mirror.
     InvalidateGpuCache,
-    /// Causes the scene builder to pause for a given amount of miliseconds each time it
+    /// Causes the scene builder to pause for a given amount of milliseconds each time it
     /// processes a transaction.
     SimulateLongSceneBuild(u32),
-    /// Causes the low priority scene builder to pause for a given amount of miliseconds
+    /// Causes the low priority scene builder to pause for a given amount of milliseconds
     /// each time it processes a transaction.
     SimulateLongLowPrioritySceneBuild(u32),
 }
@@ -997,9 +997,9 @@ impl RenderApiSender {
                 // This is used to discover the underlying cause of https://github.com/servo/servo/issues/13480.
                 let webrender_is_alive = self.api_sender.send(ApiMsg::WakeUp);
                 if webrender_is_alive.is_err() {
-                    panic!("Webrender was shut down before processing CloneApi: {}", e);
+                    panic!("WebRender was shut down before processing CloneApi: {}", e);
                 } else {
-                    panic!("CloneApi message response was dropped while Webrender was still alive: {}", e);
+                    panic!("CloneApi message response was dropped while WebRender was still alive: {}", e);
                 }
             }
         };
