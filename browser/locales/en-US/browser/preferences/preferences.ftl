@@ -887,7 +887,7 @@ content-blocking-cookies-label =
   .label = Cookies
   .accesskey = C
 
-content-blocking-expand-section =
+content-blocking-expand-section = 
   .tooltiptext = More information
 
 # Cryptomining refers to using scripts on websites that can use a computer’s resources to mine cryptocurrency without a user’s knowledge.
@@ -936,11 +936,13 @@ permissions-notification-pause =
     .label = Pause notifications until { -brand-short-name } restarts
     .accesskey = n
 
-permissions-autoplay = Autoplay
+permissions-block-autoplay-media2 =
+    .label = Block websites from automatically playing sound
+    .accesskey = B
 
-permissions-autoplay-settings =
-    .label = Settings…
-    .accesskey = t
+permissions-block-autoplay-media-exceptions =
+    .label = Exceptions…
+    .accesskey = E
 
 permissions-block-popups =
     .label = Block pop-up windows

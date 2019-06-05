@@ -151,7 +151,7 @@ function createRow(aPartId) {
   for (let state of SitePermissions.getAvailableStates(aPartId)) {
     let radio = document.createXULElement("radio");
     radio.setAttribute("id", aPartId + "#" + state);
-    radio.setAttribute("label", SitePermissions.getMultichoiceStateLabel(aPartId, state));
+    radio.setAttribute("label", SitePermissions.getMultichoiceStateLabel(state));
     radio.setAttribute("command", commandId);
     radiogroup.appendChild(radio);
   }

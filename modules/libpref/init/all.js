@@ -545,6 +545,9 @@ pref("media.autoplay.default", 0);
 // By default, don't block WebAudio from playing automatically.
 pref("media.autoplay.block-webaudio", false);
 
+// By default, don't block muted media from playing automatically.
+pref("media.autoplay.allow-muted", true);
+
 // By default, don't block the media from extension background script.
 pref("media.autoplay.allow-extension-background-pages", true);
 
