@@ -2356,7 +2356,8 @@ static void ExtractCompatVersionInfo(const nsACString& aCompatVersion,
   }
 
   aAppVersion = Substring(aCompatVersion, 0, underscorePos);
-  aAppBuildID = Substring(aCompatVersion, underscorePos + 1, slashPos - (underscorePos + 1));
+  aAppBuildID = Substring(aCompatVersion, underscorePos + 1,
+                          slashPos - (underscorePos + 1));
   aPlatformBuildID = Substring(aCompatVersion, slashPos + 1);
 }
 
