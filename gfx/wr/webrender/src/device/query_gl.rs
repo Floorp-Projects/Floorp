@@ -70,7 +70,7 @@ impl<T> QuerySet<T> {
 }
 
 pub struct GpuFrameProfile<T> {
-    gl: Rc<gl::Gl>,
+    gl: Rc<dyn gl::Gl>,
     timers: QuerySet<GpuTimer<T>>,
     samplers: QuerySet<GpuSampler<T>>,
     frame_id: GpuFrameId,
@@ -79,7 +79,7 @@ pub struct GpuFrameProfile<T> {
 }
 
 impl<T> GpuFrameProfile<T> {
-    fn new(gl: Rc<gl::Gl>, debug_method: GpuDebugMethod) -> Self {
+    fn new(gl: Rc<dyn gl::Gl>, debug_method: GpuDebugMethod) -> Self {
         GpuFrameProfile {
             gl,
             timers: QuerySet::new(),
@@ -189,14 +189,14 @@ impl<T> Drop for GpuFrameProfile<T> {
 }
 
 pub struct GpuProfiler<T> {
-    gl: Rc<gl::Gl>,
+    gl: Rc<dyn gl::Gl>,
     frames: Vec<GpuFrameProfile<T>>,
     next_frame: usize,
     debug_method: GpuDebugMethod
 }
 
 impl<T> GpuProfiler<T> {
-    pub fn new(gl: Rc<gl::Gl>, debug_method: GpuDebugMethod) -> Self {
+    pub fn new(gl: Rc<dyn gl::Gl>, debug_method: GpuDebugMethod) -> Self {
         const MAX_PROFILE_FRAMES: usize = 4;
         let frames = (0 .. MAX_PROFILE_FRAMES)
             .map(|_| GpuFrameProfile::new(Rc::clone(&gl), debug_method))
@@ -279,11 +279,11 @@ impl<T: NamedTag> GpuProfiler<T> {
 
 #[must_use]
 pub struct GpuMarker {
-    gl: Option<(Rc<gl::Gl>, GpuDebugMethod)>,
+    gl: Option<(Rc<dyn gl::Gl>, GpuDebugMethod)>,
 }
 
 impl GpuMarker {
-    fn new(gl: &Rc<gl::Gl>, message: &str, debug_method: GpuDebugMethod) -> Self {
+    fn new(gl: &Rc<dyn gl::Gl>, message: &str, debug_method: GpuDebugMethod) -> Self {
         let gl = match debug_method {
             GpuDebugMethod::KHR => {
               gl.push_debug_group_khr(gl::DEBUG_SOURCE_APPLICATION, 0, message);
@@ -298,7 +298,7 @@ impl GpuMarker {
         GpuMarker { gl }
     }
 
-    fn fire(gl: &Rc<gl::Gl>, message: &str, debug_method: GpuDebugMethod) {
+    fn fire(gl: &Rc<dyn gl::Gl>, message: &str, debug_method: GpuDebugMethod) {
         match debug_method {
             GpuDebugMethod::KHR => gl.debug_message_insert_khr(gl::DEBUG_SOURCE_APPLICATION, gl::DEBUG_TYPE_MARKER, 0, gl::DEBUG_SEVERITY_NOTIFICATION, message),
             GpuDebugMethod::MarkerEXT => gl.insert_event_marker_ext(message),
