@@ -33,10 +33,11 @@ add_task(async function() {
 
   info("Toggle the visible class to start the animation");
   await toggleVisibleClass(tab);
+  info("Wait for all renderings");
+  await waitForRendering(animationInspector);
 
   info("Wait until the scrubber is displayed");
   await waitUntil(() => panel.querySelector(".current-time-scrubber"));
-
   const scrubberEl = panel.querySelector(".current-time-scrubber");
 
   info("Wait until animations are paused");
@@ -47,6 +48,8 @@ add_task(async function() {
 
   info("Toggle the visible class to start the animation");
   await toggleVisibleClass(tab);
+  info("Wait for all renderings");
+  await waitForRendering(animationInspector);
 
   info("scrubberX after: " + scrubberEl.getBoundingClientRect().x);
 
@@ -59,9 +62,6 @@ add_task(async function() {
   // Query the scrubber element again to check that the UI is still rendered.
   ok(!!panel.querySelector(".current-time-scrubber"),
     "The scrubber element is still rendered in the animation inspector panel");
-
-  info("Wait for the keyframes graph to be updated before ending the test.");
-  await waitForAnimationDetail(animationInspector);
 });
 
 /**
