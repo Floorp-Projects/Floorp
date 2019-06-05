@@ -310,9 +310,28 @@ mapping:
                 default:
                     - ${year}/${month}/${upload_date}-${branch}-l10n
                     - latest-${branch}-l10n
-    target.dmg:
+    target.pkg:
         <<: *default
         description: "Main package installer for Mac OS X platforms"
+        all_locales: true
+        from:
+            - signing
+        only_for_platforms:
+            - macosx64-shippable
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.pkg
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.pkg
+        destinations:
+            by-locale:
+                en-US:
+                    - ${year}/${month}/${upload_date}-${branch}
+                    - latest-${branch}
+                    - latest-${branch}-l10n
+                default:
+                    - ${year}/${month}/${upload_date}-${branch}-l10n
+                    - latest-${branch}-l10n
+    target.dmg:
+        <<: *default
+        description: "Main package disk image for Mac OS X platforms"
         all_locales: true
         from:
             - repackage
