@@ -7,7 +7,6 @@
 var bs = PlacesUtils.bookmarks;
 var hs = PlacesUtils.history;
 var os = PlacesUtils.observers;
-var anno = PlacesUtils.annotations;
 
 
 var bookmarksObserver = {
@@ -50,7 +49,6 @@ var bookmarksObserver = {
                           oldValue) {
     this._itemChangedId = id;
     this._itemChangedProperty = property;
-    this._itemChanged_isAnnotationProperty = isAnnotationProperty;
     this._itemChangedValue = value;
     this._itemChangedOldValue = oldValue;
   },
@@ -328,14 +326,6 @@ add_task(async function test_bookmarks() {
   Assert.equal(bookmarksObserver._itemChangedProperty, "title");
   Assert.equal(bookmarksObserver._itemChangedValue, "ZZZXXXYYY");
 
-  // check if setting an item annotation triggers onItemChanged
-  bookmarksObserver._itemChangedId = -1;
-  anno.setItemAnnotation(newId3, "test-annotation", "foo", 0, anno.EXPIRE_NEVER);
-  Assert.equal(bookmarksObserver._itemChangedId, newId3);
-  Assert.equal(bookmarksObserver._itemChangedProperty, "test-annotation");
-  Assert.ok(bookmarksObserver._itemChanged_isAnnotationProperty);
-  Assert.equal(bookmarksObserver._itemChangedValue, "");
-
   // test search on bookmark title ZZZXXXYYY
   try {
     let options = hs.getNewQueryOptions();
@@ -417,11 +407,6 @@ add_task(async function test_bookmarks() {
   let fakeLastModified = PlacesUtils.toPRTime((await PlacesUtils.bookmarks.fetch(
     await PlacesUtils.promiseItemGuid(newId14))).lastModified);
   Assert.equal(fakeLastModified, 1234000000000000);
-
-  // ensure that removing an item removes its annotations
-  Assert.ok(anno.itemHasAnnotation(newId3, "test-annotation"));
-  bs.removeItem(newId3);
-  Assert.ok(!anno.itemHasAnnotation(newId3, "test-annotation"));
 
   // bug 378820
   let uri1 = uri("http://foo.tld/a");
