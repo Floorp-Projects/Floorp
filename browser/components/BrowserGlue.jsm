@@ -1451,7 +1451,10 @@ BrowserGlue.prototype = {
   },
 
   _recordContentBlockingTelemetry() {
-    let recordIdentityPopupEvents = Services.prefs.getBoolPref("security.identitypopup.recordEventElemetry");
+    let recordIdentityPopupEvents = Services.prefs.prefHasUserValue("security.identitypopup.recordEventElemetry") ?
+                                    Services.prefs.getBoolPref("security.identitypopup.recordEventElemetry") :
+                                    Services.prefs.getBoolPref("security.identitypopup.recordEventTelemetry");
+
     Services.telemetry.setEventRecordingEnabled("security.ui.identitypopup", recordIdentityPopupEvents);
 
     let tpEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled");

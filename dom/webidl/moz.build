@@ -400,7 +400,6 @@ WEBIDL_FILES = [
     'BeforeUnloadEvent.webidl',
     'BiquadFilterNode.webidl',
     'Blob.webidl',
-    'BoxObject.webidl',
     'BroadcastChannel.webidl',
     'BrowserElement.webidl',
     'BrowserElementDictionaries.webidl',
