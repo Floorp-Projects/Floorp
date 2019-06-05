@@ -15,10 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "bundle", function() {
-  return Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
-});
-
 /**
  * Receives and displays address bar autocomplete results.
  */
@@ -566,7 +562,7 @@ class UrlbarView {
     let setURL = false;
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-        action = bundle.GetStringFromName("switchToTab2");
+        action = UrlbarUtils.strings.GetStringFromName("switchToTab2");
         setURL = true;
         break;
       case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
@@ -574,7 +570,7 @@ class UrlbarView {
         setURL = true;
         break;
       case UrlbarUtils.RESULT_TYPE.SEARCH:
-        action = bundle.formatStringFromName("searchWithEngine",
+        action = UrlbarUtils.strings.formatStringFromName("searchWithEngine",
                                              [result.payload.engine], 1);
         break;
       case UrlbarUtils.RESULT_TYPE.KEYWORD:
@@ -606,7 +602,7 @@ class UrlbarView {
     }
 
     if (isVisitAction) {
-      action = bundle.GetStringFromName("visit");
+      action = UrlbarUtils.strings.GetStringFromName("visit");
       title.setAttribute("isurl", "true");
     } else {
       title.removeAttribute("isurl");
@@ -787,7 +783,7 @@ class UrlbarView {
       let item = this._rows.children[i];
       let action = item.querySelector(".urlbarView-action");
       action.textContent =
-        bundle.formatStringFromName("searchWithEngine",
+        UrlbarUtils.strings.formatStringFromName("searchWithEngine",
           [(engine && engine.name) || result.payload.engine], 1);
       // If we just changed the engine from the original engine and it had an
       // icon, then make sure the result now uses the new engine's icon or
