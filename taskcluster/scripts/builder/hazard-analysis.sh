@@ -12,11 +12,10 @@ GCCDIR="$TOOLTOOL_DIR/gcc"
 
 export CC="$GCCDIR/bin/gcc"
 export CXX="$GCCDIR/bin/g++"
-export PATH="$GCCDIR/bin:$PATH"
+export PATH="$GCCDIR/bin:$TOOLTOOL_DIR/clang/bin:$PATH"
 export LD_LIBRARY_PATH="$GCCDIR/lib64"
 export RUSTC="$TOOLTOOL_DIR/rustc/bin/rustc"
 export CARGO="$TOOLTOOL_DIR/rustc/bin/cargo"
-export LLVM_CONFIG="$TOOLTOOL_DIR/clang/bin/llvm-config"
 
 PYTHON=python2.7
 if ! which $PYTHON; then
