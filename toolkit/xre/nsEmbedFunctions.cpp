@@ -90,6 +90,7 @@
 #include "mozilla/net/SocketProcessImpl.h"
 
 #include "GeckoProfiler.h"
+#include "BaseProfiler.h"
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
 #  include "mozilla/sandboxTarget.h"
@@ -391,6 +392,8 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 
   mozilla::LogModule::Init(aArgc, aArgv);
 
+  AUTO_BASE_PROFILER_LABEL("XRE_InitChildProcess (around Gecko Profiler)",
+                           OTHER);
   AUTO_PROFILER_INIT;
   AUTO_PROFILER_LABEL("XRE_InitChildProcess", OTHER);
 
@@ -808,7 +811,10 @@ nsresult XRE_InitParentProcess(int aArgc, char* aArgv[],
 
   mozilla::LogModule::Init(aArgc, aArgv);
 
+  AUTO_BASE_PROFILER_LABEL("XRE_InitParentProcess (around Gecko Profiler)",
+                           OTHER);
   AUTO_PROFILER_INIT;
+  AUTO_PROFILER_LABEL("XRE_InitParentProcess", OTHER);
 
   ScopedXREEmbed embed;
 
