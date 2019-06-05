@@ -21,8 +21,20 @@ class SizeTest {
     }
 
     @Test
+    fun `get max and min lengths`() {
+        assertEquals(512, Size(512, 256).maxLength)
+        assertEquals(256, Size(512, 256).minLength)
+        assertEquals(250, Size(100, 250).maxLength)
+        assertEquals(100, Size(100, 250).minLength)
+    }
+
+    @Test
     fun `parse any size`() {
         assertEquals(Size.ANY, Size.parse("any"))
+        assertEquals(Size.ANY.width, Size.parse("any")!!.maxLength)
+        assertEquals(Size.ANY.height, Size.parse("any")!!.maxLength)
+        assertEquals(Size.ANY.width, Size.parse("any")!!.minLength)
+        assertEquals(Size.ANY.height, Size.parse("any")!!.minLength)
     }
 
     @Test

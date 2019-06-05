@@ -7,12 +7,15 @@ package mozilla.components.browser.icons.extension
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.org.json.asSequence
+import mozilla.components.support.ktx.android.org.json.toJSONArray
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
 private val typeMap: Map<String, IconRequest.Resource.Type> = mutableMapOf(
+    "manifest" to IconRequest.Resource.Type.MANIFEST_ICON,
     "icon" to IconRequest.Resource.Type.FAVICON,
     "shortcut icon" to IconRequest.Resource.Type.FAVICON,
     "fluid-icon" to IconRequest.Resource.Type.FLUID_ICON,
@@ -38,32 +41,25 @@ private fun Map<String, IconRequest.Resource.Type>.reverseLookup(type: IconReque
 }
 
 internal fun List<IconRequest.Resource>.toJSON(): JSONArray {
-    val array = JSONArray()
-
-    for (resource in this) {
+    return mapNotNull { resource ->
         if (resource.type == IconRequest.Resource.Type.TIPPY_TOP) {
             // Ignore the URLs coming from the "tippy top" list.
-            continue
+            return@mapNotNull null
         }
 
-        val item = JSONObject()
+        JSONObject().apply {
+            put("href", resource.url)
 
-        item.put("href", resource.url)
+            resource.mimeType?.let { put("mimeType", it) }
 
-        resource.mimeType?.let { item.put("mimeType", it) }
+            put("type", typeMap.reverseLookup(resource.type))
 
-        item.put("type", typeMap.reverseLookup(resource.type))
+            val sizeArray = resource.sizes.map { size -> size.toString() }.toJSONArray()
+            put("sizes", sizeArray)
 
-        val sizeArray = JSONArray()
-        resource.sizes.forEach { size ->
-            sizeArray.put("${size.width}x${size.height}")
+            put("maskable", resource.maskable)
         }
-        item.put("sizes", sizeArray)
-
-        array.put(item)
-    }
-
-    return array
+    }.toJSONArray()
 }
 
 internal fun JSONObject.toIconRequest(): IconRequest? {
@@ -78,25 +74,26 @@ internal fun JSONObject.toIconRequest(): IconRequest? {
 }
 
 internal fun JSONArray.toIconResources(): List<IconRequest.Resource> {
-    val resources = mutableListOf<IconRequest.Resource>()
-
-    for (i in 0 until length()) {
-        val resource = getJSONObject(i).toIconResource()
-        resource?.let { resources.add(it) }
-    }
-
-    return resources
+    return asSequence { i -> getJSONObject(i) }
+        .mapNotNull { it.toIconResource() }
+        .toList()
 }
 
 private fun JSONObject.toIconResource(): IconRequest.Resource? {
     try {
         val url = getString("href")
-        val type = typeMap[getString("type")]
-            ?: return null
+        val type = typeMap[getString("type")] ?: return null
         val sizes = optJSONArray("sizes").toResourceSizes()
         val mimeType = tryGetString("mimeType")
+        val maskable = optBoolean("maskable", false)
 
-        return IconRequest.Resource(url, type, sizes, if (mimeType.isNullOrEmpty()) null else mimeType)
+        return IconRequest.Resource(
+            url = url,
+            type = type,
+            sizes = sizes,
+            mimeType = if (mimeType.isNullOrEmpty()) null else mimeType,
+            maskable = maskable
+        )
     } catch (e: JSONException) {
         Logger.warn("Could not parse message from icons extensions", e)
         return null
@@ -104,17 +101,12 @@ private fun JSONObject.toIconResource(): IconRequest.Resource? {
 }
 
 private fun JSONArray?.toResourceSizes(): List<Size> {
-    this ?: return emptyList()
+    val array = this ?: return emptyList()
 
     return try {
-        val sizes = mutableListOf<Size>()
-
-        for (i in 0 until length()) {
-            val raw = getString(i)
-            Size.parse(raw)?.let { sizes.add(it) }
-        }
-
-        sizes
+        array.asSequence { i -> getString(i) }
+            .mapNotNull { raw -> Size.parse(raw) }
+            .toList()
     } catch (e: JSONException) {
         Logger.warn("Could not parse message from icons extensions", e)
         emptyList()

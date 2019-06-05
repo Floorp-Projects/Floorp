@@ -7,24 +7,17 @@ package mozilla.components.support.ktx.android.org.json
 import org.json.JSONArray
 import org.json.JSONException
 
-/*
+/**
  * Convenience method to convert a JSONArray into a sequence.
+ *
+ * @param getter callback to get the value for an index in the array.
  */
-fun JSONArray.asSequence(): Sequence<Any> {
-    return object : Sequence<Any> {
-
-        override fun iterator() = object : Iterator<Any> {
-            val it = (0 until this@asSequence.length()).iterator()
-
-            override fun next(): Any {
-                val i = it.next()
-                return this@asSequence.get(i)
-            }
-
-            override fun hasNext() = it.hasNext()
-        }
-    }
+inline fun <V> JSONArray.asSequence(crossinline getter: JSONArray.(Int) -> V): Sequence<V> {
+    val indexRange = 0 until length()
+    return indexRange.asSequence().map { i -> getter(i) }
 }
+
+fun JSONArray.asSequence(): Sequence<Any> = asSequence { i -> get(i) }
 
 /**
  * Convenience method to convert a JSONArray into a List
@@ -33,10 +26,8 @@ fun JSONArray.asSequence(): Sequence<Any> {
  */
 @Suppress("UNCHECKED_CAST")
 fun <T> JSONArray?.toList(): List<T> {
-    if (this != null) {
-        return asSequence().map { it as T }.toList()
-    }
-    return listOf()
+    val array = this ?: return emptyList()
+    return array.asSequence().map { it as T }.toList()
 }
 
 // #2305: inline this function when Android gradle plugin v3.4.0 is released
@@ -60,4 +51,8 @@ fun <T, R : Any> JSONArray.mapNotNull(getFromArray: JSONArray.(index: Int) -> T,
     }
 
     return transformedResults
+}
+
+fun Iterable<Any>.toJSONArray() = JSONArray().also { array ->
+    forEach { array.put(it) }
 }

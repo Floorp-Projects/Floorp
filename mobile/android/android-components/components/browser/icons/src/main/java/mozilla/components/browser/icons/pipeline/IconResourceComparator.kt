@@ -5,7 +5,6 @@
 package mozilla.components.browser.icons.pipeline
 
 import mozilla.components.browser.icons.IconRequest
-import kotlin.math.min
 
 /**
  * This [Comparator] implementations compares [IconRequest.Resource] objects to determine which icon to try to load
@@ -13,21 +12,23 @@ import kotlin.math.min
  */
 internal object IconResourceComparator : Comparator<IconRequest.Resource> {
 
-    @Suppress("ComplexMethod")
-    override fun compare(resource: IconRequest.Resource, other: IconRequest.Resource): Int {
-        return if (resource.url == other.url) {
-            // Two resources pointing to the same URL are always referencing the same icon. So treat them as equal.
-            0
-        } else if (resource.type != other.type) {
-            if (resource.type.rank() > other.type.rank()) -1 else 1
-        } else if (resource.maxSize != other.maxSize) {
-            if (resource.maxSize > other.maxSize) -1 else 1
-        } else {
+    /**
+     * Compare two icon resources. If [resource] is more important, a negative number is returned.
+     * If [other] is more important, a positive number is returned.
+     * If the two resources are of equal importance, 0 is returned.
+     * Importance represents which icon we should try to load first.
+     */
+    override fun compare(resource: IconRequest.Resource, other: IconRequest.Resource) = when {
+        // Two resources pointing to the same URL are always referencing the same icon. So treat them as equal.
+        resource.url == other.url -> 0
+        resource.maskable != other.maskable -> -resource.maskable.compareTo(other.maskable)
+        resource.type != other.type -> -resource.type.rank().compareTo(other.type.rank())
+        resource.maxSize != other.maxSize -> -resource.maxSize.compareTo(other.maxSize)
+        else -> {
             // If there's no other way to choose, we prefer container types.
             // They *might* contain an image larger than the size given in the <link> tag.
             val isResourceContainerType = resource.isContainerType
-            val isOtherContainerType = other.isContainerType
-            if (isResourceContainerType != isOtherContainerType) {
+            if (isResourceContainerType != other.isContainerType) {
                 if (isResourceContainerType) -1 else 1
             } else {
                 // There's no way to know which icon might be better. However we need to pick a consistent one
@@ -39,12 +40,12 @@ internal object IconResourceComparator : Comparator<IconRequest.Resource> {
     }
 }
 
-@Suppress("MagicNumber")
+@Suppress("MagicNumber", "ComplexMethod")
 private fun IconRequest.Resource.Type.rank(): Int {
     return when (this) {
         // An icon from our "tippy top" list should always be preferred
-        IconRequest.Resource.Type.TIPPY_TOP -> 20
-
+        IconRequest.Resource.Type.TIPPY_TOP -> 25
+        IconRequest.Resource.Type.MANIFEST_ICON -> 20
         // We prefer touch icons because they tend to have a higher resolution than ordinary favicons.
         IconRequest.Resource.Type.APPLE_TOUCH_ICON -> 15
         IconRequest.Resource.Type.FAVICON -> 10
@@ -59,11 +60,7 @@ private fun IconRequest.Resource.Type.rank(): Int {
 }
 
 private val IconRequest.Resource.maxSize: Int
-    get() {
-        return sizes.maxBy { size ->
-            min(size.width, size.height)
-        }?.let { min(it.width, it.height) } ?: 0
-    }
+    get() = sizes.asSequence().map { size -> size.minLength }.max() ?: 0
 
 private val IconRequest.Resource.isContainerType: Boolean
     get() = mimeType != null && containerTypes.contains(mimeType)
