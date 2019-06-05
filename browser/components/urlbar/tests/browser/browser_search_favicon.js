@@ -49,8 +49,9 @@ add_task(async function() {
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH);
   Assert.equal(result.displayed.title, "foobar");
 
+  let bundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
   Assert.equal(result.displayed.action,
-    UrlbarUtils.strings.formatStringFromName("searchWithEngine", ["SearchEngine"], 1),
+    bundle.formatStringFromName("searchWithEngine", ["SearchEngine"], 1),
     "Should have the correct action text");
 
   gBrowser.removeCurrentTab();
