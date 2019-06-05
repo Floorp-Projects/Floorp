@@ -21,7 +21,7 @@
 
 // This higher-order macro lists all categories with their subcategories.
 //
-// PROFILING_CATEGORY_LIST(BEGIN_CATEGORY, SUBCATEGORY, END_CATEGORY)
+// BASE_PROFILING_CATEGORY_LIST(BEGIN_CATEGORY, SUBCATEGORY, END_CATEGORY)
 //   BEGIN_CATEGORY(name, labelAsString, colorAsString)
 //   SUBCATEGORY(category, name, labelAsString)
 //   END_CATEGORY
@@ -38,46 +38,47 @@
 // chosen in such a way that every possible stack can be mapped to a single
 // category unambiguously.
 
-#define PROFILING_CATEGORY_LIST(BEGIN_CATEGORY, SUBCATEGORY, END_CATEGORY)    \
-  BEGIN_CATEGORY(IDLE, "Idle", "transparent")                                 \
-    SUBCATEGORY(IDLE, IDLE, "Other")                                          \
-  END_CATEGORY                                                                \
-  BEGIN_CATEGORY(OTHER, "Other", "grey")                                      \
-    SUBCATEGORY(OTHER, OTHER, "Other")                                        \
-  END_CATEGORY                                                                \
-  BEGIN_CATEGORY(LAYOUT, "Layout", "purple")                                  \
-    SUBCATEGORY(LAYOUT, LAYOUT, "Other")                                      \
-    SUBCATEGORY(LAYOUT, LAYOUT_FrameConstruction, "Frame construction")       \
-    SUBCATEGORY(LAYOUT, LAYOUT_Reflow, "Reflow")                              \
-    SUBCATEGORY(LAYOUT, LAYOUT_CSSParsing, "CSS parsing")                     \
-    SUBCATEGORY(LAYOUT, LAYOUT_SelectorQuery, "Selector query")               \
-    SUBCATEGORY(LAYOUT, LAYOUT_StyleComputation, "Style computation")         \
-  END_CATEGORY                                                                \
-  BEGIN_CATEGORY(JS, "JavaScript", "yellow")                                  \
-    SUBCATEGORY(JS, JS, "Other")                                              \
-    SUBCATEGORY(JS, JS_Parsing, "JS Parsing")                                 \
-    SUBCATEGORY(JS, JS_IonCompilation, "Ion JIT Compilation")                 \
-    SUBCATEGORY(JS, JS_BaselineCompilation, "Baseline JIT Compilation")       \
-  END_CATEGORY                                                                \
-  BEGIN_CATEGORY(GCCC, "GC / CC", "orange")                                   \
-    SUBCATEGORY(GCCC, GCCC, "Other")                                          \
-  END_CATEGORY                                                                \
-  BEGIN_CATEGORY(NETWORK, "Network", "lightblue")                             \
-    SUBCATEGORY(NETWORK, NETWORK, "Other")                                    \
-  END_CATEGORY                                                                \
-  BEGIN_CATEGORY(GRAPHICS, "Graphics", "green")                               \
-    SUBCATEGORY(GRAPHICS, GRAPHICS, "Other")                                  \
+#define BASE_PROFILING_CATEGORY_LIST(BEGIN_CATEGORY, SUBCATEGORY,              \
+                                     END_CATEGORY)                             \
+  BEGIN_CATEGORY(IDLE, "Idle", "transparent")                                  \
+    SUBCATEGORY(IDLE, IDLE, "Other")                                           \
+  END_CATEGORY                                                                 \
+  BEGIN_CATEGORY(OTHER, "Other", "grey")                                       \
+    SUBCATEGORY(OTHER, OTHER, "Other")                                         \
+  END_CATEGORY                                                                 \
+  BEGIN_CATEGORY(LAYOUT, "Layout", "purple")                                   \
+    SUBCATEGORY(LAYOUT, LAYOUT, "Other")                                       \
+    SUBCATEGORY(LAYOUT, LAYOUT_FrameConstruction, "Frame construction")        \
+    SUBCATEGORY(LAYOUT, LAYOUT_Reflow, "Reflow")                               \
+    SUBCATEGORY(LAYOUT, LAYOUT_CSSParsing, "CSS parsing")                      \
+    SUBCATEGORY(LAYOUT, LAYOUT_SelectorQuery, "Selector query")                \
+    SUBCATEGORY(LAYOUT, LAYOUT_StyleComputation, "Style computation")          \
+  END_CATEGORY                                                                 \
+  BEGIN_CATEGORY(JS, "JavaScript", "yellow")                                   \
+    SUBCATEGORY(JS, JS, "Other")                                               \
+    SUBCATEGORY(JS, JS_Parsing, "JS Parsing")                                  \
+    SUBCATEGORY(JS, JS_IonCompilation, "Ion JIT Compilation")                  \
+    SUBCATEGORY(JS, JS_BaselineCompilation, "Baseline JIT Compilation")        \
+  END_CATEGORY                                                                 \
+  BEGIN_CATEGORY(GCCC, "GC / CC", "orange")                                    \
+    SUBCATEGORY(GCCC, GCCC, "Other")                                           \
+  END_CATEGORY                                                                 \
+  BEGIN_CATEGORY(NETWORK, "Network", "lightblue")                              \
+    SUBCATEGORY(NETWORK, NETWORK, "Other")                                     \
+  END_CATEGORY                                                                 \
+  BEGIN_CATEGORY(GRAPHICS, "Graphics", "green")                                \
+    SUBCATEGORY(GRAPHICS, GRAPHICS, "Other")                                   \
     SUBCATEGORY(GRAPHICS, GRAPHICS_DisplayListBuilding, "DisplayList building") \
-    SUBCATEGORY(GRAPHICS, GRAPHICS_DisplayListMerging, "DisplayList merging") \
-    SUBCATEGORY(GRAPHICS, GRAPHICS_LayerBuilding, "Layer building")           \
-    SUBCATEGORY(GRAPHICS, GRAPHICS_TileAllocation, "Tile allocation")         \
-    SUBCATEGORY(GRAPHICS, GRAPHICS_WRDisplayList, "WebRender display list")   \
-    SUBCATEGORY(GRAPHICS, GRAPHICS_Rasterization, "Rasterization")            \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_DisplayListMerging, "DisplayList merging")  \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_LayerBuilding, "Layer building")            \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_TileAllocation, "Tile allocation")          \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_WRDisplayList, "WebRender display list")    \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_Rasterization, "Rasterization")             \
     SUBCATEGORY(GRAPHICS, GRAPHICS_FlushingAsyncPaints, "Flushing async paints") \
-    SUBCATEGORY(GRAPHICS, GRAPHICS_ImageDecoding, "Image decoding")           \
-  END_CATEGORY                                                                \
-  BEGIN_CATEGORY(DOM, "DOM", "blue")                                          \
-    SUBCATEGORY(DOM, DOM, "Other")                                            \
+    SUBCATEGORY(GRAPHICS, GRAPHICS_ImageDecoding, "Image decoding")            \
+  END_CATEGORY                                                                 \
+  BEGIN_CATEGORY(DOM, "DOM", "blue")                                           \
+    SUBCATEGORY(DOM, DOM, "Other")                                             \
   END_CATEGORY
 
 namespace JS {
@@ -90,9 +91,9 @@ namespace JS {
 #define CATEGORY_ENUM_SUBCATEGORY(supercategory, name, labelAsString) name,
 #define CATEGORY_ENUM_END_CATEGORY
 enum class ProfilingCategoryPair : uint32_t {
-  PROFILING_CATEGORY_LIST(CATEGORY_ENUM_BEGIN_CATEGORY,
-                          CATEGORY_ENUM_SUBCATEGORY,
-                          CATEGORY_ENUM_END_CATEGORY)
+  BASE_PROFILING_CATEGORY_LIST(CATEGORY_ENUM_BEGIN_CATEGORY,
+                               CATEGORY_ENUM_SUBCATEGORY,
+                               CATEGORY_ENUM_END_CATEGORY)
   COUNT,
   LAST = COUNT - 1,
 };
@@ -105,9 +106,9 @@ enum class ProfilingCategoryPair : uint32_t {
 #define SUPERCATEGORY_ENUM_SUBCATEGORY(supercategory, name, labelAsString)
 #define SUPERCATEGORY_ENUM_END_CATEGORY
 enum class ProfilingCategory : uint32_t {
-  PROFILING_CATEGORY_LIST(SUPERCATEGORY_ENUM_BEGIN_CATEGORY,
-                          SUPERCATEGORY_ENUM_SUBCATEGORY,
-                          SUPERCATEGORY_ENUM_END_CATEGORY)
+  BASE_PROFILING_CATEGORY_LIST(SUPERCATEGORY_ENUM_BEGIN_CATEGORY,
+                               SUPERCATEGORY_ENUM_SUBCATEGORY,
+                               SUPERCATEGORY_ENUM_END_CATEGORY)
   COUNT,
   LAST = COUNT - 1,
 };
