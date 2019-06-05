@@ -23,8 +23,8 @@ add_task(async function test_save_change() {
     // Add a login for the origin of the form if testing a change notification.
     if (oldPassword) {
       Services.logins.addLogin(LoginTestUtils.testData.formLogin({
-        hostname: "https://example.com",
-        formSubmitURL: "https://example.com",
+        origin: "https://example.com",
+        formActionOrigin: "https://example.com",
         username,
         password: oldPassword,
       }));

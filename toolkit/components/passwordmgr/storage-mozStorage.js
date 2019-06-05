@@ -252,9 +252,9 @@ LoginManagerStorage_mozStorage.prototype = {
                 ":timePasswordChanged, :timesUsed)";
 
     let params = {
-      hostname:            loginClone.hostname,
+      hostname:            loginClone.origin,
       httpRealm:           loginClone.httpRealm,
-      formSubmitURL:       loginClone.formSubmitURL,
+      formSubmitURL:       loginClone.formActionOrigin,
       usernameField:       loginClone.usernameField,
       passwordField:       loginClone.passwordField,
       encryptedUsername:   encUsername,
@@ -330,8 +330,8 @@ LoginManagerStorage_mozStorage.prototype = {
 
     // Look for an existing entry in case key properties changed.
     if (!newLogin.matches(oldLogin, true)) {
-      let logins = this.findLogins(newLogin.hostname,
-                                   newLogin.formSubmitURL,
+      let logins = this.findLogins(newLogin.origin,
+                                   newLogin.formActionOrigin,
                                    newLogin.httpRealm);
 
       if (logins.some(login => newLogin.matches(login, true))) {
@@ -361,9 +361,9 @@ LoginManagerStorage_mozStorage.prototype = {
 
     let params = {
       id:                  idToModify,
-      hostname:            newLogin.hostname,
+      hostname:            newLogin.origin,
       httpRealm:           newLogin.httpRealm,
-      formSubmitURL:       newLogin.formSubmitURL,
+      formSubmitURL:       newLogin.formActionOrigin,
       usernameField:       newLogin.usernameField,
       passwordField:       newLogin.passwordField,
       encryptedUsername:   encUsername,
@@ -458,23 +458,38 @@ LoginManagerStorage_mozStorage.prototype = {
     for (let field in matchData) {
       let value = matchData[field];
       let condition = "";
+
+      // Override the storage field name for some fields due to backwards
+      // compatibility with Sync/storage.
+      let storageFieldName = field;
       switch (field) {
-        case "formSubmitURL":
+        case "formActionOrigin": {
+          storageFieldName = "formSubmitURL";
+          break;
+        }
+        case "origin": {
+          storageFieldName = "hostname";
+          break;
+        }
+      }
+
+      switch (field) {
+        case "formActionOrigin":
           if (value != null) {
             // Historical compatibility requires this special case
             condition = "formSubmitURL = '' OR ";
           }
           // Fall through
-        case "hostname":
+        case "origin":
           if (value != null) {
-            condition += `${field} = :${field}`;
-            params[field] = value;
+            condition += `${storageFieldName} = :${storageFieldName}`;
+            params[storageFieldName] = value;
             let valueURI;
             try {
               if (aOptions.schemeUpgrades && (valueURI = Services.io.newURI(value)) &&
                   valueURI.scheme == "https") {
-                condition += ` OR ${field} = :http${field}`;
-                params["http" + field] = "http://" + valueURI.displayHostPort;
+                condition += ` OR ${storageFieldName} = :http${storageFieldName}`;
+                params["http" + storageFieldName] = "http://" + valueURI.displayHostPort;
               }
             } catch (ex) {
               // newURI will throw for some values (e.g. chrome://FirefoxAccounts)
@@ -497,10 +512,10 @@ LoginManagerStorage_mozStorage.prototype = {
         case "timePasswordChanged":
         case "timesUsed":
           if (value == null) {
-            condition = field + " isnull";
+            condition = storageFieldName + " isnull";
           } else {
-            condition = field + " = :" + field;
-            params[field] = value;
+            condition = storageFieldName + " = :" + storageFieldName;
+            params[storageFieldName] = value;
           }
           break;
         // Fail if caller requests an unknown property.
@@ -607,14 +622,14 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  findLogins(hostname, formSubmitURL, httpRealm) {
+  findLogins(origin, formActionOrigin, httpRealm) {
     let loginData = {
-      hostname,
-      formSubmitURL,
+      origin,
+      formActionOrigin,
       httpRealm,
     };
     let matchData = { };
-    for (let field of ["hostname", "formSubmitURL", "httpRealm"]) {
+    for (let field of ["origin", "formActionOrigin", "httpRealm"]) {
       if (loginData[field] != "") {
         matchData[field] = loginData[field];
       }
@@ -629,11 +644,11 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  countLogins(hostname, formSubmitURL, httpRealm) {
-    let _countLoginsHelper = (hostname, formSubmitURL, httpRealm) => {
+  countLogins(origin, formActionOrigin, httpRealm) {
+    let _countLoginsHelper = (origin, formActionOrigin, httpRealm) => {
       // Do checks for null and empty strings, adjust conditions and params
       let [conditions, params] =
-          this._buildConditionsAndParams(hostname, formSubmitURL, httpRealm);
+          this._buildConditionsAndParams(origin, formActionOrigin, httpRealm);
 
       let query = "SELECT COUNT(1) AS numLogins FROM moz_logins";
       if (conditions.length) {
@@ -656,7 +671,7 @@ LoginManagerStorage_mozStorage.prototype = {
       return numLogins;
     };
 
-    let resultLogins = _countLoginsHelper(hostname, formSubmitURL, httpRealm);
+    let resultLogins = _countLoginsHelper(origin, formActionOrigin, httpRealm);
     this.log("_countLogins: counted logins: " + resultLogins);
     return resultLogins;
   },
@@ -679,7 +694,7 @@ LoginManagerStorage_mozStorage.prototype = {
    */
   _getIdForLogin(login) {
     let matchData = { };
-    for (let field of ["hostname", "formSubmitURL", "httpRealm"]) {
+    for (let field of ["origin", "formActionOrigin", "httpRealm"]) {
       if (login[field] != "") {
         matchData[field] = login[field];
       }
@@ -715,21 +730,21 @@ LoginManagerStorage_mozStorage.prototype = {
    * statement being created. This fixes the cases where nulls are involved
    * and the empty string is supposed to be a wildcard match
    */
-  _buildConditionsAndParams(hostname, formSubmitURL, httpRealm) {
+  _buildConditionsAndParams(origin, formActionOrigin, httpRealm) {
     let conditions = [], params = {};
 
-    if (hostname == null) {
+    if (origin == null) {
       conditions.push("hostname isnull");
-    } else if (hostname != "") {
+    } else if (origin != "") {
       conditions.push("hostname = :hostname");
-      params.hostname = hostname;
+      params.hostname = origin;
     }
 
-    if (formSubmitURL == null) {
+    if (formActionOrigin == null) {
       conditions.push("formSubmitURL isnull");
-    } else if (formSubmitURL != "") {
+    } else if (formActionOrigin != "") {
       conditions.push("formSubmitURL = :formSubmitURL OR formSubmitURL = ''");
-      params.formSubmitURL = formSubmitURL;
+      params.formSubmitURL = formActionOrigin;
     }
 
     if (httpRealm == null) {

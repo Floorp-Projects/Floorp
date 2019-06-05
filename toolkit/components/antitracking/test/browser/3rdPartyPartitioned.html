@@ -1,0 +1,21 @@
+<html>
+<head>
+  <title>3rd party content!</title>
+</head>
+<body>
+<h1>Here the 3rd party content!</h1>
+<script>
+
+onmessage = async function(e) {
+  let cb = e.data.cb;
+  let runnableStr = `(() => {return (${cb});})();`;
+  let runnable = eval(runnableStr); // eslint-disable-line no-eval
+
+  let result = await runnable.call(this, this, e.data.value);
+  parent.postMessage(result, "*");
+};
+
+</script>
+</body>
+</html>
+

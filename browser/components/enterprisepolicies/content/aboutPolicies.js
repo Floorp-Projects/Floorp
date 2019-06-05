@@ -280,7 +280,7 @@ function generateDocumentation() {
 }
 
 let gInited = false;
-function init() {
+window.onload = function() {
   if (gInited) {
     return;
   }
@@ -310,7 +310,7 @@ function init() {
       sectionButton.click();
     }
   });
-}
+};
 
 function show(button) {
   let current_tab = document.querySelector(".active");

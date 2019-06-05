@@ -41,11 +41,12 @@ already_AddRefed<nsCookie> nsCookie::Create(
     const nsACString& aName, const nsACString& aValue, const nsACString& aHost,
     const nsACString& aPath, int64_t aExpiry, int64_t aLastAccessed,
     int64_t aCreationTime, bool aIsSession, bool aIsSecure, bool aIsHttpOnly,
-    const OriginAttributes& aOriginAttributes, int32_t aSameSite) {
+    const OriginAttributes& aOriginAttributes, int32_t aSameSite,
+    int32_t aRawSameSite) {
   mozilla::net::CookieStruct cookieData(
       nsCString(aName), nsCString(aValue), nsCString(aHost), nsCString(aPath),
       aExpiry, aLastAccessed, aCreationTime, aIsHttpOnly, aIsSession, aIsSecure,
-      aSameSite);
+      aSameSite, aRawSameSite);
 
   return Create(cookieData, aOriginAttributes);
 }
@@ -60,16 +61,21 @@ already_AddRefed<nsCookie> nsCookie::Create(
   UTF_8_ENCODING->DecodeWithoutBOMHandling(aCookieData.value(),
                                            cookie->mData.value());
 
-  // If the creationTime given to us is higher than the running maximum, update
-  // our maximum.
+  // If the creationTime given to us is higher than the running maximum,
+  // update our maximum.
   if (cookie->mData.creationTime() > gLastCreationTime) {
     gLastCreationTime = cookie->mData.creationTime();
   }
 
-  // If aSameSite is not a sensible value, assume strict
+  // If sameSite is not a sensible value, assume strict
   if (cookie->mData.sameSite() < 0 ||
       cookie->mData.sameSite() > nsICookie::SAMESITE_STRICT) {
     cookie->mData.sameSite() = nsICookie::SAMESITE_STRICT;
+  }
+
+  // If rawSameSite is not a sensible value, assume equal to sameSite.
+  if (!nsCookie::ValidateRawSame(cookie->mData)) {
+    cookie->mData.rawSameSite() = nsICookie::SAMESITE_NONE;
   }
 
   return cookie.forget();
@@ -147,7 +153,11 @@ NS_IMETHODIMP nsCookie::GetLastAccessed(int64_t* aTime) {
   return NS_OK;
 }
 NS_IMETHODIMP nsCookie::GetSameSite(int32_t* aSameSite) {
-  *aSameSite = SameSite();
+  if (mozilla::StaticPrefs::network_cookie_sameSite_laxByDefault()) {
+    *aSameSite = SameSite();
+  } else {
+    *aSameSite = RawSameSite();
+  }
   return NS_OK;
 }
 
@@ -170,6 +180,12 @@ nsCookie::GetExpires(uint64_t* aExpires) {
     *aExpires = Expiry() > 0 ? Expiry() : 1;
   }
   return NS_OK;
+}
+
+// static
+bool nsCookie::ValidateRawSame(const mozilla::net::CookieStruct& aCookieData) {
+  return aCookieData.rawSameSite() == aCookieData.sameSite() ||
+         aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE;
 }
 
 NS_IMPL_ISUPPORTS(nsCookie, nsICookie)

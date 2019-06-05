@@ -9,7 +9,7 @@ add_task(async function test() {
       guid: "70a",
       username: "jared",
       password: "deraj",
-      hostname: "https://www.example.com",
+      origin: "https://www.example.com",
     };
 
     await ContentTask.spawn(browser, TEST_LOGIN, async function(login) {

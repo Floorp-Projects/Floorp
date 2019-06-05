@@ -117,9 +117,9 @@ add_task(async function test_password_engine() {
 
     // Insert a server record that's older, so that we prefer the local one.
     let rec = new LoginRec("passwords", newLogin.guid);
-    rec.formSubmitURL = newLogin.formSubmitURL;
+    rec.formSubmitURL = newLogin.formActionOrigin;
     rec.httpRealm = newLogin.httpRealm;
-    rec.hostname = newLogin.hostname;
+    rec.hostname = newLogin.origin;
     rec.username = newLogin.username;
     rec.password = "sekrit";
     let remotePasswordChangeTime = Date.now() - 1 * 60 * 60 * 24 * 1000;
@@ -147,8 +147,8 @@ add_task(async function test_password_engine() {
     equal(oldLogin.timePasswordChanged, localPasswordChangeTime);
 
     let rec = new LoginRec("passwords", oldLogin.guid);
-    rec.hostname = oldLogin.hostname;
-    rec.formSubmitURL = oldLogin.formSubmitURL;
+    rec.hostname = oldLogin.origin;
+    rec.formSubmitURL = oldLogin.formActionOrigin;
     rec.httpRealm = oldLogin.httpRealm;
     rec.username = oldLogin.username;
     // Change the password and bump the password change time to ensure we prefer

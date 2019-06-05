@@ -9,26 +9,26 @@ const DOMAIN1_HTTP_TO_HTTP_U2_P1 = TestData.formLogin({
   username: "user2",
 });
 const DOMAIN1_HTTPS_TO_HTTPS_U1_P1 = TestData.formLogin({
-  hostname: "https://www3.example.com",
-  formSubmitURL: "https://login.example.com",
+  origin: "https://www3.example.com",
+  formActionOrigin: "https://login.example.com",
 });
 const DOMAIN1_HTTPS_TO_HTTPS_U1_P2 = TestData.formLogin({
-  hostname: "https://www3.example.com",
-  formSubmitURL: "https://login.example.com",
+  origin: "https://www3.example.com",
+  formActionOrigin: "https://login.example.com",
   password: "password two",
 });
 const DOMAIN1_HTTP_TO_HTTP_U1_P2 = TestData.formLogin({
   password: "password two",
 });
 const DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT = TestData.formLogin({
-  hostname: "http://www3.example.com:8080",
+  origin: "http://www3.example.com:8080",
 });
 const DOMAIN2_HTTP_TO_HTTP_U1_P1 = TestData.formLogin({
-  hostname: "http://different.example.com",
+  origin: "http://different.example.com",
 });
 const DOMAIN2_HTTPS_TO_HTTPS_U1_P1 = TestData.formLogin({
-  hostname: "https://different.example.com",
-  formSubmitURL: "https://login.example.com",
+  origin: "https://different.example.com",
+  formActionOrigin: "https://login.example.com",
 });
 
 add_task(function test_shadowHTTPLogins() {
@@ -49,12 +49,12 @@ add_task(function test_shadowHTTPLogins() {
       expected: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTPS_TO_HTTPS_U1_P2],
     },
     {
-      description: "same hostname, different port, different scheme",
+      description: "same origin, different port, different scheme",
       logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT],
       expected: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT],
     },
     {
-      description: "different hostname, different scheme",
+      description: "different origin, different scheme",
       logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN2_HTTP_TO_HTTP_U1_P1],
       expected: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN2_HTTP_TO_HTTP_U1_P1],
     },

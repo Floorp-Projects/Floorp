@@ -24,7 +24,7 @@ export default class LoginListItem extends HTMLElement {
 
   render() {
     this.setAttribute("guid", this._login.guid);
-    this.shadowRoot.querySelector(".hostname").textContent = this._login.hostname;
+    this.shadowRoot.querySelector(".origin").textContent = this._login.origin;
     this.shadowRoot.querySelector(".username").textContent = this._login.username;
   }
 

@@ -8,7 +8,8 @@ const { checkVersionCompatibility } =
   require("devtools/client/shared/remote-debugging/version-checker");
 
 const { RUNTIME_PREFERENCE } = require("../constants");
-const { WorkersListener } = require("./workers-listener");
+const { WorkersListener } =
+  require("devtools/client/shared/workers-listener");
 
 const PREF_TYPES = {
   BOOL: "BOOL",

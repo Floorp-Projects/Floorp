@@ -28,7 +28,7 @@ _PROTO = {}
 def _alpn(self):
     proto = _PROTO.get(self.server_sni)
     if proto is None:
-        return b""
+        return self.server_conn.get_alpn_proto_negotiated()
     if proto.startswith("HTTP/2"):
         return b"h2"
     elif proto.startswith("HTTP/1"):

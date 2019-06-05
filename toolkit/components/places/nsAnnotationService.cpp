@@ -35,30 +35,6 @@ const int32_t nsAnnotationService::kAnnoIndex_Type = 6;
 const int32_t nsAnnotationService::kAnnoIndex_DateAdded = 7;
 const int32_t nsAnnotationService::kAnnoIndex_LastModified = 8;
 
-namespace {
-
-// Fires `onItemChanged` notifications for bookmark annotation changes.
-void NotifyItemChanged(const BookmarkData& aBookmark, const nsACString& aName,
-                       uint16_t aSource, bool aDontUpdateLastModified) {
-  if (aBookmark.id < 0) {
-    return;
-  }
-
-  ItemChangeData changeData;
-  changeData.bookmark = aBookmark;
-  changeData.isAnnotation = true;
-  changeData.updateLastModified = !aDontUpdateLastModified;
-  changeData.source = aSource;
-  changeData.property = aName;
-
-  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-  if (bookmarks) {
-    bookmarks->NotifyItemChanged(changeData);
-  }
-}
-
-}  // namespace
-
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsAnnotationService, gAnnotationService)
 
 NS_IMPL_ISUPPORTS(nsAnnotationService, nsIAnnotationService,
@@ -185,8 +161,6 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId, const nsACString& aName,
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
-
-  NotifyItemChanged(bookmark, aName, aSource, aDontUpdateLastModified);
 
   return NS_OK;
 }
@@ -418,8 +392,6 @@ nsAnnotationService::RemoveItemAnnotation(int64_t aItemId,
   BookmarkData bookmark;
   nsresult rv = RemoveAnnotationInternal(aItemId, &bookmark, aName);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  NotifyItemChanged(bookmark, aName, aSource, false);
 
   return NS_OK;
 }

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const TEST_HOSTNAME = "https://example.com";
+const TEST_ORIGIN = "https://example.com";
 
 // Test with a page that only has a form within an iframe, not in the top-level document
 const IFRAME_PAGE_PATH = "/browser/toolkit/components/passwordmgr/test/browser/form_basic_iframe.html";
@@ -31,7 +31,7 @@ add_task(async function test_initialize() {
 add_task(async function test_context_menu_iframe_fill() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: TEST_HOSTNAME + IFRAME_PAGE_PATH,
+    url: TEST_ORIGIN + IFRAME_PAGE_PATH,
   }, async function(browser) {
     let contextMenuShownPromise = BrowserTestUtils.waitForEvent(window, "popupshown");
     let eventDetails = {type: "contextmenu", button: 2};
@@ -93,7 +93,7 @@ add_task(async function test_context_menu_iframe_fill() {
 add_task(async function test_context_menu_iframe_sandbox() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: TEST_HOSTNAME + IFRAME_PAGE_PATH,
+    url: TEST_ORIGIN + IFRAME_PAGE_PATH,
   }, async function(browser) {
     let contextMenuShownPromise = BrowserTestUtils.waitForEvent(window, "popupshown");
     let eventDetails = {type: "contextmenu", button: 2};
@@ -116,7 +116,7 @@ add_task(async function test_context_menu_iframe_sandbox() {
 add_task(async function test_context_menu_iframe_sandbox_same_origin() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: TEST_HOSTNAME + IFRAME_PAGE_PATH,
+    url: TEST_ORIGIN + IFRAME_PAGE_PATH,
   }, async function(browser) {
     let contextMenuShownPromise = BrowserTestUtils.waitForEvent(window, "popupshown");
     let eventDetails = {type: "contextmenu", button: 2};
@@ -136,7 +136,7 @@ add_task(async function test_context_menu_iframe_sandbox_same_origin() {
 /**
  * Search for a login by it's username.
  *
- * Only unique login/hostname combinations should be used at this test.
+ * Only unique login/origin combinations should be used at this test.
  */
 function getLoginFromUsername(username) {
   return loginList().find(login => login.username == username);
@@ -152,33 +152,33 @@ function getLoginFromUsername(username) {
 function loginList() {
   return [
     LoginTestUtils.testData.formLogin({
-      hostname: "https://example.com",
-      formSubmitURL: "https://example.com",
+      origin: "https://example.com",
+      formActionOrigin: "https://example.com",
       username: "username",
       password: "password",
     }),
     // Same as above but HTTP in order to test de-duping.
     LoginTestUtils.testData.formLogin({
-      hostname: "http://example.com",
-      formSubmitURL: "http://example.com",
+      origin: "http://example.com",
+      formActionOrigin: "http://example.com",
       username: "username",
       password: "password",
     }),
     LoginTestUtils.testData.formLogin({
-      hostname: "http://example.com",
-      formSubmitURL: "http://example.com",
+      origin: "http://example.com",
+      formActionOrigin: "http://example.com",
       username: "username1",
       password: "password1",
     }),
     LoginTestUtils.testData.formLogin({
-      hostname: "https://example.com",
-      formSubmitURL: "https://example.com",
+      origin: "https://example.com",
+      formActionOrigin: "https://example.com",
       username: "username2",
       password: "password2",
     }),
     LoginTestUtils.testData.formLogin({
-      hostname: "http://example.org",
-      formSubmitURL: "http://example.org",
+      origin: "http://example.org",
+      formActionOrigin: "http://example.org",
       username: "username-cross-origin",
       password: "password-cross-origin",
     }),

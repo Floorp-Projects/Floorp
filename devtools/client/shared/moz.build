@@ -59,6 +59,7 @@ DevToolsModules(
     'view-source.js',
     'WeakMapMap.js',
     'webgl-utils.js',
+    'workers-listener.js',
     'zoom-keys.js',
 )
 

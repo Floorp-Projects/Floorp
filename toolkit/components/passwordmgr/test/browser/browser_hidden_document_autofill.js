@@ -66,8 +66,8 @@ function observeMasterPasswordDialog(window, result) {
 add_task(async function setup() {
   Services.logins.removeAllLogins();
   let login = LoginTestUtils.testData.formLogin({
-    hostname: "http://example.org",
-    formSubmitURL: "http://example.org",
+    origin: "http://example.org",
+    formActionOrigin: "http://example.org",
     username: "user1",
     password: "pass1",
   });
