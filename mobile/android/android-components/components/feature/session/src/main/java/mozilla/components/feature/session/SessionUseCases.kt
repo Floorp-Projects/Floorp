@@ -178,17 +178,36 @@ class SessionUseCases(
 
     /**
      * Tries to recover from a crash by restoring the last know state.
+     *
+     * Executing this use case on a [Session] will clear the [Session.crashed] flag.
      */
     class CrashRecoveryUseCase internal constructor(
         private val sessionManager: SessionManager
     ) {
-        fun invoke(session: Session): Boolean {
-            val recovered = sessionManager.getOrCreateEngineSession(session)
-                .recoverFromCrash()
+        /**
+         * Tries to recover the state of the provided [Session].
+         */
+        fun invoke(session: Session): Boolean = invoke(listOf(session))
 
-            session.crashed = false
+        /**
+         * Tries to recover the state of all crashed [Session]s (with [Session.crashed] flag set).
+         */
+        fun invoke(): Boolean {
+            return invoke(sessionManager.sessions.filter { it.crashed })
+        }
 
-            return recovered
+        /**
+         * Tries to recover the state of all [sessions].
+         */
+        fun invoke(sessions: List<Session>): Boolean {
+            return sessions.fold(true) { recovered, session ->
+                val sessionRecovered = sessionManager.getOrCreateEngineSession(session)
+                    .recoverFromCrash()
+
+                session.crashed = false
+
+                sessionRecovered && recovered
+            }
         }
     }
 

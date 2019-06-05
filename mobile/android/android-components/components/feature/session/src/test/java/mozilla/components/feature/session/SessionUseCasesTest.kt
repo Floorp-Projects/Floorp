@@ -231,4 +231,52 @@ class SessionUseCasesTest {
         verify(engineSession).recoverFromCrash()
         verify(session).crashed = false
     }
+
+    @Test
+    fun `CrashRecoveryUseCase will restore list of crashed sessions`() {
+        val engineSession1 = mock(EngineSession::class.java)
+        doReturn(true).`when`(engineSession1).recoverFromCrash()
+
+        val engineSession2 = mock(EngineSession::class.java)
+        doReturn(true).`when`(engineSession2).recoverFromCrash()
+
+        val session1 = mock(Session::class.java)
+        `when`(sessionManager.getOrCreateEngineSession(session1)).thenReturn(engineSession1)
+
+        val session2 = mock(Session::class.java)
+        `when`(sessionManager.getOrCreateEngineSession(session2)).thenReturn(engineSession2)
+
+        assertTrue(useCases.crashRecovery.invoke(listOf(session1, session2)))
+
+        verify(engineSession1).recoverFromCrash()
+        verify(engineSession2).recoverFromCrash()
+        verify(session1).crashed = false
+        verify(session2).crashed = false
+    }
+
+    @Test
+    fun `CrashRecoveryUseCase will restore crashed sessions`() {
+        val engineSession1 = mock(EngineSession::class.java)
+        doReturn(true).`when`(engineSession1).recoverFromCrash()
+
+        val engineSession2 = mock(EngineSession::class.java)
+        doReturn(true).`when`(engineSession2).recoverFromCrash()
+
+        val session1 = mock(Session::class.java)
+        `when`(sessionManager.getOrCreateEngineSession(session1)).thenReturn(engineSession1)
+        doReturn(true).`when`(session1).crashed
+
+        val session2 = mock(Session::class.java)
+        doReturn(false).`when`(session2).crashed
+        `when`(sessionManager.getOrCreateEngineSession(session2)).thenReturn(engineSession2)
+
+        doReturn(listOf(session1, session2)).`when`(sessionManager).sessions
+
+        assertTrue(useCases.crashRecovery.invoke())
+
+        verify(engineSession1).recoverFromCrash()
+        verify(engineSession2, never()).recoverFromCrash()
+        verify(session1).crashed = false
+        verify(session2, never()).crashed = false
+    }
 }
