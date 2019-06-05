@@ -35,6 +35,7 @@ class TurnOnSyncFragment : PreferenceFragmentCompat(), AccountObserver {
         super.onResume()
         if (requireComponents.backgroundServices.accountManager.authenticatedAccount() != null) {
             findNavController(this).popBackStack()
+            return
         }
 
         requireComponents.backgroundServices.accountManager.register(this, owner = this)
