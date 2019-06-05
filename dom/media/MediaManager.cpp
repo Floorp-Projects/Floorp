@@ -329,8 +329,9 @@ class SourceListener : public SupportsWeakPtr<SourceListener> {
    * the weak reference to the associated window listener.
    * This will also tell the window listener to remove its hard reference to
    * this SourceListener, so any caller will need to keep its own hard ref.
+   * We enforce this by requiring a reference to a hard ref.
    */
-  void Stop();
+  void Stop(const RefPtr<SourceListener>& self);
 
   /**
    * Posts a task to stop the device associated with aTrackID and notifies the
@@ -338,8 +339,9 @@ class SourceListener : public SupportsWeakPtr<SourceListener> {
    * Should this track be the last live one to be stopped, we'll also call Stop.
    * This might tell the window listener to remove its hard reference to this
    * SourceListener, so any caller will need to keep its own hard ref.
+   * We enforce this by requiring a reference to a hard ref.
    */
-  void StopTrack(TrackID aTrackID);
+  void StopTrack(const RefPtr<SourceListener>& self, TrackID aTrackID);
 
   /**
    * Gets the main thread MediaTrackSettings from the MediaEngineSource
@@ -503,12 +505,15 @@ class GetUserMediaWindowListener {
   void RemoveAll() {
     MOZ_ASSERT(NS_IsMainThread());
 
-    for (auto& l : nsTArray<RefPtr<SourceListener>>(mInactiveListeners)) {
+    // Shallow copy since SourceListener::Stop() will modify the arrays.
+    nsTArray<RefPtr<SourceListener>> listeners(mInactiveListeners.Length() +
+                                               mActiveListeners.Length());
+    listeners.AppendElements(mInactiveListeners);
+    listeners.AppendElements(mActiveListeners);
+    for (auto& l : listeners) {
       Remove(l);
     }
-    for (auto& l : nsTArray<RefPtr<SourceListener>>(mActiveListeners)) {
-      Remove(l);
-    }
+
     MOZ_ASSERT(mInactiveListeners.Length() == 0);
     MOZ_ASSERT(mActiveListeners.Length() == 0);
 
@@ -539,11 +544,6 @@ class GetUserMediaWindowListener {
     mgr->RemoveWindowID(mWindowID);
   }
 
-  /**
-   * Removes a listener from our lists. This removes its hard reference, so any
-   * caller will need to keep its own hard ref, and ideally iterate on a copy
-   * of the list to avoid accidentally missing entries.
-   */
   bool Remove(const RefPtr<SourceListener>& aListener) {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -551,6 +551,7 @@ class GetUserMediaWindowListener {
         !mActiveListeners.RemoveElement(aListener)) {
       return false;
     }
+
     MOZ_ASSERT(!mInactiveListeners.Contains(aListener),
                "A SourceListener should only be once in one of "
                "mInactiveListeners and mActiveListeners");
@@ -560,7 +561,7 @@ class GetUserMediaWindowListener {
 
     LOG("GUMWindowListener %p stopping SourceListener %p.", this,
         aListener.get());
-    aListener->Stop();
+    aListener->Stop(aListener);
 
     if (MediaDevice* removedDevice = aListener->GetVideoDevice()) {
       bool revokeVideoPermission = true;
@@ -621,6 +622,7 @@ class GetUserMediaWindowListener {
           this);
       RemoveAll();
     }
+
     return true;
   }
 
@@ -1173,7 +1175,7 @@ class GetUserMediaStreamRunnable : public Runnable {
 
         void Stop() override {
           if (mListener) {
-            mListener->StopTrack(mTrackID);
+            mListener->StopTrack(RefPtr<SourceListener>(mListener), mTrackID);
             mListener = nullptr;
           }
         }
@@ -4196,7 +4198,7 @@ SourceListener::InitializeAsync() {
           });
 }
 
-void SourceListener::Stop() {
+void SourceListener::Stop(const RefPtr<SourceListener>& self) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
   // StopSharing() has some special logic, at least for audio capture.
@@ -4213,13 +4215,13 @@ void SourceListener::Stop() {
   if (mAudioDeviceState) {
     mAudioDeviceState->mDisableTimer->Cancel();
     if (!mAudioDeviceState->mStopped) {
-      StopTrack(kAudioTrack);
+      StopTrack(self, kAudioTrack);
     }
   }
   if (mVideoDeviceState) {
     mVideoDeviceState->mDisableTimer->Cancel();
     if (!mVideoDeviceState->mStopped) {
-      StopTrack(kVideoTrack);
+      StopTrack(self, kVideoTrack);
     }
   }
 
@@ -4227,7 +4229,8 @@ void SourceListener::Stop() {
   mWindowListener = nullptr;
 }
 
-void SourceListener::StopTrack(TrackID aTrackID) {
+void SourceListener::StopTrack(const RefPtr<SourceListener>& self,
+                               TrackID aTrackID) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
   MOZ_ASSERT(Activated(), "No device to stop");
   MOZ_ASSERT(aTrackID == kAudioTrack || aTrackID == kVideoTrack,
@@ -4256,7 +4259,7 @@ void SourceListener::StopTrack(TrackID aTrackID) {
   if ((!mAudioDeviceState || mAudioDeviceState->mStopped) &&
       (!mVideoDeviceState || mVideoDeviceState->mStopped)) {
     LOG("SourceListener %p this was the last track stopped", this);
-    Stop();
+    Stop(self);
   }
 }
 
@@ -4402,7 +4405,7 @@ void SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable) {
                 // Starting the device failed. Stopping the track here will make
                 // the MediaStreamTrack end after a pass through the
                 // MediaStreamGraph.
-                StopTrack(aTrackID);
+                StopTrack(self, aTrackID);
               } else {
                 // Stopping the device failed. This is odd, but not fatal.
                 MOZ_ASSERT_UNREACHABLE("The device should be stoppable");
@@ -4454,7 +4457,7 @@ void SourceListener::StopSharing() {
     // We want to stop the whole stream if there's no audio;
     // just the video track if we have both.
     // StopTrack figures this out for us.
-    StopTrack(kVideoTrack);
+    StopTrack(self, kVideoTrack);
   }
   if (mAudioDeviceState && mAudioDeviceState->mDevice->GetMediaSource() ==
                                MediaSourceEnum::AudioCapture) {
@@ -4602,29 +4605,33 @@ DeviceState& SourceListener::GetDeviceStateFor(TrackID aTrackID) const {
 void GetUserMediaWindowListener::StopSharing() {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
-  for (auto& l : nsTArray<RefPtr<SourceListener>>(mActiveListeners)) {
-    l->StopSharing();
+  for (auto& source : mActiveListeners) {
+    source->StopSharing();
   }
 }
 
 void GetUserMediaWindowListener::StopRawID(const nsString& removedDeviceID) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
-  for (auto& source : nsTArray<RefPtr<SourceListener>>(mActiveListeners)) {
+  nsTArray<Pair<RefPtr<SourceListener>, TrackID>> matches;
+  for (auto& source : mActiveListeners) {
     if (source->GetAudioDevice()) {
       nsString id;
       source->GetAudioDevice()->GetRawId(id);
       if (removedDeviceID.Equals(id)) {
-        source->StopTrack(kAudioTrack);
+        matches.AppendElement(MakePair(source, TrackID(kAudioTrack)));
       }
     }
     if (source->GetVideoDevice()) {
       nsString id;
       source->GetVideoDevice()->GetRawId(id);
       if (removedDeviceID.Equals(id)) {
-        source->StopTrack(kVideoTrack);
+        matches.AppendElement(MakePair(source, TrackID(kVideoTrack)));
       }
     }
+  }
+  for (auto& pair : matches) {
+    pair.first()->StopTrack(pair.first(), pair.second());
   }
 }
 
