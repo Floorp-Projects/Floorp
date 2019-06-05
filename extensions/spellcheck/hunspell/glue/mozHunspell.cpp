@@ -212,30 +212,12 @@ NS_IMETHODIMP mozHunspell::SetPersonalDictionary(
   return NS_OK;
 }
 
-NS_IMETHODIMP mozHunspell::GetDictionaryList(char16_t*** aDictionaries,
-                                             uint32_t* aCount) {
-  if (!aDictionaries || !aCount) return NS_ERROR_NULL_POINTER;
-
-  uint32_t count = 0;
-  char16_t** dicts =
-      (char16_t**)moz_xmalloc(sizeof(char16_t*) * mDictionaries.Count());
-
+NS_IMETHODIMP mozHunspell::GetDictionaryList(
+    nsTArray<nsString>& aDictionaries) {
+  MOZ_ASSERT(aDictionaries.IsEmpty());
   for (auto iter = mDictionaries.Iter(); !iter.Done(); iter.Next()) {
-    dicts[count] = ToNewUnicode(iter.Key());
-    if (!dicts[count]) {
-      while (count) {
-        --count;
-        free(dicts[count]);
-      }
-      free(dicts);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    ++count;
+    aDictionaries.AppendElement(iter.Key());
   }
-
-  *aDictionaries = dicts;
-  *aCount = count;
 
   return NS_OK;
 }

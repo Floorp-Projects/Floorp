@@ -33,7 +33,7 @@ interface mozISpellCheckingEngine : nsISupports {
   /**
    * Get the list of dictionaries
    */
-  void getDictionaryList([array, size_is(count)] out wstring dictionaries, out uint32_t count);
+  Array<AString> getDictionaryList();
 
   /**
    * check a word
