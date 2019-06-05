@@ -896,6 +896,12 @@ def provided_program(env_var):
     return provided
 
 
+def prepare_flags(host_or_target, macos_sdk):
+    if macos_sdk and host_or_target.os == 'OSX':
+        return ['-isysroot', macos_sdk]
+    return []
+
+
 @template
 def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
              other_c_compiler=None):
@@ -974,8 +980,8 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
         else:
             flags = []
 
-        if not flags and macos_sdk and host_or_target.os == 'OSX':
-            flags = ['-isysroot', macos_sdk]
+        if not flags:
+            flags = prepare_flags(host_or_target, macos_sdk)
 
         info = check_compiler(wrapper + [compiler] + flags, language,
                               host_or_target)
