@@ -30,9 +30,6 @@ import org.mozilla.fenix.GleanMetrics.Library
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
-import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.utils.Settings
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -251,11 +248,6 @@ class GleanMetricsService(private val context: Context) : MetricsService {
                 defaultBrowser.set(Browsers.all(context).isDefaultBrowser)
                 defaultMozBrowser.set(MozillaProductDetector.getMozillaBrowserDefault(context) ?: "")
                 mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
-
-                val syncItemsKey = context.getPreferenceKey(R.string.pref_key_sync_syncing_items)
-                Settings.getInstance(context).preferences.getStringSet(syncItemsKey, setOf())?.toList()?.let {
-                    syncingItems.set(it)
-                }
             }
 
             SearchDefaultEngine.apply {

@@ -30,7 +30,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.utils.Settings
 import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
 
@@ -205,9 +204,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
                 }
             }
         }
-
-        Settings.getInstance(context!!).preferences.edit()
-            .putStringSet(context!!.getPreferenceKey(R.string.pref_key_sync_syncing_items), stringSet).apply()
     }
 
     fun updateLastSyncedTimePref(context: Context, pref: Preference, failed: Boolean = false) {
