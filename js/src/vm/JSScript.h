@@ -762,17 +762,15 @@ class ScriptSource {
   }
 
  private:
+  template <typename Unit>
   struct UncompressedDataMatcher {
-    template <typename Unit>
-    const void* operator()(const Uncompressed<Unit>& u) {
-      return u.units();
-    }
+    const Unit* operator()(const Uncompressed<Unit>& u) { return u.units(); }
 
     template <typename T>
-    const void* operator()(const T&) {
+    const Unit* operator()(const T&) {
       MOZ_CRASH(
-          "attempting to access uncompressed data in a "
-          "ScriptSource not containing it");
+          "attempting to access uncompressed data in a ScriptSource not "
+          "containing it");
       return nullptr;
     }
   };
@@ -780,12 +778,12 @@ class ScriptSource {
  public:
   template <typename Unit>
   const Unit* uncompressedData() {
-    return static_cast<const Unit*>(data.match(UncompressedDataMatcher()));
+    return data.match(UncompressedDataMatcher<Unit>());
   }
 
  private:
+  template <typename Unit>
   struct CompressedDataMatcher {
-    template <typename Unit>
     char* operator()(const Compressed<Unit>& c) {
       return const_cast<char*>(c.raw.chars());
     }
@@ -793,8 +791,8 @@ class ScriptSource {
     template <typename T>
     char* operator()(const T&) {
       MOZ_CRASH(
-          "attempting to access compressed data in a ScriptSource "
-          "not containing it");
+          "attempting to access compressed data in a ScriptSource not "
+          "containing it");
       return nullptr;
     }
   };
@@ -802,7 +800,7 @@ class ScriptSource {
  public:
   template <typename Unit>
   char* compressedData() {
-    return data.match(CompressedDataMatcher());
+    return data.match(CompressedDataMatcher<Unit>());
   }
 
  private:
