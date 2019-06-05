@@ -1570,9 +1570,9 @@ function OnProcessCrashed(subject, topic, data)
     var id;
     subject = subject.QueryInterface(Ci.nsIPropertyBag2);
     if (topic == "plugin-crashed") {
-        id = subject.getPropertyAsAString("pluginDumpID");
+        id = subject.get("pluginDumpID");
     } else if (topic == "ipc:content-shutdown") {
-        id = subject.getPropertyAsAString("dumpID");
+        id = subject.get("dumpID");
     }
     if (id) {
         g.expectedCrashDumpFiles.push(id + ".dmp");
