@@ -27,20 +27,20 @@ add_task(async function test_contextMenuAddAndRemoveLogins() {
   const DOCUMENT_CONTENT = "<form><input id='pw' type=password></form>";
   const INPUT_QUERY = "input[type='password']";
 
-  let testHostnames = [
+  let testOrigins = [
     "http://www.example.com",
     "http://www2.example.com",
     "http://www3.example.com",
     "http://empty.example.com",
   ];
 
-  for (let hostname of testHostnames) {
-    info("test for hostname: " + hostname);
+  for (let origin of testOrigins) {
+    info("test for origin: " + origin);
     // Get expected logins for this test.
-    let logins = getExpectedLogins(hostname);
+    let logins = getExpectedLogins(origin);
 
     // Create the logins menuitems fragment.
-    let {fragment, document} = createLoginsFragment(hostname, DOCUMENT_CONTENT, INPUT_QUERY);
+    let {fragment, document} = createLoginsFragment(origin, DOCUMENT_CONTENT, INPUT_QUERY);
 
     if (!logins.length) {
       Assert.ok(fragment === null, "Null returned. No logins where found.");
@@ -129,10 +129,10 @@ function checkLoginItems(logins, items) {
 }
 
 /**
- * Gets the list of expected logins for a hostname.
+ * Gets the list of expected logins for an origin.
  */
-function getExpectedLogins(hostname) {
-  return Services.logins.getAllLogins().filter(entry => entry.hostname === hostname);
+function getExpectedLogins(origin) {
+  return Services.logins.getAllLogins().filter(entry => entry.origin === origin);
 }
 
 function loginList() {

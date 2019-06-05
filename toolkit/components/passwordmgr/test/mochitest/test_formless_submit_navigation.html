@@ -50,8 +50,8 @@ const TESTCASES = [
     document: `<input type=password value="pass1">`,
 
     // Expected outputs similar to PasswordManager:onFormSubmit
-    hostname: DEFAULT_ORIGIN,
-    formSubmitURL: DEFAULT_ORIGIN,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: null,
     newPasswordFieldValue: "pass1",
     oldPasswordFieldValue: null,
@@ -60,8 +60,8 @@ const TESTCASES = [
     document: `<input value="user1">
       <input type=password value="pass1">`,
 
-    hostname: DEFAULT_ORIGIN,
-    formSubmitURL: DEFAULT_ORIGIN,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
     newPasswordFieldValue: "pass1",
     oldPasswordFieldValue: null,
@@ -71,8 +71,8 @@ const TESTCASES = [
       <input type=password value="pass1">
       <input type=password value="pass2">`,
 
-    hostname: DEFAULT_ORIGIN,
-    formSubmitURL: DEFAULT_ORIGIN,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
     newPasswordFieldValue: "pass2",
     oldPasswordFieldValue: "pass1",
@@ -83,8 +83,8 @@ const TESTCASES = [
       <input type=password value="pass2">
       <input type=password value="pass2">`,
 
-    hostname: DEFAULT_ORIGIN,
-    formSubmitURL: DEFAULT_ORIGIN,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
     newPasswordFieldValue: "pass2",
     oldPasswordFieldValue: "pass1",
@@ -102,8 +102,8 @@ const TESTCASES = [
         <input type=password value="ignore-form-submission">
       </form>`,
 
-    hostname: DEFAULT_ORIGIN,
-    formSubmitURL: DEFAULT_ORIGIN,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "user1",
     newPasswordFieldValue: "pass1",
     oldPasswordFieldValue: null,
@@ -117,8 +117,8 @@ const TESTCASES = [
         <input type=password value="pass2">
       </form>`,
 
-    hostname: DEFAULT_ORIGIN,
-    formSubmitURL: DEFAULT_ORIGIN,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: null,
     newPasswordFieldValue: "pass2",
     oldPasswordFieldValue: null,
@@ -130,8 +130,8 @@ const TESTCASES = [
       <input type=password value="pass1">
       <input name="recipepword" type=password value="pass2">`,
 
-    hostname: DEFAULT_ORIGIN,
-    formSubmitURL: DEFAULT_ORIGIN,
+    origin: DEFAULT_ORIGIN,
+    formActionOrigin: DEFAULT_ORIGIN,
     usernameFieldValue: "username from recipe",
     newPasswordFieldValue: "pass2",
     oldPasswordFieldValue: null,
@@ -200,8 +200,8 @@ add_task(async function test() {
         let submittedResult = await processedPromise;
 
         // Check data sent via PasswordManager:onFormSubmit
-        is(submittedResult.hostname, tc.hostname, "Check hostname");
-        is(submittedResult.formSubmitURL, tc.formSubmitURL, "Check formSubmitURL");
+        is(submittedResult.origin, tc.origin, "Check origin");
+        is(submittedResult.formActionOrigin, tc.formActionOrigin, "Check formActionOrigin");
 
         if (tc.usernameFieldValue === null) {
           is(submittedResult.usernameField, tc.usernameFieldValue, "Check usernameField");

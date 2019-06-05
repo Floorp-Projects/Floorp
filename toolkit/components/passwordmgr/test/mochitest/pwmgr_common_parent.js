@@ -69,10 +69,10 @@ function dumpLogins() {
 
 function dumpLogin(label, login) {
   var loginText = "";
-  loginText += "host: ";
-  loginText += login.hostname;
-  loginText += " / formURL: ";
-  loginText += login.formSubmitURL;
+  loginText += "origin: ";
+  loginText += login.origin;
+  loginText += " / formActionOrigin: ";
+  loginText += login.formActionOrigin;
   loginText += " / realm: ";
   loginText += login.httpRealm;
   loginText += " / user: ";

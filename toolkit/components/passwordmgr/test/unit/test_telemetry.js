@@ -38,7 +38,7 @@ const StatisticsTestData = [
   },
   {
     timeLastUsed: daysBeforeMs(7),
-    formSubmitURL: null,
+    formActionOrigin: null,
     httpRealm: "The HTTP Realm",
   },
   {
@@ -113,7 +113,7 @@ add_task(function test_initialize() {
 
   let uniqueNumber = 1;
   for (let loginModifications of StatisticsTestData) {
-    loginModifications.hostname = `http://${uniqueNumber++}.example.com`;
+    loginModifications.origin = `http://${uniqueNumber++}.example.com`;
     Services.logins.addLogin(TestData.formLogin(loginModifications));
   }
 });

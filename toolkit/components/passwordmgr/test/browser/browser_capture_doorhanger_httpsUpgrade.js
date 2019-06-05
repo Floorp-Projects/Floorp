@@ -26,7 +26,7 @@ add_task(async function test_httpsUpgradeCaptureFields_noChange() {
   logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login still");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.hostname, "http://example.com", "Check the hostname is unchanged");
+  is(login.origin, "http://example.com", "Check the origin is unchanged");
   is(login.username, "notifyu1", "Check the username is unchanged");
   is(login.password, "notifyp1", "Check the password is unchanged");
   is(login.timesUsed, 2, "Check times used increased");
@@ -57,8 +57,8 @@ add_task(async function test_httpsUpgradeCaptureFields_changePW() {
   logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login still");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-  is(login.hostname, "https://example.com", "Check the hostname is upgraded");
-  is(login.formSubmitURL, "https://example.com", "Check the formSubmitURL is upgraded");
+  is(login.origin, "https://example.com", "Check the origin is upgraded");
+  is(login.formActionOrigin, "https://example.com", "Check the formActionOrigin is upgraded");
   is(login.username, "notifyu1", "Check the username is unchanged");
   is(login.password, "pass2", "Check the password changed");
   is(login.timesUsed, 2, "Check times used increased");
@@ -142,7 +142,7 @@ add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
   is(logins.length, 2, "Should have both HTTP and HTTPS still");
 
   let httpsLogins = LoginHelper.searchLoginsWithObject({
-    hostname: "https://example.com",
+    origin: "https://example.com",
   });
   is(httpsLogins.length, 1, "Check https logins count");
   let httpsLogin = httpsLogins[0].QueryInterface(Ci.nsILoginMetaInfo);
@@ -150,7 +150,7 @@ add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
   is(httpsLogin.timesUsed, 1, "Check times used");
 
   let httpLogins = LoginHelper.searchLoginsWithObject({
-    hostname: "http://example.com",
+    origin: "http://example.com",
   });
   is(httpLogins.length, 1, "Check http logins count");
   let httpLogin = httpLogins[0].QueryInterface(Ci.nsILoginMetaInfo);

@@ -17,35 +17,35 @@ const DOMAIN1_HTTP_TO_HTTP_U3_P1 = TestData.formLogin({
   username: "user3",
 });
 const DOMAIN1_HTTPS_TO_HTTPS_U1_P1 = TestData.formLogin({
-  hostname: DOMAIN1_HTTPS_ORIGIN,
-  formSubmitURL: "https://login.example.com",
+  origin: DOMAIN1_HTTPS_ORIGIN,
+  formActionOrigin: "https://login.example.com",
 });
 const DOMAIN1_HTTPS_TO_HTTPS_U2_P1 = TestData.formLogin({
-  hostname: DOMAIN1_HTTPS_ORIGIN,
-  formSubmitURL: "https://login.example.com",
+  origin: DOMAIN1_HTTPS_ORIGIN,
+  formActionOrigin: "https://login.example.com",
   username: "user2",
 });
 const DOMAIN1_HTTPS_TO_HTTPS_U1_P2 = TestData.formLogin({
-  hostname: DOMAIN1_HTTPS_ORIGIN,
-  formSubmitURL: "https://login.example.com",
+  origin: DOMAIN1_HTTPS_ORIGIN,
+  formActionOrigin: "https://login.example.com",
   password: "password two",
 });
 const DOMAIN1_HTTPS_TO_HTTPS_U1_P2_DIFFERENT_PORT = TestData.formLogin({
-  hostname: "https://www3.example.com:8080",
+  origin: "https://www3.example.com:8080",
   password: "password two",
 });
 const DOMAIN1_HTTP_TO_HTTP_U1_P2 = TestData.formLogin({
   password: "password two",
 });
 const DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT = TestData.formLogin({
-  hostname: "http://www3.example.com:8080",
+  origin: "http://www3.example.com:8080",
 });
 const DOMAIN2_HTTP_TO_HTTP_U1_P1 = TestData.formLogin({
-  hostname: "http://different.example.com",
+  origin: "http://different.example.com",
 });
 const DOMAIN2_HTTPS_TO_HTTPS_U1_P1 = TestData.formLogin({
-  hostname: "https://different.example.com",
-  formSubmitURL: "https://login.example.com",
+  origin: "https://different.example.com",
+  formActionOrigin: "https://login.example.com",
 });
 
 add_task(function setup() {
@@ -92,25 +92,25 @@ add_task(async function test_searchAndDedupeLogins_acceptDifferentSubdomains() {
       expected: [],
     },
     {
-      description: "HTTPS form, same hostname, different port, both schemes",
+      description: "HTTPS form, same origin, different port, both schemes",
       formActionOrigin: DOMAIN1_HTTPS_ORIGIN,
       logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT, DOMAIN1_HTTPS_TO_HTTPS_U1_P2_DIFFERENT_PORT],
       expected: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTPS_TO_HTTPS_U1_P2_DIFFERENT_PORT],
     },
     {
-      description: "HTTP form, same hostname, different port, both schemes",
+      description: "HTTP form, same origin, different port, both schemes",
       formActionOrigin: DOMAIN1_HTTP_ORIGIN,
       logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT, DOMAIN1_HTTPS_TO_HTTPS_U1_P2_DIFFERENT_PORT],
       expected: [DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT],
     },
     {
-      description: "HTTPS form, different hostname, different scheme",
+      description: "HTTPS form, different origin, different scheme",
       formActionOrigin: DOMAIN1_HTTPS_ORIGIN,
       logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN2_HTTP_TO_HTTP_U1_P1],
       expected: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1],
     },
     {
-      description: "HTTP form, different hostname, different scheme",
+      description: "HTTP form, different origin, different scheme",
       formActionOrigin: DOMAIN1_HTTP_ORIGIN,
       logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN2_HTTP_TO_HTTP_U1_P1],
       expected: [DOMAIN2_HTTP_TO_HTTP_U1_P1],
