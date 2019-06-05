@@ -274,6 +274,7 @@ windows-aarch64-tests:
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
+    - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
@@ -323,7 +324,7 @@ macosx1014-64-tests:
     - mochitest-devtools-webreplay
     - mochitest-gpu
     # - mochitest-media
-    - mochitest-webgl1-core
+    # - mochitest-webgl1-core
     # - mochitest-webgl1-ext
     # - mochitest-webgl2-core
     # - mochitest-webgl2-ext test  # timeouts
