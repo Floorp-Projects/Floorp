@@ -488,7 +488,7 @@ pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 // Pref to control whether we use a separate privileged content process
 // for certain mozilla webpages (which are listed in the pref
 // browser.tabs.remote.separatedMozillaDomains).
-pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", true);
+pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
 #endif
 
 #ifdef NIGHTLY_BUILD
