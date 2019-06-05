@@ -175,12 +175,13 @@ class DebuggerWeakMap
     return ok;
   }
 
-  // Remove entries whose keys satisfy the given predicate.
+  // Remove all entries for which test(key, value) returns true.
   template <typename Predicate>
   void removeIf(Predicate test) {
     for (Enum e(*static_cast<Base*>(this)); !e.empty(); e.popFront()) {
       JSObject* key = e.front().key();
-      if (test(key)) {
+      JSObject* value = e.front().value();
+      if (test(key, value)) {
         e.removeFront();
       }
     }
@@ -519,6 +520,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * regardless of whether the frame is currently suspended. (This list is
    * meant to explain why we update the table in the particular places where
    * we do so.)
+   *
+   * An entry in this table exists if and only if the Debugger.Frame's
+   * GENERATOR_INFO_SLOT is set.
    */
   typedef DebuggerWeakMap<JSObject*> GeneratorWeakMap;
   GeneratorWeakMap generatorFrames;
@@ -1445,6 +1449,20 @@ class DebuggerFrame : public NativeObject {
     ARGUMENTS_SLOT,
     ONSTEP_HANDLER_SLOT,
     ONPOP_HANDLER_SLOT,
+
+    // If this is a frame for a generator call, and the generator object has
+    // been created (which doesn't happen until after default argument
+    // evaluation and destructuring), then this is a PrivateValue pointing to a
+    // GeneratorInfo struct that points to the call's AbstractGeneratorObject.
+    // This allows us to implement Debugger.Frame methods even while the call is
+    // suspended, and we have no FrameIter::Data.
+    //
+    // While Debugger::generatorFrames maps an AbstractGeneratorObject to its
+    // Debugger.Frame, this link represents the reverse relation, from a
+    // Debugger.Frame to its generator object. This slot is set if and only if
+    // there is a corresponding entry in generatorFrames.
+    GENERATOR_INFO_SLOT,
+
     RESERVED_SLOTS,
   };
 
@@ -1500,6 +1518,15 @@ class DebuggerFrame : public NativeObject {
   OnStepHandler* onStepHandler() const;
   OnPopHandler* onPopHandler() const;
   void setOnPopHandler(OnPopHandler* handler);
+
+  bool setGenerator(JSContext* cx,
+                    Handle<AbstractGeneratorObject*> unwrappedGenObj);
+  bool hasGenerator() const;
+  void clearGenerator(FreeOp* fop);
+
+  // If hasGenerator(), return an direct cross-compartment reference to this
+  // Debugger.Frame's generator object.
+  AbstractGeneratorObject& unwrappedGenerator() const;
 
   /*
    * Called after a generator/async frame is resumed, before exposing this
@@ -1562,6 +1589,10 @@ class DebuggerFrame : public NativeObject {
   void freeFrameIterData(FreeOp* fop);
   void maybeDecrementFrameScriptStepperCount(FreeOp* fop,
                                              AbstractFramePtr frame);
+
+ private:
+  class GeneratorInfo;
+  inline GeneratorInfo* generatorInfo() const;
 };
 
 class DebuggerObject : public NativeObject {
