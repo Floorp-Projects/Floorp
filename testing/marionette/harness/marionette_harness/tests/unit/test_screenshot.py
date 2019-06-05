@@ -8,9 +8,7 @@ import base64
 import hashlib
 import imghdr
 import struct
-import sys
 import tempfile
-import unittest
 import urllib
 
 from marionette_driver import By
@@ -204,7 +202,6 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.marionette.switch_to_window(self.start_window)
 
     @skip_if_mobile("Fennec doesn't support other chrome windows")
-    @unittest.skipIf(sys.platform.startswith("linux"), "Bug 1504201")
     def test_formats(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
