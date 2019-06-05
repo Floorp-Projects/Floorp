@@ -55,7 +55,7 @@ data class LabeledMetricType<T>(
         //   this.is-not-fine
         //   this.$isnotfine
 
-        private const val MAX_LABEL_LENGTH = 30
+        private const val MAX_LABEL_LENGTH = 61
     }
 
     private val seenLabels: MutableSet<String> = mutableSetOf()
