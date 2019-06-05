@@ -660,15 +660,29 @@ void GCMarker::forgetWeakMap(WeakMapBase* map, Zone* zone) {
 // 'delegate' is no longer the delegate of 'key'.
 void GCMarker::severWeakDelegate(JSObject* key, JSObject* delegate) {
   JS::Zone* zone = delegate->zone();
-  auto p = zone->gcWeakKeys(delegate).get(delegate);
-  if (p) {
-    EraseIf(p->value, [this, key](const WeakMarkable& markable) -> bool {
-      if (markable.key != key) {
-        return false;
+  bool found = true;
+  while (found) {
+    found = false;
+    auto p = zone->gcWeakKeys(delegate).get(delegate);
+    if (!p) {
+      // The key may not even be in the weak key table, eg if it was already
+      // marked when marking the map.
+      break;
+    }
+
+    for (auto i = p->value.begin(); i != p->value.end(); i++) {
+      if (i->key == key) {
+        WeakMapBase* weakmap = i->weakmap;
+        p->value.erase(i);
+        // Warning: the key and delegate can be same-zone (even though they're
+        // different-compartment). This line will insert into the weak keys
+        // table and so can invalidate the pointer |p| on a rehash. So redo the
+        // lookup after each one of these.
+        weakmap->postSeverDelegate(this, key);
+        found = true;
+        break;
       }
-      markable.weakmap->postSeverDelegate(this, key, key->compartment());
-      return true;
-    });
+    }
   }
 }
 
