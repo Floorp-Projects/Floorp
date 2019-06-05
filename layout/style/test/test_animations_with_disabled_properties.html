@@ -19,12 +19,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265611
 SimpleTest.waitForExplicitFinish();
 
 /*
- * This test relies on the fact that the -webkit-text-fill-color property
- * is disabled by the layout.css.prefixes.webkit pref. If we ever remove that
- * pref we will need to substitute some other pref:property combination.
+ * This test relies on the fact that the -webkit-line-clamp property
+ * is disabled by the layout.css.webkit-line-clamp.enabled pref. If we ever
+ * remove that pref we will need to substitute some other pref:property
+ * combination.
  */
 SpecialPowers.pushPrefEnv(
-  { 'set': [[ 'layout.css.prefixes.webkit', false ]] },
+  { 'set': [[ 'layout.css.webkit-line-clamp.enabled', false ]] },
   () => window.open('file_animations_with_disabled_properties.html'));
 </script>
 </pre>
