@@ -153,7 +153,11 @@ NS_IMETHODIMP nsCookie::GetLastAccessed(int64_t* aTime) {
   return NS_OK;
 }
 NS_IMETHODIMP nsCookie::GetSameSite(int32_t* aSameSite) {
-  *aSameSite = SameSite();
+  if (mozilla::StaticPrefs::network_cookie_sameSite_laxByDefault()) {
+    *aSameSite = SameSite();
+  } else {
+    *aSameSite = RawSameSite();
+  }
   return NS_OK;
 }
 
