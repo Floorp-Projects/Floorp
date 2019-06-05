@@ -661,6 +661,9 @@ class PeerConnectionImpl final
     NS_DECL_NSITIMERCALLBACK
     NS_DECL_THREADSAFE_ISUPPORTS
 
+    void StopPlayout();
+    void StartPlayout(uint32_t aDelay);
+
     RefPtr<PeerConnectionObserver> mPCObserver;
     RefPtr<TransceiverImpl> mTransceiver;
     nsCOMPtr<nsITimer> mSendTimer;

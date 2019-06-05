@@ -33,7 +33,7 @@ interface mozISpellCheckingEngine : nsISupports {
   /**
    * Get the list of dictionaries
    */
-  void getDictionaryList([array, size_is(count)] out wstring dictionaries, out uint32_t count);
+  Array<AString> getDictionaryList();
 
   /**
    * check a word
@@ -43,8 +43,7 @@ interface mozISpellCheckingEngine : nsISupports {
   /**
    * get a list of suggestions for a misspelled word
    */
-  void suggest(in AString word, [array, size_is(count)] out wstring suggestions,
-               out uint32_t count);
+  Array<AString> suggest(in AString word);
 
   /**
    * Load dictionaries from the specified dir

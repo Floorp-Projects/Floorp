@@ -3405,7 +3405,7 @@
 
 	The canonical URL to get updates for this file is
 
-	  http://cvsweb.openwall.com/cgi/cvsweb.cgi/Owl/packages/popa3d/popa3d/md5/
+	  https://cvsweb.openwall.com/cgi/cvsweb.cgi/Owl/packages/popa3d/popa3d/md5/
 
 	as the author told me in private communication.
 
@@ -4837,7 +4837,7 @@
 
 	Apply fixes for cppcheck nitpicks.
 
-	  http://cppcheck.sourceforge.net/
+	  https://cppcheck.sourceforge.net/
 
 	The call was (from the top-level of the FreeType tree):
 
@@ -5145,7 +5145,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2013-2018 by
+Copyright (C) 2013-2019 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

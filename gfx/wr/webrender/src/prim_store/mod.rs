@@ -3180,7 +3180,7 @@ fn decompose_repeated_primitive(
     frame_state: &mut FrameBuildingState,
     gradient_tiles: &mut GradientTileStorage,
     map_local_to_pic: &SpaceMapper<LayoutPixel, PicturePixel>,
-    callback: &mut FnMut(&LayoutRect, GpuDataRequest),
+    callback: &mut dyn FnMut(&LayoutRect, GpuDataRequest),
 ) -> GradientTileRange {
     let mut visible_tiles = Vec::new();
 

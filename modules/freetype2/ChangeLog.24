@@ -231,7 +231,7 @@
 
 	* src/base/md5.c, src/base/md5.h: New files, taken from
 
-	  http://openwall.info/wiki/people/solar/software/public-domain-source-code/md5
+	  https://openwall.info/wiki/people/solar/software/public-domain-source-code/md5
 
 	* include/freetype/internal/fttrace.h: Add `bitmap'.
 
@@ -774,7 +774,7 @@
 
 	(Font_Class): Rename to...
 	(SPH_Font_Class): This.  Decorate with `const' where appropriate.
-	
+
 	* src/truetype/ttsubpix.h (scale_test_tweak, sph_test_tweak):
 	Decorate arguments with `const' where appropriate.
 
@@ -1271,7 +1271,7 @@
 	* src/autofit/afcjk.c (af_cjk_metrics_init_widths): Use it.
 	(af_cjk_metrics_init, af_cjk_script_class): Updated.
 
-	* src/autofit/afindic.c	(af_indic_metrics_init,
+	* src/autofit/afindic.c (af_indic_metrics_init,
 	af_indic_script_class): Updated.
 
 	* src/autofit/afcjk.h, src/autofit/aflatin.h: Updated.
@@ -6344,7 +6344,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2010-2018 by
+Copyright (C) 2010-2019 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

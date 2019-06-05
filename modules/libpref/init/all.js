@@ -781,8 +781,6 @@ pref("gfx.downloadable_fonts.fallback_delay_short", 100);
 // the uncached load behavior across pages (useful for testing reflow problems)
 pref("gfx.downloadable_fonts.disable_cache", false);
 
-pref("gfx.downloadable_fonts.woff2.enabled", true);
-
 // Whether OTS validation should be applied to OpenType Layout (OTL) tables
 #ifdef RELEASE_OR_BETA
 pref("gfx.downloadable_fonts.otl_validation", false);

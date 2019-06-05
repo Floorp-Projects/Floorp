@@ -1,7 +1,7 @@
 
 README for the builds/amiga subdirectory.
 
-Copyright 2005-2018 by
+Copyright (C) 2005-2019 by
 Werner Lemberg and Detlef Würkner.
 
 This file is part of the FreeType project, and may only be used, modified,
@@ -26,7 +26,7 @@ FreeType 1.3.1 from Richard Griffith (ragriffi@sprynet.com,
 http://ragriffi.home.sprynet.com).
 
 You will also need the latest include files and amiga.lib from the
-Amiga web site (http://www.amiga.com/3.9/download/NDK3.9.lha) for
+Amiga web site (https://os.amigaworld.de/download.php?id=3) for
 AmigaOS 3.9; the generated code should work under AmigaOS 2.04 and up.
 
 To use it, call "smake assign" and then "smake" from the builds/amiga
