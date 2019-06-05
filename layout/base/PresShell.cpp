@@ -7319,11 +7319,19 @@ nsIFrame* PresShell::EventHandler::MaybeFlushThrottledStyles(
     return aFrameForPresShell;
   }
 
+  PresShell* rootPresShell = mPresShell->GetRootPresShell();
+  if (NS_WARN_IF(!rootPresShell)) {
+    return nullptr;
+  }
+  Document* rootDocument = rootPresShell->GetDocument();
+  if (NS_WARN_IF(!rootDocument)) {
+    return nullptr;
+  }
+
   AutoWeakFrame weakFrameForPresShell(aFrameForPresShell);
   {  // scope for scriptBlocker.
     nsAutoScriptBlocker scriptBlocker;
-    FlushThrottledStyles(mPresShell->GetRootPresShell()->GetDocument(),
-                         nullptr);
+    FlushThrottledStyles(rootDocument, nullptr);
   }
 
   if (weakFrameForPresShell.IsAlive()) {
