@@ -130,6 +130,10 @@
 @BINPATH@/components/servicesComponents.manifest
 @BINPATH@/components/servicesSettings.manifest
 
+#ifndef MOZ_GECKOVIEW_JAR
+@BINPATH@/components/TelemetryStartup.manifest
+#endif
+
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
 @BINPATH@/components/TestInterfaceJS.js
 @BINPATH@/components/TestInterfaceJS.manifest
