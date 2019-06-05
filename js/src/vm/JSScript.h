@@ -566,7 +566,11 @@ class ScriptSource {
   // BinAST source.
   struct BinAST {
     SharedImmutableString string;
-    explicit BinAST(SharedImmutableString&& str) : string(std::move(str)) {}
+    UniquePtr<frontend::BinASTSourceMetadata> metadata;
+
+    BinAST(SharedImmutableString&& str,
+           UniquePtr<frontend::BinASTSourceMetadata> metadata)
+        : string(std::move(str)), metadata(std::move(metadata)) {}
   };
 
   using SourceType =
@@ -667,8 +671,6 @@ class ScriptSource {
   bool hasIntroductionOffset_ : 1;
   bool containsAsmJS_ : 1;
 
-  UniquePtr<frontend::BinASTSourceMetadata> binASTMetadata_;
-
   template <typename Unit>
   const Unit* chunkUnits(JSContext* cx,
                          UncompressedSourceCache::AutoHoldEntry& holder,
@@ -752,11 +754,11 @@ class ScriptSource {
 
   void setBinASTSourceMetadata(frontend::BinASTSourceMetadata* metadata) {
     MOZ_ASSERT(hasBinASTSource());
-    binASTMetadata_.reset(metadata);
+    data.as<BinAST>().metadata.reset(metadata);
   }
   frontend::BinASTSourceMetadata* binASTSourceMetadata() const {
     MOZ_ASSERT(hasBinASTSource());
-    return binASTMetadata_.get();
+    return data.as<BinAST>().metadata.get();
   }
 
  private:
