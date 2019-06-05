@@ -17,7 +17,7 @@ void PathBuilderCapture::MoveTo(const Point& aPoint) {
   op.mP1 = aPoint;
   mPathOps.push_back(op);
   mCurrentPoint = aPoint;
-  mFirstPoint = aPoint;
+  mBeginPoint = aPoint;
 }
 
 void PathBuilderCapture::LineTo(const Point& aPoint) {
@@ -68,16 +68,16 @@ void PathBuilderCapture::Close() {
   PathOp op;
   op.mType = PathOp::OP_CLOSE;
   mPathOps.push_back(op);
-  mCurrentPoint = mFirstPoint;
+  mCurrentPoint = mBeginPoint;
 }
 
-Point PathBuilderCapture::CurrentPoint() const { return mCurrentPoint; }
-
 already_AddRefed<Path> PathBuilderCapture::Finish() {
+  Point currentPoint = mCurrentPoint;
+  Point beginPoint = mBeginPoint;
   mCurrentPoint = Point(0.0, 0.0);
-  mFirstPoint = Point(0.0, 0.0);
+  mBeginPoint = Point(0.0, 0.0);
   return MakeAndAddRef<PathCapture>(std::move(mPathOps), mFillRule, mDT,
-                                    mCurrentPoint);
+                                    currentPoint, beginPoint);
 }
 
 already_AddRefed<PathBuilder> PathCapture::CopyToBuilder(
@@ -85,6 +85,7 @@ already_AddRefed<PathBuilder> PathCapture::CopyToBuilder(
   RefPtr<PathBuilderCapture> capture = new PathBuilderCapture(aFillRule, mDT);
   capture->mPathOps = mPathOps;
   capture->mCurrentPoint = mCurrentPoint;
+  capture->mBeginPoint = mBeginPoint;
   return capture.forget();
 }
 
@@ -136,6 +137,7 @@ already_AddRefed<PathBuilder> PathCapture::TransformedCopyToBuilder(
     }
   }
   capture->mCurrentPoint = aTransform.TransformPoint(mCurrentPoint);
+  capture->mBeginPoint = aTransform.TransformPoint(mBeginPoint);
   return capture.forget();
 }
 bool PathCapture::ContainsPoint(const Point& aPoint,

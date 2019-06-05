@@ -37,7 +37,7 @@ void PathBuilderSkia::SetFillRule(FillRule aFillRule) {
 void PathBuilderSkia::MoveTo(const Point& aPoint) {
   mPath.moveTo(SkFloatToScalar(aPoint.x), SkFloatToScalar(aPoint.y));
   mCurrentPoint = aPoint;
-  mFirstPoint = aPoint;
+  mBeginPoint = aPoint;
 }
 
 void PathBuilderSkia::LineTo(const Point& aPoint) {
@@ -71,7 +71,7 @@ void PathBuilderSkia::QuadraticBezierTo(const Point& aCP1, const Point& aCP2) {
 
 void PathBuilderSkia::Close() {
   mPath.close();
-  mCurrentPoint = mFirstPoint;
+  mCurrentPoint = mBeginPoint;
 }
 
 void PathBuilderSkia::Arc(const Point& aOrigin, float aRadius,
@@ -81,12 +81,12 @@ void PathBuilderSkia::Arc(const Point& aOrigin, float aRadius,
               aAntiClockwise);
 }
 
-Point PathBuilderSkia::CurrentPoint() const { return mCurrentPoint; }
-
 already_AddRefed<Path> PathBuilderSkia::Finish() {
+  RefPtr<Path> path = MakeAndAddRef<PathSkia>(mPath, mFillRule,
+                                              mCurrentPoint, mBeginPoint);
   mCurrentPoint = Point(0.0, 0.0);
-  mFirstPoint = Point(0.0, 0.0);
-  return MakeAndAddRef<PathSkia>(mPath, mFillRule);
+  mBeginPoint = Point(0.0, 0.0);
+  return path.forget();
 }
 
 void PathBuilderSkia::AppendPath(const SkPath& aPath) { mPath.addPath(aPath); }
@@ -98,7 +98,13 @@ already_AddRefed<PathBuilder> PathSkia::CopyToBuilder(
 
 already_AddRefed<PathBuilder> PathSkia::TransformedCopyToBuilder(
     const Matrix& aTransform, FillRule aFillRule) const {
-  return MakeAndAddRef<PathBuilderSkia>(aTransform, mPath, aFillRule);
+  RefPtr<PathBuilderSkia> builder = MakeAndAddRef<PathBuilderSkia>(
+    aTransform, mPath, aFillRule);
+
+  builder->mCurrentPoint = aTransform.TransformPoint(mCurrentPoint);
+  builder->mBeginPoint = aTransform.TransformPoint(mBeginPoint);
+
+  return builder.forget();
 }
 
 static bool SkPathContainsPoint(const SkPath& aPath, const Point& aPoint,
