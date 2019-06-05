@@ -19,6 +19,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -95,19 +96,6 @@ static uint32_t MutationBitForEventType(EventMessage aEventType) {
 }
 
 uint32_t EventListenerManager::sMainThreadCreatedCount = 0;
-
-static bool IsWebkitPrefixSupportEnabled() {
-  static bool sIsWebkitPrefixSupportEnabled;
-  static bool sIsPrefCached = false;
-
-  if (!sIsPrefCached) {
-    sIsPrefCached = true;
-    Preferences::AddBoolVarCache(&sIsWebkitPrefixSupportEnabled,
-                                 "layout.css.prefixes.webkit");
-  }
-
-  return sIsWebkitPrefixSupportEnabled;
-}
 
 EventListenerManagerBase::EventListenerManagerBase()
     : mNoListenerForEvent(eVoidEvent),
@@ -1050,7 +1038,7 @@ EventMessage EventListenerManager::GetLegacyEventMessage(
   // (If we're off-main-thread, we can't check the pref; so we just behave as
   // if it's disabled.)
   if (mIsMainThreadELM) {
-    if (IsWebkitPrefixSupportEnabled()) {
+    if (StaticPrefs::layout_css_prefixes_webkit()) {
       // webkit-prefixed legacy events:
       if (aEventMessage == eTransitionEnd) {
         return eWebkitTransitionEnd;
