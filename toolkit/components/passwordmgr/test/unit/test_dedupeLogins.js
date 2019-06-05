@@ -16,70 +16,70 @@ const DOMAIN1_HTTP_TO_HTTP_U2_P2 = TestData.formLogin({
   username: "username two",
 });
 const DOMAIN2_HTTP_TO_HTTP_U2_P2 = TestData.formLogin({
-  hostname: "http://www4.example.com",
-  formSubmitURL: "http://www4.example.com",
+  origin: "http://www4.example.com",
+  formActionOrigin: "http://www4.example.com",
   password: "password two",
   username: "username two",
 });
 
 const DOMAIN1_HTTPS_TO_HTTP_U1_P1 = TestData.formLogin({
-  formSubmitURL: "http://www.example.com",
-  hostname: "https://www3.example.com",
+  formActionOrigin: "http://www.example.com",
+  origin: "https://www3.example.com",
   timePasswordChanged: 4000,
   timeLastUsed: 1000,
 });
 const DOMAIN1_HTTPS_TO_HTTPS_U1_P1 = TestData.formLogin({
-  formSubmitURL: "https://www.example.com",
-  hostname: "https://www3.example.com",
+  formActionOrigin: "https://www.example.com",
+  origin: "https://www3.example.com",
   timePasswordChanged: 4000,
   timeLastUsed: 1000,
 });
 
 const DOMAIN1_HTTPS_TO_HTTPS_U1_P2 = TestData.formLogin({
-  formSubmitURL: "https://www.example.com",
-  hostname: "https://www3.example.com",
+  formActionOrigin: "https://www.example.com",
+  origin: "https://www3.example.com",
   password: "password two",
   timePasswordChanged: 4000,
   timeLastUsed: 1000,
 });
 
 const DOMAIN1_HTTPS_TO_EMPTY_U1_P1 = TestData.formLogin({
-  formSubmitURL: "",
-  hostname: "https://www3.example.com",
+  formActionOrigin: "",
+  origin: "https://www3.example.com",
 });
 const DOMAIN1_HTTPS_TO_EMPTYU_P1 = TestData.formLogin({
-  hostname: "https://www3.example.com",
+  origin: "https://www3.example.com",
   username: "",
 });
 const DOMAIN1_HTTP_AUTH = TestData.authLogin({
-  hostname: "http://www3.example.com",
+  origin: "http://www3.example.com",
 });
 const DOMAIN1_HTTPS_AUTH = TestData.authLogin({
-  hostname: "https://www3.example.com",
+  origin: "https://www3.example.com",
 });
 const DOMAIN1_HTTPS_LOGIN = TestData.formLogin({
-  hostname: "https://www3.example.com",
-  formSubmitURL: "https://www3.example.com",
+  origin: "https://www3.example.com",
+  formActionOrigin: "https://www3.example.com",
 });
 const DOMAIN1_HTTP_LOGIN = TestData.formLogin({
-  hostname: "http://www3.example.com",
-  formSubmitURL: "http://www3.example.com",
+  origin: "http://www3.example.com",
+  formActionOrigin: "http://www3.example.com",
 });
 const DOMAIN1_HTTPS_NONSTANDARD_PORT1 = TestData.formLogin({
-  hostname: "https://www3.example.com:8001",
-  formSubmitURL: "https://www3.example.com:8001",
+  origin: "https://www3.example.com:8001",
+  formActionOrigin: "https://www3.example.com:8001",
 });
 const DOMAIN1_HTTPS_NONSTANDARD_PORT2 = TestData.formLogin({
-  hostname: "https://www3.example.com:8008",
-  formSubmitURL: "https://www3.example.com:8008",
+  origin: "https://www3.example.com:8008",
+  formActionOrigin: "https://www3.example.com:8008",
 });
 const DOMAIN2_HTTPS_LOGIN = TestData.formLogin({
-  hostname: "https://www4.example.com",
-  formSubmitURL: "https://www4.example.com",
+  origin: "https://www4.example.com",
+  formActionOrigin: "https://www4.example.com",
 });
 const DOMAIN2_HTTPS_TO_HTTPS_U2_P2 = TestData.formLogin({
-  hostname: "https://www4.example.com",
-  formSubmitURL: "https://www4.example.com",
+  origin: "https://www4.example.com",
+  formActionOrigin: "https://www4.example.com",
   password: "password two",
   username: "username two",
 });
@@ -124,10 +124,10 @@ add_task(function test_dedupeLogins() {
       [],
     ],
     [
-      "same un+pw, different scheme, include hostname",
+      "same un+pw, different scheme, include origin",
       [DOMAIN1_HTTP_TO_HTTP_U1_P1, DOMAIN1_HTTPS_TO_HTTP_U1_P1],
       [DOMAIN1_HTTP_TO_HTTP_U1_P1, DOMAIN1_HTTPS_TO_HTTP_U1_P1],
-      ["hostname", "username", "password"],
+      ["origin", "username", "password"],
       [],
     ],
     [
@@ -230,7 +230,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTPS_TO_HTTP_U1_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1],
       undefined,
       ["scheme", "timePasswordChanged"],
-      DOMAIN1_HTTP_TO_HTTP_U1_P1.hostname,
+      DOMAIN1_HTTP_TO_HTTP_U1_P1.origin,
     ],
     [
       "resolveBy scheme + timePasswordChanged, prefer HTTP, reversed input",
@@ -238,7 +238,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTP_TO_HTTP_U1_P1, DOMAIN1_HTTPS_TO_HTTP_U1_P1],
       undefined,
       ["scheme", "timePasswordChanged"],
-      DOMAIN1_HTTP_TO_HTTP_U1_P1.hostname,
+      DOMAIN1_HTTP_TO_HTTP_U1_P1.origin,
     ],
     [
       "resolveBy scheme + timePasswordChanged, prefer HTTPS",
@@ -246,7 +246,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTPS_TO_HTTP_U1_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1],
       undefined,
       ["scheme", "timePasswordChanged"],
-      DOMAIN1_HTTPS_TO_HTTP_U1_P1.hostname,
+      DOMAIN1_HTTPS_TO_HTTP_U1_P1.origin,
     ],
     [
       "resolveBy scheme + timePasswordChanged, prefer HTTPS, reversed input",
@@ -254,7 +254,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTP_TO_HTTP_U1_P1, DOMAIN1_HTTPS_TO_HTTP_U1_P1],
       undefined,
       ["scheme", "timePasswordChanged"],
-      DOMAIN1_HTTPS_TO_HTTP_U1_P1.hostname,
+      DOMAIN1_HTTPS_TO_HTTP_U1_P1.origin,
     ],
     [
       "resolveBy scheme HTTP auth",
@@ -262,7 +262,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTP_AUTH, DOMAIN1_HTTPS_AUTH],
       undefined,
       ["scheme"],
-      DOMAIN1_HTTPS_AUTH.hostname,
+      DOMAIN1_HTTPS_AUTH.origin,
     ],
     [
       "resolveBy scheme HTTP auth, reversed input",
@@ -270,7 +270,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTPS_AUTH, DOMAIN1_HTTP_AUTH],
       undefined,
       ["scheme"],
-      DOMAIN1_HTTPS_AUTH.hostname,
+      DOMAIN1_HTTPS_AUTH.origin,
     ],
     [
       "resolveBy scheme, empty form submit URL",
@@ -278,7 +278,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTPS_TO_HTTP_U1_P1, DOMAIN1_HTTPS_TO_EMPTY_U1_P1],
       undefined,
       ["scheme"],
-      DOMAIN1_HTTPS_TO_HTTP_U1_P1.hostname,
+      DOMAIN1_HTTPS_TO_HTTP_U1_P1.origin,
     ],
     [
       "resolveBy subdomain, different subdomains, same login, subdomain1 preferred",
@@ -286,7 +286,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTPS_LOGIN, DOMAIN2_HTTPS_LOGIN],
       undefined,
       ["subdomain"],
-      DOMAIN1_HTTPS_LOGIN.hostname,
+      DOMAIN1_HTTPS_LOGIN.origin,
     ],
     [
       "resolveBy subdomain, different subdomains, same login, subdomain2 preferred",
@@ -294,7 +294,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTPS_LOGIN, DOMAIN2_HTTPS_LOGIN],
       undefined,
       ["subdomain"],
-      DOMAIN2_HTTPS_LOGIN.hostname,
+      DOMAIN2_HTTPS_LOGIN.origin,
     ],
     [
       "resolveBy subdomain, same subdomain, different schemes",
@@ -302,7 +302,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTPS_LOGIN, DOMAIN1_HTTP_LOGIN],
       undefined,
       ["subdomain"],
-      DOMAIN1_HTTPS_LOGIN.hostname,
+      DOMAIN1_HTTPS_LOGIN.origin,
     ],
     [
       "resolveBy subdomain, same subdomain, different ports",
@@ -310,7 +310,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTPS_LOGIN, DOMAIN1_HTTPS_NONSTANDARD_PORT1, DOMAIN1_HTTPS_NONSTANDARD_PORT2],
       undefined,
       ["subdomain"],
-      DOMAIN1_HTTPS_LOGIN.hostname,
+      DOMAIN1_HTTPS_LOGIN.origin,
     ],
     [
       "resolveBy subdomain, same subdomain, different schemes, different ports",
@@ -318,7 +318,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       [DOMAIN1_HTTPS_LOGIN, DOMAIN1_HTTPS_NONSTANDARD_PORT1, DOMAIN1_HTTPS_NONSTANDARD_PORT2],
       undefined,
       ["subdomain"],
-      DOMAIN1_HTTPS_AUTH.hostname,
+      DOMAIN1_HTTPS_AUTH.origin,
     ],
     [
       "resolveBy matching _searchAndDedupeLogins, prefer https: scheme over http: in primary and subdomains",
@@ -331,7 +331,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       // resolveBy:
       ["actionOrigin", "scheme", "subdomain", "timePasswordChanged"],
       // preferredOrigin:
-      DOMAIN1_HTTPS_TO_HTTPS_U1_P1.hostname,
+      DOMAIN1_HTTPS_TO_HTTPS_U1_P1.origin,
     ],
   ];
 

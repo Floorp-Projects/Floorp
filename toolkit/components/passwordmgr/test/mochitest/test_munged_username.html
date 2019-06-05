@@ -173,7 +173,7 @@ add_task(async function test_no_autofill_munged_username_matching_password() {
   await add2logins();
 
   let allLogins = await LoginManager.getAllLogins();
-  let matchingLogins = allLogins.filter(l => l.hostname == ORG_ORIGIN);
+  let matchingLogins = allLogins.filter(l => l.origin == ORG_ORIGIN);
   is(matchingLogins.length, 2, "Expected number of matching logins");
 
   let bulletLogin = matchingLogins.find(l => l.username == "real••••user");
@@ -217,7 +217,7 @@ add_task(async function test_autofill_munged_username_matching_password() {
   await addSingleLogin();
 
   let allLogins = await LoginManager.getAllLogins();
-  let matchingLogins = allLogins.filter(l => l.hostname == ORG_ORIGIN);
+  let matchingLogins = allLogins.filter(l => l.origin == ORG_ORIGIN);
   is(matchingLogins.length, 1, "Expected number of matching logins");
 
   info("matched login: " + matchingLogins[0].username);

@@ -35,8 +35,8 @@ this.LoginTestUtils = {
    */
   clearData() {
     Services.logins.removeAllLogins();
-    for (let hostname of Services.logins.getAllDisabledHosts()) {
-      Services.logins.setLoginSavingEnabled(hostname, true);
+    for (let origin of Services.logins.getAllDisabledHosts()) {
+      Services.logins.setLoginSavingEnabled(origin, true);
     }
   },
 
@@ -150,7 +150,7 @@ this.LoginTestUtils.testData = {
                     "the username", "the password for example.com",
                     "form_field_username", "form_field_password"),
 
-      // Forms found on the same host, but with different hostnames in the
+      // Forms found on the same origin, but with different origins in the
       // "action" attribute, are handled independently.
       new LoginInfo("http://www3.example.com", "http://www.example.com", null,
                     "the username", "the password",

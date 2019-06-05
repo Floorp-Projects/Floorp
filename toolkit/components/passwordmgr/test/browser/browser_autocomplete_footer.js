@@ -1,19 +1,19 @@
 "use strict";
 
-const TEST_HOSTNAME = "https://example.com";
+const TEST_ORIGIN = "https://example.com";
 const BASIC_FORM_PAGE_PATH = DIRECTORY_PATH + "form_basic.html";
 
 function loginList() {
   return [
     LoginTestUtils.testData.formLogin({
-      hostname: "https://example.com",
-      formSubmitURL: "https://example.com",
+      origin: "https://example.com",
+      formActionOrigin: "https://example.com",
       username: "username",
       password: "password",
     }),
     LoginTestUtils.testData.formLogin({
-      hostname: "https://example.com",
-      formSubmitURL: "https://example.com",
+      origin: "https://example.com",
+      formActionOrigin: "https://example.com",
       username: "username2",
       password: "password2",
     }),
@@ -53,7 +53,7 @@ add_task(async function test_initialize() {
 });
 
 add_task(async function test_autocomplete_footer_onclick() {
-  let url = TEST_HOSTNAME + BASIC_FORM_PAGE_PATH;
+  let url = TEST_ORIGIN + BASIC_FORM_PAGE_PATH;
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url,
@@ -89,7 +89,7 @@ add_task(async function test_autocomplete_footer_onclick() {
 });
 
 add_task(async function test_autocomplete_footer_keydown() {
-  let url = TEST_HOSTNAME + BASIC_FORM_PAGE_PATH;
+  let url = TEST_ORIGIN + BASIC_FORM_PAGE_PATH;
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url,
