@@ -1487,7 +1487,7 @@ pub struct DynamicProperties {
 }
 
 pub trait RenderNotifier: Send {
-    fn clone(&self) -> Box<RenderNotifier>;
+    fn clone(&self) -> Box<dyn RenderNotifier>;
     fn wake_up(&self);
     fn new_frame_ready(&self, _: DocumentId, scrolled: bool, composite_needed: bool, render_time_ns: Option<u64>);
     fn external_event(&self, _evt: ExternalEvent) {
@@ -1513,12 +1513,12 @@ pub trait NotificationHandler : Send + Sync {
 }
 
 pub struct NotificationRequest {
-    handler: Option<Box<NotificationHandler>>,
+    handler: Option<Box<dyn NotificationHandler>>,
     when: Checkpoint,
 }
 
 impl NotificationRequest {
-    pub fn new(when: Checkpoint, handler: Box<NotificationHandler>) -> Self {
+    pub fn new(when: Checkpoint, handler: Box<dyn NotificationHandler>) -> Self {
         NotificationRequest {
             handler: Some(handler),
             when,
