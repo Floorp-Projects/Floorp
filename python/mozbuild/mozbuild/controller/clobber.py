@@ -98,33 +98,6 @@ class Clobberer(object):
         except Exception:
             return False
 
-    def collect_subdirs(self, root, exclude):
-        """Gathers a list of subdirectories excluding specified items."""
-        paths = []
-        try:
-            for p in os.listdir(root):
-                if p not in exclude:
-                    paths.append(os.path.join(root, p).encode('utf-8'))
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
-
-        return paths
-
-    def delete_dirs(self, root, paths_to_delete):
-        """Deletes the given subdirectories in an optimal way."""
-        procs = []
-        for p in sorted(paths_to_delete):
-            path = os.path.join(root, p)
-            if sys.platform.startswith('win') and self.have_winrm() and os.path.isdir(path):
-                procs.append(subprocess.Popen(['winrm', '-rf', path]))
-            else:
-                # We use mozfile because it is faster than shutil.rmtree().
-                mozfileremove(path)
-
-        for p in procs:
-            p.wait()
-
     def remove_objdir(self, full=True):
         """Remove the object directory.
 
@@ -142,10 +115,28 @@ class Clobberer(object):
             # mozfile doesn't like unicode arguments (bug 818783).
             paths = [self.topobjdir.encode('utf-8')]
         else:
-            paths = self.collect_subdirs(self.topobjdir, no_clobber)
+            try:
+                paths = []
+                for p in os.listdir(self.topobjdir):
+                    if p not in no_clobber:
+                        paths.append(os.path.join(self.topobjdir, p).encode('utf-8'))
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
+                return
 
+        procs = []
+        for p in sorted(paths):
+            path = os.path.join(self.topobjdir, p)
+            if sys.platform.startswith('win') and self.have_winrm() and os.path.isdir(path):
+                procs.append(subprocess.Popen(['winrm', '-rf', path]))
+            else:
+                # We use mozfile because it is faster than shutil.rmtree().
+                mozfileremove(path)
 
-        self.delete_dirs(self.topobjdir, paths)
+        for p in procs:
+            p.wait()
+
     def ensure_objdir_state(self):
         """Ensure the CLOBBER file in the objdir exists.
 
