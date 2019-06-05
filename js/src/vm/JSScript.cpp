@@ -2564,7 +2564,7 @@ struct SourceDecoder {
 namespace js {
 
 template <>
-XDRResult ScriptSource::xdrUncompressedSource<XDR_DECODE>(
+XDRResult ScriptSource::xdrUnretrievableUncompressedSource<XDR_DECODE>(
     XDRState<XDR_DECODE>* xdr, uint8_t sourceCharSize,
     uint32_t uncompressedLength) {
   MOZ_ASSERT(sourceCharSize == 1 || sourceCharSize == 2);
@@ -2600,7 +2600,7 @@ struct SourceEncoder {
 namespace js {
 
 template <>
-XDRResult ScriptSource::xdrUncompressedSource<XDR_ENCODE>(
+XDRResult ScriptSource::xdrUnretrievableUncompressedSource<XDR_ENCODE>(
     XDRState<XDR_ENCODE>* xdr, uint8_t sourceCharSize,
     uint32_t uncompressedLength) {
   MOZ_ASSERT(sourceCharSize == 1 || sourceCharSize == 2);
@@ -2648,7 +2648,8 @@ XDRResult ScriptSource::codeUncompressedData(XDRState<mode>* const xdr,
   }
   MOZ_TRY(xdr->codeUint32(&uncompressedLength));
 
-  return ss->xdrUncompressedSource(xdr, sizeof(Unit), uncompressedLength);
+  return ss->xdrUnretrievableUncompressedSource(xdr, sizeof(Unit),
+                                                uncompressedLength);
 }
 
 template <typename Unit, XDRMode mode>

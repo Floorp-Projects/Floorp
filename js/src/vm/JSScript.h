@@ -1065,9 +1065,8 @@ class ScriptSource {
   // we'd need template function partial specialization to hold XDRMode
   // constant while varying Unit, so that idea's no dice.
   template <XDRMode mode>
-  MOZ_MUST_USE XDRResult xdrUncompressedSource(XDRState<mode>* xdr,
-                                               uint8_t sourceCharSize,
-                                               uint32_t uncompressedLength);
+  MOZ_MUST_USE XDRResult xdrUnretrievableUncompressedSource(
+      XDRState<mode>* xdr, uint8_t sourceCharSize, uint32_t uncompressedLength);
 
  public:
   MOZ_MUST_USE bool setFilename(JSContext* cx, const char* filename);
