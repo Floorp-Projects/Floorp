@@ -477,6 +477,8 @@ Assembler::Assembler(PositionIndependentCodeOption pic)
     : pic_(pic),
       cpu_features_(CPUFeatures::AArch64LegacyBaseline())
 {
+  // Mozilla change: always use maximally-present features.
+  cpu_features_.Combine(CPUFeatures::InferFromOS());
 }
 
 
