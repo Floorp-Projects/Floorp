@@ -284,9 +284,10 @@ nsresult LocalStorageManager::GetStorageInternal(
 
 NS_IMETHODIMP
 LocalStorageManager::PrecacheStorage(nsIPrincipal* aPrincipal,
+                                     nsIPrincipal* aStoragePrincipal,
                                      Storage** aRetval) {
   return GetStorageInternal(CreateMode::CreateIfShouldPreload, nullptr,
-                            aPrincipal, aPrincipal, EmptyString(), false,
+                            aPrincipal, aStoragePrincipal, EmptyString(), false,
                             aRetval);
 }
 

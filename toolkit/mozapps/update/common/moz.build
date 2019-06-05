@@ -63,9 +63,6 @@ SOURCES += [
     'updatecommon.cpp',
 ]
 
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    AllowCompilerWarnings()  # workaround for bug 1090497
-
 LOCAL_INCLUDES += [
     '/other-licenses/nsis/Contrib/CityHash/cityhash',
 ]

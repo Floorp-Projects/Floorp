@@ -18,9 +18,12 @@ function runtest(func) {
   }
 }
 
-function reportMarks(prefix) {
+function reportMarks(prefix = "") {
   const marks = getMarks();
-  print(`${prefix}${marks.join("/")}`);
+  const current = currentgc();
+  const markstr = marks.join("/");
+  print(`${prefix}[${current.incrementalState}/${current.sweepGroup}@${current.queuePos}] ${markstr}`);
+  return markstr;
 }
 
 function purgeKey() {
@@ -399,12 +402,10 @@ function grayMapKey() {
   vals.key = vals.val = null;
 
   startgc(100000);
-  print("1: " + getMarks().join("/"));
   assertEq(getMarks().join("/"), "gray/unmarked/unmarked",
            "marked the map gray");
 
   gcslice(100000);
-  print("4: " + getMarks().join("/"));
   assertEq(getMarks().join("/"), "gray/black/unmarked",
            "key is now marked black");
 
@@ -453,20 +454,24 @@ function grayKeyMap() {
 
   startgc(100000);
   // getMarks() returns map/key/value
+  reportMarks("1: ");
   assertEq(getMarks().join("/"), "unmarked/black/unmarked",
            "marked key black");
 
   // We always yield before sweeping (in the absence of zeal), so we will see
   // the unmarked state another time.
   gcslice(100000);
+  reportMarks("2: ");
   assertEq(getMarks().join("/"), "unmarked/black/unmarked",
            "marked key black, yield before sweeping");
 
   gcslice(100000);
+  reportMarks("3: ");
   assertEq(getMarks().join("/"), "gray/black/gray",
            "marked the map gray, which marked the value when map scanned");
 
   finishgc(); // Finish the GC
+  reportMarks("4: ");
   assertEq(getMarks().join("/"), "black/black/black",
            "further marked the map black, so value should also be blackened");
 

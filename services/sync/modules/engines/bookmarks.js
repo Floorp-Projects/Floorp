@@ -18,6 +18,7 @@ const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
 XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarkValidator: "resource://services-sync/bookmark_validator.js",
   LiveBookmarkMigrator: "resource:///modules/LiveBookmarkMigrator.jsm",
+  Observers: "resource://services-common/observers.js",
   OS: "resource://gre/modules/osfile.jsm",
   PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.jsm",
@@ -61,6 +62,12 @@ XPCOMUtils.defineLazyGetter(this, "IGNORED_SOURCES", () => [
   PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP,
   PlacesUtils.bookmarks.SOURCES.SYNC_REPARENT_REMOVED_FOLDER_CHILDREN,
 ]);
+
+// The validation telemetry version for the buffered engine. Version 1 is
+// collected by `bookmark_validator.js`, and checks value as well as structure
+// differences. Version 2 is collected by the buffered engine as part of
+// building the remote tree, and checks structure differences only.
+const BUFFERED_BOOKMARK_VALIDATOR_VERSION = 2;
 
 function isSyncedRootNode(node) {
   return node.root == "bookmarksMenuFolder" ||
@@ -476,10 +483,6 @@ BaseBookmarksEngine.prototype = {
     return FORBIDDEN_INCOMING_IDS.includes(incomingItem.id) ||
            FORBIDDEN_INCOMING_PARENT_IDS.includes(incomingItem.parentid);
   },
-
-  getValidator() {
-    return new BookmarkValidator();
-  },
 };
 
 /**
@@ -749,6 +752,10 @@ BookmarksEngine.prototype = {
                 [...newRecord.children, ...missingChildren] : missingChildren;
     this._log.debug("Recording children of " + localRecord.id, order);
     this._store._childrenToOrder[localRecord.id] = order;
+  },
+
+  getValidator() {
+    return new BookmarkValidator();
   },
 };
 
@@ -1218,6 +1225,21 @@ BufferedBookmarksStore.prototype = {
       recordTelemetryEvent: (object, method, value, extra) => {
         this.engine.service.recordTelemetryEvent(object, method, value,
                                                  extra);
+      },
+      recordStepTelemetry: (name, took, counts) => {
+        Observers.notify("weave:engine:sync:step", {
+          name,
+          took,
+          counts,
+        }, this.name);
+      },
+      recordValidationTelemetry: (took, checked, problems) => {
+        Observers.notify("weave:engine:validate:finish", {
+          version: BUFFERED_BOOKMARK_VALIDATOR_VERSION,
+          took,
+          checked,
+          problems,
+        }, this.name);
       },
     });
   },

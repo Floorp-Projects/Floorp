@@ -25,7 +25,7 @@ class TestWindows(PuppeteerMixin, MarionetteTestCase):
 
         # Open two more windows
         for index in range(0, 2):
-            self.marionette.execute_script(""" OpenBrowserWindow(); """)
+            self.marionette.open(type="window")
 
         windows = self.puppeteer.windows.all
         self.assertEquals(len(windows), 3)
@@ -130,10 +130,10 @@ class TestBaseWindow(PuppeteerMixin, MarionetteTestCase):
 
         # Open and close a new window by a custom callback
         def opener(window):
-            window.marionette.execute_script(""" OpenBrowserWindow(); """)
+            window.marionette.open(type="window")
 
         def closer(window):
-            window.marionette.execute_script(""" window.close(); """)
+            window.marionette.close()
 
         win2 = win1.open_window(callback=opener)
 

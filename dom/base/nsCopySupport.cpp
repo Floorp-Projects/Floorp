@@ -28,7 +28,7 @@
 
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/Document.h"
-#include "nsIHTMLDocument.h"
+#include "nsHTMLDocument.h"
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"
 #include "nsIURI.h"
@@ -122,10 +122,9 @@ static nsresult EncodeForTextUnicode(nsIDocumentEncoder& aEncoder,
 
   if (!selForcedTextPlain && mimeType.EqualsLiteral(kTextMime)) {
     // SetSelection and EncodeToString use this case to signal that text/plain
-    // was forced because the document is either not an nsIHTMLDocument or it's
-    // XHTML.  We want to pretty print XHTML but not non-nsIHTMLDocuments.
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(&aDocument);
-    if (!htmlDoc) {
+    // was forced because the document is either not an HTMLDocument or it's
+    // XHTML.  We want to pretty print XHTML but not non-HTMLDocuments.
+    if (!aDocument.IsHTMLOrXHTML()) {
       selForcedTextPlain = true;
     }
   }
@@ -562,10 +561,6 @@ static nsresult AppendDOMNode(nsITransferable* aTransferable,
   // Note that XHTML is not counted as HTML here, because we can't copy it
   // properly (all the copy code for non-plaintext assumes using HTML
   // serializers and parsers is OK, and those mess up XHTML).
-  DebugOnly<nsCOMPtr<nsIHTMLDocument>> htmlDoc =
-      nsCOMPtr<nsIHTMLDocument>(do_QueryInterface(document, &rv));
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-
   NS_ENSURE_TRUE(document->IsHTMLDocument(), NS_OK);
 
   // init encoder with document and node

@@ -31,8 +31,8 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozilla/PresState.h"
-#include "nsIHTMLDocument.h"
 #include "nsContentUtils.h"
+#include "nsHTMLDocument.h"
 #include "nsLayoutUtils.h"
 #include "nsBidiPresUtils.h"
 #include "nsBidiUtils.h"
@@ -5331,8 +5331,7 @@ nsIFrame* ScrollFrameHelper::GetFrameForDir() const {
     Element* root = document->GetRootElement();
 
     // But for HTML and XHTML we want the body element.
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
-    if (htmlDoc) {
+    if (document->IsHTMLOrXHTML()) {
       Element* bodyElement = document->GetBodyElement();
       if (bodyElement) {
         root = bodyElement;  // we can trust the document to hold on to it

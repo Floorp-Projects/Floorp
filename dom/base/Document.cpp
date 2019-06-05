@@ -4884,6 +4884,86 @@ mozilla::net::ReferrerPolicy Document::GetReferrerPolicy() const {
   return mReferrerPolicy;
 }
 
+void Document::GetAlinkColor(nsAString& aAlinkColor) {
+  aAlinkColor.Truncate();
+
+  HTMLBodyElement* body = GetBodyElement();
+  if (body) {
+    body->GetALink(aAlinkColor);
+  }
+}
+
+void Document::SetAlinkColor(const nsAString& aAlinkColor) {
+  HTMLBodyElement* body = GetBodyElement();
+  if (body) {
+    body->SetALink(aAlinkColor);
+  }
+}
+
+void Document::GetLinkColor(nsAString& aLinkColor) {
+  aLinkColor.Truncate();
+
+  HTMLBodyElement* body = GetBodyElement();
+  if (body) {
+    body->GetLink(aLinkColor);
+  }
+}
+
+void Document::SetLinkColor(const nsAString& aLinkColor) {
+  HTMLBodyElement* body = GetBodyElement();
+  if (body) {
+    body->SetLink(aLinkColor);
+  }
+}
+
+void Document::GetVlinkColor(nsAString& aVlinkColor) {
+  aVlinkColor.Truncate();
+
+  HTMLBodyElement* body = GetBodyElement();
+  if (body) {
+    body->GetVLink(aVlinkColor);
+  }
+}
+
+void Document::SetVlinkColor(const nsAString& aVlinkColor) {
+  HTMLBodyElement* body = GetBodyElement();
+  if (body) {
+    body->SetVLink(aVlinkColor);
+  }
+}
+
+void Document::GetBgColor(nsAString& aBgColor) {
+  aBgColor.Truncate();
+
+  HTMLBodyElement* body = GetBodyElement();
+  if (body) {
+    body->GetBgColor(aBgColor);
+  }
+}
+
+void Document::SetBgColor(const nsAString& aBgColor) {
+  HTMLBodyElement* body = GetBodyElement();
+  if (body) {
+    body->SetBgColor(aBgColor);
+  }
+}
+
+void Document::GetFgColor(nsAString& aFgColor) {
+  aFgColor.Truncate();
+
+  HTMLBodyElement* body = GetBodyElement();
+  if (body) {
+    body->GetText(aFgColor);
+  }
+}
+
+void Document::SetFgColor(const nsAString& aFgColor) {
+  HTMLBodyElement* body = GetBodyElement();
+  if (body) {
+    body->SetText(aFgColor);
+  }
+}
+
 nsresult Document::GetSrcdocData(nsAString& aSrcdocData) {
   if (mIsSrcdocDocument) {
     nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(mChannel);

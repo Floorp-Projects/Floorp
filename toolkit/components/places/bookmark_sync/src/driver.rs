@@ -5,14 +5,18 @@
 use std::{
     fmt::Write,
     sync::atomic::{AtomicBool, Ordering},
+    time::Duration,
 };
 
-use dogear::{AbortSignal, Guid};
+use dogear::{AbortSignal, Guid, ProblemCounts, StructureCounts, TelemetryEvent};
 use log::{Level, LevelFilter, Log, Metadata, Record};
 use moz_task::{Task, TaskRunnable, ThreadPtrHandle};
 use nserror::nsresult;
 use nsstring::{nsACString, nsCString, nsString};
-use xpcom::interfaces::mozISyncedBookmarksMirrorLogger;
+use storage_variant::HashPropertyBag;
+use xpcom::interfaces::{
+    mozISyncedBookmarksMirrorLogger, mozISyncedBookmarksMirrorProgressListener,
+};
 
 extern "C" {
     fn NS_GeneratePlacesGUID(guid: *mut nsACString) -> nsresult;
@@ -58,12 +62,16 @@ impl AbortSignal for AbortController {
 /// The merger driver, created and used on the storage thread.
 pub struct Driver {
     log: Logger,
+    progress: Option<ThreadPtrHandle<mozISyncedBookmarksMirrorProgressListener>>,
 }
 
 impl Driver {
     #[inline]
-    pub fn new(log: Logger) -> Driver {
-        Driver { log }
+    pub fn new(
+        log: Logger,
+        progress: Option<ThreadPtrHandle<mozISyncedBookmarksMirrorProgressListener>>,
+    ) -> Driver {
+        Driver { log, progress }
     }
 }
 
@@ -82,6 +90,20 @@ impl dogear::Driver for Driver {
     #[inline]
     fn logger(&self) -> &dyn Log {
         &self.log
+    }
+
+    fn record_telemetry_event(&self, event: TelemetryEvent) {
+        if let Some(ref progress) = self.progress {
+            let task = RecordTelemetryEventTask {
+                progress: progress.clone(),
+                event,
+            };
+            let _ = TaskRunnable::new(
+                "bookmark_sync::Driver::record_telemetry_event",
+                Box::new(task),
+            )
+            .and_then(|r| r.dispatch(progress.owning_thread()));
+        }
     }
 }
 
@@ -131,7 +153,7 @@ impl Log for Logger {
 }
 
 /// Logs a message to the mirror logger. This task is created on the async
-/// thread, and dispatched synchronously to the main thread.
+/// thread, and dispatched to the main thread.
 struct LogTask {
     logger: ThreadPtrHandle<mozISyncedBookmarksMirrorLogger>,
     level: Level,
@@ -161,4 +183,84 @@ impl Task for LogTask {
     fn done(&self) -> Result<(), nsresult> {
         Ok(())
     }
+}
+
+/// Calls a progress listener callback for a merge telemetry event. This task is
+/// created on the async thread, and dispatched to the main thread.
+struct RecordTelemetryEventTask {
+    progress: ThreadPtrHandle<mozISyncedBookmarksMirrorProgressListener>,
+    event: TelemetryEvent,
+}
+
+impl Task for RecordTelemetryEventTask {
+    fn run(&self) {
+        let callback = self.progress.get().unwrap();
+        let _ = match &self.event {
+            TelemetryEvent::FetchLocalTree(stats) => unsafe {
+                callback.OnFetchLocalTree(
+                    as_millis(stats.time),
+                    stats.items as i64,
+                    problem_counts_to_bag(&stats.problems).bag().coerce(),
+                )
+            },
+            TelemetryEvent::FetchNewLocalContents(stats) => unsafe {
+                callback.OnFetchNewLocalContents(as_millis(stats.time), stats.items as i64)
+            },
+            TelemetryEvent::FetchRemoteTree(stats) => unsafe {
+                callback.OnFetchRemoteTree(
+                    as_millis(stats.time),
+                    stats.items as i64,
+                    problem_counts_to_bag(&stats.problems).bag().coerce(),
+                )
+            },
+            TelemetryEvent::FetchNewRemoteContents(stats) => unsafe {
+                callback.OnFetchNewRemoteContents(as_millis(stats.time), stats.items as i64)
+            },
+            TelemetryEvent::Merge(time, counts) => unsafe {
+                callback.OnMerge(
+                    as_millis(*time),
+                    structure_counts_to_bag(counts).bag().coerce(),
+                )
+            },
+            TelemetryEvent::Apply(time) => unsafe { callback.OnApply(as_millis(*time)) },
+        };
+    }
+
+    fn done(&self) -> std::result::Result<(), nsresult> {
+        Ok(())
+    }
+}
+
+fn as_millis(d: Duration) -> i64 {
+    d.as_secs() as i64 * 1000 + i64::from(d.subsec_millis())
+}
+
+fn problem_counts_to_bag(problems: &ProblemCounts) -> HashPropertyBag {
+    let mut bag = HashPropertyBag::new();
+    bag.set("orphans", problems.orphans as i64);
+    bag.set("misparentedRoots", problems.misparented_roots as i64);
+    bag.set(
+        "multipleParents",
+        problems.multiple_parents_by_children as i64,
+    );
+    bag.set("missingParents", problems.missing_parent_guids as i64);
+    bag.set("nonFolderParents", problems.non_folder_parent_guids as i64);
+    bag.set(
+        "parentChildDisagreements",
+        problems.parent_child_disagreements as i64,
+    );
+    bag.set("missingChildren", problems.missing_children as i64);
+    bag
+}
+
+fn structure_counts_to_bag(counts: &StructureCounts) -> HashPropertyBag {
+    let mut bag = HashPropertyBag::new();
+    bag.set("remoteRevives", counts.remote_revives as i64);
+    bag.set("localDeletes", counts.local_deletes as i64);
+    bag.set("localRevives", counts.local_revives as i64);
+    bag.set("remoteDeletes", counts.remote_deletes as i64);
+    bag.set("dupes", counts.dupes as i64);
+    bag.set("items", counts.merged_nodes as i64);
+    bag.set("deletes", counts.merged_deletions as i64);
+    bag
 }

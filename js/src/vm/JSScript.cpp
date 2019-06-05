@@ -2169,7 +2169,7 @@ MOZ_MUST_USE bool ScriptSource::setBinASTSourceCopy(JSContext* cx,
     return false;
   }
 
-  data = SourceType(BinAST(std::move(*deduped)));
+  data = SourceType(BinAST(std::move(*deduped), nullptr));
   return true;
 }
 
@@ -2309,13 +2309,13 @@ template bool ScriptSource::assignSource(JSContext* cx,
 
 void ScriptSource::trace(JSTracer* trc) {
 #ifdef JS_BUILD_BINAST
-  if (binASTMetadata_) {
-    MOZ_ASSERT(data.is<BinAST>());
-    binASTMetadata_->trace(trc);
+  if (data.is<BinAST>()) {
+    if (auto& metadata = data.as<BinAST>().metadata) {
+      metadata->trace(trc);
+    }
   }
 #else
   MOZ_ASSERT(!data.is<BinAST>());
-  MOZ_ASSERT(!binASTMetadata_);
 #endif  // JS_BUILD_BINAST
 }
 
@@ -2756,7 +2756,7 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
   // XDR any BinAST metadata.
   uint8_t hasMetadata;
   if (mode == XDR_ENCODE) {
-    hasMetadata = ss->binASTMetadata_ != nullptr;
+    hasMetadata = ss->data.as<BinAST>().metadata != nullptr;
   }
   MOZ_TRY(xdr->codeUint8(&hasMetadata));
 
@@ -2770,7 +2770,8 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
     // |UniquePtr| stored in |ss|.  (Immutable up to GCs transparently moving
     // things around, that is.)
     UniquePtr<frontend::BinASTSourceMetadata>& binASTMetadata =
-        mode == XDR_DECODE ? freshMetadata.get() : ss->binASTMetadata_;
+        mode == XDR_DECODE ? freshMetadata.get()
+                           : ss->data.as<BinAST>().metadata;
 
     uint32_t numBinASTKinds;
     uint32_t numStrings;
@@ -2849,11 +2850,9 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
 
     MOZ_ASSERT(ss->data.is<Missing>(),
                "should only be initializing a fresh ScriptSource");
-    MOZ_ASSERT(ss->binASTMetadata_ == nullptr,
-               "shouldn't have BinAST metadata yet");
 
-    ss->data = SourceType(BinAST(std::move(*binASTData)));
-    ss->binASTMetadata_ = std::move(freshMetadata.get());
+    ss->data = SourceType(
+        BinAST(std::move(*binASTData), std::move(freshMetadata.get())));
   }
 
   MOZ_ASSERT(binASTData.isNothing());

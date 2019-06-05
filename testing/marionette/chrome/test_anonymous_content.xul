@@ -28,10 +28,22 @@
         </xul:box>
       </content>
     </binding>
+
+    <binding id="buttonbox">
+      <content>
+        <xul:box anonid="buttons">
+          <xul:button dlgtype="cancel" class="dialog-button"/>
+          <xul:button dlgtype="accept" class="dialog-button"/>
+        </xul:box>
+        <xul:vbox></xul:vbox>
+        <xul:vbox></xul:vbox>
+      </content>
+    </binding>
   </bindings>
 
   <hbox id="testAnonymousContentBox"/>
   <hbox id="container" style="-moz-binding: url('#testBindings');"/>
   <hbox id="container2" style="-moz-binding: url('#iframebox');"/>
+  <hbox id="container3" style="-moz-binding: url('#buttonbox');"/>
 
 </dialog>

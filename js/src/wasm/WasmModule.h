@@ -225,8 +225,8 @@ typedef RefPtr<const Module> SharedModule;
 
 MOZ_MUST_USE bool GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId);
 
-RefPtr<JS::WasmModule> DeserializeModule(PRFileDesc* bytecode,
-                                         UniqueChars filename, unsigned line);
+RefPtr<JS::WasmModule> DeserializeModule(const uint8_t* bytecode,
+                                         size_t bytecodeLength);
 
 }  // namespace wasm
 }  // namespace js

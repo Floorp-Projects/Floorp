@@ -160,8 +160,7 @@ nsHTMLDocument::~nsHTMLDocument() {}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHTMLDocument, Document, mAll)
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsHTMLDocument, Document,
-                                             nsIHTMLDocument)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(nsHTMLDocument, Document)
 
 JSObject* nsHTMLDocument::WrapNode(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -723,86 +722,6 @@ void nsHTMLDocument::AddedForm() { ++mNumForms; }
 void nsHTMLDocument::RemovedForm() { --mNumForms; }
 
 int32_t nsHTMLDocument::GetNumFormsSynchronous() { return mNumForms; }
-
-void nsHTMLDocument::GetAlinkColor(nsAString& aAlinkColor) {
-  aAlinkColor.Truncate();
-
-  HTMLBodyElement* body = GetBodyElement();
-  if (body) {
-    body->GetALink(aAlinkColor);
-  }
-}
-
-void nsHTMLDocument::SetAlinkColor(const nsAString& aAlinkColor) {
-  HTMLBodyElement* body = GetBodyElement();
-  if (body) {
-    body->SetALink(aAlinkColor);
-  }
-}
-
-void nsHTMLDocument::GetLinkColor(nsAString& aLinkColor) {
-  aLinkColor.Truncate();
-
-  HTMLBodyElement* body = GetBodyElement();
-  if (body) {
-    body->GetLink(aLinkColor);
-  }
-}
-
-void nsHTMLDocument::SetLinkColor(const nsAString& aLinkColor) {
-  HTMLBodyElement* body = GetBodyElement();
-  if (body) {
-    body->SetLink(aLinkColor);
-  }
-}
-
-void nsHTMLDocument::GetVlinkColor(nsAString& aVlinkColor) {
-  aVlinkColor.Truncate();
-
-  HTMLBodyElement* body = GetBodyElement();
-  if (body) {
-    body->GetVLink(aVlinkColor);
-  }
-}
-
-void nsHTMLDocument::SetVlinkColor(const nsAString& aVlinkColor) {
-  HTMLBodyElement* body = GetBodyElement();
-  if (body) {
-    body->SetVLink(aVlinkColor);
-  }
-}
-
-void nsHTMLDocument::GetBgColor(nsAString& aBgColor) {
-  aBgColor.Truncate();
-
-  HTMLBodyElement* body = GetBodyElement();
-  if (body) {
-    body->GetBgColor(aBgColor);
-  }
-}
-
-void nsHTMLDocument::SetBgColor(const nsAString& aBgColor) {
-  HTMLBodyElement* body = GetBodyElement();
-  if (body) {
-    body->SetBgColor(aBgColor);
-  }
-}
-
-void nsHTMLDocument::GetFgColor(nsAString& aFgColor) {
-  aFgColor.Truncate();
-
-  HTMLBodyElement* body = GetBodyElement();
-  if (body) {
-    body->GetText(aFgColor);
-  }
-}
-
-void nsHTMLDocument::SetFgColor(const nsAString& aFgColor) {
-  HTMLBodyElement* body = GetBodyElement();
-  if (body) {
-    body->SetText(aFgColor);
-  }
-}
 
 void nsHTMLDocument::CaptureEvents() {
   WarnOnceAbout(Document::eUseOfCaptureEvents);

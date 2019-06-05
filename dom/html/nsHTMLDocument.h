@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "nsContentList.h"
 #include "mozilla/dom/Document.h"
-#include "nsIHTMLDocument.h"
 #include "nsIHTMLCollection.h"
 #include "nsIScriptElement.h"
 #include "nsTArray.h"
@@ -35,7 +34,7 @@ class WindowProxyHolder;
 }  // namespace dom
 }  // namespace mozilla
 
-class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
+class nsHTMLDocument : public mozilla::dom::Document {
  protected:
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
   typedef mozilla::dom::Document Document;
@@ -70,7 +69,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   virtual bool UseWidthDeviceWidthFallbackViewport() const override;
 
  public:
-  // nsIHTMLDocument
   virtual Element* GetUnfocusedKeyEventTarget() override;
 
   nsContentList* GetExistingForms() const { return mForms; }
@@ -82,12 +80,24 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
                    JS::MutableHandle<JS::Value> aRetval,
                    mozilla::ErrorResult& aError);
 
-  virtual void AddedForm() override;
-  virtual void RemovedForm() override;
-  virtual int32_t GetNumFormsSynchronous() override;
-  virtual void SetIsXHTML(bool aXHTML) override {
-    mType = (aXHTML ? eXHTML : eHTML);
-  }
+  /**
+   * Called when form->BindToTree() is called so that document knows
+   * immediately when a form is added
+   */
+  void AddedForm();
+  /**
+   * Called when form->SetDocument() is called so that document knows
+   * immediately when a form is removed
+   */
+  void RemovedForm();
+  /**
+   * Called to get a better count of forms than document.forms can provide
+   * without calling FlushPendingNotifications (bug 138892).
+   */
+  // XXXbz is this still needed now that we can flush just content,
+  // not the rest?
+  int32_t GetNumFormsSynchronous();
+  void SetIsXHTML(bool aXHTML) { mType = (aXHTML ? eXHTML : eHTML); }
 
   virtual nsresult Clone(mozilla::dom::NodeInfo*,
                          nsINode** aResult) const override;
@@ -114,16 +124,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
     }
   }
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  void GetFgColor(nsAString& aFgColor);
-  void SetFgColor(const nsAString& aFgColor);
-  void GetLinkColor(nsAString& aLinkColor);
-  void SetLinkColor(const nsAString& aLinkColor);
-  void GetVlinkColor(nsAString& aAvlinkColor);
-  void SetVlinkColor(const nsAString& aVlinkColor);
-  void GetAlinkColor(nsAString& aAlinkColor);
-  void SetAlinkColor(const nsAString& aAlinkColor);
-  void GetBgColor(nsAString& aBgColor);
-  void SetBgColor(const nsAString& aBgColor);
   void Clear() const {
     // Deprecated
   }
@@ -218,9 +218,5 @@ inline nsHTMLDocument* Document::AsHTMLDocument() {
 
 }  // namespace dom
 }  // namespace mozilla
-
-#define NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(_class) \
-  NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)            \
-  NS_INTERFACE_TABLE_ENTRY(_class, nsIHTMLDocument)
 
 #endif /* nsHTMLDocument_h___ */

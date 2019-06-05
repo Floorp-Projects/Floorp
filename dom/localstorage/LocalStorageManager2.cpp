@@ -175,9 +175,11 @@ NS_IMPL_ISUPPORTS(LocalStorageManager2, nsIDOMStorageManager,
 
 NS_IMETHODIMP
 LocalStorageManager2::PrecacheStorage(nsIPrincipal* aPrincipal,
+                                      nsIPrincipal* aStoragePrincipal,
                                       Storage** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aStoragePrincipal);
   MOZ_ASSERT(_retval);
 
   // This method was created as part of the e10s-ification of the old LS
