@@ -320,10 +320,8 @@ void nsNodeUtils::LastRelease(nsINode* aNode) {
     aNode->UnsetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
-  if (Element* element = Element::FromNode(aNode)) {
-    element->OwnerDoc()->ClearBoxObjectFor(element);
-    NS_ASSERTION(!element->GetXBLBinding(), "Node has binding on destruction");
-  }
+  NS_ASSERTION(!Element::FromNode(aNode) ||
+               !Element::FromNode(aNode)->GetXBLBinding(), "Node has binding on destruction");
 
   aNode->ReleaseWrapper(aNode);
 
@@ -437,7 +435,6 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
     Document* oldDoc = aNode->OwnerDoc();
     bool wasRegistered = false;
     if (elem) {
-      oldDoc->ClearBoxObjectFor(elem);
       wasRegistered = oldDoc->UnregisterActivityObserver(elem);
     }
 

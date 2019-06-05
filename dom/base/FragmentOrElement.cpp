@@ -75,7 +75,6 @@
 #include "nsFrameLoader.h"
 #include "nsXBLBinding.h"
 #include "nsPIDOMWindow.h"
-#include "nsPIBoxObject.h"
 #include "nsSVGUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
@@ -1173,7 +1172,6 @@ void FragmentOrElement::DestroyContent() {
 
   document->BindingManager()->RemovedFromDocument(this, document,
                                                   nsBindingManager::eRunDtor);
-  document->ClearBoxObjectFor(this);
 
 #ifdef DEBUG
   uint32_t oldChildCount = GetChildCount();

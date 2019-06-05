@@ -1375,7 +1375,7 @@ pref("pdfjs.previousHandler.alwaysAskBeforeHandling", false);
 // Is the sidebar positioned ahead of the content browser
 pref("sidebar.position_start", true);
 
-pref("security.identitypopup.recordEventElemetry", true);
+pref("security.identitypopup.recordEventTelemetry", true);
 
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);

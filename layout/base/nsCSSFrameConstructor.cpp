@@ -48,7 +48,6 @@
 #include "nsStyleConsts.h"
 #ifdef MOZ_XUL
 #  include "nsXULElement.h"
-#  include "mozilla/dom/BoxObject.h"
 #endif  // MOZ_XUL
 #include "nsContainerFrame.h"
 #include "nsNameSpaceManager.h"
@@ -207,7 +206,6 @@ static FrameCtorDebugFlags gFlags[] = {
 #  include "nsMenuFrame.h"
 #  include "nsPopupSetFrame.h"
 #  include "nsTreeColFrame.h"
-#  include "nsIBoxObject.h"
 #  include "nsXULLabelFrame.h"
 
 //------------------------------------------------------------------
