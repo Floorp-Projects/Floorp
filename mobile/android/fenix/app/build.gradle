@@ -170,7 +170,12 @@ android.applicationVariants.all { variant ->
             // Append to the task so the first thing it does is run our validation
             prebuildTask.doFirst {
                 if (!project.hasProperty('versionName')) {
-                    throw new RuntimeException("Release builds require the 'versionName' property, e.g.: './gradlew -PversionName=<...> assembleNightly'")
+                    throw new RuntimeException("Release builds require the 'versionName' property to be set.\n" +
+                            "If you're using an IDE, set your build variant to be a \"debug\" type.\n" +
+                            "If you're using the command-line, either build a debug variant instead ('./gradlew assembleDebug')\n" +
+                            "\tor continue building the release build and set the \"versionName\" property ('./gradlew -PversionName=<...> assembleNightly').")
+                    // TODO when Android Studio 3.5.0 is prevalent, we can set the "debug" build type as the default
+                    // https://issuetracker.google.com/issues/36988145#comment59
                 }
             }
         }
