@@ -57,6 +57,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
         // Compute how many milliseconds until the next time the metrics ping
         // needs to collect data.
         val millisUntilNextDueTime = getMillisecondsUntilDueTime(sendTheNextCalendarDay, now)
+        logger.debug("Scheduling the 'metrics' ping in ${millisUntilNextDueTime}ms")
 
         // Build a work request: we don't use use a `PeriodicWorkRequest`, which
         // is more suitable for this task, because of the inherent drifting. See
@@ -160,6 +161,10 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
         val now = getCalendarInstance()
         val lastSentDate = getLastCollectedDate()
 
+        if (lastSentDate != null) {
+            logger.debug("The 'metrics' ping was last sent on $lastSentDate")
+        }
+
         // We expect to cover 3 cases here:
         //
         // (1) - the ping was already collected the current calendar day; only schedule
@@ -174,13 +179,13 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
             alreadySentToday -> {
                 // The metrics ping was already sent today. Schedule it for the next
                 // calendar day. This addresses (1).
-                logger.info("The 'metrics' ping was already sent today")
+                logger.info("The 'metrics' ping was already sent today, ${now.time}.")
                 schedulePingCollection(now, sendTheNextCalendarDay = true)
             }
             // The ping wasn't already sent today. Are we overdue or just waiting for
             // the right time?
             isAfterDueTime(now) -> {
-                logger.info("The 'metrics' ping is scheduled for immediate collection")
+                logger.info("The 'metrics' ping is scheduled for immediate collection, ${now.time}")
                 // The reason why we're collecting the "metrics" ping in the `Dispatchers.API`
                 // context is that we want to make sure no other metric API adds data before
                 // the ping is collected. All the exposed metrics API dispatch calls to the
@@ -194,7 +199,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
             }
             else -> {
                 // This covers (3).
-                logger.info("The 'metrics' collection scheduled for the next calendar day")
+                logger.info("The 'metrics' collection is scheduled for today, ${now.time}")
                 schedulePingCollection(now, sendTheNextCalendarDay = false)
             }
         }
@@ -208,7 +213,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun collectPingAndReschedule(now: Calendar) {
-        logger.info("Collecting the 'metrics' ping, now = $now")
+        logger.info("Collecting the 'metrics' ping, now = ${now.time}")
         Pings.metrics.send()
         // Update the collection date: we don't really care if we have data or not, let's
         // always update the sent date.
@@ -285,7 +290,7 @@ internal class MetricsPingWorker(context: Context, params: WorkerParameters) : W
         val metricsScheduler = Glean.metricsPingScheduler
         // Perform the actual work.
         val now = metricsScheduler.getCalendarInstance()
-        logger.debug("MetricsPingWorker doWork(), now = $now")
+        logger.debug("MetricsPingWorker doWork(), now = ${now.time}")
         metricsScheduler.collectPingAndReschedule(now)
         // We don't expect to fail at collection: we might fail at upload, but that's handled
         // separately by the upload worker.
