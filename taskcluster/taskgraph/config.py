@@ -88,6 +88,11 @@ graph_config_schema = Schema({
             }
         },
     },
+    Required('mac-notarization'): {
+        Required('mac-behavior'):
+            optionally_keyed_by('platform', 'release-type',
+                                Any('mac_notarize', 'mac_pkg', 'mac_sign', 'mac_sign_and_pkg')),
+    },
 })
 
 

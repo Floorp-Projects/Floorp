@@ -401,3 +401,12 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{alias}'
+
+mac-notarization:
+    mac-behavior:
+        by-release-type:
+            nightly.*: mac_notarize
+            beta.*: mac_notarize
+            esr.*: mac_notarize
+            release.*: mac_notarize
+            default: mac_sign_and_pkg
