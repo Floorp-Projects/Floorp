@@ -117,10 +117,17 @@ class CrossCompartmentKey {
         : Debuggee(debugger, referent) {}
   };
 
-  using WrappedType =
-      mozilla::Variant<JSObject*, JSString*, DebuggeeObject, DebuggeeJSScript,
-                       DebuggeeWasmScript, DebuggeeLazyScript,
-                       DebuggeeEnvironment, DebuggeeSource>;
+  // Key under which we find debugger's Debugger.Frame for the generator call
+  // whose AbstractGeneratorObject is referent.
+  struct DebuggeeFrameGenerator : Debuggee<NativeObject> {
+    DebuggeeFrameGenerator(NativeObject* debugger, NativeObject* referent)
+        : Debuggee(debugger, referent) {}
+  };
+
+  using WrappedType = mozilla::Variant<JSObject*, JSString*, DebuggeeObject,
+                                       DebuggeeJSScript, DebuggeeWasmScript,
+                                       DebuggeeLazyScript, DebuggeeEnvironment,
+                                       DebuggeeSource, DebuggeeFrameGenerator>;
 
   explicit CrossCompartmentKey(JSObject* obj) : wrapped(obj) {
     MOZ_RELEASE_ASSERT(obj);
@@ -142,6 +149,8 @@ class CrossCompartmentKey {
   explicit CrossCompartmentKey(DebuggeeEnvironment&& key)
       : wrapped(std::move(key)) {}
   explicit CrossCompartmentKey(DebuggeeWasmScript&& key)
+      : wrapped(std::move(key)) {}
+  explicit CrossCompartmentKey(DebuggeeFrameGenerator&& key)
       : wrapped(std::move(key)) {}
   explicit CrossCompartmentKey(NativeObject* debugger, JSScript* referent)
       : wrapped(DebuggeeJSScript(debugger, referent)) {}
