@@ -20,12 +20,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.ConstellationState
-import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceConstellationObserver
+import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceEventsObserver
 import mozilla.components.support.base.log.logger.Logger
-
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import java.util.concurrent.TimeUnit
@@ -161,7 +160,6 @@ internal class WorkManagerDeviceRefreshWorker(
 ) : CoroutineWorker(context, params) {
     private val logger = Logger("DeviceManagerPollWorker")
 
-    @Suppress("ReturnCount", "ComplexMethod")
     override suspend fun doWork(): Result {
         logger.info("Polling for new events via ${DeviceManagerProvider.deviceManager}")
 

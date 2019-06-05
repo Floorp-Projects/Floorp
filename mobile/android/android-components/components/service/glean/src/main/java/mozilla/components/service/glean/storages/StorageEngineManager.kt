@@ -13,9 +13,9 @@ import mozilla.components.service.glean.private.StringMetricType
 import mozilla.components.service.glean.private.TimespanMetricType
 import mozilla.components.service.glean.private.TimingDistributionMetricType
 import mozilla.components.service.glean.private.UuidMetricType
+import mozilla.components.support.ktx.android.org.json.getOrPutJSONObject
 import org.json.JSONArray
 import org.json.JSONObject
-import mozilla.components.support.ktx.android.org.json.getOrPutJSONObject
 
 /**
  * This singleton is the one interface to all the available storage engines:
@@ -138,7 +138,6 @@ internal class StorageEngineManager(
         *
         * @return A storage engine, or null if none exists
         */
-        @Suppress("ComplexMethod")
         internal fun <T> getStorageEngineForMetric(subMetric: T): StorageEngine? {
             // Every metric that supports labels needs an entry here
             return when (subMetric) {

@@ -18,8 +18,8 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceEvent
-import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.DeviceEventsObserver
+import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
@@ -30,15 +30,14 @@ import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaException
 import mozilla.components.service.fxa.FxaPanicException
 import mozilla.components.service.fxa.SharedPrefAccountStorage
-import java.util.concurrent.ConcurrentLinkedQueue
-import kotlin.coroutines.CoroutineContext
-
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import java.io.Closeable
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Propagated via [AccountObserver.onError] if we fail to load a locally stored account during
@@ -164,53 +163,41 @@ open class FxaAccountManager(
          * @return An optional [AccountState] if provided state+event combination results in a
          * state transition. Note that states may transition into themselves.
          */
-        @Suppress("ComplexMethod")
-        internal fun nextState(state: AccountState, event: Event): AccountState? {
-            return when (state) {
-                AccountState.Start -> {
-                    when (event) {
-                        Event.Init -> AccountState.Start
-                        Event.AccountNotFound -> AccountState.NotAuthenticated
-                        Event.AccountRestored -> AccountState.AuthenticatedNoProfile
-                        else -> null
-                    }
+        internal fun nextState(state: AccountState, event: Event): AccountState? =
+            when (state) {
+                AccountState.Start -> when (event) {
+                    Event.Init -> AccountState.Start
+                    Event.AccountNotFound -> AccountState.NotAuthenticated
+                    Event.AccountRestored -> AccountState.AuthenticatedNoProfile
+                    else -> null
                 }
-                AccountState.NotAuthenticated -> {
-                    when (event) {
-                        Event.Authenticate -> AccountState.NotAuthenticated
-                        Event.FailedToAuthenticate -> AccountState.NotAuthenticated
-                        is Event.Pair -> AccountState.NotAuthenticated
-                        is Event.Authenticated -> AccountState.AuthenticatedNoProfile
-                        else -> null
-                    }
+                AccountState.NotAuthenticated -> when (event) {
+                    Event.Authenticate -> AccountState.NotAuthenticated
+                    Event.FailedToAuthenticate -> AccountState.NotAuthenticated
+                    is Event.Pair -> AccountState.NotAuthenticated
+                    is Event.Authenticated -> AccountState.AuthenticatedNoProfile
+                    else -> null
                 }
-                AccountState.AuthenticatedNoProfile -> {
-                    when (event) {
-                        is Event.AuthenticationError -> AccountState.AuthenticationProblem
-                        Event.FetchProfile -> AccountState.AuthenticatedNoProfile
-                        Event.FetchedProfile -> AccountState.AuthenticatedWithProfile
-                        Event.FailedToFetchProfile -> AccountState.AuthenticatedNoProfile
-                        Event.Logout -> AccountState.NotAuthenticated
-                        else -> null
-                    }
+                AccountState.AuthenticatedNoProfile -> when (event) {
+                    is Event.AuthenticationError -> AccountState.AuthenticationProblem
+                    Event.FetchProfile -> AccountState.AuthenticatedNoProfile
+                    Event.FetchedProfile -> AccountState.AuthenticatedWithProfile
+                    Event.FailedToFetchProfile -> AccountState.AuthenticatedNoProfile
+                    Event.Logout -> AccountState.NotAuthenticated
+                    else -> null
                 }
-                AccountState.AuthenticatedWithProfile -> {
-                    when (event) {
-                        is Event.AuthenticationError -> AccountState.AuthenticationProblem
-                        Event.Logout -> AccountState.NotAuthenticated
-                        else -> null
-                    }
+                AccountState.AuthenticatedWithProfile -> when (event) {
+                    is Event.AuthenticationError -> AccountState.AuthenticationProblem
+                    Event.Logout -> AccountState.NotAuthenticated
+                    else -> null
                 }
-                AccountState.AuthenticationProblem -> {
-                    when (event) {
-                        Event.Authenticate -> AccountState.AuthenticationProblem
-                        Event.FailedToAuthenticate -> AccountState.AuthenticationProblem
-                        is Event.Authenticated -> AccountState.AuthenticatedNoProfile
-                        Event.Logout -> AccountState.NotAuthenticated
-                        else -> null
-                    }
+                AccountState.AuthenticationProblem -> when (event) {
+                    Event.Authenticate -> AccountState.AuthenticationProblem
+                    Event.FailedToAuthenticate -> AccountState.AuthenticationProblem
+                    is Event.Authenticated -> AccountState.AuthenticatedNoProfile
+                    Event.Logout -> AccountState.NotAuthenticated
+                    else -> null
                 }
-            }
         }
     }
 

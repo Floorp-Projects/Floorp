@@ -83,7 +83,7 @@ internal class Parser(
                 state = stopState
             }
         } else if (stateMap.map.containsKey(token.type)) {
-            val nextState = stateMap.map[token.type]!!
+            val nextState = stateMap.map.getValue(token.type)
 
             if (nextState.handler != null) {
                 // Use handler for this transition
@@ -96,7 +96,7 @@ internal class Parser(
 
             nextState.state?.let { state = it }
         } else if (stopMap.containsKey(token.type)) {
-            return stopMap[token.type]!!
+            return stopMap.getValue(token.type)
         } else {
             throw ParserException("Token ${token.raw} (${token.type}) unexpected in state $state")
         }

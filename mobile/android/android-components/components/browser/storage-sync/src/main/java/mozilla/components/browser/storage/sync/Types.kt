@@ -26,36 +26,30 @@ internal fun AuthInfo.into(): SyncAuthInfo {
 /**
  * Conversion from a generic [VisitType] into its richer comrade within the 'places' lib.
  */
-@SuppressWarnings("ComplexMethod")
-internal fun VisitType.into(): mozilla.appservices.places.VisitType {
-    return when (this) {
-        VisitType.NOT_A_VISIT -> mozilla.appservices.places.VisitType.UPDATE_PLACE
-        VisitType.LINK -> mozilla.appservices.places.VisitType.LINK
-        VisitType.RELOAD -> mozilla.appservices.places.VisitType.RELOAD
-        VisitType.TYPED -> mozilla.appservices.places.VisitType.TYPED
-        VisitType.BOOKMARK -> mozilla.appservices.places.VisitType.BOOKMARK
-        VisitType.EMBED -> mozilla.appservices.places.VisitType.EMBED
-        VisitType.REDIRECT_PERMANENT -> mozilla.appservices.places.VisitType.REDIRECT_PERMANENT
-        VisitType.REDIRECT_TEMPORARY -> mozilla.appservices.places.VisitType.REDIRECT_TEMPORARY
-        VisitType.DOWNLOAD -> mozilla.appservices.places.VisitType.DOWNLOAD
-        VisitType.FRAMED_LINK -> mozilla.appservices.places.VisitType.FRAMED_LINK
-    }
+internal fun VisitType.into() = when (this) {
+    VisitType.NOT_A_VISIT -> mozilla.appservices.places.VisitType.UPDATE_PLACE
+    VisitType.LINK -> mozilla.appservices.places.VisitType.LINK
+    VisitType.RELOAD -> mozilla.appservices.places.VisitType.RELOAD
+    VisitType.TYPED -> mozilla.appservices.places.VisitType.TYPED
+    VisitType.BOOKMARK -> mozilla.appservices.places.VisitType.BOOKMARK
+    VisitType.EMBED -> mozilla.appservices.places.VisitType.EMBED
+    VisitType.REDIRECT_PERMANENT -> mozilla.appservices.places.VisitType.REDIRECT_PERMANENT
+    VisitType.REDIRECT_TEMPORARY -> mozilla.appservices.places.VisitType.REDIRECT_TEMPORARY
+    VisitType.DOWNLOAD -> mozilla.appservices.places.VisitType.DOWNLOAD
+    VisitType.FRAMED_LINK -> mozilla.appservices.places.VisitType.FRAMED_LINK
 }
 
-@SuppressWarnings("ComplexMethod")
-internal fun mozilla.appservices.places.VisitType.into(): VisitType {
-    return when (this) {
-        mozilla.appservices.places.VisitType.UPDATE_PLACE -> VisitType.NOT_A_VISIT
-        mozilla.appservices.places.VisitType.LINK -> VisitType.LINK
-        mozilla.appservices.places.VisitType.RELOAD -> VisitType.RELOAD
-        mozilla.appservices.places.VisitType.TYPED -> VisitType.TYPED
-        mozilla.appservices.places.VisitType.BOOKMARK -> VisitType.BOOKMARK
-        mozilla.appservices.places.VisitType.EMBED -> VisitType.EMBED
-        mozilla.appservices.places.VisitType.REDIRECT_PERMANENT -> VisitType.REDIRECT_PERMANENT
-        mozilla.appservices.places.VisitType.REDIRECT_TEMPORARY -> VisitType.REDIRECT_TEMPORARY
-        mozilla.appservices.places.VisitType.DOWNLOAD -> VisitType.DOWNLOAD
-        mozilla.appservices.places.VisitType.FRAMED_LINK -> VisitType.FRAMED_LINK
-    }
+internal fun mozilla.appservices.places.VisitType.into() = when (this) {
+    mozilla.appservices.places.VisitType.UPDATE_PLACE -> VisitType.NOT_A_VISIT
+    mozilla.appservices.places.VisitType.LINK -> VisitType.LINK
+    mozilla.appservices.places.VisitType.RELOAD -> VisitType.RELOAD
+    mozilla.appservices.places.VisitType.TYPED -> VisitType.TYPED
+    mozilla.appservices.places.VisitType.BOOKMARK -> VisitType.BOOKMARK
+    mozilla.appservices.places.VisitType.EMBED -> VisitType.EMBED
+    mozilla.appservices.places.VisitType.REDIRECT_PERMANENT -> VisitType.REDIRECT_PERMANENT
+    mozilla.appservices.places.VisitType.REDIRECT_TEMPORARY -> VisitType.REDIRECT_TEMPORARY
+    mozilla.appservices.places.VisitType.DOWNLOAD -> VisitType.DOWNLOAD
+    mozilla.appservices.places.VisitType.FRAMED_LINK -> VisitType.FRAMED_LINK
 }
 
 internal fun mozilla.appservices.places.VisitInfo.into(): VisitInfo {

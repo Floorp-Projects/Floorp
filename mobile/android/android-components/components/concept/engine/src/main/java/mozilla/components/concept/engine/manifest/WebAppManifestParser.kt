@@ -144,17 +144,14 @@ private fun parseTextDirection(json: JSONObject): WebAppManifest.TextDirection {
     }
 }
 
-@Suppress("ComplexMethod") // It's not really that complex..
-private fun parseOrientation(json: JSONObject): WebAppManifest.Orientation {
-    return when (json.optString("orientation")) {
-        "any" -> WebAppManifest.Orientation.ANY
-        "natural" -> WebAppManifest.Orientation.NATURAL
-        "landscape" -> WebAppManifest.Orientation.LANDSCAPE
-        "portrait" -> WebAppManifest.Orientation.PORTRAIT
-        "portrait-primary" -> WebAppManifest.Orientation.PORTRAIT_PRIMARY
-        "portrait-secondary" -> WebAppManifest.Orientation.PORTRAIT_SECONDARY
-        "landscape-primary" -> WebAppManifest.Orientation.LANDSCAPE_PRIMARY
-        "landscape-secondary" -> WebAppManifest.Orientation.LANDSCAPE_SECONDARY
-        else -> WebAppManifest.Orientation.ANY
-    }
+private fun parseOrientation(json: JSONObject) = when (json.optString("orientation")) {
+    "any" -> WebAppManifest.Orientation.ANY
+    "natural" -> WebAppManifest.Orientation.NATURAL
+    "landscape" -> WebAppManifest.Orientation.LANDSCAPE
+    "portrait" -> WebAppManifest.Orientation.PORTRAIT
+    "portrait-primary" -> WebAppManifest.Orientation.PORTRAIT_PRIMARY
+    "portrait-secondary" -> WebAppManifest.Orientation.PORTRAIT_SECONDARY
+    "landscape-primary" -> WebAppManifest.Orientation.LANDSCAPE_PRIMARY
+    "landscape-secondary" -> WebAppManifest.Orientation.LANDSCAPE_SECONDARY
+    else -> WebAppManifest.Orientation.ANY
 }

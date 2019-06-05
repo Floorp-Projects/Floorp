@@ -383,7 +383,6 @@ class SystemEngineSession(
          * Chromium's mapping (internal error code, to Android WebView error code) is described at:
          * https://goo.gl/vspwct (ErrorCodeConversionHelper.java)
          */
-        @Suppress("ComplexMethod")
         internal fun webViewErrorToErrorType(errorCode: Int) =
             when (errorCode) {
                 WebViewClient.ERROR_UNKNOWN -> ErrorType.UNKNOWN

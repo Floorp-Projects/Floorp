@@ -45,24 +45,27 @@ private fun shouldSerialize(value: Any?): Boolean {
     }
 }
 
-@Suppress("ComplexMethod")
 private fun JSONObject.toBundle(): Bundle {
     val bundle = Bundle()
 
     keys().forEach { key ->
         val value = get(key)
-        when (value) {
-            is Int -> bundle.putInt(key, value)
-            is Double -> bundle.putDouble(key, value)
-            is Long -> bundle.putLong(key, value)
-            is Float -> bundle.putFloat(key, value)
-            is Char -> bundle.putChar(key, value)
-            is Short -> bundle.putShort(key, value)
-            is Byte -> bundle.putByte(key, value)
-            is String -> bundle.putString(key, value)
-            is Boolean -> bundle.putBoolean(key, value)
-        }
+        bundle.put(key, value)
     }
 
     return bundle
+}
+
+private fun Bundle.put(key: String, value: Any) {
+    when (value) {
+        is Int -> putInt(key, value)
+        is Double -> putDouble(key, value)
+        is Long -> putLong(key, value)
+        is Float -> putFloat(key, value)
+        is Char -> putChar(key, value)
+        is Short -> putShort(key, value)
+        is Byte -> putByte(key, value)
+        is String -> putString(key, value)
+        is Boolean -> putBoolean(key, value)
+    }
 }

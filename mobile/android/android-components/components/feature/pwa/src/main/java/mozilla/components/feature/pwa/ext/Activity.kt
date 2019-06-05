@@ -12,7 +12,6 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
  * Sets the requested orientation of the [Activity] to the orientation provided by the given [WebAppManifest] (See
  * [WebAppManifest.orientation] and [WebAppManifest.Orientation].
  */
-@Suppress("ComplexMethod") // Lots of branches... but not complex.
 fun Activity.applyOrientation(manifest: WebAppManifest) {
     when (manifest.orientation) {
         WebAppManifest.Orientation.NATURAL ->

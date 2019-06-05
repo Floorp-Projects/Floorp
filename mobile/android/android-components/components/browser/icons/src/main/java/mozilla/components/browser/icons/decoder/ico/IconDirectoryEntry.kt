@@ -21,36 +21,34 @@ internal data class IconDirectoryEntry(
     val payloadIsPNG: Boolean,
     val directoryIndex: Int
 ) : Comparable<IconDirectoryEntry> {
-    @Suppress("ReturnCount", "ComplexMethod")
-    override fun compareTo(other: IconDirectoryEntry): Int {
-        return when {
-            width > other.width -> 1
-            width < other.width -> -1
 
-            // Where both images exceed the max BPP, take the smaller of the two BPP values.
-            bitsPerPixel >= MAX_BITS_PER_PIXEL && other.bitsPerPixel >= MAX_BITS_PER_PIXEL &&
-                bitsPerPixel < other.bitsPerPixel -> 1
-            bitsPerPixel >= MAX_BITS_PER_PIXEL && other.bitsPerPixel >= MAX_BITS_PER_PIXEL &&
-                bitsPerPixel > other.bitsPerPixel -> -1
+    override fun compareTo(other: IconDirectoryEntry): Int = when {
+        width > other.width -> 1
+        width < other.width -> -1
 
-            // Otherwise, take the larger of the BPP values.
-            bitsPerPixel > other.bitsPerPixel -> 1
-            bitsPerPixel < other.bitsPerPixel -> -1
+        // Where both images exceed the max BPP, take the smaller of the two BPP values.
+        bitsPerPixel >= MAX_BITS_PER_PIXEL && other.bitsPerPixel >= MAX_BITS_PER_PIXEL &&
+            bitsPerPixel < other.bitsPerPixel -> 1
+        bitsPerPixel >= MAX_BITS_PER_PIXEL && other.bitsPerPixel >= MAX_BITS_PER_PIXEL &&
+            bitsPerPixel > other.bitsPerPixel -> -1
 
-            // Prefer large palettes.
-            paletteSize > other.paletteSize -> 1
-            paletteSize < other.paletteSize -> -1
+        // Otherwise, take the larger of the BPP values.
+        bitsPerPixel > other.bitsPerPixel -> 1
+        bitsPerPixel < other.bitsPerPixel -> -1
 
-            // Prefer smaller payloads.
-            payloadSize < other.payloadSize -> 1
-            payloadSize > other.payloadSize -> -1
+        // Prefer large palettes.
+        paletteSize > other.paletteSize -> 1
+        paletteSize < other.paletteSize -> -1
 
-            // If all else fails, prefer PNGs over BMPs. They tend to be smaller.
-            payloadIsPNG && !other.payloadIsPNG -> 1
-            !payloadIsPNG && other.payloadIsPNG -> -1
+        // Prefer smaller payloads.
+        payloadSize < other.payloadSize -> 1
+        payloadSize > other.payloadSize -> -1
 
-            else -> return 0
-        }
+        // If all else fails, prefer PNGs over BMPs. They tend to be smaller.
+        payloadIsPNG && !other.payloadIsPNG -> 1
+        !payloadIsPNG && other.payloadIsPNG -> -1
+
+        else -> 0
     }
 
     fun toBitmap(data: ByteArray): Bitmap? {

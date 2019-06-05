@@ -14,37 +14,39 @@ import java.io.Serializable
 /**
  * Converts a Map to a Bundle
  */
-@Suppress("ComplexMethod")
 fun <K, V> Map<K, V>.toBundle(): Bundle {
     return Bundle().apply {
         forEach { (k, v) ->
             val key = k.toString()
-
-            when (v) {
-                is IBinder -> putBinder(key, v)
-                is Boolean -> putBoolean(key, v)
-                is BooleanArray -> putBooleanArray(key, v)
-                is Bundle -> putBundle(key, v)
-                is Byte -> putByte(key, v)
-                is ByteArray -> putByteArray(key, v)
-                is Char -> putChar(key, v)
-                is CharArray -> putCharArray(key, v)
-                is CharSequence -> putCharSequence(key, v)
-                is Double -> putDouble(key, v)
-                is DoubleArray -> putDoubleArray(key, v)
-                is Float -> putFloat(key, v)
-                is FloatArray -> putFloatArray(key, v)
-                is Int -> putInt(key, v)
-                is IntArray -> putIntArray(key, v)
-                is Long -> putLong(key, v)
-                is LongArray -> putLongArray(key, v)
-                is Parcelable -> putParcelable(key, v)
-                is Serializable -> putSerializable(key, v)
-                is Short -> putShort(key, v)
-                is ShortArray -> putShortArray(key, v)
-                is Size -> putSize(key, v)
-                is SizeF -> putSizeF(key, v)
-            }
+            put(key, v)
         }
+    }
+}
+
+private fun <V> Bundle.put(key: String, value: V) {
+    when (value) {
+        is IBinder -> putBinder(key, value)
+        is Boolean -> putBoolean(key, value)
+        is BooleanArray -> putBooleanArray(key, value)
+        is Bundle -> putBundle(key, value)
+        is Byte -> putByte(key, value)
+        is ByteArray -> putByteArray(key, value)
+        is Char -> putChar(key, value)
+        is CharArray -> putCharArray(key, value)
+        is CharSequence -> putCharSequence(key, value)
+        is Double -> putDouble(key, value)
+        is DoubleArray -> putDoubleArray(key, value)
+        is Float -> putFloat(key, value)
+        is FloatArray -> putFloatArray(key, value)
+        is Int -> putInt(key, value)
+        is IntArray -> putIntArray(key, value)
+        is Long -> putLong(key, value)
+        is LongArray -> putLongArray(key, value)
+        is Parcelable -> putParcelable(key, value)
+        is Serializable -> putSerializable(key, value)
+        is Short -> putShort(key, value)
+        is ShortArray -> putShortArray(key, value)
+        is Size -> putSize(key, value)
+        is SizeF -> putSizeF(key, value)
     }
 }

@@ -12,32 +12,30 @@ import kotlin.math.min
  * first.
  */
 internal object IconResourceComparator : Comparator<IconRequest.Resource> {
-    @Suppress("ComplexMethod", "ReturnCount")
+
+    @Suppress("ComplexMethod")
     override fun compare(resource: IconRequest.Resource, other: IconRequest.Resource): Int {
-        if (resource.url == other.url) {
+        return if (resource.url == other.url) {
             // Two resources pointing to the same URL are always referencing the same icon. So treat them as equal.
-            return 0
+            0
+        } else if (resource.type != other.type) {
+            if (resource.type.rank() > other.type.rank()) -1 else 1
+        } else if (resource.maxSize != other.maxSize) {
+            if (resource.maxSize > other.maxSize) -1 else 1
+        } else {
+            // If there's no other way to choose, we prefer container types.
+            // They *might* contain an image larger than the size given in the <link> tag.
+            val isResourceContainerType = resource.isContainerType
+            val isOtherContainerType = other.isContainerType
+            if (isResourceContainerType != isOtherContainerType) {
+                if (isResourceContainerType) -1 else 1
+            } else {
+                // There's no way to know which icon might be better. However we need to pick a consistent one
+                // to avoid breaking set implementations (See Fennec Bug 1331808).
+                // Therefore we are  picking one by just comparing the URLs.
+                resource.url.compareTo(other.url)
+            }
         }
-
-        if (resource.type != other.type) {
-            return if (resource.type.rank() > other.type.rank()) -1 else 1
-        }
-
-        if (resource.maxSize != other.maxSize) {
-            return if (resource.maxSize > other.maxSize) -1 else 1
-        }
-
-        // If there's no other way to choose, we prefer container types. They *might* contain an image larger than the
-        // size given in the <link> tag.
-        val isResourceContainerType = resource.isContainerType
-        val isOtherContainerType = other.isContainerType
-        if (isResourceContainerType != isOtherContainerType) {
-            return if (isResourceContainerType) -1 else 1
-        }
-
-        // There's no way to know which icon might be better. However we need to pick a consistent one to avoid breaking
-        // set implementations (See Fennec Bug 1331808). Therefore we are  picking one by just comparing the URLs.
-        return resource.url.compareTo(other.url)
     }
 }
 
