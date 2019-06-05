@@ -85,14 +85,38 @@ function testReload(shortcut, toolbox, toolID) {
   const mm = gBrowser.selectedBrowser.messageManager;
 
   return new Promise(resolve => {
-    // The inspector needs some special care.
-    const toolUpdated = toolID === "inspector"
-      ? toolbox.getPanel("inspector").once("new-root")
-      : Promise.resolve();
+    const observer = {
+      _isDocumentUnloaded: false,
+      _isNewRooted: false,
+      onMutation(mutations) {
+        for (const { type } of mutations) {
+          if (type === "documentUnload") {
+            this._isDocumentUnloaded = true;
+          } else if (type === "newRoot") {
+            this._isNewRooted = true;
+          }
+        }
+      },
+      isReady() {
+        return this._isDocumentUnloaded && this._isNewRooted;
+      },
+    };
 
-    const complete = () => {
+    if (toolbox.walker) {
+      observer.onMutation = observer.onMutation.bind(observer);
+      toolbox.walker.on("mutations", observer.onMutation);
+    } else {
+      observer.isReady = () => true;
+    }
+
+    const complete = async () => {
       mm.removeMessageListener("devtools:test:load", complete);
-      toolUpdated.then(resolve);
+      // Wait for the documentUnload and newRoot were fired.
+      await waitUntil(() => observer.isReady());
+      if (toolbox.walker) {
+        toolbox.walker.off("mutations", observer.onMutation);
+      }
+      resolve();
     };
     mm.addMessageListener("devtools:test:load", complete);
 
