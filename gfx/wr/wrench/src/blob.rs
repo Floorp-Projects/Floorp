@@ -105,7 +105,7 @@ fn render_blob(
 /// See rawtest.rs. We use this to test that blob images are requested the right
 /// amount of times.
 pub struct BlobCallbacks {
-    pub request: Box<Fn(&[BlobImageParams]) + Send + 'static>,
+    pub request: Box<dyn Fn(&[BlobImageParams]) + Send + 'static>,
 }
 
 impl BlobCallbacks {
@@ -152,7 +152,7 @@ impl BlobImageHandler for CheckerboardRenderer {
 
     fn prepare_resources(
         &mut self,
-        _services: &BlobImageResources,
+        _services: &dyn BlobImageResources,
         requests: &[BlobImageParams],
     ) {
         if !requests.is_empty() {
@@ -160,7 +160,7 @@ impl BlobImageHandler for CheckerboardRenderer {
         }
     }
 
-    fn create_blob_rasterizer(&mut self) -> Box<AsyncBlobImageRasterizer> {
+    fn create_blob_rasterizer(&mut self) -> Box<dyn AsyncBlobImageRasterizer> {
         Box::new(Rasterizer { image_cmds: self.image_cmds.clone() })
     }
 }

@@ -164,9 +164,9 @@ impl HeadlessContext {
 }
 
 pub enum WindowWrapper {
-    Window(glutin::GlWindow, Rc<gl::Gl>),
-    Angle(winit::Window, angle::Context, Rc<gl::Gl>),
-    Headless(HeadlessContext, Rc<gl::Gl>),
+    Window(glutin::GlWindow, Rc<dyn gl::Gl>),
+    Angle(winit::Window, angle::Context, Rc<dyn gl::Gl>),
+    Headless(HeadlessContext, Rc<dyn gl::Gl>),
 }
 
 pub struct HeadlessEventIterater;
@@ -223,7 +223,7 @@ impl WindowWrapper {
         }
     }
 
-    pub fn gl(&self) -> &gl::Gl {
+    pub fn gl(&self) -> &dyn gl::Gl {
         match *self {
             WindowWrapper::Window(_, ref gl) |
             WindowWrapper::Angle(_, _, ref gl) |
@@ -231,7 +231,7 @@ impl WindowWrapper {
         }
     }
 
-    pub fn clone_gl(&self) -> Rc<gl::Gl> {
+    pub fn clone_gl(&self) -> Rc<dyn gl::Gl> {
         match *self {
             WindowWrapper::Window(_, ref gl) |
             WindowWrapper::Angle(_, _, ref gl) |
@@ -260,7 +260,7 @@ fn make_window(
                 .with_multitouch()
                 .with_dimensions(LogicalSize::new(size.width as f64, size.height as f64));
 
-            let init = |context: &glutin::GlContext| {
+            let init = |context: &dyn glutin::GlContext| {
                 unsafe {
                     context
                         .make_current()
@@ -336,7 +336,7 @@ struct Notifier {
 
 // setup a notifier so we can wait for frames to be finished
 impl RenderNotifier for Notifier {
-    fn clone(&self) -> Box<RenderNotifier> {
+    fn clone(&self) -> Box<dyn RenderNotifier> {
         Box::new(Notifier {
             tx: self.tx.clone(),
         })
@@ -361,7 +361,7 @@ impl RenderNotifier for Notifier {
     }
 }
 
-fn create_notifier() -> (Box<RenderNotifier>, Receiver<NotifierEvent>) {
+fn create_notifier() -> (Box<dyn RenderNotifier>, Receiver<NotifierEvent>) {
     let (tx, rx) = channel();
     (Box::new(Notifier { tx: tx }), rx)
 }
@@ -571,7 +571,7 @@ fn render<'a>(
             window.resize(fb_size);
         }
         wrench.document_id = captured.document_id;
-        Box::new(captured) as Box<WrenchThing>
+        Box::new(captured) as Box<dyn WrenchThing>
     } else {
         let extension = input_path
             .extension()
@@ -580,8 +580,8 @@ fn render<'a>(
             .expect("Tried to render with an unknown file type.");
 
         match extension {
-            "yaml" => Box::new(YamlFrameReader::new_from_args(subargs)) as Box<WrenchThing>,
-            "bin" => Box::new(BinaryFrameReader::new_from_args(subargs)) as Box<WrenchThing>,
+            "yaml" => Box::new(YamlFrameReader::new_from_args(subargs)) as Box<dyn WrenchThing>,
+            "bin" => Box::new(BinaryFrameReader::new_from_args(subargs)) as Box<dyn WrenchThing>,
             _ => panic!("Tried to render with an unknown file type."),
         }
     };

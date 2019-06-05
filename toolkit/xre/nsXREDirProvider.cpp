@@ -98,6 +98,8 @@ static already_AddRefed<nsIFile> CreateProcessSandboxTempDir(
 nsXREDirProvider* gDirServiceProvider = nullptr;
 nsIFile* gDataDirHomeLocal = nullptr;
 nsIFile* gDataDirHome = nullptr;
+nsCOMPtr<nsIFile> gDataDirProfileLocal = nullptr;
+nsCOMPtr<nsIFile> gDataDirProfile = nullptr;
 
 // These are required to allow nsXREDirProvider to be usable in xpcshell tests.
 // where gAppData is null.
@@ -1075,6 +1077,9 @@ nsXREDirProvider::DoStartup() {
 void nsXREDirProvider::DoShutdown() {
   AUTO_PROFILER_LABEL("nsXREDirProvider::DoShutdown", OTHER);
 
+  gDataDirProfileLocal = nullptr;
+  gDataDirProfile = nullptr;
+
   if (mProfileNotified) {
     nsCOMPtr<nsIObserverService> obsSvc =
         mozilla::services::GetObserverService();
@@ -1341,6 +1346,18 @@ nsXREDirProvider::SetUserDataDirectory(nsIFile* aFile, bool aLocal) {
   return NS_OK;
 }
 
+/* static */
+nsresult nsXREDirProvider::SetUserDataProfileDirectory(nsCOMPtr<nsIFile>& aFile,
+                                                       bool aLocal) {
+  if (aLocal) {
+    gDataDirProfileLocal = aFile;
+  } else {
+    gDataDirProfile = aFile;
+  }
+
+  return NS_OK;
+}
+
 nsresult nsXREDirProvider::GetUserDataDirectoryHome(nsIFile** aFile,
                                                     bool aLocal) {
   // Copied from nsAppFileLocationProvider (more or less)
@@ -1506,41 +1523,35 @@ nsresult nsXREDirProvider::GetSystemExtensionsDirectory(nsIFile** aFile) {
 
 nsresult nsXREDirProvider::GetUserDataDirectory(nsIFile** aFile, bool aLocal) {
   nsCOMPtr<nsIFile> localDir;
+
+  if (aLocal && gDataDirProfileLocal) {
+    return gDataDirProfileLocal->Clone(aFile);
+  }
+  if (!aLocal && gDataDirProfile) {
+    return gDataDirProfile->Clone(aFile);
+  }
+
   nsresult rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), aLocal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = AppendProfilePath(localDir, aLocal);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG_jungshik
-  nsAutoCString cwd;
-  localDir->GetNativePath(cwd);
-  printf("nsXREDirProvider::GetUserDataDirectory: %s\n", cwd.get());
-#endif
   rv = EnsureDirectoryExists(localDir);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXREDirProvider::SetUserDataProfileDirectory(localDir, aLocal);
 
   localDir.forget(aFile);
   return NS_OK;
 }
 
 nsresult nsXREDirProvider::EnsureDirectoryExists(nsIFile* aDirectory) {
-  bool exists;
-  nsresult rv = aDirectory->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-#ifdef DEBUG_jungshik
-  if (!exists) {
-    nsAutoCString cwd;
-    aDirectory->GetNativePath(cwd);
-    printf("nsXREDirProvider::EnsureDirectoryExists: %s does not\n", cwd.get());
-  }
-#endif
-  if (!exists) rv = aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0700);
-#ifdef DEBUG_jungshik
-  if (NS_FAILED(rv))
-    NS_WARNING("nsXREDirProvider::EnsureDirectoryExists: create failed");
-#endif
+  nsresult rv = aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0700);
 
+  if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
+    rv = NS_OK;
+  }
   return rv;
 }
 

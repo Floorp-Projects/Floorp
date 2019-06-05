@@ -37,8 +37,8 @@ import "./SearchBar.css";
 import type SourceEditor from "../../utils/editor/source-editor";
 
 function getShortcuts() {
-  const searchAgainKey = L10N.getStr("sourceSearch.search.again.key2");
-  const searchAgainPrevKey = L10N.getStr("sourceSearch.search.againPrev.key2");
+  const searchAgainKey = L10N.getStr("sourceSearch.search.again.key3");
+  const searchAgainPrevKey = L10N.getStr("sourceSearch.search.againPrev.key3");
   const searchKey = L10N.getStr("sourceSearch.search.key2");
 
   return {

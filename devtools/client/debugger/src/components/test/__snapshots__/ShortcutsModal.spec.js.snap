@@ -151,9 +151,9 @@ exports[`ShortcutsModal renders when enabled 1`] = `
           <span>
             <span
               className="keystroke"
-              key="Ctrl+G"
+              key="Cmd+G"
             >
-              Ctrl+G
+              Cmd+G
             </span>
           </span>
         </li>
@@ -190,9 +190,9 @@ exports[`ShortcutsModal renders when enabled 1`] = `
           <span>
             <span
               className="keystroke"
-              key="Ctrl+;"
+              key="Ctrl+G"
             >
-              Ctrl+;
+              Ctrl+G
             </span>
           </span>
         </li>
