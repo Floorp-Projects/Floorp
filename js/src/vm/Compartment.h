@@ -14,6 +14,7 @@
 #include "mozilla/Variant.h"
 
 #include <stddef.h>
+#include <utility>
 
 #include "gc/Barrier.h"
 #include "gc/NurseryAwareHashMap.h"
@@ -134,10 +135,14 @@ class CrossCompartmentKey {
   // For most debuggee keys, we must let the caller choose the key type
   // themselves. But for JSScript and LazyScript, there is only one key type
   // that makes sense, so we provide an overloaded constructor.
-  explicit CrossCompartmentKey(DebuggeeObject&& key) : wrapped(key) {}
-  explicit CrossCompartmentKey(DebuggeeSource&& key) : wrapped(key) {}
-  explicit CrossCompartmentKey(DebuggeeEnvironment&& key) : wrapped(key) {}
-  explicit CrossCompartmentKey(DebuggeeWasmScript&& key) : wrapped(key) {}
+  explicit CrossCompartmentKey(DebuggeeObject&& key)
+      : wrapped(std::move(key)) {}
+  explicit CrossCompartmentKey(DebuggeeSource&& key)
+      : wrapped(std::move(key)) {}
+  explicit CrossCompartmentKey(DebuggeeEnvironment&& key)
+      : wrapped(std::move(key)) {}
+  explicit CrossCompartmentKey(DebuggeeWasmScript&& key)
+      : wrapped(std::move(key)) {}
   explicit CrossCompartmentKey(NativeObject* debugger, JSScript* referent)
       : wrapped(DebuggeeJSScript(debugger, referent)) {}
   explicit CrossCompartmentKey(NativeObject* debugger, LazyScript* referent)
