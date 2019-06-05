@@ -172,15 +172,15 @@ BreakpointActor.prototype = {
   hit: function(frame) {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
+    const location = this.threadActor.sources.getFrameLocation(frame);
     const {
       sourceActor,
       line,
       column,
-    } = this.threadActor.sources.getFrameLocation(frame);
-    const url = sourceActor.url;
+    } = location;
 
     if (
-      this.threadActor.sources.isBlackBoxed(url, line, column) ||
+      this.threadActor.sources.isBlackBoxed(sourceActor.url, line, column) ||
       this.threadActor.skipBreakpoints ||
       frame.onStep
     ) {
@@ -195,6 +195,10 @@ BreakpointActor.prototype = {
       locationAtFinish.line === line &&
       locationAtFinish.column === column
     ) {
+      return undefined;
+    }
+
+    if (!this.threadActor.hasMoved(location, "breakpoint")) {
       return undefined;
     }
 
@@ -238,7 +242,7 @@ BreakpointActor.prototype = {
       }
 
       const message = {
-        filename: url,
+        filename: sourceActor.url,
         lineNumber: line,
         columnNumber: column,
         level: "logPoint",
