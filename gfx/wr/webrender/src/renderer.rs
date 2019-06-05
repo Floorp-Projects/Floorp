@@ -889,7 +889,7 @@ struct TextureResolver {
 
     /// Saved render targets from previous passes. This is used when a pass
     /// needs access to the result of a pass other than the immediately-preceding
-    /// one. In this case, the `RenderTask` will get a a non-`None` `saved_index`,
+    /// one. In this case, the `RenderTask` will get a non-`None` `saved_index`,
     /// which will cause the resulting render target to be persisted in this list
     /// (at that index) until the end of the frame.
     saved_targets: Vec<Texture>,
@@ -5253,7 +5253,7 @@ pub struct ExternalImage<'a> {
 
 /// The interfaces that an application can implement to support providing
 /// external image buffers.
-/// When the the application passes an external image to WR, it should kepp that
+/// When the application passes an external image to WR, it should keep that
 /// external image life time. People could check the epoch id in RenderNotifier
 /// at the client side to make sure that the external image is not used by WR.
 /// Then, do the clean up for that external image.
