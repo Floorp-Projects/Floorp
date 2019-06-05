@@ -317,6 +317,16 @@ workers:
             implementation: scriptworker-signing
             os: linux
             worker-type: signing-linux-v1
+        mac-depsigning:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-iscript
+            os: macosx
+            worker-type: depsigning-mac-v1
+        mac-signing:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-iscript
+            os: macosx
+            worker-type: signing-mac-v1
         t-ap.*:
             provisioner: proj-autophone
             implementation: script-engine-autophone
