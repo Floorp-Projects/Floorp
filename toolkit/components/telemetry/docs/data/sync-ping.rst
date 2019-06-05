@@ -79,6 +79,23 @@ Structure:
               // Optional, excluded if there were no errors
               failureReason: { ... }, // Same as above.
 
+              // Timings and counts for detailed steps that the engine reported
+              // as part of its sync. Optional; omitted if the engine didn't
+              // report any extra steps.
+              steps: {
+                name: <string>, // The step name.
+                took: <integer duration in milliseconds>, // Omitted if 0.
+                // Optional, extra named counts (e.g., number of items handled
+                // in this step). Omitted if the engine didn't report extra
+                // counts.
+                counts: [
+                  {
+                    name: <string>, // The counter name.
+                    count: <integer>, // The counter value.
+                  },
+                ],
+              },
+
               // Optional, excluded if it would be empty or if the engine cannot
               // or did not run validation on itself.
               validation: {

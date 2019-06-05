@@ -9,6 +9,7 @@ if [ -n "$FORCE_GCC" ]; then
     # We want to make sure we use binutils and other binaries in the tooltool
     # package.
     mk_add_options "export PATH=$TOOLTOOL_DIR/gcc/bin:$PATH"
+    ac_add_options --with-clang-path=$TOOLTOOL_DIR/clang/bin/clang
 else
     CC="$TOOLTOOL_DIR/clang/bin/clang"
     CXX="$TOOLTOOL_DIR/clang/bin/clang++"

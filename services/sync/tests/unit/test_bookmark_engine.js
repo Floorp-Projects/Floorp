@@ -160,6 +160,8 @@ add_bookmark_test(async function test_maintenance_after_failure(engine) {
 add_bookmark_test(async function test_delete_invalid_roots_from_server(engine) {
   _("Ensure that we delete the Places and Reading List roots from the server.");
 
+  enableValidationPrefs();
+
   let store   = engine._store;
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
@@ -186,6 +188,9 @@ add_bookmark_test(async function test_delete_invalid_roots_from_server(engine) {
     readingList.parentid = "places";
     collection.insert("readinglist", encryptPayload(readingList.cleartext));
 
+    // Note that we don't insert a record for the toolbar, so the buffered
+    // engine will report a parent-child disagreement, since Firefox's
+    // `parentid` is `toolbar`.
     let newBmk = new Bookmark("bookmarks", Utils.makeGUID());
     newBmk.bmkUri = "http://getfirefox.com";
     newBmk.title = "Get Firefox!";
@@ -196,7 +201,30 @@ add_bookmark_test(async function test_delete_invalid_roots_from_server(engine) {
     deepEqual(collection.keys().sort(), ["places", "readinglist", listBmk.id, newBmk.id].sort(),
       "Should store Places root, reading list items, and new bookmark on server");
 
-    await sync_engine_and_validate_telem(engine, false);
+    if (engine instanceof BufferedBookmarksEngine) {
+      let ping = await sync_engine_and_validate_telem(engine, true);
+      if (engine instanceof BufferedBookmarksEngine) {
+        // In a real sync, the buffered engine is named `bookmarks-buffered`.
+        // However, `sync_engine_and_validate_telem` simulates a sync, where
+        // the engine isn't registered with the engine manager, so the recorder
+        // doesn't see its `overrideTelemetryName`.
+        let engineData = ping.engines.find(e => e.name == "bookmarks");
+        ok(engineData.validation, "Buffered engine should always run validation");
+        equal(engineData.validation.checked, 6, "Buffered engine should validate all items");
+        deepEqual(engineData.validation.problems, [{
+          name: "parentChildDisagreements",
+          count: 1,
+        }], "Buffered engine should report parent-child disagreement");
+        deepEqual(engineData.steps.map(step => step.name), ["fetchLocalTree",
+          "fetchNewLocalContents", "fetchRemoteTree", "fetchNewRemoteContents",
+          "merge", "apply", "notifyObservers",
+          "fetchLocalChangeRecords"], "Buffered engine should report all merge steps");
+      }
+    } else {
+      // The legacy engine doesn't report validation failures for this case,
+      // so we disallow error pings.
+      await sync_engine_and_validate_telem(engine, false);
+    }
 
     await Assert.rejects(PlacesUtils.promiseItemId("readinglist"),
       /no item found for the given GUID/, "Should not apply Reading List root");
@@ -769,6 +797,14 @@ add_bookmark_test(async function test_sync_dateAdded(engine) {
   let oneYearMS = 365 * 24 * 60 * 60 * 1000;
 
   try {
+    let toolbar = new BookmarkFolder("bookmarks", "toolbar");
+    toolbar.title = "toolbar";
+    toolbar.parentName = "";
+    toolbar.parentid = "places";
+    toolbar.children = ["abcdefabcdef", "aaaaaaaaaaaa", "bbbbbbbbbbbb",
+                        "cccccccccccc", "dddddddddddd", "eeeeeeeeeeee"];
+    collection.insert("toolbar", encryptPayload(toolbar.cleartext));
+
     let item1GUID = "abcdefabcdef";
     let item1 = new Bookmark("bookmarks", item1GUID);
     item1.bmkUri = "https://example.com";

@@ -4145,6 +4145,14 @@ VARCACHE_PREF(
   bool, false
 )
 
+// text underline offset
+VARCACHE_PREF(
+  Live,
+  "layout.css.text-underline-offset.enabled",
+  layout_css_text_underline_offset_enabled,
+  bool, false
+)
+
 // Is support for CSS column-span enabled?
 VARCACHE_PREF(
   Live,

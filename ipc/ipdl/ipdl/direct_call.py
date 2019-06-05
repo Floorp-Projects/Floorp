@@ -51,9 +51,6 @@ DIRECT_CALL_OVERRIDES = {
         "PresentationRequestParent", "mozilla/dom/PresentationParent.h"
     ),
 
-    ("PPrinting", "child"): ("nsPrintingProxy", "nsPrintingProxy.h"),
-    ("PPrinting", "parent"): ("PrintingParent", "mozilla/embedding/printingui/PrintingParent.h"),
-
     ("PPSMContentDownloader", "child"): (
         "PSMContentDownloaderChild", "mozilla/psm/PSMContentListener.h"
     ),
@@ -516,6 +513,12 @@ VIRTUAL_CALL_CLASSES = set([
     ("PHandlerService", "parent"),
     ("PPluginBackgroundDestroyer", "child"),
     ("PPluginBackgroundDestroyer", "parent"),
+    ("PRemotePrintJob", "child"),
+    ("PRemotePrintJob", "parent"),
+    # PRemotePrintJob, PPrinting, PPrintProgressDialog and PPrintSettingsDialog
+    # need to be virtual for --disable-printing builds.
+    ("PPrinting", "child"),
+    ("PPrinting", "parent"),
     ("PPrintProgressDialog", "child"),
     ("PPrintProgressDialog", "parent"),
     ("PPrintSettingsDialog", "child"),

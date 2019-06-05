@@ -11,6 +11,7 @@ learn-more = <span data-l10n-name="link">Learn more</span>
 ## the property is not applied.
 ## Variables:
 ##   $property (string) - A CSS property name e.g. "color".
+##   $display (string) - A CSS display value e.g. "inline-block".
 
 inactive-css-not-grid-or-flex-container = <strong>{ $property }</strong> has no effect on this element since it’s neither a flex container nor a grid container.
 
@@ -25,6 +26,8 @@ inactive-css-not-flex-item = <strong>{ $property }</strong> has no effect on thi
 inactive-css-not-flex-container = <strong>{ $property }</strong> has no effect on this element since it’s not a flex container.
 
 inactive-css-not-inline-or-tablecell = <strong>{ $property }</strong> has no effect on this element since it’s not an inline or table-cell element.
+
+inactive-css-property-because-of-display = <strong>{ $property }</strong> has no effect on this element since it has a display of <strong>{ $display }</strong>.
 
 ## In the Rule View when a CSS property cannot be successfully applied we display
 ## an icon. When this icon is hovered this message is displayed to explain how
@@ -43,3 +46,7 @@ inactive-css-not-flex-item-fix = Try adding <strong>display:flex</strong> or <st
 inactive-css-not-flex-container-fix = Try adding <strong>display:flex</strong> or <strong>display:inline-flex</strong>. { learn-more }
 
 inactive-css-not-inline-or-tablecell-fix = Try adding <strong>display:inline</strong> or <strong>display:table-cell</strong>. { learn-more }
+
+inactive-css-non-replaced-inline-or-table-row-or-row-group-fix = Try adding <strong>display:inline-block</strong> or <strong>display:block</strong>. { learn-more }
+
+inactive-css-non-replaced-inline-or-table-column-or-column-group-fix = Try adding <strong>display:inline-block</strong>. { learn-more }

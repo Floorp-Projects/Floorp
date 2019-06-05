@@ -47,6 +47,7 @@ const TOPICS = [
   "weave:engine:sync:finish",
   "weave:engine:sync:error",
   "weave:engine:sync:applied",
+  "weave:engine:sync:step",
   "weave:engine:sync:uploaded",
   "weave:engine:validate:finish",
   "weave:engine:validate:error",
@@ -166,7 +167,7 @@ class EngineRecord {
   toJSON() {
     let result = { name: this.overrideTelemetryName || this.name };
     let properties = ["took", "status", "failureReason", "incoming", "outgoing",
-      "validation"];
+      "validation", "steps"];
     for (let property of properties) {
       result[property] = this[property];
     }
@@ -206,20 +207,40 @@ class EngineRecord {
     }
   }
 
+  recordStep(stepResult) {
+    let step = {
+      name: stepResult.name,
+    };
+    if (stepResult.took > 0) {
+      step.took = Math.round(stepResult.took);
+    }
+    if (stepResult.counts) {
+      let counts = stepResult.counts.filter(({count}) => count > 0);
+      if (counts.length) {
+        step.counts = counts;
+      }
+    }
+    if (this.steps) {
+      this.steps.push(step);
+    } else {
+      this.steps = [step];
+    }
+  }
+
   recordValidation(validationResult) {
     if (this.validation) {
       log.error(`Multiple validations occurred for engine ${this.name}!`);
       return;
     }
-    let { problems, version, duration, recordCount } = validationResult;
+    let { problems, version, took, checked } = validationResult;
     let validation = {
       version: version || 0,
-      checked: recordCount || 0,
+      checked: checked || 0,
     };
-    if (duration > 0) {
-      validation.took = Math.round(duration);
+    if (took > 0) {
+      validation.took = Math.round(took);
     }
-    let summarized = problems.getSummary(true).filter(({count}) => count > 0);
+    let summarized = problems.filter(({count}) => count > 0);
     if (summarized.length) {
       validation.problems = summarized;
     }
@@ -388,6 +409,13 @@ class TelemetryRecord {
       return;
     }
     this.currentEngine.recordApplied(counts);
+  }
+
+  onEngineStep(engineName, step) {
+    if (this._shouldIgnoreEngine(engineName)) {
+      return;
+    }
+    this.currentEngine.recordStep(step);
   }
 
   onEngineValidated(engineName, validationData) {
@@ -701,6 +729,12 @@ class SyncTelemetryImpl {
       case "weave:engine:sync:applied":
         if (this._checkCurrent(topic)) {
           this.current.onEngineApplied(data, subject);
+        }
+        break;
+
+      case "weave:engine:sync:step":
+        if (this._checkCurrent(topic)) {
+          this.current.onEngineStep(data, subject);
         }
         break;
 

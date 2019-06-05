@@ -68,210 +68,148 @@ rustfmt = check_prog('RUSTFMT', ['rustfmt'], paths=toolchain_search_path,
                      input='RUSTFMT', allow_missing=True)
 
 
-# We support setting up the appropriate options for bindgen via setting
-# LLVM_CONFIG or by providing explicit configure options.  The Windows
-# installer of LLVM/Clang doesn't provide llvm-config, so we need both
-# methods to support all of our tier-1 platforms.
-@depends(host)
-@imports('os')
-def llvm_config_paths(host):
-    llvm_supported_versions = ['6.0', '5.0', '4.0', '3.9']
-    llvm_config_progs = []
-    for version in llvm_supported_versions:
-        llvm_config_progs += [
-            'llvm-config-%s' % version,
-            'llvm-config-mp-%s' % version,    # MacPorts' chosen naming scheme.
-            'llvm-config%s' % version.replace('.', ''),
-        ]
-    llvm_config_progs.append('llvm-config')
-
-    # Homebrew on macOS doesn't make clang available on PATH, so we have to
-    # look for it in non-standard places.
-    if host.kernel == 'Darwin':
-        brew = find_program('brew')
-        if brew:
-            brew_config = check_cmd_output(brew, 'config').strip()
-
-            for line in brew_config.splitlines():
-                if line.startswith('HOMEBREW_PREFIX'):
-                    fields = line.split(None, 2)
-                    prefix = fields[1] if len(fields) == 2 else ''
-                    path = ['opt', 'llvm', 'bin', 'llvm-config']
-                    llvm_config_progs.append(os.path.join(prefix, *path))
-                    break
-
-    # Also add in the location to which `mach bootstrap` or
-    # `mach artifact toolchain` installs clang.
-    mozbuild_state_dir = os.environ.get('MOZBUILD_STATE_PATH',
-                                        os.path.expanduser(os.path.join('~', '.mozbuild')))
-    bootstrap_llvm_config = os.path.join(mozbuild_state_dir, 'clang', 'bin', 'llvm-config')
-
-    llvm_config_progs.append(bootstrap_llvm_config)
-
-    return llvm_config_progs
-
-js_option(env='LLVM_CONFIG', nargs=1, help='Path to llvm-config')
-
-llvm_config = check_prog('LLVM_CONFIG', llvm_config_paths, input='LLVM_CONFIG',
-                         what='llvm-config', allow_missing=True)
-
 js_option('--with-libclang-path', nargs=1,
           help='Absolute path to a directory containing Clang/LLVM libraries for bindgen (version 3.9.x or above)')
 js_option('--with-clang-path', nargs=1,
           help='Absolute path to a Clang binary for bindgen (version 3.9.x or above)')
 
-def invoke_llvm_config(llvm_config, *options):
-    '''Invoke llvm_config with the given options and return the first line of
-    output.'''
-    lines = check_cmd_output(llvm_config, *options).splitlines()
-    return lines[0]
 
-@imports(_from='textwrap', _import='dedent')
-def check_minimum_llvm_config_version(llvm_config):
-    version = Version(invoke_llvm_config(llvm_config, '--version'))
-    min_version = Version('3.9.0')
-    if version < min_version:
-        die(dedent('''\
-        llvm installation {} is incompatible with bindgen.
+@depends('--with-clang-path', c_compiler, cxx_compiler, toolchain_search_path,
+         target, macos_sdk)
+@checking('for clang for bindgen', lambda x: x.path if x else 'not found')
+def bindgen_clang_compiler(clang_path, c_compiler, cxx_compiler,
+                           toolchain_search_path, target, macos_sdk):
+    # When the target compiler is clang, use that, including flags.
+    if cxx_compiler.type == 'clang':
+        if clang_path and clang_path[0] not in (c_compiler.compiler,
+                                                cxx_compiler.compiler):
+            die('--with-clang-path is not valid when the target compiler is %s',
+                cxx_compiler.type)
+        return namespace(
+            path=cxx_compiler.compiler,
+            flags=cxx_compiler.flags,
+        )
+    # When the target compiler is clang-cl, use clang in the same directory,
+    # and figure the right flags to use.
+    if cxx_compiler.type == 'clang-cl':
+        if clang_path and os.path.dirname(clang_path[0]) != \
+                os.path.dirname(cxx_compiler.compiler):
+            die('--with-clang-path must point to clang in the same directory '
+                'as the target compiler')
+        if not clang_path:
+            clang_path = [os.path.join(os.path.dirname(cxx_compiler.compiler),
+                                       'clang')]
 
-        Please install version {} or greater of Clang + LLVM
-        and ensure that the 'llvm-config' from that
-        installation is first on your path.
+    clang_path = find_program(clang_path[0] if clang_path else 'clang++',
+                              toolchain_search_path)
+    if not clang_path:
+        return
+    flags = prepare_flags(target, macos_sdk)
+    info = check_compiler([clang_path] + flags, 'C++', target)
+    return namespace(
+        path=clang_path,
+        flags=flags + info.flags,
+    )
 
-        You can verify this by typing 'llvm-config --version'.
-        '''.format(version, min_version)))
 
-@depends(llvm_config, '--with-libclang-path', '--with-clang-path',
-         host_library_name_info, host, build_project)
-@imports('os.path')
+@depends('--with-libclang-path', bindgen_clang_compiler,
+         host_library_name_info, host)
+@checking('for libclang for bindgen', lambda x: x if x else 'not found')
 @imports('glob')
-@imports(_from='textwrap', _import='dedent')
-def bindgen_config_paths(llvm_config, libclang_path, clang_path,
-                         library_name_info, host, build_project):
-    def search_for_libclang(path):
-        # Try to ensure that the clang shared library that bindgen is going
-        # to look for is actually present.  The files that we search for
-        # mirror the logic in clang-sys/build.rs.
-        libclang_choices = []
-        if host.os == 'WINNT':
-            libclang_choices.append('libclang.dll')
-        libclang_choices.append('%sclang%s' % (library_name_info.dll.prefix,
-                                               library_name_info.dll.suffix))
-        if host.kernel == 'Linux':
-            libclang_choices.append('libclang.so.1')
+@imports(_from='os', _import='pathsep')
+@imports(_from='os.path', _import='split', _as='pathsplit')
+@imports('re')
+def bindgen_libclang_path(libclang_path, clang, library_name_info, host):
+    if not clang:
+        if libclang_path:
+            die('--with-libclang-path is not valid without a clang compiler '
+                'for bindgen')
+        return
 
-        if host.os == 'OpenBSD':
-            libclang_choices = glob.glob(path + '/libclang.so.*.*')
+    # Try to ensure that the clang shared library that bindgen is going
+    # to look for is actually present.  The files that we search for
+    # mirror the logic in clang-sys/build.rs.
+    libclang_choices = []
+    if host.os == 'WINNT':
+        libclang_choices.append('libclang.dll')
+    libclang_choices.append('%sclang%s' % (library_name_info.dll.prefix,
+                                           library_name_info.dll.suffix))
+    if host.kernel == 'Linux':
+        libclang_choices.append('libclang.so.1')
 
-        # At least one of the choices must be found.
-        for choice in libclang_choices:
-            libclang = os.path.join(path, choice)
-            if os.path.exists(libclang):
-                return (libclang, None)
-        else:
-            return (None, list(set(libclang_choices)))
+    if host.os == 'OpenBSD':
+        libclang_choices.append('libclang.so.*.*')
 
+    candidates = []
+    if not libclang_path:
+        # Try to find libclang_path based on clang search dirs.
+        clang_search_dirs = check_cmd_output(clang.path, '-print-search-dirs')
+        for line in clang_search_dirs.splitlines():
+            name, _, value = line.partition(': =')
+            if host.os == 'WINNT' and name == 'programs':
+                # On Windows, libclang.dll is in bin/ rather than lib/,
+                # so scan the programs search dirs.
+                # To make matters complicated, clang before version 9 uses `:`
+                # separate between paths (and `;` in newer versions)
+                if pathsep in value:
+                    dirs = value.split(pathsep)
+                else:
+                    for part in value.split(':'):
+                        # Assume that if previous "candidate" was of length 1,
+                        # it's a drive letter and the current part is the rest of
+                        # the corresponding full path.
+                        if candidates and len(candidates[-1]) == 1:
+                            candidates[-1] += ':' + part
+                        else:
+                            candidates.append(part)
+            elif host.os != 'WINNT' and name == 'libraries':
+                # On other platforms, use the directories from the libraries
+                # search dirs that looks like $something/clang/$version.
+                for dir in value.split(pathsep):
+                    dir, version = pathsplit(dir)
+                    if re.match(r'[0-9.]+', version):
+                        dir, name = pathsplit(dir)
+                        if name == 'clang':
+                            candidates.append(dir)
+    else:
+        candidates.append(libclang_path[0])
+
+    for dir in candidates:
+        for pattern in libclang_choices:
+            log.debug('Trying "%s" in "%s"', pattern, dir)
+            libs = glob.glob(os.path.join(dir, pattern))
+            if libs:
+                return libs[0]
+
+
+@depends(bindgen_clang_compiler, bindgen_libclang_path, build_project)
+def bindgen_config_paths(clang, libclang, build_project):
     # XXX: we want this code to be run for both Gecko and JS, but we don't
     # necessarily want to force a bindgen/Rust dependency on JS just yet.
     # Actually, we don't want to force an error if we're not building the
     # browser generally.  We therefore whitelist the projects that require
     # bindgen facilities at this point and leave it at that.
-    bindgen_projects = ('browser', 'mobile/android')
+    if build_project in ('browser', 'mobile/android'):
+        if not clang:
+            die('Could not find clang to generate run bindings for C/C++. '
+                'Please install the necessary packages, run `mach bootstrap`, '
+                'or use --with-clang-path to give the location of clang.')
 
-    if not libclang_path and not clang_path:
-        # We must have LLVM_CONFIG in this case.
-        if not llvm_config:
-            if build_project not in bindgen_projects:
-                return namespace()
-
-            die(dedent('''\
-            Could not find LLVM/Clang installation for compiling bindgen.
-            Please specify the 'LLVM_CONFIG' environment variable
-            (recommended), pass the '--with-libclang-path' and '--with-clang-path'
-            options to configure, or put 'llvm-config' in your PATH.  Altering your
-            PATH may expose 'clang' as well, potentially altering your compiler,
-            which may not be what you intended.'''))
-
-        check_minimum_llvm_config_version(llvm_config)
-        libclang_arg = '--bindir' if host.os == 'WINNT' else '--libdir'
-        libclang_path = invoke_llvm_config(llvm_config, libclang_arg)
-        clang_path = os.path.join(invoke_llvm_config(llvm_config, '--bindir'),
-                                  'clang')
-        libclang_path = normsep(libclang_path)
-        clang_path = normsep(clang_path)
-
-        # Debian-based distros, at least, can have llvm-config installed
-        # but not have other packages installed.  Since the user is trying
-        # to use their system packages, we can't be more specific about what
-        # they need.
-        clang_resolved = find_program(clang_path)
-        if not clang_resolved:
-            die(dedent('''\
-            The file {} returned by `llvm-config {}` does not exist.
-            clang is required to build Firefox.  Please install the
-            necessary packages, or run `mach bootstrap`.
-            '''.format(clang_path, '--bindir')))
-
-        if not os.path.exists(libclang_path):
-            die(dedent('''\
-            The directory {} returned by `llvm-config {}` does not exist.
-            clang is required to build Firefox.  Please install the
-            necessary packages, or run `mach bootstrap`.
-            '''.format(libclang_path, libclang_arg)))
-
-        (libclang, searched) = search_for_libclang(libclang_path)
         if not libclang:
-            die(dedent('''\
-            Could not find the clang shared library in the path {}
-            returned by `llvm-config {}` (searched for files {}).
-            clang is required to build Firefox.  Please install the
-            necessary packages, or run `mach bootstrap`.
-            '''.format(libclang_path, libclang_arg, searched)))
+            die('Could not find libclang to generate rust bindings for C/C++. '
+                'Please install the necessary packages, run `mach bootstrap`, '
+                'or use --with-libclang-path to give the path containing it.')
 
+    if clang and libclang:
         return namespace(
             libclang=libclang,
-            libclang_path=libclang_path,
-            clang_path=clang_resolved,
+            libclang_path=os.path.dirname(libclang),
+            clang_path=clang.path,
+            clang_flags=clang.flags,
         )
 
-    if (not libclang_path and clang_path) or \
-       (libclang_path and not clang_path):
-        if build_project not in bindgen_projects:
-            return namespace()
 
-        die(dedent('''\
-        You must provide both of --with-libclang-path and --with-clang-path
-        or neither of them.'''))
-
-    libclang_path = libclang_path[0]
-    clang_path = clang_path[0]
-
-    if not os.path.exists(libclang_path) or \
-       not os.path.isdir(libclang_path):
-        die(dedent('''\
-        The argument to --with-libclang-path is not a directory: {}
-        '''.format(libclang_path)))
-
-    (libclang, searched) = search_for_libclang(libclang_path)
-    if not libclang:
-        die(dedent('''\
-        Could not find the clang shared library in the path {}
-        specified by --with-libclang-path (searched for files {}).
-        '''.format(libclang_path, searched)))
-
-    clang_resolved = find_program(clang_path)
-    if not clang_resolved:
-        die(dedent('''\
-        The argument to --with-clang-path is not a file: {}
-        '''.format(clang_path)))
-
-    return namespace(
-        libclang=libclang,
-        libclang_path=libclang_path,
-        clang_path=clang_resolved,
-    )
-
-@depends(bindgen_config_paths.libclang)
+@depends(bindgen_config_paths.libclang, when=bindgen_config_paths)
 @checking('that libclang is new enough', lambda s: 'yes' if s else 'no')
 @imports(_from='ctypes', _import='CDLL')
 @imports(_from='textwrap', _import='dedent')
@@ -297,9 +235,9 @@ set_config('MOZ_CLANG_PATH', bindgen_config_paths.clang_path)
 
 
 @depends(target, target_is_unix, cxx_compiler, bindgen_cflags_android,
-         bindgen_config_paths.clang_path, macos_sdk)
+         bindgen_config_paths.clang_flags)
 def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags,
-                         clang_path, macos_sdk):
+                         clang_flags):
     args = [
         '-x', 'c++', '-fno-sized-deallocation',
         '-DTRACING=1', '-DIMPL_LIBXUL', '-DMOZILLA_INTERNAL_API',
@@ -339,20 +277,7 @@ def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags,
             '-DHAVE_VISIBILITY_HIDDEN_ATTRIBUTE=1',
         ]
 
-    # We want to pass the same base flags as we'd pass clang.
-    # check_compiler from toolchain.configure gives us that.
-    # XXX: We should actually use the compiler from toolchain.configure.
-    # See bug 1526857.
-    info = check_compiler([clang_path], 'C++', target)
-
-    args += info.flags
-
-    # XXX We wouldn't have to do this if we were using the compiler from
-    # toolchain.configure, rather than just `check_compiler`.
-    if macos_sdk and target.os == 'OSX':
-        args += ['-isysroot', macos_sdk]
-
-    return args
+    return args + (clang_flags or [])
 
 
 js_option(env='BINDGEN_CFLAGS',
