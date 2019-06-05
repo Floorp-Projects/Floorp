@@ -55,11 +55,11 @@ export default class LoginItem extends ReflectedFluentElement {
       "delete-button",
       "edit-button",
       "field-required-symbol",
-      "hostname-label",
       "modal-input-reveal-checkbox-hide",
       "modal-input-reveal-checkbox-show",
       "new-login-title",
       "open-site-button",
+      "origin-label",
       "password-label",
       "save-changes-button",
       "time-created",
@@ -90,7 +90,7 @@ export default class LoginItem extends ReflectedFluentElement {
         break;
       }
       case "field-required-symbol": {
-        for (let labelSelector of [".hostname-label", ".password-label"]) {
+        for (let labelSelector of [".origin-label", ".password-label"]) {
           let label = this.shadowRoot.querySelector(labelSelector);
           label.setAttribute("field-required-symbol", this.getAttribute(attrName));
         }
@@ -130,9 +130,8 @@ export default class LoginItem extends ReflectedFluentElement {
 
     let title = this.shadowRoot.querySelector(".title");
     title.textContent = this._login.title || title.getAttribute("new-login-title");
-    this.shadowRoot.querySelector(".hostname-saved-value").textContent = this._login.hostname || "";
-    this.shadowRoot.querySelector("input[name='hostname']").value = this._login.hostname || "";
-
+    this.shadowRoot.querySelector(".origin-saved-value").textContent = this._login.origin || "";
+    this.shadowRoot.querySelector("input[name='origin']").value = this._login.origin || "";
     this.shadowRoot.querySelector("modal-input[name='username']").setAttribute("value", this._login.username || "");
     this.shadowRoot.querySelector("modal-input[name='password']").setAttribute("value", this._login.password || "");
   }
@@ -257,7 +256,7 @@ export default class LoginItem extends ReflectedFluentElement {
   _isFormValid({reportErrors} = {}) {
     let fields = [this.shadowRoot.querySelector("modal-input[name='password']")];
     if (this.hasAttribute("isNewLogin")) {
-      fields.push(this.shadowRoot.querySelector("input[name='hostname']"));
+      fields.push(this.shadowRoot.querySelector("input[name='origin']"));
     }
     let valid = true;
     // Check validity on all required fields so each field will get :invalid styling
@@ -276,8 +275,8 @@ export default class LoginItem extends ReflectedFluentElement {
     return {
       username: this.shadowRoot.querySelector("modal-input[name='username']").value.trim(),
       password: this.shadowRoot.querySelector("modal-input[name='password']").value.trim(),
-      hostname: this.hasAttribute("isNewLogin") ? this.shadowRoot.querySelector("input[name='hostname']").value.trim()
-                                                : this.shadowRoot.querySelector(".hostname-saved-value").textContent,
+      origin: this.hasAttribute("isNewLogin") ? this.shadowRoot.querySelector("input[name='origin']").value.trim()
+                                              : this.shadowRoot.querySelector(".origin-saved-value").textContent,
     };
   }
 }

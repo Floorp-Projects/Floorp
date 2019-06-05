@@ -35,7 +35,7 @@ const EXPECTED_ABOUTLOGINS_REMOTE_TYPE =
                                   : E10SUtils.DEFAULT_REMOTE_TYPE;
 
 const isValidLogin = login => {
-  return !(login.hostname || "").startsWith("chrome://");
+  return !(login.origin || "").startsWith("chrome://");
 };
 
 const convertSubjectToLogin = subject => {
@@ -50,9 +50,9 @@ const convertSubjectToLogin = subject => {
 const augmentVanillaLoginObject = login => {
   let title;
   try {
-    title = (new URL(login.hostname)).host;
+    title = (new URL(login.origin)).host;
   } catch (ex) {
-    title = login.hostname;
+    title = login.origin;
   }
   title = title.replace(/^http(s)?:\/\//, "").
                 replace(/^www\d*\./, "");
@@ -77,7 +77,7 @@ var AboutLoginsParent = {
       case "AboutLogins:CreateLogin": {
         let newLogin = message.data.login;
         Object.assign(newLogin, {
-          formSubmitURL: "",
+          formActionOrigin: "",
           usernameField: "",
           passwordField: "",
         });
@@ -97,7 +97,7 @@ var AboutLoginsParent = {
           return;
         }
 
-        message.target.ownerGlobal.openWebLinkIn(logins[0].hostname, "tab", {relatedToCurrent: true});
+        message.target.ownerGlobal.openWebLinkIn(logins[0].origin, "tab", {relatedToCurrent: true});
         break;
       }
       case "AboutLogins:Subscribe": {

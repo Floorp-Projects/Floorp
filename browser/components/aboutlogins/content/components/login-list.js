@@ -44,7 +44,7 @@ export default class LoginList extends ReflectedFluentElement {
     let matchingLoginGuids;
     if (this._filter) {
       matchingLoginGuids = this._logins.filter(login => {
-        return login.hostname.toLocaleLowerCase().includes(this._filter) ||
+        return login.origin.toLocaleLowerCase().includes(this._filter) ||
                login.username.toLocaleLowerCase().includes(this._filter);
       }).map(login => login.guid);
     } else {

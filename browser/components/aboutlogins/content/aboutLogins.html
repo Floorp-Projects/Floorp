@@ -39,11 +39,11 @@
                                  delete-button,
                                  edit-button,
                                  field-required-symbol,
-                                 hostname-label,
                                  modal-input-reveal-checkbox-hide,
                                  modal-input-reveal-checkbox-show,
                                  new-login-title,
                                  open-site-button,
+                                 origin-label,
                                  password-label,
                                  save-changes-button,
                                  time-created,
@@ -64,7 +64,7 @@
     <template id="login-list-item-template">
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list-item.css">
-      <span class="hostname"></span>
+      <span class="origin"></span>
       <span class="username"></span>
     </template>
 
@@ -78,9 +78,9 @@
       </div>
       <div class="detail-row">
         <label>
-          <span class="hostname-label field-label"></span>
-          <span class="hostname-saved-value"></span>
-          <input type="url" name="hostname" required />
+          <span class="origin-label field-label"></span>
+          <span class="origin-saved-value"></span>
+          <input type="url" name="origin" required/>
         </label>
         <button class="open-site-button"></button>
       </div>
