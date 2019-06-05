@@ -10,6 +10,7 @@ import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.Fragment
@@ -17,6 +18,7 @@ import androidx.fragment.app.FragmentManager
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.runWithSessionIdOrSelected
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
@@ -35,8 +37,6 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import java.security.InvalidParameterException
 import java.util.Date
-import android.webkit.MimeTypeMap
-import mozilla.components.browser.session.runWithSessionIdOrSelected
 
 @VisibleForTesting(otherwise = PRIVATE)
 internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
@@ -431,7 +431,7 @@ class PromptFeature(
                 }
             }
 
-            is PromptRequest.TimeSelection -> {
+            is TimeSelection -> {
 
                 val selectionType = when (promptRequest.type) {
                     TimeSelection.Type.DATE -> TimePickerDialogFragment.SELECTION_TYPE_DATE
@@ -442,7 +442,6 @@ class PromptFeature(
                 with(promptRequest) {
                     TimePickerDialogFragment.newInstance(
                         session.id,
-                        title,
                         initialDate,
                         minimumDate,
                         maximumDate,

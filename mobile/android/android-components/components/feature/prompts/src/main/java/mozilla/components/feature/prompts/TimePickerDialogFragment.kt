@@ -4,8 +4,14 @@
 package mozilla.components.feature.prompts
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.app.DatePickerDialog
 import android.app.Dialog
+import android.app.TimePickerDialog
 import android.content.DialogInterface
+import android.content.DialogInterface.BUTTON_NEGATIVE
+import android.content.DialogInterface.BUTTON_NEUTRAL
+import android.content.DialogInterface.BUTTON_POSITIVE
 import android.os.Build
 import android.os.Build.VERSION_CODES.M
 import android.os.Bundle
@@ -16,7 +22,6 @@ import android.widget.DatePicker
 import android.widget.TimePicker
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
-import androidx.appcompat.app.AlertDialog
 import java.util.Calendar
 import java.util.Date
 
@@ -31,7 +36,8 @@ private const val KEY_SELECTION_TYPE = "KEY_SELECTION_TYPE"
  */
 @Suppress("TooManyFunctions")
 internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnDateChangedListener,
-    TimePicker.OnTimeChangedListener {
+    TimePicker.OnTimeChangedListener, TimePickerDialog.OnTimeSetListener,
+    DatePickerDialog.OnDateSetListener, DialogInterface.OnClickListener {
     private val initialDate: Date by lazy { safeArguments.getSerializable(KEY_INITIAL_DATE) as Date }
     private val minimumDate: Date? by lazy { safeArguments.getSerializable((KEY_MIN_DATE)) as? Date }
     private val maximumDate: Date? by lazy { safeArguments.getSerializable(KEY_MAX_DATE) as? Date }
@@ -45,15 +51,42 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
         }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val inflater = LayoutInflater.from(requireContext())
-        return AlertDialog.Builder(requireContext())
-            .setCancelable(true)
-            .setPositiveButton(R.string.mozac_feature_prompts_set_date) { _, _ -> onPositiveClickAction() }
-            .setView(createDialogContentView(inflater))
-            .setNegativeButton(R.string.mozac_feature_prompts_cancel) { _, _ -> feature?.onCancel(sessionId) }
-            .setNeutralButton(R.string.mozac_feature_prompts_clear) { _, _ -> onClearClickAction() }
-            .setupTitle()
-            .create()
+        val context = requireContext()
+        val dialog = when (selectionType) {
+            SELECTION_TYPE_TIME -> initialDate.toCalendar().let { cal ->
+                TimePickerDialog(
+                    context,
+                    this,
+                    cal.hour,
+                    cal.minute,
+                    DateFormat.is24HourFormat(context)
+                )
+            }
+            SELECTION_TYPE_DATE -> initialDate.toCalendar().let { cal ->
+                DatePickerDialog(
+                    context,
+                    this@TimePickerDialogFragment,
+                    cal.year,
+                    cal.month,
+                    cal.day
+                ).apply { setMinMaxDate(datePicker) }
+            }
+            SELECTION_TYPE_DATE_AND_TIME -> AlertDialog.Builder(context)
+                .setView(inflateDateTimePicker(LayoutInflater.from(context)))
+                .create()
+                .also {
+                    it.setButton(BUTTON_POSITIVE, context.getString(R.string.mozac_feature_prompts_set_date), this)
+                    it.setButton(BUTTON_NEGATIVE, context.getString(R.string.mozac_feature_prompts_cancel), this)
+                }
+            else -> throw IllegalArgumentException()
+        }
+
+        dialog.also {
+            it.setCancelable(true)
+            it.setButton(BUTTON_NEUTRAL, context.getString(R.string.mozac_feature_prompts_clear), this)
+        }
+
+        return dialog
     }
 
     /**
@@ -61,27 +94,7 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
      */
     override fun onCancel(dialog: DialogInterface?) {
         super.onCancel(dialog)
-        feature?.onCancel(sessionId)
-    }
-
-    @SuppressLint("InflateParams")
-    internal fun createDialogContentView(inflater: LayoutInflater): View {
-        return when (selectionType) {
-            SELECTION_TYPE_DATE -> inflateDatePicker(inflater)
-            SELECTION_TYPE_DATE_AND_TIME -> inflateDateTimePicker(inflater)
-            SELECTION_TYPE_TIME -> inflateTimePicker(inflater)
-            else -> {
-                throw IllegalArgumentException("$selectionType is not a valid selectionType")
-            }
-        }
-    }
-
-    @SuppressLint("InflateParams")
-    private fun inflateDatePicker(inflater: LayoutInflater): View {
-        val view = inflater.inflate(R.layout.mozac_feature_prompts_date_picker, null)
-        val datePicker = view.findViewById<DatePicker>(R.id.date_picker)
-        bind(datePicker)
-        return view
+        onClick(dialog, BUTTON_NEGATIVE)
     }
 
     @SuppressLint("InflateParams")
@@ -89,52 +102,35 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
         val view = inflater.inflate(R.layout.mozac_feature_prompts_date_time_picker, null)
         val datePicker = view.findViewById<DatePicker>(R.id.date_picker)
         val dateTimePicker = view.findViewById<TimePicker>(R.id.datetime_picker)
-        val calendar = Calendar.getInstance()
-        calendar.time = initialDate
+        val cal = initialDate.toCalendar()
 
-        bind(datePicker)
-        bind(dateTimePicker, calendar)
-
-        return view
-    }
-
-    @SuppressLint("InflateParams")
-    private fun inflateTimePicker(inflater: LayoutInflater): View {
-        val view = inflater.inflate(R.layout.mozac_feature_prompts_time_picker, null)
-        val dateTimePicker = view.findViewById<TimePicker>(R.id.time_picker)
-        val calendar = Calendar.getInstance()
-        calendar.time = initialDate
-
-        bind(dateTimePicker, calendar)
+        // Bind date picker
+        setMinMaxDate(datePicker)
+        datePicker.init(cal.year, cal.month, cal.day, this)
+        initTimePicker(dateTimePicker, cal)
 
         return view
     }
 
     @Suppress("DEPRECATION")
-    private fun bind(picker: TimePicker, cal: Calendar) {
+    private fun initTimePicker(picker: TimePicker, cal: Calendar) {
         if (Build.VERSION.SDK_INT >= M) {
-            picker.hour = cal.get(Calendar.HOUR_OF_DAY)
-            picker.minute = cal.get(Calendar.MINUTE)
+            picker.hour = cal.hour
+            picker.minute = cal.minute
         } else {
-            picker.currentHour = cal.get(Calendar.HOUR_OF_DAY)
-            picker.currentMinute = cal.get(Calendar.MINUTE)
+            picker.currentHour = cal.hour
+            picker.currentMinute = cal.minute
         }
         picker.setIs24HourView(DateFormat.is24HourFormat(requireContext()))
-        picker.setOnTimeChangedListener(this@TimePickerDialogFragment)
+        picker.setOnTimeChangedListener(this)
     }
 
-    private fun bind(datePicker: DatePicker) {
-        val calendar = Calendar.getInstance()
-        calendar.time = initialDate
-
+    private fun setMinMaxDate(datePicker: DatePicker) {
         minimumDate?.let {
             datePicker.minDate = it.time
         }
         maximumDate?.let {
             datePicker.maxDate = it.time
-        }
-        with(calendar) {
-            datePicker.init(year, month, day, this@TimePickerDialogFragment)
         }
     }
 
@@ -144,21 +140,29 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
         selectedDate = calendar.time
     }
 
-    override fun onTimeChanged(picker: TimePicker, hourOfDay: Int, minute: Int) {
-        val calendar = Calendar.getInstance()
-        calendar.time = selectedDate
+    override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
+        onDateChanged(view, year, month, dayOfMonth)
+        onClick(null, BUTTON_POSITIVE)
+    }
 
+    override fun onTimeChanged(picker: TimePicker?, hourOfDay: Int, minute: Int) {
+        val calendar = selectedDate.toCalendar()
         calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
         calendar.set(Calendar.MINUTE, minute)
         selectedDate = calendar.time
     }
 
-    private fun onClearClickAction() {
-        feature?.onClear(sessionId)
+    override fun onTimeSet(view: TimePicker?, hourOfDay: Int, minute: Int) {
+        onTimeChanged(view, hourOfDay, minute)
+        onClick(null, BUTTON_POSITIVE)
     }
 
-    private fun onPositiveClickAction() {
-        feature?.onConfirm(sessionId, selectedDate)
+    override fun onClick(dialog: DialogInterface?, which: Int) {
+        when (which) {
+            BUTTON_POSITIVE -> feature?.onConfirm(sessionId, selectedDate)
+            BUTTON_NEGATIVE -> feature?.onCancel(sessionId)
+            BUTTON_NEUTRAL -> feature?.onClear(sessionId)
+        }
     }
 
     companion object {
@@ -177,7 +181,6 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
         @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String,
-            title: String,
             initialDate: Date,
             minDate: Date?,
             maxDate: Date?,
@@ -188,7 +191,6 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
             fragment.arguments = arguments
             with(arguments) {
                 putString(KEY_SESSION_ID, sessionId)
-                putString(KEY_TITLE, title)
                 putSerializable(KEY_INITIAL_DATE, initialDate)
                 putSerializable(KEY_MIN_DATE, minDate)
                 putSerializable(KEY_MAX_DATE, maxDate)
@@ -202,25 +204,14 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
         const val SELECTION_TYPE_DATE_AND_TIME = 2
         const val SELECTION_TYPE_TIME = 3
     }
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun AlertDialog.Builder.setupTitle(): AlertDialog.Builder {
-        val defaultTitle = when (selectionType) {
-            SELECTION_TYPE_DATE -> R.string.mozac_feature_prompts_pick_a_date
-            SELECTION_TYPE_DATE_AND_TIME -> R.string.mozac_feature_prompts_pick_a_date_and_time
-            SELECTION_TYPE_TIME -> R.string.mozac_feature_prompts_pick_a_time
-            else -> {
-                throw IllegalArgumentException("$selectionType is not a valid selectionType")
-            }
-        }
-        return if (title.isEmpty()) {
-            setTitle(defaultTitle)
-        } else {
-            setTitle(title)
-        }
-    }
 }
 
+internal fun Date.toCalendar() = Calendar.getInstance().also { it.time = this }
+
+internal val Calendar.minute: Int
+    get() = get(Calendar.MINUTE)
+internal val Calendar.hour: Int
+    get() = get(Calendar.HOUR_OF_DAY)
 internal val Calendar.day: Int
     get() = get(Calendar.DAY_OF_MONTH)
 internal val Calendar.year: Int

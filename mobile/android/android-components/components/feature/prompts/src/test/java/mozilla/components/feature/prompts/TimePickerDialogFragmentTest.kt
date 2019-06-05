@@ -4,22 +4,25 @@
 
 package mozilla.components.feature.prompts
 
-import android.content.DialogInterface.BUTTON_NEGATIVE
+import android.app.AlertDialog
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.DialogInterface.BUTTON_NEUTRAL
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.os.Build.VERSION_CODES.LOLLIPOP
 import android.widget.DatePicker
-import android.widget.TextView
 import android.widget.TimePicker
-import androidx.appcompat.app.AlertDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.ext.appCompatContext
 import mozilla.components.feature.prompts.TimePickerDialogFragment.Companion.SELECTION_TYPE_DATE_AND_TIME
 import mozilla.components.feature.prompts.TimePickerDialogFragment.Companion.SELECTION_TYPE_TIME
 import mozilla.components.support.ktx.kotlin.toDate
+import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
@@ -38,7 +41,7 @@ class TimePickerDialogFragmentTest {
         val minDate = "2019-11-28".toDate("yyyy-MM-dd")
         val maxDate = "2019-11-30".toDate("yyyy-MM-dd")
         val fragment = spy(
-                TimePickerDialogFragment.newInstance("sessionId", "title", initialDate, minDate, maxDate)
+                TimePickerDialogFragment.newInstance("sessionId", initialDate, minDate, maxDate)
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -46,25 +49,13 @@ class TimePickerDialogFragmentTest {
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
-        val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
-        val datePicker = dialog.findViewById<DatePicker>(R.id.date_picker)
+        val datePicker = (dialog as DatePickerDialog).datePicker
 
-        assertEquals(titleTextView.text, "title")
         assertEquals(2019, datePicker.year)
         assertEquals(11, datePicker.month + 1)
         assertEquals(29, datePicker.dayOfMonth)
         assertEquals(minDate, Date(datePicker.minDate))
         assertEquals(maxDate, Date(datePicker.maxDate))
-
-        datePicker.updateDate(2101, 10, 28)
-
-        val selectedDate = fragment.selectedDate
-        val calendar = Calendar.getInstance()
-        calendar.time = selectedDate
-
-        assertEquals(2101, calendar.year)
-        assertEquals(10, calendar.month)
-        assertEquals(28, calendar.day)
     }
 
     @Test
@@ -72,7 +63,7 @@ class TimePickerDialogFragmentTest {
         val mockFeature: PromptFeature = mock()
         val initialDate = "2019-11-29".toDate("yyyy-MM-dd")
         val fragment = spy(
-                TimePickerDialogFragment.newInstance("sessionId", "", initialDate, null, null)
+                TimePickerDialogFragment.newInstance("sessionId", initialDate, null, null)
         )
         fragment.feature = mockFeature
 
@@ -83,22 +74,18 @@ class TimePickerDialogFragmentTest {
 
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
-        verify(mockFeature).onConfirm("sessionId", initialDate)
+        verify(mockFeature).onConfirm(eq("sessionId"), any())
 
         val neutralButton = dialog.getButton(BUTTON_NEUTRAL)
         neutralButton.performClick()
         verify(mockFeature).onClear("sessionId")
-
-        val negativeButton = dialog.getButton(BUTTON_NEGATIVE)
-        negativeButton.performClick()
-        verify(mockFeature).onCancel("sessionId")
     }
 
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
         val mockFeature: PromptFeature = mock()
         val fragment = spy(
-                TimePickerDialogFragment.newInstance("sessionId", "", Date(), null, null)
+                TimePickerDialogFragment.newInstance("sessionId", Date(), null, null)
         )
         fragment.feature = mockFeature
         doReturn(testContext).`when`(fragment).requireContext()
@@ -109,7 +96,7 @@ class TimePickerDialogFragmentTest {
     @Test
     fun `onTimeChanged must update the selectedDate`() {
 
-        val dialogPicker = TimePickerDialogFragment.newInstance("sessionId", "", Date(), null, null)
+        val dialogPicker = TimePickerDialogFragment.newInstance("sessionId", Date(), null, null)
 
         dialogPicker.onTimeChanged(mock(), 1, 12)
 
@@ -127,7 +114,6 @@ class TimePickerDialogFragmentTest {
         val fragment = spy(
             TimePickerDialogFragment.newInstance(
                 "sessionId",
-                "title",
                 initialDate,
                 minDate,
                 maxDate,
@@ -165,7 +151,6 @@ class TimePickerDialogFragmentTest {
         val fragment = spy(
             TimePickerDialogFragment.newInstance(
                 "sessionId",
-                "title",
                 initialDate,
                 minDate,
                 maxDate,
@@ -177,11 +162,7 @@ class TimePickerDialogFragmentTest {
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
-
-        val timePicker = dialog.findViewById<TimePicker>(R.id.time_picker)
-
-        assertEquals(19, timePicker.currentHour)
-        assertEquals(30, timePicker.currentMinute)
+        assertTrue(dialog is TimePickerDialog)
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -192,7 +173,6 @@ class TimePickerDialogFragmentTest {
         val fragment = spy(
             TimePickerDialogFragment.newInstance(
                 "sessionId",
-                "title",
                 initialDate,
                 minDate,
                 maxDate,
@@ -214,7 +194,6 @@ class TimePickerDialogFragmentTest {
         val fragment = spy(
             TimePickerDialogFragment.newInstance(
                 "sessionId",
-                "",
                 initialDate,
                 minDate,
                 maxDate,
