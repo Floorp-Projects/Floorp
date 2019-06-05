@@ -39,7 +39,7 @@ container.style.color = currentColor;
 assert_not_inherited('background-attachment', 'scroll', 'fixed');
 assert_not_inherited('background-clip', 'border-box', 'padding-box');
 assert_not_inherited('background-color', transparentColor, 'rgb(42, 53, 64)');
-assert_not_inherited('background-image', 'none', 'url("https://example.com/")');
+assert_not_inherited('background-image', 'none', 'url("https://{{host}}/")');
 assert_not_inherited('background-origin', 'padding-box', 'content-box');
 assert_not_inherited('background-position', '0% 0%', '10px 20px');
 assert_not_inherited('background-repeat', 'repeat', 'space round');
@@ -54,7 +54,7 @@ assert_not_inherited('border-bottom-width', mediumWidth, '10px');
 assert_not_inherited('border-image-outset', '0', '1px 2px 3px 4px');
 assert_not_inherited('border-image-repeat', 'stretch', 'repeat round');
 assert_not_inherited('border-image-slice', '100%', '1% 2% 3% 4% fill');
-assert_not_inherited('border-image-source', 'none', 'url("https://example.com/")');
+assert_not_inherited('border-image-source', 'none', 'url("https://{{host}}/")');
 assert_not_inherited('border-image-width', '1', '1px 2px 3px 4px');
 
 assert_not_inherited('border-left-color', currentColor, 'rgb(42, 53, 64)');
