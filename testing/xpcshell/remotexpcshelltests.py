@@ -16,7 +16,6 @@ import runxpcshelltests as xpcshell
 import tempfile
 from zipfile import ZipFile
 
-import mozcrash
 from mozdevice import ADBDevice, ADBTimeoutError
 import mozfile
 import mozinfo
@@ -177,10 +176,8 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
                         test_name=None):
         with mozfile.TemporaryDirectory() as dumpDir:
             self.device.pull(self.remoteMinidumpDir, dumpDir)
-            crashed = mozcrash.log_crashes(self.log,
-                                           dumpDir,
-                                           symbols_path,
-                                           test=test_name)
+            crashed = xpcshell.XPCShellTestThread.checkForCrashes(
+                  self, dumpDir, symbols_path, test_name)
             self.initDir(self.remoteMinidumpDir)
         return crashed
 
