@@ -372,6 +372,13 @@ class InsertCookieDBListener final : public DBListenerErrorHandler {
           ("InsertCookieDBListener::HandleCompletion(): rebuild complete"));
       mDBState->corruptFlag = DBState::OK;
     }
+
+    // This notification is just for testing.
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(nullptr, "cookie-saved-on-disk", nullptr);
+    }
+
     return NS_OK;
   }
 };
