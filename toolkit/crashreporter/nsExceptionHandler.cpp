@@ -130,8 +130,6 @@ typedef std::wstring xpstring;
 #  define XP_STRLEN(x) wcslen(x)
 #  define my_strlen strlen
 #  define CRASH_REPORTER_FILENAME "crashreporter.exe"
-#  define MINIDUMP_ANALYZER_FILENAME "minidump-analyzer.exe"
-#  define PATH_SEPARATOR "\\"
 #  define XP_PATH_SEPARATOR L"\\"
 #  define XP_PATH_SEPARATOR_CHAR L'\\'
 #  define XP_PATH_MAX (MAX_PATH + 1)
@@ -149,8 +147,6 @@ typedef std::string xpstring;
 #  define XP_TEXT(x) x
 #  define CONVERT_XP_CHAR_TO_UTF16(x) NS_ConvertUTF8toUTF16(x)
 #  define CRASH_REPORTER_FILENAME "crashreporter"
-#  define MINIDUMP_ANALYZER_FILENAME "minidump-analyzer"
-#  define PATH_SEPARATOR "/"
 #  define XP_PATH_SEPARATOR "/"
 #  define XP_PATH_SEPARATOR_CHAR '/'
 #  define XP_PATH_MAX PATH_MAX
