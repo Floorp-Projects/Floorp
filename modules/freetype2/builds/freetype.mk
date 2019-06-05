@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2018 by
+# Copyright (C) 1996-2019 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -75,7 +75,7 @@
 # The targets `objects' and `library' are defined at the end of this
 # Makefile after all other rules have been included.
 #
-.PHONY: single multi objects library refdoc
+.PHONY: single multi objects library refdoc refdoc-venv
 
 # default target -- build single objects and library
 #
@@ -289,18 +289,53 @@ objects: $(OBJECTS_LIST)
 
 library: $(PROJECT_LIBRARY)
 
-
+# Run `docwriter' in the current Python environment.
 # Option `-B' disables generation of .pyc files (available since python 2.6)
 #
-refdoc:
-	python -B $(SRC_DIR)/tools/docmaker/docmaker.py \
-                  --prefix=ft2                          \
-                  --title=FreeType-$(version)           \
-                  --output=$(DOC_DIR)                   \
-                  $(PUBLIC_DIR)/*.h                     \
-                  $(PUBLIC_DIR)/config/*.h              \
-                  $(PUBLIC_DIR)/cache/*.h
 
+PYTHON ?= python
+PIP    ?= pip
+
+refdoc:
+	@echo Running docwriter...
+	$(PYTHON) -m docwriter \
+                  --prefix=ft2 \
+                  --title=FreeType-$(version) \
+                  --output=$(DOC_DIR) \
+                  $(PUBLIC_DIR)/*.h \
+                  $(PUBLIC_DIR)/config/*.h \
+                  $(PUBLIC_DIR)/cache/*.h
+	@echo Building static site...
+	cd $(DOC_DIR) && mkdocs build
+	@echo Done.
+
+# Variables for running `refdoc' with Python's `virtualenv'.  The
+# environment is created in `DOC_DIR/env' and is gitignored.
+#
+# We still need to cd into `DOC_DIR' to build `mkdocs' because paths in
+# `mkdocs.yml' are relative to the current working directory.
+#
+VENV_NAME  := env
+VENV_DIR   := $(DOC_DIR)$(SEP)$(VENV_NAME)
+ENV_PYTHON := $(VENV_DIR)$(SEP)$(BIN)$(SEP)$(PYTHON)
+ENV_PIP    := $(VENV_DIR)$(SEP)$(BIN)$(SEP)$(PIP)
+
+refdoc-venv:
+	@echo Setting up virtualenv for Python...
+	virtualenv --python=$(PYTHON) $(VENV_DIR)
+	@echo Installing docwriter...
+	$(ENV_PIP) install docwriter
+	@echo Running docwriter...
+	$(ENV_PYTHON) -m docwriter \
+                      --prefix=ft2 \
+                      --title=FreeType-$(version) \
+                      --output=$(DOC_DIR) \
+                      $(PUBLIC_DIR)/*.h \
+                      $(PUBLIC_DIR)/config/*.h \
+                      $(PUBLIC_DIR)/cache/*.h
+	@echo Building static site...
+	cd $(DOC_DIR) && $(VENV_NAME)$(SEP)$(BIN)$(SEP)python -m mkdocs build
+	@echo Done.
 
 .PHONY: clean_project_std distclean_project_std
 

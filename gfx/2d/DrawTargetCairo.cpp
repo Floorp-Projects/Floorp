@@ -1417,7 +1417,7 @@ void DrawTargetCairo::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
   cairo_pattern_t* mask = cairo_pattern_create_for_surface(surf);
   cairo_matrix_t matrix;
 
-  cairo_matrix_init_translate(&matrix, -aOffset.x, -aOffset.y);
+  cairo_matrix_init_translate(&matrix, -aOffset.x - aMask->GetRect().x, -aOffset.y - aMask->GetRect().y);
   cairo_pattern_set_matrix(mask, &matrix);
 
   cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
@@ -1507,8 +1507,10 @@ void DrawTargetCairo::PushLayer(bool aOpaque, Float aOpacity,
     cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(aMask);
     if (surf) {
       layer.mMaskPattern = cairo_pattern_create_for_surface(surf);
+      Matrix maskTransform = aMaskTransform;
+      maskTransform.PreTranslate(aMask->GetRect().X(), aMask->GetRect().Y());
       cairo_matrix_t mat;
-      GfxMatrixToCairoMatrix(aMaskTransform, mat);
+      GfxMatrixToCairoMatrix(maskTransform, mat);
       cairo_matrix_invert(&mat);
       cairo_pattern_set_matrix(layer.mMaskPattern, &mat);
       cairo_surface_destroy(surf);

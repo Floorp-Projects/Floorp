@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2018 by
+# Copyright (C) 1996-2019 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -191,13 +191,13 @@ work := $(word 2,$(work))
 patch := $(subst |,$(space),$(work))
 patch := $(firstword $(patch))
 
-ifneq ($(findstring x0x,x$(patch)x),)
-  version := $(major).$(minor)
-  winversion := $(major)$(minor)
-else
+# ifneq ($(findstring x0x,x$(patch)x),)
+#   version := $(major).$(minor)
+#   winversion := $(major)$(minor)
+# else
   version := $(major).$(minor).$(patch)
   winversion := $(major)$(minor)$(patch)
-endif
+# endif
 
 
 # This target builds the tarballs.
@@ -226,16 +226,9 @@ dist:
 	  ln -s $$currdir/$$f tmp/$$f ; \
 	done
 
-	@# Prevent generation of .pyc files.  Python follows (soft) links if
-	@# the link's directory is write protected, so we have temporarily
-	@# disable write access here too.
-	chmod -w src/tools/docmaker
-
 	cd tmp ; \
 	$(MAKE) devel ; \
 	$(MAKE) do-dist
-
-	chmod +w src/tools/docmaker
 
 	mv tmp freetype-$(version)
 
@@ -273,5 +266,9 @@ do-dist: distclean refdoc
 
 	cp $(CONFIG_GUESS) builds/unix
 	cp $(CONFIG_SUB) builds/unix
+
+	@# Remove intermediate files created by the `refdoc' target.
+	rm -rf docs/reference/markdown
+	rm -f docs/reference/mkdocs.yml
 
 # EOF

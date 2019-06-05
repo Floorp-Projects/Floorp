@@ -1885,7 +1885,6 @@ PeerConnectionImpl::InsertDTMF(TransceiverImpl& transceiver,
     state = *mDTMFStates.AppendElement(new DTMFState);
     state->mPCObserver = mPCObserver;
     state->mTransceiver = &transceiver;
-    state->mSendTimer = NS_NewTimer();
   }
   MOZ_ASSERT(state);
 
@@ -1893,7 +1892,7 @@ PeerConnectionImpl::InsertDTMF(TransceiverImpl& transceiver,
   state->mDuration = duration;
   state->mInterToneGap = interToneGap;
   if (!state->mTones.IsEmpty()) {
-    state->mSendTimer->InitWithCallback(state, 0, nsITimer::TYPE_ONE_SHOT);
+    state->StartPlayout(0);
   }
   return NS_OK;
 }
@@ -1945,7 +1944,7 @@ PeerConnectionImpl::ReplaceTrackNoRenegotiation(TransceiverImpl& aTransceiver,
   // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
   for (size_t i = 0; i < mDTMFStates.Length(); ++i) {
     if (mDTMFStates[i]->mTransceiver.get() == &aTransceiver) {
-      mDTMFStates[i]->mSendTimer->Cancel();
+      mDTMFStates[i]->StopPlayout();
       mDTMFStates.RemoveElementAt(i);
       break;
     }
@@ -2179,7 +2178,7 @@ nsresult PeerConnectionImpl::CloseInt() {
 
   // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
   for (auto& dtmfState : mDTMFStates) {
-    dtmfState->mSendTimer->Cancel();
+    dtmfState->StopPlayout();
   }
 
   // We do this at the end of the call because we want to make sure we've waited
@@ -2925,10 +2924,25 @@ void PeerConnectionImpl::startCallTelem() {
   Telemetry::Accumulate(Telemetry::WEBRTC_CALL_COUNT_2, 1);
 }
 
+void PeerConnectionImpl::DTMFState::StopPlayout() {
+  if (mSendTimer) {
+    mSendTimer->Cancel();
+    mSendTimer = nullptr;
+  }
+}
+
+void PeerConnectionImpl::DTMFState::StartPlayout(uint32_t aDelay) {
+  if (!mSendTimer) {
+    mSendTimer = NS_NewTimer();
+    mSendTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_ONE_SHOT);
+  }
+}
+
 nsresult PeerConnectionImpl::DTMFState::Notify(nsITimer* timer) {
   MOZ_ASSERT(NS_IsMainThread());
+  StopPlayout();
+
   if (!mTransceiver->IsSending()) {
-    mSendTimer->Cancel();
     return NS_OK;
   }
 
@@ -2942,16 +2956,12 @@ nsresult PeerConnectionImpl::DTMFState::Notify(nsITimer* timer) {
     mTones.Cut(0, 1);
 
     if (tone == -1) {
-      mSendTimer->InitWithCallback(this, 2000, nsITimer::TYPE_ONE_SHOT);
+      StartPlayout(2000);
     } else {
       // Reset delay if necessary
-      mSendTimer->InitWithCallback(this, mDuration + mInterToneGap,
-                                   nsITimer::TYPE_ONE_SHOT);
-
+      StartPlayout(mDuration + mInterToneGap);
       mTransceiver->InsertDTMFTone(tone, mDuration);
     }
-  } else {
-    mSendTimer->Cancel();
   }
 
   RefPtr<dom::MediaStreamTrack> sendTrack = mTransceiver->GetSendTrack();
@@ -2971,7 +2981,7 @@ nsresult PeerConnectionImpl::DTMFState::Notify(nsITimer* timer) {
 }
 
 PeerConnectionImpl::DTMFState::DTMFState() = default;
-PeerConnectionImpl::DTMFState::~DTMFState() = default;
+PeerConnectionImpl::DTMFState::~DTMFState() { StopPlayout(); }
 
 NS_IMPL_ISUPPORTS(PeerConnectionImpl::DTMFState, nsITimerCallback)
 
