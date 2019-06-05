@@ -160,12 +160,13 @@ class Parameters(ReadOnlyDict):
         """
         return 'try' in self['project'] or self['try_mode'] == 'try_select'
 
-    def file_url(self, path):
+    def file_url(self, path, endpoint="file"):
         """
         Determine the VCS URL for viewing a file in the tree, suitable for
         viewing by a human.
 
         :param basestring path: The path, relative to the root of the repository.
+        :param basestring endpoint: The endpoint. Defaults to "file"
 
         :return basestring: The URL displaying the given path.
         """
@@ -177,7 +178,7 @@ class Parameters(ReadOnlyDict):
             repo = self['head_repository']
             rev = self['head_rev']
 
-        return '{}/file/{}/{}'.format(repo, rev, path)
+        return '{}/{}/{}/{}'.format(repo, endpoint, rev, path)
 
     def release_level(self):
         """

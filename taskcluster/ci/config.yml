@@ -410,3 +410,10 @@ mac-notarization:
             esr.*: mac_notarize
             release.*: mac_notarize
             default: mac_sign_and_pkg
+    mac-entitlements:
+        by-platform:
+            macosx64.*:
+                by-project:
+                    mozilla-(central|beta|release): security/mac/hardenedruntime/production.entitlements.xml
+                    default: security/mac/hardenedruntime/developer.entitlements.xml
+            default: ''
