@@ -17,6 +17,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -92,7 +93,8 @@ public class CreateFolderFragment extends DialogFragment implements SelectFolder
                 switch (item.getItemId()) {
                     case R.id.done:
                         final String title = nameText.getText().toString();
-                        new AddFolderTask(parentId, title).execute();
+                        final String defaultTitle = getString(R.string.bookmark_default_folder_title);
+                        new AddFolderTask(parentId, TextUtils.isEmpty(title) ? defaultTitle : title).execute();
                 }
                 return true;
             }
