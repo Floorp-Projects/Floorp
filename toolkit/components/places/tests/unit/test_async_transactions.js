@@ -7,7 +7,6 @@
 const bmsvc    = PlacesUtils.bookmarks;
 const obsvc    = PlacesUtils.observers;
 const tagssvc  = PlacesUtils.tagging;
-const annosvc  = PlacesUtils.annotations;
 const PT       = PlacesTransactions;
 const menuGuid = PlacesUtils.bookmarks.menuGuid;
 
@@ -74,16 +73,8 @@ var observer = {
       changesForGuid = new Map();
       this.itemsChanged.set(aGuid, changesForGuid);
     }
-
-    let newValue = aNewValue;
-    if (aIsAnnoProperty) {
-      if (annosvc.itemHasAnnotation(aItemId, aProperty))
-        newValue = annosvc.getItemAnnotation(aItemId, aProperty);
-      else
-        newValue = null;
-    }
     let change = { isAnnoProperty: aIsAnnoProperty,
-                   newValue,
+                   newValue: aNewValue,
                    lastModified: aLastModified,
                    itemType: aItemType };
     changesForGuid.set(aProperty, change);
@@ -223,25 +214,10 @@ function ensureItemsChanged(...items) {
     let changes = observer.itemsChanged.get(item.guid);
     Assert.ok(changes.has(item.property));
     let info = changes.get(item.property);
-    if (!("isAnnoProperty" in item)) {
-      Assert.ok(!info.isAnnoProperty);
-    } else {
-      Assert.equal(info.isAnnoProperty, Boolean(item.isAnnoProperty));
-    }
+    Assert.ok(!info.isAnnoProperty);
     Assert.equal(info.newValue, item.newValue);
     if ("url" in item)
       Assert.ok(item.url.equals(info.url));
-  }
-}
-
-function ensureAnnotationsSet(aGuid, aAnnos) {
-  Assert.ok(observer.itemsChanged.has(aGuid));
-  let changes = observer.itemsChanged.get(aGuid);
-  for (let anno of aAnnos) {
-    Assert.ok(changes.has(anno.name));
-    let changeInfo = changes.get(anno.name);
-    Assert.ok(changeInfo.isAnnoProperty);
-    Assert.equal(changeInfo.newValue, anno.value);
   }
 }
 

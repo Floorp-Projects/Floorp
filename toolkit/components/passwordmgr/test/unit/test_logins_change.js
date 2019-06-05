@@ -27,15 +27,15 @@ function checkLoginInvalid(aLoginInfo, aExpectedError) {
   LoginTestUtils.checkLogins([]);
 
   // Add a login for the modification tests.
-  let testLogin = TestData.formLogin({ hostname: "http://modify.example.com" });
+  let testLogin = TestData.formLogin({ origin: "http://modify.example.com" });
   Services.logins.addLogin(testLogin);
 
   // Try to modify the existing login using nsILoginInfo and nsIPropertyBag.
   Assert.throws(() => Services.logins.modifyLogin(testLogin, aLoginInfo),
                 aExpectedError);
   Assert.throws(() => Services.logins.modifyLogin(testLogin, newPropertyBag({
-    hostname: aLoginInfo.hostname,
-    formSubmitURL: aLoginInfo.formSubmitURL,
+    origin: aLoginInfo.origin,
+    formActionOrigin: aLoginInfo.formActionOrigin,
     httpRealm: aLoginInfo.httpRealm,
     username: aLoginInfo.username,
     password: aLoginInfo.password,
@@ -97,54 +97,54 @@ add_task(function test_addLogin_removeLogin() {
 });
 
 /**
- * Tests invalid combinations of httpRealm and formSubmitURL.
+ * Tests invalid combinations of httpRealm and formActionOrigin.
  *
  * For an nsILoginInfo to be valid for storage, one of the two properties should
  * be strictly equal to null, and the other must not be null or an empty string.
  *
- * The legacy case of an empty string in formSubmitURL and a null value in
+ * The legacy case of an empty string in formActionOrigin and a null value in
  * httpRealm is also supported for storage at the moment.
  */
-add_task(function test_invalid_httpRealm_formSubmitURL() {
-  // httpRealm === null, formSubmitURL === null
-  checkLoginInvalid(TestData.formLogin({ formSubmitURL: null }),
-                    /without a httpRealm or formSubmitURL/);
+add_task(function test_invalid_httpRealm_formActionOrigin() {
+  // httpRealm === null, formActionOrigin === null
+  checkLoginInvalid(TestData.formLogin({ formActionOrigin: null }),
+                    /without a httpRealm or formActionOrigin/);
 
-  // httpRealm === "", formSubmitURL === null
+  // httpRealm === "", formActionOrigin === null
   checkLoginInvalid(TestData.authLogin({ httpRealm: "" }),
-                    /without a httpRealm or formSubmitURL/);
+                    /without a httpRealm or formActionOrigin/);
 
-  // httpRealm === null, formSubmitURL === ""
+  // httpRealm === null, formActionOrigin === ""
   // This is not enforced for now.
-  // checkLoginInvalid(TestData.formLogin({ formSubmitURL: "" }),
-  //                   /without a httpRealm or formSubmitURL/);
+  // checkLoginInvalid(TestData.formLogin({ formActionOrigin: "" }),
+  //                   /without a httpRealm or formActionOrigin/);
 
-  // httpRealm === "", formSubmitURL === ""
-  checkLoginInvalid(TestData.formLogin({ formSubmitURL: "", httpRealm: "" }),
-                    /both a httpRealm and formSubmitURL/);
+  // httpRealm === "", formActionOrigin === ""
+  checkLoginInvalid(TestData.formLogin({ formActionOrigin: "", httpRealm: "" }),
+                    /both a httpRealm and formActionOrigin/);
 
-  // !!httpRealm, !!formSubmitURL
+  // !!httpRealm, !!formActionOrigin
   checkLoginInvalid(TestData.formLogin({ httpRealm: "The HTTP Realm" }),
-                    /both a httpRealm and formSubmitURL/);
+                    /both a httpRealm and formActionOrigin/);
 
-  // httpRealm === "", !!formSubmitURL
+  // httpRealm === "", !!formActionOrigin
   checkLoginInvalid(TestData.formLogin({ httpRealm: "" }),
-                    /both a httpRealm and formSubmitURL/);
+                    /both a httpRealm and formActionOrigin/);
 
-  // !!httpRealm, formSubmitURL === ""
-  checkLoginInvalid(TestData.authLogin({ formSubmitURL: "" }),
-                    /both a httpRealm and formSubmitURL/);
+  // !!httpRealm, formActionOrigin === ""
+  checkLoginInvalid(TestData.authLogin({ formActionOrigin: "" }),
+                    /both a httpRealm and formActionOrigin/);
 });
 
 /**
  * Tests null or empty values in required login properties.
  */
 add_task(function test_missing_properties() {
-  checkLoginInvalid(TestData.formLogin({ hostname: null }),
-                    /null or empty hostname/);
+  checkLoginInvalid(TestData.formLogin({ origin: null }),
+                    /null or empty origin/);
 
-  checkLoginInvalid(TestData.formLogin({ hostname: "" }),
-                    /null or empty hostname/);
+  checkLoginInvalid(TestData.formLogin({ origin: "" }),
+                    /null or empty origin/);
 
   checkLoginInvalid(TestData.formLogin({ username: null }),
                     /null username/);
@@ -161,9 +161,9 @@ add_task(function test_missing_properties() {
  */
 add_task(function test_invalid_characters() {
   let loginList = [
-    TestData.authLogin({ hostname: "http://null\0X.example.com" }),
+    TestData.authLogin({ origin: "http://null\0X.example.com" }),
     TestData.authLogin({ httpRealm: "realm\0" }),
-    TestData.formLogin({ formSubmitURL: "http://null\0X.example.com" }),
+    TestData.formLogin({ formActionOrigin: "http://null\0X.example.com" }),
     TestData.formLogin({ usernameField: "field\0_null" }),
     TestData.formLogin({ usernameField: ".\0" }), // Special single dot case
     TestData.formLogin({ passwordField: "field\0_null" }),
@@ -223,11 +223,11 @@ add_task(function test_modifyLogin_nsILoginInfo() {
   Assert.throws(() => Services.logins.modifyLogin(loginInfo, updatedLoginInfo),
                 /No matching logins/);
 
-  // The login can be changed to have a different type and hostname.
+  // The login can be changed to have a different type and origin.
   Services.logins.modifyLogin(updatedLoginInfo, differentLoginInfo);
   LoginTestUtils.checkLogins([differentLoginInfo]);
 
-  // It is now possible to add a login with the old type and hostname.
+  // It is now possible to add a login with the old type and origin.
   Services.logins.addLogin(loginInfo);
   LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
@@ -253,8 +253,8 @@ add_task(function test_modifyLogin_nsIProperyBag() {
   });
   let differentLoginInfo = TestData.authLogin();
   let differentLoginProperties = newPropertyBag({
-    hostname: differentLoginInfo.hostname,
-    formSubmitURL: differentLoginInfo.formSubmitURL,
+    origin: differentLoginInfo.origin,
+    formActionOrigin: differentLoginInfo.formActionOrigin,
     httpRealm: differentLoginInfo.httpRealm,
     username: differentLoginInfo.username,
     password: differentLoginInfo.password,
@@ -289,11 +289,11 @@ add_task(function test_modifyLogin_nsIProperyBag() {
     usernameField: null,
   })), /No matching logins/);
 
-  // The login can be changed to have a different type and hostname.
+  // The login can be changed to have a different type and origin.
   Services.logins.modifyLogin(updatedLoginInfo, differentLoginProperties);
   LoginTestUtils.checkLogins([differentLoginInfo]);
 
-  // It is now possible to add a login with the old type and hostname.
+  // It is now possible to add a login with the old type and origin.
   Services.logins.addLogin(loginInfo);
   LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
@@ -318,15 +318,15 @@ add_task(function test_deduplicate_logins() {
       results: 13,
     },
     {
-      keyset: ["hostname", "username"],
+      keyset: ["origin", "username"],
       results: 17,
     },
     {
-      keyset: ["hostname", "username", "password"],
+      keyset: ["origin", "username", "password"],
       results: 18,
     },
     {
-      keyset: ["hostname", "username", "password", "formSubmitURL"],
+      keyset: ["origin", "username", "password", "formActionOrigin"],
       results: 23,
     },
   ];
@@ -352,7 +352,7 @@ add_task(function test_deduplicate_keeps_most_recent() {
   // Logins to deduplicate.
   let logins = [
     TestData.formLogin({timeLastUsed: Date.UTC(2004, 11, 4, 0, 0, 0)}),
-    TestData.formLogin({formSubmitURL: "http://example.com", timeLastUsed: Date.UTC(2015, 11, 4, 0, 0, 0)}),
+    TestData.formLogin({formActionOrigin: "http://example.com", timeLastUsed: Date.UTC(2015, 11, 4, 0, 0, 0)}),
   ];
 
   // Deduplicate the logins.

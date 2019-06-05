@@ -84,7 +84,7 @@ this.LoginManagerContextMenu = {
    * Find logins for the current URI.
    *
    * @param {nsIURI} documentURI
-   *        URI object with the hostname of the logins we want to find.
+   *        URI object with the origin of the logins we want to find.
    *        This isn't the same as the browser's top-level document URI
    *        when subframes are involved.
    *
@@ -92,7 +92,7 @@ this.LoginManagerContextMenu = {
    */
   _findLogins(documentURI) {
     let searchParams = {
-      hostname: documentURI.displayPrePath,
+      origin: documentURI.displayPrePath,
       schemeUpgrades: LoginHelper.schemeUpgrades,
     };
     let logins = LoginHelper.searchLoginsWithObject(searchParams);

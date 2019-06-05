@@ -49,10 +49,6 @@ int64_t NS_NavBookmarksTotalSyncChanges() {
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavBookmarks, gBookmarksService)
 
-#define BOOKMARKS_ANNO_PREFIX "bookmarks/"
-#define BOOKMARKS_TOOLBAR_FOLDER_ANNO \
-  NS_LITERAL_CSTRING(BOOKMARKS_ANNO_PREFIX "toolbarFolder")
-#define SYNC_PARENT_ANNO "sync/parent"
 #define SQLITE_MAX_VARIABLE_NUMBER 999
 
 namespace {
@@ -1799,7 +1795,8 @@ void nsNavBookmarks::NotifyItemVisited(const ItemVisitData& aData) {
 void nsNavBookmarks::NotifyItemChanged(const ItemChangeData& aData) {
   // A guid must always be defined.
   MOZ_ASSERT(!aData.bookmark.guid.IsEmpty());
-
+  // No more supported.
+  MOZ_ASSERT(!aData.isAnnotation, "Don't notify item annotation changes");
   PRTime lastModified = aData.bookmark.lastModified;
   if (aData.updateLastModified) {
     lastModified = RoundedPRNow();

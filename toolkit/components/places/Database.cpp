@@ -101,16 +101,6 @@
 // How much time Sqlite can wait before returning a SQLITE_BUSY error.
 #define DATABASE_BUSY_TIMEOUT_MS 100
 
-// Old Sync GUID annotation.
-#define SYNCGUID_ANNO NS_LITERAL_CSTRING("sync/guid")
-
-// Places string bundle, contains internationalized bookmark root names.
-#define PLACES_BUNDLE "chrome://places/locale/places.properties"
-
-// This is no longer used & obsolete except for during migration.
-// Note: it may still be found in older places databases.
-#define MOBILE_ROOT_ANNO "mobile/bookmarksRoot"
-
 // This annotation is no longer used & is obsolete, but here for migration.
 #define LAST_USED_ANNO \
   NS_LITERAL_CSTRING("bookmarkPropertiesDialog/folderLastUsed")
@@ -122,6 +112,9 @@
 // corrupt if we can't look up the localized title in the string bundle. Sync
 // sets the title to the localized version when it creates the left pane query.
 #define MOBILE_ROOT_TITLE "mobile"
+
+// Legacy item annotation used by the old Sync engine.
+#define SYNC_PARENT_ANNO "sync/parent"
 
 using namespace mozilla;
 
@@ -1138,51 +1131,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
     if (currentSchemaVersion < DATABASE_SCHEMA_VERSION) {
       *aDatabaseMigrated = true;
 
-      if (currentSchemaVersion < 30) {
-        // These are versions older than Firefox 45 that are not supported
+      if (currentSchemaVersion < 35) {
+        // These are versions older than Firefox 52 ESR that are not supported
         // anymore.  In this case it's safer to just replace the database.
-        // Note that Firefox 45 is the ESR release before the latest one (52),
-        // and Firefox 48 is a watershed release, so any version older than 48
-        // will first have to go through it.
         return NS_ERROR_FILE_CORRUPTED;
       }
 
-      // Firefox 45 ESR uses schema version 30.
-
-      if (currentSchemaVersion < 31) {
-        rv = MigrateV31Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 48 uses schema version 31.
-
-      if (currentSchemaVersion < 32) {
-        rv = MigrateV32Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 49 uses schema version 32.
-
-      if (currentSchemaVersion < 33) {
-        rv = MigrateV33Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 50 uses schema version 33.
-
-      if (currentSchemaVersion < 34) {
-        rv = MigrateV34Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 51 uses schema version 34.
-
-      if (currentSchemaVersion < 35) {
-        rv = MigrateV35Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 52 uses schema version 35.
+      // Firefox 52 ESR uses schema version 35.
 
       if (currentSchemaVersion < 36) {
         rv = MigrateV36Up();
@@ -1208,7 +1163,7 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 57 uses schema version 39.
+      // Firefox 57 uses schema version 39. - This is a watershed version.
 
       if (currentSchemaVersion < 40) {
         rv = MigrateV40Up();
@@ -1232,7 +1187,7 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 60 uses schema version 43.
+      // Firefox 60 uses schema version 43. - This is an ESR.
 
       if (currentSchemaVersion < 44) {
         rv = MigrateV44Up();
@@ -1282,6 +1237,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
       }
 
       // Firefox 62 uses schema version 52.
+
+      if (currentSchemaVersion < 53) {
+        rv = MigrateV53Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 69 uses schema version 53
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -1690,247 +1652,6 @@ nsresult Database::InitTempEntities() {
   rv =
       mMainConn->ExecuteSimpleSQL(CREATE_BOOKMARKS_DELETED_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV31Up() {
-  nsresult rv = mMainConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_bookmarks_roots"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV32Up() {
-  // Remove some old and no more used Places preferences that may be confusing
-  // for the user.
-  mozilla::Unused << Preferences::ClearUser(
-      "places.history.expiration.transient_optimal_database_size");
-  mozilla::Unused << Preferences::ClearUser("places.last_vacuum");
-  mozilla::Unused << Preferences::ClearUser("browser.history_expire_sites");
-  mozilla::Unused << Preferences::ClearUser(
-      "browser.history_expire_days.mirror");
-  mozilla::Unused << Preferences::ClearUser("browser.history_expire_days_min");
-
-  // For performance reasons we want to remove too long urls from history.
-  // We cannot use the moz_places triggers here, cause they are defined only
-  // after the schema migration.  Thus we need to collect the hosts that need to
-  // be updated first.
-  nsresult rv = mMainConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TEMP TABLE moz_migrate_v32_temp ("
-                         "host TEXT PRIMARY KEY "
-                         ") WITHOUT ROWID "));
-  NS_ENSURE_SUCCESS(rv, rv);
-  {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = mMainConn->CreateStatement(
-        NS_LITERAL_CSTRING("INSERT OR IGNORE INTO moz_migrate_v32_temp (host) "
-                           "SELECT fixup_url(get_unreversed_host(rev_host)) "
-                           "FROM moz_places WHERE LENGTH(url) > :maxlen AND "
-                           "foreign_count = 0"),
-        getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("maxlen"), MaxUrlLength());
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  // Now remove the pages with a long url.
-  {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = mMainConn->CreateStatement(
-        NS_LITERAL_CSTRING("DELETE FROM moz_places WHERE LENGTH(url) > :maxlen "
-                           "AND foreign_count = 0"),
-        getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("maxlen"), MaxUrlLength());
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Expire orphan visits and update moz_hosts.
-  // These may be a bit more expensive and are not critical for the DB
-  // functionality, so we execute them asynchronously.
-  nsCOMPtr<mozIStorageAsyncStatement> expireOrphansStmt;
-  rv = mMainConn->CreateAsyncStatement(
-      NS_LITERAL_CSTRING(
-          "DELETE FROM moz_historyvisits "
-          "WHERE NOT EXISTS (SELECT 1 FROM moz_places WHERE id = place_id)"),
-      getter_AddRefs(expireOrphansStmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<mozIStorageAsyncStatement> deleteHostsStmt;
-  rv = mMainConn->CreateAsyncStatement(
-      NS_LITERAL_CSTRING(
-          "DELETE FROM moz_hosts "
-          "WHERE host IN (SELECT host FROM moz_migrate_v32_temp) "
-          "AND NOT EXISTS("
-          "SELECT 1 FROM moz_places "
-          "WHERE rev_host = get_unreversed_host(host || '.') || '.' "
-          "OR rev_host = get_unreversed_host(host || '.') || '.www.' "
-          "); "),
-      getter_AddRefs(deleteHostsStmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-#define HOST_TO_REVHOST_PREDICATE                       \
-  "rev_host = get_unreversed_host(host || '.') || '.' " \
-  "OR rev_host = get_unreversed_host(host || '.') || '.www.'"
-#define HOSTS_PREFIX_PRIORITY_FRAGMENT                                      \
-  "SELECT CASE "                                                            \
-  "WHEN ( "                                                                 \
-  "SELECT round(avg(substr(url,1,12) = 'https://www.')) FROM moz_places h " \
-  "WHERE (" HOST_TO_REVHOST_PREDICATE                                       \
-  ") AND +h.typed = 1 "                                                     \
-  ") THEN 'https://www.' "                                                  \
-  "WHEN ( "                                                                 \
-  "SELECT round(avg(substr(url,1,8) = 'https://')) FROM moz_places h "      \
-  "WHERE (" HOST_TO_REVHOST_PREDICATE                                       \
-  ") AND +h.typed = 1 "                                                     \
-  ") THEN 'https://' "                                                      \
-  "WHEN 1 = ( "                                                             \
-  "SELECT min(substr(url,1,4) = 'ftp:') FROM moz_places h "                 \
-  "WHERE (" HOST_TO_REVHOST_PREDICATE                                       \
-  ") AND +h.typed = 1 "                                                     \
-  ") THEN 'ftp://' "                                                        \
-  "WHEN ( "                                                                 \
-  "SELECT round(avg(substr(url,1,11) = 'http://www.')) FROM moz_places h "  \
-  "WHERE (" HOST_TO_REVHOST_PREDICATE                                       \
-  ") AND +h.typed = 1 "                                                     \
-  ") THEN 'www.' "                                                          \
-  "END "
-
-  nsCOMPtr<mozIStorageAsyncStatement> updateHostsStmt;
-  rv = mMainConn->CreateAsyncStatement(
-      NS_LITERAL_CSTRING(
-          "UPDATE moz_hosts "
-          "SET prefix = (" HOSTS_PREFIX_PRIORITY_FRAGMENT ") "
-          "WHERE host IN (SELECT host FROM moz_migrate_v32_temp) "),
-      getter_AddRefs(updateHostsStmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-#undef HOST_TO_REVHOST_PREDICATE
-#undef HOSTS_PREFIX_PRIORITY_FRAGMENT
-
-  nsCOMPtr<mozIStorageAsyncStatement> dropTableStmt;
-  rv = mMainConn->CreateAsyncStatement(
-      NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_migrate_v32_temp"),
-      getter_AddRefs(dropTableStmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
-      expireOrphansStmt.forget(),
-      deleteHostsStmt.forget(),
-      updateHostsStmt.forget(),
-      dropTableStmt.forget(),
-  };
-  nsCOMPtr<mozIStoragePendingStatement> ps;
-  rv = mMainConn->ExecuteAsync(stmts, nullptr, getter_AddRefs(ps));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV33Up() {
-  nsresult rv = mMainConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_url_uniqueindex"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Add an url_hash column to moz_places.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  rv = mMainConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT url_hash FROM moz_places"),
-      getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("ALTER TABLE moz_places ADD COLUMN url_hash INTEGER "
-                           "DEFAULT 0 NOT NULL"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "UPDATE moz_places SET url_hash = hash(url) WHERE url_hash = 0"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Create an index on url_hash.
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_URL_HASH);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV34Up() {
-  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_keywords WHERE id IN ( "
-      "SELECT id FROM moz_keywords k "
-      "WHERE NOT EXISTS (SELECT 1 FROM moz_places h WHERE k.place_id = h.id) "
-      ")"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult Database::MigrateV35Up() {
-  int64_t mobileRootId = CreateMobileRoot();
-  if (mobileRootId <= 0) {
-    // Either the schema is broken or there isn't any root. The latter can
-    // happen if a consumer, for example Thunderbird, never used bookmarks.
-    // If there are no roots, this migration should not run.
-    nsCOMPtr<mozIStorageStatement> checkRootsStmt;
-    nsresult rv = mMainConn->CreateStatement(
-        NS_LITERAL_CSTRING("SELECT id FROM moz_bookmarks WHERE parent = 0"),
-        getter_AddRefs(checkRootsStmt));
-    NS_ENSURE_SUCCESS(rv, rv);
-    bool hasResult = false;
-    rv = checkRootsStmt->ExecuteStep(&hasResult);
-    if (NS_SUCCEEDED(rv) && !hasResult) {
-      return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-  }
-
-  // At this point, we should have no more than two folders with the mobile
-  // bookmarks anno: the new root, and the old folder if one exists. If, for
-  // some reason, we have multiple folders with the anno, we append their
-  // children to the new root.
-  nsTArray<int64_t> folderIds;
-  nsresult rv =
-      GetItemsWithAnno(NS_LITERAL_CSTRING(MOBILE_ROOT_ANNO),
-                       nsINavBookmarksService::TYPE_FOLDER, folderIds);
-  if (NS_FAILED(rv)) return rv;
-
-  for (uint32_t i = 0; i < folderIds.Length(); ++i) {
-    if (folderIds[i] == mobileRootId) {
-      // Ignore the new mobile root. We'll remove this anno from the root in
-      // bug 1306445.
-      continue;
-    }
-
-    // Append the folder's children to the new root.
-    nsCOMPtr<mozIStorageStatement> moveStmt;
-    rv = mMainConn->CreateStatement(
-        NS_LITERAL_CSTRING("UPDATE moz_bookmarks "
-                           "SET parent = :root_id, "
-                           "position = position + IFNULL("
-                           "(SELECT MAX(position) + 1 FROM moz_bookmarks "
-                           "WHERE parent = :root_id), 0)"
-                           "WHERE parent = :folder_id"),
-        getter_AddRefs(moveStmt));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = moveStmt->BindInt64ByName(NS_LITERAL_CSTRING("root_id"), mobileRootId);
-    if (NS_FAILED(rv)) return rv;
-    rv = moveStmt->BindInt64ByName(NS_LITERAL_CSTRING("folder_id"),
-                                   folderIds[i]);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = moveStmt->Execute();
-    if (NS_FAILED(rv)) return rv;
-
-    // Delete the old folder.
-    rv = DeleteBookmarkItem(folderIds[i]);
-    if (NS_FAILED(rv)) return rv;
-  }
 
   return NS_OK;
 }
@@ -2688,6 +2409,44 @@ nsresult Database::MigrateV52Up() {
   return NS_OK;
 }
 
+nsresult Database::MigrateV53Up() {
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      NS_LITERAL_CSTRING("SELECT 1 FROM moz_items_annos"),
+      getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    // Likely we removed the table.
+    return NS_OK;
+  }
+
+  // Remove all item annotations but SYNC_PARENT_ANNO.
+  rv = mMainConn->CreateStatement(
+      NS_LITERAL_CSTRING(
+          "DELETE FROM moz_items_annos "
+          "WHERE anno_attribute_id NOT IN ( "
+          "  SELECT id FROM moz_anno_attributes WHERE name = :anno_name "
+          ") "),
+      getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"),
+                                  NS_LITERAL_CSTRING(SYNC_PARENT_ANNO));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_anno_attributes WHERE id IN ( "
+      "  SELECT id FROM moz_anno_attributes "
+      "  EXCEPT "
+      "  SELECT DISTINCT anno_attribute_id FROM moz_annos "
+      "  EXCEPT "
+      "  SELECT DISTINCT anno_attribute_id FROM moz_items_annos "
+      ")"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 nsresult Database::ConvertOldStyleQuery(nsCString& aURL) {
   AutoTArray<QueryKeyValuePair, 8> tokens;
   nsresult rv = TokenizeQueryString(aURL, &tokens);
@@ -2762,67 +2521,6 @@ nsresult Database::ConvertOldStyleQuery(nsCString& aURL) {
   }
 
   TokensToQueryString(newTokens, aURL);
-  return NS_OK;
-}
-
-nsresult Database::GetItemsWithAnno(const nsACString& aAnnoName,
-                                    int32_t aItemType,
-                                    nsTArray<int64_t>& aItemIds) {
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      NS_LITERAL_CSTRING(
-          "SELECT b.id FROM moz_items_annos a "
-          "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id "
-          "JOIN moz_bookmarks b ON b.id = a.item_id "
-          "WHERE n.name = :anno_name AND "
-          "b.type = :item_type"),
-      getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aAnnoName);
-  if (NS_FAILED(rv)) return rv;
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_type"), aItemType);
-  if (NS_FAILED(rv)) return rv;
-
-  bool hasMore = false;
-  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
-    int64_t itemId;
-    rv = stmt->GetInt64(0, &itemId);
-    if (NS_FAILED(rv)) return rv;
-    aItemIds.AppendElement(itemId);
-  }
-
-  return NS_OK;
-}
-
-nsresult Database::DeleteBookmarkItem(int32_t aItemId) {
-  // Delete the old bookmark.
-  nsCOMPtr<mozIStorageStatement> deleteStmt;
-  nsresult rv = mMainConn->CreateStatement(
-      NS_LITERAL_CSTRING("DELETE FROM moz_bookmarks WHERE id = :item_id"),
-      getter_AddRefs(deleteStmt));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = deleteStmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = deleteStmt->Execute();
-  if (NS_FAILED(rv)) return rv;
-
-  // Clean up orphan annotations.
-  nsCOMPtr<mozIStorageStatement> removeAnnosStmt;
-  rv = mMainConn->CreateStatement(
-      NS_LITERAL_CSTRING(
-          "DELETE FROM moz_items_annos WHERE item_id = :item_id"),
-      getter_AddRefs(removeAnnosStmt));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = removeAnnosStmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = removeAnnosStmt->Execute();
-  if (NS_FAILED(rv)) return rv;
-
   return NS_OK;
 }
 

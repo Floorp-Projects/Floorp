@@ -47,3 +47,49 @@ PartitionedStorageHelper.runTest("DOM Cookies",
       Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
     });
   });
+
+PartitionedStorageHelper.runPartitioningTest(
+  "Partitioned tabs - DOM Cookies",
+
+  // getDataCallback
+  async win => {
+    return win.document.cookie;
+  },
+
+  // addDataCallback
+  async (win, value) => {
+    win.document.cookie = value;
+    return true;
+  },
+
+  // cleanup
+  async _ => {
+    await new Promise(resolve => {
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+    });
+  }
+);
+
+PartitionedStorageHelper.runPartitioningTest(
+  "Partitioned tabs - Network Cookies",
+
+  // getDataCallback
+  async win => {
+    return win.fetch("cookies.sjs").then(r => r.text()).then(text => {
+      return text.substring("cookie:foopy=".length);
+    });
+  },
+
+  // addDataCallback
+  async (win, value) => {
+    await win.fetch("cookies.sjs?" + value).then(r => r.text());
+    return true;
+  },
+
+  // cleanup
+  async _ => {
+    await new Promise(resolve => {
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+    });
+  }
+);

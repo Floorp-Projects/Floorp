@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_HOSTNAME = "https://example.com";
+const TEST_ORIGIN = "https://example.com";
 const BASIC_FORM_PAGE_PATH = DIRECTORY_PATH + "form_basic.html";
 
 /**
@@ -28,7 +28,7 @@ add_task(async function test_initialize() {
 add_task(async function test_context_menu_username() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: TEST_HOSTNAME + BASIC_FORM_PAGE_PATH,
+    url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
   }, async function(browser) {
     await openContextMenu(browser, "#form-basic-username");
 
@@ -41,7 +41,7 @@ add_task(async function test_context_menu_username() {
 add_task(async function test_context_menu_password() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: TEST_HOSTNAME + BASIC_FORM_PAGE_PATH,
+    url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
   }, async function(browser) {
     await openContextMenu(browser, "#form-basic-password");
 
@@ -78,14 +78,14 @@ async function openContextMenu(browser, loginInput) {
 function loginList() {
   return [
     LoginTestUtils.testData.formLogin({
-      hostname: "https://example.com",
-      formSubmitURL: "https://example.com",
+      origin: "https://example.com",
+      formActionOrigin: "https://example.com",
       username: "username",
       password: "password",
     }),
     LoginTestUtils.testData.formLogin({
-      hostname: "https://example.com",
-      formSubmitURL: "https://example.com",
+      origin: "https://example.com",
+      formActionOrigin: "https://example.com",
       username: "username2",
       password: "password2",
     }),

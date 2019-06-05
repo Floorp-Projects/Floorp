@@ -23,14 +23,14 @@ body {
   text-overflow: ellipsis;
 }
 
-.hostname {
+.origin {
   font-weight: bold;
   overflow: hidden;
   flex: 1;
 }
 
 .realm {
-  /* hostname is not localized, so keep the margin on the left side */
+  /* origin is not localized, so keep the margin on the left side */
   margin-left: .67em;
 }
 

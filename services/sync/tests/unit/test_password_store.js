@@ -148,7 +148,7 @@ add_task(async function run_test() {
   const BOGUS_GUID_B = "yyyyyyyyyyyy";
   let recordA = {id: BOGUS_GUID_A,
                   hostname: "http://foo.bar.com",
-                  formSubmitURL: "http://foo.bar.com/baz",
+                  formSubmitURL: "http://foo.bar.com",
                   httpRealm: "secure",
                   username: "john",
                   password: "smith",
@@ -156,7 +156,7 @@ add_task(async function run_test() {
                   passwordField: "password"};
   let recordB = {id: BOGUS_GUID_B,
                   hostname: "http://foo.baz.com",
-                  formSubmitURL: "http://foo.baz.com/baz",
+                  formSubmitURL: "http://foo.baz.com",
                   username: "john",
                   password: "smith",
                   usernameField: "username",

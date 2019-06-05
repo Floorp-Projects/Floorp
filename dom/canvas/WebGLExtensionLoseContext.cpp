@@ -15,9 +15,15 @@ WebGLExtensionLoseContext::WebGLExtensionLoseContext(WebGLContext* webgl)
 
 WebGLExtensionLoseContext::~WebGLExtensionLoseContext() {}
 
-void WebGLExtensionLoseContext::LoseContext() { mContext->LoseContext(); }
+void WebGLExtensionLoseContext::LoseContext() {
+  if (!mContext) return;
+  mContext->LoseContext();
+}
 
-void WebGLExtensionLoseContext::RestoreContext() { mContext->RestoreContext(); }
+void WebGLExtensionLoseContext::RestoreContext() {
+  if (!mContext) return;
+  mContext->RestoreContext();
+}
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionLoseContext, WEBGL_lose_context)
 

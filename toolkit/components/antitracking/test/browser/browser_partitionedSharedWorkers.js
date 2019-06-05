@@ -40,3 +40,27 @@ PartitionedStorageHelper.runTest("SharedWorkers",
       Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
     });
   });
+
+PartitionedStorageHelper.runPartitioningTest(
+  "Partitioned tabs - SharedWorker",
+
+  // getDataCallback
+  async win => {
+    win.sh = new win.SharedWorker("partitionedSharedWorker.js");
+    return new Promise(resolve => {
+      win.sh.port.onmessage = e => {
+        resolve(e.data);
+      };
+      win.sh.port.postMessage({what: "get"});
+    });
+  },
+
+  // addDataCallback
+  async (win, value) => {
+    win.sh.port.postMessage({what: "put", value});
+    return true;
+  },
+
+  // cleanup
+  async _ => {}
+);

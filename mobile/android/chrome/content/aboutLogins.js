@@ -46,7 +46,7 @@ var Logins = {
   // modifying it!
   //
   // Returns a Promise that resolves to the list of logins, ordered by
-  // hostname.
+  // origin.
   _promiseLogins: function() {
     let contentBody = document.getElementById("content-body");
     let emptyBody = document.getElementById("empty-body");
@@ -67,7 +67,7 @@ var Logins = {
         throw new Error("Possible Master Password permissions error: " + e.toString());
       }
 
-      logins.sort((a, b) => a.hostname.localeCompare(b.hostname));
+      logins.sort((a, b) => a.origin.localeCompare(b.origin));
 
       return logins;
     };
@@ -245,15 +245,15 @@ var Logins = {
     usernameField.value = login.username;
     let passwordField = document.getElementById("password");
     passwordField.value = login.password;
-    let domainField = document.getElementById("hostname");
-    domainField.value = login.hostname;
+    let domainField = document.getElementById("origin");
+    domainField.value = login.origin;
 
     let img = document.getElementById("favicon");
-    this._loadFavicon(img, login.hostname);
+    this._loadFavicon(img, login.origin);
 
     let headerText = document.getElementById("edit-login-header-text");
-    if (login.hostname && (login.hostname != "")) {
-      headerText.textContent = login.hostname;
+    if (login.origin && (login.origin != "")) {
+      headerText.textContent = login.origin;
     } else {
       headerText.textContent = gStringBundle.GetStringFromName("editLogin.fallbackTitle");
     }
@@ -285,7 +285,7 @@ var Logins = {
         return;
       }
 
-      let logins = Services.logins.findLogins(this._selectedLogin.hostname, this._selectedLogin.formSubmitURL, this._selectedLogin.httpRealm);
+      let logins = Services.logins.findLogins(this._selectedLogin.origin, this._selectedLogin.formActionOrigin, this._selectedLogin.httpRealm);
 
       for (let i = 0; i < logins.length; i++) {
         if (logins[i].username == origUsername) {
@@ -437,11 +437,11 @@ var Logins = {
        });
    },
 
-  _loadFavicon: function(aImg, aHostname) {
+  _loadFavicon: function(aImg, aOrigin) {
     // Load favicon from cache.
     EventDispatcher.instance.sendRequestForResult({
       type: "Favicon:Request",
-      url: aHostname,
+      url: aOrigin,
       skipNetwork: true,
     }).then(function(faviconUrl) {
       aImg.style.backgroundImage = "url('" + faviconUrl + "')";
@@ -465,7 +465,7 @@ var Logins = {
     let img = document.createElement("div");
     img.className = "icon";
 
-    this._loadFavicon(img, login.hostname);
+    this._loadFavicon(img, login.origin);
     loginItem.appendChild(img);
 
     // Create item details.
@@ -477,8 +477,8 @@ var Logins = {
     inner.appendChild(details);
 
     let titlePart = document.createElement("div");
-    titlePart.className = "hostname";
-    titlePart.textContent = login.hostname;
+    titlePart.className = "origin";
+    titlePart.textContent = login.origin;
     details.appendChild(titlePart);
 
     let versionPart = document.createElement("div");
@@ -522,7 +522,7 @@ var Logins = {
   _filter: function(event) {
     let value = event.target.value.toLowerCase();
     let logins = this._logins.filter((login) => {
-      if (login.hostname.toLowerCase().includes(value)) {
+      if (login.origin.toLowerCase().includes(value)) {
         return true;
       }
       if (login.username &&

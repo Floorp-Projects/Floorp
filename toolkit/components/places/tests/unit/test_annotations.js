@@ -43,8 +43,8 @@ add_task(async function test_execute() {
 
   let updatedItem = await PlacesUtils.bookmarks.fetch(testItem.guid);
 
-  // verify that setting the annotation updates the last modified time
-  Assert.ok(updatedItem.lastModified > item.lastModified);
+  Assert.equal(updatedItem.lastModified.getTime(), earlierDate.getTime(),
+               "Setting an item annotation should not update lastModified");
 
   try {
     var annoVal = annosvc.getItemAnnotation(testItemId, testAnnoName);
@@ -103,10 +103,9 @@ add_task(async function test_execute() {
 
   // test annotation removal
   annosvc.setItemAnnotation(testItemId, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_NEVER);
-  // verify that removing an annotation updates the last modified date
+  // verify that removing an annotation does not update the last modified date
   testItem = await PlacesUtils.bookmarks.fetch(testItem.guid);
 
-  var lastModified3 = testItem.lastModified;
   // Workaround possible VM timers issues moving last modified to the past.
   await PlacesUtils.bookmarks.update({
     guid: testItem.guid,
@@ -116,11 +115,9 @@ add_task(async function test_execute() {
   annosvc.removeItemAnnotation(testItemId, int32Key);
 
   testItem = await PlacesUtils.bookmarks.fetch(testItem.guid);
-  var lastModified4 = testItem.lastModified;
-  info("verify that removing an annotation updates the last modified date");
-  info("lastModified3 = " + lastModified3);
-  info("lastModified4 = " + lastModified4);
-  Assert.ok(is_time_ordered(lastModified3, lastModified4));
+  info("verify that removing an annotation does not update the last modified date");
+  Assert.equal(testItem.lastModified.getTime(), earlierDate.getTime(),
+               "Setting an item annotation should not update lastModified");
 
   // test that getItems/PagesWithAnnotation returns an empty array after
   // removing all items/pages which had the annotation set, see bug 380317.
