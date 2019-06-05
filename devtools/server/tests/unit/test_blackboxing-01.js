@@ -123,11 +123,12 @@ function evalCode() {
     "" + function runTest() { // line 1
       doStuff(                // line 2 - Break here
         function (n) {        // line 3 - Step through `doStuff` to here
-          debugger;           // line 4
-        }                     // line 5
-      );                      // line 6
-    } + "\n"                  // line 7
-    + "debugger;",            // line 8
+          (() => {})();       // line 4
+          debugger;           // line 5
+        }                     // line 6
+      );                      // line 7
+    } + "\n"                  // line 8
+    + "debugger;",            // line 9
     gDebuggee,
     "1.8",
     SOURCE_URL,
