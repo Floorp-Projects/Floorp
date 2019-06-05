@@ -138,11 +138,11 @@ typedef std::wstring xpstring;
 // "<reporter path>" "<minidump path>"
 #  define CMDLINE_SIZE ((XP_PATH_MAX * 2) + 6)
 #  ifdef _USE_32BIT_TIME_T
-#    define XP_TTOA(time, buffer, base) ltoa(time, buffer, base)
+#    define XP_TTOA(time, buffer) ltoa(time, buffer, 10)
 #  else
-#    define XP_TTOA(time, buffer, base) _i64toa(time, buffer, base)
+#    define XP_TTOA(time, buffer) _i64toa(time, buffer, 10)
 #  endif
-#  define XP_STOA(size, buffer, base) _ui64toa(size, buffer, base)
+#  define XP_STOA(size, buffer) _ui64toa(size, buffer, 10)
 #else
 typedef char XP_CHAR;
 typedef std::string xpstring;
@@ -156,14 +156,12 @@ typedef std::string xpstring;
 #  define XP_PATH_MAX PATH_MAX
 #  ifdef XP_LINUX
 #    define XP_STRLEN(x) my_strlen(x)
-#    define XP_TTOA(time, buffer, base) \
-      my_inttostring(time, buffer, sizeof(buffer))
-#    define XP_STOA(size, buffer, base) \
-      my_inttostring(size, buffer, sizeof(buffer))
+#    define XP_TTOA(time, buffer) my_inttostring(time, buffer, sizeof(buffer))
+#    define XP_STOA(size, buffer) my_inttostring(size, buffer, sizeof(buffer))
 #  else
 #    define XP_STRLEN(x) strlen(x)
-#    define XP_TTOA(time, buffer, base) sprintf(buffer, "%ld", time)
-#    define XP_STOA(size, buffer, base) sprintf(buffer, "%zu", (size_t)size)
+#    define XP_TTOA(time, buffer) sprintf(buffer, "%ld", time)
+#    define XP_STOA(size, buffer) sprintf(buffer, "%zu", (size_t)size)
 #    define my_strlen strlen
 #    define sys_close close
 #    define sys_fork fork
@@ -861,7 +859,7 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
   }
 
   char crashTimeString[32];
-  XP_TTOA(crashTime, crashTimeString, 10);
+  XP_TTOA(crashTime, crashTimeString);
   WriteAnnotation(pw, Annotation::CrashTime, crashTimeString);
 
   double uptimeTS = (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation())
@@ -876,7 +874,7 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
 
     if (timeSinceLastCrash != 0) {
       char timeSinceLastCrashString[32];
-      XP_TTOA(timeSinceLastCrash, timeSinceLastCrashString, 10);
+      XP_TTOA(timeSinceLastCrash, timeSinceLastCrashString);
       WriteAnnotation(pw, Annotation::SecondsSinceLastCrash,
                       timeSinceLastCrashString);
     }
@@ -888,7 +886,7 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
 
   char buffer[128];
   if (eventloopNestingLevel > 0) {
-    XP_STOA(eventloopNestingLevel, buffer, 10);
+    XP_STOA(eventloopNestingLevel, buffer);
     WriteAnnotation(pw, Annotation::EventLoopNestingLevel, buffer);
   }
 
@@ -910,13 +908,13 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
 
   char oomAllocationSizeBuffer[32] = "";
   if (gOOMAllocationSize) {
-    XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer, 10);
+    XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer);
     WriteAnnotation(pw, Annotation::OOMAllocationSize, oomAllocationSizeBuffer);
   }
 
   char texturesSizeBuffer[32] = "";
   if (gTexturesSize) {
-    XP_STOA(gTexturesSize, texturesSizeBuffer, 10);
+    XP_STOA(gTexturesSize, texturesSizeBuffer);
     WriteAnnotation(pw, Annotation::TextureUsage, texturesSizeBuffer);
   }
 
@@ -1041,7 +1039,7 @@ bool MinidumpCallback(
   crashTime = time(nullptr);
 #endif
   char crashTimeString[32];
-  XP_TTOA(crashTime, crashTimeString, 10);
+  XP_TTOA(crashTime, crashTimeString);
 
   // write crash time to file
   if (lastCrashTimeFilename[0] != 0) {
@@ -1203,7 +1201,7 @@ static void PrepareChildExceptionTimeAnnotations(void* context) {
 
   char oomAllocationSizeBuffer[32] = "";
   if (gOOMAllocationSize) {
-    XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer, 10);
+    XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer);
     WriteAnnotation(apiData, Annotation::OOMAllocationSize,
                     oomAllocationSizeBuffer);
   }
@@ -1551,7 +1549,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   // store application start time
   char timeString[32];
   time_t startupTime = time(nullptr);
-  XP_TTOA(startupTime, timeString, 10);
+  XP_TTOA(startupTime, timeString);
   AnnotateCrashReport(Annotation::StartupTime, nsDependentCString(timeString));
 
 #if defined(XP_MACOSX)
