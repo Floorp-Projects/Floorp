@@ -45,7 +45,7 @@ pub struct Transaction {
     pub epoch_updates: Vec<(PipelineId, Epoch)>,
     pub request_scene_build: Option<SceneRequest>,
     pub blob_requests: Vec<BlobImageParams>,
-    pub blob_rasterizer: Option<(Box<AsyncBlobImageRasterizer>, AsyncBlobImageInfo)>,
+    pub blob_rasterizer: Option<(Box<dyn AsyncBlobImageRasterizer>, AsyncBlobImageInfo)>,
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
     pub resource_updates: Vec<ResourceUpdate>,
     pub frame_ops: Vec<FrameMsg>,
@@ -90,7 +90,7 @@ pub struct BuiltTransaction {
     pub built_scene: Option<BuiltScene>,
     pub resource_updates: Vec<ResourceUpdate>,
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
-    pub blob_rasterizer: Option<(Box<AsyncBlobImageRasterizer>, AsyncBlobImageInfo)>,
+    pub blob_rasterizer: Option<(Box<dyn AsyncBlobImageRasterizer>, AsyncBlobImageInfo)>,
     pub frame_ops: Vec<FrameMsg>,
     pub removed_pipelines: Vec<(PipelineId, DocumentId)>,
     pub notifications: Vec<NotificationRequest>,
@@ -271,7 +271,7 @@ pub struct SceneBuilder {
     tx: Sender<SceneBuilderResult>,
     api_tx: MsgSender<ApiMsg>,
     config: FrameBuilderConfig,
-    hooks: Option<Box<SceneBuilderHooks + Send>>,
+    hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
     simulate_slow_ms: u32,
     size_of_ops: Option<MallocSizeOfOps>,
 }
@@ -280,7 +280,7 @@ impl SceneBuilder {
     pub fn new(
         config: FrameBuilderConfig,
         api_tx: MsgSender<ApiMsg>,
-        hooks: Option<Box<SceneBuilderHooks + Send>>,
+        hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
         size_of_ops: Option<MallocSizeOfOps>,
     ) -> (Self, Sender<SceneBuilderRequest>, Receiver<SceneBuilderResult>) {
         let (in_tx, in_rx) = channel();

@@ -28,7 +28,7 @@ impl Notifier {
 }
 
 impl RenderNotifier for Notifier {
-    fn clone(&self) -> Box<RenderNotifier> {
+    fn clone(&self) -> Box<dyn RenderNotifier> {
         Box::new(Notifier {
             events_proxy: self.events_proxy.clone(),
         })

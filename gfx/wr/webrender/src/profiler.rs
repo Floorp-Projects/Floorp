@@ -46,12 +46,12 @@ pub trait ProfilerHooks : Send + Sync {
 }
 
 /// The current global profiler callbacks, if set by embedder.
-pub static mut PROFILER_HOOKS: Option<&'static ProfilerHooks> = None;
+pub static mut PROFILER_HOOKS: Option<&'static dyn ProfilerHooks> = None;
 
 /// Set the profiler callbacks, or None to disable the profiler.
 /// This function must only ever be called before any WR instances
 /// have been created, or the hooks will not be set.
-pub fn set_profiler_hooks(hooks: Option<&'static ProfilerHooks>) {
+pub fn set_profiler_hooks(hooks: Option<&'static dyn ProfilerHooks>) {
     if !wr_has_been_initialized() {
         unsafe {
             PROFILER_HOOKS = hooks;
@@ -1153,7 +1153,7 @@ impl Profiler {
     ) {
         Profiler::draw_counters(
             &[
-                &renderer_profile.frame_time as &ProfileCounter,
+                &renderer_profile.frame_time as &dyn ProfileCounter,
                 &renderer_profile.color_targets,
                 &renderer_profile.alpha_targets,
                 &renderer_profile.draw_calls,
@@ -1182,7 +1182,7 @@ impl Profiler {
     ) {
         Profiler::draw_counters(
             &[
-                &renderer_profile.frame_time as &ProfileCounter,
+                &renderer_profile.frame_time as &dyn ProfileCounter,
                 &renderer_profile.frame_counter,
                 &renderer_profile.color_targets,
                 &renderer_profile.alpha_targets,
@@ -1278,8 +1278,8 @@ impl Profiler {
                 description: "Total",
                 value: total,
             });
-            let samplers: Vec<&ProfileCounter> = samplers.iter().map(|sampler| {
-                sampler as &ProfileCounter
+            let samplers: Vec<&dyn ProfileCounter> = samplers.iter().map(|sampler| {
+                sampler as &dyn ProfileCounter
             }).collect();
             Profiler::draw_counters(
                 &samplers,

@@ -1604,7 +1604,7 @@ pub struct RendererVAOs {
 /// one per OS window), and all instances share the same thread.
 pub struct Renderer {
     result_rx: Receiver<ResultMsg>,
-    debug_server: Box<DebugServer>,
+    debug_server: Box<dyn DebugServer>,
     pub device: Device,
     pending_texture_updates: Vec<TextureUpdateList>,
     pending_gpu_cache_updates: Vec<GpuCacheUpdateList>,
@@ -1664,12 +1664,12 @@ pub struct Renderer {
 
     /// Optional trait object that allows the client
     /// application to provide external buffers for image data.
-    external_image_handler: Option<Box<ExternalImageHandler>>,
+    external_image_handler: Option<Box<dyn ExternalImageHandler>>,
 
     /// Optional trait object that allows the client
     /// application to provide a texture handle to
     /// copy the WR output to.
-    output_image_handler: Option<Box<OutputImageHandler>>,
+    output_image_handler: Option<Box<dyn OutputImageHandler>>,
 
     /// Optional function pointers for measuring memory used by a given
     /// heap-allocated pointer.
@@ -1758,8 +1758,8 @@ impl Renderer {
     /// ```
     /// [rendereroptions]: struct.RendererOptions.html
     pub fn new(
-        gl: Rc<gl::Gl>,
-        notifier: Box<RenderNotifier>,
+        gl: Rc<dyn gl::Gl>,
+        notifier: Box<dyn RenderNotifier>,
         mut options: RendererOptions,
         shaders: Option<&mut WrShaders>,
         start_size: DeviceIntSize,
@@ -2639,12 +2639,12 @@ impl Renderer {
     }
 
     /// Set a callback for handling external images.
-    pub fn set_external_image_handler(&mut self, handler: Box<ExternalImageHandler>) {
+    pub fn set_external_image_handler(&mut self, handler: Box<dyn ExternalImageHandler>) {
         self.external_image_handler = Some(handler);
     }
 
     /// Set a callback for handling external outputs.
-    pub fn set_output_image_handler(&mut self, handler: Box<OutputImageHandler>) {
+    pub fn set_output_image_handler(&mut self, handler: Box<dyn OutputImageHandler>) {
         self.output_image_handler = Some(handler);
     }
 
@@ -4898,7 +4898,7 @@ impl Renderer {
         mut textures: Vec<&Texture>,
         device_size: DeviceIntSize,
         bottom: i32,
-        select_color: &Fn(&Texture) -> [f32; 4],
+        select_color: &dyn Fn(&Texture) -> [f32; 4],
     ) {
         let mut spacing = 16;
         let mut size = 512;
@@ -5361,16 +5361,16 @@ pub struct RendererOptions {
     pub scatter_gpu_cache_updates: bool,
     pub upload_method: UploadMethod,
     pub workers: Option<Arc<ThreadPool>>,
-    pub blob_image_handler: Option<Box<BlobImageHandler>>,
-    pub recorder: Option<Box<ApiRecordingReceiver>>,
-    pub thread_listener: Option<Box<ThreadListener + Send + Sync>>,
+    pub blob_image_handler: Option<Box<dyn BlobImageHandler>>,
+    pub recorder: Option<Box<dyn ApiRecordingReceiver>>,
+    pub thread_listener: Option<Box<dyn ThreadListener + Send + Sync>>,
     pub size_of_op: Option<VoidPtrToSizeFn>,
     pub enclosing_size_of_op: Option<VoidPtrToSizeFn>,
     pub cached_programs: Option<Rc<ProgramCache>>,
     pub debug_flags: DebugFlags,
     pub renderer_id: Option<u64>,
-    pub scene_builder_hooks: Option<Box<SceneBuilderHooks + Send>>,
-    pub sampler: Option<Box<AsyncPropertySampler + Send>>,
+    pub scene_builder_hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
+    pub sampler: Option<Box<dyn AsyncPropertySampler + Send>>,
     pub chase_primitive: ChasePrimitive,
     pub support_low_priority_transactions: bool,
     pub namespace_alloc_by_client: bool,
@@ -5464,7 +5464,7 @@ impl DebugServer for NoopDebugServer {
 }
 
 #[cfg(feature = "debugger")]
-fn new_debug_server(enable: bool, api_tx: MsgSender<ApiMsg>) -> Box<DebugServer> {
+fn new_debug_server(enable: bool, api_tx: MsgSender<ApiMsg>) -> Box<dyn DebugServer> {
     if enable {
         Box::new(debug_server::DebugServerImpl::new(api_tx))
     } else {
@@ -5473,7 +5473,7 @@ fn new_debug_server(enable: bool, api_tx: MsgSender<ApiMsg>) -> Box<DebugServer>
 }
 
 #[cfg(not(feature = "debugger"))]
-fn new_debug_server(_enable: bool, api_tx: MsgSender<ApiMsg>) -> Box<DebugServer> {
+fn new_debug_server(_enable: bool, api_tx: MsgSender<ApiMsg>) -> Box<dyn DebugServer> {
     Box::new(NoopDebugServer::new(api_tx))
 }
 
