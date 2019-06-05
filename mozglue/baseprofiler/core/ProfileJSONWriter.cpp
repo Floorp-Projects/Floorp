@@ -11,6 +11,9 @@
 
 #  include "mozilla/HashFunctions.h"
 
+namespace mozilla {
+namespace baseprofiler {
+
 void ChunkedJSONWriteFunc::Write(const char* aStr) {
   MOZ_ASSERT(mChunkPtr >= mChunkList.back().get() && mChunkPtr <= mChunkEnd);
   MOZ_ASSERT(mChunkEnd >= mChunkList.back().get() + mChunkLengths.back());
@@ -61,10 +64,10 @@ void ChunkedJSONWriteFunc::CopyDataIntoLazilyAllocatedBuffer(
   *ptr = '\0';
 }
 
-mozilla::UniquePtr<char[]> ChunkedJSONWriteFunc::CopyData() const {
-  mozilla::UniquePtr<char[]> c;
+UniquePtr<char[]> ChunkedJSONWriteFunc::CopyData() const {
+  UniquePtr<char[]> c;
   CopyDataIntoLazilyAllocatedBuffer([&](size_t allocationSize) {
-    c = mozilla::MakeUnique<char[]>(allocationSize);
+    c = MakeUnique<char[]>(allocationSize);
     return c.get();
   });
   return c;
@@ -85,7 +88,7 @@ void ChunkedJSONWriteFunc::Take(ChunkedJSONWriteFunc&& aOther) {
 
 void ChunkedJSONWriteFunc::AllocChunk(size_t aChunkSize) {
   MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
-  mozilla::UniquePtr<char[]> newChunk = mozilla::MakeUnique<char[]>(aChunkSize);
+  UniquePtr<char[]> newChunk = MakeUnique<char[]>(aChunkSize);
   mChunkPtr = newChunk.get();
   mChunkEnd = mChunkPtr + aChunkSize;
   *mChunkPtr = '\0';
@@ -116,5 +119,8 @@ void SpliceableChunkedJSONWriter::TakeAndSplice(ChunkedJSONWriteFunc* aFunc) {
   WriteFunc()->Take(std::move(*aFunc));
   mNeedComma[mDepth] = true;
 }
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER

@@ -69,6 +69,9 @@
 
 using namespace mozilla;
 
+namespace mozilla {
+namespace baseprofiler {
+
 int profiler_current_process_id() { return getpid(); }
 
 int profiler_current_thread_id() {
@@ -258,7 +261,7 @@ Sampler::Sampler(PSLockRef aLock)
       ,
       mSamplerTid(-1) {
 #if defined(USE_EHABI_STACKWALK)
-  mozilla::EHABIStackWalkInit();
+  EHABIStackWalkInit();
 #endif
 
   // NOTE: We don't initialize LUL here, instead initializing it in
@@ -519,3 +522,6 @@ void Registers::SyncPopulate() {
   // }
 }
 #endif
+
+}  // namespace baseprofiler
+}  // namespace mozilla

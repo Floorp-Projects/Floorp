@@ -12,6 +12,9 @@
 
 #  include "BaseProfileJSONWriter.h"
 
+namespace mozilla {
+namespace baseprofiler {
+
 PageInformation::PageInformation(const std::string& aDocShellId,
                                  uint32_t aDocShellHistoryId,
                                  const std::string& aUrl, bool aIsSubFrame)
@@ -36,9 +39,11 @@ void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) {
   aWriter.EndObject();
 }
 
-size_t PageInformation::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+size_t PageInformation::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER
