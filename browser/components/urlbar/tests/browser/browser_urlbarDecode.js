@@ -122,7 +122,7 @@ async function checkInput(inputStr) {
   Assert.equal(result.displayed.title, inputStr.replace("\\", "/"),
     "Should be displaying the correct text");
   Assert.equal(result.displayed.action,
-    Services.strings.createBundle("chrome://global/locale/autocomplete.properties")
+    UrlbarUtils.strings
             .GetStringFromName("visit"),
     "Should be displaying the correct action text");
 }
