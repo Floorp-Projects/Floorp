@@ -676,7 +676,7 @@ void AttachFinishedCompressions(JSRuntime* runtime,
                                 AutoLockHelperThreadState& lock);
 
 // Run all pending source compression tasks synchronously, for testing purposes
-void RunPendingSourceCompressions(JSRuntime* runtime);
+void RunPendingSourceCompressions(JSContext* cx);
 
 class MOZ_RAII AutoLockHelperThreadState : public LockGuard<Mutex> {
   using Base = LockGuard<Mutex>;
