@@ -22,4 +22,154 @@ this.PartitionedStorageHelper = {
     DynamicFPIHelper.runTest(name, callback, cleanupFunction, extraPrefs);
     StoragePrincipalHelper.runTest(name, callback, cleanupFunction, extraPrefs);
   },
+
+  runPartitioningTest(name, getDataCallback, addDataCallback, cleanupFunction) {
+    add_task(async _ => {
+      info("Starting test `" + name + "' to check that 2 tabs are correctly partititioned");
+
+      await SpecialPowers.flushPrefEnv();
+      await SpecialPowers.pushPrefEnv({"set": [
+        ["dom.storage_access.enabled", true],
+        ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN],
+        ["privacy.trackingprotection.enabled", false],
+        ["privacy.trackingprotection.pbmode.enabled", false],
+        ["privacy.trackingprotection.annotate_channels", true],
+        ["privacy.storagePrincipal.enabledForTrackers", false],
+        ["privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "not-tracking.example.com"],
+      ]});
+
+      info("Creating the first tab");
+      let tab1 = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
+      gBrowser.selectedTab = tab1;
+
+      let browser1 = gBrowser.getBrowserForTab(tab1);
+      await BrowserTestUtils.browserLoaded(browser1);
+
+      info("Creating the second tab");
+      let tab2 = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE_6);
+      gBrowser.selectedTab = tab2;
+
+      let browser2 = gBrowser.getBrowserForTab(tab2);
+      await BrowserTestUtils.browserLoaded(browser2);
+
+      info("Creating the third tab");
+      let tab3 = BrowserTestUtils.addTab(gBrowser, TEST_4TH_PARTY_PARTITIONED_PAGE);
+      gBrowser.selectedTab = tab3;
+
+      let browser3 = gBrowser.getBrowserForTab(tab3);
+      await BrowserTestUtils.browserLoaded(browser3);
+
+      async function getDataFromThirdParty(browser, result) {
+        await ContentTask.spawn(browser, {
+                                  page: TEST_4TH_PARTY_PARTITIONED_PAGE,
+                                  getDataCallback: getDataCallback.toString(),
+                                  result,
+                                },
+                                async obj => {
+          await new content.Promise(resolve => {
+            let ifr = content.document.createElement("iframe");
+            ifr.onload = __ => {
+              info("Sending code to the 3rd party content");
+              ifr.contentWindow.postMessage({ cb: obj.getDataCallback }, "*");
+            };
+
+            content.addEventListener("message", function msg(event) {
+              is(event.data, obj.result, "Partitioned cookie jar has value: " + obj.result);
+              resolve();
+            }, {once: true});
+
+            content.document.body.appendChild(ifr);
+            ifr.src = obj.page;
+          });
+        });
+      }
+
+      async function getDataFromFirstParty(browser, result) {
+        await ContentTask.spawn(browser, {
+                                  getDataCallback: getDataCallback.toString(),
+                                  result,
+                                },
+                                async obj => {
+          let runnableStr = `(() => {return (${obj.getDataCallback});})();`;
+          let runnable = eval(runnableStr); // eslint-disable-line no-eval
+
+          let result = await runnable.call(content, content);
+          is(result, obj.result, "Partitioned cookie jar is empty: " + obj.result);
+        });
+      }
+
+      info("Checking 3rd party has an empty cookie jar in first tab");
+      await getDataFromThirdParty(browser1, "");
+
+      info("Checking 3rd party has an empty cookie jar in second tab");
+      await getDataFromThirdParty(browser2, "");
+
+      info("Checking first party has an empty cookie jar in third tab");
+      await getDataFromFirstParty(browser3, "");
+
+      async function createDataInThirdParty(browser, value) {
+        await ContentTask.spawn(browser, {
+                                  page: TEST_4TH_PARTY_PARTITIONED_PAGE,
+                                  addDataCallback: addDataCallback.toString(),
+                                  value,
+                                },
+                                async obj => {
+          await new content.Promise(resolve => {
+            let ifr = content.document.getElementsByTagName("iframe")[0];
+            content.addEventListener("message", function msg(event) {
+              ok(event.data, "Data created");
+              resolve();
+            }, {once: true});
+
+            ifr.contentWindow.postMessage({
+              cb: obj.addDataCallback, value: obj.value }, "*");
+          });
+        });
+      }
+
+      async function createDataInFirstParty(browser, value) {
+        await ContentTask.spawn(browser, {
+                                  addDataCallback: addDataCallback.toString(),
+                                  value,
+                                },
+                                async obj => {
+          let runnableStr = `(() => {return (${obj.addDataCallback});})();`;
+          let runnable = eval(runnableStr); // eslint-disable-line no-eval
+
+          let result = await runnable.call(content, content, obj.value);
+          ok(result, "Data created");
+        });
+      }
+
+      info("Creating data in the first tab");
+      await createDataInThirdParty(browser1, "A");
+
+      info("Creating data in the second tab");
+      await createDataInThirdParty(browser2, "B");
+
+      info("Creating data in the third tab");
+      await createDataInFirstParty(browser3, "C");
+
+      info("First tab should still have just 'A'");
+      await getDataFromThirdParty(browser1, "A");
+
+      info("Second tab should still have just 'B'");
+      await getDataFromThirdParty(browser2, "B");
+
+      info("Third tab should still have just 'C'");
+      await getDataFromFirstParty(browser3, "C");
+
+      info("Removing the tabs");
+      BrowserTestUtils.removeTab(tab1);
+      BrowserTestUtils.removeTab(tab2);
+      BrowserTestUtils.removeTab(tab3);
+    });
+
+    add_task(async _ => {
+      info("Cleaning up.");
+      if (cleanupFunction) {
+        await cleanupFunction();
+      }
+    });
+  },
 };
