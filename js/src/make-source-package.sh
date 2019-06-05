@@ -107,6 +107,7 @@ case $cmd in
 
     ${MKDIR} -p ${tgtpath}/mozglue
     cp -pPR \
+        ${TOPSRCDIR}/mozglue/baseprofiler \
         ${TOPSRCDIR}/mozglue/build \
         ${TOPSRCDIR}/mozglue/misc \
         ${TOPSRCDIR}/mozglue/moz.build \
