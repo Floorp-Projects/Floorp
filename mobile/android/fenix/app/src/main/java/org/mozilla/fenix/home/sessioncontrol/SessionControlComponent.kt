@@ -124,7 +124,6 @@ sealed class SessionControlAction : Action {
     data class Tab(val action: TabAction) : SessionControlAction()
     data class Collection(val action: CollectionAction) : SessionControlAction()
     data class Onboarding(val action: OnboardingAction) : SessionControlAction()
-    object ReloadData : SessionControlAction()
 }
 
 fun Observer<SessionControlAction>.onNext(tabAction: TabAction) {

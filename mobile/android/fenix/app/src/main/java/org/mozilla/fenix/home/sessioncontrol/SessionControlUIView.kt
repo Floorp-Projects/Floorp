@@ -152,6 +152,5 @@ class SessionControlUIView(
 
     override fun updateView() = Consumer<SessionControlState> {
         sessionControlAdapter.submitList(it.toAdapterList())
-        actionEmitter.onNext(SessionControlAction.ReloadData)
     }
 }

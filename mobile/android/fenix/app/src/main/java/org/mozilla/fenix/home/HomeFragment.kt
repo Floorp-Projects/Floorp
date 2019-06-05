@@ -144,8 +144,14 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         }
 
         postponeEnterTransition()
+
+        ActionBusFactory.get(this).logMergedObservables()
+        val activity = activity as HomeActivity
+        ThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
+
         val listener = object : ViewTreeObserver.OnPreDrawListener {
             override fun onPreDraw(): Boolean {
+                restoreLayoutState()
                 startPostponedEnterTransition()
                 sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(this)
                 return true
@@ -153,11 +159,20 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         }
         sessionControlComponent.view.viewTreeObserver.addOnPreDrawListener(listener)
 
-        ActionBusFactory.get(this).logMergedObservables()
-        val activity = activity as HomeActivity
-        ThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
-
         return view
+    }
+
+    private fun restoreLayoutState() {
+        val homeViewModel = activity?.run {
+            ViewModelProviders.of(this).get(HomeScreenViewModel::class.java)
+        }
+        homeViewModel?.layoutManagerState?.also { parcelable ->
+            sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
+        }
+        val progress = homeViewModel?.motionLayoutProgress
+        homeLayout?.progress =
+            if (progress ?: 0F > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
+        homeViewModel?.layoutManagerState = null
     }
 
     @SuppressWarnings("LongMethod")
@@ -250,7 +265,6 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                         is SessionControlAction.Tab -> handleTabAction(it.action)
                         is SessionControlAction.Collection -> handleCollectionAction(it.action)
                         is SessionControlAction.Onboarding -> handleOnboardingAction(it.action)
-                        is SessionControlAction.ReloadData -> { }
                     }
                 }
         }
