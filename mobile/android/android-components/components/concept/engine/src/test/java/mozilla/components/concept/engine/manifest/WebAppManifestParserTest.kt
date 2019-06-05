@@ -9,6 +9,7 @@ import android.graphics.Color.rgb
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -259,6 +260,33 @@ class WebAppManifestParserTest {
             assertEquals(128, sizes[0].width)
             assertEquals(128, sizes[0].height)
             assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), purpose)
+        }
+
+        assertEquals(2, manifest.relatedApplications.size)
+        assertFalse(manifest.preferRelatedApplications)
+
+        manifest.relatedApplications[0].apply {
+            assertEquals("play", platform)
+            assertEquals("https://play.google.com/store/apps/details?id=com.example.app1", url)
+            assertEquals("com.example.app1", id)
+            assertEquals("2", minVersion)
+            assertEquals(1, fingerprints.size)
+
+            assertEquals(
+                WebAppManifest.ExternalApplicationResource.Fingerprint(
+                    type = "sha256_cert",
+                    value = "92:5A:39:05:C5:B9:EA:BC:71:48:5F:F2"
+                ),
+                fingerprints[0]
+            )
+        }
+
+        manifest.relatedApplications[1].apply {
+            assertEquals("itunes", platform)
+            assertEquals("https://itunes.apple.com/app/example-app1/id123456789", url)
+            assertNull(id)
+            assertNull(minVersion)
+            assertEquals(0, fingerprints.size)
         }
     }
 

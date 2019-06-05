@@ -5,6 +5,7 @@
 package mozilla.components.concept.engine.manifest
 
 import androidx.annotation.ColorInt
+import mozilla.components.concept.engine.manifest.WebAppManifest.ExternalApplicationResource.Fingerprint
 
 /**
  * The web app manifest provides information about an application (such as its name, author, icon, and description).
@@ -42,6 +43,8 @@ import androidx.annotation.ColorInt
  * browser tab/window.
  * @property themeColor Defines the default theme color for an application. This sometimes affects how the OS displays
  * the site (e.g., on Android's task switcher, the theme color surrounds the site).
+ * @property relatedApplications List of native applications related to the web app.
+ * @property preferRelatedApplications If true, related applications should be preferred over the web app.
  */
 data class WebAppManifest(
     val name: String,
@@ -55,7 +58,9 @@ data class WebAppManifest(
     val lang: String? = null,
     val orientation: Orientation = Orientation.ANY,
     val scope: String? = null,
-    @ColorInt val themeColor: Int? = null
+    @ColorInt val themeColor: Int? = null,
+    val relatedApplications: List<ExternalApplicationResource> = emptyList(),
+    val preferRelatedApplications: Boolean = false
 ) {
     /**
      * Defines the developers’ preferred display mode for the website.
@@ -158,5 +163,32 @@ data class WebAppManifest(
          * about the text's direction.
          */
         AUTO
+    }
+
+    /**
+     * An external native application that is related to the web app.
+     *
+     * @property platform The platform the native app is associated with.
+     * @property url The URL where it can be found.
+     * @property id Information additional to or instead of the URL, depending on the platform.
+     * @property minVersion The minimum version of an application related to this web app.
+     * @property fingerprints [Fingerprint] objects used for verifying the application.
+     */
+    data class ExternalApplicationResource(
+        val platform: String,
+        val url: String? = null,
+        val id: String? = null,
+        val minVersion: String? = null,
+        val fingerprints: List<Fingerprint> = emptyList()
+    ) {
+
+        /**
+         * Represents a set of cryptographic fingerprints used for verifying the application.
+         * The syntax and semantics of [type] and [value] are platform-defined.
+         */
+        data class Fingerprint(
+            val type: String,
+            val value: String
+        )
     }
 }
