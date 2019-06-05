@@ -21,7 +21,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -41,7 +41,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -61,7 +61,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -81,7 +81,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -101,7 +101,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -121,7 +121,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -141,7 +141,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -161,7 +161,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -181,7 +181,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -201,7 +201,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -221,7 +221,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -241,7 +241,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -261,7 +261,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST.lib" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST.lib" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -281,7 +281,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST.lib" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST.lib" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -301,7 +301,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST.lib" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST.lib" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -321,7 +321,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST.lib" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST.lib" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -341,7 +341,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST.lib" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST.lib" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -361,7 +361,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST.lib" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST.lib" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -381,7 +381,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -401,7 +401,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -421,7 +421,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -441,7 +441,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -461,7 +461,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -481,7 +481,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -501,7 +501,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -521,7 +521,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -541,7 +541,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -561,7 +561,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -581,7 +581,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -601,7 +601,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291ST_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100ST_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -621,7 +621,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -641,7 +641,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -661,7 +661,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -681,7 +681,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -701,7 +701,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -721,7 +721,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -741,7 +741,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -758,7 +758,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype291MT_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\wince\vc2005-ce\freetype2100MT_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />

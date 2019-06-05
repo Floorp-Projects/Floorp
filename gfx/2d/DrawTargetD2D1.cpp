@@ -430,7 +430,8 @@ void DrawTargetD2D1::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
 
   IntSize size =
       IntSize::Truncate(aMask->GetSize().width, aMask->GetSize().height);
-  Rect dest = Rect(aOffset.x, aOffset.y, Float(size.width), Float(size.height));
+  Rect dest = Rect(aOffset.x + aMask->GetRect().x, aOffset.y + aMask->GetRect().y,
+                   Float(size.width), Float(size.height));
 
   HRESULT hr = image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
   if (!bitmap || FAILED(hr)) {
@@ -444,13 +445,15 @@ void DrawTargetD2D1::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
     hr = mDC->CreateImageBrush(
         image,
         D2D1::ImageBrushProperties(D2D1::RectF(0, 0, size.width, size.height)),
-        D2D1::BrushProperties(1.0f, D2D1::IdentityMatrix()),
+        D2D1::BrushProperties(
+            1.0f, D2D1::Matrix3x2F::Translation(aMask->GetRect().x,
+                                                aMask->GetRect().y)),
         getter_AddRefs(maskBrush));
     MOZ_ASSERT(SUCCEEDED(hr));
 
     mDC->PushLayer(D2D1::LayerParameters1(D2D1::InfiniteRect(), nullptr,
                                           D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
-                                          D2D1::IdentityMatrix(), 1.0f,
+                                          D2D1::Matrix3x2F::Translation(aMask->GetRect().x, aMask->GetRect().y), 1.0f,
                                           maskBrush, D2D1_LAYER_OPTIONS1_NONE),
                    nullptr);
 
@@ -472,7 +475,7 @@ void DrawTargetD2D1::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
   // FillOpacityMask only works if the antialias mode is MODE_ALIASED
   mDC->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
 
-  Rect maskRect = Rect(0.f, 0.f, Float(size.width), Float(size.height));
+  Rect maskRect = Rect(aMask->GetRect().x, aMask->GetRect().y, Float(size.width), Float(size.height));
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aSource, aOptions.mAlpha);
   mDC->FillOpacityMask(bitmap, brush, D2D1_OPACITY_MASK_CONTENT_GRAPHICS,
                        D2DRect(dest), D2DRect(maskRect));
@@ -973,6 +976,7 @@ void DrawTargetD2D1::PushLayer(bool aOpaque, Float aOpacity,
     mDC->SetTransform(D2D1::IdentityMatrix());
     mTransformDirty = true;
 
+    maskTransform = maskTransform.PreTranslate(aMask->GetRect().X(), aMask->GetRect().Y());
     // The mask is given in user space. Our layer will apply it in device space.
     maskTransform = maskTransform * mTransform;
 

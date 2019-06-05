@@ -838,7 +838,6 @@ enum gfxUserFontType {
   GFX_USERFONT_WOFF = 3,
   GFX_USERFONT_WOFF2 = 4
 };
-#define GFX_PREF_WOFF2_ENABLED "gfx.downloadable_fonts.woff2.enabled"
 
 extern const uint8_t sCJKCompatSVSTable[];
 

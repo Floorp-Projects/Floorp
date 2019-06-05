@@ -74,11 +74,6 @@ const startupPhases = {
   // Anything done before or during app-startup must have a compelling reason
   // to run before we have even selected the user profile.
   "before profile selection": [
-    { // bug 1541226
-      path: "UAppData:",
-      condition: WIN,
-      stat: 3,
-    },
     { // bug 1541200
       path: "UAppData:Crash Reports/InstallTime20*",
       condition: AppConstants.MOZ_CRASHREPORTER,
@@ -99,11 +94,6 @@ const startupPhases = {
       ignoreIfUnused: true, // only if we ever crashed on this machine
       read: 1,
       close: 1,
-    },
-    { // bug 1541226
-      path: "DefProfLRt.parent:",
-      condition: WIN,
-      stat: 1,
     },
     { // At least the read seems unavoidable for a regular startup.
       path: "UAppData:profiles.ini",
@@ -130,7 +120,7 @@ const startupPhases = {
     { // bug 1541226, bug 1363586, bug 1541593
       path: "ProfD:",
       condition: WIN,
-      stat: 3,
+      stat: 1,
     },
     {
       path: "ProfLD:.startup-incomplete",
@@ -225,7 +215,7 @@ const startupPhases = {
     { // bug 1541226
       path: "ProfD:",
       condition: WIN,
-      stat: 2,
+      stat: 1,
     },
     {
       path: "XCurProcD:blocklist.xml",
@@ -288,16 +278,6 @@ const startupPhases = {
       condition: LINUX,
       read: 3,
       close: 3,
-    },
-    { // bug 1541246
-      path: "XREUSysExt:",
-      condition: WIN,
-      stat: 1,
-    },
-    { // bug 1541246
-      path: "XRESysExtDev:",
-      condition: WIN,
-      stat: 1,
     },
     { // bug 1541246
       path: "ProfD:extensions",

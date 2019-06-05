@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2018 by
+# Copyright (C) 1996-2019 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -80,36 +80,46 @@ ifeq ($(PLATFORM),dos)
   ifneq ($(findstring emx,$(MAKECMDGOALS)),)        # EMX gcc
     CONFIG_FILE := dos-emx.mk
     CC          := gcc
-    emx: setup
+
     .PHONY: emx
+    emx: setup
+	    @cd .
   endif
 
   ifneq ($(findstring turboc,$(MAKECMDGOALS)),)     # Turbo C
     CONFIG_FILE := dos-tcc.mk
     CC          := tcc
-    turboc: setup
+
     .PHONY: turboc
+    turboc: setup
+	    @cd .
   endif
 
   ifneq ($(findstring watcom,$(MAKECMDGOALS)),)     # Watcom C/C++
     CONFIG_FILE := dos-wat.mk
     CC          := wcc386
-    watcom: setup
+
     .PHONY: watcom
+    watcom: setup
+	    @cd .
   endif
 
   ifneq ($(findstring borlandc,$(MAKECMDGOALS)),)   # Borland C/C++ 32-bit
     CONFIG_FILE := dos-bcc.mk
     CC          := bcc32
-    borlandc: setup
+
     .PHONY: borlandc
+    borlandc: setup
+	    @cd .
   endif
 
   ifneq ($(findstring borlandc16,$(MAKECMDGOALS)),) # Borland C/C++ 16-bit
     CONFIG_FILE := dos-bcc.mk
     CC          := bcc
-    borlandc16: setup
+
     .PHONY: borlandc16
+    borlandc16: setup
+	    @cd .
   endif
 
   ifneq ($(findstring bash,$(SHELL)),)              # check for bash

@@ -2,7 +2,7 @@ eval '(exit $?0)' && eval 'exec perl -wS -i "$0" ${1+"$@"}'
   & eval 'exec perl -wS -i "$0" $argv:q'
     if 0;
 
-# Copyright 2015-2018 by
+# Copyright (C) 2015-2019 by
 # Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -67,7 +67,8 @@ while (<>)
     s {
         (?<begin>.*)
         Copyright
-        (?<space1>\ +)
+        (?<space1>(\ +
+                   | \ +\(C\)\ +))
         (?<first>[12][0-9][0-9][0-9])
         (?<middle>.+)
         (?<last>[12][0-9][0-9][0-9])
@@ -78,14 +79,15 @@ while (<>)
       }
       {
         # Fill line to the same length (if appropriate); we skip the middle
-        # part but insert two spaces and `-'.
+        # part but insert `(C)', three spaces, and `-'.
         my $space = length($+{space1}) - 1
                     + length($+{middle}) - 1
                     + length($+{space2}) - 1
-                    + length($+{space3});
+                    + length($+{space3})
+                    - (length("(C)") + 1);
 
         print "$+{begin}";
-        print "Copyright\ $+{first}-$year\ by";
+        print "Copyright\ (C)\ $+{first}-$year\ by";
         print ' ' x $space if length($+{end});
         print "$+{end}\n";
         $replaced = 1;
@@ -95,7 +97,8 @@ while (<>)
     s {
         (?<begin>.*)
         Copyright
-        (?<space1>\ +)
+        (?<space1>(\ +
+                   | \ +\(C\)\ +))
         (?<first>[12][0-9][0-9][0-9])
         (?<space2>\ +)
         by
@@ -103,7 +106,7 @@ while (<>)
         (?<end>.*)
       }
       {
-        # Fill line to the same length (if appropriate); we insert two
+        # Fill line to the same length (if appropriate); we insert three
         # spaces, a `-', and the current year.
         my $space = length($+{space1}) - 1
                     + length($+{space2}) - 1
@@ -111,7 +114,7 @@ while (<>)
                     - (length($year) + 1);
 
         print "$+{begin}";
-        print "Copyright $+{first}-$year by";
+        print "Copyright\ (C)\ $+{first}-$year\ by";
         # If $space is negative this inserts nothing.
         print ' ' x $space if length($+{end});
         print "$+{end}\n";

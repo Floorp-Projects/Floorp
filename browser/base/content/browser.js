@@ -2326,11 +2326,11 @@ function BrowserReload() {
   BrowserReloadWithFlags(reloadFlags);
 }
 
+const kSkipCacheFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY |
+                        Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
 function BrowserReloadSkipCache() {
   // Bypass proxy and cache.
-  const reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY |
-                      Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
-  BrowserReloadWithFlags(reloadFlags);
+  BrowserReloadWithFlags(kSkipCacheFlags);
 }
 
 function BrowserHome(aEvent) {
@@ -5640,24 +5640,43 @@ var TabsProgressListener = {
   onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     // Collect telemetry data about tab load times.
     if (aWebProgress.isTopLevel && (!aRequest.originalURI || aRequest.originalURI.scheme != "about")) {
-      let stopwatchRunning = TelemetryStopwatch.running("FX_PAGE_LOAD_MS_2", aBrowser);
+      let histogram = "FX_PAGE_LOAD_MS_2";
+      let recordLoadTelemetry = true;
 
+      if (aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD) {
+        // loadType is constructed by shifting loadFlags, this is why we need to
+        // do the same shifting here.
+        // https://searchfox.org/mozilla-central/rev/11cfa0462a6b5d8c5e2111b8cfddcf78098f0141/docshell/base/nsDocShellLoadTypes.h#22
+        if (aWebProgress.loadType & (kSkipCacheFlags << 16)) {
+          histogram = "FX_PAGE_RELOAD_SKIP_CACHE_MS";
+        } else if (aWebProgress.loadType == Ci.nsIDocShell.LOAD_CMD_RELOAD) {
+          histogram = "FX_PAGE_RELOAD_NORMAL_MS";
+        } else {
+          recordLoadTelemetry = false;
+        }
+      }
+
+      let stopwatchRunning = TelemetryStopwatch.running(histogram, aBrowser);
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
           if (stopwatchRunning) {
             // Oops, we're seeing another start without having noticed the previous stop.
-            TelemetryStopwatch.cancel("FX_PAGE_LOAD_MS_2", aBrowser);
+            if (recordLoadTelemetry)
+              TelemetryStopwatch.cancel(histogram, aBrowser);
           }
-          TelemetryStopwatch.start("FX_PAGE_LOAD_MS_2", aBrowser);
+          if (recordLoadTelemetry)
+            TelemetryStopwatch.start(histogram, aBrowser);
           Services.telemetry.getHistogramById("FX_TOTAL_TOP_VISITS").add(true);
         } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
                    stopwatchRunning /* we won't see STATE_START events for pre-rendered tabs */) {
-          TelemetryStopwatch.finish("FX_PAGE_LOAD_MS_2", aBrowser);
+          if (recordLoadTelemetry)
+            TelemetryStopwatch.finish(histogram, aBrowser);
         }
       } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
                  aStatus == Cr.NS_BINDING_ABORTED &&
                  stopwatchRunning /* we won't see STATE_START events for pre-rendered tabs */) {
-        TelemetryStopwatch.cancel("FX_PAGE_LOAD_MS_2", aBrowser);
+        if (recordLoadTelemetry)
+          TelemetryStopwatch.cancel(histogram, aBrowser);
       }
     }
   },
