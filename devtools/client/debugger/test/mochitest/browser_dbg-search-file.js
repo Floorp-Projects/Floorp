@@ -4,6 +4,8 @@
 
 // Tests the search bar correctly responds to queries, enter, shift enter
 
+const isMacOS = AppConstants.platform === "macosx";
+
 function waitForSearchState(dbg) {
   return waitForState(dbg, () => getCM(dbg).state.search);
 }
@@ -49,12 +51,15 @@ add_task(async function() {
   pressKey(dbg, "ShiftEnter");
   is(state.posFrom.line, 3);
 
-  pressKey(dbg, "fileSearchNext");
-  is(state.posFrom.line, 4);
+  if (isMacOS) {
+    info('cmd+G and cmdShift+G shortcut for traversing results only work for macOS');
+    pressKey(dbg, "fileSearchNext");
+    is(state.posFrom.line, 4);
 
-  pressKey(dbg, "fileSearchPrev");
-  is(state.posFrom.line, 3);
-
+    pressKey(dbg, "fileSearchPrev");
+    is(state.posFrom.line, 3);
+  }
+  
   pressKey(dbg, "fileSearch");
   type(dbg, "fun");
 

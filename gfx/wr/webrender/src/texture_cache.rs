@@ -1766,12 +1766,12 @@ impl TextureCacheUpdate {
 fn quantize_dimension(size: i32) -> i32 {
     match size {
         0 => unreachable!(),
-        1...16 => 16,
-        17...32 => 32,
-        33...64 => 64,
-        65...128 => 128,
-        129...256 => 256,
-        257...512 => 512,
+        1..=16 => 16,
+        17..=32 => 32,
+        33..=64 => 64,
+        65..=128 => 128,
+        129..=256 => 256,
+        257..=512 => 512,
         _ => panic!("Invalid dimensions for cache!"),
     }
 }

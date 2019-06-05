@@ -1688,7 +1688,7 @@
 
 2001-04-03  Werner Lemberg  <wl@gnu.org>
 
-	* src/*/Jamfile: Slight changes	to make files more cryptic.
+	* src/*/Jamfile: Slight changes to make files more cryptic.
 
 2001-04-03  Werner Lemberg  <wl@gnu.org>
 
@@ -1928,7 +1928,7 @@
 
 	* src/autohint/ahtypes.h (AH_Hinter): Add elements
 	`disable_horz_edges', `disable_vert_edges'.
-	* src/autohint/ahhint.c	(ah_hint_edges_3, ah_hinter_hint_edges): Use
+	* src/autohint/ahhint.c (ah_hint_edges_3, ah_hinter_hint_edges): Use
 	them (and remove static variables with the same names).
 	* src/pcf/pcfutil.c (BitOrderInvert): Add `const'.
 	* docs/glnames.py: Updated to latest pstables.h changes.
@@ -2109,7 +2109,7 @@
 	* include/freetype/internal/t2types.h: This file was merged with
 	cfftypes.h and is no longer necessary.
 
-	* include/freetype/internal/t2errors.h:	Renamed to cfferrs.h.
+	* include/freetype/internal/t2errors.h: Renamed to cfferrs.h.
 
 	* src/cff/cffobjs.c, src/cff/cffobjs.h, src/cff/cffparse.c,
 	src/cff/cffdrivr.c, src/cff/cff.c, src/cff/cffload.c,
@@ -2184,11 +2184,11 @@
 
 2000-12-24  Tom Kacvinsky  <tkacvins@freetype.org>
 
-	* src/cff/t2gload.c (T2_Load_Glyph): Added code	so that the font
+	* src/cff/t2gload.c (T2_Load_Glyph): Added code so that the font
 	transform is applied.
 
 	* src/cff/cffparse.c (cff_parse_font_matrix): Added code so that
-	the font matrix numbers	are scaled by 1/(matrix->yy).  Also, the
+	the font matrix numbers are scaled by 1/(matrix->yy).  Also, the
 	offset vector now contains integer values instead of 16.16 fixed
 	numbers.
 
@@ -2597,7 +2597,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2000-2018 by
+Copyright (C) 2000-2019 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

@@ -590,7 +590,7 @@ impl BlobImageHandler for Moz2dBlobImageHandler {
         self.blob_commands.remove(&key);
     }
 
-    fn create_blob_rasterizer(&mut self) -> Box<AsyncBlobImageRasterizer> {
+    fn create_blob_rasterizer(&mut self) -> Box<dyn AsyncBlobImageRasterizer> {
         Box::new(Moz2dBlobRasterizer {
             workers: Arc::clone(&self.workers),
             blob_commands: self.blob_commands.clone(),
@@ -611,7 +611,7 @@ impl BlobImageHandler for Moz2dBlobImageHandler {
 
     fn prepare_resources(
         &mut self,
-        resources: &BlobImageResources,
+        resources: &dyn BlobImageResources,
         requests: &[BlobImageParams]
     ) {
         for params in requests {
@@ -655,7 +655,7 @@ impl Moz2dBlobImageHandler {
     /// Does early preprocessing of a blob's resources.
     ///
     /// Currently just sets up fonts found in the blob.
-    fn prepare_request(&self, blob: &[u8], resources: &BlobImageResources) {
+    fn prepare_request(&self, blob: &[u8], resources: &dyn BlobImageResources) {
         #[cfg(target_os = "windows")]
         fn process_native_font_handle(key: FontKey, handle: &NativeFontHandle) {
             let file = dwrote::FontFile::new_from_path(&handle.path).unwrap();
@@ -676,7 +676,7 @@ impl Moz2dBlobImageHandler {
 
         fn process_fonts(
             mut extra_data: BufReader,
-            resources: &BlobImageResources,
+            resources: &dyn BlobImageResources,
             unscaled_fonts: &mut Vec<FontKey>,
             scaled_fonts: &mut Vec<FontInstanceKey>,
         ) {
