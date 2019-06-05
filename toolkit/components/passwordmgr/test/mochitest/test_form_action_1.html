@@ -125,7 +125,7 @@ function startTest() {
     is($_(i, "pword").value, "testpass", "Checking for filled password " + i);
   }
 
-  // The login's formSubmitURL isn't "javascript:", so don't fill it in.
+  // The login's formActionOrigin isn't "javascript:", so don't fill it in.
   isnot($_(10, "uname"), "testuser", "Checking username w/ JS action URL");
   isnot($_(10, "pword"), "testpass", "Checking password w/ JS action URL");
 

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test autofill on an HTTPS page using upgraded HTTP logins wtih different formSubmitURL</title>
+  <title>Test autofill on an HTTPS page using upgraded HTTP logins wtih different formActionOrigin</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
@@ -44,7 +44,7 @@ async function prepareLoginsAndProcessForm(url, logins = []) {
   await promiseFormsProcessed();
 }
 
-add_task(async function test_formSubmitURL_wildcard_should_autofill() {
+add_task(async function test_formActionOrigin_wildcard_should_autofill() {
   await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
     new nsLoginInfo("https://example.com", "", null,
                     "name2", "pass2", "uname", "pword"),
@@ -56,7 +56,7 @@ add_task(async function test_formSubmitURL_wildcard_should_autofill() {
   checkLoginForm(uname, "name2", pword, "pass2");
 });
 
-add_task(async function test_formSubmitURL_different_shouldnt_autofill() {
+add_task(async function test_formActionOrigin_different_shouldnt_autofill() {
   await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
     new nsLoginInfo("https://example.com", "https://another.domain", null,
                     "name2", "pass2", "uname", "pword"),

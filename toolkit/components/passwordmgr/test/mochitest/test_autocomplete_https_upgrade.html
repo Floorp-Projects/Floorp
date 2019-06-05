@@ -31,7 +31,7 @@ runInParent(function addLogins() {
   let login2 = new nsLoginInfo("http://example.org", "http://example.org", null,
                                "name1", "pass1", "uname", "pword");
 
-  // Different HTTP login to upgrade with secure formSubmitURL
+  // Different HTTP login to upgrade with secure formActionOrigin
   let login3 = new nsLoginInfo("http://example.org", "https://example.org", null,
                                "name2", "passHTTPtoHTTPS", "uname", "pword");
 
@@ -91,7 +91,7 @@ add_task(async function test_autocomplete_http() {
   await setup(HTTP_FORM_URL);
 
   let logins = LoginManager.getAllLogins();
-  info("got logins: " + logins.map(l => l.hostname));
+  info("got logins: " + logins.map(l => l.origin));
   // from a HTTP page, look for matching logins, we should never offer a login with an HTTPS scheme
   // we're expecting just login2 as a match
   // Make sure initial form is empty.
