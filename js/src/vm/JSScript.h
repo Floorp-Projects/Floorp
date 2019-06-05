@@ -849,8 +849,7 @@ class ScriptSource {
   }
 
   template <typename Unit>
-  bool uncompressedSourceIs() const {
-    MOZ_ASSERT(hasUncompressedSource());
+  bool isUncompressed() const {
     return data.is<Uncompressed<Unit>>();
   }
 
@@ -880,8 +879,7 @@ class ScriptSource {
   bool hasCompressedSource() const { return data.match(HasCompressedSource()); }
 
   template <typename Unit>
-  bool compressedSourceIs() const {
-    MOZ_ASSERT(hasCompressedSource());
+  bool isCompressed() const {
     return data.is<Compressed<Unit>>();
   }
 
