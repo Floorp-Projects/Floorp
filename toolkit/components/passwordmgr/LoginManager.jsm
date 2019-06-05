@@ -173,12 +173,12 @@ LoginManager.prototype = {
     let usernamePresentHistogram = clearAndGetHistogram("PWMGR_USERNAME_PRESENT");
     let loginLastUsedDaysHistogram = clearAndGetHistogram("PWMGR_LOGIN_LAST_USED_DAYS");
 
-    let hostnameCount = new Map();
+    let originCount = new Map();
     for (let login of logins) {
       usernamePresentHistogram.add(!!login.username);
 
-      let hostname = login.hostname;
-      hostnameCount.set(hostname, (hostnameCount.get(hostname) || 0) + 1);
+      let origin = login.origin;
+      originCount.set(origin, (originCount.get(origin) || 0) + 1);
 
       login.QueryInterface(Ci.nsILoginMetaInfo);
       let timeLastUsedAgeMs = referenceTimeMs - login.timeLastUsed;
@@ -191,7 +191,7 @@ LoginManager.prototype = {
     Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_LOGIN_LAST_USED_DAYS");
 
     let passwordsCountHistogram = clearAndGetHistogram("PWMGR_NUM_PASSWORDS_PER_HOSTNAME");
-    for (let count of hostnameCount.values()) {
+    for (let count of originCount.values()) {
       passwordsCountHistogram.add(count);
     }
     Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_NUM_PASSWORDS_PER_HOSTNAME");
@@ -206,8 +206,8 @@ LoginManager.prototype = {
    */
   _checkLogin(login) {
     // Sanity check the login
-    if (login.hostname == null || login.hostname.length == 0) {
-      throw new Error("Can't add a login with a null or empty hostname.");
+    if (login.origin == null || login.origin.length == 0) {
+      throw new Error("Can't add a login with a null or empty origin.");
     }
 
     // For logins w/o a username, set to "", not null.
@@ -219,19 +219,19 @@ LoginManager.prototype = {
       throw new Error("Can't add a login with a null or empty password.");
     }
 
-    if (login.formSubmitURL || login.formSubmitURL == "") {
+    if (login.formActionOrigin || login.formActionOrigin == "") {
       // We have a form submit URL. Can't have a HTTP realm.
       if (login.httpRealm != null) {
-        throw new Error("Can't add a login with both a httpRealm and formSubmitURL.");
+        throw new Error("Can't add a login with both a httpRealm and formActionOrigin.");
       }
     } else if (login.httpRealm) {
       // We have a HTTP realm. Can't have a form submit URL.
-      if (login.formSubmitURL != null) {
-        throw new Error("Can't add a login with both a httpRealm and formSubmitURL.");
+      if (login.formActionOrigin != null) {
+        throw new Error("Can't add a login with both a httpRealm and formActionOrigin.");
       }
     } else {
       // Need one or the other!
-      throw new Error("Can't add a login without a httpRealm or formSubmitURL.");
+      throw new Error("Can't add a login without a httpRealm or formActionOrigin.");
     }
   },
 
@@ -258,7 +258,7 @@ LoginManager.prototype = {
     this._checkLogin(login);
 
     // Look for an existing entry.
-    let logins = this.findLogins(login.hostname, login.formSubmitURL,
+    let logins = this.findLogins(login.origin, login.formActionOrigin,
                                  login.httpRealm);
 
     if (logins.some(l => login.matches(l, true))) {
@@ -384,12 +384,12 @@ LoginManager.prototype = {
 
     matchData.QueryInterface(Ci.nsIPropertyBag2);
     if (!matchData.hasKey("guid")) {
-      if (!matchData.hasKey("hostname")) {
-        log.warn("searchLogins: A `hostname` is recommended");
+      if (!matchData.hasKey("origin")) {
+        log.warn("searchLogins: An `origin` is recommended");
       }
 
-      if (!matchData.hasKey("formSubmitURL") && !matchData.hasKey("httpRealm")) {
-        log.warn("searchLogins: `formSubmitURL` or `httpRealm` is recommended");
+      if (!matchData.hasKey("formActionOrigin") && !matchData.hasKey("httpRealm")) {
+        log.warn("searchLogins: `formActionOrigin` or `httpRealm` is recommended");
       }
     }
 
@@ -438,7 +438,7 @@ LoginManager.prototype = {
    */
   setLoginSavingEnabled(origin, enabled) {
     // Throws if there are bogus values.
-    LoginHelper.checkHostnameValue(origin);
+    LoginHelper.checkOriginValue(origin);
 
     let uri = Services.io.newURI(origin);
     if (enabled) {

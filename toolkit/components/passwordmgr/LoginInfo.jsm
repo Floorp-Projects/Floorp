@@ -19,19 +19,32 @@ nsLoginInfo.prototype = {
   // nsILoginInfo interfaces...
   //
 
-  hostname: null,
-  formSubmitURL: null,
+  origin: null,
+  formActionOrigin: null,
   httpRealm: null,
   username: null,
   password: null,
   usernameField: null,
   passwordField: null,
 
-  init(aHostname, aFormSubmitURL, aHttpRealm,
-       aUsername, aPassword,
+  /**
+   * @deprecated Use `origin` instead.
+   */
+  get hostname() {
+    return this.origin;
+  },
+
+  /**
+   * @deprecated Use `formActionOrigin` instead.
+   */
+  get formSubmitURL() {
+    return this.formActionOrigin;
+  },
+
+  init(aOrigin, aFormActionOrigin, aHttpRealm, aUsername, aPassword,
        aUsernameField = "", aPasswordField = "") {
-    this.hostname      = aHostname;
-    this.formSubmitURL = aFormSubmitURL;
+    this.origin        = aOrigin;
+    this.formActionOrigin = aFormActionOrigin;
     this.httpRealm     = aHttpRealm;
     this.username      = aUsername;
     this.password      = aPassword;
@@ -46,8 +59,8 @@ nsLoginInfo.prototype = {
   },
 
   equals(aLogin) {
-    if (this.hostname != aLogin.hostname ||
-        this.formSubmitURL != aLogin.formSubmitURL ||
+    if (this.origin != aLogin.origin ||
+        this.formActionOrigin != aLogin.formActionOrigin ||
         this.httpRealm != aLogin.httpRealm ||
         this.username != aLogin.username ||
         this.password != aLogin.password ||
@@ -62,7 +75,7 @@ nsLoginInfo.prototype = {
   clone() {
     let clone = Cc["@mozilla.org/login-manager/loginInfo;1"].
                 createInstance(Ci.nsILoginInfo);
-    clone.init(this.hostname, this.formSubmitURL, this.httpRealm,
+    clone.init(this.origin, this.formActionOrigin, this.httpRealm,
                this.username, this.password,
                this.usernameField, this.passwordField);
 
