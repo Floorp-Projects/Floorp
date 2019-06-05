@@ -16,8 +16,8 @@ add_task(async function setup() {
     await storageChangedPromised;
   }
   let tabOpenedPromise =
-    BrowserTestUtils.waitForNewTab(gBrowser, "about:logins?filter=" + encodeURIComponent(TEST_LOGIN1.hostname), true);
-  LoginHelper.openPasswordManager(window, { filterString: TEST_LOGIN1.hostname, entryPoint: "preferences" });
+    BrowserTestUtils.waitForNewTab(gBrowser, "about:logins?filter=" + encodeURIComponent(TEST_LOGIN1.origin), true);
+  LoginHelper.openPasswordManager(window, { filterString: TEST_LOGIN1.origin, entryPoint: "preferences" });
   await tabOpenedPromise;
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -38,7 +38,7 @@ add_task(async function test_query_parameter_filter() {
     }, "Waiting for logins to be cached");
 
     let loginFilter = Cu.waiveXrays(content.document.querySelector("login-filter"));
-    is(loginFilter.value, logins[0].hostname, "The filter should be prepopulated");
+    is(loginFilter.value, logins[0].origin, "The filter should be prepopulated");
 
     let hiddenLoginListItems = loginList.shadowRoot.querySelectorAll("login-list-item[hidden]");
     let visibleLoginListItems = loginList.shadowRoot.querySelectorAll("login-list-item:not([hidden])");

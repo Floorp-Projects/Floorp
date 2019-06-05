@@ -8,11 +8,11 @@
   padding-right: 40px;
 }
 
-:host([isNewLogin]) .hostname-saved-value,
+:host([isNewLogin]) .origin-saved-value,
 :host([isNewLogin]) copy-to-clipboard-button,
 :host([isNewLogin]) .open-site-button,
 :host([isNewLogin]) .meta-info,
-:host(:not([isNewLogin])) input[name="hostname"],
+:host(:not([isNewLogin])) input[name="origin"],
 :host(:not([editing])) .save-changes-button,
 :host(:not([editing])) .cancel-button {
   display: none;
@@ -73,7 +73,7 @@
   margin-bottom: 5px;
 }
 
-.hostname-label::after,
+.origin-label::after,
 .password-label::after {
   content: attr(field-required-symbol);
 }

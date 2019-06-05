@@ -27,13 +27,13 @@ Test the login-list component
 let gLoginList;
 const TEST_LOGIN_1 = {
   guid: "123456789",
-  hostname: "https://example.com",
+  origin: "https://example.com",
   username: "user1",
   password: "pass1",
 };
 const TEST_LOGIN_2 = {
   guid: "987654321",
-  hostname: "https://example.com",
+  origin: "https://example.com",
   username: "user2",
   password: "pass2",
 };
@@ -62,8 +62,8 @@ add_task(async function test_populated_list() {
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 2, "Both logins should be displayed");
   is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
-  is(loginListItems[0].shadowRoot.querySelector(".hostname").textContent, TEST_LOGIN_1.hostname,
-     "login-list-item hostname should match");
+  is(loginListItems[0].shadowRoot.querySelector(".origin").textContent, TEST_LOGIN_1.origin,
+     "login-list-item origin should match");
   is(loginListItems[0].shadowRoot.querySelector(".username").textContent, TEST_LOGIN_1.username,
      "login-list-item username should match");
 
@@ -133,8 +133,8 @@ add_task(async function test_login_modified() {
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 2, "Both logins should be displayed");
   is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
-  is(loginListItems[0].shadowRoot.querySelector(".hostname").textContent, TEST_LOGIN_1.hostname,
-     "login-list-item hostname should match");
+  is(loginListItems[0].shadowRoot.querySelector(".origin").textContent, TEST_LOGIN_1.origin,
+     "login-list-item origin should match");
   is(loginListItems[0].shadowRoot.querySelector(".username").textContent, modifiedLogin.username,
      "login-list-item username should have been updated");
   is(loginListItems[1].shadowRoot.querySelector(".username").textContent, TEST_LOGIN_2.username,
@@ -150,8 +150,8 @@ add_task(async function test_login_added() {
   is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
   is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
   is(loginListItems[2].getAttribute("guid"), newLogin.guid, "login-list-item3 should have correct guid attribute");
-  is(loginListItems[2].shadowRoot.querySelector(".hostname").textContent, newLogin.hostname,
-     "login-list-item hostname should match");
+  is(loginListItems[2].shadowRoot.querySelector(".origin").textContent, newLogin.origin,
+     "login-list-item origin should match");
   is(loginListItems[2].shadowRoot.querySelector(".username").textContent, newLogin.username,
      "login-list-item username should have been updated");
 });

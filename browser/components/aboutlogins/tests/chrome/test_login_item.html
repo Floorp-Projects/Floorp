@@ -28,7 +28,7 @@ Test the login-item component
 let gLoginItem;
 const TEST_LOGIN_1 = {
   guid: "123456789",
-  hostname: "https://example.com",
+  origin: "https://example.com",
   username: "user1",
   password: "pass1",
   timeCreated: "1000",
@@ -38,7 +38,7 @@ const TEST_LOGIN_1 = {
 
 const TEST_LOGIN_2 = {
   guid: "987654321",
-  hostname: "https://example.com",
+  origin: "https://example.com",
   username: "user2",
   password: "pass2",
   timeCreated: "2000",
@@ -63,7 +63,7 @@ add_task(async function setup() {
 
 add_task(async function test_empty_item() {
   ok(gLoginItem, "loginItem exists");
-  is(gLoginItem.shadowRoot.querySelector(".hostname-saved-value").textContent, "", "hostname should be blank");
+  is(gLoginItem.shadowRoot.querySelector(".origin-saved-value").textContent, "", "origin should be blank");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value, "", "username should be blank");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value, "", "password should be blank");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, "", "time-created should be blank when undefined");
@@ -77,11 +77,11 @@ add_task(async function test_set_login() {
 
   ok(!gLoginItem.hasAttribute("editing"), "loginItem should not be in 'edit' mode");
   ok(!gLoginItem.hasAttribute("isNewLogin"), "loginItem should not be in 'isNewLogin' mode");
-  let savedHostname = gLoginItem.shadowRoot.querySelector(".hostname-saved-value");
-  is(getComputedStyle(savedHostname).display, "inline", ".hostname-saved-value should be visible for non-editing existing logins");
-  let hostnameInput = gLoginItem.shadowRoot.querySelector("input[name='hostname']");
-  is(getComputedStyle(hostnameInput).display, "none", "input[name='hostname'] should be hidden for non-editing existing logins");
-  is(savedHostname.textContent, TEST_LOGIN_1.hostname, "hostname should be populated");
+  let savedOrigin = gLoginItem.shadowRoot.querySelector(".origin-saved-value");
+  is(getComputedStyle(savedOrigin).display, "inline", ".origin-saved-value should be visible for non-editing existing logins");
+  let originInput = gLoginItem.shadowRoot.querySelector("input[name='origin']");
+  is(getComputedStyle(originInput).display, "none", "input[name='origin'] should be hidden for non-editing existing logins");
+  is(savedOrigin.textContent, TEST_LOGIN_1.origin, "origin should be populated");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value, TEST_LOGIN_1.username, "username should be populated");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value, TEST_LOGIN_1.password, "password should be populated");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, TEST_LOGIN_1.timeCreated, "time-created should be populated");
@@ -96,11 +96,11 @@ add_task(async function test_edit_login() {
 
   ok(gLoginItem.hasAttribute("editing"), "loginItem should be in 'edit' mode");
   ok(!gLoginItem.hasAttribute("isNewLogin"), "loginItem should not be in 'isNewLogin' mode");
-  let savedHostname = gLoginItem.shadowRoot.querySelector(".hostname-saved-value");
-  is(getComputedStyle(savedHostname).display, "inline", ".hostname-saved-value should be visible for editing existing logins");
-  let hostnameInput = gLoginItem.shadowRoot.querySelector("input[name='hostname']");
-  is(getComputedStyle(hostnameInput).display, "none", "input[name='hostname'] should be hidden for editing existing logins");
-  is(savedHostname.textContent, TEST_LOGIN_1.hostname, "hostname should be populated");
+  let savedOrigin = gLoginItem.shadowRoot.querySelector(".origin-saved-value");
+  is(getComputedStyle(savedOrigin).display, "inline", ".origin-saved-value should be visible for editing existing logins");
+  let originInput = gLoginItem.shadowRoot.querySelector("input[name='origin']");
+  is(getComputedStyle(originInput).display, "none", "input[name='origin'] should be hidden for editing existing logins");
+  is(savedOrigin.textContent, TEST_LOGIN_1.origin, "origin should be populated");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value, TEST_LOGIN_1.username, "username should be populated");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value, TEST_LOGIN_1.password, "password should be populated");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, TEST_LOGIN_1.timeCreated, "time-created should be populated");
@@ -113,7 +113,7 @@ add_task(async function test_edit_login() {
   let updateEventDispatched = false;
   document.addEventListener("AboutLoginsUpdateLogin", event => {
     is(event.detail.guid, TEST_LOGIN_1.guid, "event should include guid");
-    is(event.detail.hostname, TEST_LOGIN_1.hostname, "event should include hostname");
+    is(event.detail.origin, TEST_LOGIN_1.origin, "event should include origin");
     is(event.detail.username, "newUsername", "event should include new username");
     is(event.detail.password, "newPassword", "event should include new password");
     updateEventDispatched = true;
@@ -158,10 +158,10 @@ add_task(async function test_set_login_empty() {
 
   ok(gLoginItem.hasAttribute("editing"), "loginItem should be in 'edit' mode");
   ok(gLoginItem.hasAttribute("isNewLogin"), "loginItem should be in 'isNewLogin' mode");
-  let savedHostname = gLoginItem.shadowRoot.querySelector(".hostname-saved-value");
-  is(getComputedStyle(savedHostname).display, "none", ".hostname-saved-value should be hidden for new logins");
-  let hostnameInput = gLoginItem.shadowRoot.querySelector("input[name='hostname']");
-  is(getComputedStyle(hostnameInput).display, "inline-block", "input[name='hostname'] should be visible for new logins");
+  let savedOrigin = gLoginItem.shadowRoot.querySelector(".origin-saved-value");
+  is(getComputedStyle(savedOrigin).display, "none", ".origin-saved-value should be hidden for new logins");
+  let originInput = gLoginItem.shadowRoot.querySelector("input[name='origin']");
+  is(getComputedStyle(originInput).display, "inline-block", "input[name='origin'] should be visible for new logins");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value, "", "username should be empty");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value, "", "password should be empty");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, "", "time-created should be blank when undefined");
@@ -174,15 +174,15 @@ add_task(async function test_set_login_empty() {
   }, {once: true});
   gLoginItem.shadowRoot.querySelector(".save-changes-button").click();
   ok(!createEventDispatched, "Clicking the .save-changes-button shouldn't dispatch the event when fields are invalid");
-  ok(hostnameInput.matches(":invalid"), "hostname value is required");
+  ok(originInput.matches(":invalid"), "origin value is required");
 
-  hostnameInput.value = "https://example.com/foo";
+  originInput.value = "https://example.com/foo";
   gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value = "user1";
   gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value = "pass1";
 
   document.addEventListener("AboutLoginsCreateLogin", event => {
     is(event.detail.guid, undefined, "event should not include guid");
-    is(event.detail.hostname, "https://example.com/foo", "event should include hostname");
+    is(event.detail.origin, "https://example.com/foo", "event should include origin");
     is(event.detail.username, "user1", "event should include new username");
     is(event.detail.password, "pass1", "event should include new password");
     createEventDispatched = true;
@@ -197,7 +197,7 @@ add_task(async function test_different_login_modified() {
   gLoginItem.loginModified(otherLogin);
   await asyncElementRendered();
 
-  is(gLoginItem.shadowRoot.querySelector(".hostname-saved-value").textContent, TEST_LOGIN_1.hostname, "hostname should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector(".origin-saved-value").textContent, TEST_LOGIN_1.origin, "origin should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value, TEST_LOGIN_1.username, "username should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value, TEST_LOGIN_1.password, "password should be unchanged");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
@@ -211,7 +211,7 @@ add_task(async function test_different_login_removed() {
   gLoginItem.loginRemoved(otherLogin);
   await asyncElementRendered();
 
-  is(gLoginItem.shadowRoot.querySelector(".hostname-saved-value").textContent, TEST_LOGIN_1.hostname, "hostname should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector(".origin-saved-value").textContent, TEST_LOGIN_1.origin, "origin should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value, TEST_LOGIN_1.username, "username should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value, TEST_LOGIN_1.password, "password should be unchanged");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
@@ -225,7 +225,7 @@ add_task(async function test_login_modified() {
   gLoginItem.loginModified(modifiedLogin);
   await asyncElementRendered();
 
-  is(gLoginItem.shadowRoot.querySelector(".hostname-saved-value").textContent, modifiedLogin.hostname, "hostname should be updated");
+  is(gLoginItem.shadowRoot.querySelector(".origin-saved-value").textContent, modifiedLogin.origin, "origin should be updated");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value, modifiedLogin.username, "username should be updated");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value, modifiedLogin.password, "password should be updated");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, modifiedLogin.timeCreated, "time-created should be updated");
@@ -238,7 +238,7 @@ add_task(async function test_login_removed() {
   gLoginItem.loginRemoved(TEST_LOGIN_1);
   await asyncElementRendered();
 
-  is(gLoginItem.shadowRoot.querySelector(".hostname-saved-value").textContent, "", "hostname should be cleared");
+  is(gLoginItem.shadowRoot.querySelector(".origin-saved-value").textContent, "", "origin should be cleared");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value, "", "username should be cleared");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value, "", "password should be cleared");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, "", "time-created should be blank when undefined");
