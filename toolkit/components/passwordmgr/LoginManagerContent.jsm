@@ -1117,16 +1117,16 @@ this.LoginManagerContent = {
       return;
     }
 
-    let hostname = LoginHelper.getLoginOrigin(doc.documentURI);
-    if (!hostname) {
-      log("(form submission ignored -- invalid hostname)");
+    let origin = LoginHelper.getLoginOrigin(doc.documentURI);
+    if (!origin) {
+      log("(form submission ignored -- invalid origin)");
       return;
     }
 
-    let formSubmitURL = LoginHelper.getFormActionOrigin(form);
+    let formActionOrigin = LoginHelper.getFormActionOrigin(form);
     let messageManager = win.docShell.messageManager;
 
-    let recipes = LoginRecipesContent.getRecipes(hostname, win);
+    let recipes = LoginRecipesContent.getRecipes(origin, win);
 
     // Get the appropriate fields from the form.
     let [usernameField, newPasswordField, oldPasswordField] =
@@ -1205,8 +1205,8 @@ this.LoginManagerContent = {
 
     let autoFilledLogin = this.stateForDocument(doc).fillsByRootElement.get(form.rootElement);
     messageManager.sendAsyncMessage("PasswordManager:onFormSubmit",
-                                    { hostname,
-                                      formSubmitURL,
+                                    { origin,
+                                      formActionOrigin,
                                       autoFilledLoginGuid: autoFilledLogin && autoFilledLogin.guid,
                                       usernameField: mockUsername,
                                       newPasswordField: mockPassword,
@@ -1382,19 +1382,19 @@ this.LoginManagerContent = {
       }
 
       if (!userTriggered) {
-        // Only autofill logins that match the form's action and hostname. In the above code
+        // Only autofill logins that match the form's action and origin. In the above code
         // we have attached autocomplete for logins that don't match the form action.
         let loginOrigin = LoginHelper.getLoginOrigin(form.ownerDocument.documentURI);
         let formActionOrigin = LoginHelper.getFormActionOrigin(form);
         foundLogins = foundLogins.filter(l => {
-          let formActionMatches = LoginHelper.isOriginMatching(l.formSubmitURL,
+          let formActionMatches = LoginHelper.isOriginMatching(l.formActionOrigin,
                                                                formActionOrigin,
                                                                {
                                                                  schemeUpgrades: LoginHelper.schemeUpgrades,
                                                                  acceptWildcardMatch: true,
                                                                  acceptDifferentSubdomains: false,
                                                                });
-          let formOriginMatches = LoginHelper.isOriginMatching(l.hostname,
+          let formOriginMatches = LoginHelper.isOriginMatching(l.origin,
                                                                loginOrigin,
                                                                {
                                                                  schemeUpgrades: LoginHelper.schemeUpgrades,

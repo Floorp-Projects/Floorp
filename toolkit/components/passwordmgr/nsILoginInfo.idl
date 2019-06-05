@@ -12,10 +12,16 @@
 [scriptable, uuid(c41b7dff-6b9b-42fe-b78d-113051facb05)]
 interface nsILoginInfo : nsISupports {
   /**
-   * The origin the login applies to, incorrectly called a hostname.
+   * The origin the login applies to.
    *
    * For example,
    * "https://site.com", "http://site.com:1234", "ftp://ftp.site.com".
+   */
+  attribute AString origin;
+
+  /**
+   * The origin the login applies to, incorrectly called a hostname.
+   * @deprecated in favor of `origin`
    */
   attribute AString hostname;
 
@@ -29,6 +35,12 @@ interface nsILoginInfo : nsISupports {
    *
    * For logins obtained from a HTTP or FTP protocol authentication,
    * this field is NULL.
+   */
+  attribute AString formActionOrigin;
+
+  /**
+   * The origin a form-based login was submitted to, incorrectly referred to as a URL.
+   * @deprecated in favor of `formActionOrigin`
    */
   attribute AString formSubmitURL;
 
@@ -79,8 +91,8 @@ interface nsILoginInfo : nsISupports {
    *
    * The arguments are the fields for the new object.
    */
-  void init(in AString aHostname,
-            in AString aFormSubmitURL, in AString aHttpRealm,
+  void init(in AString aOrigin,
+            in AString aFormActionOrigin, in AString aHttpRealm,
             in AString aUsername,      in AString aPassword,
             [optional] in AString aUsernameField, [optional] in AString aPasswordField);
 
