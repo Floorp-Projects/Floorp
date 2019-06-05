@@ -4,12 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ProfilerBacktrace.h"
+#include "BaseProfiler.h"
 
-#include "ProfileBuffer.h"
-#include "ProfiledThreadData.h"
-#include "BaseProfileJSONWriter.h"
-#include "ThreadInfo.h"
+#ifdef MOZ_BASE_PROFILER
+
+#  include "ProfilerBacktrace.h"
+
+#  include "ProfileBuffer.h"
+#  include "ProfiledThreadData.h"
+#  include "BaseProfileJSONWriter.h"
+#  include "ThreadInfo.h"
 
 ProfilerBacktrace::ProfilerBacktrace(const char* aName, int aThreadId,
                                      mozilla::UniquePtr<ProfileBuffer> aBuffer)
@@ -32,3 +36,5 @@ void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
                           /* aUnregisterTime */ mozilla::TimeStamp(),
                           /* aSinceTime */ 0, aUniqueStacks);
 }
+
+#endif  // MOZ_BASE_PROFILER
