@@ -6937,7 +6937,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
 
           LoadURIOptions loadURIOptions;
           loadURIOptions.mTriggeringPrincipal = triggeringPrincipal;
-          loadURIOptions.mCsp = loadInfo->GetCspToInherit();
+          loadURIOptions.mCsp = loadInfo->GetCsp();
           loadURIOptions.mPostData = newPostData;
           return LoadURI(newSpecW, loadURIOptions);
         }
@@ -10061,16 +10061,16 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       }
     }
 
-    // For document loads we store the CSP that potentially needs to
-    // be inherited by the new document, e.g. in case we are loading
-    // an opaque origin like a data: URI. The actual inheritance
-    // check happens within Document::InitCSP().
-    // Please create an actual copy of the CSP (do not share the same
-    // reference) otherwise a Meta CSP of an opaque origin will
-    // incorrectly be propagated to the embedding document.
-    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
-    cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
-    loadInfo->SetCSPToInherit(cspToInherit);
+    if (CSP_ShouldResponseInheritCSP(channel)) {
+      // If the new load needs to inherit the CSP, temporarily store the CSP
+      // on the loadinfo, and transfer it to the new Document within
+      // Document::InitCSP(). Please create an actual copy of the CSP (do not
+      // share the same reference) otherwise a Meta CSP of an opaque origin
+      // will incorrectly be propagated to the embedding document.
+      RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
+      cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
+      loadInfo->SetCSPToInherit(cspToInherit);
+    }
   }
 
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
@@ -11471,7 +11471,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
       triggeringPrincipal = loadInfo->TriggeringPrincipal();
     }
     if (!csp) {
-      csp = loadInfo->GetCspToInherit();
+      csp = static_cast<net::LoadInfo*>(loadInfo.get())->GetCSPToInherit();
     }
 
     loadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));

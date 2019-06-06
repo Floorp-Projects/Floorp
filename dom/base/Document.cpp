@@ -2951,15 +2951,12 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
 
   MOZ_ASSERT(!mCSP, "where did mCSP get set if not here?");
 
-  // If there is a CSP that needs to be inherited from whatever
-  // global is considered the client of the document fetch then
-  // we query it here from the loadinfo in case the newly created
-  // document needs to inherit the CSP. See:
-  // https://w3c.github.io/webappsec-csp/#initialize-document-csp
-  if (CSP_ShouldResponseInheritCSP(aChannel)) {
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-    mCSP = loadInfo->GetCspToInherit();
-  }
+  // If there is a CSP that needs to be inherited either from the
+  // embedding doc or from the opening doc, then we query it here
+  // from the loadinfo because the docshell temporarily stored it
+  // on the loadinfo so we can set it here.
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  mCSP = static_cast<net::LoadInfo*>(loadInfo.get())->GetCSPToInherit();
 
   // If there is no CSP to inherit, then we create a new CSP here so
   // that history entries always have the right reference in case a
