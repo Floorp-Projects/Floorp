@@ -17,6 +17,9 @@
 
 #include <cstdint>
 
+namespace mozilla {
+namespace baseprofiler {
+
 // clang-format off
 
 // This higher-order macro lists all categories with their subcategories.
@@ -81,8 +84,6 @@
     SUBCATEGORY(DOM, DOM, "Other")                                             \
   END_CATEGORY
 
-namespace JS {
-
 // An enum that lists all possible category pairs in one list.
 // This is the enum that is used in profiler stack labels. Having one list that
 // includes subcategories from all categories in one list allows assigning the
@@ -124,9 +125,10 @@ struct ProfilingCategoryPairInfo {
   const char* mLabel;
 };
 
-MFBT_API const ProfilingCategoryPairInfo& GetBaseProfilingCategoryPairInfo(
+MFBT_API const ProfilingCategoryPairInfo& GetProfilingCategoryPairInfo(
     ProfilingCategoryPair aCategoryPair);
 
-}  // namespace JS
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif /* BaseProfilingCategory_h */
