@@ -41,7 +41,7 @@ Well, are ya? -- you can ignore this clobber requirement by running:
 
 
 class Clobberer(object):
-    def __init__(self, topsrcdir, topobjdir):
+    def __init__(self, topsrcdir, topobjdir, substs=None):
         """Create a new object to manage clobbering the tree.
 
         It is bound to a top source directory and to a specific object
@@ -54,6 +54,10 @@ class Clobberer(object):
         self.topobjdir = os.path.normpath(topobjdir)
         self.src_clobber = os.path.join(topsrcdir, 'CLOBBER')
         self.obj_clobber = os.path.join(topobjdir, 'CLOBBER')
+        if substs:
+            self.substs = substs
+        else:
+            self.substs = dict()
 
         # Try looking for mozilla/CLOBBER, for comm-central
         if not os.path.isfile(self.src_clobber):
