@@ -7,34 +7,54 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const { DOMLocalization } =
-    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm");
+  const { FluentBundle } =
+    ChromeUtils.import("resource://gre/modules/Fluent.jsm");
 
   async function* mockGenerateMessages(locales, resourceIds) {
+    const bundle = new FluentBundle(locales);
+    bundle.addMessages(`
+key1 = Value for Key 1
+key2 = Value for Key 2
+    `);
+    yield bundle;
   }
 
   window.onload = async function() {
     SimpleTest.waitForExplicitFinish();
+
+    const p1 = document.getElementById("p1");
 
     const domLoc = new DOMLocalization(
       [],
       mockGenerateMessages
     );
 
-    const frag = document.querySelectorAll("div")[0];
+    await domLoc.translateRoots();
+    is(p1.textContent.length == 0, true);
 
-    domLoc.connectRoot(frag);
-    is(domLoc.roots.has(frag), true);
+    const body = document.body;
 
-    domLoc.disconnectRoot(frag);
-    is(domLoc.roots.has(frag), false);
+    domLoc.connectRoot(body);
+    await domLoc.translateRoots();
+    is(p1.textContent.includes("Key 1"), true);
+    is(p1.textContent.includes("Key 2"), false);
+
+    domLoc.disconnectRoot(body);
+    domLoc.setAttributes(p1, "key2");
+    await domLoc.translateRoots();
+    is(p1.textContent.includes("Key 1"), true);
+    is(p1.textContent.includes("Key 2"), false);
+
+    domLoc.connectRoot(body);
+    await domLoc.translateRoots();
+    is(p1.textContent.includes("Key 1"), false);
+    is(p1.textContent.includes("Key 2"), true);
 
     SimpleTest.finish();
   };
   </script>
 </head>
 <body>
-  <div>
-  </div>
+  <p id="p1" data-l10n-id="key1"></p>
 </body>
 </html>
