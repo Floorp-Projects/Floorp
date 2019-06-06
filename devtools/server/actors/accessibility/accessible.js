@@ -428,33 +428,53 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     return contrastRatio;
   },
 
+  _getAuditByType(type) {
+    switch (type) {
+      case AUDIT_TYPE.CONTRAST:
+        return this._getContrastRatio();
+      default:
+        return null;
+    }
+  },
+
   /**
    * Audit the state of the accessible object.
+   *
+   * @param  {Object} options
+   *         Options for running audit, may include:
+   *         - types: Array of audit types to be performed during audit.
    *
    * @return {Object|null}
    *         Audit results for the accessible object.
   */
-  audit() {
+  audit(options = {}) {
     if (this._auditing) {
       return this._auditing;
+    }
+
+    const { types } = options;
+    let auditTypes = Object.values(AUDIT_TYPE);
+    if (types && types.length > 0) {
+      auditTypes = auditTypes.filter(auditType => types.includes(auditType));
     }
 
     // More audit steps will be added here in the near future. In addition to
     // colour contrast ratio we will add autits for to the missing names,
     // invalid states, etc. (For example see bug 1518808).
-    this._auditing = Promise.all([
-      this._getContrastRatio(),
-    ]).then(([
-      contrastRatio,
-    ]) => {
-      let audit = null;
-      if (!this.isDefunct && !this.isDestroyed) {
-        audit = {
-          [AUDIT_TYPE.CONTRAST]: contrastRatio,
-        };
-        this._lastAudit = audit;
-        events.emit(this, "audited", audit);
+    this._auditing = Promise.all(
+      auditTypes.map(auditType => this._getAuditByType(auditType))
+    ).then(results => {
+      if (this.isDefunct || this.isDestroyed) {
+        return null;
       }
+
+      const audit = results.reduce((auditResults, result, index) => {
+        auditResults[auditTypes[index]] = result;
+        return auditResults;
+      }, {});
+      this._lastAudit = this._lastAudit || {};
+      Object.assign(this._lastAudit, audit);
+      events.emit(this, "audited", audit);
 
       return audit;
     }).catch(error => {

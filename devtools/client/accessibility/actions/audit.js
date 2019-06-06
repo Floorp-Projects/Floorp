@@ -10,10 +10,14 @@ exports.filterToggle = filter =>
   dispatch => dispatch({ filter, type: FILTER_TOGGLE });
 
 exports.auditing = filter =>
-  dispatch => dispatch({ auditing: filter, type: AUDITING });
+  dispatch => {
+    const auditing = [filter];
+    return dispatch({ auditing, type: AUDITING });
+  };
 
 exports.audit = (walker, filter) =>
   dispatch => new Promise(resolve => {
+    const types = [filter];
     const auditEventHandler = ({ type, ancestries, progress }) => {
       switch (type) {
         case "error":
@@ -35,5 +39,5 @@ exports.audit = (walker, filter) =>
     };
 
     walker.on("audit-event", auditEventHandler);
-    walker.startAudit();
+    walker.startAudit({ types });
   });

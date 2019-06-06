@@ -18,6 +18,7 @@ const {
   setupStore,
 } = require("devtools/client/accessibility/test/jest/helpers");
 const { FILTERS } = require("devtools/client/accessibility/constants");
+const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
 
 describe("AccessibilityTreeFilter component:", () => {
   it("audit filter not filtered", () => {
@@ -47,7 +48,12 @@ describe("AccessibilityTreeFilter component:", () => {
 
   it("audit filter filtered", () => {
     const store = setupStore({
-      preloadedState: { audit: { filters: { [FILTERS.CONTRAST]: true }}},
+      preloadedState: { audit: {
+        filters: {
+          [FILTERS.CONTRAST]: true,
+        },
+        auditing: [],
+      }},
     });
 
     const wrapper = mount(Provider({store}, AccessibilityTreeFilter()));
@@ -64,7 +70,7 @@ describe("AccessibilityTreeFilter component:", () => {
         filters: {
           [FILTERS.CONTRAST]: false,
         },
-        auditing: FILTERS.CONTRAST,
+        auditing: [AUDIT_TYPE.CONTRAST],
       }},
     });
 
@@ -84,7 +90,7 @@ describe("AccessibilityTreeFilter component:", () => {
         filters: {
           [FILTERS.CONTRAST]: true,
         },
-        auditing: FILTERS.CONTRAST,
+        auditing: [AUDIT_TYPE.CONTRAST],
       }},
     });
 

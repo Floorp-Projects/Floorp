@@ -98,7 +98,7 @@ const accessibleSpec = generateActorSpec({
 
   methods: {
     audit: {
-      request: {},
+      request: { options: Arg(0, "nullable:json") },
       response: {
         audit: RetVal("nullable:json"),
       },
@@ -185,7 +185,9 @@ const accessibleWalkerSpec = generateActorSpec({
         ancestry: RetVal("array:accessibleWithChildren"),
       },
     },
-    startAudit: {},
+    startAudit: {
+      request: { options: Arg(0, "nullable:json") },
+    },
     highlightAccessible: {
       request: {
         accessible: Arg(0, "accessible"),
