@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/DocumentL10n.h"
+#include "DocumentL10n.h"
 #include "mozilla/dom/DocumentL10nBinding.h"
 #include "mozilla/dom/L10nUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -13,10 +13,7 @@
 #include "nsISupports.h"
 #include "nsContentUtils.h"
 
-using namespace mozilla::intl;
-
-namespace mozilla {
-namespace dom {
+using namespace mozilla::dom::l10n;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DocumentL10n)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocumentL10n, DOMLocalization)
@@ -149,6 +146,3 @@ void DocumentL10n::InitialDocumentTranslationCompleted() {
 Promise* DocumentL10n::Ready() { return mReady; }
 
 void DocumentL10n::OnCreatePresShell() { mMutations->OnCreatePresShell(); }
-
-}  // namespace dom
-}  // namespace mozilla
