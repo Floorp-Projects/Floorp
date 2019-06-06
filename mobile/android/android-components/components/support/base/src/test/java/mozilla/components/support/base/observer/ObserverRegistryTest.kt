@@ -10,6 +10,8 @@ import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -352,6 +354,21 @@ class ObserverRegistryTest {
         }
 
         assertFalse(observer.notified)
+    }
+
+    @Test
+    fun `unregisterObservers will unregister from view`() {
+        val view: View = mock()
+        doReturn(true).`when`(view).isAttachedToWindow
+
+        val registry = ObserverRegistry<TestObserver>()
+        val observer = TestObserver()
+
+        registry.register(observer, view)
+        verify(view).addOnAttachStateChangeListener(any())
+
+        registry.unregisterObservers()
+        verify(view).removeOnAttachStateChangeListener(any())
     }
 
     @Test

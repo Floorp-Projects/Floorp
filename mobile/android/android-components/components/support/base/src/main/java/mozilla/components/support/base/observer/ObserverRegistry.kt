@@ -96,14 +96,10 @@ class ObserverRegistry<T> : Observable<T> {
 
     @Synchronized
     override fun unregisterObservers() {
-        observers.forEach {
-            lifecycleObservers[it]?.remove()
+        observers.toList().forEach { observer ->
+            unregister(observer)
         }
 
-        observers.clear()
-        pausedObservers.clear()
-        lifecycleObservers.clear()
-        viewObservers.clear()
     }
 
     @Synchronized
