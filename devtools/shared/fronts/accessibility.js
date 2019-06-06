@@ -144,7 +144,8 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
   }
 
   audited(checks) {
-    this._form.checks = checks;
+    this._form.checks = this._form.checks || {};
+    Object.assign(this._form.checks, checks);
   }
 
   hydrate() {

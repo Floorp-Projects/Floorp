@@ -34,7 +34,7 @@ class MainFrame extends Component {
       walker: PropTypes.object.isRequired,
       enabled: PropTypes.bool.isRequired,
       dispatch: PropTypes.func.isRequired,
-      auditing: PropTypes.string,
+      auditing: PropTypes.array.isRequired,
     };
   }
 
@@ -97,12 +97,15 @@ class MainFrame extends Component {
       return Description({ accessibility });
     }
 
+    // Audit is currently running.
+    const isAuditing = auditing.length > 0;
+
     return (
       div({ className: "mainFrame", role: "presentation" },
         Toolbar({ accessibility, walker }),
-        auditing && AuditProgressOverlay(),
+        isAuditing && AuditProgressOverlay(),
         span({
-          "aria-hidden": !!auditing,
+          "aria-hidden": isAuditing,
           role: "presentation",
           style: { display: "contents" },
         },

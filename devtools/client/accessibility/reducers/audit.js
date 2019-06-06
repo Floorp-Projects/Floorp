@@ -21,7 +21,7 @@ function getInitialState() {
     filters: {
       [FILTERS.CONTRAST]: false,
     },
-    auditing: null,
+    auditing: [],
     progress: null,
   };
 }
@@ -51,7 +51,7 @@ function audit(state = getInitialState(), action) {
     case AUDIT:
       return {
         ...state,
-        auditing: null,
+        auditing: getInitialState().auditing,
         progress: null,
       };
     case AUDIT_PROGRESS:
