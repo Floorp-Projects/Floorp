@@ -371,3 +371,20 @@ if CONFIG['COMPILE_ENVIRONMENT']:
 # This library is entirely composed of Rust code, and needs to come after
 # all the C++ code so any possible C++ -> Rust calls can be resolved.
 USE_LIBS += ['gkrust']
+
+# The buildid is refreshed on every (incremental) build. But we want to avoid
+# rebuilding libxul every time, so instead of having a source file that
+# #include's buildid.h, which would have a dependency on it, and that would
+# thus trigger make to rebuild everything, we generate a source with the
+# buildid hard coded in it. Then we make that source file depend on all the
+# objects files that constitute libxul, so that if any of the files linked into
+# libxul is rebuilt, we refresh the buildid and link it into libxul.
+SOURCES += ['!buildid.cpp']
+GENERATED_FILES += ['buildid.cpp']
+GENERATED_FILES['buildid.cpp'].script = 'gen_buildid.py'
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
+    libxul_list = 'XUL'
+else:
+    libxul_list = '%sxul_%s' % (
+        CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'].lstrip('.'))
+GENERATED_FILES['buildid.cpp'].inputs = ['!%s.list' % libxul_list]
