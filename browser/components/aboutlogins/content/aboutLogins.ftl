@@ -23,7 +23,10 @@ login-list =
         [one] { $count } entry
        *[other] { $count } entries
     }
-
+  .last-changed-option = Last Changed
+  .last-used-option = Last Used
+  .name-option = Name
+  .sort-label-text = Sort by:
 login-item =
   .cancel-button = Cancel
   .copied-password-button = ✓ Copied!
