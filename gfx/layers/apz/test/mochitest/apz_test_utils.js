@@ -378,7 +378,7 @@ async function waitUntilApzStable() {
     // it must be totally self-contained to be shipped over to the parent process.
     /* eslint-env mozilla/frame-script */
     function parentProcessFlush() {
-      addMessageListener("apz-flush", function() {
+      function apzFlush() {
         const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
         var topWin = Services.wm.getMostRecentWindow("navigator:browser");
         if (!topWin) {
@@ -409,13 +409,23 @@ async function waitUntilApzStable() {
         // Flush APZ repaints, but wait until all the pending paints have been
         // sent.
         flushRepaint();
-      });
+      }
+      function cleanup() {
+        removeMessageListener("apz-flush", apzFlush);
+        removeMessageListener("cleanup", cleanup);
+      }
+      addMessageListener("apz-flush", apzFlush);
+      addMessageListener("cleanup", cleanup);
     }
 
     // This is the first time waitUntilApzStable is being called, do initialization
     if (typeof waitUntilApzStable.chromeHelper == "undefined") {
       waitUntilApzStable.chromeHelper = SpecialPowers.loadChromeScript(parentProcessFlush);
-      ApzCleanup.register(() => { waitUntilApzStable.chromeHelper.destroy(); });
+      ApzCleanup.register(() => {
+        waitUntilApzStable.chromeHelper.sendSyncMessage("cleanup", null);
+        waitUntilApzStable.chromeHelper.destroy();
+        delete waitUntilApzStable.chromeHelper;
+      });
     }
 
     // Actually trigger the parent-process flush and wait for it to finish
