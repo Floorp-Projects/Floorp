@@ -92,28 +92,18 @@ NS_IMPL_ISUPPORTS(ElementDeletionObserver, nsIMutationObserver)
 void ElementDeletionObserver::ParentChainChanged(nsIContent* aContent) {
   // If the native anonymous content has been unbound already in
   // DeleteRefToAnonymousNode, mNativeAnonNode's parentNode is null.
-  if (aContent == mObservedElement && mNativeAnonNode &&
-      mNativeAnonNode->GetParentNode() == aContent) {
-    // If the observed node has been moved to another document, there isn't much
-    // we can do easily. But at least be safe and unbind the native anonymous
-    // content and stop observing changes.
-    if (mNativeAnonNode->OwnerDoc() != mObservedElement->OwnerDoc()) {
-      mObservedElement->RemoveMutationObserver(this);
-      mObservedElement = nullptr;
-      mNativeAnonNode->RemoveMutationObserver(this);
-      mNativeAnonNode->UnbindFromTree();
-      mNativeAnonNode = nullptr;
-      NS_RELEASE_THIS();
-      return;
-    }
-
-    // We're staying in the same document, just rebind the native anonymous
-    // node so that the subtree root points to the right object etc.
-    mNativeAnonNode->UnbindFromTree();
-
-    BindContext context(*mObservedElement, BindContext::ForNativeAnonymous);
-    mNativeAnonNode->BindToTree(context, *mObservedElement);
+  if (aContent != mObservedElement || !mNativeAnonNode ||
+      mNativeAnonNode->GetParent() != aContent) {
+    return;
   }
+
+  ManualNACPtr::RemoveContentFromNACArray(mNativeAnonNode);
+
+  mObservedElement->RemoveMutationObserver(this);
+  mObservedElement = nullptr;
+  mNativeAnonNode->RemoveMutationObserver(this);
+  mNativeAnonNode = nullptr;
+  NS_RELEASE_THIS();
 }
 
 void ElementDeletionObserver::NodeWillBeDestroyed(const nsINode* aNode) {
