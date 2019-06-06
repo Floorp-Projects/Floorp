@@ -139,6 +139,17 @@ class MozDialog extends MozXULElement {
     window.centerWindowOnScreen = this.centerWindowOnScreen;
   }
 
+  setInContent() {
+    console.assert(this.isConnectedAndReady, "Shall be called after connectedCallback");
+
+    if (!this.hasAttribute("subdialog")) {
+      this.setAttribute("subdialog", "true");
+      this.shadowRoot.appendChild(MozXULElement.parseXULToFragment(
+        `<html:link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />`
+      ));
+    }
+  }
+
   set buttons(val) {
     this._configureButtons(val);
     return val;
