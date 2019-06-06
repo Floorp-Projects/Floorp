@@ -345,7 +345,10 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     else:
         # is_linux or is_macosx
         mh_command = [
-            'python2.7',
+            # Using /usr/bin/python2.7 rather than python2.7 because
+            # /usr/local/bin/python2.7 is broken on the mac workers.
+            # See bug #1547903.
+            '/usr/bin/python2.7',
             '-u',
             'mozharness/scripts/' + mozharness['script']
         ]
