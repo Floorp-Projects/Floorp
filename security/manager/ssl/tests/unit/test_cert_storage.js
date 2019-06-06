@@ -16,6 +16,8 @@ const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {}
 const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
 const {BlocklistClients} = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
 
+Services.prefs.setIntPref("extensions.enabledScopes", 1);
+
 // First, we need to setup appInfo for the blocklist service to work
 var id = "xpcshell@tests.mozilla.org";
 var appName = "XPCShell";
