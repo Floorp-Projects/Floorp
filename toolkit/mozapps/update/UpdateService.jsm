@@ -4672,29 +4672,4 @@ Downloader.prototype = {
                                           Ci.nsIInterfaceRequestor]),
 };
 
-/**
- * UpdatePrompt
- * An object which can prompt the user with information about updates, request
- * action, etc. Embedding clients can override this component with one that
- * invokes a native front end.
- * @constructor
- */
-function UpdatePrompt() {
-}
-UpdatePrompt.prototype = {
-  /**
-   * See nsIUpdateService.idl
-   */
-  showUpdateHistory: function UP_showUpdateHistory(parent) {
-    let uri = "chrome://mozapps/content/update/history.xul";
-    let features = "chrome,centerscreen,resizable=no,titlebar,toolbar=no,dialog=yes,modal";
-    Services.ww.openWindow(parent, uri, "Update:Elevation", features, null);
-  },
-
-  classDescription: "Update Prompt",
-  contractID: "@mozilla.org/updates/update-prompt;1",
-  classID: Components.ID("{27ABA825-35B5-4018-9FDD-F99250A0E722}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdatePrompt]),
-};
-
-var EXPORTED_SYMBOLS = ["UpdateService", "Checker", "UpdatePrompt", "UpdateManager"];
+var EXPORTED_SYMBOLS = ["UpdateService", "Checker", "UpdateManager"];
