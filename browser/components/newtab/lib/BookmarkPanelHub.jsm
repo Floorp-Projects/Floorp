@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "DOMLocalization",
-  "resource://gre/modules/DOMLocalization.jsm");
 ChromeUtils.defineModuleGetter(this, "FxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
