@@ -1038,6 +1038,22 @@ def split_variants(config, tests):
 
 
 @transforms.add
+def ensure_spi_disabled_on_all_but_spi(config, tests):
+    for test in tests:
+        variant = test['attributes'].get('unittest_variant', '')
+        mochi_or_wpt = ('mochitest' in test['suite'] or
+                        'web-platform' in test['suite'])
+
+        if mochi_or_wpt and variant != 'socketprocess':
+            test['mozharness']['extra-options'].append(
+                    '--setpref="media.peerconnection.mtransport_process=false"')
+            test['mozharness']['extra-options'].append(
+                    '--setpref="network.process.enabled=false"')
+
+        yield test
+
+
+@transforms.add
 def split_e10s(config, tests):
     for test in tests:
         e10s = test['e10s']
