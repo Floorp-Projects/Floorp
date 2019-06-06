@@ -45,7 +45,7 @@ function getOrientation(device, viewport, angleToRotateTo = null) {
   if (typeof angleToRotateTo === "number") {
     angle = angleToRotateTo;
   } else if (currentOrientation !== primaryOrientation) {
-    angle = 270;
+    angle = 90;
   } else {
     angle = 0;
   }
