@@ -164,6 +164,9 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   bool NameEquals(const nsAString& aName) { return mName.Equals(aName); }
 
   bool IsContent() const { return mType == Type::Content; }
+  bool IsChrome() const { return !IsContent(); }
+
+  bool IsTopContent() const { return IsContent() && !GetParent(); }
 
   uint64_t Id() const { return mBrowsingContextId; }
 

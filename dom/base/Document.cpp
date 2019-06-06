@@ -6030,7 +6030,7 @@ void Document::SetContainer(nsDocShell* aContainer) {
 
   BrowsingContext* context = aContainer->GetBrowsingContext();
   if (context && context->IsContent()) {
-    if (!context->GetParent()) {
+    if (context->IsTopContent()) {
       SetIsTopLevelContentDocument(true);
     }
     SetIsContentDocument(true);
