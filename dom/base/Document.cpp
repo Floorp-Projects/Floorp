@@ -3457,8 +3457,12 @@ bool Document::GetAllowPlugins() {
 void Document::InitializeLocalization(nsTArray<nsString>& aResourceIds) {
   MOZ_ASSERT(!mDocumentL10n, "mDocumentL10n should not be initialized yet");
 
-  DocumentL10n* l10n = new DocumentL10n(this);
-  MOZ_ALWAYS_TRUE(l10n->Init(aResourceIds));
+  RefPtr<DocumentL10n> l10n = new DocumentL10n(this);
+  ErrorResult rv;
+  l10n->Init(aResourceIds, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return;
+  }
   mDocumentL10n = l10n;
 }
 
@@ -3482,7 +3486,7 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
   if (mDocumentL10n) {
     AutoTArray<nsString, 1> resourceIds;
     resourceIds.AppendElement(href);
-    mDocumentL10n->AddResourceIds(resourceIds);
+    mDocumentL10n->AddResourceIds(resourceIds, false);
   } else if (mReadyState >= READYSTATE_INTERACTIVE) {
     // Otherwise, if the document has already been parsed
     // we need to lazily initialize the localization.

@@ -8,11 +8,13 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Internationalization")
 
 EXPORTS.mozilla.dom.l10n += [
+    'DOMLocalization.h',
     'DOMOverlays.h',
     'Mutations.h',
 ]
 
 UNIFIED_SOURCES += [
+    'DOMLocalization.cpp',
     'DOMOverlays.cpp',
     'Mutations.cpp',
 ]
