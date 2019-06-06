@@ -56,7 +56,7 @@ function checkOptions(doc, options, expectedOptions) {
     is(input.value, expected.value, "The value is right");
     is(input.checked, expected.checked, "The checked property is correct");
     Assert.deepEqual(
-      doc.l10n.getAttributes(text), {id: expected.label},
+      doc.l10n.getAttributes(text), {id: expected.label, args: null},
       "The label has the right text");
   }
 }
@@ -222,7 +222,7 @@ add_task(async function testDetailOperations() {
   // Check toggling disabled.
   let name = card.querySelector(".addon-name");
   is(name.textContent, "Test", "The name is set when enabled");
-  is(doc.l10n.getAttributes(name).id, "", "There is no l10n name");
+  is(doc.l10n.getAttributes(name).id, null, "There is no l10n name");
 
   // Disable the extension.
   let disableToggled = BrowserTestUtils.waitForEvent(card, "update");
@@ -244,7 +244,7 @@ add_task(async function testDetailOperations() {
 
   // Name is just the add-on name again.
   is(name.textContent, "Test", "The name is reset when enabled");
-  is(doc.l10n.getAttributes(name).id, "", "There is no l10n name");
+  is(doc.l10n.getAttributes(name).id, null, "There is no l10n name");
 
   // Remove but cancel.
   let cancelled = BrowserTestUtils.waitForEvent(card, "remove-cancelled");

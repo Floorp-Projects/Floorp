@@ -122,6 +122,7 @@ module.exports = {
     "DOMError": false,
     "DOMException": false,
     "DOMImplementation": false,
+    "DOMLocalization": false,
     "DOMMatrix": false,
     "DOMMatrixReadOnly": false,
     "DOMParser": false,
