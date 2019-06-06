@@ -97,10 +97,22 @@ class ObserverRegistry<T> : Observable<T> {
 
     @Synchronized
     override fun unregisterObservers() {
+        // Remove all registered observers
         observers.toList().forEach { observer ->
             unregister(observer)
         }
 
+        // There can still be view observers for views that are not attached yet and therefore the observers were not
+        // registered yet. Let's remove them too.
+        viewObservers.keys.toList().forEach { observer ->
+            unregister(observer)
+        }
+
+        // If any of our sets and maps is not empty now then this would be a serious bug.
+        check(observers.isEmpty())
+        check(pausedObservers.isEmpty())
+        check(lifecycleObservers.isEmpty())
+        check(viewObservers.isEmpty())
     }
 
     @Synchronized
