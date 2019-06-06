@@ -47,9 +47,6 @@ const MessageState = overrides => Object.freeze(Object.assign({
   filteredMessagesCount: getDefaultFiltersCounter(),
   // List of the message ids which are opened.
   messagesUiById: [],
-  // Map of the form {messageId : tableData}, which represent the data passed
-  // as an argument in console.table calls.
-  messagesTableDataById: new Map(),
   // Map of the form {groupMessageId : groupArray},
   // where groupArray is the list of of all the parent groups' ids of the groupMessageId.
   // This handles console API groups.
@@ -82,7 +79,6 @@ function cloneState(state) {
     filteredMessagesCount: {...state.filteredMessagesCount},
     messagesUiById: [...state.messagesUiById],
     messagesPayloadById: new Map(state.messagesPayloadById),
-    messagesTableDataById: new Map(state.messagesTableDataById),
     groupsById: new Map(state.groupsById),
     currentGroup: state.currentGroup,
     removedActors: [...state.removedActors],
@@ -287,7 +283,6 @@ function messages(state = MessageState(), action, filtersState, prefsState, uiSt
     messagesById,
     messagesPayloadById,
     messagesUiById,
-    messagesTableDataById,
     networkMessagesUpdateById,
     groupsById,
     visibleMessages,
@@ -463,14 +458,6 @@ function messages(state = MessageState(), action, filtersState, prefsState, uiSt
           visibleMessages.filter(id => !groupMessages.includes(id));
       }
       return closeState;
-
-    case constants.MESSAGE_TABLE_RECEIVE:
-      const {id, data} = action;
-
-      return {
-        ...state,
-        messagesTableDataById: (new Map(messagesTableDataById)).set(id, data),
-      };
 
     case constants.MESSAGE_UPDATE_PAYLOAD:
       return {
@@ -783,8 +770,8 @@ function removeMessagesFromState(state, removedMessagesIds) {
       getNewCurrentGroup(state.currentGroup, state.groupsById, removedMessagesIds);
   }
 
-  if (mapHasRemovedIdKey(state.messagesTableDataById)) {
-    state.messagesTableDataById = cleanUpMap(state.messagesTableDataById);
+  if (mapHasRemovedIdKey(state.messagesPayloadById)) {
+    state.messagesPayloadById = cleanUpMap(state.messagesPayloadById);
   }
   if (mapHasRemovedIdKey(state.groupsById)) {
     state.groupsById = cleanUpMap(state.groupsById);
