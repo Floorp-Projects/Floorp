@@ -224,7 +224,7 @@ const OverviewView = {
     if (recording !== PerformanceController.getCurrentRecording()) {
       return;
     }
-    this.render(FRAMERATE_GRAPH_HIGH_RES_INTERVAL);
+    await this.render(FRAMERATE_GRAPH_HIGH_RES_INTERVAL);
     await this._checkSelection(recording);
   }),
 
