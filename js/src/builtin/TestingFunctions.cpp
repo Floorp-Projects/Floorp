@@ -4310,10 +4310,9 @@ static void minorGC(JSContext* cx, JSGCStatus status, void* data) {
   }
 }
 
-// Process global, should really be runtime-local. Also, the final one of these
-// is currently leaked, since they are only deleted when changing.
-MajorGC* prevMajorGC = nullptr;
-MinorGC* prevMinorGC = nullptr;
+// Process global, should really be runtime-local.
+static MajorGC majorGCInfo;
+static MinorGC minorGCInfo;
 
 } /* namespace gcCallback */
 
@@ -4375,28 +4374,10 @@ static bool SetGCCallback(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  if (gcCallback::prevMajorGC) {
-    JS_SetGCCallback(cx, nullptr, nullptr);
-    js_delete<gcCallback::MajorGC>(gcCallback::prevMajorGC);
-    gcCallback::prevMajorGC = nullptr;
-  }
-
-  if (gcCallback::prevMinorGC) {
-    JS_SetGCCallback(cx, nullptr, nullptr);
-    js_delete<gcCallback::MinorGC>(gcCallback::prevMinorGC);
-    gcCallback::prevMinorGC = nullptr;
-  }
-
   if (StringEqualsAscii(action, "minorGC")) {
-    auto info = js_new<gcCallback::MinorGC>();
-    if (!info) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-
-    info->phases = phases;
-    info->active = true;
-    JS_SetGCCallback(cx, gcCallback::minorGC, info);
+    gcCallback::minorGCInfo.phases = phases;
+    gcCallback::minorGCInfo.active = true;
+    JS_SetGCCallback(cx, gcCallback::minorGC, &gcCallback::minorGCInfo);
   } else if (StringEqualsAscii(action, "majorGC")) {
     if (!JS_GetProperty(cx, opts, "depth", &v)) {
       return false;
@@ -4417,15 +4398,9 @@ static bool SetGCCallback(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    auto info = js_new<gcCallback::MajorGC>();
-    if (!info) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-
-    info->phases = phases;
-    info->depth = depth;
-    JS_SetGCCallback(cx, gcCallback::majorGC, info);
+    gcCallback::majorGCInfo.phases = phases;
+    gcCallback::majorGCInfo.depth = depth;
+    JS_SetGCCallback(cx, gcCallback::majorGC, &gcCallback::majorGCInfo);
   } else {
     JS_ReportErrorASCII(cx, "Unknown GC callback action");
     return false;
