@@ -41,8 +41,12 @@ ZoneAllocator::ZoneAllocator(JSRuntime* rt)
 }
 
 ZoneAllocator::~ZoneAllocator() {
-  MOZ_ASSERT_IF(runtimeFromAnyThread()->gc.shutdownCollectedEverything(),
-                gcMallocBytes == 0);
+#ifdef DEBUG
+  if (runtimeFromAnyThread()->gc.shutdownCollectedEverything()) {
+    gcMallocTracker.checkEmptyOnDestroy();
+    MOZ_ASSERT(gcMallocBytes == 0);
+  }
+#endif
 }
 
 void ZoneAllocator::fixupAfterMovingGC() {
@@ -658,12 +662,7 @@ static const char* MemoryUseName(MemoryUse use) {
 
 MemoryTracker::MemoryTracker() : mutex(mutexid::MemoryTracker) {}
 
-MemoryTracker::~MemoryTracker() {
-  if (!TlsContext.get()->runtime()->gc.shutdownCollectedEverything()) {
-    // Memory leak, suppress crashes.
-    return;
-  }
-
+void MemoryTracker::checkEmptyOnDestroy() {
   bool ok = true;
 
   if (!map.empty()) {
