@@ -85,6 +85,15 @@ function bytesToString(bytes) {
   return String.fromCharCode.apply(null, bytes);
 }
 
+class CRLiteState {
+  constructor(subject, spkiHash, state) {
+    this.subject = subject;
+    this.spkiHash = spkiHash;
+    this.state = state;
+  }
+}
+CRLiteState.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsICRLiteState]);
+
 class CertInfo {
   constructor(cert, subject) {
     this.cert = cert;
@@ -224,11 +233,7 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
     }
 
     // This method returns a promise to RemoteSettingsClient.maybeSync method.
-    async onSync(event) {
-        const {
-          data: {deleted},
-        } = event;
-
+    async onSync({ data: { current, created, updated, deleted } }) {
         if (!Services.prefs.getBoolPref(INTERMEDIATES_ENABLED_PREF, true)) {
           log.debug("Intermediate Preloading is disabled");
           return;
@@ -236,6 +241,34 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
 
         log.debug(`Removing ${deleted.length} Intermediate certificates`);
         await this.removeCerts(deleted);
+
+        let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
+        let hasPriorCRLiteData = await new Promise((resolve) => {
+          certStorage.hasPriorData(Ci.nsICertStorage.DATA_TYPE_CRLITE, (rv, hasPriorData) => {
+            if (rv == Cr.NS_OK) {
+              resolve(hasPriorData);
+            } else {
+              resolve(false);
+            }
+          });
+        });
+        if (!hasPriorCRLiteData) {
+          deleted = [];
+          updated = [];
+          created = current;
+        }
+        const toAdd = created.concat(updated.map(u => u.new));
+        let entries = [];
+        for (let entry of deleted) {
+          entries.push(new CRLiteState(entry.subjectDN, entry.pubKeyHash,
+                                       Ci.nsICertStorage.STATE_UNSET));
+        }
+        for (let entry of toAdd) {
+          entries.push(new CRLiteState(entry.subjectDN, entry.pubKeyHash,
+                                       entry.crlite_enrolled ? Ci.nsICertStorage.STATE_ENFORCE
+                                                             : Ci.nsICertStorage.STATE_UNSET));
+        }
+        await new Promise((resolve) => certStorage.setCRLiteState(entries, resolve));
     }
 
     /**

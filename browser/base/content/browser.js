@@ -6463,7 +6463,13 @@ function handleLinkClick(event, href, linkNode) {
     return true;
   }
 
-  var referrerURI = doc.documentURIObject;
+  let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(Ci.nsIReferrerInfo);
+  if (linkNode) {
+    referrerInfo.initWithNode(linkNode);
+  } else {
+    referrerInfo.initWithDocument(doc);
+  }
+
   // if the mixedContentChannel is present and the referring URI passes
   // a same origin check with the target URI, we can preserve the users
   // decision of disabling MCB on a page for it's child tabs.
@@ -6474,28 +6480,12 @@ function handleLinkClick(event, href, linkNode) {
     try {
       var targetURI = makeURI(href);
       let isPrivateWin = doc.nodePrincipal.originAttributes.privateBrowsingId > 0;
-      sm.checkSameOriginURI(referrerURI, targetURI, false, isPrivateWin);
+      sm.checkSameOriginURI(doc.documentURIObject, targetURI, false, isPrivateWin);
       persistAllowMixedContentInChildTab = true;
     } catch (e) { }
   }
 
-  // first get document wide referrer policy, then
-  // get referrer attribute from clicked link and parse it and
-  // allow per element referrer to overrule the document wide referrer if enabled
-  let referrerPolicy = doc.referrerPolicy;
-  if (linkNode) {
-    let referrerAttrValue = Services.netUtils.parseAttributePolicyString(linkNode.
-                            getAttribute("referrerpolicy"));
-    if (referrerAttrValue != Ci.nsIHttpChannel.REFERRER_POLICY_UNSET) {
-      referrerPolicy = referrerAttrValue;
-    }
-  }
-
   let frameOuterWindowID = WebNavigationFrames.getFrameId(doc.defaultView);
-  let referrerInfo = new ReferrerInfo(
-    referrerPolicy,
-    !BrowserUtils.linkHasNoReferrer(linkNode),
-    referrerURI);
 
   urlSecurityCheck(href, doc.nodePrincipal);
   let params = {

@@ -1272,8 +1272,7 @@ LoginManagerPrompter.prototype = {
     // of the selected username.
     var ok = Services.prompt.select(this._chromeWindow,
                                     dialogTitle, dialogText,
-                                    usernames.length, usernames,
-                                    selectedIndex);
+                                    usernames, selectedIndex);
     if (ok) {
       // Now that we know which login to use, modify its password.
       var selectedLogin = logins[selectedIndex.value];

@@ -15,22 +15,11 @@ from mozlog import get_proxy_logger, get_default_logger
 LOG = get_proxy_logger(component="raptor-utils")
 here = os.path.dirname(os.path.realpath(__file__))
 
-if os.environ.get('SCRIPTSPATH', None) is not None:
-    # in production it is env SCRIPTS_PATH
-    mozharness_dir = os.environ['SCRIPTSPATH']
-else:
-    # locally it's in source tree
-    mozharness_dir = os.path.join(here, '../../mozharness')
-sys.path.insert(0, mozharness_dir)
-
 external_tools_path = os.environ.get('EXTERNALTOOLSPATH', None)
 
 if external_tools_path is not None:
     # running in production via mozharness
     TOOLTOOL_PATH = os.path.join(external_tools_path, 'tooltool.py')
-else:
-    # running locally via mach
-    TOOLTOOL_PATH = os.path.join(mozharness_dir, 'external_tools', 'tooltool.py')
 
 
 def transform_platform(str_to_transform, config_platform, config_processor=None):

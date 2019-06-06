@@ -643,7 +643,8 @@ var gIdentityHandler = {
     // show permission icons
     let permissions = SitePermissions.getAllForBrowser(gBrowser.selectedBrowser);
     for (let permission of permissions) {
-      if (permission.state == SitePermissions.BLOCK) {
+      if (permission.state == SitePermissions.BLOCK ||
+          permission.state == SitePermissions.AUTOPLAY_BLOCKED_ALL) {
         let icon = permissionAnchors[permission.id];
         if (icon) {
           icon.setAttribute("showing", "true");
@@ -1141,7 +1142,8 @@ var gIdentityHandler = {
         } else {
           menuitem.setAttribute("value", state);
         }
-        menuitem.setAttribute("label", SitePermissions.getMultichoiceStateLabel(state));
+
+        menuitem.setAttribute("label", SitePermissions.getMultichoiceStateLabel(aPermission.id, state));
         menupopup.appendChild(menuitem);
       }
 

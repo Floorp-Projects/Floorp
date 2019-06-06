@@ -1101,7 +1101,7 @@ class nsLayoutUtils {
                                         const nsRect& aTestRect);
 
   static bool MaybeCreateDisplayPortInFirstScrollFrameEncountered(
-      nsIFrame* aFrame, nsDisplayListBuilder& aBuilder);
+      nsIFrame* aFrame, nsDisplayListBuilder* aBuilder);
 
   enum class PaintFrameFlags : uint32_t {
     InTransform = 0x01,
@@ -2248,8 +2248,8 @@ class nsLayoutUtils {
   static mozilla::dom::Element* GetEditableRootContentByContentEditable(
       mozilla::dom::Document* aDocument);
 
-  static void AddExtraBackgroundItems(nsDisplayListBuilder& aBuilder,
-                                      nsDisplayList& aList, nsIFrame* aFrame,
+  static void AddExtraBackgroundItems(nsDisplayListBuilder* aBuilder,
+                                      nsDisplayList* aList, nsIFrame* aFrame,
                                       const nsRect& aCanvasArea,
                                       const nsRegion& aVisibleRegion,
                                       nscolor aBackstop);
@@ -2824,7 +2824,7 @@ class nsLayoutUtils {
    * Returns true if there is a displayport on an async scrollable scrollframe
    * after this call, either because one was just added or it already existed.
    */
-  static bool MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
+  static bool MaybeCreateDisplayPort(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aScrollFrame,
                                      RepaintMode aRepaintMode);
 

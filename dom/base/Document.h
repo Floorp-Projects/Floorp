@@ -48,6 +48,7 @@
 #include "nsContentListDeclarations.h"
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
+#include "ReferrerInfo.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -726,6 +727,16 @@ class Document : public nsINode,
   }
 
   /**
+   * ReferrerInfo getter for Document.webidl.
+   */
+  nsIReferrerInfo* ReferrerInfo() const { return GetReferrerInfo(); }
+
+  nsIReferrerInfo* GetReferrerInfo() const { return mReferrerInfo; }
+
+  nsIReferrerInfo* GetPreloadReferrerInfo() const {
+    return mPreloadReferrerInfo;
+  }
+  /**
    * Return the referrer policy of the document. Return "default" if there's no
    * valid meta referrer tag found in the document.
    * Referrer policy should be inherited from parent if the iframe is srcdoc
@@ -763,7 +774,38 @@ class Document : public nsINode,
     return mUpgradeInsecureRequests;
   }
 
-  void SetReferrer(const nsACString& aReferrer) { mReferrer = aReferrer; }
+  void SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
+    mReferrerInfo = aReferrerInfo;
+  }
+
+  /*
+   * Referrer policy from <meta name="referrer" content=`policy`>
+   * will have higher priority than referrer policy from Referrer-Policy
+   * header. So override the old ReferrerInfo if we get one from meta
+   */
+  void UpdateReferrerInfoFromMeta(const nsAString& aMetaReferrer,
+                                  bool aPreload) {
+    net::ReferrerPolicy policy =
+        mozilla::net::ReferrerPolicyFromString(aMetaReferrer);
+    // The empty string "" corresponds to no referrer policy, causing a fallback
+    // to a referrer policy defined elsewhere.
+    if (policy == mozilla::net::RP_Unset) {
+      return;
+    }
+
+    MOZ_ASSERT(mReferrerInfo);
+    MOZ_ASSERT(mPreloadReferrerInfo);
+
+    if (aPreload) {
+      mPreloadReferrerInfo =
+          static_cast<mozilla::dom::ReferrerInfo*>((mPreloadReferrerInfo).get())
+              ->CloneWithNewPolicy(policy);
+    } else {
+      mReferrerInfo =
+          static_cast<mozilla::dom::ReferrerInfo*>((mReferrerInfo).get())
+              ->CloneWithNewPolicy(policy);
+    }
+  }
 
   /**
    * Set the principals responsible for this document.  Chances are, you do not
@@ -930,9 +972,7 @@ class Document : public nsINode,
    * Tell this document that it's the initial document in its window.  See
    * comments on mIsInitialDocumentInWindow for when this should be called.
    */
-  void SetIsInitialDocument(bool aIsInitialDocument) {
-    mIsInitialDocumentInWindow = aIsInitialDocument;
-  }
+  void SetIsInitialDocument(bool aIsInitialDocument);
 
   void SetLoadedAsData(bool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
   void SetLoadedAsInteractiveData(bool aLoadedAsInteractiveData) {
@@ -1617,6 +1657,8 @@ class Document : public nsINode,
   nsresult InitCSP(nsIChannel* aChannel);
 
   nsresult InitFeaturePolicy(nsIChannel* aChannel);
+
+  nsresult InitReferrerInfo(nsIChannel* aChannel);
 
   void PostUnblockOnloadEvent();
 
@@ -4152,7 +4194,9 @@ class Document : public nsINode,
   already_AddRefed<nsIChannel> CreateDummyChannelForCookies(
       nsIURI* aCodebaseURI);
 
-  nsCString mReferrer;
+  nsCOMPtr<nsIReferrerInfo> mPreloadReferrerInfo;
+  nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
+
   nsString mLastModified;
 
   nsCOMPtr<nsIURI> mDocumentURI;
@@ -4168,9 +4212,6 @@ class Document : public nsINode,
   RefPtr<URLExtraData> mCachedURLData;
 
   nsWeakPtr mDocumentLoadGroup;
-
-  bool mReferrerPolicySet;
-  ReferrerPolicyEnum mReferrerPolicy;
 
   bool mBlockAllMixedContent;
   bool mBlockAllMixedContentPreloads;

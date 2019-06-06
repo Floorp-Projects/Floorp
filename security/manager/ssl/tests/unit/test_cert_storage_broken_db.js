@@ -32,6 +32,13 @@ async function check_has_prior_cert_data(certStorage, expectedResult) {
                `should ${expectedResult ? "have" : "not have"} prior cert data`);
 }
 
+async function check_has_prior_crlite_data(certStorage, expectedResult) {
+  let hasPriorCRLiteData = await call_has_prior_data(certStorage,
+                                                     Ci.nsICertStorage.DATA_TYPE_CRLITE);
+  Assert.equal(hasPriorCRLiteData, expectedResult,
+               `should ${expectedResult ? "have" : "not have"} prior CRLite data`);
+}
+
 add_task({
     skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
   }, async function() {
@@ -44,6 +51,7 @@ add_task({
   let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
   check_has_prior_revocation_data(certStorage, false);
   check_has_prior_cert_data(certStorage, false);
+  check_has_prior_crlite_data(certStorage, false);
 
   let result = await new Promise((resolve) => {
     certStorage.setRevocations([], resolve);
@@ -52,6 +60,7 @@ add_task({
 
   check_has_prior_revocation_data(certStorage, true);
   check_has_prior_cert_data(certStorage, false);
+  check_has_prior_crlite_data(certStorage, false);
 
   result = await new Promise((resolve) => {
     certStorage.addCerts([], resolve);
@@ -60,4 +69,13 @@ add_task({
 
   check_has_prior_revocation_data(certStorage, true);
   check_has_prior_cert_data(certStorage, true);
+  check_has_prior_crlite_data(certStorage, false);
+
+  result = await new Promise((resolve) => {
+    certStorage.setCRLiteState([], resolve);
+  });
+  Assert.equal(result, Cr.NS_OK, "setCRLiteState should succeed");
+  check_has_prior_revocation_data(certStorage, true);
+  check_has_prior_cert_data(certStorage, true);
+  check_has_prior_crlite_data(certStorage, true);
 });

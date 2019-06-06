@@ -331,8 +331,6 @@ interface nsIPromptService : nsISupports
    *        Text to appear in the title of the dialog.
    * @param aText
    *        Text to appear in the body of the dialog.
-   * @param aCount
-   *        The length of the aSelectList array parameter.
    * @param aSelectList
    *        The list of strings to display.
    * @param aOutSelection
@@ -344,8 +342,7 @@ interface nsIPromptService : nsISupports
   boolean select(in mozIDOMWindowProxy aParent,
                  in wstring aDialogTitle,
                  in wstring aText,
-                 in  uint32_t aCount,
-                 [array, size_is(aCount)] in wstring aSelectList,
+                 in Array<AString> aSelectList,
                  out long aOutSelection);
 
   // NOTE: These functions differ from their nsIAuthPrompt counterparts by

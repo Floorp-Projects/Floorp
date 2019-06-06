@@ -65,7 +65,7 @@ add_task(async function test_select_empty_list() {
     let promptDone = handlePrompt(state, action);
     let items = [];
     selectVal.value = null; // outparam, just making sure.
-    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
+    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items, selectVal);
     is(isOK, true, "checked expected retval");
     is(selectVal.value, -1, "checking selected index");
 
@@ -86,7 +86,7 @@ add_task(async function test_select_ok() {
     let promptDone = handlePrompt(state, action);
     let items = ["one", "two", "three"];
     selectVal.value = null; // outparam, just making sure.
-    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
+    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items, selectVal);
     is(isOK, true, "checked expected retval");
     is(selectVal.value, 0, "checking selected index");
 
@@ -108,7 +108,7 @@ add_task(async function test_select_item() {
     let promptDone = handlePrompt(state, action);
     let items = ["one", "two", "three"];
     selectVal.value = null; // outparam, just making sure.
-    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
+    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items, selectVal);
     is(isOK, true, "checked expected retval");
     is(selectVal.value, 1, "checking selected index");
 
@@ -129,7 +129,7 @@ add_task(async function test_cancel_prompt() {
     let promptDone = handlePrompt(state, action);
     let items = ["one", "two", "three"];
     selectVal.value = null; // outparam, just making sure.
-    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
+    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items, selectVal);
     is(isOK, false, "checked expected retval");
     is(selectVal.value, 0, "checking selected index");
 

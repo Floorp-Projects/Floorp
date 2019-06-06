@@ -18,7 +18,7 @@ add_task(async function setup() {
       "visibleDefaultEngines": ["hidden"],
     },
   });
-  Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).setCharPref(kUrlPref, url);
+  Services.prefs.getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF).setCharPref(kUrlPref, url);
 
   Assert.ok(!Services.search.isInitialized);
 
@@ -59,7 +59,7 @@ add_task(async function invalid_engine() {
       "visibleDefaultEngines": ["hidden", "bogus"],
     },
   });
-  Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).setCharPref(kUrlPref, url);
+  Services.prefs.getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF).setCharPref(kUrlPref, url);
 
   await asyncReInit({ waitForRegionFetch: true });
 

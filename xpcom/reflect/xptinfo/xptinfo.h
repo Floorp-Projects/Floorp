@@ -451,12 +451,6 @@ struct nsXPTMethodInfo {
     return ParamCount() - uint8_t(HasRetval());
   }
 
-  /////////////////////////////////////////////
-  // nsXPTMethodInfo backwards compatibility //
-  /////////////////////////////////////////////
-
-  const char* GetName() const { return Name(); }
-
   JS::SymbolCode GetSymbolCode() const {
     MOZ_ASSERT(IsSymbol());
     return JS::SymbolCode(mName);
@@ -466,7 +460,22 @@ struct nsXPTMethodInfo {
     return JS::GetWellKnownSymbol(aCx, GetSymbolCode());
   }
 
-  void GetSymbolDescription(JSContext* aCx, nsACString& aID) const;
+  const char* SymbolDescription() const;
+
+  const char* NameOrDescription() const {
+    if (IsSymbol()) {
+      return SymbolDescription();
+    }
+    return Name();
+  }
+
+  bool GetId(JSContext* aCx, jsid& aId) const;
+
+  /////////////////////////////////////////////
+  // nsXPTMethodInfo backwards compatibility //
+  /////////////////////////////////////////////
+
+  const char* GetName() const { return Name(); }
 
   uint8_t GetParamCount() const { return ParamCount(); }
   const nsXPTParamInfo& GetParam(uint8_t aIndex) const { return Param(aIndex); }

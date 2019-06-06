@@ -1093,8 +1093,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
         doc = parentWindow->GetExtantDoc();
       }
       if (doc) {
-        nsCOMPtr<nsIReferrerInfo> referrerInfo =
-            new ReferrerInfo(doc->GetDocumentURI(), doc->GetReferrerPolicy());
+        nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+        referrerInfo->InitWithDocument(doc);
         loadState->SetReferrerInfo(referrerInfo);
       }
     }
