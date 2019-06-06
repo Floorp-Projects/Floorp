@@ -47,8 +47,8 @@ void nsGridRowGroupLayout::AddWidth(nsSize& aSize, nscoord aSize2,
                                     bool aIsHorizontal) {
   nscoord& size = GET_WIDTH(aSize, aIsHorizontal);
 
-  if (size == NS_INTRINSICSIZE || aSize2 == NS_INTRINSICSIZE)
-    size = NS_INTRINSICSIZE;
+  if (size == NS_UNCONSTRAINEDSIZE || aSize2 == NS_UNCONSTRAINEDSIZE)
+    size = NS_UNCONSTRAINEDSIZE;
   else
     size += aSize2;
 }

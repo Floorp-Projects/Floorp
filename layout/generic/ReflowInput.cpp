@@ -502,7 +502,7 @@ static bool IsQuirkContainingBlockHeight(const ReflowInput* rs,
       LayoutFrameType::Scroll == aFrameType) {
     // Note: This next condition could change due to a style change,
     // but that would cause a style reflow anyway, which means we're ok.
-    if (NS_AUTOHEIGHT == rs->ComputedHeight()) {
+    if (NS_UNCONSTRAINEDSIZE == rs->ComputedHeight()) {
       if (!rs->mFrame->IsAbsolutelyPositioned(rs->mStyleDisplay)) {
         return false;
       }
@@ -671,10 +671,10 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     // ComputedBSize() and a dirty subtree, since that might require us to
     // change BSize due to kids having been added or removed.
     SetBResize(mCBReflowInput->IsBResizeForWM(wm));
-    if (ComputedBSize() == NS_AUTOHEIGHT) {
+    if (ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
       SetBResize(IsBResize() || NS_SUBTREE_DIRTY(mFrame));
     }
-  } else if (ComputedBSize() == NS_AUTOHEIGHT) {
+  } else if (ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
     if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
         mCBReflowInput) {
       SetBResize(mCBReflowInput->IsBResizeForWM(wm));
@@ -720,7 +720,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
 
   // Set NS_FRAME_CONTAINS_RELATIVE_BSIZE if it's needed.
 
-  // It would be nice to check that |ComputedBSize != NS_AUTOHEIGHT|
+  // It would be nice to check that |ComputedBSize != NS_UNCONSTRAINEDSIZE|
   // &&ed with the percentage bsize check.  However, this doesn't get
   // along with table special bsize reflows, since a special bsize
   // reflow (a quirk that makes such percentage height work on children
@@ -1031,7 +1031,7 @@ void ReflowInput::ComputeRelativeOffsets(WritingMode aWM, nsIFrame* aFrame,
 
   // Check for percentage based values and a containing block block-size
   // that depends on the content block-size. Treat them like 'auto'
-  if (NS_AUTOHEIGHT == aCBSize.BSize(aWM)) {
+  if (NS_UNCONSTRAINEDSIZE == aCBSize.BSize(aWM)) {
     if (position->OffsetHasPercent(blockStart)) {
       blockStartIsAuto = true;
     }
@@ -1607,7 +1607,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
                                           LayoutFrameType aFrameType) {
   WritingMode wm = GetWritingMode();
   WritingMode cbwm = aCBReflowInput->GetWritingMode();
-  NS_WARNING_ASSERTION(aCBSize.BSize(cbwm) != NS_AUTOHEIGHT,
+  NS_WARNING_ASSERTION(aCBSize.BSize(cbwm) != NS_UNCONSTRAINEDSIZE,
                        "containing block bsize must be constrained");
 
   NS_ASSERTION(aFrameType != LayoutFrameType::Table,
@@ -2011,10 +2011,10 @@ static nscoord GetBlockMarginBorderPadding(const ReflowInput* aReflowInput) {
 
 /* Get the height based on the viewport of the containing block specified
  * in aReflowInput when the containing block has mComputedHeight ==
- * NS_AUTOHEIGHT This will walk up the chain of containing blocks looking for a
- * computed height until it finds the canvas frame, or it encounters a frame
- * that is not a block, area, or scroll frame. This handles compatibility with
- * IE (see bug 85016 and bug 219693)
+ * NS_UNCONSTRAINEDSIZE This will walk up the chain of containing blocks looking
+ * for a computed height until it finds the canvas frame, or it encounters a
+ * frame that is not a block, area, or scroll frame. This handles compatibility
+ * with IE (see bug 85016 and bug 219693)
  *
  * When we encounter scrolledContent block frames, we skip over them,
  * since they are guaranteed to not be useful for computing the containing
@@ -2027,10 +2027,10 @@ static nscoord CalcQuirkContainingBlockHeight(
   const ReflowInput* firstAncestorRI = nullptr;   // a candidate for html frame
   const ReflowInput* secondAncestorRI = nullptr;  // a candidate for body frame
 
-  // initialize the default to NS_AUTOHEIGHT as this is the containings block
-  // computed height when this function is called. It is possible that we
+  // initialize the default to NS_UNCONSTRAINEDSIZE as this is the containings
+  // block computed height when this function is called. It is possible that we
   // don't alter this height especially if we are restricted to one level
-  nscoord result = NS_AUTOHEIGHT;
+  nscoord result = NS_UNCONSTRAINEDSIZE;
 
   const ReflowInput* ri = aCBReflowInput;
   for (; ri; ri = ri->mParentReflowInput) {
@@ -2050,7 +2050,7 @@ static nscoord CalcQuirkContainingBlockHeight(
       // go any further (see bug 221784).  The behavior we want here is: 1) If
       // not auto-height, use this as the percentage base.  2) If auto-height,
       // keep looking, unless the frame is positioned.
-      if (NS_AUTOHEIGHT == ri->ComputedHeight()) {
+      if (NS_UNCONSTRAINEDSIZE == ri->ComputedHeight()) {
         if (ri->mFrame->IsAbsolutelyPositioned(ri->mStyleDisplay)) {
           break;
         } else {
@@ -2073,7 +2073,7 @@ static nscoord CalcQuirkContainingBlockHeight(
     result = (LayoutFrameType::PageContent == frameType) ? ri->AvailableHeight()
                                                          : ri->ComputedHeight();
     // if unconstrained - don't sutract borders - would result in huge height
-    if (NS_AUTOHEIGHT == result) return result;
+    if (NS_UNCONSTRAINEDSIZE == result) return result;
 
     // if we got to the canvas or page content frame, then subtract out
     // margin/border/padding for the BODY and HTML elements
@@ -2166,7 +2166,7 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
     // parent with a non-auto height if the element has a percent height
     // Note: We don't emulate this quirk for percents in calc() or in
     // vertical writing modes.
-    if (!wm.IsVertical() && NS_AUTOHEIGHT == cbSize.BSize(wm)) {
+    if (!wm.IsVertical() && NS_UNCONSTRAINEDSIZE == cbSize.BSize(wm)) {
       if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
           (IsQuirky(mStylePosition->mHeight) ||
            (mFrame->IsTableWrapperFrame() &&
@@ -2258,7 +2258,7 @@ void ReflowInput::InitConstraints(
 
     // See if the containing block height is based on the size of its
     // content
-    if (NS_AUTOHEIGHT == cbSize.BSize(wm)) {
+    if (NS_UNCONSTRAINEDSIZE == cbSize.BSize(wm)) {
       // See if the containing block is a cell frame which needs
       // to use the mComputedHeight of the cell instead of what the cell block
       // passed in.
@@ -2287,7 +2287,7 @@ void ReflowInput::InitConstraints(
     // Check for a percentage based block size and a containing block
     // block size that depends on the content block size
     if (blockSize.HasPercent()) {
-      if (NS_AUTOHEIGHT == cbSize.BSize(wm)) {
+      if (NS_UNCONSTRAINEDSIZE == cbSize.BSize(wm)) {
         // this if clause enables %-blockSize on replaced inline frames,
         // such as images.  See bug 54119.  The else clause "blockSizeUnit =
         // eStyleUnit_Auto;" used to be called exclusively.
@@ -2301,7 +2301,7 @@ void ReflowInput::InitConstraints(
               eCompatibility_NavQuirks == aPresContext->CompatibilityMode()) {
             if (!IsTableCell(cbri->mFrame->Type())) {
               cbSize.BSize(wm) = CalcQuirkContainingBlockHeight(cbri);
-              if (cbSize.BSize(wm) == NS_AUTOHEIGHT) {
+              if (cbSize.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
                 isAutoBSize = true;
               }
             } else {
@@ -2313,7 +2313,7 @@ void ReflowInput::InitConstraints(
           // as per CSS2 spec.
           else {
             nscoord computedBSize = cbri->ComputedSize(wm).BSize(wm);
-            if (NS_AUTOHEIGHT != computedBSize) {
+            if (NS_UNCONSTRAINEDSIZE != computedBSize) {
               cbSize.BSize(wm) = computedBSize;
             } else {
               isAutoBSize = true;
@@ -2388,7 +2388,7 @@ void ReflowInput::InitConstraints(
       // calc() with both percentages and lengths acts like 'auto' on internal
       // table elements
       if (isAutoBSize || blockSize.HasLengthAndPercentage()) {
-        ComputedBSize() = NS_AUTOHEIGHT;
+        ComputedBSize() = NS_UNCONSTRAINEDSIZE;
       } else {
         ComputedBSize() =
             ComputeBSizeValue(cbSize.BSize(wm), mStylePosition->mBoxSizing,
@@ -2839,7 +2839,7 @@ static inline nscoord ComputeLineHeight(ComputedStyle* aComputedStyle,
   }
 
   MOZ_ASSERT(lineHeight.IsNormal() || lineHeight.IsMozBlockHeight());
-  if (lineHeight.IsMozBlockHeight() && aBlockBSize != NS_AUTOHEIGHT) {
+  if (lineHeight.IsMozBlockHeight() && aBlockBSize != NS_UNCONSTRAINEDSIZE) {
     return aBlockBSize;
   }
 
@@ -2849,10 +2849,10 @@ static inline nscoord ComputeLineHeight(ComputedStyle* aComputedStyle,
 }
 
 nscoord ReflowInput::CalcLineHeight() const {
-  nscoord blockBSize =
-      nsLayoutUtils::IsNonWrapperBlock(mFrame)
-          ? ComputedBSize()
-          : (mCBReflowInput ? mCBReflowInput->ComputedBSize() : NS_AUTOHEIGHT);
+  nscoord blockBSize = nsLayoutUtils::IsNonWrapperBlock(mFrame)
+                           ? ComputedBSize()
+                           : (mCBReflowInput ? mCBReflowInput->ComputedBSize()
+                                             : NS_UNCONSTRAINEDSIZE);
 
   return CalcLineHeight(mFrame->GetContent(), mFrame->Style(),
                         mFrame->PresContext(), blockBSize,

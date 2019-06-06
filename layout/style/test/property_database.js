@@ -254,6 +254,147 @@ var validGradientAndElementValues = [
   "radial-gradient(at left calc(100px + -25%), red, blue)",
   "radial-gradient(at calc(100px + -25px) top, red, blue)",
   "radial-gradient(at left calc(100px + -25px), red, blue)",
+
+  // 2008 GRADIENTS: -webkit-gradient()
+  // ----------------------------------
+  // linear w/ no color stops (valid) and a variety of position values:
+  "-webkit-gradient(linear, 1 2, 3 4)",
+  "-webkit-gradient(linear,1 2,3 4)", // (no extra space)
+  "-webkit-gradient(linear  ,  1   2  ,  3   4  )", // (lots of extra space)
+  "-webkit-gradient(linear, 1 10% , 0% 4)", // percentages
+  "-webkit-gradient(linear, +1.0 -2%, +5.3% -0)", // (+/- & decimals are valid)
+  "-webkit-gradient(linear, left top, right bottom)", // keywords
+  "-webkit-gradient(linear, right center, center top)",
+  "-webkit-gradient(linear, center center, center center)",
+  "-webkit-gradient(linear, center 5%, 30 top)", // keywords mixed w/ nums
+
+  // linear w/ just 1 color stop:
+  "-webkit-gradient(linear, 1 2, 3 4, from(lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, to(lime))",
+  // * testing the various allowable stop values (<number> & <percent>):
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(-0, lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(-30, lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(+9999, lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(-.1, lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0%, lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(100%, lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(9999%, lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(-.5%, lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(+0%, lime))",
+  // * testing the various color values:
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, transparent))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, rgb(1,2,3)))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, #00ff00))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, #00f))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, hsla(240, 30%, 50%, 0.8)))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, rgba(255, 230, 10, 0.5)))",
+
+  // linear w/ multiple color stops:
+  // * using from()/to() -- note that out-of-order is OK:
+  "-webkit-gradient(linear, 1 2, 3 4, from(lime), from(blue))",
+  "-webkit-gradient(linear, 1 2, 3 4, to(lime),   to(blue))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(lime), to(blue))",
+  "-webkit-gradient(linear, 1 2, 3 4, to(lime),   from(blue))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(lime), to(blue), from(purple))",
+  // * using color-stop():
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, lime), color-stop(30%, blue))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, lime), color-stop(30%, blue), color-stop(100%, purple))",
+  // * using color-stop() intermixed with from()/to() functions:
+  "-webkit-gradient(linear, 1 2, 3 4, from(lime), color-stop(30%, blue))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(30%, blue), to(lime))",
+  // * overshooting endpoints (0 & 1.0)
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(-30%, lime), color-stop(.4, blue), color-stop(1.5, purple))",
+  // * repeating a stop position (valid)
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(30%, lime), color-stop(30%, blue))",
+  // * stops out of order (valid)
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(70%, lime), color-stop(20%, blue), color-stop(40%, purple))",
+
+  // radial w/ no color stops (valid) and a several different radius values:
+  "-webkit-gradient(radial, 1 2, 8, 3 4, 9)",
+  "-webkit-gradient(radial, 0 0, 10, 0 0, 5)",
+  "-webkit-gradient(radial, 1 2, -1.5, center center, +99999.9999)",
+
+  // radial w/ color stops
+  // (mostly leaning on more-robust 'linear' tests above; just testing a few
+  // examples w/ radial as a sanity-check):
+  "-webkit-gradient(radial, 1 2, 8, 3 4, 9, from(lime))",
+  "-webkit-gradient(radial, 1 2, 8, 3 4, 9, to(blue))",
+  "-webkit-gradient(radial, 1 2, 8, 3 4, 9, color-stop(0.5, #00f), color-stop(0.8, rgba(100, 200, 0, 0.5)))",
+
+  // 2011 GRADIENTS: -webkit-linear-gradient(), -webkit-radial -gradient()
+  // ---------------------------------------------------------------------
+  // Basic linear-gradient syntax (valid when prefixed or unprefixed):
+  "-webkit-linear-gradient(red, green, blue)",
+
+  // Angled linear-gradients (valid when prefixed or unprefixed):
+  "-webkit-linear-gradient(135deg, red, blue)",
+  "-webkit-linear-gradient( 135deg  , red  , blue )",
+  "-webkit-linear-gradient(280deg, red 60%, blue)",
+
+  // Linear-gradient with unitless-0 <angle> (normally invalid for <angle>
+  // but accepted here for better webkit emulation):
+  "-webkit-linear-gradient(0, red, blue)",
+
+  // Linear-gradient with calc expression (bug 1363349)
+  "-webkit-gradient(linear, calc(5 + 5) top, calc(10 + 10) top, from(blue), to(lime))",
+  "-webkit-gradient(linear, calc(5 - 5) top, calc(10 + 10) top, from(blue), to(lime))",
+  "-webkit-gradient(linear, calc(5 * 5) top, calc(10 + 10) top, from(blue), to(lime))",
+  "-webkit-gradient(linear, calc(5 / 5) top, calc(10 + 10) top, from(blue), to(lime))",
+  "-webkit-gradient(linear, left calc(25% - 10%), right calc(75% + 10%), from(blue), to(lime))",
+  "-webkit-gradient(linear, calc(1) 2, 3 4)",
+
+  // Radial-gradient with calc expression (bug 1363349)
+  "-webkit-gradient(radial, 1 2, 0, 3 4, calc(1 + 5), from(blue), to(lime))",
+  "-webkit-gradient(radial, 1 2, calc(1 + 2), 3 4, calc(1 + 5), from(blue), to(lime))",
+  "-webkit-gradient(radial, 1 2, calc(1 - 2), 3 4, calc(1 + 5), from(blue), to(lime))",
+  "-webkit-gradient(radial, 1 2, calc(1 * 2), 3 4, calc(1 + 5), from(blue), to(lime))",
+  "-webkit-gradient(radial, 1 2, calc(1 / 2), 3 4, calc(1 + 5), from(blue), to(lime))",
+  "-webkit-gradient(radial, calc(0 + 1) calc(1 + 1), calc(1 + 2), calc(1 + 2) 4, calc(1 + 5), from(blue), to(lime))",
+  "-webkit-gradient(radial, 1 2, calc(8), 3 4, 9)",
+
+  // Basic radial-gradient syntax (valid when prefixed or unprefixed):
+  "-webkit-radial-gradient(circle, white, black)",
+  "-webkit-radial-gradient(circle, white, black)",
+  "-webkit-radial-gradient(ellipse closest-side, white, black)",
+  "-webkit-radial-gradient(circle farthest-corner, white, black)",
+
+  // Contain/cover keywords (valid only for -moz/-webkit prefixed):
+  "-webkit-radial-gradient(cover, red, blue)",
+  "-webkit-radial-gradient(cover circle, red, blue)",
+  "-webkit-radial-gradient(contain, red, blue)",
+  "-webkit-radial-gradient(contain ellipse, red, blue)",
+
+  // Initial side/corner/point (valid only for -moz/-webkit prefixed):
+  "-webkit-linear-gradient(top, red, blue)",
+  "-webkit-linear-gradient(left, red, blue)",
+  "-webkit-linear-gradient(bottom, red, blue)",
+  "-webkit-linear-gradient(right top, red, blue)",
+  "-webkit-linear-gradient(top right, red, blue)",
+  "-webkit-radial-gradient(right, red, blue)",
+  "-webkit-radial-gradient(left bottom, red, blue)",
+  "-webkit-radial-gradient(bottom left, red, blue)",
+  "-webkit-radial-gradient(center, red, blue)",
+  "-webkit-radial-gradient(center right, red, blue)",
+  "-webkit-radial-gradient(center center, red, blue)",
+  "-webkit-radial-gradient(center top, red, blue)",
+  "-webkit-radial-gradient(left 50%, red, blue)",
+  "-webkit-radial-gradient(20px top, red, blue)",
+  "-webkit-radial-gradient(20em 30%, red, blue)",
+
+  // Point + keyword-sized shape (valid only for -moz/-webkit prefixed):
+  "-webkit-radial-gradient(center, circle closest-corner, red, blue)",
+  "-webkit-radial-gradient(10px 20px, cover circle, red, blue)",
+  "-webkit-radial-gradient(5em 50%, ellipse contain, red, blue)",
+
+  // Repeating examples:
+  "-webkit-repeating-linear-gradient(red 10%, blue 30%)",
+  "-webkit-repeating-linear-gradient(30deg, pink 20px, orange 70px)",
+  "-webkit-repeating-linear-gradient(left, red, blue)",
+  "-webkit-repeating-linear-gradient(left, red 10%, blue 30%)",
+  "-webkit-repeating-radial-gradient(circle, red, blue 10%, red 20%)",
+  "-webkit-repeating-radial-gradient(circle farthest-corner, gray 10px, yellow 20px)",
+  "-webkit-repeating-radial-gradient(top left, circle, red, blue 4%, red 8%)"
 ];
 var invalidGradientAndElementValues = [
   "-moz-element(#a:1)",
@@ -364,6 +505,164 @@ var invalidGradientAndElementValues = [
   "-moz-linear-gradient(unset, 10px 10px, from(blue))",
   "-moz-linear-gradient(unset, 10px 10px, blue 0)",
   "-moz-repeating-linear-gradient(unset, 10px 10px, blue 0)",
+
+  // 2008 GRADIENTS: -webkit-gradient()
+  // https://www.webkit.org/blog/175/introducing-css-gradients/
+  // ----------------------------------
+  // Mostly-empty expressions (missing most required pieces):
+  "-webkit-gradient()",
+  "-webkit-gradient( )",
+  "-webkit-gradient(,)",
+  "-webkit-gradient(bogus)",
+  "-webkit-gradient(linear)",
+  "-webkit-gradient(linear,)",
+  "-webkit-gradient(,linear)",
+  "-webkit-gradient(radial)",
+  "-webkit-gradient(radial,)",
+
+  // linear w/ partial/missing <point> expression(s)
+  "-webkit-gradient(linear, 1)", // Incomplete <point>
+  "-webkit-gradient(linear, left)", // Incomplete <point>
+  "-webkit-gradient(linear, center)", // Incomplete <point>
+  "-webkit-gradient(linear, top)", // Incomplete <point>
+  "-webkit-gradient(linear, 5%)", // Incomplete <point>
+  "-webkit-gradient(linear, 1 2)", // Missing 2nd <point>
+  "-webkit-gradient(linear, 1, 3)", // 2 incomplete <point>s
+  "-webkit-gradient(linear, 1, 3 4)", // Incomplete 1st <point>
+  "-webkit-gradient(linear, 1 2, 3)", // Incomplete 2nd <point>
+  "-webkit-gradient(linear, 1 2, 3, 4)", // Comma inside <point>
+  "-webkit-gradient(linear, 1, 2, 3 4)", // Comma inside <point>
+  "-webkit-gradient(linear, 1, 2, 3, 4)", // Comma inside <point>
+
+  // linear w/ invalid units in <point> expression
+  "-webkit-gradient(linear, 1px 2, 3 4)",
+  "-webkit-gradient(linear, 1 2, 3 4px)",
+  "-webkit-gradient(linear, 1px 2px, 3px 4px)",
+  "-webkit-gradient(linear, 1 2em, 3 4)",
+
+  // linear w/ <radius> (only valid for radial)
+  "-webkit-gradient(linear, 1 2, 8, 3 4, 9)",
+
+  // linear w/ out-of-order position keywords in <point> expression
+  // (horizontal keyword is supposed to come first, for "x" coord)
+  "-webkit-gradient(linear, 0 0, top right)",
+  "-webkit-gradient(linear, bottom center, 0 0)",
+  "-webkit-gradient(linear, top bottom, 0 0)",
+  "-webkit-gradient(linear, bottom top, 0 0)",
+  "-webkit-gradient(linear, bottom top, 0 0)",
+
+  // linear w/ trailing comma (which implies missing color-stops):
+  "-webkit-gradient(linear, 1 2, 3 4,)",
+
+  // linear w/ invalid color values:
+  "-webkit-gradient(linear, 1 2, 3 4, from(invalidcolorname))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(inherit))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(initial))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(currentColor))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(00ff00))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(##00ff00))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(#00fff))", // wrong num hex digits
+  "-webkit-gradient(linear, 1 2, 3 4, from(xyz(0,0,0)))", // bogus color func
+  // Mixing <number> and <percentage> is invalid.
+  "-webkit-gradient(linear, 1 2, 3 4, from(rgb(100, 100%, 30)))",
+
+  // linear w/ color stops that have comma issues
+  "-webkit-gradient(linear, 1 2, 3 4 from(lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(lime,))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(lime),)",
+  "-webkit-gradient(linear, 1 2, 3 4, from(lime) to(blue))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(lime),, to(blue))",
+  "-webkit-gradient(linear, 1 2, 3 4, from(rbg(0, 0, 0,)))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0 lime))",
+  "-webkit-gradient(linear, 1 2, 3 4, color-stop(0,, lime))",
+
+  // radial w/ broken <point>/radius expression(s)
+  "-webkit-gradient(radial, 1)", // Incomplete <point>
+  "-webkit-gradient(radial, 1 2)", // Missing radius + 2nd <point>
+  "-webkit-gradient(radial, 1 2, 8)", // Missing 2nd <point>
+  "-webkit-gradient(radial, 1 2, 8, 3)", // Incomplete 2nd <point>
+  "-webkit-gradient(radial, 1 2, 8, 3 4)", // Missing 2nd radius
+  "-webkit-gradient(radial, 1 2, 3 4, 9)", // Missing 1st radius
+
+  // radial w/ incorrect units on radius (invalid; expecting <number>)
+  "-webkit-gradient(radial, 1 2, 8%,      3 4, 9)",
+  "-webkit-gradient(radial, 1 2, 8px,     3 4, 9)",
+  "-webkit-gradient(radial, 1 2, 8em,     3 4, 9)",
+  "-webkit-gradient(radial, 1 2, top,     3 4, 9)",
+
+  // radial w/ trailing comma (which implies missing color-stops):
+  "-webkit-gradient(linear, 1 2, 8, 3 4, 9,)",
+
+  // radial w/ invalid color value (mostly leaning on 'linear' test above):
+  "-webkit-gradient(radial, 1 2, 8, 3 4, 9, from(invalidcolorname))",
+
+  // 2011 GRADIENTS: -webkit-linear-gradient(), -webkit-radial -gradient()
+  // ---------------------------------------------------------------------
+  // Syntax that's invalid for all types of gradients:
+  // * empty gradient expressions:
+  "-webkit-linear-gradient()",
+  "-webkit-radial-gradient()",
+  "-webkit-repeating-linear-gradient()",
+  "-webkit-repeating-radial-gradient()",
+
+  // * missing comma between <legacy-gradient-line> and color list:
+  "-webkit-linear-gradient(0 red, blue)",
+  "-webkit-linear-gradient(30deg red, blue)",
+  "-webkit-linear-gradient(top right red, blue)",
+  "-webkit-linear-gradient(bottom red, blue)",
+
+  // Linear-gradient with calc expression containing mixed units or division
+  // by zero (bug 1363349)
+  "-webkit-gradient(linear, calc(5 + 5%) top, calc(10 + 10) top, from(blue), to(lime))",
+  "-webkit-gradient(linear, left calc(25 - 10%), right calc(75% + 10%), from(blue), to(lime))",
+  "-webkit-gradient(linear, calc(1 / 0) 2, 3 4)",
+
+  // Radial-gradient with calc expression containing mixed units, division
+  // by zero, or a percentage in the radius (bug 1363349)
+  "-webkit-gradient(radial, 1 2, 0, 3 4, calc(1% + 5%), from(blue), to(lime))",
+  "-webkit-gradient(radial, 1 2, calc(1 + 2), 3 4, calc(1 + 5%), from(blue), to(lime))",
+  "-webkit-gradient(radial, calc(0 + 1) calc(1 + 1), calc(1% + 2%), calc(1 + 2) 4, calc(1 + 5), from(blue), to(lime))",
+  "-webkit-gradient(radial, 1 2, calc(8 / 0), 3 4, 9)",
+
+  // Linear syntax that's invalid for both -webkit & unprefixed, but valid
+  // for -moz:
+  // * initial <legacy-gradient-line> which includes a length:
+  "-webkit-linear-gradient(10px, red, blue)",
+  "-webkit-linear-gradient(10px top, red, blue)",
+  // * initial <legacy-gradient-line> which includes a side *and* an angle:
+  "-webkit-linear-gradient(bottom 30deg, red, blue)",
+  "-webkit-linear-gradient(30deg bottom, red, blue)",
+  "-webkit-linear-gradient(10px top 50deg, red, blue)",
+  "-webkit-linear-gradient(50deg 10px top, red, blue)",
+  // * initial <legacy-gradient-line> which includes explicit "center":
+  "-webkit-linear-gradient(center, red, blue)",
+  "-webkit-linear-gradient(left center, red, blue)",
+  "-webkit-linear-gradient(top center, red, blue)",
+  "-webkit-linear-gradient(center top, red, blue)",
+
+  // Linear syntax that's invalid for -webkit, but valid for -moz & unprefixed:
+  // * "to" syntax:
+  "-webkit-linear-gradient(to top, red, blue)",
+
+  // * <shape> followed by angle:
+  "-webkit-radial-gradient(circle 10deg, red, blue)",
+
+  // Radial syntax that's invalid for both -webkit & -moz, but valid for
+  // unprefixed:
+  // * "<shape> at <position>" syntax:
+  "-webkit-radial-gradient(circle at left bottom, red, blue)",
+  // * explicitly-sized shape:
+  "-webkit-radial-gradient(circle 10px, red, blue)",
+  "-webkit-radial-gradient(ellipse 40px 20px, red, blue)",
+
+  // Radial syntax that's invalid for both -webkit & unprefixed, but valid
+  // for -moz:
+  // * initial angle
+  "-webkit-radial-gradient(30deg, red, blue)",
+  // * initial angle/position combo
+  "-webkit-radial-gradient(top 30deg, red, blue)",
+  "-webkit-radial-gradient(left top 30deg, red, blue)",
+  "-webkit-radial-gradient(10px 20px 30deg, red, blue)"
 ];
 var unbalancedGradientAndElementValues = [
   "-moz-element(#a()",
@@ -547,312 +846,6 @@ var basicShapeUnbalancedValues = [
 ];
 
 
-if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
-  // Extend gradient lists with valid/invalid webkit-prefixed expressions:
-  validGradientAndElementValues.push(
-    // 2008 GRADIENTS: -webkit-gradient()
-    // ----------------------------------
-    // linear w/ no color stops (valid) and a variety of position values:
-    "-webkit-gradient(linear, 1 2, 3 4)",
-    "-webkit-gradient(linear,1 2,3 4)", // (no extra space)
-    "-webkit-gradient(linear  ,  1   2  ,  3   4  )", // (lots of extra space)
-    "-webkit-gradient(linear, 1 10% , 0% 4)", // percentages
-    "-webkit-gradient(linear, +1.0 -2%, +5.3% -0)", // (+/- & decimals are valid)
-    "-webkit-gradient(linear, left top, right bottom)", // keywords
-    "-webkit-gradient(linear, right center, center top)",
-    "-webkit-gradient(linear, center center, center center)",
-    "-webkit-gradient(linear, center 5%, 30 top)", // keywords mixed w/ nums
-
-    // linear w/ just 1 color stop:
-    "-webkit-gradient(linear, 1 2, 3 4, from(lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, to(lime))",
-    // * testing the various allowable stop values (<number> & <percent>):
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(-0, lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(-30, lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(+9999, lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(-.1, lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0%, lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(100%, lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(9999%, lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(-.5%, lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(+0%, lime))",
-    // * testing the various color values:
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, transparent))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, rgb(1,2,3)))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, #00ff00))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, #00f))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, hsla(240, 30%, 50%, 0.8)))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, rgba(255, 230, 10, 0.5)))",
-
-    // linear w/ multiple color stops:
-    // * using from()/to() -- note that out-of-order is OK:
-    "-webkit-gradient(linear, 1 2, 3 4, from(lime), from(blue))",
-    "-webkit-gradient(linear, 1 2, 3 4, to(lime),   to(blue))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(lime), to(blue))",
-    "-webkit-gradient(linear, 1 2, 3 4, to(lime),   from(blue))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(lime), to(blue), from(purple))",
-    // * using color-stop():
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, lime), color-stop(30%, blue))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, lime), color-stop(30%, blue), color-stop(100%, purple))",
-    // * using color-stop() intermixed with from()/to() functions:
-    "-webkit-gradient(linear, 1 2, 3 4, from(lime), color-stop(30%, blue))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(30%, blue), to(lime))",
-    // * overshooting endpoints (0 & 1.0)
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(-30%, lime), color-stop(.4, blue), color-stop(1.5, purple))",
-    // * repeating a stop position (valid)
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(30%, lime), color-stop(30%, blue))",
-    // * stops out of order (valid)
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(70%, lime), color-stop(20%, blue), color-stop(40%, purple))",
-
-    // radial w/ no color stops (valid) and a several different radius values:
-    "-webkit-gradient(radial, 1 2, 8, 3 4, 9)",
-    "-webkit-gradient(radial, 0 0, 10, 0 0, 5)",
-    "-webkit-gradient(radial, 1 2, -1.5, center center, +99999.9999)",
-
-    // radial w/ color stops
-    // (mostly leaning on more-robust 'linear' tests above; just testing a few
-    // examples w/ radial as a sanity-check):
-    "-webkit-gradient(radial, 1 2, 8, 3 4, 9, from(lime))",
-    "-webkit-gradient(radial, 1 2, 8, 3 4, 9, to(blue))",
-    "-webkit-gradient(radial, 1 2, 8, 3 4, 9, color-stop(0.5, #00f), color-stop(0.8, rgba(100, 200, 0, 0.5)))",
-
-    // 2011 GRADIENTS: -webkit-linear-gradient(), -webkit-radial -gradient()
-    // ---------------------------------------------------------------------
-    // Basic linear-gradient syntax (valid when prefixed or unprefixed):
-    "-webkit-linear-gradient(red, green, blue)",
-
-    // Angled linear-gradients (valid when prefixed or unprefixed):
-    "-webkit-linear-gradient(135deg, red, blue)",
-    "-webkit-linear-gradient( 135deg  , red  , blue )",
-    "-webkit-linear-gradient(280deg, red 60%, blue)",
-
-    // Linear-gradient with unitless-0 <angle> (normally invalid for <angle>
-    // but accepted here for better webkit emulation):
-    "-webkit-linear-gradient(0, red, blue)",
-
-    // Linear-gradient with calc expression (bug 1363349)
-    "-webkit-gradient(linear, calc(5 + 5) top, calc(10 + 10) top, from(blue), to(lime))",
-    "-webkit-gradient(linear, calc(5 - 5) top, calc(10 + 10) top, from(blue), to(lime))",
-    "-webkit-gradient(linear, calc(5 * 5) top, calc(10 + 10) top, from(blue), to(lime))",
-    "-webkit-gradient(linear, calc(5 / 5) top, calc(10 + 10) top, from(blue), to(lime))",
-    "-webkit-gradient(linear, left calc(25% - 10%), right calc(75% + 10%), from(blue), to(lime))",
-    "-webkit-gradient(linear, calc(1) 2, 3 4)",
-
-    // Radial-gradient with calc expression (bug 1363349)
-    "-webkit-gradient(radial, 1 2, 0, 3 4, calc(1 + 5), from(blue), to(lime))",
-    "-webkit-gradient(radial, 1 2, calc(1 + 2), 3 4, calc(1 + 5), from(blue), to(lime))",
-    "-webkit-gradient(radial, 1 2, calc(1 - 2), 3 4, calc(1 + 5), from(blue), to(lime))",
-    "-webkit-gradient(radial, 1 2, calc(1 * 2), 3 4, calc(1 + 5), from(blue), to(lime))",
-    "-webkit-gradient(radial, 1 2, calc(1 / 2), 3 4, calc(1 + 5), from(blue), to(lime))",
-    "-webkit-gradient(radial, calc(0 + 1) calc(1 + 1), calc(1 + 2), calc(1 + 2) 4, calc(1 + 5), from(blue), to(lime))",
-    "-webkit-gradient(radial, 1 2, calc(8), 3 4, 9)",
-
-    // Basic radial-gradient syntax (valid when prefixed or unprefixed):
-    "-webkit-radial-gradient(circle, white, black)",
-    "-webkit-radial-gradient(circle, white, black)",
-    "-webkit-radial-gradient(ellipse closest-side, white, black)",
-    "-webkit-radial-gradient(circle farthest-corner, white, black)",
-
-    // Contain/cover keywords (valid only for -moz/-webkit prefixed):
-    "-webkit-radial-gradient(cover, red, blue)",
-    "-webkit-radial-gradient(cover circle, red, blue)",
-    "-webkit-radial-gradient(contain, red, blue)",
-    "-webkit-radial-gradient(contain ellipse, red, blue)",
-
-    // Initial side/corner/point (valid only for -moz/-webkit prefixed):
-    "-webkit-linear-gradient(top, red, blue)",
-    "-webkit-linear-gradient(left, red, blue)",
-    "-webkit-linear-gradient(bottom, red, blue)",
-    "-webkit-linear-gradient(right top, red, blue)",
-    "-webkit-linear-gradient(top right, red, blue)",
-    "-webkit-radial-gradient(right, red, blue)",
-    "-webkit-radial-gradient(left bottom, red, blue)",
-    "-webkit-radial-gradient(bottom left, red, blue)",
-    "-webkit-radial-gradient(center, red, blue)",
-    "-webkit-radial-gradient(center right, red, blue)",
-    "-webkit-radial-gradient(center center, red, blue)",
-    "-webkit-radial-gradient(center top, red, blue)",
-    "-webkit-radial-gradient(left 50%, red, blue)",
-    "-webkit-radial-gradient(20px top, red, blue)",
-    "-webkit-radial-gradient(20em 30%, red, blue)",
-
-    // Point + keyword-sized shape (valid only for -moz/-webkit prefixed):
-    "-webkit-radial-gradient(center, circle closest-corner, red, blue)",
-    "-webkit-radial-gradient(10px 20px, cover circle, red, blue)",
-    "-webkit-radial-gradient(5em 50%, ellipse contain, red, blue)",
-
-    // Repeating examples:
-    "-webkit-repeating-linear-gradient(red 10%, blue 30%)",
-    "-webkit-repeating-linear-gradient(30deg, pink 20px, orange 70px)",
-    "-webkit-repeating-linear-gradient(left, red, blue)",
-    "-webkit-repeating-linear-gradient(left, red 10%, blue 30%)",
-    "-webkit-repeating-radial-gradient(circle, red, blue 10%, red 20%)",
-    "-webkit-repeating-radial-gradient(circle farthest-corner, gray 10px, yellow 20px)",
-    "-webkit-repeating-radial-gradient(top left, circle, red, blue 4%, red 8%)"
-  );
-
-  invalidGradientAndElementValues.push(
-    // 2008 GRADIENTS: -webkit-gradient()
-    // https://www.webkit.org/blog/175/introducing-css-gradients/
-    // ----------------------------------
-    // Mostly-empty expressions (missing most required pieces):
-    "-webkit-gradient()",
-    "-webkit-gradient( )",
-    "-webkit-gradient(,)",
-    "-webkit-gradient(bogus)",
-    "-webkit-gradient(linear)",
-    "-webkit-gradient(linear,)",
-    "-webkit-gradient(,linear)",
-    "-webkit-gradient(radial)",
-    "-webkit-gradient(radial,)",
-
-    // linear w/ partial/missing <point> expression(s)
-    "-webkit-gradient(linear, 1)", // Incomplete <point>
-    "-webkit-gradient(linear, left)", // Incomplete <point>
-    "-webkit-gradient(linear, center)", // Incomplete <point>
-    "-webkit-gradient(linear, top)", // Incomplete <point>
-    "-webkit-gradient(linear, 5%)", // Incomplete <point>
-    "-webkit-gradient(linear, 1 2)", // Missing 2nd <point>
-    "-webkit-gradient(linear, 1, 3)", // 2 incomplete <point>s
-    "-webkit-gradient(linear, 1, 3 4)", // Incomplete 1st <point>
-    "-webkit-gradient(linear, 1 2, 3)", // Incomplete 2nd <point>
-    "-webkit-gradient(linear, 1 2, 3, 4)", // Comma inside <point>
-    "-webkit-gradient(linear, 1, 2, 3 4)", // Comma inside <point>
-    "-webkit-gradient(linear, 1, 2, 3, 4)", // Comma inside <point>
-
-    // linear w/ invalid units in <point> expression
-    "-webkit-gradient(linear, 1px 2, 3 4)",
-    "-webkit-gradient(linear, 1 2, 3 4px)",
-    "-webkit-gradient(linear, 1px 2px, 3px 4px)",
-    "-webkit-gradient(linear, 1 2em, 3 4)",
-
-    // linear w/ <radius> (only valid for radial)
-    "-webkit-gradient(linear, 1 2, 8, 3 4, 9)",
-
-    // linear w/ out-of-order position keywords in <point> expression
-    // (horizontal keyword is supposed to come first, for "x" coord)
-    "-webkit-gradient(linear, 0 0, top right)",
-    "-webkit-gradient(linear, bottom center, 0 0)",
-    "-webkit-gradient(linear, top bottom, 0 0)",
-    "-webkit-gradient(linear, bottom top, 0 0)",
-    "-webkit-gradient(linear, bottom top, 0 0)",
-
-    // linear w/ trailing comma (which implies missing color-stops):
-    "-webkit-gradient(linear, 1 2, 3 4,)",
-
-    // linear w/ invalid color values:
-    "-webkit-gradient(linear, 1 2, 3 4, from(invalidcolorname))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(inherit))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(initial))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(currentColor))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(00ff00))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(##00ff00))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(#00fff))", // wrong num hex digits
-    "-webkit-gradient(linear, 1 2, 3 4, from(xyz(0,0,0)))", // bogus color func
-    // Mixing <number> and <percentage> is invalid.
-    "-webkit-gradient(linear, 1 2, 3 4, from(rgb(100, 100%, 30)))",
-
-    // linear w/ color stops that have comma issues
-    "-webkit-gradient(linear, 1 2, 3 4 from(lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(lime,))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(lime),)",
-    "-webkit-gradient(linear, 1 2, 3 4, from(lime) to(blue))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(lime),, to(blue))",
-    "-webkit-gradient(linear, 1 2, 3 4, from(rbg(0, 0, 0,)))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0 lime))",
-    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0,, lime))",
-
-    // radial w/ broken <point>/radius expression(s)
-    "-webkit-gradient(radial, 1)", // Incomplete <point>
-    "-webkit-gradient(radial, 1 2)", // Missing radius + 2nd <point>
-    "-webkit-gradient(radial, 1 2, 8)", // Missing 2nd <point>
-    "-webkit-gradient(radial, 1 2, 8, 3)", // Incomplete 2nd <point>
-    "-webkit-gradient(radial, 1 2, 8, 3 4)", // Missing 2nd radius
-    "-webkit-gradient(radial, 1 2, 3 4, 9)", // Missing 1st radius
-
-    // radial w/ incorrect units on radius (invalid; expecting <number>)
-    "-webkit-gradient(radial, 1 2, 8%,      3 4, 9)",
-    "-webkit-gradient(radial, 1 2, 8px,     3 4, 9)",
-    "-webkit-gradient(radial, 1 2, 8em,     3 4, 9)",
-    "-webkit-gradient(radial, 1 2, top,     3 4, 9)",
-
-    // radial w/ trailing comma (which implies missing color-stops):
-    "-webkit-gradient(linear, 1 2, 8, 3 4, 9,)",
-
-    // radial w/ invalid color value (mostly leaning on 'linear' test above):
-    "-webkit-gradient(radial, 1 2, 8, 3 4, 9, from(invalidcolorname))",
-
-    // 2011 GRADIENTS: -webkit-linear-gradient(), -webkit-radial -gradient()
-    // ---------------------------------------------------------------------
-    // Syntax that's invalid for all types of gradients:
-    // * empty gradient expressions:
-    "-webkit-linear-gradient()",
-    "-webkit-radial-gradient()",
-    "-webkit-repeating-linear-gradient()",
-    "-webkit-repeating-radial-gradient()",
-
-    // * missing comma between <legacy-gradient-line> and color list:
-    "-webkit-linear-gradient(0 red, blue)",
-    "-webkit-linear-gradient(30deg red, blue)",
-    "-webkit-linear-gradient(top right red, blue)",
-    "-webkit-linear-gradient(bottom red, blue)",
-
-    // Linear-gradient with calc expression containing mixed units or division
-    // by zero (bug 1363349)
-    "-webkit-gradient(linear, calc(5 + 5%) top, calc(10 + 10) top, from(blue), to(lime))",
-    "-webkit-gradient(linear, left calc(25 - 10%), right calc(75% + 10%), from(blue), to(lime))",
-    "-webkit-gradient(linear, calc(1 / 0) 2, 3 4)",
-
-    // Radial-gradient with calc expression containing mixed units, division
-    // by zero, or a percentage in the radius (bug 1363349)
-    "-webkit-gradient(radial, 1 2, 0, 3 4, calc(1% + 5%), from(blue), to(lime))",
-    "-webkit-gradient(radial, 1 2, calc(1 + 2), 3 4, calc(1 + 5%), from(blue), to(lime))",
-    "-webkit-gradient(radial, calc(0 + 1) calc(1 + 1), calc(1% + 2%), calc(1 + 2) 4, calc(1 + 5), from(blue), to(lime))",
-    "-webkit-gradient(radial, 1 2, calc(8 / 0), 3 4, 9)",
-
-    // Linear syntax that's invalid for both -webkit & unprefixed, but valid
-    // for -moz:
-    // * initial <legacy-gradient-line> which includes a length:
-    "-webkit-linear-gradient(10px, red, blue)",
-    "-webkit-linear-gradient(10px top, red, blue)",
-    // * initial <legacy-gradient-line> which includes a side *and* an angle:
-    "-webkit-linear-gradient(bottom 30deg, red, blue)",
-    "-webkit-linear-gradient(30deg bottom, red, blue)",
-    "-webkit-linear-gradient(10px top 50deg, red, blue)",
-    "-webkit-linear-gradient(50deg 10px top, red, blue)",
-    // * initial <legacy-gradient-line> which includes explicit "center":
-    "-webkit-linear-gradient(center, red, blue)",
-    "-webkit-linear-gradient(left center, red, blue)",
-    "-webkit-linear-gradient(top center, red, blue)",
-    "-webkit-linear-gradient(center top, red, blue)",
-
-    // Linear syntax that's invalid for -webkit, but valid for -moz & unprefixed:
-    // * "to" syntax:
-    "-webkit-linear-gradient(to top, red, blue)",
-
-    // * <shape> followed by angle:
-    "-webkit-radial-gradient(circle 10deg, red, blue)",
-
-    // Radial syntax that's invalid for both -webkit & -moz, but valid for
-    // unprefixed:
-    // * "<shape> at <position>" syntax:
-    "-webkit-radial-gradient(circle at left bottom, red, blue)",
-    // * explicitly-sized shape:
-    "-webkit-radial-gradient(circle 10px, red, blue)",
-    "-webkit-radial-gradient(ellipse 40px 20px, red, blue)",
-
-    // Radial syntax that's invalid for both -webkit & unprefixed, but valid
-    // for -moz:
-    // * initial angle
-    "-webkit-radial-gradient(30deg, red, blue)",
-    // * initial angle/position combo
-    "-webkit-radial-gradient(top 30deg, red, blue)",
-    "-webkit-radial-gradient(left top 30deg, red, blue)",
-    "-webkit-radial-gradient(10px 20px 30deg, red, blue)"
-  );
-}
-
 if (/* mozGradientsEnabled */ true) { // Maybe one day :(
   // Extend gradient lists with valid/invalid moz-prefixed expressions:
   validGradientAndElementValues.push(
@@ -975,74 +968,69 @@ if (/* mozGradientsEnabled */ true) { // Maybe one day :(
     "-moz-radial-gradient(left calc(100px + -25%), red, blue)",
     "-moz-radial-gradient(calc(100px + -25px) top, red, blue)",
     "-moz-radial-gradient(left calc(100px + -25px), red, blue)",
+    "-moz-radial-gradient(40%, -100px -10%, red, blue)",
   );
 
-  (IsCSSPropertyPrefEnabled("layout.css.simple-moz-gradient.enabled")
-    ? validGradientAndElementValues
-    : validGradientAndElementValues).push(
-      "-moz-radial-gradient(40%, -100px -10%, red, blue)",
-    );
-
-  (IsCSSPropertyPrefEnabled("layout.css.simple-moz-gradient.enabled")
-    ? invalidGradientAndElementValues
-    : validGradientAndElementValues).push(
-      "-moz-linear-gradient(center 0%, red, blue)",
-      "-moz-linear-gradient(50% top, red, blue)",
-      "-moz-linear-gradient(50% 0%, red, blue)",
-      "-moz-linear-gradient(0 0, red, blue)",
-      "-moz-linear-gradient(20% bottom, red, blue)",
-      "-moz-linear-gradient(center 20%, red, blue)",
-      "-moz-linear-gradient(left 35px, red, blue)",
-      "-moz-linear-gradient(10% 10em, red, blue)",
-      "-moz-linear-gradient(44px top, red, blue)",
-      "-moz-linear-gradient(0px, red, blue)",
-      "-moz-linear-gradient(top left 45deg, red, blue)",
-      "-moz-linear-gradient(20% bottom -300deg, red, blue)",
-      "-moz-linear-gradient(center 20% 1.95929rad, red, blue)",
-      "-moz-linear-gradient(left 35px 30grad, red, blue)",
-      "-moz-linear-gradient(left 35px 0.1turn, red, blue)",
-      "-moz-linear-gradient(10% 10em 99999deg, red, blue)",
-      "-moz-linear-gradient(44px top -33deg, red, blue)",
-      "-moz-linear-gradient(30grad left 35px, red, blue)",
-      "-moz-linear-gradient(10deg 20px, red, blue)",
-      "-moz-linear-gradient(1turn 20px, red, blue)",
-      "-moz-linear-gradient(.414rad bottom, red, blue)",
-      "-moz-radial-gradient(top left 45deg, red, blue)",
-      "-moz-radial-gradient(20% bottom -300deg, red, blue)",
-      "-moz-radial-gradient(center 20% 1.95929rad, red, blue)",
-      "-moz-radial-gradient(left 35px 30grad, red, blue)",
-      "-moz-radial-gradient(10% 10em 99999deg, red, blue)",
-      "-moz-radial-gradient(44px top -33deg, red, blue)",
-      "-moz-radial-gradient(-33deg, red, blue)",
-      "-moz-radial-gradient(30grad left 35px, red, blue)",
-      "-moz-radial-gradient(10deg 20px, red, blue)",
-      "-moz-radial-gradient(.414rad bottom, red, blue)",
-      "-moz-radial-gradient(99deg, cover, red, blue)",
-      "-moz-radial-gradient(-1.2345rad, circle, red, blue)",
-      "-moz-radial-gradient(399grad, ellipse closest-corner, red, blue)",
-      "-moz-radial-gradient(399grad, farthest-side circle, red, blue)",
-      "-moz-radial-gradient(top left 99deg, cover, red, blue)",
-      "-moz-radial-gradient(15% 20% -1.2345rad, circle, red, blue)",
-      "-moz-radial-gradient(45px 399grad, ellipse closest-corner, red, blue)",
-      "-moz-radial-gradient(45px 399grad, farthest-side circle, red, blue)",
-      "-moz-repeating-linear-gradient(0 0, red, blue)",
-      "-moz-repeating-linear-gradient(20% bottom, red, blue)",
-      "-moz-repeating-linear-gradient(center 20%, red, blue)",
-      "-moz-repeating-linear-gradient(left 35px, red, blue)",
-      "-moz-repeating-linear-gradient(10% 10em, red, blue)",
-      "-moz-repeating-linear-gradient(44px top, red, blue)",
-      "-moz-repeating-linear-gradient(top left 45deg, red, blue)",
-      "-moz-repeating-linear-gradient(20% bottom -300deg, red, blue)",
-      "-moz-repeating-linear-gradient(center 20% 1.95929rad, red, blue)",
-      "-moz-repeating-linear-gradient(left 35px 30grad, red, blue)",
-      "-moz-repeating-linear-gradient(10% 10em 99999deg, red, blue)",
-      "-moz-repeating-linear-gradient(44px top -33deg, red, blue)",
-      "-moz-repeating-linear-gradient(30grad left 35px, red, blue)",
-      "-moz-repeating-linear-gradient(10deg 20px, red, blue)",
-      "-moz-repeating-linear-gradient(.414rad bottom, red, blue)",
-    );
-
   invalidGradientAndElementValues.push(
+    // The entries in this block used to be valid with the older more-complex
+    // -moz prefixed gradient syntax, but we've since simplified the syntax for
+    // consistency with -webkit prefixed gradients, in a way that makes these
+    // invalid now.
+    "-moz-linear-gradient(center 0%, red, blue)",
+    "-moz-linear-gradient(50% top, red, blue)",
+    "-moz-linear-gradient(50% 0%, red, blue)",
+    "-moz-linear-gradient(0 0, red, blue)",
+    "-moz-linear-gradient(20% bottom, red, blue)",
+    "-moz-linear-gradient(center 20%, red, blue)",
+    "-moz-linear-gradient(left 35px, red, blue)",
+    "-moz-linear-gradient(10% 10em, red, blue)",
+    "-moz-linear-gradient(44px top, red, blue)",
+    "-moz-linear-gradient(0px, red, blue)",
+    "-moz-linear-gradient(top left 45deg, red, blue)",
+    "-moz-linear-gradient(20% bottom -300deg, red, blue)",
+    "-moz-linear-gradient(center 20% 1.95929rad, red, blue)",
+    "-moz-linear-gradient(left 35px 30grad, red, blue)",
+    "-moz-linear-gradient(left 35px 0.1turn, red, blue)",
+    "-moz-linear-gradient(10% 10em 99999deg, red, blue)",
+    "-moz-linear-gradient(44px top -33deg, red, blue)",
+    "-moz-linear-gradient(30grad left 35px, red, blue)",
+    "-moz-linear-gradient(10deg 20px, red, blue)",
+    "-moz-linear-gradient(1turn 20px, red, blue)",
+    "-moz-linear-gradient(.414rad bottom, red, blue)",
+    "-moz-radial-gradient(top left 45deg, red, blue)",
+    "-moz-radial-gradient(20% bottom -300deg, red, blue)",
+    "-moz-radial-gradient(center 20% 1.95929rad, red, blue)",
+    "-moz-radial-gradient(left 35px 30grad, red, blue)",
+    "-moz-radial-gradient(10% 10em 99999deg, red, blue)",
+    "-moz-radial-gradient(44px top -33deg, red, blue)",
+    "-moz-radial-gradient(-33deg, red, blue)",
+    "-moz-radial-gradient(30grad left 35px, red, blue)",
+    "-moz-radial-gradient(10deg 20px, red, blue)",
+    "-moz-radial-gradient(.414rad bottom, red, blue)",
+    "-moz-radial-gradient(99deg, cover, red, blue)",
+    "-moz-radial-gradient(-1.2345rad, circle, red, blue)",
+    "-moz-radial-gradient(399grad, ellipse closest-corner, red, blue)",
+    "-moz-radial-gradient(399grad, farthest-side circle, red, blue)",
+    "-moz-radial-gradient(top left 99deg, cover, red, blue)",
+    "-moz-radial-gradient(15% 20% -1.2345rad, circle, red, blue)",
+    "-moz-radial-gradient(45px 399grad, ellipse closest-corner, red, blue)",
+    "-moz-radial-gradient(45px 399grad, farthest-side circle, red, blue)",
+    "-moz-repeating-linear-gradient(0 0, red, blue)",
+    "-moz-repeating-linear-gradient(20% bottom, red, blue)",
+    "-moz-repeating-linear-gradient(center 20%, red, blue)",
+    "-moz-repeating-linear-gradient(left 35px, red, blue)",
+    "-moz-repeating-linear-gradient(10% 10em, red, blue)",
+    "-moz-repeating-linear-gradient(44px top, red, blue)",
+    "-moz-repeating-linear-gradient(top left 45deg, red, blue)",
+    "-moz-repeating-linear-gradient(20% bottom -300deg, red, blue)",
+    "-moz-repeating-linear-gradient(center 20% 1.95929rad, red, blue)",
+    "-moz-repeating-linear-gradient(left 35px 30grad, red, blue)",
+    "-moz-repeating-linear-gradient(10% 10em 99999deg, red, blue)",
+    "-moz-repeating-linear-gradient(44px top -33deg, red, blue)",
+    "-moz-repeating-linear-gradient(30grad left 35px, red, blue)",
+    "-moz-repeating-linear-gradient(10deg 20px, red, blue)",
+    "-moz-repeating-linear-gradient(.414rad bottom, red, blue)",
+
     /* no quirks mode colors */
     "-moz-radial-gradient(10% bottom, ffffff, black) scroll no-repeat",
     /* no quirks mode lengths */
@@ -6843,6 +6831,501 @@ var gCSSProperties = {
     alias_for: "padding-inline-start",
     subproperties: [ "padding-inline-start" ],
   },
+  "-webkit-animation": {
+    domProp: "webkitAnimation",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "animation",
+    subproperties: [ "animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-direction", "animation-fill-mode", "animation-iteration-count", "animation-play-state" ],
+  },
+  "-webkit-animation-delay": {
+    domProp: "webkitAnimationDelay",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-delay",
+    subproperties: [ "animation-delay" ],
+  },
+  "-webkit-animation-direction": {
+    domProp: "webkitAnimationDirection",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-direction",
+    subproperties: [ "animation-direction" ],
+  },
+  "-webkit-animation-duration": {
+    domProp: "webkitAnimationDuration",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-duration",
+    subproperties: [ "animation-duration" ],
+  },
+  "-webkit-animation-fill-mode": {
+    domProp: "webkitAnimationFillMode",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-fill-mode",
+    subproperties: [ "animation-fill-mode" ],
+  },
+  "-webkit-animation-iteration-count": {
+    domProp: "webkitAnimationIterationCount",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-iteration-count",
+    subproperties: [ "animation-iteration-count" ],
+  },
+  "-webkit-animation-name": {
+    domProp: "webkitAnimationName",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-name",
+    subproperties: [ "animation-name" ],
+  },
+  "-webkit-animation-play-state": {
+    domProp: "webkitAnimationPlayState",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-play-state",
+    subproperties: [ "animation-play-state" ],
+  },
+  "-webkit-animation-timing-function": {
+    domProp: "webkitAnimationTimingFunction",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-timing-function",
+    subproperties: [ "animation-timing-function" ],
+  },
+  "-webkit-filter": {
+    domProp: "webkitFilter",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "filter",
+    subproperties: [ "filter" ],
+  },
+  "-webkit-text-fill-color": {
+    domProp: "webkitTextFillColor",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
+    prerequisites: { "color": "black" },
+    initial_values: [ "currentColor", "black", "#000", "#000000", "rgb(0,0,0)" ],
+    other_values: [ "red", "rgba(255,255,255,0.5)", "transparent" ],
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
+  },
+  "-webkit-text-stroke": {
+    domProp: "webkitTextStroke",
+    inherited: true,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    prerequisites: { "color": "black" },
+    subproperties: [ "-webkit-text-stroke-width", "-webkit-text-stroke-color" ],
+    initial_values: [ "0 currentColor", "currentColor 0px", "0", "currentColor", "0px black" ],
+    other_values: [ "thin black", "#f00 medium", "thick rgba(0,0,255,0.5)", "calc(4px - 8px) green", "2px", "green 0", "currentColor 4em", "currentColor calc(5px - 1px)" ],
+    invalid_values: [ "-3px black", "calc(50%+ 2px) #000", "30% #f00" ]
+  },
+  "-webkit-text-stroke-color": {
+    domProp: "webkitTextStrokeColor",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
+    prerequisites: { "color": "black" },
+    initial_values: [ "currentColor", "black", "#000", "#000000", "rgb(0,0,0)" ],
+    other_values: [ "red", "rgba(255,255,255,0.5)", "transparent" ],
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
+  },
+  "-webkit-text-stroke-width": {
+    domProp: "webkitTextStrokeWidth",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
+    initial_values: [ "0", "0px", "0em", "0ex", "calc(0pt)", "calc(4px - 8px)" ],
+    other_values: [ "thin", "medium", "thick", "17px", "0.2em", "calc(3*25px + 5em)", "calc(5px - 1px)" ],
+    invalid_values: [ "5%", "1px calc(nonsense)", "1px red", "-0.1px", "-3px", "30%" ]
+  },
+  "-webkit-text-size-adjust": {
+    domProp: "webkitTextSizeAdjust",
+    inherited: true,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-text-size-adjust",
+    subproperties: [ "-moz-text-size-adjust" ],
+  },
+  "-webkit-transform": {
+    domProp: "webkitTransform",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transform",
+    subproperties: [ "transform" ],
+  },
+  "-webkit-transform-origin": {
+    domProp: "webkitTransformOrigin",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transform-origin",
+    subproperties: [ "transform-origin" ],
+  },
+  "-webkit-transform-style": {
+    domProp: "webkitTransformStyle",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transform-style",
+    subproperties: [ "transform-style" ],
+  },
+  "-webkit-backface-visibility": {
+    domProp: "webkitBackfaceVisibility",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "backface-visibility",
+    subproperties: [ "backface-visibility" ],
+  },
+  "-webkit-perspective": {
+    domProp: "webkitPerspective",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "perspective",
+    subproperties: [ "perspective" ],
+  },
+  "-webkit-perspective-origin": {
+    domProp: "webkitPerspectiveOrigin",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "perspective-origin",
+    subproperties: [ "perspective-origin" ],
+  },
+  "-webkit-transition": {
+    domProp: "webkitTransition",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "transition",
+    subproperties: [ "transition-property", "transition-duration", "transition-timing-function", "transition-delay" ],
+  },
+  "-webkit-transition-delay": {
+    domProp: "webkitTransitionDelay",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transition-delay",
+    subproperties: [ "transition-delay" ],
+  },
+  "-webkit-transition-duration": {
+    domProp: "webkitTransitionDuration",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transition-duration",
+    subproperties: [ "transition-duration" ],
+  },
+  "-webkit-transition-property": {
+    domProp: "webkitTransitionProperty",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transition-property",
+    subproperties: [ "transition-property" ],
+  },
+  "-webkit-transition-timing-function": {
+    domProp: "webkitTransitionTimingFunction",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transition-timing-function",
+    subproperties: [ "transition-timing-function" ],
+  },
+  "-webkit-border-radius": {
+    domProp: "webkitBorderRadius",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "border-radius",
+    subproperties: [ "border-bottom-left-radius", "border-bottom-right-radius", "border-top-left-radius", "border-top-right-radius" ],
+  },
+  "-webkit-border-top-left-radius": {
+    domProp: "webkitBorderTopLeftRadius",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    applies_to_first_letter: true,
+    alias_for: "border-top-left-radius",
+    subproperties: [ "border-top-left-radius" ],
+  },
+  "-webkit-border-top-right-radius": {
+    domProp: "webkitBorderTopRightRadius",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    applies_to_first_letter: true,
+    alias_for: "border-top-right-radius",
+    subproperties: [ "border-top-right-radius" ],
+  },
+  "-webkit-border-bottom-left-radius": {
+    domProp: "webkitBorderBottomLeftRadius",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    applies_to_first_letter: true,
+    alias_for: "border-bottom-left-radius",
+    subproperties: [ "border-bottom-left-radius" ],
+  },
+  "-webkit-border-bottom-right-radius": {
+    domProp: "webkitBorderBottomRightRadius",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    applies_to_first_letter: true,
+    alias_for: "border-bottom-right-radius",
+    subproperties: [ "border-bottom-right-radius" ],
+  },
+  "-webkit-background-clip": {
+    domProp: "webkitBackgroundClip",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
+    alias_for: "background-clip",
+    subproperties: [ "background-clip" ],
+  },
+  "-webkit-background-origin": {
+    domProp: "webkitBackgroundOrigin",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
+    alias_for: "background-origin",
+    subproperties: [ "background-origin" ],
+  },
+  "-webkit-background-size": {
+    domProp: "webkitBackgroundSize",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
+    alias_for: "background-size",
+    subproperties: [ "background-size" ],
+  },
+  "-webkit-border-image": {
+    domProp: "webkitBorderImage",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "border-image",
+    subproperties: [ "border-image-source", "border-image-slice", "border-image-width",  "border-image-outset", "border-image-repeat" ],
+  },
+  "-webkit-box-shadow": {
+    domProp: "webkitBoxShadow",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    applies_to_first_letter: true,
+    alias_for: "box-shadow",
+    subproperties: [ "box-shadow" ],
+  },
+  "-webkit-box-sizing": {
+    domProp: "webkitBoxSizing",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "box-sizing",
+    subproperties: [ "box-sizing" ],
+  },
+  "-webkit-box-flex": {
+    domProp: "webkitBoxFlex",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-box-flex",
+    subproperties: [ "-moz-box-flex" ],
+  },
+  "-webkit-box-ordinal-group": {
+    domProp: "webkitBoxOrdinalGroup",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-box-ordinal-group",
+    subproperties: [ "-moz-box-ordinal-group" ],
+  },
+  "-webkit-box-orient": {
+    domProp: "webkitBoxOrient",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-box-orient",
+    subproperties: [ "-moz-box-orient" ],
+  },
+  "-webkit-box-direction": {
+    domProp: "webkitBoxDirection",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-box-direction",
+    subproperties: [ "-moz-box-direction" ],
+  },
+  "-webkit-box-align": {
+    domProp: "webkitBoxAlign",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-box-align",
+    subproperties: [ "-moz-box-align" ],
+  },
+  "-webkit-box-pack": {
+    domProp: "webkitBoxPack",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-box-pack",
+    subproperties: [ "-moz-box-pack" ],
+  },
+  "-webkit-flex-direction": {
+    domProp: "webkitFlexDirection",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "flex-direction",
+    subproperties: [ "flex-direction" ],
+  },
+  "-webkit-flex-wrap": {
+    domProp: "webkitFlexWrap",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "flex-wrap",
+    subproperties: [ "flex-wrap" ],
+  },
+  "-webkit-flex-flow": {
+    domProp: "webkitFlexFlow",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "flex-flow",
+    subproperties: [ "flex-direction", "flex-wrap" ],
+  },
+  "-webkit-order": {
+    domProp: "webkitOrder",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "order",
+    subproperties: [ "order" ],
+  },
+  "-webkit-flex": {
+    domProp: "webkitFlex",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "flex",
+    subproperties: [ "flex-grow", "flex-shrink", "flex-basis" ],
+  },
+  "-webkit-flex-grow": {
+    domProp: "webkitFlexGrow",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "flex-grow",
+    subproperties: [ "flex-grow" ],
+  },
+  "-webkit-flex-shrink": {
+    domProp: "webkitFlexShrink",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "flex-shrink",
+    subproperties: [ "flex-shrink" ],
+  },
+  "-webkit-flex-basis": {
+    domProp: "webkitFlexBasis",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "flex-basis",
+    subproperties: [ "flex-basis" ],
+  },
+  "-webkit-justify-content": {
+    domProp: "webkitJustifyContent",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "justify-content",
+    subproperties: [ "justify-content" ],
+  },
+  "-webkit-align-items": {
+    domProp: "webkitAlignItems",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "align-items",
+    subproperties: [ "align-items" ],
+  },
+  "-webkit-align-self": {
+    domProp: "webkitAlignSelf",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "align-self",
+    subproperties: [ "align-self" ],
+  },
+  "-webkit-align-content": {
+    domProp: "webkitAlignContent",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "align-content",
+    subproperties: [ "align-content" ],
+  },
+  "-webkit-user-select": {
+    domProp: "webkitUserSelect",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "user-select",
+    subproperties: [ "user-select" ],
+  },
+  "-webkit-mask": {
+    domProp: "webkitMask",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "mask",
+    subproperties: [ "mask-clip", "mask-image", "mask-mode", "mask-origin", "mask-position", "mask-repeat", "mask-size" , "mask-composite" ],
+  },
+  "-webkit-mask-clip": {
+    domProp: "webkitMaskClip",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-clip",
+    subproperties: [ "mask-clip" ],
+  },
+
+  "-webkit-mask-composite": {
+    domProp: "webkitMaskComposite",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-composite",
+    subproperties: [ "mask-composite" ],
+  },
+
+  "-webkit-mask-image": {
+    domProp: "webkitMaskImage",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-image",
+    subproperties: [ "mask-image" ],
+  },
+  "-webkit-mask-origin": {
+    domProp: "webkitMaskOrigin",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-origin",
+    subproperties: [ "mask-origin" ],
+  },
+  "-webkit-mask-position": {
+    domProp: "webkitMaskPosition",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-position",
+    subproperties: [ "mask-position" ],
+  },
+  "-webkit-mask-position-x": {
+    domProp: "webkitMaskPositionX",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-position-x",
+    subproperties: [ "mask-position-x" ],
+  },
+  "-webkit-mask-position-y": {
+    domProp: "webkitMaskPositionY",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-position-y",
+    subproperties: [ "mask-position-y" ],
+  },
+  "-webkit-mask-repeat": {
+    domProp: "webkitMaskRepeat",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-repeat",
+    subproperties: [ "mask-repeat" ],
+  },
+  "-webkit-mask-size": {
+    domProp: "webkitMaskSize",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "mask-size",
+    subproperties: [ "mask-size" ],
+  },
 } // end of gCSSProperties
 
 // Get the computed value for a property.  For shorthands, return the
@@ -7975,504 +8458,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap-v1.enabled")) {
     other_values: [ "0", "10px", "20%", "calc(2em + 3ex)", "calc(50% + 60px)",
                     "calc(-50px)" ],
     invalid_values: [ "20", "-20px" ],
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
-  gCSSProperties["-webkit-animation"] = {
-    domProp: "webkitAnimation",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    alias_for: "animation",
-    subproperties: [ "animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-direction", "animation-fill-mode", "animation-iteration-count", "animation-play-state" ],
-  };
-  gCSSProperties["-webkit-animation-delay"] = {
-    domProp: "webkitAnimationDelay",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "animation-delay",
-    subproperties: [ "animation-delay" ],
-  };
-  gCSSProperties["-webkit-animation-direction"] = {
-    domProp: "webkitAnimationDirection",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "animation-direction",
-    subproperties: [ "animation-direction" ],
-  };
-  gCSSProperties["-webkit-animation-duration"] = {
-    domProp: "webkitAnimationDuration",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "animation-duration",
-    subproperties: [ "animation-duration" ],
-  };
-  gCSSProperties["-webkit-animation-fill-mode"] = {
-    domProp: "webkitAnimationFillMode",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "animation-fill-mode",
-    subproperties: [ "animation-fill-mode" ],
-  };
-  gCSSProperties["-webkit-animation-iteration-count"] = {
-    domProp: "webkitAnimationIterationCount",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "animation-iteration-count",
-    subproperties: [ "animation-iteration-count" ],
-  };
-  gCSSProperties["-webkit-animation-name"] = {
-    domProp: "webkitAnimationName",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "animation-name",
-    subproperties: [ "animation-name" ],
-  };
-  gCSSProperties["-webkit-animation-play-state"] = {
-    domProp: "webkitAnimationPlayState",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "animation-play-state",
-    subproperties: [ "animation-play-state" ],
-  };
-  gCSSProperties["-webkit-animation-timing-function"] = {
-    domProp: "webkitAnimationTimingFunction",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "animation-timing-function",
-    subproperties: [ "animation-timing-function" ],
-  };
-  gCSSProperties["-webkit-filter"] = {
-    domProp: "webkitFilter",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "filter",
-    subproperties: [ "filter" ],
-  };
-  gCSSProperties["-webkit-text-fill-color"] = {
-    domProp: "webkitTextFillColor",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    applies_to_first_line: true,
-    applies_to_placeholder: true,
-    prerequisites: { "color": "black" },
-    initial_values: [ "currentColor", "black", "#000", "#000000", "rgb(0,0,0)" ],
-    other_values: [ "red", "rgba(255,255,255,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
-  };
-  gCSSProperties["-webkit-text-stroke"] = {
-    domProp: "webkitTextStroke",
-    inherited: true,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    prerequisites: { "color": "black" },
-    subproperties: [ "-webkit-text-stroke-width", "-webkit-text-stroke-color" ],
-    initial_values: [ "0 currentColor", "currentColor 0px", "0", "currentColor", "0px black" ],
-    other_values: [ "thin black", "#f00 medium", "thick rgba(0,0,255,0.5)", "calc(4px - 8px) green", "2px", "green 0", "currentColor 4em", "currentColor calc(5px - 1px)" ],
-    invalid_values: [ "-3px black", "calc(50%+ 2px) #000", "30% #f00" ]
-  };
-  gCSSProperties["-webkit-text-stroke-color"] = {
-    domProp: "webkitTextStrokeColor",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    applies_to_first_line: true,
-    applies_to_placeholder: true,
-    prerequisites: { "color": "black" },
-    initial_values: [ "currentColor", "black", "#000", "#000000", "rgb(0,0,0)" ],
-    other_values: [ "red", "rgba(255,255,255,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
-  };
-  gCSSProperties["-webkit-text-stroke-width"] = {
-    domProp: "webkitTextStrokeWidth",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    applies_to_first_line: true,
-    applies_to_placeholder: true,
-    initial_values: [ "0", "0px", "0em", "0ex", "calc(0pt)", "calc(4px - 8px)" ],
-    other_values: [ "thin", "medium", "thick", "17px", "0.2em", "calc(3*25px + 5em)", "calc(5px - 1px)" ],
-    invalid_values: [ "5%", "1px calc(nonsense)", "1px red", "-0.1px", "-3px", "30%" ]
-  },
-  gCSSProperties["-webkit-text-size-adjust"] = {
-    domProp: "webkitTextSizeAdjust",
-    inherited: true,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "-moz-text-size-adjust",
-    subproperties: [ "-moz-text-size-adjust" ],
-  };
-  gCSSProperties["-webkit-transform"] = {
-    domProp: "webkitTransform",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "transform",
-    subproperties: [ "transform" ],
-  };
-  gCSSProperties["-webkit-transform-origin"] = {
-    domProp: "webkitTransformOrigin",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "transform-origin",
-    subproperties: [ "transform-origin" ],
-  };
-  gCSSProperties["-webkit-transform-style"] = {
-    domProp: "webkitTransformStyle",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "transform-style",
-    subproperties: [ "transform-style" ],
-  };
-  gCSSProperties["-webkit-backface-visibility"] = {
-    domProp: "webkitBackfaceVisibility",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "backface-visibility",
-    subproperties: [ "backface-visibility" ],
-  };
-  gCSSProperties["-webkit-perspective"] = {
-    domProp: "webkitPerspective",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "perspective",
-    subproperties: [ "perspective" ],
-  };
-  gCSSProperties["-webkit-perspective-origin"] = {
-    domProp: "webkitPerspectiveOrigin",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "perspective-origin",
-    subproperties: [ "perspective-origin" ],
-  };
-  gCSSProperties["-webkit-transition"] = {
-    domProp: "webkitTransition",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    alias_for: "transition",
-    subproperties: [ "transition-property", "transition-duration", "transition-timing-function", "transition-delay" ],
-  };
-  gCSSProperties["-webkit-transition-delay"] = {
-    domProp: "webkitTransitionDelay",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "transition-delay",
-    subproperties: [ "transition-delay" ],
-  };
-  gCSSProperties["-webkit-transition-duration"] = {
-    domProp: "webkitTransitionDuration",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "transition-duration",
-    subproperties: [ "transition-duration" ],
-  };
-  gCSSProperties["-webkit-transition-property"] = {
-    domProp: "webkitTransitionProperty",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "transition-property",
-    subproperties: [ "transition-property" ],
-  };
-  gCSSProperties["-webkit-transition-timing-function"] = {
-    domProp: "webkitTransitionTimingFunction",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "transition-timing-function",
-    subproperties: [ "transition-timing-function" ],
-  };
-  gCSSProperties["-webkit-border-radius"] = {
-    domProp: "webkitBorderRadius",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    alias_for: "border-radius",
-    subproperties: [ "border-bottom-left-radius", "border-bottom-right-radius", "border-top-left-radius", "border-top-right-radius" ],
-  };
-  gCSSProperties["-webkit-border-top-left-radius"] = {
-    domProp: "webkitBorderTopLeftRadius",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    applies_to_first_letter: true,
-    alias_for: "border-top-left-radius",
-    subproperties: [ "border-top-left-radius" ],
-  };
-  gCSSProperties["-webkit-border-top-right-radius"] = {
-    domProp: "webkitBorderTopRightRadius",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    applies_to_first_letter: true,
-    alias_for: "border-top-right-radius",
-    subproperties: [ "border-top-right-radius" ],
-  };
-  gCSSProperties["-webkit-border-bottom-left-radius"] = {
-    domProp: "webkitBorderBottomLeftRadius",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    applies_to_first_letter: true,
-    alias_for: "border-bottom-left-radius",
-    subproperties: [ "border-bottom-left-radius" ],
-  };
-  gCSSProperties["-webkit-border-bottom-right-radius"] = {
-    domProp: "webkitBorderBottomRightRadius",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    applies_to_first_letter: true,
-    alias_for: "border-bottom-right-radius",
-    subproperties: [ "border-bottom-right-radius" ],
-  };
-  gCSSProperties["-webkit-background-clip"] = {
-    domProp: "webkitBackgroundClip",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    applies_to_first_letter: true,
-    applies_to_first_line: true,
-    applies_to_placeholder: true,
-    alias_for: "background-clip",
-    subproperties: [ "background-clip" ],
-  };
-  gCSSProperties["-webkit-background-origin"] = {
-    domProp: "webkitBackgroundOrigin",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    applies_to_first_letter: true,
-    applies_to_first_line: true,
-    applies_to_placeholder: true,
-    alias_for: "background-origin",
-    subproperties: [ "background-origin" ],
-  };
-  gCSSProperties["-webkit-background-size"] = {
-    domProp: "webkitBackgroundSize",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    applies_to_first_letter: true,
-    applies_to_first_line: true,
-    applies_to_placeholder: true,
-    alias_for: "background-size",
-    subproperties: [ "background-size" ],
-  };
-  gCSSProperties["-webkit-border-image"] = {
-    domProp: "webkitBorderImage",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    alias_for: "border-image",
-    subproperties: [ "border-image-source", "border-image-slice", "border-image-width",  "border-image-outset", "border-image-repeat" ],
-  };
-  gCSSProperties["-webkit-box-shadow"] = {
-    domProp: "webkitBoxShadow",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    applies_to_first_letter: true,
-    alias_for: "box-shadow",
-    subproperties: [ "box-shadow" ],
-  };
-  gCSSProperties["-webkit-box-sizing"] = {
-    domProp: "webkitBoxSizing",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "box-sizing",
-    subproperties: [ "box-sizing" ],
-  };
-  gCSSProperties["-webkit-box-flex"] = {
-    domProp: "webkitBoxFlex",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "-moz-box-flex",
-    subproperties: [ "-moz-box-flex" ],
-  };
-  gCSSProperties["-webkit-box-ordinal-group"] = {
-    domProp: "webkitBoxOrdinalGroup",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "-moz-box-ordinal-group",
-    subproperties: [ "-moz-box-ordinal-group" ],
-  };
-  gCSSProperties["-webkit-box-orient"] = {
-    domProp: "webkitBoxOrient",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "-moz-box-orient",
-    subproperties: [ "-moz-box-orient" ],
-  };
-  gCSSProperties["-webkit-box-direction"] = {
-    domProp: "webkitBoxDirection",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "-moz-box-direction",
-    subproperties: [ "-moz-box-direction" ],
-  };
-  gCSSProperties["-webkit-box-align"] = {
-    domProp: "webkitBoxAlign",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "-moz-box-align",
-    subproperties: [ "-moz-box-align" ],
-  };
-  gCSSProperties["-webkit-box-pack"] = {
-    domProp: "webkitBoxPack",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "-moz-box-pack",
-    subproperties: [ "-moz-box-pack" ],
-  };
-  gCSSProperties["-webkit-flex-direction"] = {
-    domProp: "webkitFlexDirection",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "flex-direction",
-    subproperties: [ "flex-direction" ],
-  };
-  gCSSProperties["-webkit-flex-wrap"] = {
-    domProp: "webkitFlexWrap",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "flex-wrap",
-    subproperties: [ "flex-wrap" ],
-  };
-  gCSSProperties["-webkit-flex-flow"] = {
-    domProp: "webkitFlexFlow",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    alias_for: "flex-flow",
-    subproperties: [ "flex-direction", "flex-wrap" ],
-  };
-  gCSSProperties["-webkit-order"] = {
-    domProp: "webkitOrder",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "order",
-    subproperties: [ "order" ],
-  };
-  gCSSProperties["-webkit-flex"] = {
-    domProp: "webkitFlex",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    alias_for: "flex",
-    subproperties: [ "flex-grow", "flex-shrink", "flex-basis" ],
-  };
-  gCSSProperties["-webkit-flex-grow"] = {
-    domProp: "webkitFlexGrow",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "flex-grow",
-    subproperties: [ "flex-grow" ],
-  };
-  gCSSProperties["-webkit-flex-shrink"] = {
-    domProp: "webkitFlexShrink",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "flex-shrink",
-    subproperties: [ "flex-shrink" ],
-  };
-  gCSSProperties["-webkit-flex-basis"] = {
-    domProp: "webkitFlexBasis",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "flex-basis",
-    subproperties: [ "flex-basis" ],
-  };
-  gCSSProperties["-webkit-justify-content"] = {
-    domProp: "webkitJustifyContent",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "justify-content",
-    subproperties: [ "justify-content" ],
-  };
-  gCSSProperties["-webkit-align-items"] = {
-    domProp: "webkitAlignItems",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "align-items",
-    subproperties: [ "align-items" ],
-  };
-  gCSSProperties["-webkit-align-self"] = {
-    domProp: "webkitAlignSelf",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "align-self",
-    subproperties: [ "align-self" ],
-  };
-  gCSSProperties["-webkit-align-content"] = {
-    domProp: "webkitAlignContent",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "align-content",
-    subproperties: [ "align-content" ],
-  };
-  gCSSProperties["-webkit-user-select"] = {
-    domProp: "webkitUserSelect",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "user-select",
-    subproperties: [ "user-select" ],
-  };
-  gCSSProperties["-webkit-mask"] = {
-    domProp: "webkitMask",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    alias_for: "mask",
-    subproperties: [ "mask-clip", "mask-image", "mask-mode", "mask-origin", "mask-position", "mask-repeat", "mask-size" , "mask-composite" ],
-  };
-  gCSSProperties["-webkit-mask-clip"] = {
-    domProp: "webkitMaskClip",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "mask-clip",
-    subproperties: [ "mask-clip" ],
-  };
-
-  gCSSProperties["-webkit-mask-composite"] = {
-    domProp: "webkitMaskComposite",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "mask-composite",
-    subproperties: [ "mask-composite" ],
-  };
-
-  gCSSProperties["-webkit-mask-image"] = {
-    domProp: "webkitMaskImage",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "mask-image",
-    subproperties: [ "mask-image" ],
-  };
-  gCSSProperties["-webkit-mask-origin"] = {
-    domProp: "webkitMaskOrigin",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "mask-origin",
-    subproperties: [ "mask-origin" ],
-  };
-  gCSSProperties["-webkit-mask-position"] = {
-    domProp: "webkitMaskPosition",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "mask-position",
-    subproperties: [ "mask-position" ],
-  };
-  gCSSProperties["-webkit-mask-position-x"] = {
-    domProp: "webkitMaskPositionX",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "mask-position-x",
-    subproperties: [ "mask-position-x" ],
-  };
-  gCSSProperties["-webkit-mask-position-y"] = {
-    domProp: "webkitMaskPositionY",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "mask-position-y",
-    subproperties: [ "mask-position-y" ],
-  };
-  gCSSProperties["-webkit-mask-repeat"] = {
-    domProp: "webkitMaskRepeat",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "mask-repeat",
-    subproperties: [ "mask-repeat" ],
-  };
-  gCSSProperties["-webkit-mask-size"] = {
-    domProp: "webkitMaskSize",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "mask-size",
-    subproperties: [ "mask-size" ],
   };
 }
 

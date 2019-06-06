@@ -324,6 +324,16 @@ function run_test() {
 };
 '''
 
+# A test that crashes outright.
+TEST_CRASHING = '''
+function run_test () {
+  Components.utils.import("resource://gre/modules/ctypes.jsm", this);
+  let zero = new ctypes.intptr_t(8);
+  let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
+  badptr.contents;
+}
+'''
+
 # A test for asynchronous cleanup functions
 ASYNC_CLEANUP = '''
 function run_test() {
@@ -932,6 +942,20 @@ add_test({
         self.assertEquals(1, self.x.testCount)
         self.assertEquals(1, self.x.passCount)
         self.assertEquals(0, self.x.failCount)
+
+    def testCrashLogging(self):
+        """
+        Test that a crashing test process logs a failure.
+        """
+        self.writeFile("test_crashes.js", TEST_CRASHING)
+        self.writeManifest(["test_crashes.js"])
+
+        self.assertTestResult(False)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(0, self.x.passCount)
+        self.assertEquals(1, self.x.failCount)
+        if substs.get('MOZ_CRASHREPORTER'):
+            self.assertInLog("\nPROCESS-CRASH")
 
     def testLogCorrectFileName(self):
         """

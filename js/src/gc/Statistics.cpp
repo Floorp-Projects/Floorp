@@ -147,7 +147,7 @@ using PhaseTable = EnumeratedArray<Phase, Phase::LIMIT, PhaseInfo>;
 using PhaseKindTable =
     EnumeratedArray<PhaseKind, PhaseKind::LIMIT, PhaseKindInfo>;
 
-#include "gc/StatsPhasesGenerated.cpp"
+#include "gc/StatsPhasesGenerated.inc"
 
 static double t(TimeDuration duration) { return duration.ToMilliseconds(); }
 

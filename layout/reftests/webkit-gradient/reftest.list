@@ -1,6 +1,4 @@
 # This directory contains tests for -webkit-gradient() expressions.
-# They require webkit prefix support to be enabled.
-default-preferences pref(layout.css.prefixes.webkit,true)
 
 # In this test, we don't render a "-webkit-gradient" exactly correctly.
 # (It's just here to ensure that our approximate/do-something rendering doesn't
