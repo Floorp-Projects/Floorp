@@ -249,6 +249,11 @@ struct Animation {
   // True if the animation has a fixed current time (e.g. paused and
   // forward-filling animations).
   bool isNotPlaying;
+  // True if this is not an animating property. For some transform-like
+  // properties, we just send their baseStyles for merging with other animating
+  // properties. In this case, we don't have animation information on this
+  // property, and so don't need to do interpolation.
+  bool isNotAnimating;
   // The base style that animations should composite with. This is only set for
   // animations with a composite mode of additive or accumulate, and only for
   // the first animation in the set (i.e. the animation that is lowest in the

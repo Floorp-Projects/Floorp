@@ -79,6 +79,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
       75%  { transform: translate(120px); animation-timing-function: linear }
       100% { transform: translate(20px); animation-timing-function: ease-out }
     }
+    @keyframes kf_scale {
+      to { scale: 2.25 2.25; }
+    }
 
     @keyframes always_fifty {
       from, to { transform: translate(50px) }
@@ -2613,6 +2616,105 @@ addAsyncAnimTest(async function() {
 
   done_div();
 });
+
+// Multiple transform-like properties animation. The non-animating properties
+// shouldn't be overridden by animating ones.
+addAsyncAnimTest(async function() {
+  new_div("translate: 100px; " +
+          "scale: 1 1; " +
+          "transform: translate(200px); " +
+          "transition: all 10s linear");
+  await waitForPaintsFlushed();
+
+  // No transition on transform property.
+  gDiv.style.translate = "200px";
+  gDiv.style.scale = "2 2";
+  await waitForPaintsFlushed();
+
+  omta_is("transform", { compositorValue: { tx: 300 },
+                         usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  if (isGeckoView()) {
+    todo(false,
+         "Bug 1536392: GeckoView with e10s: cannot get correct OMTA style");
+  } else {
+    omta_is("transform",
+            // The order is: translate, scale, transform.
+            // So the translate() in transform should be multiplied by 1.5.
+            { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 200*1.5), 0 ],
+              usesMultipleProperties: true },
+            RunningOn.Compositor,
+            "transform-like properties on compositor at 5s");
+  }
+
+  done_div();
+});
+
+// Multiple transform-like properties animation with delay. The delayed
+// animating properties shouldn't be overridden.
+//
+// Note:
+// In delay phase, the SampleResult should be None, even though there is
+// an non-animating property which is also sent to the compositor.
+// If the SampleResult is Sampled in this case, we may get an incorrect result
+// ("scale" would be "1" because the final matrix is calculated by a default
+// scale value which overrides the scale css style).
+// That's why we shouldn't take non-animating properties into account on
+// SampleResult.
+addAsyncAnimTest(async function() {
+  new_div("translate: 100px; " +
+          "scale: 1.25 1.25; " +
+          "animation: kf_scale 10s 2.5s linear");
+  await waitForPaintsFlushed();
+
+  // All transform-like properties use DisplayItemType::TYPE_TRANSFORM,
+  // so using "transform" is enough.
+  var compositorStr =
+    SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "transform");
+  ok(compositorStr === "",
+     "transform-like properties should not run on the compositor at 0s " +
+     "(in delay phase)");
+  var computedStr = window.getComputedStyle(gDiv).translate;
+  ok(computedStr === "100px",
+     "The computed value of translate property should be equal to 100px " +
+     "in delay phase, got " + computedStr);
+  computedStr = window.getComputedStyle(gDiv).scale;
+  ok(computedStr === "1.25",
+     "The computed value of scale property should be equal to 1.25 " +
+     "in delay phase, got " + computedStr);
+
+  advance_clock(2500);
+
+  if (isGeckoView()) {
+    todo(false,
+         "Bug 1536392: GeckoView with e10s: cannot get correct OMTA style");
+  } else {
+    omta_is("transform", { compositorValue: [ 1.25, 0, 0, 1.25, 100, 0 ],
+                           usesMultipleProperties: true },
+            RunningOn.Compositor,
+            "transform-like properties on compositor at 2.5s");
+  }
+
+  advance_clock(5000);
+
+  if (isGeckoView()) {
+    todo(false,
+         "Bug 1536392: GeckoView with e10s: cannot get correct OMTA style");
+  } else {
+    omta_is("transform",
+            { compositorValue: [ 1.75, 0, 0, 1.75, 100, 0 ],
+              usesMultipleProperties: true },
+            RunningOn.Compositor,
+            "transform-like properties on compositor at 7.5s");
+  }
+
+  done_div();
+});
+
 
 </script>
 </html>
