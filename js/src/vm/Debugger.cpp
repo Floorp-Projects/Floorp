@@ -1019,6 +1019,11 @@ bool Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
     // If we're leaving successfully at a yield opcode, we're probably
     // suspending; the `isClosed()` check detects a debugger forced return
     // from an `onStep` handler, which looks almost the same.
+    //
+    // GetGeneratorObjectForFrame can return nullptr even when a generator
+    // object does exist, if the frame is paused between the GENERATOR and
+    // SETALIASEDVAR opcodes. But by checking the opcode first we eliminate that
+    // possibility, so it's fine to call genObj->isClosed().
     genObj = GetGeneratorObjectForFrame(cx, frame);
     suspending =
         frameOk && pc &&
@@ -1089,6 +1094,13 @@ bool Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
         RootedValue nextValue(cx, wrappedValue);
         bool success;
         {
+          // Mark the generator as running, to prevent reentrance.
+          //
+          // At certain points in a generator's lifetime,
+          // GetGeneratorObjectForFrame can return null even when the generator
+          // exists, but at those points the generator has not yet been exposed
+          // to JavaScript, so reentrance isn't possible anyway. So there's no
+          // harm done if this has no effect in that case.
           AutoSetGeneratorRunning asgr(cx, genObj);
           success = handler->onPop(cx, frameobj, nextResumeMode, &nextValue,
                                    exnStack);
@@ -2425,29 +2437,9 @@ ResumeMode Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp) {
             continue;
           }
 
-          // It is possible to have entries in generatorFrames that are not
-          // live, but also not suspended:
-          //
-          // In a generator script prologue, between the 'GENERATOR'
-          // instruction, which creates the generator object, and the
-          // 'SETALIASEDVAR .generator' instruction, which stores it in its
-          // designated spot in the frame, we are in an odd state. 'GENERATOR'
-          // has called onNewGenerator, adding an entry to generatorFrames
-          // mapping the generator object to its Debugger.Frame; but
-          // GetGeneratorObjectForFrame cannot yet find that generator object
-          // given a frame pointer. This means that if Debugger forces a return
-          // between those two instructions, slowPathOnLeaveFrame cannot find
-          // the generator object in order to clean up its generatorFramse
-          // entry.
-          //
-          // When this has occurred, the table entry will get cleaned up once
-          // the generator object gets GC'd, which should be soon since nobody
-          // got a chance to look at it. But it does mean that we need to verify
-          // that the generator is actually suspended before we attribute a step
-          // count to it.
-          if (!genObj.isSuspended()) {
-            continue;
-          }
+          // If a frame isn't live, but it has an entry in generatorFrames,
+          // it had better be suspended.
+          MOZ_ASSERT(genObj.isSuspended());
 
           if (!genObj.callee().isInterpretedLazy() &&
               genObj.callee().nonLazyScript() == trappingScript &&
@@ -7828,21 +7820,17 @@ void Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx,
     Debugger* dbg = Debugger::fromChildJSObject(frameobj);
     dbg->frames.remove(frame);
 
-    if (!suspending && frame.isGeneratorFrame()) {
-      // Terminally exiting a generator. Note that, since
-      // GetGeneratorObjectForFrame cannot find a generator frame's generator
-      // object between the GENERATOR opcode and the SETALIASEDVAR opcode, it
-      // may return nullptr even for frames that do have generator objects.
-      auto* genObj = GetGeneratorObjectForFrame(cx, frame);
-      if (GeneratorWeakMap::Ptr p = dbg->generatorFrames.lookup(genObj)) {
-        MOZ_ASSERT(p->value() == frameobj);
-        dbg->generatorFrames.remove(p);
-
-        // Maintain the invariant that a DebuggerFrame's GENERATOR_INFO_SLOT is
-        // populated if and only if there is a corresponding entry in
-        // generatorFrames.
-        frameobj->clearGenerator(fop);
-      }
+    // If this is a generator's final pop, remove its entry from
+    // generatorFrames. Such an entry exists if and only if the Debugger.Frame's
+    // generator has been set.
+    if (!suspending && frameobj->hasGenerator()) {
+      // Terminally exiting a generator.
+      AbstractGeneratorObject& genObj = frameobj->unwrappedGenerator();
+      GeneratorWeakMap::Ptr p = dbg->generatorFrames.lookup(&genObj);
+      MOZ_ASSERT(p);
+      MOZ_ASSERT(p->value() == frameobj);
+      dbg->generatorFrames.remove(p);
+      frameobj->clearGenerator(fop);
     }
   });
 
@@ -8955,8 +8943,9 @@ bool ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame,
       referent.isFunctionFrame() && referent.callee()->isAsync() &&
       !referent.callee()->isGenerator()) {
     AutoRealm ar(cx, referent.callee());
-    if (auto* genObj = GetGeneratorObjectForFrame(cx, referent)) {
-      isAfterAwait = !genObj->isClosed() && genObj->isRunning();
+    if (frame->hasGenerator()) {
+      AbstractGeneratorObject& genObj = frame->unwrappedGenerator();
+      isAfterAwait = !genObj.isClosed() && genObj.isRunning();
     }
   }
 
