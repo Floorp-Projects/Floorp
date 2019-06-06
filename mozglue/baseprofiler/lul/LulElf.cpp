@@ -45,37 +45,41 @@
 //   src/common/linux/elfutils.cc
 //   src/common/linux/file_id.cc
 
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+#include "BaseProfiler.h"
 
-#include <set>
-#include <string>
-#include <vector>
+#ifdef MOZ_BASE_PROFILER
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Sprintf.h"
+#  include <errno.h>
+#  include <fcntl.h>
+#  include <stdio.h>
+#  include <string.h>
+#  include <sys/mman.h>
+#  include <sys/stat.h>
+#  include <unistd.h>
+#  include <arpa/inet.h>
 
-#include "PlatformMacros.h"
-#include "LulCommonExt.h"
-#include "LulDwarfExt.h"
-#include "LulElfInt.h"
-#include "LulMainInt.h"
+#  include <set>
+#  include <string>
+#  include <vector>
 
-#if defined(GP_PLAT_arm_android) && !defined(SHT_ARM_EXIDX)
+#  include "mozilla/Assertions.h"
+#  include "mozilla/Sprintf.h"
+
+#  include "PlatformMacros.h"
+#  include "LulCommonExt.h"
+#  include "LulDwarfExt.h"
+#  include "LulElfInt.h"
+#  include "LulMainInt.h"
+
+#  if defined(GP_PLAT_arm_android) && !defined(SHT_ARM_EXIDX)
 // bionic and older glibsc don't define it
-#  define SHT_ARM_EXIDX (SHT_LOPROC + 1)
-#endif
+#    define SHT_ARM_EXIDX (SHT_LOPROC + 1)
+#  endif
 
 // Old Linux header doesn't define EM_AARCH64
-#ifndef EM_AARCH64
-#  define EM_AARCH64 183
-#endif
+#  ifndef EM_AARCH64
+#    define EM_AARCH64 183
+#  endif
 
 // This namespace contains helper functions.
 namespace {
@@ -744,7 +748,7 @@ bool FindElfSegment(const void* elf_mapped_base, uint32_t segment_type,
 //
 
 // ELF note name and desc are 32-bits word padded.
-#define NOTE_PADDING(a) ((a + 3) & ~3)
+#  define NOTE_PADDING(a) ((a + 3) & ~3)
 
 // These functions are also used inside the crashed process, so be safe
 // and use the syscall/libc wrappers instead of direct syscalls or libc.
@@ -869,3 +873,5 @@ void FileID::ConvertIdentifierToString(const uint8_t identifier[kMDGUIDSize],
 }
 
 }  // namespace lul
+
+#endif  // MOZ_BASE_PROFILER
