@@ -11,7 +11,7 @@
         android:icon="@drawable/ic_qr" />
     <androidx.preference.Preference
         android:key="@string/pref_key_sync_sign_in"
-        android:title="@string/preferences_sync_sign_in"
+        android:title="@string/preferences_sync"
         android:icon="@drawable/ic_sign_in" />
     <androidx.preference.Preference
         android:key="@string/pref_key_sync_create_account"
