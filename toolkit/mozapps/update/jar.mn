@@ -6,7 +6,5 @@ toolkit.jar:
 % content mozapps %content/mozapps/
   content/mozapps/update/history.xul                            (content/history.xul)
   content/mozapps/update/history.js                             (content/history.js)
-  content/mozapps/update/updates.css                            (content/updates.css)
-  content/mozapps/update/updates.js                             (content/updates.js)
-  content/mozapps/update/updates.xml                            (content/updates.xml)
-* content/mozapps/update/updates.xul                            (content/updates.xul)
+  content/mozapps/update/updateElevation.js                     (content/updateElevation.js)
+* content/mozapps/update/updateElevation.xul                    (content/updateElevation.xul)
