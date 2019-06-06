@@ -29,7 +29,7 @@ async function* test() {
        .useRemoteSubframes,
      "OOP iframe is actually OOP");
   let iframeResult = await FissionTestHelper.sendToOopif(iframeElement, "20 + 22");
-  ok(iframeResult == 42, "Basic content fission test works");
+  is(iframeResult, 42, "Basic content fission test works");
 }
 
   </script>

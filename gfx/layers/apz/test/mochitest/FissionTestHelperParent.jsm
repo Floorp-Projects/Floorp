@@ -45,6 +45,10 @@ class FissionTestHelperParent extends JSWindowActorParent {
         FissionTestHelperParent.SimpleTest.ok(msg.data.cond, this.docURI() + " | " + msg.data.msg);
         break;
 
+      case "is":
+        FissionTestHelperParent.SimpleTest.is(msg.data.a, msg.data.b, this.docURI() + " | " + msg.data.msg);
+        break;
+
       case "Test:Complete":
         this._testCompletePromiseResolver();
         break;
