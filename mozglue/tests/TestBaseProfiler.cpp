@@ -22,6 +22,8 @@
 #    error
 #  endif
 
+using namespace mozilla;
+
 // Increase the depth, to a maximum (to avoid too-deep recursion).
 static constexpr size_t NextDepth(size_t aDepth) {
   constexpr size_t MAX_DEPTH = 128;
@@ -69,31 +71,32 @@ static void SleepMilli(unsigned aMilliseconds) {
 
 void TestProfiler() {
   printf("TestProfiler starting -- pid: %d, tid: %d\n",
-         profiler_current_process_id(), profiler_current_thread_id());
+         baseprofiler::profiler_current_process_id(),
+         baseprofiler::profiler_current_thread_id());
   // ::Sleep(10000);
 
   {
     printf("profiler_init()...\n");
     AUTO_BASE_PROFILER_INIT;
 
-    MOZ_RELEASE_ASSERT(!profiler_is_active());
-    MOZ_RELEASE_ASSERT(!profiler_thread_is_being_profiled());
-    MOZ_RELEASE_ASSERT(!profiler_thread_is_sleeping());
+    MOZ_RELEASE_ASSERT(!baseprofiler::profiler_is_active());
+    MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_being_profiled());
+    MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_sleeping());
 
     printf("profiler_start()...\n");
     mozilla::Vector<const char*> filters;
     // Profile all registered threads.
     MOZ_RELEASE_ASSERT(filters.append(""));
-    const uint32_t features = ProfilerFeature::Leaf |
-                              ProfilerFeature::StackWalk |
-                              ProfilerFeature::Threads;
-    profiler_start(BASE_PROFILER_DEFAULT_ENTRIES,
-                   BASE_PROFILER_DEFAULT_INTERVAL, features, filters.begin(),
-                   filters.length());
+    const uint32_t features = baseprofiler::ProfilerFeature::Leaf |
+                              baseprofiler::ProfilerFeature::StackWalk |
+                              baseprofiler::ProfilerFeature::Threads;
+    baseprofiler::profiler_start(baseprofiler::BASE_PROFILER_DEFAULT_ENTRIES,
+                                 BASE_PROFILER_DEFAULT_INTERVAL, features,
+                                 filters.begin(), filters.length());
 
-    MOZ_RELEASE_ASSERT(profiler_is_active());
-    MOZ_RELEASE_ASSERT(profiler_thread_is_being_profiled());
-    MOZ_RELEASE_ASSERT(!profiler_thread_is_sleeping());
+    MOZ_RELEASE_ASSERT(baseprofiler::profiler_is_active());
+    MOZ_RELEASE_ASSERT(baseprofiler::profiler_thread_is_being_profiled());
+    MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_sleeping());
 
     {
       AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE("fibonacci", "First leaf call",
@@ -111,15 +114,15 @@ void TestProfiler() {
       SleepMilli(1000);
     }
 
-    printf("profiler_save_profile_to_file()...\n");
-    profiler_save_profile_to_file("TestProfiler_profile.json");
+    printf("baseprofiler_save_profile_to_file()...\n");
+    baseprofiler::profiler_save_profile_to_file("TestProfiler_profile.json");
 
     printf("profiler_stop()...\n");
-    profiler_stop();
+    baseprofiler::profiler_stop();
 
-    MOZ_RELEASE_ASSERT(!profiler_is_active());
-    MOZ_RELEASE_ASSERT(!profiler_thread_is_being_profiled());
-    MOZ_RELEASE_ASSERT(!profiler_thread_is_sleeping());
+    MOZ_RELEASE_ASSERT(!baseprofiler::profiler_is_active());
+    MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_being_profiled());
+    MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_sleeping());
 
     printf("profiler_shutdown()...\n");
   }
