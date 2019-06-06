@@ -38,6 +38,7 @@ exports.AUDIT_PROGRESS = "AUDIT_PROGRESS";
 
 // List of filters for accessibility checks.
 exports.FILTERS = {
+  ALL: "ALL",
   [AUDIT_TYPE.CONTRAST]: "CONTRAST",
 };
 

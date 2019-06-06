@@ -1,8 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
+const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
 const {
   AUDIT,
   AUDITING,
@@ -19,10 +21,21 @@ const {
 function getInitialState() {
   return {
     filters: {
+      [FILTERS.ALL]: false,
       [FILTERS.CONTRAST]: false,
     },
     auditing: [],
     progress: null,
+  };
+}
+
+/**
+ * State with all filters active.
+ */
+function allActiveFilters() {
+  return {
+    [FILTERS.ALL]: true,
+    [FILTERS.CONTRAST]: true,
   };
 }
 
@@ -31,11 +44,23 @@ function audit(state = getInitialState(), action) {
     case FILTER_TOGGLE:
       const { filter } = action;
       let { filters } = state;
-      const active = !filters[filter];
-      filters = {
-        ...filters,
-        [filter]: active,
-      };
+      const isToggledToActive = !filters[filter];
+
+      if (filter === FILTERS.ALL) {
+        filters = isToggledToActive ? allActiveFilters() : getInitialState().filters;
+      } else {
+        filters = {
+          ...filters,
+          [filter]: isToggledToActive,
+        };
+
+        if (isToggledToActive && !filters[FILTERS.ALL] &&
+            Object.values(AUDIT_TYPE).every(filterKey => filters[filterKey])) {
+          filters[FILTERS.ALL] = true;
+        } else if (!isToggledToActive && filters[FILTERS.ALL]) {
+          filters[FILTERS.ALL] = false;
+        }
+      }
 
       return {
         ...state,
