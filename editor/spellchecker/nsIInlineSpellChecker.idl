@@ -31,7 +31,7 @@ interface nsIInlineSpellChecker : nsISupports
   void removeWordFromDictionary(in AString aWord);
 
   void ignoreWord(in AString aWord);
-  void ignoreWords([array, size_is(aCount)] in wstring aWordsToIgnore, in unsigned long aCount);
+  void ignoreWords(in Array<AString> aWordsToIgnore);
   void updateCurrentDictionary();
 
   readonly attribute boolean spellCheckPending;
