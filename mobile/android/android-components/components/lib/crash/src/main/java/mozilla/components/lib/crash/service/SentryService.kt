@@ -21,11 +21,13 @@ import mozilla.components.lib.crash.Crash
  * @param context The application [Context].
  * @param dsn Data Source Name of the Sentry server.
  * @param tags A list of additional tags that will be sent together with crash reports.
+ * @param environment An optional, environment name string or null to set none
  */
 class SentryService(
     context: Context,
     dsn: String,
     tags: Map<String, String> = emptyMap(),
+    environment: String? = null,
     private val sendEventForNativeCrashes: Boolean = false,
     clientFactory: SentryClientFactory = AndroidSentryClientFactory(context)
 ) : CrashReporterService {
@@ -35,6 +37,7 @@ class SentryService(
             .build()
             .toString(),
         clientFactory).apply {
+        this.environment = environment
         tags.forEach { entry ->
             addTag(entry.key, entry.value)
         }

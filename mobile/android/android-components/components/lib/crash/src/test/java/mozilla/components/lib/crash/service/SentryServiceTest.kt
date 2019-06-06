@@ -127,4 +127,25 @@ class SentryServiceTest {
         verify(client).addTag(eq("ac.git"), any())
         verify(client).addTag(eq("ac.as.build_version"), any())
     }
+
+    @Test
+    fun `SentryService passes an environment or null`() {
+        val client: SentryClient = mock()
+        val environmentString = "production"
+
+        SentryService(context,
+                "https://fake:notreal@sentry.prod.example.net/405",
+                clientFactory = object : SentryClientFactory() {
+                    override fun createSentryClient(dsn: Dsn?): SentryClient = client
+                },
+                environment = environmentString)
+        verify(client).environment = eq(environmentString)
+
+        SentryService(context,
+                "https://fake:notreal@sentry.prod.example.net/405",
+                clientFactory = object : SentryClientFactory() {
+                    override fun createSentryClient(dsn: Dsn?): SentryClient = client
+                })
+        verify(client).environment = null
+    }
 }
