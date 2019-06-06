@@ -4,6 +4,14 @@
 
 "use strict";
 
+const {
+  accessibility: {
+    AUDIT_TYPE,
+    ISSUE_TYPE,
+    SCORES,
+  },
+} = require("devtools/shared/constants");
+
 // Checks for the AccessibleWalkerActor audit.
 add_task(async function() {
   const {target, accessibility} =
@@ -14,7 +22,11 @@ add_task(async function() {
     role: "document",
     childCount: 2,
     checks: {
-      "CONTRAST": null,
+      [AUDIT_TYPE.CONTRAST]: null,
+      [AUDIT_TYPE.TEXT_LABEL]: {
+        score: SCORES.FAIL,
+        issue: ISSUE_TYPE.DOCUMENT_NO_TITLE,
+      },
     },
   }, {
     name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do " +
@@ -22,7 +34,8 @@ add_task(async function() {
     role: "paragraph",
     childCount: 1,
     checks: {
-      "CONTRAST": null,
+      [AUDIT_TYPE.CONTRAST]: null,
+      [AUDIT_TYPE.TEXT_LABEL]: null,
     },
   }, {
     name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do " +
@@ -30,33 +43,36 @@ add_task(async function() {
     role: "text leaf",
     childCount: 0,
     checks: {
-      "CONTRAST": {
+      [AUDIT_TYPE.CONTRAST]: {
         "value": 4.00,
         "color": [255, 0, 0, 1],
         "backgroundColor": [255, 255, 255, 1],
         "isLargeText": false,
         "score": "fail",
       },
+      [AUDIT_TYPE.TEXT_LABEL]: null,
     },
   }, {
     name: "",
     role: "paragraph",
     childCount: 1,
     checks: {
-      "CONTRAST": null,
+      [AUDIT_TYPE.CONTRAST]: null,
+      [AUDIT_TYPE.TEXT_LABEL]: null,
     },
   }, {
     name: "Accessible Paragraph",
     role: "text leaf",
     childCount: 0,
     checks: {
-      "CONTRAST": {
+      [AUDIT_TYPE.CONTRAST]: {
         "value": 4.00,
         "color": [255, 0, 0, 1],
         "backgroundColor": [255, 255, 255, 1],
         "isLargeText": false,
         "score": "fail",
       },
+      [AUDIT_TYPE.TEXT_LABEL]: null,
     },
   }];
   const total = accessibles.length;
@@ -116,8 +132,8 @@ add_task(async function() {
   ok(a11yWalker, "The AccessibleWalkerFront was returned");
   await accessibility.enable();
 
-  await checkWalkerAudit(a11yWalker, 2);
-  await checkWalkerAudit(a11yWalker, 2, { types: ["CONTRAST"] });
+  await checkWalkerAudit(a11yWalker, 3);
+  await checkWalkerAudit(a11yWalker, 2, { types: [AUDIT_TYPE.CONTRAST] });
 
   await accessibility.disable();
   await waitForA11yShutdown();
