@@ -134,7 +134,7 @@ class ObserverRegistry<T> : Observable<T> {
 
     @Synchronized
     override fun isObserved(): Boolean {
-        return !observers.isEmpty()
+        return observers.isNotEmpty()
     }
 
     /**
