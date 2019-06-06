@@ -205,9 +205,10 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
 @run_job_using('generic-worker', 'mozharness-test', schema=mozharness_test_run_schema)
 def mozharness_test_on_generic_worker(config, job, taskdesc):
+    run = job['run']
     test = taskdesc['run']['test']
     mozharness = test['mozharness']
-    worker = taskdesc['worker']
+    worker = taskdesc['worker'] = job['worker']
 
     bitbar_script = 'test-linux.sh'
     bitbar_wrapper = '/builds/taskcluster/script.py'
@@ -401,10 +402,16 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             },
         }]
 
-    if is_windows:
-        worker['command'] = [' '.join(mh_command)]
-    else:  # is_macosx
-        worker['command'] = [mh_command]
+    job['run'] = {
+        'workdir': run['workdir'],
+        'tooltool-downloads': mozharness['tooltool-downloads'],
+        'checkout': test['checkout'],
+        'command': mh_command,
+        'using': 'run-task',
+    }
+    if is_bitbar:
+        job['run']['run-as-root'] = True
+    configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
 
 
 @run_job_using('script-engine-autophone', 'mozharness-test', schema=mozharness_test_run_schema)
