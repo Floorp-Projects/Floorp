@@ -162,7 +162,7 @@ static uint32_t AvailableFeatures() {
     ProfilerFeature::Set##Name_(features);
 
   // Add all the possible features.
-  PROFILER_FOR_EACH_FEATURE(ADD_FEATURE)
+  BASE_PROFILER_FOR_EACH_FEATURE(ADD_FEATURE)
 
 #  undef ADD_FEATURE
 
@@ -593,7 +593,7 @@ class ActivePS {
       return ProfilerFeature::Has##Name_(sInstance->mFeatures); \
     }
 
-  PROFILER_FOR_EACH_FEATURE(PS_GET_FEATURE)
+  BASE_PROFILER_FOR_EACH_FEATURE(PS_GET_FEATURE)
 
 #  undef PS_GET_FEATURE
 
@@ -1504,8 +1504,9 @@ static void StreamCategories(SpliceableJSONWriter& aWriter) {
 #  define CATEGORY_JSON_SUBCATEGORY(category, name, labelAsString)
 #  define CATEGORY_JSON_END_CATEGORY aWriter.EndObject();
 
-  PROFILING_CATEGORY_LIST(CATEGORY_JSON_BEGIN_CATEGORY,
-                          CATEGORY_JSON_SUBCATEGORY, CATEGORY_JSON_END_CATEGORY)
+  BASE_PROFILING_CATEGORY_LIST(CATEGORY_JSON_BEGIN_CATEGORY,
+                               CATEGORY_JSON_SUBCATEGORY,
+                               CATEGORY_JSON_END_CATEGORY)
 
 #  undef CATEGORY_JSON_BEGIN_CATEGORY
 #  undef CATEGORY_JSON_SUBCATEGORY
@@ -1731,17 +1732,18 @@ static void PrintUsageThenExit(int aExitCode) {
       "    Features: (x=unavailable, D/d=default/unavailable,\n"
       "               S/s=MOZ_BASE_PROFILER_STARTUP extra "
       "default/unavailable)\n",
-      unsigned(PROFILER_DEFAULT_ENTRIES),
-      unsigned(PROFILER_DEFAULT_STARTUP_ENTRIES), sizeof(ProfileBufferEntry),
-      sizeof(ProfileBufferEntry) * PROFILER_DEFAULT_ENTRIES,
-      sizeof(ProfileBufferEntry) * PROFILER_DEFAULT_STARTUP_ENTRIES);
+      unsigned(BASE_PROFILER_DEFAULT_ENTRIES),
+      unsigned(BASE_PROFILER_DEFAULT_STARTUP_ENTRIES),
+      sizeof(ProfileBufferEntry),
+      sizeof(ProfileBufferEntry) * BASE_PROFILER_DEFAULT_ENTRIES,
+      sizeof(ProfileBufferEntry) * BASE_PROFILER_DEFAULT_STARTUP_ENTRIES);
 
 #  define PRINT_FEATURE(n_, str_, Name_, desc_)                             \
     printf("    %c %5u: \"%s\" (%s)\n",                                     \
            FeatureCategory(ProfilerFeature::Name_), ProfilerFeature::Name_, \
            str_, desc_);
 
-  PROFILER_FOR_EACH_FEATURE(PRINT_FEATURE)
+  BASE_PROFILER_FOR_EACH_FEATURE(PRINT_FEATURE)
 
 #  undef PRINT_FEATURE
 
@@ -2067,7 +2069,7 @@ static uint32_t ParseFeature(const char* aFeature, bool aIsStartup) {
       return ProfilerFeature::Name_;                \
     }
 
-  PROFILER_FOR_EACH_FEATURE(PARSE_FEATURE_BIT)
+  BASE_PROFILER_FOR_EACH_FEATURE(PARSE_FEATURE_BIT)
 
 #  undef PARSE_FEATURE_BIT
 
@@ -2182,9 +2184,9 @@ void profiler_init(void* aStackTop) {
   Vector<const char*> filters;
   MOZ_RELEASE_ASSERT(filters.append(kMainThreadName));
 
-  uint32_t capacity = PROFILER_DEFAULT_ENTRIES;
+  uint32_t capacity = BASE_PROFILER_DEFAULT_ENTRIES;
   Maybe<double> duration = Nothing();
-  double interval = PROFILER_DEFAULT_INTERVAL;
+  double interval = BASE_PROFILER_DEFAULT_INTERVAL;
 
   {
     PSAutoLock lock;
@@ -2212,7 +2214,7 @@ void profiler_init(void* aStackTop) {
     LOG("- MOZ_BASE_PROFILER_STARTUP is set");
 
     // Startup default capacity may be different.
-    capacity = PROFILER_DEFAULT_STARTUP_ENTRIES;
+    capacity = BASE_PROFILER_DEFAULT_STARTUP_ENTRIES;
 
     const char* startupCapacity = getenv("MOZ_BASE_PROFILER_STARTUP_ENTRIES");
     if (startupCapacity && startupCapacity[0] != '\0') {
@@ -2585,7 +2587,7 @@ static void locked_profiler_start(PSLockRef aLock, uint32_t aCapacity,
       LOG("- feature  = %s", str_);               \
     }
 
-    PROFILER_FOR_EACH_FEATURE(LOG_FEATURE)
+    BASE_PROFILER_FOR_EACH_FEATURE(LOG_FEATURE)
 
 #  undef LOG_FEATURE
 
@@ -2601,13 +2603,13 @@ static void locked_profiler_start(PSLockRef aLock, uint32_t aCapacity,
 #  endif
 
   // Fall back to the default values if the passed-in values are unreasonable.
-  uint32_t capacity = aCapacity > 0 ? aCapacity : PROFILER_DEFAULT_ENTRIES;
+  uint32_t capacity = aCapacity > 0 ? aCapacity : BASE_PROFILER_DEFAULT_ENTRIES;
   Maybe<double> duration = aDuration;
 
   if (aDuration && *aDuration <= 0) {
     duration = Nothing();
   }
-  double interval = aInterval > 0 ? aInterval : PROFILER_DEFAULT_INTERVAL;
+  double interval = aInterval > 0 ? aInterval : BASE_PROFILER_DEFAULT_INTERVAL;
 
   ActivePS::Create(aLock, capacity, interval, aFeatures, aFilters, aFilterCount,
                    duration);
