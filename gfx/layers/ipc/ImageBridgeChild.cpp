@@ -627,6 +627,17 @@ void ImageBridgeChild::UpdateTextureFactoryIdentifier(
   bool disablingWebRender =
       GetCompositorBackendType() == LayersBackend::LAYERS_WR &&
       aIdentifier.mParentBackend != LayersBackend::LAYERS_WR;
+
+  // Do not update TextureFactoryIdentifier if aIdentifier is going to disable
+  // WebRender, but gecko is still using WebRender. Since gecko uses different
+  // incompatible ImageHost and TextureHost between WebRender and non-WebRender.
+  //
+  // Even when WebRender is still in use, if non-accelerated widget is opened,
+  // aIdentifier disables WebRender at ImageBridgeChild.
+  if (disablingWebRender && gfxVars::UseWebRender()) {
+    return;
+  }
+
   // D3DTexture might become obsolte. To prevent to use obsoleted D3DTexture,
   // drop all ImageContainers' ImageClients.
 
