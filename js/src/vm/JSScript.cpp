@@ -1913,7 +1913,7 @@ const Unit* ScriptSource::units(JSContext* cx,
   MOZ_ASSERT(begin <= length());
   MOZ_ASSERT(begin + len <= length());
 
-  if (data.is<Uncompressed<Unit>>()) {
+  if (isUncompressed<Unit>()) {
     const Unit* units = data.as<Uncompressed<Unit>>().units();
     if (!units) {
       return nullptr;
@@ -1929,7 +1929,7 @@ const Unit* ScriptSource::units(JSContext* cx,
     MOZ_CRASH("ScriptSource::units() on ScriptSource with retrievable source");
   }
 
-  MOZ_ASSERT(data.is<Compressed<Unit>>());
+  MOZ_ASSERT(isCompressed<Unit>());
 
   // Determine first/last chunks, the offset (in bytes) into the first chunk
   // of the requested units, and the number of bytes in the last chunk.
@@ -2229,7 +2229,7 @@ bool ScriptSource::tryCompressOffThread(JSContext* cx) {
 template <typename Unit>
 void ScriptSource::convertToCompressedSource(SharedImmutableString compressed,
                                              size_t uncompressedLength) {
-  MOZ_ASSERT(data.is<Uncompressed<Unit>>(),
+  MOZ_ASSERT(isUncompressed<Unit>(),
              "should only be converting uncompressed source to compressed "
              "source identically encoded");
   MOZ_ASSERT(length() == uncompressedLength);
@@ -2335,7 +2335,7 @@ static MOZ_MUST_USE bool reallocUniquePtr(UniqueChars& unique, size_t size) {
 template <typename Unit>
 void SourceCompressionTask::workEncodingSpecific() {
   ScriptSource* source = sourceHolder_.get();
-  MOZ_ASSERT(source->data.is<ScriptSource::Uncompressed<Unit>>());
+  MOZ_ASSERT(source->isUncompressed<Unit>());
 
   // Try to keep the maximum memory usage down by only allocating half the
   // size of the string, first.
@@ -2628,7 +2628,7 @@ XDRResult ScriptSource::codeUncompressedData(XDRState<mode>* const xdr,
                 "should handle UTF-8 and UTF-16");
 
   if (mode == XDR_ENCODE) {
-    MOZ_ASSERT(ss->data.is<Uncompressed<Unit>>());
+    MOZ_ASSERT(ss->isUncompressed<Unit>());
   } else {
     MOZ_ASSERT(ss->data.is<Missing>());
   }
@@ -2664,7 +2664,7 @@ XDRResult ScriptSource::codeCompressedData(XDRState<mode>* const xdr,
                 "should handle UTF-8 and UTF-16");
 
   if (mode == XDR_ENCODE) {
-    MOZ_ASSERT(ss->data.is<Compressed<Unit>>());
+    MOZ_ASSERT(ss->isCompressed<Unit>());
   } else {
     MOZ_ASSERT(ss->data.is<Missing>());
   }
