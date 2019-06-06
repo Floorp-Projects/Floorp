@@ -192,6 +192,7 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
       }
 
       item->Destroy(&mBuilder);
+      Metrics()->mRemovedItems++;
 
       i++;
       aUpdated = PartialUpdateResult::Updated;
@@ -396,6 +397,7 @@ void OldItemInfo::Discard(RetainedDisplayListBuilder* aBuilder,
   if (mItem) {
     MOZ_ASSERT(mOwnsItem);
     mItem->Destroy(aBuilder->Builder());
+    aBuilder->Metrics()->mRemovedItems++;
   }
   mItem = nullptr;
 }
@@ -436,6 +438,7 @@ class MergeState {
                           HasModifiedFrame(aNewItem));
     if (!aNewItem->HasModifiedFrame() &&
         HasMatchingItemInOldList(aNewItem, &oldIndex)) {
+      mBuilder->Metrics()->mRebuiltItems++;
       nsDisplayItem* oldItem = mOldItems[oldIndex.val].mItem;
       MOZ_DIAGNOSTIC_ASSERT(oldItem->GetPerFrameKey() ==
                                 aNewItem->GetPerFrameKey() &&
@@ -648,6 +651,8 @@ class MergeState {
 #endif
 
     mMergedItems.AppendToTop(aItem);
+    mBuilder->Metrics()->mTotalItems++;
+
     MergedListIndex newIndex =
         mMergedDAG.AddNode(aDirectPredecessors, aExtraDirectPredecessor);
     return newIndex;
@@ -671,6 +676,7 @@ class MergeState {
         mBuilder->IncrementSubDocPresShellPaintCount(item);
       }
       item->SetReused(true);
+      mBuilder->Metrics()->mReusedItems++;
       mOldItems[aNode.val].AddedToMergedList(
           AddNewNode(item, Some(aNode), aDirectPredecessors, Nothing()));
     }
@@ -813,6 +819,7 @@ bool RetainedDisplayListBuilder::MergeDisplayLists(
 
   Maybe<MergedListIndex> previousItemIndex;
   while (nsDisplayItem* item = aNewList->RemoveBottom()) {
+    Metrics()->mNewItems++;
     previousItemIndex = merge.ProcessItemFromNewList(item, previousItemIndex);
   }
 
@@ -1302,11 +1309,26 @@ bool RetainedDisplayListBuilder::ComputeRebuildRegion(
   return true;
 }
 
-/*
- * A simple early exit heuristic to avoid slow partial display list rebuilds.
- */
-static bool ShouldBuildPartial(nsTArray<nsIFrame*>& aModifiedFrames) {
+bool RetainedDisplayListBuilder::ShouldBuildPartial(
+    nsTArray<nsIFrame*>& aModifiedFrames) {
+  if (mList.IsEmpty()) {
+    // Partial builds without a previous display list do not make sense.
+    Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::EmptyList;
+    return false;
+  }
+
   if (aModifiedFrames.Length() > StaticPrefs::LayoutRebuildFrameLimit()) {
+    // Computing a dirty rect with too many modified frames can be slow.
+    Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::RebuildLimit;
+    return false;
+  }
+
+  // We don't support retaining with overlay scrollbars, since they require
+  // us to look at the display list and pick the highest z-index, which
+  // we can't do during partial building.
+  if (mBuilder.DisablePartialUpdates()) {
+    mBuilder.SetDisablePartialUpdates(false);
+    Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::Disabled;
     return false;
   }
 
@@ -1324,11 +1346,32 @@ static bool ShouldBuildPartial(nsTArray<nsIFrame*>& aModifiedFrames) {
     if (type == LayoutFrameType::Viewport ||
         type == LayoutFrameType::PageContent ||
         type == LayoutFrameType::Canvas || type == LayoutFrameType::Scrollbar) {
+      Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::FrameType;
       return false;
     }
   }
 
   return true;
+}
+
+void RetainedDisplayListBuilder::InvalidateCaretFramesIfNeeded(
+    nsTArray<nsIFrame*>& aModifiedFrames) {
+  if (mPreviousCaret == mBuilder.GetCaretFrame()) {
+    // The current caret frame is the same as the previous one.
+    return;
+  }
+
+  if (mPreviousCaret &&
+      mBuilder.MarkFrameModifiedDuringBuilding(mPreviousCaret)) {
+    aModifiedFrames.AppendElement(mPreviousCaret);
+  }
+
+  if (mBuilder.GetCaretFrame() &&
+      mBuilder.MarkFrameModifiedDuringBuilding(mBuilder.GetCaretFrame())) {
+    aModifiedFrames.AppendElement(mBuilder.GetCaretFrame());
+  }
+
+  mPreviousCaret = mBuilder.GetCaretFrame();
 }
 
 static void ClearFrameProps(nsTArray<nsIFrame*>& aFrames) {
@@ -1347,13 +1390,10 @@ static void ClearFrameProps(nsTArray<nsIFrame*>& aFrames) {
 class AutoClearFramePropsArray {
  public:
   explicit AutoClearFramePropsArray(size_t aCapacity) : mFrames(aCapacity) {}
-
   AutoClearFramePropsArray() = default;
-
   ~AutoClearFramePropsArray() { ClearFrameProps(mFrames); }
 
   nsTArray<nsIFrame*>& Frames() { return mFrames; }
-
   bool IsEmpty() const { return mFrames.IsEmpty(); }
 
  private:
@@ -1367,9 +1407,8 @@ void RetainedDisplayListBuilder::ClearFramesWithProps() {
                                 &framesWithProps.Frames());
 }
 
-auto RetainedDisplayListBuilder::AttemptPartialUpdate(
-    nscolor aBackstop, mozilla::DisplayListChecker* aChecker)
-    -> PartialUpdateResult {
+PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
+    nscolor aBackstop, mozilla::DisplayListChecker* aChecker) {
   mBuilder.RemoveModifiedWindowRegions();
   mBuilder.ClearWindowOpaqueRegion();
 
@@ -1387,33 +1426,11 @@ auto RetainedDisplayListBuilder::AttemptPartialUpdate(
   GetModifiedAndFramesWithProps(&mBuilder, &modifiedFrames.Frames(),
                                 &framesWithProps.Frames());
 
-  // Do not allow partial builds if the retained display list is empty, or if
-  // ShouldBuildPartial heuristic fails.
-  bool shouldBuildPartial =
-      !mList.IsEmpty() && ShouldBuildPartial(modifiedFrames.Frames());
+  // Do not allow partial builds if the |ShouldBuildPartial()| heuristic fails.
+  bool shouldBuildPartial = ShouldBuildPartial(modifiedFrames.Frames());
 
-  // We don't support retaining with overlay scrollbars, since they require
-  // us to look at the display list and pick the highest z-index, which
-  // we can't do during partial building.
-  if (mBuilder.DisablePartialUpdates()) {
-    shouldBuildPartial = false;
-    mBuilder.SetDisablePartialUpdates(false);
-  }
-
-  if (mPreviousCaret != mBuilder.GetCaretFrame()) {
-    if (mPreviousCaret) {
-      if (mBuilder.MarkFrameModifiedDuringBuilding(mPreviousCaret)) {
-        modifiedFrames.Frames().AppendElement(mPreviousCaret);
-      }
-    }
-
-    if (mBuilder.GetCaretFrame()) {
-      if (mBuilder.MarkFrameModifiedDuringBuilding(mBuilder.GetCaretFrame())) {
-        modifiedFrames.Frames().AppendElement(mBuilder.GetCaretFrame());
-      }
-    }
-
-    mPreviousCaret = mBuilder.GetCaretFrame();
+  if (shouldBuildPartial) {
+    InvalidateCaretFramesIfNeeded(modifiedFrames.Frames());
   }
 
   nsRect modifiedDirty;
@@ -1465,6 +1482,7 @@ auto RetainedDisplayListBuilder::AttemptPartialUpdate(
     mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), nullptr);
     mList.DeleteAll(&mBuilder);
     modifiedDL.DeleteAll(&mBuilder);
+    Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::Content;
     return PartialUpdateResult::Failed;
   }
 
