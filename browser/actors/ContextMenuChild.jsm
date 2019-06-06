@@ -486,7 +486,7 @@ class ContextMenuChild extends ActorChild {
     // The same-origin check will be done in nsContextMenu.openLinkInTab.
     let parentAllowsMixedContent = !!this.docShell.mixedContentChannel;
 
-    let disableSetDesktopBg = null;
+    let disableSetDesktopBackground = null;
 
     // Media related cache info parent needs for saving
     let contentType = null;
@@ -494,7 +494,8 @@ class ContextMenuChild extends ActorChild {
     if (aEvent.composedTarget.nodeType == aEvent.composedTarget.ELEMENT_NODE &&
         aEvent.composedTarget instanceof Ci.nsIImageLoadingContent &&
         aEvent.composedTarget.currentURI) {
-      disableSetDesktopBg = this._disableSetDesktopBackground(aEvent.composedTarget);
+      disableSetDesktopBackground =
+        this._disableSetDesktopBackground(aEvent.composedTarget);
 
       try {
         let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
@@ -535,31 +536,25 @@ class ContextMenuChild extends ActorChild {
       this._cleanContext();
     }
 
-    let isRemote = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+    editFlags = SpellCheckHelper.isEditable(aEvent.composedTarget, this.content);
 
-    if (isRemote) {
-      editFlags = SpellCheckHelper.isEditable(aEvent.composedTarget, this.content);
-
-      if (editFlags & SpellCheckHelper.SPELLCHECKABLE) {
-        spellInfo = InlineSpellCheckerContent.initContextMenu(aEvent, editFlags, this.mm);
-      }
-
-      // Set the event target first as the copy image command needs it to
-      // determine what was context-clicked on. Then, update the state of the
-      // commands on the context menu.
-      this.docShell.contentViewer.QueryInterface(Ci.nsIContentViewerEdit)
-                   .setCommandNode(aEvent.composedTarget);
-      aEvent.composedTarget.ownerGlobal.updateCommands("contentcontextmenu");
-
-      customMenuItems = PageMenuChild.build(aEvent.composedTarget);
-      principal = doc.nodePrincipal;
+    if (editFlags & SpellCheckHelper.SPELLCHECKABLE) {
+      spellInfo = InlineSpellCheckerContent.initContextMenu(aEvent, editFlags, this.mm);
     }
+
+    // Set the event target first as the copy image command needs it to
+    // determine what was context-clicked on. Then, update the state of the
+    // commands on the context menu.
+    this.docShell.contentViewer.QueryInterface(Ci.nsIContentViewerEdit)
+                 .setCommandNode(aEvent.composedTarget);
+    aEvent.composedTarget.ownerGlobal.updateCommands("contentcontextmenu");
+
+    principal = doc.nodePrincipal;
 
     let data = {
       context,
       charSet,
       baseURI,
-      isRemote,
       referrerInfo,
       editFlags,
       principal,
@@ -573,7 +568,7 @@ class ContextMenuChild extends ActorChild {
       contentDisposition,
       frameOuterWindowID,
       popupNodeSelectors,
-      disableSetDesktopBg,
+      disableSetDesktopBackground,
       parentAllowsMixedContent,
     };
 
@@ -581,28 +576,27 @@ class ContextMenuChild extends ActorChild {
       data.frameReferrerInfo = doc.referrerInfo;
     }
 
-    Services.obs.notifyObservers({wrappedJSObject: data}, "on-prepare-contextmenu");
-
-    if (isRemote) {
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
       data.referrerInfo = E10SUtils.serializeReferrerInfo(data.referrerInfo);
       if (data.frameReferrerInfo) {
         data.frameReferrerInfo = E10SUtils.serializeReferrerInfo(data.frameReferrerInfo);
       }
 
-      this.mm.sendAsyncMessage("contextmenu", data, {
-        targetAsCPOW,
-      });
-    } else {
-      let browser = this.docShell.chromeEventHandler;
-      let mainWin = browser.ownerGlobal;
-
-      data.documentURIObject = doc.documentURIObject;
-      data.disableSetDesktopBackground = data.disableSetDesktopBg;
-      delete data.disableSetDesktopBg;
-
-      data.context.targetAsCPOW = targetAsCPOW;
-      mainWin.setContextMenuContentData(data);
+      data.customMenuItems = PageMenuChild.build(aEvent.composedTarget);
     }
+
+    Services.obs.notifyObservers({wrappedJSObject: data}, "on-prepare-contextmenu");
+
+    // In the event that the content is running in the parent process, we don't
+    // actually want the contextmenu events to reach the parent - we'll dispatch
+    // a new contextmenu event after the async message has reached the parent
+    // instead.
+    aEvent.preventDefault();
+    aEvent.stopPropagation();
+
+    this.mm.sendAsyncMessage("contextmenu", data, {
+      targetAsCPOW,
+    });
   }
 
   /**

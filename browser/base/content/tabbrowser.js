@@ -42,9 +42,11 @@ window._gBrowser = {
     }
 
     let messageManager = window.getGroupMessageManager("browsers");
+    window.messageManager.addMessageListener("contextmenu", this);
+
     if (gMultiProcessBrowser) {
       messageManager.addMessageListener("DOMTitleChanged", this);
-      window.messageManager.addMessageListener("contextmenu", this);
+      messageManager.addMessageListener("DOMWindowClose", this);
       messageManager.addMessageListener("Browser:Init", this);
     } else {
       this._outerWindowIDBrowserMap.set(this.selectedBrowser.outerWindowID,

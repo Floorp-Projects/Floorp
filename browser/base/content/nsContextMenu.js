@@ -27,10 +27,6 @@ XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
 
 var gContextMenuContentData = null;
 
-function setContextMenuContentData(data) {
-  gContextMenuContentData = data;
-}
-
 function openContextMenu(aMessage) {
   let data = aMessage.data;
   let browser = aMessage.target;
@@ -58,7 +54,6 @@ function openContextMenu(aMessage) {
   }
 
   gContextMenuContentData = { context: data.context,
-                              isRemote: data.isRemote,
                               popupNodeSelectors: data.popupNodeSelectors,
                               browser,
                               editFlags: data.editFlags,
@@ -74,7 +69,7 @@ function openContextMenu(aMessage) {
                               contentDisposition: data.contentDisposition,
                               frameOuterWindowID: data.frameOuterWindowID,
                               selectionInfo: data.selectionInfo,
-                              disableSetDesktopBackground: data.disableSetDesktopBg,
+                              disableSetDesktopBackground: data.disableSetDesktopBackground,
                               loginFillInfo: data.loginFillInfo,
                               parentAllowsMixedContent: data.parentAllowsMixedContent,
                               userContextId: data.userContextId,
@@ -90,7 +85,6 @@ function openContextMenu(aMessage) {
   var newEvent = document.createEvent("MouseEvent");
   newEvent.initNSMouseEvent("contextmenu", true, true, null, 0, context.screenX, context.screenY,
                             0, 0, false, false, false, false, 0, null, 0, context.mozInputSource);
-
   popup.openPopupAtScreen(newEvent.screenX, newEvent.screenY, true, newEvent);
 }
 
@@ -111,13 +105,9 @@ nsContextMenu.prototype = {
     this.hasPageMenu = false;
     this.isContentSelected = !this.selectionInfo.docSelectionIsCollapsed;
     if (!aIsShift) {
-      if (this.isRemote) {
-        this.hasPageMenu =
-          PageMenuParent.addToPopup(gContextMenuContentData.customMenuItems,
-                                    this.browser, aXulMenu);
-      } else {
-        this.hasPageMenu = PageMenuParent.buildAndAddToPopup(this.target, aXulMenu);
-      }
+      this.hasPageMenu =
+        PageMenuParent.addToPopup(gContextMenuContentData.customMenuItems,
+                                  this.browser, aXulMenu);
 
       let tab = gBrowser && gBrowser.getTabForBrowser ?
         gBrowser.getTabForBrowser(this.browser) : undefined;
@@ -175,12 +165,10 @@ nsContextMenu.prototype = {
 
   setContext() {
     let context = Object.create(null);
-    this.isRemote = false;
 
     if (gContextMenuContentData) {
       context = gContextMenuContentData.context;
       gContextMenuContentData.context = null;
-      this.isRemote = gContextMenuContentData.isRemote;
     }
 
     this.shouldDisplay = context.shouldDisplay;
@@ -231,7 +219,7 @@ nsContextMenu.prototype = {
     this.onTextInput         = context.onTextInput;
     this.onVideo             = context.onVideo;
 
-    this.target = this.isRemote ? context.target : document.popupNode;
+    this.target = context.target;
     this.targetAsCPOW = context.targetAsCPOW;
 
     this.principal = context.principal;
@@ -252,13 +240,8 @@ nsContextMenu.prototype = {
                            ? gContextMenuContentData.popupNodeSelectors
                            : [];
 
-    if (this.isRemote) {
-      this.browser = gContextMenuContentData.browser;
-      this.selectionInfo = gContextMenuContentData.selectionInfo;
-    } else {
-      this.browser = this.ownerDoc.defaultView.docShell.chromeEventHandler;
-      this.selectionInfo = BrowserUtils.getSelectionDetails(window);
-    }
+    this.browser = gContextMenuContentData.browser;
+    this.selectionInfo = gContextMenuContentData.selectionInfo;
 
     const {gBrowser} = this.browser.ownerGlobal;
 
@@ -270,27 +253,11 @@ nsContextMenu.prototype = {
       !!gBrowser.getTabForBrowser(this.browser) : false;
 
     if (context.shouldInitInlineSpellCheckerUINoChildren) {
-      if (this.isRemote) {
-        InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
-      } else {
-        InlineSpellCheckerUI.init(this.target.editor);
-        InlineSpellCheckerUI.initFromEvent(document.popupRangeParent,
-                                           document.popupRangeOffset);
-      }
+      InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
     }
 
     if (context.shouldInitInlineSpellCheckerUIWithChildren) {
-      if (this.isRemote) {
-        InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
-      } else {
-        var targetWin = this.ownerDoc.defaultView;
-        var {editingSession} = targetWin.docShell;
-
-        InlineSpellCheckerUI.init(editingSession.getEditorForWindow(targetWin));
-        InlineSpellCheckerUI.initFromEvent(document.popupRangeParent,
-                                           document.popupRangeOffset);
-      }
-
+      InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
       let canSpell = InlineSpellCheckerUI.canSpellCheck && this.canSpellCheck;
       this.showItem("spell-check-enabled", canSpell);
       this.showItem("spell-separator", canSpell);
@@ -804,12 +771,6 @@ nsContextMenu.prototype = {
       params[p] = extra[p];
     }
 
-    if (!this.isRemote) {
-      // Propagate the frameOuterWindowID value saved when
-      // the context menu has been opened.
-      params.frameOuterWindowID = this.frameOuterWindowID;
-    }
-
     let referrerInfo = gContextMenuContentData.referrerInfo;
     // If we want to change userContextId, we must be sure that we don't
     // propagate the referrer.
@@ -1266,7 +1227,7 @@ nsContextMenu.prototype = {
 
   // Save URL of clicked-on link.
   saveLink() {
-    let isContentWindowPrivate = this.isRemote ? this.ownerDoc.isPrivate : undefined;
+    let isContentWindowPrivate = this.ownerDoc.isPrivate;
     this.saveHelper(this.linkURL, this.linkTextStr, null, true, this.ownerDoc,
                     gContextMenuContentData.documentURIObject,
                     this.frameOuterWindowID,
@@ -1283,7 +1244,7 @@ nsContextMenu.prototype = {
   // Save URL of the clicked upon image, video, or audio.
   saveMedia() {
     let doc = this.ownerDoc;
-    let isContentWindowPrivate = this.isRemote ? this.ownerDoc.isPrivate : undefined;
+    let isContentWindowPrivate = this.ownerDoc.isPrivate;
     let referrerURI = gContextMenuContentData.documentURIObject;
     let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
     if (this.onCanvas) {
