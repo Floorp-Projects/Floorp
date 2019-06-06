@@ -207,8 +207,6 @@ nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettin
 
 - (NSString*)localizedString:(const char*)aKey;
 
-- (int16_t)chosenFrameSetting;
-
 - (const char*)headerFooterStringForList:(NSPopUpButton*)aList;
 
 - (void)exportHeaderFooterSettings;
@@ -234,13 +232,9 @@ nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettin
 
 - (void)addAppearanceSection;
 
-- (void)addFramesSection;
-
 - (void)addHeaderFooterSection;
 
 - (NSString*)summaryValueForCheckbox:(NSButton*)aCheckbox;
-
-- (NSString*)framesSummaryValue;
 
 - (NSString*)headerSummaryValue;
 
@@ -255,13 +249,12 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 // Public methods
 
 - (id)initWithSettings:(nsIPrintSettings*)aSettings {
-  [super initWithFrame:NSMakeRect(0, 0, 540, 270)];
+  [super initWithFrame:NSMakeRect(0, 0, 540, 185)];
 
   mSettings = aSettings;
   [self initBundle];
   [self addOptionsSection];
   [self addAppearanceSection];
-  [self addFramesSection];
   [self addHeaderFooterSection];
 
   return self;
@@ -274,7 +267,6 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
   mSettings->SetShrinkToFit([mShrinkToFitCheckbox state] == NSOnState);
   mSettings->SetPrintBGColors([mPrintBGColorsCheckbox state] == NSOnState);
   mSettings->SetPrintBGImages([mPrintBGImagesCheckbox state] == NSOnState);
-  mSettings->SetPrintFrameType([self chosenFrameSetting]);
 
   [self exportHeaderFooterSettings];
 }
@@ -372,11 +364,11 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 
 - (void)addOptionsSection {
   // Title
-  [self addLabel:"optionsTitleMac" withFrame:NSMakeRect(0, 240, 151, 22)];
+  [self addLabel:"optionsTitleMac" withFrame:NSMakeRect(0, 155, 151, 22)];
 
   // "Print Selection Only"
   mPrintSelectionOnlyCheckbox = [self checkboxWithLabel:"selectionOnly"
-                                               andFrame:NSMakeRect(156, 240, 0, 0)];
+                                               andFrame:NSMakeRect(156, 155, 0, 0)];
 
   bool canPrintSelection;
   mSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &canPrintSelection);
@@ -391,7 +383,7 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
   [self addSubview:mPrintSelectionOnlyCheckbox];
 
   // "Shrink To Fit"
-  mShrinkToFitCheckbox = [self checkboxWithLabel:"shrinkToFit" andFrame:NSMakeRect(156, 218, 0, 0)];
+  mShrinkToFitCheckbox = [self checkboxWithLabel:"shrinkToFit" andFrame:NSMakeRect(156, 133, 0, 0)];
 
   bool shrinkToFit;
   mSettings->GetShrinkToFit(&shrinkToFit);
@@ -402,11 +394,11 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 
 - (void)addAppearanceSection {
   // Title
-  [self addLabel:"appearanceTitleMac" withFrame:NSMakeRect(0, 188, 151, 22)];
+  [self addLabel:"appearanceTitleMac" withFrame:NSMakeRect(0, 103, 151, 22)];
 
   // "Print Background Colors"
   mPrintBGColorsCheckbox = [self checkboxWithLabel:"printBGColors"
-                                          andFrame:NSMakeRect(156, 188, 0, 0)];
+                                          andFrame:NSMakeRect(156, 103, 0, 0)];
 
   bool geckoBool;
   mSettings->GetPrintBGColors(&geckoBool);
@@ -416,64 +408,12 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 
   // "Print Background Images"
   mPrintBGImagesCheckbox = [self checkboxWithLabel:"printBGImages"
-                                          andFrame:NSMakeRect(156, 166, 0, 0)];
+                                          andFrame:NSMakeRect(156, 81, 0, 0)];
 
   mSettings->GetPrintBGImages(&geckoBool);
   [mPrintBGImagesCheckbox setState:(geckoBool ? NSOnState : NSOffState)];
 
   [self addSubview:mPrintBGImagesCheckbox];
-}
-
-- (void)addFramesSection {
-  // Title
-  [self addLabel:"framesTitleMac" withFrame:NSMakeRect(0, 124, 151, 22)];
-
-  // Radio matrix
-  NSButtonCell* radio = [[NSButtonCell alloc] init];
-  [radio setButtonType:NSRadioButton];
-  [radio setFont:[NSFont systemFontOfSize:[NSFont systemFontSize]]];
-  NSMatrix* matrix = [[NSMatrix alloc] initWithFrame:NSMakeRect(156, 81, 400, 66)
-                                                mode:NSRadioModeMatrix
-                                           prototype:(NSCell*)radio
-                                        numberOfRows:3
-                                     numberOfColumns:1];
-  [radio release];
-  [matrix setCellSize:NSMakeSize(400, 21)];
-  [self addSubview:matrix];
-  [matrix release];
-  NSArray* cellArray = [matrix cells];
-  mAsLaidOutRadio = [cellArray objectAtIndex:0];
-  mSelectedFrameRadio = [cellArray objectAtIndex:1];
-  mSeparateFramesRadio = [cellArray objectAtIndex:2];
-  [mAsLaidOutRadio setTitle:[self localizedString:"asLaidOut"]];
-  [mSelectedFrameRadio setTitle:[self localizedString:"selectedFrame"]];
-  [mSeparateFramesRadio setTitle:[self localizedString:"separateFrames"]];
-
-  // Radio enabled state
-  int16_t frameUIFlag;
-  mSettings->GetHowToEnableFrameUI(&frameUIFlag);
-  if (frameUIFlag == nsIPrintSettings::kFrameEnableNone) {
-    [mAsLaidOutRadio setEnabled:NO];
-    [mSelectedFrameRadio setEnabled:NO];
-    [mSeparateFramesRadio setEnabled:NO];
-  } else if (frameUIFlag == nsIPrintSettings::kFrameEnableAsIsAndEach) {
-    [mSelectedFrameRadio setEnabled:NO];
-  }
-
-  // Radio values
-  int16_t printFrameType;
-  mSettings->GetPrintFrameType(&printFrameType);
-  switch (printFrameType) {
-    case nsIPrintSettings::kFramesAsIs:
-      [mAsLaidOutRadio setState:NSOnState];
-      break;
-    case nsIPrintSettings::kSelectedFrame:
-      [mSelectedFrameRadio setState:NSOnState];
-      break;
-    case nsIPrintSettings::kEachFrameSep:
-      [mSeparateFramesRadio setState:NSOnState];
-      break;
-  }
 }
 
 - (void)addHeaderFooterSection {
@@ -520,13 +460,6 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 
 // Export settings
 
-- (int16_t)chosenFrameSetting {
-  if ([mAsLaidOutRadio state] == NSOnState) return nsIPrintSettings::kFramesAsIs;
-  if ([mSelectedFrameRadio state] == NSOnState) return nsIPrintSettings::kSelectedFrame;
-  if ([mSeparateFramesRadio state] == NSOnState) return nsIPrintSettings::kEachFrameSep;
-  return nsIPrintSettings::kNoFrames;
-}
-
 - (const char*)headerFooterStringForList:(NSPopUpButton*)aList {
   NSInteger index = [aList indexOfSelectedItem];
   NS_ASSERTION(index < NSInteger(ArrayLength(sHeaderFooterTags)),
@@ -564,18 +497,6 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
                                         : [self localizedString:"summaryOffValue"];
 }
 
-- (NSString*)framesSummaryValue {
-  switch ([self chosenFrameSetting]) {
-    case nsIPrintSettings::kFramesAsIs:
-      return [self localizedString:"asLaidOut"];
-    case nsIPrintSettings::kSelectedFrame:
-      return [self localizedString:"selectedFrame"];
-    case nsIPrintSettings::kEachFrameSep:
-      return [self localizedString:"separateFrames"];
-  }
-  return [self localizedString:"summaryNAValue"];
-}
-
 - (NSString*)headerSummaryValue {
   return [[mHeaderLeftList titleOfSelectedItem]
       stringByAppendingString:
@@ -599,11 +520,6 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 - (NSArray*)localizedSummaryItems {
   return [NSArray
       arrayWithObjects:
-          [NSDictionary dictionaryWithObjectsAndKeys:[self localizedString:"summaryFramesTitle"],
-                                                     NSPrintPanelAccessorySummaryItemNameKey,
-                                                     [self framesSummaryValue],
-                                                     NSPrintPanelAccessorySummaryItemDescriptionKey,
-                                                     nil],
           [NSDictionary
               dictionaryWithObjectsAndKeys:[self localizedString:"summarySelectionOnlyTitle"],
                                            NSPrintPanelAccessorySummaryItemNameKey,

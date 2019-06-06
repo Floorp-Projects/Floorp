@@ -35,8 +35,10 @@ BrowserHost* BrowserHost::GetFrom(nsIRemoteTab* aRemoteTab) {
   return static_cast<BrowserHost*>(aRemoteTab);
 }
 
+TabId BrowserHost::GetTabId() const { return mId; }
+
 mozilla::layers::LayersId BrowserHost::GetLayersId() const {
-  return mRoot->GetRenderFrame()->GetLayersId();
+  return mRoot->GetLayersId();
 }
 
 BrowsingContext* BrowserHost::GetBrowsingContext() const {

@@ -1032,13 +1032,19 @@ AES_CreateContext(const unsigned char *key, const unsigned char *iv,
 void
 AES_DestroyContext(AESContext *cx, PRBool freeit)
 {
+    void *mem = cx->mem;
     if (cx->worker_cx && cx->destroy) {
         (*cx->destroy)(cx->worker_cx, PR_TRUE);
         cx->worker_cx = NULL;
         cx->destroy = NULL;
     }
+    PORT_Memset(cx, 0, sizeof(AESContext));
     if (freeit) {
-        PORT_Free(cx->mem);
+        PORT_Free(mem);
+    } else {
+        /* if we are not freeing the context, restore mem, We may get called
+         * again to actually free the context */
+        cx->mem = mem;
     }
 }
 

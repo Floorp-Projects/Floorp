@@ -93,7 +93,7 @@
             '<(DEPTH)/lib/dbm/src/src.gyp:dbm',
           ],
         }],
-        [ 'enable_sslkeylogfile==1', {
+        [ 'enable_sslkeylogfile==1 and sanitizer_flags==0', {
           'sources': [
             'ssl_keylog_unittest.cc',
           ],

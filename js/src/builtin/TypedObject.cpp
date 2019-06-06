@@ -2933,6 +2933,6 @@ static bool CreateTraceList(JSContext* cx, HandleTypeDescr descr) {
 void TypeDescr::finalize(FreeOp* fop, JSObject* obj) {
   TypeDescr& descr = obj->as<TypeDescr>();
   if (descr.hasTraceList()) {
-    js_free(const_cast<int32_t*>(descr.traceList()));
+    fop->free_(const_cast<int32_t*>(descr.traceList()));
   }
 }

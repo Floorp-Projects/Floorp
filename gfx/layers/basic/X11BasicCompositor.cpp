@@ -41,8 +41,8 @@ bool X11DataTextureSourceBasic::Update(gfx::DataSourceSurface* aSurface,
       surf = new gfxImageSurface(aSurface->GetSize(), imageFormat);
     }
 
-    mBufferDrawTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(
-        surf, aSurface->GetSize());
+    mBufferDrawTarget =
+        gfxPlatform::CreateDrawTargetForSurface(surf, aSurface->GetSize());
   }
 
   // Image contents have changed, upload to our DrawTarget

@@ -25,6 +25,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Base64.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
@@ -462,6 +463,7 @@ gfxPlatform::gfxPlatform()
       mApzSupportCollector(this, &gfxPlatform::GetApzSupportInfo),
       mTilesInfoCollector(this, &gfxPlatform::GetTilesSupportInfo),
       mFrameStatsCollector(this, &gfxPlatform::GetFrameStats),
+      mCMSInfoCollector(this, &gfxPlatform::GetCMSSupportInfo),
       mCompositorBackend(layers::LayersBackend::LAYERS_NONE),
       mScreenDepth(0) {
   mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -3256,6 +3258,26 @@ void gfxPlatform::GetFrameStats(mozilla::widget::InfoObject& aObj) {
         (f.compositeEnd() - f.compositeStart()).ToMilliseconds());
     aObj.DefineProperty(name.get(), value.get());
   }
+}
+
+void gfxPlatform::GetCMSSupportInfo(mozilla::widget::InfoObject& aObj) {
+  void* profile = nullptr;
+  size_t size = 0;
+
+  GetCMSOutputProfileData(profile, size);
+  if (!profile) {
+    return;
+  }
+
+  char* encodedProfile = nullptr;
+  nsresult rv =
+      Base64Encode(reinterpret_cast<char*>(profile), size, &encodedProfile);
+  if (NS_SUCCEEDED(rv)) {
+    aObj.DefineProperty("CMSOutputProfile", encodedProfile);
+    free(encodedProfile);
+  }
+
+  free(profile);
 }
 
 class FrameStatsComparator {

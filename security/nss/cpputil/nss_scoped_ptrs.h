@@ -14,6 +14,7 @@
 #include "pk11pqg.h"
 #include "pk11pub.h"
 #include "pkcs11uri.h"
+#include "secmod.h"
 
 struct ScopedDelete {
   void operator()(CERTCertificate* cert) { CERT_DestroyCertificate(cert); }
@@ -47,6 +48,7 @@ struct ScopedDelete {
     SEC_PKCS12DecoderFinish(dcx);
   }
   void operator()(CERTDistNames* names) { CERT_FreeDistNames(names); }
+  void operator()(SECMODModule* module) { SECMOD_DestroyModule(module); }
 };
 
 template <class T>
@@ -82,6 +84,7 @@ SCOPED(PK11Context);
 SCOPED(PK11GenericObject);
 SCOPED(SEC_PKCS12DecoderContext);
 SCOPED(CERTDistNames);
+SCOPED(SECMODModule);
 
 #undef SCOPED
 

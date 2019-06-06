@@ -112,9 +112,9 @@ nsContainerFrame* NS_NewColumnSetFrame(mozilla::PresShell* aPresShell,
                                        mozilla::ComputedStyle* aStyle,
                                        nsFrameState aStateFlags);
 
-class nsSimplePageSequenceFrame;
-nsSimplePageSequenceFrame* NS_NewSimplePageSequenceFrame(
-    mozilla::PresShell* aPresShell, mozilla::ComputedStyle* aStyle);
+class nsPageSequenceFrame;
+nsPageSequenceFrame* NS_NewPageSequenceFrame(mozilla::PresShell* aPresShell,
+                                             mozilla::ComputedStyle* aStyle);
 class nsPageFrame;
 nsPageFrame* NS_NewPageFrame(mozilla::PresShell* aPresShell,
                              mozilla::ComputedStyle* aStyle);

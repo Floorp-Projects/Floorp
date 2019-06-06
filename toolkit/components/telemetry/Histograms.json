@@ -648,7 +648,7 @@
   },
   "GC_IN_PROGRESS_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["smaug@mozilla.com"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "smaug@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -852,7 +852,7 @@
   "GC_NURSERY_BYTES": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "never",
+    "expires_in_version": "72",
     "kind": "linear",
     "high": 16777216,
     "n_buckets": 16,
@@ -919,6 +919,39 @@
     "n_buckets": 100,
     "bug_numbers": [1475896],
     "description": "The number of objects marked per ms during GC."
+  },
+  "GC_TIME_BETWEEN_S": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 120,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1556467],
+    "description": "Time spent in between garbage collections for the main runtime (seconds)"
+  },
+  "GC_TIME_BETWEEN_SLICES_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1556467],
+    "description": "Time spent in between garbage collections slice for the main runtime (ms)"
+  },
+  "GC_SLICE_COUNT": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 200,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1556467],
+    "description": "The number of slices in an incremental GC for the main runtime"
   },
   "GEOLOCATION_ACCURACY_EXPONENTIAL": {
     "record_in_processes": ["main", "content"],

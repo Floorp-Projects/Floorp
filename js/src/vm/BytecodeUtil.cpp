@@ -2531,11 +2531,10 @@ extern bool js::IsValidBytecodeOffset(JSContext* cx, JSScript* script,
  * PurgePCCounts            None      None      None
  */
 
-static void ReleaseScriptCounts(FreeOp* fop) {
-  JSRuntime* rt = fop->runtime();
+static void ReleaseScriptCounts(JSRuntime* rt) {
   MOZ_ASSERT(rt->scriptAndCountsVector);
 
-  fop->delete_(rt->scriptAndCountsVector.ref());
+  js_delete(rt->scriptAndCountsVector.ref());
   rt->scriptAndCountsVector = nullptr;
 }
 
@@ -2547,7 +2546,7 @@ JS_FRIEND_API void js::StartPCCountProfiling(JSContext* cx) {
   }
 
   if (rt->scriptAndCountsVector) {
-    ReleaseScriptCounts(rt->defaultFreeOp());
+    ReleaseScriptCounts(rt);
   }
 
   ReleaseAllJITCode(rt->defaultFreeOp());
@@ -2566,7 +2565,7 @@ JS_FRIEND_API void js::StopPCCountProfiling(JSContext* cx) {
   ReleaseAllJITCode(rt->defaultFreeOp());
 
   auto* vec = cx->new_<PersistentRooted<ScriptAndCountsVector>>(
-      cx, ScriptAndCountsVector(SystemAllocPolicy()));
+      cx, ScriptAndCountsVector());
   if (!vec) {
     return;
   }
@@ -2594,7 +2593,7 @@ JS_FRIEND_API void js::PurgePCCounts(JSContext* cx) {
   }
   MOZ_ASSERT(!rt->profilingScripts);
 
-  ReleaseScriptCounts(rt->defaultFreeOp());
+  ReleaseScriptCounts(rt);
 }
 
 JS_FRIEND_API size_t js::GetPCCountScriptCount(JSContext* cx) {

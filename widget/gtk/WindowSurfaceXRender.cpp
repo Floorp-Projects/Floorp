@@ -38,8 +38,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceXRender::Lock(
     return nullptr;
   }
 
-  return gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mXlibSurface,
-                                                                size);
+  return gfxPlatform::CreateDrawTargetForSurface(mXlibSurface, size);
 }
 
 void WindowSurfaceXRender::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {

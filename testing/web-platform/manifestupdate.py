@@ -118,8 +118,7 @@ def run(src_root, obj_root, logger=None, **kwargs):
     manifests = load_and_update(logger, src_wpt_dir, test_paths,
                                 update=update,
                                 rebuild=kwargs["rebuild"],
-                                cache_root=kwargs["cache_root"],
-                                meta_filters=kwargs.get("meta_filters"))
+                                cache_root=kwargs["cache_root"])
 
     return manifests
 
@@ -176,7 +175,7 @@ def generate_config(logger, repo_root, wpt_dir, dest_path, force_rewrite=False):
 
 
 def load_and_update(logger, wpt_dir, test_paths, rebuild=False, config_dir=None, cache_root=None,
-                    meta_filters=None, update=True):
+                    update=True):
     rv = {}
     wptdir_hash = hashlib.sha256(os.path.abspath(wpt_dir)).hexdigest()
     for url_base, paths in test_paths.iteritems():
@@ -188,8 +187,7 @@ def load_and_update(logger, wpt_dir, test_paths, rebuild=False, config_dir=None,
                                               update=update,
                                               rebuild=rebuild,
                                               working_copy=True,
-                                              cache_root=this_cache_root,
-                                              meta_filters=meta_filters)
+                                              cache_root=this_cache_root)
         path_data = {"url_base": url_base}
         path_data.update(paths)
         rv[m] = path_data

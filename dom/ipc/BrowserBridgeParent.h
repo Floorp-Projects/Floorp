@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/PBrowserBridgeParent.h"
 #include "mozilla/Tuple.h"
+#include "mozilla/dom/ipc/IdType.h"
 
 namespace mozilla {
 
@@ -33,7 +34,7 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
   // Initialize this actor after performing startup.
   nsresult Init(const nsString& aPresentationURL, const nsString& aRemoteType,
                 CanonicalBrowsingContext* aBrowsingContext,
-                const uint32_t& aChromeFlags);
+                const uint32_t& aChromeFlags, TabId aTabId);
 
   BrowserParent* GetBrowserParent() { return mBrowserParent; }
 

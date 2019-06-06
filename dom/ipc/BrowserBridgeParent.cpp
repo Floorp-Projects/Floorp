@@ -35,7 +35,7 @@ BrowserBridgeParent::~BrowserBridgeParent() { Destroy(); }
 nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                                    const nsString& aRemoteType,
                                    CanonicalBrowsingContext* aBrowsingContext,
-                                   const uint32_t& aChromeFlags) {
+                                   const uint32_t& aChromeFlags, TabId aTabId) {
   mIPCOpen = true;
 
   // FIXME: This should actually use a non-bogus TabContext, probably inherited
@@ -64,14 +64,13 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   aBrowsingContext->SetOwnerProcessId(constructorSender->ChildID());
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  TabId tabId(nsContentUtils::GenerateTabId());
-  cpm->RegisterRemoteFrame(tabId, ContentParentId(0), TabId(0),
+  cpm->RegisterRemoteFrame(aTabId, ContentParentId(0), TabId(0),
                            tabContext.AsIPCTabContext(),
                            constructorSender->ChildID());
 
   // Construct the BrowserParent object for our subframe.
   RefPtr<BrowserParent> browserParent(new BrowserParent(
-      constructorSender, tabId, tabContext, aBrowsingContext, aChromeFlags));
+      constructorSender, aTabId, tabContext, aBrowsingContext, aChromeFlags));
   browserParent->SetBrowserBridgeParent(this);
 
   // Open a remote endpoint for our PBrowser actor. DeallocPBrowserParent
@@ -85,7 +84,7 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
 
   // Tell the content process to set up its PBrowserChild.
   bool ok = constructorSender->SendConstructBrowser(
-      std::move(childEp), tabId, TabId(0), tabContext.AsIPCTabContext(),
+      std::move(childEp), aTabId, TabId(0), tabContext.AsIPCTabContext(),
       aBrowsingContext, aChromeFlags, constructorSender->ChildID(),
       constructorSender->IsForBrowser(), /* aIsTopLevel */ false);
   if (NS_WARN_IF(!ok)) {
@@ -98,14 +97,8 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   mBrowserParent->SetOwnerElement(Manager()->GetOwnerElement());
   mBrowserParent->InitRendering();
 
-  RenderFrame* rf = mBrowserParent->GetRenderFrame();
-  if (NS_WARN_IF(!rf)) {
-    MOZ_ASSERT(false, "No RenderFrame");
-    return NS_ERROR_FAILURE;
-  }
-
   // Send the newly created layers ID back into content.
-  Unused << SendSetLayersId(rf->GetLayersId());
+  Unused << SendSetLayersId(mBrowserParent->GetLayersId());
   return NS_OK;
 }
 
@@ -128,11 +121,9 @@ void BrowserBridgeParent::Destroy() {
 IPCResult BrowserBridgeParent::RecvShow(const ScreenIntSize& aSize,
                                         const bool& aParentIsActive,
                                         const nsSizeMode& aSizeMode) {
-  RenderFrame* rf = mBrowserParent->GetRenderFrame();
-  if (!rf->AttachLayerManager()) {
+  if (!mBrowserParent->AttachLayerManager()) {
     MOZ_CRASH();
   }
-
   Unused << mBrowserParent->SendShow(aSize, mBrowserParent->GetShowInfo(),
                                      aParentIsActive, aSizeMode);
   return IPC_OK();
