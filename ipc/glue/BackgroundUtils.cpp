@@ -547,7 +547,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
 
   Maybe<CSPInfo> maybeCspToInheritInfo;
   nsCOMPtr<nsIContentSecurityPolicy> cspToInherit =
-      aLoadInfo->GetCspToInherit();
+      static_cast<net::LoadInfo*>(aLoadInfo)->GetCSPToInherit();
   if (cspToInherit) {
     CSPInfo cspToInheritInfo;
     Unused << NS_WARN_IF(
