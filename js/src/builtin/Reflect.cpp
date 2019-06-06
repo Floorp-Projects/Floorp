@@ -27,7 +27,7 @@ static bool Reflect_deleteProperty(JSContext* cx, unsigned argc, Value* vp) {
   // Step 1.
   RootedObject target(
       cx,
-      NonNullObjectArg(cx, "`target`", "Reflect.deleteProperty", args.get(0)));
+      RequireObjectArg(cx, "`target`", "Reflect.deleteProperty", args.get(0)));
   if (!target) {
     return false;
   }
@@ -55,7 +55,7 @@ bool js::Reflect_getPrototypeOf(JSContext* cx, unsigned argc, Value* vp) {
   // Step 1.
   RootedObject target(
       cx,
-      NonNullObjectArg(cx, "`target`", "Reflect.getPrototypeOf", args.get(0)));
+      RequireObjectArg(cx, "`target`", "Reflect.getPrototypeOf", args.get(0)));
   if (!target) {
     return false;
   }
@@ -76,7 +76,7 @@ bool js::Reflect_isExtensible(JSContext* cx, unsigned argc, Value* vp) {
   // Step 1.
   RootedObject target(
       cx,
-      NonNullObjectArg(cx, "`target`", "Reflect.isExtensible", args.get(0)));
+      RequireObjectArg(cx, "`target`", "Reflect.isExtensible", args.get(0)));
   if (!target) {
     return false;
   }
@@ -97,7 +97,7 @@ bool js::Reflect_ownKeys(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 1.
   RootedObject target(
-      cx, NonNullObjectArg(cx, "`target`", "Reflect.ownKeys", args.get(0)));
+      cx, RequireObjectArg(cx, "`target`", "Reflect.ownKeys", args.get(0)));
   if (!target) {
     return false;
   }
@@ -113,7 +113,7 @@ static bool Reflect_preventExtensions(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 1.
   RootedObject target(
-      cx, NonNullObjectArg(cx, "`target`", "Reflect.preventExtensions",
+      cx, RequireObjectArg(cx, "`target`", "Reflect.preventExtensions",
                            args.get(0)));
   if (!target) {
     return false;
@@ -134,7 +134,7 @@ static bool Reflect_set(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 1.
   RootedObject target(
-      cx, NonNullObjectArg(cx, "`target`", "Reflect.set", args.get(0)));
+      cx, RequireObjectArg(cx, "`target`", "Reflect.set", args.get(0)));
   if (!target) {
     return false;
   }
@@ -169,7 +169,7 @@ static bool Reflect_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  RootedObject obj(cx, NonNullObjectArg(cx, "`target`",
+  RootedObject obj(cx, RequireObjectArg(cx, "`target`",
                                         "Reflect.setPrototypeOf", args.get(0)));
   if (!obj) {
     return false;

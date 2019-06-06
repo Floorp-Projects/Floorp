@@ -2166,7 +2166,7 @@ static bool intrinsic_ThrowArgTypeNotObject(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args[0].isNumber());
   MOZ_ASSERT(!args[1].isObject());
   if (args[0].toNumber() == NOT_OBJECT_KIND_DESCRIPTOR) {
-    ReportNotObjectWithName(cx, "descriptor", args[1]);
+    ReportNotObject(cx, JSMSG_OBJECT_REQUIRED_PROP_DESC, args[1]);
   } else {
     MOZ_CRASH("unexpected kind");
   }
