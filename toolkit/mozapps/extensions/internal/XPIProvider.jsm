@@ -1553,7 +1553,7 @@ var XPIStates = {
     if (!this._jsonFile) {
       this._jsonFile = new JSONFile({
         path: OS.Path.join(OS.Constants.Path.profileDir, FILE_XPI_STATES),
-        finalizeAt: AddonManagerPrivate.finalShutdown,
+        finalizeAt: AddonManager.shutdown,
         compression: "lz4",
       });
       this._jsonFile.data = this;

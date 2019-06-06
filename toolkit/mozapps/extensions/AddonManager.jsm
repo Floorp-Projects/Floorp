@@ -516,8 +516,7 @@ var gCheckUpdateSecurity = gCheckUpdateSecurityDefault;
 var gUpdateEnabled = true;
 var gAutoUpdateDefault = true;
 var gWebExtensionsMinPlatformVersion = "";
-var gFinalShutdownBarrier = null;
-var gBeforeShutdownBarrier = null;
+var gShutdownBarrier = null;
 var gRepoShutdownState = "";
 var gShutdownInProgress = false;
 var gPluginPageListener = null;
@@ -590,7 +589,7 @@ var AddonManagerInternal = {
       };
       logger.debug("Registering shutdown blocker for " + name);
       this.providerShutdowns.set(aProvider, AMProviderShutdown);
-      AddonManagerPrivate.finalShutdown.addBlocker(name, AMProviderShutdown);
+      AddonManager.shutdown.addBlocker(name, AMProviderShutdown);
     }
 
     this.pendingProviders.delete(aProvider);
@@ -712,8 +711,7 @@ var AddonManagerInternal = {
       }
 
       // Register our shutdown handler with the AsyncShutdown manager
-      gBeforeShutdownBarrier = new AsyncShutdown.Barrier("AddonManager: Waiting to start provider shutdown.");
-      gFinalShutdownBarrier = new AsyncShutdown.Barrier("AddonManager: Waiting for providers to shut down.");
+      gShutdownBarrier = new AsyncShutdown.Barrier("AddonManager: Waiting for providers to shut down.");
       AsyncShutdown.profileBeforeChange.addBlocker("AddonManager: shutting down.",
                                                    this.shutdownManager.bind(this),
                                                    {fetchState: this.shutdownState.bind(this)});
@@ -829,14 +827,13 @@ var AddonManagerInternal = {
 
     // If we're unregistering after startup but before shutting down,
     // remove the blocker for this provider's shutdown and call it.
-    // If we're already shutting down, just let gFinalShutdownBarrier
-    // call it to avoid races.
+    // If we're already shutting down, just let gShutdownBarrier call it to avoid races.
     if (gStarted && !gShutdownInProgress) {
       logger.debug("Unregistering shutdown blocker for " + providerName(aProvider));
       let shutter = this.providerShutdowns.get(aProvider);
       if (shutter) {
         this.providerShutdowns.delete(aProvider);
-        gFinalShutdownBarrier.client.removeBlocker(shutter);
+        gShutdownBarrier.client.removeBlocker(shutter);
         return shutter();
       }
     }
@@ -908,10 +905,11 @@ var AddonManagerInternal = {
    */
   shutdownState() {
     let state = [];
-    for (let barrier of [gBeforeShutdownBarrier, gFinalShutdownBarrier]) {
-      if (barrier) {
-        state.push({name: barrier.client.name, state: barrier.state});
-      }
+    if (gShutdownBarrier) {
+      state.push({
+        name: gShutdownBarrier.client.name,
+        state: gShutdownBarrier.state,
+      });
     }
     state.push({
       name: "AddonRepository: async shutdown",
@@ -927,13 +925,6 @@ var AddonManagerInternal = {
    *                       have finished shutting down
    */
   async shutdownManager() {
-    logger.debug("before shutdown");
-    try {
-      await gBeforeShutdownBarrier.wait();
-    } catch (e) {
-      Cu.reportError(e);
-    }
-
     logger.debug("shutdown");
     this.callManagerListeners("onShutdown");
 
@@ -952,7 +943,7 @@ var AddonManagerInternal = {
     // Only shut down providers if they've been started.
     if (gStarted) {
       try {
-        await gFinalShutdownBarrier.wait();
+        await gShutdownBarrier.wait();
       } catch (err) {
         savedError = err;
         logger.error("Failure during wait for shutdown barrier", err);
@@ -981,8 +972,7 @@ var AddonManagerInternal = {
       delete this.startupChanges[type];
     gStarted = false;
     gStartupComplete = false;
-    gFinalShutdownBarrier = null;
-    gBeforeShutdownBarrier = null;
+    gShutdownBarrier = null;
     gShutdownInProgress = false;
     if (savedError) {
       throw savedError;
@@ -2998,16 +2988,6 @@ var AddonManagerPrivate = {
     let provider = AddonManagerInternal._getProviderByName("XPIProvider");
     return provider ? provider.databaseReady : new Promise(() => {});
   },
-
-  /**
-   * Async shutdown barrier which blocks the completion of add-on
-   * manager shutdown. This should generally only be used by add-on
-   * providers (i.e., XPIProvider) to complete their final shutdown
-   * tasks.
-   */
-  get finalShutdown() {
-    return gFinalShutdownBarrier.client;
-  },
 };
 
 /**
@@ -3512,13 +3492,8 @@ var AddonManager = {
     return AddonManagerInternal.webAPI;
   },
 
-  /**
-   * Async shutdown barrier which blocks the start of AddonManager
-   * shutdown. Callers should add blockers to this barrier if they need
-   * to complete add-on manager operations before it shuts down.
-   */
-  get beforeShutdown() {
-    return gBeforeShutdownBarrier.client;
+  get shutdown() {
+    return gShutdownBarrier.client;
   },
 };
 
