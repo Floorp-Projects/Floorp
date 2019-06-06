@@ -161,8 +161,7 @@ nsresult nsJSThunk::EvaluateScript(
   // CSP check: javascript: URIs disabled unless "inline" scripts are
   // allowed.  Here we use the CSP of the thing that started the load,
   // which is the CSPToInherit of the loadInfo.
-  nsCOMPtr<nsIContentSecurityPolicy> csp =
-      static_cast<mozilla::net::LoadInfo*>(loadInfo.get())->GetCSPToInherit();
+  nsCOMPtr<nsIContentSecurityPolicy> csp = loadInfo->GetCspToInherit();
   if (csp) {
     bool allowsInlineScript = true;
     rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
