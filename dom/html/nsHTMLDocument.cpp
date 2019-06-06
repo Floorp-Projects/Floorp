@@ -577,12 +577,6 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsHtml5TreeOpExecutor* executor = nullptr;
   if (loadAsHtml5) {
     executor = static_cast<nsHtml5TreeOpExecutor*>(mParser->GetContentSink());
-    if (mReferrerPolicySet) {
-      // CSP may have set the referrer policy, so a speculative parser should
-      // start with the new referrer policy.
-      executor->SetSpeculationReferrerPolicy(
-          static_cast<ReferrerPolicy>(mReferrerPolicy));
-    }
   }
 
   if (forceUtf8) {

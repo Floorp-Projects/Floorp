@@ -49,30 +49,17 @@ class ClickHandlerChild extends ActorChild {
 
     let [href, node, principal] = this._hrefAndLinkNodeForClickEvent(event);
 
-    // get referrer attribute from clicked link and parse it
-    // if per element referrer is enabled, the element referrer overrules
-    // the document wide referrer
-    let referrerPolicy = ownerDoc.referrerPolicy;
-    if (node) {
-      let referrerAttrValue = Services.netUtils.parseAttributePolicyString(node.
-                              getAttribute("referrerpolicy"));
-      if (referrerAttrValue !== Ci.nsIHttpChannel.REFERRER_POLICY_UNSET) {
-        referrerPolicy = referrerAttrValue;
-      }
-    }
-
     let csp = ownerDoc.csp;
     if (csp) {
       csp = E10SUtils.serializeCSP(csp);
     }
 
-    let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
-                                              "nsIReferrerInfo",
-                                              "init");
-    let referrerInfo = new ReferrerInfo(
-      referrerPolicy,
-      !BrowserUtils.linkHasNoReferrer(node),
-      ownerDoc.documentURIObject);
+    let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(Ci.nsIReferrerInfo);
+    if (node) {
+      referrerInfo.initWithNode(node);
+    } else {
+      referrerInfo.initWithDocument(ownerDoc);
+    }
     referrerInfo = E10SUtils.serializeReferrerInfo(referrerInfo);
     let frameOuterWindowID = WebNavigationFrames.getFrameId(ownerDoc.defaultView);
 

@@ -834,8 +834,8 @@ static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
   }
 
   if (!referrerInfo) {
-    referrerInfo =
-        new ReferrerInfo(doc->GetDocBaseURI(), doc->GetReferrerPolicy());
+    referrerInfo = new ReferrerInfo();
+    referrerInfo->InitWithDocument(doc);
   }
 
   referrerInfo.swap(*aReferrerInfo);
