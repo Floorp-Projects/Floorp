@@ -29,10 +29,13 @@ class DOMLocalization : public nsIObserver,
 
   explicit DOMLocalization(nsIGlobalObject* aGlobal);
   void Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv);
+  void Init(nsTArray<nsString>& aResourceIds, JS::Handle<JS::Value> aGenerateMessages, ErrorResult& aRv);
 
   static already_AddRefed<DOMLocalization> Constructor(
       const GlobalObject& aGlobal,
-      const Optional<Sequence<nsString>>& aResourceIds, ErrorResult& aRv);
+      const Optional<Sequence<nsString>>& aResourceIds,
+      const Optional<OwningNonNull<GenerateMessages>>& aGenerateMessages,
+      ErrorResult& aRv);
 
   nsIGlobalObject* GetParentObject() const;
 
