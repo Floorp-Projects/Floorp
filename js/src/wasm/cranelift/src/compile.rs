@@ -84,7 +84,7 @@ impl CompiledFunc {
 pub struct BatchCompiler<'a, 'b> {
     static_environ: &'a bd::StaticEnvironment,
     environ: bd::ModuleEnvironment<'b>,
-    isa: Box<TargetIsa>,
+    isa: Box<dyn TargetIsa>,
     context: Context,
     trans: FuncTranslator,
     pub current_func: CompiledFunc,
