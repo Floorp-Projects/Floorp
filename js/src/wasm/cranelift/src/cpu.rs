@@ -47,7 +47,7 @@ impl From<settings::SetError> for BasicError {
 /// # Errors
 ///
 /// This function fails if Cranelift has not been compiled with support for the current CPU.
-pub fn make_isa(env: &StaticEnvironment) -> DashResult<Box<isa::TargetIsa>> {
+pub fn make_isa(env: &StaticEnvironment) -> DashResult<Box<dyn isa::TargetIsa>> {
     // Start with the ISA-independent settings.
     let shared_flags = make_shared_flags().expect("Cranelift configuration error");
 
