@@ -89,7 +89,6 @@
 #include "mozilla/dom/SessionStoreListener.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
-#include "mozilla/layout/RenderFrame.h"
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsGenericHTMLFrameElement.h"
@@ -2682,7 +2681,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
   // The remoteType can be queried by asking the message manager instead.
   ownerElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, false);
 
-  // Now that browserParent is set, we can initialize the RenderFrame
+  // Now that browserParent is set, we can initialize graphics
   browserParent->InitRendering();
 
   MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
@@ -2782,13 +2781,7 @@ BrowserBridgeChild* nsFrameLoader::GetBrowserBridgeChild() const {
 
 mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
   MOZ_ASSERT(mIsRemoteFrame);
-  if (auto* browserParent = GetBrowserParent()) {
-    return browserParent->GetRenderFrame()->GetLayersId();
-  }
-  if (auto* browserBridgeChild = GetBrowserBridgeChild()) {
-    return browserBridgeChild->GetLayersId();
-  }
-  return mozilla::layers::LayersId{};
+  return mRemoteBrowser->GetLayersId();
 }
 
 void nsFrameLoader::ActivateRemoteFrame(ErrorResult& aRv) {

@@ -1,17 +1,43 @@
 <!doctype html>
 <script>
-  window.onportalactivate = function(e) {
-    var portal = e.adoptPredecessor();
-    document.body.appendChild(portal);
+  var searchParams = new URL(location).searchParams;
+  var test = searchParams.get("test");
 
-    if (portal instanceof HTMLPortalElement) {
-      var bc_adopted = new BroadcastChannel("portal-adopted");
-      bc_adopted.postMessage("adopted");
-      bc_adopted.close();
+  window.onportalactivate = function(e) {
+    if (test == "adopt-once") {
+      var portal = e.adoptPredecessor();
+      document.body.appendChild(portal);
+
+      if (portal instanceof HTMLPortalElement) {
+        portal.postMessage("adopted", "*");
+      }
+    }
+    if (test == "adopt-twice") {
+      var portal = e.adoptPredecessor();
+      document.body.appendChild(portal);
+
+      try {
+        e.adoptPredecessor();
+      } catch(e) {
+        if (e.name == "InvalidStateError") {
+          portal.postMessage("passed", "*");
+        }
+      }
+    }
+    if (test == "adopt-after-event") {
+      setTimeout(function() {
+        try {
+          e.adoptPredecessor();
+        } catch(e) {
+          if (e.name == "InvalidStateError") {
+            var bc_test = new BroadcastChannel(`test-${test}`);
+            bc_test.postMessage("passed");
+            bc_test.close();
+          }
+        }
+      });
     }
   }
 
-  var bc_loaded = new BroadcastChannel("portal-loaded");
-  bc_loaded.postMessage("loaded");
-  bc_loaded.close();
+  window.portalHost.postMessage("loaded", "*");
 </script>

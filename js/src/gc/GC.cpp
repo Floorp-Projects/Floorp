@@ -990,7 +990,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       numArenasFreeCommitted(0),
       verifyPreData(nullptr),
       chunkAllocationSinceLastGC(false),
-      lastGCTime(ReallyNow()),
+      lastGCTime_(ReallyNow()),
       mode(TuningDefaults::Mode),
       numActiveZoneIters(0),
       cleanUpEverything(false),
@@ -2208,12 +2208,19 @@ void MemoryCounter::recordTrigger(TriggerKind trigger) {
 
 /* Compacting GC */
 
+bool js::gc::IsCurrentlyAnimating(const TimeStamp& lastAnimationTime,
+                                  const TimeStamp& currentTime) {
+  // Assume that we're currently animating if js::NotifyAnimationActivity has
+  // been called in the last second.
+  static const auto oneSecond = TimeDuration::FromSeconds(1);
+  return !lastAnimationTime.IsNull() &&
+         currentTime < (lastAnimationTime + oneSecond);
+}
+
 bool GCRuntime::shouldCompact() {
   // Compact on shrinking GC if enabled.  Skip compacting in incremental GCs
   // if we are currently animating, unless the user is inactive or we're
   // responding to memory pressure.
-
-  static const auto oneSecond = TimeDuration::FromSeconds(1);
 
   if (invocationKind != GC_SHRINK || !isCompactingGCEnabled()) {
     return false;
@@ -2224,9 +2231,8 @@ bool GCRuntime::shouldCompact() {
     return true;
   }
 
-  const auto& lastAnimationTime = rt->lastAnimationTime.ref();
-  return !isIncremental || lastAnimationTime.IsNull() ||
-         lastAnimationTime + oneSecond < TimeStamp::Now();
+  return !isIncremental ||
+         !IsCurrentlyAnimating(rt->lastAnimationTime, TimeStamp::Now());
 }
 
 bool GCRuntime::isCompactingGCEnabled() const {
@@ -4113,8 +4119,6 @@ bool GCRuntime::shouldPreserveJITCode(Realm* realm,
                                       const TimeStamp& currentTime,
                                       JS::GCReason reason,
                                       bool canAllocateMoreCode) {
-  static const auto oneSecond = TimeDuration::FromSeconds(1);
-
   if (cleanUpEverything) {
     return false;
   }
@@ -4129,9 +4133,7 @@ bool GCRuntime::shouldPreserveJITCode(Realm* realm,
     return true;
   }
 
-  const auto& lastAnimationTime = realm->lastAnimationTime.ref();
-  if (!lastAnimationTime.IsNull() &&
-      lastAnimationTime + oneSecond >= currentTime) {
+  if (IsCurrentlyAnimating(realm->lastAnimationTime, currentTime)) {
     return true;
   }
 
@@ -6899,7 +6901,7 @@ void GCRuntime::finishCollection() {
   clearBufferedGrayRoots();
 
   auto currentTime = ReallyNow();
-  schedulingState.updateHighFrequencyMode(lastGCTime, currentTime, tunables);
+  schedulingState.updateHighFrequencyMode(lastGCTime_, currentTime, tunables);
 
   for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
     if (zone->isCollecting()) {
@@ -6916,7 +6918,7 @@ void GCRuntime::finishCollection() {
   MOZ_ASSERT(zonesToMaybeCompact.ref().isEmpty());
   MOZ_ASSERT(cellsToAssertNotGray.ref().empty());
 
-  lastGCTime = currentTime;
+  lastGCTime_ = currentTime;
 }
 
 static const char* HeapStateToLabel(JS::HeapState heapState) {

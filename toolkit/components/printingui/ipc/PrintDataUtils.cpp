@@ -49,19 +49,6 @@ MockWebBrowserPrint::GetDoingPrintPreview(bool* aDoingPrintPreview) {
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::GetIsFramesetDocument(bool* aIsFramesetDocument) {
-  *aIsFramesetDocument = mData.isFramesetDocument();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MockWebBrowserPrint::GetIsFramesetFrameSelected(
-    bool* aIsFramesetFrameSelected) {
-  *aIsFramesetFrameSelected = mData.isFramesetFrameSelected();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 MockWebBrowserPrint::GetIsIFrameSelected(bool* aIsIFrameSelected) {
   *aIsIFrameSelected = mData.isIFrameSelected();
   return NS_OK;

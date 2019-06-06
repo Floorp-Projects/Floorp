@@ -23,7 +23,7 @@
       const entry = performance.getEntriesByType('firstInput')[0];
       assert_equals(entry.name, 'mousedown');
       assert_equals(entry.entryType, 'firstInput');
-      assert_greater_than(entry.duration, 50,
+      assert_greater_than_equal(entry.duration, 104,
         "The first input was a long one.");
       t.done();
     }

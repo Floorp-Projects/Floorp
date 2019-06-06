@@ -8,12 +8,12 @@ from collections import defaultdict, namedtuple
 
 from mozlog import structuredlog
 
-import manifestupdate
-import testloader
-import wptmanifest
-import wpttest
-from expected import expected_path
-from vcs import git
+from . import manifestupdate
+from . import testloader
+from . import wptmanifest
+from . import wpttest
+from .expected import expected_path
+from .vcs import git
 manifest = None  # Module that will be imported relative to test_root
 manifestitem = None
 
@@ -516,7 +516,7 @@ class PackedResultList(object):
         else:
             value = status_intern.get(value_idx)
 
-        run_info = run_info_intern.get((packed & 0x00FF))
+        run_info = run_info_intern.get(packed & 0x00FF)
 
         return prop, run_info, value
 

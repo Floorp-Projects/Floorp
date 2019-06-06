@@ -1,5 +1,5 @@
 import os
-import urlparse
+from six.moves.urllib.parse import urljoin
 from collections import deque
 
 from wptmanifest.backends import static
@@ -237,8 +237,8 @@ class ExpectedManifest(ManifestItem):
 
     @property
     def url(self):
-        return urlparse.urljoin(self.url_base,
-                                "/".join(self.test_path.split(os.path.sep)))
+        return urljoin(self.url_base,
+                       "/".join(self.test_path.split(os.path.sep)))
 
     @property
     def disabled(self):
@@ -354,7 +354,7 @@ class TestNode(ManifestItem):
 
     @property
     def is_empty(self):
-        required_keys = set(["type"])
+        required_keys = {"type"}
         if set(self._data.keys()) != required_keys:
             return False
         return all(child.is_empty for child in self.children)
@@ -365,7 +365,7 @@ class TestNode(ManifestItem):
 
     @property
     def id(self):
-        return urlparse.urljoin(self.parent.url, self.name)
+        return urljoin(self.parent.url, self.name)
 
     @property
     def disabled(self):

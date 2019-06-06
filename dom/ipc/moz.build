@@ -105,6 +105,7 @@ UNIFIED_SOURCES += [
     'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
     'ReferrerInfoUtils.cpp',
+    'RemoteBrowser.cpp',
     'RemoteWebProgress.cpp',
     'RemoteWebProgressRequest.cpp',
     'SharedMap.cpp',
