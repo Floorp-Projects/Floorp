@@ -124,6 +124,10 @@ if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD', 'NetBSD', 'OpenBSD'):
             'xptcstubs_asm_mips64.S',
             'xptcstubs_mips64.cpp',
         ]
+        if CONFIG['CC_TYPE'] == 'clang':
+            ASFLAGS += [
+                '-fno-integrated-as',
+            ]
     if CONFIG['CPU_ARCH'] == 'mips32':
         SOURCES += [
             'xptcinvoke_asm_mips.S',
@@ -131,6 +135,10 @@ if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD', 'NetBSD', 'OpenBSD'):
             'xptcstubs_asm_mips.S',
             'xptcstubs_mips.cpp',
         ]
+        if CONFIG['CC_TYPE'] == 'clang':
+            ASFLAGS += [
+                '-fno-integrated-as',
+            ]
 
 if CONFIG['OS_ARCH'] == 'AIX':
     if CONFIG['HAVE_64BIT_BUILD']:
