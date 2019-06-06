@@ -84,6 +84,7 @@ class StringTest {
         assertTrue("Geo:1,-1".isGeoLocation())
     }
 
+    @Suppress("Deprecation")
     @Test
     fun toUri() {
         assertEquals(

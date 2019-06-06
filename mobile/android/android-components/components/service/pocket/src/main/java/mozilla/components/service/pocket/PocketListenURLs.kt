@@ -5,7 +5,7 @@
 package mozilla.components.service.pocket
 
 import android.net.Uri
-import mozilla.components.support.ktx.kotlin.toUri
+import androidx.core.net.toUri
 
 // When upgrading to production endpoint, ensure this is HTTPS.
 private const val STAGE_SERVER_BASE = "http://scout-stage.herokuapp.com"

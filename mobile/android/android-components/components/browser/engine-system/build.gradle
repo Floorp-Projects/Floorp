@@ -32,6 +32,7 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':support-utils')
 
+    implementation Dependencies.androidx_core_ktx
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 

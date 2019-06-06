@@ -8,6 +8,7 @@ import android.content.Context
 import android.os.SystemClock
 import android.util.LruCache
 import androidx.annotation.VisibleForTesting
+import androidx.core.net.toUri
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.fetch.Client
@@ -16,7 +17,6 @@ import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
-import mozilla.components.support.ktx.kotlin.toUri
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 

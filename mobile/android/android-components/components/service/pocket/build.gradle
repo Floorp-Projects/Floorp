@@ -22,6 +22,7 @@ android {
 }
 
 dependencies {
+    implementation Dependencies.androidx_core_ktx
     implementation Dependencies.kotlin_stdlib
 
     implementation project(':support-ktx')

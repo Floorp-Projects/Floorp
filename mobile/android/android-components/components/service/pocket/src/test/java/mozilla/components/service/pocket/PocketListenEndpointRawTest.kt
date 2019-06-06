@@ -4,6 +4,7 @@
 
 package mozilla.components.service.pocket
 
+import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
@@ -16,7 +17,6 @@ import mozilla.components.service.pocket.helpers.MockResponses
 import mozilla.components.service.pocket.helpers.assertRequestParams
 import mozilla.components.service.pocket.helpers.assertResponseIsClosed
 import mozilla.components.service.pocket.helpers.assertSuccessfulRequestReturnsResponseBody
-import mozilla.components.support.ktx.kotlin.toUri
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals

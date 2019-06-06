@@ -4,7 +4,7 @@
 
 package mozilla.components.support.ktx.android.net
 
-import mozilla.components.support.ktx.kotlin.toUri
+import androidx.core.net.toUri
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

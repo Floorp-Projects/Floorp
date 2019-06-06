@@ -6,12 +6,12 @@ package mozilla.components.browser.icons.preparer
 
 import android.content.Context
 import android.content.res.AssetManager
+import androidx.core.net.toUri
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
 import mozilla.components.support.ktx.android.org.json.asSequence
-import mozilla.components.support.ktx.kotlin.toUri
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject

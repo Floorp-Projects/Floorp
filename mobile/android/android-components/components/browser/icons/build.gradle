@@ -40,6 +40,7 @@ dependencies {
     implementation project(':browser-session')
 
     implementation Dependencies.androidx_annotation
+    implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_palette
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

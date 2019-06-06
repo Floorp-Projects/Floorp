@@ -5,12 +5,12 @@
 package mozilla.components.feature.sitepermissions.db
 
 import android.content.Context
+import androidx.core.net.toUri
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
-import mozilla.components.support.ktx.kotlin.toUri
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

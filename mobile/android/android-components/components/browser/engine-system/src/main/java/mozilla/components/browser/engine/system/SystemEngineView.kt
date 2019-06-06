@@ -42,6 +42,7 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.core.net.toUri
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.engine.system.permission.SystemPermissionRequest
@@ -55,7 +56,6 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
-import mozilla.components.support.ktx.kotlin.toUri
 import mozilla.components.support.utils.DownloadUtils
 import java.util.Date
 
@@ -294,7 +294,7 @@ class SystemEngineView @JvmOverloads constructor(
             val session = session ?: return handler.cancel()
 
             val formattedUrl = session.currentUrl.toUri().let { uri ->
-                (uri.scheme ?: "http") + "://" + (uri.host ?: host)
+                "${uri.scheme ?: "http"}://${uri.host ?: host}"
             }
 
             // Trim obnoxiously long realms.

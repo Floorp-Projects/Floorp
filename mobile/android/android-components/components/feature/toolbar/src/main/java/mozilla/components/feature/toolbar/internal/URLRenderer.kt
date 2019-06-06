@@ -7,6 +7,7 @@ package mozilla.components.feature.toolbar.internal
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import androidx.annotation.VisibleForTesting
+import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -15,7 +16,6 @@ import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.launch
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.ToolbarFeature
-import mozilla.components.support.ktx.kotlin.toUri
 
 /**
  * Asynchronous URL renderer.

@@ -7,7 +7,7 @@ package mozilla.components.service.pocket
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
-import mozilla.components.support.ktx.kotlin.toUri
+import androidx.core.net.toUri
 
 private const val CDN_BASE = "https://getpocket.cdn.mozilla.net/v3/firefox"
 
