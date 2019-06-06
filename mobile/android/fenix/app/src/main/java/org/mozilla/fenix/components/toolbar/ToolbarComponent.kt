@@ -12,14 +12,14 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.toolbar.BrowserToolbar
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
-import org.mozilla.fenix.mvi.ViewState
-import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.UIComponentViewModelBase
 import org.mozilla.fenix.mvi.UIComponentViewModelProvider
+import org.mozilla.fenix.mvi.ViewState
 
 class ToolbarComponent(
     private val container: ViewGroup,
@@ -74,7 +74,8 @@ data class SearchState(
     val searchTerm: String,
     val isEditing: Boolean,
     val engine: SearchEngine? = null,
-    val focused: Boolean = isEditing
+    val focused: Boolean = isEditing,
+    val isQueryUpdated: Boolean = false
 ) : ViewState
 
 sealed class SearchAction : Action {
@@ -87,6 +88,7 @@ sealed class SearchAction : Action {
 }
 
 sealed class SearchChange : Change {
+    data class QueryTextChanged(val query: String) : SearchChange()
     object ToolbarRequestedFocus : SearchChange()
     object ToolbarClearedFocus : SearchChange()
     data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchChange()
@@ -98,6 +100,7 @@ class ToolbarViewModel(initialState: SearchState) :
     companion object {
         val reducer: Reducer<SearchState, SearchChange> = { state, change ->
             when (change) {
+                is SearchChange.QueryTextChanged -> state.copy(query = change.query, isQueryUpdated = true)
                 is SearchChange.ToolbarClearedFocus -> state.copy(focused = false)
                 is SearchChange.ToolbarRequestedFocus -> state.copy(focused = true)
                 is SearchChange.SearchShortcutEngineSelected ->

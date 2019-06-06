@@ -183,7 +183,9 @@ class ToolbarUIView(
         if (newState.isEditing) {
             view.setSearchTerms(newState.searchTerm)
             view.url = newState.query
-            view.editMode()
+            if (!newState.isQueryUpdated) {
+                view.editMode()
+            }
         } else {
             view.displayMode()
         }

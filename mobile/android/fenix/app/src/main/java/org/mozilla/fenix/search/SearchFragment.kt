@@ -244,6 +244,7 @@ class SearchFragment : Fragment(), BackHandler {
                         }
                     }
                     is SearchAction.TextChanged -> {
+                        getManagedEmitter<SearchChange>().onNext(SearchChange.QueryTextChanged(it.query))
                         getManagedEmitter<AwesomeBarChange>().onNext(AwesomeBarChange.UpdateQuery(it.query))
                     }
                     is SearchAction.EditingCanceled -> {
