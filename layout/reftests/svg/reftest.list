@@ -58,6 +58,7 @@ skip == blend-difference-stacking.html blend-difference-stacking-ref.html # bug 
 fuzzy(0-11,0-7155) == blur-inside-clipPath.svg blur-inside-clipPath-ref.svg
 
 == border-radius-01.html pass.svg
+== mask-image-filter-transform.html mask-image-filter-transform-ref.html
 
 == clip-01.svg pass.svg
 == clip-02a.svg clip-02-ref.svg
