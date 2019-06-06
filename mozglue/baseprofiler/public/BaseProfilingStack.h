@@ -4,8 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_ProfilingStack_h
-#define js_ProfilingStack_h
+#ifndef BaseProfilingStack_h
+#define BaseProfilingStack_h
+
+#include "BaseProfilingCategory.h"
+
+#include "mozilla/Atomics.h"
 
 #include "BaseProfiler.h"
 
@@ -15,25 +19,6 @@
 
 #include <algorithm>
 #include <stdint.h>
-
-#include "jstypes.h"
-
-#include "js/ProfilingCategory.h"
-#include "js/TypeDecls.h"
-#include "js/Utility.h"
-
-#ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wattributes"
-#endif  // JS_BROKEN_GCC_ATTRIBUTE_WARNING
-
-class JS_PUBLIC_API JSTracer;
-
-#ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#  pragma GCC diagnostic pop
-#endif  // JS_BROKEN_GCC_ATTRIBUTE_WARNING
-
-class ProfilingStack;
 
 // This file defines the classes ProfilingStack and ProfilingStackFrame.
 // The ProfilingStack manages an array of ProfilingStackFrames.
@@ -168,8 +153,6 @@ class ProfilingStackFrame {
                   mozilla::recordreplay::Behavior::DontPreserve>
       flagsAndCategoryPair_;
 
-  static int32_t pcToOffset(JSScript* aScript, jsbytecode* aPc);
-
  public:
   ProfilingStackFrame() = default;
   ProfilingStackFrame& operator=(const ProfilingStackFrame& other) {
@@ -270,7 +253,7 @@ class ProfilingStackFrame {
         uint32_t(Flags::LABEL_DETERMINED_BY_CATEGORY_PAIR)) {
       auto categoryPair = JS::ProfilingCategoryPair(
           flagsAndCategoryPair >> uint32_t(Flags::FLAGS_BITCOUNT));
-      return JS::GetProfilingCategoryPairInfo(categoryPair).mLabel;
+      return JS::GetBaseProfilingCategoryPairInfo(categoryPair).mLabel;
     }
     return label_;
   }
@@ -302,11 +285,11 @@ class ProfilingStackFrame {
   }
 
   void initJsFrame(const char* aLabel, const char* aDynamicString,
-                   JSScript* aScript, jsbytecode* aPc) {
+                   void* /* JSScript* */ aScript, int32_t aOffset) {
     label_ = aLabel;
     dynamicString_ = aDynamicString;
     spOrScript = aScript;
-    pcOffsetIfJS_ = pcToOffset(aScript, aPc);
+    pcOffsetIfJS_ = aOffset;
     flagsAndCategoryPair_ =
         uint32_t(Flags::IS_JS_FRAME) | (uint32_t(JS::ProfilingCategoryPair::JS)
                                         << uint32_t(Flags::FLAGS_BITCOUNT));
@@ -327,20 +310,25 @@ class ProfilingStackFrame {
     return spOrScript;
   }
 
-  JS_PUBLIC_API JSScript* script() const;
-
   // Note that the pointer returned might be invalid.
-  JSScript* rawScript() const {
+  void* rawScript() const {
     MOZ_ASSERT(isJsFrame());
-    void* script = spOrScript;
-    return static_cast<JSScript*>(script);
+    return spOrScript;
+  }
+  void setRawScript(void* aScript) {
+    MOZ_ASSERT(isJsFrame());
+    spOrScript = aScript;
   }
 
-  // We can't know the layout of JSScript, so look in vm/GeckoProfiler.cpp.
-  JS_FRIEND_API jsbytecode* pc() const;
-  void setPC(jsbytecode* pc);
+  int32_t pcOffset() const {
+    MOZ_ASSERT(isJsFrame());
+    return pcOffsetIfJS_;
+  }
 
-  void trace(JSTracer* trc);
+  void setPCOffset(int32_t aOffset) {
+    MOZ_ASSERT(isJsFrame());
+    pcOffsetIfJS_ = aOffset;
+  }
 
   // The offset of a pc into a script's code can actually be 0, so to
   // signify a nullptr pc, use a -1 index. This is checked against in
@@ -348,17 +336,9 @@ class ProfilingStackFrame {
   static const int32_t NullPCOffset = -1;
 };
 
-JS_FRIEND_API void SetContextProfilingStack(JSContext* cx,
-                                            ProfilingStack* profilingStack);
-
-// GetContextProfilingStack also exists, but it's defined in RootingAPI.h.
-
-JS_FRIEND_API void EnableContextProfilingStack(JSContext* cx, bool enabled);
-
-JS_FRIEND_API void RegisterContextProfilingEventMarker(JSContext* cx,
-                                                       void (*fn)(const char*));
-
 }  // namespace js
+
+class ProfilingStack;
 
 namespace JS {
 
@@ -367,7 +347,7 @@ typedef ProfilingStack* (*RegisterThreadCallback)(const char* threadName,
 
 typedef void (*UnregisterThreadCallback)();
 
-JS_FRIEND_API void SetProfilingThreadCallbacks(
+MFBT_API void SetProfilingThreadCallbacks(
     RegisterThreadCallback registerThread,
     UnregisterThreadCallback unregisterThread);
 
@@ -396,7 +376,7 @@ class ProfilingStack final {
  public:
   ProfilingStack() : stackPointer(0) {}
 
-  ~ProfilingStack();
+  MFBT_API ~ProfilingStack();
 
   void pushLabelFrame(const char* label, const char* dynamicString, void* sp,
                       JS::ProfilingCategoryPair categoryPair,
@@ -438,8 +418,8 @@ class ProfilingStack final {
     stackPointer = oldStackPointer + 1;
   }
 
-  void pushJsFrame(const char* label, const char* dynamicString,
-                   JSScript* script, jsbytecode* pc) {
+  void pushJsOffsetFrame(const char* label, const char* dynamicString,
+                         void* script, int32_t offset) {
     // This thread is the only one that ever changes the value of
     // stackPointer. Only load the atomic once.
     uint32_t oldStackPointer = stackPointer;
@@ -447,7 +427,7 @@ class ProfilingStack final {
     if (MOZ_UNLIKELY(oldStackPointer >= capacity)) {
       ensureCapacitySlow();
     }
-    frames[oldStackPointer].initJsFrame(label, dynamicString, script, pc);
+    frames[oldStackPointer].initJsFrame(label, dynamicString, script, offset);
 
     // This must happen at the end, see the comment in pushLabelFrame.
     stackPointer = stackPointer + 1;
@@ -470,7 +450,7 @@ class ProfilingStack final {
  private:
   // Out of line path for expanding the buffer, since otherwise this would get
   // inlined in every DOM WebIDL call.
-  MOZ_COLD void ensureCapacitySlow();
+  MFBT_API MOZ_COLD void ensureCapacitySlow();
 
   // No copying.
   ProfilingStack(const ProfilingStack&) = delete;
@@ -525,7 +505,7 @@ class GeckoProfilerThread {
   ProfilingStack* profilingStackIfEnabled_;
 
  public:
-  GeckoProfilerThread();
+  MFBT_API GeckoProfilerThread();
 
   uint32_t stackPointer() {
     MOZ_ASSERT(infraInstalled());
@@ -544,26 +524,12 @@ class GeckoProfilerThread {
    */
   bool infraInstalled() { return profilingStack_ != nullptr; }
 
-  void setProfilingStack(ProfilingStack* profilingStack, bool enabled);
+  MFBT_API void setProfilingStack(ProfilingStack* profilingStack, bool enabled);
   void enable(bool enable) {
     profilingStackIfEnabled_ = enable ? profilingStack_ : nullptr;
   }
-  void trace(JSTracer* trc);
-
-  /*
-   * Functions which are the actual instrumentation to track run information
-   *
-   *   - enter: a function has started to execute
-   *   - updatePC: updates the pc information about where a function
-   *               is currently executing
-   *   - exit: this function has ceased execution, and no further
-   *           entries/exits will be made
-   */
-  bool enter(JSContext* cx, JSScript* script);
-  void exit(JSContext* cx, JSScript* script);
-  inline void updatePC(JSContext* cx, JSScript* script, jsbytecode* pc);
 };
 
 }  // namespace js
 
-#endif /* js_ProfilingStack_h */
+#endif /* BaseProfilingStack_h */

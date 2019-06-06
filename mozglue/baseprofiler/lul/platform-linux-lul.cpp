@@ -34,7 +34,7 @@ void read_procmaps(lul::LUL* aLUL) {
   for (size_t i = 0; i < info.GetSize(); i++) {
     const SharedLibrary& lib = info.GetEntry(i);
 
-    std::string nativePath = lib.GetNativeDebugPath();
+    std::string nativePath = lib.GetDebugPath();
 
 #    if defined(GP_OS_android)
     // We're using faulty.lib.  Use a special-case object mapper.
@@ -52,7 +52,7 @@ void read_procmaps(lul::LUL* aLUL) {
     if (ok && image && size > 0) {
       aLUL->NotifyAfterMap(lib.GetStart(), lib.GetEnd() - lib.GetStart(),
                            nativePath.c_str(), image);
-    } else if (!ok && lib.GetDebugName().IsEmpty()) {
+    } else if (!ok && lib.GetDebugName().empty()) {
       // The object has no name and (as a consequence) the mapper failed to map
       // it.  This happens on Linux, where GetInfoForSelf() produces such a
       // mapping for the VDSO.  This is a problem on x86-{linux,android} because
@@ -74,11 +74,13 @@ void read_procmaps(lul::LUL* aLUL) {
 // LUL needs a callback for its logging sink.
 void logging_sink_for_LUL(const char* str) {
   // These are only printed when Verbose logging is enabled (e.g. with
-  // MOZ_LOG="prof:5"). This is because LUL's logging is much more verbose than
-  // the rest of the profiler's logging, which occurs at the Info (3) and Debug
-  // (4) levels.
-  MOZ_LOG(gProfilerLog, mozilla::LogLevel::Verbose,
-          ("[%d] %s", profiler_current_process_id(), str));
+  // MOZ_BASE_PROFILER_VERBOSE_LOGGING=1). This is because LUL's logging is much
+  // more verbose than the rest of the profiler's logging, which occurs at the
+  // Info (3) and Debug (4) levels.
+  // FIXME: This causes a build failure in memory/replace/dmd/test/SmokeDMD (!)
+  // and other places, because it doesn't link the implementation in
+  // platform.cpp.
+  // VERBOSE_LOG("[%d] %s", profiler_current_process_id(), str);
 }
 
 #endif  // MOZ_BASE_PROFILER

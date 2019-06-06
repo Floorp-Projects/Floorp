@@ -56,7 +56,7 @@ class ProfilerMarker {
       aUniqueStacks.mUniqueStrings->WriteElement(aWriter, mMarkerName.get());
       aWriter.DoubleElement(mTime);
       const JS::ProfilingCategoryPairInfo& info =
-          JS::GetProfilingCategoryPairInfo(mCategoryPair);
+          JS::GetBaseProfilingCategoryPairInfo(mCategoryPair);
       aWriter.IntElement(unsigned(info.mCategory));
       // TODO: Store the callsite for this marker if available:
       // if have location data
