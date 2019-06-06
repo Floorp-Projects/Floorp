@@ -139,7 +139,6 @@ class SessionControlUIView(
         view.apply {
             adapter = sessionControlAdapter
             layoutManager = LinearLayoutManager(container.context)
-            itemAnimator = null // TODO #2785: Remove this line
             val itemTouchHelper =
                 ItemTouchHelper(
                     SwipeToDeleteCallback(

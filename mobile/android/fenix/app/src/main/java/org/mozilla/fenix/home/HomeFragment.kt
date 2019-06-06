@@ -128,7 +128,14 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 this,
                 SessionControlViewModel::class.java
             ) {
-                SessionControlViewModel(SessionControlState(listOf(), setOf(), listOf(), mode))
+                SessionControlViewModel(
+                    SessionControlState(
+                        getListOfTabs(requireComponents.core.sessionManager),
+                        setOf(),
+                        requireComponents.core.tabCollectionStorage.cachedTabCollections,
+                        mode
+                    )
+                )
             }
         )
 
@@ -269,10 +276,14 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 }
         }
 
-        val mode = currentMode()
-        getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
+        getManagedEmitter<SessionControlChange>().onNext(
+            SessionControlChange.Change(
+                tabs = getListOfTabs(sessionManager = requireComponents.core.sessionManager),
+                mode = currentMode(),
+                collections = requireComponents.core.tabCollectionStorage.cachedTabCollections
+            )
+        )
 
-        emitSessionChanges()
         sessionObserver.onStart()
         tabCollectionObserver = subscribeToTabCollections()
     }
@@ -609,25 +620,28 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     private fun emitSessionChanges() {
-        val sessionManager = requireComponents.core.sessionManager
-
+        val sessionManager = context?.components?.core?.sessionManager ?: return
         getManagedEmitter<SessionControlChange>().onNext(
             SessionControlChange.TabsChange(
-                sessionManager.sessions
-                    .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
-                    .map {
-                        val selected = it == sessionManager.selectedSession
-                        Tab(
-                            it.id,
-                            it.url,
-                            it.url.urlToTrimmedHost(),
-                            it.title,
-                            selected,
-                            it.thumbnail
-                        )
-                    }
+                getListOfTabs(sessionManager)
             )
         )
+    }
+
+    private fun getListOfTabs(sessionManager: SessionManager): List<Tab> {
+        return sessionManager.sessions
+            .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
+            .map {
+                val selected = it == sessionManager.selectedSession
+                Tab(
+                    it.id,
+                    it.url,
+                    it.url.urlToTrimmedHost(),
+                    it.title,
+                    selected,
+                    it.thumbnail
+                )
+            }
     }
 
     private fun emitAccountChanges() {

@@ -139,6 +139,8 @@ fun Observer<SessionControlAction>.onNext(onboardingAction: OnboardingAction) {
 }
 
 sealed class SessionControlChange : Change {
+    data class Change(val tabs: List<Tab>, val mode: Mode, val collections: List<TabCollection>) :
+        SessionControlChange()
     data class TabsChange(val tabs: List<Tab>) : SessionControlChange()
     data class ModeChange(val mode: Mode) : SessionControlChange()
     data class CollectionsChange(val collections: List<TabCollection>) : SessionControlChange()
@@ -165,6 +167,11 @@ class SessionControlViewModel(
 
                     state.copy(expandedCollections = newExpandedCollection)
                 }
+                is SessionControlChange.Change -> state.copy(
+                    tabs = change.tabs,
+                    mode = change.mode,
+                    collections = change.collections
+                )
             }
         }
     }
