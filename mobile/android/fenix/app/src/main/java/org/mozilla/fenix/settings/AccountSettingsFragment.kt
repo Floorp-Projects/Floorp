@@ -63,11 +63,15 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
         override fun onProfileUpdated(profile: Profile) {}
     }
 
+    override fun onResume() {
+        super.onResume()
+        (activity as AppCompatActivity).title = getString(R.string.preferences_account_settings)
+        (activity as AppCompatActivity).supportActionBar?.show()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         job = Job()
-        (activity as AppCompatActivity).title = getString(R.string.preferences_account_settings)
-        (activity as AppCompatActivity).supportActionBar?.show()
         requireComponents.analytics.metrics.track(Event.SyncAccountOpened)
     }
 

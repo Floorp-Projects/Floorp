@@ -30,12 +30,15 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        (activity as AppCompatActivity).title = getString(R.string.preferences_data_choices)
-        (activity as AppCompatActivity).supportActionBar?.show()
-
         context?.let {
             preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (activity as AppCompatActivity).title = getString(R.string.preferences_data_choices)
+        (activity as AppCompatActivity).supportActionBar?.show()
     }
 
     override fun onDestroy() {

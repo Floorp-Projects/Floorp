@@ -295,7 +295,7 @@
     <fragment
         android:id="@+id/dataChoicesFragment"
         android:name="org.mozilla.fenix.settings.DataChoicesFragment"
-        android:label="DataChoicesFragment" />
+        android:label="@string/preferences_data_choices" />
     <fragment
         android:id="@+id/sitePermissionsFragment"
         android:name="org.mozilla.fenix.settings.SitePermissionsFragment"
@@ -313,15 +313,15 @@
     <fragment
         android:id="@+id/accessibilityFragment"
         android:name="org.mozilla.fenix.settings.AccessibilityFragment"
-        android:label="AccessibilityFragment" />
+        android:label="@string/preferences_accessibility" />
     <fragment
         android:id="@+id/accountSettingsFragment"
         android:name="org.mozilla.fenix.settings.AccountSettingsFragment"
-        android:label="AccountSettingsFragment" />
+        android:label="@string/preferences_account_settings" />
     <fragment
         android:id="@+id/searchEngineFragment"
         android:name="org.mozilla.fenix.settings.SearchEngineFragment"
-        android:label="SearchEngineFragment" />
+        android:label="@string/preferences_search_engine" />
 
     <fragment
         android:id="@+id/turnOnSyncFragment"
@@ -351,7 +351,7 @@
     <fragment
         android:id="@+id/pairFragment"
         android:name="org.mozilla.fenix.settings.PairFragment"
-        android:label="PairFragment">
+        android:label="@string/preferences_sync">
         <action
             android:id="@+id/action_pairFragment_to_browserFragment"
             app:destination="@id/browserFragment"
@@ -377,7 +377,7 @@
     <fragment
         android:id="@+id/themeFragment"
         android:name="org.mozilla.fenix.settings.ThemeFragment"
-        android:label="ThemeFragment" />
+        android:label="@string/preferences_theme" />
     <fragment
         android:id="@+id/trackingProtectionFragment"
         android:name="org.mozilla.fenix.settings.TrackingProtectionFragment"
@@ -389,12 +389,12 @@
     <fragment
         android:id="@+id/deleteBrowsingDataFragment"
         android:name="org.mozilla.fenix.settings.DeleteBrowsingDataFragment"
-        android:label="DeleteBrowsingDataFragment">
+        android:label="@string/preferences_delete_browsing_data">
     </fragment>
     <fragment
         android:id="@+id/exceptionsFragment"
         android:name="org.mozilla.fenix.exceptions.ExceptionsFragment"
-        android:label="ExceptionsFragment" />
+        android:label="@string/preference_exceptions" />
     <dialog
         android:id="@+id/createCollectionFragment"
         android:name="org.mozilla.fenix.collections.CreateCollectionFragment"
