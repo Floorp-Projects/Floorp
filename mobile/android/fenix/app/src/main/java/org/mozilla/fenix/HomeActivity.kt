@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
+import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.navigation.fragment.NavHostFragment
@@ -29,6 +30,7 @@ import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderFragmentDirections
@@ -56,10 +58,12 @@ open class HomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         browsingModeManager = createBrowsingModeManager()
-        themeManager = createThemeManager(when (browsingModeManager.isPrivate) {
-            true -> ThemeManager.Theme.Private
-            false -> ThemeManager.Theme.Normal
-        })
+        themeManager = createThemeManager(
+            when (browsingModeManager.isPrivate) {
+                true -> ThemeManager.Theme.Private
+                false -> ThemeManager.Theme.Normal
+            }
+        )
 
         setTheme(themeManager.currentTheme)
         ThemeManager.applyStatusBarTheme(window, themeManager, this)
@@ -183,35 +187,55 @@ open class HomeActivity : AppCompatActivity() {
             sessionObserver = subscribeToSessions()
 
         if (navHost.navController.currentDestination?.id == R.id.browserFragment) return
+        @IdRes var fragmentId: Int? = null
         val directions = if (!navHost.navController.popBackStack(R.id.browserFragment, false)) {
             when (from) {
-                BrowserDirection.FromGlobal -> NavGraphDirections.actionGlobalBrowser(customTabSessionId)
-                BrowserDirection.FromHome ->
+                BrowserDirection.FromGlobal ->
+                    NavGraphDirections.actionGlobalBrowser(customTabSessionId)
+                BrowserDirection.FromHome -> {
+                    fragmentId = R.id.homeFragment
                     HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId)
-                BrowserDirection.FromSearch ->
+                }
+                BrowserDirection.FromSearch -> {
+                    fragmentId = R.id.searchFragment
                     SearchFragmentDirections.actionSearchFragmentToBrowserFragment(customTabSessionId)
-                BrowserDirection.FromSettings ->
+                }
+                BrowserDirection.FromSettings -> {
+                    fragmentId = R.id.settingsFragment
                     SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(customTabSessionId)
-                BrowserDirection.FromBookmarks ->
+                }
+                BrowserDirection.FromBookmarks -> {
+                    fragmentId = R.id.bookmarkFragment
                     BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(customTabSessionId)
-                BrowserDirection.FromBookmarksFolderSelect ->
+                }
+                BrowserDirection.FromBookmarksFolderSelect -> {
+                    fragmentId = R.id.bookmarkSelectFolderFragment
                     SelectBookmarkFolderFragmentDirections
                         .actionBookmarkSelectFolderFragmentToBrowserFragment(customTabSessionId)
-                BrowserDirection.FromHistory ->
+                }
+                BrowserDirection.FromHistory -> {
+                    fragmentId = R.id.historyFragment
                     HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(customTabSessionId)
-                BrowserDirection.FromPair ->
+                }
+                BrowserDirection.FromPair -> {
+                    fragmentId = R.id.pairFragment
                     PairFragmentDirections.actionPairFragmentToBrowserFragment(customTabSessionId)
-                BrowserDirection.FromTurnOnSync ->
+                }
+                BrowserDirection.FromTurnOnSync -> {
+                    fragmentId = R.id.turnOnSyncFragment
                     TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToBrowserFragment(customTabSessionId)
-                BrowserDirection.FromAccountProblem ->
+                }
+                BrowserDirection.FromAccountProblem -> {
+                    fragmentId = R.id.turnOnSyncFragment
                     AccountProblemFragmentDirections.actionAccountProblemFragmentToBrowserFragment(customTabSessionId)
+                }
             }
         } else {
             null
         }
 
         directions?.let {
-            navHost.navController.navigate(it)
+            navHost.navController.nav(fragmentId, it)
         }
     }
 
@@ -265,10 +289,12 @@ open class HomeActivity : AppCompatActivity() {
             CustomTabBrowsingModeManager()
         } else {
             DefaultBrowsingModeManager(Settings.getInstance(this).createBrowserModeStorage()) {
-                themeManager.setTheme(when (it.isPrivate()) {
-                    true -> ThemeManager.Theme.Private
-                    false -> ThemeManager.Theme.Normal
-                })
+                themeManager.setTheme(
+                    when (it.isPrivate()) {
+                        true -> ThemeManager.Theme.Private
+                        false -> ThemeManager.Theme.Normal
+                    }
+                )
             }
         }
     }

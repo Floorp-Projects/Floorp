@@ -45,6 +45,7 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -197,18 +198,20 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                         metrics()?.track(Event.OpenedBookmark)
                     }
                     is BookmarkAction.Expand -> {
-                        navigation
-                            .navigate(BookmarkFragmentDirections.actionBookmarkFragmentSelf(it.folder.guid))
+                        nav(
+                            R.id.bookmarkFragment,
+                            BookmarkFragmentDirections.actionBookmarkFragmentSelf(it.folder.guid)
+                        )
                     }
                     is BookmarkAction.BackPressed -> {
                         navigation.popBackStack()
                     }
                     is BookmarkAction.Edit -> {
-                        navigation
-                            .navigate(
-                                BookmarkFragmentDirections
-                                    .actionBookmarkFragmentToBookmarkEditFragment(it.item.guid)
-                            )
+                        nav(
+                            R.id.bookmarkFragment,
+                            BookmarkFragmentDirections
+                                .actionBookmarkFragmentToBookmarkEditFragment(it.item.guid)
+                        )
                     }
                     is BookmarkAction.Select -> {
                         getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.IsSelected(it.item))
@@ -224,7 +227,8 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                     }
                     is BookmarkAction.Share -> {
                         it.item.url?.apply {
-                            navigation.navigate(
+                            nav(
+                                R.id.bookmarkFragment,
                                 BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
                                     this,
                                     it.item.title
@@ -308,18 +312,17 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
                 (activity as HomeActivity).supportActionBar?.hide()
-                navigation
-                    .navigate(BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
+                nav(R.id.bookmarkFragment, BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
                 metrics()?.track(Event.OpenedBookmarksInNewTabs)
                 true
             }
             R.id.edit_bookmark_multi_select -> {
                 val bookmark = getSelectedBookmarks().first()
-                navigation
-                    .navigate(
-                        BookmarkFragmentDirections
-                            .actionBookmarkFragmentToBookmarkEditFragment(bookmark.guid)
-                    )
+                nav(
+                    R.id.bookmarkFragment,
+                    BookmarkFragmentDirections
+                        .actionBookmarkFragmentToBookmarkEditFragment(bookmark.guid)
+                )
                 true
             }
             R.id.open_bookmarks_in_private_tabs_multi_select -> {
@@ -331,8 +334,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
                 (activity as HomeActivity).supportActionBar?.hide()
-                navigation
-                    .navigate(BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
+                nav(R.id.bookmarkFragment, BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
                 metrics()?.track(Event.OpenedBookmarksInPrivateTabs)
                 true
             }
@@ -422,8 +424,8 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 children = childrenWithVirtualFolder
             )
 
-        // If we're looking at the root, that means we're in the "Desktop Bookmarks" folder.
-        // Rename its child roots and remove the mobile root.
+            // If we're looking at the root, that means we're in the "Desktop Bookmarks" folder.
+            // Rename its child roots and remove the mobile root.
         } else if (node.guid == BookmarkRoot.Root.id) {
             return BookmarkNode(
                 type = node.type,
@@ -434,7 +436,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 url = node.url,
                 children = processDesktopRoots(node.children)
             )
-        // If we're looking at one of the desktop roots, change their titles to friendly names.
+            // If we're looking at one of the desktop roots, change their titles to friendly names.
         } else if (node.guid in listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id)) {
             return BookmarkNode(
                 type = node.type,

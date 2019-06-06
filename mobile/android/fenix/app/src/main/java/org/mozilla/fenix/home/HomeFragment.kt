@@ -18,7 +18,6 @@ import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.navigation.Navigation
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.transition.TransitionInflater
@@ -50,6 +49,7 @@ import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
@@ -220,7 +220,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 FragmentNavigator.Extras.Builder()
                     .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
                     .build()
-            Navigation.findNavController(it).navigate(directions, extras)
+            nav(R.id.homeFragment, directions, extras)
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
 
@@ -328,7 +328,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                     FragmentNavigator.Extras.Builder()
                         .addSharedElement(action.tabView, "$TAB_ITEM_TRANSITION_NAME${action.sessionId}")
                         .build()
-                Navigation.findNavController(action.tabView).navigate(directions, extras)
+                nav(R.id.homeFragment, directions, extras)
             }
             is TabAction.Close -> {
                 if (deleteSessionJob == null) removeTabWithUndo(action.sessionId) else {
@@ -362,7 +362,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             is TabAction.Add -> {
                 invokePendingDeleteJobs()
                 val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
-                Navigation.findNavController(view!!).navigate(directions)
+                nav(R.id.homeFragment, directions)
             }
             is TabAction.ShareTabs -> {
                 invokePendingDeleteJobs()
@@ -504,14 +504,16 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 HomeMenu.Item.Settings -> {
                     invokePendingDeleteJobs()
                     onboarding.finish()
-                    Navigation.findNavController(homeLayout).navigate(
+                    nav(
+                        R.id.homeFragment,
                         HomeFragmentDirections.actionHomeFragmentToSettingsFragment()
                     )
                 }
                 HomeMenu.Item.Library -> {
                     invokePendingDeleteJobs()
                     onboarding.finish()
-                    Navigation.findNavController(homeLayout).navigate(
+                    nav(
+                        R.id.homeFragment,
                         HomeFragmentDirections.actionHomeFragmentToLibraryFragment()
                     )
                 }
@@ -673,14 +675,14 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
         view?.let {
             val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
-            Navigation.findNavController(it).navigate(directions)
+            nav(R.id.homeFragment, directions)
         }
     }
 
     private fun share(url: String? = null, tabs: List<ShareTab>? = null) {
         val directions =
             HomeFragmentDirections.actionHomeFragmentToShareFragment(url = url, tabs = tabs?.toTypedArray())
-        Navigation.findNavController(view!!).navigate(directions)
+        nav(R.id.homeFragment, directions)
     }
 
     private fun currentMode(): Mode = if (!onboarding.userHasBeenOnboarded()) {
@@ -696,11 +698,25 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         Mode.Normal
     }
 
-    override fun onAuthenticationProblems() { emitAccountChanges() }
-    override fun onAuthenticated(account: OAuthAccount) { emitAccountChanges() }
-    override fun onError(error: Exception) { emitAccountChanges() }
-    override fun onLoggedOut() { emitAccountChanges() }
-    override fun onProfileUpdated(profile: Profile) { emitAccountChanges() }
+    override fun onAuthenticationProblems() {
+        emitAccountChanges()
+    }
+
+    override fun onAuthenticated(account: OAuthAccount) {
+        emitAccountChanges()
+    }
+
+    override fun onError(error: Exception) {
+        emitAccountChanges()
+    }
+
+    override fun onLoggedOut() {
+        emitAccountChanges()
+    }
+
+    override fun onProfileUpdated(profile: Profile) {
+        emitAccountChanges()
+    }
 
     companion object {
         private const val SHARED_TRANSITION_MS = 200L

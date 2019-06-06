@@ -16,8 +16,6 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
-import androidx.navigation.Navigation
-import kotlinx.android.synthetic.main.fragment_bookmark.view.*
 import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.*
 import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -36,6 +34,7 @@ import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.library.bookmarks.SignInAction
@@ -145,7 +144,8 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
         return when (item.itemId) {
             R.id.add_folder_button -> {
                 launch(Main) {
-                    Navigation.findNavController(requireActivity(), R.id.container).navigate(
+                    nav(
+                        R.id.bookmarkSelectFolderFragment,
                         SelectBookmarkFolderFragmentDirections
                             .actionBookmarkSelectFolderFragmentToBookmarkAddFolderFragment()
                     )

@@ -22,6 +22,7 @@ import mozilla.appservices.places.BookmarkRoot
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getColorFromAttr
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 
 class LibraryFragment : Fragment() {
@@ -53,15 +54,16 @@ class LibraryFragment : Fragment() {
         libraryHistory.setOnClickListener {
             requireComponents.analytics.metrics
                 .track(Event.LibrarySelectedItem(view.context.getString(R.string.library_history)))
-            Navigation.findNavController(view)
-                .navigate(LibraryFragmentDirections.actionLibraryFragmentToHistoryFragment())
+            nav(R.id.libraryFragment, LibraryFragmentDirections.actionLibraryFragmentToHistoryFragment())
         }
 
         libraryBookmarks.setOnClickListener {
             requireComponents.analytics.metrics
                 .track(Event.LibrarySelectedItem(view.context.getString(R.string.library_bookmarks)))
-            Navigation.findNavController(view)
-                .navigate(LibraryFragmentDirections.actionLibraryFragmentToBookmarksFragment(BookmarkRoot.Mobile.id))
+            nav(
+                R.id.libraryFragment,
+                LibraryFragmentDirections.actionLibraryFragmentToBookmarksFragment(BookmarkRoot.Mobile.id)
+            )
         }
 
         requireComponents.analytics.metrics.track(Event.LibraryOpened)
@@ -95,6 +97,6 @@ class LibraryFragment : Fragment() {
         toolbar.setBackgroundColor(backgroundColor)
         toolbar.setTitleTextColor(foregroundColor)
         toolbar.navigationIcon?.colorFilter =
-                PorterDuffColorFilter(foregroundColor, PorterDuff.Mode.SRC_IN)
+            PorterDuffColorFilter(foregroundColor, PorterDuff.Mode.SRC_IN)
     }
 }

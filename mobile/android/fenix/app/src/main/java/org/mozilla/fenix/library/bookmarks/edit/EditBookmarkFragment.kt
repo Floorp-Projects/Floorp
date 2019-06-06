@@ -39,6 +39,7 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getColorFromAttr
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import java.util.concurrent.TimeUnit
@@ -106,7 +107,8 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
                     bookmark_folder_selector.text = node.title
                     bookmark_folder_selector.setOnClickListener {
                         sharedViewModel.selectedFolder = null
-                        Navigation.findNavController(requireActivity(), R.id.container).navigate(
+                        nav(
+                            R.id.bookmarkEditFragment,
                             EditBookmarkFragmentDirections
                                 .actionBookmarkEditFragmentToBookmarkSelectFolderFragment(null)
                         )

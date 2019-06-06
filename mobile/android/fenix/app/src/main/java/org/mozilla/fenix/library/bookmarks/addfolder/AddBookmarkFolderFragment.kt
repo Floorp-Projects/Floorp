@@ -28,6 +28,7 @@ import mozilla.appservices.places.BookmarkRoot
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getColorFromAttr
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import kotlin.coroutines.CoroutineContext
@@ -65,14 +66,14 @@ class AddBookmarkFolderFragment : Fragment(), CoroutineScope {
             launch(Main) {
                 bookmark_add_folder_parent_selector.text = sharedViewModel.selectedFolder!!.title
                 bookmark_add_folder_parent_selector.setOnClickListener {
-                    Navigation.findNavController(requireActivity(), R.id.container)
-                        .navigate(
-                            AddBookmarkFolderFragmentDirections
-                                .actionBookmarkAddFolderFragmentToBookmarkSelectFolderFragment(
-                                    BookmarkRoot.Root.id,
-                                    true
-                                )
-                        )
+                    nav(
+                        R.id.bookmarkAddFolderFragment,
+                        AddBookmarkFolderFragmentDirections
+                            .actionBookmarkAddFolderFragmentToBookmarkSelectFolderFragment(
+                                BookmarkRoot.Root.id,
+                                true
+                            )
+                    )
                 }
             }
         }

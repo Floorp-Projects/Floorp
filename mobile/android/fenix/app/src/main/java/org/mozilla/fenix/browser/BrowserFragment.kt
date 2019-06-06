@@ -17,7 +17,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
-import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
@@ -78,6 +77,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarUIView
 import org.mozilla.fenix.components.toolbar.ToolbarViewModel
 import org.mozilla.fenix.customtabs.CustomTabsIntegration
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.Tab
@@ -443,13 +443,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             .subscribe {
                 when (it) {
                     is SearchAction.ToolbarClicked -> {
-                        Navigation
-                            .findNavController(toolbarComponent.getView())
-                            .navigate(
-                                BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                                    getSessionById()?.id
-                                )
+                        nav(
+                            R.id.browserFragment,
+                            BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                                getSessionById()?.id
                             )
+                        )
 
                         requireComponents.analytics.metrics.track(
                             Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)
@@ -533,11 +532,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 val found = existing.isNotEmpty() && existing[0].url == session.url
                 if (found) {
                     launch(Main) {
-                        Navigation.findNavController(requireActivity(), R.id.container)
-                            .navigate(
-                                BrowserFragmentDirections
-                                    .actionBrowserFragmentToBookmarkEditFragment(existing[0].guid)
-                            )
+                        nav(
+                            R.id.browserFragment,
+                            BrowserFragmentDirections
+                                .actionBrowserFragmentToBookmarkEditFragment(existing[0].guid)
+                        )
                     }
                 } else {
                     val guid = components.core.bookmarksStorage
@@ -558,16 +557,13 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                             )
                                 .setAnchorView(toolbarComponent.uiView.view)
                                 .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
-                                    Navigation.findNavController(
-                                        requireActivity(),
-                                        R.id.container
+                                    nav(
+                                        R.id.browserFragment,
+                                        BrowserFragmentDirections
+                                            .actionBrowserFragmentToBookmarkEditFragment(
+                                                guid
+                                            )
                                     )
-                                        .navigate(
-                                            BrowserFragmentDirections
-                                                .actionBrowserFragmentToBookmarkEditFragment(
-                                                    guid
-                                                )
-                                        )
                                 }
                                 .setText(getString(R.string.bookmark_saved_snackbar))
                                 .show()
@@ -687,10 +683,14 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke(getSessionById())
             ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke(getSessionById())
             ToolbarMenu.Item.Stop -> sessionUseCases.stopLoading.invoke(getSessionById())
-            ToolbarMenu.Item.Settings -> Navigation.findNavController(toolbarComponent.getView())
-                .navigate(BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment())
-            ToolbarMenu.Item.Library -> Navigation.findNavController(toolbarComponent.getView())
-                .navigate(BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment())
+            ToolbarMenu.Item.Settings -> nav(
+                R.id.browserFragment,
+                BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
+            )
+            ToolbarMenu.Item.Library -> nav(
+                R.id.browserFragment,
+                BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment()
+            )
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)
             ToolbarMenu.Item.Share -> getSessionById()?.let { session ->
                 session.url.apply {
@@ -700,7 +700,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             ToolbarMenu.Item.NewPrivateTab -> {
                 val directions = BrowserFragmentDirections
                     .actionBrowserFragmentToSearchFragment(null)
-                Navigation.findNavController(view!!).navigate(directions)
+                nav(R.id.browserFragment, directions)
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
             }
             ToolbarMenu.Item.FindInPage -> {
@@ -724,7 +724,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             ToolbarMenu.Item.NewTab -> {
                 val directions = BrowserFragmentDirections
                     .actionBrowserFragmentToSearchFragment(null)
-                Navigation.findNavController(view!!).navigate(directions)
+                nav(R.id.browserFragment, directions)
                 (activity as HomeActivity).browsingModeManager.mode =
                     BrowsingModeManager.Mode.Normal
             }
@@ -759,7 +759,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             viewModel?.snackbarAnchorView = nestedScrollQuickAction
             view?.let {
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
-                Navigation.findNavController(it).navigate(directions)
+                nav(R.id.browserFragment, directions)
             }
         }
     }
@@ -793,7 +793,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                         sitePermissions = sitePermissions,
                         gravity = getAppropriateLayoutGravity()
                     )
-                    Navigation.findNavController(it).navigate(directions)
+                    nav(R.id.browserFragment, directions)
                 }
             }
         }
@@ -876,7 +876,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     private fun shareUrl(url: String) {
         val directions = BrowserFragmentDirections.actionBrowserFragmentToShareFragment(url)
-        Navigation.findNavController(view!!).navigate(directions)
+        nav(R.id.browserFragment, directions)
     }
 
     companion object {

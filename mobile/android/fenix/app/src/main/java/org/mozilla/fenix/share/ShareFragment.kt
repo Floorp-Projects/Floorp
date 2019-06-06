@@ -16,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
-import androidx.navigation.fragment.NavHostFragment.findNavController
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.fragment_share.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +25,7 @@ import mozilla.components.concept.sync.DeviceEventOutgoing
 import mozilla.components.concept.sync.OAuthAccount
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -87,7 +87,7 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
                 }
                 ShareAction.SignInClicked -> {
                     val directions = ShareFragmentDirections.actionShareFragmentToTurnOnSyncFragment()
-                    findNavController(this@ShareFragment).navigate(directions)
+                    nav(R.id.shareFragment, directions)
                     dismiss()
                 }
                 ShareAction.AddNewDeviceClicked -> {

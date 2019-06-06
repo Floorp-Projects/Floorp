@@ -15,7 +15,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.navigation.Navigation
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
@@ -38,6 +37,7 @@ import org.mozilla.fenix.ext.components
 import kotlin.coroutines.CoroutineContext
 import android.graphics.drawable.BitmapDrawable
 import android.widget.ImageView
+import org.mozilla.fenix.ext.nav
 
 private const val MAX_ITEMS_PER_PAGE = 50
 
@@ -135,7 +135,7 @@ class SitePermissionsExceptionsFragment : Fragment(), View.OnClickListener, Coro
         val sitePermissions = view?.tag as SitePermissions
         val directions = SitePermissionsExceptionsFragmentDirections
             .actionSitePermissionsToExceptionsToSitePermissionsDetails(sitePermissions)
-        Navigation.findNavController(requireNotNull(view)).navigate(directions)
+        nav(R.id.sitePermissionsExceptionsFragment, directions)
     }
 }
 

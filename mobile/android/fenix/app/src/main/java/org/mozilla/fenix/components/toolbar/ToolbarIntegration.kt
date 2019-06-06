@@ -23,6 +23,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.utils.Settings
 
 class ToolbarIntegration(
@@ -67,8 +68,18 @@ class ToolbarIntegration(
                                 )
                                 .build()
                         val navController = Navigation.findNavController(toolbar)
-                        if (!navController.popBackStack(R.id.homeFragment, false)) {
-                            navController.navigate(R.id.action_browserFragment_to_homeFragment, null, options, extras)
+                        if (!navController.popBackStack(
+                                R.id.homeFragment,
+                                false
+                            )
+                        ) {
+                            navController.nav(
+                                R.id.browserFragment,
+                                R.id.action_browserFragment_to_homeFragment,
+                                null,
+                                options,
+                                extras
+                            )
                         }
                     },
                     isPrivate

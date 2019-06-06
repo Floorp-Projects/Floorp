@@ -16,6 +16,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.nav
 
 class PairInstructionsFragment : BottomSheetDialogFragment() {
 
@@ -46,7 +47,7 @@ class PairInstructionsFragment : BottomSheetDialogFragment() {
         val openCamera = view.findViewById(R.id.pair_open_camera) as Button
         openCamera.setOnClickListener {
             val directions = PairInstructionsFragmentDirections.actionPairInstructionsFragmentToPairFragment()
-            findNavController(this@PairInstructionsFragment).navigate(directions)
+            nav(R.id.pairInstructionsFragment, directions)
         }
 
         val cancelCamera = view.findViewById(R.id.pair_cancel) as Button

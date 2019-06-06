@@ -38,6 +38,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getHostFromUrl
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -161,7 +162,7 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
                 browsingModeManager.mode = BrowsingModeManager.Mode.Normal
                 supportActionBar?.hide()
             }
-            navigation.navigate(HistoryFragmentDirections.actionHistoryFragmentToHomeFragment())
+            nav(R.id.historyFragment, HistoryFragmentDirections.actionHistoryFragmentToHomeFragment())
             true
         }
         R.id.open_history_in_private_tabs_multi_select -> {
@@ -176,7 +177,7 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
                 browsingModeManager.mode = BrowsingModeManager.Mode.Private
                 supportActionBar?.hide()
             }
-            navigation.navigate(HistoryFragmentDirections.actionHistoryFragmentToHomeFragment())
+            nav(R.id.historyFragment, HistoryFragmentDirections.actionHistoryFragmentToHomeFragment())
             true
         }
         else -> super.onOptionsItemSelected(item)
@@ -297,7 +298,7 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
     private fun share(url: String? = null, tabs: List<ShareTab>? = null) {
         val directions =
             HistoryFragmentDirections.actionHistoryFragmentToShareFragment(url = url, tabs = tabs?.toTypedArray())
-        Navigation.findNavController(view!!).navigate(directions)
+        nav(R.id.historyFragment, directions)
     }
 
     private inline fun emitChange(producer: () -> HistoryChange) {
