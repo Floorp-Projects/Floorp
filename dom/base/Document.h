@@ -972,9 +972,7 @@ class Document : public nsINode,
    * Tell this document that it's the initial document in its window.  See
    * comments on mIsInitialDocumentInWindow for when this should be called.
    */
-  void SetIsInitialDocument(bool aIsInitialDocument) {
-    mIsInitialDocumentInWindow = aIsInitialDocument;
-  }
+  void SetIsInitialDocument(bool aIsInitialDocument);
 
   void SetLoadedAsData(bool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
   void SetLoadedAsInteractiveData(bool aLoadedAsInteractiveData) {
