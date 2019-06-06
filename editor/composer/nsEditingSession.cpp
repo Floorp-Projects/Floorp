@@ -163,7 +163,7 @@ nsEditingSession::MakeWindowEditable(mozIDOMWindowProxy* aWindow,
 
   // aDoAfterUriLoad can be false only when making an existing window editable
   if (!aDoAfterUriLoad) {
-    rv = SetupEditorOnWindow(aWindow);
+    rv = SetupEditorOnWindow(MOZ_KnownLive(*window));
 
     // mEditorStatus is set to the error reason
     // Since this is used only when editing an existing page,
@@ -266,20 +266,8 @@ bool IsSupportedTextType(const char* aMIMEType) {
   return false;
 }
 
-/*---------------------------------------------------------------------------
-
-  SetupEditorOnWindow
-
-  nsIEditor setupEditorOnWindow (in nsIDOMWindow aWindow);
-----------------------------------------------------------------------------*/
-NS_IMETHODIMP
-nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
+nsresult nsEditingSession::SetupEditorOnWindow(nsPIDOMWindowOuter& aWindow) {
   mDoneSetup = true;
-
-  NS_ENSURE_TRUE(aWindow, NS_ERROR_FAILURE);
-  auto* window = nsPIDOMWindowOuter::From(aWindow);
-
-  nsresult rv;
 
   // MIME CHECKING
   // must get the content type
@@ -288,7 +276,7 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
   nsAutoCString mimeCType;
 
   // then lets check the mime type
-  if (RefPtr<Document> doc = window->GetDoc()) {
+  if (RefPtr<Document> doc = aWindow.GetDoc()) {
     nsAutoString mimeType;
     doc->GetContentType(mimeType);
     AppendUTF16toUTF8(mimeType, mimeCType);
@@ -348,8 +336,7 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
   // now init the state maintainer
   // This allows notification of error state
   //  even if we don't create an editor
-  rv = mComposerCommandsUpdater->Init(window);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mComposerCommandsUpdater->Init(aWindow);
 
   if (mEditorStatus != eEditorCreationInProgress) {
     RefPtr<ComposerCommandsUpdater> updater = mComposerCommandsUpdater;
@@ -366,7 +353,7 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
 
   // Create editor and do other things
   //  only if we haven't found some error above,
-  nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
+  nsCOMPtr<nsIDocShell> docShell = aWindow.GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
   RefPtr<PresShell> presShell = docShell->GetPresShell();
   if (NS_WARN_IF(!presShell)) {
@@ -401,14 +388,14 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
         do_GetWeakReference(static_cast<nsIEditor*>(htmlEditor.get()));
   }
   // set the editor on the docShell. The docShell now owns it.
-  rv = docShell->SetHTMLEditor(htmlEditor);
+  nsresult rv = docShell->SetHTMLEditor(htmlEditor);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // setup the HTML editor command controller
   if (needHTMLController) {
     // The third controller takes an nsIEditor as the context
     rv = SetupEditorCommandController(
-        nsBaseCommandController::CreateHTMLEditorController, aWindow,
+        nsBaseCommandController::CreateHTMLEditorController, &aWindow,
         static_cast<nsIEditor*>(htmlEditor), &mHTMLCommandControllerId);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -523,7 +510,7 @@ nsEditingSession::TearDownEditorOnWindow(mozIDOMWindowProxy* aWindow) {
   if (mComposerCommandsUpdater && htmlEditor) {
     // Null out the editor on the controllers first to prevent their weak
     // references from pointing to a destroyed editor.
-    SetEditorOnControllers(aWindow, nullptr);
+    SetEditorOnControllers(*window, nullptr);
   }
 
   // Null out the editor on the docShell to trigger PreDestroy which
@@ -879,7 +866,8 @@ nsresult nsEditingSession::EndDocumentLoad(nsIWebProgress* aWebProgress,
     mEditorStatus = eEditorErrorFileNotFound;
   }
 
-  nsIDocShell* docShell = nsPIDOMWindowOuter::From(domWindow)->GetDocShell();
+  auto* window = nsPIDOMWindowOuter::From(domWindow);
+  nsIDocShell* docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);  // better error handling?
 
   // cancel refresh from meta tags
@@ -910,7 +898,7 @@ nsresult nsEditingSession::EndDocumentLoad(nsIWebProgress* aWebProgress,
 
       if (needsSetup) {
         mCanCreateEditor = false;
-        rv = SetupEditorOnWindow(domWindow);
+        rv = SetupEditorOnWindow(MOZ_KnownLive(*window));
         if (NS_FAILED(rv)) {
           // If we had an error, setup timer to load a blank page later
           if (mLoadBlankDocTimer) {
@@ -1087,24 +1075,13 @@ nsresult nsEditingSession::SetupEditorCommandController(
   return SetContextOnControllerById(controllers, aContext, *aControllerId);
 }
 
-/*---------------------------------------------------------------------------
-
-  SetEditorOnControllers
-
-  Set the editor on the controller(s) for this window
-----------------------------------------------------------------------------*/
-NS_IMETHODIMP
-nsEditingSession::SetEditorOnControllers(mozIDOMWindowProxy* aWindow,
-                                         nsIEditor* aEditor) {
-  NS_ENSURE_TRUE(aWindow, NS_ERROR_NULL_POINTER);
-
-  auto* piWindow = nsPIDOMWindowOuter::From(aWindow);
-
+nsresult nsEditingSession::SetEditorOnControllers(nsPIDOMWindowOuter& aWindow,
+                                                  HTMLEditor* aEditor) {
   nsCOMPtr<nsIControllers> controllers;
-  nsresult rv = piWindow->GetControllers(getter_AddRefs(controllers));
+  nsresult rv = aWindow.GetControllers(getter_AddRefs(controllers));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISupports> editorAsISupports = static_cast<nsISupports*>(aEditor);
+  nsCOMPtr<nsISupports> editorAsISupports = static_cast<nsIEditor*>(aEditor);
   if (mBaseCommandControllerId) {
     rv = SetContextOnControllerById(controllers, editorAsISupports,
                                     mBaseCommandControllerId);
@@ -1209,7 +1186,7 @@ void nsEditingSession::RestoreAnimationMode(nsPIDOMWindowOuter* aWindow) {
   presContext->SetImageAnimationMode(mImageAnimationMode);
 }
 
-nsresult nsEditingSession::DetachFromWindow(mozIDOMWindowProxy* aWindow) {
+nsresult nsEditingSession::DetachFromWindow(nsPIDOMWindowOuter* aWindow) {
   NS_ENSURE_TRUE(mDoneSetup, NS_OK);
 
   NS_ASSERTION(mComposerCommandsUpdater,
@@ -1221,14 +1198,12 @@ nsresult nsEditingSession::DetachFromWindow(mozIDOMWindowProxy* aWindow) {
     mLoadBlankDocTimer = nullptr;
   }
 
-  auto* window = nsPIDOMWindowOuter::From(aWindow);
-
   // Remove controllers, webprogress listener, and otherwise
   // make things the way they were before we started editing.
-  RemoveEditorControllers(window);
-  RemoveWebProgressListener(window);
-  RestoreJSAndPlugins(window);
-  RestoreAnimationMode(window);
+  RemoveEditorControllers(aWindow);
+  RemoveWebProgressListener(aWindow);
+  RestoreJSAndPlugins(aWindow);
+  RestoreAnimationMode(aWindow);
 
   // Kill our weak reference to our original window, in case
   // it changes on restore, or otherwise dies.
@@ -1237,7 +1212,7 @@ nsresult nsEditingSession::DetachFromWindow(mozIDOMWindowProxy* aWindow) {
   return NS_OK;
 }
 
-nsresult nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow) {
+nsresult nsEditingSession::ReattachToWindow(nsPIDOMWindowOuter* aWindow) {
   NS_ENSURE_TRUE(mDoneSetup, NS_OK);
   NS_ENSURE_TRUE(aWindow, NS_ERROR_FAILURE);
 
@@ -1248,8 +1223,7 @@ nsresult nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow) {
   // old editor ot the window.
   nsresult rv;
 
-  auto* window = nsPIDOMWindowOuter::From(aWindow);
-  nsIDocShell* docShell = window->GetDocShell();
+  nsIDocShell* docShell = aWindow->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
   mDocShell = do_GetWeakReference(docShell);
 
@@ -1263,7 +1237,7 @@ nsresult nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow) {
   mEditorStatus = eEditorCreationInProgress;
 
   // Adds back web progress listener.
-  rv = PrepareForEditing(window);
+  rv = PrepareForEditing(aWindow);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Setup the command controllers again.
@@ -1278,7 +1252,7 @@ nsresult nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mComposerCommandsUpdater) {
-    mComposerCommandsUpdater->Init(window);
+    mComposerCommandsUpdater->Init(*aWindow);
   }
 
   // Get editor
@@ -1307,7 +1281,7 @@ nsresult nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set context on all controllers to be the editor
-  rv = SetEditorOnControllers(aWindow, htmlEditor);
+  rv = SetEditorOnControllers(*aWindow, htmlEditor);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG

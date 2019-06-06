@@ -199,13 +199,9 @@ ComposerCommandsUpdater::DidMerge(nsITransactionManager* aManager,
 #  pragma mark -
 #endif
 
-nsresult ComposerCommandsUpdater::Init(nsPIDOMWindowOuter* aDOMWindow) {
-  if (NS_WARN_IF(!aDOMWindow)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  mDOMWindow = aDOMWindow;
-  mDocShell = aDOMWindow->GetDocShell();
-  return NS_OK;
+void ComposerCommandsUpdater::Init(nsPIDOMWindowOuter& aDOMWindow) {
+  mDOMWindow = &aDOMWindow;
+  mDocShell = aDOMWindow.GetDocShell();
 }
 
 nsresult ComposerCommandsUpdater::PrimeUpdateTimer() {
