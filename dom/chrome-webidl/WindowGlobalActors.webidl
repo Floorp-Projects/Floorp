@@ -34,6 +34,12 @@ interface WindowGlobalParent {
 
   static WindowGlobalParent? getByInnerWindowId(unsigned long long innerWindowId);
 
+  /**
+   * Get or create the JSWindowActor with the given name.
+   *
+   * See WindowActorOptions from JSWindowActor.webidl for details on how to
+   * customize actor creation.
+   */
   [Throws]
   JSWindowActorParent getActor(DOMString name);
 
@@ -63,6 +69,12 @@ interface WindowGlobalChild {
 
   static WindowGlobalChild? getByInnerWindowId(unsigned long long innerWIndowId);
 
+  /**
+   * Get or create the JSWindowActor with the given name.
+   *
+   * See WindowActorOptions from JSWindowActor.webidl for details on how to
+   * customize actor creation.
+   */
   [Throws]
   JSWindowActorChild getActor(DOMString name);
 };
