@@ -22,7 +22,6 @@ const {
   MESSAGE_CLOSE,
   MESSAGE_TYPE,
   MESSAGE_UPDATE_PAYLOAD,
-  MESSAGE_TABLE_RECEIVE,
   PAUSED_EXCECUTION_POINT,
   PRIVATE_MESSAGES_CLEAR,
 } = require("../constants");
@@ -117,7 +116,7 @@ function messageGetMatchingElements(id, cssSelectors) {
   };
 }
 
-function messageTableDataGet(id, client, dataType) {
+function messageGetTableData(id, client, dataType) {
   return ({dispatch}) => {
     let fetchObjectActorData;
     if (["Map", "WeakMap", "Set", "WeakSet"].includes(dataType)) {
@@ -133,17 +132,9 @@ function messageTableDataGet(id, client, dataType) {
       // eslint-disable-next-line mozilla/use-returnValue
       iterator.slice(0, iterator.count, sliceResponse => {
         const {ownProperties} = sliceResponse;
-        dispatch(messageTableDataReceive(id, ownProperties));
+        dispatch(messageUpdatePayload(id, ownProperties));
       });
     });
-  };
-}
-
-function messageTableDataReceive(id, data) {
-  return {
-    type: MESSAGE_TABLE_RECEIVE,
-    id,
-    data,
   };
 }
 
@@ -192,12 +183,11 @@ module.exports = {
   messageOpen,
   messageClose,
   messageGetMatchingElements,
-  messageTableDataGet,
+  messageGetTableData,
   messageUpdatePayload,
   networkMessageUpdate,
   networkUpdateRequest,
   privateMessagesClear,
   // for test purpose only.
-  messageTableDataReceive,
   setPauseExecutionPoint,
 };

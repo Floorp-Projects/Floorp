@@ -46,7 +46,7 @@ class ConsoleTable extends Component {
     const dataType = getParametersDataType(parameters);
 
     // Get all the object properties.
-    dispatch(actions.messageTableDataGet(id, client, dataType));
+    dispatch(actions.messageGetTableData(id, client, dataType));
   }
 
   getHeaders(columns) {
