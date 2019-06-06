@@ -30,7 +30,6 @@ class PathBuilderCairo : public PathBuilder {
   void Close() override;
   void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
            float aEndAngle, bool aAntiClockwise = false) override;
-  Point CurrentPoint() const override;
   already_AddRefed<Path> Finish() override;
 
   BackendType GetBackendType() const override { return BackendType::CAIRO; }
@@ -40,10 +39,6 @@ class PathBuilderCairo : public PathBuilder {
 
   FillRule mFillRule;
   std::vector<cairo_path_data_t> mPathData;
-  // It's easiest to track this here, parsing the path data to find the current
-  // point is a little tricky.
-  Point mCurrentPoint;
-  Point mBeginPoint;
 };
 
 class PathCairo : public Path {
@@ -51,7 +46,7 @@ class PathCairo : public Path {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathCairo, override)
 
   PathCairo(FillRule aFillRule, std::vector<cairo_path_data_t>& aPathData,
-            const Point& aCurrentPoint);
+            const Point& aCurrentPoint, const Point& aBeginPoint);
   explicit PathCairo(cairo_t* aContext);
   virtual ~PathCairo();
 
@@ -91,6 +86,7 @@ class PathCairo : public Path {
   mutable cairo_t* mContainingContext;
   mutable Matrix mContainingTransform;
   Point mCurrentPoint;
+  Point mBeginPoint;
 };
 
 }  // namespace gfx

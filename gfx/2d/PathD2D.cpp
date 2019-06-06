@@ -223,8 +223,6 @@ void PathBuilderD2D::Arc(const Point& aOrigin, Float aRadius, Float aStartAngle,
   mCurrentPoint = endPoint;
 }
 
-Point PathBuilderD2D::CurrentPoint() const { return mCurrentPoint; }
-
 void PathBuilderD2D::EnsureActive(const Point& aPoint) {
   if (!mFigureActive) {
     mSink->BeginFigure(D2DPoint(aPoint), D2D1_FIGURE_BEGIN_FILLED);

@@ -1006,13 +1006,43 @@ XDRResult XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj);
  * Report a TypeError: "so-and-so is not an object".
  * Using NotNullObject is usually less code.
  */
-extern void ReportNotObject(JSContext* cx, HandleValue v);
+extern void ReportNotObject(JSContext* cx, const Value& v);
 
-inline JSObject* NonNullObject(JSContext* cx, HandleValue v) {
+inline JSObject* RequireObject(JSContext* cx, HandleValue v) {
   if (v.isObject()) {
     return &v.toObject();
   }
   ReportNotObject(cx, v);
+  return nullptr;
+}
+
+/*
+ * Report a TypeError: "SOMETHING must be an object, got VALUE".
+ * Using NotNullObject is usually less code.
+ *
+ * By default this function will attempt to report the expression which computed
+ * the value which given as argument. This can be disabled by using
+ * JSDVG_IGNORE_STACK.
+ */
+extern void ReportNotObject(JSContext* cx, JSErrNum err, int spindex,
+                            HandleValue v);
+
+inline JSObject* RequireObject(JSContext* cx, JSErrNum err, int spindex,
+                               HandleValue v) {
+  if (v.isObject()) {
+    return &v.toObject();
+  }
+  ReportNotObject(cx, err, spindex, v);
+  return nullptr;
+}
+
+extern void ReportNotObject(JSContext* cx, JSErrNum err, HandleValue v);
+
+inline JSObject* RequireObject(JSContext* cx, JSErrNum err, HandleValue v) {
+  if (v.isObject()) {
+    return &v.toObject();
+  }
+  ReportNotObject(cx, err, v);
   return nullptr;
 }
 
@@ -1023,28 +1053,12 @@ inline JSObject* NonNullObject(JSContext* cx, HandleValue v) {
 extern void ReportNotObjectArg(JSContext* cx, const char* nth, const char* fun,
                                HandleValue v);
 
-inline JSObject* NonNullObjectArg(JSContext* cx, const char* nth,
+inline JSObject* RequireObjectArg(JSContext* cx, const char* nth,
                                   const char* fun, HandleValue v) {
   if (v.isObject()) {
     return &v.toObject();
   }
   ReportNotObjectArg(cx, nth, fun, v);
-  return nullptr;
-}
-
-/*
- * Report a TypeError: "SOMETHING must be an object, got VALUE".
- * Using NotNullObjectWithName is usually less code.
- */
-extern void ReportNotObjectWithName(JSContext* cx, const char* name,
-                                    HandleValue v);
-
-inline JSObject* NonNullObjectWithName(JSContext* cx, const char* name,
-                                       HandleValue v) {
-  if (v.isObject()) {
-    return &v.toObject();
-  }
-  ReportNotObjectWithName(cx, name, v);
   return nullptr;
 }
 

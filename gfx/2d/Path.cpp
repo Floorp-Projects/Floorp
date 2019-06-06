@@ -75,7 +75,7 @@ void FlattenedPath::MoveTo(const Point& aPoint) {
   op.mPoint = aPoint;
   mPathOps.push_back(op);
 
-  mLastMove = aPoint;
+  mBeginPoint = aPoint;
 }
 
 void FlattenedPath::LineTo(const Point& aPoint) {
@@ -109,7 +109,7 @@ void FlattenedPath::QuadraticBezierTo(const Point& aCP1, const Point& aCP2) {
 
 void FlattenedPath::Close() {
   MOZ_ASSERT(!mCalculatedLength);
-  LineTo(mLastMove);
+  LineTo(mBeginPoint);
 }
 
 void FlattenedPath::Arc(const Point& aOrigin, float aRadius, float aStartAngle,

@@ -3663,7 +3663,7 @@ const Class Debugger::class_ = {
 
 static Debugger* Debugger_fromThisValue(JSContext* cx, const CallArgs& args,
                                         const char* fnname) {
-  JSObject* thisobj = NonNullObject(cx, args.thisv());
+  JSObject* thisobj = RequireObject(cx, args.thisv());
   if (!thisobj) {
     return nullptr;
   }
@@ -4240,7 +4240,7 @@ bool Debugger::construct(JSContext* cx, unsigned argc, Value* vp) {
 
   // Check that the arguments, if any, are cross-compartment wrappers.
   for (unsigned i = 0; i < args.length(); i++) {
-    JSObject* argobj = NonNullObject(cx, args[i]);
+    JSObject* argobj = RequireObject(cx, args[i]);
     if (!argobj) {
       return false;
     }
@@ -5152,7 +5152,7 @@ bool Debugger::findScripts(JSContext* cx, unsigned argc, Value* vp) {
   ScriptQuery query(cx, dbg);
 
   if (args.length() >= 1) {
-    RootedObject queryObject(cx, NonNullObject(cx, args[0]));
+    RootedObject queryObject(cx, RequireObject(cx, args[0]));
     if (!queryObject || !query.parseQuery(queryObject)) {
       return false;
     }
@@ -5554,7 +5554,7 @@ bool Debugger::findObjects(JSContext* cx, unsigned argc, Value* vp) {
   ObjectQuery query(cx, dbg);
 
   if (args.length() >= 1) {
-    RootedObject queryObject(cx, NonNullObject(cx, args[0]));
+    RootedObject queryObject(cx, RequireObject(cx, args[0]));
     if (!queryObject || !query.parseQuery(queryObject)) {
       return false;
     }
@@ -5817,7 +5817,7 @@ bool Debugger::adoptSource(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject obj(cx, NonNullObject(cx, args[0]));
+  RootedObject obj(cx, RequireObject(cx, args[0]));
   if (!obj) {
     return false;
   }
@@ -6120,7 +6120,7 @@ JSObject* Debugger::wrapWasmScript(JSContext* cx,
 
 static JSObject* DebuggerScript_check(JSContext* cx, HandleValue v,
                                       const char* fnname) {
-  JSObject* thisobj = NonNullObject(cx, v);
+  JSObject* thisobj = RequireObject(cx, v);
   if (!thisobj) {
     return nullptr;
   }
@@ -6827,7 +6827,7 @@ static bool DebuggerScript_getPossibleBreakpoints(JSContext* cx, unsigned argc,
   RootedObject result(cx);
   DebuggerScriptGetPossibleBreakpointsMatcher<false> matcher(cx, &result);
   if (args.length() >= 1 && !args[0].isUndefined()) {
-    RootedObject queryObject(cx, NonNullObject(cx, args[0]));
+    RootedObject queryObject(cx, RequireObject(cx, args[0]));
     if (!queryObject || !matcher.parseQuery(queryObject)) {
       return false;
     }
@@ -6849,7 +6849,7 @@ static bool DebuggerScript_getPossibleBreakpointOffsets(JSContext* cx,
   RootedObject result(cx);
   DebuggerScriptGetPossibleBreakpointsMatcher<true> matcher(cx, &result);
   if (args.length() >= 1 && !args[0].isUndefined()) {
-    RootedObject queryObject(cx, NonNullObject(cx, args[0]));
+    RootedObject queryObject(cx, RequireObject(cx, args[0]));
     if (!queryObject || !matcher.parseQuery(queryObject)) {
       return false;
     }
@@ -7997,7 +7997,7 @@ static bool DebuggerScript_setBreakpoint(JSContext* cx, unsigned argc,
     return false;
   }
 
-  RootedObject handler(cx, NonNullObject(cx, args[1]));
+  RootedObject handler(cx, RequireObject(cx, args[1]));
   if (!handler) {
     return false;
   }
@@ -8095,7 +8095,7 @@ static bool DebuggerScript_clearBreakpoint(JSContext* cx, unsigned argc,
   }
   Debugger* dbg = Debugger::fromChildJSObject(obj);
 
-  JSObject* handler = NonNullObject(cx, args[0]);
+  JSObject* handler = RequireObject(cx, args[0]);
   if (!handler) {
     return false;
   }
@@ -8419,7 +8419,7 @@ static bool DebuggerSource_construct(JSContext* cx, unsigned argc, Value* vp) {
 
 static NativeObject* DebuggerSource_check(JSContext* cx, HandleValue thisv,
                                           const char* fnname) {
-  JSObject* thisobj = NonNullObject(cx, thisv);
+  JSObject* thisobj = RequireObject(cx, thisv);
   if (!thisobj) {
     return nullptr;
   }
@@ -9732,7 +9732,7 @@ void DebuggerFrame::trace(JSTracer* trc, JSObject* obj) {
 /* static */
 DebuggerFrame* DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args,
                                         const char* fnname, bool checkLive) {
-  JSObject* thisobj = NonNullObject(cx, args.thisv());
+  JSObject* thisobj = RequireObject(cx, args.thisv());
   if (!thisobj) {
     return nullptr;
   }
@@ -9924,7 +9924,7 @@ static bool DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp) {
   int32_t i = args.callee().as<JSFunction>().getExtendedSlot(0).toInt32();
 
   // Check that the this value is an Arguments object.
-  RootedObject argsobj(cx, NonNullObject(cx, args.thisv()));
+  RootedObject argsobj(cx, RequireObject(cx, args.thisv()));
   if (!argsobj) {
     return false;
   }
@@ -10219,7 +10219,7 @@ bool DebuggerFrame::evalWithBindingsMethod(JSContext* cx, unsigned argc,
   }
   mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
 
-  RootedObject bindings(cx, NonNullObject(cx, args[1]));
+  RootedObject bindings(cx, RequireObject(cx, args[1]));
   if (!bindings) {
     return false;
   }
@@ -10286,7 +10286,7 @@ void DebuggerObject_trace(JSTracer* trc, JSObject* obj) {
 static DebuggerObject* DebuggerObject_checkThis(JSContext* cx,
                                                 const CallArgs& args,
                                                 const char* fnname) {
-  JSObject* thisobj = NonNullObject(cx, args.thisv());
+  JSObject* thisobj = RequireObject(cx, args.thisv());
   if (!thisobj) {
     return nullptr;
   }
@@ -11404,7 +11404,7 @@ bool DebuggerObject::executeInGlobalWithBindingsMethod(JSContext* cx,
   }
   mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
 
-  RootedObject bindings(cx, NonNullObject(cx, args[1]));
+  RootedObject bindings(cx, RequireObject(cx, args[1]));
   if (!bindings) {
     return false;
   }
@@ -12576,7 +12576,7 @@ void DebuggerEnv_trace(JSTracer* trc, JSObject* obj) {
 static DebuggerEnvironment* DebuggerEnvironment_checkThis(
     JSContext* cx, const CallArgs& args, const char* fnname,
     bool requireDebuggee) {
-  JSObject* thisobj = NonNullObject(cx, args.thisv());
+  JSObject* thisobj = RequireObject(cx, args.thisv());
   if (!thisobj) {
     return nullptr;
   }
