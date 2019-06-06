@@ -6,6 +6,7 @@
 
 <html>
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
   <meta charset="utf-8" />
   <title>about:webrtc</title>
   <link rel="stylesheet" type="text/css" media="all"
@@ -13,7 +14,7 @@
   <script src="chrome://global/content/aboutwebrtc/aboutWebrtc.js"
           defer="defer"></script>
 </head>
-<body id="body" onload="onLoad()">
+<body id="body">
   <div id="controls" class="no-print"></div>
   <div id="content"></div>
 </body>
