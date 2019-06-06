@@ -25,7 +25,7 @@ object Versions {
     const val jna = "5.2.0"
     const val disklrucache = "2.0.2"
 
-    const val mozilla_appservices = "0.30.0"
+    const val mozilla_appservices = "0.31.0"
     const val servo = "0.0.1.20181017.aa95911"
 
     const val material = "1.0.0"
@@ -114,6 +114,7 @@ object Dependencies {
     const val mozilla_rustlog = "org.mozilla.appservices:rustlog:${Versions.mozilla_appservices}"
     const val mozilla_servo_arm = "org.mozilla.servoview:servoview-armv7:${Versions.servo}"
     const val mozilla_servo_x86 = "org.mozilla.servoview:servoview-x86:${Versions.servo}"
+    const val mozilla_sync15 = "org.mozilla.appservices:sync15:${Versions.mozilla_appservices}"
 
     const val thirdparty_okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
     const val thirdparty_okhttp_urlconnection = "com.squareup.okhttp3:okhttp-urlconnection:${Versions.okhttp}"

@@ -11,10 +11,10 @@ import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.AuthInfo
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StoreSyncStatus
+import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.concept.sync.SyncResult
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncStatusObserver
-import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
