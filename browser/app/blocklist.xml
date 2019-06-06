@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1559563142131" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1559739185033" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3149,6 +3149,30 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="94404f29-bf39-473a-a299-57d922f51c6c" id="{5a3477ec-7abe-4efc-b44a-7ede3cc02217}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="0561368d-755a-498b-a3ba-55274d9bc925" id="/^((\{366bbde3-553b-4587-99d1-ce34f6b52e1b\})|(\{af48b3a0-a899-4722-a6b0-72ea823c9c57\})|(\{bc4dba63-23da-47ce-9ed5-574859c80ae2\})|(\{e390c529-7e38-4191-9cee-7b6902c9d833\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="96dbcd8a-d40a-4949-957b-b6eda96d0b95" id="{4bf7c817-a8ab-4d98-b84d-65f79f05415d}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.14" severity="3"/>
+    </emItem>
+    <emItem blockID="dc8887b5-eae3-4cc9-937f-229b8830ba83" id="{31dea008-38a8-44c5-8404-d1b110f47ab5}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.2" severity="3"/>
+    </emItem>
+    <emItem blockID="6016087e-a255-4d70-8ffa-d7095af42e00" id="/^((__MSG_name__@crx-to-xpi)|(\{3fedc417-0513-4d15-a7e5-978d044cc9b9\})|(\{5c0f4cf6-b6f5-4485-a941-6c25f65c54eb\})|(\{5e1948ce-2889-4504-9e53-170753e731f6\})|(\{5fbf70b1-6dd8-4cd3-83fd-fbc53c59b7f7\})|(\{6ed4cb78-09ec-4a85-ad8c-d29382beb6d2\})|(\{6f7b3f15-30ab-40ce-9424-9a03a4969bea\})|(\{7d516686-2f77-4f2f-8a24-2441f9661187\})|(\{8c50589a-419d-40b5-8edb-4027a509725a\})|(\{8cf8a461-47f0-4eef-966c-faf0ae9593f8\})|(\{9ae1dd88-5e97-4ff4-b6a6-907689b6289b\})|(\{17a98bce-6b45-4c91-82ac-2916264e79ad\})|(\{50bf8563-c1e1-4c6d-80f8-281cd0d9f453\})|(\{51c03d30-c160-409f-be23-a576bf6ee2a6\})|(\{76a4a4cd-0bbb-4c6b-b285-d3aa4b55a99e\})|(\{94c8b1f5-7675-48fb-8c2b-3a8c7faa059e\})|(\{110b4b76-4314-4c63-9ae7-01e0e30f995f\})|(\{204d5f5f-d2bf-4892-a35d-e02d7436a410\})|(\{358af48c-726e-4853-a941-a19f9f4bcf8a\})|(\{02110a55-b817-49e7-bddd-5ce06d7f66e3\})|(\{9521b96b-f232-4689-81eb-907ba68872fb\})|(\{83034ff5-c83d-4560-8e6e-646862d2f405\})|(\{167357db-2afa-43a2-90df-ca2c6527ed78\})|(\{08429889-d4dd-4dc0-a607-5e26d976f376\})|(\{20289793-a4b4-48de-b640-672e6be44f5e\})|(\{a1be3447-d87d-409b-8721-d895935f65b8\})|(\{bf599b22-fc5d-43ac-ae24-343016cf6a94\})|(\{c8faeded-34a7-4eb6-8e21-407c82040ca1\})|(\{d8b5848f-b314-483b-8fd3-9f919f0f3b8b\})|(\{d768a761-3df5-4676-8cbe-5e3f4f426f6d\})|(\{e5d45ac7-1a6d-4ec8-89ae-d75ff07b89b3\})|(\{e5705290-3609-4b11-a062-6c55fd074d80\})|(\{ec92f712-38a6-4d81-80fb-529990a5b83d\})|(\{f14fbd1c-1df9-4ab3-a983-a8889f88fec2\})|(\{fcdb43b5-add6-49f2-a102-761147cb88fe\})|(\{fddfb568-5055-4dc7-ac3c-5eabc69c3c75\})|(anhjddeakbabimdgmonfbnpbainknbfa@chrome-store-foxified--782543786)|(anhjddeakbabimdgmonfbnpbainknbfa@chrome-store-foxified-875652714)|(darktheme@addon\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="a7bc4a56-2f54-4791-b644-0ed2403bb9db" id="/^((\{8dcc43e0-bd17-44db-a0a1-4cf179f4a97f\})|(\{a4ef8092-6d9b-4ca2-bc6a-021fc9e8e156\})|(\{9fb5bfd6-27d6-4321-8af9-47b6ceacac3f\})|(\{3c9052cd-10e7-4ccf-9dda-8524cccf66a7\})|(\{da554ce8-5c96-4511-93f2-4e00a85aeb20\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p332">
@@ -3181,15 +3205,15 @@
       <infoURL>https://get.adobe.com/shockwave/</infoURL>
       <versionRange maxVersion="12.2.0.162" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
-    <pluginItem blockID="49b843cc-a8fc-4ede-be0c-a0da56d0214f" os="Linux">
-      <match exp="libflashplayer\.so" name="filename"/>
-      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.156" minVersion="0" severity="0" vulnerabilitystatus="1"/>
-    </pluginItem>
     <pluginItem blockID="832dc9ff-3314-4df2-abcf-7bd65a645371">
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.156" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.171" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
+    <pluginItem blockID="49b843cc-a8fc-4ede-be0c-a0da56d0214f" os="Linux">
+      <match exp="libflashplayer\.so" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="32.0.0.171" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
   </pluginItems>
   <gfxItems>
