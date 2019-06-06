@@ -51,27 +51,19 @@ class TaskBuilder(object):
             for arch in architectures
         }
 
-        def secret_index(name):
-            if is_staging:
-                return 'garbage/staging/project/mobile/fenix/{}'.format(name)
-            elif channel == 'nightly':
-                # TODO: Move nightly secrets to "project/mobile/fenix/nightly/..."
-                return 'project/mobile/fenix/{}'.format(name)
-            else:
-                return 'project/mobile/fenix/{}/{}'.format(channel, name)
-
-        sentry_secret = secret_index('sentry')
-        leanplum_secret = secret_index('leanplum')
-        adjust_secret = secret_index('adjust')
+        if is_staging:
+            secret_index = 'garbage/staging/project/mobile/fenix'
+        else:
+            secret_index = 'project/mobile/fenix/{}'.format(channel)
 
         pre_gradle_commands = (
             'python automation/taskcluster/helper/get-secret.py -s {} -k {} -f {}'.format(
-                secret, key, target_file
+                secret_index, key, target_file
             )
-            for secret, key, target_file in (
-                (sentry_secret, 'dsn', '.sentry_token'),
-                (leanplum_secret, 'production', '.leanplum_token'),
-                (adjust_secret, 'adjust', '.adjust_token'),
+            for key, target_file in (
+                ('sentry_dsn', '.sentry_token'),
+                ('leanplum', '.leanplum_token'),
+                ('adjust', '.adjust_token'),
             )
         )
 
@@ -97,7 +89,7 @@ class TaskBuilder(object):
             description='Build Fenix {} from source code'.format(capitalized_channel),
             command=command,
             scopes=[
-                "secrets:get:{}".format(secret) for secret in (sentry_secret, leanplum_secret, adjust_secret)
+                "secrets:get:{}".format(secret_index)
             ],
             artifacts=artifacts,
             routes=routes,
