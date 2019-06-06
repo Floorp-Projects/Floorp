@@ -8396,15 +8396,6 @@
     "n_buckets": 15,
     "description": "Time (ms) it takes to figure out extension last modified time"
   },
-  "TELEMETRY_MEMORY_REPORTER_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 5000,
-    "n_buckets": 10,
-    "description": "Time (ms) it takes to run memory reporters when sending a telemetry ping"
-  },
   "SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX" : {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],
