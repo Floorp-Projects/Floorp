@@ -39,6 +39,9 @@ permalink: /changelog/
   * Removed `Drawable.toBitmap()` in favour of the Android Core KTX version.
   * Removed `Context.systemService()` in favour of the Android Core KTX version.
 
+* **browser-session**
+  * Added `Session.hasParentSession` to indicate whether a `Session` was opened from a parent `Session` such as opening a new tab from a link context menu ("Open in new tab").
+
 # 0.55.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.54.0...v0.55.0)

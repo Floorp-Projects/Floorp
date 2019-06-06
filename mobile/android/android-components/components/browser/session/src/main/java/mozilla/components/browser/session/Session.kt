@@ -31,7 +31,7 @@ class Session(
     val private: Boolean = false,
     val source: Source = Source.NONE,
     val id: String = UUID.randomUUID().toString(),
-    delegate: Observable<Session.Observer> = ObserverRegistry()
+    delegate: Observable<Observer> = ObserverRegistry()
 ) : Observable<Session.Observer> by delegate {
     /**
      * Holder for keeping a reference to an engine session and its observer to update this session
@@ -431,6 +431,16 @@ class Session(
             notifyObservers(block)
         }
     }
+
+    /**
+     * Returns true if this [Session] has a parent [Session].
+     *
+     * A [Session] can have a parent [Session] if one was provided when calling [SessionManager.add]. The parent
+     * [Session] is usually the [Session] the new [Session] was opened from - like opening a new tab from a link
+     * context menu ("Open in new tab").
+     */
+    val hasParentSession: Boolean
+        get() = parentId != null
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -1017,4 +1017,28 @@ class SessionTest {
         session.recordingDevices = oneDevice
         verify(observer).onRecordingDevicesChanged(session, oneDevice)
     }
+
+    @Test
+    fun `hasParentSession returns false by default`() {
+        val session = Session("https://www.mozilla.org")
+        assertFalse(session.hasParentSession)
+    }
+
+    @Test
+    fun `hasParentSession returns true if added to SessionManager with a parent`() {
+        val sessionManager = SessionManager(engine = mock())
+
+        val parentSession = Session("https://www.mozilla.org")
+        sessionManager.add(parentSession)
+
+        val session = Session("https://www.mozilla.org/en-US/firefox/accounts/")
+
+        assertFalse(parentSession.hasParentSession)
+        assertFalse(session.hasParentSession)
+
+        sessionManager.add(session, parent = parentSession)
+
+        assertFalse(parentSession.hasParentSession)
+        assertTrue(session.hasParentSession)
+    }
 }
