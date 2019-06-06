@@ -165,12 +165,12 @@ void SVGRenderingObserver::StopObserving() {
 
   if (target) {
     target->RemoveMutationObserver(this);
-    if (mInObserverList) {
+    if (mInObserverSet) {
       SVGObserverUtils::RemoveRenderingObserver(target, this);
-      mInObserverList = false;
+      mInObserverSet = false;
     }
   }
-  NS_ASSERTION(!mInObserverList, "still in an observer list?");
+  NS_ASSERTION(!mInObserverSet, "still in an observer set?");
 }
 
 Element* SVGRenderingObserver::GetAndObserveReferencedElement() {
@@ -178,9 +178,9 @@ Element* SVGRenderingObserver::GetAndObserveReferencedElement() {
   DebugObserverSet();
 #endif
   Element* referencedElement = GetReferencedElementWithoutObserving();
-  if (referencedElement && !mInObserverList) {
+  if (referencedElement && !mInObserverSet) {
     SVGObserverUtils::AddRenderingObserver(referencedElement, this);
-    mInObserverList = true;
+    mInObserverSet = true;
   }
   return referencedElement;
 }
@@ -205,13 +205,13 @@ nsIFrame* SVGRenderingObserver::GetAndObserveReferencedFrame(
 }
 
 void SVGRenderingObserver::OnNonDOMMutationRenderingChange() {
-  mInObserverList = false;
+  mInObserverSet = false;
   OnRenderingChange();
 }
 
 void SVGRenderingObserver::NotifyEvictedFromRenderingObserverSet() {
-  mInObserverList = false;  // We've been removed from rendering-obs. list.
-  StopObserving();          // Remove ourselves from mutation-obs. list.
+  mInObserverSet = false;  // We've been removed from rendering-obs. set.
+  StopObserving();         // Stop observing mutations too.
 }
 
 void SVGRenderingObserver::AttributeChanged(dom::Element* aElement,
@@ -342,10 +342,10 @@ SVGIDRenderingObserver::SVGIDRenderingObserver(URLAndReferrerInfo* aURI,
 }
 
 void SVGIDRenderingObserver::OnRenderingChange() {
-  if (mObservedElementTracker.get() && mInObserverList) {
+  if (mObservedElementTracker.get() && mInObserverSet) {
     SVGObserverUtils::RemoveRenderingObserver(mObservedElementTracker.get(),
                                               this);
-    mInObserverList = false;
+    mInObserverSet = false;
   }
 }
 
@@ -1040,11 +1040,11 @@ void SVGRenderingObserver::DebugObserverSet() {
   if (referencedElement) {
     SVGRenderingObserverSet* observers = GetObserverSet(referencedElement);
     bool inObserverSet = observers && observers->Contains(this);
-    MOZ_ASSERT(inObserverSet == mInObserverList,
+    MOZ_ASSERT(inObserverSet == mInObserverSet,
                "failed to track whether we're in our referenced element's "
                "observer set!");
   } else {
-    MOZ_ASSERT(!mInObserverList, "In whose observer set are we, then?");
+    MOZ_ASSERT(!mInObserverSet, "In whose observer set are we, then?");
   }
 }
 #endif
