@@ -25,8 +25,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Mutations)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Mutations)
 
-Mutations::Mutations(DocumentL10n* aDocumentL10n)
-    : mDocumentL10n(aDocumentL10n) {
+Mutations::Mutations(DOMLocalization* aDOMLocalization)
+    : mDOMLocalization(aDOMLocalization) {
   mObserving = true;
 }
 
@@ -60,7 +60,7 @@ void Mutations::ContentAppended(nsIContent* aChild) {
 
       Document* uncomposedDoc = elem->GetUncomposedDoc();
       if (uncomposedDoc) {
-        mDocumentL10n->GetTranslatables(*node, elements, rv);
+        DOMLocalization::GetTranslatables(*node, elements, rv);
       }
     }
 
@@ -88,7 +88,7 @@ void Mutations::ContentInserted(nsIContent* aChild) {
   if (!uncomposedDoc) {
     return;
   }
-  mDocumentL10n->GetTranslatables(*aChild, elements, rv);
+  DOMLocalization::GetTranslatables(*aChild, elements, rv);
 
   for (auto& elem : elements) {
     L10nElementChanged(elem);
@@ -116,7 +116,7 @@ void Mutations::WillRefresh(mozilla::TimeStamp aTime) {
 }
 
 void Mutations::FlushPendingTranslations() {
-  if (!mDocumentL10n) {
+  if (!mDOMLocalization) {
     return;
   }
 
@@ -135,23 +135,28 @@ void Mutations::FlushPendingTranslations() {
   mPendingElementsHash.Clear();
   mPendingElements.Clear();
 
-  RefPtr<Promise> promise = mDocumentL10n->TranslateElements(elements, rv);
+  RefPtr<Promise> promise = mDOMLocalization->TranslateElements(elements, rv);
 }
 
 void Mutations::Disconnect() {
   StopRefreshObserver();
-  mDocumentL10n = nullptr;
+  mDOMLocalization = nullptr;
 }
 
 void Mutations::StartRefreshObserver() {
-  if (!mDocumentL10n || mRefreshObserver) {
+  if (!mDOMLocalization || mRefreshObserver) {
     return;
   }
 
   if (!mRefreshDriver) {
-    nsPresContext* ctx = mDocumentL10n->GetDocument()->GetPresContext();
-    if (ctx) {
-      mRefreshDriver = ctx->RefreshDriver();
+    nsPIDOMWindowInner* innerWindow =
+        mDOMLocalization->GetParentObject()->AsInnerWindow();
+    Document* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
+    if (doc) {
+      nsPresContext* ctx = doc->GetPresContext();
+      if (ctx) {
+        mRefreshDriver = ctx->RefreshDriver();
+      }
     }
   }
 
@@ -162,11 +167,13 @@ void Mutations::StartRefreshObserver() {
   if (mRefreshDriver) {
     mRefreshDriver->AddRefreshObserver(this, FlushType::Style);
     mRefreshObserver = true;
+  } else {
+    NS_WARNING("[l10n][mutations] Failed to start a refresh observer.");
   }
 }
 
 void Mutations::StopRefreshObserver() {
-  if (!mDocumentL10n) {
+  if (!mDOMLocalization) {
     return;
   }
 

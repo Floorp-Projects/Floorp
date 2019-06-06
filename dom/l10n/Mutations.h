@@ -4,7 +4,7 @@
 #include "nsRefreshDriver.h"
 #include "nsStubMutationObserver.h"
 #include "nsTHashtable.h"
-#include "mozilla/dom/DocumentL10n.h"
+#include "mozilla/dom/l10n/DOMLocalization.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,7 +24,7 @@ class Mutations final : public nsStubMutationObserver,
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
-  explicit Mutations(DocumentL10n* aDocumentL10n);
+  explicit Mutations(DOMLocalization* aDOMLocalization);
 
   /**
    * Pause root observation.
@@ -42,7 +42,7 @@ class Mutations final : public nsStubMutationObserver,
   /**
    * Disconnect roots, stop refresh observer
    * and break the cycle collection deadlock
-   * by removing the reference to mDocumentL10n.
+   * by removing the reference to mDOMLocalization.
    */
   void Disconnect();
 
@@ -57,7 +57,7 @@ class Mutations final : public nsStubMutationObserver,
   bool mObserving = false;
   bool mRefreshObserver = false;
   RefPtr<nsRefreshDriver> mRefreshDriver;
-  DocumentL10n* mDocumentL10n;
+  DOMLocalization* mDOMLocalization;
 
   // The hash is used to speed up lookups into mPendingElements.
   nsTHashtable<nsRefPtrHashKey<Element>> mPendingElementsHash;
@@ -73,8 +73,8 @@ class Mutations final : public nsStubMutationObserver,
  private:
   ~Mutations() {
     StopRefreshObserver();
-    MOZ_ASSERT(!mDocumentL10n,
-               "DocumentL10n<-->Mutations cycle should be broken.");
+    MOZ_ASSERT(!mDOMLocalization,
+               "DOMLocalization<-->Mutations cycle should be broken.");
   }
 };
 
