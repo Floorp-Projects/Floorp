@@ -516,6 +516,23 @@ function runContinuation(testFunction) {
   };
 }
 
+// Same as runContinuation, except it takes an async generator, and doesn't
+// invoke it with any callback, since the generator doesn't need one.
+function runAsyncContinuation(testFunction) {
+  return async function() {
+    var asyncContinuation = testFunction();
+    try {
+      var ret = await asyncContinuation.next();
+      while (!ret.done) {
+        ret = await asyncContinuation.next();
+      }
+    } catch (ex) {
+      SimpleTest.ok(false, "APZ async test continuation failed with exception: " + ex);
+      throw ex;
+    }
+  };
+}
+
 // Take a snapshot of the given rect, *including compositor transforms* (i.e.
 // includes async scroll transforms applied by APZ). If you don't need the
 // compositor transforms, you can probably get away with using
