@@ -1841,7 +1841,7 @@ template <typename Unit>
 const Unit* ScriptSource::chunkUnits(
     JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
     size_t chunk) {
-  const CompressedData<Unit>& c = data.as<Compressed<Unit>>();
+  const CompressedData<Unit>& c = *compressedData<Unit>();
 
   ScriptSourceChunk ssc(this, chunk);
   if (const Unit* decompressed =
@@ -1914,7 +1914,7 @@ const Unit* ScriptSource::units(JSContext* cx,
   MOZ_ASSERT(begin + len <= length());
 
   if (isUncompressed<Unit>()) {
-    const Unit* units = data.as<Uncompressed<Unit>>().units();
+    const Unit* units = uncompressedData<Unit>()->units();
     if (!units) {
       return nullptr;
     }
@@ -2346,8 +2346,7 @@ void SourceCompressionTask::workEncodingSpecific() {
     return;
   }
 
-  const Unit* chars =
-      source->data.as<ScriptSource::Uncompressed<Unit>>().units();
+  const Unit* chars = source->uncompressedData<Unit>()->units();
   Compressor comp(reinterpret_cast<const unsigned char*>(chars), inputBytes);
   if (!comp.init()) {
     return;
@@ -2593,7 +2592,8 @@ struct UnretrievableSourceEncoder {
       : xdr_(xdr), source_(source), uncompressedLength_(uncompressedLength) {}
 
   XDRResult encode() {
-    Unit* sourceUnits = const_cast<Unit*>(source_->uncompressedData<Unit>());
+    Unit* sourceUnits =
+        const_cast<Unit*>(source_->uncompressedData<Unit>()->units());
 
     return xdr_->codeChars(sourceUnits, uncompressedLength_);
   }
@@ -2646,7 +2646,7 @@ XDRResult ScriptSource::codeUncompressedData(XDRState<mode>* const xdr,
 
   uint32_t uncompressedLength;
   if (mode == XDR_ENCODE) {
-    uncompressedLength = ss->data.as<Uncompressed<Unit>>().length();
+    uncompressedLength = ss->uncompressedData<Unit>()->length();
   }
   MOZ_TRY(xdr->codeUint32(&uncompressedLength));
 
