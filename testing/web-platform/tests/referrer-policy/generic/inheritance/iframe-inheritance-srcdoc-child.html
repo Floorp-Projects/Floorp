@@ -31,7 +31,7 @@
             `<script src = "${BASE}/common/security-features/resources/common.js"></sc` + `ript>
             <script src = "${BASE}/referrer-policy/generic/referrer-policy-test-case.js"></sc` + `ript>
             <script>
-              var urlPath = "/referrer-policy/generic/subresource/xhr.py";
+              var urlPath = "/common/security-features/subresource/xhr.py";
               var url = "${BASE}" + urlPath;
               requestViaXhr(url).then((msg) => {
                   window.top.postMessage({referrer: msg.referrer}, "*")})
