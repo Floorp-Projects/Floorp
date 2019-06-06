@@ -319,6 +319,7 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
   MOZ_ASSERT(aAnimationValues.IsEmpty(),
              "Should be called with empty aAnimationValues");
 
+  nsTArray<RefPtr<RawServoAnimationValue>> nonAnimatingValues;
   for (PropertyAnimationGroup& group : aPropertyAnimationGroups) {
     // Initialize animation value with base style.
     RefPtr<RawServoAnimationValue> currValue = group.mBaseStyle;
@@ -327,6 +328,23 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
                                             group.mAnimations.Length() == 1
                                         ? CanSkipCompose::IfPossible
                                         : CanSkipCompose::No;
+
+    MOZ_ASSERT(
+        !group.mAnimations.IsEmpty() ||
+            nsCSSPropertyIDSet::TransformLikeProperties().HasProperty(
+                group.mProperty),
+        "Only transform-like properties can have empty PropertyAnimation list");
+
+    // For properties which are not animating (i.e. their values are always the
+    // same), we store them in a different array, and then merge them into the
+    // final result (a.k.a. aAnimationValues) because we shouldn't take them
+    // into account for SampleResult. (In other words, these properties
+    // shouldn't affect the optimization.)
+    if (group.mAnimations.IsEmpty()) {
+      nonAnimatingValues.AppendElement(std::move(currValue));
+      continue;
+    }
+
     SampleResult result = SampleAnimationForProperty(
         aPreviousFrameTime, aCurrentFrameTime, aPreviousValue, canSkipCompose,
         group.mAnimations, currValue);
@@ -374,8 +392,12 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
   }
 #endif
 
-  return aAnimationValues.IsEmpty() ? SampleResult::None
-                                    : SampleResult::Sampled;
+  SampleResult rv =
+      aAnimationValues.IsEmpty() ? SampleResult::None : SampleResult::Sampled;
+  if (rv == SampleResult::Sampled) {
+    aAnimationValues.AppendElements(nonAnimatingValues);
+  }
+  return rv;
 }
 
 static dom::FillMode GetAdjustedFillMode(const Animation& aAnimation) {
@@ -439,6 +461,17 @@ nsTArray<PropertyAnimationGroup> AnimationHelper::ExtractAnimations(
       currData->mBaseStyle = AnimationValue::FromAnimatable(
           animation.property(), animation.baseStyle());
       currBaseStyle = &animation.baseStyle();
+    }
+
+    // If this layers::Animation sets isNotAnimating to true, it only has
+    // base style and doesn't have any animation information, so we can skip
+    // the rest steps. (And so its PropertyAnimationGroup::mAnimation will be
+    // an empty array.)
+    if (animation.isNotAnimating()) {
+      MOZ_ASSERT(nsCSSPropertyIDSet::TransformLikeProperties().HasProperty(
+                     animation.property()),
+                 "Only transform-like properties could set this true");
+      continue;
     }
 
     PropertyAnimation* propertyAnimation =
