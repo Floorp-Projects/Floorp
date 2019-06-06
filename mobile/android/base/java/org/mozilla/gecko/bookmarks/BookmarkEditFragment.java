@@ -146,6 +146,9 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
                             bundle.putString(Bookmarks.TITLE, newTitle);
                             bundle.putString(Bookmarks.URL, newUrl);
                             bundle.putString(Bookmarks.KEYWORD, newKeyword);
+                            bundle.putString(Bookmarks.OLD_TITLE, bookmark.originalTitle);
+                            bundle.putString(Bookmarks.OLD_URL, bookmark.originalUrl);
+                            bundle.putString(Bookmarks.OLD_KEYWORD, bookmark.originalKeyword);
                             if (bookmark.parentId != bookmark.originalParentId) {
                                 bundle.putLong(Bookmarks.PARENT, bookmark.parentId);
                                 bundle.putLong(BrowserContract.PARAM_OLD_BOOKMARK_PARENT, bookmark.originalParentId);

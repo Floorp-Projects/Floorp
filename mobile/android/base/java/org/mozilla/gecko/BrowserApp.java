@@ -72,9 +72,11 @@ import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.adjust.AdjustBrowserAppDelegate;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.bookmarks.EditBookmarkCallback;
 import org.mozilla.gecko.bookmarks.BookmarkEditFragment;
 import org.mozilla.gecko.bookmarks.BookmarkUtils;
 import org.mozilla.gecko.bookmarks.EditBookmarkTask;
+import org.mozilla.gecko.bookmarks.UndoEditBookmarkTask;
 import org.mozilla.gecko.cleanup.FileCleanupController;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
@@ -94,12 +96,14 @@ import org.mozilla.gecko.home.HomeBanner;
 import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.home.HomeConfigPrefsBackend;
+import org.mozilla.gecko.home.HomeContextMenuInfo;
 import org.mozilla.gecko.home.HomeFragment;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.home.HomeScreen;
 import org.mozilla.gecko.home.SearchEngine;
+import org.mozilla.gecko.home.UndoRemoveBookmarkTask;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.icons.IconsHelper;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
@@ -203,7 +207,8 @@ public class BrowserApp extends GeckoApp
                                    PropertyAnimator.PropertyAnimationListener,
                                    TabsPanel.TabsLayoutChangeListener,
                                    View.OnKeyListener,
-                                   OnboardingHelper.OnboardingListener {
+                                   OnboardingHelper.OnboardingListener,
+                                   EditBookmarkCallback {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     private static final int TABS_ANIMATION_DURATION = 450;
@@ -811,9 +816,17 @@ public class BrowserApp extends GeckoApp
         mSearchEngineManager = new SearchEngineManager(this, distribution);
 
         // Init suggested sites engine in BrowserDB.
-        final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
         final BrowserDB db = BrowserDB.from(profile);
+        final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
         db.setSuggestedSites(suggestedSites);
+
+        // Remove bookmarks that were marked as soft delete
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                db.removeSoftDeleteBookmarks(getContentResolver());
+            }
+        });
 
         mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
         mReadingListHelper = new ReadingListHelper(appContext, profile);
@@ -4177,7 +4190,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onEditBookmark(@NonNull Bundle bundle) {
-        new EditBookmarkTask(this, bundle).execute();
+        new EditBookmarkTask(this, bundle, this).execute();
     }
 
     @Override
@@ -4235,5 +4248,15 @@ public class BrowserApp extends GeckoApp
 
     private boolean isShutDownOrAbort() {
         return mIsAbortingAppLaunch || mShutdownOnDestroy;
+    }
+
+    @Override
+    public void onUndoEditBookmark(Bundle bundle) {
+        new UndoEditBookmarkTask(this, bundle).execute();
+    }
+
+    @Override
+    public void onUndoRemoveBookmark(HomeContextMenuInfo info, int position) {
+        new UndoRemoveBookmarkTask(this, info, position).execute();
     }
 }
