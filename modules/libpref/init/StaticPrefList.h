@@ -4350,15 +4350,6 @@ VARCACHE_PREF(
   AtomicFloat, 1.0f
 )
 
-// Are -moz-prefixed gradients restricted to a simpler syntax? (with an optional
-// <angle> or <position>, but not both)?
-VARCACHE_PREF(
-  Live,
-  "layout.css.simple-moz-gradient.enabled",
-  layout_css_simple_moz_gradient_enabled,
-  bool, true
-)
-
 #ifdef NIGHTLY_BUILD
 # define PREF_VALUE true
 #else
