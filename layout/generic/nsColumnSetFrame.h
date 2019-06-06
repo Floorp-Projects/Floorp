@@ -91,19 +91,19 @@ class nsColumnSetFrame final : public nsContainerFrame {
     int32_t mBalanceColCount = INT32_MAX;
 
     // The inline-size of each individual column.
-    nscoord mColISize = NS_INTRINSICSIZE;
+    nscoord mColISize = NS_UNCONSTRAINEDSIZE;
 
     // The amount of inline-size that is expected to be left over after all the
     // columns and column gaps are laid out.
     nscoord mExpectedISizeLeftOver = 0;
 
     // The width (inline-size) of each column gap.
-    nscoord mColGap = NS_INTRINSICSIZE;
+    nscoord mColGap = NS_UNCONSTRAINEDSIZE;
 
     // The maximum bSize of any individual column during a reflow iteration.
     // This parameter is set during each iteration of the binary search for
     // the best column block-size.
-    nscoord mColMaxBSize = NS_INTRINSICSIZE;
+    nscoord mColMaxBSize = NS_UNCONSTRAINEDSIZE;
 
     // A boolean controlling whether or not we are balancing. This should be
     // equivalent to mBalanceColCount != INT32_MAX.
@@ -111,14 +111,14 @@ class nsColumnSetFrame final : public nsContainerFrame {
 
     // The last known column block-size that was 'feasible'. A column bSize is
     // feasible if all child content fits within the specified bSize.
-    nscoord mKnownFeasibleBSize = NS_INTRINSICSIZE;
+    nscoord mKnownFeasibleBSize = NS_UNCONSTRAINEDSIZE;
 
     // The last known block-size that was 'infeasible'. A column bSize is
     // infeasible if not all child content fits within the specified bSize.
     nscoord mKnownInfeasibleBSize = 0;
 
     // block-size of the column set frame
-    nscoord mComputedBSize = NS_INTRINSICSIZE;
+    nscoord mComputedBSize = NS_UNCONSTRAINEDSIZE;
 
     // The block-size "consumed" by previous-in-flows.
     // The computed block-size should be equal to the block-size of the element

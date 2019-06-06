@@ -6240,7 +6240,7 @@
   "FX_TAB_SWITCH_SPINNER_VISIBLE_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["mconley@mozilla.com", "dothayer@mozilla.com"],
-    "expires_in_version": "70",
+    "expires_in_version": "77",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 20,
@@ -6251,7 +6251,7 @@
   "FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["mconley@mozilla.com", "dothayer@mozilla.com"],
-    "expires_in_version": "70",
+    "expires_in_version": "77",
     "kind": "exponential",
     "low": 1000,
     "high": 64000,
@@ -6264,7 +6264,7 @@
     "record_in_processes": ["main"],
     "alert_emails": ["dothayer@mozilla.com"],
     "bug_numbers": [1442068],
-    "expires_in_version": "70",
+    "expires_in_version": "77",
     "kind": "categorical",
     "labels": ["none", "preActions", "postActions", "onLoadTimeout", "onLayersReady", "onSizeModeOrOcc", "onEndSwapDocShells"],
     "releaseChannelCollection": "opt-out",
@@ -6272,7 +6272,7 @@
   },
   "FX_TAB_SWITCH_REQUEST_TAB_WARMING_STATE": {
     "record_in_processes": ["main"],
-    "expires_in_version": "70",
+    "expires_in_version": "77",
     "alert_emails": ["mconley@mozilla.com"],
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",

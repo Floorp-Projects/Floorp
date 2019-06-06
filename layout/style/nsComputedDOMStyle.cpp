@@ -199,7 +199,7 @@ struct ComputedStyleMap {
 
   // This generated file includes definition of kEntries which is typed
   // Entry[] and used below, so this #include has to be put here.
-#include "nsComputedDOMStyleGenerated.cpp"
+#include "nsComputedDOMStyleGenerated.inc"
 
   /**
    * Returns the number of properties that should be exposed on an
@@ -2098,7 +2098,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetPaddingWidthFor(
 bool nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord) {
   AssertFlushedPendingReflows();
 
-  nscoord blockHeight = NS_AUTOHEIGHT;
+  nscoord blockHeight = NS_UNCONSTRAINEDSIZE;
   if (StyleText()->mLineHeight.IsMozBlockHeight()) {
     if (!mInnerFrame) return false;
 

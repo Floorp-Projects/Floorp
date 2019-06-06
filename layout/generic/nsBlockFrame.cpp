@@ -1226,7 +1226,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   // If we have non-auto block size, we're clipping our kids and we fit,
   // make sure our kids fit too.
   if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
-      aReflowInput.ComputedBSize() != NS_AUTOHEIGHT &&
+      aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE &&
       ShouldApplyOverflowClipping(this, aReflowInput.mStyleDisplay)) {
     LogicalMargin blockDirExtras = aReflowInput.ComputedLogicalBorderPadding();
     if (GetLogicalSkipSides().BStart()) {

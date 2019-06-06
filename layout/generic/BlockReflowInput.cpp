@@ -150,7 +150,7 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
 }
 
 nscoord BlockReflowInput::ConsumedBSize() {
-  if (mConsumedBSize == NS_INTRINSICSIZE) {
+  if (mConsumedBSize == NS_UNCONSTRAINEDSIZE) {
     mConsumedBSize = mBlock->ConsumedBSize(mReflowInput.GetWritingMode());
   }
 

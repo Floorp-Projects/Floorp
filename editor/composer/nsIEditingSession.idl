@@ -68,30 +68,9 @@ interface nsIEditingSession : nsISupports
 	nsIEditor getEditorForWindow(in mozIDOMWindowProxy window);
 
   /**
-   *  Setup editor and related support objects
-   */
-  [can_run_script]
-  void setupEditorOnWindow(in mozIDOMWindowProxy window);
-
-  /**
    *   Destroy editor and related support objects
    */
-  void tearDownEditorOnWindow(in mozIDOMWindowProxy window);
-
-  void setEditorOnControllers(in mozIDOMWindowProxy aWindow,
-                              in nsIEditor aEditor);
-
-  /**
-   * Removes all the editor's controllers/listeners etc and makes the window
-   * uneditable.
-   */
-  void detachFromWindow(in mozIDOMWindowProxy aWindow);
-
-  /**
-   * Undos detachFromWindow(), reattaches this editing session/editor
-   * to the window.
-   */
-  void reattachToWindow(in mozIDOMWindowProxy aWindow);
+  [noscript] void tearDownEditorOnWindow(in mozIDOMWindowProxy window);
 
 %{C++
   /**

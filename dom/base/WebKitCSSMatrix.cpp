@@ -18,8 +18,7 @@ namespace dom {
 static const double sRadPerDegree = 2.0 * M_PI / 360.0;
 
 bool WebKitCSSMatrix::FeatureEnabled(JSContext* aCx, JSObject* aObj) {
-  return StaticPrefs::layout_css_DOMMatrix_enabled() &&
-         StaticPrefs::layout_css_prefixes_webkit();
+  return StaticPrefs::layout_css_DOMMatrix_enabled();
 }
 
 already_AddRefed<WebKitCSSMatrix> WebKitCSSMatrix::Constructor(

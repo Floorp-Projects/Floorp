@@ -277,7 +277,10 @@ class XPCShellTestThread(Thread):
           Simple wrapper to check for crashes.
           On a remote system, this is more complex and we need to overload this function.
         """
-        return mozcrash.check_for_crashes(dump_directory, symbols_path, test_name=test_name)
+        return mozcrash.log_crashes(self.log,
+                                    dump_directory,
+                                    symbols_path,
+                                    test=test_name)
 
     def logCommand(self, name, completeCmd, testdir):
         self.log.info("%s | full command: %r" % (name, completeCmd))
