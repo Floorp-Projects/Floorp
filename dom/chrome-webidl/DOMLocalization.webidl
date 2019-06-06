@@ -19,6 +19,8 @@ dictionary L10nKey {
   object? args = null;
 };
 
+callback GenerateMessages = Promise<any> (sequence<DOMString> aAppLocales, sequence<DOMString> aResourceIds);
+
 /**
  * DOMLocalization is an extension of the Fluent Localization API.
  *
@@ -58,8 +60,11 @@ dictionary L10nKey {
  *    - aResourceids       - a list of localization resource URIs
  *                           which will provide messages for this
  *                           Localization instance.
- /
-[ChromeOnly, Constructor(optional sequence<DOMString> aResourceIds)]
+ *    - aGenerateMessages  - a callback function which will be
+ *                           used to generate an iterator
+ *                           over FluentBundle instances.
+ */
+[ChromeOnly, Constructor(optional sequence<DOMString> aResourceIds, optional GenerateMessages aGenerateMessages)]
 interface DOMLocalization {
   /**
    * Localization API
