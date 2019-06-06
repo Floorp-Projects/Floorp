@@ -71,6 +71,8 @@ class ObserverRegistryTest {
         }
 
         assertFalse(observer.notified)
+
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
     }
 
     @Test
@@ -112,6 +114,8 @@ class ObserverRegistryTest {
         }
 
         assertFalse(observer.notified)
+
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
     }
 
     @Test
@@ -130,6 +134,8 @@ class ObserverRegistryTest {
         }
 
         assertFalse(observer.notified)
+
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
     }
 
     @Test
@@ -152,6 +158,8 @@ class ObserverRegistryTest {
         observer.notified = false
         registry.notifyObservers { somethingChanged() }
         assertFalse(observer.notified)
+
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
     }
 
     @Test
@@ -221,6 +229,8 @@ class ObserverRegistryTest {
         assertFalse(observer2.notified)
         assertFalse(observer3.notified)
         assertFalse(observer4.notified)
+
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
     }
 
     @Test
@@ -240,6 +250,8 @@ class ObserverRegistryTest {
         registry.unregisterObservers()
 
         assertFalse(registry.isObserved())
+
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
     }
 
     @Test
@@ -248,7 +260,9 @@ class ObserverRegistryTest {
         val observer = "Observer"
 
         registry.unregister(observer)
+
         assertFalse(registry.isObserved())
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
     }
 
     @Test
@@ -261,6 +275,7 @@ class ObserverRegistryTest {
         registry.unregister(observer)
 
         assertFalse(registry.isObserved())
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
     }
 
     @Test
@@ -273,6 +288,7 @@ class ObserverRegistryTest {
         registry.unregister(observer)
 
         assertFalse(registry.isObserved())
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
     }
 
     @Test
@@ -354,6 +370,8 @@ class ObserverRegistryTest {
         }
 
         assertFalse(observer.notified)
+
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
     }
 
     @Test
@@ -369,6 +387,25 @@ class ObserverRegistryTest {
 
         registry.unregisterObservers()
         verify(view).removeOnAttachStateChangeListener(any())
+
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
+    }
+
+    @Test
+    fun `unregisterObserver will remove attach listener`() {
+        val view: View = mock()
+        doReturn(true).`when`(view).isAttachedToWindow
+
+        val registry = ObserverRegistry<TestObserver>()
+        val observer = TestObserver()
+
+        registry.register(observer, view)
+        verify(view).addOnAttachStateChangeListener(any())
+
+        registry.unregister(observer)
+        verify(view).removeOnAttachStateChangeListener(any())
+
+        assertTrue(registry.checkInternalCollectionsAreEmpty())
     }
 
     @Test
@@ -514,7 +551,7 @@ class ObserverRegistryTest {
 
     @Test
     fun `isObserved is true if observers is empty`() {
-        val registry = spy(ObserverRegistry<TestIntObserver>())
+        val registry = ObserverRegistry<TestIntObserver>()
         val observer = TestIntObserver()
 
         assertFalse(registry.isObserved())
@@ -525,6 +562,27 @@ class ObserverRegistryTest {
 
         registry.unregister(observer)
 
+        assertFalse(registry.isObserved())
+    }
+
+    @Test
+    fun `isObserved is true if there is still a view observer that may register an observer for a view`() {
+        val registry = ObserverRegistry<TestIntObserver>()
+        val observer: TestIntObserver = mock()
+
+        val view: View = mock()
+        doReturn(false).`when`(view).isAttachedToWindow
+
+        registry.register(observer, view)
+
+        // observer is not registered since the view is not attached yet
+        registry.notifyObservers { somethingChanged(42) }
+        verify(observer, never()).somethingChanged(42)
+
+        // But it still counts as being observed
+        assertTrue(registry.isObserved())
+
+        registry.unregister(observer)
         assertFalse(registry.isObserved())
     }
 

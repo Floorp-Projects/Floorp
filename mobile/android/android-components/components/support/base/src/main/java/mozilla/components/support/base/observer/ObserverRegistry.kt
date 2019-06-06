@@ -5,6 +5,7 @@
 package mozilla.components.support.base.observer
 
 import android.view.View
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Lifecycle.Event.ON_DESTROY
 import androidx.lifecycle.Lifecycle.Event.ON_PAUSE
 import androidx.lifecycle.Lifecycle.Event.ON_RESUME
@@ -22,6 +23,7 @@ import java.util.WeakHashMap
  *
  * ObserverRegistry is thread-safe.
  */
+@Suppress("TooManyFunctions")
 class ObserverRegistry<T> : Observable<T> {
     private val observers = mutableSetOf<T>()
     private val lifecycleObservers = WeakHashMap<T, LifecycleBoundObserver<T>>()
@@ -90,7 +92,7 @@ class ObserverRegistry<T> : Observable<T> {
         lifecycleObservers[observer]?.remove()
         viewObservers[observer]?.remove()
 
-        // Remove lifecyle/view observers from map
+        // Remove lifecycle/view observers from map
         lifecycleObservers.remove(observer)
         viewObservers.remove(observer)
     }
@@ -109,10 +111,7 @@ class ObserverRegistry<T> : Observable<T> {
         }
 
         // If any of our sets and maps is not empty now then this would be a serious bug.
-        check(observers.isEmpty())
-        check(pausedObservers.isEmpty())
-        check(lifecycleObservers.isEmpty())
-        check(viewObservers.isEmpty())
+        checkInternalCollectionsAreEmpty()
     }
 
     @Synchronized
@@ -150,6 +149,15 @@ class ObserverRegistry<T> : Observable<T> {
         // The registry is getting observed if there are registered observer or if there are registered view observers
         // that will register an observer as soon as their views are attached.
         return observers.isNotEmpty() || viewObservers.isNotEmpty()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun checkInternalCollectionsAreEmpty(): Boolean {
+        check(observers.isEmpty())
+        check(pausedObservers.isEmpty())
+        check(lifecycleObservers.isEmpty())
+        check(viewObservers.isEmpty())
+        return true
     }
 
     /**
