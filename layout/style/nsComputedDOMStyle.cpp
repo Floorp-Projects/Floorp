@@ -199,7 +199,7 @@ struct ComputedStyleMap {
 
   // This generated file includes definition of kEntries which is typed
   // Entry[] and used below, so this #include has to be put here.
-#include "nsComputedDOMStyleGenerated.cpp"
+#include "nsComputedDOMStyleGenerated.inc"
 
   /**
    * Returns the number of properties that should be exposed on an

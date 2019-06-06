@@ -62,7 +62,7 @@ included_inclnames_to_ignore = set([
     'javascript-trace.h',       # generated in $OBJDIR if HAVE_DTRACE is defined
     'frontend/ReservedWordsGenerated.h',  # generated in $OBJDIR
     'gc/StatsPhasesGenerated.h',         # generated in $OBJDIR
-    'gc/StatsPhasesGenerated.cpp',       # generated in $OBJDIR
+    'gc/StatsPhasesGenerated.inc',       # generated in $OBJDIR
     'jit/LOpcodes.h',           # generated in $OBJDIR
     'jit/MOpcodes.h',           # generated in $OBJDIR
     'jscustomallocator.h',      # provided by embedders;  allowed to be missing
@@ -118,7 +118,7 @@ oddly_ordered_inclnames = set([
     # Included in the body of frontend/TokenStream.h
     'frontend/ReservedWordsGenerated.h',
     'gc/StatsPhasesGenerated.h',         # Included in the body of gc/Statistics.h
-    'gc/StatsPhasesGenerated.cpp',       # Included in the body of gc/Statistics.cpp
+    'gc/StatsPhasesGenerated.inc',       # Included in the body of gc/Statistics.cpp
     'psapi.h',                  # Must be included after "util/Windows.h" on Windows
     'machine/endian.h',         # Must be included after <sys/types.h> on BSD
     'winbase.h',                # Must precede other system headers(?)
