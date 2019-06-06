@@ -15,7 +15,7 @@ var sitePermissionsDialog;
 function checkPermissionItem(origin, state) {
   let doc = sitePermissionsDialog.document;
 
-  let label = doc.getElementsByTagName("label")[2];
+  let label = doc.getElementsByTagName("label")[3];
   Assert.equal(label.value, origin);
 
   let menulist = doc.getElementsByTagName("menulist")[0];
