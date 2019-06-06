@@ -37,4 +37,12 @@ add_task({
     });
   });
   Assert.equal(hasPriorCertData, true, "should have prior cert data");
+
+  let hasPriorCRLiteData  = await new Promise((resolve) => {
+    certStorage.hasPriorData(Ci.nsICertStorage.DATA_TYPE_CRLITE, (rv, hasPriorData) => {
+      Assert.equal(rv, Cr.NS_OK, "hasPriorData should succeed");
+      resolve(hasPriorData);
+    });
+  });
+  Assert.equal(hasPriorCRLiteData, true, "should have prior cert data");
 });
