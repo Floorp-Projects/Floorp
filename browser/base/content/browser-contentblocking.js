@@ -1093,6 +1093,18 @@ var ContentBlocking = {
     if (!baseURI) {
       return;
     }
+
+    let isBrowserPrivate = PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser);
+
+    // Check whether the user has added an exception for this site.
+    let type = isBrowserPrivate ? "trackingprotection-pb" : "trackingprotection";
+    let hasException = Services.perms.testExactPermission(baseURI, type) ==
+      Services.perms.ALLOW_ACTION;
+
+    this.content.toggleAttribute("hasException", hasException);
+    this.protectionsPopup.toggleAttribute("hasException", hasException);
+    this.iconBox.toggleAttribute("hasException", hasException);
+
     // Add to telemetry per page load as a baseline measurement.
     this.fingerprintersHistogramAdd("pageLoad");
     this.cryptominersHistogramAdd("pageLoad");
@@ -1130,7 +1142,7 @@ var ContentBlocking = {
     let isBrowserPrivate = PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser);
 
     // Check whether the user has added an exception for this site.
-    let type =  isBrowserPrivate ? "trackingprotection-pb" : "trackingprotection";
+    let type = isBrowserPrivate ? "trackingprotection-pb" : "trackingprotection";
     let hasException = Services.perms.testExactPermission(baseURI, type) ==
       Services.perms.ALLOW_ACTION;
 
