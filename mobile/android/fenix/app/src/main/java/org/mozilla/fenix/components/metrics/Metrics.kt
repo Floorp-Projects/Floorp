@@ -105,7 +105,7 @@ sealed class Event {
 
         override val extras: Map<String, String>?
             get() = mapOf(
-                "preferenceKey" to preferenceKey,
+                "preference_key" to preferenceKey,
                 "enabled" to enabled.toString()
             )
 
@@ -123,7 +123,7 @@ sealed class Event {
 
     data class ErrorPageVisited(val errorType: ErrorType) : Event() {
         override val extras: Map<String, String>?
-            get() = mapOf("errorType" to errorType.name)
+            get() = mapOf("error_type" to errorType.name)
     }
 
     data class SearchBarTapped(val source: Source) : Event() {
