@@ -57,10 +57,11 @@ class CrashReporterFragment : Fragment() {
         submitReportIfNecessary(crash)
 
         if (shouldRestore) {
-            requireComponents.useCases.sessionUseCases.crashRecovery.invoke(session)
+            requireComponents.useCases.sessionUseCases.crashRecovery.invoke()
             Navigation.findNavController(view!!).popBackStack()
         } else {
             requireComponents.useCases.tabsUseCases.removeTab.invoke(session)
+            requireComponents.useCases.sessionUseCases.crashRecovery.invoke()
             navigateHome(view!!)
         }
     }
