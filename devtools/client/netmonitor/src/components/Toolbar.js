@@ -389,23 +389,22 @@ class Toolbar extends Component {
     // Render the entire toolbar.
     // dock at bottom or dock at side has different layout
     return singleRow ? (
-      span({
-        id: "netmonitor-main-toolbar",
-        className: "devtools-toolbar devtools-input-toolbar",
-      },
-        this.renderClearButton(clearRequests),
-        this.renderSeparator(),
-        this.renderFilterBox(setRequestFilterText),
-        this.renderSeparator(),
-        this.renderToggleRecordingButton(recording, toggleRecording),
-        this.renderSeparator(),
-        this.renderFilterButtons(requestFilterTypes),
-        this.renderSeparator(),
-        this.renderPersistlogCheckbox(persistentLogsEnabled, togglePersistentLogs),
-        this.renderCacheCheckbox(browserCacheDisabled, toggleBrowserCache),
-        this.renderSeparator(),
-        this.renderThrottlingMenu(),
-        this.renderHarButton(),
+      span({ id: "netmonitor-toolbar-container" },
+        span({ className: "devtools-toolbar devtools-input-toolbar" },
+          this.renderClearButton(clearRequests),
+          this.renderSeparator(),
+          this.renderFilterBox(setRequestFilterText),
+          this.renderSeparator(),
+          this.renderToggleRecordingButton(recording, toggleRecording),
+          this.renderSeparator(),
+          this.renderFilterButtons(requestFilterTypes),
+          this.renderSeparator(),
+          this.renderPersistlogCheckbox(persistentLogsEnabled, togglePersistentLogs),
+          this.renderCacheCheckbox(browserCacheDisabled, toggleBrowserCache),
+          this.renderSeparator(),
+          this.renderThrottlingMenu(),
+          this.renderHarButton(),
+        )
       )
     ) : (
       span({ id: "netmonitor-toolbar-container" },
