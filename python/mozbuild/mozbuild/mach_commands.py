@@ -392,7 +392,7 @@ class Clobber(MachCommandBase):
         if 'objdir' in what:
             from mozbuild.controller.clobber import Clobberer
             try:
-                Clobberer(self.topsrcdir, self.topobjdir).remove_objdir(full)
+                Clobberer(self.topsrcdir, self.topobjdir, self.substs).remove_objdir(full)
             except OSError as e:
                 if sys.platform.startswith('win'):
                     if isinstance(e, WindowsError) and e.winerror in (5, 32):
