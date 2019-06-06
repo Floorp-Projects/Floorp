@@ -661,8 +661,8 @@ class ZoneHeapThreshold {
 class MemoryTracker {
  public:
   MemoryTracker();
-  ~MemoryTracker();
   void fixupAfterMovingGC();
+  void checkEmptyOnDestroy();
 
   void adopt(MemoryTracker& other);
 
