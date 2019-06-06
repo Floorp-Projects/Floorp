@@ -8,7 +8,7 @@
 #include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
 #include "mozilla/Assertions.h"  // MOZ_RELEASE_ASSERT
 
-#include <algorithm>  // std::all_of, std::copy_n, std::equal, std::move
+#include <algorithm>  // std::all_of, std::equal, std::move, std::transform
 #include <memory>     // std::uninitialized_fill_n
 #include <stddef.h>   // size_t
 #include <stdint.h>   // uint32_t
@@ -136,13 +136,20 @@ static void WriteFunctionOfSizeAtOffset(Source<Unit>& source,
   MOZ_RELEASE_ASSERT(offset <= usableSourceLen - functionLength,
                      "function must not extend past usable source");
 
+  // Assigning |char| to |char16_t| is permitted, but we deliberately require a
+  // cast to assign |char| to |Utf8Unit|.  |std::copy_n| would handle the first
+  // case, but the required transformation for UTF-8 demands |std::transform|.
+  auto TransformToUnit = [](char c) { return Unit(c); };
+
   // Fill in the function start.
-  std::copy_n(FunctionStart, FunctionStartLength, &source[offset]);
-  source[offset + FunctionNameOffset] = functionName;
+  std::transform(FunctionStart, FunctionStart + FunctionStartLength,
+                 &source[offset], TransformToUnit);
+  source[offset + FunctionNameOffset] = Unit(functionName);
 
   // Fill in the function end.
-  std::copy_n(FunctionEnd, FunctionEndLength,
-              &source[offset + functionLength - FunctionEndLength]);
+  std::transform(FunctionEnd, FunctionEnd + FunctionEndLength,
+                 &source[offset + functionLength - FunctionEndLength],
+                 TransformToUnit);
 }
 
 static JSString* DecompressSource(JSContext* cx, JS::Handle<JSFunction*> fun) {
