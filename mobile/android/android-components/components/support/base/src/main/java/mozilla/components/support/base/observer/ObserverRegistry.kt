@@ -19,6 +19,8 @@ import java.util.WeakHashMap
 /**
  * A helper for classes that want to get observed. This class keeps track of registered observers
  * and can automatically unregister observers if a LifecycleOwner is provided.
+ *
+ * ObserverRegistry is thread-safe.
  */
 class ObserverRegistry<T> : Observable<T> {
     private val observers = mutableSetOf<T>()
@@ -75,7 +77,6 @@ class ObserverRegistry<T> : Observable<T> {
 
     /**
      * Unregisters an observer. Does nothing if [observer] is not registered.
-     * This method is thread-safe.
      *
      * @param observer the observer to unregister.
      */
