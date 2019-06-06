@@ -1841,7 +1841,7 @@ template <typename Unit>
 const Unit* ScriptSource::chunkUnits(
     JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
     size_t chunk) {
-  const Compressed<Unit>& c = data.as<Compressed<Unit>>();
+  const CompressedData<Unit>& c = data.as<Compressed<Unit>>();
 
   ScriptSourceChunk ssc(this, chunk);
   if (const Unit* decompressed =
@@ -1884,13 +1884,14 @@ void ScriptSource::movePendingCompressedSource() {
     return;
   }
 
-  Compressed<Unit>& pending = pendingCompressed_.ref<Compressed<Unit>>();
+  CompressedData<Unit>& pending =
+      pendingCompressed_.ref<CompressedData<Unit>>();
 
   MOZ_ASSERT(!hasCompressedSource());
   MOZ_ASSERT_IF(hasUncompressedSource(),
                 pending.uncompressedLength == length());
 
-  data = SourceType(std::move(pending));
+  data = SourceType(Compressed<Unit>(std::move(pending)));
   pendingCompressed_.destroy();
 }
 
@@ -2235,8 +2236,8 @@ void ScriptSource::convertToCompressedSource(SharedImmutableString compressed,
 
   if (pinnedUnitsStack_) {
     MOZ_ASSERT(pendingCompressed_.empty());
-    pendingCompressed_.construct<Compressed<Unit>>(std::move(compressed),
-                                                   uncompressedLength);
+    pendingCompressed_.construct<CompressedData<Unit>>(std::move(compressed),
+                                                       uncompressedLength);
   } else {
     data =
         SourceType(Compressed<Unit>(std::move(compressed), uncompressedLength));
