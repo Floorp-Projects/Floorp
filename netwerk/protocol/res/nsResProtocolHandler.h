@@ -70,6 +70,10 @@ class nsResProtocolHandler final
                                         const nsACString& aPathname,
                                         nsACString& aResult) override;
 
+  virtual MOZ_MUST_USE bool MustResolveJAR(const nsACString& aRoot) override {
+    return aRoot.EqualsLiteral("android");
+  }
+
  private:
   MOZ_MUST_USE nsresult Init();
   static mozilla::StaticRefPtr<nsResProtocolHandler> sSingleton;

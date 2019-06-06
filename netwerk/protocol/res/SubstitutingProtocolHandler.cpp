@@ -355,7 +355,7 @@ nsresult SubstitutingProtocolHandler::NewURI(const nsACString& aSpec,
 
   // "android" is the only root that would return the RESOLVE_JAR_URI flag
   // see nsResProtocolHandler::GetSubstitutionInternal
-  if (host.EqualsLiteral("android")) {
+  if (MustResolveJAR(host)) {
     return ResolveJARURI(uri, aResult);
   }
 
