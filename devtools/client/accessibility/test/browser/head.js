@@ -381,6 +381,23 @@ async function checkSidebarState(store, expectedState) {
 }
 
 /**
+ * Check the state of the accessibility checks toolbar.
+ * @param  {Object} store         React store for the panel (includes store for
+ *                                the sidebar).
+ * @param  {Object} expected      Expected active state of the filters in the
+ *                                toolbar.
+ */
+async function checkToolbarState(doc, expected) {
+  info("Checking toolbar state.");
+  const hasExpectedStructure = await BrowserTestUtils.waitForCondition(() =>
+    [...doc.querySelectorAll("button.toggle-button.badge")].every((filter, i) =>
+      expected[i] === filter.classList.contains("checked")),
+      "Wait for the right toolbar state.");
+
+  ok(hasExpectedStructure, "Toolbar state is correct.");
+}
+
+/**
  * Focus accessibility properties tree in the a11y inspector sidebar. If focused for the
  * first time, the tree will select first rendered node as defult selection for keyboard
  * purposes.
@@ -514,13 +531,17 @@ async function runA11yPanelTests(tests, env) {
       await setup(env);
     }
 
-    const { tree, sidebar, audit } = expected;
+    const { tree, sidebar, audit, toolbar } = expected;
     if (tree) {
       await checkTreeState(env.doc, tree);
     }
 
     if (sidebar) {
       await checkSidebarState(env.store, sidebar);
+    }
+
+    if (toolbar) {
+      await checkToolbarState(env.doc, toolbar);
     }
 
     if (typeof audit !== "undefined") {

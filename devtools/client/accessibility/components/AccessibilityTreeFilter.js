@@ -19,6 +19,7 @@ const { FILTERS } = require("../constants");
 
 const TELEMETRY_AUDIT_ACTIVATED = "devtools.accessibility.audit_activated";
 const FILTER_LABELS = {
+  [FILTERS.ALL]: "accessibility.filter.all",
   [FILTERS.CONTRAST]: "accessibility.badge.contrast",
 };
 
