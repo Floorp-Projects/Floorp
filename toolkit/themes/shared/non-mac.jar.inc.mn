@@ -34,6 +34,5 @@
   skin/classic/mozapps/extensions/cancel.png                 (../../windows/mozapps/extensions/cancel.png)
   skin/classic/mozapps/handling/handling.css                 (../../windows/mozapps/handling/handling.css)
   skin/classic/mozapps/profile/profileSelection.css          (../../windows/mozapps/profile/profileSelection.css)
-  skin/classic/mozapps/update/downloadButtons.png            (../../windows/mozapps/update/downloadButtons.png)
 
 % override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.svg

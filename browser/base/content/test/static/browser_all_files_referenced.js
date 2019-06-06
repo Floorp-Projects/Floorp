@@ -140,9 +140,6 @@ var whitelist = [
   // Bug 1348533
   {file: "chrome://mozapps/skin/downloads/buttons.png", platforms: ["macosx"]},
   {file: "chrome://mozapps/skin/downloads/downloadButtons.png", platforms: ["linux", "win"]},
-  // Bug 1348558
-  {file: "chrome://mozapps/skin/update/downloadButtons.png",
-   platforms: ["linux"]},
   // Bug 1348559
   {file: "chrome://pippki/content/resetpassword.xul"},
   // Bug 1337345

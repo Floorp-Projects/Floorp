@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- This is temporary until bug 1521632 is fixed -->
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://mozapps/skin/update/updates.css"?>
+
+<!DOCTYPE dialog [
+<!ENTITY % updateDTD SYSTEM "chrome://mozapps/locale/update/updates.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%updateDTD;
+%brandDTD;
+#if defined(XP_MACOSX) && MOZ_BUILD_APP == browser
+#include ../../../../browser/base/content/browser-doctype.inc
+#endif
+]>
+
+<dialog id="updates"
+        windowtype="Update:Elevation"
+        type="child"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        buttons="extra2,extra1,accept"
+        role="dialog"
+        title="&updateWizard.title;"
+        style="width: auto; height: auto"
+        onload="gUpdateElevationDialog.onLoad();">
+
+  <script src="chrome://mozapps/content/update/updateElevation.js"/>
+  <script src="chrome://global/content/contentAreaUtils.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+
+#if defined(XP_MACOSX) && MOZ_BUILD_APP == browser
+#include ../../../../browser/base/content/macWindow.inc.xul
+#endif
+
+  <stringbundleset id="updateSet">
+    <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
+    <stringbundle id="updateStrings" src="chrome://mozapps/locale/update/updates.properties"/>
+  </stringbundleset>
+
+  <vbox id="elevationBox">
+    <hbox class="update-header" flex="1">
+      <vbox class="update-header-box-1">
+        <vbox class="update-header-box-text">
+          <label class="update-header-label">&finishedPage.title;</label>
+        </vbox>
+      </vbox>
+    </hbox>
+    <vbox class="update-content" flex="1">
+      <label>&finishedBackgroundPage.text;</label>
+      <separator/>
+      <hbox align="center">
+        <label>&finishedBackground.name;</label>
+        <label id="updateFinishedName" flex="1" crop="right" value=""/>
+        <label id="detailsLinkLabel" disabled="true" is="text-link"
+               value="&details.link;"
+               onclick="gUpdateElevationDialog.openUpdateURL(event);"/>
+      </hbox>
+      <spacer flex="1"/>
+      <label id="finishedBackgroundMoreElevated">&finishedBackground.moreElevated;</label>
+      <label id="finishedBackgroundMoreElevatedLink">&errorManual.label;</label>
+      <hbox>
+        <label id="manualLinkLabel" is="text-link" value=""
+               onclick="gUpdateElevationDialog.openUpdateURL(event);"/>
+      </hbox>
+    </vbox>
+  </vbox>
+  <separator class="groove update-buttons-separator"/>
+  <hbox id="update-button-box" pack="end">
+    <button id="elevateExtra2" dlgtype="extra2" label="" class="dialog-button"
+	        oncommand="gUpdateElevationDialog.onRestartLater();" />
+    <button id="elevateExtra1" dlgtype="extra1" label="" class="dialog-button"
+	        oncommand="gUpdateElevationDialog.onNoThanks();" />
+    <spacer flex="1"/>
+    <button id="elevateAccept" dlgtype="accept" label="" class="dialog-button"
+	        oncommand="gUpdateElevationDialog.onRestartNow();" default="true"/>
+  </hbox>
+</dialog>

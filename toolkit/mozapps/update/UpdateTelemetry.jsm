@@ -546,39 +546,6 @@ var AUSTLMY = {
   },
 
   /**
-   * Submit a telemetry ping for the last page displayed by the update wizard.
-   *
-   * @param  aPageID
-   *         The page id for the last page displayed.
-   */
-  pingWizLastPageCode: function UT_pingWizLastPageCode(aPageID) {
-    let pageMap = { invalid: 0,
-                    dummy: 1,
-                    checking: 2,
-                    pluginupdatesfound: 3,
-                    noupdatesfound: 4,
-                    manualUpdate: 5,
-                    unsupported: 6,
-                    updatesfoundbasic: 8,
-                    updatesfoundbillboard: 9,
-                    downloading: 12,
-                    errors: 13,
-                    errorextra: 14,
-                    errorpatching: 15,
-                    finished: 16,
-                    finishedBackground: 17,
-                    installed: 18 };
-    try {
-      let id = "UPDATE_WIZ_LAST_PAGE_CODE";
-      // enumerated type histogram
-      Services.telemetry.getHistogramById(id).add(pageMap[aPageID] ||
-                                                  pageMap.invalid);
-    } catch (e) {
-      Cu.reportError(e);
-    }
-  },
-
-  /**
    * Submit a telemetry ping for a boolean type histogram that indicates if the
    * service is installed and a telemetry ping for a boolean type histogram that
    * indicates if the service was at some point installed and is now

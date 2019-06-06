@@ -109,11 +109,6 @@ pref("app.update.timerFirstInterval", 30000);
 // The interval to check for updates (app.update.interval) is defined in
 // firefox-branding.js
 
-// Alternative windowtype for an application update user interface window. When
-// a window with this windowtype is open the application update service won't
-// open the normal application update user interface window.
-pref("app.update.altwindowtype", "Browser:About");
-
 // Enables some extra Application Update Logging (can reduce performance)
 pref("app.update.log", false);
 // Causes Application Update Logging to be sent to a file in the profile
@@ -126,9 +121,6 @@ pref("app.update.log.file", false);
 // user of the failure. User initiated update checks always notify the user of
 // the failure.
 pref("app.update.backgroundMaxErrors", 10);
-
-// Whether or not to use the doorhanger application update UI.
-pref("app.update.doorhanger", true);
 
 // Ids of the links to the "What's new" update documentation
 pref("app.update.link.updateAvailableWhatsNew", "update-available-whats-new");
@@ -152,11 +144,6 @@ pref("app.update.elevation.promptMaxAttempts", 2);
 pref("app.update.auto", true);
 #endif
 
-// If set to true, the Update Service will present no UI for any event.
-pref("app.update.silent", false);
-
-// app.update.badgeWaitTime is in branding section
-
 // If set to true, the Update Service will apply updates in the background
 // when it finishes downloading them.
 pref("app.update.staging.enabled", true);
@@ -166,11 +153,9 @@ pref("app.update.url", "https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%B
 // app.update.url.manual is in branding section
 // app.update.url.details is in branding section
 
+// app.update.badgeWaitTime is in branding section
 // app.update.interval is in branding section
 // app.update.promptWaitTime is in branding section
-
-// Show the Update Checking/Ready UI when the user was idle for x seconds
-pref("app.update.idletime", 60);
 
 // Whether or not to attempt using the service for updates.
 #ifdef MOZ_MAINTENANCE_SERVICE
