@@ -8,7 +8,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DOMOverlaysBinding.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/L10nUtilsBinding.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsNetUtil.h"
 

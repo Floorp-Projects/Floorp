@@ -10,7 +10,6 @@
 #include "mozilla/dom/DOMLocalizationBinding.h"
 #include "mozilla/dom/DocumentL10nBinding.h"
 #include "mozilla/dom/DOMOverlaysBinding.h"
-#include "mozilla/dom/L10nUtilsBinding.h"
 #include "mozilla/dom/l10n/Mutations.h"
 
 class nsIGlobalObject;

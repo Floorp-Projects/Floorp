@@ -6,7 +6,6 @@
 
 #include "DocumentL10n.h"
 #include "mozilla/dom/DocumentL10nBinding.h"
-#include "mozilla/dom/L10nUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsQueryObject.h"
