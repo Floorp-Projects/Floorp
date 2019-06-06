@@ -50,19 +50,6 @@ NS_INTERFACE_MAP_END
 DOMLocalization::DOMLocalization(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {
   mMutations = new mozilla::dom::l10n::Mutations(this);
 }
-
-already_AddRefed<DOMLocalization> DOMLocalization::Constructor(
-    const GlobalObject& aGlobal, ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!global) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  RefPtr<DOMLocalization> loc = new DOMLocalization(global);
-  return loc.forget();
-}
-
 void DOMLocalization::Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv) {
   nsCOMPtr<mozILocalizationJSM> jsm =
       do_ImportModule("resource://gre/modules/Localization.jsm");
@@ -86,6 +73,30 @@ void DOMLocalization::Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv) {
   // the document when locale changes or pseudolocalization
   // gets turned on.
   RegisterObservers();
+}
+
+already_AddRefed<DOMLocalization> DOMLocalization::Constructor(
+    const GlobalObject& aGlobal,
+    const Optional<Sequence<nsString>>& aResourceIds, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  RefPtr<DOMLocalization> loc = new DOMLocalization(global);
+  nsTArray<nsString> resourceIds;
+
+  if (aResourceIds.WasPassed()) {
+    resourceIds = aResourceIds.Value();
+  }
+
+  loc->Init(resourceIds, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return loc.forget();
 }
 
 nsIGlobalObject* DOMLocalization::GetParentObject() const { return mGlobal; }
@@ -697,7 +708,7 @@ already_AddRefed<Promise> DOMLocalization::MaybeWrapPromise(
 
   ErrorResult result;
   RefPtr<Promise> docPromise = Promise::Create(mGlobal, result);
-  if (result.Failed()) {
+  if (NS_WARN_IF(result.Failed())) {
     return nullptr;
   }
 
