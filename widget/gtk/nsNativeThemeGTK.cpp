@@ -809,6 +809,7 @@ class SystemCairoClipper : public ClipExporter {
 
   void MoveTo(const Point& aPoint) override {
     cairo_move_to(mContext, aPoint.x / mScaleFactor, aPoint.y / mScaleFactor);
+    mBeginPoint = aPoint;
     mCurrentPoint = aPoint;
   }
 
@@ -842,15 +843,15 @@ class SystemCairoClipper : public ClipExporter {
                 aAntiClockwise);
   }
 
-  void Close() override { cairo_close_path(mContext); }
+  void Close() override {
+    cairo_close_path(mContext);
+    mCurrentPoint = mBeginPoint;
+  }
 
   void EndClip() override { cairo_clip(mContext); }
 
-  Point CurrentPoint() const override { return mCurrentPoint; }
-
  private:
   cairo_t* mContext;
-  Point mCurrentPoint;
   gint mScaleFactor;
 };
 

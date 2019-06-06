@@ -31,7 +31,6 @@ class PathBuilderSkia : public PathBuilder {
   void Close() override;
   void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
            float aEndAngle, bool aAntiClockwise = false) override;
-  Point CurrentPoint() const override;
   already_AddRefed<Path> Finish() override;
 
   void AppendPath(const SkPath& aPath);
@@ -39,6 +38,8 @@ class PathBuilderSkia : public PathBuilder {
   BackendType GetBackendType() const override { return BackendType::SKIA; }
 
  private:
+  friend class PathSkia;
+
   void SetFillRule(FillRule aFillRule);
 
   SkPath mPath;
@@ -49,7 +50,13 @@ class PathSkia : public Path {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathSkia, override)
 
-  PathSkia(SkPath& aPath, FillRule aFillRule) : mFillRule(aFillRule) {
+  PathSkia(SkPath& aPath,
+           FillRule aFillRule,
+           Point aCurrentPoint = Point(),
+           Point aBeginPoint = Point())
+  : mFillRule(aFillRule)
+  , mCurrentPoint(aCurrentPoint)
+  , mBeginPoint(aBeginPoint) {
     mPath.swap(aPath);
   }
 
@@ -83,6 +90,8 @@ class PathSkia : public Path {
 
   SkPath mPath;
   FillRule mFillRule;
+  Point mCurrentPoint;
+  Point mBeginPoint;
 };
 
 }  // namespace gfx

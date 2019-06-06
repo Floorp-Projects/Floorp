@@ -57,13 +57,9 @@ void PathBuilderRecording::Close() {
   mPathBuilder->Close();
 }
 
-Point PathBuilderRecording::CurrentPoint() const {
-  return mPathBuilder->CurrentPoint();
-}
-
 already_AddRefed<Path> PathBuilderRecording::Finish() {
   RefPtr<Path> path = mPathBuilder->Finish();
-  return MakeAndAddRef<PathRecording>(path, mPathOps, mFillRule);
+  return MakeAndAddRef<PathRecording>(path, mPathOps, mFillRule, mCurrentPoint, mBeginPoint);
 }
 
 PathRecording::~PathRecording() {
@@ -79,6 +75,8 @@ already_AddRefed<PathBuilder> PathRecording::CopyToBuilder(
   RefPtr<PathBuilderRecording> recording =
       new PathBuilderRecording(pathBuilder, aFillRule);
   recording->mPathOps = mPathOps;
+  recording->SetCurrentPoint(mCurrentPoint);
+  recording->SetBeginPoint(mBeginPoint);
   return recording.forget();
 }
 
@@ -104,6 +102,10 @@ already_AddRefed<PathBuilder> PathRecording::TransformedCopyToBuilder(
     }
     recording->mPathOps.push_back(newPathOp);
   }
+
+  recording->SetCurrentPoint(aTransform.TransformPoint(mCurrentPoint));
+  recording->SetBeginPoint(aTransform.TransformPoint(mBeginPoint));
+
   return recording.forget();
 }
 

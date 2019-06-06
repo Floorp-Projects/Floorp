@@ -196,7 +196,7 @@ function ObjectGetOwnPropertyDescriptor(obj, propertyKey) {
 function ObjectOrReflectDefineProperty(obj, propertyKey, attributes, strict) {
     // Step 1.
     if (!IsObject(obj))
-        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, DecompileArg(0, obj));
+        ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, obj));
 
     // Step 2.
     propertyKey = TO_PROPERTY_KEY(propertyKey);

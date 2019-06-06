@@ -680,7 +680,7 @@ static MOZ_MUST_USE bool SavedFrame_checkThis(JSContext* cx, CallArgs& args,
 
   if (!thisValue.isObject()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_NOT_NONNULL_OBJECT,
+                              JSMSG_OBJECT_REQUIRED,
                               InformalValueTypeName(thisValue));
     return false;
   }

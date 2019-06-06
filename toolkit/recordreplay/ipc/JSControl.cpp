@@ -34,7 +34,7 @@ static bool FillCharBufferCallback(const char16_t* buf, uint32_t len,
   return true;
 }
 
-static JSObject* NonNullObject(JSContext* aCx, HandleValue aValue) {
+static JSObject* RequireObject(JSContext* aCx, HandleValue aValue) {
   if (!aValue.isObject()) {
     JS_ReportErrorASCII(aCx, "Expected object");
     return nullptr;
@@ -142,7 +142,7 @@ static bool Middleman_RegisterReplayDebugger(JSContext* aCx, unsigned aArgc,
     return JS_WrapValue(aCx, args.rval());
   }
 
-  RootedObject obj(aCx, NonNullObject(aCx, args.get(0)));
+  RootedObject obj(aCx, RequireObject(aCx, args.get(0)));
   if (!obj) {
     return false;
   }
@@ -194,7 +194,7 @@ static bool Middleman_SpawnReplayingChild(JSContext* aCx, unsigned aArgc,
 static bool Middleman_SendManifest(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  RootedObject manifestObject(aCx, NonNullObject(aCx, args.get(1)));
+  RootedObject manifestObject(aCx, RequireObject(aCx, args.get(1)));
   if (!manifestObject) {
     return false;
   }
@@ -631,7 +631,7 @@ static bool RecordReplay_ManifestFinished(JSContext* aCx, unsigned aArgc,
 
   CharBuffer responseBuffer;
   if (args.hasDefined(0)) {
-    RootedObject responseObject(aCx, NonNullObject(aCx, args.get(0)));
+    RootedObject responseObject(aCx, RequireObject(aCx, args.get(0)));
     if (!responseObject) {
       return false;
     }
