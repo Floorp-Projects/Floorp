@@ -307,10 +307,31 @@ void nsSVGImageFrame::PaintSVG(gfxContext& aContext,
                        (mState & NS_FRAME_IS_NONDISPLAY),
                    "Display lists handle dirty rect intersection test");
       dirtyRect = ToAppUnits(*aDirtyRect, appUnitsPerDevPx);
-      // Adjust dirtyRect to match our local coordinate system.
-      nsRect rootRect = nsSVGUtils::TransformFrameRectToOuterSVG(
-          mRect, aTransform, PresContext());
-      dirtyRect.MoveBy(-rootRect.TopLeft());
+
+      // dirtyRect is relative to the outer <svg>, we should transform it
+      // down to <image>.
+      Rect dir(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
+      dir.Scale(1.f / AppUnitsPerCSSPixel());
+
+      // FIXME: This isn't correct if there is an inner <svg> enclosing
+      // the <image>. But that seems to be a quite obscure usecase, we can
+      // add a dedicated utility for that purpose to replace the GetCTM
+      // here if necessary.
+      auto mat = SVGContentUtils::GetCTM(
+          static_cast<SVGImageElement*>(GetContent()), false);
+      if (mat.IsSingular()) {
+        return;
+      }
+
+      mat.Invert();
+      dir = mat.TransformRect(dir);
+
+      // x, y offset of <image> is not included in CTM.
+      dir.MoveBy(-x, -y);
+
+      dir.Scale(AppUnitsPerCSSPixel());
+      dir.Round();
+      dirtyRect = nsRect(dir.x, dir.y, dir.width, dir.height);
     }
 
     uint32_t flags = aImgParams.imageFlags;
