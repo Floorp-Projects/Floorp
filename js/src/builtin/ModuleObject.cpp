@@ -677,12 +677,13 @@ void ModuleNamespaceObject::ProxyHandler::trace(JSTracer* trc,
   }
 }
 
-void ModuleNamespaceObject::ProxyHandler::finalize(JSFreeOp* fop,
+void ModuleNamespaceObject::ProxyHandler::finalize(JSFreeOp* fopArg,
                                                    JSObject* proxy) const {
+  FreeOp* fop = FreeOp::get(fopArg);
   auto& self = proxy->as<ModuleNamespaceObject>();
 
   if (self.hasBindings()) {
-    js_delete(&self.bindings());
+    fop->delete_(&self.bindings());
   }
 }
 

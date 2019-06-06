@@ -3865,9 +3865,6 @@ pref("layout.word_select.eat_space_to_next_word", true);
 // scrollbar snapping region
 pref("slider.snapMultiplier", 6);
 
-// Whether to extend the native dialog with information on printing frames.
-pref("print.extend_native_print_dialog", true);
-
 // Locate plugins by the directories specified in the Windows registry for PLIDs
 // Which is currently HKLM\Software\MozillaPlugins\xxxPLIDxxx\Path
 pref("plugin.scan.plid.all", true);

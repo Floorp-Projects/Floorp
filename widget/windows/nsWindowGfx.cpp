@@ -318,10 +318,9 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
 
         RECT paintRect;
         ::GetClientRect(mWnd, &paintRect);
-        RefPtr<DrawTarget> dt =
-            gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(
-                targetSurface, IntSize(paintRect.right - paintRect.left,
-                                       paintRect.bottom - paintRect.top));
+        RefPtr<DrawTarget> dt = gfxPlatform::CreateDrawTargetForSurface(
+            targetSurface, IntSize(paintRect.right - paintRect.left,
+                                   paintRect.bottom - paintRect.top));
         if (!dt || !dt->IsValid()) {
           gfxWarning()
               << "nsWindow::OnPaint failed in CreateDrawTargetForSurface";

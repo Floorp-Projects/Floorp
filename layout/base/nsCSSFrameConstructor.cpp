@@ -99,7 +99,7 @@
 #include "nsFirstLetterFrame.h"
 #include "nsGfxScrollFrame.h"
 #include "nsPageFrame.h"
-#include "nsSimplePageSequenceFrame.h"
+#include "nsPageSequenceFrame.h"
 #include "nsTableWrapperFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsBackdropFrame.h"
@@ -2517,7 +2517,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   Print presentation, non-XUL
 
       ViewportFrame
-        nsSimplePageSequenceFrame
+        nsPageSequenceFrame
           nsPageFrame
             nsPageContentFrame [fixed-cb]
               nsCanvasFrame [abs-cb]
@@ -2528,7 +2528,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
 
       ViewportFrame
         nsHTMLScrollFrame
-          nsSimplePageSequenceFrame
+          nsPageSequenceFrame
             nsPageFrame
               nsPageContentFrame [fixed-cb]
                 nsCanvasFrame [abs-cb]
@@ -2544,7 +2544,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
       the root element.
     mDocElementContainingBlock is the parent of mRootElementFrame
       (i.e. nsCanvasFrame or nsRootBoxFrame)
-    mPageSequenceFrame is the nsSimplePageSequenceFrame, or null if there isn't
+    mPageSequenceFrame is the nsPageSequenceFrame, or null if there isn't
       one
   */
 
@@ -2584,8 +2584,8 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
     mDocElementContainingBlock = rootFrame;
   } else {
     // Create a page sequence frame
-    rootFrame = NS_NewSimplePageSequenceFrame(mPresShell, viewportPseudoStyle);
-    mPageSequenceFrame = rootFrame;
+    rootFrame = mPageSequenceFrame =
+        NS_NewPageSequenceFrame(mPresShell, viewportPseudoStyle);
     rootPseudo = PseudoStyleType::pageSequence;
     rootFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
   }

@@ -116,8 +116,7 @@ void DIBTextureData::FillInfo(TextureData::Info& aInfo) const {
 }
 
 already_AddRefed<gfx::DrawTarget> DIBTextureData::BorrowDrawTarget() {
-  return gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mSurface,
-                                                                mSize);
+  return gfxPlatform::CreateDrawTargetForSurface(mSurface, mSize);
 }
 
 DIBTextureData* DIBTextureData::Create(gfx::IntSize aSize,

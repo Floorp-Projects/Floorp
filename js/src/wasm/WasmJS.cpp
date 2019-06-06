@@ -2349,10 +2349,10 @@ void WasmGlobalObject::trace(JSTracer* trc, JSObject* obj) {
 }
 
 /* static */
-void WasmGlobalObject::finalize(FreeOp*, JSObject* obj) {
+void WasmGlobalObject::finalize(FreeOp* fop, JSObject* obj) {
   WasmGlobalObject* global = reinterpret_cast<WasmGlobalObject*>(obj);
   if (!global->isNewborn()) {
-    js_delete(global->cell());
+    fop->delete_(global->cell());
   }
 }
 

@@ -7,7 +7,11 @@
 #ifndef NSSUBDOCUMENTFRAME_H_
 #define NSSUBDOCUMENTFRAME_H_
 
+#include "Layers.h"
+#include "LayerState.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/layers/WebRenderScrollData.h"
+#include "nsDisplayList.h"
 #include "nsAtomicContainerFrame.h"
 #include "nsIReflowCallback.h"
 #include "nsFrameLoader.h"
@@ -15,9 +19,6 @@
 
 namespace mozilla {
 class PresShell;
-namespace layout {
-class RenderFrame;
-}
 }  // namespace mozilla
 
 /******************************************************************************
@@ -162,6 +163,58 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   bool mDidCreateDoc;
   bool mCallingShow;
   WeakFrame mPreviousCaret;
+};
+
+/**
+ * A nsDisplayRemote will graft a remote frame's shadow layer tree (for a given
+ * nsFrameLoader) into its parent frame's layer tree.
+ */
+class nsDisplayRemote final : public nsPaintedDisplayItem {
+  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
+  typedef mozilla::dom::TabId TabId;
+  typedef mozilla::gfx::Matrix4x4 Matrix4x4;
+  typedef mozilla::layers::EventRegionsOverride EventRegionsOverride;
+  typedef mozilla::layers::Layer Layer;
+  typedef mozilla::layers::LayersId LayersId;
+  typedef mozilla::layers::RefLayer RefLayer;
+  typedef mozilla::layers::StackingContextHelper StackingContextHelper;
+  typedef mozilla::LayerState LayerState;
+  typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
+  typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
+
+ public:
+  nsDisplayRemote(nsDisplayListBuilder* aBuilder, nsSubDocumentFrame* aFrame);
+
+  LayerState GetLayerState(
+      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+      const ContainerLayerParameters& aParameters) override;
+
+  already_AddRefed<Layer> BuildLayer(
+      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+      const ContainerLayerParameters& aContainerParameters) override;
+
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+
+  bool CreateWebRenderCommands(
+      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const StackingContextHelper& aSc,
+      mozilla::layers::RenderRootStateManager* aManager,
+      nsDisplayListBuilder* aDisplayListBuilder) override;
+  bool UpdateScrollData(
+      mozilla::layers::WebRenderScrollData* aData,
+      mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
+
+  NS_DISPLAY_DECL_NAME("Remote", TYPE_REMOTE)
+
+ private:
+  friend class nsDisplayItemBase;
+  nsFrameLoader* GetFrameLoader() const;
+
+  TabId mTabId;
+  LayersId mLayersId;
+  LayoutDeviceIntPoint mOffset;
+  EventRegionsOverride mEventRegionsOverride;
 };
 
 #endif /* NSSUBDOCUMENTFRAME_H_ */

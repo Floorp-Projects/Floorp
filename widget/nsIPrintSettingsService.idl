@@ -87,8 +87,8 @@ interface nsIPrintSettingsService : nsISupports
    *
    * Items not read:
    *   startPageRange, endPageRange, scaling, printRange, title
-   *   docURL, howToEnableFrameUI, isCancelled,
-   *   printFrameType, printSilent, shrinkToFit, numCopies,
+   *   docURL, isCancelled,
+   *   printSilent, shrinkToFit, numCopies,
    *   printerName
    *
    */
@@ -108,8 +108,8 @@ interface nsIPrintSettingsService : nsISupports
    *
    * Items not written:
    *   startPageRange, endPageRange, scaling, printRange, title
-   *   docURL, howToEnableFrameUI, isCancelled,
-   *   printFrameType, printSilent, shrinkToFit, numCopies
+   *   docURL, isCancelled,
+   *   printSilent, shrinkToFit, numCopies
    *
    */
   void savePrintSettingsToPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);

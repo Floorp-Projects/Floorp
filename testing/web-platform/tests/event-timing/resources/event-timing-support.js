@@ -8,7 +8,7 @@ function clickOnElement(id, callback) {
   const yCenter = rect.y + rect.height / 2;
   const leftButton = 0;
   const clickHandler = () => {
-    mainThreadBusy(60);
+    mainThreadBusy(120);
     if (callback)
       callback();
     element.removeEventListener("mousedown", clickHandler);
@@ -29,13 +29,15 @@ function verifyClickEvent(entry, is_first=false) {
   assert_true(entry.cancelable);
   assert_equals(entry.name, 'mousedown');
   assert_equals(entry.entryType, 'event');
-  assert_greater_than(entry.duration, 50,
-      "The entry's duration should be greater than 50ms.");
+  assert_greater_than_equal(entry.duration, 104,
+      "The entry's duration should be greater than or equal to 104 ms.");
   assert_greater_than(entry.processingStart, entry.startTime,
       "The entry's processingStart should be greater than startTime.");
   assert_greater_than_equal(entry.processingEnd, entry.processingStart,
       "The entry's processingEnd must be at least as large as processingStart.");
-  assert_greater_than_equal(entry.duration, entry.processingEnd - entry.startTime,
+  // |duration| is a number rounded to the nearest 8 ms, so add 4 to get a lower bound
+  // on the actual duration.
+  assert_greater_than_equal(entry.duration + 4, entry.processingEnd - entry.startTime,
       "The entry's duration must be at least as large as processingEnd - startTime.");
   if (is_first) {
     let firstInputs = performance.getEntriesByType('firstInput');

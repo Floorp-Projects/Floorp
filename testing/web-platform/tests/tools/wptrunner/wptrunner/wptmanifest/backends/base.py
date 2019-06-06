@@ -130,7 +130,7 @@ class ManifestItem(object):
         self._data = {}
 
     def __repr__(self):
-        return "<ManifestItem %s>" % (self.node.data)
+        return "<%s %s>" % (self.__class__, self.node.data)
 
     def __str__(self):
         rv = [repr(self)]

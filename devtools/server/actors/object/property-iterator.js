@@ -109,13 +109,19 @@ const PropertyIteratorActor  = protocol.ActorClassWithSpec(propertyIteratorSpec,
   },
 });
 
+function waiveXrays(obj) {
+  return isWorker ? obj : Cu.waiveXrays(obj);
+}
+
+function unwaiveXrays(obj) {
+  return isWorker ? obj : Cu.unwaiveXrays(obj);
+}
+
 /**
  * Helper function to create a grip from a Map/Set entry
  */
 function gripFromEntry({ obj, hooks }, entry) {
-  if (!isWorker) {
-    entry = Cu.unwaiveXrays(entry);
-  }
+  entry = unwaiveXrays(entry);
   return hooks.createValueGrip(
     ObjectUtils.makeDebuggeeValueIfNeeded(obj, entry));
 }
@@ -253,22 +259,12 @@ function enumMapEntries(objectActor) {
   // Even then though, we might want to continue waiving Xrays here for the
   // same reason we do so for Arrays above - this filtering behavior is likely
   // to be more confusing than beneficial in the case of Object previews.
-  let keys, getValue;
-  if (isWorker) {
-    const keysIterator = DevToolsUtils.callPropertyOnObject(objectActor.obj, "keys");
-    keys = [...DevToolsUtils.makeDebuggeeIterator(keysIterator)];
-    const valuesIterator = DevToolsUtils.callPropertyOnObject(objectActor.obj, "values");
-    const values = [...DevToolsUtils.makeDebuggeeIterator(valuesIterator)];
-    const map = new Map();
-    for (let i = 0; i < keys.length; i++) {
-      map.set(keys[i], values[i]);
-    }
-    getValue = key => map.get(key);
-  } else {
-    const raw = objectActor.obj.unsafeDereference();
-    keys = [...Cu.waiveXrays(Map.prototype.keys.call(raw))];
-    getValue = key => Map.prototype.get.call(raw, key);
-  }
+  const raw = objectActor.obj.unsafeDereference();
+  const iterator =
+    objectActor.obj.makeDebuggeeValue(waiveXrays(Map.prototype.keys.call(raw)));
+  const keys = [...DevToolsUtils.makeDebuggeeIterator(iterator)];
+  const getValue =
+    key => Map.prototype.get.call(raw, ObjectUtils.unwrapDebuggeeValue(key));
 
   return {
     [Symbol.iterator]: function* () {
@@ -348,20 +344,11 @@ function enumWeakMapEntries(objectActor) {
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
   const raw = objectActor.obj.unsafeDereference();
-  const basekeys = ChromeUtils.nondeterministicGetWeakMapKeys(raw);
-  const keys = isWorker ? basekeys : Cu.waiveXrays(basekeys);
+  const keys = waiveXrays(ChromeUtils.nondeterministicGetWeakMapKeys(raw));
 
   const values = [];
-  if (isWorker) {
-    for (const k of keys) {
-      const nk = ObjectUtils.makeDebuggeeValueIfNeeded(objectActor.obj, k);
-      const v = DevToolsUtils.callPropertyOnObject(objectActor.obj, "get", nk);
-      values.push(ObjectUtils.unwrapDebuggeeValue(v));
-    }
-  } else {
-    for (const k of keys) {
-      values.push(WeakMap.prototype.get.call(raw, k));
-    }
+  for (const k of keys) {
+    values.push(WeakMap.prototype.get.call(raw, k));
   }
 
   return {
@@ -402,14 +389,10 @@ function enumSetEntries(objectActor) {
   // This code is designed to handle untrusted objects, so we can safely
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
-  let values;
-  if (isWorker) {
-    const iterator = DevToolsUtils.callPropertyOnObject(objectActor.obj, "values");
-    values = [...DevToolsUtils.makeDebuggeeIterator(iterator)];
-  } else {
-    const raw = objectActor.obj.unsafeDereference();
-    values = [...Cu.waiveXrays(Set.prototype.values.call(raw))];
-  }
+  const raw = objectActor.obj.unsafeDereference();
+  const iterator =
+    objectActor.obj.makeDebuggeeValue(waiveXrays(Set.prototype.values.call(raw)));
+  const values = [...DevToolsUtils.makeDebuggeeIterator(iterator)];
 
   return {
     [Symbol.iterator]: function* () {
@@ -443,8 +426,7 @@ function enumWeakSetEntries(objectActor) {
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
   const raw = objectActor.obj.unsafeDereference();
-  const basekeys = ChromeUtils.nondeterministicGetWeakSetKeys(raw);
-  const keys = isWorker ? basekeys : Cu.waiveXrays(basekeys);
+  const keys = waiveXrays(ChromeUtils.nondeterministicGetWeakSetKeys(raw));
 
   return {
     [Symbol.iterator]: function* () {
