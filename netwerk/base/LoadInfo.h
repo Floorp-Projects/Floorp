@@ -91,21 +91,30 @@ class LoadInfo final : public nsILoadInfo {
   void SetIsFromProcessingFrameAttributes();
 
   // Hands off from the cspToInherit functionality!
-  // The only place that knows that a new document load needs to inherit the
-  // CSP is the docshell. At that point neither the document nor the client
-  // are available yet. Since we need a way to transfer the CSP from the
-  // docshell to the document, we temporarily store the CSP that needs to
-  // be inherited within the Loadinfo. In other words, those two functions
-  // build the bridge to transfer the CSP from the docshell into the doc.
+  //
+  // For navigations, GetCSPToInherit returns what the spec calls the
+  // "request's client's global object's CSP list", or more precisely
+  // a snapshot of it taken when the navigation starts.  For navigations
+  // that need to inherit their CSP, this is the right CSP to use for
+  // the new document.  We need a way to transfer the CSP from the
+  // docshell (where the navigation starts) to the point where the new
+  // document is created and decides whether to inherit its CSP, and
+  // this is the mechanism we use for that.
+  //
+  // For example:
+  // A document with a CSP triggers a new top-level data: URI load.
+  // We pass the CSP of the document that triggered the load all the
+  // way to docshell. Within docshell we call SetCSPToInherit() on the
+  // loadinfo. Within Document::InitCSP() we check if the newly created
+  // document needs to inherit the CSP. If so, we call GetCSPToInherit()
+  // and set the inherited CSP as the CSP for the new document. Please
+  // note that any additonal Meta CSP in that document will be merged
+  // into that CSP. Any subresource loads within that document
+  // subesquently will receive the correct CSP by querying
+  // loadinfo->GetCSP() from that point on.
   void SetCSPToInherit(nsIContentSecurityPolicy* aCspToInherit) {
     mCspToInherit = aCspToInherit;
   }
-  // Certain schemes need to inherit the CSP. If needed, we temporarily
-  // store the CSP from the embedding/opening document here which then
-  // gets propagated to the new doc within Document::InitCSP(). This
-  // member is only ever non-null if the new doc actually needs to
-  // inherit the CSP from the embedding/opening document.
-  nsIContentSecurityPolicy* GetCSPToInherit() { return mCspToInherit; }
 
  private:
   // private constructor that is only allowed to be called from within

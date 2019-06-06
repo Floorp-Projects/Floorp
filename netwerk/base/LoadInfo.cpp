@@ -1484,5 +1484,10 @@ already_AddRefed<nsIContentSecurityPolicy> LoadInfo::GetPreloadCsp() {
   return preloadCSP.forget();
 }
 
+already_AddRefed<nsIContentSecurityPolicy> LoadInfo::GetCspToInherit() {
+  nsCOMPtr<nsIContentSecurityPolicy> cspToInherit = mCspToInherit;
+  return cspToInherit.forget();
+}
+
 }  // namespace net
 }  // namespace mozilla
