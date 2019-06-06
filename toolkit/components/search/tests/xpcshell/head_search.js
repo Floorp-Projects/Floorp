@@ -401,7 +401,7 @@ var addTestEngines = async function(aItems) {
       if (item.xmlFileName) {
         Services.search.addEngine(gDataUrl + item.xmlFileName, null, false);
       } else {
-        Services.search.addEngineWithDetails(item.name, ...item.details);
+        Services.search.addEngineWithDetails(item.name, item.details);
       }
     });
   }
