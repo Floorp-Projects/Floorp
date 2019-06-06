@@ -416,41 +416,44 @@ bool HangMonitorChild::InterruptCallback() {
 
   if (cancelContentJS) {
     js::AutoAssertNoContentJS nojs(mContext);
-    TabId currentJSTabId = BrowserChild::GetFrom(win)->GetTabId();
-    if (currentJSTabId != cancelContentJSTab) {
+
+    RefPtr<BrowserChild> browserChild =
+        BrowserChild::FindBrowserChild(cancelContentJSTab);
+    RefPtr<BrowserChild> browserChildFromWin = BrowserChild::GetFrom(win);
+    if (!browserChild || !browserChildFromWin) {
+      return true;
+    }
+
+    TabId tabIdFromWin = browserChildFromWin->GetTabId();
+    if (tabIdFromWin != cancelContentJSTab) {
       // The currently-executing content JS doesn't belong to the tab that
       // requested cancellation of JS. Just return and let the JS continue.
       return true;
     }
 
-    RefPtr<BrowserChild> browserChild =
-        BrowserChild::FindBrowserChild(cancelContentJSTab);
-    if (browserChild) {
-      nsresult rv;
-      nsCOMPtr<nsIURI> uri;
+    nsresult rv;
+    nsCOMPtr<nsIURI> uri;
 
-      if (cancelContentJSNavigationURI) {
-        rv = NS_NewURI(getter_AddRefs(uri),
-                       cancelContentJSNavigationURI.value());
-        if (NS_FAILED(rv)) {
-          return true;
+    if (cancelContentJSNavigationURI) {
+      rv = NS_NewURI(getter_AddRefs(uri), cancelContentJSNavigationURI.value());
+      if (NS_FAILED(rv)) {
+        return true;
+      }
+    }
+
+    bool canCancel;
+    rv = browserChild->CanCancelContentJS(cancelContentJSNavigationType,
+                                          cancelContentJSNavigationIndex, uri,
+                                          cancelContentJSEpoch, &canCancel);
+    if (NS_SUCCEEDED(rv) && canCancel) {
+      // Don't add this page to the BF cache, since we're cancelling its JS.
+      if (Document* doc = win->GetExtantDoc()) {
+        if (Document* topLevelDoc = doc->GetTopLevelContentDocument()) {
+          topLevelDoc->DisallowBFCaching();
         }
       }
 
-      bool canCancel;
-      rv = browserChild->CanCancelContentJS(cancelContentJSNavigationType,
-                                            cancelContentJSNavigationIndex, uri,
-                                            cancelContentJSEpoch, &canCancel);
-      if (NS_SUCCEEDED(rv) && canCancel) {
-        // Don't add this page to the BF cache, since we're cancelling its JS.
-        if (Document* doc = win->GetExtantDoc()) {
-          if (Document* topLevelDoc = doc->GetTopLevelContentDocument()) {
-            topLevelDoc->DisallowBFCaching();
-          }
-        }
-
-        return false;
-      }
+      return false;
     }
   }
 
