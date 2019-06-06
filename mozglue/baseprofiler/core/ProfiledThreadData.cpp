@@ -4,17 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ProfiledThreadData.h"
+#include "BaseProfiler.h"
 
-#include "ProfileBuffer.h"
-#include "BaseProfileJSONWriter.h"
+#ifdef MOZ_BASE_PROFILER
 
-#include "js/TraceLoggerAPI.h"
-#include "mozilla/dom/ContentChild.h"
+#  include "ProfiledThreadData.h"
 
-#if defined(GP_OS_darwin)
-#  include <pthread.h>
-#endif
+#  include "ProfileBuffer.h"
+#  include "BaseProfileJSONWriter.h"
+
+#  include "js/TraceLoggerAPI.h"
+#  include "mozilla/dom/ContentChild.h"
+
+#  if defined(GP_OS_darwin)
+#    include <pthread.h>
+#  endif
 
 ProfiledThreadData::ProfiledThreadData(ThreadInfo* aThreadInfo,
                                        nsIEventTarget* aEventTarget,
@@ -301,3 +305,5 @@ void ProfiledThreadData::NotifyAboutToLoseJSContext(
   mJITFrameInfoForPreviousJSContexts = std::move(jitFrameInfo);
   mBufferPositionWhenReceivedJSContext = mozilla::Nothing();
 }
+
+#endif  // MOZ_BASE_PROFILER

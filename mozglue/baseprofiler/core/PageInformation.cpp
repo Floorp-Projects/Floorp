@@ -4,9 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "PageInformation.h"
+#include "BaseProfiler.h"
 
-#include "BaseProfileJSONWriter.h"
+#ifdef MOZ_BASE_PROFILER
+
+#  include "PageInformation.h"
+
+#  include "BaseProfileJSONWriter.h"
 
 PageInformation::PageInformation(const nsID& aDocShellId,
                                  uint32_t aDocShellHistoryId,
@@ -35,3 +39,5 @@ size_t PageInformation::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
+
+#endif  // MOZ_BASE_PROFILER
