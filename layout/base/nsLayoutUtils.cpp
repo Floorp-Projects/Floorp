@@ -3552,6 +3552,119 @@ static void ApplyEffectsUpdates(
   }
 }
 
+static void LogPaintedPixelCount(LayerManager* aLayerManager,
+                                 const TimeStamp aPaintStart) {
+  static std::vector<std::pair<TimeStamp, uint32_t>> history;
+
+  const TimeStamp now = TimeStamp::Now();
+  const double rasterizeTime = (now - aPaintStart).ToMilliseconds();
+
+  const uint32_t pixelCount = aLayerManager->GetAndClearPaintedPixelCount();
+  if (pixelCount) {
+    history.push_back(std::make_pair(now, pixelCount));
+  }
+
+  uint32_t paintedInLastSecond = 0;
+  for (auto i = history.begin(); i != history.end(); i++) {
+    if ((now - i->first).ToMilliseconds() > 1000.0f) {
+      // more than 1000ms ago, don't count it
+      continue;
+    }
+
+    if (paintedInLastSecond == 0) {
+      // This is the first one in the last 1000ms, so drop everything earlier
+      history.erase(history.begin(), i);
+      i = history.begin();
+    }
+
+    paintedInLastSecond += i->second;
+    MOZ_ASSERT(paintedInLastSecond);  // all historical pixel counts are > 0
+  }
+
+  printf_stderr("Painted %u pixels in %fms (%u in the last 1000ms)\n",
+                pixelCount, rasterizeTime, paintedInLastSecond);
+}
+
+static void DumpBeforePaintDisplayList(UniquePtr<std::stringstream>& aStream,
+                                       nsDisplayListBuilder* aBuilder,
+                                       nsDisplayList* aList,
+                                       const nsRect& aVisibleRect) {
+#ifdef MOZ_DUMP_PAINTING
+  if (gfxEnv::DumpPaintToFile()) {
+    nsCString string("dump-");
+    // Include the process ID in the dump file name, to make sure that in an
+    // e10s setup different processes don't clobber each other's dump files.
+    string.AppendInt(getpid());
+    for (int paintCount : *gPaintCountStack) {
+      string.AppendLiteral("-");
+      string.AppendInt(paintCount);
+    }
+    string.AppendLiteral(".html");
+    gfxUtils::sDumpPaintFile = fopen(string.BeginReading(), "w");
+  } else {
+    gfxUtils::sDumpPaintFile = stderr;
+  }
+  if (gfxEnv::DumpPaintToFile()) {
+    *aStream << "<html><head><script>\n"
+                "var array = {};\n"
+                "function ViewImage(index) { \n"
+                "  var image = document.getElementById(index);\n"
+                "  if (image.src) {\n"
+                "    image.removeAttribute('src');\n"
+                "  } else {\n"
+                "    image.src = array[index];\n"
+                "  }\n"
+                "}</script></head><body>";
+  }
+#endif
+  *aStream << nsPrintfCString(
+                  "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
+                  aVisibleRect.x, aVisibleRect.y, aVisibleRect.width,
+                  aVisibleRect.height)
+                  .get();
+  nsFrame::PrintDisplayList(aBuilder, *aList, *aStream,
+                            gfxEnv::DumpPaintToFile());
+
+  if (gfxEnv::DumpPaint() || gfxEnv::DumpPaintItems()) {
+    // Flush stream now to avoid reordering dump output relative to
+    // messages dumped by PaintRoot below.
+    fprint_stderr(gfxUtils::sDumpPaintFile, *aStream);
+    aStream = MakeUnique<std::stringstream>();
+  }
+}
+
+static void DumpAfterPaintDisplayList(UniquePtr<std::stringstream>& aStream,
+                                      nsDisplayListBuilder* aBuilder,
+                                      nsDisplayList* aList,
+                                      LayerManager* aManager) {
+  *aStream << "Painting --- after optimization:\n";
+  nsFrame::PrintDisplayList(aBuilder, *aList, *aStream,
+                            gfxEnv::DumpPaintToFile());
+
+  *aStream << "Painting --- layer tree:\n";
+  if (aManager) {
+    FrameLayerBuilder::DumpRetainedLayerTree(aManager, *aStream,
+                                             gfxEnv::DumpPaintToFile());
+  }
+
+  fprint_stderr(gfxUtils::sDumpPaintFile, *aStream);
+
+#ifdef MOZ_DUMP_PAINTING
+  if (gfxEnv::DumpPaintToFile()) {
+    *aStream << "</body></html>";
+  }
+  if (gfxEnv::DumpPaintToFile()) {
+    fclose(gfxUtils::sDumpPaintFile);
+  }
+#endif
+
+  std::stringstream lsStream;
+  nsFrame::PrintDisplayList(aBuilder, *aList, lsStream);
+  if (aManager->GetRoot()) {
+    aManager->GetRoot()->SetDisplayListLog(lsStream.str().c_str());
+  }
+}
+
 struct TemporaryDisplayListBuilder {
   TemporaryDisplayListBuilder(nsIFrame* aFrame,
                               nsDisplayListBuilderMode aBuilderMode,
@@ -3933,47 +4046,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
   UniquePtr<std::stringstream> ss;
   if (consoleNeedsDisplayList) {
     ss = MakeUnique<std::stringstream>();
-#ifdef MOZ_DUMP_PAINTING
-    if (gfxEnv::DumpPaintToFile()) {
-      nsCString string("dump-");
-      // Include the process ID in the dump file name, to make sure that in an
-      // e10s setup different processes don't clobber each other's dump files.
-      string.AppendInt(getpid());
-      for (int paintCount : *gPaintCountStack) {
-        string.AppendLiteral("-");
-        string.AppendInt(paintCount);
-      }
-      string.AppendLiteral(".html");
-      gfxUtils::sDumpPaintFile = fopen(string.BeginReading(), "w");
-    } else {
-      gfxUtils::sDumpPaintFile = stderr;
-    }
-    if (gfxEnv::DumpPaintToFile()) {
-      *ss << "<html><head><script>\n"
-             "var array = {};\n"
-             "function ViewImage(index) { \n"
-             "  var image = document.getElementById(index);\n"
-             "  if (image.src) {\n"
-             "    image.removeAttribute('src');\n"
-             "  } else {\n"
-             "    image.src = array[index];\n"
-             "  }\n"
-             "}</script></head><body>";
-    }
-#endif
-    *ss << nsPrintfCString(
-               "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
-               visibleRect.x, visibleRect.y, visibleRect.width,
-               visibleRect.height)
-               .get();
-    nsFrame::PrintDisplayList(builder, *list, *ss, gfxEnv::DumpPaintToFile());
-
-    if (gfxEnv::DumpPaint() || gfxEnv::DumpPaintItems()) {
-      // Flush stream now to avoid reordering dump output relative to
-      // messages dumped by PaintRoot below.
-      fprint_stderr(gfxUtils::sDumpPaintFile, *ss);
-      ss = MakeUnique<std::stringstream>();
-    }
+    DumpBeforePaintDisplayList(ss, builder, list, visibleRect);
   }
 
   uint32_t flags = nsDisplayList::PAINT_DEFAULT;
@@ -4017,61 +4090,16 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
   builder->Check();
 
   if (StaticPrefs::GfxLoggingPaintedPixelCountEnabled()) {
-    TimeStamp now = TimeStamp::Now();
-    float rasterizeTime = (now - paintStart).ToMilliseconds();
-    uint32_t pixelCount = layerManager->GetAndClearPaintedPixelCount();
-    static std::vector<std::pair<TimeStamp, uint32_t>> history;
-    if (pixelCount) {
-      history.push_back(std::make_pair(now, pixelCount));
-    }
-    uint32_t paintedInLastSecond = 0;
-    for (auto i = history.begin(); i != history.end(); i++) {
-      if ((now - i->first).ToMilliseconds() > 1000.0f) {
-        // more than 1000ms ago, don't count it
-        continue;
-      }
-      if (paintedInLastSecond == 0) {
-        // This is the first one in the last 1000ms, so drop everything earlier
-        history.erase(history.begin(), i);
-        i = history.begin();
-      }
-      paintedInLastSecond += i->second;
-      MOZ_ASSERT(paintedInLastSecond);  // all historical pixel counts are > 0
-    }
-    printf_stderr("Painted %u pixels in %fms (%u in the last 1000ms)\n",
-                  pixelCount, rasterizeTime, paintedInLastSecond);
+    LogPaintedPixelCount(layerManager, paintStart);
   }
 
   if (consoleNeedsDisplayList) {
-    *ss << "Painting --- after optimization:\n";
-    nsFrame::PrintDisplayList(builder, *list, *ss, gfxEnv::DumpPaintToFile());
-
-    *ss << "Painting --- layer tree:\n";
-    if (layerManager) {
-      FrameLayerBuilder::DumpRetainedLayerTree(layerManager, *ss,
-                                               gfxEnv::DumpPaintToFile());
-    }
-
-    fprint_stderr(gfxUtils::sDumpPaintFile, *ss);
-
-#ifdef MOZ_DUMP_PAINTING
-    if (gfxEnv::DumpPaintToFile()) {
-      *ss << "</body></html>";
-    }
-    if (gfxEnv::DumpPaintToFile()) {
-      fclose(gfxUtils::sDumpPaintFile);
-    }
-    gfxUtils::sDumpPaintFile = savedDumpFile;
-#endif
-
-    std::stringstream lsStream;
-    nsFrame::PrintDisplayList(builder, *list, lsStream);
-    if (layerManager->GetRoot()) {
-      layerManager->GetRoot()->SetDisplayListLog(lsStream.str().c_str());
-    }
+    DumpAfterPaintDisplayList(ss, builder, list, layerManager);
   }
 
 #ifdef MOZ_DUMP_PAINTING
+  gfxUtils::sDumpPaintFile = savedDumpFile;
+
   if (StaticPrefs::DumpClientLayers()) {
     std::stringstream ss;
     FrameLayerBuilder::DumpRetainedLayerTree(layerManager, ss, false);
