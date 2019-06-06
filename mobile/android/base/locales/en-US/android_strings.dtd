@@ -588,6 +588,7 @@ shown from Android O while a tab is being queued.-->
 <!ENTITY bookmark_edit_location "Location">
 <!ENTITY bookmark_edit_keyword "Keyword">
 <!ENTITY bookmark_select_folder "Select folder">
+<!ENTITY bookmark_edit_undo "Undo">
 
 <!-- Localization note (site_settings_*) : These strings are used in the "Site Settings"
      dialog that appears after selecting the "Edit Site Settings" context menu item. -->

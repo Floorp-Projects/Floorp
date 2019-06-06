@@ -18,7 +18,9 @@ import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStream;
+import org.mozilla.gecko.bookmarks.EditBookmarkCallback;
 import org.mozilla.gecko.bookmarks.BookmarkUtils;
+import org.mozilla.gecko.bookmarks.UndoEditBookmarkTask;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
 import org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy;
@@ -59,7 +61,7 @@ import android.view.View;
  * <p>
  * The containing activity <b>must</b> implement {@link OnUrlOpenListener}.
  */
-public abstract class HomeFragment extends Fragment {
+public abstract class HomeFragment extends Fragment implements EditBookmarkCallback {
     // Log Tag.
     private static final String LOGTAG = "GeckoHomeFragment";
 
@@ -348,7 +350,7 @@ public abstract class HomeFragment extends Fragment {
             if (info.hasPartnerBookmarkId()) {
                 new RemovePartnerBookmarkTask(getActivity(), info.bookmarkId).execute();
             } else {
-                new RemoveItemTask(getActivity(), info, position).execute();
+                new RemoveItemTask(getActivity(), info, position, getContext(), this).execute();
             }
             return true;
         }
@@ -440,6 +442,16 @@ public abstract class HomeFragment extends Fragment {
         mIsLoaded = true;
     }
 
+    @Override
+    public void onUndoEditBookmark(Bundle bundle) {
+        new UndoEditBookmarkTask(getActivity(), bundle).execute();
+    }
+
+    @Override
+    public void onUndoRemoveBookmark(HomeContextMenuInfo info, int position) {
+        new UndoRemoveBookmarkTask(getActivity(), info, position).execute();
+    }
+
     private static class ToggleASPinTask extends UIAsyncTask.WithoutParams<Void> {
         private final WeakReference<Activity> activityWeakReference;
         private final Context context;
@@ -500,11 +512,13 @@ public abstract class HomeFragment extends Fragment {
         private final int position;
         private final BrowserDB db;
 
+        private EditBookmarkCallback editBookmarkCallback;
+
         /**
          * Remove bookmark/history/reading list type item, and also unpin the
          * Top Sites grid item at index <code>position</code>.
          */
-        RemoveItemTask(Activity activity, HomeContextMenuInfo info, int position) {
+        RemoveItemTask(Activity activity, HomeContextMenuInfo info, int position, Context context, EditBookmarkCallback editBookmarkCallback) {
             super(ThreadUtils.getBackgroundHandler());
 
             this.activityWeakReference = new WeakReference<>(activity);
@@ -512,6 +526,7 @@ public abstract class HomeFragment extends Fragment {
             this.info = info;
             this.position = position;
             this.db = BrowserDB.from(context);
+            this.editBookmarkCallback = editBookmarkCallback;
         }
 
         @Override
@@ -559,10 +574,26 @@ public abstract class HomeFragment extends Fragment {
             } else {
                 message = R.string.page_removed;
             }
-            SnackbarBuilder.builder(activity)
-                    .message(message)
-                    .duration(Snackbar.LENGTH_LONG)
-                    .buildAndShow();
+
+            if (RemoveItemType.BOOKMARKS == info.itemType) {
+
+                SnackbarBuilder.builder(activity)
+                        .message(message)
+                        .action(R.string.bookmark_edit_undo)
+                        .callback(new SnackbarBuilder.SnackbarCallback() {
+                            @Override
+                            public void onClick(View v) {
+                                editBookmarkCallback.onUndoRemoveBookmark(info, position);
+                            }
+                        })
+                        .duration(Snackbar.LENGTH_LONG)
+                        .buildAndShow();
+            } else {
+                SnackbarBuilder.builder(activity)
+                        .message(message)
+                        .duration(Snackbar.LENGTH_LONG)
+                        .buildAndShow();
+            }
         }
 
         private void removeBookmark(ContentResolver cr) {
@@ -579,7 +610,7 @@ public abstract class HomeFragment extends Fragment {
             }
 
             Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, extra);
-            db.removeBookmarkWithId(cr, info.bookmarkId);
+            db.updateSoftDeleteForBookmarkWithId(cr, info.bookmarkId, true);
 
             if (isReaderViewPage) {
                 ReadingListHelper.removeCachedReaderItem(info.url, context);
