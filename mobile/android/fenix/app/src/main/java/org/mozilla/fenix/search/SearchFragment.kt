@@ -94,7 +94,10 @@ class SearchFragment : Fragment(), BackHandler {
             ) {
                 ToolbarViewModel(SearchState(url, session?.searchTerms ?: "", isEditing = true))
             }
-        )
+        ).also {
+            // Remove background from toolbar view since it conflicts with the search UI.
+            it.uiView.view.background = null
+        }
 
         awesomeBarComponent = AwesomeBarComponent(
             view.search_layout,
