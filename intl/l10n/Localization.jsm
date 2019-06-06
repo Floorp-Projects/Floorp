@@ -220,8 +220,7 @@ class Localization {
   constructor(resourceIds = [], generateBundles = defaultGenerateBundles) {
     this.resourceIds = resourceIds;
     this.generateBundles = generateBundles;
-    this.bundles = this.cached(
-      this.generateBundles(this.resourceIds));
+    this.onChange(true);
   }
 
   cached(iterable) {
@@ -584,10 +583,16 @@ function keysFromBundle(method, bundle, keys, translations) {
 
 /**
  * Helper function which allows us to construct a new
- * Localization from DocumentL10n.
+ * Localization from DOMLocalization.
  */
-var getLocalization = () => new Localization();
+var getLocalization = (resourceIds) => {
+  return new Localization(resourceIds);
+};
+
+var getLocalizationWithCustomGenerateMessages = (resourceIds, generateMessages) => {
+  return new Localization(resourceIds, generateMessages);
+};
 
 this.Localization = Localization;
 this.LocalizationSync = LocalizationSync;
-var EXPORTED_SYMBOLS = ["Localization", "LocalizationSync", "getLocalization"];
+var EXPORTED_SYMBOLS = ["Localization", "LocalizationSync", "getLocalization", "getLocalizationWithCustomGenerateMessages"];
