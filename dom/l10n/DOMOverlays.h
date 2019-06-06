@@ -2,7 +2,6 @@
 #define mozilla_dom_l10n_DOMOverlays_h__
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/L10nUtilsBinding.h"
 #include "mozilla/dom/DOMOverlaysBinding.h"
 
 namespace mozilla {
