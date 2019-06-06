@@ -53,7 +53,21 @@ class PathBuilderRecording : public PathBuilder {
   /* Point the current subpath is at - or where the next subpath will start
    * if there is no active subpath.
    */
-  virtual Point CurrentPoint() const override;
+  virtual Point CurrentPoint() const override {
+    return mPathBuilder->CurrentPoint();
+  }
+
+  virtual Point BeginPoint() const override {
+    return mPathBuilder->BeginPoint();
+  }
+
+  virtual void SetCurrentPoint(const Point& aPoint) override {
+    mPathBuilder->SetCurrentPoint(aPoint);
+  }
+
+  virtual void SetBeginPoint(const Point& aPoint) override {
+    mPathBuilder->SetBeginPoint(aPoint);
+  }
 
   virtual already_AddRefed<Path> Finish() override;
 
@@ -73,8 +87,10 @@ class PathRecording : public Path {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathRecording, override)
 
-  PathRecording(Path* aPath, const std::vector<PathOp> aOps, FillRule aFillRule)
-      : mPath(aPath), mPathOps(aOps), mFillRule(aFillRule) {}
+  PathRecording(Path* aPath, const std::vector<PathOp> aOps, FillRule aFillRule,
+                const Point& aCurrentPoint, const Point& aBeginPoint)
+      : mPath(aPath), mPathOps(aOps), mFillRule(aFillRule),
+        mCurrentPoint(aCurrentPoint), mBeginPoint(aBeginPoint) {}
 
   ~PathRecording();
 
@@ -122,6 +138,8 @@ class PathRecording : public Path {
   RefPtr<Path> mPath;
   std::vector<PathOp> mPathOps;
   FillRule mFillRule;
+  Point mCurrentPoint;
+  Point mBeginPoint;
 
   // Event recorders that have this path in their event stream.
   std::vector<RefPtr<DrawEventRecorderPrivate>> mStoredRecorders;

@@ -187,7 +187,7 @@ static PerfMeasurement* GetPM(JSContext* cx, JS::HandleValue value,
     UniqueChars bytes =
         DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
     if (!bytes) return nullptr;
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, 0, JSMSG_NOT_NONNULL_OBJECT,
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, 0, JSMSG_OBJECT_REQUIRED,
                              bytes.get());
     return nullptr;
   }

@@ -53,16 +53,6 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
     // changes accordingly.
     private byte[] mCSDInfo = null;
 
-    private boolean mDiscontinuity = false;
-
-    public void onPositionDiscontinuity() {
-        if (DEBUG) {
-            Log.d(LOGTAG, "positionDiscontinuity");
-        }
-        mDiscontinuity = true;
-        clearInputSamplesQueue();
-    }
-
     public GeckoHlsVideoRenderer(final GeckoHlsPlayer.ComponentEventDispatcher eventDispatcher) {
         super(C.TRACK_TYPE_VIDEO, eventDispatcher);
         assertTrue(Build.VERSION.SDK_INT >= 16);
@@ -174,7 +164,6 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
             mInputBuffer = null;
             mCSDInfo = null;
             mInitialized = false;
-            mDiscontinuity = false;
         }
     }
 
@@ -237,14 +226,6 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
 
     @Override
     protected void handleSamplePreparation(final DecoderInputBuffer bufferForRead) {
-        if (mDiscontinuity) {
-            // We recently seeked. Drop frames up to the next keyframe.
-            if (!bufferForRead.isKeyFrame()) {
-                return;
-            }
-            mDiscontinuity = false;
-        }
-
         int csdInfoSize = mCSDInfo != null ? mCSDInfo.length : 0;
         int dataSize = bufferForRead.data.limit();
         int size = bufferForRead.isKeyFrame() ? csdInfoSize + dataSize : dataSize;

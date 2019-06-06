@@ -2329,7 +2329,7 @@ static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
         break;
     }
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_NOT_NONNULL_OBJECT, message);
+                              JSMSG_OBJECT_REQUIRED, message);
     return false;
   }
 
@@ -3457,7 +3457,7 @@ static MOZ_MUST_USE JSObject* CommonStaticResolveRejectImpl(
     const char* msg = mode == ResolveMode ? "Receiver of Promise.resolve call"
                                           : "Receiver of Promise.reject call";
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_NOT_NONNULL_OBJECT, msg);
+                              JSMSG_OBJECT_REQUIRED, msg);
     return nullptr;
   }
   RootedObject C(cx, &thisVal.toObject());
@@ -4590,7 +4590,7 @@ static bool Promise_then_impl(JSContext* cx, HandleValue promiseVal,
   // Step 2.
   if (!promiseVal.isObject()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_NOT_NONNULL_OBJECT,
+                              JSMSG_OBJECT_REQUIRED,
                               "Receiver of Promise.prototype.then call");
     return false;
   }

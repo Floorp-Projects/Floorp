@@ -587,10 +587,31 @@ class PathSink : public RefCounted<PathSink> {
   /** Add an arc to the current figure */
   virtual void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
                    float aEndAngle, bool aAntiClockwise = false) = 0;
+
+  virtual Point CurrentPoint() const {
+    return mCurrentPoint;
+  }
+
+  virtual Point BeginPoint() const {
+    return mBeginPoint;
+  }
+
+  virtual void SetCurrentPoint(const Point& aPoint) {
+    mCurrentPoint = aPoint;
+  }
+
+  virtual void SetBeginPoint(const Point& aPoint) {
+    mBeginPoint = aPoint;
+  }
+
+protected:
   /** Point the current subpath is at - or where the next subpath will start
    * if there is no active subpath.
    */
-  virtual Point CurrentPoint() const = 0;
+  Point mCurrentPoint;
+
+  /** Position of the previous MoveTo operation. */
+  Point mBeginPoint;
 };
 
 class PathBuilder;
