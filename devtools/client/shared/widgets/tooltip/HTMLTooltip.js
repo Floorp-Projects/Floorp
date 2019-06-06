@@ -60,7 +60,7 @@ const EXTRA_HEIGHT = {
 
 const EXTRA_BORDER = {
   "normal": 0,
-  "arrow": 3,
+  "arrow": -0.5,
   "doorhanger": 0,
 };
 
