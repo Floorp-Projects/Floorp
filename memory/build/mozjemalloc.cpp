@@ -182,7 +182,7 @@ using namespace mozilla;
 // Debug builds are opted out too, for test coverage.
 #ifndef MOZ_DEBUG
 #  if !defined(__ia64__) && !defined(__sparc__) && !defined(__mips__) && \
-      !defined(__aarch64__)
+      !defined(__aarch64__) && !defined(__powerpc__)
 #    define MALLOC_STATIC_PAGESIZE 1
 #  endif
 #endif
