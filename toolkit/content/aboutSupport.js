@@ -1227,8 +1227,10 @@ function setupEventListeners() {
   let button = $("show-update-history-button");
   if (button) {
     button.addEventListener("click", function(event) {
-      var prompter = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
-      prompter.showUpdateHistory(window);
+      let uri = "chrome://mozapps/content/update/history.xul";
+      let features = "chrome,centerscreen,resizable=no,titlebar,toolbar=no," +
+                     "dialog=yes,modal";
+      Services.ww.openWindow(window, uri, "Update:History", features, null);
     });
   }
   button = $("reset-box-button");
