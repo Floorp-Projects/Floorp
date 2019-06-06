@@ -30,7 +30,6 @@ class nsITimer;
 class nsIChannel;
 class nsIControllers;
 class nsIDocShell;
-class nsIEditor;
 class nsIWebProgress;
 
 namespace mozilla {
@@ -53,6 +52,18 @@ class nsEditingSession final : public nsIEditingSession,
   // nsIEditingSession
   NS_DECL_NSIEDITINGSESSION
 
+  /**
+   * Removes all the editor's controllers/listeners etc and makes the window
+   * uneditable.
+   */
+  nsresult DetachFromWindow(nsPIDOMWindowOuter* aWindow);
+
+  /**
+   * Undos DetachFromWindow(), reattaches this editing session/editor
+   * to the window.
+   */
+  nsresult ReattachToWindow(nsPIDOMWindowOuter* aWindow);
+
  protected:
   virtual ~nsEditingSession();
 
@@ -64,6 +75,17 @@ class nsEditingSession final : public nsIEditingSession,
 
   nsresult SetContextOnControllerById(nsIControllers* aControllers,
                                       nsISupports* aContext, uint32_t aID);
+
+  /**
+   *  Set the editor on the controller(s) for this window
+   */
+  nsresult SetEditorOnControllers(nsPIDOMWindowOuter& aWindow,
+                                  mozilla::HTMLEditor* aEditor);
+
+  /**
+   *  Setup editor and related support objects
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult SetupEditorOnWindow(nsPIDOMWindowOuter& aWindow);
 
   nsresult PrepareForEditing(nsPIDOMWindowOuter* aWindow);
 

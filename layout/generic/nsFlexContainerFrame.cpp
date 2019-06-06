@@ -700,7 +700,7 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   // resulting "hypothetical main size" (the base size clamped to our
   // main-axis [min,max] sizing constraints).
   void SetFlexBaseSizeAndMainSize(nscoord aNewFlexBaseSize) {
-    MOZ_ASSERT(!mIsFrozen || mFlexBaseSize == NS_INTRINSICSIZE,
+    MOZ_ASSERT(!mIsFrozen || mFlexBaseSize == NS_UNCONSTRAINEDSIZE,
                "flex base size shouldn't change after we're frozen "
                "(unless we're just resolving an intrinsic size)");
     mFlexBaseSize = aNewFlexBaseSize;
@@ -1362,7 +1362,7 @@ UniquePtr<FlexItem> nsFlexContainerFrame::GenerateFlexItemForChild(
       mainMinSize = std::max(mainMinSize, widgetMainMinSize);
       mainMaxSize = std::max(mainMaxSize, widgetMainMinSize);
 
-      if (tentativeCrossSize != NS_INTRINSICSIZE) {
+      if (tentativeCrossSize != NS_UNCONSTRAINEDSIZE) {
         tentativeCrossSize = std::max(tentativeCrossSize, widgetCrossMinSize);
       }
       crossMinSize = std::max(crossMinSize, widgetCrossMinSize);
@@ -1424,7 +1424,8 @@ static bool IsCrossSizeDefinite(const ReflowInput& aItemReflowInput,
 // returning the cross min-size, when the cross size is indefinite. (This param
 // should be set IFF the caller intends to resolve the main min-size.) If this
 // param is true, then this function is guaranteed to return a definite value
-// (i.e. not NS_AUTOHEIGHT, excluding cases where huge sizes are involved).
+// (i.e. not NS_UNCONSTRAINEDSIZE, excluding cases where huge sizes are
+// involved).
 //
 // XXXdholbert the min-size behavior here is based on my understanding in
 //   http://lists.w3.org/Archives/Public/www-style/2014Jul/0053.html
@@ -1454,7 +1455,7 @@ static nscoord CrossSizeToUseWithRatio(const FlexItem& aFlexItem,
   }
 
   // Indefinite cross-size.
-  return NS_AUTOHEIGHT;
+  return NS_UNCONSTRAINEDSIZE;
 }
 
 // Convenience function; returns a main-size, given a cross-size and an
@@ -1492,7 +1493,7 @@ static nscoord PartiallyResolveAutoMinSize(
   // * the used flex-basis, if the computed flex-basis was 'auto':
   // XXXdholbert ('auto' might be renamed to 'main-size'; see bug 1032922)
   if (aItemReflowInput.mStylePosition->mFlexBasis.IsAuto() &&
-      aFlexItem.GetFlexBaseSize() != NS_AUTOHEIGHT) {
+      aFlexItem.GetFlexBaseSize() != NS_UNCONSTRAINEDSIZE) {
     // NOTE: We skip this if the flex base size depends on content & isn't yet
     // resolved. This is OK, because the caller is responsible for computing
     // the min-content height and min()'ing it with the value we return, which
@@ -1535,7 +1536,7 @@ static nscoord PartiallyResolveAutoMinSize(
 static bool ResolveAutoFlexBasisFromRatio(
     FlexItem& aFlexItem, const ReflowInput& aItemReflowInput,
     const FlexboxAxisTracker& aAxisTracker) {
-  MOZ_ASSERT(NS_AUTOHEIGHT == aFlexItem.GetFlexBaseSize(),
+  MOZ_ASSERT(NS_UNCONSTRAINEDSIZE == aFlexItem.GetFlexBaseSize(),
              "Should only be called to resolve an 'auto' flex-basis");
   // If the flex item has ...
   //  - an intrinsic aspect ratio,
@@ -1550,7 +1551,7 @@ static bool ResolveAutoFlexBasisFromRatio(
     nscoord crossSizeToUseWithRatio = CrossSizeToUseWithRatio(
         aFlexItem, aItemReflowInput, useMinSizeIfCrossSizeIsIndefinite,
         aAxisTracker);
-    if (crossSizeToUseWithRatio != NS_AUTOHEIGHT) {
+    if (crossSizeToUseWithRatio != NS_UNCONSTRAINEDSIZE) {
       // We have a definite cross-size
       nscoord mainSizeFromRatio = MainSizeFromAspectRatio(
           crossSizeToUseWithRatio, aFlexItem.IntrinsicRatio(), aAxisTracker);
@@ -1570,8 +1571,9 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
   // (Note: We can guarantee that the flex-basis will have already been
   // resolved if the main axis is the same is the same as the item's inline
   // axis. Inline-axis values should always be resolvable without reflow.)
-  const bool isMainSizeAuto = (!aFlexItem.IsInlineAxisMainAxis() &&
-                               NS_AUTOHEIGHT == aFlexItem.GetFlexBaseSize());
+  const bool isMainSizeAuto =
+      (!aFlexItem.IsInlineAxisMainAxis() &&
+       NS_UNCONSTRAINEDSIZE == aFlexItem.GetFlexBaseSize());
 
   const bool isMainMinSizeAuto = aFlexItem.NeedsMinSizeAutoResolution();
 
@@ -1603,9 +1605,9 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
     // - If it's column-oriented, then "yes", because its cross size is its
     // inline-size which is always definite from its descendants' perspective.
     // - Otherwise (if it's row-oriented), then we check the actual size
-    // and call it definite if it's not NS_AUTOHEIGHT.
+    // and call it definite if it's not NS_UNCONSTRAINEDSIZE.
     if (aAxisTracker.IsColumnOriented() ||
-        containerCrossSize != NS_AUTOHEIGHT) {
+        containerCrossSize != NS_UNCONSTRAINEDSIZE) {
       // Container's cross size is "definite", so we can resolve the item's
       // stretched cross size using that.
       aFlexItem.ResolveStretchedCrossSize(containerCrossSize, aAxisTracker);
@@ -3981,7 +3983,7 @@ static nscoord ResolveFlexContainerMainSize(
     return aTentativeMainSize;
   }
 
-  if (aTentativeMainSize != NS_INTRINSICSIZE) {
+  if (aTentativeMainSize != NS_UNCONSTRAINEDSIZE) {
     // Column-oriented case, with fixed BSize:
     if (aAvailableBSizeForContent == NS_UNCONSTRAINEDSIZE ||
         aTentativeMainSize < aAvailableBSizeForContent) {
@@ -4041,7 +4043,7 @@ nscoord nsFlexContainerFrame::ComputeCrossSize(
   }
 
   nscoord effectiveComputedBSize = GetEffectiveComputedBSize(aReflowInput);
-  if (effectiveComputedBSize != NS_INTRINSICSIZE) {
+  if (effectiveComputedBSize != NS_UNCONSTRAINEDSIZE) {
     // Row-oriented case (cross axis is block-axis), with fixed BSize:
     *aIsDefinite = true;
     if (aAvailableBSizeForContent == NS_UNCONSTRAINEDSIZE ||
@@ -4768,7 +4770,7 @@ void nsFlexContainerFrame::DoFlexLayout(
 
   // Recalculate the gap sizes if necessary now that the container size has
   // been determined.
-  if (aReflowInput.ComputedBSize() == NS_INTRINSICSIZE &&
+  if (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE &&
       aReflowInput.mStylePosition->mRowGap.IsLengthPercentage() &&
       aReflowInput.mStylePosition->mRowGap.AsLengthPercentage().HasPercent()) {
     bool rowIsCross = aAxisTracker.IsRowOriented();
@@ -4998,7 +5000,7 @@ void nsFlexContainerFrame::DoFlexLayout(
     if (aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE ||
         desiredSizeInFlexWM.BSize(flexWM) == 0 ||
         desiredBSizeWithBEndBP <= aReflowInput.AvailableBSize() ||
-        aReflowInput.ComputedBSize() == NS_INTRINSICSIZE) {
+        aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
       // Update desired height to include block-end border/padding
       desiredSizeInFlexWM.BSize(flexWM) = desiredBSizeWithBEndBP;
     } else {

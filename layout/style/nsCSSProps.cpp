@@ -263,7 +263,6 @@ KTableEntry nsCSSProps::kDisplayKTable[] = {
     {eCSSKeyword_ruby_text_container, StyleDisplay::RubyTextContainer},
     {eCSSKeyword_grid, StyleDisplay::Grid},
     {eCSSKeyword_inline_grid, StyleDisplay::InlineGrid},
-    // The next 4 entries are controlled by the layout.css.prefixes.webkit pref.
     {eCSSKeyword__webkit_box, StyleDisplay::WebkitBox},
     {eCSSKeyword__webkit_inline_box, StyleDisplay::WebkitInlineBox},
     {eCSSKeyword__webkit_flex, StyleDisplay::Flex},

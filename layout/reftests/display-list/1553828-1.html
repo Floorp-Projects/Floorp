@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Bug 1553828</title>
+    <style type="text/css">
+    .container {
+        transform-style: preserve-3d;
+        perspective: 1000px;
+        width: 500px;
+        background-color: white;
+    }
+
+    .child {
+        width: 500px;
+        height: 500px;
+        background-color: blue;
+        transform: translateY(0px);
+        mix-blend-mode: difference;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="child"></div>
+    </div>
+    <script type="text/javascript">
+    function doTest() {
+        document.querySelector(".child").style["background-color"] = "red";
+        document.documentElement.className = "";
+    }
+    window.addEventListener("MozReftestInvalidate", doTest);
+    // setTimeout(doTest, 5000);
+    </script>
+</body>
+
+</html>
