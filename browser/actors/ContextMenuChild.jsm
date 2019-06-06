@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   InlineSpellCheckerContent: "resource://gre/modules/InlineSpellCheckerContent.jsm",
+  ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "PageMenuChild", () => {
@@ -531,8 +532,8 @@ class ContextMenuChild extends ActorChild {
     let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(Ci.nsIReferrerInfo);
     referrerInfo.initWithNode(context.onLink ? context.link : aEvent.composedTarget);
 
-    let targetAsCPOW = context.target;
-    if (targetAsCPOW) {
+    let target = context.target;
+    if (target) {
       this._cleanContext();
     }
 
@@ -594,9 +595,7 @@ class ContextMenuChild extends ActorChild {
     aEvent.preventDefault();
     aEvent.stopPropagation();
 
-    this.mm.sendAsyncMessage("contextmenu", data, {
-      targetAsCPOW,
-    });
+    this.mm.sendAsyncMessage("contextmenu", data);
   }
 
   /**
@@ -757,6 +756,7 @@ class ContextMenuChild extends ActorChild {
     // Remember the node and its owner document that was clicked
     // This may be modifed before sending to nsContextMenu
     context.target = node;
+    context.targetIdentifier = ContentDOMReference.get(node);
 
     context.principal = context.target.ownerDocument.nodePrincipal;
     context.csp = E10SUtils.serializeCSP(context.target.ownerDocument.csp);
