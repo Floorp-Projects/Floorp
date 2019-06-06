@@ -626,7 +626,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
         }
         viewModel?.tabs = tabs
-        val selectedTabs = tabs.find { tab -> tab.sessionId == selectedTabId }
+        val selectedTabs = tabs.find { tab -> tab.sessionId == selectedTabId } ?: if (tabs.size == 1) tabs[0] else null
         val selectedSet = if (selectedTabs == null) mutableSetOf() else mutableSetOf(selectedTabs)
         viewModel?.selectedTabs = selectedSet
         viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
