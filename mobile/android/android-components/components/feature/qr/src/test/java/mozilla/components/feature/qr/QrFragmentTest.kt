@@ -179,6 +179,27 @@ class QrFragmentTest {
     }
 
     @Test
+    fun `catches and handles IllegalStateException when creating preview session`() {
+        val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
+
+        var camera: CameraDevice = mock()
+        `when`(camera.createCaptureRequest(anyInt())).thenThrow(IllegalStateException("CameraDevice was already closed"))
+        qrFragment.cameraDevice = camera
+
+        val textureView: AutoFitTextureView = mock()
+        `when`(textureView.surfaceTexture).thenReturn(mock())
+        qrFragment.textureView = textureView
+
+        qrFragment.previewSize = mock()
+
+        try {
+            qrFragment.createCameraPreviewSession()
+        } catch (e: IllegalStateException) {
+            fail("IllegalStateException should have been caught and logged, not re-thrown.")
+        }
+    }
+
+    @Test
     fun `catches and handles CameraAccessException when opening camera`() {
         val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
         `when`(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }

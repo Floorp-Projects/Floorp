@@ -416,7 +416,7 @@ class QrFragment : Fragment() {
         val surface = Surface(texture)
         val mImageSurface = imageReader?.surface
 
-        try {
+        handleCaptureException("Failed to create camera preview session") {
             cameraDevice?.let {
                 previewRequestBuilder = it.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
                     addTarget(mImageSurface as Surface)
@@ -434,14 +434,12 @@ class QrFragment : Fragment() {
                         previewRequest = previewRequestBuilder?.build()
                         captureSession = cameraCaptureSession
 
-                        try {
+                        handleCaptureException("Failed to request capture") {
                             cameraCaptureSession.setRepeatingRequest(
-                                    previewRequest as CaptureRequest,
-                                    captureCallback,
-                                    backgroundHandler
+                                previewRequest as CaptureRequest,
+                                captureCallback,
+                                backgroundHandler
                             )
-                        } catch (e: CameraAccessException) {
-                            logger.error("Failed to request capture", e)
                         }
                     }
 
@@ -452,8 +450,20 @@ class QrFragment : Fragment() {
 
                 it.createCaptureSession(Arrays.asList(mImageSurface, surface), stateCallback, null)
             }
-        } catch (e: CameraAccessException) {
-            logger.error("Failed to create camera preview session", e)
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun handleCaptureException(msg: String, block: () -> Unit) {
+        try {
+            block()
+        } catch (e: Exception) {
+            when (e) {
+                is CameraAccessException, is IllegalStateException -> {
+                    logger.error(msg, e)
+                }
+                else -> throw e
+            }
         }
     }
 
@@ -545,7 +555,6 @@ class QrFragment : Fragment() {
             return processImage(bitmaps[0])
         }
 
-        @Suppress("MagicNumber")
         fun processImage(bitmap: BinaryBitmap): Void? {
             if (qrState != STATE_DECODE_PROGRESS) {
                 return null
