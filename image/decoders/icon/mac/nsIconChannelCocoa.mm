@@ -186,7 +186,7 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener) {
       "security flags in loadInfo but doContentSecurityCheck() not called");
 
   nsCOMPtr<nsIInputStream> inStream;
-  MakeInputStream(getter_AddRefs(inStream), true);
+  rv = MakeInputStream(getter_AddRefs(inStream), true);
   if (NS_FAILED(rv)) {
     mCallbacks = nullptr;
     return rv;
