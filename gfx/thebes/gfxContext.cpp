@@ -853,7 +853,8 @@ void gfxContext::ChangeTransform(const Matrix& aNewMatrix,
 }
 
 Rect gfxContext::GetAzureDeviceSpaceClipBounds() const {
-  Rect rect(CurrentState().deviceOffset.x, CurrentState().deviceOffset.y,
+  Rect rect(CurrentState().deviceOffset.x + Float(mDT->GetRect().x),
+            CurrentState().deviceOffset.y + Float(mDT->GetRect().y),
             Float(mDT->GetSize().width), Float(mDT->GetSize().height));
   for (unsigned int i = 0; i < mStateStack.Length(); i++) {
     for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
