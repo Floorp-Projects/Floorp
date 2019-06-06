@@ -16,11 +16,11 @@ import mozilla.components.support.base.log.logger.Logger
 class AndroidIconDecoder : IconDecoder {
     private val logger = Logger("AndroidIconDecoder")
 
-    override fun decode(data: ByteArray, targetSize: Int, maxSize: Int, maxScaleFactor: Float): Bitmap? {
+    override fun decode(data: ByteArray, targetSize: Int, maxSize: Int, maxScaleFactor: Float): Bitmap? =
         try {
             val bitmap = decodeBitmap(data)
 
-            return when {
+            when {
                 bitmap == null -> null
 
                 bitmap.width <= 0 || bitmap.height <= 0 -> {
@@ -42,9 +42,8 @@ class AndroidIconDecoder : IconDecoder {
                 else -> bitmap
             }
         } catch (e: OutOfMemoryError) {
-            return null
+            null
         }
-    }
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun decodeBitmap(data: ByteArray): Bitmap? {

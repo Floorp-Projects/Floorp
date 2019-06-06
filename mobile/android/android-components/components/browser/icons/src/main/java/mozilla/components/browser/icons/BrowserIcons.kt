@@ -112,7 +112,9 @@ class BrowserIcons(
         }
 
         // (3) Finally process the icon.
-        return process(context, processors, request, resource, icon)
+        return process(context, processors, request, resource, icon).run {
+            if (bitmap != null) this else generator.generate(context, request)
+        }
     }
 
     /**
@@ -135,15 +137,10 @@ class BrowserIcons(
     }
 }
 
-private fun prepare(context: Context, preparers: List<IconPreprarer>, request: IconRequest): IconRequest {
-    var preparedRequest: IconRequest = request
-
-    preparers.forEach { preparer ->
-        preparedRequest = preparer.prepare(context, preparedRequest)
+private fun prepare(context: Context, preparers: List<IconPreprarer>, request: IconRequest): IconRequest =
+    preparers.fold(request) { preparedRequest, preparer ->
+        preparer.prepare(context, preparedRequest)
     }
-
-    return preparedRequest
-}
 
 private fun load(
     context: Context,
@@ -192,12 +189,7 @@ private fun process(
     request: IconRequest,
     resource: IconRequest.Resource?,
     icon: Icon
-): Icon {
-    var processedIcon = icon
-
-    processors.forEach { processor ->
-        processedIcon = processor.process(context, request, resource, processedIcon)
+): Icon =
+    processors.fold(icon) { processedIcon, processor ->
+        processor.process(context, request, resource, processedIcon)
     }
-
-    return processedIcon
-}
