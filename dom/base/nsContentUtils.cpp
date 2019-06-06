@@ -9505,7 +9505,7 @@ bool nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel) {
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo->TriggeringPrincipal();
-  nsCOMPtr<nsIContentSecurityPolicy> csp = loadInfo->GetCspToInherit();
+  nsCOMPtr<nsIContentSecurityPolicy> csp = loadInfo->GetCsp();
 
   // Get the channel's load flags, and use them to generate nsIWebNavigation
   // load flags. We want to make sure to propagate the refresh and cache busting
