@@ -10,12 +10,12 @@
  * corresponding event as well as the AccesibleFront state being up to date.
  */
 
-async function checkAudit(a11yWalker, node, expected) {
+async function checkAudit(a11yWalker, node, expected, options) {
   const front = await a11yWalker.getAccessibleFor(node);
   const [ textLeafNode ] = await front.children();
 
   const onAudited = textLeafNode.once("audited");
-  const audit = await textLeafNode.audit();
+  const audit = await textLeafNode.audit(options);
   const auditFromEvent = await onAudited;
 
   Assert.deepEqual(audit, expected, "Audit results are correct.");
@@ -41,10 +41,23 @@ add_task(async function() {
     },
   });
 
+  await checkAudit(a11yWalker, headerNode, {
+    "CONTRAST": {
+      "value": 21,
+      "color": [0, 0, 0, 1],
+      "backgroundColor": [255, 255, 255, 1],
+      "isLargeText": true,
+      score: "AAA",
+    },
+  }, { types: ["CONTRAST"] });
+
   const paragraphNode = await walker.querySelector(walker.rootNode, "#p");
   await checkAudit(a11yWalker, paragraphNode, {
     "CONTRAST": null,
   });
+  await checkAudit(a11yWalker, paragraphNode, {
+    "CONTRAST": null,
+  }, { types: [] });
 
   await accessibility.disable();
   await waitForA11yShutdown();

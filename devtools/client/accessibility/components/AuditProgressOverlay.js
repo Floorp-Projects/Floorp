@@ -32,7 +32,7 @@ function TextProgressBar({ id, textStringKey }) {
 class AuditProgressOverlay extends React.Component {
   static get propTypes() {
     return {
-      auditing: PropTypes.array,
+      auditing: PropTypes.array.isRequired,
       total: PropTypes.number,
       percentage: PropTypes.number,
     };
@@ -40,7 +40,7 @@ class AuditProgressOverlay extends React.Component {
 
   render() {
     const { auditing, percentage, total } = this.props;
-    if (!auditing) {
+    if (auditing.length === 0) {
       return null;
     }
 
