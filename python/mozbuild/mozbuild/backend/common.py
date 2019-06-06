@@ -176,8 +176,9 @@ class CommonBackend(BuildBackend):
             return False
 
         elif isinstance(obj, GeneratedFile):
-            if obj.required_for_compile:
-                for f in obj.required_for_compile:
+            if obj.required_during_compile or obj.required_before_compile:
+                for f in itertools.chain(obj.required_before_compile,
+                                         obj.required_during_compile):
                     fullpath = ObjDirPath(obj._context, '!' + f).full_path
                     self._handle_generated_sources([fullpath])
             return False
