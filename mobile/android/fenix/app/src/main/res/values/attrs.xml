@@ -17,6 +17,7 @@
     <attr name="neutralFaded" format="reference" />
     <attr name="shadow" format="reference" />
     <attr name="destructive" format="reference"/>
+    <attr name="disabled" format="reference" />
 
     <attr name="scrimStart" format="reference"/>
     <attr name="scrimEnd" format="reference"/>

@@ -38,7 +38,7 @@ class DefaultToolbarMenu(
                 context.components.core.sessionManager.selectedSession?.canGoBack ?: true
             },
             secondaryImageTintResource = ThemeManager.resolveAttribute(
-                R.attr.neutral,
+                R.attr.disabled,
                 context
             ),
             disableInSecondaryState = true
@@ -57,7 +57,7 @@ class DefaultToolbarMenu(
                 context.components.core.sessionManager.selectedSession?.canGoForward ?: true
             },
             secondaryImageTintResource = ThemeManager.resolveAttribute(
-                R.attr.neutral,
+                R.attr.disabled,
                 context
             ),
             disableInSecondaryState = true
