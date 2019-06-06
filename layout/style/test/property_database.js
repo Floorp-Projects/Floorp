@@ -4765,6 +4765,14 @@ var gCSSProperties = {
     other_values: ["0", "-14px", "25px", "100em", "-45em"],
     invalid_values: ["13", "-25", "rubbish", ",./!@#$", "43%", "-10%"]
   },
+  "text-decoration-width": {
+    domProp: "textDecorationWidth",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: ["0", "-14px", "25px", "100em", "-45em"],
+    invalid_values: ["13", "-25", "rubbish", ",./!@#$", "43%", "-10%"]
+  },
   "text-emphasis": {
     domProp: "textEmphasis",
     inherited: true,
