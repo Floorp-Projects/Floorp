@@ -90,6 +90,7 @@ import org.mozilla.fenix.quickactionsheet.QuickActionChange
 import org.mozilla.fenix.quickactionsheet.QuickActionComponent
 import org.mozilla.fenix.quickactionsheet.QuickActionState
 import org.mozilla.fenix.quickactionsheet.QuickActionViewModel
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.utils.Settings
 import java.net.MalformedURLException
@@ -713,8 +714,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 }
             }
             ToolbarMenu.Item.Help -> {
-                // TODO Help #1016
-                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1016")
+                requireComponents.useCases.tabsUseCases.addTab.invoke(
+                    SupportUtils.getSumoURLForTopic(
+                        requireContext(),
+                        SupportUtils.SumoTopic.HELP
+                    )
+                )
             }
             ToolbarMenu.Item.NewTab -> {
                 val directions = BrowserFragmentDirections
