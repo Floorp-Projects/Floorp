@@ -94,6 +94,10 @@ if CONFIG['LIBJPEG_TURBO_ASFLAGS']:
             'simd/mips/jsimd.c',
             'simd/mips/jsimd_dspr2.S',
         ]
+        if CONFIG['CC_TYPE'] == 'clang':
+            SOURCES['simd/mips/jsimd_dspr2.S'].flags += [
+                '-fno-integrated-as',
+            ]
     elif CONFIG['CPU_ARCH'] == 'x86_64':
         SOURCES += [
             'simd/x86_64/jccolor-avx2.asm',
