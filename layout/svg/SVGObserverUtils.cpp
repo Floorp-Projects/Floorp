@@ -517,6 +517,21 @@ class SVGMozElementObserver final : public nsSVGPaintingProperty {
   bool ObservesReflow() override { return true; }
 };
 
+/**
+ * For content with `background-clip: text`.
+ *
+ * This observer is unusual in that the observing frame and observed frame are
+ * the same frame.  This is because the observing frame is observing for reflow
+ * of its descendant text nodes, since such reflows may not result in the
+ * frame's nsDisplayBackground changing.  In other words, Display List Based
+ * Invalidation may not invalidate the frame's background, so we need this
+ * observer to make sure that happens.
+ *
+ * XXX: It's questionable whether we should even be [ab]using the SVG observer
+ * mechanism for `background-clip:text`.  Since we know that the observed frame
+ * is the frame we need to invalidate, we could just check the computed style
+ * in the (one) place where we pass INVALIDATE_REFLOW and invalidate there...
+ */
 class BackgroundClipRenderingObserver : public SVGRenderingObserver {
  public:
   explicit BackgroundClipRenderingObserver(nsIFrame* aFrame) : mFrame(aFrame) {}
@@ -531,8 +546,15 @@ class BackgroundClipRenderingObserver : public SVGRenderingObserver {
   }
 
   void OnRenderingChange() final;
+
+  /**
+   * Observing for mutations is not enough.  A new font loading and applying
+   * to the text content could cause it to reflow, and we need to invalidate
+   * for that.
+   */
   bool ObservesReflow() final { return true; }
 
+  // The observer and observee!
   nsIFrame* mFrame;
 };
 
