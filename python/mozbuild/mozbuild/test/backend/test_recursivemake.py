@@ -400,7 +400,6 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'export:: $(MDDEPDIR)/bar.c.stub',
             'bar.c: $(MDDEPDIR)/bar.c.stub ;',
             'GARBAGE += bar.c',
             'GARBAGE += $(MDDEPDIR)/bar.c.stub',
@@ -410,14 +409,14 @@ class TestRecursiveMakeBackend(BackendTester):
             '$(call py_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp $(MDDEPDIR)/bar.c.stub)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
-            'export:: $(MDDEPDIR)/foo.c.stub',
-            'foo.c: $(MDDEPDIR)/foo.c.stub ;',
-            'GARBAGE += foo.c',
-            'GARBAGE += $(MDDEPDIR)/foo.c.stub',
-            'EXTRA_MDDEPEND_FILES += foo.c.pp',
-            '$(MDDEPDIR)/foo.c.stub: %s/generate-foo.py $(srcdir)/foo-data' % (env.topsrcdir),
+            'export:: $(MDDEPDIR)/foo.h.stub',
+            'foo.h: $(MDDEPDIR)/foo.h.stub ;',
+            'GARBAGE += foo.h',
+            'GARBAGE += $(MDDEPDIR)/foo.h.stub',
+            'EXTRA_MDDEPEND_FILES += foo.h.pp',
+            '$(MDDEPDIR)/foo.h.stub: %s/generate-foo.py $(srcdir)/foo-data' % (env.topsrcdir),
             '$(REPORT_BUILD)',
-            '$(call py_action,file_generate,%s/generate-foo.py main foo.c $(MDDEPDIR)/foo.c.pp $(MDDEPDIR)/foo.c.stub $(srcdir)/foo-data)' % (env.topsrcdir),  # noqa
+            '$(call py_action,file_generate,%s/generate-foo.py main foo.h $(MDDEPDIR)/foo.h.pp $(MDDEPDIR)/foo.h.stub $(srcdir)/foo-data)' % (env.topsrcdir),  # noqa
             '@$(TOUCH) $@',
             '',
         ]
@@ -433,7 +432,6 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'export:: $(MDDEPDIR)/bar.c.stub',
             'bar.c: $(MDDEPDIR)/bar.c.stub ;',
             'GARBAGE += bar.c',
             'GARBAGE += $(MDDEPDIR)/bar.c.stub',
@@ -443,7 +441,6 @@ class TestRecursiveMakeBackend(BackendTester):
             '$(call py_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp $(MDDEPDIR)/bar.c.stub)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
-            'export:: $(MDDEPDIR)/foo.c.stub',
             'foo.c: $(MDDEPDIR)/foo.c.stub ;',
             'GARBAGE += foo.c',
             'GARBAGE += $(MDDEPDIR)/foo.c.stub',
