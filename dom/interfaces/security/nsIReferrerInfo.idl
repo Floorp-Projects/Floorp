@@ -6,6 +6,8 @@
 #include "nsISerializable.idl"
 
 interface nsIURI;
+webidl Document;
+webidl Node;
 
 native URIRef(already_AddRefed<nsIURI>);
 
@@ -43,8 +45,23 @@ interface nsIReferrerInfo : nsISerializable
    * @param aSendReferrer sendReferrer of the created object, defaults to false
    * @param aOriginalReferrer the original referrer, defaults to null.
    */
-
   void init(in uint32_t aReferrerPolicy,
            [optional] in boolean aSendReferrer,
            [optional] in nsIURI aOriginalReferrer);
+
+  /**
+   * Initialize with a given document.
+   * @param aDocument the document to init referrerInfo object
+   */
+  void initWithDocument(in Document aDocument);
+
+  /**
+   * Initialize with a given node. It you are working with node which supports
+   * referrerpolicy attribute: <a>, <img>, <area>, <script>, <iframe>, please
+   * try to use this init instead of initWithDocument, because referrer policy
+   * from rel and attribute has a higher priority.
+   * @param aNode the element to init referrerInfo object
+   */
+  void initWithNode(in Node aNode);
+
 };

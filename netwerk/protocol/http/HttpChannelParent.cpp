@@ -262,7 +262,7 @@ base::ProcessId HttpChannelParent::OtherPid() const {
   if (mIPCClosed) {
     return 0;
   }
-  return Manager()->OtherPid();
+  return IProtocol::OtherPid();
 }
 
 //-----------------------------------------------------------------------------

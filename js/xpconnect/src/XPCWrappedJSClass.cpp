@@ -780,17 +780,9 @@ nsXPCWrappedJS::CallMethod(uint16_t methodIndex, const nsXPTMethodInfo* info,
 
   const nsXPTInterfaceInfo* interfaceInfo = GetInfo();
   JS::RootedId id(cx);
-  const char* name;
-  nsAutoCString symbolName;
-  if (info->IsSymbol()) {
-    info->GetSymbolDescription(cx, symbolName);
-    name = symbolName.get();
-    id = SYMBOL_TO_JSID(info->GetSymbol(cx));
-  } else {
-    name = info->GetName();
-    if (!AtomizeAndPinJSString(cx, id.get(), name)) {
-      return NS_ERROR_FAILURE;
-    }
+  const char* name = info->NameOrDescription();
+  if (!info->GetId(cx, id.get())) {
+    return NS_ERROR_FAILURE;
   }
 
   // We now need to enter the realm of the actual JSObject* we are pointing at.

@@ -113,6 +113,8 @@ public abstract class BrowserDB {
     @Nullable public abstract Cursor getAllBookmarkFolders(ContentResolver cr);
     public abstract void removeBookmarksWithURL(ContentResolver cr, String uri);
     public abstract void removeBookmarkWithId(ContentResolver cr, long id);
+    public abstract void removeSoftDeleteBookmarks(ContentResolver cr);
+    public abstract void updateSoftDeleteForBookmarkWithId(ContentResolver cr, long id, boolean softDelete);
     public abstract void registerBookmarkObserver(ContentResolver cr, ContentObserver observer);
     public abstract void updateBookmark(ContentResolver cr, long id, String uri, String title, String keyword);
     public abstract void updateBookmark(ContentResolver cr, long id, String uri, String title, String keyword, long newParentId, long oldParentId);

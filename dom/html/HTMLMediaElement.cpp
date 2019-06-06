@@ -6203,8 +6203,8 @@ void HTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel) {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Set the Referer header
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(
-      OwnerDoc()->GetDocumentURI(), OwnerDoc()->GetReferrerPolicy());
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+  referrerInfo->InitWithDocument(OwnerDoc());
   rv = aChannel->SetReferrerInfoWithoutClone(referrerInfo);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }

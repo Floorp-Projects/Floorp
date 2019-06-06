@@ -91,7 +91,6 @@ interface nsIPrompt : nsISupports
 
     boolean select(in wstring dialogTitle,
                    in wstring text,
-                   in  uint32_t count,
-                   [array, size_is(count)] in wstring selectList,
+                   in Array<AString> selectList,
                    out long outSelection);
 };

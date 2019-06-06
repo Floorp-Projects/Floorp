@@ -9276,13 +9276,12 @@ nsresult nsHttpChannel::OnPush(const nsACString& url,
                                 NS_GET_IID(nsIHttpPushListener),
                                 getter_AddRefs(pushListener));
 
-  MOZ_ASSERT(pushListener);
   if (!pushListener) {
     LOG(
         ("nsHttpChannel::OnPush [this=%p] notification callbacks do not "
          "implement nsIHttpPushListener\n",
          this));
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsCOMPtr<nsIURI> pushResource;

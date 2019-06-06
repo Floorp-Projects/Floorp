@@ -3124,7 +3124,7 @@ nsresult nsPluginHost::NewPluginURLStream(
         if (!doc) {
           return NS_ERROR_FAILURE;
         }
-        referer = doc->GetDocumentURI();
+        referer = doc->GetDocumentURIAsReferrer();
         referrerPolicy = doc->GetReferrerPolicy();
       }
       nsCOMPtr<nsIReferrerInfo> referrerInfo =

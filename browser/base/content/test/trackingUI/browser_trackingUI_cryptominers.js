@@ -37,7 +37,11 @@ async function testIdentityState(hasException) {
   }
 
   ok(!ContentBlocking.content.hasAttribute("detected"), "cryptominers are not detected");
-  ok(BrowserTestUtils.is_hidden(ContentBlocking.iconBox), "icon box is not visible");
+  if (hasException) {
+    ok(!BrowserTestUtils.is_hidden(ContentBlocking.iconBox), "icon box is visible to indicate the exception");
+  } else {
+    ok(BrowserTestUtils.is_hidden(ContentBlocking.iconBox), "icon box is not visible");
+  }
 
   promise = waitForContentBlockingEvent();
 

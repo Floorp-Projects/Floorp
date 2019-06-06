@@ -3639,7 +3639,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             processnative.addcode(
                 '''
                 #ifdef OS_WIN
-                DowncastState()->GetIPCChannel()->ProcessNativeEventsInInterruptCall();
+                GetIPCChannel()->ProcessNativeEventsInInterruptCall();
                 #else
                 FatalError("This method is Windows-only");
                 #endif

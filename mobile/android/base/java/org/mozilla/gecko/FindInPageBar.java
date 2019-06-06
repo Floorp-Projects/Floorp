@@ -114,6 +114,9 @@ public class FindInPageBar extends LinearLayout
         // Always clear the Find string, primarily for privacy.
         mFindText.setText("");
 
+        // Always clear the error message bug 1556382
+        mFindText.setError(null);
+
         // Only close the IMM if its EditText is the one with focus.
         if (mFindText.isFocused()) {
           getInputMethodManager(mFindText).hideSoftInputFromWindow(mFindText.getWindowToken(), 0);

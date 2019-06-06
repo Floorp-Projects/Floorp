@@ -701,7 +701,7 @@ DocumentL10n
 ------------
 
 DocumentL10n implements the DocumentL10n WebIDL API and allows Document to
-communicate with mozDOMLocalization.
+communicate with DOMLocalization.
 
 L10nRegistry
 ------------

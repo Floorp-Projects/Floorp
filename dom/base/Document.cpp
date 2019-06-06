@@ -231,7 +231,6 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/TouchEvent.h"
-#include "ReferrerInfo.h"
 
 #include "mozilla/Preferences.h"
 
@@ -245,7 +244,6 @@
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/DocumentFragment.h"
-#include "mozilla/dom/DocumentL10n.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLBodyElement.h"
@@ -260,6 +258,7 @@
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/TimeoutManager.h"
+#include "mozilla/dom/DocumentL10n.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "nsFrame.h"
 #include "nsDOMCaretPosition.h"
@@ -1015,7 +1014,7 @@ nsresult ExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        new ReferrerInfo(aReferrer, aReferrerPolicy);
+        new dom::ReferrerInfo(aReferrer, aReferrerPolicy);
     rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     Unused << NS_WARN_IF(NS_FAILED(rv));
   }
@@ -1164,8 +1163,6 @@ Document::FrameRequest::FrameRequest(FrameRequestCallback& aCallback,
 Document::Document(const char* aContentType)
     : nsINode(nullptr),
       DocumentOrShadowRoot(*this),
-      mReferrerPolicySet(false),
-      mReferrerPolicy(mozilla::net::RP_Unset),
       mBlockAllMixedContent(false),
       mBlockAllMixedContentPreloads(false),
       mUpgradeInsecureRequests(false),
@@ -1342,6 +1339,9 @@ Document::Document(const char* aContentType)
   mPreloadPictureFoundSource.SetIsVoid(true);
 
   RecomputeLanguageFromCharset();
+
+  mPreloadReferrerInfo = new dom::ReferrerInfo(nullptr);
+  mReferrerInfo = new dom::ReferrerInfo(nullptr);
 }
 
 bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
@@ -1922,6 +1922,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuppressedEventListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrototypeDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMidasCommandManager)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReferrerInfo)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPreloadReferrerInfo)
 
   tmp->mParentDocument = nullptr;
 
@@ -2254,7 +2256,6 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
   SetContentTypeInternal(EmptyCString());
   mContentLanguage.Truncate();
   mBaseTarget.Truncate();
-  mReferrer.Truncate();
 
   mXMLDeclarationBits = 0;
 
@@ -2820,7 +2821,10 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     }
   }
 
-  nsresult rv = InitCSP(aChannel);
+  nsresult rv = InitReferrerInfo(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = InitCSP(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize FeaturePolicy
@@ -3134,6 +3138,46 @@ nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
   return NS_OK;
 }
 
+nsresult Document::InitReferrerInfo(nsIChannel* aChannel) {
+  MOZ_ASSERT(mReferrerInfo);
+  MOZ_ASSERT(mPreloadReferrerInfo);
+
+  if (ReferrerInfo::ShouldResponseInheritReferrerInfo(aChannel)) {
+    // At this point the document is not fully created and mParentDocument has
+    // not been set yet,
+    Document* parentDoc = GetSameTypeParentDocument();
+    if (parentDoc) {
+      mReferrerInfo = parentDoc->GetReferrerInfo();
+      mPreloadReferrerInfo = mReferrerInfo;
+      return NS_OK;
+    }
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel;
+  nsresult rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!httpChannel) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
+  if (referrerInfo) {
+    mReferrerInfo = referrerInfo;
+  }
+
+  // Override policy if we get one from Referrerr-Policy header
+  mozilla::net::ReferrerPolicy policy =
+      nsContentUtils::GetReferrerPolicyFromChannel(aChannel);
+  mReferrerInfo = static_cast<dom::ReferrerInfo*>(mReferrerInfo.get())
+                      ->CloneWithNewPolicy(policy);
+
+  mPreloadReferrerInfo = mReferrerInfo;
+  return NS_OK;
+}
+
 void Document::StopDocumentLoad() {
   if (mParser) {
     mParserAborted = true;
@@ -3413,8 +3457,12 @@ bool Document::GetAllowPlugins() {
 void Document::InitializeLocalization(nsTArray<nsString>& aResourceIds) {
   MOZ_ASSERT(!mDocumentL10n, "mDocumentL10n should not be initialized yet");
 
-  DocumentL10n* l10n = new DocumentL10n(this);
-  MOZ_ALWAYS_TRUE(l10n->Init(aResourceIds));
+  RefPtr<DocumentL10n> l10n = new DocumentL10n(this);
+  ErrorResult rv;
+  l10n->Init(aResourceIds, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return;
+  }
   mDocumentL10n = l10n;
 }
 
@@ -3438,7 +3486,7 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
   if (mDocumentL10n) {
     AutoTArray<nsString, 1> resourceIds;
     resourceIds.AppendElement(href);
-    mDocumentL10n->AddResourceIds(resourceIds);
+    mDocumentL10n->AddResourceIds(resourceIds, false);
   } else if (mReadyState >= READYSTATE_INTERACTIVE) {
     // Otherwise, if the document has already been parsed
     // we need to lazily initialize the localization.
@@ -4726,10 +4774,23 @@ void Document::SetLastFocusTime(const TimeStamp& aFocusTime) {
 }
 
 void Document::GetReferrer(nsAString& aReferrer) const {
-  if (mIsSrcdocDocument && mParentDocument)
-    mParentDocument->GetReferrer(aReferrer);
-  else
-    CopyUTF8toUTF16(mReferrer, aReferrer);
+  aReferrer.Truncate();
+  if (!mReferrerInfo) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> referrer = mReferrerInfo->GetComputedReferrer();
+  if (!referrer) {
+    return;
+  }
+
+  nsAutoCString uri;
+  nsresult rv = referrer->GetSpec(uri);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  CopyUTF8toUTF16(uri, aReferrer);
 }
 
 void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
@@ -4877,11 +4938,12 @@ already_AddRefed<nsIChannel> Document::CreateDummyChannelForCookies(
 }
 
 mozilla::net::ReferrerPolicy Document::GetReferrerPolicy() const {
-  if (mIsSrcdocDocument && mParentDocument &&
-      mReferrerPolicy == mozilla::net::RP_Unset) {
-    return mParentDocument->GetReferrerPolicy();
+  if (!mReferrerInfo) {
+    return mozilla::net::RP_Unset;
   }
-  return mReferrerPolicy;
+
+  return static_cast<mozilla::net::ReferrerPolicy>(
+      mReferrerInfo->GetReferrerPolicy());
 }
 
 void Document::GetAlinkColor(nsAString& aAlinkColor) {
@@ -5181,30 +5243,8 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
       aHeaderField == nsGkAtoms::viewport_user_scalable) {
     mViewportType = Unknown;
   }
-
-  // Referrer policy spec says to ignore any empty referrer policies.
-  if (aHeaderField == nsGkAtoms::referrer && !aData.IsEmpty()) {
-    enum mozilla::net::ReferrerPolicy policy =
-        mozilla::net::ReferrerPolicyFromString(aData);
-    // If policy is not the empty string, then set element's node document's
-    // referrer policy to policy
-    if (policy != mozilla::net::RP_Unset) {
-      // Referrer policy spec (section 6.1) says that we always use the newest
-      // referrer policy we find
-      mReferrerPolicy = policy;
-      mReferrerPolicySet = true;
-    }
-  }
-
-  if (aHeaderField == nsGkAtoms::headerReferrerPolicy && !aData.IsEmpty()) {
-    enum mozilla::net::ReferrerPolicy policy =
-        nsContentUtils::GetReferrerPolicyFromHeader(aData);
-    if (policy != mozilla::net::RP_Unset) {
-      mReferrerPolicy = policy;
-      mReferrerPolicySet = true;
-    }
-  }
 }
+
 void Document::TryChannelCharset(nsIChannel* aChannel, int32_t& aCharsetSource,
                                  NotNull<const Encoding*>& aEncoding,
                                  nsHtml5TreeOpExecutor* aExecutor) {
@@ -5990,7 +6030,7 @@ void Document::SetContainer(nsDocShell* aContainer) {
 
   BrowsingContext* context = aContainer->GetBrowsingContext();
   if (context && context->IsContent()) {
-    if (!context->GetParent()) {
+    if (context->IsTopContent()) {
       SetIsTopLevelContentDocument(true);
     }
     SetIsContentDocument(true);
@@ -8268,16 +8308,6 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
   RefPtr<nsHtml5Parser> parser = nsHtml5Module::NewHtml5Parser();
   mParser = parser;
   parser->Initialize(this, GetDocumentURI(), shell, nullptr);
-  if (mReferrerPolicySet) {
-    // CSP may have set the referrer policy, so a speculative parser should
-    // start with the new referrer policy.
-    nsHtml5TreeOpExecutor* executor = nullptr;
-    executor = static_cast<nsHtml5TreeOpExecutor*>(mParser->GetContentSink());
-    if (executor && mReferrerPolicySet) {
-      executor->SetSpeculationReferrerPolicy(
-          static_cast<net::ReferrerPolicy>(mReferrerPolicy));
-    }
-  }
   nsresult rv = parser->StartExecutor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
@@ -9471,14 +9501,10 @@ void Document::RetrieveRelevantHeaders(nsIChannel* aChannel) {
       }
     }
 
-    // The misspelled key 'referer' is as per the HTTP spec
-    rv =
-        httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("referer"), mReferrer);
-
     static const char* const headers[] = {
         "default-style", "content-style-type", "content-language",
         "content-disposition", "refresh", "x-dns-prefetch-control",
-        "x-frame-options", "referrer-policy",
+        "x-frame-options",
         // add more http headers if you need
         // XXXbz don't add content-location support without reading bug
         // 238654 and its dependencies/dups first.
@@ -10423,6 +10449,9 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   clone->SetPrincipals(NodePrincipal(), EffectiveStoragePrincipal());
   clone->mDocumentBaseURI = mDocumentBaseURI;
   clone->SetChromeXHRDocBaseURI(mChromeXHRDocBaseURI);
+  clone->mReferrerInfo =
+      static_cast<dom::ReferrerInfo*>(mReferrerInfo.get())->Clone();
+  clone->mPreloadReferrerInfo = clone->mReferrerInfo;
 
   bool hasHadScriptObject = true;
   nsIScriptGlobalObject* scriptObject =
@@ -11346,6 +11375,10 @@ already_AddRefed<Document> Document::CreateStaticClone(
       if (const FontFaceSet* set = GetFonts()) {
         set->CopyNonRuleFacesTo(clonedDoc->Fonts());
       }
+
+      clonedDoc->mReferrerInfo =
+          static_cast<dom::ReferrerInfo*>(mReferrerInfo.get())->Clone();
+      clonedDoc->mPreloadReferrerInfo = clonedDoc->mPreloadReferrerInfo;
     }
   }
   mCreatingStaticClone = false;
@@ -15103,6 +15136,18 @@ nsIPrincipal* Document::EffectiveStoragePrincipal() const {
   }
 
   return mIntrinsicStoragePrincipal;
+}
+
+void Document::SetIsInitialDocument(bool aIsInitialDocument) {
+  mIsInitialDocumentInWindow = aIsInitialDocument;
+
+  // Asynchronously tell the parent process that we are, or are no longer, the
+  // initial document. This happens async.
+  if (RefPtr<nsPIDOMWindowInner> inner = GetInnerWindow()) {
+    if (RefPtr<WindowGlobalChild> wgc = inner->GetWindowGlobalChild()) {
+      wgc->SendSetIsInitialDocument(aIsInitialDocument);
+    }
+  }
 }
 
 }  // namespace dom

@@ -16,8 +16,14 @@ add_task(async function test_resultDomain() {
   let [engine1, engine2, engine3] = await addTestEngines([
     { name: "Test search engine", xmlFileName: "engine.xml" },
     { name: "A second test engine", xmlFileName: "engine2.xml" },
-    { name: "bacon", details: ["", "bacon", "Search Bacon", "GET",
-                               "http://www.bacon.moz/?search={searchTerms}"] },
+    { name: "bacon",
+      details: {
+        alias: "bacon",
+        description: "Search Bacon",
+        method: "GET",
+        template: "http://www.bacon.moz/?search={searchTerms}",
+      },
+    },
   ]);
 
   Assert.equal(engine1.getResultDomain(), "google.com");
