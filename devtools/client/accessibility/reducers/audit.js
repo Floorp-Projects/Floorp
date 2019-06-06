@@ -23,6 +23,7 @@ function getInitialState() {
     filters: {
       [FILTERS.ALL]: false,
       [FILTERS.CONTRAST]: false,
+      [FILTERS.TEXT_LABEL]: false,
     },
     auditing: [],
     progress: null,
@@ -36,6 +37,7 @@ function allActiveFilters() {
   return {
     [FILTERS.ALL]: true,
     [FILTERS.CONTRAST]: true,
+    [FILTERS.TEXT_LABEL]: true,
   };
 }
 
