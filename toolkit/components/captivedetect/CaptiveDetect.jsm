@@ -31,6 +31,10 @@ function URLFetcher(url, timeout) {
   xhr.channel.loadFlags |= Ci.nsIRequest.LOAD_ANONYMOUS;
   // Use the system's resolver for this check
   xhr.channel.loadFlags |= Ci.nsIRequest.LOAD_DISABLE_TRR;
+
+  // We don't want to follow _any_ redirects
+  xhr.channel.QueryInterface(Ci.nsIHttpChannel).redirectionLimit = 0;
+
   // The Cache-Control header is only interpreted by proxies and the
   // final destination. It does not help if a resource is already
   // cached locally.
@@ -51,6 +55,10 @@ function URLFetcher(url, timeout) {
         self.onsuccess(xhr.responseText);
       } else if (xhr.status) {
         self.onredirectorerror(xhr.status);
+      } else if (xhr.channel.status == Cr.NS_ERROR_REDIRECT_LOOP) {
+        // For some redirects we don't get a status, so we need to check it
+        // this way. This only works because we set the redirectionLimit to 0.
+        self.onredirectorerror(300);
       }
     }
   };
@@ -329,7 +337,7 @@ CaptivePortalDetector.prototype = {
   },
 
   _mayRetry: function _mayRetry() {
-    if (this._runningRequest.retryCount++ < this._maxRetryCount) {
+    if (this._runningRequest && this._runningRequest.retryCount++ < this._maxRetryCount) {
       debug("retry-Detection: " + this._runningRequest.retryCount + "/" + this._maxRetryCount);
       this._startDetection();
     } else {
