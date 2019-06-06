@@ -2639,7 +2639,7 @@ pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);
 // assertion flag will be set to false after fixing Bug 1473549
 pref("security.allow_eval_with_system_principal", false);
-pref("security.uris_using_eval_with_system_principal", "autocomplete.xml,redux.js,react-redux.js,content-task.js,preferencesbindings.js,lodash.js,jszip.js,sinon-7.2.7.js,jsol.js");
+pref("security.uris_using_eval_with_system_principal", "autocomplete.xml,redux.js,react-redux.js,content-task.js,preferencesbindings.js,lodash.js,jszip.js,sinon-7.2.7.js,ajv-4.1.1.js,jsol.js");
 #endif
 
 #ifdef EARLY_BETA_OR_EARLIER
@@ -6004,3 +6004,4 @@ pref("fission.preserve_browsing_contexts", false);
 //  * userContent.css
 //  * userChrome.css
 pref("toolkit.legacyUserProfileCustomizations.stylesheets", false);
+
