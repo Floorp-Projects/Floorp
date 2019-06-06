@@ -336,6 +336,7 @@ void HandleGetPortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports) {
 }
 
 static void* PortServerThread(void* argument) {
+  pthread_setname_np("PortServerThread");
   MemoryPorts* ports = static_cast<MemoryPorts*>(argument);
   MachReceiveMessage child_message;
   while (true) {
