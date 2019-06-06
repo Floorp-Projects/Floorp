@@ -147,7 +147,9 @@ class ObserverRegistry<T> : Observable<T> {
 
     @Synchronized
     override fun isObserved(): Boolean {
-        return observers.isNotEmpty()
+        // The registry is getting observed if there are registered observer or if there are registered view observers
+        // that will register an observer as soon as their views are attached.
+        return observers.isNotEmpty() || viewObservers.isNotEmpty()
     }
 
     /**
