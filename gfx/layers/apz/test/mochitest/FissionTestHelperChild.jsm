@@ -29,6 +29,8 @@ class FissionTestHelperChild extends JSWindowActorChild {
     let cw = this.cw();
     Cu.exportFunction((cond, msg) => this.sendAsyncMessage("ok", {cond, msg}),
                       cw, { defineAs: "ok" });
+    Cu.exportFunction((a, b, msg) => this.sendAsyncMessage("is", {a, b, msg}),
+                      cw, { defineAs: "is" });
 
     let FissionTestHelper = Cu.createObjectIn(cw, { defineAs: "FissionTestHelper" });
     FissionTestHelper.startTestPromise =
