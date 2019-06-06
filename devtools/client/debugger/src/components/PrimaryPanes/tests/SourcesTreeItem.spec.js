@@ -91,6 +91,13 @@ describe("SourceTreeItem", () => {
           id: "node-menu-blackbox",
           label: "Blackbox source",
         },
+        {
+          accesskey: "d",
+          click: expect.any(Function),
+          disabled: false,
+          id: "node-menu-download-file",
+          label: "Download file",
+        },
       ];
       const mockEvent = {
         preventDefault: jest.fn(),
@@ -104,7 +111,6 @@ describe("SourceTreeItem", () => {
       await instance.onContextMenu(mockEvent, item, source);
 
       expect(showMenu).toHaveBeenCalledWith(mockEvent, menuOptions);
-
       expect(mockEvent.preventDefault).toHaveBeenCalled();
       expect(mockEvent.stopPropagation).toHaveBeenCalled();
 
@@ -130,6 +136,13 @@ describe("SourceTreeItem", () => {
           id: "node-menu-blackbox",
           label: "Blackbox source",
         },
+        {
+          accesskey: "d",
+          click: expect.any(Function),
+          disabled: false,
+          id: "node-menu-download-file",
+          label: "Download file",
+        },
       ];
       const mockEvent = {
         preventDefault: jest.fn(),
@@ -151,6 +164,57 @@ describe("SourceTreeItem", () => {
       expect(props.setProjectDirectoryRoot).not.toHaveBeenCalled();
       expect(props.clearProjectDirectoryRoot).not.toHaveBeenCalled();
       expect(props.toggleBlackBox).toHaveBeenCalled();
+    });
+
+    it("shows context menu on file to download source file", async () => {
+      const menuOptions = [
+        {
+          accesskey: "u",
+          click: expect.any(Function),
+          disabled: false,
+          id: "node-menu-copy-source",
+          label: "Copy source URI",
+        },
+        {
+          accesskey: "B",
+          click: expect.any(Function),
+          disabled: false,
+          id: "node-menu-blackbox",
+          label: "Blackbox source",
+        },
+        {
+          accesskey: "d",
+          click: expect.any(Function),
+          disabled: false,
+          id: "node-menu-download-file",
+          label: "Download file",
+        },
+      ];
+      const mockEvent = {
+        preventDefault: jest.fn(),
+        stopPropagation: jest.fn(),
+      };
+
+      const { props, instance } = render({
+        projectRoot: "root/",
+      });
+      const { item, source } = instance.props;
+
+      instance.handleDownloadFile = jest.fn(() => {});
+
+      await instance.onContextMenu(mockEvent, item, source);
+
+      expect(showMenu).toHaveBeenCalledWith(mockEvent, menuOptions);
+
+      expect(mockEvent.preventDefault).toHaveBeenCalled();
+      expect(mockEvent.stopPropagation).toHaveBeenCalled();
+
+      showMenu.mock.calls[0][1][2].click();
+      expect(props.setProjectDirectoryRoot).not.toHaveBeenCalled();
+      expect(props.clearProjectDirectoryRoot).not.toHaveBeenCalled();
+      expect(props.toggleBlackBox).not.toHaveBeenCalled();
+      expect(copyToTheClipboard).not.toHaveBeenCalled();
+      expect(instance.handleDownloadFile).toHaveBeenCalled();
     });
 
     it("shows context menu on root to remove directory root", async () => {
