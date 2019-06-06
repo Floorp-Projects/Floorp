@@ -1,147 +1,64 @@
 %include ../../global/shared.inc
 
-/* General */
-/* Specify the size for the wizardpage so the billboard has a fixed size. 3rd
+/* Elevation Dialog */
+/* Specify the size for the UI so it has a fixed size. 3rd
    party themes should typically specify the same values. */
-wizardpage {
+#elevationBox, .update-content {
   height: 360px;
   width: 700px;
 }
 
-/* Remove margin and padding so the billboard will extend to the edge of the
+/* Remove margin and padding so the inner UI will extend to the edge of the
    window. 3rd party themes should typically specify the same values. */
-#updates, .wizard-page-box {
+#updates {
   margin: 0;
   padding: 0;
+}
+
+.update-header {
+  -moz-appearance: dialog;
+  margin: 12px 12px 0 12px;
+}
+
+.update-header-box-1 {
+  color: #000;
+}
+
+.update-header-box-text {
+  margin: 0;
+  padding: 0;
+  font: menu;
+  font-weight: bold;
+}
+
+.update-header-label {
+  font-weight: bold;
 }
 
 .update-content {
   padding: 6px 12px 12px 12px;
 }
 
-.wizard-header-box-text {
-  padding: 0;
+.update-buttons-separator {
+  display: none;
 }
 
-.wizard-header {
-  margin: 12px 12px 0 12px;
-}
-
-.wizard-buttons-btm {
-  padding: 15px 12px;
-}
-
-/* Don't use top margin - it can cause a scrollbar on some pages */
-.wizard-buttons {
-  padding: 0;
+#update-button-box {
+  padding: 10px 12px 12px 12px;
   -moz-appearance: statusbar;
   -moz-window-dragging: drag;
 }
 
-.wizard-buttons button {
+#update-button-box button {
   -moz-appearance: toolbarbutton;
   color: ButtonText;
   min-height: 22px;
-  margin: 0 6px;
-  padding: 0;
   text-shadow: @loweredShadow@;
 }
 
-#finishedBackgroundMore {
-  margin-bottom: 6px;
-}
-
-.inline-link {
-  color: -moz-nativehyperlinktext;
-  text-decoration: none;
-}
-
-.inline-link:hover {
-  text-decoration: underline;
-}
-
-/* Unsupported Page */
-#unsupportedLabel, #unsupportedLinkLabel {
-  margin-inline-start: 0;
-  padding-inline-start: 0;
-}
-
-/* Update Found Basic Page */
-#updateName, #updateFinishedName {
+#updateFinishedName {
   font-weight: bold;
   font-size: larger;
-}
-
-/* Downloading Page */
-#downloadStatusLine {
-  -moz-box-align: center;
-}
-
-#downloadStatus {
-  height: 3em !important;
-}
-
-#downloadStatusProgress {
-  padding-right: 5px;
-}
-
-#pauseButton {
-  list-style-image: url(chrome://mozapps/skin/update/buttons.png);
-  -moz-image-region: rect(48px, 16px, 64px, 0px);
-  -moz-appearance: none;
-  background-color: transparent;
-  border: none;
-  min-height: 16px;
-  min-width: 16px;
-  max-height: 16px;
-  max-width: 16px;
-  margin: 0 1px 0 1px;
-  padding: 0;
-}
-
-/* !Important must be used otherwise this won't immediately take affect */
-#pauseButton > .button-box {
-  padding: 0 !important;
-}
-
-#pauseButton:hover {
-  -moz-image-region: rect(48px, 32px, 64px, 16px);
-}
-
-#pauseButton:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(48px, 48px, 64px, 32px);
-}
-
-#pauseButton[disabled="true"] {
-  -moz-image-region: rect(48px, 16px, 64px, 0px);
-}
-
-#pauseButton[paused="true"] {
-  -moz-image-region: rect(16px, 16px, 32px, 0px);
-}
-
-#pauseButton[paused="true"]:hover {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
-}
-
-#pauseButton[paused="true"]:hover:active {
-  -moz-image-region: rect(16px, 48px, 32px, 32px);
-}
-
-#verificationFailedIcon {
-  margin-left: 5px;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  list-style-image: url(chrome://global/skin/icons/warning.svg);
-}
-
-/* Error Page */
-#errorReason {
-  margin-top: 1px;
-  margin-bottom: 2px;
-  margin-inline-start: 6px !important;
-  margin-inline-end: 5px;
-  font-weight: bold;
 }
 
 /* Update History Window */
@@ -174,4 +91,10 @@ update {
 
 #historyItems .update {
   padding: 5px;
+  display: -moz-box;
+  -moz-box-orient: vertical;
+}
+
+.update-name {
+  -moz-box-flex: 1;
 }

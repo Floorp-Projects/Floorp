@@ -771,9 +771,6 @@ function setupTestCommon(aAppUpdateAutoEnabled = false, aAllowBits = false) {
 
   setDefaultPrefs();
 
-  // Don't attempt to show a prompt when an update finishes.
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, true);
-
   gGREDirOrig = getGREDir();
   gGREBinDirOrig = getGREBinDir();
 
