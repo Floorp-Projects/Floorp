@@ -248,7 +248,7 @@ class Localization {
    * Format translations and handle fallback if needed.
    *
    * Format translations for `keys` from `FluentBundle` instances on this
-   * DOMLocalization. In case of errors, fetch the next context in the
+   * Localization. In case of errors, fetch the next context in the
    * fallback chain.
    *
    * @param   {Array<Object>}         keys    - Translation keys to format.
@@ -313,7 +313,7 @@ class Localization {
   /**
    * Retrieve translations corresponding to the passed keys.
    *
-   * A generalized version of `DOMLocalization.formatValue`. Keys can
+   * A generalized version of `Localization.formatValue`. Keys can
    * either be simple string identifiers or `[id, args]` arrays.
    *
    *     docL10n.formatValues([
@@ -583,7 +583,7 @@ function keysFromBundle(method, bundle, keys, translations) {
 
 /**
  * Helper function which allows us to construct a new
- * Localization from DOMLocalization.
+ * Localization from Localization.
  */
 var getLocalization = (resourceIds) => {
   return new Localization(resourceIds);
