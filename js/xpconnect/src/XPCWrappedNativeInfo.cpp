@@ -285,16 +285,10 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
     }
 
     jsid name;
-    if (info.IsSymbol()) {
-      name = SYMBOL_TO_JSID(info.GetSymbol(cx));
-    } else {
-      str = JS_AtomizeAndPinString(cx, info.GetName());
-      if (!str) {
-        NS_ERROR("bad method name");
-        failed = true;
-        break;
-      }
-      name = INTERNED_STRING_TO_JSID(cx, str);
+    if (!info.GetId(cx, name)) {
+      NS_ERROR("bad method name");
+      failed = true;
+      break;
     }
 
     if (info.IsSetter()) {
