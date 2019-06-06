@@ -1814,11 +1814,6 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   }
 
   if (scheme.EqualsLiteral("moz-extension")) {
-    if (!NS_IsMainThread()) {
-      return NS_ERROR_UNKNOWN_PROTOCOL;
-    }
-    // TODO: must be thread safe
-    MOZ_ASSERT(NS_IsMainThread());
     RefPtr<mozilla::net::ExtensionProtocolHandler> handler =
         mozilla::net::ExtensionProtocolHandler::GetSingleton();
     if (!handler) {
