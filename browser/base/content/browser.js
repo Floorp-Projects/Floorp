@@ -124,8 +124,7 @@ XPCOMUtils.defineLazyScriptGetter(this, "gSync",
                                   "chrome://browser/content/browser-sync.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gBrowserThumbnails",
                                   "chrome://browser/content/browser-thumbnails.js");
-XPCOMUtils.defineLazyScriptGetter(this, ["setContextMenuContentData",
-                                         "openContextMenu", "nsContextMenu"],
+XPCOMUtils.defineLazyScriptGetter(this, ["openContextMenu", "nsContextMenu"],
                                   "chrome://browser/content/nsContextMenu.js");
 XPCOMUtils.defineLazyScriptGetter(this, ["DownloadsPanel",
                                          "DownloadsOverlayLoader",
