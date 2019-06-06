@@ -935,8 +935,8 @@ nsresult EventSourceImpl::SetupReferrerInfo() {
   MOZ_ASSERT(!IsShutDown());
   nsCOMPtr<Document> doc = mEventSource->GetDocumentIfCurrent();
   if (doc) {
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        new ReferrerInfo(doc->GetDocumentURI(), doc->GetReferrerPolicy());
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+    referrerInfo->InitWithDocument(doc);
     nsresult rv = mHttpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }

@@ -72,11 +72,6 @@ class nsHtml5TreeOpExecutor final
 
   nsCOMPtr<nsIURI> mSpeculationBaseURI;
 
-  /**
-   * Speculative referrer policy
-   */
-  ReferrerPolicy mSpeculationReferrerPolicy;
-
   nsCOMPtr<nsIURI> mViewSourceBaseURI;
 
   /**
@@ -259,8 +254,7 @@ class nsHtml5TreeOpExecutor final
 
   void SetSpeculationBase(const nsAString& aURL);
 
-  void SetSpeculationReferrerPolicy(ReferrerPolicy aReferrerPolicy);
-  void SetSpeculationReferrerPolicy(const nsAString& aReferrerPolicy);
+  void UpdateReferrerInfoFromMeta(const nsAString& aMetaReferrer);
 
   void AddSpeculationCSP(const nsAString& aCSP);
 
@@ -288,6 +282,8 @@ class nsHtml5TreeOpExecutor final
   bool ShouldPreloadURI(nsIURI* aURI);
 
   ReferrerPolicy GetPreloadReferrerPolicy(const nsAString& aReferrerPolicy);
+
+  ReferrerPolicy GetPreloadReferrerPolicy(ReferrerPolicy aReferrerPolicy);
 };
 
 #endif  // nsHtml5TreeOpExecutor_h
