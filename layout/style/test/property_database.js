@@ -107,6 +107,7 @@ var validGradientAndElementValues = [
   "linear-gradient(#ffff00, #ef3, rgba(10, 20, 30, 0.4))",
   "linear-gradient(rgba(10, 20, 30, 0.4), #ffff00, #ef3)",
   "linear-gradient(red, green calc(50% + 20px), blue)",
+  "linear-gradient(180deg, red, blue)",
 
   "linear-gradient(to top, red, blue)",
   "linear-gradient(to bottom, red, blue)",
