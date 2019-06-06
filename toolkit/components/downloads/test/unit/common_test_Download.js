@@ -2538,6 +2538,89 @@ add_task(async function test_history_tryToKeepPartialData() {
 });
 
 /**
+ * Checks that finished downloads are not removed.
+ */
+add_task(async function test_download_cancel_retry_finalize() {
+  // Start a download that is not allowed to finish yet.
+  let sourceUrl = httpUrl("interruptible.txt");
+  let targetFilePath = getTempFile(TEST_TARGET_FILE_NAME).path;
+  mustInterruptResponses();
+  let download1 = await Downloads.createDownload({
+    source: sourceUrl,
+    target: { path: targetFilePath,
+              partFilePath: targetFilePath + ".part" },
+  });
+  download1.start().catch(() => {});
+  await promiseDownloadMidway(download1);
+  await promisePartFileReady(download1);
+
+  // Cancel the download and make sure that the partial data do not exist.
+  await download1.cancel();
+  Assert.equal(targetFilePath, download1.target.path);
+  Assert.equal(false, await OS.File.exists(download1.target.path));
+  Assert.equal(false, await OS.File.exists(download1.target.partFilePath));
+  continueResponses();
+
+  // Download the same file again with a different download session.
+  let download2 = await Downloads.createDownload({
+    source: sourceUrl,
+    target: { path: targetFilePath,
+              partFilePath: targetFilePath + ".part" },
+  });
+  download2.start().catch(() => {});
+
+  // Wait for download to be completed.
+  await promiseDownloadStopped(download2);
+  Assert.equal(targetFilePath, download2.target.path);
+  Assert.ok(await OS.File.exists(download2.target.path));
+  Assert.equal(false, await OS.File.exists(download2.target.partFilePath));
+
+  // Finalize the first download session.
+  await download1.finalize(true);
+
+  // The complete download should not have been removed.
+  Assert.ok(await OS.File.exists(download2.target.path));
+  Assert.equal(false, await OS.File.exists(download2.target.partFilePath));
+});
+
+/**
+ * Checks that confirmBlock does not clobber unrelated safe files.
+ */
+add_task(async function test_blocked_removeByHand_confirmBlock() {
+  let download1 = await promiseBlockedDownload({
+    keepPartialData: true,
+    keepBlockedData: true,
+  });
+
+  Assert.ok(download1.hasBlockedData);
+  Assert.equal((await OS.File.stat(download1.target.path)).size, 0);
+  Assert.ok(await OS.File.exists(download1.target.partFilePath));
+
+  // Remove the placeholder without telling the download.
+  await OS.File.remove(download1.target.path);
+  Assert.equal(false, await OS.File.exists(download1.target.path));
+
+  // Download a file with the same name as the blocked download.
+  let download2 = await Downloads.createDownload({
+    source: httpUrl("interruptible_resumable.txt"),
+    target: { path: download1.target.path,
+              partFilePath: download1.target.path + ".part" },
+  });
+  download2.start().catch(() => {});
+
+  // Wait for download to be completed.
+  await promiseDownloadStopped(download2);
+  Assert.equal(download1.target.path, download2.target.path);
+  Assert.ok(await OS.File.exists(download2.target.path));
+
+  // Remove the blocked download.
+  await download1.confirmBlock();
+
+  // After confirming the complete download should not have been removed.
+  Assert.ok(await OS.File.exists(download2.target.path));
+});
+
+/**
  * Tests that the temp download files are removed on exit and exiting private
  * mode after they have been launched.
  */

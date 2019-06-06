@@ -90,6 +90,24 @@ function deserializeUnknownProperties(aObject, aSerializable, aFilterFn) {
 }
 
 /**
+ * Check if the file is a placeholder.
+ *
+ * @return {Promise}
+ * @resolves {boolean}
+ * @rejects Never.
+ */
+async function isPlaceholder(path) {
+  try {
+    if ((await OS.File.stat(path)).size == 0) {
+      return true;
+    }
+  } catch (ex) {
+    Cu.reportError(ex);
+  }
+  return false;
+}
+
+/**
  * This determines the minimum time interval between updates to the number of
  * bytes transferred, and is a limiting factor to the sequence of readings used
  * in calculating the speed of the download.
@@ -440,7 +458,7 @@ this.Download.prototype = {
           // needed, independently of which code path failed. In some cases, the
           // component executing the download may have already removed the file.
           if (!this.hasPartialData && !this.hasBlockedData) {
-            await this.saver.removeData();
+            await this.saver.removeData(true);
           }
           throw ex;
         }
@@ -458,7 +476,7 @@ this.Download.prototype = {
           // just delete the target and effectively cancel the download. Since
           // the DownloadSaver succeeded, we already renamed the ".part" file to
           // the final name, and this results in all the data being deleted.
-          await this.saver.removeData();
+          await this.saver.removeData(true);
 
           // Cancellation exceptions will be changed in the catch block below.
           throw new DownloadError();
@@ -1700,11 +1718,13 @@ this.DownloadSaver.prototype = {
    * either resolved or rejected, and the "execute" method is not called again
    * until the promise returned by this method is resolved or rejected.
    *
+   * @param canRemoveFinalTarget
+   *        True if can remove target file regardless of it being a placeholder.
    * @return {Promise}
    * @resolves When the operation has finished successfully.
    * @rejects Never.
    */
-  async removeData() {},
+  async removeData(canRemoveFinalTarget) {},
 
   /**
    * This can be called by the saver implementation when the download is already
@@ -2125,7 +2145,7 @@ this.DownloadCopySaver.prototype = {
       // download did not use a partial file path, meaning it
       // currently has its final filename.
       if (!DownloadIntegration.shouldKeepBlockedData() || !partFilePath) {
-        await this.removeData();
+        await this.removeData(!partFilePath);
       } else {
         newProperties.hasBlockedData = true;
       }
@@ -2157,7 +2177,7 @@ this.DownloadCopySaver.prototype = {
   /**
    * Implements "DownloadSaver.removeData".
    */
-  async removeData() {
+  async removeData(canRemoveFinalTarget = false) {
     // Defined inline so removeData can be shared with DownloadLegacySaver.
     async function _tryToRemoveFile(path) {
       try {
@@ -2179,7 +2199,9 @@ this.DownloadCopySaver.prototype = {
     }
 
     if (this.download.target.path) {
-      await _tryToRemoveFile(this.download.target.path);
+      if (canRemoveFinalTarget || await isPlaceholder(this.download.target.path)) {
+        await _tryToRemoveFile(this.download.target.path);
+      }
       this.download.target.exists = false;
       this.download.target.size = 0;
     }
@@ -2507,11 +2529,11 @@ this.DownloadLegacySaver.prototype = {
   /**
    * Implements "DownloadSaver.removeData".
    */
-  removeData() {
+  removeData(canRemoveFinalTarget) {
     // DownloadCopySaver and DownloadLeagcySaver use the same logic for removing
     // partially downloaded data, though this implementation isn't shared by
     // other saver types, thus it isn't found on their shared prototype.
-    return DownloadCopySaver.prototype.removeData.call(this);
+    return DownloadCopySaver.prototype.removeData.call(this, canRemoveFinalTarget);
   },
 
   /**
