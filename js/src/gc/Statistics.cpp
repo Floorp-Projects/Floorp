@@ -979,15 +979,20 @@ void Statistics::printStats() {
   fflush(gcTimerFile);
 }
 
-void Statistics::beginGC(JSGCInvocationKind kind) {
+void Statistics::beginGC(JSGCInvocationKind kind,
+                         const TimeStamp& currentTime) {
   slices_.clearAndFree();
   sccTimes.clearAndFree();
   gckind = kind;
   nonincrementalReason_ = gc::AbortReason::None;
 
-  preHeapSize = runtime->gc.heapSize.gcBytes();
-  startingMajorGCNumber = runtime->gc.majorGCCount();
-  startingSliceNumber = runtime->gc.gcNumber();
+  GCRuntime& gc = runtime->gc;
+  preHeapSize = gc.heapSize.gcBytes();
+  startingMajorGCNumber = gc.majorGCCount();
+  startingSliceNumber = gc.gcNumber();
+  if (gc.lastGCTime()) {
+    timeSinceLastGC = currentTime - gc.lastGCTime();
+  }
 }
 
 void Statistics::endGC() {
@@ -1017,6 +1022,20 @@ void Statistics::endGC() {
     runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL_REASON,
                           uint32_t(nonincrementalReason_));
   }
+
+#ifdef DEBUG
+  // Reset happens non-incrementally, so only the last slice can be reset.
+  for (size_t i = 0; i < slices_.length() - 1; i++) {
+    MOZ_ASSERT(!slices_[i].wasReset());
+  }
+#endif
+  const auto& lastSlice = slices_.back();
+  runtime->addTelemetry(JS_TELEMETRY_GC_RESET, lastSlice.wasReset());
+  if (lastSlice.wasReset()) {
+    runtime->addTelemetry(JS_TELEMETRY_GC_RESET_REASON,
+                          uint32_t(lastSlice.resetReason));
+  }
+
   runtime->addTelemetry(JS_TELEMETRY_GC_INCREMENTAL_DISABLED,
                         !runtime->gc.isIncrementalGCAllowed());
   runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS, t(sccTotal));
@@ -1030,6 +1049,18 @@ void Statistics::endGC() {
 
   const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
   runtime->addTelemetry(JS_TELEMETRY_GC_MMU_50, mmu50 * 100);
+
+  // Record scheduling telemetry for the main runtime but not for workers, which
+  // are scheduled differently.
+  if (!runtime->parentRuntime && timeSinceLastGC) {
+    runtime->addTelemetry(JS_TELEMETRY_GC_TIME_BETWEEN_S,
+                          timeSinceLastGC.ToSeconds());
+    if (!nonincremental()) {
+      runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_COUNT,
+                            slices_.length());
+    }
+  }
+
   thresholdTriggered = false;
 }
 
@@ -1061,12 +1092,20 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats,
 
   this->zoneStats = zoneStats;
 
+  TimeStamp currentTime = ReallyNow();
+
   bool first = !runtime->gc.isIncrementalGCInProgress();
   if (first) {
-    beginGC(gckind);
+    beginGC(gckind, currentTime);
   }
 
-  if (!slices_.emplaceBack(budget, reason, ReallyNow(), GetPageFaultCount(),
+  if (!runtime->parentRuntime && !slices_.empty()) {
+    TimeDuration timeSinceLastSlice = currentTime - slices_.back().end;
+    runtime->addTelemetry(JS_TELEMETRY_GC_TIME_BETWEEN_SLICES_MS,
+                          uint32_t(timeSinceLastSlice.ToMilliseconds()));
+  }
+
+  if (!slices_.emplaceBack(budget, reason, currentTime, GetPageFaultCount(),
                            runtime->gc.state())) {
     // If we are OOM, set a flag to indicate we have missing slice data.
     aborted = true;
@@ -1102,16 +1141,11 @@ void Statistics::endSlice() {
     writeLogMessage("end slice");
     TimeDuration sliceTime = slice.end - slice.start;
     runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
-    runtime->addTelemetry(JS_TELEMETRY_GC_RESET, slice.wasReset());
-    if (slice.wasReset()) {
-      runtime->addTelemetry(JS_TELEMETRY_GC_RESET_REASON,
-                            uint32_t(slice.resetReason));
-    }
 
     if (slice.budget.isTimeBudget()) {
       int64_t budget_ms = slice.budget.timeBudget.budget;
       runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS, budget_ms);
-      if (budget_ms == runtime->gc.defaultSliceBudget()) {
+      if (IsCurrentlyAnimating(runtime->lastAnimationTime, slice.end)) {
         runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
       }
 

@@ -3,6 +3,11 @@ from six import iteritems
 from six.moves.urllib.parse import urljoin, urlparse
 from abc import ABCMeta, abstractproperty
 
+MYPY = False
+if MYPY:
+    # MYPY is set to True when run under Mypy.
+    from typing import Optional
+
 item_types = {}
 
 
@@ -24,7 +29,7 @@ class ManifestItem(object):
 
     __slots__ = ("_tests_root", "path")
 
-    item_type = None
+    item_type = None  # type: Optional[str]
 
     def __init__(self, tests_root=None, path=None):
         self._tests_root = tests_root
@@ -63,15 +68,11 @@ class URLManifestItem(ManifestItem):
 
     def __init__(self, tests_root, path, url_base, url, **extras):
         super(URLManifestItem, self).__init__(tests_root, path)
+        assert url_base[0] == "/"
         self.url_base = url_base
+        assert url[0] != "/"
         self._url = url
         self._extras = extras
-
-    @property
-    def _source_file(self):
-        """create a SourceFile for the item"""
-        from .sourcefile import SourceFile
-        return SourceFile(self._tests_root, self.path, self.url_base)
 
     @property
     def id(self):
@@ -80,11 +81,6 @@ class URLManifestItem(ManifestItem):
     @property
     def url(self):
         # we can outperform urljoin, because we know we just have path relative URLs
-        if self._url[0] == "/":
-            # TODO: MANIFEST6
-            # this is actually a bug in older generated manifests, _url shouldn't
-            # be an absolute path
-            return self._url
         if self.url_base == "/":
             return "/" + self._url
         return urljoin(self.url_base, self._url)
@@ -109,6 +105,8 @@ class URLManifestItem(ManifestItem):
 
 
 class TestharnessTest(URLManifestItem):
+    __slots__ = ()
+
     item_type = "testharness"
 
     @property
@@ -125,12 +123,7 @@ class TestharnessTest(URLManifestItem):
 
     @property
     def script_metadata(self):
-        if "script_metadata" in self._extras:
-            return self._extras["script_metadata"]
-        else:
-            # TODO: MANIFEST6
-            # this branch should go when the manifest version is bumped
-            return self._source_file.script_metadata
+        return self._extras.get("script_metadata")
 
     def to_json(self):
         rv = super(TestharnessTest, self).to_json()
@@ -140,8 +133,7 @@ class TestharnessTest(URLManifestItem):
             rv[-1]["testdriver"] = self.testdriver
         if self.jsshell:
             rv[-1]["jsshell"] = True
-        if self.script_metadata is not None:
-            # we store this even if it is [] to avoid having to read the source file
+        if self.script_metadata:
             rv[-1]["script_metadata"] = self.script_metadata
         return rv
 
@@ -172,10 +164,15 @@ class RefTestBase(URLManifestItem):
 
     @property
     def fuzzy(self):
-        rv = self._extras.get("fuzzy", [])
-        if isinstance(rv, list):
-            return {tuple(item[0]): item[1]
-                    for item in self._extras.get("fuzzy", [])}
+        fuzzy = self._extras.get("fuzzy", {})
+        if not isinstance(fuzzy, list):
+            return fuzzy
+
+        rv = {}
+        for k, v in fuzzy:
+            if k is not None:
+                k = tuple(k)
+            rv[k] = v
         return rv
 
     def to_json(self):
@@ -217,30 +214,44 @@ class RefTestBase(URLManifestItem):
 
 
 class RefTestNode(RefTestBase):
+    __slots__ = ()
+
     item_type = "reftest_node"
 
 
 class RefTest(RefTestBase):
+    __slots__ = ()
+
     item_type = "reftest"
 
 
 class ManualTest(URLManifestItem):
+    __slots__ = ()
+
     item_type = "manual"
 
 
 class ConformanceCheckerTest(URLManifestItem):
+    __slots__ = ()
+
     item_type = "conformancechecker"
 
 
 class VisualTest(URLManifestItem):
+    __slots__ = ()
+
     item_type = "visual"
 
 
 class Stub(URLManifestItem):
+    __slots__ = ()
+
     item_type = "stub"
 
 
 class WebDriverSpecTest(URLManifestItem):
+    __slots__ = ()
+
     item_type = "wdspec"
 
     @property
@@ -255,6 +266,8 @@ class WebDriverSpecTest(URLManifestItem):
 
 
 class SupportFile(ManifestItem):
+    __slots__ = ()
+
     item_type = "support"
 
     @property
