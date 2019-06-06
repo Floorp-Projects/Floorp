@@ -86,10 +86,6 @@ add_task(async function startup() {
       min: 200,
       max: 350,
     },
-    "layout.css.prefixes.webkit": {
-      min: 135,
-      max: 170,
-    },
     "layout.css.dpi": {
       min: 45,
       max: 81,

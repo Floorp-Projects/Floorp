@@ -95,8 +95,9 @@ class nsSplittableFrame : public nsFrame {
    * computed block size, minus the block size consumed by any previous
    * in-flows.
    */
-  nscoord GetEffectiveComputedBSize(const ReflowInput& aReflowInput,
-                                    nscoord aConsumed = NS_INTRINSICSIZE) const;
+  nscoord GetEffectiveComputedBSize(
+      const ReflowInput& aReflowInput,
+      nscoord aConsumed = NS_UNCONSTRAINEDSIZE) const;
 
   /**
    * @see nsIFrame::GetLogicalSkipSides()

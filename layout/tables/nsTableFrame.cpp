@@ -3734,7 +3734,7 @@ bool nsTableFrame::IsAutoBSize(WritingMode aWM) {
 
 nscoord nsTableFrame::CalcBorderBoxBSize(const ReflowInput& aReflowInput) {
   nscoord bSize = aReflowInput.ComputedBSize();
-  if (NS_AUTOHEIGHT != bSize) {
+  if (NS_UNCONSTRAINEDSIZE != bSize) {
     WritingMode wm = aReflowInput.GetWritingMode();
     LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowInput);
     bSize += borderPadding.BStartEnd(wm);

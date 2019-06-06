@@ -307,8 +307,8 @@ LogicalSize nsSVGOuterSVGFrame::ComputeSize(
     // We're the root of the outermost browsing context, so we need to scale
     // cbSize by the full-zoom so that SVGs with percentage width/height zoom:
 
-    NS_ASSERTION(aCBSize.ISize(aWritingMode) != NS_AUTOHEIGHT &&
-                     aCBSize.BSize(aWritingMode) != NS_AUTOHEIGHT,
+    NS_ASSERTION(aCBSize.ISize(aWritingMode) != NS_UNCONSTRAINEDSIZE &&
+                     aCBSize.BSize(aWritingMode) != NS_UNCONSTRAINEDSIZE,
                  "root should not have auto-width/height containing block");
 
     if (!IsContainingWindowElementOfType(nullptr, nsGkAtoms::iframe)) {
@@ -336,7 +336,7 @@ LogicalSize nsSVGOuterSVGFrame::ComputeSize(
 
     const SVGAnimatedLength& height =
         content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
-    NS_ASSERTION(aCBSize.BSize(aWritingMode) != NS_AUTOHEIGHT,
+    NS_ASSERTION(aCBSize.BSize(aWritingMode) != NS_UNCONSTRAINEDSIZE,
                  "root should not have auto-height containing block");
     if (height.IsPercentage()) {
       MOZ_ASSERT(!intrinsicSize.height,
