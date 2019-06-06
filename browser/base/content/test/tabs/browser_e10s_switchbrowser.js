@@ -69,6 +69,15 @@ var waitForLoad = async function(uri) {
   gBrowser.selectedBrowser.webNavigation.loadURI(uri, loadURIOptions);
 
   await BrowserTestUtils.browserStopped(gBrowser);
+
+  // Some of the documents we're using in this test use Fluent,
+  // and they may finish localization later.
+  // To prevent this test from being intermittent, we'll
+  // wait for the `document.l10n.ready` promise to resolve.
+  if (gBrowser.selectedBrowser.contentWindow &&
+      gBrowser.selectedBrowser.contentWindow.document.l10n) {
+    await gBrowser.selectedBrowser.contentWindow.document.l10n.ready;
+  }
   gExpectedHistory.index++;
   gExpectedHistory.entries.push({
     uri: gBrowser.currentURI.spec,
