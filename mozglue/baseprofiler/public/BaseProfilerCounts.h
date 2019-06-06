@@ -21,14 +21,15 @@
 
 #  include "mozilla/Atomics.h"
 
+namespace mozilla {
+namespace baseprofiler {
+
 class BaseProfilerCount;
 MFBT_API void profiler_add_sampled_counter(BaseProfilerCount* aCounter);
 MFBT_API void profiler_remove_sampled_counter(BaseProfilerCount* aCounter);
 
-typedef mozilla::Atomic<int64_t, mozilla::MemoryOrdering::Relaxed>
-    ProfilerAtomicSigned;
-typedef mozilla::Atomic<uint64_t, mozilla::MemoryOrdering::Relaxed>
-    ProfilerAtomicUnsigned;
+typedef Atomic<int64_t, MemoryOrdering::Relaxed> ProfilerAtomicSigned;
+typedef Atomic<uint64_t, MemoryOrdering::Relaxed> ProfilerAtomicUnsigned;
 
 // Counter support
 // There are two types of counters:
@@ -195,7 +196,7 @@ class ProfilerCounterTotal final : public BaseProfilerCount {
     ProfilerAtomicUnsigned profiler_number_##label(0);                   \
     const char profiler_category_##label[] = category;                   \
     const char profiler_description_##label[] = description;             \
-    mozilla::UniquePtr<BaseProfilerCount> AutoCount_##label;
+    UniquePtr<::mozilla::baseprofiler::BaseProfilerCount> AutoCount_##label;
 
 // This counts, but doesn't keep track of the number of calls to
 // AUTO_PROFILER_COUNT()
@@ -203,17 +204,17 @@ class ProfilerCounterTotal final : public BaseProfilerCount {
     ProfilerAtomicSigned profiler_count_##label(0);                \
     const char profiler_category_##label[] = category;             \
     const char profiler_description_##label[] = description;       \
-    mozilla::UniquePtr<BaseProfilerCount> AutoCount_##label;
+    UniquePtr<::mozilla::baseprofiler::BaseProfilerCount> AutoCount_##label;
 
 // This will create a static initializer if used, but avoids a possible
 // allocation.
-#  define BASE_PROFILER_DEFINE_STATIC_COUNT_TOTAL(label, category,          \
-                                                  description)              \
-    ProfilerAtomicSigned profiler_count_##label(0);                         \
-    ProfilerAtomicUnsigned profiler_number_##label(0);                      \
-    BaseProfilerCount AutoCount_##label(#label, &profiler_count_##label,    \
-                                        &profiler_number_##label, category, \
-                                        description);
+#  define BASE_PROFILER_DEFINE_STATIC_COUNT_TOTAL(label, category,           \
+                                                  description)               \
+    ProfilerAtomicSigned profiler_count_##label(0);                          \
+    ProfilerAtomicUnsigned profiler_number_##label(0);                       \
+    ::mozilla::baseprofiler::BaseProfilerCount AutoCount_##label(            \
+        #label, &profiler_count_##label, &profiler_number_##label, category, \
+        description);
 
 // If we didn't care about static initializers, we could avoid the need for
 // a ptr to the BaseProfilerCount object.
@@ -231,7 +232,8 @@ class ProfilerCounterTotal final : public BaseProfilerCount {
         AutoCount_##label.reset(new BaseProfilerCount(                      \
             #label, &profiler_count_##label, &profiler_number_##label,      \
             profiler_category_##label, profiler_description_##label));      \
-        profiler_add_sampled_counter(AutoCount_##label.get());              \
+        ::mozilla::baseprofiler::profiler_add_sampled_counter(              \
+            AutoCount_##label.get());                                       \
       }                                                                     \
     } while (0)
 
@@ -245,7 +247,8 @@ class ProfilerCounterTotal final : public BaseProfilerCount {
         AutoCount_##label.reset(new BaseProfilerCount(                      \
             #label, nullptr, &profiler_number_##label,                      \
             profiler_category_##label, profiler_description_##label));      \
-        profiler_add_sampled_counter(AutoCount_##label.get());              \
+        ::mozilla::baseprofiler::profiler_add_sampled_counter(              \
+            AutoCount_##label.get());                                       \
       }                                                                     \
     } while (0)
 
@@ -262,11 +265,15 @@ class ProfilerCounterTotal final : public BaseProfilerCount {
         /* Ignore that we could call this twice in theory, and that we leak \
          * them                                                             \
          */                                                                 \
-        AutoCount_##label.reset(new BaseProfilerCount(                      \
-            #label, &profiler_count_##label, &profiler_number_##label,      \
-            profiler_category_##label, profiler_description_##label));      \
+        AutoCount_##label.reset(                                            \
+            new ::mozilla::baseprofiler::BaseProfilerCount(                 \
+                #label, &profiler_count_##label, &profiler_number_##label,  \
+                profiler_category_##label, profiler_description_##label));  \
       }                                                                     \
     } while (0)
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // !MOZ_BASE_PROFILER
 

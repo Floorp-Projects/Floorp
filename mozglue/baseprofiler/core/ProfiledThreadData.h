@@ -18,6 +18,9 @@
 
 #include <string>
 
+namespace mozilla {
+namespace baseprofiler {
+
 class ProfileBuffer;
 
 // This class contains information about a thread that is only relevant while
@@ -49,29 +52,27 @@ class ProfiledThreadData final {
   ~ProfiledThreadData();
 
   void NotifyUnregistered(uint64_t aBufferPosition) {
-    mLastSample = mozilla::Nothing();
+    mLastSample = Nothing();
     MOZ_ASSERT(!mBufferPositionWhenReceivedJSContext,
                "JSContext should have been cleared before the thread was "
                "unregistered");
-    mUnregisterTime = mozilla::TimeStamp::Now();
-    mBufferPositionWhenUnregistered = mozilla::Some(aBufferPosition);
+    mUnregisterTime = TimeStamp::Now();
+    mBufferPositionWhenUnregistered = Some(aBufferPosition);
   }
-  mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() {
+  Maybe<uint64_t> BufferPositionWhenUnregistered() {
     return mBufferPositionWhenUnregistered;
   }
 
-  mozilla::Maybe<uint64_t>& LastSample() { return mLastSample; }
+  Maybe<uint64_t>& LastSample() { return mLastSample; }
 
   void StreamJSON(const ProfileBuffer& aBuffer, SpliceableJSONWriter& aWriter,
                   const std::string& aProcessName,
-                  const mozilla::TimeStamp& aProcessStartTime,
-                  double aSinceTime);
+                  const TimeStamp& aProcessStartTime, double aSinceTime);
 
   const RefPtr<ThreadInfo> Info() const { return mThreadInfo; }
 
   void NotifyReceivedJSContext(uint64_t aCurrentBufferPosition) {
-    mBufferPositionWhenReceivedJSContext =
-        mozilla::Some(aCurrentBufferPosition);
+    mBufferPositionWhenReceivedJSContext = Some(aCurrentBufferPosition);
   }
 
  private:
@@ -89,25 +90,28 @@ class ProfiledThreadData final {
   // When sampling, this holds the position in ActivePS::mBuffer of the most
   // recent sample for this thread, or Nothing() if there is no sample for this
   // thread in the buffer.
-  mozilla::Maybe<uint64_t> mLastSample;
+  Maybe<uint64_t> mLastSample;
 
   // Only non-Nothing() if the thread currently has a JSContext.
-  mozilla::Maybe<uint64_t> mBufferPositionWhenReceivedJSContext;
+  Maybe<uint64_t> mBufferPositionWhenReceivedJSContext;
 
   // Group C:
   // The following fields are only used once this thread has been unregistered.
 
-  mozilla::Maybe<uint64_t> mBufferPositionWhenUnregistered;
-  mozilla::TimeStamp mUnregisterTime;
+  Maybe<uint64_t> mBufferPositionWhenUnregistered;
+  TimeStamp mUnregisterTime;
 };
 
 void StreamSamplesAndMarkers(const char* aName, int aThreadId,
                              const ProfileBuffer& aBuffer,
                              SpliceableJSONWriter& aWriter,
                              const std::string& aProcessName,
-                             const mozilla::TimeStamp& aProcessStartTime,
-                             const mozilla::TimeStamp& aRegisterTime,
-                             const mozilla::TimeStamp& aUnregisterTime,
+                             const TimeStamp& aProcessStartTime,
+                             const TimeStamp& aRegisterTime,
+                             const TimeStamp& aUnregisterTime,
                              double aSinceTime, UniqueStacks& aUniqueStacks);
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // ProfiledThreadData_h
