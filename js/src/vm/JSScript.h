@@ -519,13 +519,12 @@ class ScriptSource {
 
   // Indicate which field in the |data| union is active.
 
-  // Uncompressed source text.
   template <typename Unit>
-  class Uncompressed {
+  class UncompressedData {
     typename SourceTypeTraits<Unit>::SharedImmutableString string_;
 
    public:
-    explicit Uncompressed(
+    explicit UncompressedData(
         typename SourceTypeTraits<Unit>::SharedImmutableString str)
         : string_(std::move(str)) {}
 
@@ -534,16 +533,36 @@ class ScriptSource {
     size_t length() const { return string_.length(); }
   };
 
-  // Compressed source text.
+  // Uncompressed source text.
   template <typename Unit>
-  struct Compressed {
+  class Uncompressed : public UncompressedData<Unit> {
+    using Base = UncompressedData<Unit>;
+
+   public:
+    using Base::Base;
+  };
+
+  template <typename Unit>
+  struct CompressedData {
     // Single-byte compressed text, regardless whether the original text
     // was single-byte or two-byte.
     SharedImmutableString raw;
     size_t uncompressedLength;
 
-    Compressed(SharedImmutableString raw, size_t uncompressedLength)
+    CompressedData(SharedImmutableString raw, size_t uncompressedLength)
         : raw(std::move(raw)), uncompressedLength(uncompressedLength) {}
+  };
+
+  // Compressed source text.
+  template <typename Unit>
+  struct Compressed : public CompressedData<Unit> {
+    using Base = CompressedData<Unit>;
+
+   public:
+    using Base::Base;
+
+    explicit Compressed(CompressedData<Unit>&& data)
+        : Base(std::move(data.raw), data.uncompressedLength) {}
   };
 
   // Source that can be retrieved using the registered source hook.  |Unit|
@@ -584,7 +603,8 @@ class ScriptSource {
   // present, the first PinnedUnits (that is, bottom of the stack) will set
   // the compressed chars upon destruction.
   PinnedUnitsBase* pinnedUnitsStack_;
-  mozilla::MaybeOneOf<Compressed<mozilla::Utf8Unit>, Compressed<char16_t>>
+  mozilla::MaybeOneOf<CompressedData<mozilla::Utf8Unit>,
+                      CompressedData<char16_t>>
       pendingCompressed_;
 
   // The filename of this script.
