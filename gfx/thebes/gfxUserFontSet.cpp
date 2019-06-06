@@ -253,7 +253,10 @@ class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
 // Returns a newly-allocated block, or nullptr in case of fatal errors.
 const uint8_t* gfxUserFontEntry::SanitizeOpenTypeData(
     const uint8_t* aData, uint32_t aLength, uint32_t& aSaneLength,
-    gfxUserFontType aFontType) {
+    gfxUserFontType& aFontType) {
+  aFontType = gfxFontUtils::DetermineFontDataType(aData, aLength);
+  Telemetry::Accumulate(Telemetry::WEBFONT_FONTTYPE, uint32_t(aFontType));
+
   if (aFontType == GFX_USERFONT_UNKNOWN) {
     aSaneLength = 0;
     return nullptr;
@@ -672,25 +675,13 @@ bool gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData,
                    mFontDataLoadingState < LOADING_FAILED,
                "attempting to load a font that has either completed or failed");
 
-  gfxFontEntry* fe = nullptr;
-
-  gfxUserFontType fontType =
-      gfxFontUtils::DetermineFontDataType(aFontData, aLength);
-  Telemetry::Accumulate(Telemetry::WEBFONT_FONTTYPE, uint32_t(fontType));
-
   // Unwrap/decompress/sanitize or otherwise munge the downloaded data
   // to make a usable sfnt structure.
-
-  // Because platform font activation code may replace the name table
-  // in the font with a synthetic one, we save the original name so that
-  // it can be reported via the InspectorUtils API.
-  nsAutoCString originalFullName;
 
   // Call the OTS sanitizer; this will also decode WOFF to sfnt
   // if necessary. The original data in aFontData is left unchanged.
   uint32_t saneLen;
-  uint32_t fontCompressionRatio = 0;
-  size_t computedSize = 0;
+  gfxUserFontType fontType;
   const uint8_t* saneData =
       SanitizeOpenTypeData(aFontData, aLength, saneLen, fontType);
   if (!saneData) {
@@ -706,6 +697,16 @@ bool gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData,
       saneData = nullptr;
     }
   }
+
+  // Because platform font activation code may replace the name table
+  // in the font with a synthetic one, we save the original name so that
+  // it can be reported via the InspectorUtils API.
+  nsAutoCString originalFullName;
+
+  gfxFontEntry* fe = nullptr;
+  uint32_t fontCompressionRatio = 0;
+  size_t computedSize = 0;
+
   if (saneData) {
     if (saneLen) {
       fontCompressionRatio = uint32_t(100.0 * aLength / saneLen + 0.5);
