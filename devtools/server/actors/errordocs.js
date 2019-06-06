@@ -52,7 +52,7 @@ const ErrorDocs = {
   JSMSG_DEPRECATED_FOR_EACH: "For-each-in_loops_are_deprecated",
   JSMSG_STRICT_NON_SIMPLE_PARAMS: "Strict_Non_Simple_Params",
   JSMSG_DEAD_OBJECT: "Dead_object",
-  JSMSG_NOT_NONNULL_OBJECT: "No_non-null_object",
+  JSMSG_OBJECT_REQUIRED: "No_non-null_object",
   JSMSG_IDSTART_AFTER_NUMBER: "Identifier_after_number",
   JSMSG_DEPRECATED_EXPR_CLOSURE: "Deprecated_expression_closures",
   JSMSG_ILLEGAL_CHARACTER: "Illegal_character",

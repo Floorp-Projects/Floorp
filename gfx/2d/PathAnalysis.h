@@ -45,7 +45,6 @@ class FlattenedPath : public PathSink {
  private:
   Float mCachedLength;
   bool mCalculatedLength;
-  Point mLastMove;
 
   std::vector<FlatPathOp> mPathOps;
 };
