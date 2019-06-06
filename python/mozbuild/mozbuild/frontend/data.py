@@ -1178,7 +1178,8 @@ class GeneratedFile(ContextDerived):
         'outputs',
         'inputs',
         'flags',
-        'required_for_compile',
+        'required_before_compile',
+        'required_during_compile',
         'localized',
         'force',
     )
@@ -1195,9 +1196,6 @@ class GeneratedFile(ContextDerived):
         self.force = force
 
         suffixes = (
-            '.asm',
-            '.c',
-            '.cpp',
             '.h',
             '.inc',
             '.py',
@@ -1210,8 +1208,11 @@ class GeneratedFile(ContextDerived):
             '.profdata',
             '.webidl'
         )
-        self.required_for_compile = [
+        self.required_before_compile = [
             f for f in self.outputs if f.endswith(suffixes) or 'stl_wrappers/' in f]
+
+        self.required_during_compile = [
+            f for f in self.outputs if f.endswith(('.asm', '.c', '.cpp'))]
 
 
 class ChromeManifestEntry(ContextDerived):

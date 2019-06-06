@@ -1042,7 +1042,7 @@ class TupBackend(CommonBackend):
                    for f in obj.outputs):
                 output_group = self._early_generated_files
             else:
-                output_group = self._installed_files if obj.required_for_compile else None
+                output_group = self._installed_files if obj.required_during_compile else None
                 full_inputs += [self._early_generated_files]
 
             extra_inputs = []
