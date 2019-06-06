@@ -30,6 +30,9 @@ permalink: /changelog/
 * **support-base**
   * Fixed multiple potential leaks in `ObserverRegistry` (used internally by many classes in other components like `SessionManager`, `EngineSession` and others).
 
+* **browser-icons**
+  * Fixed possible `NullPointerException` when disk cache is written to concurrently.
+
 # 0.55.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.54.0...v0.55.0)

@@ -38,6 +38,8 @@ internal class DiskCache :
     private val logger = Logger("Icons/DiskCache")
     private var iconResourcesCache: DiskLruCache? = null
     private var iconDataCache: DiskLruCache? = null
+    private val iconResourcesCacheWriteLock = Any()
+    private val iconDataCacheWriteLock = Any()
 
     override fun getResources(context: Context, request: IconRequest): List<IconRequest.Resource> {
         val key = createKey(request.url)
@@ -61,14 +63,16 @@ internal class DiskCache :
 
     internal fun putResources(context: Context, request: IconRequest) {
         try {
-            val key = createKey(request.url)
-            val editor = getIconResourcesCache(context)
-                .edit(key)
+            synchronized(iconResourcesCacheWriteLock) {
+                val key = createKey(request.url)
+                val editor = getIconResourcesCache(context)
+                    .edit(key) ?: return
 
-            val data = request.resources.toJSON().toString()
-            editor.set(0, data)
+                val data = request.resources.toJSON().toString()
+                editor.set(0, data)
 
-            editor.commit()
+                editor.commit()
+            }
         } catch (e: IOException) {
             logger.info("Failed to save resources to disk", e)
         } catch (e: JSONException) {
@@ -102,14 +106,16 @@ internal class DiskCache :
 
     internal fun putIconBitmap(context: Context, resource: IconRequest.Resource, bitmap: Bitmap) {
         try {
-            val editor = getIconDataCache(context)
-                .edit(createKey(resource.url))
+            synchronized(iconDataCacheWriteLock) {
+                val editor = getIconDataCache(context)
+                    .edit(createKey(resource.url)) ?: return
 
-            editor.newOutputStream(0).use { stream ->
-                bitmap.compress(Bitmap.CompressFormat.WEBP, WEBP_QUALITY, stream)
+                editor.newOutputStream(0).use { stream ->
+                    bitmap.compress(Bitmap.CompressFormat.WEBP, WEBP_QUALITY, stream)
+                }
+
+                editor.commit()
             }
-
-            editor.commit()
         } catch (e: IOException) {
             logger.info("Failed to save icon bitmap to disk", e)
         }
