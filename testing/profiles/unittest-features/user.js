@@ -16,8 +16,6 @@ user_pref("layout.css.grid-template-subgrid-value.enabled", true);
 user_pref("layout.css.initial-letter.enabled", true);
 // Enable -webkit-{min|max}-device-pixel-ratio media queries for testing
 user_pref("layout.css.prefixes.device-pixel-ratio-webkit", true);
-// Enable webkit prefixed CSS features for testing
-user_pref("layout.css.prefixes.webkit", true);
 // Enable Media Source Extensions for testing
 user_pref("media.mediasource.mp4.enabled", true);
 user_pref("media.mediasource.webm.enabled", true);

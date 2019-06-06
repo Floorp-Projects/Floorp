@@ -87,6 +87,16 @@ void JSWindowActorParent::SendRawMessage(const JSWindowActorMessageMeta& aMeta,
   }
 }
 
+CanonicalBrowsingContext* JSWindowActorParent::GetBrowsingContext(
+    ErrorResult& aRv) {
+  if (!mManager) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return mManager->BrowsingContext();
+}
+
 void JSWindowActorParent::StartDestroy() {
   JSWindowActor::StartDestroy();
   mCanSend = false;

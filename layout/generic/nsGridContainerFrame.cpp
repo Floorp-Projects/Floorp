@@ -5980,7 +5980,7 @@ nsGridContainerFrame::GetNearestFragmentainer(
       data->mCanBreakAtStart =
           numRows > 0 && aState.mRows.mSizes[0].mPosition > 0;
       nscoord bSize = gridRI->ComputedBSize();
-      data->mIsAutoBSize = bSize == NS_AUTOHEIGHT;
+      data->mIsAutoBSize = bSize == NS_UNCONSTRAINEDSIZE;
       if (data->mIsAutoBSize) {
         bSize = gridRI->ComputedMinBSize();
       } else {
@@ -7089,7 +7089,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
           bSize += sz.mBase;
         }
         bSize += gridReflowInput.mRows.SumOfGridGaps();
-      } else if (computedBSize == NS_AUTOHEIGHT) {
+      } else if (computedBSize == NS_UNCONSTRAINEDSIZE) {
         bSize = gridReflowInput.mRows.GridLineEdge(rowSizes.Length(),
                                                    GridLineSide::BeforeGridGap);
       }
@@ -7106,7 +7106,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
                                                  GridLineSide::AfterGridGap);
     }
   }
-  if (computedBSize == NS_AUTOHEIGHT) {
+  if (computedBSize == NS_UNCONSTRAINEDSIZE) {
     bSize = NS_CSS_MINMAX(bSize, aReflowInput.ComputedMinBSize(),
                           aReflowInput.ComputedMaxBSize());
   } else {
@@ -7121,7 +7121,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     const auto& rowSizes = gridReflowInput.mRows.mSizes;
     if (!IsRowSubgrid()) {
       // Apply 'align-content' to the grid.
-      if (computedBSize == NS_AUTOHEIGHT &&
+      if (computedBSize == NS_UNCONSTRAINEDSIZE &&
           stylePos->mRowGap.IsLengthPercentage() &&
           stylePos->mRowGap.AsLengthPercentage().HasPercent()) {
         // Re-resolve the row-gap now that we know our intrinsic block-size.
@@ -7130,7 +7130,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
       }
       gridReflowInput.mRows.AlignJustifyContent(stylePos, wm, bSize, false);
     } else {
-      if (computedBSize == NS_AUTOHEIGHT) {
+      if (computedBSize == NS_UNCONSTRAINEDSIZE) {
         bSize = gridReflowInput.mRows.GridLineEdge(rowSizes.Length(),
                                                    GridLineSide::BeforeGridGap);
         contentArea.BSize(wm) = bSize;

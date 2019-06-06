@@ -628,10 +628,10 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
       aPresContext->AppUnitsToDevPixels(aMinSize.width),
       aPresContext->AppUnitsToDevPixels(aMinSize.height));
   LayoutDeviceIntSize devMaxSize(
-      aMaxSize.width == NS_INTRINSICSIZE
+      aMaxSize.width == NS_UNCONSTRAINEDSIZE
           ? NS_MAXSIZE
           : aPresContext->AppUnitsToDevPixels(aMaxSize.width),
-      aMaxSize.height == NS_INTRINSICSIZE
+      aMaxSize.height == NS_UNCONSTRAINEDSIZE
           ? NS_MAXSIZE
           : aPresContext->AppUnitsToDevPixels(aMaxSize.height));
 

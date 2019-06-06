@@ -77,9 +77,11 @@ enum class TextureFlags : uint32_t {
   NON_BLOCKING_READ_LOCK = 1 << 15,
   // Enable a blocking read lock.
   BLOCKING_READ_LOCK = 1 << 16,
+  // Keep TextureClient alive when host side is used
+  WAIT_HOST_USAGE_END = 1 << 17,
 
   // OR union of all valid bits
-  ALL_BITS = (1 << 17) - 1,
+  ALL_BITS = (1 << 18) - 1,
   // the default flags
   DEFAULT = NO_FLAGS
 };

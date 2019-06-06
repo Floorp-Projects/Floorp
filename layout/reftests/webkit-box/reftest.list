@@ -1,6 +1,5 @@
 # This directory contains tests for "display: -webkit-box" and associated
-# CSS properties. These tests require webkit prefix support to be enabled.
-default-preferences pref(layout.css.prefixes.webkit,true)
+# CSS properties.
 
 # Tests for abspos children inside of a -webkit-box:
 == webkit-box-abspos-children-1.html webkit-box-abspos-children-1-ref.html

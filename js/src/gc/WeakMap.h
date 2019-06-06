@@ -132,8 +132,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // An unmarked CCW with a delegate will add a weakKeys entry for the
   // delegate. If the delegate is removed with NukeCrossCompartmentWrapper,
   // then the (former) CCW needs to be added to weakKeys instead.
-  virtual void postSeverDelegate(GCMarker* marker, gc::Cell* key,
-                                 Compartment* comp) = 0;
+  virtual void postSeverDelegate(GCMarker* marker, gc::Cell* key) = 0;
 
   virtual bool markEntries(GCMarker* marker) = 0;
 
@@ -288,8 +287,7 @@ class WeakMap
                  gc::Cell* origKey) override;
 
   // 'key' has lost its delegate, update our weak key state.
-  void postSeverDelegate(GCMarker* marker, gc::Cell* key,
-                         Compartment* comp) override;
+  void postSeverDelegate(GCMarker* marker, gc::Cell* key) override;
 
   void trace(JSTracer* trc) override;
 

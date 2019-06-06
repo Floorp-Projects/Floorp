@@ -829,7 +829,10 @@ void CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(
     return;
   }
 
-  if (!(aClient->GetFlags() & TextureFlags::RECYCLE)) {
+  bool waitNotifyNotUsed =
+      aClient->GetFlags() & TextureFlags::RECYCLE ||
+      aClient->GetFlags() & TextureFlags::WAIT_HOST_USAGE_END;
+  if (!waitNotifyNotUsed) {
     return;
   }
 
