@@ -36,7 +36,7 @@ function ConsoleApiCall(props) {
     dispatch,
     message,
     open,
-    tableData,
+    payload,
     serviceContainer,
     timestampsVisible,
     repeat,
@@ -113,7 +113,7 @@ function ConsoleApiCall(props) {
       id: message.id,
       serviceContainer,
       parameters: message.parameters,
-      tableData,
+      tableData: payload,
     });
   }
 
@@ -201,4 +201,3 @@ function formatReps(options = {}) {
 }
 
 module.exports = ConsoleApiCall;
-

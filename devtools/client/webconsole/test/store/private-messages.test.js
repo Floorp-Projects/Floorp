@@ -6,7 +6,7 @@
 
 const {
   getAllMessagesUiById,
-  getAllMessagesTableDataById,
+  getAllMessagesPayloadById,
   getAllNetworkMessagesUpdateById,
   getAllRepeatById,
   getCurrentGroup,
@@ -94,7 +94,7 @@ describe("private messages", () => {
     });
   });
 
-  it("cleans messagesTableDataById on PRIVATE_MESSAGES_CLEAR action", () => {
+  it("cleans messagesPayloadById on PRIVATE_MESSAGES_CLEAR action", () => {
     const { dispatch, getState } = setupStore();
 
     dispatch(actions.messagesAdd([
@@ -104,23 +104,23 @@ describe("private messages", () => {
 
     const privateTableData = Symbol("privateTableData");
     const publicTableData = Symbol("publicTableData");
-    dispatch(actions.messageTableDataReceive(
+    dispatch(actions.messageUpdatePayload(
       getFirstMessage(getState()).id,
       privateTableData
     ));
-    dispatch(actions.messageTableDataReceive(
+    dispatch(actions.messageUpdatePayload(
       getLastMessage(getState()).id,
       publicTableData
     ));
 
     let state = getState();
-    expect(getAllMessagesTableDataById(state).size).toBe(2);
+    expect(getAllMessagesPayloadById(state).size).toBe(2);
 
     dispatch(actions.privateMessagesClear());
 
     state = getState();
-    expect(getAllMessagesTableDataById(state).size).toBe(1);
-    expect(getAllMessagesTableDataById(state).get(getFirstMessage(getState()).id))
+    expect(getAllMessagesPayloadById(state).size).toBe(1);
+    expect(getAllMessagesPayloadById(state).get(getFirstMessage(getState()).id))
       .toBe(publicTableData);
   });
 
