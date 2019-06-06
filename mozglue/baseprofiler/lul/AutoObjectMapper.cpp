@@ -31,10 +31,6 @@ MFBT_API size_t __dl_get_mappable_length(void* handle);
 MFBT_API void* __dl_mmap(void* handle, void* addr, size_t length, off_t offset);
 MFBT_API void __dl_munmap(void* handle, void* addr, size_t length);
 }
-// The following are for get_installation_lib_dir()
-#    include "nsString.h"
-#    include "nsDirectoryServiceUtils.h"
-#    include "nsDirectoryServiceDefs.h"
 #  endif
 
 // A helper function for creating failure error messages in
@@ -100,28 +96,6 @@ bool AutoObjectMapperPOSIX::Map(/*OUT*/ void** start, /*OUT*/ size_t* length,
 }
 
 #  if defined(GP_OS_android)
-// A helper function for AutoObjectMapperFaultyLib::Map.  Finds out
-// where the installation's lib directory is, since we'll have to look
-// in there to get hold of libmozglue.so.  Returned C string is heap
-// allocated and the caller must deallocate it.
-static char* get_installation_lib_dir() {
-  nsCOMPtr<nsIProperties> directoryService(
-      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
-  if (!directoryService) {
-    return nullptr;
-  }
-  nsCOMPtr<nsIFile> greDir;
-  nsresult rv = directoryService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile),
-                                      getter_AddRefs(greDir));
-  if (NS_FAILED(rv)) return nullptr;
-  nsCString path;
-  rv = greDir->GetNativePath(path);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-  return strdup(path.get());
-}
-
 AutoObjectMapperFaultyLib::AutoObjectMapperFaultyLib(void (*aLog)(const char*))
     : AutoObjectMapperPOSIX(aLog), mHdl(nullptr) {}
 
@@ -148,45 +122,7 @@ bool AutoObjectMapperFaultyLib::Map(/*OUT*/ void** start,
                                     /*OUT*/ size_t* length,
                                     std::string fileName) {
   MOZ_ASSERT(!mHdl);
-
-  if (fileName == "libmozglue.so") {
-    // Do (2) in the comment above.
-    char* libdir = get_installation_lib_dir();
-    if (libdir) {
-      fileName = std::string(libdir) + "/lib/" + fileName;
-      free(libdir);
-    }
-    // Hand the problem off to the standard mapper.
-    return AutoObjectMapperPOSIX::Map(start, length, fileName);
-
-  } else {
-    // Do cases (1) and (3) in the comment above.  We have to
-    // grapple with faulty.lib directly.
-    void* hdl = dlopen(fileName.c_str(), RTLD_GLOBAL | RTLD_LAZY);
-    if (!hdl) {
-      failedToMessage(mLog, "get handle for ELF file", fileName);
-      return false;
-    }
-
-    size_t sz = __dl_get_mappable_length(hdl);
-    if (sz == 0) {
-      dlclose(hdl);
-      failedToMessage(mLog, "get size for ELF file", fileName);
-      return false;
-    }
-
-    void* image = __dl_mmap(hdl, nullptr, sz, 0);
-    if (image == MAP_FAILED) {
-      dlclose(hdl);
-      failedToMessage(mLog, "mmap ELF file", fileName);
-      return false;
-    }
-
-    mHdl = hdl;
-    mImage = *start = image;
-    mSize = *length = sz;
-    return true;
-  }
+  return false;
 }
 
 #  endif  // defined(GP_OS_android)

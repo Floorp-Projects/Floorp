@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ProfilerCounts_h
-#define ProfilerCounts_h
+#ifndef BaseProfilerCounts_h
+#define BaseProfilerCounts_h
 
 #ifndef MOZ_BASE_PROFILER
 
@@ -21,8 +21,8 @@
 #  include "mozilla/Atomics.h"
 
 class BaseProfilerCount;
-void profiler_add_sampled_counter(BaseProfilerCount* aCounter);
-void profiler_remove_sampled_counter(BaseProfilerCount* aCounter);
+MFBT_API void profiler_add_sampled_counter(BaseProfilerCount* aCounter);
+MFBT_API void profiler_remove_sampled_counter(BaseProfilerCount* aCounter);
 
 typedef mozilla::Atomic<int64_t, mozilla::MemoryOrdering::Relaxed>
     ProfilerAtomicSigned;
@@ -268,4 +268,4 @@ class ProfilerCounterTotal final : public BaseProfilerCount {
 
 #endif  // !MOZ_BASE_PROFILER
 
-#endif  // ProfilerCounts_h
+#endif  // BaseProfilerCounts_h

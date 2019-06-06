@@ -12,10 +12,7 @@
 #include "BaseProfilerMarkerPayload.h"
 #include "ThreadInfo.h"
 
-#include "js/TraceLoggerAPI.h"
-#include "jsapi.h"
 #include "mozilla/UniquePtr.h"
-#include "nsIEventTarget.h"
 
 // This class contains the state for a single thread that is accessible without
 // protection from gPSMutex in platform.cpp. Because there is no external
@@ -25,11 +22,9 @@
 class RacyRegisteredThread final {
  public:
   explicit RacyRegisteredThread(int aThreadId)
-      : mThreadId(aThreadId), mSleep(AWAKE), mIsBeingProfiled(false) {
-    MOZ_COUNT_CTOR(RacyRegisteredThread);
-  }
+      : mThreadId(aThreadId), mSleep(AWAKE), mIsBeingProfiled(false) {}
 
-  ~RacyRegisteredThread() { MOZ_COUNT_DTOR(RacyRegisteredThread); }
+  ~RacyRegisteredThread() {}
 
   void SetIsBeingProfiled(bool aIsBeingProfiled) {
     mIsBeingProfiled = aIsBeingProfiled;
@@ -164,7 +159,7 @@ class RacyRegisteredThread final {
 // protected by the profiler state lock.
 class RegisteredThread final {
  public:
-  RegisteredThread(ThreadInfo* aInfo, nsIEventTarget* aThread, void* aStackTop);
+  RegisteredThread(ThreadInfo* aInfo, void* aStackTop);
   ~RegisteredThread();
 
   class RacyRegisteredThread& RacyRegisteredThread() {
@@ -179,89 +174,7 @@ class RegisteredThread final {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  // Set the JSContext of the thread to be sampled. Sampling cannot begin until
-  // this has been set.
-  void SetJSContext(JSContext* aContext) {
-    // This function runs on-thread.
-
-    MOZ_ASSERT(aContext && !mContext);
-
-    mContext = aContext;
-
-    // We give the JS engine a non-owning reference to the ProfilingStack. It's
-    // important that the JS engine doesn't touch this once the thread dies.
-    js::SetContextProfilingStack(aContext,
-                                 &RacyRegisteredThread().ProfilingStack());
-  }
-
-  void ClearJSContext() {
-    // This function runs on-thread.
-    mContext = nullptr;
-  }
-
-  JSContext* GetJSContext() const { return mContext; }
-
   const RefPtr<ThreadInfo> Info() const { return mThreadInfo; }
-  const nsCOMPtr<nsIEventTarget> GetEventTarget() const { return mThread; }
-
-  // Request that this thread start JS sampling. JS sampling won't actually
-  // start until a subsequent PollJSSampling() call occurs *and* mContext has
-  // been set.
-  void StartJSSampling(uint32_t aJSFlags) {
-    // This function runs on-thread or off-thread.
-
-    MOZ_RELEASE_ASSERT(mJSSampling == INACTIVE ||
-                       mJSSampling == INACTIVE_REQUESTED);
-    mJSSampling = ACTIVE_REQUESTED;
-    mJSFlags = aJSFlags;
-  }
-
-  // Request that this thread stop JS sampling. JS sampling won't actually stop
-  // until a subsequent PollJSSampling() call occurs.
-  void StopJSSampling() {
-    // This function runs on-thread or off-thread.
-
-    MOZ_RELEASE_ASSERT(mJSSampling == ACTIVE ||
-                       mJSSampling == ACTIVE_REQUESTED);
-    mJSSampling = INACTIVE_REQUESTED;
-  }
-
-  // Poll to see if JS sampling should be started/stopped.
-  void PollJSSampling() {
-    // This function runs on-thread.
-
-    // We can't start/stop profiling until we have the thread's JSContext.
-    if (mContext) {
-      // It is possible for mJSSampling to go through the following sequences.
-      //
-      // - INACTIVE, ACTIVE_REQUESTED, INACTIVE_REQUESTED, INACTIVE
-      //
-      // - ACTIVE, INACTIVE_REQUESTED, ACTIVE_REQUESTED, ACTIVE
-      //
-      // Therefore, the if and else branches here aren't always interleaved.
-      // This is ok because the JS engine can handle that.
-      //
-      if (mJSSampling == ACTIVE_REQUESTED) {
-        mJSSampling = ACTIVE;
-        js::EnableContextProfilingStack(mContext, true);
-        JS_SetGlobalJitCompilerOption(mContext,
-                                      JSJITCOMPILER_TRACK_OPTIMIZATIONS,
-                                      TrackOptimizationsEnabled());
-        if (JSTracerEnabled()) {
-          JS::StartTraceLogger(mContext);
-        }
-        js::RegisterContextProfilingEventMarker(mContext,
-                                                profiler_add_js_marker);
-
-      } else if (mJSSampling == INACTIVE_REQUESTED) {
-        mJSSampling = INACTIVE;
-        js::EnableContextProfilingStack(mContext, false);
-        if (JSTracerEnabled()) {
-          JS::StopTraceLogger(mContext);
-        }
-      }
-    }
-  }
 
  private:
   class RacyRegisteredThread mRacyRegisteredThread;
@@ -270,68 +183,6 @@ class RegisteredThread final {
   const void* mStackTop;
 
   const RefPtr<ThreadInfo> mThreadInfo;
-  const nsCOMPtr<nsIEventTarget> mThread;
-
-  // If this is a JS thread, this is its JSContext, which is required for any
-  // JS sampling.
-  JSContext* mContext;
-
-  // The profiler needs to start and stop JS sampling of JS threads at various
-  // times. However, the JS engine can only do the required actions on the
-  // JS thread itself ("on-thread"), not from another thread ("off-thread").
-  // Therefore, we have the following two-step process.
-  //
-  // - The profiler requests (on-thread or off-thread) that the JS sampling be
-  //   started/stopped, by changing mJSSampling to the appropriate REQUESTED
-  //   state.
-  //
-  // - The relevant JS thread polls (on-thread) for changes to mJSSampling.
-  //   When it sees a REQUESTED state, it performs the appropriate actions to
-  //   actually start/stop JS sampling, and changes mJSSampling out of the
-  //   REQUESTED state.
-  //
-  // The state machine is as follows.
-  //
-  //             INACTIVE --> ACTIVE_REQUESTED
-  //                  ^       ^ |
-  //                  |     _/  |
-  //                  |   _/    |
-  //                  |  /      |
-  //                  | v       v
-  //   INACTIVE_REQUESTED <-- ACTIVE
-  //
-  // The polling is done in the following two ways.
-  //
-  // - Via the interrupt callback mechanism; the JS thread must call
-  //   profiler_js_interrupt_callback() from its own interrupt callback.
-  //   This is how sampling must be started/stopped for threads where the
-  //   request was made off-thread.
-  //
-  // - When {Start,Stop}JSSampling() is called on-thread, we can immediately
-  //   follow it with a PollJSSampling() call to avoid the delay between the
-  //   two steps. Likewise, setJSContext() calls PollJSSampling().
-  //
-  // One non-obvious thing about all this: these JS sampling requests are made
-  // on all threads, even non-JS threads. mContext needs to also be set (via
-  // setJSContext(), which can only happen for JS threads) for any JS sampling
-  // to actually happen.
-  //
-  enum {
-    INACTIVE = 0,
-    ACTIVE_REQUESTED = 1,
-    ACTIVE = 2,
-    INACTIVE_REQUESTED = 3,
-  } mJSSampling;
-
-  uint32_t mJSFlags;
-
-  bool TrackOptimizationsEnabled() {
-    return mJSFlags & uint32_t(JSSamplingFlags::TrackOptimizations);
-  }
-
-  bool JSTracerEnabled() {
-    return mJSFlags & uint32_t(JSSamplingFlags::TraceLogging);
-  }
 };
 
 #endif  // RegisteredThread_h
