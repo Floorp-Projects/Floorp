@@ -784,10 +784,12 @@ class ScriptSource {
  private:
   template <typename Unit>
   struct UncompressedDataMatcher {
-    const Unit* operator()(const Uncompressed<Unit>& u) { return u.units(); }
+    const UncompressedData<Unit>* operator()(const Uncompressed<Unit>& u) {
+      return &u;
+    }
 
     template <typename T>
-    const Unit* operator()(const T&) {
+    const UncompressedData<Unit>* operator()(const T&) {
       MOZ_CRASH(
           "attempting to access uncompressed data in a ScriptSource not "
           "containing it");
@@ -797,19 +799,19 @@ class ScriptSource {
 
  public:
   template <typename Unit>
-  const Unit* uncompressedData() {
+  const UncompressedData<Unit>* uncompressedData() {
     return data.match(UncompressedDataMatcher<Unit>());
   }
 
  private:
   template <typename Unit>
   struct CompressedDataMatcher {
-    char* operator()(const Compressed<Unit>& c) {
-      return const_cast<char*>(c.raw.chars());
+    const CompressedData<Unit>* operator()(const Compressed<Unit>& c) {
+      return &c;
     }
 
     template <typename T>
-    char* operator()(const T&) {
+    const CompressedData<Unit>* operator()(const T&) {
       MOZ_CRASH(
           "attempting to access compressed data in a ScriptSource not "
           "containing it");
@@ -819,7 +821,7 @@ class ScriptSource {
 
  public:
   template <typename Unit>
-  char* compressedData() {
+  const CompressedData<Unit>* compressedData() {
     return data.match(CompressedDataMatcher<Unit>());
   }
 
