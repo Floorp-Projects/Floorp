@@ -303,7 +303,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 customTabSessionId
             ) {
                 if (it) {
-                    FenixSnackbar.make(view.rootView, Snackbar.LENGTH_LONG)
+                    FenixSnackbar.make(view.rootView, Snackbar.LENGTH_SHORT)
                         .setText(getString(R.string.full_screen_notification))
                         .show()
                     activity?.enterToImmersiveMode()
