@@ -60,25 +60,29 @@ class ManualNACPtr final {
     }
 
     RefPtr<Element> ptr = mPtr.forget();
-    nsIContent* parentContent = ptr->GetParent();
+    RemoveContentFromNACArray(ptr);
+  }
+
+  static void RemoveContentFromNACArray(nsIContent* aAnonymousContent) {
+    nsIContent* parentContent = aAnonymousContent->GetParent();
     if (!parentContent) {
       NS_WARNING("Potentially leaking manual NAC");
       return;
     }
 
     // Remove reference from the parent element.
-    auto nac = static_cast<mozilla::ManualNACArray*>(
+    auto* nac = static_cast<ManualNACArray*>(
         parentContent->GetProperty(nsGkAtoms::manualNACProperty));
     // Document::AdoptNode might remove all properties before destroying editor.
     // So we have to consider that NAC could be already removed.
     if (nac) {
-      nac->RemoveElement(ptr);
+      nac->RemoveElement(aAnonymousContent);
       if (nac->IsEmpty()) {
         parentContent->DeleteProperty(nsGkAtoms::manualNACProperty);
       }
     }
 
-    ptr->UnbindFromTree();
+    aAnonymousContent->UnbindFromTree();
   }
 
   Element* get() const { return mPtr.get(); }
