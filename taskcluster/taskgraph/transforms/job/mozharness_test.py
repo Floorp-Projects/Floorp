@@ -6,7 +6,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from voluptuous import Required
 from taskgraph.util.taskcluster import get_artifact_url
-from taskgraph.transforms.job import run_job_using
+from taskgraph.transforms.job import (
+    configure_taskdesc_for_run,
+    run_job_using,
+)
 from taskgraph.util.schema import Schema
 from taskgraph.util.taskcluster import get_artifact_path
 from taskgraph.transforms.tests import (
@@ -14,7 +17,6 @@ from taskgraph.transforms.tests import (
     normpath
 )
 from taskgraph.transforms.job.common import (
-    docker_worker_add_tooltool,
     support_vcs_checkout,
 )
 import json
@@ -67,7 +69,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
     run = job['run']
     test = taskdesc['run']['test']
     mozharness = test['mozharness']
-    worker = taskdesc['worker']
+    worker = taskdesc['worker'] = job['worker']
 
     # apply some defaults
     worker['docker-image'] = test['docker-image']
@@ -149,18 +151,8 @@ def mozharness_test_on_docker(config, job, taskdesc):
         env['TRY_COMMIT_MSG'] = config.params['message']
 
     # handle some of the mozharness-specific options
-
-    if mozharness['tooltool-downloads']:
-        internal = mozharness['tooltool-downloads'] == 'internal'
-        docker_worker_add_tooltool(config, job, taskdesc, internal=internal)
-
     if test['reboot']:
         raise Exception('reboot: {} not supported on generic-worker'.format(test['reboot']))
-
-    # assemble the command line
-    command = [
-        '{workdir}/bin/run-task'.format(**run),
-    ]
 
     # Support vcs checkouts regardless of whether the task runs from
     # source or not in case it is needed on an interactive loaner.
@@ -169,7 +161,6 @@ def mozharness_test_on_docker(config, job, taskdesc):
     # If we have a source checkout, run mozharness from it instead of
     # downloading a zip file with the same content.
     if test['checkout']:
-        command.extend(['--gecko-checkout', '{workdir}/checkouts/gecko'.format(**run)])
         env['MOZHARNESS_PATH'] = '{workdir}/checkouts/gecko/testing/mozharness'.format(**run)
     else:
         env['MOZHARNESS_URL'] = {'task-reference': mozharness_url}
@@ -180,10 +171,9 @@ def mozharness_test_on_docker(config, job, taskdesc):
     }
     env['EXTRA_MOZHARNESS_CONFIG'] = {'task-reference': json.dumps(extra_config)}
 
-    command.extend([
-        '--',
+    command = [
         '{workdir}/bin/test-linux.sh'.format(**run),
-    ])
+    ]
     command.extend(mozharness.get('extra-options', []))
 
     # TODO: remove the need for run['chunked']
@@ -203,7 +193,14 @@ def mozharness_test_on_docker(config, job, taskdesc):
         download_symbols = {True: 'true', False: 'false'}.get(download_symbols, download_symbols)
         command.append('--download-symbols=' + download_symbols)
 
-    worker['command'] = command
+    job['run'] = {
+        'workdir': run['workdir'],
+        'tooltool-downloads': mozharness['tooltool-downloads'],
+        'checkout': test['checkout'],
+        'command': command,
+        'using': 'run-task',
+    }
+    configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
 
 
 @run_job_using('generic-worker', 'mozharness-test', schema=mozharness_test_run_schema)
