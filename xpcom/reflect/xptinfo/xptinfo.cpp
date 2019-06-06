@@ -7,6 +7,7 @@
 #include "xptinfo.h"
 #include "nsISupports.h"
 #include "mozilla/dom/DOMJSClass.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/ArrayUtils.h"
 
 #include "jsfriendapi.h"
@@ -76,16 +77,24 @@ nsresult nsXPTInterfaceInfo::GetConstant(uint16_t aIndex,
 // nsXPTMethodInfo symbol helpers //
 ////////////////////////////////////
 
-void nsXPTMethodInfo::GetSymbolDescription(JSContext* aCx,
-                                           nsACString& aID) const {
-  JS::RootedSymbol symbol(aCx, GetSymbol(aCx));
-  JSString* desc = JS::GetSymbolDescription(symbol);
-  MOZ_ASSERT(JS_StringHasLatin1Chars(desc));
+const char* nsXPTMethodInfo::SymbolDescription() const {
+  switch (GetSymbolCode()) {
+#define XPC_WELL_KNOWN_SYMBOL_DESCR_CASE(name) \
+  case JS::SymbolCode::name:                   \
+    return #name;
+    JS_FOR_EACH_WELL_KNOWN_SYMBOL(XPC_WELL_KNOWN_SYMBOL_DESCR_CASE)
+#undef XPC_WELL_KNOWN_SYMBOL_DESCR_CASE
 
-  JS::AutoAssertNoGC nogc(aCx);
-  size_t length;
-  const JS::Latin1Char* chars =
-      JS_GetLatin1StringCharsAndLength(aCx, nogc, desc, &length);
+    default:
+      return "";
+  }
+}
 
-  aID.AssignASCII(reinterpret_cast<const char*>(chars), length);
+bool nsXPTMethodInfo::GetId(JSContext* aCx, jsid& aId) const {
+  if (IsSymbol()) {
+    aId = SYMBOL_TO_JSID(GetSymbol(aCx));
+    return true;
+  }
+
+  return mozilla::dom::AtomizeAndPinJSString(aCx, aId, Name());
 }
