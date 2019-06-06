@@ -30,7 +30,7 @@ add_task(async function test_listJSONlocale() {
 add_task(async function test_listJSONlocaleSwitch() {
   let promise = SearchTestUtils.promiseSearchNotification("reinit-complete");
 
-  let defaultBranch = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
+  let defaultBranch = Services.prefs.getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF);
   defaultBranch.setCharPref("param.code", "good&id=unique");
 
   Services.locale.availableLocales = ["fr"];

@@ -38,6 +38,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -263,6 +264,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -494,6 +496,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -708,6 +711,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -880,6 +884,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -1055,6 +1060,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -1198,6 +1204,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -1367,6 +1374,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -1504,6 +1512,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -1647,6 +1656,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -1819,6 +1829,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -2000,6 +2011,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -2223,6 +2235,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {
@@ -2449,6 +2462,7 @@ Object {
   "instance": SourceTreeItem {
     "addCollapseExpandAllOptions": [Function],
     "context": Object {},
+    "handleDownloadFile": [Function],
     "onClick": [Function],
     "onContextMenu": [Function],
     "props": Object {

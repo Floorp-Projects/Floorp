@@ -542,7 +542,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       // background behind the page, not the canvas color. The canvas color gets
       // painted on the page itself.
       if (nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
-        presShell->AddPrintPreviewBackgroundItem(*aBuilder, childItems, frame,
+        presShell->AddPrintPreviewBackgroundItem(aBuilder, &childItems, frame,
                                                  bounds);
       } else {
         // Add the canvas background color to the bottom of the list. This
@@ -553,7 +553,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
             AddCanvasBackgroundColorFlags::ForceDraw |
             AddCanvasBackgroundColorFlags::AddForSubDocument;
         presShell->AddCanvasBackgroundColorItem(
-            *aBuilder, childItems, frame, bounds, NS_RGBA(0, 0, 0, 0), flags);
+            aBuilder, &childItems, frame, bounds, NS_RGBA(0, 0, 0, 0), flags);
       }
     }
   }
@@ -629,7 +629,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     AddCanvasBackgroundColorFlags flags =
         AddCanvasBackgroundColorFlags::ForceDraw |
         AddCanvasBackgroundColorFlags::AppendUnscrolledOnly;
-    presShell->AddCanvasBackgroundColorItem(*aBuilder, childItems, this, bounds,
+    presShell->AddCanvasBackgroundColorItem(aBuilder, &childItems, this, bounds,
                                             NS_RGBA(0, 0, 0, 0), flags);
   }
 

@@ -48,8 +48,8 @@ WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
       mInnerWindowId(aInit.innerWindowId()),
       mOuterWindowId(aInit.outerWindowId()),
       mInProcess(aInProcess),
-      mIPCClosed(true)  // Closed until WGP::Init
-{
+      mIPCClosed(true),  // Closed until WGP::Init
+      mIsInitialDocument(false) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "Parent process only");
   MOZ_RELEASE_ASSERT(mDocumentPrincipal, "Must have a valid principal");
 
@@ -250,7 +250,7 @@ already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
     return nullptr;
   }
 
-  MOZ_RELEASE_ASSERT(!actor->Manager(),
+  MOZ_RELEASE_ASSERT(!actor->GetManager(),
                      "mManager was already initialized once!");
   actor->Init(aName, this);
   mWindowActors.Put(aName, actor);

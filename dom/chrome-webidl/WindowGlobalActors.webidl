@@ -24,6 +24,11 @@ interface WindowGlobalParent {
   // embedder is in a different process.
   readonly attribute boolean isProcessRoot;
 
+  // Is the document loaded in this WindowGlobalParent the initial document
+  // implicitly created while "creating a new browsing context".
+  // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-browsing-context
+  readonly attribute boolean isInitialDocument;
+
   readonly attribute FrameLoader? rootFrameLoader; // Embedded (browser) only
 
   readonly attribute WindowGlobalChild? childActor; // in-process only
@@ -34,6 +39,12 @@ interface WindowGlobalParent {
 
   static WindowGlobalParent? getByInnerWindowId(unsigned long long innerWindowId);
 
+  /**
+   * Get or create the JSWindowActor with the given name.
+   *
+   * See WindowActorOptions from JSWindowActor.webidl for details on how to
+   * customize actor creation.
+   */
   [Throws]
   JSWindowActorParent getActor(DOMString name);
 
@@ -63,6 +74,12 @@ interface WindowGlobalChild {
 
   static WindowGlobalChild? getByInnerWindowId(unsigned long long innerWIndowId);
 
+  /**
+   * Get or create the JSWindowActor with the given name.
+   *
+   * See WindowActorOptions from JSWindowActor.webidl for details on how to
+   * customize actor creation.
+   */
   [Throws]
   JSWindowActorChild getActor(DOMString name);
 };

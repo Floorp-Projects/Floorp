@@ -1,5 +1,6 @@
 browser/components/translation/cld2/
 devtools/client/aboutdebugging-new/test/jest/node_modules/
+devtools/client/application/test/node_modules/
 devtools/client/debugger/node_modules/
 devtools/client/shared/build/babel.js
 devtools/client/shared/sourceeditor/codemirror/

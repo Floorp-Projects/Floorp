@@ -111,9 +111,7 @@ nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor()
       mSuppressEOF(false),
       mReadingFromStage(false),
       mStreamParser(nullptr),
-      mPreloadedURLs(23)  // Mean # of preloadable resources per page on dmoz
-      ,
-      mSpeculationReferrerPolicy(mozilla::net::RP_Unset),
+      mPreloadedURLs(23),  // Mean # of preloadable resources per page on dmoz
       mStarted(false),
       mRunFlushLoopOnStack(false),
       mCallContinueInterruptedParsingIfEnabled(false),
@@ -953,8 +951,17 @@ net::ReferrerPolicy nsHtml5TreeOpExecutor::GetPreloadReferrerPolicy(
     const nsAString& aReferrerPolicy) {
   net::ReferrerPolicy referrerPolicy =
       net::AttributeReferrerPolicyFromString(aReferrerPolicy);
-  return referrerPolicy != net::RP_Unset ? referrerPolicy
-                                         : mSpeculationReferrerPolicy;
+  return GetPreloadReferrerPolicy(referrerPolicy);
+}
+
+net::ReferrerPolicy nsHtml5TreeOpExecutor::GetPreloadReferrerPolicy(
+    ReferrerPolicy aReferrerPolicy) {
+  if (aReferrerPolicy != net::RP_Unset) {
+    return aReferrerPolicy;
+  }
+
+  return static_cast<net::ReferrerPolicy>(
+      mDocument->GetPreloadReferrerInfo()->GetReferrerPolicy());
 }
 
 void nsHtml5TreeOpExecutor::PreloadScript(
@@ -966,12 +973,9 @@ void nsHtml5TreeOpExecutor::PreloadScript(
   if (!uri) {
     return;
   }
-  net::ReferrerPolicy referrerPolicy = aReferrerPolicy != net::RP_Unset
-                                           ? aReferrerPolicy
-                                           : mSpeculationReferrerPolicy;
-  mDocument->ScriptLoader()->PreloadURI(uri, aCharset, aType, aCrossOrigin,
-                                        aIntegrity, aScriptFromHead, aAsync,
-                                        aDefer, aNoModule, referrerPolicy);
+  mDocument->ScriptLoader()->PreloadURI(
+      uri, aCharset, aType, aCrossOrigin, aIntegrity, aScriptFromHead, aAsync,
+      aDefer, aNoModule, GetPreloadReferrerPolicy(aReferrerPolicy));
 }
 
 void nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
@@ -1041,24 +1045,9 @@ void nsHtml5TreeOpExecutor::SetSpeculationBase(const nsAString& aURL) {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to create a URI");
 }
 
-void nsHtml5TreeOpExecutor::SetSpeculationReferrerPolicy(
-    const nsAString& aReferrerPolicy) {
-  // Specs says:
-  // - Let value be the result of stripping leading and trailing whitespace from
-  // the value of element's content attribute.
-  // - If value is not the empty string, then:
-  if (aReferrerPolicy.IsEmpty()) {
-    return;
-  }
-
-  ReferrerPolicy policy =
-      mozilla::net::ReferrerPolicyFromString(aReferrerPolicy);
-  // Specs says:
-  // - If policy is not the empty string, then set element's node document's
-  // referrer policy to policy
-  if (policy != mozilla::net::RP_Unset) {
-    SetSpeculationReferrerPolicy(policy);
-  }
+void nsHtml5TreeOpExecutor::UpdateReferrerInfoFromMeta(
+    const nsAString& aMetaReferrer) {
+  mDocument->UpdateReferrerInfoFromMeta(aMetaReferrer, true);
 }
 
 void nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP) {
@@ -1089,14 +1078,6 @@ void nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP) {
     inner->SetPreloadCsp(preloadCsp);
   }
   mDocument->ApplySettingsFromCSP(true);
-}
-
-void nsHtml5TreeOpExecutor::SetSpeculationReferrerPolicy(
-    ReferrerPolicy aReferrerPolicy) {
-  // Record "speculated" referrer policy locally and thread through the
-  // speculation phase.  The actual referrer policy will be set by
-  // HTMLMetaElement::BindToTree().
-  mSpeculationReferrerPolicy = aReferrerPolicy;
 }
 
 #ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH

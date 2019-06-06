@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization's DOMOverlay functionality</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const { FluentBundle } =
+    ChromeUtils.import("resource://gre/modules/Fluent.jsm");
+
+  async function* mockGenerateMessages(locales, resourceIds) {
+    const bundle = new FluentBundle(locales);
+    bundle.addMessages(`title = Visit <a data-l10n-name="mozilla-link">Mozilla</a> or <a data-l10n-name="firefox-link">Firefox</a> website!`);
+    yield bundle;
+  }
+
+  window.onload = async function() {
+    SimpleTest.waitForExplicitFinish();
+
+    const domLoc = new DOMLocalization(
+      [],
+      mockGenerateMessages
+    );
+
+    await domLoc.translateFragment(document.body);
+
+    const p1 = document.querySelectorAll("p")[0];
+    const linkList = p1.querySelectorAll("a");
+
+
+    is(linkList[0].getAttribute("href"), "http://www.mozilla.org");
+    is(linkList[0].textContent, "Mozilla");
+    is(linkList[1].getAttribute("href"), "http://www.firefox.com");
+    is(linkList[1].textContent, "Firefox");
+
+    SimpleTest.finish();
+  };
+  </script>
+</head>
+<body>
+  <p data-l10n-id="title">
+    <a href="http://www.mozilla.org" data-l10n-name="mozilla-link"></a>
+    <a href="http://www.firefox.com" data-l10n-name="firefox-link"></a>
+  </p>
+</body>
+</html>

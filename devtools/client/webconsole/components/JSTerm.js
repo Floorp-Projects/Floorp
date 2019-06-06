@@ -841,7 +841,7 @@ class JSTerm extends Component {
     const value = this._getValue();
     if (this.lastInputValue !== value) {
       this.resizeInput();
-      if (this.props.autocomplete) {
+      if (this.props.autocomplete || this.autocompletePopup.isOpen) {
         this.autocompleteUpdate();
       }
       this.lastInputValue = value;

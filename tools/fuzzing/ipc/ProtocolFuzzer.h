@@ -22,25 +22,14 @@ class ProtocolFuzzerHelper {
 
   static void CompositorBridgeParentSetup();
 
-  template <typename T>
-  static void AddShmemToProtocol(T* aProtocol, Shmem::SharedMemory* aSegment,
-                                 int32_t aId) {
-    GetToplevelState(aProtocol)->mShmemMap.AddWithID(aSegment, aId);
+  static void AddShmemToProtocol(IToplevelProtocol* aProtocol,
+                                 Shmem::SharedMemory* aSegment, int32_t aId) {
+    aProtocol->mShmemMap.AddWithID(aSegment, aId);
   }
 
-  template <typename T>
-  static void RemoveShmemFromProtocol(T* aProtocol, int32_t aId) {
-    GetToplevelState(aProtocol)->mShmemMap.RemoveIfPresent(aId);
-  }
-
- private:
-  template <typename T>
-  static mozilla::ipc::IToplevelProtocol::ToplevelState* GetToplevelState(
-      T* aProtocol) {
-    static_assert(std::is_base_of<mozilla::ipc::IToplevelProtocol, T>::value,
-                  "Only ToplevelProtocols are supported for now");
-    return static_cast<mozilla::ipc::IToplevelProtocol::ToplevelState*>(
-        static_cast<mozilla::ipc::IToplevelProtocol*>(aProtocol)->mState.get());
+  static void RemoveShmemFromProtocol(IToplevelProtocol* aProtocol,
+                                      int32_t aId) {
+    aProtocol->mShmemMap.RemoveIfPresent(aId);
   }
 };
 

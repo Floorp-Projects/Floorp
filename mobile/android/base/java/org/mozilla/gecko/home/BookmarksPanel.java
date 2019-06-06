@@ -240,7 +240,7 @@ public class BookmarksPanel extends HomeFragment implements BookmarkEditFragment
 
     @Override
     public void onEditBookmark(@NonNull Bundle bundle) {
-        new EditBookmarkTask(getActivity(), bundle).execute();
+        new EditBookmarkTask(getActivity(), bundle, this).execute();
     }
 
     private void updateUiFromCursor(Cursor c) {

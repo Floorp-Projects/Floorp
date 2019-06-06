@@ -36,7 +36,7 @@ void nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor) {
           mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
       break;
     case eSpeculativeLoadMetaReferrer:
-      aExecutor->SetSpeculationReferrerPolicy(mReferrerPolicyOrIntegrity);
+      aExecutor->UpdateReferrerInfoFromMeta(mReferrerPolicyOrIntegrity);
       break;
     case eSpeculativeLoadImage:
       aExecutor->PreloadImage(

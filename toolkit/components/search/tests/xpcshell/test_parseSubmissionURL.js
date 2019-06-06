@@ -21,14 +21,32 @@ add_task(async function test_parseSubmissionURL() {
   let [engine1, engine2, engine3, engine4] = await addTestEngines([
     { name: "Test search engine", xmlFileName: "engine.xml" },
     { name: "Test search engine (fr)", xmlFileName: "engine-fr.xml" },
-    { name: "bacon_addParam", details: ["", "bacon_addParam", "Search Bacon",
-                                        "GET", "http://www.bacon.test/find"] },
-    { name: "idn_addParam", details: ["", "idn_addParam", "Search IDN",
-                                        "GET", "http://www.xn--bcher-kva.ch/search"] },
+    { name: "bacon_addParam",
+      details: {
+        alias: "bacon_addParam",
+        description: "Search Bacon",
+        method: "GET",
+        template: "http://www.bacon.test/find",
+      },
+    },
+    { name: "idn_addParam",
+      details: {
+        alias: "idn_addParam",
+        description: "Search IDN",
+        method: "GET",
+        template: "http://www.xn--bcher-kva.ch/search",
+      },
+    },
     // The following engines cannot identify the search parameter.
     { name: "A second test engine", xmlFileName: "engine2.xml" },
-    { name: "bacon", details: ["", "bacon", "Search Bacon", "GET",
-                               "http://www.bacon.moz/search?q={searchTerms}"] },
+    { name: "bacon",
+      details: {
+        alias: "bacon",
+        description: "Search Bacon",
+        method: "GET",
+        template: "http://www.bacon.moz/search?q={searchTerms}",
+      },
+    },
   ]);
 
   engine3.addParam("q", "{searchTerms}", null);

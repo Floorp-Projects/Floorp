@@ -1224,6 +1224,25 @@ public class LocalBrowserDB extends BrowserDB {
     }
 
     @Override
+    public void removeSoftDeleteBookmarks(ContentResolver cr) {
+        // BrowserProvider will bump parent's lastModified timestamp after successful deletion.
+        cr.delete(mBookmarksUriWithProfile,
+                Bookmarks.IS_DELETED + " = 1 AND " + Bookmarks.PARENT + " != ? ",
+                new String[] { String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) });
+    }
+
+    public void updateSoftDeleteForBookmarkWithId(ContentResolver cr, long id, boolean safeDelete) {
+        ContentValues values = new ContentValues();
+        values.put(Bookmarks.IS_DELETED, safeDelete ? 1 : 0);
+        // No need to update Bookmarks.SYNC_VERSION at this time. The user might revert this operation.
+
+        cr.update(mBookmarksUriWithProfile,
+                values,
+                "_id = ?",
+                new String[] { String.valueOf(id) });
+    }
+
+    @Override
     public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer) {
         cr.registerContentObserver(mBookmarksUriWithProfile, false, observer);
     }

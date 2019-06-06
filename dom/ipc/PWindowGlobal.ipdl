@@ -47,6 +47,9 @@ parent:
   /// Update the URI of the document in this WindowGlobal.
   async UpdateDocumentURI(nsIURI aUri);
 
+  /// Send down initial document bit to the parent.
+  async SetIsInitialDocument(bool aIsInitialDocument);
+
   /// Notify the parent that this PWindowGlobal is now the current global.
   async BecomeCurrentWindowGlobal();
 
