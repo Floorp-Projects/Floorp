@@ -434,7 +434,6 @@ values, you may use the alternative lower-level API `sumRawNanos` and `setRawNan
 
 `setRawNanos` directly sets the timespan value, erasing any timespans recorded since the last time the ping was sent.  
 Care should be taken using this if the ping lifetime might contain more than one timespan measurement.  
-To be safe, `setRawNanos` should generally be followed by sending a custom ping containing the timespan. 
 
 ```Kotlin
 import org.mozilla.yourApplication.GleanMetrics.Auth
