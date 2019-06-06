@@ -220,7 +220,7 @@ SubDialog.prototype = {
     }
 
     // Provide the ability for the dialog to know that it is being loaded "in-content".
-    this._frame.contentDocument.documentElement.setAttribute("subdialog", "true");
+    this._frame.contentDocument.documentElement.setInContent();
 
     this._frame.contentWindow.addEventListener("dialogclosing", this);
 
