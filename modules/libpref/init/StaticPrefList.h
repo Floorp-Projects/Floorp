@@ -4281,6 +4281,14 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for CSS individual transform enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.individual-transform.enabled",
+  IndividualTransform,
+  bool, false
+)
+
 // Pref to control whether line-height: -moz-block-height is exposed to content.
 VARCACHE_PREF(
   Live,
