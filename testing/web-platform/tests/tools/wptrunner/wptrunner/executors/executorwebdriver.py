@@ -121,7 +121,7 @@ class WebDriverTestharnessProtocolPart(TestharnessProtocolPart):
             if test_window is None:
                 after = self.webdriver.handles
                 if len(after) == 2:
-                    test_window = next(iter(set(after) - set([parent])))
+                    test_window = next(iter(set(after) - {parent}))
                 elif after[0] == parent and len(after) > 2:
                     # Hope the first one here is the test window
                     test_window = after[1]
@@ -258,7 +258,7 @@ class WebDriverRun(object):
         timeout = self.timeout
 
         try:
-            self.protocol.base.set_timeout((timeout + extra_timeout))
+            self.protocol.base.set_timeout(timeout + extra_timeout)
         except client.UnknownErrorException:
             self.logger.error("Lost WebDriver connection")
             return Stop
@@ -356,6 +356,20 @@ class WebDriverTestharnessExecutor(TestharnessExecutor):
         while True:
             result = protocol.base.execute_script(
                 self.script_resume % format_map, async=True)
+
+            # As of 2019-03-29, WebDriver does not define expected behavior for
+            # cases where the browser crashes during script execution:
+            #
+            # https://github.com/w3c/webdriver/issues/1308
+            if not isinstance(result, list) or len(result) != 2:
+                try:
+                    is_alive = self.is_alive()
+                except client.WebDriverException:
+                    is_alive = False
+
+                if not is_alive:
+                    raise Exception("Browser crashed during script execution.")
+
             done, rv = handler(result)
             if done:
                 break

@@ -5,10 +5,18 @@ from collections import deque
 from six import binary_type
 from six.moves.urllib.parse import urljoin
 from fnmatch import fnmatch
+
+MYPY = False
+if MYPY:
+    # MYPY is set to True when run under Mypy.
+    from types import ModuleType
+
 try:
-    from xml.etree import cElementTree as ElementTree
+    from xml.etree import cElementTree
+    ElementTree = cElementTree  # type: ModuleType
 except ImportError:
-    from xml.etree import ElementTree
+    from xml.etree import ElementTree as _ElementTree
+    ElementTree = _ElementTree
 
 import html5lib
 
@@ -17,8 +25,8 @@ from .item import Stub, ManualTest, WebDriverSpecTest, RefTestNode, TestharnessT
 from .utils import ContextManagerBytesIO, cached_property
 
 wd_pattern = "*.py"
-js_meta_re = re.compile(b"//\s*META:\s*(\w*)=(.*)$")
-python_meta_re = re.compile(b"#\s*META:\s*(\w*)=(.*)$")
+js_meta_re = re.compile(br"//\s*META:\s*(\w*)=(.*)$")
+python_meta_re = re.compile(br"#\s*META:\s*(\w*)=(.*)$")
 
 reference_file_re = re.compile(r'(^|[\-_])(not)?ref[0-9]*([\-_]|$)')
 
@@ -146,11 +154,11 @@ class SourceFile(object):
                "xhtml":_parse_xml,
                "svg":_parse_xml}
 
-    root_dir_non_test = set(["common"])
+    root_dir_non_test = {"common"}
 
-    dir_non_test = set(["resources",
-                        "support",
-                        "tools"])
+    dir_non_test = {"resources",
+                    "support",
+                    "tools"}
 
     dir_path_non_test = {("css21", "archive"),
                          ("css", "CSS2", "archive"),

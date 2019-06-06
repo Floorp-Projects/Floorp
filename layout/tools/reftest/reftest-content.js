@@ -256,7 +256,6 @@ function printToPdf(callback) {
     ps.printBGColors = true;
     ps.printToFile = true;
     ps.toFileName = file.path;
-    ps.printFrameType = Ci.nsIPrintSettings.kFramesAsIs;
     ps.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
 
     if (isPrintSelection) {

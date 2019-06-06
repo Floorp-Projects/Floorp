@@ -28,7 +28,6 @@
     };
 
     const fakeDeviceInitOptions = { supportsImmersive:true };
-    const sessionOptions = { mode: 'immersive-vr' };
 
     let testSession;
 
@@ -36,7 +35,7 @@
       assert_not_equals(view, null);
       assert_not_equals(view.transform, null);
 
-      let inv_view_transform = view.transform.inverse();
+      let inv_view_transform = view.transform.inverse;
       assert_not_equals(inv_view_transform, null);
       assert_not_equals(inv_view_transform.matrix, null);
       assert_equals(inv_view_transform.matrix.length, 16);
@@ -77,6 +76,6 @@
     }
 
     xr_session_promise_test(
-      testName, testFunction, fakeDeviceInitOptions, sessionOptions);
+      testName, testFunction, fakeDeviceInitOptions, 'immersive-vr');
   </script>
 </body>

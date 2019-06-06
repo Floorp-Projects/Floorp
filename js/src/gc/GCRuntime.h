@@ -432,6 +432,8 @@ class GCRuntime {
   bool areGrayBitsValid() const { return grayBitsValid; }
   void setGrayBitsInvalid() { grayBitsValid = false; }
 
+  mozilla::TimeStamp lastGCTime() const { return lastGCTime_; }
+
   bool majorGCRequested() const {
     return majorGCTriggerReason != JS::GCReason::NO_REASON;
   }
@@ -775,7 +777,7 @@ class GCRuntime {
 
  private:
   UnprotectedData<bool> chunkAllocationSinceLastGC;
-  MainThreadData<mozilla::TimeStamp> lastGCTime;
+  MainThreadData<mozilla::TimeStamp> lastGCTime_;
 
   /*
    * JSGC_MODE
@@ -1129,6 +1131,9 @@ inline bool GCRuntime::upcomingZealousGC() { return false; }
 inline bool GCRuntime::needZealousGC() { return false; }
 inline bool GCRuntime::hasIncrementalTwoSliceZealMode() { return false; }
 #endif
+
+bool IsCurrentlyAnimating(const mozilla::TimeStamp& lastAnimationTime,
+                          const mozilla::TimeStamp& currentTime);
 
 } /* namespace gc */
 } /* namespace js */

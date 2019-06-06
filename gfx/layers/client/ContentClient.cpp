@@ -506,8 +506,7 @@ RefPtr<RotatedBuffer> ContentClientBasic::CreateBuffer(gfxContentType aType,
     RefPtr<gfxASurface> surf = new gfxWindowsSurface(
         size, aType == gfxContentType::COLOR ? gfxImageFormat::X8R8G8B8_UINT32
                                              : gfxImageFormat::A8R8G8B8_UINT32);
-    drawTarget =
-        gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf, size);
+    drawTarget = gfxPlatform::CreateDrawTargetForSurface(surf, size);
   }
 #endif
 

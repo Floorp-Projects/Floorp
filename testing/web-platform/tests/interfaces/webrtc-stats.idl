@@ -102,7 +102,10 @@ dictionary RTCOutboundRtpStreamStats : RTCSentRtpStreamStats {
              DOMString senderId;
              DOMString remoteId;
              DOMHighResTimeStamp lastPacketSentTimestamp;
+             unsigned long long retransmittedPacketsSent;
+             unsigned long long retransmittedBytesSent;
              double targetBitrate;
+             unsigned long long totalEncodedBytesTarget;
              unsigned long framesEncoded;
              unsigned long long qpSum;
              double totalEncodeTime;
@@ -207,6 +210,8 @@ dictionary RTCAudioReceiverStats : RTCAudioHandlerStats {
              unsigned long long concealedSamples;
              unsigned long long silentConcealedSamples;
              unsigned long long concealmentEvents;
+             unsigned long long insertedSamplesForDeceleration;
+             unsigned long long removedSamplesForAcceleration;
 };
 
 dictionary RTCDataChannelStats : RTCStats {

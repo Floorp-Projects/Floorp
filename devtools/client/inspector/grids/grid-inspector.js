@@ -346,6 +346,10 @@ class GridInspector {
           return;
         }
 
+        if (!parentGridNodeFront) {
+          return;
+        }
+
         const parentIndex = grids.findIndex(g =>
           g.nodeFront.actorID === parentGridNodeFront.actorID);
         gridData.parentNodeActorID = parentGridNodeFront.actorID;
@@ -504,10 +508,18 @@ class GridInspector {
         customGridColors[hostname][grid.id] = color;
         await asyncStorage.setItem("gridInspectorHostColors", customGridColors);
 
+        if (!this.isPanelVisible()) {
+          // This call might fail if called asynchrously after the toolbox is finished
+          // closing.
+          return;
+        }
+
         // If the grid for which the color was updated currently has a highlighter, update
         // the color.
-        if (grid.highlighted) {
+        if (this.highlighters.gridHighlighters.has(node)) {
           this.highlighters.showGridHighlighter(node);
+        } else if (this.highlighters.parentGridHighlighters.has(node)) {
+          this.highlighters.showParentGridHighlighter(node);
         }
       }
     }
