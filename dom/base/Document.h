@@ -168,7 +168,9 @@ class CDATASection;
 class Comment;
 struct CustomElementDefinition;
 class DocGroup;
+namespace l10n {
 class DocumentL10n;
+}
 class DocumentFragment;
 class DocumentTimeline;
 class DocumentType;
@@ -3811,7 +3813,7 @@ class Document : public nsINode,
    * This is a public method exposed on Document WebIDL
    * to chrome only documents.
    */
-  DocumentL10n* GetL10n();
+  l10n::DocumentL10n* GetL10n();
 
   /**
    * This method should be called when the container
@@ -3864,7 +3866,7 @@ class Document : public nsINode,
   virtual void InitialDocumentTranslationCompleted();
 
  protected:
-  RefPtr<DocumentL10n> mDocumentL10n;
+  RefPtr<l10n::DocumentL10n> mDocumentL10n;
 
   /**
    * Return true when you want a document without explicitly specified viewport

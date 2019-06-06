@@ -22,14 +22,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'locale'
 
-EXPORTS.mozilla.dom += [
-    'DocumentL10n.h',
-]
-
-UNIFIED_SOURCES += [
-    'DocumentL10n.cpp',
-]
-
 LOCAL_INCLUDES += [
     '/dom/base',
 ]
