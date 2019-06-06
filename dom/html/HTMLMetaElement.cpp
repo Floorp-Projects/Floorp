@@ -43,7 +43,7 @@ void HTMLMetaElement::SetMetaReferrer(Document* aDocument) {
   if (headElt && nsContentUtils::ContentIsDescendantOf(this, headElt)) {
     content = nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
         content);
-    aDocument->SetHeaderData(nsGkAtoms::referrer, content);
+    aDocument->UpdateReferrerInfoFromMeta(content, false);
   }
 }
 
