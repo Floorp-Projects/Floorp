@@ -258,7 +258,7 @@
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/TimeoutManager.h"
-#include "mozilla/dom/l10n/DocumentL10n.h"
+#include "mozilla/dom/DocumentL10n.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "nsFrame.h"
 #include "nsDOMCaretPosition.h"
@@ -3457,7 +3457,7 @@ bool Document::GetAllowPlugins() {
 void Document::InitializeLocalization(nsTArray<nsString>& aResourceIds) {
   MOZ_ASSERT(!mDocumentL10n, "mDocumentL10n should not be initialized yet");
 
-  RefPtr<l10n::DocumentL10n> l10n = new l10n::DocumentL10n(this);
+  RefPtr<DocumentL10n> l10n = new DocumentL10n(this);
   ErrorResult rv;
   l10n->Init(aResourceIds, rv);
   if (NS_WARN_IF(rv.Failed())) {
@@ -3466,7 +3466,7 @@ void Document::InitializeLocalization(nsTArray<nsString>& aResourceIds) {
   mDocumentL10n = l10n;
 }
 
-l10n::DocumentL10n* Document::GetL10n() { return mDocumentL10n; }
+DocumentL10n* Document::GetL10n() { return mDocumentL10n; }
 
 bool Document::DocumentSupportsL10n(JSContext* aCx, JSObject* aObject) {
   nsCOMPtr<nsIPrincipal> callerPrincipal =

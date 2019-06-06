@@ -7,18 +7,18 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Internationalization")
 
-EXPORTS.mozilla.dom.l10n += [
+EXPORTS.mozilla.dom += [
     'DocumentL10n.h',
     'DOMLocalization.h',
-    'DOMOverlays.h',
-    'Mutations.h',
+    'L10nMutations.h',
+    'L10nOverlays.h',
 ]
 
 UNIFIED_SOURCES += [
     'DocumentL10n.cpp',
     'DOMLocalization.cpp',
-    'DOMOverlays.cpp',
-    'Mutations.cpp',
+    'L10nMutations.cpp',
+    'L10nOverlays.cpp',
 ]
 
 LOCAL_INCLUDES += [

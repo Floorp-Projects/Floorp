@@ -9,14 +9,13 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/DOMLocalizationBinding.h"
 #include "mozilla/dom/DocumentL10nBinding.h"
-#include "mozilla/dom/DOMOverlaysBinding.h"
-#include "mozilla/dom/l10n/Mutations.h"
+#include "mozilla/dom/L10nOverlaysBinding.h"
+#include "mozilla/dom/L10nMutations.h"
 
 class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
-namespace l10n {
 
 class DOMLocalization : public nsIObserver,
                         public nsSupportsWeakReference,
@@ -29,7 +28,8 @@ class DOMLocalization : public nsIObserver,
 
   explicit DOMLocalization(nsIGlobalObject* aGlobal);
   void Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv);
-  void Init(nsTArray<nsString>& aResourceIds, JS::Handle<JS::Value> aGenerateMessages, ErrorResult& aRv);
+  void Init(nsTArray<nsString>& aResourceIds,
+            JS::Handle<JS::Value> aGenerateMessages, ErrorResult& aRv);
 
   static already_AddRefed<DOMLocalization> Constructor(
       const GlobalObject& aGlobal,
@@ -119,16 +119,14 @@ class DOMLocalization : public nsIObserver,
   void DisconnectMutations();
   void DisconnectRoots();
   already_AddRefed<Promise> MaybeWrapPromise(Promise* aPromise);
-  void ReportDOMOverlaysErrors(
-      nsTArray<mozilla::dom::DOMOverlaysError>& aErrors);
+  void ReportL10nOverlaysErrors(nsTArray<L10nOverlaysError>& aErrors);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<Mutations> mMutations;
+  RefPtr<L10nMutations> mMutations;
   nsCOMPtr<mozILocalization> mLocalization;
   nsTHashtable<nsRefPtrHashKey<Element>> mRoots;
 };
 
-}  // namespace l10n
 }  // namespace dom
 }  // namespace mozilla
 

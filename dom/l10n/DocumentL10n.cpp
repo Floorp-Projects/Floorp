@@ -12,7 +12,7 @@
 #include "nsISupports.h"
 #include "nsContentUtils.h"
 
-using namespace mozilla::dom::l10n;
+using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DocumentL10n)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocumentL10n, DOMLocalization)

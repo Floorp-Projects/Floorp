@@ -4,16 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
-#include "mozilla/dom/l10n/DOMOverlays.h"
+#include "mozilla/dom/L10nOverlays.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/DOMOverlaysBinding.h"
+#include "mozilla/dom/L10nOverlaysBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsNetUtil.h"
 
 using mozilla::NullPrincipal;
 using namespace mozilla::dom;
-using namespace mozilla::dom::l10n;
 
 static already_AddRefed<Document> SetUpDocument() {
   nsCOMPtr<nsIURI> uri;
@@ -37,10 +36,10 @@ static already_AddRefed<Document> SetUpDocument() {
 }
 
 /**
- * This test verifies that the basic C++ DOMOverlays API
+ * This test verifies that the basic C++ DOM L10nOverlays API
  * works correctly.
  */
-TEST(DOM_L10n_DOMOverlays, Initial)
+TEST(DOM_L10n_Overlays, Initial)
 {
   mozilla::ErrorResult rv;
 
@@ -67,8 +66,8 @@ TEST(DOM_L10n_DOMOverlays, Initial)
       "Hello <a data-l10n-name=\"link\">World</a>.");
 
   // 4. Translate the element.
-  nsTArray<DOMOverlaysError> errors;
-  DOMOverlays::TranslateElement(*elem, translation, errors, rv);
+  nsTArray<L10nOverlaysError> errors;
+  L10nOverlays::TranslateElement(*elem, translation, errors, rv);
 
   nsAutoString textContent;
   elem->GetInnerHTML(textContent, rv);

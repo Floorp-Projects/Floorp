@@ -1,14 +1,13 @@
-#ifndef mozilla_dom_l10n_DOMOverlays_h__
-#define mozilla_dom_l10n_DOMOverlays_h__
+#ifndef mozilla_dom_l10n_L10nOverlays_h__
+#define mozilla_dom_l10n_L10nOverlays_h__
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/DOMOverlaysBinding.h"
+#include "mozilla/dom/L10nOverlaysBinding.h"
 
 namespace mozilla {
 namespace dom {
-namespace l10n {
 
-class DOMOverlays {
+class L10nOverlays {
  public:
   /**
    * Translate an element.
@@ -19,13 +18,12 @@ class DOMOverlays {
    * translation defines the same children, their attributes and text contents
    * will be used for translating the matching source child.
    */
-  static void TranslateElement(
-      const GlobalObject& aGlobal, Element& aElement,
-      const L10nValue& aTranslation,
-      Nullable<nsTArray<mozilla::dom::DOMOverlaysError>>& aErrors);
-  static void TranslateElement(
-      Element& aElement, const L10nValue& aTranslation,
-      nsTArray<mozilla::dom::DOMOverlaysError>& aErrors, ErrorResult& aRv);
+  static void TranslateElement(const GlobalObject& aGlobal, Element& aElement,
+                               const L10nValue& aTranslation,
+                               Nullable<nsTArray<L10nOverlaysError>>& aErrors);
+  static void TranslateElement(Element& aElement, const L10nValue& aTranslation,
+                               nsTArray<L10nOverlaysError>& aErrors,
+                               ErrorResult& aRv);
 
  private:
   /**
@@ -74,7 +72,7 @@ class DOMOverlays {
    */
   static already_AddRefed<nsINode> GetNodeForNamedElement(
       Element* aSourceElement, Element* aTranslatedChild,
-      nsTArray<DOMOverlaysError>& aErrors, ErrorResult& aRv);
+      nsTArray<L10nOverlaysError>& aErrors, ErrorResult& aRv);
 
   /**
    * Check if element is allowed in the translation.
@@ -101,7 +99,7 @@ class DOMOverlays {
    */
   static void OverlayChildNodes(DocumentFragment* aFromFragment,
                                 Element* aToElement,
-                                nsTArray<DOMOverlaysError>& aErrors,
+                                nsTArray<L10nOverlaysError>& aErrors,
                                 ErrorResult& aRv);
 
   /**
@@ -110,7 +108,6 @@ class DOMOverlays {
   static bool ContainsMarkup(const nsAString& aStr);
 };
 
-}  // namespace l10n
 }  // namespace dom
 }  // namespace mozilla
 
