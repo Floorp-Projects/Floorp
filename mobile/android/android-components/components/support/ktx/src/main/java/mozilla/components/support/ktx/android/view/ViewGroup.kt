@@ -6,12 +6,11 @@ package mozilla.components.support.ktx.android.view
 
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.forEach
 
 /**
  * Performs the given action on each View in this ViewGroup.
  */
-fun ViewGroup.forEach(action: (View) -> Unit) {
-    for (index in 0 until childCount) {
-        action(getChildAt(index))
-    }
-}
+@Deprecated("Use Android KTX instead",
+    ReplaceWith("forEach(action)", "androidx.core.view.forEach"))
+inline fun ViewGroup.forEach(action: (View) -> Unit) = forEach(action)

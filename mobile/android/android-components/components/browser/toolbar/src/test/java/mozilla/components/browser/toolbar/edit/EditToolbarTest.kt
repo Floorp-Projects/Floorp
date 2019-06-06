@@ -10,6 +10,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.core.view.contains
+import androidx.core.view.forEach
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
@@ -17,7 +19,6 @@ import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
-import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
@@ -292,60 +293,36 @@ class EditToolbarTest {
     }
 
     companion object {
-        private fun extractClearView(editToolbar: EditToolbar): ImageView {
-            var clearView: ImageView? = null
+        private fun extractClearView(editToolbar: EditToolbar): ImageView =
+            extractView(editToolbar) {
+                it?.id == R.id.mozac_browser_toolbar_clear_view
+            } ?: throw AssertionError("Could not find clear view")
 
-            editToolbar.forEach {
-                if (it is ImageView && it.id == R.id.mozac_browser_toolbar_clear_view) {
-                    clearView = it
-                    return@forEach
-                }
-            }
-
-            return clearView ?: throw AssertionError("Could not find clear view")
-        }
-
-        private fun extractUrlView(editToolbar: EditToolbar): View {
-            var urlView: InlineAutocompleteEditText? = null
-
-            editToolbar.forEach { view ->
-                if (view is InlineAutocompleteEditText) {
-                    urlView = view
-                    return@forEach
-                }
-            }
-
-            return urlView ?: throw java.lang.AssertionError("Could not find URL input view")
-        }
+        private fun extractUrlView(editToolbar: EditToolbar): View =
+            extractView(editToolbar) ?: throw AssertionError("Could not find URL input view")
 
         private fun extractActionView(
             editToolbar: EditToolbar,
             contentDescription: String
-        ): View {
-            var actionView: View? = null
+        ): View = extractView(editToolbar) {
+            it?.contentDescription == contentDescription
+        } ?: throw AssertionError("Could not find action view: $contentDescription")
 
-            editToolbar.forEach { view ->
-                if (view.contentDescription == contentDescription) {
-                    actionView = view
-                    return@forEach
+        private inline fun <reified T> extractView(
+            editToolbar: EditToolbar,
+            otherCondition: (T) -> Boolean = { true }
+        ): T? {
+            editToolbar.forEach {
+                if (it is T && otherCondition(it)) {
+                    return it
                 }
             }
-
-            return actionView ?: throw java.lang.AssertionError("Could not find action view: $contentDescription")
+            return null
         }
     }
 
     infix fun View.assertIn(group: ViewGroup) {
-        var found = false
-
-        group.forEach {
-            if (this == it) {
-                println("Checking $this == $it")
-                found = true
-            }
-        }
-
-        if (!found) {
+        if (!group.contains(this)) {
             throw AssertionError("View not found in ViewGroup")
         }
     }

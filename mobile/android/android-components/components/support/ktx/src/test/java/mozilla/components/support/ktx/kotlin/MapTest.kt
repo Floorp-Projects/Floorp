@@ -17,6 +17,7 @@ import org.junit.runner.RunWith
 import java.io.Serializable
 
 @RunWith(AndroidJUnit4::class)
+@Suppress("Deprecation")
 class MapTest {
 
     @Test

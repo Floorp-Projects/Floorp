@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.core.view.forEach
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
@@ -22,7 +23,6 @@ import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.browser.session.tab.CustomTabMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock

@@ -24,6 +24,10 @@ permalink: /changelog/
 * **feature-prompts**
   * Improved month picker UI, now we have the same widget as Fennec.
 
+* **support-ktx**
+  * Deprecated `ViewGroup.forEach` in favour of Android Core KTX.
+  * Deprecated `Map.toBundle()` in favour of Android Core KTX `bundleOf`.
+
 # 5.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v4.0.0...v5.0.0)

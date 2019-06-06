@@ -912,32 +912,27 @@ class DisplayToolbarTest {
 
         private inline fun <reified T> extractView(
             displayToolbar: DisplayToolbar,
-            otherCondition: (T) -> Boolean = { _ -> true }
+            otherCondition: (T) -> Boolean = { true }
         ): T? {
             displayToolbar.forEach {
                 if (it is T && otherCondition(it)) {
                     return it
                 }
             }
-
             return null
         }
     }
 }
 
 infix fun View.assertIn(group: ViewGroup) {
-    var found = false
-
     group.forEach {
         if (this == it) {
             println("Checking $this == $it")
-            found = true
+            return
         }
     }
 
-    if (!found) {
-        throw AssertionError("View not found in ViewGroup")
-    }
+    throw AssertionError("View not found in ViewGroup")
 }
 
 infix fun View.assertNotIn(group: ViewGroup) {
