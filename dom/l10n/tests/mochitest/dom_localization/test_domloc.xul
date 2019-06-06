@@ -10,8 +10,6 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript">
   <![CDATA[
-  const { DOMLocalization } =
-    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm");
   const { FluentBundle } =
     ChromeUtils.import("resource://gre/modules/Fluent.jsm");
 
