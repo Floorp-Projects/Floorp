@@ -145,6 +145,9 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // child and the parent process.
   void Detach(bool aFromIPC = false);
 
+  // Prepare this BrowsingContext to leave the current process.
+  void PrepareForProcessChange();
+
   // Remove all children from the current BrowsingContext and cache
   // them to allow them to be attached again.
   void CacheChildren(bool aFromIPC = false);
