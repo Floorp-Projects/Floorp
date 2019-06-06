@@ -1464,33 +1464,33 @@ Element* SVGObserverUtils::GetAndObserveBackgroundClip(nsIFrame* aFrame) {
 }
 
 nsSVGPaintServerFrame* SVGObserverUtils::GetAndObservePaintServer(
-    nsIFrame* aTargetFrame, nsStyleSVGPaint nsStyleSVG::*aPaint) {
+    nsIFrame* aPaintedFrame, nsStyleSVGPaint nsStyleSVG::*aPaint) {
   // If we're looking at a frame within SVG text, then we need to look up
   // to find the right frame to get the painting property off.  We should at
   // least look up past a text frame, and if the text frame's parent is the
   // anonymous block frame, then we look up to its parent (the SVGTextFrame).
-  nsIFrame* frame = aTargetFrame;
-  if (frame->GetContent()->IsText()) {
-    frame = frame->GetParent();
-    nsIFrame* grandparent = frame->GetParent();
+  nsIFrame* paintedFrame = aPaintedFrame;
+  if (paintedFrame->GetContent()->IsText()) {
+    paintedFrame = paintedFrame->GetParent();
+    nsIFrame* grandparent = paintedFrame->GetParent();
     if (grandparent && grandparent->IsSVGTextFrame()) {
-      frame = grandparent;
+      paintedFrame = grandparent;
     }
   }
 
-  const nsStyleSVG* svgStyle = frame->StyleSVG();
+  const nsStyleSVG* svgStyle = paintedFrame->StyleSVG();
   if ((svgStyle->*aPaint).Type() != eStyleSVGPaintType_Server) {
     return nullptr;
   }
 
-  RefPtr<URLAndReferrerInfo> paintServerURL =
-      ResolveURLUsingLocalRef(frame, (svgStyle->*aPaint).GetPaintServer());
+  RefPtr<URLAndReferrerInfo> paintServerURL = ResolveURLUsingLocalRef(
+      paintedFrame, (svgStyle->*aPaint).GetPaintServer());
 
   MOZ_ASSERT(aPaint == &nsStyleSVG::mFill || aPaint == &nsStyleSVG::mStroke);
   PaintingPropertyDescriptor propDesc =
       (aPaint == &nsStyleSVG::mFill) ? FillProperty() : StrokeProperty();
   nsSVGPaintingProperty* property =
-      GetPaintingProperty(paintServerURL, frame, propDesc);
+      GetPaintingProperty(paintServerURL, paintedFrame, propDesc);
   if (!property) {
     return nullptr;
   }
