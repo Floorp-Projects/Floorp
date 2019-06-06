@@ -89,7 +89,7 @@ if CONFIG['LIBJPEG_TURBO_ASFLAGS']:
             'simd/arm64/jsimd.c',
             'simd/arm64/jsimd_neon.S',
         ]
-    elif CONFIG['CPU_ARCH'] == 'mips':
+    elif CONFIG['CPU_ARCH'] == 'mips32':
         SOURCES += [
             'simd/mips/jsimd.c',
             'simd/mips/jsimd_dspr2.S',
