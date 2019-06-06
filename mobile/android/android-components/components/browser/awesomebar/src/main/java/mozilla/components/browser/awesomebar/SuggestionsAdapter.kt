@@ -51,11 +51,8 @@ internal class SuggestionsAdapter(
         // Start with the current list of suggestions
         val updatedSuggestions = suggestions.toMutableList()
 
-        if (!provider.shouldClearSuggestions) {
-            // This provider doesn't want its suggestions to be cleared when the typed text changes. This means now
-            // that there are new suggestions we need to remove the previous suggestions of this provider.
-            suggestionMap[provider]?.let { updatedSuggestions.removeAll(it) }
-        }
+        // Remove previous suggestions of this provider.
+        suggestionMap[provider]?.let { updatedSuggestions.removeAll(it) }
 
         // Remember which suggestions this provider added
         suggestionMap[provider] = providerSuggestions

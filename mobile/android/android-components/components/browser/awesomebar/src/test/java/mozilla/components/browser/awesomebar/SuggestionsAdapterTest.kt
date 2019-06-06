@@ -21,6 +21,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -42,6 +43,34 @@ class SuggestionsAdapterTest {
 
         adapter.addSuggestions(mockProvider(), suggestions)
 
+        assertEquals(3, adapter.itemCount)
+        assertEquals(suggestions, adapter.suggestions)
+    }
+
+    @Test
+    fun `addSuggestions() always clears previous suggestions of provider`() {
+        val adapter = SuggestionsAdapter(mock())
+
+        val provider = mockProvider()
+        `when`(provider.shouldClearSuggestions).thenReturn(true)
+
+        assertEquals(0, adapter.itemCount)
+
+        val suggestions = listOf<AwesomeBar.Suggestion>(mock(), mock(), mock())
+        adapter.addSuggestions(provider, suggestions)
+        assertEquals(3, adapter.itemCount)
+        assertEquals(suggestions, adapter.suggestions)
+
+        adapter.addSuggestions(provider, suggestions)
+        assertEquals(3, adapter.itemCount)
+        assertEquals(suggestions, adapter.suggestions)
+
+        // shouldClearSuggestions is used to indicate whether or not
+        // suggestions should be cleared right away on input changes.
+        // When we're adding newly computed suggestions, we should
+        // always clear old ones to prevent duplicates.
+        `when`(provider.shouldClearSuggestions).thenReturn(false)
+        adapter.addSuggestions(provider, suggestions)
         assertEquals(3, adapter.itemCount)
         assertEquals(suggestions, adapter.suggestions)
     }
