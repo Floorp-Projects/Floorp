@@ -45,11 +45,6 @@ class PathBuilderCapture : public PathBuilder {
    */
   virtual void Close() override;
 
-  /* Point the current subpath is at - or where the next subpath will start
-   * if there is no active subpath.
-   */
-  virtual Point CurrentPoint() const override;
-
   virtual already_AddRefed<Path> Finish() override;
 
   virtual BackendType GetBackendType() const override {
@@ -61,7 +56,6 @@ class PathBuilderCapture : public PathBuilder {
 
   FillRule mFillRule;
   std::vector<PathOp> mPathOps;
-  Point mCurrentPoint;
   RefPtr<DrawTarget> mDT;
 };
 
@@ -70,11 +64,13 @@ class PathCapture : public Path {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathCapture, override)
 
   PathCapture(const std::vector<PathOp> aOps, FillRule aFillRule,
-              DrawTarget* aDT, const Point& aCurrentPoint)
+              DrawTarget* aDT, const Point& aCurrentPoint,
+              const Point& aBeginPoint)
       : mPathOps(aOps),
         mFillRule(aFillRule),
         mDT(aDT),
-        mCurrentPoint(aCurrentPoint) {}
+        mCurrentPoint(aCurrentPoint),
+        mBeginPoint(aBeginPoint) {}
 
   virtual BackendType GetBackendType() const override {
     return BackendType::CAPTURE;
@@ -109,6 +105,7 @@ class PathCapture : public Path {
   FillRule mFillRule;
   RefPtr<DrawTarget> mDT;
   Point mCurrentPoint;
+  Point mBeginPoint;
 };
 
 }  // namespace gfx
