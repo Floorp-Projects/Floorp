@@ -1921,8 +1921,8 @@ bool nsGlobalWindowInner::DialogsAreBeingAbused() {
 void nsGlobalWindowInner::FireFrameLoadEvent(bool aIsTrusted) {
   // If we're not in a content frame, or are at a BrowsingContext tree boundary,
   // such as the content-chrome boundary, don't fire the "load" event.
-  if (!GetBrowsingContext()->GetParent() ||
-      !GetBrowsingContext()->IsContent()) {
+  if (GetBrowsingContext()->IsTopContent() ||
+      GetBrowsingContext()->IsChrome()) {
     return;
   }
 
