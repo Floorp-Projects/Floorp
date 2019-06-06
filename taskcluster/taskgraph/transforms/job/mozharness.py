@@ -26,8 +26,6 @@ from taskgraph.transforms.job.common import (
     setup_secrets,
     docker_worker_add_artifacts,
     generic_worker_add_artifacts,
-    generic_worker_hg_commands,
-    support_vcs_checkout,
 )
 from taskgraph.transforms.task import (
     get_branch_repo,
@@ -253,7 +251,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         raise Exception("Jobs run using mozharness on Windows do not support properties " +
                         ', '.join(invalid))
 
-    worker = taskdesc['worker']
+    worker = taskdesc['worker'] = job['worker']
 
     setup_secrets(config, job, taskdesc)
 
@@ -264,7 +262,6 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     })
     if not worker.get('skip-artifacts', False):
         generic_worker_add_artifacts(config, job, taskdesc)
-    support_vcs_checkout(config, job, taskdesc)
 
     env = worker['env']
     env.update({
@@ -293,27 +290,14 @@ def mozharness_on_generic_worker(config, job, taskdesc):
             "Task generation for mozharness build jobs currently only supported on Windows"
         )
 
-    # TODO We should run the mozharness script with `mach python` so these
-    # modules are automatically available, but doing so somehow caused hangs in
-    # Windows ccov builds (see bug 1543149).
-    gecko = env['GECKO_PATH'].replace('.', '%cd%')
-    mozbase_dir = "{}/testing/mozbase".format(gecko)
-    env['PYTHONPATH'] = ';'.join([
-        "{}/manifestparser".format(mozbase_dir),
-        "{}/mozinfo".format(mozbase_dir),
-        "{}/mozfile".format(mozbase_dir),
-        "{}/mozprocess".format(mozbase_dir),
-        "{}/third_party/python/six".format(gecko),
-    ])
-
     mh_command = [
             'c:/mozilla-build/python/python.exe',
-            '{}/testing/{}'.format(gecko, run['script']),
+            '%GECKO_PATH%/testing/{}'.format(run['script']),
     ]
 
     if 'config-paths' in run:
         for path in run['config-paths']:
-            mh_command.append('--extra-config-path {}/{}'.format(gecko, path))
+            mh_command.append('--extra-config-path %GECKO_PATH%/{}'.format(path))
 
     for cfg in run['config']:
         mh_command.append('--config ' + cfg)
@@ -329,34 +313,29 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         mh_command.append('--custom-build-variant')
         mh_command.append(run['custom-build-variant-cfg'])
 
-    hg_commands = generic_worker_hg_commands(
-        base_repo=env['GECKO_BASE_REPOSITORY'],
-        head_repo=env['GECKO_HEAD_REPOSITORY'],
-        head_rev=env['GECKO_HEAD_REV'],
-        path=r'.\build\src',
-    )
+    run_task = job['run'] = {
+        key: value
+        for key, value in run.iteritems()
+        if key in run_task_keys
+    }
+    run_task['using'] = 'run-task'
+    run_task['command'] = mh_command
+    configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
 
-    if run['comm-checkout']:
-        hg_commands.extend(
-            generic_worker_hg_commands(
-                base_repo=env['COMM_BASE_REPOSITORY'],
-                head_repo=env['COMM_HEAD_REPOSITORY'],
-                head_rev=env['COMM_HEAD_REV'],
-                path=r'.\build\src\comm'))
+    # TODO We should run the mozharness script with `mach python` so these
+    # modules are automatically available, but doing so somehow caused hangs in
+    # Windows ccov builds (see bug 1543149).
+    mozbase_dir = "{}/testing/mozbase".format(env['GECKO_PATH'])
+    env['PYTHONPATH'] = ';'.join([
+        "{}/manifestparser".format(mozbase_dir),
+        "{}/mozinfo".format(mozbase_dir),
+        "{}/mozfile".format(mozbase_dir),
+        "{}/mozprocess".format(mozbase_dir),
+        "{}/third_party/python/six".format(env['GECKO_PATH']),
+    ])
 
-    fetch_commands = []
-    if 'MOZ_FETCHES' in env:
-        # When Bug 1436037 is fixed, run-task can be used for this task,
-        # and this call can go away
-        fetch_commands.append(' '.join([
-            r'c:\mozilla-build\python3\python3.exe',
-            r'build\src\taskcluster\scripts\misc\fetch-content',
-            'task-artifacts',
-        ]))
-
-    worker['command'] = []
     if taskdesc.get('needs-sccache'):
-        worker['command'].extend([
+        worker['command'] = [
             # Make the comment part of the first command, as it will help users to
             # understand what is going on, and why these steps are implemented.
             dedent('''\
@@ -368,10 +347,4 @@ def mozharness_on_generic_worker(config, job, taskdesc):
             # Grant delete permission on the link to everyone.
             r'icacls z:\build /grant *S-1-1-0:D /L',
             r'cd /d z:\build',
-        ])
-
-    worker['command'].extend(hg_commands)
-    worker['command'].extend(fetch_commands)
-    worker['command'].extend([
-        ' '.join(mh_command)
-    ])
+        ] + worker['command']
