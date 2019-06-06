@@ -1286,7 +1286,7 @@ void nsDisplayListBuilder::SetGlassDisplayItem(nsDisplayItem* aItem) {
         NS_WARNING("Multiple glass backgrounds found?");
       } else
 #endif
-      if (!mHasGlassItemDuringPartial) {
+          if (!mHasGlassItemDuringPartial) {
         mHasGlassItemDuringPartial = true;
         aItem->SetIsGlassItem();
       }
@@ -1300,7 +1300,7 @@ void nsDisplayListBuilder::SetGlassDisplayItem(nsDisplayItem* aItem) {
       NS_WARNING("Multiple glass backgrounds found?");
     } else
 #endif
-    if (!mGlassDisplayItem) {
+        if (!mGlassDisplayItem) {
       mGlassDisplayItem = aItem;
       mGlassDisplayItem->SetIsGlassItem();
     }
@@ -8639,22 +8639,26 @@ void nsDisplayTransform::UpdateBounds(nsDisplayListBuilder* aBuilder) {
     return;
   }
 
-  if (!Combines3DTransformWithAncestors()) {
-    if (mFrame->Extend3DContext()) {
+  if (mFrame->Extend3DContext()) {
+    if (!Combines3DTransformWithAncestors()) {
       // The transform establishes a 3D context. |UpdateBoundsFor3D()| will
       // collect the bounds from the child transforms.
       UpdateBoundsFor3D(aBuilder);
     } else {
-      // A stand-alone transform.
-      mBounds = TransformUntransformedBounds(aBuilder, GetTransform());
+      // With nested 3D transforms, the 2D bounds might not be useful.
+      mBounds = nsRect();
     }
 
     return;
   }
 
-  // With nested 3D transforms, the 2D bounds might not be useful.
-  MOZ_ASSERT(mFrame->Combines3DTransformWithAncestors());
-  mBounds = nsRect();
+  MOZ_ASSERT(!mFrame->Extend3DContext());
+
+  // We would like to avoid calculating 2D bounds here for nested 3D transforms,
+  // but mix-blend-mode relies on having bounds set. See bug 1556956.
+
+  // A stand-alone transform.
+  mBounds = TransformUntransformedBounds(aBuilder, GetTransform());
 }
 
 void nsDisplayTransform::UpdateBoundsFor3D(nsDisplayListBuilder* aBuilder) {

@@ -68,9 +68,9 @@ void nsGridLayout2::AddWidth(nsSize& aSize, nscoord aSize2,
                              bool aIsHorizontal) {
   nscoord& size = GET_WIDTH(aSize, aIsHorizontal);
 
-  if (size != NS_INTRINSICSIZE) {
-    if (aSize2 == NS_INTRINSICSIZE)
-      size = NS_INTRINSICSIZE;
+  if (size != NS_UNCONSTRAINEDSIZE) {
+    if (aSize2 == NS_UNCONSTRAINEDSIZE)
+      size = NS_UNCONSTRAINEDSIZE;
     else
       size += aSize2;
   }
@@ -151,7 +151,7 @@ nsSize nsGridLayout2::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
 
   // if there are no <rows> tags that will sum up our columns,
   // sum up our columns here.
-  nsSize total(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  nsSize total(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   nsIFrame* rowsBox = mGrid.GetRowsBox();
   nsIFrame* columnsBox = mGrid.GetColumnsBox();
   if (!rowsBox || !columnsBox) {

@@ -596,9 +596,9 @@ void nsBoxFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
   LogicalSize prefSize(wm);
 
   // if we are told to layout intrinsic then get our preferred size.
-  NS_ASSERTION(computedSize.ISize(wm) != NS_INTRINSICSIZE,
+  NS_ASSERTION(computedSize.ISize(wm) != NS_UNCONSTRAINEDSIZE,
                "computed inline size should always be computed");
-  if (computedSize.BSize(wm) == NS_INTRINSICSIZE) {
+  if (computedSize.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
     nsSize physicalPrefSize = GetXULPrefSize(state);
     nsSize minSize = GetXULMinSize(state);
     nsSize maxSize = GetXULMaxSize(state);
@@ -610,7 +610,7 @@ void nsBoxFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
   // get our desiredSize
   computedSize.ISize(wm) += m.IStart(wm) + m.IEnd(wm);
 
-  if (aReflowInput.ComputedBSize() == NS_INTRINSICSIZE) {
+  if (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
     computedSize.BSize(wm) = prefSize.BSize(wm);
     // prefSize is border-box but min/max constraints are content-box.
     nscoord blockDirBorderPadding =
@@ -747,7 +747,7 @@ nsSize nsBoxFrame::GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) {
   NS_ASSERTION(aBoxLayoutState.GetRenderingContext(),
                "must have rendering context");
 
-  nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  nsSize size(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   DISPLAY_MAX_SIZE(this, size);
   if (!DoesNeedRecalc(mMaxSize)) {
     size = mMaxSize;

@@ -22,6 +22,9 @@ interface JSWindowActor {
 [ChromeOnly, ChromeConstructor]
 interface JSWindowActorParent {
   readonly attribute WindowGlobalParent manager;
+
+  [Throws]
+  readonly attribute CanonicalBrowsingContext? browsingContext;
 };
 JSWindowActorParent implements JSWindowActor;
 

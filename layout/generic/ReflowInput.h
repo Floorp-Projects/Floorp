@@ -599,8 +599,8 @@ struct ReflowInput : public SizeComputationInput {
   // The computed width specifies the frame's content area width, and it does
   // not apply to inline non-replaced elements
   //
-  // For replaced inline frames, a value of NS_INTRINSICSIZE means you should
-  // use your intrinsic width as the computed width
+  // For replaced inline frames, a value of NS_UNCONSTRAINEDSIZE means you
+  // should use your intrinsic width as the computed width
   //
   // For block-level frames, the computed width is based on the width of the
   // containing block, the margin/border/padding areas, and the min/max width.
@@ -610,15 +610,15 @@ struct ReflowInput : public SizeComputationInput {
   // The computed height specifies the frame's content height, and it does
   // not apply to inline non-replaced elements
   //
-  // For replaced inline frames, a value of NS_INTRINSICSIZE means you should
-  // use your intrinsic height as the computed height
+  // For replaced inline frames, a value of NS_UNCONSTRAINEDSIZE means you
+  // should use your intrinsic height as the computed height
   //
   // For non-replaced block-level frames in the flow and floated, a value of
-  // NS_AUTOHEIGHT means you choose a height to shrink wrap around the normal
-  // flow child frames. The height must be within the limit of the min/max
-  // height if there is such a limit
+  // NS_UNCONSTRAINEDSIZE means you choose a height to shrink wrap around the
+  // normal flow child frames. The height must be within the limit of the
+  // min/max height if there is such a limit
   //
-  // For replaced block-level frames, a value of NS_INTRINSICSIZE
+  // For replaced block-level frames, a value of NS_UNCONSTRAINEDSIZE
   // means you use your intrinsic height as the computed height
   MOZ_INIT_OUTSIDE_CTOR
   nscoord mComputedHeight;
@@ -803,8 +803,8 @@ struct ReflowInput : public SizeComputationInput {
    * @param aBlockBSize The computed block size of the content rect of the block
    *                     that the line should fill.
    *                     Only used with line-height:-moz-block-height.
-   *                     NS_AUTOHEIGHT results in a normal line-height for
-   *                     line-height:-moz-block-height.
+   *                     NS_UNCONSTRAINEDSIZE results in a normal line-height
+   * for line-height:-moz-block-height.
    * @param aFontSizeInflation The result of the appropriate
    *                           nsLayoutUtils::FontSizeInflationFor call,
    *                           or 1.0 if during intrinsic size
