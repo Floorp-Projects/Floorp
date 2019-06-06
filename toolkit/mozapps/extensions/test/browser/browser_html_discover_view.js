@@ -282,6 +282,9 @@ add_task(async function setup() {
       // Enable HTML for all because some tests load non-discopane views.
       ["extensions.htmlaboutaddons.enabled", true],
       ["extensions.htmlaboutaddons.discover.enabled", true],
+      // Disable non-discopane recommendations to avoid unexpected discovery
+      // API requests.
+      ["extensions.htmlaboutaddons.recommendations.enabled", false],
       // Disable the telemetry client ID (and its associated UI warning).
       // browser_html_discover_view_clientid.js covers this functionality.
       ["browser.discovery.enabled", false],
