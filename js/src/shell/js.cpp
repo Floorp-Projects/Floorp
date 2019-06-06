@@ -10285,12 +10285,8 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   if (const char* str = op.getStringOption("cache-ir-stubs")) {
     if (strcmp(str, "on") == 0) {
       jit::JitOptions.disableCacheIR = false;
-      jit::JitOptions.disableCacheIRCalls = true;
     } else if (strcmp(str, "off") == 0) {
       jit::JitOptions.disableCacheIR = true;
-    } else if (strcmp(str, "call") == 0) {
-      jit::JitOptions.disableCacheIR = false;
-      jit::JitOptions.disableCacheIRCalls = false;
     } else {
       return OptionFailure("cache-ir-stubs", str);
     }

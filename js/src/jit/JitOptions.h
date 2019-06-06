@@ -57,7 +57,6 @@ struct DefaultJitOptions {
   bool disableRecoverIns;
   bool disableScalarReplacement;
   bool disableCacheIR;
-  bool disableCacheIRCalls;
   bool disableSincos;
   bool disableSink;
   bool disableOptimizationLevels;
