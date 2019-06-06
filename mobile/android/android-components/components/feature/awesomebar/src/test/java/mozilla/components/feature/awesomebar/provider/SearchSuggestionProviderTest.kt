@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
@@ -12,7 +13,6 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
-import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock

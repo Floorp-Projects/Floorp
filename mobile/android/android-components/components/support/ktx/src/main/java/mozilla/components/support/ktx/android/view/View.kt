@@ -8,12 +8,12 @@ import android.content.Context
 import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
-import androidx.core.view.ViewCompat
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import androidx.core.content.getSystemService
+import androidx.core.view.ViewCompat
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.content.res.pxToDp
-import mozilla.components.support.ktx.android.content.systemService
 import java.lang.ref.WeakReference
 
 /**
@@ -117,7 +117,7 @@ private class ShowKeyboard(
                 return
             }
 
-            view.context?.systemService<InputMethodManager>(Context.INPUT_METHOD_SERVICE)?.let { imm ->
+            view.context?.getSystemService<InputMethodManager>()?.let { imm ->
                 if (!imm.isActive(view)) {
                     // This view is not the currently active view for the input method yet.
                     post()

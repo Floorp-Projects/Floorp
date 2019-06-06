@@ -23,7 +23,7 @@ permalink: /changelog/
 * **browser-domains**
   * New domain autocomplete providers `ShippedDomainsProvider` and `CustomDomainsProvider` that
     should be used instead of deprecated `DomainAutoCompleteProvider`.
-    
+
 * **service-glean**
   * The length limit on labels in labeled metrics has been increased from 30 to 61 characters.  See [1556684](https://bugzilla.mozilla.org/show_bug.cgi?id=1556684).
   * Timespan metrics have a new API for setting the timespan directly: `sumRawNanos` and `setRawNanos`.
@@ -39,6 +39,10 @@ permalink: /changelog/
 
 * **browser-session**
   * ⚠️ **This is a breaking change**: Added `url` parameter to `Session.Observer.onLoadRequest()`.
+
+* **support-ktx**
+  * Removed `Drawable.toBitmap()` in favour of the Android Core KTX version.
+  * Removed `Context.systemService()` in favour of the Android Core KTX version.
 
 # 0.55.0
 

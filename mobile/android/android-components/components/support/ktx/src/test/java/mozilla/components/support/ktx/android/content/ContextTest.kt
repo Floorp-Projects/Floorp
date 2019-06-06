@@ -12,6 +12,7 @@ import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.hardware.camera2.CameraManager
+import androidx.core.content.getSystemService
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.support.test.argumentCaptor
 import org.junit.Assert.assertEquals
@@ -24,10 +25,10 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.shadows.ShadowApplication
-import org.robolectric.shadows.ShadowProcess
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowApplication
 import org.robolectric.shadows.ShadowCameraCharacteristics
+import org.robolectric.shadows.ShadowProcess
 
 @RunWith(RobolectricTestRunner::class)
 class ContextTest {
@@ -40,28 +41,13 @@ class ContextTest {
     }
 
     @Test
-    fun `systemService() returns same service as getSystemService()`() {
-        assertEquals(
-            context.getSystemService(Context.INPUT_METHOD_SERVICE),
-            context.systemService(Context.INPUT_METHOD_SERVICE))
-
-        assertEquals(
-            context.getSystemService(Context.ACTIVITY_SERVICE),
-            context.systemService(Context.ACTIVITY_SERVICE))
-
-        assertEquals(
-            context.getSystemService(Context.LOCATION_SERVICE),
-            context.systemService(Context.LOCATION_SERVICE))
-    }
-
-    @Test
     fun `isOSOnLowMemory() should return the same as getMemoryInfo() lowMemory`() {
         val extensionFunctionResult = context.isOSOnLowMemory()
 
-        val activityManager = context.systemService<ActivityManager>(Context.ACTIVITY_SERVICE)
+        val activityManager: ActivityManager? = context.getSystemService()
 
         val normalMethodResult = ActivityManager.MemoryInfo().also { memoryInfo ->
-            activityManager.getMemoryInfo(memoryInfo)
+            activityManager?.getMemoryInfo(memoryInfo)
         }.lowMemory
 
         assertEquals(extensionFunctionResult, normalMethodResult)

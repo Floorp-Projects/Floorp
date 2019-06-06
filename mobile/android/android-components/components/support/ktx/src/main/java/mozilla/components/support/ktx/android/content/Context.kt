@@ -13,12 +13,13 @@ import android.content.Intent.EXTRA_SUBJECT
 import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.hardware.camera2.CameraManager
 import android.os.Process
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat.checkSelfPermission
+import androidx.core.content.getSystemService
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.ktx.R
-import android.hardware.camera2.CameraManager
 
 /**
  * The (visible) version name of the application, as specified by the <manifest> tag's versionName
@@ -40,17 +41,10 @@ val Context.appName: String
     }
 
 /**
- * Returns the handle to a system-level service by name.
- */
-inline fun <reified T> Context.systemService(name: String): T {
-    return getSystemService(name) as T
-}
-
-/**
  * Returns whether or not the operating system is under low memory conditions.
  */
 fun Context.isOSOnLowMemory(): Boolean {
-    val activityManager = systemService<ActivityManager>(Context.ACTIVITY_SERVICE)
+    val activityManager: ActivityManager = getSystemService()!!
     return ActivityManager.MemoryInfo().also { memoryInfo ->
         activityManager.getMemoryInfo(memoryInfo)
     }.lowMemory
@@ -69,7 +63,10 @@ fun Context.isPermissionGranted(vararg permission: String): Boolean {
  *
  * @return true if a camera was found, otherwise false.
  */
-fun Context.hasCamera(): Boolean = systemService<CameraManager>(Context.CAMERA_SERVICE).cameraIdList.isNotEmpty()
+fun Context.hasCamera(): Boolean {
+    val cameraManager: CameraManager? = getSystemService()
+    return cameraManager?.cameraIdList?.isNotEmpty() ?: false
+}
 
 /**
  *  Shares content via [ACTION_SEND] intent.
