@@ -27,6 +27,9 @@ permalink: /changelog/
 * **service-glean**
   * The length limit on labels in labeled metrics has been increased from 30 to 61 characters.  See [1556684](https://bugzilla.mozilla.org/show_bug.cgi?id=1556684).
 
+* **support-base**
+  * Fixed multiple potential leaks in `ObserverRegistry` (used internally by many classes in other components like `SessionManager`, `EngineSession` and others).
+
 # 0.55.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.54.0...v0.55.0)
