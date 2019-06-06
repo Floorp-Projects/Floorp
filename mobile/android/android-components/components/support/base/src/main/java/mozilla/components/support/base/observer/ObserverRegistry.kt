@@ -32,12 +32,12 @@ class ObserverRegistry<T> : Observable<T> {
      *
      * @param observer the observer to register.
      */
+    @Synchronized
     override fun register(observer: T) {
-        synchronized(observers) {
-            observers.add(observer)
-        }
+        observers.add(observer)
     }
 
+    @Synchronized
     override fun register(observer: T, owner: LifecycleOwner, autoPause: Boolean) {
         // Don't register if the owner is already destroyed
         if (owner.lifecycle.currentState == DESTROYED) {
@@ -57,6 +57,7 @@ class ObserverRegistry<T> : Observable<T> {
         owner.lifecycle.addObserver(lifecycleObserver)
     }
 
+    @Synchronized
     override fun register(observer: T, view: View) {
         val viewObserver = ViewBoundObserver(
                 view,
@@ -78,70 +79,66 @@ class ObserverRegistry<T> : Observable<T> {
      *
      * @param observer the observer to unregister.
      */
+    @Synchronized
     override fun unregister(observer: T) {
-        synchronized(observers) {
-            observers.remove(observer)
-            pausedObservers.remove(observer)
-        }
+        // Remove observer
+        observers.remove(observer)
+        pausedObservers.remove(observer)
 
-        // Unregister observers
+        // Unregister lifecycle/view observers
         lifecycleObservers[observer]?.remove()
         viewObservers[observer]?.remove()
-        // Remove observers from map
+
+        // Remove lifecyle/view observers from map
         lifecycleObservers.remove(observer)
         viewObservers.remove(observer)
     }
 
+    @Synchronized
     override fun unregisterObservers() {
-        synchronized(observers) {
-            observers.forEach {
-                lifecycleObservers[it]?.remove()
-            }
-            observers.clear()
-            pausedObservers.clear()
-            lifecycleObservers.clear()
-            viewObservers.clear()
+        observers.forEach {
+            lifecycleObservers[it]?.remove()
         }
+
+        observers.clear()
+        pausedObservers.clear()
+        lifecycleObservers.clear()
+        viewObservers.clear()
     }
 
+    @Synchronized
     override fun pauseObserver(observer: T) {
-        synchronized(observers) {
-            pausedObservers.add(observer)
-        }
+        pausedObservers.add(observer)
     }
 
+    @Synchronized
     override fun resumeObserver(observer: T) {
-        synchronized(observers) {
-            pausedObservers.remove(observer)
-        }
+        pausedObservers.remove(observer)
     }
 
+    @Synchronized
     override fun notifyObservers(block: T.() -> Unit) {
-        synchronized(observers) {
-            observers.forEach {
-                if (!pausedObservers.contains(it)) {
-                    it.block()
-                }
+        observers.forEach {
+            if (!pausedObservers.contains(it)) {
+                it.block()
             }
         }
     }
 
+    @Synchronized
     override fun <V> wrapConsumers(block: T.(V) -> Boolean): List<(V) -> Boolean> {
         val consumers: MutableList<(V) -> Boolean> = mutableListOf()
 
-        synchronized(observers) {
-            observers.forEach { observer ->
-                consumers.add { value -> observer.block(value) }
-            }
+        observers.forEach { observer ->
+            consumers.add { value -> observer.block(value) }
         }
 
         return consumers
     }
 
+    @Synchronized
     override fun isObserved(): Boolean {
-        synchronized(observers) {
-            return !observers.isEmpty()
-        }
+        return !observers.isEmpty()
     }
 
     /**
