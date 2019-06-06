@@ -55,6 +55,8 @@ run_task_schema = Schema({
         'internal',
     ),
 
+    # Whether to run as root. (defaults to False)
+    Optional('run-as-root'): bool,
 })
 
 
@@ -78,6 +80,7 @@ worker_defaults = {
     'comm-checkout': False,
     'sparse-profile': None,
     'tooltool-downloads': False,
+    'run-as-root': False,
 }
 
 
@@ -114,6 +117,8 @@ def docker_worker_run_task(config, job, taskdesc):
     if run['comm-checkout']:
         command.append('--comm-checkout={workdir}/checkouts/gecko/comm'.format(**run))
     command.append('--fetch-hgfingerprint')
+    if run['run-as-root']:
+        command.extend(('--user', 'root', '--group', 'root'))
     command.append('--')
     command.extend(run_command)
     worker['command'] = command
@@ -163,6 +168,8 @@ def generic_worker_run_task(config, job, taskdesc):
             run_command = '"{}"'.format(run_command)
         run_command = ['bash', '-cx', run_command]
 
+    if run['run-as-root']:
+        command.extend(('--user', 'root', '--group', 'root'))
     command.append('--')
     command.extend(run_command)
 
