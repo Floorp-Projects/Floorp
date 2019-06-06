@@ -40,12 +40,12 @@ class TaskBuilder(object):
         self.date = arrow.get(date_string)
         self.trust_level = trust_level
 
-    def craft_assemble_release_task(self, architectures, track, is_staging, version_name):
+    def craft_assemble_release_task(self, architectures, channel, is_staging, version_name):
         artifacts = {
             'public/target.{}.apk'.format(arch): {
                 "type": 'file',
                 "path": '/opt/fenix/app/build/outputs/apk/'
-                        '{arch}/{track}/app-{arch}-{track}-unsigned.apk'.format(arch=arch, track=track),
+                        '{arch}/{channel}/app-{arch}-{channel}-unsigned.apk'.format(arch=arch, channel=channel),
                 "expires": taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
             }
             for arch in architectures
@@ -54,11 +54,11 @@ class TaskBuilder(object):
         def secret_index(name):
             if is_staging:
                 return 'garbage/staging/project/mobile/fenix/{}'.format(name)
-            elif track == 'nightly':
+            elif channel == 'nightly':
                 # TODO: Move nightly secrets to "project/mobile/fenix/nightly/..."
                 return 'project/mobile/fenix/{}'.format(name)
             else:
-                return 'project/mobile/fenix/{}/{}'.format(track, name)
+                return 'project/mobile/fenix/{}/{}'.format(channel, name)
 
         sentry_secret = secret_index('sentry')
         leanplum_secret = secret_index('leanplum')
@@ -75,10 +75,10 @@ class TaskBuilder(object):
             )
         )
 
-        capitalized_track = upper_case_first_letter(track)
+        capitalized_channel = upper_case_first_letter(channel)
         gradle_commands = (
             './gradlew --no-daemon -PversionName={} clean test assemble{}'.format(
-                version_name, capitalized_track),
+                version_name, capitalized_channel),
         )
 
         command = ' && '.join(
@@ -93,8 +93,8 @@ class TaskBuilder(object):
         ]
 
         return self._craft_build_ish_task(
-            name='Build {} task'.format(capitalized_track),
-            description='Build Fenix {} from source code'.format(capitalized_track),
+            name='Build {} task'.format(capitalized_channel),
+            description='Build Fenix {} from source code'.format(capitalized_channel),
             command=command,
             scopes=[
                 "secrets:get:{}".format(secret) for secret in (sentry_secret, leanplum_secret, adjust_secret)
@@ -106,7 +106,7 @@ class TaskBuilder(object):
                 'machine': {
                     'platform': 'android-all',
                 },
-                'symbol': '{}-A'.format(track),
+                'symbol': '{}-A'.format(channel),
                 'tier': 1,
             },
         )
@@ -431,25 +431,25 @@ class TaskBuilder(object):
         )
 
     def craft_release_signing_task(
-        self, build_task_id, apk_paths, track, is_staging,
+        self, build_task_id, apk_paths, channel, is_staging,
     ):
-        capitalized_track = upper_case_first_letter(track)
+        capitalized_channel = upper_case_first_letter(channel)
         staging_prefix = '.staging' if is_staging else ''
 
         routes = [
             "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.latest".format(
-                staging_prefix, track, self.date.year, self.date.month, self.date.day
+                staging_prefix, channel, self.date.year, self.date.month, self.date.day
             ),
             "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.revision.{}".format(
-                staging_prefix, track, self.date.year, self.date.month, self.date.day, self.commit
+                staging_prefix, channel, self.date.year, self.date.month, self.date.day, self.commit
             ),
-            "index.project.mobile.fenix.v2{}.{}.latest".format(staging_prefix, track),
+            "index.project.mobile.fenix.v2{}.{}.latest".format(staging_prefix, channel),
         ]
 
         return self._craft_signing_task(
-            name="Signing {} task".format(capitalized_track),
-            description="Sign {} builds of Fenix".format(capitalized_track),
-            signing_type="dep" if is_staging else track,
+            name="Signing {} task".format(capitalized_channel),
+            description="Sign {} builds of Fenix".format(capitalized_channel),
+            signing_type="dep" if is_staging else channel,
             assemble_task_id=build_task_id,
             apk_paths=apk_paths,
             routes=routes,
@@ -458,18 +458,18 @@ class TaskBuilder(object):
                 'machine': {
                   'platform': 'android-all',
                 },
-                'symbol': '{}-s'.format(track),
+                'symbol': '{}-s'.format(channel),
                 'tier': 1,
             },
         )
 
     def craft_push_task(
-        self, signing_task_id, apks, track, is_staging=False
+        self, signing_task_id, apks, channel, is_staging=False
     ):
         payload = {
             "commit": True,
-            "google_play_track": track,
-            "certificate_alias": 'fenix' if is_staging else 'fenix-{}'.format(track),
+            "channel": channel,
+            "certificate_alias": 'fenix' if is_staging else 'fenix-{}'.format(channel),
             "upstreamArtifacts": [
                 {
                     "paths": apks,
@@ -497,7 +497,7 @@ class TaskBuilder(object):
                 'machine': {
                   'platform': 'android-all',
                 },
-                'symbol': '{}-gp'.format(track),
+                'symbol': '{}-gp'.format(channel),
                 'tier': 1,
             },
         )

@@ -106,8 +106,8 @@ def raptor(is_staging):
     return (build_tasks, signing_tasks, other_tasks)
 
 
-def release(track, is_staging, version_name):
-    variants = get_variants_for_build_type(track)
+def release(channel, is_staging, version_name):
+    variants = get_variants_for_build_type(channel)
     architectures = [variant.abi for variant in variants]
     apk_paths = ["public/target.{}.apk".format(arch) for arch in architectures]
 
@@ -116,13 +116,13 @@ def release(track, is_staging, version_name):
     push_tasks = {}
 
     build_task_id = taskcluster.slugId()
-    build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(architectures, track, is_staging, version_name)
+    build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(architectures, channel, is_staging, version_name)
 
     signing_task_id = taskcluster.slugId()
     signing_tasks[signing_task_id] = BUILDER.craft_release_signing_task(
         build_task_id,
         apk_paths=apk_paths,
-        track=track,
+        channel=channel,
         is_staging=is_staging,
     )
 
@@ -130,7 +130,7 @@ def release(track, is_staging, version_name):
     push_tasks[push_task_id] = BUILDER.craft_push_task(
         signing_task_id,
         apks=apk_paths,
-        track=track,
+        channel=channel,
         is_staging=is_staging,
     )
 
