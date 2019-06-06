@@ -1,15 +1,14 @@
-#include "DOMOverlays.h"
+#include "L10nOverlays.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "HTMLSplitOnSpacesTokenizer.h"
 #include "nsHtml5StringParser.h"
 #include "nsTextNode.h"
 
-using namespace mozilla::dom::l10n;
 using namespace mozilla::dom;
 using namespace mozilla;
 
-bool DOMOverlays::IsAttrNameLocalizable(
+bool L10nOverlays::IsAttrNameLocalizable(
     const nsAtom* nameAtom, Element* aElement,
     nsTArray<nsString>* aExplicitlyAllowed) {
   nsAutoString name;
@@ -102,7 +101,7 @@ bool DOMOverlays::IsAttrNameLocalizable(
   return false;
 }
 
-already_AddRefed<nsINode> DOMOverlays::CreateTextNodeFromTextContent(
+already_AddRefed<nsINode> L10nOverlays::CreateTextNodeFromTextContent(
     Element* aElement, ErrorResult& aRv) {
   nsAutoString content;
   aElement->GetTextContent(content, aRv);
@@ -122,7 +121,7 @@ class AttributeNameValueComparator {
   }
 };
 
-void DOMOverlays::OverlayAttributes(
+void L10nOverlays::OverlayAttributes(
     const Nullable<Sequence<AttributeNameValue>>& aTranslation,
     Element* aToElement, ErrorResult& aRv) {
   nsTArray<nsString> explicitlyAllowed;
@@ -177,8 +176,8 @@ void DOMOverlays::OverlayAttributes(
   }
 }
 
-void DOMOverlays::OverlayAttributes(Element* aFromElement, Element* aToElement,
-                                    ErrorResult& aRv) {
+void L10nOverlays::OverlayAttributes(Element* aFromElement, Element* aToElement,
+                                     ErrorResult& aRv) {
   Nullable<Sequence<AttributeNameValue>> attributes;
   uint32_t attrCount = aFromElement->GetAttrCount();
 
@@ -202,8 +201,8 @@ void DOMOverlays::OverlayAttributes(Element* aFromElement, Element* aToElement,
   return OverlayAttributes(attributes, aToElement, aRv);
 }
 
-void DOMOverlays::ShallowPopulateUsing(Element* aFromElement,
-                                       Element* aToElement, ErrorResult& aRv) {
+void L10nOverlays::ShallowPopulateUsing(Element* aFromElement,
+                                        Element* aToElement, ErrorResult& aRv) {
   nsAutoString content;
   aFromElement->GetTextContent(content, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -221,9 +220,9 @@ void DOMOverlays::ShallowPopulateUsing(Element* aFromElement,
   }
 }
 
-already_AddRefed<nsINode> DOMOverlays::GetNodeForNamedElement(
+already_AddRefed<nsINode> L10nOverlays::GetNodeForNamedElement(
     Element* aSourceElement, Element* aTranslatedChild,
-    nsTArray<DOMOverlaysError>& aErrors, ErrorResult& aRv) {
+    nsTArray<L10nOverlaysError>& aErrors, ErrorResult& aRv) {
   nsAutoString childName;
   aTranslatedChild->GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nname,
                             childName);
@@ -246,8 +245,8 @@ already_AddRefed<nsINode> DOMOverlays::GetNodeForNamedElement(
   }
 
   if (!sourceChild) {
-    DOMOverlaysError error;
-    error.mCode.Construct(DOMOverlays_Binding::ERROR_NAMED_ELEMENT_MISSING);
+    L10nOverlaysError error;
+    error.mCode.Construct(L10nOverlays_Binding::ERROR_NAMED_ELEMENT_MISSING);
     error.mL10nName.Construct(childName);
     aErrors.AppendElement(error);
     return CreateTextNodeFromTextContent(aTranslatedChild, aRv);
@@ -260,9 +259,9 @@ already_AddRefed<nsINode> DOMOverlays::GetNodeForNamedElement(
       // see bug 1543493
       !(translatedChildName == nsGkAtoms::img &&
         sourceChildName == nsGkAtoms::image)) {
-    DOMOverlaysError error;
+    L10nOverlaysError error;
     error.mCode.Construct(
-        DOMOverlays_Binding::ERROR_NAMED_ELEMENT_TYPE_MISMATCH);
+        L10nOverlays_Binding::ERROR_NAMED_ELEMENT_TYPE_MISMATCH);
     error.mL10nName.Construct(childName);
     error.mTranslatedElementName.Construct(
         aTranslatedChild->NodeInfo()->LocalName());
@@ -286,7 +285,7 @@ already_AddRefed<nsINode> DOMOverlays::GetNodeForNamedElement(
   return clone.forget();
 }
 
-bool DOMOverlays::IsElementAllowed(Element* aElement) {
+bool L10nOverlays::IsElementAllowed(Element* aElement) {
   uint32_t nameSpace = aElement->NodeInfo()->NamespaceID();
   if (nameSpace != kNameSpaceID_XHTML) {
     return false;
@@ -309,7 +308,7 @@ bool DOMOverlays::IsElementAllowed(Element* aElement) {
          nameAtom == nsGkAtoms::wbr;
 }
 
-already_AddRefed<Element> DOMOverlays::CreateSanitizedElement(
+already_AddRefed<Element> L10nOverlays::CreateSanitizedElement(
     Element* aElement, ErrorResult& aRv) {
   // Start with an empty element of the same type to remove nested children
   // and non-localizable attributes defined by the translation.
@@ -330,10 +329,10 @@ already_AddRefed<Element> DOMOverlays::CreateSanitizedElement(
   return clone.forget();
 }
 
-void DOMOverlays::OverlayChildNodes(DocumentFragment* aFromFragment,
-                                    Element* aToElement,
-                                    nsTArray<DOMOverlaysError>& aErrors,
-                                    ErrorResult& aRv) {
+void L10nOverlays::OverlayChildNodes(DocumentFragment* aFromFragment,
+                                     Element* aToElement,
+                                     nsTArray<L10nOverlaysError>& aErrors,
+                                     ErrorResult& aRv) {
   nsINodeList* childNodes = aFromFragment->ChildNodes();
   for (uint32_t i = 0; i < childNodes->Length(); i++) {
     nsINode* childNode = childNodes->Item(i);
@@ -370,8 +369,8 @@ void DOMOverlays::OverlayChildNodes(DocumentFragment* aFromFragment,
       continue;
     }
 
-    DOMOverlaysError error;
-    error.mCode.Construct(DOMOverlays_Binding::ERROR_FORBIDDEN_TYPE);
+    L10nOverlaysError error;
+    error.mCode.Construct(L10nOverlays_Binding::ERROR_FORBIDDEN_TYPE);
     error.mTranslatedElementName.Construct(
         childElement->NodeInfo()->LocalName());
     aErrors.AppendElement(error);
@@ -397,18 +396,18 @@ void DOMOverlays::OverlayChildNodes(DocumentFragment* aFromFragment,
   }
 }
 
-void DOMOverlays::TranslateElement(
+void L10nOverlays::TranslateElement(
     const GlobalObject& aGlobal, Element& aElement,
     const L10nValue& aTranslation,
-    Nullable<nsTArray<DOMOverlaysError>>& aErrors) {
-  nsTArray<DOMOverlaysError> errors;
+    Nullable<nsTArray<L10nOverlaysError>>& aErrors) {
+  nsTArray<L10nOverlaysError> errors;
 
   ErrorResult rv;
 
   TranslateElement(aElement, aTranslation, errors, rv);
   if (NS_WARN_IF(rv.Failed())) {
-    DOMOverlaysError error;
-    error.mCode.Construct(DOMOverlays_Binding::ERROR_UNKNOWN);
+    L10nOverlaysError error;
+    error.mCode.Construct(L10nOverlays_Binding::ERROR_UNKNOWN);
     errors.AppendElement(error);
   }
   if (!errors.IsEmpty()) {
@@ -416,7 +415,7 @@ void DOMOverlays::TranslateElement(
   }
 }
 
-bool DOMOverlays::ContainsMarkup(const nsAString& aStr) {
+bool L10nOverlays::ContainsMarkup(const nsAString& aStr) {
   // We use our custom ContainsMarkup rather than the
   // one from FragmentOrElement.cpp, because we don't
   // want to trigger HTML parsing on every `Preferences & Options`
@@ -445,10 +444,10 @@ bool DOMOverlays::ContainsMarkup(const nsAString& aStr) {
   return false;
 }
 
-void DOMOverlays::TranslateElement(Element& aElement,
-                                   const L10nValue& aTranslation,
-                                   nsTArray<DOMOverlaysError>& aErrors,
-                                   ErrorResult& aRv) {
+void L10nOverlays::TranslateElement(Element& aElement,
+                                    const L10nValue& aTranslation,
+                                    nsTArray<L10nOverlaysError>& aErrors,
+                                    ErrorResult& aRv) {
   if (!aTranslation.mValue.IsVoid()) {
     if (!ContainsMarkup(aTranslation.mValue)) {
       // If the translation doesn't contain any markup skip the overlay logic.

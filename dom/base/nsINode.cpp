@@ -36,7 +36,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/l10n/DOMOverlays.h"
+#include "mozilla/dom/L10nOverlays.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsAttrValueOrString.h"
 #include "nsBindingManager.h"
