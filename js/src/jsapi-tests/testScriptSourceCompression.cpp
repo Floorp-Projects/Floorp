@@ -59,12 +59,7 @@ static Source<Unit> MakeSourceAllWhitespace(JSContext* cx, size_t len) {
 }
 
 static bool Evaluate(JSContext* cx, const JS::CompileOptions& options,
-                     const char16_t* src, size_t srclen) {
-  JS::SourceText<char16_t> sourceText;
-  if (!sourceText.init(cx, src, srclen, JS::SourceOwnership::Borrowed)) {
-    return false;
-  }
-
+                     JS::SourceText<char16_t>& sourceText) {
   JS::Rooted<JS::Value> dummy(cx);
   return JS::Evaluate(cx, options, sourceText, &dummy);
 }
@@ -77,7 +72,12 @@ static JSFunction* EvaluateChars(JSContext* cx, Source<Unit> chars, size_t len,
 
   // Evaluate the provided source text, containing a function named
   // |functionName|.
-  if (!Evaluate(cx, options, chars.get(), len)) {
+  JS::SourceText<Unit> sourceText;
+  if (!sourceText.init(cx, std::move(chars), len)) {
+    return nullptr;
+  }
+
+  if (!Evaluate(cx, options, sourceText)) {
     return nullptr;
   }
 
