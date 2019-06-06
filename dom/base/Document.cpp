@@ -15138,5 +15138,17 @@ nsIPrincipal* Document::EffectiveStoragePrincipal() const {
   return mIntrinsicStoragePrincipal;
 }
 
+void Document::SetIsInitialDocument(bool aIsInitialDocument) {
+  mIsInitialDocumentInWindow = aIsInitialDocument;
+
+  // Asynchronously tell the parent process that we are, or are no longer, the
+  // initial document. This happens async.
+  if (RefPtr<nsPIDOMWindowInner> inner = GetInnerWindow()) {
+    if (RefPtr<WindowGlobalChild> wgc = inner->GetWindowGlobalChild()) {
+      wgc->SendSetIsInitialDocument(aIsInitialDocument);
+    }
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla
