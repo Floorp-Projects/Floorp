@@ -81,6 +81,7 @@ module.exports = {
 
   // When adding items to this file please check for effects on sub-directories.
   "plugins": [
+    "fetch-options",
     "mozilla",
     "no-unsanitized",
   ],
@@ -133,6 +134,10 @@ module.exports = {
 
     // Always require a trailing EOL
     "eol-last": "error",
+
+    // XXX This rule should be enabled, see Bug 1557040
+    // No credentials submitted with fetch calls
+    "fetch-options/no-fetch-credentials": "off",
 
     // No spaces between function name and parentheses
     "func-call-spacing": "error",
