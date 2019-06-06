@@ -477,18 +477,3 @@ interface nsIUpdateManager : nsISupports
    */
   void cleanupActiveUpdate();
 };
-
-/**
- * An interface describing an object that can show various kinds of Update
- * notification UI to the user.
- */
-[scriptable, uuid(cee3bd60-c564-42ff-a2bf-d442cb15f75c)]
-interface nsIUpdatePrompt : nsISupports
-{
-  /**
-   * Shows a list of all updates installed to date.
-   * @param   parent
-   *          An nsIDOMWindow to set as the parent for this window. Can be null.
-   */
-  void showUpdateHistory(in nsIDOMWindow parent);
-};
