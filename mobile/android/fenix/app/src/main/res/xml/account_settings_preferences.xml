@@ -8,17 +8,17 @@
             android:key="@string/pref_key_sync_now"
             android:title="@string/preferences_sync_now" />
 
-    <PreferenceCategory
+    <androidx.preference.PreferenceCategory
             android:key="@string/preferences_sync_category"
             android:title="@string/preferences_sync_category">
 
-        <CheckBoxPreference
+        <androidx.preference.CheckBoxPreference
                 android:key="@string/pref_key_sync_bookmarks"
                 android:defaultValue="true"
                 android:enabled="false"
                 android:title="@string/preferences_sync_bookmarks" />
 
-        <CheckBoxPreference
+        <androidx.preference.CheckBoxPreference
                 android:key="@string/pref_key_sync_history"
                 android:defaultValue="true"
                 android:enabled="false"
@@ -28,7 +28,7 @@
                 android:key="@string/pref_key_sync_device_name"
                 android:title="@string/preferences_sync_device_name" />
 
-    </PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
 
     <androidx.preference.Preference
             android:key="@string/pref_key_sign_out"

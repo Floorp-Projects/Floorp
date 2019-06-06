@@ -53,7 +53,7 @@
     <style name="NormalTheme" parent="NormalThemeBase" />
 
     <style name="DialogStyle" parent="Theme.MaterialComponents.Dialog.Alert">
-        <item name="android:background">?above</item>
+        <item name="android:colorBackground">?above</item>
         <item name="colorAccent">?accent</item>
         <item name="android:textColorPrimary">?primaryText</item>
     </style>
