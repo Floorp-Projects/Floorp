@@ -27,7 +27,9 @@ LOCAL_INCLUDES += [
 
 FINAL_LIBRARY = 'xul'
 
+MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/mochitest/browser.ini']
 
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
