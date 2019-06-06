@@ -73,8 +73,8 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
    * @param aDocShell
    *        The docshell performing the load.
    * @param aCsp
-   *        The CSP to be used for that load. That is the CSP that e.g. upgrades
-   *        the load to HTTPS in case upgrade-insecure-requests is set.
+   *        The CSP to be used for reloading the top-level load. That is the CSP
+   *        of the document that initially triggered the new document load.
    */
   bool reloadInFreshProcess(in nsIDocShell aDocShell,
                             in nsIURI aURI,

@@ -237,6 +237,8 @@ nsresult WorkerLoadInfo::SetPrincipalsAndCSPFromChannel(nsIChannel* aChannel) {
       getter_AddRefs(loadGroup));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Workers themselves can have their own CSP - Workers of an opaque origin
+  // however inherit the CSP of the document that spawned the worker.
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   if (CSP_ShouldResponseInheritCSP(aChannel)) {
     nsCOMPtr<nsILoadInfo> loadinfo = aChannel->LoadInfo();
