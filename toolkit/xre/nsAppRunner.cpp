@@ -27,7 +27,6 @@
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/recordreplay/ParentIPC.h"
 #include "mozilla/JSONWriter.h"
-#include "BaseProfiler.h"
 
 #include "nsAppRunner.h"
 #include "mozilla/XREAppData.h"
@@ -4668,7 +4667,6 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   CodeCoverageHandler::Init();
 #endif
 
-  AUTO_BASE_PROFILER_LABEL("XREMain::XRE_main (around Gecko Profiler)", OTHER);
   AUTO_PROFILER_INIT;
   AUTO_PROFILER_LABEL("XREMain::XRE_main", OTHER);
 
