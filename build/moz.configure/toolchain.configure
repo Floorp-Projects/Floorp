@@ -700,10 +700,10 @@ def toolchain_search_path_for(host_or_target):
         target: vc_compiler_path,
     }[host_or_target]
 
-    @depends(vc_path, original_path)
+    @depends(vc_path, original_path, developer_options)
     @imports('os')
     @imports(_from='os', _import='environ')
-    def toolchain_search_path(vc_compiler_path, original_path):
+    def toolchain_search_path(vc_compiler_path, original_path, developer_options):
         result = list(original_path)
 
         if vc_compiler_path:
@@ -719,20 +719,24 @@ def toolchain_search_path_for(host_or_target):
         # `mach artifact toolchain` installs clang.
         mozbuild_state_dir = environ.get('MOZBUILD_STATE_PATH',
                                          os.path.expanduser(os.path.join('~', '.mozbuild')))
+        bootstrapped = []
+
         bootstrap_clang_path = os.path.join(mozbuild_state_dir, 'clang', 'bin')
-        result.append(bootstrap_clang_path)
+        bootstrapped.append(bootstrap_clang_path)
 
         bootstrap_cbindgen_path = os.path.join(mozbuild_state_dir, 'cbindgen')
-        result.append(bootstrap_cbindgen_path)
+        bootstrapped.append(bootstrap_cbindgen_path)
 
         bootstrap_nasm_path = os.path.join(mozbuild_state_dir, 'nasm')
-        result.append(bootstrap_nasm_path)
+        bootstrapped.append(bootstrap_nasm_path)
 
         # Also add the rustup install directory for cargo/rustc.
         rustup_path = os.path.expanduser(os.path.join('~', '.cargo', 'bin'))
         result.append(rustup_path)
 
-        return result
+        if developer_options:
+            return bootstrapped + result
+        return result + bootstrapped
     return toolchain_search_path
 
 
