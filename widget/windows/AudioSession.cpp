@@ -260,6 +260,7 @@ void SpawnASCReleaseThread(RefPtr<IAudioSessionControl>&& aASC) {
   PRThread* thread = PR_CreateThread(
       PR_USER_THREAD,
       [](void* aRawPtr) {
+        NS_SetCurrentThreadName("AudioASCReleaser");
         static_cast<IAudioSessionControl*>(aRawPtr)->Release();
       },
       rawPtr, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_UNJOINABLE_THREAD, 0);
