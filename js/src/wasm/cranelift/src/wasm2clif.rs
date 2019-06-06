@@ -107,7 +107,7 @@ pub fn init_sig(
 
 /// A `TargetIsa` and `ModuleEnvironment` joined so we can implement `FuncEnvironment`.
 pub struct TransEnv<'a, 'b, 'c> {
-    isa: &'a TargetIsa,
+    isa: &'a dyn TargetIsa,
     env: &'b bd::ModuleEnvironment<'b>,
     static_env: &'c bd::StaticEnvironment,
 
@@ -155,7 +155,7 @@ pub struct TransEnv<'a, 'b, 'c> {
 
 impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
     pub fn new(
-        isa: &'a TargetIsa,
+        isa: &'a dyn TargetIsa,
         env: &'b bd::ModuleEnvironment,
         static_env: &'c bd::StaticEnvironment,
     ) -> Self {
@@ -268,8 +268,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
             }
         };
         let ga = pos.ins().global_value(native_pointer_type(), gv);
-        pos.ins()
-            .load(ir::types::I32, ir::MemFlags::new(), ga, 0)
+        pos.ins().load(ir::types::I32, ir::MemFlags::new(), ga, 0)
     }
 
     /// Get a `FuncRef` for the given symbolic address.

@@ -17,8 +17,14 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     Services.prefs.setBoolPref("nglayout.debug.paint_flashing", true);
 
     addTestEngines([
-      { name: "bacon", details: ["", "bacon", "Search Bacon", "GET",
-                                 "http://www.bacon.moz/?search={searchTerms}"] },
+      { name: "bacon",
+        details: {
+          alias: "bacon",
+          description: "Search Bacon",
+          method: "GET",
+          template: "http://www.bacon.moz/?search={searchTerms}",
+        },
+      },
     ]).then(engines => {
       Services.prefs.setCharPref("browser.search.defaultenginename", engines[0].name);
 

@@ -20,9 +20,9 @@ async function performTests_false() {
 
   const { autocompletePopup: popup } = hud.jsterm;
 
-  info(`Enter ":"`);
+  info(`Enter "w"`);
   jsterm.focus();
-  EventUtils.sendString(":");
+  EventUtils.sendString("w");
   // delay of 2 seconds.
   await wait(2000);
   ok(!popup.isOpen, "popup is not open");
@@ -35,4 +35,12 @@ async function performTests_false() {
   await onPopUpOpen;
 
   ok(popup.isOpen, "popup opens on Ctrl+Space");
+
+  const onUpdated = jsterm.once("autocomplete-updated");
+
+  ok(popup.getItems().length > 0, "'w' gave a list of suggestions");
+
+  EventUtils.synthesizeKey("in");
+  await onUpdated;
+  ok(popup.getItems().length == 2, "'win' gave a list of suggestions");
 }

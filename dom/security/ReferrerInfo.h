@@ -26,6 +26,7 @@
 class nsIURI;
 class nsIChannel;
 class nsILoadInfo;
+class nsINode;
 
 namespace mozilla {
 namespace net {
@@ -68,11 +69,21 @@ class ReferrerInfo : public nsIReferrerInfo {
   // create an copy of the ReferrerInfo with new referrer policy
   already_AddRefed<nsIReferrerInfo> CloneWithNewPolicy(uint32_t aPolicy) const;
 
+  // create an copy of the ReferrerInfo with new original referrer
+  already_AddRefed<nsIReferrerInfo> CloneWithNewOriginalReferrer(
+      nsIURI* aOriginalReferrer) const;
+
   /**
    * Check whether the given referrer's scheme is allowed to be computed and
    * sent. The whitelist schemes are: http, https, ftp.
    */
   static bool IsReferrerSchemeAllowed(nsIURI* aReferrer);
+
+  /*
+   * The Referrer Policy should be inherited for nested browsing contexts that
+   * are not created from responses. Such as: srcdoc, data, blob.
+   */
+  static bool ShouldResponseInheritReferrerInfo(nsIChannel* aChannel);
 
   /*
    * Check whether we need to hide referrer when leaving a .onion domain.
@@ -146,6 +157,19 @@ class ReferrerInfo : public nsIReferrerInfo {
   };
 
   /**
+   * Check whether the given node has referrerpolicy attribute and parse
+   * referrer policy from the attribute.
+   * Currently, referrerpolicy attribute is supported in a, area, img, iframe,
+   * script, or link element.
+   */
+  void GetReferrerPolicyFromAtribute(nsINode* aNode, uint32_t& aPolicy) const;
+
+  /**
+   * Return true if node has a rel="noreferrer" attribute.
+   */
+  bool HasRelNoReferrer(nsINode* aNode) const;
+
+  /**
    * Returns true if the given channel is cross-origin request
    *
    * Computing whether the request is cross-origin may be expensive, so please
@@ -199,8 +223,9 @@ class ReferrerInfo : public nsIReferrerInfo {
    */
   bool IsInitialized() { return mInitialized; }
 
-  // nsHttpChannel could access IsPolicyOverrided();
+  // nsHttpChannel, Document could access IsPolicyOverrided();
   friend class mozilla::net::nsHttpChannel;
+  friend class mozilla::dom::Document;
   /*
    * Check whether if unset referrer policy is overrided by default or not
    */

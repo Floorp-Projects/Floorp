@@ -28,12 +28,6 @@ from mozrunner import runners
 # need this so raptor imports work both from /raptor and via mach
 here = os.path.abspath(os.path.dirname(__file__))
 paths = [here]
-if os.environ.get('SCRIPTSPATH') is not None:
-    # in production it is env SCRIPTS_PATH
-    paths.append(os.environ['SCRIPTSPATH'])
-else:
-    # locally it's in source tree
-    paths.append(os.path.join(here, '..', '..', 'mozharness'))
 
 webext_dir = os.path.join(here, '..', 'webext')
 paths.append(webext_dir)

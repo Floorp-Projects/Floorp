@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIClassInfoImpl.h"
-#include "nsContentUtils.h"
 #include "nsICookieService.h"
 #include "nsIHttpChannel.h"
 #include "nsIObjectInputStream.h"
@@ -14,12 +13,15 @@
 #include "nsIURL.h"
 #include "nsIURIMutator.h"
 
+#include "nsWhitespaceTokenizer.h"
 #include "nsAlgorithm.h"
+#include "nsContentUtils.h"
 #include "ReferrerInfo.h"
 
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/net/HttpBaseChannel.h"
+#include "mozilla/dom/Element.h"
 
 static mozilla::LazyLogModule gReferrerInfoLog("ReferrerInfo");
 #define LOG(msg) MOZ_LOG(gReferrerInfoLog, mozilla::LogLevel::Debug, msg)
@@ -181,6 +183,29 @@ bool ReferrerInfo::IsReferrerSchemeAllowed(nsIURI* aReferrer) {
 
   return scheme.EqualsIgnoreCase("https") || scheme.EqualsIgnoreCase("http") ||
          scheme.EqualsIgnoreCase("ftp");
+}
+
+/* static */
+bool ReferrerInfo::ShouldResponseInheritReferrerInfo(nsIChannel* aChannel) {
+  if (!aChannel) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> channelURI;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(channelURI));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  bool isAbout =
+      (NS_SUCCEEDED(channelURI->SchemeIs("about", &isAbout)) && isAbout);
+  if (!isAbout) {
+    return false;
+  }
+
+  nsAutoCString aboutSpec;
+  rv = channelURI->GetSpec(aboutSpec);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return aboutSpec.EqualsLiteral("about:srcdoc");
 }
 
 nsresult ReferrerInfo::HandleSecureToInsecureReferral(nsIURI* aURI,
@@ -512,6 +537,13 @@ already_AddRefed<nsIReferrerInfo> ReferrerInfo::CloneWithNewPolicy(
   return copy.forget();
 }
 
+already_AddRefed<nsIReferrerInfo> ReferrerInfo::CloneWithNewOriginalReferrer(
+    nsIURI* aOriginalReferrer) const {
+  RefPtr<ReferrerInfo> copy(new ReferrerInfo(*this));
+  copy->mOriginalReferrer = aOriginalReferrer;
+  return copy.forget();
+}
+
 NS_IMETHODIMP
 ReferrerInfo::GetOriginalReferrer(nsIURI** aOriginalReferrer) {
   *aOriginalReferrer = mOriginalReferrer;
@@ -553,11 +585,84 @@ ReferrerInfo::Init(uint32_t aReferrerPolicy, bool aSendReferrer,
     return NS_ERROR_ALREADY_INITIALIZED;
   };
 
-  mInitialized = true;
   mPolicy = aReferrerPolicy;
   mSendReferrer = aSendReferrer;
   mOriginalReferrer = aOriginalReferrer;
+  mInitialized = true;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+ReferrerInfo::InitWithDocument(Document* aDocument) {
+  MOZ_ASSERT(!mInitialized);
+  if (mInitialized) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  };
+
+  mPolicy = aDocument->GetReferrerPolicy();
+  mSendReferrer = true;
+  mOriginalReferrer = aDocument->GetDocumentURIAsReferrer();
+  mInitialized = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ReferrerInfo::InitWithNode(nsINode* aNode) {
+  MOZ_ASSERT(!mInitialized);
+  if (mInitialized) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  };
+
+  // Referrer policy from referrerpolicy attribute will have a higher priority
+  // than referrer policy from <meta> tag and Referrer-Policy header.
+  GetReferrerPolicyFromAtribute(aNode, mPolicy);
+  if (mPolicy == mozilla::net::RP_Unset) {
+    // Fallback to use document's referrer poicy if we don't have referrer
+    // policy from attribute.
+    mPolicy = aNode->OwnerDoc()->GetReferrerPolicy();
+  }
+
+  mSendReferrer = !HasRelNoReferrer(aNode);
+  mOriginalReferrer = aNode->OwnerDoc()->GetDocumentURIAsReferrer();
+
+  mInitialized = true;
+  return NS_OK;
+}
+
+void ReferrerInfo::GetReferrerPolicyFromAtribute(nsINode* aNode,
+                                                 uint32_t& aPolicy) const {
+  aPolicy = mozilla::net::RP_Unset;
+  mozilla::dom::Element* element = aNode->AsElement();
+
+  if (!element->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area,
+                                    nsGkAtoms::script, nsGkAtoms::iframe,
+                                    nsGkAtoms::img)) {
+    return;
+  }
+
+  aPolicy = element->GetReferrerPolicyAsEnum();
+}
+
+bool ReferrerInfo::HasRelNoReferrer(nsINode* aNode) const {
+  mozilla::dom::Element* element = aNode->AsElement();
+
+  // rel=noreferrer is only support in <a> and <area>
+  if (!element->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area)) {
+    return false;
+  }
+
+  nsAutoString rel;
+  element->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel);
+  nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(rel);
+
+  while (tok.hasMoreTokens()) {
+    const nsAString& token = tok.nextToken();
+    if (token.LowerCaseEqualsLiteral("noreferrer")) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {

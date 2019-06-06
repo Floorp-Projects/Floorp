@@ -98,6 +98,8 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
   bool IsProcessRoot();
 
+  bool IsInitialDocument() { return mIsInitialDocument; }
+
   already_AddRefed<Promise> ChangeFrameRemoteness(dom::BrowsingContext* aBc,
                                                   const nsAString& aRemoteType,
                                                   uint64_t aPendingSwitchId,
@@ -121,6 +123,10 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
   // IPC messages
   mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI);
+  mozilla::ipc::IPCResult RecvSetIsInitialDocument(bool aIsInitialDocument) {
+    mIsInitialDocument = aIsInitialDocument;
+    return IPC_OK();
+  }
   mozilla::ipc::IPCResult RecvBecomeCurrentWindowGlobal();
   mozilla::ipc::IPCResult RecvDestroy();
   mozilla::ipc::IPCResult RecvRawMessage(const JSWindowActorMessageMeta& aMeta,
@@ -144,6 +150,7 @@ class WindowGlobalParent final : public WindowGlobalActor,
   uint64_t mOuterWindowId;
   bool mInProcess;
   bool mIPCClosed;
+  bool mIsInitialDocument;
 };
 
 }  // namespace dom

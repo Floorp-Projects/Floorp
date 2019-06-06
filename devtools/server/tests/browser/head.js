@@ -16,7 +16,8 @@ const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry")
 const {DebuggerServer} = require("devtools/server/main");
 
 const PATH = "browser/devtools/server/tests/browser/";
-const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
+const TEST_DOMAIN = "http://test1.example.org";
+const MAIN_DOMAIN = `${TEST_DOMAIN}/${PATH}`;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
 const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
 

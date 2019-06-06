@@ -247,29 +247,6 @@ var BrowserUtils = {
   },
 
   /**
-   * Return true if linkNode has a rel="noreferrer" attribute.
-   *
-   * @param linkNode The <a> element, or null.
-   * @return a boolean indicating if linkNode has a rel="noreferrer" attribute.
-   */
-  linkHasNoReferrer(linkNode) {
-    // A null linkNode typically means that we're checking a link that wasn't
-    // provided via an <a> link, like a text-selected URL.  Don't leak
-    // referrer information in this case.
-    if (!linkNode)
-      return true;
-
-    let rel = linkNode.getAttribute("rel");
-    if (!rel)
-      return false;
-
-    // The HTML spec says that rel should be split on spaces before looking
-    // for particular rel values.
-    let values = rel.split(/[ \t\r\n\f]/);
-    return values.includes("noreferrer");
-  },
-
-  /**
    * Returns true if |mimeType| is text-based, or false otherwise.
    *
    * @param mimeType

@@ -455,7 +455,7 @@ public class BrowserSearch extends HomeFragment
             // Position for Top Sites grid items, but will always be -1 since this is only for BrowserSearch result
             final int position = -1;
 
-            new RemoveItemTask(getActivity(), info, position).execute();
+            new RemoveItemTask(getActivity(), info, position, getContext(), this).execute();
             return true;
         }
 

@@ -329,7 +329,7 @@ InternalPrompt.prototype = {
     return ok;
   },
 
-  select: function select(aTitle, aText, aCount, aSelectList, aOutSelection) {
+  select: function select(aTitle, aText, aSelectList, aOutSelection) {
     let p = this._getPrompt(aTitle, aText, [ PromptUtils.getLocaleString("OK") ]);
     p.addMenulist({ values: aSelectList });
     let data = this.showPrompt(p);
