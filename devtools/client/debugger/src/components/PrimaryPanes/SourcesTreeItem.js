@@ -19,6 +19,7 @@ import {
   hasPrettySource as checkHasPrettySource,
   getContext,
   getMainThread,
+  getSourceContent,
 } from "../../selectors";
 import actions from "../../actions";
 
@@ -31,9 +32,16 @@ import {
 import { isDirectory } from "../../utils/sources-tree";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { features } from "../../utils/prefs";
+import { downloadFile } from "../../utils/utils";
 
 import type { TreeNode } from "../../utils/sources-tree/types";
-import type { Source, Context, MainThread, Thread } from "../../types";
+import type {
+  Source,
+  Context,
+  MainThread,
+  Thread,
+  SourceContent,
+} from "../../types";
 
 type Props = {
   autoExpand: ?boolean,
@@ -42,6 +50,7 @@ type Props = {
   projectRoot: string,
   source: ?Source,
   item: TreeNode,
+  sourceContent: SourceContent,
   depth: number,
   focused: boolean,
   expanded: boolean,
@@ -56,6 +65,7 @@ type Props = {
   clearProjectDirectoryRoot: typeof actions.clearProjectDirectoryRoot,
   setProjectDirectoryRoot: typeof actions.setProjectDirectoryRoot,
   toggleBlackBox: typeof actions.toggleBlackBox,
+  loadSourceText: typeof actions.loadSourceText,
 };
 
 type State = {};
@@ -122,7 +132,14 @@ class SourceTreeItem extends Component<Props, State> {
             disabled: !shouldBlackbox(source),
             click: () => this.props.toggleBlackBox(cx, source),
           };
-          menuOptions.push(copySourceUri2, blackBoxMenuItem);
+          const downloadFileItem = {
+            id: "node-menu-download-file",
+            label: L10N.getStr("downloadFile.label"),
+            accesskey: L10N.getStr("downloadFile.accesskey"),
+            disabled: false,
+            click: () => this.handleDownloadFile(cx, source, item),
+          };
+          menuOptions.push(copySourceUri2, blackBoxMenuItem, downloadFileItem);
         }
       }
     }
@@ -154,6 +171,15 @@ class SourceTreeItem extends Component<Props, State> {
     }
 
     showMenu(event, menuOptions);
+  };
+
+  handleDownloadFile = async (cx: Context, source: ?Source, item: TreeNode) => {
+    const name = item.name;
+    if (!this.props.sourceContent) {
+      await this.props.loadSourceText({ cx, source });
+    }
+    const data = this.props.sourceContent;
+    downloadFile(data, name);
   };
 
   addCollapseExpandAllOptions = (menuOptions: ContextMenu, item: TreeNode) => {
@@ -310,6 +336,11 @@ function getHasMatchingGeneratedSource(state, source: ?Source) {
   return !!getGeneratedSourceByURL(state, source.url);
 }
 
+function getSourceContentValue(state, source: Source) {
+  const content = getSourceContent(state, source.id);
+  return content !== null ? content.value : false;
+}
+
 const mapStateToProps = (state, props) => {
   const { source } = props;
   return {
@@ -318,6 +349,7 @@ const mapStateToProps = (state, props) => {
     hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
     hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
     hasPrettySource: source ? checkHasPrettySource(state, source.id) : false,
+    sourceContent: source ? getSourceContentValue(state, source) : false,
   };
 };
 
@@ -327,5 +359,6 @@ export default connect(
     setProjectDirectoryRoot: actions.setProjectDirectoryRoot,
     clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
     toggleBlackBox: actions.toggleBlackBox,
+    loadSourceText: actions.loadSourceText,
   }
 )(SourceTreeItem);
