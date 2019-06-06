@@ -115,7 +115,7 @@ BrowserElementPrompt.prototype = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  select(title, text, aCount, aSelectList, aOutSelection) {
+  select(title, text, aSelectList, aOutSelection) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
