@@ -1027,11 +1027,46 @@ interface nsILoadInfo : nsISupports
   PerformanceStoragePtr GetPerformanceStorage();
 
   /**
-   * Query the CSP (or Preload CSP for preloads) which should be
-   * enforced for the channel this loadinfo belongs to.
+   * Returns the CSP (or Preload CSP for preloads) which should be enforced
+   * when fetching the resource this loadinfo belongs to.
+   * 
+   * a) Non-navigations:
+   * For non-navigation loads, GetCSP() returns what the spec refers to as the
+   * "request's client's global object's CSP list". In practice, if this is the
+   * loadinfo of a subresource load (e.g an image load), then GetCSP() or
+   * GetPreloadCSP() returns the CSP of the document which embeds the image.
+   * The returned CSP includes any policy delivered through the HTTP header or
+   * also through the meta tag (modulo the difference for preloads, e.g. image
+   * preloads have to query GetPreloadCsp() because at the time of preloading
+   * we are not entirely sure if the Meta CSP will be applied to the document
+   * in the end or not). Please note that GetCSPToInherit() called on a
+   * loadinfo for any non-navigation always returns null.
+   *
+   * b) Navigations:
+   *   * Top-level loads:
+   *     For top-level loads (navigations) GetCSP() will return null, unless
+   *     the navigation is started by a WebExtension, in which case it will
+   *     return the CSP of the webextension, if any.
+   *     If you need to query the CSP that potentially should apply to the
+   *     new top-level load, you have to query GetCspToInherit(), which is
+   *     the CSP of the request's client's global object, just like GetCsp()
+   *     is for non-navigation requests.
+   *
+   *   * Iframe-loads:
+   *     For iframe-loads (navigations) GetCSP() will return the CSP of the
+   *     parent document, unless the navigation is started by a WebExtension,
+   *     in which case it will return the CSP of the webextension, if any.
+   *
+   * If you need to query the CSP that should potentially be inherited
+   * into the new document, you have to query GetCSPToInherit().
+   *
+   * TODO Bug 1557114:
+   * After evaluating what CSP to use for frame navigations we should
+   * update the above documentation to match the outcome of Bug 1557114.
    */
   [notxpcom,nostdcall] CSPRef GetCsp();
   [notxpcom,nostdcall] CSPRef GetPreloadCsp();
+  [notxpcom,nostdcall] CSPRef GetCspToInherit();
 
   /**
     * The service worker and fetch specifications require returning the
