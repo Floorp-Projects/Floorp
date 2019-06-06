@@ -17,8 +17,7 @@
   --onboarding-link-active-color: var(--blue-40);
 
   /* Tooltips */
-  --theme-tooltip-border: #434850;
-  --theme-tooltip-background: rgba(19, 28, 38, .9);
+  --theme-tooltip-background: var(--theme-popup-background);
   --theme-tooltip-shadow: rgba(25, 25, 25, 0.76);
 
   /* Doorhangers */
@@ -40,8 +39,7 @@
   --onboarding-link-active-color: var(--blue-70);
 
   /* Tooltips */
-  --theme-tooltip-border: #d9e1e8;
-  --theme-tooltip-background: rgba(255, 255, 255, .9);
+  --theme-tooltip-background: rgb(255, 255, 255);
   --theme-tooltip-shadow: rgba(155, 155, 155, 0.26);
 
   /* Doorhangers */
@@ -205,8 +203,6 @@ strong {
   min-height: 10px;
   box-sizing: border-box;
   width: 100%;
-
-  border: 3px solid var(--theme-tooltip-border);
   border-radius: 5px;
 }
 
@@ -251,10 +247,7 @@ strong {
   margin-left: 4px;
   background: linear-gradient(-45deg,
     var(--theme-tooltip-background) 50%, transparent 50%);
-  border-color: var(--theme-tooltip-border);
-  border-style: solid;
-  border-width: 0px 3px 3px 0px;
-  border-radius: 3px;
+  border: 0 none;
   pointer-events: all;
 }
 
@@ -490,11 +483,12 @@ strong {
 
 /* Tooltip: Events */
 
-.event-header {
+.devtools-tooltip-events-container .event-header {
   display: flex;
   align-items: center;
   cursor: pointer;
   overflow: hidden;
+  background-color: var(--theme-tooltip-background);
 }
 
 .event-header:before {

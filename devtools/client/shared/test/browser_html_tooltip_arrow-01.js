@@ -65,6 +65,7 @@ async function runTests(doc) {
 
     const isInPanel = arrowBounds.left >= panelBounds.left &&
                     arrowBounds.right <= panelBounds.right;
+
     ok(isInPanel,
       "The tooltip arrow remains inside the tooltip panel horizontally");
 
