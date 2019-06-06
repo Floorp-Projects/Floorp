@@ -179,6 +179,9 @@ open class HomeActivity : AppCompatActivity() {
 
     @Suppress("ComplexMethod")
     fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
+        if (sessionObserver == null)
+            sessionObserver = subscribeToSessions()
+
         if (navHost.navController.currentDestination?.id == R.id.browserFragment) return
         val directions = if (!navHost.navController.popBackStack(R.id.browserFragment, false)) {
             when (from) {
@@ -206,9 +209,6 @@ open class HomeActivity : AppCompatActivity() {
         } else {
             null
         }
-
-        if (sessionObserver == null)
-            sessionObserver = subscribeToSessions()
 
         directions?.let {
             navHost.navController.navigate(it)
