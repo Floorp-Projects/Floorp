@@ -136,11 +136,21 @@ class Clobberer(object):
         some directories (e.g. Visual Studio Project Files) will not be
         deleted.
         """
+        # Determine where cargo build artifacts are stored
+        RUST_TARGET_VARS = ('RUST_HOST_TARGET', 'RUST_TARGET')
+        rust_targets = set([self.substs[x] for x in RUST_TARGET_VARS if x in self.substs])
+        rust_build_kind = 'release'
+        if self.substs.get('MOZ_DEBUG_RUST'):
+            rust_build_kind = 'debug'
+
         # Top-level files and directories to not clobber by default.
         no_clobber = {
             '.mozbuild',
             'msvc',
         }
+
+        # Hold off on clobbering cargo build artifacts
+        no_clobber |= rust_targets
 
         if full:
             # mozfile doesn't like unicode arguments (bug 818783).
@@ -149,6 +159,13 @@ class Clobberer(object):
             paths = self.collect_subdirs(self.topobjdir, no_clobber)
 
         self.delete_dirs(self.topobjdir, paths)
+
+        # Now handle cargo's build artifacts and skip removing the incremental
+        # compilation cache.
+        for target in rust_targets:
+            cargo_path = os.path.join(self.topobjdir, target, rust_build_kind)
+            paths = self.collect_subdirs(cargo_path, {'incremental', })
+            self.delete_dirs(cargo_path, paths)
 
     def ensure_objdir_state(self):
         """Ensure the CLOBBER file in the objdir exists.
