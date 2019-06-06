@@ -56,16 +56,6 @@ interface nsIWebBrowserPrint : nsISupports
   readonly attribute boolean doingPrintPreview;
 
   /**
-   * This returns whether the current document is a frameset document
-   */
-  readonly attribute boolean isFramesetDocument;
-
-  /**
-   * This returns whether the current document is a frameset document
-   */
-  readonly attribute boolean isFramesetFrameSelected;
-
-  /**
    * This returns whether there is an IFrame selected
    */
   readonly attribute boolean isIFrameSelected;

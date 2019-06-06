@@ -20,7 +20,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/layout/RenderFrame.h"
+#include "mozilla/layout/RemoteLayerTreeOwner.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Move.h"
 #include "nsCOMPtr.h"
@@ -171,7 +171,7 @@ class BrowserParent final : public PBrowserParent,
    */
   a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
 
-  layout::RenderFrame* GetRenderFrame();
+  LayersId GetLayersId() const;
 
   // Returns the BrowserBridgeParent if this BrowserParent is for an
   // out-of-process iframe and nullptr otherwise.
@@ -466,20 +466,22 @@ class BrowserParent final : public PBrowserParent,
 
   PBrowserBridgeParent* AllocPBrowserBridgeParent(
       const nsString& aPresentationURL, const nsString& aRemoteType,
-      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags);
+      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
+      const TabId& aTabId);
 
   bool DeallocPBrowserBridgeParent(PBrowserBridgeParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPBrowserBridgeConstructor(
       PBrowserBridgeParent* aActor, const nsString& aPresentationURL,
       const nsString& aRemoteType, BrowsingContext* aBrowsingContext,
-      const uint32_t& aChromeFlags) override;
+      const uint32_t& aChromeFlags, const TabId& aTabId) override;
 
   void LoadURL(nsIURI* aURI);
 
   void ResumeLoad(uint64_t aPendingSwitchID);
 
   void InitRendering();
+  bool AttachLayerManager();
   void MaybeShowFrame();
 
   bool Show(const ScreenIntSize& aSize, bool aParentIsActive);
@@ -839,7 +841,7 @@ class BrowserParent final : public PBrowserParent,
 
   ContentCacheInParent mContentCache;
 
-  layout::RenderFrame mRenderFrame;
+  layout::RemoteLayerTreeOwner mRemoteLayerTreeOwner;
   LayersObserverEpoch mLayerTreeEpoch;
 
   Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;

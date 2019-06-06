@@ -35,7 +35,6 @@ nsPrintData::nsPrintData(ePrintDataType aType)
       mPreparingForPrint(false),
       mDocWasToBeDestroyed(false),
       mShrinkToFit(false),
-      mPrintFrameType(nsIPrintSettings::kFramesAsIs),
       mNumPrintablePages(0),
       mNumPagesPrinted(0),
       mShrinkRatio(1.0) {

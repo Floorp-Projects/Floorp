@@ -37,6 +37,7 @@ class BrowserBridgeHost : public RemoteBrowser {
   BrowserHost* AsBrowserHost() override { return nullptr; }
   BrowserBridgeHost* AsBrowserBridgeHost() override { return this; }
 
+  TabId GetTabId() const override;
   LayersId GetLayersId() const override;
   BrowsingContext* GetBrowsingContext() const override;
   nsILoadContext* GetLoadContext() const override;

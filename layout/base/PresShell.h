@@ -80,7 +80,7 @@ class nsIDocShell;
 class nsIFrame;
 class nsILayoutHistoryState;
 class nsINode;
-class nsIPageSequenceFrame;
+class nsPageSequenceFrame;
 class nsIReflowCallback;
 class nsIScrollableFrame;
 class nsITimer;
@@ -453,7 +453,7 @@ class PresShell final : public nsStubDocumentObserver,
    * Returns the page sequence frame associated with the frame hierarchy.
    * Returns nullptr if not a paginated view.
    */
-  nsIPageSequenceFrame* GetPageSequenceFrame() const;
+  nsPageSequenceFrame* GetPageSequenceFrame() const;
 
   /**
    * Returns the canvas frame associated with the frame hierarchy.

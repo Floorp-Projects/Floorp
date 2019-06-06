@@ -5,6 +5,133 @@
  *     method's JSDoc.
  */
 
+// ===============================================================
+// Types
+// ===============================================================
+// Objects of the following types are used to represent what kind of
+// subresource requests should be sent with what kind of policies,
+// from what kind of possibly nested source contexts.
+// The objects are represented as JSON objects (not JavaScript/Python classes
+// in a strict sense) to be passed between JavaScript/Python code.
+
+// Note: So far this document covers:
+// - resources/common.js : client-side test infra code
+// - scope/ - server-side scripts that serves nested source contexts
+// but doesn't cover:
+// - tools/ - generator scripts that generates top-level HTML documents.
+// There are some policies only handled by generators (e.g. mixed-content
+// opt-ins) and not yet covered by the docs here.
+
+/**
+  @typedef PolicyDelivery
+  @type {object}
+  Referrer policy etc. can be applied/delivered in several ways.
+  A PolicyDelivery object specifies what policy is delivered and how.
+
+  @property {string} deliveryType
+    Specifies how the policy is delivered.
+    The valid deliveryType are:
+
+     "attr"
+        [A] DOM attributes e.g. referrerPolicy.
+
+      "rel-noref"
+        [A] <link rel="noreferrer"> (referrer-policy only).
+
+      "http-rp"
+        [B] HTTP response headers.
+
+      "meta"
+        [B] <meta> elements.
+
+  @property {string} key
+  @property {string} value
+    Specifies what policy to be delivered. The valid keys are:
+
+      "referrerPolicy"
+        Referrer Policy
+        https://w3c.github.io/webappsec-referrer-policy/
+        Valid values are those listed in
+        https://w3c.github.io/webappsec-referrer-policy/#referrer-policy
+        (except that "" is represented as null/None)
+
+  A PolicyDelivery can be specified in several ways:
+
+  - (for [A]) Associated with an individual subresource request and
+    specified in `Subresource.policies`,
+    e.g. referrerPolicy attributes of DOM elements.
+    This is handled in invokeRequest().
+
+  - (for [B]) Associated with an nested environmental settings object and
+    specified in `SourceContext.policies`,
+    e.g. HTTP referrer-policy response headers of HTML/worker scripts.
+    This is handled in server-side under /common/security-features/scope/.
+
+  - (for [B]) Associated with the top-level HTML document.
+    This is handled by the generators.d
+*/
+
+/**
+  @typedef Subresource
+  @type {object}
+  A Subresource represents how a subresource request is sent.
+
+  @property{SubresourceType} subresourceType
+    How the subresource request is sent,
+    e.g. "img-tag" for sending a request via <img src>.
+    See the keys of `subresourceMap` for valid values.
+
+  @property{string} url
+    subresource's URL.
+    Typically this is constructed by getRequestURLs() below.
+
+  @property{PolicyDelivery} policyDeliveries
+    Policies delivered specific to the subresource request.
+*/
+
+/**
+  @typedef SourceContext
+  @type {object}
+  Requests can be possibly sent from various kinds of source contexts, i.e.
+  fetch client's environment settings objects:
+  top-level windows, iframes, or workers.
+  A SourceContext object specifies one environment settings object, and
+  an Array<SourceContext> specifies a possibly nested context,
+  from the outer-most to inner-most environment settings objects.
+
+  For example:
+    [{sourceContextType: "srcdoc"}, {sourceContextType: "classic-worker"}]
+  means that a subresource request is to be sent from
+  a classic dedicated worker created from <iframe srcdoc>
+  inside the top-level HTML document.
+  Note: the top-level document is not included in the array and
+  is assumed implicitly.
+
+  SourceContext (or Array<SourceContext>) is set based on
+  the fetch client's settings object that is used for the subresource request,
+  NOT on module map settings object, and
+  NOT on the inner-most settings object that appears in the test.
+  For example, Array<SourceContext> is `[]` (indicating the top Window)
+  for `worker.js`
+  - When it is the root worker script: `new Worker('worker.js')`, or
+  - When it is imported from the root worker script:
+    `new Worker('top.js', {type: 'module'})`
+    where `top.js` has `import 'worker.js'`.
+  because the request for `worker.js` uses the Window as its fetch client's
+  settings object, while a WorkerGlobalScope is created though.
+
+  @property {string} sourceContextType
+    Kind of the source context to be used.
+    Valid values are the keys of `sourceContextMap` below.
+
+  @property {Array<PolicyDelivery>} policyDeliveries
+    A list of PolicyDelivery applied to the source context.
+*/
+
+// ===============================================================
+// General utility functions
+// ===============================================================
+
 function timeoutPromise(t, ms) {
   return new Promise(resolve => { t.step_timeout(resolve, ms); });
 }
@@ -70,8 +197,16 @@ function xhrRequest(url, responseType) {
  */
 function setAttributes(el, attrs) {
   attrs = attrs || {}
-  for (var attr in attrs)
-    el.setAttribute(attr, attrs[attr]);
+  for (var attr in attrs) {
+    if (attr !== 'src')
+      el.setAttribute(attr, attrs[attr]);
+  }
+  // Workaround for Chromium: set <img>'s src attribute after all other
+  // attributes to ensure the policy is applied.
+  for (var attr in attrs) {
+    if (attr === 'src')
+      el.setAttribute(attr, attrs[attr]);
+  }
 }
 
 /**
@@ -192,17 +327,89 @@ function createHelperIframe(name, doBindEvents) {
                        doBindEvents);
 }
 
+function wrapResult(server_data) {
+  if (typeof(server_data) === "string") {
+    throw server_data;
+  }
+  return {
+    referrer: server_data.headers.referer,
+    headers: server_data.headers
+  }
+}
+
+// ===============================================================
+// Subresources
+// ===============================================================
+
 /**
- * requestVia*() functions return promises that are resolved on successful
- * requests with objects of the same "type", i.e. objects that contains
- * the same sets of keys that are fixed within one category of tests (e.g.
- * within wpt/referrer-policy tests).
- * wrapResult() (that should be defined outside this file) is used to convert
- * the response bodies of subresources into the expected result objects in some
- * cases, and in other cases the result objects are constructed more directly.
- * TODO(https://crbug.com/906850): Clean up the semantics around this, e.g.
- * use (or not use) wrapResult() consistently, unify the arguments, etc.
- */
+  @typedef RequestResult
+  @type {object}
+  Represents the result of sending an request.
+  All properties are optional. See the comments for
+  requestVia*() and invokeRequest() below to see which properties are set.
+
+  @property {Array<Object<string, string>>} headers
+    HTTP request headers sent to server.
+  @property {string} referrer - Referrer.
+  @property {string} location - The URL of the subresource.
+  @property {string} sourceContextUrl
+    the URL of the global object where the actual request is sent.
+*/
+
+/**
+  requestVia*(url, additionalAttributes) functions send a subresource
+  request from the current environment settings object.
+
+  @param {string} url
+    The URL of the subresource.
+  @param {Object<string, string>} additionalAttributes
+    Additional attributes set to DOM elements
+    (element-initiated requests only).
+
+  @returns {Promise} that are resolved with a RequestResult object
+  on successful requests.
+
+  - Category 1:
+      `headers`: set.
+      `referrer`: set via `document.referrer`.
+      `location`: set via `document.location`.
+      See `template/document.html.template`.
+  - Category 2:
+      `headers`: set.
+      `referrer`: set to `headers.referer` by `wrapResult()`.
+      `location`: not set.
+  - Category 3:
+      All the keys listed above are NOT set.
+  `sourceContextUrl` is not set here.
+
+  -------------------------------- -------- --------------------------
+  Function name                    Category Used in
+                                            -------- ------- ---------
+                                            referrer mixed-  upgrade-
+                                            policy   content insecure-
+                                            policy   content request
+  -------------------------------- -------- -------- ------- ---------
+  requestViaAnchor                 1        Y        Y       -
+  requestViaArea                   1        Y        Y       -
+  requestViaAudio                  3        -        Y       -
+  requestViaDedicatedWorker        2        Y        Y       Y
+  requestViaFetch                  2        Y        Y       -
+  requestViaForm                   3        -        Y       -
+  requestViaIframe                 1        Y        Y       -
+  requestViaImage                  2        Y        Y       -
+  requestViaLinkPrefetch           3        -        Y       -
+  requestViaLinkStylesheet         3        -        Y       -
+  requestViaObject                 3        -        Y       -
+  requestViaPicture                3        -        Y       -
+  requestViaScript                 2        Y        Y       -
+  requestViaSendBeacon             3        -        Y       -
+  requestViaSharedWorker           2        Y        -       -
+  requestViaVideo                  3        -        Y       -
+  requestViaWebSocket              3        -        Y       -
+  requestViaWorklet                3        -        Y       Y
+  requestViaXhr                    2        Y        Y       -
+  -------------------------------- -------- -------- ------- ---------
+*/
 
 /**
  * Creates a new iframe, binds load and error events, sets the src attribute and
@@ -218,7 +425,8 @@ function requestViaIframe(url, additionalAttributes) {
       false);
   return bindEvents2(window, "message", iframe, "error", window, "error")
       .then(event => {
-          assert_equals(event.source, iframe.contentWindow);
+          if (event.source !== iframe.contentWindow)
+            return Promise.reject(new Error('Unexpected event.source'));
           return event.data;
         });
 }
@@ -229,117 +437,62 @@ function requestViaIframe(url, additionalAttributes) {
  * @param {string} url The src for the image.
  * @return {Promise} The promise for success/error events.
  */
-function requestViaImage(url) {
-  return createRequestViaElement("img", {"src": url}, document.body);
+function requestViaImage(url, additionalAttributes) {
+  const img = createElement(
+      "img",
+      // crossOrigin attribute is added to read the pixel data of the response.
+      Object.assign({"src": url, "crossOrigin": "Anonymous"}, additionalAttributes),
+      document.body, true);
+  return img.eventPromise.then(() => wrapResult(decodeImageData(img)));
 }
 
-// Helpers for requestViaImageForReferrerPolicy().
-function loadImageInWindow(src, attributes, w) {
-  return new Promise((resolve, reject) => {
-    var image = new w.Image();
-    image.crossOrigin = "Anonymous";
-    image.onload = function() {
-      resolve(image);
-    };
+// Helper for requestViaImage().
+function decodeImageData(img) {
+  var canvas = document.createElement("canvas");
+  var context = canvas.getContext('2d');
+  context.drawImage(img, 0, 0);
+  var imgData = context.getImageData(0, 0, img.clientWidth, img.clientHeight);
+  const rgba = imgData.data;
 
-    // Extend element with attributes. (E.g. "referrerPolicy" or "rel")
-    if (attributes) {
-      for (var attr in attributes) {
-        image[attr] = attributes[attr];
-      }
+  let decodedBytes = new Uint8ClampedArray(rgba.length);
+  let decodedLength = 0;
+
+  for (var i = 0; i + 12 <= rgba.length; i += 12) {
+    // A single byte is encoded in three pixels. 8 pixel octets (among
+    // 9 octets = 3 pixels * 3 channels) are used to encode 8 bits,
+    // the most significant bit first, where `0` and `255` in pixel values
+    // represent `0` and `1` in bits, respectively.
+    // This encoding is used to avoid errors due to different color spaces.
+    const bits = [];
+    for (let j = 0; j < 3; ++j) {
+      bits.push(rgba[i + j * 4 + 0]);
+      bits.push(rgba[i + j * 4 + 1]);
+      bits.push(rgba[i + j * 4 + 2]);
+      // rgba[i + j * 4 + 3]: Skip alpha channel.
+    }
+    // The last one element is not used.
+    bits.pop();
+
+    // Decode a single byte.
+    let byte = 0;
+    for (let j = 0; j < 8; ++j) {
+      byte <<= 1;
+      if (bits[j] >= 128)
+        byte |= 1;
     }
 
-    image.src = src;
-    w.document.body.appendChild(image)
-  });
-}
-
-function extractImageData(img) {
-    var canvas = document.createElement("canvas");
-    var context = canvas.getContext('2d');
-    context.drawImage(img, 0, 0);
-    var imgData = context.getImageData(0, 0, img.clientWidth, img.clientHeight);
-    return imgData.data;
-}
-
-function decodeImageData(rgba) {
-  var rgb = new Uint8ClampedArray(rgba.length);
-
-  // RGBA -> RGB.
-  var rgb_length = 0;
-  for (var i = 0; i < rgba.length; ++i) {
-    // Skip alpha component.
-    if (i % 4 == 3)
-      continue;
-
     // Zero is the string terminator.
-    if (rgba[i] == 0)
+    if (byte == 0)
       break;
 
-    rgb[rgb_length++] = rgba[i];
+    decodedBytes[decodedLength++] = byte;
   }
 
   // Remove trailing nulls from data.
-  rgb = rgb.subarray(0, rgb_length);
-  var string_data = (new TextDecoder("ascii")).decode(rgb);
+  decodedBytes = decodedBytes.subarray(0, decodedLength);
+  var string_data = (new TextDecoder("ascii")).decode(decodedBytes);
 
   return JSON.parse(string_data);
-}
-
-// A variant of requestViaImage for referrer policy tests.
-// This tests many patterns of <iframe>s to test referrer policy inheritance.
-// TODO(https://crbug.com/906850): Merge this into requestViaImage().
-// <iframe>-related code should be moved outside requestViaImage*().
-function requestViaImageForReferrerPolicy(url, attributes, referrerPolicy) {
-  // For images, we'll test:
-  // - images in a `srcdoc` frame to ensure that it uses the referrer
-  //   policy of its parent,
-  // - images in a top-level document,
-  // - and images in a `srcdoc` frame with its own referrer policy to
-  //   override its parent.
-
-  var iframeWithoutOwnPolicy = document.createElement('iframe');
-  var noSrcDocPolicy = new Promise((resolve, reject) => {
-        iframeWithoutOwnPolicy.srcdoc = "Hello, world.";
-        iframeWithoutOwnPolicy.onload = resolve;
-        document.body.appendChild(iframeWithoutOwnPolicy);
-      })
-    .then(() => {
-        var nextUrl = url + "&cache_destroyer2=" + (new Date()).getTime();
-        return loadImageInWindow(nextUrl, attributes,
-                                 iframeWithoutOwnPolicy.contentWindow);
-      })
-    .then(function (img) {
-        return decodeImageData(extractImageData(img));
-      });
-
-  // Give a srcdoc iframe a referrer policy different from the top-level page's policy.
-  var iframePolicy = (referrerPolicy === "no-referrer") ? "unsafe-url" : "no-referrer";
-  var iframeWithOwnPolicy = document.createElement('iframe');
-  var srcDocPolicy = new Promise((resolve, reject) => {
-        iframeWithOwnPolicy.srcdoc = "<meta name='referrer' content='" + iframePolicy + "'>Hello world.";
-        iframeWithOwnPolicy.onload = resolve;
-        document.body.appendChild(iframeWithOwnPolicy);
-      })
-    .then(() => {
-        var nextUrl = url + "&cache_destroyer3=" + (new Date()).getTime();
-        return loadImageInWindow(nextUrl, null,
-                                 iframeWithOwnPolicy.contentWindow);
-      })
-    .then(function (img) {
-        return decodeImageData(extractImageData(img));
-      });
-
-  var pagePolicy = loadImageInWindow(url, attributes, window)
-    .then(function (img) {
-        return decodeImageData(extractImageData(img));
-      });
-
-  return Promise.all([noSrcDocPolicy, srcDocPolicy, pagePolicy]).then(values => {
-    assert_equals(values[0].headers.referer, values[2].headers.referer, "Referrer inside 'srcdoc' without its own policy should be the same as embedder's referrer.");
-    assert_equals((iframePolicy === "no-referrer" ? undefined : document.location.href), values[1].headers.referer, "Referrer inside 'srcdoc' should use the iframe's policy if it has one");
-    return wrapResult(values[2]);
-  });
 }
 
 /**
@@ -365,8 +518,9 @@ function requestViaFetch(url) {
 function dedicatedWorkerUrlThatFetches(url) {
   return `data:text/javascript,
     fetch('${url}')
-      .then(() => postMessage(''),
-            () => postMessage(''));`;
+      .then(r => r.json())
+      .then(j => postMessage(j))
+      .catch((e) => postMessage(e.message));`;
 }
 
 function workerUrlThatImports(url) {
@@ -417,8 +571,7 @@ function get_worklet(type) {
   if (type == 'audio')
     return new OfflineAudioContext(2,44100*40,44100).audioWorklet;
 
-  assert_unreached('unknown worklet type is passed.');
-  return undefined;
+  throw new Error('unknown worklet type is passed.');
 }
 
 function requestViaWorklet(type, url) {
@@ -446,7 +599,8 @@ function requestViaNavigable(navigableElement, url) {
   const promise =
     bindEvents2(window, "message", iframe, "error", window, "error")
       .then(event => {
-          assert_equals(event.source, iframe.contentWindow, "event.source");
+          if (event.source !== iframe.contentWindow)
+            return Promise.reject(new Error('Unexpected event.source'));
           return event.data;
         });
   navigableElement.click();
@@ -679,6 +833,348 @@ function requestViaWebSocket(url) {
   .then(data => {
       return JSON.parse(data);
     });
+}
+
+/**
+  @typedef SubresourceType
+  @type {string}
+
+  Represents how a subresource is sent.
+  The keys of `subresourceMap` below are the valid values.
+*/
+
+// Subresource paths and invokers.
+const subresourceMap = {
+  "a-tag": {
+    path: "/common/security-features/subresource/document.py",
+    invoker: requestViaAnchor,
+  },
+  "area-tag": {
+    path: "/common/security-features/subresource/document.py",
+    invoker: requestViaArea,
+  },
+  "audio-tag": {
+    path: "/common/security-features/subresource/audio.py",
+    invoker: requestViaAudio,
+  },
+  "beacon-request": {
+    path: "/common/security-features/subresource/empty.py",
+    invoker: requestViaSendBeacon,
+  },
+  "fetch-request": {
+    path: "/common/security-features/subresource/xhr.py",
+    invoker: requestViaFetch,
+  },
+  "form-tag": {
+    path: "/common/security-features/subresource/empty.py",
+    invoker: requestViaForm,
+  },
+  "iframe-tag": {
+    path: "/common/security-features/subresource/document.py",
+    invoker: requestViaIframe,
+  },
+  "img-tag": {
+    path: "/common/security-features/subresource/image.py",
+    invoker: requestViaImage,
+  },
+  "link-css-tag": {
+    path: "/common/security-features/subresource/empty.py",
+    invoker: requestViaLinkStylesheet,
+  },
+  "link-prefetch-tag": {
+    path: "/common/security-features/subresource/empty.py",
+    invoker: requestViaLinkPrefetch,
+  },
+  "object-tag": {
+    path: "/common/security-features/subresource/empty.py",
+    invoker: requestViaObject,
+  },
+  "picture-tag": {
+    path: "/common/security-features/subresource/image.py",
+    invoker: requestViaPicture,
+  },
+  "script-tag": {
+    path: "/common/security-features/subresource/script.py",
+    invoker: requestViaScript,
+  },
+  "video-tag": {
+    path: "/common/security-features/subresource/video.py",
+    invoker: requestViaVideo,
+  },
+  "xhr-request": {
+    path: "/common/security-features/subresource/xhr.py",
+    invoker: requestViaXhr,
+  },
+
+  "worker-request": {
+    path: "/common/security-features/subresource/worker.py",
+    invoker: url => requestViaDedicatedWorker(url),
+  },
+  // TODO: Merge "module-worker" and "module-worker-top-level".
+  "module-worker": {
+    path: "/common/security-features/subresource/worker.py",
+    invoker: url => requestViaDedicatedWorker(url, {type: "module"}),
+  },
+  "module-worker-top-level": {
+    path: "/common/security-features/subresource/worker.py",
+    invoker: url => requestViaDedicatedWorker(url, {type: "module"}),
+  },
+  "module-data-worker-import": {
+    path: "/common/security-features/subresource/worker.py",
+    invoker: url =>
+        requestViaDedicatedWorker(workerUrlThatImports(url), {type: "module"}),
+  },
+  "shared-worker": {
+    path: "/common/security-features/subresource/shared-worker.py",
+    invoker: requestViaSharedWorker,
+  },
+
+  "websocket-request": {
+    path: "/stash_responder",
+    invoker: requestViaWebSocket,
+  },
+};
+for (const workletType of ['animation', 'audio', 'layout', 'paint']) {
+  subresourceMap[`worklet-${workletType}-top-level`] = {
+      path: "/common/security-features/subresource/worker.py",
+      invoker: url => requestViaWorklet(workletType, url)
+    };
+  subresourceMap[`worklet-${workletType}-data-import`] = {
+      path: "/common/security-features/subresource/worker.py",
+      invoker: url =>
+          requestViaWorklet(workletType, workerUrlThatImports(url))
+    };
+}
+
+/**
+  @typedef RedirectionType
+  @type {string}
+
+  Represents what redirects should occur to the subresource request
+  after initial request.
+  See preprocess_redirection() in
+  /common/security-features/subresource/subresource.py for valid values.
+*/
+
+/**
+  Construct subresource (and related) URLs.
+
+  @param {SubresourceType} subresourceType
+  @param {OriginType} originType
+  @param {RedirectionType} redirectionType
+  @returns {object} with following properties:
+    {string} testUrl
+      The subresource request URL.
+    {string} announceUrl
+    {string} assertUrl
+      The URLs to be used for detecting whether `testUrl` is actually sent
+      to the server.
+      1. Fetch `announceUrl` first,
+      2. then possibly fetch `testUrl`, and
+      3. finally fetch `assertUrl`.
+         The fetch result of `assertUrl` should indicate whether
+         `testUrl` is actually sent to the server or not.
+*/
+function getRequestURLs(subresourceType, originType, redirectionType) {
+  const key = guid();
+  const value = guid();
+
+  // We use the same stash path for both HTTP/S and WS/S stash requests.
+  const stashPath = encodeURIComponent("/mixed-content");
+
+  const stashEndpoint = "/common/security-features/subresource/xhr.py?key=" +
+                        key + "&path=" + stashPath;
+  return {
+    testUrl:
+      getSubresourceOrigin(originType) +
+        subresourceMap[subresourceType].path +
+        "?redirection=" + encodeURIComponent(redirectionType) +
+        "&action=purge&key=" + key +
+        "&path=" + stashPath,
+    announceUrl: stashEndpoint + "&action=put&value=" + value,
+    assertUrl: stashEndpoint + "&action=take",
+  };
+}
+
+// ===============================================================
+// Source Context
+// ===============================================================
+// Requests can be sent from several source contexts,
+// such as the main documents, iframes, workers, or so,
+// possibly nested, and possibly with <meta>/http headers added.
+// invokeRequest() and invokeFrom*() functions handles
+// SourceContext-related setup in client-side.
+
+/**
+  invokeRequest() invokes a subresource request
+  (specified as `subresource`)
+  from a (possibly nested) environment settings object
+  (specified as `sourceContextList`).
+
+  For nested contexts, invokeRequest() calls an invokeFrom*() function
+  that creates a nested environment settings object using
+  /common/security-features/scope/, which calls invokeRequest()
+  again inside the nested environment settings object.
+  This cycle continues until all specified
+  nested environment settings object are created, and
+  finally invokeRequest() calls a requestVia*() function to start the
+  subresource request from the inner-most environment settings object.
+
+  @param {Subresource} subresource
+  @param {Array<SourceContext>} sourceContextList
+
+  @returns {Promise} A promise that is resolved with an RequestResult object.
+  `sourceContextUrl` is always set. For whether other properties are set,
+  see the comments for requestVia*() above.
+*/
+function invokeRequest(subresource, sourceContextList) {
+  if (sourceContextList.length === 0) {
+    // No further nested global objects. Send the subresource request here.
+
+    const additionalAttributes = {};
+    /** @type {PolicyDelivery} policyDelivery */
+    for (const policyDelivery of (subresource.policyDeliveries || [])) {
+      // Depending on the delivery method, extend the subresource element with
+      // these attributes.
+      if (policyDelivery.deliveryType === "attr") {
+        additionalAttributes[policyDelivery.key] = policyDelivery.value;
+      } else if (policyDelivery.deliveryType === "rel-noref") {
+        additionalAttributes["rel"] = "noreferrer";
+      }
+    }
+
+    return subresourceMap[subresource.subresourceType].invoker(
+        subresource.url,
+        additionalAttributes)
+      .then(result => Object.assign(
+          {sourceContextUrl: location.toString()},
+          result));
+  }
+
+  // Defines invokers for each valid SourceContext.sourceContextType.
+  const sourceContextMap = {
+    "srcdoc": { // <iframe srcdoc></iframe>
+      invoker: invokeFromIframe,
+    },
+    "iframe": { // <iframe src="same-origin-URL"></iframe>
+      invoker: invokeFromIframe,
+    },
+    "classic-worker": {
+      // Classic dedicated worker loaded from same-origin.
+      invoker: invokeFromWorker.bind(undefined, false, {}),
+    },
+    "classic-data-worker": {
+      // Classic dedicated worker loaded from data: URL.
+      invoker: invokeFromWorker.bind(undefined, true, {}),
+    },
+    "module-worker": {
+      // Module dedicated worker loaded from same-origin.
+      invoker: invokeFromWorker.bind(undefined, false, {type: 'module'}),
+    },
+    "module-data-worker": {
+      // Module dedicated worker loaded from data: URL.
+      invoker: invokeFromWorker.bind(undefined, true, {type: 'module'}),
+    },
+  };
+
+  return sourceContextMap[sourceContextList[0].sourceContextType].invoker(
+      subresource, sourceContextList);
+}
+
+// Quick hack to expose invokeRequest when common.js is loaded either
+// as a classic or module script.
+self.invokeRequest = invokeRequest;
+
+/**
+  invokeFrom*() functions are helper functions with the same parameters
+  and return values as invokeRequest(), that are tied to specific types
+  of top-most environment settings objects.
+  For example, invokeFromIframe() is the helper function for the cases where
+  sourceContextList[0] is an iframe.
+*/
+
+/**
+  @param {boolean} isDataUrl
+    true if the worker script is loaded from data: URL.
+    Otherwise, the script is loaded from same-origin.
+  @param {object} workerOptions
+    The `options` argument for Worker constructor.
+
+  Other parameters and return values are the same as those of invokeRequest().
+*/
+function invokeFromWorker(isDataUrl, workerOptions,
+                          subresource, sourceContextList) {
+  const currentSourceContext = sourceContextList.shift();
+  let workerUrl =
+    "/common/security-features/scope/worker.py?policyDeliveries=" +
+    encodeURIComponent(JSON.stringify(
+        currentSourceContext.policyDeliveries || []));
+  if (workerOptions.type === 'module') {
+    workerUrl += "&type=module";
+  }
+
+  let promise;
+  if (isDataUrl) {
+    promise = fetch(workerUrl)
+      .then(r => r.text())
+      .then(source => {
+          return 'data:text/javascript;base64,' + btoa(source);
+        });
+  } else {
+    promise = Promise.resolve(workerUrl);
+  }
+
+  return promise
+    .then(url => {
+      const worker = new Worker(url, workerOptions);
+      worker.postMessage({subresource: subresource,
+                          sourceContextList: sourceContextList});
+      return bindEvents2(worker, "message", worker, "error", window, "error");
+    })
+    .then(event => {
+        if (event.data.error)
+          return Promise.reject(event.data.error);
+        return event.data;
+      });
+}
+
+function invokeFromIframe(subresource, sourceContextList) {
+  const currentSourceContext = sourceContextList.shift();
+  const frameUrl =
+    "/common/security-features/scope/document.py?policyDeliveries=" +
+    encodeURIComponent(JSON.stringify(
+        currentSourceContext.policyDeliveries || []));
+
+  let promise;
+  if (currentSourceContext.sourceContextType === 'srcdoc') {
+    promise = fetch(frameUrl)
+      .then(r => r.text())
+      .then(srcdoc => {
+          return createElement("iframe", {srcdoc: srcdoc}, document.body, true);
+        });
+  } else if (currentSourceContext.sourceContextType === 'iframe') {
+    promise = Promise.resolve(
+        createElement("iframe", {src: frameUrl}, document.body, true));
+  }
+
+  return promise
+    .then(iframe => {
+        return iframe.eventPromise
+          .then(() => {
+              const promise = bindEvents2(
+                  window, "message", iframe, "error", window, "error");
+              iframe.contentWindow.postMessage(
+                  {subresource: subresource,
+                   sourceContextList: sourceContextList},
+                  "*");
+              return promise;
+            })
+          .then(event => {
+              if (event.data.error)
+                return Promise.reject(event.data.error);
+              return event.data;
+            });
+      });
 }
 
 // SanityChecker does nothing in release mode. See sanity-checker.js for debug

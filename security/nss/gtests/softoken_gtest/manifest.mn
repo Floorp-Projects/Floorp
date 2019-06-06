@@ -12,6 +12,7 @@ CPPSRCS = \
 
 INCLUDES += \
 	-I$(CORE_DEPTH)/gtests/google_test/gtest/include \
+  -I$(CORE_DEPTH)/gtests/common \
 	-I$(CORE_DEPTH)/cpputil \
 	$(NULL)
 

@@ -875,6 +875,17 @@ SECStatus PK11_WriteRawAttribute(PK11ObjectType type, void *object,
 PK11SlotList *
 PK11_GetAllSlotsForCert(CERTCertificate *cert, void *arg);
 
+/*
+ * Finds all certificates on the given slot with the given subject distinguished
+ * name and returns them as DER bytes. If no such certificates can be found,
+ * returns SECSuccess and sets *results to NULL. If a failure is encountered
+ * while fetching any of the matching certificates, SECFailure is returned and
+ * *results will be NULL.
+ */
+SECStatus
+PK11_FindRawCertsWithSubject(PK11SlotInfo *slot, SECItem *derSubject,
+                             CERTCertificateList **results);
+
 /**********************************************************************
  * New functions which are already deprecated....
  **********************************************************************/

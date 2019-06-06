@@ -16,8 +16,8 @@
 #include "nsGkAtoms.h"
 #include "nsPageContentFrame.h"
 #include "nsDisplayList.h"
-#include "nsSimplePageSequenceFrame.h"  // for nsSharedPageData
-#include "nsTextFormatter.h"  // for page number localization formatting
+#include "nsPageSequenceFrame.h"  // for nsSharedPageData
+#include "nsTextFormatter.h"      // for page number localization formatting
 #include "nsBidiUtils.h"
 #include "nsIPrintSettings.h"
 

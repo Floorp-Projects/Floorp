@@ -8,13 +8,13 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'Web Painting')
 
 EXPORTS.mozilla.layout += [
-    'RenderFrame.h',
+    'RemoteLayerTreeOwner.h',
     'VsyncChild.h',
     'VsyncParent.h',
 ]
 
 UNIFIED_SOURCES += [
-    'RenderFrame.cpp',
+    'RemoteLayerTreeOwner.cpp',
 ]
 
 SOURCES += [
