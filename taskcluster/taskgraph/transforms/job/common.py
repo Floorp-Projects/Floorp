@@ -133,9 +133,9 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
         'GECKO_BASE_REPOSITORY': config.params['base_repository'],
         'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
         'GECKO_HEAD_REV': config.params['head_rev'],
+        'GECKO_PATH': geckodir,
         'HG_STORE_PATH': hgstore,
     })
-    taskdesc['worker']['env'].setdefault('GECKO_PATH', geckodir)
 
     if 'comm_base_repository' in config.params:
         taskdesc['worker']['env'].update({
