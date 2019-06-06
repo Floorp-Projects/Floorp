@@ -611,7 +611,7 @@ PromptDelegate.prototype = {
     return true;
   },
 
-  select: function(aTitle, aText, aCount, aSelectList, aOutSelection) {
+  select: function(aTitle, aText, aSelectList, aOutSelection) {
     let choices = Array.prototype.map.call(aSelectList, (item, index) => ({
       id: String(index),
       label: item,

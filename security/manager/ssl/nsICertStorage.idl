@@ -56,6 +56,21 @@ interface nsISubjectAndPubKeyRevocationState : nsIRevocationState {
 };
 
 /**
+ * An interface representing the CRLite enrollment state of a certificate
+ * identified by its subject and subject public key info hash.
+ * subject is a base 64-encoded DER subject distinguished name.
+ * spkiHash is a base 64-encoded SHA-256 hash of a DER subject public key info.
+ * state is nsICertStorage.STATE_ENFORCE or STATE_UNSET, meaning the certificate
+ * is or is not enrolled in CRLite, respectively.
+ */
+[scriptable, uuid(5d0d22be-185f-4cf0-b73b-c5a911273e77)]
+interface nsICRLiteState : nsISupports {
+    readonly attribute ACString subject;
+    readonly attribute ACString spkiHash;
+    readonly attribute short state;
+};
+
+/**
  * An interface representing a certificate to add to storage. Consists of the
  * base64-encoded DER bytes of the certificate (cert), the base64-encoded DER
  * bytes of the subject distinguished name of the certificate (subject), and the
@@ -75,6 +90,7 @@ interface nsICertInfo : nsISupports {
 interface nsICertStorage : nsISupports {
   const octet DATA_TYPE_REVOCATION = 1;
   const octet DATA_TYPE_CERTIFICATE = 2;
+  const octet DATA_TYPE_CRLITE = 3;
 
   /**
    * Asynchronously check if the backing storage has stored data of the given
@@ -123,6 +139,24 @@ interface nsICertStorage : nsISupports {
     */
   [must_use]
   boolean isBlocklistFresh();
+
+  /**
+   * Asynchronously set a batch of CRLite enrollment state. See the
+   * documentation for nsICRLiteState.
+   * Must only be called from the main thread.
+   */
+  [must_use]
+  void setCRLiteState(in Array<nsICRLiteState> crliteState,
+                      in nsICertStorageCallback callback);
+
+  /**
+   * Get the CRLite enrollment state of a certificate identified by the given
+   * subject distinguished name and subject public key info (both as DER bytes).
+   * STATE_ENFORCE indicates the certificate is enrolled, whereas STATE_UNSET
+   * indicates it is not.
+   */
+  [must_use]
+  short getCRLiteState(in Array<octet> subject, in Array<octet> spki);
 
   /**
    * Trust flags to use when adding a adding a certificate.

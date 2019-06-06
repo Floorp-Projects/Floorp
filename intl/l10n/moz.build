@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
-    'DOMLocalization.jsm',
     'Fluent.jsm',
     'L10nRegistry.jsm',
     'Localization.jsm',
@@ -16,29 +15,16 @@ TESTING_JS_MODULES += [
 ]
 
 XPIDL_SOURCES += [
-    'mozIDOMLocalization.idl',
     'mozILocalization.idl',
 ]
 
 XPIDL_MODULE = 'locale'
-
-EXPORTS.mozilla.dom += [
-    'DocumentL10n.h',
-]
-
-UNIFIED_SOURCES += [
-    'DocumentL10n.cpp',
-]
 
 LOCAL_INCLUDES += [
     '/dom/base',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
-
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 SPHINX_TREES['l10n'] = 'docs'
 

@@ -11,13 +11,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
+  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
 var {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 var {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 var {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
-const BROWSER_SEARCH_PREF = "browser.search.";
 const PREF_SEARCH_URL = "geoSpecificDefaults.url";
 const NS_APP_SEARCH_DIR = "SrchPlugns";
 
@@ -42,7 +42,7 @@ Services.prefs.setIntPref("browser.search.geoip.timeout", 3000);
 // But still disable geoip lookups - tests that need it will re-configure this.
 Services.prefs.setCharPref("browser.search.geoip.url", "");
 // Also disable region defaults - tests using it will also re-configure it.
-Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).setCharPref("geoSpecificDefaults.url", "");
+Services.prefs.getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF).setCharPref("geoSpecificDefaults.url", "");
 
 AddonTestUtils.init(this, false);
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
@@ -327,11 +327,11 @@ async function withGeoServer(testFn, {
   srv.start(-1);
 
   let url = `http://localhost:${srv.identity.primaryPort}/${path}?`;
-  let defaultBranch = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
+  let defaultBranch = Services.prefs.getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF);
   let originalURL = defaultBranch.getCharPref(PREF_SEARCH_URL);
   defaultBranch.setCharPref(PREF_SEARCH_URL, url);
   // Set a bogus user value so that running the test ensures we ignore it.
-  Services.prefs.setCharPref(BROWSER_SEARCH_PREF + PREF_SEARCH_URL, "about:blank");
+  Services.prefs.setCharPref(SearchUtils.BROWSER_SEARCH_PREF + PREF_SEARCH_URL, "about:blank");
   Services.prefs.setCharPref("browser.search.geoip.url",
                              'data:application/json,{"country_code": "FR"}');
 
@@ -342,7 +342,7 @@ async function withGeoServer(testFn, {
   } finally {
     srv.stop(() => {});
     defaultBranch.setCharPref(PREF_SEARCH_URL, originalURL);
-    Services.prefs.clearUserPref(BROWSER_SEARCH_PREF + PREF_SEARCH_URL);
+    Services.prefs.clearUserPref(SearchUtils.BROWSER_SEARCH_PREF + PREF_SEARCH_URL);
     Services.prefs.clearUserPref("browser.search.geoip.url");
   }
 }
@@ -401,7 +401,7 @@ var addTestEngines = async function(aItems) {
       if (item.xmlFileName) {
         Services.search.addEngine(gDataUrl + item.xmlFileName, null, false);
       } else {
-        Services.search.addEngineWithDetails(item.name, ...item.details);
+        Services.search.addEngineWithDetails(item.name, item.details);
       }
     });
   }

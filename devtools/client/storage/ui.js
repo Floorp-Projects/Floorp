@@ -31,7 +31,7 @@ loader.lazyRequireGetter(this, "validator",
  * Localization convenience methods.
  */
 const STORAGE_STRINGS = "devtools/client/locales/storage.properties";
-const L10N = new LocalizationHelper(STORAGE_STRINGS);
+const L10N = new LocalizationHelper(STORAGE_STRINGS, true);
 
 const GENERIC_VARIABLES_VIEW_SETTINGS = {
   lazyEmpty: true,
@@ -59,6 +59,7 @@ const COOKIE_KEY_MAP = {
   isHttpOnly: "HttpOnly",
   creationTime: "CreationTime",
   lastAccessed: "LastAccessed",
+  sameSite: "SameSite",
 };
 
 const SAFE_HOSTS_PREFIXES_REGEX = /^(about:|https?:|file:|moz-extension:)/;
@@ -1055,8 +1056,15 @@ class StorageUI {
       columns[f.name] = f.name;
       let columnName;
       try {
+        let name = f.name;
+
         // Path key names for l10n in the case of a string change.
-        const name = f.name === "keyPath" ? "keyPath2" : f.name;
+        switch (f.name) {
+          case "creationTime":
+          case "keyPath":
+            name = `${f.name}2`;
+            break;
+        }
 
         columnName = L10N.getStr("table.headers." + type + "." + name);
       } catch (e) {

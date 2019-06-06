@@ -121,7 +121,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // Callback while background channel is destroyed.
   void OnBackgroundParentDestroyed();
 
-  base::ProcessId OtherPid() const override;
+  base::ProcessId OtherPid() const;
 
   // Calling this method will cancel the HttpChannelChild because the consumer
   // needs to be relocated to another process.

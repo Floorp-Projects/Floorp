@@ -21,7 +21,12 @@ interface JSWindowActor {
 
 [ChromeOnly, ChromeConstructor]
 interface JSWindowActorParent {
-  readonly attribute WindowGlobalParent manager;
+  /**
+   * Actor initialization occurs after the constructor is called but before the
+   * first message is delivered. Until the actor is initialized, accesses to
+   * manager will fail.
+   */
+  readonly attribute WindowGlobalParent? manager;
 
   [Throws]
   readonly attribute CanonicalBrowsingContext? browsingContext;
@@ -30,7 +35,12 @@ JSWindowActorParent implements JSWindowActor;
 
 [ChromeOnly, ChromeConstructor]
 interface JSWindowActorChild {
-  readonly attribute WindowGlobalChild manager;
+  /**
+   * Actor initialization occurs after the constructor is called but before the
+   * first message is delivered. Until the actor is initialized, accesses to
+   * manager will fail.
+   */
+  readonly attribute WindowGlobalChild? manager;
 
   [Throws]
   readonly attribute Document? document;
@@ -69,6 +79,16 @@ callback interface MozObserverCallback {
 [MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback MozActorDestroyCallback = void();
 
+/**
+ * The willDestroy method, if present, will be called at the last opportunity
+ * to send messages to the remote side, giving implementers the chance to clean
+ * up and send final messages.
+ * The didDestroy method, if present, will be called after the actor is no
+ * longer able to receive any more messages.
+ *
+ * NOTE: Messages may be received between willDestroy and didDestroy, but they
+ * may not be sent.
+ */
 dictionary MozActorDestroyCallbacks {
   [ChromeOnly] MozActorDestroyCallback willDestroy;
   [ChromeOnly] MozActorDestroyCallback didDestroy;
@@ -97,14 +117,14 @@ dictionary WindowActorOptions {
    * may be instantiated for. If this is defined, only documents URL which match
    * are allowed to have the given actor created for them. Other
    * documents will fail to have their actor constructed, returning nullptr.
-   **/
+   */
   sequence<DOMString> matches;
 
   /**
    * Optional list of regular expressions for remoteTypes which are
    * allowed to instantiate this actor. If not passed, all content
    * processes are allowed to instantiate the actor.
-   **/
+   */
   sequence<DOMString> remoteTypes;
 
   /** This fields are used for configuring individual sides of the actor. */
@@ -113,7 +133,11 @@ dictionary WindowActorOptions {
 };
 
 dictionary WindowActorSidedOptions {
-  /** The JSM path which should be loaded for the actor on this side. */
+  /**
+   * The JSM path which should be loaded for the actor on this side.
+   * If not passed, the specified side cannot receive messages, but may send
+   * them using `sendAsyncMessage` or `sendQuery`.
+   */
   ByteString moduleURI;
 };
 

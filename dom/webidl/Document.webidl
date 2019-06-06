@@ -22,6 +22,7 @@ interface nsISupports;
 interface URI;
 interface nsIDocShell;
 interface nsILoadGroup;
+interface nsIReferrerInfo;
 
 enum VisibilityState { "hidden", "visible" };
 
@@ -247,6 +248,13 @@ partial interface Document {
    */
   [ChromeOnly]
   readonly attribute unsigned long referrerPolicy;
+
+    /**
+   * Current referrer info, which holds all referrer related information
+   * including referrer policy and raw referrer of document.
+   */
+  [ChromeOnly]
+  readonly attribute nsIReferrerInfo referrerInfo;
 
 };
 

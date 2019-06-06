@@ -19,9 +19,9 @@ function run_test() {
 }
 
 add_task(async function test_pref() {
-  let defaultBranch = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
+  let defaultBranch = Services.prefs.getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF);
   defaultBranch.setCharPref("param.code", "good&id=unique");
-  Services.prefs.setCharPref(BROWSER_SEARCH_PREF + "param.code", "bad");
+  Services.prefs.setCharPref(SearchUtils.BROWSER_SEARCH_PREF + "param.code", "bad");
 
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();

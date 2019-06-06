@@ -6,13 +6,15 @@
 const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
 
 function setupTestPreferences(isAllowedAutoplay, isAllowedMuted) {
-  const autoplayDefault = isAllowedAutoplay ?
-    SpecialPowers.Ci.nsIAutoplay.ALLOWED : SpecialPowers.Ci.nsIAutoplay.BLOCKED;
+  let autoplayDefault = SpecialPowers.Ci.nsIAutoplay.ALLOWED;
+  if (!isAllowedAutoplay) {
+    autoplayDefault = isAllowedMuted ? SpecialPowers.Ci.nsIAutoplay.BLOCKED
+      : SpecialPowers.Ci.nsIAutoplay.BLOCKED_ALL;
+  }
   return SpecialPowers.pushPrefEnv({"set": [
     ["dom.media.autoplay.autoplay-policy-api", true],
     ["media.autoplay.default", autoplayDefault],
     ["media.autoplay.enabled.user-gestures-needed", true],
-    ["media.autoplay.allow-muted", isAllowedMuted],
   ]});
 }
 

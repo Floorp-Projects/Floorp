@@ -64,7 +64,7 @@ class DrawTargetOffset : public DrawTarget {
   virtual void DetachAllSnapshots() override;
   virtual IntSize GetSize() const override { return mDrawTarget->GetSize(); }
   virtual IntRect GetRect() const override {
-    return IntRect(mOrigin, GetSize());
+    return mDrawTarget->GetRect() + mOrigin;
   }
 
   virtual void Flush() override;

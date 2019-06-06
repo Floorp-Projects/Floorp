@@ -923,14 +923,13 @@ mozInlineSpellChecker::IgnoreWord(const nsAString& word) {
 // mozInlineSpellChecker::IgnoreWords
 
 NS_IMETHODIMP
-mozInlineSpellChecker::IgnoreWords(const char16_t** aWordsToIgnore,
-                                   uint32_t aCount) {
+mozInlineSpellChecker::IgnoreWords(const nsTArray<nsString>& aWordsToIgnore) {
   NS_ENSURE_TRUE(mSpellCheck, NS_ERROR_NOT_INITIALIZED);
 
   // add each word to the ignore list and then recheck the document
-  for (uint32_t index = 0; index < aCount; index++)
-    mSpellCheck->IgnoreWordAllOccurrences(
-        nsDependentString(aWordsToIgnore[index]));
+  for (auto& word : aWordsToIgnore) {
+    mSpellCheck->IgnoreWordAllOccurrences(word);
+  }
 
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   nsresult rv = status->InitForSelection();
