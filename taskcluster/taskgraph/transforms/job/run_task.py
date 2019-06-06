@@ -129,7 +129,7 @@ def generic_worker_run_task(config, job, taskdesc):
     if is_win:
         command = ['C:/mozilla-build/python3/python3.exe', 'run-task']
     elif is_mac:
-        command = ['/tools/python36/bin/python3.6', 'run-task']
+        command = ['/tools/python37/bin/python3.7', 'run-task']
         if job['worker-type'].endswith('1014'):
             command = ['/usr/local/bin/python3', 'run-task']
     else:
