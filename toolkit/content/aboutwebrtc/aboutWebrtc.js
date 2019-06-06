@@ -35,7 +35,7 @@ function getLog() {
 var reportsRetrieved = getStats();
 var logRetrieved = getLog();
 
-function onLoad() {
+window.onload = function() {
   document.title = getString("document_title");
   let controls = document.querySelector("#controls");
   if (controls) {
@@ -59,7 +59,7 @@ function onLoad() {
   Promise.all([reportsRetrieved, logRetrieved])
     .then(([stats, log]) => contentInit({reports: stats.reports, log}))
     .catch(error => contentInit({error}));
-}
+};
 
 function onClearLog() {
   WebrtcGlobalInformation.clearLogging();

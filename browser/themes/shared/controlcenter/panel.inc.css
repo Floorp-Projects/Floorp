@@ -64,8 +64,7 @@
 
 /* Make sure hidden elements don't accidentally become visible from one of the
    above selectors (see Bug 1194258) */
-#identity-popup [hidden],
-#protections-popup [hidden] {
+#identity-popup [hidden] {
   display: none !important;
 }
 
@@ -207,6 +206,10 @@
 
 #protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
   fill: rgb(100, 70, 228);
+}
+
+#protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow:-moz-locale-dir(rtl) {
+  fill: rgb(18, 90, 223);
 }
 
 #protections-popup-mainView-panel-header {
@@ -781,4 +784,72 @@ description#identity-popup-content-verifier,
 
 .identity-popup-permission-remove-button:not(:-moz-focusring):hover:active {
   opacity: 0.8;
+}
+
+#protections-popup-tp-switch-label-box > label {
+  display: none;
+}
+
+#protections-popup:not([hasException]) #protections-popup-tp-switch-on-header,
+#protections-popup:not([hasException]) #protections-popup-tp-switch-breakage-link,
+#protections-popup[hasException] #protections-popup-tp-switch-off-header {
+  display: unset;
+}
+
+#protections-popup-tp-switch-section {
+  padding: 4px;
+}
+
+#protections-popup-tp-switch-label-box,
+#protections-popup-tp-switch-box {
+  padding: 4px 1em;
+  min-height: 40px;
+  -moz-box-pack: center;
+}
+
+#protections-popup-tp-switch-on-header,
+#protections-popup-tp-switch-off-header {
+  font-weight: 600;
+}
+
+#protections-popup-tp-switch {
+  -moz-appearance: none;
+  box-sizing: border-box;
+  min-width: 26px;
+  border-radius: 10px;
+  background-color: var(--arrowpanel-dimmed-even-further);
+  border: 1px solid transparent;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  margin-inline-start: 1px;
+  margin-inline-end: 7px;
+  padding: 2px;
+  transition: padding .2s ease;
+}
+
+#protections-popup-tp-switch::before {
+  position: relative;
+  display: block;
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  background: white;
+}
+
+#protections-popup-tp-switch[enabled] {
+  background-color: #0a84ff;
+  border: 1px solid #0a84ff;
+  /* Push the toggle to the right. */
+  padding-inline-start: 12px;
+}
+
+#protections-popup-tp-switch:hover,
+#protections-popup-tp-switch:-moz-focusring {
+  border: 1px solid var(--panel-separator-color);
+}
+
+#protections-popup-tp-switch[enabled=true]:hover,
+#protections-popup-tp-switch[enabled=true]:-moz-focusring {
+  background-color: #45a1ff;
 }

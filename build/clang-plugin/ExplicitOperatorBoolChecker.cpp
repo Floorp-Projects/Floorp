@@ -21,7 +21,7 @@ void ExplicitOperatorBoolChecker::check(
       Result.Nodes.getNodeAs<CXXConversionDecl>("node");
   const CXXRecordDecl *Clazz = Method->getParent();
 
-  if (!Method->isExplicitSpecified() &&
+  if (!Method->isExplicit() &&
       !hasCustomAttribute<moz_implicit>(Method) &&
       !ASTIsInSystemHeader(Method->getASTContext(), *Method) &&
       isInterestingDeclForImplicitConversion(Method)) {

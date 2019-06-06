@@ -10,6 +10,7 @@ import android.content.ContentResolver;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.view.View;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarBuilder;
@@ -17,6 +18,7 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
 
@@ -28,13 +30,16 @@ public class EditBookmarkTask extends UIAsyncTask.WithoutParams<Integer> {
     private final ContentResolver contentResolver;
     private final Bundle bundle;
 
-    public EditBookmarkTask(Activity activity, @NonNull Bundle bundle) {
+    private EditBookmarkCallback editBookmarkCallback;
+
+    public EditBookmarkTask(Activity activity, @NonNull Bundle bundle, EditBookmarkCallback editBookmarkCallback) {
         super(ThreadUtils.getBackgroundHandler());
 
         this.activityWeakReference = new WeakReference<>(activity);
         this.db = BrowserDB.from(activity);
         this.contentResolver = activity.getContentResolver();
         this.bundle = bundle;
+        this.editBookmarkCallback = editBookmarkCallback;
     }
 
     @Override
@@ -85,6 +90,13 @@ public class EditBookmarkTask extends UIAsyncTask.WithoutParams<Integer> {
         }
         SnackbarBuilder.builder(activity)
                 .message(messageResId)
+                .callback(new SnackbarBuilder.SnackbarCallback() {
+                    @Override
+                    public void onClick(View v) {
+                        editBookmarkCallback.onUndoEditBookmark(bundle);
+                    }
+                })
+                .action(R.string.bookmark_edit_undo)
                 .duration(Snackbar.LENGTH_LONG)
                 .buildAndShow();
     }

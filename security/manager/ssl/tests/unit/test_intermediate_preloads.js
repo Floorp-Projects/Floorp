@@ -61,7 +61,14 @@ function getSubjectBytes(certDERString) {
   let bytes = stringToArray(certDERString);
   let cert = new X509.Certificate();
   cert.parse(bytes);
-  return btoa(arrayToString(cert.tbsCertificate.subject._der._bytes));
+  return arrayToString(cert.tbsCertificate.subject._der._bytes);
+}
+
+function getSPKIBytes(certDERString) {
+  let bytes = stringToArray(certDERString);
+  let cert = new X509.Certificate();
+  cert.parse(bytes);
+  return arrayToString(cert.tbsCertificate.subjectPublicKeyInfo._der._bytes);
 }
 
 /**
@@ -99,7 +106,7 @@ async function syncAndDownload(filenames, options = {}) {
       },
       "derHash": getHashCommon(certDERBytes, true),
       "subject": "",
-      "subjectDN": getSubjectBytes(certDERBytes),
+      "subjectDN": btoa(getSubjectBytes(certDERBytes)),
       "attachment": {
         "hash": hashFunc(certBytes),
         "size": lengthFunc(certBytes),
@@ -108,7 +115,7 @@ async function syncAndDownload(filenames, options = {}) {
         "mimetype": "application/x-pem-file",
       },
       "whitelist": false,
-      "pubKeyHash": "", // not used yet
+      "pubKeyHash": getHashCommon(getSPKIBytes(certDERBytes), true),
       "crlite_enrolled": true,
     };
 
@@ -263,6 +270,16 @@ add_task({
   await checkCertErrorGeneric(certDB, ee_cert_2, SEC_ERROR_UNKNOWN_ISSUER,
                               certificateUsageSSLServer);
 
+  let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
+  let intermediateBytes = readFile(do_get_file("test_intermediate_preloads/int.pem"));
+  let intermediateDERBytes = atob(pemToBase64(intermediateBytes));
+  let intermediateCert = new X509.Certificate();
+  intermediateCert.parse(stringToArray(intermediateDERBytes));
+  let crliteStateBefore = certStorage.getCRLiteState(
+    intermediateCert.tbsCertificate.subject._der._bytes,
+    intermediateCert.tbsCertificate.subjectPublicKeyInfo._der._bytes);
+  equal(crliteStateBefore, Ci.nsICertStorage.STATE_UNSET, "crlite state should be unset before");
+
   const result = await syncAndDownload(["int.pem", "int2.pem"]);
   equal(result, "success", "Preloading update should have run");
 
@@ -272,6 +289,24 @@ add_task({
   // an intermediate
   await checkCertErrorGeneric(certDB, ee_cert, PRErrorCodeSuccess,
                               certificateUsageSSLServer);
+
+  let localDB = await remoteSecSetting.client.openCollection();
+  let { data } = await localDB.list();
+  ok(data.length > 0, "should have some entries");
+  // simulate a sync (syncAndDownload doesn't actually... sync.)
+  await remoteSecSetting.client.emit("sync", {
+    "data": {
+      current: data,
+      created: data,
+      deleted: [],
+      updated: [],
+    },
+  });
+
+  let crliteStateAfter = certStorage.getCRLiteState(
+    intermediateCert.tbsCertificate.subject._der._bytes,
+    intermediateCert.tbsCertificate.subjectPublicKeyInfo._der._bytes);
+  equal(crliteStateAfter, Ci.nsICertStorage.STATE_ENFORCE, "crlite state should be set after");
 
   // check that ee cert 2 does not verify - since we don't know the issuer of
   // this certificate
@@ -339,7 +374,14 @@ add_task({
   let resultsBefore = certStorage.findCertsBySubject(stringToArray(atob(subject)));
   equal(resultsBefore.length, 1, "should find the intermediate in cert storage before");
   // simulate a sync where we deleted the entry
-  await remoteSecSetting.client.emit("sync", { "data": { deleted: [ data[0] ] } });
+  await remoteSecSetting.client.emit("sync", {
+    "data": {
+      current: [],
+      created: [],
+      deleted: [ data[0] ],
+      updated: [],
+    },
+  });
   let resultsAfter = certStorage.findCertsBySubject(stringToArray(atob(subject)));
   equal(resultsAfter.length, 0, "shouldn't find intermediate in cert storage now");
 });

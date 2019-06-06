@@ -1,7 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  CustomizableUITestUtils: "resource://testing-common/CustomizableUITestUtils.jsm",
+  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
+});
+
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
 /**

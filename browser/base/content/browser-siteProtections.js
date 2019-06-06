@@ -22,6 +22,11 @@ var gProtectionsHandler = {
     return this._protectionsPopupMainViewHeaderLabel =
       document.getElementById("protections-popup-mainView-panel-header-span");
   },
+  get _protectionsPopupTPSwitch() {
+    delete this._protectionsPopupTPSwitch;
+    return this._protectionsPopupTPSwitch =
+      document.getElementById("protections-popup-tp-switch");
+  },
 
   handleProtectionsButtonEvent(event) {
     event.stopPropagation();
@@ -45,12 +50,77 @@ var gProtectionsHandler = {
     }).catch(Cu.reportError);
   },
 
+  onPopupShown(event) {
+    if (event.target == this._protectionsPopup) {
+      window.addEventListener("focus", this, true);
+    }
+  },
+
+  onPopupHidden(event) {
+    if (event.target == this._protectionsPopup) {
+      window.removeEventListener("focus", this, true);
+      this._protectionsPopup.removeAttribute("open");
+    }
+  },
+
+  handleEvent(event) {
+    let elem = document.activeElement;
+    let position = elem.compareDocumentPosition(this._protectionsPopup);
+
+    if (!(position & (Node.DOCUMENT_POSITION_CONTAINS |
+                      Node.DOCUMENT_POSITION_CONTAINED_BY)) &&
+        !this._protectionsPopup.hasAttribute("noautohide")) {
+      // Hide the panel when focusing an element that is
+      // neither an ancestor nor descendant unless the panel has
+      // @noautohide (e.g. for a tour).
+      PanelMultiView.hidePopup(this._protectionsPopup);
+    }
+  },
+
   refreshProtectionsPopup() {
+    // Refresh the state of the TP toggle switch.
+    this._protectionsPopupTPSwitch.toggleAttribute("enabled",
+      !this._protectionsPopup.hasAttribute("hasException"));
+
     let host = gIdentityHandler.getHostForDisplay();
 
     // Push the appropriate strings out to the UI.
     this._protectionsPopupMainViewHeaderLabel.textContent =
       // gNavigatorBundle.getFormattedString("protections.header", [host]);
       `Tracking Protections for ${host}`;
+
+    let currentlyEnabled =
+      !this._protectionsPopup.hasAttribute("hasException");
+
+    this._protectionsPopupTPSwitch.toggleAttribute("enabled", currentlyEnabled);
+  },
+
+  async onTPSwitchCommand(event) {
+    // When the switch is clicked, we wait 500ms and then disable/enable
+    // protections, causing the page to refresh, and close the popup.
+    // We need to ensure we don't handle more clicks during the 500ms delay,
+    // so we keep track of state and return early if needed.
+    if (this._TPSwitchCommanding) {
+      return;
+    }
+
+    this._TPSwitchCommanding = true;
+
+    let currentlyEnabled =
+      !this._protectionsPopup.hasAttribute("hasException");
+
+    this._protectionsPopupTPSwitch.toggleAttribute("enabled", !currentlyEnabled);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    if (currentlyEnabled) {
+      ContentBlocking.disableForCurrentPage();
+      gIdentityHandler.recordClick("unblock");
+    } else {
+      ContentBlocking.enableForCurrentPage();
+      gIdentityHandler.recordClick("block");
+    }
+
+    PanelMultiView.hidePopup(this._protectionsPopup);
+    delete this._TPSwitchCommanding;
   },
 };

@@ -18,8 +18,13 @@ add_task(async function test_big_icon() {
   let iconUrl = gDataUrl + "big_icon.ico";
   await addTestEngines([
     { name: "BigIcon",
-      details: [iconUrl, "", "Big icon", "GET",
-                "http://test_big_icon/search?q={searchTerms}"] },
+      details: {
+        iconURL: iconUrl,
+        description: "Big icon",
+        method:  "GET",
+        template: "http://test_big_icon/search?q={searchTerms}",
+      },
+    },
   ]);
 
   await promiseAfterCache();

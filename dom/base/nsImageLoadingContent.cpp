@@ -1146,14 +1146,6 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
   nsLoadFlags loadFlags =
       aLoadFlags | nsContentUtils::CORSModeToLoadImageFlags(GetCORSMode());
 
-  // get document wide referrer policy
-  // if referrer attributes are enabled in preferences, load img referrer
-  // attribute if the image does not provide a referrer attribute, ignore this
-  net::ReferrerPolicy referrerPolicy = aDocument->GetReferrerPolicy();
-  net::ReferrerPolicy imgReferrerPolicy = GetImageReferrerPolicy();
-  if (imgReferrerPolicy != net::RP_Unset) {
-    referrerPolicy = imgReferrerPolicy;
-  }
 
   RefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
   nsCOMPtr<nsIContent> content =
@@ -1172,10 +1164,14 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
 
   nsCOMPtr<nsINode> thisNode =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+  referrerInfo->InitWithNode(thisNode);
+  nsCOMPtr<nsIURI> referrer = referrerInfo->GetOriginalReferrer();
   nsresult rv = nsContentUtils::LoadImage(
-      aNewURI, thisNode, aDocument, triggeringPrincipal, 0,
-      aDocument->GetDocumentURIAsReferrer(), referrerPolicy, this, loadFlags,
-      content->LocalName(), getter_AddRefs(req), policyType,
+      aNewURI, thisNode, aDocument, triggeringPrincipal, 0, referrer,
+      static_cast<mozilla::net::ReferrerPolicy>(
+          referrerInfo->GetReferrerPolicy()),
+      this, loadFlags, content->LocalName(), getter_AddRefs(req), policyType,
       mUseUrgentStartForChannel);
 
   // Reset the flag to avoid loading from XPCOM or somewhere again else without

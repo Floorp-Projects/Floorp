@@ -311,6 +311,11 @@ public class BrowserContract {
 
         public static final String ANNOTATION_KEY = "annotation_key";
         public static final String ANNOTATION_VALUE = "annotation_value";
+
+        public static final String OLD_TITLE = "old_title";
+        public static final String OLD_URL = "old_url";
+        public static final String OLD_KEYWORD = "old_keyword";
+
     }
 
     @RobocopTarget

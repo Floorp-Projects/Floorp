@@ -542,7 +542,7 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         nsRect(aBuilder->ToReferenceFrame(child), child->GetSize());
 
     PresContext()->GetPresShell()->AddCanvasBackgroundColorItem(
-        *aBuilder, content, child, backgroundRect, NS_RGBA(0, 0, 0, 0));
+        aBuilder, &content, child, backgroundRect, NS_RGBA(0, 0, 0, 0));
   }
 
   content.AppendNewToTop<nsDisplayTransform>(aBuilder, child, &content,
