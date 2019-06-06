@@ -1,30 +1,29 @@
-#ifndef mozilla_dom_l10n_Mutations_h__
-#define mozilla_dom_l10n_Mutations_h__
+#ifndef mozilla_dom_l10n_L10nMutations_h__
+#define mozilla_dom_l10n_L10nMutations_h__
 
 #include "nsRefreshDriver.h"
 #include "nsStubMutationObserver.h"
 #include "nsTHashtable.h"
-#include "mozilla/dom/l10n/DOMLocalization.h"
+#include "mozilla/dom/DOMLocalization.h"
 
 namespace mozilla {
 namespace dom {
-namespace l10n {
 
 /**
- * Mutations manage observing roots for localization
+ * L10nMutations manage observing roots for localization
  * changes and coalescing pending translations into
  * batches - one per animation frame.
  */
-class Mutations final : public nsStubMutationObserver,
-                        public nsARefreshObserver {
+class L10nMutations final : public nsStubMutationObserver,
+                            public nsARefreshObserver {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(Mutations, nsIMutationObserver)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(L10nMutations, nsIMutationObserver)
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
-  explicit Mutations(DOMLocalization* aDOMLocalization);
+  explicit L10nMutations(DOMLocalization* aDOMLocalization);
 
   /**
    * Pause root observation.
@@ -71,15 +70,14 @@ class Mutations final : public nsStubMutationObserver,
   void FlushPendingTranslations();
 
  private:
-  ~Mutations() {
+  ~L10nMutations() {
     StopRefreshObserver();
     MOZ_ASSERT(!mDOMLocalization,
-               "DOMLocalization<-->Mutations cycle should be broken.");
+               "DOMLocalization<-->L10nMutations cycle should be broken.");
   }
 };
 
-}  // namespace l10n
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_l10n_Mutations_h__
+#endif  // mozilla_dom_l10n_L10nMutations_h__

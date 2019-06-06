@@ -5,7 +5,7 @@
 #include "DOMLocalization.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
-#include "mozilla/dom/l10n/DOMOverlays.h"
+#include "mozilla/dom/L10nOverlays.h"
 
 #define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
 
@@ -18,7 +18,6 @@ static const char* kObservedPrefs[] = {L10N_PSEUDO_PREF, INTL_UI_DIRECTION_PREF,
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::l10n;
 using namespace mozilla::intl;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMLocalization)
@@ -48,7 +47,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMLocalization)
 NS_INTERFACE_MAP_END
 
 DOMLocalization::DOMLocalization(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {
-  mMutations = new mozilla::dom::l10n::Mutations(this);
+  mMutations = new L10nMutations(this);
 }
 
 void DOMLocalization::Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv) {
@@ -62,9 +61,11 @@ void DOMLocalization::Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv) {
   RegisterObservers();
 }
 
-void DOMLocalization::Init(nsTArray<nsString>& aResourceIds, JS::Handle<JS::Value> aGenerateMessages, ErrorResult& aRv) {
+void DOMLocalization::Init(nsTArray<nsString>& aResourceIds,
+                           JS::Handle<JS::Value> aGenerateMessages,
+                           ErrorResult& aRv) {
   nsCOMPtr<mozILocalizationJSM> jsm =
-    do_ImportModule("resource://gre/modules/Localization.jsm");
+      do_ImportModule("resource://gre/modules/Localization.jsm");
   MOZ_RELEASE_ASSERT(jsm);
 
   Unused << jsm->GetLocalizationWithCustomGenerateMessages(
@@ -584,11 +585,10 @@ void DOMLocalization::ApplyTranslations(nsTArray<nsCOMPtr<Element>>& aElements,
     return;
   }
 
-  nsTArray<DOMOverlaysError> errors;
+  nsTArray<L10nOverlaysError> errors;
   for (size_t i = 0; i < aTranslations.Length(); ++i) {
     Element* elem = aElements[i];
-    mozilla::dom::l10n::DOMOverlays::TranslateElement(*elem, aTranslations[i],
-                                                      errors, aRv);
+    L10nOverlays::TranslateElement(*elem, aTranslations[i], errors, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
@@ -601,7 +601,7 @@ void DOMLocalization::ApplyTranslations(nsTArray<nsCOMPtr<Element>>& aElements,
     return;
   }
 
-  ReportDOMOverlaysErrors(errors);
+  ReportL10nOverlaysErrors(errors);
 }
 
 /* Protected */
@@ -726,27 +726,27 @@ already_AddRefed<Promise> DOMLocalization::MaybeWrapPromise(
   return docPromise.forget();
 }
 
-void DOMLocalization::ReportDOMOverlaysErrors(
-    nsTArray<mozilla::dom::DOMOverlaysError>& aErrors) {
+void DOMLocalization::ReportL10nOverlaysErrors(
+    nsTArray<L10nOverlaysError>& aErrors) {
   nsAutoString msg;
 
   for (auto& error : aErrors) {
     if (error.mCode.WasPassed()) {
       msg = NS_LITERAL_STRING("[fluent-dom] ");
       switch (error.mCode.Value()) {
-        case DOMOverlays_Binding::ERROR_FORBIDDEN_TYPE:
+        case L10nOverlays_Binding::ERROR_FORBIDDEN_TYPE:
           msg += NS_LITERAL_STRING("An element of forbidden type \"") +
                  error.mTranslatedElementName.Value() +
                  NS_LITERAL_STRING(
                      "\" was found in the translation. Only safe text-level "
                      "elements and elements with data-l10n-name are allowed.");
           break;
-        case DOMOverlays_Binding::ERROR_NAMED_ELEMENT_MISSING:
+        case L10nOverlays_Binding::ERROR_NAMED_ELEMENT_MISSING:
           msg += NS_LITERAL_STRING("An element named \"") +
                  error.mL10nName.Value() +
                  NS_LITERAL_STRING("\" wasn't found in the source.");
           break;
-        case DOMOverlays_Binding::ERROR_NAMED_ELEMENT_TYPE_MISMATCH:
+        case L10nOverlays_Binding::ERROR_NAMED_ELEMENT_TYPE_MISMATCH:
           msg += NS_LITERAL_STRING("An element named \"") +
                  error.mL10nName.Value() +
                  NS_LITERAL_STRING(
@@ -756,7 +756,7 @@ void DOMLocalization::ReportDOMOverlaysErrors(
                      " didn't match the element found in the source ") +
                  error.mSourceElementName.Value() + NS_LITERAL_STRING(".");
           break;
-        case DOMOverlays_Binding::ERROR_UNKNOWN:
+        case L10nOverlays_Binding::ERROR_UNKNOWN:
         default:
           msg += NS_LITERAL_STRING(
               "Unknown error happened while translation of an element.");

@@ -18,11 +18,10 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
-#include "mozilla/dom/l10n/DOMLocalization.h"
+#include "mozilla/dom/DOMLocalization.h"
 
 namespace mozilla {
 namespace dom {
-namespace l10n {
 
 enum class DocumentL10nState {
   Initialized = 0,
@@ -40,16 +39,16 @@ enum class DocumentL10nState {
  * instance of mozILocalization and maintains a single promise
  * which gets resolved the first time the document gets translated.
  */
-class DocumentL10n final : public l10n::DOMLocalization {
+class DocumentL10n final : public DOMLocalization {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocumentL10n, l10n::DOMLocalization)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocumentL10n, DOMLocalization)
 
  public:
   explicit DocumentL10n(Document* aDocument);
   void Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv);
 
-   protected:
+ protected:
   virtual ~DocumentL10n() = default;
 
   RefPtr<Document> mDocument;
@@ -71,7 +70,6 @@ class DocumentL10n final : public l10n::DOMLocalization {
   void OnCreatePresShell();
 };
 
-}  // namespace l10n
 }  // namespace dom
 }  // namespace mozilla
 

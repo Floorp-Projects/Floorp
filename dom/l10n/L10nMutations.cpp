@@ -1,38 +1,36 @@
-#include "Mutations.h"
+#include "L10nMutations.h"
 #include "mozilla/dom/DocumentInlines.h"
 
-namespace mozilla {
-namespace dom {
-namespace l10n {
+using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(Mutations)
+NS_IMPL_CYCLE_COLLECTION_CLASS(L10nMutations)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Mutations)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(L10nMutations)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingElements)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingElementsHash)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Mutations)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(L10nMutations)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingElements)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingElementsHash)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Mutations)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(L10nMutations)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Mutations)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(Mutations)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(L10nMutations)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(L10nMutations)
 
-Mutations::Mutations(DOMLocalization* aDOMLocalization)
+L10nMutations::L10nMutations(DOMLocalization* aDOMLocalization)
     : mDOMLocalization(aDOMLocalization) {
   mObserving = true;
 }
 
-void Mutations::AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
-                                 nsAtom* aAttribute, int32_t aModType,
-                                 const nsAttrValue* aOldValue) {
+void L10nMutations::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
+                                     nsAtom* aAttribute, int32_t aModType,
+                                     const nsAttrValue* aOldValue) {
   if (!mObserving) {
     return;
   }
@@ -46,7 +44,7 @@ void Mutations::AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
   }
 }
 
-void Mutations::ContentAppended(nsIContent* aChild) {
+void L10nMutations::ContentAppended(nsIContent* aChild) {
   if (!mObserving) {
     return;
   }
@@ -72,7 +70,7 @@ void Mutations::ContentAppended(nsIContent* aChild) {
   }
 }
 
-void Mutations::ContentInserted(nsIContent* aChild) {
+void L10nMutations::ContentInserted(nsIContent* aChild) {
   if (!mObserving) {
     return;
   }
@@ -95,7 +93,7 @@ void Mutations::ContentInserted(nsIContent* aChild) {
   }
 }
 
-void Mutations::L10nElementChanged(Element* aElement) {
+void L10nMutations::L10nElementChanged(Element* aElement) {
   if (!mPendingElementsHash.Contains(aElement)) {
     mPendingElements.AppendElement(aElement);
     mPendingElementsHash.PutEntry(aElement);
@@ -106,16 +104,16 @@ void Mutations::L10nElementChanged(Element* aElement) {
   }
 }
 
-void Mutations::PauseObserving() { mObserving = false; }
+void L10nMutations::PauseObserving() { mObserving = false; }
 
-void Mutations::ResumeObserving() { mObserving = true; }
+void L10nMutations::ResumeObserving() { mObserving = true; }
 
-void Mutations::WillRefresh(mozilla::TimeStamp aTime) {
+void L10nMutations::WillRefresh(mozilla::TimeStamp aTime) {
   StopRefreshObserver();
   FlushPendingTranslations();
 }
 
-void Mutations::FlushPendingTranslations() {
+void L10nMutations::FlushPendingTranslations() {
   if (!mDOMLocalization) {
     return;
   }
@@ -138,12 +136,12 @@ void Mutations::FlushPendingTranslations() {
   RefPtr<Promise> promise = mDOMLocalization->TranslateElements(elements, rv);
 }
 
-void Mutations::Disconnect() {
+void L10nMutations::Disconnect() {
   StopRefreshObserver();
   mDOMLocalization = nullptr;
 }
 
-void Mutations::StartRefreshObserver() {
+void L10nMutations::StartRefreshObserver() {
   if (!mDOMLocalization || mRefreshObserver) {
     return;
   }
@@ -172,7 +170,7 @@ void Mutations::StartRefreshObserver() {
   }
 }
 
-void Mutations::StopRefreshObserver() {
+void L10nMutations::StopRefreshObserver() {
   if (!mDOMLocalization) {
     return;
   }
@@ -183,12 +181,8 @@ void Mutations::StopRefreshObserver() {
   }
 }
 
-void Mutations::OnCreatePresShell() {
+void L10nMutations::OnCreatePresShell() {
   if (!mPendingElements.IsEmpty()) {
     StartRefreshObserver();
   }
 }
-
-}  // namespace l10n
-}  // namespace dom
-}  // namespace mozilla

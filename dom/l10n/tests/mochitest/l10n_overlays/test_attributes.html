@@ -2,11 +2,11 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test DOMOverlays Top-level attributes</title>
+  <title>Test L10nOverlays Top-level attributes</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
-  /* global DOMOverlays */
+  /* global L10nOverlays */
   "use strict";
 
   function elem(name) {
@@ -18,7 +18,7 @@
     };
   }
 
-  const { translateElement } = DOMOverlays;
+  const { translateElement } = L10nOverlays;
 
   {
     // Allowed attribute
