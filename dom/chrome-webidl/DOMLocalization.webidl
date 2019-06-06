@@ -52,7 +52,14 @@ dictionary L10nKey {
  *    - translateRoots     - translate all attached roots
  *
  */
-[ChromeOnly, Constructor]
+
+/**
+ * Constructor arguments:
+ *    - aResourceids       - a list of localization resource URIs
+ *                           which will provide messages for this
+ *                           Localization instance.
+ /
+[ChromeOnly, Constructor(optional sequence<DOMString> aResourceIds)]
 interface DOMLocalization {
   /**
    * Localization API

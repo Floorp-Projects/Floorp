@@ -48,7 +48,7 @@ class DocumentL10n final : public l10n::DOMLocalization {
   explicit DocumentL10n(Document* aDocument);
   void Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv);
 
- protected:
+   protected:
   virtual ~DocumentL10n() = default;
 
   RefPtr<Document> mDocument;

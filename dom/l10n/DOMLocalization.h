@@ -29,10 +29,11 @@ class DOMLocalization : public nsIObserver,
   NS_DECL_NSIOBSERVER
 
   explicit DOMLocalization(nsIGlobalObject* aGlobal);
+  void Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv);
 
   static already_AddRefed<DOMLocalization> Constructor(
-      const GlobalObject& aGlobal, ErrorResult& aRv);
-  void Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv);
+      const GlobalObject& aGlobal,
+      const Optional<Sequence<nsString>>& aResourceIds, ErrorResult& aRv);
 
   nsIGlobalObject* GetParentObject() const;
 
