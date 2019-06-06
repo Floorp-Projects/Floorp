@@ -13,6 +13,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "nsCOMPtr.h"
+#include "nsIFontLoadCompleteCallback.h"
 #include "nsIStreamLoader.h"
 #include "nsIChannel.h"
 #include "nsIRequestObserver.h"
@@ -23,7 +24,8 @@
 class nsIPrincipal;
 
 class nsFontFaceLoader final : public nsIStreamLoaderObserver,
-                               public nsIRequestObserver {
+                               public nsIRequestObserver,
+                               public nsIFontLoadCompleteCallback {
  public:
   nsFontFaceLoader(gfxUserFontEntry* aFontToLoad, nsIURI* aFontURI,
                    mozilla::dom::FontFaceSet* aFontFaceSet,
@@ -45,6 +47,10 @@ class nsFontFaceLoader final : public nsIStreamLoaderObserver,
   static void LoadTimerCallback(nsITimer* aTimer, void* aClosure);
 
   gfxUserFontEntry* GetUserFontEntry() const { return mUserFontEntry; }
+
+  // Called by the gfxUserFontEntry once it has finished the platform font
+  // loading.
+  NS_IMETHODIMP FontLoadComplete() final;
 
  protected:
   virtual ~nsFontFaceLoader();

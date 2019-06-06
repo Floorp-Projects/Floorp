@@ -10,6 +10,12 @@ with Files('*Text*'):
 with Files('*DWrite*'):
     BUG_COMPONENT = ('Core', 'Graphics: Text')
 
+XPIDL_SOURCES += [
+    'nsIFontLoadCompleteCallback.idl',
+]
+
+XPIDL_MODULE = 'gfx'
+
 EXPORTS += [
     'DrawMode.h',
     'gfx2DGlue.h',
