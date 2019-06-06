@@ -79,6 +79,11 @@ function testOnWindow(aTestData) {
       await BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded");
 
       let doc = win.gBrowser.contentDocument;
+
+      // This test works on a document which uses Fluent.
+      // Fluent localization may finish later than DOMContentLoaded,
+      // so let's wait for `document.l10n.ready` promise to resolve.
+      await doc.l10n.ready;
       let advisoryEl = doc.getElementById("advisory_provider");
       if (aTestData.provider != "google" && aTestData.provider != "google4") {
         ok(!advisoryEl, "Advisory should not be shown");
