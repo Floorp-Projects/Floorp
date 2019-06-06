@@ -5,6 +5,7 @@
 package mozilla.components.browser.icons.decoder
 
 import android.graphics.Bitmap
+import mozilla.components.browser.icons.DesiredSize
 
 /**
  * An icon decoder that can decode a [ByteArray] into a [Bitmap].
@@ -19,7 +20,7 @@ interface IconDecoder {
      * The caller provides a maximum size. This is useful for image formats that may decode into multiple images. The
      * decoder can use this size to determine which [Bitmap] to return.
      */
-    fun decode(data: ByteArray, targetSize: Int, maxSize: Int, maxScaleFactor: Float): Bitmap?
+    fun decode(data: ByteArray, desiredSize: DesiredSize): Bitmap?
 
     companion object {
         @Suppress("MagicNumber")

@@ -23,7 +23,7 @@ class ColorProcessorTest {
     @Test
     fun `test extracting color`() {
         val icon = Icon(mockRedBitmap(1), source = Icon.Source.DISK)
-        val processed = ColorProcessor().process(mock(), mock(), mock(), icon)
+        val processed = ColorProcessor().process(mock(), mock(), mock(), icon, mock())
 
         assertEquals(icon.bitmap, processed.bitmap)
         assertNotNull(processed.color)
@@ -32,7 +32,7 @@ class ColorProcessorTest {
     @Test
     fun `test extracting color from larger bitmap`() {
         val icon = Icon(mockRedBitmap(3), source = Icon.Source.DISK)
-        val processed = ColorProcessor().process(mock(), mock(), mock(), icon)
+        val processed = ColorProcessor().process(mock(), mock(), mock(), icon, mock())
 
         assertEquals(icon.bitmap, processed.bitmap)
         assertNotNull(processed.color)

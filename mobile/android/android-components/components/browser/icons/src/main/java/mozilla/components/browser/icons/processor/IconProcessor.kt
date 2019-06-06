@@ -5,6 +5,7 @@
 package mozilla.components.browser.icons.processor
 
 import android.content.Context
+import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 
@@ -13,5 +14,11 @@ import mozilla.components.browser.icons.IconRequest
  * the icon was loaded. The [IconProcessor] has the option to rewrite a loaded [Icon] and return a new instance.
  */
 interface IconProcessor {
-    fun process(context: Context, request: IconRequest, resource: IconRequest.Resource?, icon: Icon): Icon
+    fun process(
+        context: Context,
+        request: IconRequest,
+        resource: IconRequest.Resource?,
+        icon: Icon,
+        desiredSize: DesiredSize
+    ): Icon?
 }

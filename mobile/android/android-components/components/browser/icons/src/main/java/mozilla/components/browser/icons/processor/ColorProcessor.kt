@@ -6,6 +6,7 @@ package mozilla.components.browser.icons.processor
 
 import android.content.Context
 import androidx.palette.graphics.Palette
+import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 
@@ -14,8 +15,14 @@ import mozilla.components.browser.icons.IconRequest
  */
 class ColorProcessor : IconProcessor {
 
-    override fun process(context: Context, request: IconRequest, resource: IconRequest.Resource?, icon: Icon): Icon {
-        if (icon.bitmap == null || icon.color != null) return icon
+    override fun process(
+        context: Context,
+        request: IconRequest,
+        resource: IconRequest.Resource?,
+        icon: Icon,
+        desiredSize: DesiredSize
+    ): Icon {
+        if (icon.color != null) return icon
 
         val swatch = Palette.from(icon.bitmap).generate().dominantSwatch
         return swatch?.run { icon.copy(color = rgb) } ?: icon

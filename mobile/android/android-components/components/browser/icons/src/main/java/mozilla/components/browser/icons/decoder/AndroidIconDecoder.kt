@@ -8,16 +8,22 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.support.base.log.logger.Logger
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * [IconDecoder] that will use Android's [BitmapFactory] in order to decode the byte data.
  */
-class AndroidIconDecoder : IconDecoder {
+class AndroidIconDecoder(
+    private val ignoreSize: Boolean = false
+) : IconDecoder {
     private val logger = Logger("AndroidIconDecoder")
 
-    override fun decode(data: ByteArray, targetSize: Int, maxSize: Int, maxScaleFactor: Float): Bitmap? =
+    override fun decode(data: ByteArray, desiredSize: DesiredSize): Bitmap? =
         try {
+            val (targetSize, maxSize, maxScaleFactor) = desiredSize
             val bitmap = decodeBitmap(data)
 
             when {
@@ -28,13 +34,12 @@ class AndroidIconDecoder : IconDecoder {
                     null
                 }
 
-                bitmap.width * maxScaleFactor < targetSize || bitmap.height * maxScaleFactor < targetSize -> {
+                !ignoreSize && min(bitmap.width, bitmap.height) * maxScaleFactor < targetSize -> {
                     logger.debug("BitmapFactory returned too small bitmap")
                     null
                 }
 
-                bitmap.width * (1.0f / maxScaleFactor) > maxSize ||
-                    bitmap.height * (1.0f / maxScaleFactor) > maxSize -> {
+                !ignoreSize && max(bitmap.width, bitmap.height) * (1.0f / maxScaleFactor) > maxSize -> {
                     logger.debug("BitmapFactory returned way too large image")
                     null
                 }

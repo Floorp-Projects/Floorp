@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons.decoder
 
+import mozilla.components.browser.icons.DesiredSize
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
@@ -13,11 +14,11 @@ class OnDeviceAndroidIconDecoderTest {
     fun decodingPNG() {
         val decoder = AndroidIconDecoder()
 
-        val bitmap = decoder.decode(
-            loadImage("png/mozac.png"),
+        val bitmap = decoder.decode(loadImage("png/mozac.png"), DesiredSize(
             targetSize = 32,
             maxSize = 256,
-            maxScaleFactor = 2.0f)
+            maxScaleFactor = 2.0f
+        ))
 
         assertNotNull(bitmap!!)
         assertEquals(16, bitmap.width)
@@ -28,11 +29,11 @@ class OnDeviceAndroidIconDecoderTest {
     fun decodingGIF() {
         val decoder = AndroidIconDecoder()
 
-        val bitmap = decoder.decode(
-            loadImage("gif/cat.gif"),
+        val bitmap = decoder.decode(loadImage("gif/cat.gif"), DesiredSize(
             targetSize = 64,
             maxSize = 256,
-            maxScaleFactor = 2.0f)
+            maxScaleFactor = 2.0f
+        ))
 
         assertNotNull(bitmap!!)
         assertEquals(250, bitmap.width)
@@ -43,11 +44,11 @@ class OnDeviceAndroidIconDecoderTest {
     fun decodingJPEG() {
         val decoder = AndroidIconDecoder()
 
-        val bitmap = decoder.decode(
-            loadImage("jpg/tonys.jpg"),
+        val bitmap = decoder.decode(loadImage("jpg/tonys.jpg"), DesiredSize(
             targetSize = 64,
             maxSize = 512,
-            maxScaleFactor = 2.0f)
+            maxScaleFactor = 2.0f
+        ))
 
         assertNotNull(bitmap!!)
         assertEquals(532, bitmap.width)
@@ -58,11 +59,11 @@ class OnDeviceAndroidIconDecoderTest {
     fun decodingBMP() {
         val decoder = AndroidIconDecoder()
 
-        val bitmap = decoder.decode(
-            loadImage("bmp/test.bmp"),
+        val bitmap = decoder.decode(loadImage("bmp/test.bmp"), DesiredSize(
             targetSize = 64,
             maxSize = 256,
-            maxScaleFactor = 2.0f)
+            maxScaleFactor = 2.0f
+        ))
 
         assertNotNull(bitmap!!)
         assertEquals(100, bitmap.width)
@@ -73,11 +74,11 @@ class OnDeviceAndroidIconDecoderTest {
     fun decodingWEBP() {
         val decoder = AndroidIconDecoder()
 
-        val bitmap = decoder.decode(
-            loadImage("webp/test.webp"),
+        val bitmap = decoder.decode(loadImage("webp/test.webp"), DesiredSize(
             targetSize = 64,
             maxSize = 256,
-            maxScaleFactor = 2.0f)
+            maxScaleFactor = 2.0f
+        ))
 
         assertNotNull(bitmap!!)
         assertEquals(192, bitmap.width)

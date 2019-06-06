@@ -37,7 +37,7 @@ class MemoryCacheTest {
         assertEquals(IconLoader.Result.NoResult, loader.load(mock(), request, resource))
 
         // First, save something in the memory cache using the processor
-        processor.process(mock(), request, resource, icon)
+        processor.process(mock(), request, resource, icon, mock())
 
         // Then load the same icon from the loader
         val result = loader.load(mock(), request, resource)

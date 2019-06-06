@@ -82,10 +82,7 @@ internal class DiskCache :
 
     override fun put(context: Context, request: IconRequest, resource: IconRequest.Resource, icon: Icon) {
         putResources(context, request)
-
-        if (icon.bitmap != null) {
-            putIconBitmap(context, resource, icon.bitmap)
-        }
+        putIconBitmap(context, resource, icon.bitmap)
     }
 
     override fun getIconData(context: Context, resource: IconRequest.Resource): ByteArray? {

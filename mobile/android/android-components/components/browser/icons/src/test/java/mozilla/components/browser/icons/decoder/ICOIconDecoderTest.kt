@@ -5,6 +5,7 @@
 package mozilla.components.browser.icons.decoder
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.browser.icons.decoder.ico.IconDirectoryEntry
 import mozilla.components.browser.icons.decoder.ico.decodeDirectoryEntries
 import org.junit.Assert.assertEquals
@@ -20,7 +21,7 @@ class ICOIconDecoderTest {
         val icon = loadIcon("microsoft_favicon.ico")
         val decoder = ICOIconDecoder()
 
-        val bitmap = decoder.decode(icon, 192, 1024, 2.0f)
+        val bitmap = decoder.decode(icon, DesiredSize(192, 1024, 2.0f))
         assertNotNull(bitmap)
     }
 
@@ -29,7 +30,7 @@ class ICOIconDecoderTest {
         val icon = loadIcon("golem_favicon.ico")
         val decoder = ICOIconDecoder()
 
-        val bitmap = decoder.decode(icon, 192, 1024, 2.0f)
+        val bitmap = decoder.decode(icon, DesiredSize(192, 1024, 2.0f))
         assertNotNull(bitmap)
     }
 
@@ -38,7 +39,7 @@ class ICOIconDecoderTest {
         val icon = loadIcon("nvidia_favicon.ico")
         val decoder = ICOIconDecoder()
 
-        val bitmap = decoder.decode(icon, 96, 1024, 2.0f)
+        val bitmap = decoder.decode(icon, DesiredSize(96, 1024, 2.0f))
         assertNotNull(bitmap)
     }
 

@@ -96,7 +96,7 @@ class BrowserIconsTest {
             ).loadIcon(request).await()
 
             assertNotNull(icon)
-            assertNotNull(icon.bitmap!!)
+            assertNotNull(icon.bitmap)
 
             val serverRequest = server.takeRequest()
             assertEquals("/icon128.png", serverRequest.requestUrl.encodedPath())

@@ -102,10 +102,10 @@ class DefaultIconGeneratorTest {
         assertNotNull(icon.color)
 
         val dp32 = testContext.resources.pxToDp(32)
-        assertEquals(dp32, icon.bitmap!!.width)
-        assertEquals(dp32, icon.bitmap!!.height)
+        assertEquals(dp32, icon.bitmap.width)
+        assertEquals(dp32, icon.bitmap.height)
 
-        assertEquals(Bitmap.Config.ARGB_8888, icon.bitmap!!.config)
+        assertEquals(Bitmap.Config.ARGB_8888, icon.bitmap.config)
 
         assertEquals(Icon.Source.GENERATOR, icon.source)
     }

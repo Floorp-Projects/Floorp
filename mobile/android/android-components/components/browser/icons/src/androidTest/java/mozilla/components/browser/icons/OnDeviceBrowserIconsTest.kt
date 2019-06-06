@@ -60,8 +60,6 @@ class OnDeviceBrowserIconsTest {
         assertNotNull(icon)
 
         val bitmap = icon.bitmap
-        assertNotNull(bitmap!!)
-
         assertEquals(100, bitmap.width)
         assertEquals(100, bitmap.height)
     }

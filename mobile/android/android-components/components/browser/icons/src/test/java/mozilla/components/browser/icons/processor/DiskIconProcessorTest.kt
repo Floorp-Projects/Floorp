@@ -20,7 +20,7 @@ class DiskIconProcessorTest {
         val cache: DiskIconProcessor.ProcessorDiskCache = mock()
 
         val processor = DiskIconProcessor(cache)
-        processor.process(context = mock(), request = mock(), resource = mock(), icon = icon)
+        processor.process(mock(), mock(), mock(), icon, mock())
 
         verify(cache, never()).put(any(), any(), any(), eq(icon))
     }
@@ -31,7 +31,7 @@ class DiskIconProcessorTest {
         val cache: DiskIconProcessor.ProcessorDiskCache = mock()
 
         val processor = DiskIconProcessor(cache)
-        processor.process(context = mock(), request = mock(), resource = mock(), icon = icon)
+        processor.process(mock(), mock(), mock(), icon, mock())
 
         verify(cache, never()).put(any(), any(), any(), eq(icon))
     }
@@ -42,7 +42,7 @@ class DiskIconProcessorTest {
         val cache: DiskIconProcessor.ProcessorDiskCache = mock()
 
         val processor = DiskIconProcessor(cache)
-        processor.process(context = mock(), request = mock(), resource = mock(), icon = icon)
+        processor.process(mock(), mock(), mock(), icon, mock())
 
         verify(cache, never()).put(any(), any(), any(), eq(icon))
     }
@@ -55,7 +55,7 @@ class DiskIconProcessorTest {
         val processor = DiskIconProcessor(cache)
         val request: IconRequest = mock()
         val resource: IconRequest.Resource = mock()
-        processor.process(mock(), request, resource, icon)
+        processor.process(mock(), request, resource, icon, mock())
 
         verify(cache).put(any(), eq(request), eq(resource), eq(icon))
     }
@@ -68,7 +68,7 @@ class DiskIconProcessorTest {
         val processor = DiskIconProcessor(cache)
         val request: IconRequest = mock()
         val resource: IconRequest.Resource = mock()
-        processor.process(mock(), request, resource, icon)
+        processor.process(mock(), request, resource, icon, mock())
 
         verify(cache).put(any(), eq(request), eq(resource), eq(icon))
     }
@@ -79,7 +79,7 @@ class DiskIconProcessorTest {
         val cache: DiskIconProcessor.ProcessorDiskCache = mock()
 
         val processor = DiskIconProcessor(cache)
-        processor.process(context = mock(), request = mock(), resource = null, icon = icon)
+        processor.process(context = mock(), request = mock(), resource = null, icon = icon, desiredSize = mock())
 
         verify(cache, never()).put(any(), any(), any(), eq(icon))
     }

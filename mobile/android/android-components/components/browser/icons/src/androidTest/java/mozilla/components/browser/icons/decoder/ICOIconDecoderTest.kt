@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.browser.icons.decoder.ICOIconDecoder
 import mozilla.components.browser.icons.decoder.ico.decodeDirectoryEntries
 import org.junit.Assert.assertEquals
@@ -46,7 +47,7 @@ class ICOIconDecoderTest {
         val icon = loadIcon("microsoft_favicon.ico")
 
         val decoder = ICOIconDecoder()
-        val bitmap = decoder.decode(icon, 192, 256, 2.0f)
+        val bitmap = decoder.decode(icon, DesiredSize(192, 256, 2.0f))
 
         assertNotNull(bitmap)
 
@@ -59,7 +60,7 @@ class ICOIconDecoderTest {
         val icon = loadIcon("microsoft_favicon.ico")
 
         val decoder = ICOIconDecoder()
-        val bitmap = decoder.decode(icon, 64, 120, 2.0f)
+        val bitmap = decoder.decode(icon, DesiredSize(64, 120, 2.0f))
 
         assertNotNull(bitmap)
 
