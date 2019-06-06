@@ -69,11 +69,12 @@ describe("AccessibilityTreeFilter component:", () => {
     expect(toolbar.prop("role")).toBe("toolbar");
 
     const filterButtons = filters.find(ToggleButton);
-    expect(filterButtons.length).toBe(2);
+    expect(filterButtons.length).toBe(3);
 
     const expectedText = [
       "accessibility.filter.all",
       "accessibility.badge.contrast",
+      "accessibility.badge.textLabel",
     ];
 
     for (let i = 0; i < filterButtons.length; i++) {
@@ -87,6 +88,7 @@ describe("AccessibilityTreeFilter component:", () => {
         filters: {
           [FILTERS.ALL]: true,
           [FILTERS.CONTRAST]: true,
+          [FILTERS.TEXT_LABEL]: true,
         },
         auditing: [],
       }},
@@ -157,104 +159,135 @@ describe("AccessibilityTreeFilter component:", () => {
 
   it("render filters after state changes", () => {
     const store = setupStore();
-
     const wrapper = mount(Provider({store}, AccessibilityTreeFilter()));
-    expect(wrapper.html()).toMatchSnapshot();
-    checkFiltersState(wrapper, [{
-      active: false, busy: false,
+
+    const tests = [{
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: false, busy: false },
+      ],
     }, {
-      active: false, busy: false,
-    }]);
-
-    store.dispatch({
-      type: AUDITING,
-      auditing: Object.values(FILTERS),
-    });
-    wrapper.update();
-
-    expect(wrapper.html()).toMatchSnapshot();
-    checkFiltersState(wrapper, [{
-      active: false, busy: true,
+      action: {
+        type: AUDITING,
+        auditing: Object.values(FILTERS),
+      },
+      expected: [
+        { active: false, busy: true },
+        { active: false, busy: true },
+        { active: false, busy: true },
+      ],
     }, {
-      active: false, busy: true,
-    }]);
-
-    store.dispatch({
-      type: AUDIT,
-      response: [],
-    });
-    wrapper.update();
-
-    expect(wrapper.html()).toMatchSnapshot();
-    checkFiltersState(wrapper, [{
-      active: false, busy: false,
+      action: {
+        type: AUDIT,
+        response: [],
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: false, busy: false },
+      ],
     }, {
-      active: false, busy: false,
-    }]);
-
-    store.dispatch({
-      type: FILTER_TOGGLE,
-      filter: FILTERS.ALL,
-    });
-    wrapper.update();
-
-    expect(wrapper.html()).toMatchSnapshot();
-    checkFiltersState(wrapper, [{
-      active: true, busy: false,
+      action: {
+        type: FILTER_TOGGLE,
+        filter: FILTERS.ALL,
+      },
+      expected: [
+        { active: true, busy: false },
+        { active: true, busy: false },
+        { active: true, busy: false },
+      ],
     }, {
-      active: true, busy: false,
-    }]);
-
-    store.dispatch({
-      type: FILTER_TOGGLE,
-      filter: FILTERS.CONTRAST,
-    });
-    wrapper.update();
-
-    expect(wrapper.html()).toMatchSnapshot();
-    checkFiltersState(wrapper, [{
-      active: false, busy: false,
+      action: {
+        type: FILTER_TOGGLE,
+        filter: FILTERS.CONTRAST,
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: true, busy: false },
+      ],
     }, {
-      active: false, busy: false,
-    }]);
-
-    store.dispatch({
-      type: AUDITING,
-      auditing: [FILTERS.CONTRAST],
-    });
-    wrapper.update();
-
-    expect(wrapper.html()).toMatchSnapshot();
-    checkFiltersState(wrapper, [{
-      active: false, busy: false,
+      action: {
+        type: AUDITING,
+        auditing: [FILTERS.CONTRAST],
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: true },
+        { active: true, busy: false },
+      ],
     }, {
-      active: false, busy: true,
-    }]);
-
-    store.dispatch({
-      type: AUDIT,
-      response: [],
-    });
-    wrapper.update();
-
-    expect(wrapper.html()).toMatchSnapshot();
-    checkFiltersState(wrapper, [{
-      active: false, busy: false,
+      action: {
+        type: AUDIT,
+        response: [],
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: true, busy: false },
+      ],
     }, {
-      active: false, busy: false,
-    }]);
-
-    store.dispatch({
-      type: FILTER_TOGGLE,
-      filter: FILTERS.CONTRAST,
-    });
-    wrapper.update();
-
-    expect(wrapper.html()).toMatchSnapshot();
-    checkFiltersState(wrapper, [{
-      active: true, busy: false,
+      action: {
+        type: FILTER_TOGGLE,
+        filter: FILTERS.CONTRAST,
+      },
+      expected: [
+        { active: true, busy: false },
+        { active: true, busy: false },
+        { active: true, busy: false },
+      ],
     }, {
-      active: true, busy: false,
-    }]);
+      action: {
+        type: FILTER_TOGGLE,
+        filter: FILTERS.ALL,
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: false, busy: false },
+      ],
+    }, {
+      action: {
+        type: AUDITING,
+        auditing: [FILTERS.TEXT_LABEL],
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: false, busy: true },
+      ],
+    }, {
+      action: {
+        type: AUDIT,
+        response: [],
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: false, busy: false },
+      ],
+    }, {
+      action: {
+        type: FILTER_TOGGLE,
+        filter: FILTERS.TEXT_LABEL,
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: true, busy: false },
+      ],
+    }];
+
+    for (const test of tests) {
+      const { action, expected } = test;
+      if (action) {
+        store.dispatch(action);
+        wrapper.update();
+      }
+
+      expect(wrapper.html()).toMatchSnapshot();
+      checkFiltersState(wrapper, expected);
+    }
   });
 });

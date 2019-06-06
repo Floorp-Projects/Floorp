@@ -37,7 +37,7 @@ const tests = [{
       name: `"Accessibility Panel Test"`,
       selected: true,
     }],
-    toolbar: [false, false],
+    toolbar: [false, false, false],
   },
 }, {
   desc: "Run an audit (all) from a11y panel toolbar by activating a filter.",
@@ -55,7 +55,7 @@ const tests = [{
       name: `"Second level header "contrast`,
       badges: [ "contrast" ],
     }],
-    toolbar: [true, true],
+    toolbar: [true, true, true],
   },
 }, {
   desc: "Click on the filter again.",
@@ -82,7 +82,7 @@ const tests = [{
       name: `"Second level header "contrast`,
       badges: [ "contrast" ],
     }],
-    toolbar: [false, false],
+    toolbar: [false, false, false],
   },
 }];
 

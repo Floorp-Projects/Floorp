@@ -25,7 +25,7 @@ const TEST_URI = `<html>
 const tests = [{
   desc: "Check initial state.",
   expected: {
-    toolbar: [false, false],
+    toolbar: [false, false, false],
   },
 }, {
   desc: "Toggle first filter (all) to activate.",
@@ -33,7 +33,7 @@ const tests = [{
     await toggleFilter(doc, 0);
   },
   expected: {
-    toolbar: [true, true],
+    toolbar: [true, true, true],
   },
 }, {
   desc: "Click on the filter again.",
@@ -41,15 +41,15 @@ const tests = [{
     await toggleFilter(doc, 0);
   },
   expected: {
-    toolbar: [false, false],
+    toolbar: [false, false, false],
   },
 }, {
-  desc: "Toggle second filter (all) (contrast) to activate.",
+  desc: "Toggle second filter (contrast) to activate.",
   setup: async ({ doc }) => {
     await toggleFilter(doc, 1);
   },
   expected: {
-    toolbar: [true, true],
+    toolbar: [false, true, false],
   },
 }, {
   desc: "Click on the filter again.",
@@ -57,15 +57,23 @@ const tests = [{
     await toggleFilter(doc, 1);
   },
   expected: {
-    toolbar: [false, false],
+    toolbar: [false, false, false],
   },
 }, {
-  desc: "Toggle second filter (all) (contrast) to activate.",
+  desc: "Toggle second filter (contrast) to activate.",
   setup: async ({ doc }) => {
     await toggleFilter(doc, 1);
   },
   expected: {
-    toolbar: [true, true],
+    toolbar: [false, true, false],
+  },
+}, {
+  desc: "Toggle third filter (all) (text label) to activate.",
+  setup: async ({ doc }) => {
+    await toggleFilter(doc, 2);
+  },
+  expected: {
+    toolbar: [true, true, true],
   },
 }, {
   desc: "Click on the first filter to de-activate all.",
@@ -73,7 +81,7 @@ const tests = [{
     await toggleFilter(doc, 0);
   },
   expected: {
-    toolbar: [false, false],
+    toolbar: [false, false, false],
   },
 }];
 
