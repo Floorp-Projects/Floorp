@@ -1492,8 +1492,14 @@ class BuildDriver(MozbuildObject):
             (mozconfig['env'] or {}).get('added', {}).get('AUTOCLOBBER', False),
             'AUTOCLOBBER=1' in (mozconfig['make_extra'] or []),
         ])
-
-        clobberer = Clobberer(self.topsrcdir, self.topobjdir)
+        from mozbuild.base import BuildEnvironmentNotFoundException
+        substs = dict()
+        try:
+            substs = self.substs
+        except BuildEnvironmentNotFoundException:
+            # We'll just use an empty substs if there is no config.
+            pass
+        clobberer = Clobberer(self.topsrcdir, self.topobjdir, substs)
         clobber_output = io.BytesIO()
         res = clobberer.maybe_do_clobber(os.getcwd(), auto_clobber,
                                          clobber_output)
