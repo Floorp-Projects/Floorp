@@ -24,7 +24,7 @@ JSObject* JSWindowActorChild::WrapObject(JSContext* aCx,
   return JSWindowActorChild_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-WindowGlobalChild* JSWindowActorChild::Manager() const { return mManager; }
+WindowGlobalChild* JSWindowActorChild::GetManager() const { return mManager; }
 
 void JSWindowActorChild::Init(const nsAString& aName,
                               WindowGlobalChild* aManager) {

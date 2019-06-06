@@ -45,7 +45,7 @@ class JSWindowActorChild final : public JSWindowActor {
     return MakeAndAddRef<JSWindowActorChild>();
   }
 
-  WindowGlobalChild* Manager() const;
+  WindowGlobalChild* GetManager() const;
   void Init(const nsAString& aName, WindowGlobalChild* aManager);
   void StartDestroy();
   void AfterDestroy();
