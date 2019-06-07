@@ -1155,8 +1155,25 @@ already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
 
   nsCOMPtr<nsIGlobalObject> global = DerivedClass()->GetParentObject();
 
-  RefPtr<Promise> promise = FetchBodyConsumer<Derived>::Create(
-      global, mMainThreadEventTarget, this, bodyStream, signalImpl, aType, aRv);
+  MutableBlobStorage::MutableBlobStorageType blobStorageType =
+      MutableBlobStorage::eOnlyInMemory;
+  const mozilla::UniquePtr<mozilla::ipc::PrincipalInfo>& principalInfo =
+      DerivedClass()->GetPrincipalInfo();
+  // We support temporary file for blobs only if the principal is known and
+  // it's system or content not in private Browsing.
+  if (principalInfo &&
+      (principalInfo->type() ==
+           mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo ||
+       (principalInfo->type() ==
+            mozilla::ipc::PrincipalInfo::TContentPrincipalInfo &&
+        principalInfo->get_ContentPrincipalInfo().attrs().mPrivateBrowsingId ==
+            0))) {
+    blobStorageType = MutableBlobStorage::eCouldBeInTemporaryFile;
+  }
+
+  RefPtr<Promise> promise = FetchBodyConsumer::Create(
+      global, mMainThreadEventTarget, bodyStream, signalImpl, aType,
+      BodyBlobURISpec(), BodyLocalPath(), MimeType(), blobStorageType, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
