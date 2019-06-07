@@ -700,19 +700,9 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       break;
     }
     case eIntID_SystemUsesDarkTheme: {
-      // It seems GTK doesn't have an API to query if the current theme is
-      // "light" or "dark", so we synthesize it from the CSS2 Window/WindowText
-      // colors instead, by comparing their luminosity.
-      nscolor fg, bg;
-      if (NS_SUCCEEDED(NativeGetColor(ColorID::Windowtext, fg)) &&
-          NS_SUCCEEDED(NativeGetColor(ColorID::Window, bg))) {
-        aResult = (RelativeLuminanceUtils::Compute(bg) <
-                   RelativeLuminanceUtils::Compute(fg))
-                      ? 1
-                      : 0;
-        break;
-      }
-      MOZ_FALLTHROUGH;
+      EnsureInit();
+      aResult = mSystemUsesDarkTheme;
+      break;
     }
     default:
       aResult = 0;
@@ -919,6 +909,17 @@ void nsLookAndFeel::EnsureInit() {
 
   GdkRGBA color;
   GtkStyleContext* style;
+
+  // It seems GTK doesn't have an API to query if the current theme is
+  // "light" or "dark", so we synthesize it from the CSS2 Window/WindowText
+  // colors instead, by comparing their luminosity.
+  GdkRGBA bg, fg;
+  style = GetStyleContext(MOZ_GTK_WINDOW);
+  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &bg);
+  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &fg);
+  mSystemUsesDarkTheme =
+      (RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(bg)) <
+       RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(fg)));
 
   // Gtk manages a screen's CSS in the settings object so we
   // ask Gtk to create it explicitly. Otherwise we may end up
