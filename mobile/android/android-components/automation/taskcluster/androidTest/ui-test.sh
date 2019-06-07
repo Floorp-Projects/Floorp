@@ -55,7 +55,7 @@ FLANK_CONF_X86="${PATH_TEST}/flank-x86.yml"
 echo
 echo "RETRIEVE SERVICE ACCT TOKEN"
 echo
-python automation/taskcluster/helper/get-secret.py -s project/mobile/android-components/firebase -k firebaseToken  -f $GOOGLE_APPLICATION_CREDENTIALS 
+python automation/taskcluster/helper/get-secret.py --json -s project/mobile/android-components/firebase -k firebaseToken  -f $GOOGLE_APPLICATION_CREDENTIALS 
 echo
 echo
 
