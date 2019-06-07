@@ -87,7 +87,7 @@ class MozDialog extends MozXULElement {
   }
 
   get _markup() {
-    let buttons = AppConstants.platform == "linux" ? `
+    let buttons = AppConstants.XP_UNIX ? `
       <hbox class="dialog-button-box">
         <button dlgtype="disclosure" class="dialog-button" hidden="true"/>
         <button dlgtype="help" class="dialog-button" hidden="true"/>
