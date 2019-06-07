@@ -10,6 +10,11 @@
 namespace mozilla {
 namespace widget {
 
+#ifdef HAVE_LIBDRM
+bool nsWaylandDisplay::mIsDMABufEnabled;
+bool nsWaylandDisplay::mIsDMABufPrefLoaded;
+#endif
+
 // nsWaylandDisplay needs to be created for each calling thread(main thread,
 // compositor thread and render thread)
 #define MAX_DISPLAY_CONNECTIONS 3
@@ -288,16 +293,23 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
       ,
       mGbmDevice(nullptr),
       mGbmFd(-1),
-      mGdmConfigured(false),
-      mExplicitSync(false),
       mXRGBFormat({false, false, -1, nullptr, 0}),
-      mARGBFormat({false, false, -1, nullptr, 0})
+      mARGBFormat({false, false, -1, nullptr, 0}),
+      mGdmConfigured(false),
+      mExplicitSync(false)
 #endif
 {
   mRegistry = wl_display_get_registry(mDisplay);
   wl_registry_add_listener(mRegistry, &registry_listener, this);
 
   if (NS_IsMainThread()) {
+#ifdef HAVE_LIBDRM
+    if (!mIsDMABufPrefLoaded) {
+      mIsDMABufPrefLoaded = true;
+      mIsDMABufEnabled =
+          Preferences::GetBool("widget.wayland_dmabuf_backend.enabled", false);
+    }
+#endif
     // Use default event queue in main thread operated by Gtk+.
     mEventQueue = nullptr;
     wl_display_roundtrip(mDisplay);
