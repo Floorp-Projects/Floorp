@@ -752,6 +752,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   }
 
   void runTask() override;
+  ThreadType threadType() override { return ThreadType::THREAD_TYPE_PARSE; }
 };
 
 struct ScriptDecodeTask : public ParseTask {
@@ -842,6 +843,8 @@ class SourceCompressionTask : public RunnableTask {
   void runTask() override;
   void complete();
 
+  ThreadType threadType() override { return ThreadType::THREAD_TYPE_COMPRESS; }
+
  private:
   struct PerformTaskWork;
   friend struct PerformTaskWork;
@@ -875,6 +878,7 @@ struct PromiseHelperTask : OffThreadPromiseTask, public RunnableTask {
   // the caller must immediately return from the stream callback.
   void executeAndResolveAndDestroy(JSContext* cx);
   void runTask() override;
+  ThreadType threadType() override { return THREAD_TYPE_PROMISE_TASK; }
 };
 
 } /* namespace js */

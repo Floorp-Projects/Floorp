@@ -83,6 +83,7 @@ enum ThreadType {
  * mozilla::HelperThreadPool's runnable handler to call runTask() on each type.
  */
 struct RunnableTask {
+  virtual ThreadType threadType() = 0;
   virtual void runTask() = 0;
 };
 
