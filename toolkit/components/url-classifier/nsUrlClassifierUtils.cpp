@@ -828,15 +828,13 @@ nsresult nsUrlClassifierUtils::ReadProvidersFromPrefs(ProviderDictType& aDict) {
 
   // We've got a pref branch for "browser.safebrowsing.provider.".
   // Enumerate all children prefs and parse providers.
-  uint32_t childCount;
-  char** childArray;
-  rv = prefBranch->GetChildList("", &childCount, &childArray);
+  nsTArray<nsCString> childArray;
+  rv = prefBranch->GetChildList("", childArray);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Collect providers from childArray.
   nsTHashtable<nsCStringHashKey> providers;
-  for (uint32_t i = 0; i < childCount; i++) {
-    nsCString child(childArray[i]);
+  for (auto& child : childArray) {
     auto dotPos = child.FindChar('.');
     if (dotPos < 0) {
       continue;
@@ -846,7 +844,6 @@ nsresult nsUrlClassifierUtils::ReadProvidersFromPrefs(ProviderDictType& aDict) {
 
     providers.PutEntry(provider);
   }
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(childCount, childArray);
 
   // Now we have all providers. Check which one owns |aTableName|.
   // e.g. The owning lists of provider "google" is defined in

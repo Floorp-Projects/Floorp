@@ -32,7 +32,7 @@ const prefs = [
 var providers = {};
 
 var branch = SpecialPowers.Services.prefs.getBranch("browser.safebrowsing.provider.");
-var children = branch.getChildList("", {});
+var children = branch.getChildList("");
 
 for (var child of children) {
   var prefComponents =  child.split(".");

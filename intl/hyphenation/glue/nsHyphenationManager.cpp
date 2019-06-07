@@ -278,16 +278,15 @@ void nsHyphenationManager::LoadAliases() {
   if (!prefRootBranch) {
     return;
   }
-  uint32_t prefCount;
-  char** prefNames;
-  nsresult rv = prefRootBranch->GetChildList(kIntlHyphenationAliasPrefix,
-                                             &prefCount, &prefNames);
-  if (NS_SUCCEEDED(rv) && prefCount > 0) {
-    for (uint32_t i = 0; i < prefCount; ++i) {
+  nsTArray<nsCString> prefNames;
+  nsresult rv =
+      prefRootBranch->GetChildList(kIntlHyphenationAliasPrefix, prefNames);
+  if (NS_SUCCEEDED(rv)) {
+    for (auto& prefName : prefNames) {
       nsAutoCString value;
-      rv = Preferences::GetCString(prefNames[i], value);
+      rv = Preferences::GetCString(prefName.get(), value);
       if (NS_SUCCEEDED(rv)) {
-        nsAutoCString alias(prefNames[i]);
+        nsAutoCString alias(prefName);
         alias.Cut(0, sizeof(kIntlHyphenationAliasPrefix) - 1);
         ToLowerCase(alias);
         ToLowerCase(value);
@@ -296,6 +295,5 @@ void nsHyphenationManager::LoadAliases() {
         mHyphAliases.Put(aliasAtom, valueAtom);
       }
     }
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
   }
 }
