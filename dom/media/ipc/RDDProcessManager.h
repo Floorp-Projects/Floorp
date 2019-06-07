@@ -61,6 +61,9 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
   // Returns whether or not a RDD process was ever launched.
   bool AttemptedRDDProcess() const { return mNumProcessAttempts > 0; }
 
+  // Returns the RDD Process
+  RDDProcessHost* Process() { return mProcess; }
+
  private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
