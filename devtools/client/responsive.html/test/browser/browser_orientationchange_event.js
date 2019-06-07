@@ -34,20 +34,4 @@ addRDMTask(TEST_URL, async function({ ui }) {
       await orientationChange;
     }
   );
-
-  info("Check that the viewport orientation changed, but not the angle after a reload");
-  const browser = ui.getViewportBrowser();
-  const reload = browser.reload();
-  const onViewportOrientationChange = once(ui, "only-viewport-orientation-changed");
-  await reload;
-  await onViewportOrientationChange;
-  ok(true, "orientationchange event was not dispatched on reload.");
-
-  await ContentTask.spawn(ui.getViewportBrowser(), {},
-  async function() {
-    info("Check that we still have the previous orientation values.");
-    is(content.screen.orientation.angle, 90, "Orientation angle is still 90");
-    is(content.screen.orientation.type,
-      "landscape-primary", "Orientation is still landscape-primary.");
-  });
 });

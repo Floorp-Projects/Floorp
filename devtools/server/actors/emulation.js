@@ -370,14 +370,15 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
    *        The orientation type of the rotated device.
    * @param {Number} angle
    *        The rotated angle of the device.
-   * @param {Boolean} isViewportRotated
-   *        Whether or not screen orientation change is a result of rotating the viewport.
-   *        If true, then dispatch the "orientationchange" event on the content window.
+   * @param {Boolean} deviceChange
+   *        Whether or not screen orientation change is a result of changing the device
+   *        or rotating the current device. If the latter, then dispatch the
+   *        "orientationchange" event on the content window.
    */
-  async simulateScreenOrientationChange(type, angle, isViewportRotated = false) {
+  async simulateScreenOrientationChange(type, angle, deviceChange) {
     // Don't dispatch the "orientationchange" event if orientation change is a result
-    // of switching to a new device, location change, or opening RDM.
-    if (!isViewportRotated) {
+    // of switching to a new device.
+    if (deviceChange) {
       this.setScreenOrientation(type, angle);
       return;
     }

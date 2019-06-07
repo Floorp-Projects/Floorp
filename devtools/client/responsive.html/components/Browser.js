@@ -13,7 +13,6 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { PORTRAIT_PRIMARY, LANDSCAPE_PRIMARY } = require("../constants");
-const Types = require("../types");
 const e10s = require("../utils/e10s");
 const message = require("../utils/message");
 const { getTopLevelWindow } = require("../utils/window");
@@ -34,7 +33,7 @@ class Browser extends PureComponent {
       onResizeViewport: PropTypes.func.isRequired,
       swapAfterMount: PropTypes.bool.isRequired,
       userContextId: PropTypes.number.isRequired,
-      viewport: PropTypes.shape(Types.viewport).isRequired,
+      viewportId: PropTypes.number.isRequired,
     };
   }
 
@@ -115,10 +114,10 @@ class Browser extends PureComponent {
 
   onSetScreenOrientation(msg) {
     const { width, height } = msg.data;
-    const { angle, id } = this.props.viewport;
+    const angle = Services.prefs.getIntPref("devtools.responsive.viewport.angle");
     const type = height >= width ? PORTRAIT_PRIMARY : LANDSCAPE_PRIMARY;
 
-    this.props.onChangeViewportOrientation(id, type, angle);
+    this.props.onChangeViewportOrientation(this.props.viewportId, { type, angle });
   }
 
   async startFrameScript() {
