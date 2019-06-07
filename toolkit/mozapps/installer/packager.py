@@ -189,6 +189,8 @@ def main():
                         help='removed-files source file')
     parser.add_argument('--ignore-errors', action='store_true', default=False,
                         help='Transform errors into warnings.')
+    parser.add_argument('--ignore-broken-symlinks', action='store_true', default=False,
+                        help='Do not fail when processing broken symlinks.')
     parser.add_argument('--minify', action='store_true', default=False,
                         help='Make some files more compact while packaging')
     parser.add_argument('--minify-js', action='store_true',
@@ -257,6 +259,7 @@ def main():
         finder_args = dict(
             minify=args.minify,
             minify_js=args.minify_js,
+            ignore_broken_symlinks=args.ignore_broken_symlinks,
         )
         if args.js_binary:
             finder_args['minify_js_verify_command'] = [

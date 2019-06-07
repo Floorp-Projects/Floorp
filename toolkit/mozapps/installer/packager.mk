@@ -25,6 +25,7 @@ stage-package: multilocale.txt locale-manifest.in $(MOZ_PKG_MANIFEST) $(MOZ_PKG_
 		--format $(MOZ_PACKAGER_FORMAT) \
 		$(addprefix --removals ,$(MOZ_PKG_REMOVALS)) \
 		$(if $(filter-out 0,$(MOZ_PKG_FATAL_WARNINGS)),,--ignore-errors) \
+		$(if $(MOZ_AUTOMATION),,--ignore-broken-symlinks) \
 		$(if $(MOZ_PACKAGER_MINIFY),--minify) \
 		$(if $(MOZ_PACKAGER_MINIFY_JS),--minify-js \
 		  $(addprefix --js-binary ,$(JS_BINARY)) \

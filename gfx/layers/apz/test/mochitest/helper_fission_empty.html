@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+ <meta charset="utf-8">
+ <script>
+// This is an empty document that serves as a OOPIF content document that be
+// reused by different fission subtests. The subtest can eval stuff in this
+// document using the sendToOopif helper and thereby populate this document
+// with whatever is needed. This allows the subtest to more "contained" in a
+// single file and avoids having to create new dummy files for each subtest.
+function loaded() {
+  window.dispatchEvent(new Event("FissionTestHelper:Init"));
+  FissionTestHelper.fireEventInEmbedder("OOPIF:Load", {content: window.location.href});
+}
+ </script>
+ <body onload="loaded()">
+ </body>
+</html>

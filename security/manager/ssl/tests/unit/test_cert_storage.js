@@ -12,24 +12,8 @@
 // * it does a sanity check to ensure other cert verifier behavior is
 //   unmodified
 
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
-const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
-const { BlocklistClients } = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
-
-// First, we need to setup appInfo for the blocklist service to work
-var id = "xpcshell@tests.mozilla.org";
-var appName = "XPCShell";
-var version = "1";
-var platformVersion = "1.9.2";
-ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
-/* global updateAppInfo:false */ // Imported via AppInfo.jsm.
-updateAppInfo({
-  name: appName,
-  ID: id,
-  version,
-  platformVersion: platformVersion ? platformVersion : "1.0",
-  crashReporter: true,
-});
+const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
+const { BlocklistClients } = ChromeUtils.import("resource://services-common/blocklist-clients.js");
 
 // we need to ensure we setup revocation data before certDB, or we'll start with
 // no revocation.txt in the profile
@@ -97,12 +81,6 @@ const certBlocklist = [
     pubKeyHash: "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=",
   },
 ];
-
-// Setup the addonManager
-var addonManager = Cc["@mozilla.org/addons/integration;1"]
-                     .getService(Ci.nsIObserver)
-                     .QueryInterface(Ci.nsITimerCallback);
-addonManager.observe(null, "addons-startup", null);
 
 function verify_cert(file, expectedError) {
   let ee = constructCertFromFile(file);

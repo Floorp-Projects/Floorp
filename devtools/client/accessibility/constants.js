@@ -38,7 +38,9 @@ exports.AUDIT_PROGRESS = "AUDIT_PROGRESS";
 
 // List of filters for accessibility checks.
 exports.FILTERS = {
+  ALL: "ALL",
   [AUDIT_TYPE.CONTRAST]: "CONTRAST",
+  [AUDIT_TYPE.TEXT_LABEL]: "TEXT_LABEL",
 };
 
 // Ordered accessible properties to be displayed by the accessible component.

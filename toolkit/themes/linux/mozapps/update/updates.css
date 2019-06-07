@@ -1,104 +1,49 @@
-/* General */
-/* Specify the size for the wizardpage so the billboard has a fixed size. 3rd
+/* Elevation Dialog */
+/* Specify the size for the UI so it has a fixed size. 3rd
    party themes should typically specify the same values. */
-wizardpage {
+#elevationBox, .update-content {
   height: 360px;
   width: 700px;
 }
 
-/* Remove margin and padding so the billboard will extend to the edge of the
+/* Remove margin and padding so the inner UI will extend to the edge of the
    window. 3rd party themes should typically specify the same values. */
-#updates, .wizard-page-box {
+#updates {
   margin: 0;
   padding: 0;
 }
 
 .update-header {
-  padding: 0px 10px;
+  border-bottom: 2px groove ThreeDFace;
+  background-color: Window;
+  color: WindowText;
+}
+
+.update-header-box-1 {
+  padding: 5px 0px 5px 0px;
 }
 
 .update-content {
   padding: 10px;
 }
 
-.wizard-buttons-separator {
+.update-header-label {
+  font-weight: bold;
+}
+
+#update-button-box {
+  margin: 0;
+  padding: 6px 10px 10px 10px;
+}
+
+.update-buttons-separator {
   margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
-.inline-link {
-  color: -moz-nativehyperlinktext;
-  text-decoration: none;
-}
-
-.inline-link:hover {
-  text-decoration: underline;
-}
-
-/* Unsupported Page */
-#unsupportedLabel, #unsupportedLinkLabel {
-  margin-inline-start: 0;
-  padding-inline-start: 0;
-}
-
-/* Update Found Basic Page */
-#updateName, #updateFinishedName {
+#updateFinishedName {
   font-weight: bold;
   font-size: larger;
-}
-
-/* Downloading Page */
-#downloadStatusLine {
-  -moz-box-align: center;
-}
-
-#downloadStatus {
-  height: 3em !important;
-}
-
-#downloadStatusProgress {
-  padding-right: 5px;
-}
-
-#pauseButton {
-  list-style-image: url("moz-icon://stock/gtk-media-pause?size=menu");
-  -moz-appearance: none;
-  background-color: transparent;
-  border: none;
-  min-width: 0;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-}
-
-/* !Important must be used otherwise this won't immediately take affect */
-#pauseButton > .button-box {
-  padding: 0 !important;
-}
-
-#pauseButton[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-media-pause?size=menu&state=disabled");
-}
-
-#pauseButton[paused="true"] {
-  list-style-image: url("moz-icon://stock/gtk-media-play?size=menu");
-}
-
-#pauseButton[paused="true"][disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-media-play?size=menu&state=disabled");
-}
-
-#verificationFailedIcon {
-  margin-left: 5px;
-  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=menu");
-}
-
-/* Error Page */
-#errorReason {
-  margin-top: 1px;
-  margin-bottom: 2px;
-  margin-inline-start: 6px !important;
-  margin-inline-end: 5px;
-  font-weight: bold;
 }
 
 /* Update History Window */
@@ -131,4 +76,10 @@ update {
 
 #historyItems .update {
   padding: 5px;
+  display: -moz-box;
+  -moz-box-orient: vertical;
+}
+
+.update-name {
+  -moz-box-flex: 1;
 }

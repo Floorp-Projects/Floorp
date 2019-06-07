@@ -76,6 +76,12 @@ class SubstitutingProtocolHandler {
     return false;
   }
 
+  // This method should only return true if GetSubstitutionInternal would
+  // return the RESOLVE_JAR_URI flag.
+  virtual MOZ_MUST_USE bool MustResolveJAR(const nsACString& aRoot) {
+    return false;
+  }
+
   // Override this in the subclass to check for special case when opening
   // channels.
   virtual MOZ_MUST_USE nsresult SubstituteChannel(nsIURI* uri,

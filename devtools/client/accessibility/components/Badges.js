@@ -15,9 +15,13 @@ const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
 loader.lazyGetter(this, "ContrastBadge",
   () => createFactory(require("./ContrastBadge")));
 
+loader.lazyGetter(this, "TextLabelBadge",
+  () => createFactory(require("./TextLabelBadge")));
+
 function getComponentForAuditType(type) {
   const auditTypeToComponentMap = {
     [AUDIT_TYPE.CONTRAST]: ContrastBadge,
+    [AUDIT_TYPE.TEXT_LABEL]: TextLabelBadge,
   };
 
   return auditTypeToComponentMap[type];

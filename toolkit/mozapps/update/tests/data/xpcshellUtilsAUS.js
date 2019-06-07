@@ -771,9 +771,6 @@ function setupTestCommon(aAppUpdateAutoEnabled = false, aAllowBits = false) {
 
   setDefaultPrefs();
 
-  // Don't attempt to show a prompt when an update finishes.
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, true);
-
   gGREDirOrig = getGREDir();
   gGREBinDirOrig = getGREBinDir();
 
@@ -3410,48 +3407,6 @@ function checkFilesInDirRecursive(aDir, aCallback) {
     }
   }
 }
-
-
-/**
- * Helper function to override the update prompt component to verify whether it
- * is called or not.
- *
- * @param   aCallback
- *          The callback to call if the update prompt component is called.
- */
-function overrideUpdatePrompt(aCallback) {
-  MockRegistrar.register("@mozilla.org/updates/update-prompt;1", UpdatePrompt, [aCallback]);
-}
-
-function UpdatePrompt(aCallback) {
-  this._callback = aCallback;
-
-  let fns = ["checkForUpdates", "showUpdateAvailable", "showUpdateDownloaded",
-             "showUpdateError", "showUpdateHistory", "showUpdateInstalled"];
-
-  fns.forEach(function UP_fns(aPromptFn) {
-    UpdatePrompt.prototype[aPromptFn] = function() {
-      if (!this._callback) {
-        return;
-      }
-
-      let callback = this._callback[aPromptFn];
-      if (!callback) {
-        return;
-      }
-
-      callback.apply(this._callback,
-                     Array.prototype.slice.call(arguments));
-    };
-  });
-}
-
-UpdatePrompt.prototype = {
-  flags: Ci.nsIClassInfo.SINGLETON,
-  getScriptableHelper: () => null,
-  interfaces: [Ci.nsISupports, Ci.nsIUpdatePrompt],
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIClassInfo, Ci.nsIUpdatePrompt]),
-};
 
 /**
  * Waits for an update check request to complete.

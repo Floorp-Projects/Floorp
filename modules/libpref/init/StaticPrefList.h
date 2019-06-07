@@ -4153,6 +4153,14 @@ VARCACHE_PREF(
   bool, false
 )
 
+// text decoration width
+VARCACHE_PREF(
+  Live,
+  "layout.css.text-decoration-width.enabled",
+  layout_css_text_decoration_width_enabled,
+  bool, false
+)
+
 // Is support for CSS column-span enabled?
 VARCACHE_PREF(
   Live,
@@ -4272,6 +4280,14 @@ VARCACHE_PREF(
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
+
+// Is support for CSS individual transform enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.individual-transform.enabled",
+  IndividualTransform,
+  bool, false
+)
 
 // Pref to control whether line-height: -moz-block-height is exposed to content.
 VARCACHE_PREF(

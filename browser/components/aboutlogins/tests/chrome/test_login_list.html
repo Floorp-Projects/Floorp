@@ -27,15 +27,23 @@ Test the login-list component
 let gLoginList;
 const TEST_LOGIN_1 = {
   guid: "123456789",
-  origin: "https://example.com",
+  origin: "https://abc-example.com",
   username: "user1",
   password: "pass1",
+  title: "abc-example.com",
+  // new Date("December 13, 2018").getTime()
+  timeLastUsed: 1544677200000,
+  timePasswordChanged: 1544677200000,
 };
 const TEST_LOGIN_2 = {
   guid: "987654321",
   origin: "https://example.com",
   username: "user2",
   password: "pass2",
+  title: "example.com",
+  // new Date("June 1, 2019").getTime()
+  timeLastUsed: 1559361600000,
+  timePasswordChanged: 1559361600000,
 };
 
 add_task(async function setup() {
@@ -187,6 +195,29 @@ add_task(async function test_login_added_filtered() {
   ok(loginListItems[1].hidden, "login-list-item2 should be hidden");
   ok(loginListItems[2].hidden, "login-list-item3 should be hidden");
   is(countSpan.textContent, "1", "Count should remain unchanged");
+});
+
+add_task(async function test_sorted_list() {
+  // sort by last used
+  gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 1;
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  let timeUsed = loginListItems[0]._login.timeLastUsed;
+  let timeUsed2 = loginListItems[1]._login.timeLastUsed;
+  is(timeUsed2 > timeUsed, true, "Last used login should be displayed at top of list");
+
+  // sort by name
+  gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 0;
+  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  let title = loginListItems[0]._login.title;
+  let title2 = loginListItems[1]._login.title;
+  is(title.localeCompare(title2), -1, "Logins should be sorted alphabetically by hostname");
+
+  // sort by last changed
+  gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 2;
+  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  let pwChanged = loginListItems[0]._login.timePasswordChanged;
+  let pwChanged2 = loginListItems[1]._login.timePasswordChanged;
+  is(pwChanged2 > pwChanged, true, "Login with most recently changed password should be displayed at top of list");
 });
 </script>
 
