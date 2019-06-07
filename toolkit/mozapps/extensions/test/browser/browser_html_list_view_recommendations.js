@@ -6,9 +6,6 @@
 const {
   AddonTestUtils,
 } = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-const {
-  TelemetryTestUtils,
-} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
 AddonTestUtils.initMochitest(this);
 
@@ -185,21 +182,10 @@ async function testListRecommendations({type, manifestExtra = {}}) {
 
   await closeView(win);
 
-  TelemetryTestUtils.assertEvents([{
-    category: "addonsManager",
-    method: "action",
-    object: "aboutAddons",
-    extra: {
-      action: "installFromRecommendation",
-      view: "list",
-      addonId,
-      type,
-    },
-  }], {
-    category: "addonsManager",
-    method: "action",
-    object: "aboutAddons",
-  });
+  assertAboutAddonsTelemetryEvents([
+    ["addonsManager", "action", "aboutAddons", null,
+     {action: "installFromRecommendation", view: "list", addonId, type}],
+  ], {methods: ["action"]});
 }
 
 add_task(async function testExtensionList() {

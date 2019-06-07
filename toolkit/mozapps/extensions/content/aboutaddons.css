@@ -60,6 +60,10 @@ addon-card:not([expanded]) > .addon.card:hover {
   cursor: pointer;
 }
 
+addon-card[expanded] .addon.card {
+  padding-bottom: 0;
+}
+
 .addon-card-collapsed {
   display: flex;
 }
@@ -237,11 +241,11 @@ addon-details {
 }
 
 .addon-detail-contribute {
+  display: flex;
   padding: var(--card-padding);
   border: 1px solid var(--in-content-box-border-color);
   border-radius: var(--panel-border-radius);
   margin-bottom: var(--card-padding);
-  display: flex;
   flex-direction: column;
 }
 
@@ -279,8 +283,7 @@ addon-details {
   border: none;
 }
 
-.addon-detail-row-has-help,
-.addon-detail-row:last-of-type {
+.addon-detail-row-has-help {
   padding-bottom: 0;
 }
 

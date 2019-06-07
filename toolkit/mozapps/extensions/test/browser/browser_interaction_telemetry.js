@@ -1,3 +1,9 @@
+/**
+ * These tests run in both the XUL and HTML version of about:addons. When adding
+ * a new test it should be defined as a function that accepts a boolean isHtmlViews
+ * and added to the testFns array.
+ */
+
 const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
 
 AddonTestUtils.initMochitest(this);
@@ -13,19 +19,10 @@ registerCleanupFunction(() => {
   gManagerWindow = null;
 });
 
-async function init(startPage) {
-  gManagerWindow = await open_manager(null);
-  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-
-  // When about:addons initially loads it will load the last view that
-  // was open. If that's different than startPage, then clear the events
-  // so that we can reliably test them.
-  if (gCategoryUtilities.selectedCategory != startPage) {
-    Services.telemetry.clearEvents();
-  }
-
-  return gCategoryUtilities.openType(startPage);
-}
+add_task(function setupPromptService() {
+  let promptService = mockPromptService();
+  promptService._response = 0; // Accept dialogs.
+});
 
 async function installTheme() {
   let id = "theme@mochi.test";
@@ -71,26 +68,164 @@ async function installExtension(manifest = {}) {
   return extension;
 }
 
-add_task(function clearInitialTelemetry() {
+function getAddonCard(doc, id) {
+  if (doc.ownerGlobal != gManagerWindow) {
+    return doc.querySelector(`addon-card[addon-id="${id}"]`);
+  }
+  return doc.querySelector(`.addon[value="${id}"]`);
+}
+
+function openDetailView(doc, id) {
+  if (doc.ownerGlobal != gManagerWindow) {
+    let card = getAddonCard(doc, id);
+    card.querySelector('[action="expand"]').click();
+  } else {
+    getAddonCard(doc, id).click();
+  }
+}
+
+async function enableAndDisable(doc, row) {
+  if (doc.ownerGlobal != gManagerWindow) {
+    let toggleButton = row.querySelector('[action="toggle-disabled"]');
+    let disabled = BrowserTestUtils.waitForEvent(row, "update");
+    toggleButton.click();
+    await disabled;
+    let enabled = BrowserTestUtils.waitForEvent(row, "update");
+    toggleButton.click();
+    await enabled;
+  } else {
+    is(row.getAttribute("active"), "true", "The add-on is enabled");
+    doc.getAnonymousElementByAttribute(row, "anonid", "disable-btn").click();
+    await TestUtils.waitForCondition(() => row.getAttribute("active") == "false", "Wait for disable");
+    doc.getAnonymousElementByAttribute(row, "anonid", "enable-btn").click();
+    await TestUtils.waitForCondition(() => row.getAttribute("active") == "true", "Wait for enable");
+  }
+}
+
+async function removeAddonAndUndo(doc, row) {
+  let isHtml = doc.ownerGlobal != gManagerWindow;
+  let id = isHtml ? row.addon.id : row.mAddon.id;
+  let started = AddonTestUtils.promiseWebExtensionStartup(id);
+  if (isHtml) {
+    let removed = BrowserTestUtils.waitForEvent(row, "remove");
+    row.querySelector('[action="remove"]').click();
+    await removed;
+
+    let undoBanner = doc.querySelector(`message-bar[addon-id="${row.addon.id}"]`);
+    undoBanner.querySelector('[action="undo"]').click();
+    await TestUtils.waitForCondition(() => getAddonCard(doc, row.addon.id));
+  } else {
+    is(row.getAttribute("status"), "installed", "The add-on is installed");
+    ok(!row.hasAttribute("pending"), "The add-on is not pending");
+    doc.getAnonymousElementByAttribute(row, "anonid", "remove-btn").click();
+    await TestUtils.waitForCondition(() => row.getAttribute("pending") == "uninstall", "Wait for uninstall");
+
+    doc.getAnonymousElementByAttribute(row, "anonid", "undo-btn").click();
+    await TestUtils.waitForCondition(() => !row.hasAttribute("pending"), "Wait for undo");
+  }
+  await started;
+}
+
+async function openPrefs(doc, row) {
+  if (doc.ownerGlobal != gManagerWindow) {
+    row.querySelector('[action="preferences"]').click();
+  } else {
+    let prefsButton;
+    await TestUtils.waitForCondition(() => {
+      prefsButton = doc.getAnonymousElementByAttribute(row, "anonid", "preferences-btn");
+      return prefsButton;
+    });
+    prefsButton.click();
+  }
+}
+
+function changeAutoUpdates(doc) {
+  if (doc.ownerGlobal != gManagerWindow) {
+    let row = doc.querySelector(".addon-detail-row-updates");
+    let checked = row.querySelector(":checked");
+    is(checked.value, "1", "Use default is selected");
+    row.querySelector('[value="0"]').click();
+    row.querySelector('[action="update-check"]').click();
+    row.querySelector('[value="2"]').click();
+    row.querySelector('[value="1"]').click();
+  } else {
+    let autoUpdate = doc.getElementById("detail-autoUpdate");
+    is(autoUpdate.value, "1", "Use default is selected");
+    // Turn off auto update.
+    autoUpdate.querySelector('[value="0"]').click();
+    // Check for updates.
+    let checkForUpdates = doc.getElementById("detail-findUpdates-btn");
+    is(checkForUpdates.hidden, false, "The check for updates button is visible");
+    checkForUpdates.click();
+    // Turn on auto update.
+    autoUpdate.querySelector('[value="2"]').click();
+    // Set auto update to default again.
+    autoUpdate.querySelector('[value="1"]').click();
+  }
+}
+
+function clickLinks(doc) {
+  if (doc.ownerGlobal != gManagerWindow) {
+    let links = ["author", "homepage", "rating"];
+    for (let linkType of links) {
+      doc.querySelector(`.addon-detail-row-${linkType} a`).click();
+    }
+  } else {
+    // Check links.
+    let creator = doc.getElementById("detail-creator");
+    let label = doc.getAnonymousElementByAttribute(creator, "anonid", "label");
+    let link = doc.getAnonymousElementByAttribute(creator, "anonid", "creator-link");
+    // Check that clicking the label doesn't trigger a telemetry event.
+    label.click();
+    assertTelemetryMatches([]);
+    link.click();
+    doc.getElementById("detail-homepage").click();
+    doc.getElementById("detail-reviews").click();
+  }
+}
+
+async function init(startPage, isHtmlViews) {
+  gManagerWindow = await open_manager(null);
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+  // When about:addons initially loads it will load the last view that
+  // was open. If that's different than startPage, then clear the events
+  // so that we can reliably test them.
+  if (gCategoryUtilities.selectedCategory != startPage) {
+    Services.telemetry.clearEvents();
+  }
+
+  await gCategoryUtilities.openType(startPage);
+
+  if (isHtmlViews) {
+    return gManagerWindow.document.getElementById("html-view-browser").contentDocument;
+  }
+  return gManagerWindow.document;
+}
+
+/* Test functions start here. */
+
+async function setup(isHtmlViews) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.htmlaboutaddons.enabled", isHtmlViews]],
+  });
   // Clear out any telemetry data that existed before this file is run.
   Services.telemetry.clearEvents();
-});
+}
 
-add_task(async function testBasicViewTelemetry() {
+async function testBasicViewTelemetry(isHtmlViews) {
   let addons = await Promise.all([
     installTheme(),
     installExtension(),
   ]);
-  await init("discover");
-
-  let doc = gManagerWindow.document;
+  let doc = await init("discover", isHtmlViews);
 
   await gCategoryUtilities.openType("theme");
-  doc.querySelector('.addon[value="theme@mochi.test"]').click();
+  openDetailView(doc, "theme@mochi.test");
   await wait_for_view_load(gManagerWindow);
 
   await gCategoryUtilities.openType("extension");
-  doc.querySelector('.addon[value="extension@mochi.test"]').click();
+  openDetailView(doc, "extension@mochi.test");
   await wait_for_view_load(gManagerWindow);
 
   assertTelemetryMatches([
@@ -103,78 +238,53 @@ add_task(async function testBasicViewTelemetry() {
 
   await close_manager(gManagerWindow);
   await Promise.all(addons.map(addon => addon.unload()));
-});
+}
 
-add_task(async function testExtensionEvents() {
+async function testExtensionEvents(isHtmlViews) {
   let addon = await installExtension();
   let type = "extension";
-  await init("extension");
-
-  let doc = gManagerWindow.document;
-  let list = doc.getElementById("addon-list");
-  let row = list.querySelector(`[value="${addonId}"]`);
+  let doc = await init("extension", isHtmlViews);
 
   // Check/clear the current telemetry.
   assertTelemetryMatches([["view", "aboutAddons", "list", {type: "extension"}]],
-                         {filterMethods: ["view"]});
+                          {filterMethods: ["view"]});
+
+  let row = getAddonCard(doc, addonId);
 
   // Check disable/enable.
-  is(row.getAttribute("active"), "true", "The add-on is enabled");
-  doc.getAnonymousElementByAttribute(row, "anonid", "disable-btn").click();
-  await TestUtils.waitForCondition(() => row.getAttribute("active") == "false", "Wait for disable");
-  doc.getAnonymousElementByAttribute(row, "anonid", "enable-btn").click();
-  await TestUtils.waitForCondition(() => row.getAttribute("active") == "true", "Wait for enable");
+  await enableAndDisable(doc, row);
   assertTelemetryMatches([
     ["action", "aboutAddons", null, {action: "disable", addonId, type, view: "list"}],
     ["action", "aboutAddons", null, {action: "enable", addonId, type, view: "list"}],
   ], {filterMethods: ["action"]});
 
   // Check remove/undo.
-  is(row.getAttribute("status"), "installed", "The add-on is installed");
-  ok(!row.hasAttribute("pending"), "The add-on is not pending");
-  doc.getAnonymousElementByAttribute(row, "anonid", "remove-btn").click();
-  await TestUtils.waitForCondition(() => row.getAttribute("pending") == "uninstall", "Wait for uninstall");
-  // Find the row again since the binding changed.
-  doc.getAnonymousElementByAttribute(row, "anonid", "undo-btn").click();
-  await TestUtils.waitForCondition(() => !row.hasAttribute("pending"), "Wait for undo");
+  await removeAddonAndUndo(doc, row);
+  let uninstallValue = isHtmlViews ? "accepted" : null;
   assertTelemetryMatches([
-    ["action", "aboutAddons", null, {action: "uninstall", addonId, type, view: "list"}],
+    ["action", "aboutAddons", uninstallValue, {action: "uninstall", addonId, type, view: "list"}],
     ["action", "aboutAddons", null, {action: "undo", addonId, type, view: "list"}],
   ], {filterMethods: ["action"]});
 
   // Open the preferences page.
   let waitForNewTab = BrowserTestUtils.waitForNewTab(gBrowser);
-  let prefsButton;
-  await TestUtils.waitForCondition(() => {
-    prefsButton = doc.getAnonymousElementByAttribute(row, "anonid", "preferences-btn");
-    return prefsButton;
-  });
-  prefsButton.click();
+  // Find the row again since it was modified on uninstall.
+  row = getAddonCard(doc, addonId);
+  await openPrefs(doc, row);
   BrowserTestUtils.removeTab(await waitForNewTab);
   assertTelemetryMatches([
     ["action", "aboutAddons", "external", {action: "preferences", type, addonId, view: "list"}],
   ], {filterMethods: ["action"]});
 
   // Go to the detail view.
-  row.click();
+  openDetailView(doc, addonId);
   await wait_for_view_load(gManagerWindow);
   assertTelemetryMatches([
     ["view", "aboutAddons", "detail", {type, addonId}],
   ], {filterMethods: ["view"]});
 
   // Check updates.
-  let autoUpdate = doc.getElementById("detail-autoUpdate");
-  is(autoUpdate.value, "1", "Use default is selected");
-  // Turn off auto update.
-  autoUpdate.querySelector('[value="0"]').click();
-  // Check for updates.
-  let checkForUpdates = doc.getElementById("detail-findUpdates-btn");
-  is(checkForUpdates.hidden, false, "The check for updates button is visible");
-  checkForUpdates.click();
-  // Turn on auto update.
-  autoUpdate.querySelector('[value="2"]').click();
-  // Set auto update to default again.
-  autoUpdate.querySelector('[value="1"]').click();
+  changeAutoUpdates(doc);
   assertTelemetryMatches([
     ["action", "aboutAddons", "", {action: "setAddonUpdate", type, addonId, view: "detail"}],
     ["action", "aboutAddons", null, {action: "checkForUpdate", type, addonId, view: "detail"}],
@@ -182,33 +292,19 @@ add_task(async function testExtensionEvents() {
     ["action", "aboutAddons", "default", {action: "setAddonUpdate", type, addonId, view: "detail"}],
   ], {filterMethods: ["action"]});
 
-  // Check links.
-  let creator = doc.getElementById("detail-creator");
-  let label = doc.getAnonymousElementByAttribute(creator, "anonid", "label");
-  let link = doc.getAnonymousElementByAttribute(creator, "anonid", "creator-link");
-  // Check that clicking the label doesn't trigger a telemetry event.
-  label.click();
-  assertTelemetryMatches([]);
-
   // These links don't actually have a URL, so they don't open a tab. They're only
   // shown when there is a URL though.
-  link.click();
-  doc.getElementById("detail-homepage").click();
-  doc.getElementById("detail-reviews").click();
+  clickLinks(doc);
 
   // The support button will open a new tab.
   waitForNewTab = BrowserTestUtils.waitForNewTab(gBrowser);
-  doc.getElementById("helpButton").click();
+  gManagerWindow.document.getElementById("helpButton").click();
   BrowserTestUtils.removeTab(await waitForNewTab);
 
   // Check that the preferences button includes the view.
   waitForNewTab = BrowserTestUtils.waitForNewTab(gBrowser);
-  let prefsBtn;
-  await TestUtils.waitForCondition(() => {
-    prefsBtn = doc.getElementById("detail-prefs-btn");
-    return prefsBtn;
-  });
-  prefsBtn.click();
+  row = getAddonCard(doc, addonId);
+  await openPrefs(doc, row);
   BrowserTestUtils.removeTab(await waitForNewTab);
 
   assertTelemetryMatches([
@@ -222,13 +318,10 @@ add_task(async function testExtensionEvents() {
   // Update the preferences and check that inline changes.
   await gCategoryUtilities.openType("extension");
   let upgraded = await installExtension({options_ui: {page: "options.html"}, version: "2"});
-  row = list.querySelector(`[value="${addonId}"]`);
-  await TestUtils.waitForCondition(() => {
-    prefsBtn = doc.getAnonymousElementByAttribute(row, "anonid", "preferences-btn");
-    return prefsBtn;
-  });
-  prefsBtn.click();
+  row = getAddonCard(doc, addonId);
+  await openPrefs(doc, row);
   await wait_for_view_load(gManagerWindow);
+
   assertTelemetryMatches([
     ["view", "aboutAddons", "list", {type}],
     ["action", "aboutAddons", "inline", {action: "preferences", type, addonId, view: "list"}],
@@ -238,10 +331,10 @@ add_task(async function testExtensionEvents() {
   await close_manager(gManagerWindow);
   await addon.unload();
   await upgraded.unload();
-});
+}
 
-add_task(async function testGeneralActions() {
-  await init("extension");
+async function testGeneralActions(isHtmlViews) {
+  await init("extension", isHtmlViews);
 
   let doc = gManagerWindow.document;
   let menu = doc.getElementById("utils-menu");
@@ -298,12 +391,12 @@ add_task(async function testGeneralActions() {
   await close_manager(gManagerWindow);
 
   assertTelemetryMatches([]);
-});
+}
 
-add_task(async function testPreferencesLink() {
+async function testPreferencesLink(isHtmlViews) {
   assertTelemetryMatches([]);
 
-  await init("theme");
+  await init("theme", isHtmlViews);
 
   let doc = gManagerWindow.document;
 
@@ -329,4 +422,31 @@ add_task(async function testPreferencesLink() {
   ], {filterMethods: ["link", "view"]});
 
   await close_manager(gManagerWindow);
-});
+}
+
+const testFns = [
+  testBasicViewTelemetry,
+  testExtensionEvents,
+  testGeneralActions,
+  testPreferencesLink,
+];
+
+/**
+ * Setup the tasks. This will add tasks for each of testFns to run with the
+ * XUL and HTML version of about:addons.
+ *
+ * To add a test, add it to the testFns array.
+ */
+function addTestTasks(isHtmlViews) {
+  add_task(() => setup(isHtmlViews));
+
+  for (let fn of testFns) {
+    let localTestFnName = fn.name + (isHtmlViews ? "HTML" : "XUL");
+    // Get an informative name for the function in stack traces.
+    let obj = {[localTestFnName]: () => fn(isHtmlViews)};
+    add_task(obj[localTestFnName]);
+  }
+}
+
+addTestTasks(false);
+addTestTasks(true);
