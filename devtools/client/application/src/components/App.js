@@ -21,36 +21,53 @@ const WorkerListEmpty = createFactory(require("./WorkerListEmpty"));
 class App extends Component {
   static get propTypes() {
     return {
+      // mapped from state
+      canDebugWorkers: PropTypes.bool.isRequired,
       client: PropTypes.object.isRequired,
-      workers: PropTypes.array.isRequired,
-      serviceContainer: PropTypes.object.isRequired,
+      // mapped from state
       domain: PropTypes.string.isRequired,
       fluentBundles: PropTypes.array.isRequired,
+      serviceContainer: PropTypes.object.isRequired,
+      // mapped from state
+      workers: PropTypes.array.isRequired,
     };
   }
 
   render() {
-    let { workers, domain, client, serviceContainer, fluentBundles } = this.props;
+    const {
+      canDebugWorkers,
+      client,
+      domain,
+      fluentBundles,
+      serviceContainer,
+      workers,
+    } = this.props;
 
     // Filter out workers from other domains
-    workers = workers.filter((x) => new URL(x.url).hostname === domain);
-    const isEmpty = workers.length === 0;
+    const domainWorkers = workers.filter((x) => new URL(x.url).hostname === domain);
+    const isWorkerListEmpty = domainWorkers.length === 0;
 
     return (
       LocalizationProvider(
         { messages: fluentBundles },
         main(
-          { className: `application ${isEmpty ? "application--empty" : ""}` },
-          isEmpty ? WorkerListEmpty({ serviceContainer })
-                  : WorkerList({ workers, client })
+          { className: `application ${isWorkerListEmpty ? "application--empty" : ""}` },
+          isWorkerListEmpty ? WorkerListEmpty({ serviceContainer })
+                  : WorkerList({ canDebugWorkers, client, workers: domainWorkers })
         )
       )
     );
   }
 }
 
+function mapStateToProps(state) {
+  return {
+    canDebugWorkers: state.workers.canDebugWorkers,
+    domain: state.page.domain,
+    workers: state.workers.list,
+  };
+}
+
 // Exports
 
-module.exports = connect(
-  (state) => ({ workers: state.workers.list, domain: state.page.domain }),
-)(App);
+module.exports = connect(mapStateToProps)(App);

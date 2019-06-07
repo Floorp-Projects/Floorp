@@ -5,8 +5,9 @@
 "use strict";
 
 const actionTypes = {
-  UPDATE_WORKERS: "UPDATE_WORKERS",
   UPDATE_DOMAIN: "UPDATE_DOMAIN",
+  UPDATE_CAN_DEBUG_WORKERS: "UPDATE_CAN_DEBUG_WORKERS",
+  UPDATE_WORKERS: "UPDATE_WORKERS",
 };
 
 // flatten constants

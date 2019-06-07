@@ -30,6 +30,7 @@ add_task(async function() {
     "Navigate to another page for a different domain with no service worker");
 
   await navigate(target, EMPTY_URL);
+  info("Wait until the service worker list is updated");
   await waitUntil(() => doc.querySelector(".worker-list-empty") !== null);
   ok(true, "No service workers are shown for an empty page in a different domain.");
 
