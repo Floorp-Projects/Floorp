@@ -1346,3 +1346,8 @@ if CONFIG['MOZ_WAYLAND']:
         'wayland-egl.h',
         'wayland-util.h',
     ]
+
+if CONFIG['OS_TARGET'] == 'Linux' and CONFIG['CPU_ARCH'].startswith('mips'):
+    system_headers += [
+        'sys/cachectl.h',
+    ]
