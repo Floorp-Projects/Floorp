@@ -11,6 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobImpl.h"
+#include "mozilla/dom/BodyConsumer.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "nsIMutable.h"
@@ -25,6 +26,7 @@ namespace dom {
 struct BlobPropertyBag;
 class File;
 class OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString;
+class Promise;
 
 #define NS_DOM_BLOB_IID                              \
   {                                                  \
@@ -120,12 +122,18 @@ class Blob : public nsIMutable,
   nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                        nsACString& aContentType, nsACString& aCharset) const;
 
+  already_AddRefed<Promise> Text(ErrorResult& aRv);
+  already_AddRefed<Promise> ArrayBuffer(ErrorResult& aRv);
+
  protected:
   // File constructor should never be used directly. Use Blob::Create instead.
   Blob(nsISupports* aParent, BlobImpl* aImpl);
   virtual ~Blob();
 
   virtual bool HasFileInterface() const { return false; }
+
+  already_AddRefed<Promise> ConsumeBody(BodyConsumer::ConsumeType aConsumeType,
+                                        ErrorResult& aRv);
 
   // The member is the real backend implementation of this File/Blob.
   // It's thread-safe and not CC-able and it's the only element that is moved
