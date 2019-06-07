@@ -462,7 +462,7 @@ impl SceneBuilder {
 
         let doc = self.documents
                       .entry(txn.document_id)
-                      .or_insert(Document::new(Scene::new()));
+                      .or_insert_with(|| Document::new(Scene::new()));
         let scene = &mut doc.scene;
 
         for update in txn.display_list_updates.drain(..) {

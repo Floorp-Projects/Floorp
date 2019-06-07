@@ -1115,7 +1115,7 @@ impl RenderPass {
                         Some(texture_target) => {
                             let texture = texture_cache
                                 .entry((texture_target, layer))
-                                .or_insert(
+                                .or_insert_with(||
                                     TextureCacheRenderTarget::new(target_kind)
                                 );
                             texture.add_task(task_id, render_tasks);
