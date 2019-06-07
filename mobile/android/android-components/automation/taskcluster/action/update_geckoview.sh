@@ -45,7 +45,7 @@ if [ "$CHANNEL" = "nightly" ]
 then
     ./gradlew browser-engine-gecko-nightly:assemble \
           browser-engine-gecko-nightly:test \
-          sample-browser:assembleGeckoNightlyArm
+          sample-browser:assembleGeckoNightlyUniversal
 elif [ "$CHANNEL" = "beta" ]
 then
     ./gradlew browser-engine-gecko-beta:assemble \
