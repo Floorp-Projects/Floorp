@@ -66,8 +66,7 @@ public abstract class SessionTest extends UITest {
                 url = getPage(key);
             }
             title = key;
-            triggeringPrincipal_base64 =
-              "SmIS26zLEdO3ZQBgsLbOywAAAAAAAAAAwAAAAAAAAEY=";
+            triggeringPrincipal_base64 = "eyIzIjp7fX0=";
         }
     }
 
