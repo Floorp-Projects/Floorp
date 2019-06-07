@@ -2700,6 +2700,14 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Whether font sanitization is performed on the main thread or not.
+VARCACHE_PREF(
+  Live,
+  "gfx.downloadable_fonts.sanitize_omt",
+  gfx_downloadable_fonts_sanitize_omt,
+  RelaxedAtomicBool, false
+)
+
 VARCACHE_PREF(
   Live,
   "gfx.downloadable_fonts.validate_variation_tables",

@@ -862,7 +862,18 @@ void gfxUserFontEntry::FontDataDownloadComplete(
   // download successful, make platform font using font data
   if (NS_SUCCEEDED(aDownloadStatus) &&
       mFontDataLoadingState != LOADING_TIMED_OUT) {
-    LoadPlatformFontAsync(aFontData, aLength, aCallback);
+    if (StaticPrefs::gfx_downloadable_fonts_sanitize_omt()) {
+      LoadPlatformFontAsync(aFontData, aLength, aCallback);
+    } else {
+      bool loaded = LoadPlatformFontSync(aFontData, aLength);
+      aFontData = nullptr;
+      if (loaded) {
+        IncrementGeneration();
+        aCallback->FontLoadComplete();
+      } else {
+        FontLoadFailed(aCallback);
+      }
+    }
     return;
   }
 
