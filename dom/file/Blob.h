@@ -122,6 +122,8 @@ class Blob : public nsIMutable,
   nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                        nsACString& aContentType, nsACString& aCharset) const;
 
+  void Stream(JSContext* aCx, JS::MutableHandle<JSObject*> aStream,
+              ErrorResult& aRv);
   already_AddRefed<Promise> Text(ErrorResult& aRv);
   already_AddRefed<Promise> ArrayBuffer(ErrorResult& aRv);
 

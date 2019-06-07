@@ -30,7 +30,7 @@ interface Blob {
              optional DOMString contentType);
 
   // read from the Blob.
-  // TODO [NewObject] ReadableStream stream();
+  [NewObject] ReadableStream stream();
   [NewObject] Promise<USVString> text();
   [NewObject] Promise<ArrayBuffer> arrayBuffer();
 };
