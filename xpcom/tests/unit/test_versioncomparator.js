@@ -2,6 +2,9 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Versions to test listed in ascending order, none can be equal
 var comparisons = [
+  "pre",
+  // A number that is too large to be supported should be normalized to 0.
+  String(0x1F0000000),
   "0.9",
   "0.9.1",
   "1.0pre1",
