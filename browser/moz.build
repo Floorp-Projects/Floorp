@@ -11,6 +11,10 @@ SPHINX_TREES['browser'] = 'docs'
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
 
+EXTRA_COMPONENTS += [
+    'l10n-registry.manifest',
+]
+
 DIRS += [
     'actors',
     'base',
