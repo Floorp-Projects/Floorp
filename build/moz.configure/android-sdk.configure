@@ -7,11 +7,9 @@
 # Ensure Android SDK and build-tools versions depending on mobile target.
 
 
-@depends(host, '--help')
+@depends(host, mozbuild_state_path, '--help')
 @imports('os')
-def default_android_sdk_root(host, _):
-    mozbuild_state_dir = os.environ.get('MOZBUILD_STATE_PATH',
-                                        os.path.expanduser(os.path.join('~', '.mozbuild')))
+def default_android_sdk_root(host, mozbuild_state_path, _):
     sdk_basename = {
         'Darwin': 'android-sdk-macosx',
         'Linux': 'android-sdk-linux',
@@ -20,7 +18,7 @@ def default_android_sdk_root(host, _):
     if sdk_basename is None:
         log.warning("%s is unsupported host" % host.kernel)
         return None
-    return os.path.join(mozbuild_state_dir, sdk_basename)
+    return os.path.join(mozbuild_state_path, sdk_basename)
 
 
 option('--with-android-sdk', nargs=1,
