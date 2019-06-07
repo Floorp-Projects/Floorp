@@ -2,7 +2,7 @@
 
 # PeriodicRefreshManager
 
-`interface PeriodicRefreshManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaDeviceManager.kt#L114)
+`interface PeriodicRefreshManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaDeviceManager.kt#L120)
 
 ### Functions
 

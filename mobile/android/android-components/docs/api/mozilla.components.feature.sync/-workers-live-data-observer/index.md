@@ -2,7 +2,7 @@
 
 # WorkersLiveDataObserver
 
-`object WorkersLiveDataObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sync/src/main/java/mozilla/components/feature/sync/WorkManagerSyncDispatcher.kt#L49)
+`object WorkersLiveDataObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sync/src/main/java/mozilla/components/feature/sync/WorkManagerSyncDispatcher.kt#L51)
 
 A singleton wrapper around the the LiveData "forever" observer - i.e. an observer not bound
 to a lifecycle owner. This observer is always active.

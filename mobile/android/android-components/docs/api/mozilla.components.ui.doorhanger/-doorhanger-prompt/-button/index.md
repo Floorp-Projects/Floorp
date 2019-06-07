@@ -2,7 +2,7 @@
 
 # Button
 
-`data class Button` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L92)
+`data class Button` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L95)
 
 ### Constructors
 

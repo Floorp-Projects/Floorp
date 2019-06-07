@@ -36,7 +36,7 @@
 
 | Name | Summary |
 |---|---|
-| [AuthException](-auth-exception/index.md) | `class AuthException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)<br>An exception which may happen while obtaining auth information using [OAuthAccount](-o-auth-account/index.md). |
+| [AuthException](-auth-exception/index.md) | `class AuthException : `[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)<br>An exception which may happen while obtaining auth information using [OAuthAccount](-o-auth-account/index.md). |
 
 ### Type Aliases
 

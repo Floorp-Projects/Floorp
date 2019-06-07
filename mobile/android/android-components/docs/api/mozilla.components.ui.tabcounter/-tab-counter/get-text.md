@@ -2,4 +2,4 @@
 
 # getText
 
-`fun getText(): `[`CharSequence`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/tabcounter/src/main/java/mozilla/components/ui/tabcounter/TabCounter.kt#L62)
+`fun getText(): `[`CharSequence`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/tabcounter/src/main/java/mozilla/components/ui/tabcounter/TabCounter.kt#L63)

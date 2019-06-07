@@ -17,6 +17,7 @@ A popup menu composed of BrowserMenuItem objects.
 | Name | Summary |
 |---|---|
 | [dismiss](dismiss.md) | `fun dismiss(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [invalidate](invalidate.md) | `fun invalidate(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [show](show.md) | `fun show(anchor: `[`View`](https://developer.android.com/reference/android/view/View.html)`, orientation: `[`Orientation`](-orientation/index.md)` = Orientation.DOWN): `[`PopupWindow`](https://developer.android.com/reference/android/widget/PopupWindow.html) |
 
 ### Companion Object Functions

@@ -2,7 +2,7 @@
 
 # initDeviceAsync
 
-`abstract fun initDeviceAsync(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, type: `[`DeviceType`](../-device-type/index.md)` = DeviceType.MOBILE, capabilities: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`DeviceCapability`](../-device-capability/index.md)`>): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L23)
+`abstract fun initDeviceAsync(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, type: `[`DeviceType`](../-device-type/index.md)` = DeviceType.MOBILE, capabilities: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`DeviceCapability`](../-device-capability/index.md)`>): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L23)
 
 Register current device in the associated [DeviceConstellation](index.md).
 
@@ -15,5 +15,5 @@ Register current device in the associated [DeviceConstellation](index.md).
 `capabilities` - A list of capabilities that the current device claims to have.
 
 **Return**
-A [Deferred](#) that will be resolved once initialization is complete.
+A [Deferred](#) that will be resolved with a success flag once operation is complete.
 

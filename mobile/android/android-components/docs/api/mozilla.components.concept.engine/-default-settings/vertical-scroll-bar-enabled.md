@@ -2,7 +2,7 @@
 
 # verticalScrollBarEnabled
 
-`var verticalScrollBarEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L172)
+`var verticalScrollBarEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L182)
 
 Overrides [Settings.verticalScrollBarEnabled](../-settings/vertical-scroll-bar-enabled.md)
 

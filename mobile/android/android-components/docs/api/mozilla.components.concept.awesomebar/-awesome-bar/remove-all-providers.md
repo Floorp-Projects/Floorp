@@ -4,5 +4,5 @@
 
 `abstract fun removeAllProviders(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L34)
 
-Removes all [SuggestionProviders](#)
+Removes all [SuggestionProvider](-suggestion-provider/index.md)s
 

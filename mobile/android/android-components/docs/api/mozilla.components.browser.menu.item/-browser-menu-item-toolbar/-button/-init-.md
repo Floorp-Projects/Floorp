@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`Button(imageResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, contentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, iconTintColorResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`
+`Button(@DrawableRes imageResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, contentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, @ColorRes iconTintColorResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = NO_ID, isEnabled: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { true }, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`
 
 A button to be shown in a toolbar inside the browser menu.
 
@@ -13,5 +13,7 @@ A button to be shown in a toolbar inside the browser menu.
 `contentDescription` - The button's content description, used for accessibility support.
 
 `iconTintColorResource` - Optional ID of color resource to tint the icon.
+
+`isEnabled` - Lambda to return true/false to indicate if this button should be enabled or disabled.
 
 `listener` - Callback to be invoked when the button is pressed.

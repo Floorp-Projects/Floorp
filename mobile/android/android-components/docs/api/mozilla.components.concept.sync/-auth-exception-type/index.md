@@ -11,6 +11,8 @@ An auth-related exception type, for use with [AuthException](../-auth-exception/
 | Name | Summary |
 |---|---|
 | [KEY_INFO](-k-e-y_-i-n-f-o.md) |  |
+| [NO_TOKEN](-n-o_-t-o-k-e-n.md) |  |
+| [UNAUTHORIZED](-u-n-a-u-t-h-o-r-i-z-e-d.md) |  |
 
 ### Properties
 

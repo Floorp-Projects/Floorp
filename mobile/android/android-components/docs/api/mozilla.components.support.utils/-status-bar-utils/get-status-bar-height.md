@@ -2,7 +2,7 @@
 
 # getStatusBarHeight
 
-`fun getStatusBarHeight(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`, block: (`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/StatusBarUtils.kt#L15)
+`fun getStatusBarHeight(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`, block: (`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/StatusBarUtils.kt#L16)
 
 Determine the height of the status bar asynchronously.
 

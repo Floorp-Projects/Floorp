@@ -2,7 +2,7 @@
 
 # setDevicePushSubscriptionAsync
 
-`abstract fun setDevicePushSubscriptionAsync(subscription: `[`DevicePushSubscription`](../-device-push-subscription/index.md)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L75)
+`abstract fun setDevicePushSubscriptionAsync(subscription: `[`DevicePushSubscription`](../-device-push-subscription/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L78)
 
 Set a [DevicePushSubscription](../-device-push-subscription/index.md) for the current device.
 
@@ -11,5 +11,5 @@ Set a [DevicePushSubscription](../-device-push-subscription/index.md) for the cu
 `subscription` - A new [DevicePushSubscription](../-device-push-subscription/index.md).
 
 **Return**
-A [Deferred](#) that will be resolved once operation is complete.
+A [Deferred](#) that will be resolved with a success flag once operation is complete.
 

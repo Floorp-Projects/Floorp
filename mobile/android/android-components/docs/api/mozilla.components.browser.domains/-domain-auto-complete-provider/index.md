@@ -2,8 +2,8 @@
 
 # DomainAutoCompleteProvider
 
-`class ~~DomainAutoCompleteProvider~~` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/domains/src/main/java/mozilla/components/browser/domains/DomainAutoCompleteProvider.kt#L21)
-**Deprecated:** Use [Providers.ShippedDomainsProvider] or [Providers.CustomDomainsProvider]
+`class ~~DomainAutoCompleteProvider~~` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/domains/src/main/java/mozilla/components/browser/domains/DomainAutoCompleteProvider.kt#L24)
+**Deprecated:** Use `ShippedDomainsProvider` or `CustomDomainsProvider`
 
 Provides autocomplete functionality for domains, based on a provided list
 of assets (see [Domains](../-domains/index.md)) and/or a custom domain list managed by

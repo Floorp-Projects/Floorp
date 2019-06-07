@@ -2,7 +2,7 @@
 
 # getCollections
 
-`fun getCollections(limit: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 20): LiveData<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TabCollection`](../-tab-collection/index.md)`>>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tab-collections/src/main/java/mozilla/components/feature/tab/collections/TabCollectionStorage.kt#L112)
+`fun getCollections(limit: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 20): LiveData<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TabCollection`](../-tab-collection/index.md)`>>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tab-collections/src/main/java/mozilla/components/feature/tab/collections/TabCollectionStorage.kt#L113)
 
 Returns the last [TabCollection](../-tab-collection/index.md) instances (up to [limit](get-collections.md#mozilla.components.feature.tab.collections.TabCollectionStorage$getCollections(kotlin.Int)/limit)) as a [LiveData](#) list.
 

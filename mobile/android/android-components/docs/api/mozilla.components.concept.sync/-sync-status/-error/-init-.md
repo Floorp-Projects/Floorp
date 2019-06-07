@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`Error(exception: `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)`)`
+`Error(exception: `[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`)`
 
 Sync completed with an error.
 

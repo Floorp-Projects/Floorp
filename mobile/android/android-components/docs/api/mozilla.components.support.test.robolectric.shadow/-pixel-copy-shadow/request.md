@@ -1,0 +1,5 @@
+[android-components](../../index.md) / [mozilla.components.support.test.robolectric.shadow](../index.md) / [PixelCopyShadow](index.md) / [request](./request.md)
+
+# request
+
+`@JvmStatic @Implementation fun request(source: `[`Window`](https://developer.android.com/reference/android/view/Window.html)`, srcRect: `[`Rect`](https://developer.android.com/reference/android/graphics/Rect.html)`?, dest: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`, listener: `[`OnPixelCopyFinishedListener`](https://developer.android.com/reference/android/view/PixelCopy/OnPixelCopyFinishedListener.html)`, listenerThread: `[`Handler`](https://developer.android.com/reference/android/os/Handler.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/test/src/main/java/mozilla/components/support/test/robolectric/shadow/PixelCopyShadow.kt#L31)

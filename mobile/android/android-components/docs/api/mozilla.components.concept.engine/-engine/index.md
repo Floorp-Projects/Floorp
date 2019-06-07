@@ -6,6 +6,12 @@
 
 Entry point for interacting with the engine implementation.
 
+### Types
+
+| Name | Summary |
+|---|---|
+| [BrowsingData](-browsing-data/index.md) | `class BrowsingData`<br>Describes a combination of browsing data types stored by the engine. |
+
 ### Properties
 
 | Name | Summary |
@@ -16,6 +22,7 @@ Entry point for interacting with the engine implementation.
 
 | Name | Summary |
 |---|---|
+| [clearData](clear-data.md) | `open fun clearData(data: `[`BrowsingData`](-browsing-data/index.md)` = BrowsingData.all(), host: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, onSuccess: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }, onError: (`[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears browsing data stored by the engine. |
 | [createSession](create-session.md) | `abstract fun createSession(private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false): `[`EngineSession`](../-engine-session/index.md)<br>Creates a new engine session. |
 | [createSessionState](create-session-state.md) | `abstract fun createSessionState(json: `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)`): `[`EngineSessionState`](../-engine-session-state/index.md)<br>Create a new [EngineSessionState](../-engine-session-state/index.md) instance from the serialized JSON representation. |
 | [createView](create-view.md) | `abstract fun createView(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, attrs: `[`AttributeSet`](https://developer.android.com/reference/android/util/AttributeSet.html)`? = null): `[`EngineView`](../-engine-view/index.md)<br>Creates a new view for rendering web content. |

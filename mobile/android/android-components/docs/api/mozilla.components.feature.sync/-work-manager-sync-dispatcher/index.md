@@ -2,7 +2,7 @@
 
 # WorkManagerSyncDispatcher
 
-`class WorkManagerSyncDispatcher : `[`SyncDispatcher`](../-sync-dispatcher/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`SyncStatusObserver`](../../mozilla.components.concept.sync/-sync-status-observer/index.md)`>, `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sync/src/main/java/mozilla/components/feature/sync/WorkManagerSyncDispatcher.kt#L77)
+`class WorkManagerSyncDispatcher : `[`SyncDispatcher`](../-sync-dispatcher/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`SyncStatusObserver`](../../mozilla.components.concept.sync/-sync-status-observer/index.md)`>, `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sync/src/main/java/mozilla/components/feature/sync/WorkManagerSyncDispatcher.kt#L79)
 
 ### Constructors
 

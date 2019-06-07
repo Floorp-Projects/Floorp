@@ -2,7 +2,7 @@
 
 # onDownloadCompleted
 
-`var onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsFeature.kt#L44)
+`var onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsFeature.kt#L46)
 
 a callback invoked when a download is completed.
 

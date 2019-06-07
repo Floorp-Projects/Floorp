@@ -2,7 +2,7 @@
 
 # LocaleSettingUpdater
 
-`class LocaleSettingUpdater : `[`SettingUpdater`](../-setting-updater/index.md)`<`[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/integration/LocaleSettingUpdater.kt#L17)
+`class LocaleSettingUpdater : `[`SettingUpdater`](../-setting-updater/index.md)`<`[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/integration/LocaleSettingUpdater.kt#L17)
 
 Class to set the locales setting for geckoview, updating from the locale of the device.
 

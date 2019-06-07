@@ -2,7 +2,7 @@
 
 # DomainMatch
 
-`data class DomainMatch` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/DomainMatcher.kt#L11)
+`data class DomainMatch` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/DomainMatcher.kt#L13)
 
 ### Constructors
 

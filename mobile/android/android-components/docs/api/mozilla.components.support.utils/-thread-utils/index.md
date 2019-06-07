@@ -2,7 +2,7 @@
 
 # ThreadUtils
 
-`object ThreadUtils` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/ThreadUtils.kt#L11)
+`object ThreadUtils` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/ThreadUtils.kt#L12)
 
 ### Functions
 

@@ -2,7 +2,7 @@
 
 # ControlGroup
 
-`data class ControlGroup` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L104)
+`data class ControlGroup` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L107)
 
 A group of controls to be displayed in a [DoorhangerPrompt](../index.md).
 

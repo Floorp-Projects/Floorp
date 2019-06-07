@@ -2,7 +2,7 @@
 
 # CheckBox
 
-`data class CheckBox : `[`Control`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L140)
+`data class CheckBox : `[`Control`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L143)
 
 [Control](../index.md) implementation for checkboxes. A checkbox is a specific type of two-states button that can be
 either checked or unchecked.

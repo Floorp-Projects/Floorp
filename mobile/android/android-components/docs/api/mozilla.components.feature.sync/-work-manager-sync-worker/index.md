@@ -2,7 +2,7 @@
 
 # WorkManagerSyncWorker
 
-`class WorkManagerSyncWorker : CoroutineWorker` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sync/src/main/java/mozilla/components/feature/sync/WorkManagerSyncDispatcher.kt#L185)
+`class WorkManagerSyncWorker : CoroutineWorker` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sync/src/main/java/mozilla/components/feature/sync/WorkManagerSyncDispatcher.kt#L187)
 
 ### Constructors
 

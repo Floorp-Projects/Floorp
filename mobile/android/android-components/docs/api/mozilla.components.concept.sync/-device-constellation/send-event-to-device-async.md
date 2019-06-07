@@ -2,7 +2,7 @@
 
 # sendEventToDeviceAsync
 
-`abstract fun sendEventToDeviceAsync(targetDeviceId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, outgoingEvent: `[`DeviceEventOutgoing`](../-device-event-outgoing/index.md)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L83)
+`abstract fun sendEventToDeviceAsync(targetDeviceId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, outgoingEvent: `[`DeviceEventOutgoing`](../-device-event-outgoing/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L86)
 
 Send an event to a specified device.
 
@@ -13,5 +13,5 @@ Send an event to a specified device.
 `outgoingEvent` - An event to send.
 
 **Return**
-A [Deferred](#) that will be resolved once operation is complete.
+A [Deferred](#) that will be resolved with a success flag once operation is complete.
 

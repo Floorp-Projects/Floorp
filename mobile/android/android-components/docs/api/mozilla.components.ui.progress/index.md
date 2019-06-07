@@ -6,4 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [AnimatedProgressBar](-animated-progress-bar/index.md) | `open class AnimatedProgressBar : `[`ProgressBar`](https://developer.android.com/reference/android/widget/ProgressBar.html)<br>An animated progress bar following the Photon Design System. |
+| [AnimatedProgressBar](-animated-progress-bar/index.md) | `open class ~~AnimatedProgressBar~~ : `[`ProgressBar`](https://developer.android.com/reference/android/widget/ProgressBar.html)<br>An animated progress bar following the Photon Design System. |

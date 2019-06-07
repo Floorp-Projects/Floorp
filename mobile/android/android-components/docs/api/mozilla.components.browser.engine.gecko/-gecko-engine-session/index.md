@@ -2,7 +2,7 @@
 
 # GeckoEngineSession
 
-`class GeckoEngineSession : CoroutineScope, `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L46)
+`class GeckoEngineSession : CoroutineScope, `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L44)
 
 Gecko-based EngineSession implementation.
 
@@ -28,7 +28,6 @@ Gecko-based EngineSession implementation.
 
 | Name | Summary |
 |---|---|
-| [clearData](clear-data.md) | `fun clearData(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.clearData](../../mozilla.components.concept.engine/-engine-session/clear-data.md) |
 | [clearFindMatches](clear-find-matches.md) | `fun clearFindMatches(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.clearFindMatches](../../mozilla.components.concept.engine/-engine-session/clear-find-matches.md) |
 | [close](close.md) | `fun close(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.close](../../mozilla.components.concept.engine/-engine-session/close.md). |
 | [disableTrackingProtection](disable-tracking-protection.md) | `fun disableTrackingProtection(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.disableTrackingProtection](../../mozilla.components.concept.engine/-engine-session/disable-tracking-protection.md) |
@@ -41,9 +40,21 @@ Gecko-based EngineSession implementation.
 | [handleLongClick](handle-long-click.md) | `fun handleLongClick(elementSrc: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, elementType: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, uri: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null): `[`HitResult`](../../mozilla.components.concept.engine/-hit-result/index.md)`?` |
 | [loadData](load-data.md) | `fun loadData(data: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, mimeType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, encoding: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.loadData](../../mozilla.components.concept.engine/-engine-session/load-data.md) |
 | [loadUrl](load-url.md) | `fun loadUrl(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.loadUrl](../../mozilla.components.concept.engine/-engine-session/load-url.md) |
-| [recoverFromCrash](recover-from-crash.md) | `fun recoverFromCrash(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Tries to recover from a crash by restoring the last know state. |
+| [recoverFromCrash](recover-from-crash.md) | `fun recoverFromCrash(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>See [EngineSession.recoverFromCrash](../../mozilla.components.concept.engine/-engine-session/recover-from-crash.md) |
 | [reload](reload.md) | `fun reload(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.reload](../../mozilla.components.concept.engine/-engine-session/reload.md) |
 | [restoreState](restore-state.md) | `fun restoreState(state: `[`EngineSessionState`](../../mozilla.components.concept.engine/-engine-session-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.restoreState](../../mozilla.components.concept.engine/-engine-session/restore-state.md) |
 | [saveState](save-state.md) | `fun saveState(): `[`EngineSessionState`](../../mozilla.components.concept.engine/-engine-session-state/index.md)<br>See [EngineSession.saveState](../../mozilla.components.concept.engine/-engine-session/save-state.md) |
 | [stopLoading](stop-loading.md) | `fun stopLoading(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.stopLoading](../../mozilla.components.concept.engine/-engine-session/stop-loading.md) |
 | [toggleDesktopMode](toggle-desktop-mode.md) | `fun toggleDesktopMode(enable: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, reload: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.settings](../../mozilla.components.concept.engine/-engine-session/settings.md) |
+
+### Inherited Functions
+
+| Name | Summary |
+|---|---|
+| [clearData](../../mozilla.components.concept.engine/-engine-session/clear-data.md) | `open fun clearData(data: `[`BrowsingData`](../../mozilla.components.concept.engine/-engine/-browsing-data/index.md)` = Engine.BrowsingData.all(), host: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, onSuccess: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }, onError: (`[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears browsing data stored by the engine. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [launchGeckoResult](../kotlinx.coroutines.-coroutine-scope/launch-gecko-result.md) | `fun <T> CoroutineScope.launchGeckoResult(context: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = EmptyCoroutineContext, start: CoroutineStart = CoroutineStart.DEFAULT, block: suspend CoroutineScope.() -> `[`T`](../kotlinx.coroutines.-coroutine-scope/launch-gecko-result.md#T)`): `[`GeckoResult`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoResult.html)`<`[`T`](../kotlinx.coroutines.-coroutine-scope/launch-gecko-result.md#T)`>`<br>Create a GeckoResult from a co-routine. |

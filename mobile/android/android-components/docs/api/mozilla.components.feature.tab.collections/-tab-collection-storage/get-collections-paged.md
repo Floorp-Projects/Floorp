@@ -2,7 +2,7 @@
 
 # getCollectionsPaged
 
-`fun getCollectionsPaged(): Factory<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`TabCollection`](../-tab-collection/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tab-collections/src/main/java/mozilla/components/feature/tab/collections/TabCollectionStorage.kt#L102)
+`fun getCollectionsPaged(): Factory<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`TabCollection`](../-tab-collection/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tab-collections/src/main/java/mozilla/components/feature/tab/collections/TabCollectionStorage.kt#L103)
 
 Returns all [TabCollection](../-tab-collection/index.md)s as a [DataSource.Factory](#).
 

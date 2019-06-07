@@ -2,7 +2,8 @@
 
 # Doorhanger
 
-`class Doorhanger` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/Doorhanger.kt#L21)
+`class ~~Doorhanger~~` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/Doorhanger.kt#L22)
+**Deprecated:** The ui-doorhanger component is getting removed.
 
 A [Doorhanger](./index.md) is a floating heads-up popup that can be anchored to a view. They are presented to notify the user
 of something that is important.

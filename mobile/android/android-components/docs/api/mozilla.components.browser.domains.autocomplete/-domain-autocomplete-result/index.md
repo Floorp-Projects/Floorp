@@ -2,7 +2,7 @@
 
 # DomainAutocompleteResult
 
-`class DomainAutocompleteResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/domains/src/main/java/mozilla/components/browser/domains/autocomplete/Providers.kt#L117)
+`class DomainAutocompleteResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/domains/src/main/java/mozilla/components/browser/domains/autocomplete/Providers.kt#L119)
 
 Describes an autocompletion result against a list of domains.
 

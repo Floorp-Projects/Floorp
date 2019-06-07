@@ -2,6 +2,12 @@
 
 ## Package mozilla.components.support.test.robolectric
 
+### Properties
+
+| Name | Summary |
+|---|---|
+| [testContext](test-context.md) | `val testContext: `[`Context`](https://developer.android.com/reference/android/content/Context.html)<br>Provides application context for test purposes |
+
 ### Functions
 
 | Name | Summary |

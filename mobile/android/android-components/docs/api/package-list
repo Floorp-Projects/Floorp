@@ -1,12 +1,16 @@
 $dokka.format:gfm
 $dokka.linkExtension:md
+$dokka.location:mozilla.components.browser.engine.gecko$await(org.mozilla.geckoview.GeckoResult((mozilla.components.browser.engine.gecko.await.T)))mozilla.components.browser.engine.gecko/org.mozilla.geckoview.-gecko-result/await.md
+$dokka.location:mozilla.components.browser.engine.gecko$launchGeckoResult(kotlinx.coroutines.CoroutineScope, kotlin.coroutines.CoroutineContext, kotlinx.coroutines.CoroutineStart, kotlin.SuspendFunction1((kotlinx.coroutines.CoroutineScope, mozilla.components.browser.engine.gecko.launchGeckoResult.T)))mozilla.components.browser.engine.gecko/kotlinx.coroutines.-coroutine-scope/launch-gecko-result.md
 $dokka.location:mozilla.components.browser.engine.system.matcher$reverse(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reverse.md
 $dokka.location:mozilla.components.browser.engine.system.matcher$reversible(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reversible.md
+$dokka.location:mozilla.components.browser.session.engine.request$isSet(kotlin.Int, mozilla.components.browser.session.engine.request.LoadRequestOption)mozilla.components.browser.session.engine.request/kotlin.-int/is-set.md
+$dokka.location:mozilla.components.browser.session.engine.request$plus(kotlin.Int, mozilla.components.browser.session.engine.request.LoadRequestOption)mozilla.components.browser.session.engine.request/kotlin.-int/plus.md
 $dokka.location:mozilla.components.browser.session.ext$readSnapshot(android.util.AtomicFile, mozilla.components.concept.engine.Engine, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/read-snapshot.md
 $dokka.location:mozilla.components.browser.session.ext$readSnapshotItem(android.util.AtomicFile, mozilla.components.concept.engine.Engine, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/read-snapshot-item.md
 $dokka.location:mozilla.components.browser.session.ext$writeSnapshot(android.util.AtomicFile, mozilla.components.browser.session.SessionManager.Snapshot, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/write-snapshot.md
 $dokka.location:mozilla.components.browser.session.ext$writeSnapshotItem(android.util.AtomicFile, mozilla.components.browser.session.SessionManager.Snapshot.Item, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/write-snapshot-item.md
-$dokka.location:mozilla.components.feature.pwa.ext$applyOrientation(android.app.Activity, mozilla.components.browser.session.manifest.WebAppManifest)mozilla.components.feature.pwa.ext/android.app.-activity/apply-orientation.md
+$dokka.location:mozilla.components.feature.pwa.ext$applyOrientation(android.app.Activity, mozilla.components.concept.engine.manifest.WebAppManifest)mozilla.components.feature.pwa.ext/android.app.-activity/apply-orientation.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Boolean)mozilla.components.lib.jexl.ext/kotlin.-boolean/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Double)mozilla.components.lib.jexl.ext/kotlin.-double/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Float)mozilla.components.lib.jexl.ext/kotlin.-float/to-jexl.md
@@ -29,9 +33,14 @@ $dokka.location:mozilla.components.support.android.test.espresso$assertIsDisplay
 $dokka.location:mozilla.components.support.android.test.espresso$assertIsEnabled(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-enabled.md
 $dokka.location:mozilla.components.support.android.test.espresso$assertIsSelected(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-selected.md
 $dokka.location:mozilla.components.support.android.test.espresso$click(androidx.test.espresso.ViewInteraction)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/click.md
+$dokka.location:mozilla.components.support.base.ids$cancel(android.app.NotificationManager, android.content.Context, kotlin.String)mozilla.components.support.base.ids/android.app.-notification-manager/cancel.md
+$dokka.location:mozilla.components.support.base.ids$cancel(androidx.core.app.NotificationManagerCompat, android.content.Context, kotlin.String)mozilla.components.support.base.ids/androidx.core.app.-notification-manager-compat/cancel.md
+$dokka.location:mozilla.components.support.base.ids$notify(android.app.NotificationManager, android.content.Context, kotlin.String, android.app.Notification)mozilla.components.support.base.ids/android.app.-notification-manager/notify.md
+$dokka.location:mozilla.components.support.base.ids$notify(androidx.core.app.NotificationManagerCompat, android.content.Context, kotlin.String, android.app.Notification)mozilla.components.support.base.ids/androidx.core.app.-notification-manager-compat/notify.md
 $dokka.location:mozilla.components.support.ktx.android.arch.lifecycle$addObservers(androidx.lifecycle.Lifecycle, kotlin.Array((androidx.lifecycle.LifecycleObserver)))mozilla.components.support.ktx.android.arch.lifecycle/androidx.lifecycle.-lifecycle/add-observers.md
 $dokka.location:mozilla.components.support.ktx.android.content$appName#android.content.Contextmozilla.components.support.ktx.android.content/android.content.-context/app-name.md
 $dokka.location:mozilla.components.support.ktx.android.content$appVersionName#android.content.Contextmozilla.components.support.ktx.android.content/android.content.-context/app-version-name.md
+$dokka.location:mozilla.components.support.ktx.android.content$hasCamera(android.content.Context)mozilla.components.support.ktx.android.content/android.content.-context/has-camera.md
 $dokka.location:mozilla.components.support.ktx.android.content$isMainProcess(android.content.Context)mozilla.components.support.ktx.android.content/android.content.-context/is-main-process.md
 $dokka.location:mozilla.components.support.ktx.android.content$isOSOnLowMemory(android.content.Context)mozilla.components.support.ktx.android.content/android.content.-context/is-o-s-on-low-memory.md
 $dokka.location:mozilla.components.support.ktx.android.content$isPermissionGranted(android.content.Context, kotlin.Array((kotlin.String)))mozilla.components.support.ktx.android.content/android.content.-context/is-permission-granted.md
@@ -61,6 +70,7 @@ $dokka.location:mozilla.components.support.ktx.android.os$resetAfter(android.os.
 $dokka.location:mozilla.components.support.ktx.android.view$enterToImmersiveMode(android.app.Activity)mozilla.components.support.ktx.android.view/android.app.-activity/enter-to-immersive-mode.md
 $dokka.location:mozilla.components.support.ktx.android.view$exitImmersiveModeIfNeeded(android.app.Activity)mozilla.components.support.ktx.android.view/android.app.-activity/exit-immersive-mode-if-needed.md
 $dokka.location:mozilla.components.support.ktx.android.view$forEach(android.view.ViewGroup, kotlin.Function1((android.view.View, kotlin.Unit)))mozilla.components.support.ktx.android.view/android.view.-view-group/for-each.md
+$dokka.location:mozilla.components.support.ktx.android.view$getRectWithViewLocation(android.view.View)mozilla.components.support.ktx.android.view/android.view.-view/get-rect-with-view-location.md
 $dokka.location:mozilla.components.support.ktx.android.view$hideKeyboard(android.view.View)mozilla.components.support.ktx.android.view/android.view.-view/hide-keyboard.md
 $dokka.location:mozilla.components.support.ktx.android.view$isGone(android.view.View)mozilla.components.support.ktx.android.view/android.view.-view/is-gone.md
 $dokka.location:mozilla.components.support.ktx.android.view$isInvisible(android.view.View)mozilla.components.support.ktx.android.view/android.view.-view/is-invisible.md
@@ -85,6 +95,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotl
 $dokka.location:mozilla.components.support.ktx.kotlin$toNormalizedUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-normalized-url.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toUri(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-uri.md
 $dokka.location:mozilla.components.support.utils$toSafeIntent(android.content.Intent)mozilla.components.support.utils/android.content.-intent/to-safe-intent.md
+mozilla.components
 mozilla.components.browser.awesomebar
 mozilla.components.browser.awesomebar.layout
 mozilla.components.browser.awesomebar.transform
@@ -118,14 +129,15 @@ mozilla.components.browser.search.provider.localization
 mozilla.components.browser.search.suggestions
 mozilla.components.browser.session
 mozilla.components.browser.session.action
+mozilla.components.browser.session.engine.request
 mozilla.components.browser.session.ext
 mozilla.components.browser.session.helper
-mozilla.components.browser.session.manifest
 mozilla.components.browser.session.selector
 mozilla.components.browser.session.state
 mozilla.components.browser.session.storage
 mozilla.components.browser.session.store
 mozilla.components.browser.session.tab
+mozilla.components.browser.session.utils
 mozilla.components.browser.storage.memory
 mozilla.components.browser.storage.sync
 mozilla.components.browser.tabstray
@@ -135,6 +147,7 @@ mozilla.components.browser.toolbar.behavior
 mozilla.components.concept.awesomebar
 mozilla.components.concept.engine
 mozilla.components.concept.engine.history
+mozilla.components.concept.engine.manifest
 mozilla.components.concept.engine.media
 mozilla.components.concept.engine.mediaquery
 mozilla.components.concept.engine.permission
@@ -159,7 +172,10 @@ mozilla.components.feature.downloads
 mozilla.components.feature.findinpage
 mozilla.components.feature.findinpage.view
 mozilla.components.feature.intent
+mozilla.components.feature.media
+mozilla.components.feature.media.state
 mozilla.components.feature.prompts
+mozilla.components.feature.push
 mozilla.components.feature.pwa
 mozilla.components.feature.pwa.ext
 mozilla.components.feature.qr
@@ -192,6 +208,7 @@ mozilla.components.lib.jexl.lexer
 mozilla.components.lib.jexl.parser
 mozilla.components.lib.jexl.value
 mozilla.components.lib.publicsuffixlist
+mozilla.components.lib.push.firebase
 mozilla.components.service.experiments
 mozilla.components.service.experiments.debug
 mozilla.components.service.fretboard
@@ -220,6 +237,7 @@ mozilla.components.support.base.android.view
 mozilla.components.support.base.facts
 mozilla.components.support.base.facts.processor
 mozilla.components.support.base.feature
+mozilla.components.support.base.ids
 mozilla.components.support.base.log
 mozilla.components.support.base.log.logger
 mozilla.components.support.base.log.sink
@@ -239,6 +257,7 @@ mozilla.components.support.ktx.kotlin
 mozilla.components.support.rustlog
 mozilla.components.support.test
 mozilla.components.support.test.robolectric
+mozilla.components.support.test.robolectric.shadow
 mozilla.components.support.utils
 mozilla.components.tooling.fetch.tests
 mozilla.components.tooling.lint

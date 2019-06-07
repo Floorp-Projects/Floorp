@@ -2,10 +2,11 @@
 
 # refreshDeviceStateAsync
 
-`abstract fun refreshDeviceStateAsync(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L112)
+`abstract fun refreshDeviceStateAsync(): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L118)
 
-Refreshes internal state of the device constellation.
+Refreshes [ConstellationState](../-constellation-state/index.md) and polls for device events.
 
 **Return**
-A [Deferred](#) that will be resolved once operation is complete.
+A [Deferred](#) that will be resolved with a success flag once operation is complete. Failure may
+indicate a partial success.
 

@@ -12,6 +12,12 @@ Implementation of the [BookmarksStorage](../../mozilla.components.concept.storag
 |---|---|
 | [&lt;init&gt;](-init-.md) | `PlacesBookmarksStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`<br>Implementation of the [BookmarksStorage](../../mozilla.components.concept.storage/-bookmarks-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
 
+### Properties
+
+| Name | Summary |
+|---|---|
+| [logger](logger.md) | `open val logger: `[`Logger`](../../mozilla.components.support.base.log.logger/-logger/index.md) |
+
 ### Functions
 
 | Name | Summary |
@@ -32,4 +38,6 @@ Implementation of the [BookmarksStorage](../../mozilla.components.concept.storag
 | Name | Summary |
 |---|---|
 | [cleanup](../-places-storage/cleanup.md) | `open fun cleanup(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Cleans up background work and database connections |
+| [ignoreUrlExceptions](../-places-storage/ignore-url-exceptions.md) | `fun ignoreUrlExceptions(operation: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, block: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Runs [block](../-places-storage/ignore-url-exceptions.md#mozilla.components.browser.storage.sync.PlacesStorage$ignoreUrlExceptions(kotlin.String, kotlin.Function0((kotlin.Unit)))/block) described by [operation](../-places-storage/ignore-url-exceptions.md#mozilla.components.browser.storage.sync.PlacesStorage$ignoreUrlExceptions(kotlin.String, kotlin.Function0((kotlin.Unit)))/operation), ignoring and logging any thrown [UrlParseFailed](#) exceptions. |
 | [runMaintenance](../-places-storage/run-maintenance.md) | `open suspend fun runMaintenance(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Internal database maintenance tasks. Ideally this should be called once a day. |
+| [syncAndHandleExceptions](../-places-storage/sync-and-handle-exceptions.md) | `fun syncAndHandleExceptions(syncBlock: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`SyncStatus`](../../mozilla.components.concept.sync/-sync-status/index.md)<br>Runs a [syncBlock](../-places-storage/sync-and-handle-exceptions.md#mozilla.components.browser.storage.sync.PlacesStorage$syncAndHandleExceptions(kotlin.Function0((kotlin.Unit)))/syncBlock), re-throwing any panics that may be encountered. |

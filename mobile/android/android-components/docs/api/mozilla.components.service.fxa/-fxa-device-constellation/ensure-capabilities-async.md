@@ -2,13 +2,19 @@
 
 # ensureCapabilitiesAsync
 
-`fun ensureCapabilitiesAsync(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L86)
+`fun ensureCapabilitiesAsync(capabilities: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`DeviceCapability`](../../mozilla.components.concept.sync/-device-capability/index.md)`>): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L89)
 
 Overrides [DeviceConstellation.ensureCapabilitiesAsync](../../mozilla.components.concept.sync/-device-constellation/ensure-capabilities-async.md)
 
-Ensure that all initialized [DeviceCapability](../../mozilla.components.concept.sync/-device-capability/index.md), such as [DeviceCapability.SEND_TAB](../../mozilla.components.concept.sync/-device-capability/-s-e-n-d_-t-a-b.md), are configured.
+Ensure that all passed in [capabilities](../../mozilla.components.concept.sync/-device-constellation/ensure-capabilities-async.md#mozilla.components.concept.sync.DeviceConstellation$ensureCapabilitiesAsync(kotlin.collections.List((mozilla.components.concept.sync.DeviceCapability)))/capabilities) are configured.
 This may involve backend service registration, or other work involving network/disc access.
 
+### Parameters
+
+`capabilities` - A list of capabilities to configure. This is expected to be the same or
+longer list than what was passed into [initDeviceAsync](../../mozilla.components.concept.sync/-device-constellation/init-device-async.md). Removing capabilities is currently
+not supported.
+
 **Return**
-A [Deferred](#) that will be resolved once operation is complete.
+A [Deferred](#) that will be resolved with a success flag once operation is complete.
 

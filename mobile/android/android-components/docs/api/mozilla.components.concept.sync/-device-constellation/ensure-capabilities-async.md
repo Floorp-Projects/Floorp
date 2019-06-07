@@ -2,11 +2,17 @@
 
 # ensureCapabilitiesAsync
 
-`abstract fun ensureCapabilitiesAsync(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L43)
+`abstract fun ensureCapabilitiesAsync(capabilities: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`DeviceCapability`](../-device-capability/index.md)`>): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L46)
 
-Ensure that all initialized [DeviceCapability](../-device-capability/index.md), such as [DeviceCapability.SEND_TAB](../-device-capability/-s-e-n-d_-t-a-b.md), are configured.
+Ensure that all passed in [capabilities](ensure-capabilities-async.md#mozilla.components.concept.sync.DeviceConstellation$ensureCapabilitiesAsync(kotlin.collections.List((mozilla.components.concept.sync.DeviceCapability)))/capabilities) are configured.
 This may involve backend service registration, or other work involving network/disc access.
 
+### Parameters
+
+`capabilities` - A list of capabilities to configure. This is expected to be the same or
+longer list than what was passed into [initDeviceAsync](init-device-async.md). Removing capabilities is currently
+not supported.
+
 **Return**
-A [Deferred](#) that will be resolved once operation is complete.
+A [Deferred](#) that will be resolved with a success flag once operation is complete.
 

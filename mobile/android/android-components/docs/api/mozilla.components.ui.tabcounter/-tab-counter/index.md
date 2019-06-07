@@ -2,7 +2,7 @@
 
 # TabCounter
 
-`open class TabCounter : `[`RelativeLayout`](https://developer.android.com/reference/android/widget/RelativeLayout.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/tabcounter/src/main/java/mozilla/components/ui/tabcounter/TabCounter.kt#L22)
+`open class TabCounter : `[`RelativeLayout`](https://developer.android.com/reference/android/widget/RelativeLayout.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/tabcounter/src/main/java/mozilla/components/ui/tabcounter/TabCounter.kt#L23)
 
 ### Constructors
 
@@ -30,6 +30,7 @@
 | Name | Summary |
 |---|---|
 | [forEach](../../mozilla.components.support.ktx.android.view/android.view.-view-group/for-each.md) | `fun `[`ViewGroup`](https://developer.android.com/reference/android/view/ViewGroup.html)`.forEach(action: (`[`View`](https://developer.android.com/reference/android/view/View.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Performs the given action on each View in this ViewGroup. |
+| [getRectWithViewLocation](../../mozilla.components.support.ktx.android.view/android.view.-view/get-rect-with-view-location.md) | `fun `[`View`](https://developer.android.com/reference/android/view/View.html)`.getRectWithViewLocation(): `[`Rect`](https://developer.android.com/reference/android/graphics/Rect.html)<br>Fills the given [Rect](https://developer.android.com/reference/android/graphics/Rect.html) with data about location view in the window. |
 | [hideKeyboard](../../mozilla.components.support.ktx.android.view/android.view.-view/hide-keyboard.md) | `fun `[`View`](https://developer.android.com/reference/android/view/View.html)`.hideKeyboard(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Hides the soft input window. |
 | [isGone](../../mozilla.components.support.ktx.android.view/android.view.-view/is-gone.md) | `fun `[`View`](https://developer.android.com/reference/android/view/View.html)`.isGone(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if this view's visibility is set to View.GONE. |
 | [isInvisible](../../mozilla.components.support.ktx.android.view/android.view.-view/is-invisible.md) | `fun `[`View`](https://developer.android.com/reference/android/view/View.html)`.isInvisible(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if this view's visibility is set to View.INVISIBLE. |

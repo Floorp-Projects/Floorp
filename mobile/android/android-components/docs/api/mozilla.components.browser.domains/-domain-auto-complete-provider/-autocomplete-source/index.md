@@ -2,7 +2,7 @@
 
 # AutocompleteSource
 
-`object AutocompleteSource` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/domains/src/main/java/mozilla/components/browser/domains/DomainAutoCompleteProvider.kt#L22)
+`object AutocompleteSource` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/domains/src/main/java/mozilla/components/browser/domains/DomainAutoCompleteProvider.kt#L26)
 
 ### Properties
 

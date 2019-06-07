@@ -14,5 +14,5 @@
 
 | Name | Summary |
 |---|---|
-| [SessionBundleStorage](../../../mozilla.components.feature.session.bundling/-session-bundle-storage/index.md) | `class SessionBundleStorage : `[`Storage`](./index.md)<br>A [Session](../../../mozilla.components.browser.session/-session/index.md) storage implementation that saves snapshots as a [SessionBundle](../../../mozilla.components.feature.session.bundling/-session-bundle/index.md). |
+| [SessionBundleStorage](../../../mozilla.components.feature.session.bundling/-session-bundle-storage/index.md) | `class ~~SessionBundleStorage~~ : `[`Storage`](./index.md)<br>A [Session](../../../mozilla.components.browser.session/-session/index.md) storage implementation that saves snapshots as a [SessionBundle](../../../mozilla.components.feature.session.bundling/-session-bundle/index.md). |
 | [SessionStorage](../../-session-storage/index.md) | `class SessionStorage : `[`Storage`](./index.md)<br>Session storage for persisting the state of a [SessionManager](../../../mozilla.components.browser.session/-session-manager/index.md) to disk (browser and engine session states). |

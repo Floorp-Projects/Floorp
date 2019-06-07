@@ -11,3 +11,10 @@
 | [GeckoEngineSessionState](-gecko-engine-session-state/index.md) | `class GeckoEngineSessionState : `[`EngineSessionState`](../mozilla.components.concept.engine/-engine-session-state/index.md) |
 | [GeckoEngineView](-gecko-engine-view/index.md) | `class GeckoEngineView : `[`FrameLayout`](https://developer.android.com/reference/android/widget/FrameLayout.html)`, `[`EngineView`](../mozilla.components.concept.engine/-engine-view/index.md)<br>Gecko-based EngineView implementation. |
 | [NestedGeckoView](-nested-gecko-view/index.md) | `open class NestedGeckoView : `[`GeckoView`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoView.html)`, NestedScrollingChild`<br>geckoView that supports nested scrolls (for using in a CoordinatorLayout). |
+
+### Extensions for External Classes
+
+| Name | Summary |
+|---|---|
+| [kotlinx.coroutines.CoroutineScope](kotlinx.coroutines.-coroutine-scope/index.md) |  |
+| [org.mozilla.geckoview.GeckoResult](org.mozilla.geckoview.-gecko-result/index.md) |  |

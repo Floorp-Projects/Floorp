@@ -2,7 +2,7 @@
 
 # FirefoxAccountsAuthFeature
 
-`class FirefoxAccountsAuthFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FirefoxAccountsAuthFeature.kt#L22)
+`class FirefoxAccountsAuthFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FirefoxAccountsAuthFeature.kt#L21)
 
 Ties together an account manager with a session manager/tabs implementation, facilitating an
 authentication flow.

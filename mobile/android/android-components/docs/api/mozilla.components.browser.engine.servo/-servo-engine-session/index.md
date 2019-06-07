@@ -22,7 +22,6 @@ Servo-based EngineSession implementation.
 
 | Name | Summary |
 |---|---|
-| [clearData](clear-data.md) | `fun clearData(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears all user data sources available. |
 | [clearFindMatches](clear-find-matches.md) | `fun clearFindMatches(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears the highlighted results of previous calls to [findAll](../../mozilla.components.concept.engine/-engine-session/find-all.md) / [findNext](../../mozilla.components.concept.engine/-engine-session/find-next.md). |
 | [disableTrackingProtection](disable-tracking-protection.md) | `fun disableTrackingProtection(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Disables tracking protection for this engine session. |
 | [enableTrackingProtection](enable-tracking-protection.md) | `fun enableTrackingProtection(policy: `[`TrackingProtectionPolicy`](../../mozilla.components.concept.engine/-engine-session/-tracking-protection-policy/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Enables tracking protection for this engine session. |
@@ -44,4 +43,5 @@ Servo-based EngineSession implementation.
 
 | Name | Summary |
 |---|---|
+| [clearData](../../mozilla.components.concept.engine/-engine-session/clear-data.md) | `open fun clearData(data: `[`BrowsingData`](../../mozilla.components.concept.engine/-engine/-browsing-data/index.md)` = Engine.BrowsingData.all(), host: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, onSuccess: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }, onError: (`[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears browsing data stored by the engine. |
 | [close](../../mozilla.components.concept.engine/-engine-session/close.md) | `open fun close(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Close the session. This may free underlying objects. Call this when you are finished using this session. |

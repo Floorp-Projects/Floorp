@@ -2,7 +2,7 @@
 
 # AccountObserver
 
-`interface AccountObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L74)
+`interface AccountObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L84)
 
 Observer interface which lets its users monitor account state changes and major events.
 
@@ -11,6 +11,7 @@ Observer interface which lets its users monitor account state changes and major 
 | Name | Summary |
 |---|---|
 | [onAuthenticated](on-authenticated.md) | `abstract fun onAuthenticated(account: `[`OAuthAccount`](../-o-auth-account/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Account was successfully authenticated. |
+| [onAuthenticationProblems](on-authentication-problems.md) | `abstract fun onAuthenticationProblems(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Account needs to be re-authenticated (e.g. due to a password change). |
 | [onError](on-error.md) | `abstract fun onError(error: `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Account manager encountered an error. Inspect [error](on-error.md#mozilla.components.concept.sync.AccountObserver$onError(java.lang.Exception)/error) for details. |
 | [onLoggedOut](on-logged-out.md) | `abstract fun onLoggedOut(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Account just got logged out. |
 | [onProfileUpdated](on-profile-updated.md) | `abstract fun onProfileUpdated(profile: `[`Profile`](../-profile/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Account's profile is now available. |

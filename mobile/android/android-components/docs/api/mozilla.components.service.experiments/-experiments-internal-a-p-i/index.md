@@ -2,7 +2,7 @@
 
 # ExperimentsInternalAPI
 
-`open class ExperimentsInternalAPI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L18)
+`open class ExperimentsInternalAPI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L17)
 
 Entry point of the library.
 

@@ -2,12 +2,13 @@
 
 # refreshDeviceStateAsync
 
-`fun refreshDeviceStateAsync(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L165)
+`fun refreshDeviceStateAsync(): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L186)
 
 Overrides [DeviceConstellation.refreshDeviceStateAsync](../../mozilla.components.concept.sync/-device-constellation/refresh-device-state-async.md)
 
-Refreshes internal state of the device constellation.
+Refreshes [ConstellationState](../../mozilla.components.concept.sync/-constellation-state/index.md) and polls for device events.
 
 **Return**
-A [Deferred](#) that will be resolved once operation is complete.
+A [Deferred](#) that will be resolved with a success flag once operation is complete. Failure may
+indicate a partial success.
 

@@ -38,6 +38,7 @@ satisfy [BrowserMenuItem.getLayoutResource](../../mozilla.components.browser.men
 | Name | Summary |
 |---|---|
 | [getLayoutResource](../../mozilla.components.browser.menu/-browser-menu-item/get-layout-resource.md) | `abstract fun getLayoutResource(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Returns the layout resource ID of the layout to be inflated for showing a menu item of this type. |
+| [invalidate](../../mozilla.components.browser.menu/-browser-menu-item/invalidate.md) | `open fun invalidate(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to update the displayed data of this item using the passed view. |
 
 ### Inheritors
 

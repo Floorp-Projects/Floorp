@@ -16,6 +16,8 @@ No-op implementation of [EngineSessionState](../../mozilla.components.concept.en
 
 | Name | Summary |
 |---|---|
+| [equals](equals.md) | `fun equals(other: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+| [hashCode](hash-code.md) | `fun hashCode(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [toJSON](to-j-s-o-n.md) | `fun toJSON(): `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)<br>Create a JSON representation of this state that can be saved to disk. |
 
 ### Companion Object Functions

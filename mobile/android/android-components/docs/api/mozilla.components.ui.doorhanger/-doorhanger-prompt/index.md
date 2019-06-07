@@ -2,7 +2,8 @@
 
 # DoorhangerPrompt
 
-`class DoorhangerPrompt` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L31)
+`class ~~DoorhangerPrompt~~` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L34)
+**Deprecated:** The ui-doorhanger component is getting removed.
 
 Builder for creating a prompt [Doorhanger](../-doorhanger/index.md) providing a way to present decisions to users.
 

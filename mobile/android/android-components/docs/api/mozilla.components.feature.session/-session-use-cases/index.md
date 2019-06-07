@@ -2,7 +2,7 @@
 
 # SessionUseCases
 
-`class SessionUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L18)
+`class SessionUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L19)
 
 Contains use cases related to the session feature.
 

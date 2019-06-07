@@ -2,7 +2,7 @@
 
 # DeviceConstellationObserver
 
-`interface DeviceConstellationObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L123)
+`interface DeviceConstellationObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L129)
 
 Allows monitoring constellation state.
 

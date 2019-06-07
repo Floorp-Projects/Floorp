@@ -2,7 +2,7 @@
 
 # TwoStateButton
 
-`class TwoStateButton : `[`Button`](../-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuItemToolbar.kt#L101)
+`class TwoStateButton : `[`Button`](../-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuItemToolbar.kt#L108)
 
 A button that either shows an primary state or an secondary state based on the provided
 isInPrimaryState lambda.
@@ -31,7 +31,7 @@ isInPrimaryState lambda.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `TwoStateButton(primaryImageResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, primaryContentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, primaryImageTintResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, secondaryImageResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = primaryImageResource, secondaryContentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = primaryContentDescription, secondaryImageTintResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = primaryImageTintResource, isInPrimaryState: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { true }, disableInSecondaryState: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>A button that either shows an primary state or an secondary state based on the provided isInPrimaryState lambda. |
+| [&lt;init&gt;](-init-.md) | `TwoStateButton(primaryImageResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, primaryContentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, primaryImageTintResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = NO_ID, secondaryImageResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = primaryImageResource, secondaryContentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = primaryContentDescription, secondaryImageTintResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = primaryImageTintResource, isInPrimaryState: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { true }, disableInSecondaryState: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>A button that either shows an primary state or an secondary state based on the provided isInPrimaryState lambda. |
 
 ### Properties
 
@@ -53,4 +53,5 @@ isInPrimaryState lambda.
 | [contentDescription](../-button/content-description.md) | `val contentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The button's content description, used for accessibility support. |
 | [iconTintColorResource](../-button/icon-tint-color-resource.md) | `val iconTintColorResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Optional ID of color resource to tint the icon. |
 | [imageResource](../-button/image-resource.md) | `val imageResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>ID of a drawable resource to be shown as icon. |
+| [isEnabled](../-button/is-enabled.md) | `val isEnabled: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Lambda to return true/false to indicate if this button should be enabled or disabled. |
 | [listener](../-button/listener.md) | `val listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Callback to be invoked when the button is pressed. |

@@ -2,15 +2,16 @@
 
 # register
 
-`fun register(observer: `[`T`](index.md#T)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt#L24)
+`@Synchronized fun register(observer: `[`T`](index.md#T)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt#L40)
 
 Overrides [Observable.register](../-observable/register.md)
 
-Registers an observer to get notified about changes.
+Registers an observer to get notified about changes. Does nothing if [observer](register.md#mozilla.components.support.base.observer.ObserverRegistry$register(mozilla.components.support.base.observer.ObserverRegistry.T)/observer) is already registered.
+This method is thread-safe.
 
 ### Parameters
 
-`observer` - the observer to register.`fun register(observer: `[`T`](index.md#T)`, owner: LifecycleOwner, autoPause: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt#L30)
+`observer` - the observer to register.`@Synchronized fun register(observer: `[`T`](index.md#T)`, owner: LifecycleOwner, autoPause: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt#L45)
 
 Overrides [Observable.register](../-observable/register.md)
 
@@ -26,7 +27,7 @@ becomes DESTROYED.
 `owner` - the lifecycle owner the provided observer is bound to.
 
 `autoPause` - whether or not the observer should automatically be
-paused/resumed with the bound lifecycle.`fun register(observer: `[`T`](index.md#T)`, view: `[`View`](https://developer.android.com/reference/android/view/View.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt#L48)
+paused/resumed with the bound lifecycle.`@Synchronized fun register(observer: `[`T`](index.md#T)`, view: `[`View`](https://developer.android.com/reference/android/view/View.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt#L65)
 
 Overrides [Observable.register](../-observable/register.md)
 

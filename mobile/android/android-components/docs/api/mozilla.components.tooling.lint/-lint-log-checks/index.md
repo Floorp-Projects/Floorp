@@ -17,7 +17,7 @@ Custom lint checks related to logging.
 | Name | Summary |
 |---|---|
 | [getApplicableMethodNames](get-applicable-method-names.md) | `fun getApplicableMethodNames(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>` |
-| [visitMethod](visit-method.md) | `fun visitMethod(context: <ERROR CLASS>, node: <ERROR CLASS>, method: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [visitMethodCall](visit-method-call.md) | `fun visitMethodCall(context: <ERROR CLASS>, node: <ERROR CLASS>, method: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Companion Object Properties
 

@@ -2,7 +2,8 @@
 
 # load
 
-`@Synchronized suspend fun load(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): Deferred<`[`SearchEngineList`](../../mozilla.components.browser.search.provider/-search-engine-list/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/SearchEngineManager.kt#L45)
+`@Synchronized suspend fun ~~load~~(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): Deferred<`[`SearchEngineList`](../../mozilla.components.browser.search.provider/-search-engine-list/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/SearchEngineManager.kt#L60)
+**Deprecated:** Use `loadAsync` instead
 
-Asynchronously load search engines from providers. Inherits caller's [CoroutineScope.coroutineContext](#).
+Asynchronously load search engines from providers. Inherits caller's [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html).
 

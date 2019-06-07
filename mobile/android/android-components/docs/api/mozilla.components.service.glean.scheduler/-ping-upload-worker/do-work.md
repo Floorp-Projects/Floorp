@@ -2,7 +2,7 @@
 
 # doWork
 
-`fun doWork(): Result` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/scheduler/PingUploadWorker.kt#L83)
+`fun doWork(): Result` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/scheduler/PingUploadWorker.kt#L86)
 
 This method is called on a background thread - you are required to **synchronously** do your
 work and return the [androidx.work.ListenableWorker.Result](#) from this method.  Once you
