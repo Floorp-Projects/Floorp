@@ -193,7 +193,7 @@ impl FrameStamp {
         FrameStamp {
             id: FrameId::first(),
             time: SystemTime::now(),
-            document_id: document_id,
+            document_id,
         }
     }
 
@@ -1816,7 +1816,7 @@ impl RenderBackend {
                 .expect(&format!("Unable to open {}.ron", data_stores_name));
 
             let doc = Document {
-                id: id,
+                id,
                 scene: scene.clone(),
                 removed_pipelines: Vec::new(),
                 view: view.clone(),

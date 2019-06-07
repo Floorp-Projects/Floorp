@@ -1247,7 +1247,7 @@ impl DisplayListBuilder {
     ) {
         let item = di::DisplayItem::Text(di::TextDisplayItem {
             common: *common,
-            bounds: bounds,
+            bounds,
             color,
             font_key,
             glyph_options,
