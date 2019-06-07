@@ -2527,6 +2527,13 @@ VARCACHE_PREF(
 
 VARCACHE_PREF(
   Live,
+  "gfx.canvas.remote",
+  CanvasRemote,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
   "gfx.color_management.enablev4",
   CMSEnableV4,
   RelaxedAtomicBool, false

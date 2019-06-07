@@ -844,6 +844,7 @@ pref("gfx.font_ahem_antialias_none", false);
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
 pref("gfx.canvas.azure.backends", "direct2d1.1,skia,cairo");
 pref("gfx.content.azure.backends", "direct2d1.1,skia,cairo");
+pref("gfx.canvas.remote", false);
 #else
 #ifdef XP_MACOSX
 pref("gfx.content.azure.backends", "skia");
