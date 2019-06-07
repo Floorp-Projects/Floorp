@@ -44,7 +44,6 @@
 #include "jit/IonTypes.h"
 #include "js/AllocPolicy.h"
 #include "vm/MutexIDs.h"
-#include "vm/PosixNSPR.h"
 #include "wasm/WasmSignalHandlers.h"
 
 namespace vixl {

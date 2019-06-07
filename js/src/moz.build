@@ -362,11 +362,6 @@ SOURCES += [
     'vm/ProfilingStack.cpp',
 ]
 
-if CONFIG['JS_POSIX_NSPR']:
-    UNIFIED_SOURCES += [
-        'vm/PosixNSPR.cpp',
-    ]
-
 if CONFIG['MOZ_INSTRUMENTS']:
     SOURCES += [
         'devtools/Instruments.cpp',
