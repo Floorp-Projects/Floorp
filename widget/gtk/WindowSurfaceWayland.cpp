@@ -420,6 +420,9 @@ WindowBackBufferDMABuf::WindowBackBufferDMABuf(
     nsWaylandDisplay* aWaylandDisplay, int aWidth, int aHeight)
     : WindowBackBuffer(aWaylandDisplay) {
   mDMAbufSurface.Create(aWidth, aHeight);
+
+  LOGWAYLAND(("%s [%p] Created DMABuf buffer [%d x %d]\n", __PRETTY_FUNCTION__,
+              (void*)this, aWidth, aHeight));
 }
 
 WindowBackBufferDMABuf::~WindowBackBufferDMABuf() { mDMAbufSurface.Release(); }
@@ -533,8 +536,8 @@ bool WindowSurfaceWayland::UseDMABufBackend() {
   if (!mUseDMABufInitialized) {
 #ifdef HAVE_LIBDRM
     if (WaylandDMABufSurface::IsAvailable()) {
-      mUseDMABuf =
-          Preferences::GetBool("gfx.wayland_dmabuf_backend.enabled", false);
+      mUseDMABuf = nsWaylandDisplay::IsDMABufEnabled();
+      LOGWAYLAND(("%s DMABuf state %d\n", __PRETTY_FUNCTION__, mUseDMABuf));
     }
 #endif
     mUseDMABufInitialized = true;
