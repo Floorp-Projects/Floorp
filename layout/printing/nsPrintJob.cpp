@@ -6,12 +6,14 @@
 
 #include "nsPrintJob.h"
 
+#include "nsDocShell.h"
 #include "nsIStringBundle.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -449,6 +451,40 @@ static void MapContentToWebShells(const UniquePtr<nsPrintObject>& aRootPO,
 }
 
 /**
+ * Recursively builds the static clone document tree.
+ * XXXjwatt - uh, CreateStaticClone already takes care of recursively creating
+ * subdocs (in-process, at least).  nsPrintObject::Init creating a static clone
+ * for subdocs is...broken, surely.
+ * The outparam aDocList returns a (depth first) flat list of all the
+ * nsPrintObjects created.
+ */
+static void BuildDocTree(BrowsingContext* aBrowsingContext,
+                         const UniquePtr<nsPrintObject>& aPO,
+                         nsTArray<nsPrintObject*>* aDocList) {
+  MOZ_ASSERT(aBrowsingContext, "Pointer is null!");
+  MOZ_ASSERT(aDocList, "Pointer is null!");
+  MOZ_ASSERT(aPO, "Pointer is null!");
+
+  for (auto& childBC : aBrowsingContext->GetChildren()) {
+    auto window = childBC->GetDOMWindow();
+    if (!window) {
+      // XXXfission - handle OOP-iframes
+      continue;
+    }
+    auto childPO = MakeUnique<nsPrintObject>();
+    childPO->mParent = aPO.get();
+    nsresult rv = childPO->Init(childBC->GetDocShell(), window->GetExtantDoc(),
+                                aPO->mPrintPreview);
+    if (NS_FAILED(rv)) {
+      MOZ_ASSERT_UNREACHABLE("Init failed?");
+    }
+    aPO->mKids.AppendElement(std::move(childPO));
+    aDocList->AppendElement(aPO->mKids.LastElement().get());
+    BuildDocTree(childBC, aPO->mKids.LastElement(), aDocList);
+  }
+}
+
+/**
  * On platforms that support it, sets the printer name stored in the
  * nsIPrintSettings to the default printer if a printer name is not already
  * set.
@@ -815,9 +851,10 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     printData->mPrintObject->mFrameType =
         printData->mIsParentAFrameSet ? eFrameSet : eDoc;
 
-    // Build the "tree" of PrintObjects
-    BuildDocTree(printData->mPrintObject->mDocShell, &printData->mPrintDocList,
-                 printData->mPrintObject);
+    // Builds the static clone doc tree and the "tree" of PrintObjects
+    BuildDocTree(nsDocShell::Cast(printData->mPrintObject->mDocShell)
+                     ->GetBrowsingContext(),
+                 printData->mPrintObject, &printData->mPrintDocList);
   }
 
   // The nsAutoScriptBlocker above will now have been destroyed, which may
@@ -1239,40 +1276,6 @@ bool nsPrintJob::IsThereARangeSelection(nsPIDOMWindowOuter* aDOMWin) {
 
   // check to make sure it isn't an insertion selection
   return selection->GetRangeAt(0) && !selection->IsCollapsed();
-}
-
-//---------------------------------------------------------------------
-// Recursively build a list of sub documents to be printed
-// that mirrors the document tree
-void nsPrintJob::BuildDocTree(nsIDocShell* aParentNode,
-                              nsTArray<nsPrintObject*>* aDocList,
-                              const UniquePtr<nsPrintObject>& aPO) {
-  NS_ASSERTION(aParentNode, "Pointer is null!");
-  NS_ASSERTION(aDocList, "Pointer is null!");
-  NS_ASSERTION(aPO, "Pointer is null!");
-
-  int32_t childWebshellCount;
-  aParentNode->GetChildCount(&childWebshellCount);
-  if (childWebshellCount > 0) {
-    for (int32_t i = 0; i < childWebshellCount; i++) {
-      nsCOMPtr<nsIDocShellTreeItem> child;
-      aParentNode->GetChildAt(i, getter_AddRefs(child));
-      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-
-      nsCOMPtr<nsIContentViewer> viewer;
-      childAsShell->GetContentViewer(getter_AddRefs(viewer));
-      if (viewer) {
-        nsCOMPtr<Document> doc = do_GetInterface(childAsShell);
-        auto po = MakeUnique<nsPrintObject>();
-        po->mParent = aPO.get();
-        nsresult rv = po->Init(childAsShell, doc, aPO->mPrintPreview);
-        if (NS_FAILED(rv)) MOZ_ASSERT_UNREACHABLE("Init failed?");
-        aPO->mKids.AppendElement(std::move(po));
-        aDocList->AppendElement(aPO->mKids.LastElement().get());
-        BuildDocTree(childAsShell, aDocList, aPO->mKids.LastElement());
-      }
-    }
-  }
 }
 
 //---------------------------------------------------------------------
@@ -2704,32 +2707,21 @@ already_AddRefed<nsPIDOMWindowOuter> nsPrintJob::FindFocusedDOMWindow() const {
 
 //---------------------------------------------------------------------
 bool nsPrintJob::IsWindowsInOurSubTree(nsPIDOMWindowOuter* window) const {
-  bool found = false;
-
-  // now check to make sure it is in "our" tree of docshells
   if (window) {
-    nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
-
-    if (docShell) {
-      // get this DocViewer docshell
-      nsCOMPtr<nsIDocShell> thisDVDocShell(do_QueryReferent(mDocShell));
-      while (!found) {
-        if (docShell) {
-          if (docShell == thisDVDocShell) {
-            found = true;
-            break;
-          }
-        } else {
-          break;  // at top of tree
+    nsCOMPtr<nsIDocShell> ourDocShell(do_QueryReferent(mDocShell));
+    if (ourDocShell) {
+      BrowsingContext* ourBC =
+          nsDocShell::Cast(ourDocShell)->GetBrowsingContext();
+      BrowsingContext* bc = window->GetBrowsingContext();
+      while (bc) {
+        if (bc == ourBC) {
+          return true;
         }
-        nsCOMPtr<nsIDocShellTreeItem> docShellItemParent;
-        docShell->GetSameTypeParent(getter_AddRefs(docShellItemParent));
-        docShell = do_QueryInterface(docShellItemParent);
-      }  // while
+        bc = bc->GetParent();
+      }
     }
-  }  // scriptobj
-
-  return found;
+  }
+  return false;
 }
 
 //-------------------------------------------------------
