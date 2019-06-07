@@ -378,6 +378,10 @@ description#identity-popup-content-verifier,
   border-top: 1px solid var(--panel-separator-color);
 }
 
+#identity-popup-breakageReportView-collection-url {
+  font: inherit;
+}
+
 #identity-popup-breakageReportView-collection-comments {
   height: 120px;
 }

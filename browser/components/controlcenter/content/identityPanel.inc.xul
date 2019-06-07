@@ -331,7 +331,7 @@
         <vbox id="identity-popup-breakageReportView-body" class="panel-view-body-unscrollable">
           <vbox class="identity-popup-breakageReportView-collection-section">
             <label>&contentBlocking.breakageReportView.collection.url.label;</label>
-            <textbox readonly="true" id="identity-popup-breakageReportView-collection-url"/>
+            <html:input readonly="readonly" id="identity-popup-breakageReportView-collection-url"/>
           </vbox>
           <vbox class="identity-popup-breakageReportView-collection-section">
             <label>&contentBlocking.breakageReportView.collection.comments.label;</label>
