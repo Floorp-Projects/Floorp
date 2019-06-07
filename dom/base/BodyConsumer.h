@@ -38,6 +38,26 @@ class BodyConsumer final : public nsIObserver,
     CONSUME_TEXT,
   };
 
+  /**
+   * Returns a promise which will be resolved when the body is completely
+   * consumed and converted to the wanted type (See ConsumeType).
+   *
+   * @param aGlobal the global to construct the Promise.
+   * @param aMainThreadEventTarget the main-thread event target. The reading
+   *          needs to start on the main-thread because of nsIInputStreamPump.
+   * @param aBodyStream the stream to read.
+   * @param aSignalImpl an AbortSignal object. Optional.
+   * @param aType the consume type.
+   * @param aBodyBlobURISpec this is used only if the consume type is
+   *          CONSUME_BLOB. Optional.
+   * @param aBodyLocalPath local path in case the blob is created from a local
+   *          file. Used only by CONSUME_BLOB. Optional.
+   * @param aBodyMimeType the mime-type for blob. Used only by CONSUME_BLOB.
+   *          Optional.
+   * @param aBlobStorageType Blobs can be saved in temporary file. This is the
+   *          type of blob storage to use. Used only by CONSUME_BLOB.
+   * @param aRv An ErrorResult.
+   */
   static already_AddRefed<Promise> Create(
       nsIGlobalObject* aGlobal, nsIEventTarget* aMainThreadEventTarget,
       nsIInputStream* aBodyStream, AbortSignalImpl* aSignalImpl,

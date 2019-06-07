@@ -8,6 +8,8 @@
 #include "File.h"
 #include "MemoryBlobImpl.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "MultipartBlobImpl.h"
 #include "nsIInputStream.h"
 #include "nsPIDOMWindow.h"
@@ -237,6 +239,45 @@ size_t BindingJSObjectMallocBytes(Blob* aBlob) {
   JS::AutoSuppressGCAnalysis nogc;
 
   return aBlob->GetAllocationSize();
+}
+
+already_AddRefed<Promise> Blob::Text(ErrorResult& aRv) {
+  return ConsumeBody(BodyConsumer::CONSUME_TEXT, aRv);
+}
+
+already_AddRefed<Promise> Blob::ArrayBuffer(ErrorResult& aRv) {
+  return ConsumeBody(BodyConsumer::CONSUME_ARRAYBUFFER, aRv);
+}
+
+already_AddRefed<Promise> Blob::ConsumeBody(
+    BodyConsumer::ConsumeType aConsumeType, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIEventTarget> mainThreadEventTarget;
+  if (!NS_IsMainThread()) {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+    mainThreadEventTarget = workerPrivate->MainThreadEventTarget();
+  } else {
+    mainThreadEventTarget = global->EventTargetFor(TaskCategory::Other);
+  }
+
+  MOZ_ASSERT(mainThreadEventTarget);
+
+  nsCOMPtr<nsIInputStream> inputStream;
+  CreateInputStream(getter_AddRefs(inputStream), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return BodyConsumer::Create(global, mainThreadEventTarget, inputStream,
+                              nullptr, aConsumeType, VoidCString(),
+                              VoidString(), VoidCString(),
+                              MutableBlobStorage::eOnlyInMemory, aRv);
 }
 
 }  // namespace dom
