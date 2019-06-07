@@ -558,7 +558,7 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
    * Should be called only once per TextureClient.
    * The TextureClient must not be locked when calling this method.
    */
-  bool InitIPDLActor(KnowsCompositor* aForwarder);
+  bool InitIPDLActor(KnowsCompositor* aKnowsCompositor);
 
   /**
    * Return a pointer to the IPDLActor.

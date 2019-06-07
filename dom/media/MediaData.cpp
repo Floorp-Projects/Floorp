@@ -416,7 +416,7 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
   }
 
   RefPtr<layers::TextureClient> texture =
-      videoImage->GetTextureClient(/* aForwarder */ nullptr);
+      videoImage->GetTextureClient(/* aKnowsCompositor */ nullptr);
   if (!texture) {
     NS_WARNING("Failed to allocate TextureClient");
     return nullptr;

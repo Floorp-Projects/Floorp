@@ -824,7 +824,7 @@ impl TileCache {
                 &frame_state.retained_tiles.ref_prims,
                 &new_prim_map,
             )
-        }.unwrap_or(WorldVector2D::zero());
+        }.unwrap_or_else(WorldVector2D::zero);
 
         // Assume no tiles are valid to draw by default
         self.tiles_to_draw.clear();
@@ -1183,7 +1183,7 @@ impl TileCache {
         let mut world_clip_rect = world_rect;
         let mut culling_rect = prim_rect
             .intersection(&prim_instance.local_clip_rect)
-            .unwrap_or(LayoutRect::zero());
+            .unwrap_or_else(LayoutRect::zero);
 
         // To maintain the previous logic, consider every clip in the current active
         // clip stack that could affect this primitive.
@@ -1232,12 +1232,12 @@ impl TileCache {
                                         // number of primitives that affect this tile.
                                         world_clip_rect = world_clip_rect
                                             .intersection(&clip_world_rect)
-                                            .unwrap_or(WorldRect::zero());
+                                            .unwrap_or_else(WorldRect::zero);
 
                                         // If the clip rect is in the same spatial node, it can be handled by the
                                         // local clip rect.
                                         if clip_chain_node.spatial_node_index == prim_instance.spatial_node_index {
-                                            culling_rect = culling_rect.intersection(&local_clip_rect).unwrap_or(LayoutRect::zero());
+                                            culling_rect = culling_rect.intersection(&local_clip_rect).unwrap_or_else(LayoutRect::zero);
 
                                             false
                                         } else if !clip_scroll_tree.is_same_or_child_of(
@@ -1330,7 +1330,7 @@ impl TileCache {
                     .map(|rect| {
                         rect.translate(&-tile.world_rect.origin.to_vector())
                     })
-                    .unwrap_or(WorldRect::zero())
+                    .unwrap_or_else(WorldRect::zero)
                     .round();
 
                 // Work out the needed rect for the primitive on this tile.
@@ -1557,7 +1557,7 @@ impl TileCache {
                     tile.valid_rect = visible_rect
                         .intersection(&self.world_bounding_rect)
                         .map(|rect| rect.translate(&-tile.world_rect.origin.to_vector()))
-                        .unwrap_or(WorldRect::zero());
+                        .unwrap_or_else(WorldRect::zero);
 
                     // Store a blit operation to be done after drawing the
                     // frame in order to update the cached texture tile.
@@ -1829,7 +1829,7 @@ impl SurfaceInfo {
 
         let pic_bounds = map_surface_to_world
             .unmap(&map_surface_to_world.bounds)
-            .unwrap_or(PictureRect::max_rect());
+            .unwrap_or_else(PictureRect::max_rect);
 
         let map_local_to_surface = SpaceMapper::new(
             surface_spatial_node_index,
@@ -2107,7 +2107,7 @@ impl PrimitiveList {
                 );
                 let culling_rect = prim_instance.local_clip_rect
                     .intersection(&prim_rect)
-                    .unwrap_or(LayoutRect::zero());
+                    .unwrap_or_else(LayoutRect::zero);
 
                 cluster.bounding_rect = cluster.bounding_rect.union(&culling_rect);
             }
@@ -2408,7 +2408,7 @@ impl PicturePrimitive {
         );
 
         let pic_bounds = map_pic_to_world.unmap(&map_pic_to_world.bounds)
-                                         .unwrap_or(PictureRect::max_rect());
+                                         .unwrap_or_else(PictureRect::max_rect);
 
         let map_local_to_pic = SpaceMapper::new(
             surface_spatial_node_index,
@@ -3353,7 +3353,7 @@ fn create_raster_mappers(
     );
 
     let raster_bounds = map_raster_to_world.unmap(&world_rect)
-                                           .unwrap_or(RasterRect::max_rect());
+                                           .unwrap_or_else(RasterRect::max_rect);
 
     let map_pic_to_raster = SpaceMapper::new_with_target(
         raster_spatial_node_index,

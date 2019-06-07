@@ -350,6 +350,9 @@ inline bool StyleComputedUrl::HasRef() const {
   return false;
 }
 
+template <>
+bool StyleGradient::IsOpaque() const;
+
 }  // namespace mozilla
 
 #endif

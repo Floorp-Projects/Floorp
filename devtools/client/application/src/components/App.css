@@ -22,11 +22,11 @@ a:visited {
   cursor: pointer;
 }
 
-a.disabled,
-a.disabled:hover,
-a.disabled:visited {
+a.disabled-link,
+a.disabled-link:hover,
+a.disabled-link:visited {
   opacity: 0.5 !important;
-  cursor: default;
+  cursor: not-allowed;
 }
 
 /*

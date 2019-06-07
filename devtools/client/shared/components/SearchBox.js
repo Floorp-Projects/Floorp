@@ -32,6 +32,8 @@ class SearchBox extends PureComponent {
       onFocus: PropTypes.func,
       onKeyDown: PropTypes.func,
       placeholder: PropTypes.string.isRequired,
+      summary: PropTypes.string,
+      summaryTooltip: PropTypes.string,
       type: PropTypes.string,
     };
   }
@@ -169,6 +171,8 @@ class SearchBox extends PureComponent {
   render() {
     const {
       autocompleteProvider,
+      summary,
+      summaryTooltip,
       learnMoreTitle,
       learnMoreUrl,
       placeholder,
@@ -197,6 +201,12 @@ class SearchBox extends PureComponent {
         title: learnMoreTitle,
         url: learnMoreUrl,
       }),
+      summary ?
+        dom.span({
+          className: "devtools-searchinput-summary",
+          title: summaryTooltip || "",
+        }, summary)
+        : null,
       dom.button({
         className: "devtools-searchinput-clear",
         hidden: value === "",

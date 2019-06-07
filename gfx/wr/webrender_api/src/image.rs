@@ -424,7 +424,7 @@ where
         match (*self, *other) {
             (All, rect) | (rect, All)  => rect,
             (Partial(rect1), Partial(rect2)) => Partial(rect1.intersection(&rect2)
-                                                                   .unwrap_or(TypedRect::zero()))
+                                                                   .unwrap_or_else(TypedRect::zero))
         }
     }
 
@@ -435,7 +435,7 @@ where
         match *self {
             All              => *rect,
             Partial(dirty_rect) => dirty_rect.intersection(rect)
-                                               .unwrap_or(TypedRect::zero()),
+                                               .unwrap_or_else(TypedRect::zero),
         }
     }
 }

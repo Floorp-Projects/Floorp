@@ -68,8 +68,8 @@ class GPUVideoImage final : public Image {
     return data->GetAsSourceSurface();
   }
 
-  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override {
-    MOZ_ASSERT(aForwarder == ImageBridgeChild::GetSingleton(),
+  TextureClient* GetTextureClient(KnowsCompositor* aKnowsCompositor) override {
+    MOZ_ASSERT(aKnowsCompositor == ImageBridgeChild::GetSingleton(),
                "Must only use GPUVideo on ImageBridge");
     return mTextureClient;
   }

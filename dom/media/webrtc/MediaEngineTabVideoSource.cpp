@@ -346,7 +346,7 @@ void MediaEngineTabVideoSource::Draw() {
   }
 
   RefPtr<layers::TextureClient> texture =
-      rgbImage->GetTextureClient(/* aForwarder */ nullptr);
+      rgbImage->GetTextureClient(/* aKnowsCompositor */ nullptr);
   if (!texture) {
     NS_WARNING("Failed to allocate TextureClient");
     return;

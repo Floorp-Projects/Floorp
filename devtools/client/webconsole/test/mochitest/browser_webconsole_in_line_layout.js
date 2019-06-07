@@ -69,22 +69,18 @@ async function performTests() {
 
   const filterBarHeight = filterBarNode.clientHeight;
 
-  info("Show the hidden messages label");
-  const onHiddenMessagesLabelVisible = waitFor(() =>
-    document.querySelector(".webconsole-filterbar-filtered-messages"));
-  setFilterState(hud, {text: "message-"});
-  await onHiddenMessagesLabelVisible;
-
-  info("Shrink the window so the label is on its own line");
+  info("Shrink the window so the filter buttons are put in a new line");
   const toolbox = hud.ui.wrapper.toolbox;
   const hostWindow = toolbox.win.parent;
   hostWindow.resizeTo(300, window.screen.availHeight);
+  await waitFor(() => document.querySelector(".webconsole-filteringbar-wrapper.narrow"));
 
   ok(filterBarNode.clientHeight > filterBarHeight, "The filter bar is taller");
   testLayout(appNode);
 
-  info("Expand the window so hidden label isn't on its own line anymore");
+  info("Expand the window so filter buttons aren't on their own line anymore");
   hostWindow.resizeTo(window.screen.availWidth, window.screen.availHeight);
+  await waitFor(() => document.querySelector(".webconsole-filteringbar-wrapper.wide"));
   testLayout(appNode);
 
   setInputValue(hud, "");

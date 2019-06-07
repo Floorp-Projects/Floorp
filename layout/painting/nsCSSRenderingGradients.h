@@ -42,7 +42,7 @@ class nsCSSGradientRenderer final {
    */
   static nsCSSGradientRenderer Create(nsPresContext* aPresContext,
                                       ComputedStyle* aComputedStyle,
-                                      nsStyleGradient* aGradient,
+                                      const StyleGradient& aGradient,
                                       const nsSize& aIntrinsiceSize);
 
   /**
@@ -105,7 +105,7 @@ class nsCSSGradientRenderer final {
       const nsSize& aRepeatSize, bool aForceRepeatToCoverTiles);
 
   nsPresContext* mPresContext;
-  nsStyleGradient* mGradient;
+  const StyleGradient* mGradient;
   nsTArray<ColorStop> mStops;
   gfxPoint mLineStart, mLineEnd;
   double mRadiusX, mRadiusY;

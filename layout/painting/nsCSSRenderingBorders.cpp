@@ -3639,10 +3639,9 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
       break;
     }
     case eStyleImageType_Gradient: {
-      RefPtr<nsStyleGradient> gradientData = mImageRenderer.GetGradientData();
+      const StyleGradient& gradient = *mImageRenderer.GetGradientData();
       nsCSSGradientRenderer renderer = nsCSSGradientRenderer::Create(
-          aForFrame->PresContext(), aForFrame->Style(), gradientData,
-          mImageSize);
+          aForFrame->PresContext(), aForFrame->Style(), gradient, mImageSize);
 
       wr::ExtendMode extendMode;
       nsTArray<wr::GradientStop> stops;
@@ -3652,7 +3651,7 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
       renderer.BuildWebRenderParameters(1.0, extendMode, stops, lineStart,
                                         lineEnd, gradientRadius);
 
-      if (gradientData->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+      if (gradient.kind.IsLinear()) {
         LayoutDevicePoint startPoint =
             LayoutDevicePoint(dest.origin.x, dest.origin.y) + lineStart;
         LayoutDevicePoint endPoint =

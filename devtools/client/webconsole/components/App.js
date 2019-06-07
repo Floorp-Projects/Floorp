@@ -10,6 +10,9 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
 
 const actions = require("devtools/client/webconsole/actions/index");
+const {
+  FILTERBAR_DISPLAY_MODES,
+} = require("devtools/client/webconsole/constants");
 const ConsoleOutput = createFactory(require("devtools/client/webconsole/components/ConsoleOutput"));
 const FilterBar = createFactory(require("devtools/client/webconsole/components/FilterBar"));
 const SideBar = createFactory(require("devtools/client/webconsole/components/SideBar"));
@@ -52,6 +55,9 @@ class App extends Component {
       reverseSearchInitialValue: PropTypes.string,
       editorMode: PropTypes.bool,
       hideShowContentMessagesCheckbox: PropTypes.bool,
+      sidebarVisible: PropTypes.bool.isRequired,
+      filterBarDisplayMode:
+        PropTypes.oneOf([...Object.values(FILTERBAR_DISPLAY_MODES)]).isRequired,
     };
   }
 
@@ -203,6 +209,8 @@ class App extends Component {
       autocomplete,
       reverseSearchInitialValue,
       editorMode,
+      filterBarDisplayMode,
+      sidebarVisible,
       hideShowContentMessagesCheckbox,
     } = this.props;
 
@@ -235,6 +243,7 @@ class App extends Component {
             hidePersistLogsCheckbox: webConsoleUI.isBrowserConsole,
             hideShowContentMessagesCheckbox,
             closeSplitConsole,
+            displayMode: filterBarDisplayMode,
           }),
           ConsoleOutput({
             serviceContainer,
@@ -262,6 +271,7 @@ class App extends Component {
         ),
         SideBar({
           serviceContainer,
+          visible: sidebarVisible,
         }),
         ConfirmDialog({
           webConsoleUI,
@@ -278,6 +288,8 @@ const mapStateToProps = state => ({
   reverseSearchInputVisible: state.ui.reverseSearchInputVisible,
   reverseSearchInitialValue: state.ui.reverseSearchInitialValue,
   editorMode: state.ui.editor,
+  sidebarVisible: state.ui.sidebarVisible,
+  filterBarDisplayMode: state.ui.filterBarDisplayMode,
 });
 
 const mapDispatchToProps = dispatch => ({

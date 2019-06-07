@@ -115,7 +115,8 @@ def docker_worker_run_task(config, job, taskdesc):
     if isinstance(run_command, (basestring, dict)):
         run_command = ['bash', '-cx', run_command]
     if run['comm-checkout']:
-        command.append('--comm-checkout={workdir}/checkouts/gecko/comm'.format(**run))
+        command.append('--comm-checkout={}/comm'.format(
+            taskdesc['worker']['env']['GECKO_PATH']))
     command.append('--fetch-hgfingerprint')
     if run['run-as-root']:
         command.extend(('--user', 'root', '--group', 'root'))
