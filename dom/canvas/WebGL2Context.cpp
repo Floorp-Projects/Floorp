@@ -50,7 +50,6 @@ static const gl::GLFeature kRequiredFeatures[] = {
     gl::GLFeature::copy_buffer,
     gl::GLFeature::depth_texture,
     gl::GLFeature::draw_instanced,
-    gl::GLFeature::draw_range_elements,
     gl::GLFeature::element_index_uint,
     gl::GLFeature::frag_color_float,
     gl::GLFeature::frag_depth,

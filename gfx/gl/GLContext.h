@@ -83,7 +83,6 @@ enum class GLFeature {
   depth_texture,
   draw_buffers,
   draw_instanced,
-  draw_range_elements,
   element_index_uint,
   ES2_compatibility,
   ES3_compatibility,
@@ -412,7 +411,6 @@ class GLContext : public GenericAtomicRefCounted,
     EXT_draw_buffers,
     EXT_draw_buffers2,
     EXT_draw_instanced,
-    EXT_draw_range_elements,
     EXT_float_blend,
     EXT_frag_depth,
     EXT_framebuffer_blit,
@@ -2454,26 +2452,6 @@ class GLContext : public GenericAtomicRefCounted,
     BEFORE_GL_CALL;
     ASSERT_SYMBOL_PRESENT(fDrawElementsInstanced);
     mSymbols.fDrawElementsInstanced(mode, count, type, indices, primcount);
-    AFTER_GL_CALL;
-  }
-
-  // -----------------------------------------------------------------------------
-  // Feature draw_range_elements
- public:
-  void fDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
-                          GLenum type, const GLvoid* indices) {
-    BeforeGLDrawCall();
-    raw_fDrawRangeElements(mode, start, end, count, type, indices);
-    AfterGLDrawCall();
-  }
-
- private:
-  void raw_fDrawRangeElements(GLenum mode, GLuint start, GLuint end,
-                              GLsizei count, GLenum type,
-                              const GLvoid* indices) {
-    BEFORE_GL_CALL;
-    ASSERT_SYMBOL_PRESENT(fDrawRangeElements);
-    mSymbols.fDrawRangeElements(mode, start, end, count, type, indices);
     AFTER_GL_CALL;
   }
 
