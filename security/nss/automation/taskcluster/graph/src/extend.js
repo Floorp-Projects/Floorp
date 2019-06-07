@@ -296,6 +296,10 @@ export default async function main() {
 
   await scheduleMac("Mac (opt)", {collection: "opt"}, "--opt");
   await scheduleMac("Mac (debug)", {collection: "debug"});
+
+  // Must be executed after all other tasks are scheduled
+  queue.clearFilters();
+  await scheduleCodeReview();
 }
 
 
@@ -460,7 +464,6 @@ async function scheduleLinux(name, overrides, args = "") {
     },
     symbol: "clang-4"
   }));
-
   queue.scheduleTask(merge(extra_base, {
     name: `${name} w/ gcc-4.4`,
     image: LINUX_GCC44_IMAGE,
@@ -1005,6 +1008,33 @@ async function scheduleTools() {
   }));
 
   queue.scheduleTask(merge(base, {
+    symbol: "coverity",
+    name: "coverity",
+    image: FUZZ_IMAGE,
+    tags: ['code-review'],
+    env: {
+      USE_64: "1",
+      CC: "clang",
+      CCC: "clang++",
+      NSS_AUTOMATION: "1"
+    },
+    features: ["taskclusterProxy"],
+    scopes: ["secrets:get:project/relman/coverity-nss"],
+    artifacts: {
+      "public/code-review/coverity.json": {
+        expires: 24 * 7,
+        type: "file",
+        path: "/home/worker/nss/coverity/coverity.json"
+      }
+    },
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_coverity.sh"
+    ]
+  }));
+
+  queue.scheduleTask(merge(base, {
     symbol: "hacl",
     name: "hacl",
     image: HACL_GEN_IMAGE,
@@ -1093,3 +1123,38 @@ async function scheduleTools() {
 
   return queue.submit();
 }
+
+async function scheduleCodeReview() {
+  let tasks = queue.taggedTasks("code-review");
+  if(! tasks) {
+    console.debug("No code review tasks, skipping ending task");
+    return
+  }
+
+  // From https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/ci/code-review/kind.yml
+  queue.scheduleTask({
+    platform: "nss-tools",
+    name: "code-review-issues",
+    description: "List all issues found in static analysis and linting tasks",
+
+    // No logic on that task
+    image: LINUX_IMAGE,
+    command: ["/bin/true"],
+
+    // This task must run after all analyzer tasks are completed
+    parents: tasks,
+
+    // This option permits to run the task
+    // regardless of the analyzers tasks exit status
+    // as we are interested in the task failures
+    requires: "all-resolved",
+
+    // Publish code review trigger on pulse
+    routes: ["project.relman.codereview.v1.try_ending"],
+
+    kind: "code-review",
+    symbol: "E"
+  });
+
+  return queue.submit();
+};
