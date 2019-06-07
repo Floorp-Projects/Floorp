@@ -99,7 +99,7 @@ class D3D9SurfaceImage : public Image {
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
-  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  TextureClient* GetTextureClient(KnowsCompositor* aKnowsCompositor) override;
 
   already_AddRefed<IDirect3DSurface9> GetD3D9Surface() const;
 

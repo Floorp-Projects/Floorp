@@ -59,7 +59,7 @@ class D3D11ShareHandleImage final : public Image {
 
   gfx::IntSize GetSize() const override;
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
-  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  TextureClient* GetTextureClient(KnowsCompositor* aKnowsCompositor) override;
   gfx::IntRect GetPictureRect() const override { return mPictureRect; }
 
   ID3D11Texture2D* GetTexture() const;

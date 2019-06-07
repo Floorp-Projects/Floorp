@@ -73,7 +73,7 @@ class D3D11YCbCrImage : public Image {
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
-  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  TextureClient* GetTextureClient(KnowsCompositor* aKnowsCompositor) override;
 
   gfx::IntRect GetPictureRect() const override { return mPictureRect; }
 
