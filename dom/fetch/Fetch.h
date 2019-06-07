@@ -87,9 +87,6 @@ nsresult ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
                                    nsCString& aContentType,
                                    uint64_t& aContentLength);
 
-template <class Derived>
-class FetchBodyConsumer;
-
 enum FetchConsumeType {
   CONSUME_ARRAYBUFFER,
   CONSUME_BLOB,
@@ -135,8 +132,6 @@ enum FetchConsumeType {
 template <class Derived>
 class FetchBody : public BodyStreamHolder, public AbortFollower {
  public:
-  friend class FetchBodyConsumer<Derived>;
-
   bool GetBodyUsed(ErrorResult& aRv) const;
 
   // For use in assertions. On success, returns true if the body is used, false
