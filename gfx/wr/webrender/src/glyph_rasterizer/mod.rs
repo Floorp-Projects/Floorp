@@ -238,7 +238,7 @@ impl FontInstance {
     ) -> Self {
         FontInstance {
             transform: FontTransform::identity(),
-            color: color.into(),
+            color,
             size: base.size,
             base,
             render_mode,
