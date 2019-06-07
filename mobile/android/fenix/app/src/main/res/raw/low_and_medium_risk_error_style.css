@@ -44,7 +44,7 @@ li > button {
 }
 
 /* Push the #ignoreWarningButton to the bottom on the blocked site page */
-.blockedsite > #errorPageContainer > #errorLongContent {
+#errorLongContent {
   flex: 1;
 }
 
@@ -67,6 +67,7 @@ p {
 button {
   /* Force buttons to display: block here to try and enforce collapsing margins */
   display: block;
+  flex: 0;
   height: 36px;
   width: 100%;
   border-radius: 5px;
@@ -77,11 +78,10 @@ button {
   line-height:16px;
   font-size: 14px;
   font-weight: bold;
-  position: fixed;
-  bottom: 20px;
   text-aligned:center;
   vertical-aligned:center;
   background-image: none;
+  margin-bottom: 20px;
 }
 
 button.inProgress {
@@ -117,10 +117,7 @@ button.inProgress {
    * This number should be kept in sync with the media query for tablets below */
   max-width: 550px;
   margin: 0 auto;
-  transform: translateY(var(--moz-background-height));
-  padding-bottom: var(--moz-vertical-spacing);
-
-  min-height: calc(100% - var(--moz-background-height) - var(--moz-vertical-spacing));
+  min-height: 100%;
   display: flex;
   flex-direction: column;
 }
