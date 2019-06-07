@@ -11,6 +11,8 @@ var EXPORTED_SYMBOLS = ["ContextMenuChild"];
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -22,7 +24,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   InlineSpellCheckerContent: "resource://gre/modules/InlineSpellCheckerContent.jsm",
-  ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "PageMenuChild", () => {
@@ -31,205 +32,204 @@ XPCOMUtils.defineLazyGetter(this, "PageMenuChild", () => {
   return new tmp.PageMenuChild();
 });
 
+const messageListeners = {
+  "ContextMenu:BookmarkFrame": function(aMessage) {
+    let frame = this.getTarget(aMessage).ownerDocument;
+
+    this.mm.sendAsyncMessage("ContextMenu:BookmarkFrame:Result",
+                             { title: frame.title });
+  },
+
+  "ContextMenu:Canvas:ToBlobURL": function(aMessage) {
+    this.getTarget(aMessage).toBlob((blob) => {
+      let blobURL = URL.createObjectURL(blob);
+      this.mm.sendAsyncMessage("ContextMenu:Canvas:ToBlobURL:Result", { blobURL });
+    });
+  },
+
+  "ContextMenu:DoCustomCommand": function(aMessage) {
+    E10SUtils.wrapHandlingUserInput(
+      this.content,
+      aMessage.data.handlingUserInput,
+      () => PageMenuChild.executeMenu(aMessage.data.generatedItemId)
+    );
+  },
+
+  "ContextMenu:Hiding": function() {
+    this.context = null;
+    this.target = null;
+  },
+
+  "ContextMenu:MediaCommand": function(aMessage) {
+    E10SUtils.wrapHandlingUserInput(
+      this.content, aMessage.data.handlingUserInput, () => {
+        let media = this.getTarget(aMessage, "element");
+
+        switch (aMessage.data.command) {
+          case "play":
+            media.play();
+            break;
+          case "pause":
+            media.pause();
+            break;
+          case "loop":
+            media.loop = !media.loop;
+            break;
+          case "mute":
+            media.muted = true;
+            break;
+          case "unmute":
+            media.muted = false;
+            break;
+          case "playbackRate":
+            media.playbackRate = aMessage.data.data;
+            break;
+          case "hidecontrols":
+            media.removeAttribute("controls");
+            break;
+          case "showcontrols":
+            media.setAttribute("controls", "true");
+            break;
+          case "fullscreen":
+            if (this.content.document.fullscreenEnabled) {
+              media.requestFullscreen();
+            }
+            break;
+          case "pictureinpicture":
+            let event = new this.content.CustomEvent("MozTogglePictureInPicture", {
+              bubbles: true,
+            }, this.content);
+            media.dispatchEvent(event);
+            break;
+        }
+      }
+    );
+  },
+
+  "ContextMenu:ReloadFrame": function(aMessage) {
+    let forceReload = aMessage.objects && aMessage.objects.forceReload;
+    this.getTarget(aMessage).ownerDocument.location.reload(forceReload);
+  },
+
+  "ContextMenu:ReloadImage": function(aMessage) {
+    let image = this.getTarget(aMessage);
+
+    if (image instanceof Ci.nsIImageLoadingContent) {
+      image.forceReload();
+    }
+  },
+
+  "ContextMenu:SearchFieldBookmarkData": function(aMessage) {
+    let node = this.getTarget(aMessage);
+    let charset = node.ownerDocument.characterSet;
+    let formBaseURI = Services.io.newURI(node.form.baseURI, charset);
+    let formURI = Services.io.newURI(node.form.getAttribute("action"),
+                                     charset, formBaseURI);
+    let spec = formURI.spec;
+    let isURLEncoded =  (node.form.method.toUpperCase() == "POST" &&
+                         (node.form.enctype == "application/x-www-form-urlencoded" ||
+                          node.form.enctype == ""));
+    let title = node.ownerDocument.title;
+
+    function escapeNameValuePair([aName, aValue]) {
+      if (isURLEncoded) {
+        return escape(aName + "=" + aValue);
+      }
+
+      return escape(aName) + "=" + escape(aValue);
+    }
+    let formData = new this.content.FormData(node.form);
+    formData.delete(node.name);
+    formData = Array.from(formData).map(escapeNameValuePair);
+    formData.push(escape(node.name) + (isURLEncoded ? escape("=%s") : "=%s"));
+
+    let postData;
+
+    if (isURLEncoded) {
+      postData = formData.join("&");
+    } else {
+      let separator = spec.includes("?") ? "&" : "?";
+      spec += separator + formData.join("&");
+    }
+
+    this.mm.sendAsyncMessage("ContextMenu:SearchFieldBookmarkData:Result",
+                             { spec, title, postData, charset });
+  },
+
+  "ContextMenu:SaveVideoFrameAsImage": function(aMessage) {
+    let video = this.getTarget(aMessage);
+    let canvas = this.content.document.createElementNS("http://www.w3.org/1999/xhtml",
+                                                       "canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    let ctxDraw = canvas.getContext("2d");
+    ctxDraw.drawImage(video, 0, 0);
+
+    this.mm.sendAsyncMessage("ContextMenu:SaveVideoFrameAsImage:Result", {
+      dataURL: canvas.toDataURL("image/jpeg", ""),
+    });
+  },
+
+  "ContextMenu:SetAsDesktopBackground": function(aMessage) {
+    let target = this.getTarget(aMessage);
+
+    // Paranoia: check disableSetDesktopBackground again, in case the
+    // image changed since the context menu was initiated.
+    let disable = this._disableSetDesktopBackground(target);
+
+    if (!disable) {
+      try {
+        BrowserUtils.urlSecurityCheck(target.currentURI.spec,
+                                      target.ownerDocument.nodePrincipal);
+        let canvas = this.content.document.createElement("canvas");
+        canvas.width = target.naturalWidth;
+        canvas.height = target.naturalHeight;
+        let ctx = canvas.getContext("2d");
+        ctx.drawImage(target, 0, 0);
+        let dataUrl = canvas.toDataURL();
+        let url = (new URL(target.ownerDocument.location.href)).pathname;
+        let imageName = url.substr(url.lastIndexOf("/") + 1);
+        this.mm.sendAsyncMessage("ContextMenu:SetAsDesktopBackground:Result",
+                                 { dataUrl, imageName });
+      } catch (e) {
+        Cu.reportError(e);
+        disable = true;
+      }
+    }
+
+    if (disable) {
+      this.mm.sendAsyncMessage("ContextMenu:SetAsDesktopBackground:Result",
+                               { disable });
+    }
+  },
+};
+
 let contextMenus = new WeakMap();
 
-class ContextMenuChild extends JSWindowActorChild {
+class ContextMenuChild extends ActorChild {
   // PUBLIC
-  constructor() {
-    super();
+  constructor(dispatcher) {
+    super(dispatcher);
+
+    contextMenus.set(this.mm, this);
 
     this.target = null;
     this.context = null;
     this.lastMenuTarget = null;
+
+    Object.keys(messageListeners).forEach(key =>
+      this.mm.addMessageListener(key, messageListeners[key].bind(this))
+    );
   }
 
-  static getTarget(browsingContext, message, key) {
-    let actor = contextMenus.get(browsingContext);
-    if (!actor) {
-      throw new Error("Can't find ContextMenu actor for browsing context with " +
-                      "ID: " + browsingContext.id);
-    }
-    return actor.getTarget(message, key);
+  static getTarget(mm, message, key) {
+    return contextMenus.get(mm).getTarget(message, key);
   }
 
-  static getLastTarget(browsingContext) {
-    let contextMenu = contextMenus.get(browsingContext);
+  static getLastTarget(mm) {
+    let contextMenu = contextMenus.get(mm);
     return contextMenu && contextMenu.lastMenuTarget;
-  }
-
-  receiveMessage(message) {
-    switch (message.name) {
-      case "ContextMenu:GetFrameTitle": {
-        let target = ContentDOMReference.resolve(message.data.targetIdentifier);
-        return Promise.resolve(target.ownerDocument.title);
-      }
-
-      case "ContextMenu:Canvas:ToBlobURL": {
-        let target = ContentDOMReference.resolve(message.data.targetIdentifier);
-        return new Promise(resolve => {
-          target.toBlob(blob => {
-            let blobURL = URL.createObjectURL(blob);
-            resolve(blobURL);
-          });
-        });
-      }
-
-      case "ContextMenu:DoCustomCommand": {
-        E10SUtils.wrapHandlingUserInput(
-          this.contentWindow,
-          message.data.handlingUserInput,
-          () => PageMenuChild.executeMenu(message.data.generatedItemId)
-        );
-        break;
-      }
-
-      case "ContextMenu:Hiding": {
-        this.context = null;
-        this.target = null;
-        break;
-      }
-
-      case "ContextMenu:MediaCommand": {
-        E10SUtils.wrapHandlingUserInput(
-          this.contentWindow, message.data.handlingUserInput, () => {
-            let media = ContentDOMReference.resolve(message.data.targetIdentifier);
-
-            switch (message.data.command) {
-              case "play":
-                media.play();
-                break;
-              case "pause":
-                media.pause();
-                break;
-              case "loop":
-                media.loop = !media.loop;
-                break;
-              case "mute":
-                media.muted = true;
-                break;
-              case "unmute":
-                media.muted = false;
-                break;
-              case "playbackRate":
-                media.playbackRate = message.data.data;
-                break;
-              case "hidecontrols":
-                media.removeAttribute("controls");
-                break;
-              case "showcontrols":
-                media.setAttribute("controls", "true");
-                break;
-              case "fullscreen":
-                if (this.document.fullscreenEnabled) {
-                  media.requestFullscreen();
-                }
-                break;
-              case "pictureinpicture":
-                let event = new this.contentWindow.CustomEvent("MozTogglePictureInPicture", {
-                  bubbles: true,
-                }, this.contentWindow);
-                media.dispatchEvent(event);
-                break;
-            }
-          }
-        );
-        break;
-      }
-
-      case "ContextMenu:ReloadFrame": {
-        let target = ContentDOMReference.resolve(message.data.targetIdentifier);
-        target.ownerDocument.location.reload(message.data.forceReload);
-        break;
-      }
-
-      case "ContextMenu:ReloadImage": {
-        let image = ContentDOMReference.resolve(message.data.targetIdentifier);
-
-        if (image instanceof Ci.nsIImageLoadingContent) {
-          image.forceReload();
-        }
-        break;
-      }
-
-      case "ContextMenu:SearchFieldBookmarkData": {
-        let node =  ContentDOMReference.resolve(message.data.targetIdentifier);
-        let charset = node.ownerDocument.characterSet;
-        let formBaseURI = Services.io.newURI(node.form.baseURI, charset);
-        let formURI = Services.io.newURI(node.form.getAttribute("action"),
-                                         charset, formBaseURI);
-        let spec = formURI.spec;
-        let isURLEncoded =  (node.form.method.toUpperCase() == "POST" &&
-                             (node.form.enctype == "application/x-www-form-urlencoded" ||
-                              node.form.enctype == ""));
-        let title = node.ownerDocument.title;
-
-        function escapeNameValuePair([aName, aValue]) {
-          if (isURLEncoded) {
-            return escape(aName + "=" + aValue);
-          }
-
-          return escape(aName) + "=" + escape(aValue);
-        }
-        let formData = new this.contentWindow.FormData(node.form);
-        formData.delete(node.name);
-        formData = Array.from(formData).map(escapeNameValuePair);
-        formData.push(escape(node.name) + (isURLEncoded ? escape("=%s") : "=%s"));
-
-        let postData;
-
-        if (isURLEncoded) {
-          postData = formData.join("&");
-        } else {
-          let separator = spec.includes("?") ? "&" : "?";
-          spec += separator + formData.join("&");
-        }
-
-        return Promise.resolve({ spec, title, postData, charset });
-      }
-
-      case "ContextMenu:SaveVideoFrameAsImage": {
-        let video = ContentDOMReference.resolve(message.data.targetIdentifier);
-        let canvas = this.document.createElementNS("http://www.w3.org/1999/xhtml",
-                                                   "canvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        let ctxDraw = canvas.getContext("2d");
-        ctxDraw.drawImage(video, 0, 0);
-
-        return Promise.resolve(canvas.toDataURL("image/jpeg", ""));
-      }
-
-      case "ContextMenu:SetAsDesktopBackground": {
-        let target = ContentDOMReference.resolve(message.data.targetIdentifier);
-
-        // Paranoia: check disableSetDesktopBackground again, in case the
-        // image changed since the context menu was initiated.
-        let disable = this._disableSetDesktopBackground(target);
-
-        if (!disable) {
-          try {
-            BrowserUtils.urlSecurityCheck(target.currentURI.spec,
-                                          target.ownerDocument.nodePrincipal);
-            let canvas = this.document.createElement("canvas");
-            canvas.width = target.naturalWidth;
-            canvas.height = target.naturalHeight;
-            let ctx = canvas.getContext("2d");
-            ctx.drawImage(target, 0, 0);
-            let dataURL = canvas.toDataURL();
-            let url = (new URL(target.ownerDocument.location.href)).pathname;
-            let imageName = url.substr(url.lastIndexOf("/") + 1);
-            return Promise.resolve({ failed: false, dataURL, imageName });
-          } catch (e) {
-            Cu.reportError(e);
-          }
-        }
-
-        return Promise.resolve({ failed: true, dataURL: null, imageName: null });
-      }
-    }
-
-    return undefined;
   }
 
   /**
@@ -334,7 +334,7 @@ class ContextMenuChild extends JSWindowActorChild {
       if (node.nodeType == node.TEXT_NODE) {
         // Add this text to our collection.
         text += " " + node.data;
-      } else if (node instanceof this.contentWindow.HTMLImageElement) {
+      } else if (node instanceof this.content.HTMLImageElement) {
         // If it has an "alt" attribute, add that.
         let altText = node.getAttribute( "alt" );
         if ( altText && altText != "" ) {
@@ -399,11 +399,11 @@ class ContextMenuChild extends JSWindowActorChild {
   }
 
   _isTargetATextBox(node) {
-    if (node instanceof this.contentWindow.HTMLInputElement) {
+    if (node instanceof this.content.HTMLInputElement) {
       return node.mozIsTextField(false);
     }
 
-    return (node instanceof this.contentWindow.HTMLTextAreaElement);
+    return (node instanceof this.content.HTMLTextAreaElement);
   }
 
   _isSpellCheckEnabled(aNode) {
@@ -452,8 +452,6 @@ class ContextMenuChild extends JSWindowActorChild {
   }
 
   handleEvent(aEvent) {
-    contextMenus.set(this.browsingContext, this);
-
     let defaultPrevented = aEvent.defaultPrevented;
 
     if (!Services.prefs.getBoolPref("dom.event.contextmenu.enabled")) {
@@ -488,7 +486,7 @@ class ContextMenuChild extends JSWindowActorChild {
     // The same-origin check will be done in nsContextMenu.openLinkInTab.
     let parentAllowsMixedContent = !!this.docShell.mixedContentChannel;
 
-    let disableSetDesktopBackground = null;
+    let disableSetDesktopBg = null;
 
     // Media related cache info parent needs for saving
     let contentType = null;
@@ -496,8 +494,7 @@ class ContextMenuChild extends JSWindowActorChild {
     if (aEvent.composedTarget.nodeType == aEvent.composedTarget.ELEMENT_NODE &&
         aEvent.composedTarget instanceof Ci.nsIImageLoadingContent &&
         aEvent.composedTarget.currentURI) {
-      disableSetDesktopBackground =
-        this._disableSetDesktopBackground(aEvent.composedTarget);
+      disableSetDesktopBg = this._disableSetDesktopBackground(aEvent.composedTarget);
 
       try {
         let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
@@ -516,7 +513,7 @@ class ContextMenuChild extends JSWindowActorChild {
       } catch (e) {}
     }
 
-    let selectionInfo = BrowserUtils.getSelectionDetails(this.contentWindow);
+    let selectionInfo = BrowserUtils.getSelectionDetails(this.content);
     let loadContext = this.docShell.QueryInterface(Ci.nsILoadContext);
     let userContextId = loadContext.originAttributes.userContextId;
     let popupNodeSelectors = findAllCssSelectors(aEvent.composedTarget);
@@ -532,32 +529,37 @@ class ContextMenuChild extends JSWindowActorChild {
 
     let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(Ci.nsIReferrerInfo);
     referrerInfo.initWithNode(context.onLink ? context.link : aEvent.composedTarget);
-    referrerInfo = E10SUtils.serializeReferrerInfo(referrerInfo);
 
-    let target = context.target;
-    if (target) {
+    let targetAsCPOW = context.target;
+    if (targetAsCPOW) {
       this._cleanContext();
     }
 
-    editFlags = SpellCheckHelper.isEditable(aEvent.composedTarget, this.contentWindow);
+    let isRemote = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
-    if (editFlags & SpellCheckHelper.SPELLCHECKABLE) {
-      spellInfo = InlineSpellCheckerContent.initContextMenu(aEvent, editFlags, this);
+    if (isRemote) {
+      editFlags = SpellCheckHelper.isEditable(aEvent.composedTarget, this.content);
+
+      if (editFlags & SpellCheckHelper.SPELLCHECKABLE) {
+        spellInfo = InlineSpellCheckerContent.initContextMenu(aEvent, editFlags, this.mm);
+      }
+
+      // Set the event target first as the copy image command needs it to
+      // determine what was context-clicked on. Then, update the state of the
+      // commands on the context menu.
+      this.docShell.contentViewer.QueryInterface(Ci.nsIContentViewerEdit)
+                   .setCommandNode(aEvent.composedTarget);
+      aEvent.composedTarget.ownerGlobal.updateCommands("contentcontextmenu");
+
+      customMenuItems = PageMenuChild.build(aEvent.composedTarget);
+      principal = doc.nodePrincipal;
     }
-
-    // Set the event target first as the copy image command needs it to
-    // determine what was context-clicked on. Then, update the state of the
-    // commands on the context menu.
-    this.docShell.contentViewer.QueryInterface(Ci.nsIContentViewerEdit)
-        .setCommandNode(aEvent.composedTarget);
-    aEvent.composedTarget.ownerGlobal.updateCommands("contentcontextmenu");
-
-    principal = doc.nodePrincipal;
 
     let data = {
       context,
       charSet,
       baseURI,
+      isRemote,
       referrerInfo,
       editFlags,
       principal,
@@ -571,7 +573,7 @@ class ContextMenuChild extends JSWindowActorChild {
       contentDisposition,
       frameOuterWindowID,
       popupNodeSelectors,
-      disableSetDesktopBackground,
+      disableSetDesktopBg,
       parentAllowsMixedContent,
     };
 
@@ -579,20 +581,28 @@ class ContextMenuChild extends JSWindowActorChild {
       data.frameReferrerInfo = doc.referrerInfo;
     }
 
-    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-      data.customMenuItems = PageMenuChild.build(aEvent.composedTarget);
-    }
-
     Services.obs.notifyObservers({wrappedJSObject: data}, "on-prepare-contextmenu");
 
-    // In the event that the content is running in the parent process, we don't
-    // actually want the contextmenu events to reach the parent - we'll dispatch
-    // a new contextmenu event after the async message has reached the parent
-    // instead.
-    aEvent.preventDefault();
-    aEvent.stopPropagation();
+    if (isRemote) {
+      data.referrerInfo = E10SUtils.serializeReferrerInfo(data.referrerInfo);
+      if (data.frameReferrerInfo) {
+        data.frameReferrerInfo = E10SUtils.serializeReferrerInfo(data.frameReferrerInfo);
+      }
 
-    this.sendAsyncMessage("contextmenu", data);
+      this.mm.sendAsyncMessage("contextmenu", data, {
+        targetAsCPOW,
+      });
+    } else {
+      let browser = this.docShell.chromeEventHandler;
+      let mainWin = browser.ownerGlobal;
+
+      data.documentURIObject = doc.documentURIObject;
+      data.disableSetDesktopBackground = data.disableSetDesktopBg;
+      delete data.disableSetDesktopBg;
+
+      data.context.targetAsCPOW = targetAsCPOW;
+      mainWin.setContextMenuContentData(data);
+    }
   }
 
   /**
@@ -668,13 +678,13 @@ class ContextMenuChild extends JSWindowActorChild {
 
     // Set the node to containing <video>/<audio>/<embed>/<object> if the node
     // is in the videocontrols/pluginProblem UA Widget.
-    if (this.contentWindow.ShadowRoot) {
+    if (this.content.ShadowRoot) {
       let n = node;
       while (n) {
-        if (n instanceof this.contentWindow.ShadowRoot) {
-          if (n.host instanceof this.contentWindow.HTMLMediaElement ||
-              n.host instanceof this.contentWindow.HTMLEmbedElement ||
-              n.host instanceof this.contentWindow.HTMLObjectElement) {
+        if (n instanceof this.content.ShadowRoot) {
+          if (n.host instanceof this.content.HTMLMediaElement ||
+              n.host instanceof this.content.HTMLEmbedElement ||
+              n.host instanceof this.content.HTMLObjectElement) {
             node = n.host;
             break;
           }
@@ -696,8 +706,8 @@ class ContextMenuChild extends JSWindowActorChild {
     }
 
     const isAboutDevtoolsToolbox =
-          this.document.documentURI.startsWith("about:devtools-toolbox");
-    const editFlags = SpellCheckHelper.isEditable(node, this.contentWindow);
+          this.content.document.documentURI.startsWith("about:devtools-toolbox");
+    const editFlags = SpellCheckHelper.isEditable(node, this.content);
 
     if (isAboutDevtoolsToolbox && (editFlags & SpellCheckHelper.TEXTINPUT) === 0) {
       // Don't display for about:devtools-toolbox page unless the source was text input.
@@ -753,7 +763,6 @@ class ContextMenuChild extends JSWindowActorChild {
     // Remember the node and its owner document that was clicked
     // This may be modifed before sending to nsContextMenu
     context.target = node;
-    context.targetIdentifier = ContentDOMReference.get(node);
 
     context.principal = context.target.ownerDocument.nodePrincipal;
     context.csp = E10SUtils.serializeCSP(context.target.ownerDocument.csp);
@@ -847,9 +856,9 @@ class ContextMenuChild extends JSWindowActorChild {
         context.imageDescURL = this._makeURLAbsolute(context.target.ownerDocument.body.baseURI,
                                                     descURL);
       }
-    } else if (context.target instanceof this.contentWindow.HTMLCanvasElement) {
+    } else if (context.target instanceof this.content.HTMLCanvasElement) {
       context.onCanvas = true;
-    } else if (context.target instanceof this.contentWindow.HTMLVideoElement) {
+    } else if (context.target instanceof this.content.HTMLVideoElement) {
       const mediaURL = context.target.currentSrc || context.target.src;
 
       if (this._isMediaURLReusable(mediaURL)) {
@@ -873,7 +882,7 @@ class ContextMenuChild extends JSWindowActorChild {
       } else {
         context.onVideo = true;
       }
-    } else if (context.target instanceof this.contentWindow.HTMLAudioElement) {
+    } else if (context.target instanceof this.content.HTMLAudioElement) {
       context.onAudio = true;
       const mediaURL = context.target.currentSrc || context.target.src;
 
@@ -898,7 +907,7 @@ class ContextMenuChild extends JSWindowActorChild {
       }
 
       context.onKeywordField = (editFlags & SpellCheckHelper.KEYWORD);
-    } else if (context.target instanceof this.contentWindow.HTMLHtmlElement) {
+    } else if (context.target instanceof this.content.HTMLHtmlElement) {
       const bodyElt = context.target.ownerDocument.body;
 
       if (bodyElt) {
@@ -917,10 +926,10 @@ class ContextMenuChild extends JSWindowActorChild {
                                                     computedURL);
         }
       }
-    } else if ((context.target instanceof this.contentWindow.HTMLEmbedElement ||
-               context.target instanceof this.contentWindow.HTMLObjectElement) &&
-               context.target.displayedType == this.contentWindow.HTMLObjectElement.TYPE_NULL &&
-               context.target.pluginFallbackType == this.contentWindow.HTMLObjectElement.PLUGIN_CLICK_TO_PLAY) {
+    } else if ((context.target instanceof this.content.HTMLEmbedElement ||
+               context.target instanceof this.content.HTMLObjectElement) &&
+               context.target.displayedType == this.content.HTMLObjectElement.TYPE_NULL &&
+               context.target.pluginFallbackType == this.content.HTMLObjectElement.PLUGIN_CLICK_TO_PLAY) {
       context.onCTPPlugin = true;
     }
 
@@ -949,11 +958,11 @@ class ContextMenuChild extends JSWindowActorChild {
             // Be consistent with what hrefAndLinkNodeForClickEvent
             // does in browser.js
             (this._isXULTextLinkLabel(elem) ||
-            (elem instanceof this.contentWindow.HTMLAnchorElement && elem.href) ||
-            (elem instanceof this.contentWindow.SVGAElement &&
+            (elem instanceof this.content.HTMLAnchorElement && elem.href) ||
+            (elem instanceof this.content.SVGAElement &&
             (elem.href || elem.hasAttributeNS(XLINK_NS, "href"))) ||
-            (elem instanceof this.contentWindow.HTMLAreaElement && elem.href) ||
-            elem instanceof this.contentWindow.HTMLLinkElement ||
+            (elem instanceof this.content.HTMLAreaElement && elem.href) ||
+            elem instanceof this.content.HTMLLinkElement ||
             elem.getAttributeNS(XLINK_NS, "type") == "simple")) {
           // Target is a link or a descendant of a link.
           context.onLink = true;

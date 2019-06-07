@@ -26,14 +26,14 @@ InlineSpellChecker.prototype = {
     }
   },
 
-  initFromRemote(aSpellInfo, aWindowGlobalParent) {
+  initFromRemote(aSpellInfo) {
     if (this.mRemote)
       throw new Error("Unexpected state");
     this.uninit();
 
     if (!aSpellInfo)
       return;
-    this.mInlineSpellChecker = this.mRemote = new RemoteSpellChecker(aSpellInfo, aWindowGlobalParent);
+    this.mInlineSpellChecker = this.mRemote = new RemoteSpellChecker(aSpellInfo);
     this.mOverMisspelling = aSpellInfo.overMisspelling;
     this.mMisspelling = aSpellInfo.misspelling;
   },
@@ -428,10 +428,9 @@ var SpellCheckHelper = {
   },
 };
 
-function RemoteSpellChecker(aSpellInfo, aWindowGlobalParent) {
+function RemoteSpellChecker(aSpellInfo) {
   this._spellInfo = aSpellInfo;
   this._suggestionGenerator = null;
-  this._actor = aWindowGlobalParent.getActor("InlineSpellChecker");
 }
 
 RemoteSpellChecker.prototype = {
@@ -460,16 +459,16 @@ RemoteSpellChecker.prototype = {
   get dictionaryList() { return this._spellInfo.dictionaryList.slice(); },
 
   selectDictionary(localeCode) {
-    this._actor.selectDictionary({ localeCode });
+    this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:selectDictionary",
+                                            { localeCode });
   },
 
   replaceMisspelling(index) {
-    this._actor.replaceMisspelling({ index });
+    this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:replaceMisspelling",
+                                            { index });
   },
 
-  toggleEnabled() {
-    this._actor.toggleEnabled();
-  },
+  toggleEnabled() { this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:toggleEnabled", {}); },
   addToDictionary() {
     // This is really ugly. There is an nsISpellChecker somewhere in the
     // parent that corresponds to our current element's spell checker in the
@@ -482,21 +481,22 @@ RemoteSpellChecker.prototype = {
     let dictionary = Cc["@mozilla.org/spellchecker/personaldictionary;1"]
                        .getService(Ci.mozIPersonalDictionary);
     dictionary.addWord(this._spellInfo.misspelling);
-    this._actor.recheckSpelling();
+
+    this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:recheck", {});
   },
   undoAddToDictionary(word) {
     let dictionary = Cc["@mozilla.org/spellchecker/personaldictionary;1"]
                        .getService(Ci.mozIPersonalDictionary);
     dictionary.removeWord(word);
-    this._actor.recheckSpelling();
+
+    this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:recheck", {});
   },
   ignoreWord() {
     let dictionary = Cc["@mozilla.org/spellchecker/personaldictionary;1"]
                        .getService(Ci.mozIPersonalDictionary);
     dictionary.ignoreWord(this._spellInfo.misspelling);
-    this._actor.recheckSpelling();
+
+    this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:recheck", {});
   },
-  uninit() {
-    this._actor.uninit();
-  },
+  uninit() { this._spellInfo.target.sendAsyncMessage("InlineSpellChecker:uninit", {}); },
 };
