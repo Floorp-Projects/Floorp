@@ -1266,6 +1266,19 @@ set_define('MOZ_UPDATE_CHANNEL', update_channel)
 add_old_configure_assignment('MOZ_UPDATE_CHANNEL', update_channel)
 
 
+js_option(env='MOZBUILD_STATE_PATH', nargs=1,
+          help='Path to a persistent state directory for the build system '
+               'and related tools')
+
+
+@depends('MOZBUILD_STATE_PATH', '--help')
+@imports('os')
+def mozbuild_state_path(path, _):
+    if path:
+        return path[0]
+    return os.path.expanduser(os.path.join('~', '.mozbuild'))
+
+
 # A template providing a shorthand for setting a variable. The created
 # option will only be settable with imply_option.
 # It is expected that a project-specific moz.configure will call imply_option
