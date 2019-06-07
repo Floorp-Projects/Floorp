@@ -166,7 +166,7 @@ void NullaryNode::dumpImpl(GenericPrinter& out, int indent) {
       break;
 
     default:
-      out.printf("(%s)", parseNodeNames[size_t(getKind())]);
+      out.printf("(%s)", parseNodeNames[getKindAsIndex()]);
   }
 }
 
@@ -184,15 +184,15 @@ void NumericLiteral::dumpImpl(GenericPrinter& out, int indent) {
 }
 
 void BigIntLiteral::dumpImpl(GenericPrinter& out, int indent) {
-  out.printf("(%s)", parseNodeNames[size_t(getKind())]);
+  out.printf("(%s)", parseNodeNames[getKindAsIndex()]);
 }
 
 void RegExpLiteral::dumpImpl(GenericPrinter& out, int indent) {
-  out.printf("(%s)", parseNodeNames[size_t(getKind())]);
+  out.printf("(%s)", parseNodeNames[getKindAsIndex()]);
 }
 
 void LoopControlStatement::dumpImpl(GenericPrinter& out, int indent) {
-  const char* name = parseNodeNames[size_t(getKind())];
+  const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s", name);
   if (label()) {
     out.printf(" ");
@@ -202,7 +202,7 @@ void LoopControlStatement::dumpImpl(GenericPrinter& out, int indent) {
 }
 
 void UnaryNode::dumpImpl(GenericPrinter& out, int indent) {
-  const char* name = parseNodeNames[size_t(getKind())];
+  const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s ", name);
   indent += strlen(name) + 2;
   DumpParseTree(kid(), out, indent);
@@ -226,7 +226,7 @@ void BinaryNode::dumpImpl(GenericPrinter& out, int indent) {
     return;
   }
 
-  const char* name = parseNodeNames[size_t(getKind())];
+  const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s ", name);
   indent += strlen(name) + 2;
   DumpParseTree(left(), out, indent);
@@ -236,7 +236,7 @@ void BinaryNode::dumpImpl(GenericPrinter& out, int indent) {
 }
 
 void TernaryNode::dumpImpl(GenericPrinter& out, int indent) {
-  const char* name = parseNodeNames[size_t(getKind())];
+  const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s ", name);
   indent += strlen(name) + 2;
   DumpParseTree(kid1(), out, indent);
@@ -248,7 +248,7 @@ void TernaryNode::dumpImpl(GenericPrinter& out, int indent) {
 }
 
 void FunctionNode::dumpImpl(GenericPrinter& out, int indent) {
-  const char* name = parseNodeNames[size_t(getKind())];
+  const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s ", name);
   indent += strlen(name) + 2;
   DumpParseTree(body(), out, indent);
@@ -256,7 +256,7 @@ void FunctionNode::dumpImpl(GenericPrinter& out, int indent) {
 }
 
 void ModuleNode::dumpImpl(GenericPrinter& out, int indent) {
-  const char* name = parseNodeNames[size_t(getKind())];
+  const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s ", name);
   indent += strlen(name) + 2;
   DumpParseTree(body(), out, indent);
@@ -264,7 +264,7 @@ void ModuleNode::dumpImpl(GenericPrinter& out, int indent) {
 }
 
 void ListNode::dumpImpl(GenericPrinter& out, int indent) {
-  const char* name = parseNodeNames[size_t(getKind())];
+  const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s [", name);
   if (ParseNode* listHead = head()) {
     indent += strlen(name) + 3;
@@ -325,7 +325,7 @@ void NameNode::dumpImpl(GenericPrinter& out, int indent) {
     }
 
     default: {
-      const char* name = parseNodeNames[size_t(getKind())];
+      const char* name = parseNodeNames[getKindAsIndex()];
       out.printf("(%s)", name);
       return;
     }
@@ -333,7 +333,7 @@ void NameNode::dumpImpl(GenericPrinter& out, int indent) {
 }
 
 void LabeledStatement::dumpImpl(GenericPrinter& out, int indent) {
-  const char* name = parseNodeNames[size_t(getKind())];
+  const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s ", name);
   atom()->dumpCharsNoNewline(out);
   out.printf(" ");
@@ -343,7 +343,7 @@ void LabeledStatement::dumpImpl(GenericPrinter& out, int indent) {
 }
 
 void LexicalScopeNode::dumpImpl(GenericPrinter& out, int indent) {
-  const char* name = parseNodeNames[size_t(getKind())];
+  const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s [", name);
   int nameIndent = indent + strlen(name) + 3;
   if (!isEmptyScope()) {
