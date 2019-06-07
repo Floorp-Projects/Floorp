@@ -332,6 +332,10 @@ var PlacesUIUtils = {
   getViewForNode: function PUIU_getViewForNode(aNode) {
     let node = aNode;
 
+    if (Cu.isDeadWrapper(node)) {
+      return null;
+    }
+
     if (node.localName == "panelview" && node._placesView) {
       return node._placesView;
     }
