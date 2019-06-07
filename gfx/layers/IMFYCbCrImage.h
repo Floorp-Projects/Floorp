@@ -22,10 +22,10 @@ class IMFYCbCrImage : public RecyclingPlanarYCbCrImage {
 
   bool IsValid() const override { return true; }
 
-  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  TextureClient* GetTextureClient(KnowsCompositor* aKnowsCompositor) override;
 
  protected:
-  TextureClient* GetD3D11TextureClient(KnowsCompositor* aForwarder);
+  TextureClient* GetD3D11TextureClient(KnowsCompositor* aKnowsCompositor);
   static bool CopyDataToTexture(const Data& aData, ID3D11Device* aDevice,
                                 DXGIYCbCrTextureData* aTextureData);
 

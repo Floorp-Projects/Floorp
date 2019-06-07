@@ -104,7 +104,8 @@ bool SharedRGBImage::Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
 
 gfx::IntSize SharedRGBImage::GetSize() const { return mSize; }
 
-TextureClient* SharedRGBImage::GetTextureClient(KnowsCompositor* aForwarder) {
+TextureClient* SharedRGBImage::GetTextureClient(
+    KnowsCompositor* aKnowsCompositor) {
   return mTextureClient.get();
 }
 
