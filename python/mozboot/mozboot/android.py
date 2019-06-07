@@ -62,10 +62,6 @@ ac_add_options --enable-application=mobile/android
 {extra_lines}
 # With the following Android NDK:
 ac_add_options --with-android-ndk="{ndk_path}"
-
-# With the following compiler toolchain:
-CC="{moz_state_dir}/clang/bin/clang"
-CXX="{moz_state_dir}/clang/bin/clang++"
 <<<
 '''
 
