@@ -508,6 +508,8 @@ cbindgen-types = [
     { gecko = "StyleComputedImageUrl", servo = "gecko::url::ComputedImageUrl" },
     { gecko = "StyleLoadData", servo = "gecko::url::LoadData" },
     { gecko = "StyleGenericFilter", servo = "values::generics::effects::Filter" },
+    { gecko = "StyleGenericGradient", servo = "values::generics::image::Gradient" },
+    { gecko = "StyleLineDirection", servo = "values::computed::image::LineDirection" },
 ]
 
 mapped-generic-types = [

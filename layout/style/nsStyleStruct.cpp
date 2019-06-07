@@ -1634,43 +1634,9 @@ nsChangeHint nsStyleTableBorder::CalcDifference(
   }
 }
 
-// --------------------
-// nsStyleGradient
-//
-bool nsStyleGradient::operator==(const nsStyleGradient& aOther) const {
-  MOZ_ASSERT(mSize == NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER ||
-                 mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR,
-             "incorrect combination of shape and size");
-  MOZ_ASSERT(aOther.mSize == NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER ||
-                 aOther.mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR,
-             "incorrect combination of shape and size");
-
-  if (mShape != aOther.mShape || mSize != aOther.mSize ||
-      mRepeating != aOther.mRepeating ||
-      mLegacySyntax != aOther.mLegacySyntax ||
-      mMozLegacySyntax != aOther.mMozLegacySyntax ||
-      mBgPosX != aOther.mBgPosX || mBgPosY != aOther.mBgPosY ||
-      mAngle != aOther.mAngle || mRadiusX != aOther.mRadiusX ||
-      mRadiusY != aOther.mRadiusY) {
-    return false;
-  }
-
-  if (mStops != aOther.mStops) {
-    return false;
-  }
-
-  return true;
-}
-
-nsStyleGradient::nsStyleGradient()
-    : mShape(NS_STYLE_GRADIENT_SHAPE_LINEAR),
-      mSize(NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER),
-      mRepeating(false),
-      mLegacySyntax(false),
-      mMozLegacySyntax(false) {}
-
-bool nsStyleGradient::IsOpaque() {
-  for (auto& stop : mStops) {
+template <>
+bool StyleGradient::IsOpaque() const {
+  for (auto& stop : items.AsSpan()) {
     if (stop.IsInterpolationHint()) {
       continue;
     }
@@ -1941,7 +1907,7 @@ void nsStyleImage::DoCopy(const nsStyleImage& aOther) {
   if (aOther.mType == eStyleImageType_Image) {
     SetImageRequest(do_AddRef(aOther.mImage));
   } else if (aOther.mType == eStyleImageType_Gradient) {
-    SetGradientData(aOther.mGradient);
+    SetGradientData(MakeUnique<StyleGradient>(*aOther.mGradient));
   } else if (aOther.mType == eStyleImageType_Element) {
     SetElementId(do_AddRef(aOther.mElementId));
   }
@@ -1955,7 +1921,8 @@ void nsStyleImage::DoCopy(const nsStyleImage& aOther) {
 
 void nsStyleImage::SetNull() {
   if (mType == eStyleImageType_Gradient) {
-    mGradient->Release();
+    delete mGradient;
+    mGradient = nullptr;
   } else if (mType == eStyleImageType_Image) {
     NS_RELEASE(mImage);
   } else if (mType == eStyleImageType_Element) {
@@ -1983,19 +1950,15 @@ void nsStyleImage::SetImageRequest(
   }
 }
 
-void nsStyleImage::SetGradientData(nsStyleGradient* aGradient) {
-  if (aGradient) {
-    aGradient->AddRef();
-  }
+void nsStyleImage::SetGradientData(UniquePtr<StyleGradient> aGradient) {
+  MOZ_ASSERT(aGradient);
 
   if (mType != eStyleImageType_Null) {
     SetNull();
   }
 
-  if (aGradient) {
-    mGradient = aGradient;
-    mType = eStyleImageType_Gradient;
-  }
+  mGradient = aGradient.release();
+  mType = eStyleImageType_Gradient;
 }
 
 void nsStyleImage::SetElementId(already_AddRefed<nsAtom> aElementId) {
