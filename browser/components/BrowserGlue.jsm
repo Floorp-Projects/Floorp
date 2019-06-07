@@ -16,21 +16,6 @@ ChromeUtils.defineModuleGetter(this, "ActorManagerParent",
 const PREF_PDFJS_ENABLED_CACHE_STATE = "pdfjs.enabledCache.state";
 
 let ACTORS = {
-  ContextMenu: {
-    parent: {
-      moduleURI: "resource:///actors/ContextMenuParent.jsm",
-    },
-
-    child: {
-      moduleURI: "resource:///actors/ContextMenuChild.jsm",
-      events: {
-        "contextmenu": { mozSystemGroup: true },
-      },
-    },
-
-    allFrames: true,
-  },
-
   SubframeCrash: {
     parent: {
       moduleURI: "resource:///actors/SubframeCrashParent.jsm",
@@ -131,6 +116,15 @@ let LEGACY_ACTORS = {
     },
   },
 
+  ContextMenu: {
+    child: {
+      module: "resource:///actors/ContextMenuChild.jsm",
+      events: {
+        "contextmenu": {mozSystemGroup: true},
+      },
+    },
+  },
+
   ContentSearch: {
     child: {
       module: "resource:///actors/ContentSearchChild.jsm",
@@ -144,16 +138,6 @@ let LEGACY_ACTORS = {
         "ContentSearch",
       ],
     },
-  },
-
-  ContextMenuSpecialProcess: {
-    child: {
-      module: "resource:///actors/ContextMenuSpecialProcessChild.jsm",
-      events: {
-        "contextmenu": {mozSystemGroup: true},
-      },
-    },
-    allFrames: true,
   },
 
   DOMFullscreen: {

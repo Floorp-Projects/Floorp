@@ -28,8 +28,6 @@ FINAL_TARGET_FILES.actors += [
     'ExtFindChild.jsm',
     'FindBarChild.jsm',
     'FinderChild.jsm',
-    'InlineSpellCheckerChild.jsm',
-    'InlineSpellCheckerParent.jsm',
     'KeyPressEventModelCheckerChild.jsm',
     'PictureInPictureChild.jsm',
     'PopupBlockingChild.jsm',
