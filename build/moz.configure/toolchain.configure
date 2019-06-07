@@ -776,10 +776,9 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
 
     other_c_compiler = () if other_c_compiler is None else (other_c_compiler,)
 
-    @depends(host_or_target, target, toolchain_prefix, android_clang_compiler,
-             *other_c_compiler)
+    @depends(host_or_target, target, toolchain_prefix, *other_c_compiler)
     def default_c_compilers(host_or_target, target, toolchain_prefix,
-                            android_clang_compiler, *other_c_compiler):
+                            *other_c_compiler):
         if host_or_target.kernel == 'WINNT':
             supported = types = ('clang-cl', 'gcc', 'clang')
         elif host_or_target.kernel == 'Darwin':
@@ -802,10 +801,6 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
                     # -m32/-m64 for the host, it's probably toolchain-prefixed,
                     # so we prioritize a raw 'gcc' instead.
                     prioritized = info.type
-            elif info.type == 'clang' and android_clang_compiler:
-                # Android NDK clangs do not function as host compiler, so
-                # prioritize a raw 'clang' instead.
-                prioritized = info.type
 
             types = [prioritized] + [t for t in types if t != info.type]
 
@@ -815,12 +810,7 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
 
         result = []
         for type in types:
-            # Android sets toolchain_prefix and android_clang_compiler, but
-            # we want the latter to take precedence, because the latter can
-            # point at clang, which is what we want to use.
-            if type == 'clang' and android_clang_compiler and host_or_target is target:
-                result.append(android_clang_compiler)
-            elif type == 'gcc':
+            if type == 'gcc':
                 result.extend(gcc)
             else:
                 result.append(type)
