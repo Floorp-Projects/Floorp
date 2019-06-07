@@ -64,11 +64,24 @@ async function installTestExtension(overrideOptions = {}) {
   return {extension, addon};
 }
 
-async function assertRejectsAbuseReportError(promise, errorType) {
-  await Assert.rejects(promise, error => {
-    ok(error instanceof AbuseReportError);
-    return error.errorType === errorType;
-  });
+async function assertRejectsAbuseReportError(promise, errorType, errorInfo) {
+  let error;
+
+  await Assert.rejects(promise, err => {
+    // Log the actual error to make investigating test failures easier.
+    Cu.reportError(err);
+    error = err;
+    return err instanceof AbuseReportError;
+  }, `Got an AbuseReportError`);
+
+  equal(error.errorType, errorType, "Got the expected errorType");
+  equal(error.errorInfo, errorInfo, "Got the expected errorInfo");
+  ok(error.message.includes(errorType),
+    "errorType should be included in the error message");
+  if (errorInfo) {
+    ok(error.message.includes(errorInfo),
+      "errorInfo should be included in the error message");
+  }
 }
 
 async function assertBaseReportData({reportData, addon}) {
@@ -292,9 +305,13 @@ add_task(async function test_error_recent_submit() {
 add_task(async function test_submission_server_error() {
   const {extension} = await installTestExtension();
 
-  async function testErrorCode(
-    responseStatus, expectedErrorType, expectRequest = true
-  ) {
+  async function testErrorCode({
+    responseStatus,
+    responseText = "",
+    expectedErrorType,
+    expectedErrorInfo,
+    expectRequest = true,
+  }) {
     info(`Test expected AbuseReportError on response status "${responseStatus}"`);
     Services.telemetry.clearEvents();
     await clearAbuseReportState();
@@ -303,14 +320,15 @@ add_task(async function test_submission_server_error() {
     apiRequestHandler = ({request, response}) => {
       requestReceived = true;
       response.setStatusLine(request.httpVersion, responseStatus, "Error");
-      response.write("");
+      response.write(responseText);
     };
 
     const report = await AbuseReporter.createAbuseReport(ADDON_ID, REPORT_OPTIONS);
     const promiseSubmit = report.submit({reason: "a-reason"});
     if (typeof expectedErrorType === "string") {
       // Assert a specific AbuseReportError errorType.
-      await assertRejectsAbuseReportError(promiseSubmit, expectedErrorType);
+      await assertRejectsAbuseReportError(
+        promiseSubmit, expectedErrorType, expectedErrorInfo);
     } else {
       // Assert on a given Error class.
       await Assert.rejects(promiseSubmit, expectedErrorType);
@@ -329,17 +347,47 @@ add_task(async function test_submission_server_error() {
     }], TELEMETRY_EVENTS_FILTERS);
   }
 
-  await testErrorCode(500, "ERROR_SERVER");
-  await testErrorCode(404, "ERROR_CLIENT");
+  await testErrorCode({
+    responseStatus: 500,
+    responseText: "A server error",
+    expectedErrorType: "ERROR_SERVER",
+    expectedErrorInfo: JSON.stringify({
+      status: 500,
+      responseText: "A server error",
+    }),
+  });
+  await testErrorCode({
+    responseStatus: 404,
+    responseText: "Not found error",
+    expectedErrorType: "ERROR_CLIENT",
+    expectedErrorInfo: JSON.stringify({
+      status: 404,
+      responseText: "Not found error",
+    }),
+  });
   // Test response with unexpected status code.
-  await testErrorCode(604, "ERROR_UNKNOWN");
+  await testErrorCode({
+    responseStatus: 604,
+    responseText: "An unexpected status code",
+    expectedErrorType: "ERROR_UNKNOWN",
+    expectedErrorInfo: JSON.stringify({
+      status: 604,
+      responseText: "An unexpected status code",
+    }),
+  });
   // Test response status 200 with invalid json data.
-  await testErrorCode(200, /SyntaxError: JSON.parse/);
+  await testErrorCode({
+    responseStatus: 200,
+    expectedErrorType: /SyntaxError: JSON.parse/,
+  });
 
   // Test on invalid url.
   Services.prefs.setCharPref("extensions.abuseReport.url",
                              "invalid-protocol://abuse-report");
-  await testErrorCode(200, "ERROR_NETWORK", false);
+  await testErrorCode({
+    expectedErrorType: "ERROR_NETWORK",
+    expectRequest: false,
+  });
 
   await extension.unload();
 });
