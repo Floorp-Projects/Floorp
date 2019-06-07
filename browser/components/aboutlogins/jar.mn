@@ -13,6 +13,8 @@ browser.jar:
   content/browser/aboutlogins/components/login-list.js         (content/components/login-list.js)
   content/browser/aboutlogins/components/login-list-item.css   (content/components/login-list-item.css)
   content/browser/aboutlogins/components/login-list-item.js    (content/components/login-list-item.js)
+  content/browser/aboutlogins/components/menu-button.css       (content/components/menu-button.css)
+  content/browser/aboutlogins/components/menu-button.js        (content/components/menu-button.js)
   content/browser/aboutlogins/components/modal-input.css       (content/components/modal-input.css)
   content/browser/aboutlogins/components/modal-input.js        (content/components/modal-input.js)
   content/browser/aboutlogins/components/reflected-fluent-element.js  (content/components/reflected-fluent-element.js)

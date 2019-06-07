@@ -14,6 +14,7 @@
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
+    <script type="module" src="chrome://browser/content/aboutlogins/components/menu-button.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/modal-input.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
@@ -25,6 +26,7 @@
       <login-filter data-l10n-id="login-filter"
                     data-l10n-attrs="placeholder"></login-filter>
       <button id="create-login-button" data-l10n-id="create-login-button"></button>
+      <menu-button></menu-button>
     </header>
     <login-list data-l10n-id="login-list"
                 data-l10n-args='{"count": 0}'
@@ -122,6 +124,15 @@
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-filter.css">
       <input type="text"/>
+    </template>
+
+    <template id="menu-button-template">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/menu-button.css">
+      <button class="menu-button alternate-button"></button>
+      <ul class="menu" role="menu" aria-hidden="true">
+      </ul>
     </template>
 
     <template id="modal-input-template">
