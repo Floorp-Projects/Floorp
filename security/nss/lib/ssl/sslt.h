@@ -367,7 +367,7 @@ typedef struct SSLPreliminaryChannelInfoStr {
      * resume this session. */
     PRUint32 maxEarlyDataSize;
 
-    /* The following fields were added in NSS 3.39. */
+    /* The following fields were added in NSS 3.43. */
     /* This reports the cipher suite used for 0-RTT if it sent or accepted.  For
      * a client, this is set earlier than |cipherSuite|, and will match that
      * value if 0-RTT is accepted by the server.  The server only sets this
@@ -422,7 +422,7 @@ typedef struct SSLCipherSuiteInfoStr {
      * this instead of |authAlgorithm|. */
     SSLAuthType authType;
 
-    /* The following fields were added in NSS 3.39. */
+    /* The following fields were added in NSS 3.43. */
     /* This reports the hash function used in the TLS KDF, or HKDF for TLS 1.3.
      * For suites defined for versions of TLS earlier than TLS 1.2, this reports
      * ssl_hash_none. */
