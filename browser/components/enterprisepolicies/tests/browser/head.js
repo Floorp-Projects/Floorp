@@ -62,3 +62,25 @@ registerCleanupFunction(async function policies_headjs_finishWithCleanSlate() {
   EnterprisePolicyTesting.resetRunOnceState();
   PoliciesPrefTracker.stop();
 });
+
+async function testOnAboutAddonsType(type, fn) {
+  let useHtmlAboutAddons;
+  switch (type) {
+    case "XUL":
+      useHtmlAboutAddons = false;
+      break;
+    case "HTML":
+      useHtmlAboutAddons = true;
+      break;
+    default:
+      throw new Error(`Unknown about:addons type ${type}`);
+  }
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.htmlaboutaddons.enabled", useHtmlAboutAddons]],
+  });
+  info(`Run tests on ${type} about:addons`);
+  await fn();
+  await SpecialPowers.popPrefEnv();
+}
+
+
