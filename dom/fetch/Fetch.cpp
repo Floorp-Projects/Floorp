@@ -6,7 +6,6 @@
 
 #include "Fetch.h"
 #include "FetchConsumer.h"
-#include "FetchStream.h"
 
 #include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
@@ -1273,8 +1272,8 @@ void FetchBody<Derived>::GetBody(JSContext* aCx,
   }
 
   JS::Rooted<JSObject*> body(aCx);
-  FetchStream::Create(aCx, this, DerivedClass()->GetParentObject(), inputStream,
-                      &body, aRv);
+  BodyStream::Create(aCx, this, DerivedClass()->GetParentObject(), inputStream,
+                     &body, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
