@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the menu-button component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the menu-button component</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="module" src="menu-button.js"></script>
+  <script src="aboutlogins_common.js"></script>
+
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+  </p>
+<div id="content" style="display: none">
+  <iframe id="templateFrame" src="aboutLogins.html"
+          sandbox="allow-same-origin"></iframe>
+</div>
+<pre id="test">
+</pre>
+<script>
+/** Test the menu-button component **/
+
+let gMenuButton;
+add_task(async function setup() {
+  let templateFrame = document.getElementById("templateFrame");
+  let displayEl = document.getElementById("display");
+  importDependencies(templateFrame, displayEl);
+
+  gMenuButton = document.createElement("menu-button");
+  displayEl.appendChild(gMenuButton);
+
+  isnot(document.activeElement, gMenuButton, "menu-button should not be focused by default");
+  while (document.activeElement != gMenuButton) {
+    sendKey("TAB");
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  }
+});
+
+add_task(async function test_menu_open_close() {
+  is(document.activeElement, gMenuButton, "menu-button should be focused to start the test");
+
+  let menu = gMenuButton.shadowRoot.querySelector(".menu");
+  is("true", menu.getAttribute("aria-hidden"), "menu should be hidden before pressing 'space'");
+  sendKey("SPACE");
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  is("false", menu.getAttribute("aria-hidden"), "menu should be visible after pressing 'space'");
+
+  let preferencesItem = gMenuButton.shadowRoot.querySelector(".menuitem-preferences");
+  ok(!preferencesItem.matches(":focus"), ".menuitem-preferences should not be focused before tabbing to it");
+  sendKey("TAB");
+  await SimpleTest.promiseWaitForCondition(() => preferencesItem.matches(":focus"),
+    "waiting for preferencesItem to get focus");
+  ok(preferencesItem.matches(":focus"), ".menuitem-preferences should be focused after tabbing to it");
+
+  let openPreferencesEvent = null;
+  is("false", menu.getAttribute("aria-hidden"), "menu should be visible before pressing 'space' on .menuitem-preferences");
+  window.addEventListener("AboutLoginsOpenPreferences", event => openPreferencesEvent = event);
+  sendKey("SPACE");
+  ok(openPreferencesEvent, "AboutLoginsOpenPreferences event should be dispatched after pressing 'space' on .menuitem-preferences");
+  is("true", menu.getAttribute("aria-hidden"), "menu should be hidden after pressing 'space' on .menuitem-preferences");
+});
+</script>
+
+</body>
+</html>
