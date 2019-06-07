@@ -5,14 +5,12 @@ package org.mozilla.fenix.collections
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import android.app.Dialog
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProviders
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,8 +18,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.sessioncontrol.toSessionBundle
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -129,7 +125,6 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                 )
                 is CollectionCreationAction.BackPressed -> handleBackPress(backPressFrom = it.backPressFrom)
                 is CollectionCreationAction.SaveCollectionName -> {
-                    showSavedSnackbar(it.tabs.size)
                     dismiss()
 
                     context?.let { context ->
@@ -140,7 +135,6 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                     }
                 }
                 is CollectionCreationAction.SelectCollection -> {
-                    showSavedSnackbar(it.tabs.size)
                     dismiss()
                     context?.let { context ->
                         val sessionBundle = it.tabs.toList().toSessionBundle(context)
@@ -151,39 +145,11 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                     }
                 }
                 is CollectionCreationAction.RenameCollection -> {
-                    showRenamedSnackbar()
                     dismiss()
                     launch(Dispatchers.IO) {
                         requireComponents.core.tabCollectionStorage.renameCollection(it.collection, it.name)
                     }
                 }
-            }
-        }
-    }
-
-    private fun showRenamedSnackbar() {
-        context?.let { context: Context ->
-            val rootView = context.getRootView()
-            rootView?.let { view: View ->
-                val string = context.getString(R.string.snackbar_collection_renamed)
-                FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
-                    .show()
-            }
-        }
-    }
-
-    private fun showSavedSnackbar(tabSize: Int) {
-        context?.let { context: Context ->
-            val rootView = context.getRootView()
-            rootView?.let { view: View ->
-                val string =
-                    if (tabSize > 1) context.getString(R.string.create_collection_tabs_saved) else
-                        context.getString(R.string.create_collection_tab_saved)
-                val snackbar = FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
-                viewModel.snackbarAnchorView?.let {
-                    snackbar.setAnchorView(it)
-                }
-                snackbar.show()
             }
         }
     }

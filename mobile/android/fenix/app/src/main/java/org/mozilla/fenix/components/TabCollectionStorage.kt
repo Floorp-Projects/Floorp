@@ -12,10 +12,36 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tab.collections.TabCollectionStorage
+import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.base.observer.ObserverRegistry
 import org.mozilla.fenix.test.Mockable
 
 @Mockable
-class TabCollectionStorage(private val context: Context, private val sessionManager: SessionManager) {
+class TabCollectionStorage(
+    private val context: Context,
+    private val sessionManager: SessionManager,
+    private val delegate: Observable<Observer> = ObserverRegistry()
+) : Observable<org.mozilla.fenix.components.TabCollectionStorage.Observer> by delegate {
+
+    /**
+     * Interface to be implemented by classes that want to observe the storage
+     */
+    interface Observer {
+        /**
+         * A collection has been created
+         */
+        fun onCollectionCreated(title: String, sessions: List<Session>) = Unit
+
+        /**
+         *  Tab(s) have been added to collection
+         */
+        fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) = Unit
+
+        /**
+         *  Collection has been renamed
+         */
+        fun onCollectionRenamed(tabCollection: TabCollection, title: String) = Unit
+    }
 
     var cachedTabCollections = listOf<TabCollection>()
 
@@ -25,10 +51,12 @@ class TabCollectionStorage(private val context: Context, private val sessionMana
 
     fun createCollection(title: String, sessions: List<Session>) {
         collectionStorage.createCollection(title, sessions)
+        notifyObservers { onCollectionCreated(title, sessions) }
     }
 
     fun addTabsToCollection(tabCollection: TabCollection, sessions: List<Session>) {
         collectionStorage.addTabsToCollection(tabCollection, sessions)
+        notifyObservers { onTabsAdded(tabCollection, sessions) }
     }
 
     fun getTabCollectionsCount(): Int {
@@ -57,5 +85,6 @@ class TabCollectionStorage(private val context: Context, private val sessionMana
 
     fun renameCollection(tabCollection: TabCollection, title: String) {
         collectionStorage.renameCollection(tabCollection, title)
+        notifyObservers { onCollectionRenamed(tabCollection, title) }
     }
 }

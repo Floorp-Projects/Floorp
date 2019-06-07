@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home
 
+import android.content.Context
 import android.content.DialogInterface
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
@@ -21,6 +22,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.transition.TransitionInflater
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -47,6 +49,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
+import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -284,6 +288,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             )
         )
 
+        requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
         sessionObserver.onStart()
         tabCollectionObserver = subscribeToTabCollections()
     }
@@ -716,6 +721,51 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
     override fun onProfileUpdated(profile: Profile) {
         emitAccountChanges()
+    }
+
+    private val collectionStorageObserver = object : TabCollectionStorage.Observer {
+        override fun onCollectionCreated(title: String, sessions: List<Session>) {
+            super.onCollectionCreated(title, sessions)
+            showSavedSnackbar(sessions.size)
+        }
+
+        override fun onTabsAdded(
+            tabCollection: mozilla.components.feature.tab.collections.TabCollection,
+            sessions: List<Session>
+        ) {
+            super.onTabsAdded(tabCollection, sessions)
+            showSavedSnackbar(sessions.size)
+        }
+
+        override fun onCollectionRenamed(
+            tabCollection: mozilla.components.feature.tab.collections.TabCollection,
+            title: String
+        ) {
+            super.onCollectionRenamed(tabCollection, title)
+            showRenamedSnackbar()
+        }
+    }
+
+    private fun showSavedSnackbar(tabSize: Int) {
+        context?.let { context: Context ->
+            view?.let { view: View ->
+                val string =
+                    if (tabSize > 1) context.getString(R.string.create_collection_tabs_saved) else
+                        context.getString(R.string.create_collection_tab_saved)
+                val snackbar = FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
+                snackbar.show()
+            }
+        }
+    }
+
+    private fun showRenamedSnackbar() {
+        context?.let { context: Context ->
+            view?.let { view: View ->
+                val string = context.getString(R.string.snackbar_collection_renamed)
+                FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
+                    .show()
+            }
+        }
     }
 
     companion object {
