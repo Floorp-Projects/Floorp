@@ -2072,10 +2072,10 @@ def select_linker(linker, c_compiler, developer_options, enable_gold,
         die("Failed to find a linker")
 
     if (linker is None and enable_gold.origin == 'default' and
-            developer_options and result.KIND in ('bfd', 'gold'):
+            developer_options and result.KIND == 'bfd'):
         # try and use lld if available.
         tried = try_linker('lld')
-        if result.KIND != 'gold' and (tried is None or tried.KIND != 'lld'):
+        if tried is None or tried.KIND != 'lld':
             tried = try_linker('gold')
             if tried is None or tried.KIND != 'gold':
                 tried = None
