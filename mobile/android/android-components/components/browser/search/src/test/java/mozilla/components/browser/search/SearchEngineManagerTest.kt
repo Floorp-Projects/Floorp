@@ -11,9 +11,7 @@ import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.search.provider.SearchEngineList
 import mozilla.components.browser.search.provider.SearchEngineProvider
@@ -258,7 +256,6 @@ class SearchEngineManagerTest {
 
         val context = getApplicationContext<Context>()
         context.sendBroadcast(Intent(Intent.ACTION_LOCALE_CHANGED))
-        launch(Dispatchers.Default) {}.join()
 
         verify(provider).loadSearchEngines(testContext)
         verifyNoMoreInteractions(provider)
