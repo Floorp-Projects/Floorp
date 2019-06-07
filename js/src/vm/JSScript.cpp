@@ -2260,7 +2260,7 @@ void ScriptSource::triggerConvertToCompressedSource(
 }
 
 template <typename Unit>
-MOZ_MUST_USE bool ScriptSource::initializeWithCompressedSource(
+MOZ_MUST_USE bool ScriptSource::initializeWithUnretrievableCompressedSource(
     JSContext* cx, UniqueChars&& compressed, size_t rawLength,
     size_t sourceLength) {
   MOZ_ASSERT(data.is<Missing>(), "shouldn't be double-initializing");
@@ -2715,9 +2715,9 @@ XDRResult ScriptSource::codeCompressedData(XDRState<mode>* const xdr,
     }
     MOZ_TRY(xdr->codeBytes(bytes.get(), compressedLength));
 
-    if (!ss->initializeWithCompressedSource<Unit>(xdr->cx(), std::move(bytes),
-                                                  compressedLength,
-                                                  uncompressedLength)) {
+    if (!ss->initializeWithUnretrievableCompressedSource<Unit>(
+            xdr->cx(), std::move(bytes), compressedLength,
+            uncompressedLength)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
   } else {
