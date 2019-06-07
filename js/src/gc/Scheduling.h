@@ -645,17 +645,22 @@ class HeapSize {
 
   size_t gcBytes() const { return gcBytes_; }
 
-  void addGCArena() {
-    gcBytes_ += ArenaSize;
+  void addGCArena() { addBytes(ArenaSize); }
+  void removeGCArena() { removeBytes(ArenaSize); }
+
+  void addBytes(size_t nbytes) {
+    mozilla::DebugOnly<size_t> initialBytes(gcBytes_);
+    MOZ_ASSERT(initialBytes + nbytes > initialBytes);
+    gcBytes_ += nbytes;
     if (parent_) {
-      parent_->addGCArena();
+      parent_->addBytes(nbytes);
     }
   }
-  void removeGCArena() {
-    MOZ_ASSERT(gcBytes_ >= ArenaSize);
-    gcBytes_ -= ArenaSize;
+  void removeBytes(size_t nbytes) {
+    MOZ_ASSERT(gcBytes_ >= nbytes);
+    gcBytes_ -= nbytes;
     if (parent_) {
-      parent_->removeGCArena();
+      parent_->removeBytes(nbytes);
     }
   }
 
@@ -666,23 +671,29 @@ class HeapSize {
   }
 };
 
-// This class encapsulates the data that determines when we need to do a zone
-// GC.
-class ZoneHeapThreshold {
-  // The "growth factor" for computing our next thresholds after a GC.
-  GCLockData<float> gcHeapGrowthFactor_;
-
-  // GC trigger threshold for allocations on the GC heap.
+// Base class for GC heap and malloc thresholds.
+class ZoneThreshold {
+ protected:
+  // GC trigger threshold.
   mozilla::Atomic<size_t, mozilla::Relaxed,
                   mozilla::recordreplay::Behavior::DontPreserve>
       gcTriggerBytes_;
 
  public:
-  ZoneHeapThreshold() : gcHeapGrowthFactor_(3.0f), gcTriggerBytes_(0) {}
-
-  float gcHeapGrowthFactor() const { return gcHeapGrowthFactor_; }
   size_t gcTriggerBytes() const { return gcTriggerBytes_; }
   float eagerAllocTrigger(bool highFrequencyGC) const;
+};
+
+// This class encapsulates the data that determines when we need to do a zone GC
+// base on GC heap size.
+class ZoneHeapThreshold : public ZoneThreshold {
+  // The "growth factor" for computing our next thresholds after a GC.
+  GCLockData<float> gcHeapGrowthFactor_;
+
+ public:
+  ZoneHeapThreshold() : gcHeapGrowthFactor_(3.0f) {}
+
+  float gcHeapGrowthFactor() const { return gcHeapGrowthFactor_; }
 
   void updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
                      const GCSchedulingTunables& tunables,
@@ -695,6 +706,19 @@ class ZoneHeapThreshold {
       const GCSchedulingState& state);
   static size_t computeZoneTriggerBytes(float growthFactor, size_t lastBytes,
                                         JSGCInvocationKind gckind,
+                                        const GCSchedulingTunables& tunables,
+                                        const AutoLockGC& lock);
+};
+
+// This class encapsulates the data that determines when we need to do a zone
+// GC based on malloc data.
+class ZoneMallocThreshold : public ZoneThreshold {
+ public:
+  void updateAfterGC(size_t lastBytes, const GCSchedulingTunables& tunables,
+                     const GCSchedulingState& state, const AutoLockGC& lock);
+
+ private:
+  static size_t computeZoneTriggerBytes(float growthFactor, size_t lastBytes,
                                         const GCSchedulingTunables& tunables,
                                         const AutoLockGC& lock);
 };
