@@ -17,6 +17,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtrExtensions.h"  // UniqueFreePtr
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"
@@ -675,14 +676,14 @@ static void TraceGrayRoots(JSTracer* trc, void* data) {
   }
 }
 
-static char* GetLine(FILE* file, const char* prompt) {
+static mozilla::UniqueFreePtr<char[]> GetLine(FILE* file, const char* prompt) {
 #ifdef EDITLINE
   /*
    * Use readline only if file is stdin, because there's no way to specify
    * another handle.  Are other filehandles interactive?
    */
   if (file == stdin) {
-    char* linep = readline(prompt);
+    mozilla::UniqueFreePtr<char[]> linep(readline(prompt));
     /*
      * We set it to zero to avoid complaining about inappropriate ioctl
      * for device in the case of EOF. Looks like errno == 251 if line is
@@ -696,7 +697,7 @@ static char* GetLine(FILE* file, const char* prompt) {
       return nullptr;
     }
     if (linep[0] != '\0') {
-      add_history(linep);
+      add_history(linep.get());
     }
     return linep;
   }
@@ -709,25 +710,24 @@ static char* GetLine(FILE* file, const char* prompt) {
   }
 
   size_t size = 80;
-  char* buffer = static_cast<char*>(malloc(size));
+  mozilla::UniqueFreePtr<char[]> buffer(static_cast<char*>(malloc(size)));
   if (!buffer) {
     return nullptr;
   }
 
-  char* current = buffer;
+  char* current = buffer.get();
   do {
     while (true) {
       if (fgets(current, size - len, file)) {
         break;
       }
       if (errno != EINTR) {
-        free(buffer);
         return nullptr;
       }
     }
 
     len += strlen(current);
-    char* t = buffer + len - 1;
+    char* t = buffer.get() + len - 1;
     if (*t == '\n') {
       /* Line was read. We remove '\n' and exit. */
       *t = '\0';
@@ -736,14 +736,15 @@ static char* GetLine(FILE* file, const char* prompt) {
 
     if (len + 1 == size) {
       size = size * 2;
-      char* tmp = static_cast<char*>(realloc(buffer, size));
+      char* raw = buffer.release();
+      char* tmp = static_cast<char*>(realloc(raw, size));
       if (!tmp) {
-        free(buffer);
+        free(raw);
         return nullptr;
       }
-      buffer = tmp;
+      buffer.reset(tmp);
     }
-    current = buffer + len;
+    current = buffer.get() + len;
   } while (true);
   return buffer;
 }
@@ -1358,7 +1359,8 @@ static MOZ_MUST_USE bool ReadEvalPrintLoop(JSContext* cx, FILE* in,
       sc->serviceInterrupt = false;
       errno = 0;
 
-      char* line = GetLine(in, startline == lineno ? "js> " : "");
+      mozilla::UniqueFreePtr<char[]> line =
+          GetLine(in, startline == lineno ? "js> " : "");
       if (!line) {
         if (errno) {
           /*
@@ -1372,7 +1374,8 @@ static MOZ_MUST_USE bool ReadEvalPrintLoop(JSContext* cx, FILE* in,
         break;
       }
 
-      if (!buffer.append(line, strlen(line)) || !buffer.append('\n')) {
+      if (!buffer.append(line.get(), strlen(line.get())) ||
+          !buffer.append('\n')) {
         return false;
       }
 
