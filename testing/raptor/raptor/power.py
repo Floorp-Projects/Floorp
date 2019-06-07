@@ -7,11 +7,16 @@ from __future__ import absolute_import
 import os
 import re
 
+from logger.logger import RaptorLogger
+
+
+LOG = RaptorLogger(component='raptor-power')
+
 
 def init_android_power_test(raptor):
     upload_dir = os.getenv("MOZ_UPLOAD_DIR")
     if not upload_dir:
-        raptor.log.critical(
+        LOG.critical(
             "% power test ignored; MOZ_UPLOAD_DIR unset" % raptor.config["app"]
         )
         return
@@ -85,7 +90,7 @@ def init_android_power_test(raptor):
 def finish_android_power_test(raptor, test_name):
     upload_dir = os.getenv("MOZ_UPLOAD_DIR")
     if not upload_dir:
-        raptor.log.critical(
+        LOG.critical(
             "% power test ignored because MOZ_UPLOAD_DIR was not set" % test_name
         )
         return
@@ -181,7 +186,7 @@ def finish_android_power_test(raptor, test_name):
     screen = full_screen if screen == 0 else screen
     wifi = full_wifi if wifi is None else wifi
 
-    raptor.log.info(
+    LOG.info(
         "power data for uid: %s, cpu: %s, wifi: %s, screen: %s, proportional: %s"
         % (uid, cpu, wifi, screen, proportional)
     )
@@ -200,13 +205,12 @@ def finish_android_power_test(raptor, test_name):
         },
     }
 
-    # Only submit proportional measurement on Android 8+
+    LOG.info("submitting power data via control server directly")
     if major_android_version >= 8:
         power_data['values']['proportional'] = float(proportional)
 
-    raptor.log.info("submitting power data via control server directly")
     raptor.control_server.submit_supporting_data(power_data)
 
     # Generate power bugreport zip
-    raptor.log.info("generating power bugreport zip")
+    LOG.info("generating power bugreport zip")
     raptor.device.command_output(["bugreport", upload_dir])

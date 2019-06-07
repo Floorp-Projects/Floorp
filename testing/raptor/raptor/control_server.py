@@ -14,9 +14,9 @@ import socket
 import threading
 import time
 
-from mozlog import get_proxy_logger
+from logger.logger import RaptorLogger
 
-LOG = get_proxy_logger(component='raptor-control-server')
+LOG = RaptorLogger(component='raptor-control-server')
 
 here = os.path.abspath(os.path.dirname(__file__))
 

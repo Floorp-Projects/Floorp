@@ -13,9 +13,9 @@ import filters
 import json
 import os
 
-from mozlog import get_proxy_logger
+from logger.logger import RaptorLogger
 
-LOG = get_proxy_logger(component="raptor-output")
+LOG = RaptorLogger(component='raptor-output')
 
 
 class Output(object):
@@ -43,7 +43,7 @@ class Output(object):
 
         # check if we actually have any results
         if len(self.results) == 0:
-            LOG.error("error: no raptor test results found for %s" %
+            LOG.error("no raptor test results found for %s" %
                       ', '.join(test_names))
             return
 
@@ -822,7 +822,7 @@ class Output(object):
             screenshot_path = os.path.join(os.getcwd(), 'screenshots.html')
 
         if self.summarized_results == {}:
-            LOG.error("error: no summarized raptor results found for %s" %
+            LOG.error("no summarized raptor results found for %s" %
                       ', '.join(test_names))
         else:
             with open(results_path, 'w') as f:
@@ -871,7 +871,7 @@ class Output(object):
         from the actual Raptor test that was ran when the supporting data was gathered.
         '''
         if len(self.summarized_supporting_data) == 0:
-            LOG.error("error: no summarized supporting data found for %s" %
+            LOG.error("no summarized supporting data found for %s" %
                       ', '.join(test_names))
             return False
 
