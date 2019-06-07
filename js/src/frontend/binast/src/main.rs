@@ -4,7 +4,6 @@ extern crate env_logger;
 extern crate inflector;
 extern crate itertools;
 #[macro_use] extern crate log;
-extern crate webidl;
 extern crate yaml_rust;
 
 use binjs_meta::export::{ ToWebidl, TypeDeanonymizer, TypeName };
@@ -2355,12 +2354,9 @@ fn main() {
     file.read_to_string(&mut source)
         .expect("Could not read source");
 
-    println!("...parsing webidl");
-    let ast = webidl::parse_string(&source)
-        .expect("Could not parse source");
-
     println!("...verifying grammar");
-    let mut builder = Importer::import(&ast);
+    let mut builder = Importer::import(vec![source.as_ref()])
+        .expect("Invalid grammar");
     let fake_root = builder.node_name("@@ROOT@@"); // Unused
     let null = builder.node_name(""); // Used
     builder.add_interface(&null)
