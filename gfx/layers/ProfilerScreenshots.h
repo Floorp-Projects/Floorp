@@ -11,6 +11,9 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
+#include "nsCOMPtr.h"
+#include "nsTArray.h"
 
 #include "mozilla/gfx/Point.h"
 
@@ -84,19 +87,19 @@ class ProfilerScreenshots final {
    * Returns null if the limit is reached.
    * Can be called on any thread.
    */
-  already_AddRefed<DataSourceSurface> TakeNextSurface();
+  already_AddRefed<gfx::DataSourceSurface> TakeNextSurface();
 
   /**
    * Return aSurface back into the mAvailableSurfaces pool. Can be called on
    * any thread.
    */
-  void ReturnSurface(DataSourceSurface* aSurface);
+  void ReturnSurface(gfx::DataSourceSurface* aSurface);
 
   // The thread on which encoding happens.
   nsCOMPtr<nsIThread> mThread;
   // An array of surfaces ready to be recycled. Can be accessed from multiple
   // threads, protected by mMutex.
-  nsTArray<RefPtr<DataSourceSurface>> mAvailableSurfaces;
+  nsTArray<RefPtr<gfx::DataSourceSurface>> mAvailableSurfaces;
   // Protects mAvailableSurfaces.
   Mutex mMutex;
   // The total number of surfaces created. If encoding is fast enough to happen

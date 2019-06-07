@@ -12,6 +12,7 @@
 namespace mozilla {
 namespace layers {
 
+class Compositor;
 class CompositorScreenshotGrabberImpl;
 
 /**
