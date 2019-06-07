@@ -194,7 +194,7 @@ struct RetainedDisplayListBuilder {
   /**
    * Invalidates the current and previous caret frame if they have changed.
    */
-  void InvalidateCaretFramesIfNeeded(nsTArray<nsIFrame*>& aModifiedFrames);
+  void InvalidateCaretFramesIfNeeded();
 
   /**
    * A simple early exit heuristic to avoid slow partial display list rebuilds.

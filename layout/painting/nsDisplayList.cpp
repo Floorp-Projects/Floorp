@@ -96,6 +96,7 @@
 #include "nsTableColFrame.h"
 #include "nsTextFrame.h"
 #include "nsSliderFrame.h"
+#include "nsFocusManager.h"
 #include "ClientLayerManager.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
@@ -1233,6 +1234,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mUsedAGRBudget(0),
       mDirtyRect(-1, -1, -1, -1),
       mGlassDisplayItem(nullptr),
+      mCaretFrame(nullptr),
       mScrollInfoItemsForHoisting(nullptr),
       mFirstClipChainToDestroy(nullptr),
       mActiveScrolledRootForRootScrollframe(nullptr),
@@ -1291,6 +1293,21 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       "Check TYPE_MAX should not overflow");
 }
 
+static PresShell* GetFocusedPresShell() {
+  nsPIDOMWindowOuter* focusedWnd =
+      nsFocusManager::GetFocusManager()->GetFocusedWindow();
+  if (!focusedWnd) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocShell> focusedDocShell = focusedWnd->GetDocShell();
+  if (!focusedDocShell) {
+    return nullptr;
+  }
+
+  return focusedDocShell->GetPresShell();
+}
+
 void nsDisplayListBuilder::BeginFrame() {
   nsCSSRendering::BeginFrameTreesLocked();
   mCurrentAGR = mRootAGR;
@@ -1308,6 +1325,21 @@ void nsDisplayListBuilder::BeginFrame() {
   for (auto& renderRootRect : mRenderRootRects) {
     renderRootRect = LayoutDeviceRect();
   }
+
+  RefPtr<PresShell> presShell = GetFocusedPresShell();
+  if (presShell) {
+    RefPtr<nsCaret> caret = presShell->GetCaret();
+    mCaretFrame = caret->GetPaintGeometry(&mCaretRect);
+
+    // The focused pres shell may not be in the document that we're
+    // painting, or be in a popup. Check if the display root for
+    // the caret matches the display root that we're painting, and
+    // only use it if it matches.
+    if (mCaretFrame &&
+        nsLayoutUtils::GetDisplayRootFrame(mCaretFrame) != mReferenceFrame) {
+      mCaretFrame = nullptr;
+    }
+  }
 }
 
 void nsDisplayListBuilder::EndFrame() {
@@ -1320,6 +1352,7 @@ void nsDisplayListBuilder::EndFrame() {
   FreeClipChains();
   FreeTemporaryItems();
   nsCSSRendering::EndFrameTreesLocked();
+  mCaretFrame = nullptr;
 }
 
 void nsDisplayListBuilder::MarkFrameForDisplay(nsIFrame* aFrame,
@@ -1597,7 +1630,6 @@ void nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
                                           bool aPointerEventsNoneDoc) {
   PresShellState* state = mPresShellStates.AppendElement();
   state->mPresShell = aReferenceFrame->PresShell();
-  state->mCaretFrame = nullptr;
   state->mFirstFrameMarkedForDisplay = mFramesMarkedForDisplay.Length();
   state->mFirstFrameWithOOFData = mFramesWithOOFData.Length();
 
@@ -1659,10 +1691,11 @@ void nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
     return;
   }
 
-  RefPtr<nsCaret> caret = state->mPresShell->GetCaret();
-  state->mCaretFrame = caret->GetPaintGeometry(&state->mCaretRect);
-  if (state->mCaretFrame) {
-    MarkFrameForDisplay(state->mCaretFrame, aReferenceFrame);
+  // Caret frames add visual area to their frame, but we don't update the
+  // overflow area. Use flags to make sure we build display items for that frame
+  // instead.
+  if (mCaretFrame && mCaretFrame->PresShell() == state->mPresShell) {
+    MarkFrameForDisplay(mCaretFrame, aReferenceFrame);
   }
 }
 
