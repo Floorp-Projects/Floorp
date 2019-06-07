@@ -40,7 +40,16 @@ XPCOMUtils.defineLazyGetter(this, "passwordMgrBundle", () => {
   return Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
 });
 
-function loginSort(a, b) {
+function loginSort(formHostPort, a, b) {
+  let maybeHostPortA = LoginHelper.maybeGetHostPortForURL(a.origin);
+  let maybeHostPortB = LoginHelper.maybeGetHostPortForURL(b.origin);
+  if (formHostPort == maybeHostPortA && formHostPort != maybeHostPortB) {
+    return -1;
+  }
+  if (formHostPort != maybeHostPortA && formHostPort == maybeHostPortB) {
+    return 1;
+  }
+
   let userA = a.username.toLowerCase();
   let userB = b.username.toLowerCase();
 
@@ -173,7 +182,7 @@ class LoginsFooterAutocompleteItem extends AutocompleteItem {
 
 
 // nsIAutoCompleteResult implementation
-function LoginAutoCompleteResult(aSearchString, matchingLogins, {
+function LoginAutoCompleteResult(aSearchString, matchingLogins, formHostPort, {
   generatedPassword,
   isSecure,
   messageManager,
@@ -217,7 +226,7 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
   }
 
   // Saved login items
-  let logins = matchingLogins.sort(loginSort);
+  let logins = matchingLogins.sort(loginSort.bind(null, formHostPort));
   let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
   let duplicateUsernames = findDuplicates(matchingLogins);
   for (let login of logins) {
@@ -378,9 +387,9 @@ LoginAutoComplete.prototype = {
       if (this._autoCompleteLookupPromise !== autoCompleteLookupPromise) {
         return;
       }
-
+      let formHostPort = LoginHelper.maybeGetHostPortForURL(aElement.ownerDocument.documentURI);
       this._autoCompleteLookupPromise = null;
-      let results = new LoginAutoCompleteResult(aSearchString, logins, {
+      let results = new LoginAutoCompleteResult(aSearchString, logins, formHostPort, {
         generatedPassword,
         messageManager,
         isSecure,
