@@ -39,10 +39,6 @@ class AboutLoginsChild extends ActorChild {
         this.mm.sendAsyncMessage("AboutLogins:DeleteLogin", {login: event.detail});
         break;
       }
-      case "AboutLoginsOpenPreferences": {
-        this.mm.sendAsyncMessage("AboutLogins:OpenPreferences");
-        break;
-      }
       case "AboutLoginsOpenSite": {
         this.mm.sendAsyncMessage("AboutLogins:OpenSite", {login: event.detail});
         break;
