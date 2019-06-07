@@ -4,36 +4,33 @@
 
 package mozilla.components.browser.awesomebar.layout
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.awesomebar.R
 import mozilla.components.browser.awesomebar.widget.FlowLayout
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class DefaultSuggestionViewHolderTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `DefaultViewHolder sets title and description`() {
-        val view = LayoutInflater.from(context).inflate(
+        val view = LayoutInflater.from(testContext).inflate(
             R.layout.mozac_browser_awesomebar_item_generic, null, false)
 
-        val awesomeBar = BrowserAwesomeBar(context)
+        val awesomeBar = BrowserAwesomeBar(testContext)
         val viewHolder = DefaultSuggestionViewHolder.Default(awesomeBar, view)
 
         val suggestion = AwesomeBar.Suggestion(
@@ -55,10 +52,10 @@ class DefaultSuggestionViewHolderTest {
 
     @Test
     fun `DefaultViewHolder without description hides description view`() {
-        val view = LayoutInflater.from(context).inflate(
+        val view = LayoutInflater.from(testContext).inflate(
                 R.layout.mozac_browser_awesomebar_item_generic, null, false)
 
-        val awesomeBar = BrowserAwesomeBar(context)
+        val awesomeBar = BrowserAwesomeBar(testContext)
         val viewHolder = DefaultSuggestionViewHolder.Default(awesomeBar, view)
 
         val suggestion = AwesomeBar.Suggestion(
@@ -78,11 +75,11 @@ class DefaultSuggestionViewHolderTest {
 
     @Test
     fun `Clicking on default suggestion view invokes callback`() {
-        val view = LayoutInflater.from(context).inflate(
+        val view = LayoutInflater.from(testContext).inflate(
             R.layout.mozac_browser_awesomebar_item_generic, null, false)
 
         val viewHolder = DefaultSuggestionViewHolder.Default(
-            BrowserAwesomeBar(context), view)
+            BrowserAwesomeBar(testContext), view)
 
         var callbackExecuted = false
         val suggestion = AwesomeBar.Suggestion(
@@ -103,11 +100,11 @@ class DefaultSuggestionViewHolderTest {
 
     @Test
     fun `ChipsSuggestionViewHolder adds views for chips`() {
-        val view = LayoutInflater.from(context).inflate(
+        val view = LayoutInflater.from(testContext).inflate(
             R.layout.mozac_browser_awesomebar_item_chips, null, false)
 
         val viewHolder = DefaultSuggestionViewHolder.Chips(
-            BrowserAwesomeBar(context), view)
+            BrowserAwesomeBar(testContext), view)
 
         val suggestion = AwesomeBar.Suggestion(
             mock(),
@@ -133,11 +130,11 @@ class DefaultSuggestionViewHolderTest {
 
     @Test
     fun `Clicking on a chip invokes callback`() {
-        val view = LayoutInflater.from(context).inflate(
+        val view = LayoutInflater.from(testContext).inflate(
             R.layout.mozac_browser_awesomebar_item_chips, null, false)
 
         val viewHolder = DefaultSuggestionViewHolder.Chips(
-            BrowserAwesomeBar(context), view)
+            BrowserAwesomeBar(testContext), view)
 
         var chipClicked: String? = null
 
@@ -169,16 +166,16 @@ class DefaultSuggestionViewHolderTest {
 
     @Test
     fun `FlowLayout for chips has spacing applied`() {
-        val view = LayoutInflater.from(context).inflate(
+        val view = LayoutInflater.from(testContext).inflate(
             R.layout.mozac_browser_awesomebar_item_chips, null, false)
 
         val flowLayout = view.findViewById<FlowLayout>(R.id.mozac_browser_awesomebar_chips)
 
         assertEquals(0, flowLayout.spacing)
 
-        val awesomeBar = BrowserAwesomeBar(context)
+        val awesomeBar = BrowserAwesomeBar(testContext)
         DefaultSuggestionViewHolder.Chips(awesomeBar, view)
 
-        assertEquals(context.resources.pxToDp(2), flowLayout.spacing)
+        assertEquals(testContext.resources.pxToDp(2), flowLayout.spacing)
     }
 }

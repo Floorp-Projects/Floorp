@@ -4,32 +4,29 @@
 
 package mozilla.components.browser.awesomebar.widget
 
-import android.content.Context
 import android.view.View
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class FlowLayoutTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `Layouts children in multiple rows`() {
-        val flowLayout = FlowLayout(context)
+        val flowLayout = FlowLayout(testContext)
         flowLayout.spacing = 10
 
-        val view1 = spy(View(context)).also { flowLayout.addView(it, 100, 50) }
-        val view2 = spy(View(context)).also { flowLayout.addView(it, 200, 50) }
-        val view3 = spy(View(context)).also { flowLayout.addView(it, 300, 50) }
-        val view4 = spy(View(context)).also { flowLayout.addView(it, 200, 50) }
-        val view5 = spy(View(context)).also { flowLayout.addView(it, 100, 50) }
-        val view6 = spy(View(context)).also { flowLayout.addView(it, 100, 50) }
+        val view1 = spy(View(testContext)).also { flowLayout.addView(it, 100, 50) }
+        val view2 = spy(View(testContext)).also { flowLayout.addView(it, 200, 50) }
+        val view3 = spy(View(testContext)).also { flowLayout.addView(it, 300, 50) }
+        val view4 = spy(View(testContext)).also { flowLayout.addView(it, 200, 50) }
+        val view5 = spy(View(testContext)).also { flowLayout.addView(it, 100, 50) }
+        val view6 = spy(View(testContext)).also { flowLayout.addView(it, 100, 50) }
 
         val widthSpec = View.MeasureSpec.makeMeasureSpec(600, View.MeasureSpec.AT_MOST)
         val heightSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.AT_MOST)
