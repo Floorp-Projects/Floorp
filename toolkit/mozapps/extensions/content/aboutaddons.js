@@ -580,7 +580,7 @@ class AddonOptions extends HTMLElement {
         el.hidden = !hasPermission(addon, "uninstall");
         break;
       case "report":
-        el.hidden = !ABUSE_REPORT_ENABLED;
+        el.hidden = !ABUSE_REPORT_ENABLED || addon.isBuiltin || addon.isSystem;
         break;
       case "toggle-disabled":
         let toggleDisabledAction = addon.userDisabled ? "enable" : "disable";

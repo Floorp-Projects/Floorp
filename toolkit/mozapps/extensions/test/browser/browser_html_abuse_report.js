@@ -26,7 +26,9 @@ const BASE_TEST_MANIFEST = {
     32: "test-icon.png",
   },
 };
+const DEFAULT_BUILTIN_THEME_ID = "default-theme@mozilla.org";
 const EXT_WITH_PRIVILEGED_URL_ID = "ext-with-privileged-url@mochi.test";
+const EXT_SYSTEM_ADDON_ID = "test-system-addon@mochi.test";
 const THEME_NO_UNINSTALL_ID = "theme-without-perm-can-uninstall@mochi.test";
 
 let gProvider;
@@ -78,6 +80,19 @@ async function closeAboutAddons() {
     gHtmlAboutAddonsWindow = null;
     gManagerWindow = null;
   }
+}
+
+async function assertReportActionHidden(gManagerWindow, extId) {
+  await gManagerWindow.htmlBrowserLoaded;
+  const {contentDocument: doc} = gManagerWindow.getHtmlBrowser();
+
+  let addonCard = doc.querySelector(
+    `addon-list addon-card[addon-id="${extId}"]`);
+  ok(addonCard, `Got the addon-card for the ${extId} test extension`);
+
+  let reportButton = addonCard.querySelector("[action=report]");
+  ok(reportButton, `Got the report action for ${extId}`);
+  ok(reportButton.hidden, `${extId} report action should be hidden`);
 }
 
 async function installTestExtension(
@@ -232,6 +247,13 @@ add_task(async function setup() {
     version: "1.1",
     creator: {name: "creator", url: "about:config"},
     type: "extension",
+  }, {
+    id: EXT_SYSTEM_ADDON_ID,
+    name: "This is a system addon",
+    version: "1.1",
+    creator: {name: "creator", url: "http://example.com/creator"},
+    type: "extension",
+    isSystem: true,
   }]);
 });
 
@@ -1065,5 +1087,17 @@ add_task(async function test_abuse_report_open_author_url() {
   await waitForConsole;
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await closeAboutAddons();
+});
+
+add_task(async function test_report_action_hidden_on_builtin_addons() {
+  await openAboutAddons("theme");
+  await assertReportActionHidden(gManagerWindow, DEFAULT_BUILTIN_THEME_ID);
+  await closeAboutAddons();
+});
+
+add_task(async function test_report_action_hidden_on_system_addons() {
+  await openAboutAddons("extension");
+  await assertReportActionHidden(gManagerWindow, EXT_SYSTEM_ADDON_ID);
   await closeAboutAddons();
 });
