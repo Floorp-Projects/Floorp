@@ -182,13 +182,11 @@ class WindowSurfaceWayland : public WindowSurface {
  private:
   WindowBackBuffer* CreateWaylandBuffer(int aWidth, int aHeight);
   WindowBackBuffer* GetWaylandBufferToDraw(int aWidth, int aHeight,
-                                           bool aFullScreenUpdate,
-                                           bool aNoBackBufferCopy);
+                                           bool aFullScreenUpdate);
 
   already_AddRefed<gfx::DrawTarget> LockWaylandBuffer(int aWidth, int aHeight,
                                                       bool aClearBuffer,
-                                                      bool aFullScreenUpdate,
-                                                      bool aNoBackBufferCopy);
+                                                      bool aFullScreenUpdate);
   void UnlockWaylandBuffer();
 
   already_AddRefed<gfx::DrawTarget> LockImageSurface(
@@ -204,6 +202,7 @@ class WindowSurfaceWayland : public WindowSurface {
 
   // TODO: Do we need to hold a reference to nsWindow object?
   nsWindow* mWindow;
+  LayoutDeviceIntRect mLastScreenRect;
   nsWaylandDisplay* mWaylandDisplay;
   WindowBackBuffer* mWaylandBuffer;
   LayoutDeviceIntRegion mWaylandBufferDamage;
@@ -219,7 +218,6 @@ class WindowSurfaceWayland : public WindowSurface {
   bool mWaylandBufferFullScreenDamage;
   bool mIsMainThread;
   bool mNeedScaleFactorUpdate;
-  bool mWaitToFullScreenUpdate;
 
   static bool UseDMABufBackend();
   static bool mUseDMABufInitialized;
