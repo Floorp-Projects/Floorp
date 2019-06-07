@@ -40,3 +40,24 @@
   right: auto;
   left: 0;
 }
+
+.menuitem-button {
+  padding: 4px 8px;
+  /* 32px = 8px (padding) + 16px (icon) + 8px (padding) */
+  padding-inline-start: 32px;
+  background-repeat: no-repeat;
+  background-position: left 8px center;
+  background-size: 16px;
+  margin: 0;
+  border-radius: 0;
+  /* Override common.inc.css box-shadow on these buttons */
+  box-shadow: none !important;
+}
+
+.menuitem-button:dir(rtl) {
+  background-position: right 8px center;
+}
+
+.menuitem-preferences {
+  background-image: url("chrome://browser/skin/settings.svg");
+}
