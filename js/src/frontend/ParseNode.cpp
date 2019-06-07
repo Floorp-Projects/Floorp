@@ -106,6 +106,12 @@ const ParseNode::TypeCode ParseNode::typeCodeTable[] = {
 
 #ifdef DEBUG
 
+const size_t ParseNode::sizeTable[] = {
+#  define NODE_SIZE(_name, type) sizeof(type),
+    FOR_EACH_PARSE_NODE_KIND(NODE_SIZE)
+#  undef NODE_SIZE
+};
+
 static const char* const parseNodeNames[] = {
 #  define STRINGIFY(name, _type) #  name,
     FOR_EACH_PARSE_NODE_KIND(STRINGIFY)

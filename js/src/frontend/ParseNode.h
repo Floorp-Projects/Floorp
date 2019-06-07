@@ -677,6 +677,11 @@ class ParseNode {
   // pnk.
   static const TypeCode typeCodeTable[];
 
+ private:
+#ifdef DEBUG
+  static const size_t sizeTable[];
+#endif
+
  public:
   TypeCode typeCode() const { return typeCodeTable[getKindAsIndex()]; }
 
@@ -759,6 +764,9 @@ class ParseNode {
   void dump();
   void dump(GenericPrinter& out);
   void dump(GenericPrinter& out, int indent);
+
+  // The size of this node, in bytes.
+  size_t size() const { return sizeTable[getKindAsIndex()]; }
 #endif
 };
 
@@ -1088,13 +1096,6 @@ class ListNode : public ParseNode {
   // Flag set by the emitter after emitting top-level function statements.
   static constexpr uint32_t emittedTopLevelFunctionDeclarationsBit = 0x08;
 
-  void checkConsistency() const
-#ifndef DEBUG
-  {
-  }
-#endif
-  ;
-
  public:
   ListNode(ParseNodeKind kind, const TokenPos& pos) : ParseNode(kind, pos) {
     makeEmpty();
@@ -1150,6 +1151,13 @@ class ListNode : public ParseNode {
   uint32_t count() const { return count_; }
 
   bool empty() const { return count() == 0; }
+
+  void checkConsistency() const
+#ifndef DEBUG
+  {
+  }
+#endif
+  ;
 
   MOZ_MUST_USE bool hasTopLevelFunctionDeclarations() const {
     MOZ_ASSERT(isKind(ParseNodeKind::StatementList));
