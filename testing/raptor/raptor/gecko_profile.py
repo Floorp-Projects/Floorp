@@ -13,12 +13,12 @@ import tempfile
 import zipfile
 
 import mozfile
-from mozlog import get_proxy_logger
 
+from logger.logger import RaptorLogger
 from profiler import symbolication, profiling
 
 here = os.path.dirname(os.path.realpath(__file__))
-LOG = get_proxy_logger()
+LOG = RaptorLogger(component='raptor-gecko-profile')
 
 
 class GeckoProfile(object):
