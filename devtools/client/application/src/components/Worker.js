@@ -212,7 +212,7 @@ class Worker extends Component {
         dd({},
           Localized(
             { id: "serviceworker-worker-status-" + status },
-            span({}),
+            span({ className: "js-worker-status" }),
           ),
           !this.isRunning() ? this.renderStartLink() : null,
         )
