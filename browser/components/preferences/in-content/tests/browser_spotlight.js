@@ -8,8 +8,6 @@ add_task(async function test_openPreferences_spotlight() {
      "panePrivacy", "#privacy", "credit-card-autofill"],
     ["privacy-form-autofill",
      "panePrivacy", "#privacy", "form-autofill"],
-    ["privacy-logins",
-     "panePrivacy", "#privacy", "logins"],
     ["privacy-trackingprotection",
      "panePrivacy", "#privacy", "trackingprotection"],
     ["privacy-permissions-block-popups",

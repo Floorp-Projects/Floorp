@@ -53,11 +53,3 @@ master-password-notification-message = Please enter your master password to view
 master-password-reload-button-label = Log in
 # TODO: Not sure how to use formatValue with these as attributes on a single ID
 master-password-reload-button-accesskey = L
-
-menu-button =
-  .button-title = Open menu
-  .menuitem-preferences =
-    { PLATFORM() ->
-        [windows] Options
-       *[other] Preferences
-    }
