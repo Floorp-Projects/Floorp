@@ -665,6 +665,8 @@ void ClientLayerManager::ForwardTransaction(bool aScheduleComposite) {
   AUTO_PROFILER_TRACING("Paint", "ForwardTransaction", GRAPHICS);
   TimeStamp start = TimeStamp::Now();
 
+  GetCompositorBridgeChild()->EndCanvasTransaction();
+
   // Skip the synchronization for buffer since we also skip the painting during
   // device-reset status. With OMTP, we have to wait for async paints
   // before we synchronize and it's done on the paint thread.
@@ -862,8 +864,7 @@ ClientLayerManager::CreatePersistentBufferProvider(const gfx::IntSize& aSize,
   // because the canvas will most likely be flattened into a thebes layer
   // instead of being sent to the compositor, in which case rendering into
   // shared memory is wasteful.
-  if (IsCompositingCheap() &&
-      StaticPrefs::PersistentBufferProviderSharedEnabled()) {
+  if (IsCompositingCheap()) {
     RefPtr<PersistentBufferProvider> provider =
         PersistentBufferProviderShared::Create(aSize, aFormat,
                                                AsShadowForwarder());

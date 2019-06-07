@@ -209,7 +209,7 @@ class nsPrintJob final : public nsIObserver,
                              eDocTitleDefault aDefType);
 
   bool CheckBeforeDestroy();
-  nsresult Cancelled();
+  nsresult Cancel();
 
   mozilla::PresShell* GetPrintPreviewPresShell() {
     return mPrtPreview->mPrintObject->mPresShell;

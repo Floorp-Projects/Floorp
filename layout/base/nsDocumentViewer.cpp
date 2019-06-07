@@ -3750,7 +3750,7 @@ nsDocumentViewer::GetCurrentPrintSettings(
 NS_IMETHODIMP
 nsDocumentViewer::Cancel() {
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
-  return mPrintJob->Cancelled();
+  return mPrintJob->Cancel();
 }
 
 NS_IMETHODIMP

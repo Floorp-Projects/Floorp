@@ -1871,7 +1871,7 @@ Maybe<TimeStamp> CompositorBridgeParent::GetTestingTimeStamp() const {
   return mTestTime;
 }
 
-static void EraseLayerState(LayersId aId) {
+void EraseLayerState(LayersId aId) {
   RefPtr<APZUpdater> apz;
 
   {  // scope lock
@@ -2189,8 +2189,8 @@ void CompositorBridgeParent::InvalidateRemoteLayers() {
   });
 }
 
-static void UpdateIndirectTree(LayersId aId, Layer* aRoot,
-                               const TargetConfig& aTargetConfig) {
+void UpdateIndirectTree(LayersId aId, Layer* aRoot,
+                        const TargetConfig& aTargetConfig) {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees[aId].mRoot = aRoot;
   sIndirectLayerTrees[aId].mTargetConfig = aTargetConfig;
@@ -2281,6 +2281,11 @@ PTextureParent* CompositorBridgeParent::AllocPTextureParent(
 
 bool CompositorBridgeParent::DeallocPTextureParent(PTextureParent* actor) {
   return TextureHost::DestroyIPDLActor(actor);
+}
+
+mozilla::ipc::IPCResult CompositorBridgeParent::RecvInitPCanvasParent(
+    Endpoint<PCanvasParent>&& aEndpoint) {
+  MOZ_CRASH("PCanvasParent shouldn't be created via CompositorBridgeParent.");
 }
 
 bool CompositorBridgeParent::IsSameProcess() const {

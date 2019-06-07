@@ -231,8 +231,6 @@ nsresult MemoryTelemetry::GatherReports(
   MOZ_DIAGNOSTIC_ASSERT(mgr);
   NS_ENSURE_TRUE(mgr, NS_ERROR_FAILURE);
 
-  auto startTime = TimeStamp::Now();
-
 #define RECORD(id, metric, units)                                       \
   do {                                                                  \
     int64_t amt;                                                        \
@@ -332,9 +330,6 @@ nsresult MemoryTelemetry::GatherReports(
     mTotalMemoryGatherer->Begin(mThreadPool);
   }
 
-  Telemetry::AccumulateTimeDelta(
-      Telemetry::HistogramID::TELEMETRY_MEMORY_REPORTER_MS, startTime,
-      TimeStamp::Now());
   return NS_OK;
 }
 

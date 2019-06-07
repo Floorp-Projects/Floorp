@@ -105,7 +105,7 @@ class PRFileDescStream final : public mozilla::gfx::EventStream {
     mGood = res >= 0 && (static_cast<size_t>(res) == aSize);
   }
 
-  bool good() { return mGood; }
+  bool good() final { return mGood; }
 
  private:
   size_t AvailableBufferSpace() { return kBufferSize - mBufferPos; }
