@@ -176,9 +176,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // Returns whether or not a GPU process was ever launched.
   bool AttemptedGPUProcess() const { return mNumProcessAttempts > 0; }
 
-  // Returns the process host
-  GPUProcessHost* Process() { return mProcess; }
-
  private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();

@@ -129,8 +129,6 @@ class nsIOService final : public nsIIOService,
   void CallOrWaitForSocketProcess(const std::function<void()>& aFunc);
 
   int32_t SocketProcessPid();
-  SocketProcessHost* SocketProcess() { return mSocketProcess; }
-
   friend SocketProcessMemoryReporter;
   RefPtr<MemoryReportingProcess> GetSocketProcessMemoryReporter();
 
