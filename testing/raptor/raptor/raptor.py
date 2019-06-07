@@ -1185,7 +1185,7 @@ def main(args=sys.argv[1:]):
 
     # ensure we have at least one valid test to run
     if len(raptor_test_list) == 0:
-        LOG.critical("abort: no tests found")
+        LOG.critical("this test is not targeted for {}".format(args.app))
         sys.exit(1)
 
     LOG.info("raptor tests scheduled to run:")
