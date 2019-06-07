@@ -230,7 +230,11 @@ class SystemEngineView @JvmOverloads constructor(
             }
 
             if (request.isForMainFrame) {
-                session?.let { it.notifyObservers { onLoadRequest(request.hasGesture(), true) } }
+                session?.let {
+                    it.notifyObservers {
+                        onLoadRequest(request.url.toString(), request.hasGesture(), true)
+                    }
+                }
             }
 
             return super.shouldInterceptRequest(view, request)

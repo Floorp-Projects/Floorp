@@ -1680,7 +1680,7 @@ class GeckoEngineSessionTest {
         var observedTriggeredByRedirect: Boolean? = null
 
         engineSession.register(object : EngineSession.Observer {
-            override fun onLoadRequest(triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
                 observedTriggeredByRedirect = triggeredByRedirect
             }
         })
@@ -1705,21 +1705,26 @@ class GeckoEngineSessionTest {
         captureDelegates()
 
         val fakeUrl = "https://example.com"
+        var observedUrl: String?
         var observedTriggeredByWebContent: Boolean?
 
         engineSession.register(object : EngineSession.Observer {
-            override fun onLoadRequest(triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
                 observedTriggeredByWebContent = triggeredByWebContent
+                observedUrl = url
             }
         })
 
         fun fakePageLoad(expectedTriggeredByWebContent: Boolean) {
             observedTriggeredByWebContent = null
+            observedUrl = null
             navigationDelegate.value.onLoadRequest(
                 mock(), mockLoadRequest(fakeUrl, triggeredByRedirect = true))
             progressDelegate.value.onPageStop(mock(), true)
             assertNotNull(observedTriggeredByWebContent)
             assertEquals(expectedTriggeredByWebContent, observedTriggeredByWebContent!!)
+            assertNotNull(observedUrl)
+            assertEquals(fakeUrl, observedUrl)
         }
 
         // loadUrl(url: String)
@@ -1789,7 +1794,7 @@ class GeckoEngineSessionTest {
         navigationDelegate.value.onLoadRequest(
             mock(), mockLoadRequest("sample:about", triggeredByRedirect = true))
 
-        verify(observer, never()).onLoadRequest(anyBoolean(), anyBoolean())
+        verify(observer, never()).onLoadRequest(eq("sample:about"), anyBoolean(), anyBoolean())
     }
 
     private fun mockGeckoSession(): GeckoSession {

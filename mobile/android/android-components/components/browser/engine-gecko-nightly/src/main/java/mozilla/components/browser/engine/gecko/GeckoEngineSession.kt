@@ -326,6 +326,7 @@ class GeckoEngineSession(
                     // is "True if and only if the request was triggered by an HTTP redirect."
                     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1545170
                     onLoadRequest(
+                        url = request.uri,
                         triggeredByRedirect = request.isRedirect,
                         triggeredByWebContent = requestFromWebContent
                     )

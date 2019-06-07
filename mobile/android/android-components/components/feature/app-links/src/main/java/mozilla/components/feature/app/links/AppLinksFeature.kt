@@ -48,8 +48,13 @@ class AppLinksFeature(
 
     @VisibleForTesting
     internal val observer: SelectionAwareSessionObserver = object : SelectionAwareSessionObserver(sessionManager) {
-        override fun onLoadRequest(session: Session, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
-            handleLoadRequest(session, triggeredByWebContent)
+        override fun onLoadRequest(
+            session: Session,
+            url: String,
+            triggeredByRedirect: Boolean,
+            triggeredByWebContent: Boolean
+        ) {
+            handleLoadRequest(session, url, triggeredByWebContent)
         }
     }
 
@@ -72,12 +77,11 @@ class AppLinksFeature(
     }
 
     @VisibleForTesting
-    internal fun handleLoadRequest(session: Session, triggeredByWebContent: Boolean) {
+    internal fun handleLoadRequest(session: Session, url: String, triggeredByWebContent: Boolean) {
         if (!triggeredByWebContent) {
             return
         }
 
-        val url = session.url
         val redirect = useCases.interceptedAppLinkRedirect.invoke(url)
 
         if (redirect.isRedirect()) {

@@ -7,7 +7,6 @@ package mozilla.components.browser.session.engine
 import android.graphics.Bitmap
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.engine.request.LoadRequestOption
-import mozilla.components.browser.session.engine.request.isSet
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
@@ -443,32 +442,35 @@ class EngineObserverTest {
 
     @Test
     fun `onLoadRequest clears search terms for requests triggered by user interaction`() {
-        val session = Session("https://www.mozilla.org")
+        val url = "https://www.mozilla.org"
+        val session = Session(url)
         session.searchTerms = "Mozilla Foundation"
 
         val observer = EngineObserver(session)
-        observer.onLoadRequest(triggeredByRedirect = true, triggeredByWebContent = true)
+        observer.onLoadRequest(url = url, triggeredByRedirect = true, triggeredByWebContent = true)
 
         assertEquals("", session.searchTerms)
-        val triggeredByRedirect = session.loadRequestTriggers.isSet(LoadRequestOption.REDIRECT)
-        val triggeredByWebContent = session.loadRequestTriggers.isSet(LoadRequestOption.WEB_CONTENT)
+        val triggeredByRedirect = session.loadRequestMetadata.isSet(LoadRequestOption.REDIRECT)
+        val triggeredByWebContent = session.loadRequestMetadata.isSet(LoadRequestOption.WEB_CONTENT)
 
         assertTrue(triggeredByRedirect)
         assertTrue(triggeredByWebContent)
+        assertEquals(session.loadRequestMetadata.url, url)
     }
 
     @Test
     fun `onLoadRequest does not clear search terms for requests not triggered by user interacting with web content`() {
-        val session = Session("https://www.mozilla.org")
+        val url = "https://www.mozilla.org"
+        val session = Session(url)
         session.searchTerms = "Mozilla Foundation"
 
         val observer = EngineObserver(session)
-        observer.onLoadRequest(triggeredByRedirect = true, triggeredByWebContent = false)
+        observer.onLoadRequest(url = url, triggeredByRedirect = true, triggeredByWebContent = false)
 
         assertEquals("Mozilla Foundation", session.searchTerms)
 
-        val triggeredByRedirect = session.loadRequestTriggers.isSet(LoadRequestOption.REDIRECT)
-        val triggeredByWebContent = session.loadRequestTriggers.isSet(LoadRequestOption.WEB_CONTENT)
+        val triggeredByRedirect = session.loadRequestMetadata.isSet(LoadRequestOption.REDIRECT)
+        val triggeredByWebContent = session.loadRequestMetadata.isSet(LoadRequestOption.WEB_CONTENT)
 
         assertTrue(triggeredByRedirect)
         assertFalse(triggeredByWebContent)

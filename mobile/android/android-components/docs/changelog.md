@@ -36,7 +36,10 @@ permalink: /changelog/
 
 * **lib-crash**
   * Crash reports sent to Sentry now contain optional environment information, if a parameter is passed.
-  
+
+* **browser-session**
+  * ⚠️ **This is a breaking change**: Added `url` parameter to `Session.Observer.onLoadRequest()`.
+
 # 0.55.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.54.0...v0.55.0)

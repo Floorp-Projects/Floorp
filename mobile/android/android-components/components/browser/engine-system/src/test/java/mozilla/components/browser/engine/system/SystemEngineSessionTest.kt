@@ -448,10 +448,11 @@ class SystemEngineSessionTest {
 
     @Test
     fun `shouldInterceptRequest notifies observers if request was not intercepted`() {
+        val url = "sample:about"
         val request: WebResourceRequest = mock()
         doReturn(true).`when`(request).isForMainFrame
         doReturn(true).`when`(request).hasGesture()
-        doReturn(Uri.parse("sample:about")).`when`(request).url
+        doReturn(Uri.parse(url)).`when`(request).url
 
         val engineSession = SystemEngineSession(getApplicationContext())
         engineSession.webView = spy(engineSession.webView)
@@ -463,7 +464,7 @@ class SystemEngineSessionTest {
 
         engineSession.webView.webViewClient.shouldInterceptRequest(engineSession.webView, request)
 
-        verify(observer).onLoadRequest(true, true)
+        verify(observer).onLoadRequest(anyString(), eq(true), eq(true))
 
         val redirect: WebResourceRequest = mock()
         doReturn(true).`when`(redirect).isForMainFrame
@@ -472,7 +473,7 @@ class SystemEngineSessionTest {
 
         engineSession.webView.webViewClient.shouldInterceptRequest(engineSession.webView, redirect)
 
-        verify(observer).onLoadRequest(false, true)
+        verify(observer).onLoadRequest(anyString(), eq(true), eq(true))
     }
 
     @Test
@@ -502,7 +503,7 @@ class SystemEngineSessionTest {
             engineSession.webView,
             request)
 
-        verify(observer, never()).onLoadRequest(anyBoolean(), anyBoolean())
+        verify(observer, never()).onLoadRequest(anyString(), anyBoolean(), anyBoolean())
     }
 
     @Test

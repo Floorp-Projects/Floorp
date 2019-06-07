@@ -324,6 +324,7 @@ class GeckoEngineSession(
                     // As the name LoadRequest.isRedirect may imply this flag is about http redirects. The flag
                     // is "True if and only if the request was triggered by an HTTP redirect."
                     onLoadRequest(
+                        url = request.uri,
                         triggeredByRedirect = request.isRedirect,
                         triggeredByWebContent = requestFromWebContent
                     )

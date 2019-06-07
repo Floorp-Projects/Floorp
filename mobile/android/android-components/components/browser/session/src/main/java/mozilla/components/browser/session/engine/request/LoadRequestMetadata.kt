@@ -6,6 +6,24 @@
 
 package mozilla.components.browser.session.engine.request
 
+class LoadRequestMetadata(
+    val url: String,
+    options: Array<LoadRequestOption> = emptyArray()
+) {
+    private val optionMask: Long
+    init {
+        optionMask = options.fold(0L) { acc, it ->
+            acc or it.mask
+        }
+    }
+
+    fun isSet(option: LoadRequestOption) = optionMask and option.mask > 0
+
+    companion object {
+        val blank = LoadRequestMetadata("about:blank")
+    }
+}
+
 /**
  * Simple enum class for defining the set of characteristics of a [LoadRequest].
  *
@@ -13,14 +31,8 @@ package mozilla.components.browser.session.engine.request
  *
  * This should be generalized, but it's not clear if it will be useful enough to go into [kotlin.support].
  */
-enum class LoadRequestOption constructor(val mask: Int) {
-    NONE(0),
-    REDIRECT(1 shl 0),
-    WEB_CONTENT(1 shl 1);
-
-    fun toMask() = mask
+enum class LoadRequestOption constructor(internal val mask: Long) {
+    NONE(0L),
+    REDIRECT(1L shl 0),
+    WEB_CONTENT(1L shl 1);
 }
-
-infix operator fun LoadRequestOption.plus(other: LoadRequestOption) = this.mask or other.mask
-infix operator fun Int.plus(other: LoadRequestOption) = this or other.mask
-infix fun Int.isSet(option: LoadRequestOption) = this and option.mask > 0

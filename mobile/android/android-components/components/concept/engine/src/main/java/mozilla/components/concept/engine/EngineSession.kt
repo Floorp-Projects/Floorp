@@ -58,11 +58,12 @@ abstract class EngineSession(
         /**
          * The engine received a request to load a request.
          *
+         * @param url The string url that was requested.
          * @param triggeredByRedirect True if and only if the request was triggered by an HTTP redirect.
          * @param triggeredByWebContent True if and only if the request was triggered from within
          * web content (as opposed to via the browser chrome).
          */
-        fun onLoadRequest(triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) = Unit
+        fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) = Unit
 
         @Suppress("LongParameterList")
         fun onExternalResource(

@@ -47,7 +47,7 @@ class AppLinksFeatureTest {
         mockContext = mock(Context::class.java)
 
         val engine = mock(Engine::class.java)
-        mockSessionManager = Mockito.spy(SessionManager(engine))
+        mockSessionManager = spy(SessionManager(engine))
         mockFragmentManager = mock(FragmentManager::class.java)
         mockUseCases = mock(AppLinksUseCases::class.java)
 
@@ -73,16 +73,16 @@ class AppLinksFeatureTest {
         )
     }
 
-    private fun createSession(url: String, isPrivate: Boolean): Session {
+    private fun createSession(isPrivate: Boolean): Session {
         val session = mock(Session::class.java)
         `when`(session.private).thenReturn(isPrivate)
-        `when`(session.url).thenReturn(url)
         return session
     }
 
     private fun userTapsOnSession(url: String, private: Boolean) {
         feature.observer.onLoadRequest(
-            createSession(url, private),
+            createSession(private),
+            url,
             triggeredByRedirect = false,
             triggeredByWebContent = true
         )
@@ -106,14 +106,14 @@ class AppLinksFeatureTest {
 
     @Test
     fun `it tests for app links when triggered by user clicking on a link`() {
-        val session = createSession(webUrl, false)
+        val session = createSession(false)
         val subject = AppLinksFeature(
             mockContext,
             mockSessionManager,
             useCases = mockUseCases
         )
 
-        subject.handleLoadRequest(session, true)
+        subject.handleLoadRequest(session, webUrl, true)
 
         verify(mockGetRedirect).invoke(webUrl)
         verifyNoMoreInteractions(mockOpenRedirect)
@@ -127,7 +127,7 @@ class AppLinksFeatureTest {
             sessionId = "123",
             useCases = mockUseCases
         )
-        val mockSession = createSession(webUrl, false)
+        val mockSession = createSession(false)
         `when`(mockSessionManager.findSessionById(ArgumentMatchers.anyString())).thenReturn(mockSession)
 
         feature.start()
@@ -199,7 +199,8 @@ class AppLinksFeatureTest {
         featureWithDialog.start()
 
         feature.observer.onLoadRequest(
-            createSession(webUrl, true),
+            createSession(true),
+            webUrl,
             triggeredByRedirect = false,
             triggeredByWebContent = false
         )

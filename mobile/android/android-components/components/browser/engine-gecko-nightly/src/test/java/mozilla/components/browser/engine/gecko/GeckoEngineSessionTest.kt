@@ -1702,11 +1702,13 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
+        var observedUrl: String? = null
         var observedTriggeredByRedirect: Boolean? = null
 
         engineSession.register(object : EngineSession.Observer {
-            override fun onLoadRequest(triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
                 observedTriggeredByRedirect = triggeredByRedirect
+                observedUrl = url
             }
         })
 
@@ -1715,11 +1717,13 @@ class GeckoEngineSessionTest {
 
         assertNotNull(observedTriggeredByRedirect)
         assertTrue(observedTriggeredByRedirect!!)
+        assertEquals("sample:about", observedUrl)
 
         navigationDelegate.value.onLoadRequest(
             mock(), mockLoadRequest("sample:about", triggeredByRedirect = false))
 
         assertFalse(observedTriggeredByRedirect!!)
+        assertEquals("sample:about", observedUrl)
     }
 
     @Test
@@ -1730,21 +1734,26 @@ class GeckoEngineSessionTest {
         captureDelegates()
 
         val fakeUrl = "https://example.com"
+        var observedUrl: String?
         var observedTriggeredByWebContent: Boolean?
 
         engineSession.register(object : EngineSession.Observer {
-            override fun onLoadRequest(triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
                 observedTriggeredByWebContent = triggeredByWebContent
+                observedUrl = url
             }
         })
 
         fun fakePageLoad(expectedTriggeredByWebContent: Boolean) {
             observedTriggeredByWebContent = null
+            observedUrl = null
             navigationDelegate.value.onLoadRequest(
                 mock(), mockLoadRequest(fakeUrl, triggeredByRedirect = true))
             progressDelegate.value.onPageStop(mock(), true)
             assertNotNull(observedTriggeredByWebContent)
             assertEquals(expectedTriggeredByWebContent, observedTriggeredByWebContent!!)
+            assertNotNull(observedUrl)
+            assertEquals(fakeUrl, observedUrl)
         }
 
         // loadUrl(url: String)
@@ -1811,10 +1820,11 @@ class GeckoEngineSessionTest {
         val observer: EngineSession.Observer = mock()
         engineSession.register(observer)
 
+        val fakeUri = "sample:about"
         navigationDelegate.value.onLoadRequest(
-            mock(), mockLoadRequest("sample:about", triggeredByRedirect = true))
+            mock(), mockLoadRequest(fakeUri, triggeredByRedirect = true))
 
-        verify(observer, never()).onLoadRequest(anyBoolean(), anyBoolean())
+        verify(observer, never()).onLoadRequest(eq(fakeUri), anyBoolean(), anyBoolean())
     }
 
     private fun mockGeckoSession(): GeckoSession {

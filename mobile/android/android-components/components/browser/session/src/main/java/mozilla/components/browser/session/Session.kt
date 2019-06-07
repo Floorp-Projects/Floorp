@@ -6,8 +6,8 @@ package mozilla.components.browser.session
 
 import android.graphics.Bitmap
 import mozilla.components.browser.session.engine.EngineSessionHolder
+import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
-import mozilla.components.browser.session.engine.request.isSet
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -54,7 +54,12 @@ class Session(
         fun onProgress(session: Session, progress: Int) = Unit
         fun onLoadingStateChanged(session: Session, loading: Boolean) = Unit
         fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean) = Unit
-        fun onLoadRequest(session: Session, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) = Unit
+        fun onLoadRequest(
+            session: Session,
+            url: String,
+            triggeredByRedirect: Boolean,
+            triggeredByWebContent: Boolean
+        ) = Unit
         fun onSearch(session: Session, searchTerms: String) = Unit
         fun onSecurityChanged(session: Session, securityInfo: SecurityInfo) = Unit
         fun onCustomTabConfigChanged(session: Session, customTabConfig: CustomTabConfig?) = Unit
@@ -202,12 +207,13 @@ class Session(
     }
 
     /**
-     * Set when a load request is received, indicating if the user was involved in the interaction.
+     * Set when a load request is received, indicating if the request came from web content, or via a redirect.
      */
-    var loadRequestTriggers: Int by Delegates.observable(0) {
+    var loadRequestMetadata: LoadRequestMetadata by Delegates.observable(LoadRequestMetadata.blank) {
         _, _, new -> notifyObservers {
             onLoadRequest(
                 this@Session,
+                new.url,
                 new.isSet(LoadRequestOption.REDIRECT),
                 new.isSet(LoadRequestOption.WEB_CONTENT)
             )
