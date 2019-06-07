@@ -333,8 +333,8 @@ macosx1014-64-tests:
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
-    # - web-platform-tests
-    # - web-platform-tests-reftests
+    - web-platform-tests
+    - web-platform-tests-reftests
     - web-platform-tests-wdspec
     # - xpcshell
 
@@ -354,8 +354,6 @@ macosx64-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     # - mochitest-webgl2-ext test timeouts
-    - web-platform-tests
-    - web-platform-tests-reftests
     - xpcshell
 
 macosx64-talos:
