@@ -25,7 +25,6 @@
 #include "jit/JitOptions.h"
 #include "js/BuildId.h"  // JS::BuildIdCharVector
 #include "threading/LockGuard.h"
-#include "util/NSPR.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmInstance.h"
