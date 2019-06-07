@@ -7,7 +7,6 @@
 #include "mozilla/ProcInfo.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Logging.h"
-#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "nsAutoRef.h"
 #include "nsLocalFile.h"
 #include "nsNetCID.h"
@@ -208,8 +207,7 @@ class ThreadInfoReader final : public StatReader {
 };
 
 RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& type,
-                                    ipc::GeckoChildProcessHost* childProcess) {
+                                    const ProcType& type) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
   nsresult rv = NS_OK;
