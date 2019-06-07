@@ -76,44 +76,6 @@ nsIFile* AddonManagerStartup::ProfileDir() {
 NS_IMPL_ISUPPORTS(AddonManagerStartup, amIAddonManagerStartup, nsIObserver)
 
 /*****************************************************************************
- * URI utils
- *****************************************************************************/
-
-static nsresult ParseJARURI(nsIJARURI* uri, nsIURI** jarFile,
-                            nsCString& entry) {
-  MOZ_TRY(uri->GetJARFile(jarFile));
-  MOZ_TRY(uri->GetJAREntry(entry));
-
-  // The entry portion of a jar: URI is required to begin with a '/', but for
-  // nested JAR URIs, the leading / of the outer entry is currently stripped.
-  // This is a bug which should be fixed in the JAR URI code, but...
-  if (entry.IsEmpty() || entry[0] != '/') {
-    entry.Insert('/', 0);
-  }
-  return NS_OK;
-}
-
-static nsresult ParseJARURI(nsIURI* uri, nsIURI** jarFile, nsCString& entry) {
-  nsresult rv;
-  nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(uri, &rv);
-  MOZ_TRY(rv);
-
-  return ParseJARURI(jarURI, jarFile, entry);
-}
-
-static Result<nsCOMPtr<nsIFile>, nsresult> GetFile(nsIURI* uri) {
-  nsresult rv;
-  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(uri, &rv);
-  MOZ_TRY(rv);
-
-  nsCOMPtr<nsIFile> file;
-  MOZ_TRY(fileURL->GetFile(getter_AddRefs(file)));
-  MOZ_ASSERT(file);
-
-  return std::move(file);
-}
-
-/*****************************************************************************
  * File utils
  *****************************************************************************/
 
@@ -248,11 +210,19 @@ static Result<FileLocation, nsresult> GetFileLocation(nsIURI* uri) {
     MOZ_TRY(fileURL->GetFile(getter_AddRefs(file)));
     location.Init(file);
   } else {
-    nsCOMPtr<nsIURI> fileURI;
-    nsCString entry;
-    MOZ_TRY(ParseJARURI(uri, getter_AddRefs(fileURI), entry));
+    nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(uri);
+    NS_ENSURE_TRUE(jarURI, Err(NS_ERROR_INVALID_ARG));
 
-    MOZ_TRY_VAR(file, GetFile(fileURI));
+    nsCOMPtr<nsIURI> fileURI;
+    MOZ_TRY(jarURI->GetJARFile(getter_AddRefs(fileURI)));
+
+    fileURL = do_QueryInterface(fileURI);
+    NS_ENSURE_TRUE(fileURL, Err(NS_ERROR_INVALID_ARG));
+
+    MOZ_TRY(fileURL->GetFile(getter_AddRefs(file)));
+
+    nsCString entry;
+    MOZ_TRY(jarURI->GetJAREntry(entry));
 
     location.Init(file, entry.get());
   }
@@ -592,11 +562,24 @@ nsresult AddonManagerStartup::DecodeBlob(JS::HandleValue value, JSContext* cx,
   ;
 }
 
-static nsresult EnumerateZip(nsIZipReader* zip, const nsACString& pattern,
-                             nsTArray<nsString>& results) {
+nsresult AddonManagerStartup::EnumerateZipFile(nsIFile* file,
+                                               const nsACString& pattern,
+                                               uint32_t* countOut,
+                                               char16_t*** entriesOut) {
+  NS_ENSURE_ARG_POINTER(file);
+  NS_ENSURE_ARG_POINTER(countOut);
+  NS_ENSURE_ARG_POINTER(entriesOut);
+
+  nsCOMPtr<nsIZipReaderCache> zipCache;
+  MOZ_TRY_VAR(zipCache, GetJarCache());
+
+  nsCOMPtr<nsIZipReader> zip;
+  MOZ_TRY(zipCache->GetZip(file, getter_AddRefs(zip)));
+
   nsCOMPtr<nsIUTF8StringEnumerator> entries;
   MOZ_TRY(zip->FindEntries(pattern, getter_AddRefs(entries)));
 
+  nsTArray<nsString> results;
   bool hasMore;
   while (NS_SUCCEEDED(entries->HasMore(&hasMore)) && hasMore) {
     nsAutoCString name;
@@ -605,60 +588,15 @@ static nsresult EnumerateZip(nsIZipReader* zip, const nsACString& pattern,
     results.AppendElement(NS_ConvertUTF8toUTF16(name));
   }
 
+  auto strResults = MakeUnique<char16_t*[]>(results.Length());
+  for (uint32_t i = 0; i < results.Length(); i++) {
+    strResults[i] = ToNewUnicode(results[i]);
+  }
+
+  *countOut = results.Length();
+  *entriesOut = strResults.release();
+
   return NS_OK;
-}
-
-nsresult AddonManagerStartup::EnumerateJAR(nsIURI* uri,
-                                           const nsACString& pattern,
-                                           nsTArray<nsString>& results) {
-  nsCOMPtr<nsIZipReaderCache> zipCache;
-  MOZ_TRY_VAR(zipCache, GetJarCache());
-
-  nsCOMPtr<nsIZipReader> zip;
-  nsCOMPtr<nsIFile> file;
-  if (nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(uri)) {
-    nsCOMPtr<nsIURI> fileURI;
-    nsCString entry;
-    MOZ_TRY(ParseJARURI(jarURI, getter_AddRefs(fileURI), entry));
-
-    MOZ_TRY_VAR(file, GetFile(fileURI));
-    MOZ_TRY(zipCache->GetInnerZip(file, Substring(entry, 1),
-                                  getter_AddRefs(zip)));
-  } else {
-    MOZ_TRY_VAR(file, GetFile(uri));
-    MOZ_TRY(zipCache->GetZip(file, getter_AddRefs(zip)));
-  }
-  MOZ_ASSERT(zip);
-
-  return EnumerateZip(zip, pattern, results);
-}
-
-nsresult AddonManagerStartup::EnumerateJARSubtree(nsIURI* uri,
-                                                  nsTArray<nsString>& results) {
-  nsCOMPtr<nsIURI> fileURI;
-  nsCString entry;
-  MOZ_TRY(ParseJARURI(uri, getter_AddRefs(fileURI), entry));
-
-  // Mangle the path into a pattern to match all child entries by escaping any
-  // existing pattern matching metacharacters it contains and appending "/*".
-  NS_NAMED_LITERAL_CSTRING(metaChars, "[]()?*~|$\\");
-
-  nsCString pattern;
-  pattern.SetCapacity(entry.Length());
-
-  // The first character of the entry name is "/", which we want to skip.
-  for (auto chr : MakeSpan(Substring(entry, 1))) {
-    if (metaChars.FindChar(chr) >= 0) {
-      pattern.Append('\\');
-    }
-    pattern.Append(chr);
-  }
-  if (!pattern.IsEmpty() && !StringEndsWith(pattern, NS_LITERAL_CSTRING("/"))) {
-    pattern.Append('/');
-  }
-  pattern.Append('*');
-
-  return EnumerateJAR(fileURI, pattern, results);
 }
 
 nsresult AddonManagerStartup::InitializeURLPreloader() {
