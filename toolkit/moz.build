@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+SPHINX_TREES['/toolkit'] = 'docs'
+
 DIRS += [
     'actors',
     'components',
@@ -51,6 +53,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
 TEST_HARNESS_FILES.testing.mochitest.browser.toolkit.crashreporter.test.browser += [
     'crashreporter/test/browser/crashreport.sjs',
 ]
+
+with Files('docs/**'):
+    BUG_COMPONENT = ('Toolkit', 'General')
 
 with Files('moz.*'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
