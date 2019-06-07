@@ -5854,7 +5854,7 @@ bool PresShell::AssumeAllFramesVisible() {
   // Note that it's not safe to call IsRootContentDocument() if we're
   // currently being destroyed, so we have to check that first.
   if (!mHaveShutDown && !mIsDestroying &&
-      !mPresContext->IsRootContentDocument()) {
+      !mPresContext->IsRootContentDocumentInProcess()) {
     nsPresContext* presContext =
         mPresContext->GetToplevelContentDocumentPresContext();
     if (presContext && presContext->PresShell()->AssumeAllFramesVisible()) {
