@@ -70,6 +70,7 @@ class LocalStorageCacheChild final : public PBackgroundLocalStorageCacheChild {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvObserve(const PrincipalInfo& aPrincipalInfo,
+                                      const PrincipalInfo& aCachePrincipalInfo,
                                       const uint32_t& aPrivateBrowsingId,
                                       const nsString& aDocumentURI,
                                       const nsString& aKey,
@@ -215,11 +216,13 @@ class LocalStorageCacheParent final
 
  public:
   // Created in AllocPBackgroundLocalStorageCacheParent.
-  LocalStorageCacheParent(const PrincipalInfo& aPrincipalInfo,
+  LocalStorageCacheParent(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                           const nsACString& aOriginKey,
                           uint32_t aPrivateBrowsingId);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::LocalStorageCacheParent)
+
+  const PrincipalInfo& PrincipalInfo() const { return mPrincipalInfo; }
 
  private:
   // Reference counted.
