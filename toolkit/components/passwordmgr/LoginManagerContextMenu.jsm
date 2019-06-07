@@ -21,8 +21,8 @@ this.LoginManagerContextMenu = {
   /**
    * Look for login items and add them to the contextual menu.
    *
-   * @param {Object} inputElementIdentifier
-   *        An identifier generated for the input element via ContentDOMReference.
+   * @param {HTMLInputElement} inputElement
+   *        The target input element of the context menu click.
    * @param {xul:browser} browser
    *        The browser for the document the context menu was open on.
    * @param {nsIURI} documentURI
@@ -31,7 +31,7 @@ this.LoginManagerContextMenu = {
    *        when subframes are involved.
    * @returns {DocumentFragment} a document fragment with all the login items.
    */
-  addLoginsToMenu(inputElementIdentifier, browser, documentURI) {
+  addLoginsToMenu(inputElement, browser, documentURI) {
     let foundLogins = this._findLogins(documentURI);
 
     if (!foundLogins.length) {
@@ -58,7 +58,7 @@ this.LoginManagerContextMenu = {
 
       // login is bound so we can keep the reference to each object.
       item.addEventListener("command", function(login, event) {
-        this._fillTargetField(login, inputElementIdentifier, browser, documentURI);
+        this._fillTargetField(login, inputElement, browser, documentURI);
       }.bind(this, login));
 
       fragment.appendChild(item);
@@ -149,8 +149,8 @@ this.LoginManagerContextMenu = {
   /**
    * @param {nsILoginInfo} login
    *        The login we want to fill the form with.
-   * @param {Object} inputElementIdentifier
-   *        An identifier generated for the input element via ContentDOMReference.
+   * @param {Element} inputElement
+   *        The target input element we want to fill.
    * @param {xul:browser} browser
    *        The target tab browser.
    * @param {nsIURI} documentURI
@@ -158,12 +158,12 @@ this.LoginManagerContextMenu = {
    *        This isn't the same as the browser's top-level
    *        document URI when subframes are involved.
    */
-  _fillTargetField(login, inputElementIdentifier, browser, documentURI) {
+  _fillTargetField(login, inputElement, browser, documentURI) {
     LoginManagerParent.fillForm({
       browser,
-      inputElementIdentifier,
       loginFormOrigin: documentURI.displayPrePath,
       login,
+      inputElement,
     }).catch(Cu.reportError);
   },
 

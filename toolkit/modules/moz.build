@@ -175,7 +175,6 @@ EXTRA_JS_MODULES += [
     'CharsetMenu.jsm',
     'Color.jsm',
     'Console.jsm',
-    'ContentDOMReference.jsm',
     'CreditCard.jsm',
     'css-selector.js',
     'DateTimePickerPanel.jsm',
