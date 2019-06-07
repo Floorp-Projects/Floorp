@@ -63,13 +63,13 @@ pub(in crate) struct AsyncScreenshotGrabber {
 
 impl Default for AsyncScreenshotGrabber {
     fn default() -> Self {
-        return AsyncScreenshotGrabber {
+        AsyncScreenshotGrabber {
             scaling_textures: Vec::new(),
             available_pbos: Vec::new(),
             awaiting_readback: HashMap::new(),
             next_pbo_handle: 1,
             mode: AsyncScreenshotGrabberMode::ProfilerScreenshots,
-        };
+        }
     }
 }
 
