@@ -396,7 +396,7 @@ class AddonInternal {
   }
 
   get hidden() {
-    return this.location.hidden || (this._hidden && this.isPrivileged) || false;
+    return this.location.hidden || (this._hidden && this.isPrivileged);
   }
 
   set hidden(val) {
