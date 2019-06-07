@@ -39,13 +39,18 @@ const ERROR_TYPES = Object.freeze([
 ]);
 
 class AbuseReportError extends Error {
-  constructor(errorType) {
+  constructor(errorType, errorInfo = undefined) {
     if (!ERROR_TYPES.includes(errorType)) {
       throw new Error(`Unknown AbuseReportError type "${errorType}"`);
     }
-    super(errorType);
+
+    let message = errorInfo ?
+      `${errorType} - ${errorInfo}` : errorType;
+
+    super(message);
     this.name = "AbuseReportError";
     this.errorType = errorType;
+    this.errorInfo = errorInfo;
   }
 }
 
@@ -285,20 +290,32 @@ class AbuseReport {
     } = this[PRIVATE_REPORT_PROPS];
 
     // Record telemetry event and throw an AbuseReportError.
-    const throwReportError = (errorType) => {
+    const rejectReportError = async (errorType, {response} = {}) => {
       this.recordTelemetry(errorType);
-      throw new AbuseReportError(errorType);
+
+      let errorInfo;
+      if (response) {
+        try {
+          errorInfo = JSON.stringify({
+            status: response.status,
+            responseText: await response.text().catch(err => ""),
+          });
+        } catch (err) {
+          // leave the errorInfo empty if we failed to stringify it.
+        }
+      }
+      throw new AbuseReportError(errorType, errorInfo);
     };
 
     if (aborted) {
       // Report aborted before being actually submitted.
-      throwReportError("ERROR_ABORTED_SUBMIT");
+      return rejectReportError("ERROR_ABORTED_SUBMIT");
     }
 
     // Prevent submit of a new abuse report in less than MIN_MS_BETWEEN_SUBMITS.
     let msFromLastReport = AbuseReporter.getTimeFromLastReport();
     if (msFromLastReport < MIN_MS_BETWEEN_SUBMITS) {
-      throwReportError("ERROR_RECENT_SUBMIT");
+      return rejectReportError("ERROR_RECENT_SUBMIT");
     }
 
     let response;
@@ -318,10 +335,10 @@ class AbuseReport {
       });
     } catch (err) {
       if (err.name === "AbortError") {
-        throwReportError("ERROR_ABORTED_SUBMIT");
+        return rejectReportError("ERROR_ABORTED_SUBMIT");
       }
       Cu.reportError(err);
-      throwReportError("ERROR_NETWORK");
+      return rejectReportError("ERROR_NETWORK");
     }
 
     if (response.ok && response.status >= 200 && response.status < 400) {
@@ -334,19 +351,19 @@ class AbuseReport {
       }
       AbuseReporter.updateLastReportTimestamp();
       this.recordTelemetry();
-      return;
+      return undefined;
     }
 
     if (response.status >= 400 && response.status < 500) {
-      throwReportError("ERROR_CLIENT");
+      return rejectReportError("ERROR_CLIENT", {response});
     }
 
     if (response.status >= 500 && response.status < 600) {
-      throwReportError("ERROR_SERVER");
+      return rejectReportError("ERROR_SERVER", {response});
     }
 
     // We got an unexpected HTTP status code.
-    throwReportError("ERROR_UNKNOWN");
+    return rejectReportError("ERROR_UNKNOWN", {response});
   }
 
   /**
