@@ -21,7 +21,7 @@ interface nsIPageThumbsStorageService : nsISupports
   /**
    * Returns the path where the thumbnails are stored
    */
-  readonly attribute ACString path;
+  readonly attribute AString path;
 
   /**
    * Returns the full file path containing the screenshot for a given URL
