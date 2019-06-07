@@ -306,7 +306,7 @@ bool CheckWriteOnlySecurity(bool aCORSUsed, nsIPrincipal* aPrincipal,
     }
 
     nsIGlobalObject* incumbentSettingsObject = dom::GetIncumbentGlobal();
-    if (NS_WARN_IF(!incumbentSettingsObject)) {
+    if (!incumbentSettingsObject) {
       return true;
     }
 
