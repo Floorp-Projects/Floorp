@@ -39,6 +39,7 @@ add_task(async function enableHtmlViews() {
     set: [["extensions.htmlaboutaddons.enabled", true]],
   });
   promptService = mockPromptService();
+  Services.telemetry.clearEvents();
 });
 
 let extensionsCreated = 0;
@@ -58,10 +59,11 @@ function createExtensions(manifestExtras) {
 }
 
 add_task(async function testExtensionList() {
+  let id = "test@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test extension",
-      applications: {gecko: {id: "test@mochi.test"}},
+      applications: {gecko: {id}},
       icons: {
         32: "test-icon.png",
       },
@@ -70,7 +72,7 @@ add_task(async function testExtensionList() {
   });
   await extension.startup();
 
-  let addon = await AddonManager.getAddonByID("test@mochi.test");
+  let addon = await AddonManager.getAddonByID(id);
   ok(addon, "The add-on can be found");
 
   let win = await loadInitialView("extension");
@@ -86,7 +88,7 @@ add_task(async function testExtensionList() {
   // The loaded extension should be in the enabled list.
   let enabledSection = getSection(doc, "enabled");
   ok(!isEmpty(enabledSection), "The enabled section isn't empty");
-  let card = getCardByAddonId(enabledSection, "test@mochi.test");
+  let card = getCardByAddonId(enabledSection, id);
   ok(card, "The card is in the enabled section");
 
   // Check the properties of the card.
@@ -126,7 +128,7 @@ add_task(async function testExtensionList() {
   removeButton.click();
   await removed;
 
-  addon = await AddonManager.getAddonByID("test@mochi.test");
+  addon = await AddonManager.getAddonByID(id);
   ok(addon && !!(addon.pendingOperations & AddonManager.PENDING_UNINSTALL),
      "The addon is pending uninstall");
 
@@ -237,6 +239,21 @@ add_task(async function testExtensionList() {
 
   ok(!await AddonManager.getAddonByID(themeAddon.id),
      "The theme addon is fully uninstalled");
+
+  assertAboutAddonsTelemetryEvents([
+    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "extension", addonId: id, view: "list", action: "disable"}],
+    ["addonsManager", "action", "aboutAddons", "cancelled",
+     {type: "extension", addonId: id, view: "list", action: "uninstall"}],
+    ["addonsManager", "action", "aboutAddons", "accepted",
+     {type: "extension", addonId: id, view: "list", action: "uninstall"}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "extension", addonId: id, view: "list", action: "undo"}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "extension", addonId: "test-2@mochi.test", view: "list",
+      action: "undo"}],
+  ]);
 });
 
 add_task(async function testMouseSupport() {

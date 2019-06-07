@@ -6,6 +6,7 @@
 /* eslint no-unused-vars: ["error", {vars: "local", args: "none"}] */
 
 var {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {TelemetryTestUtils} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
 var tmp = {};
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm", tmp);
@@ -1453,6 +1454,16 @@ function acceptAppMenuNotificationWhenShown(id, addonId) {
   return waitAppMenuNotificationShown(id, addonId, true);
 }
 
+const ABOUT_ADDONS_METHODS = new Set(["action", "view", "link"]);
+function assertAboutAddonsTelemetryEvents(events, filters = {}) {
+  TelemetryTestUtils.assertEvents(events, {
+    category: "addonsManager",
+    method: (actual) => filters.methods ?
+      filters.methods.includes(actual) : ABOUT_ADDONS_METHODS.has(actual),
+    object: "aboutAddons",
+  });
+}
+
 function assertTelemetryMatches(events, {filterMethods} = {}) {
   let snapshot = Services.telemetry.snapshotEvents(
     Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
@@ -1477,9 +1488,11 @@ function assertTelemetryMatches(events, {filterMethods} = {}) {
 
 /* HTML view helpers */
 async function loadInitialView(type) {
+  // Force the first page load to be the view we want.
+  let viewId = type == "discover" ? "discover/" : `list/${type}`;
+  Services.prefs.setCharPref(PREF_UI_LASTCATEGORY, `addons://${viewId}`);
+
   let managerWindow = await open_manager(null);
-  let categoryUtilities = new CategoryUtilities(managerWindow);
-  await categoryUtilities.openType(type);
 
   let browser = managerWindow.document.getElementById("html-view-browser");
   let win = browser.contentWindow;
