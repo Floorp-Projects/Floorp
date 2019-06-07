@@ -2376,12 +2376,11 @@ bool gfxFcPlatformFontList::PrefFontListsUseOnlyGenerics() {
   static const char kFontNamePrefix[] = "font.name.";
 
   bool prefFontsUseOnlyGenerics = true;
-  uint32_t count;
-  char** names;
-  nsresult rv = Preferences::GetRootBranch()->GetChildList(kFontNamePrefix,
-                                                           &count, &names);
-  if (NS_SUCCEEDED(rv) && count) {
-    for (size_t i = 0; i < count; i++) {
+  nsTArray<nsCString> names;
+  nsresult rv =
+      Preferences::GetRootBranch()->GetChildList(kFontNamePrefix, names);
+  if (NS_SUCCEEDED(rv)) {
+    for (auto& name : names) {
       // Check whether all font.name prefs map to generic keywords
       // and that the pref name and keyword match.
       //   Ex: font.name.serif.ar ==> "serif" (ok)
@@ -2393,12 +2392,13 @@ bool gfxFcPlatformFontList::PrefFontListsUseOnlyGenerics() {
       //       font.name-list.serif.ar ==> "Something, serif"
       //                                           (return false)
 
-      nsDependentCString prefName(names[i] + ArrayLength(kFontNamePrefix) - 1);
+      nsDependentCSubstring prefName =
+          Substring(name, ArrayLength(kFontNamePrefix) - 1);
       nsCCharSeparatedTokenizer tokenizer(prefName, '.');
       const nsDependentCSubstring& generic = tokenizer.nextToken();
       const nsDependentCSubstring& langGroup = tokenizer.nextToken();
       nsAutoCString fontPrefValue;
-      Preferences::GetCString(names[i], fontPrefValue);
+      Preferences::GetCString(name.get(), fontPrefValue);
       if (fontPrefValue.IsEmpty()) {
         // The font name list may have two or more family names as comma
         // separated list.  In such case, not matching with generic font
@@ -2414,7 +2414,6 @@ bool gfxFcPlatformFontList::PrefFontListsUseOnlyGenerics() {
         break;
       }
     }
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, names);
   }
   return prefFontsUseOnlyGenerics;
 }

@@ -336,8 +336,7 @@ interface nsIPrefBranch : nsISupports
    * @param aStartingAt The point on the branch at which to start enumerating
    *                    the child preferences. Pass in "" to enumerate all
    *                    preferences referenced by this branch.
-   * @param aCount      Receives the number of elements in the array.
-   * @param aChildArray Receives the array of child preferences.
+   * @return            The array of child preferences.
    *
    * @note
    * This method can be called on either a default or user branch but, in
@@ -345,9 +344,7 @@ interface nsIPrefBranch : nsISupports
    *
    * @throws Error The preference(s) do not exist or an error occurred.
    */
-  void getChildList(in string aStartingAt,
-                    [optional] out unsigned long aCount,
-                    [array, size_is(aCount), retval] out string aChildArray);
+  Array<ACString> getChildList(in string aStartingAt);
 
   /**
    * Called to reset all of the preferences referenced by this branch to their
