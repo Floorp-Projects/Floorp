@@ -4925,9 +4925,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
     use style::properties::longhands::background_image::SpecifiedValue as BackgroundImage;
     use style::properties::PropertyDeclaration;
     use style::stylesheets::CorsMode;
-    use style::values::generics::image::Image;
+    use style::values::generics::image::{Image, ImageLayer};
     use style::values::specified::url::SpecifiedImageUrl;
-    use style::values::Either;
 
     let url_data = unsafe { UrlExtraData::from_ptr_ref(&raw_extra_data) };
     let string = unsafe { (*value).to_string() };
@@ -4941,9 +4940,9 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
         None,
     );
     let url = SpecifiedImageUrl::parse_from_string(string.into(), &context, CorsMode::None);
-    let decl = PropertyDeclaration::BackgroundImage(BackgroundImage(vec![Either::Second(
-        Image::Url(url),
-    )].into()));
+    let decl = PropertyDeclaration::BackgroundImage(BackgroundImage(vec![
+        ImageLayer::Image(Image::Url(url))
+    ].into()));
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(decl, Importance::Normal);
     });

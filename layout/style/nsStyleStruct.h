@@ -130,46 +130,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   RefPtr<nsAtom> mLanguage;
 };
 
-class nsStyleGradient final {
- public:
-  nsStyleGradient();
-  uint8_t mShape;  // NS_STYLE_GRADIENT_SHAPE_*
-  uint8_t mSize;   // NS_STYLE_GRADIENT_SIZE_*;
-                   // not used (must be FARTHEST_CORNER) for linear shape
-  bool mRepeating;
-  bool mLegacySyntax;  // If true, serialization should use a vendor prefix.
-  // XXXdholbert This will hopefully be going away soon, if bug 1337655 sticks:
-  bool mMozLegacySyntax;  // (Only makes sense when mLegacySyntax is true.)
-                          // If true, serialization should use -moz prefix.
-                          // Else, serialization should use -webkit prefix.
-
-  nsStyleCoord mBgPosX;  // percent, coord, calc, none
-  nsStyleCoord mBgPosY;  // percent, coord, calc, none
-  nsStyleCoord mAngle;   // none, angle
-
-  nsStyleCoord mRadiusX;  // percent, coord, calc, none
-  nsStyleCoord mRadiusY;  // percent, coord, calc, none
-
-  // stops are in the order specified in the stylesheet
-  nsTArray<mozilla::StyleGradientItem> mStops;
-
-  bool operator==(const nsStyleGradient& aOther) const;
-  bool operator!=(const nsStyleGradient& aOther) const {
-    return !(*this == aOther);
-  }
-
-  bool IsOpaque();
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStyleGradient)
-
- private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~nsStyleGradient() {}
-
-  nsStyleGradient(const nsStyleGradient& aOther) = delete;
-  nsStyleGradient& operator=(const nsStyleGradient& aOther) = delete;
-};
-
 /**
  * A wrapper for an imgRequestProxy that supports off-main-thread creation
  * and equality comparison.
@@ -304,7 +264,7 @@ struct nsStyleImage {
 
   void SetNull();
   void SetImageRequest(already_AddRefed<nsStyleImageRequest> aImage);
-  void SetGradientData(nsStyleGradient* aGradient);
+  void SetGradientData(mozilla::UniquePtr<mozilla::StyleGradient>);
   void SetElementId(already_AddRefed<nsAtom> aElementId);
   void SetCropRect(mozilla::UniquePtr<nsStyleSides> aCropRect);
 
@@ -327,9 +287,9 @@ struct nsStyleImage {
     return mImage;
   }
   imgRequestProxy* GetImageData() const { return ImageRequest()->get(); }
-  nsStyleGradient* GetGradientData() const {
+  const mozilla::StyleGradient& GetGradient() const {
     NS_ASSERTION(mType == eStyleImageType_Gradient, "Data is not a gradient!");
-    return mGradient;
+    return *mGradient;
   }
   bool IsResolved() const {
     return mType != eStyleImageType_Image || ImageRequest()->IsResolved();
@@ -429,7 +389,7 @@ struct nsStyleImage {
   nsStyleImageType mType;
   union {
     nsStyleImageRequest* mImage;
-    nsStyleGradient* mGradient;
+    mozilla::StyleGradient* mGradient;
     nsAtom* mElementId;
   };
 
