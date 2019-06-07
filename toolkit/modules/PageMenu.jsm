@@ -161,10 +161,8 @@ PageMenu.prototype = {
       } else if (this._browser) {
         let win = target.ownerGlobal;
         let windowUtils = win.windowUtils;
-        this._browser.messageManager.sendAsyncMessage("ContextMenu:DoCustomCommand", {
-          generatedItemId: target.getAttribute(this.GENERATEDITEMID_ATTR),
-          handlingUserInput: windowUtils.isHandlingUserInput,
-        });
+        win.gContextMenu.doCustomCommand(target.getAttribute(this.GENERATEDITEMID_ATTR),
+                                         windowUtils.isHandlingUserInput);
       }
     } else if (type == "popuphidden" && this._popup == target) {
       this.removeGeneratedContent(this._popup);
