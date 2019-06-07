@@ -4588,13 +4588,18 @@ void AsyncPanZoomController::NotifyLayersUpdated(
           aLayerMetrics.GetDevPixelsPerCSSPixel());
     }
     bool scrollableRectChanged = false;
+    bool compositionBoundsChanged = false;
     if (!Metrics().GetScrollableRect().IsEqualEdges(
             aLayerMetrics.GetScrollableRect())) {
       Metrics().SetScrollableRect(aLayerMetrics.GetScrollableRect());
       needContentRepaint = true;
       scrollableRectChanged = true;
     }
-    Metrics().SetCompositionBounds(aLayerMetrics.GetCompositionBounds());
+    if (!Metrics().GetCompositionBounds().IsEqualEdges(
+            aLayerMetrics.GetCompositionBounds())) {
+      Metrics().SetCompositionBounds(aLayerMetrics.GetCompositionBounds());
+      compositionBoundsChanged = true;
+    }
     Metrics().SetRootCompositionSize(aLayerMetrics.GetRootCompositionSize());
     Metrics().SetPresShellResolution(aLayerMetrics.GetPresShellResolution());
     Metrics().SetCumulativeResolution(aLayerMetrics.GetCumulativeResolution());
@@ -4682,10 +4687,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       // Since the main-thread scroll offset changed we should trigger a
       // recomposite to make sure it becomes user-visible.
       ScheduleComposite();
-    } else if (scrollableRectChanged) {
+    } else if (scrollableRectChanged || compositionBoundsChanged) {
       // Even if we didn't accept a new scroll offset from content, the
-      // scrollable rect may have changed in a way that makes our local
-      // scroll offset out of bounds, so re-clamp it.
+      // scrollable rect or composition bounds may have changed in a way that
+      // makes our local scroll offset out of bounds, so re-clamp it.
       ClampAndSetScrollOffset(Metrics().GetScrollOffset());
       ClampCompositedScrollOffset();
     }
