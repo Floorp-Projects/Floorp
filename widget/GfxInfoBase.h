@@ -55,8 +55,8 @@ class GfxInfoBase : public nsIGfxInfo,
 
   NS_IMETHOD GetMonitors(JSContext* cx,
                          JS::MutableHandleValue _retval) override;
-  NS_IMETHOD GetFailures(uint32_t* failureCount, int32_t** indices,
-                         char*** failures) override;
+  NS_IMETHOD GetFailures(nsTArray<int32_t>& indices,
+                         nsTArray<nsCString>& failures) override;
   NS_IMETHOD_(void) LogFailure(const nsACString& failure) override;
   NS_IMETHOD GetInfo(JSContext*, JS::MutableHandle<JS::Value>) override;
   NS_IMETHOD GetFeatures(JSContext*, JS::MutableHandle<JS::Value>) override;
