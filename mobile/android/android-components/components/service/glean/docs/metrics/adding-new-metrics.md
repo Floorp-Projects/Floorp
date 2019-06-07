@@ -80,15 +80,27 @@ Views.loginOpened...
 There are different metrics to choose from, depending on what you want to achieve:
 
 * [Events](#Events): Records events e.g. individual occurences of user actions, say every time a view was open and from where.
-* [Booleans](#Booleans): Records a single truth value, for example "is a11y enabled?"
+* [Booleans](#Booleans): Records a single truth value, for example "is a11y enabled?".
 * [Strings](#Strings): Records a single Unicode string value, for example the name of the OS.
-* [String Lists](#String-lists): Records a list of Unicode string values, for example the list of enabled search engines.
+* [Labeled strings](#Labeled-strings): Records multiple Unicode string values, for example to record which kind of error occured in different stages of a login process - `"RuntimeException"` in the `"server_auth"` stage or `"invalid_string"` in the `"enter_email"` stage.
+* [String Lists](#String-lists): Records a list of Unicode string values, for example the list of enabled search engines - `"duckduckgo"`, `"google"`, etc.
 * [Counters](#Counters): Used to count how often something happens, for example, how often a certain button was pressed.
+* [Labeled counters](#Labeled-counters): Used to count how often something happens, for example which kind of crashes occured - `"uncaught_exception"` or `"native_code_crash"`.
 * [Timespans](#Timespans): Used to measure how much time is spent in a single task.
+* [Labeled timespans](#Labeled-timespans): Used to measure how much time is spent in a set of related tasks, for example different stages in a login process - the time taken for `"fill_form"`, `"auth_with_server"`, `"load_next_view"`.
 * [Timing Distributions](#Timing-Distributions): Used to record the distribution of multiple time measurements.
 * [Datetimes](#Datetimes): Used to record an absolute date and time, such as the time the user first ran the application.
 * [UUIDs](#UUIDs): Used to record universally unique identifiers (UUIDs), such as a client ID.
-* [Labeled Metrics](#Labeled-metrics): Used to record multiple metrics of the same type under different string labels, say every time you want to get a count of different error types in one metric.
+
+## Labeled metrics
+
+There are two types of metrics listed above - *labeled* and *unlabeled* metrics. If a metric is *labeled*, it means that for a single metric entry you define in `metrics.yaml`, you can record into multiple metrics under the same name, each of the same type and identified by a different string label.
+
+This is useful when you need to break down metrics by a label known at build time or run time. For example:
+- When you want to count a different set of subviews that users interact with, you could use `viewCount["view1"].add()` and `viewCount["view2"].add()`.
+- When you want to count errors that might occur for a feature, you could use `errorCount[errorName].add()`.
+
+**Note**: Be careful with using arbitrary strings as labels and make sure they can't accidentally contain identifying data (like directory paths or user input).
 
 ## Events
 
@@ -105,7 +117,7 @@ views:
       Recorded when the login view is opened.
     ...
     extra_keys:
-      source_of_login: 
+      source_of_login:
         description: The source from which the login view was opened, e.g. "toolbar".
 ```
 
@@ -212,6 +224,23 @@ assertTrue(SearchDefault.name.testHasValue())
 assertEquals("wikipedia", SearchDefault.name.testGetValue())
 ```
 
+## Labeled strings
+
+Labeled strings record multiple Unicode string values, each under a different label.
+
+For example to record which kind of error occured in different stages of a login process - `"RuntimeException"` in the `"server_auth"` stage or `"invalid_string"` in the `"enter_email"` stage:
+
+```YAML
+login:
+  errors_by_stage:
+    type: labeled_string
+    description: Records the error type, if any, that occur in different stages of the login process.
+    labels:
+      - server_auth
+      - enter_email
+    ...
+```
+
 ## String lists
 
 Strings lists are used for recording a list of Unicode string values, such as
@@ -293,6 +322,47 @@ assertTrue(Controls.refreshPressed.testHasValue())
 assertEquals(6, Controls.refreshPressed.testGetValue())
 ```
 
+## Labeled Counters
+
+Labeled counters are used to record different related counts that should sum up to a total.
+
+For example, you may want to record a count of different types of crashes for your Android application, such as native code crashes and uncaught exceptions:
+
+```YAML
+stability:
+  crash_count:
+    type: labeled_counter
+    description: >
+      Counts the number of crashes that occur in the application. ...
+    labels:
+      - uncaught_exception
+      - native_code_crash
+    ...
+```
+
+Now you can use the labeled counter from the application's code:
+
+```Kotlin
+import org.mozilla.yourApplication.GleanMetrics.Stability
+
+Stability.crashCount["uncaught_exception"].add() // Adds 1 to the "uncaught_exception" counter.
+Stability.crashCount["native_code_crash"].add(3) // Adds 3 to the "native_code_crash" counter.
+```
+
+There are test APIs available too:
+
+```Kotlin
+import org.mozilla.yourApplication.GleanMetrics.Stability
+Glean.enableTestingMode()
+
+// Was anything recorded?
+assertTrue(Stability.crashCount["uncaught_exception"].testHasValue())
+assertTrue(Stability.crashCount["native_code_crash"].testHasValue())
+// Do the counters have the expected values?
+assertEquals(1, Stability.crashCount["uncaught_exception"].testGetValue())
+assertEquals(3, Stability.crashCount["native_code_crash"].testGetValue())
+```
+
 ## Timespans
 
 Timespans are used to make a summed measurement of how much time is spent in a
@@ -348,7 +418,7 @@ fun onLogin(e: Event) {
 }
 
 fun onLoginCancel(e: Event) {
-    Auth.loginTime.cancel(e.tart)
+    Auth.loginTime.cancel(e.target)
     // ...
 }
 ```
@@ -367,6 +437,67 @@ assertTrue(Auth.loginTime.testHasValue())
 // Does the timer have the expected value
 assertTrue(Auth.loginTime.testGetValue() > 0)
 ```
+
+## Labeled Timespans
+
+Used to measure how much time is spent in a set of related tasks.
+
+For example, to record the time spent in different stages in a login process:
+
+```YAML
+auth:
+  times_per_stage:
+    type: labeled_timespan
+    description: The time spent in the different stages of the login process.
+    labels:
+      - fill_form
+      - auth_with_server
+      - load_next_view
+    ...
+```
+
+Now you can use the labeled timespan from the application's code. Each time interval
+that the metric records must be associated with an object provided by
+the user. This is so that intervals can be measured concurrently. In our example
+using time in different stages of the login process, this might be an object representing the login UI page.
+
+```Kotlin
+import org.mozilla.yourApplication.GleanMetrics.Auth
+
+fun onShowLoginForm(e: Event) {
+    Auth.timesPerStage["fill_form"].start(e.target)
+    // ...
+}
+
+fun onLoginFormSubmitted(e: Event) {
+    Auth.timesPerStage["fill_form"].stop(e.target)
+    Auth.timesPerStage["auth_with_server"].start(e.target)
+    // ...
+}
+
+// ... etc.
+
+fun onLoginCancel(e: Event) {
+    Auth.timesPerStage["fill_form"].cancel(e.target)
+    // ...
+}
+```
+
+The times reported in Glean will be the sum of all of these
+timespans recorded during the lifetime of the ping.
+
+There are test APIs available too:
+
+```Kotlin
+import org.mozilla.yourApplication.GleanMetrics.Auth
+Glean.enableTestingMode()
+
+// Was anything recorded?
+assertTrue(Auth.timesPerStage["fill_form"].testHasValue())
+assertTrue(Auth.timesPerStage["auth_with_server"].testHasValue())
+// Does the timer have the expected value
+assertTrue(Auth.timesPerStage["fill_form"].testGetValue() > 0)
+assertTrue(Auth.timesPerStage["auth_with_server"].testGetValue() > 0)
 
 ## Timing Distributions
 
@@ -527,54 +658,6 @@ Glean.enableTestingMode()
 assertTrue(User.clientId.testHasValue())
 // Was it the expected value? 
 assertEquals(uuid, User.clientId.testGetValue())
-```
-
-## Labeled metrics
-
-Some metrics can be used as *labeled* variants. This means that for a single metric entry you define in `metrics.yaml`, you can record into multiple metrics under the same name, each identified by a different string label.
-
-This is useful when you need to break down metrics by a label known at build time or run time. For example:
-- When you want to count a different set of subviews that users interact with, you could use `viewCount["view1"].add()` and `viewCount["view2"].add()`.
-- When you want to count errors that might occur for a feature, you could use `errorCount[errorName].add()`.
-
-**Note**: Be careful with using arbitrary strings as labels and make sure they can't accidentally contain identifying data (like directory paths or user input).
-
-All metric types except events have labeled variants.  For example, for a labeled counter, use `type: labeled_counter`.
-
-Say you're adding a new counter for errors that can occur when loading a resource from a REST API. First you need to add an entry for the counter to the `metrics.yaml` file:
-
-```YAML
-updater:
-  load_error:
-    type: labeled_counter
-    labels: # This is optional, if provided it limits the set of labels you can use.
-    - timeout
-    - not_found
-    description: >
-      Counts the different types of load errors that can occur.
-    ...
-```
-
-Now you can use the labeled counter from the applications code:
-
-```Kotlin
-import org.mozilla.yourApplication.GleanMetrics.Updater
-
-Updater.loadError["timeout"].add() // Adds 1 to the "timeout" counter.
-Updater.loadError["not_found"].add(2)
-```
-
-There are test APIs available too:
-
-```Kotlin
-import org.mozilla.yourApplication.GleanMetrics.Updater
-Glean.enableTestingMode()
-
-// Was anything recorded?
-assertTrue(Updater.loadError["timeout"].testHasValue())
-assertTrue(Updater.loadError["not_found"].testHasValue())
-// Does the counter have the expected value?
-assertEquals(2, Updater.loadError["not_found"].testGetValue())
 ```
 
 # Common metric parameters
