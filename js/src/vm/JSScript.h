@@ -1011,13 +1011,11 @@ class ScriptSource {
   void triggerConvertToCompressedSource(SharedImmutableString compressed,
                                         size_t sourceLength);
 
-  // Initialize a fresh ScriptSource as containing compressed source of the
-  // indicated original encoding.
+  // Initialize a fresh ScriptSource as containing unretrievable compressed
+  // source of the indicated original encoding.
   template <typename Unit>
-  MOZ_MUST_USE bool initializeWithCompressedSource(JSContext* cx,
-                                                   UniqueChars&& raw,
-                                                   size_t rawLength,
-                                                   size_t sourceLength);
+  MOZ_MUST_USE bool initializeWithUnretrievableCompressedSource(
+      JSContext* cx, UniqueChars&& raw, size_t rawLength, size_t sourceLength);
 
 #if defined(JS_BUILD_BINAST)
 
