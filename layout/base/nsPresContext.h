@@ -950,7 +950,25 @@ class nsPresContext : public nsISupports,
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
+  /**
+   * Deprecated. Please use the InProcess or CrossProcess variants
+   * to specify which behaviour you want.
+   */
   bool IsRootContentDocument() const;
+
+  /**
+   * We are a root content document in process if: we are not a resource doc, we
+   * are not chrome, and we either have no parent in the current process or our
+   * parent is chrome.
+   */
+  bool IsRootContentDocumentInProcess() const;
+
+  /**
+   * We are a root content document cross process if: we are not a resource doc,
+   * we are not chrome, and we either have no parent in any process or our
+   * parent is chrome.
+   */
+  bool IsRootContentDocumentCrossProcess() const;
 
   bool HadNonBlankPaint() const { return mHadNonBlankPaint; }
   bool HadContentfulPaint() const { return mHadContentfulPaint; }
