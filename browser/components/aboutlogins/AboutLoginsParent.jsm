@@ -89,6 +89,10 @@ var AboutLoginsParent = {
         Services.logins.removeLogin(login);
         break;
       }
+      case "AboutLogins:OpenPreferences": {
+        message.target.ownerGlobal.openPreferences("privacy-logins");
+        break;
+      }
       case "AboutLogins:OpenSite": {
         let guid = message.data.login.guid;
         let logins = LoginHelper.searchLoginsWithObject({guid});

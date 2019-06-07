@@ -52,6 +52,7 @@ let LEGACY_ACTORS = {
       events: {
         "AboutLoginsCreateLogin": {wantUntrusted: true},
         "AboutLoginsDeleteLogin": {wantUntrusted: true},
+        "AboutLoginsOpenPreferences": {wantUntrusted: true},
         "AboutLoginsOpenSite": {wantUntrusted: true},
         "AboutLoginsUpdateLogin": {wantUntrusted: true},
         "AboutLoginsInit": {wantUntrusted: true},
@@ -572,6 +573,7 @@ const listeners = {
   mm: {
     "AboutLogins:CreateLogin": ["AboutLoginsParent"],
     "AboutLogins:DeleteLogin": ["AboutLoginsParent"],
+    "AboutLogins:OpenPreferences": ["AboutLoginsParent"],
     "AboutLogins:OpenSite": ["AboutLoginsParent"],
     "AboutLogins:Subscribe": ["AboutLoginsParent"],
     "AboutLogins:UpdateLogin": ["AboutLoginsParent"],
