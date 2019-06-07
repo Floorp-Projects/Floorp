@@ -5,11 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ProcInfo.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 
 namespace mozilla {
 
 RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& type) {
+                                    const ProcType& type,
+                                    ipc::GeckoChildProcessHost* childProcess) {
   // Not implemented on Android.
   return nullptr;
 }
