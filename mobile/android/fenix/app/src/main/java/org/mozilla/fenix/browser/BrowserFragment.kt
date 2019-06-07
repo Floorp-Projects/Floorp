@@ -51,7 +51,6 @@ import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import mozilla.components.support.ktx.kotlin.toUri
 import org.mozilla.fenix.BrowsingModeManager
@@ -77,6 +76,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarUIView
 import org.mozilla.fenix.components.toolbar.ToolbarViewModel
 import org.mozilla.fenix.customtabs.CustomTabsIntegration
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.urlToTrimmedHost
