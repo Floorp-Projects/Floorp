@@ -3232,7 +3232,7 @@ fn compute_conservative_visible_rect(
     map_local_to_pic: &SpaceMapper<LayoutPixel, PicturePixel>,
 ) -> LayoutRect {
     if let Some(local_bounds) = map_local_to_pic.get_conservative_local_bounds() {
-        return local_clip_rect.intersection(&local_bounds).unwrap_or(LayoutRect::zero())
+        return local_clip_rect.intersection(&local_bounds).unwrap_or_else(LayoutRect::zero)
     }
 
     *local_clip_rect
