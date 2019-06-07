@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function
 
+import io
 import os
 import posixpath
 import re
@@ -15,6 +16,9 @@ import time
 import traceback
 
 from distutils import dir_util
+import six
+from six.moves import range
+
 from . import version_codes
 
 
@@ -189,7 +193,10 @@ class ADBCommand(object):
                                       stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE).communicate()
             re_version = re.compile(r'Android Debug Bridge version (.*)')
-            self._adb_version = re_version.match(output[0]).group(1)
+            if isinstance(output[0], six.binary_type):
+                self._adb_version = re_version.match(output[0].decode('utf-8', 'replace')).group(1)
+            else:
+                self._adb_version = re_version.match(output[0]).group(1)
 
         except Exception as exc:
             raise ADBError('%s: %s is not executable.' % (exc, adb))
@@ -320,7 +327,7 @@ class ADBCommand(object):
 
             return output
         finally:
-            if adb_process and isinstance(adb_process.stdout_file, file):
+            if adb_process and isinstance(adb_process.stdout_file, io.IOBase):
                 adb_process.stdout_file.close()
 
 
@@ -805,7 +812,7 @@ class ADBDevice(ADBCommand):
                 re_device_serial_tcpip.match(serial) is not None or \
                 ":" not in serial
 
-        if isinstance(device, (str, unicode)):
+        if isinstance(device, six.string_types):
             # Treat this as a device serial
             if not is_valid_serial(device):
                 raise ValueError("Device serials containing ':' characters are "
@@ -1355,8 +1362,8 @@ class ADBDevice(ADBCommand):
         if cwd:
             cmd = "cd %s && %s" % (cwd, cmd)
         if env:
-            envstr = '&& '.join(map(lambda x: 'export %s=%s' %
-                                    (x[0], x[1]), env.iteritems()))
+            envstr = '&& '.join(['export %s=%s' %
+                                 (x[0], x[1]) for x in env.items()])
             cmd = envstr + "&& " + cmd
         cmd += "; echo adb_returncode=$?"
 
@@ -1380,7 +1387,7 @@ class ADBDevice(ADBCommand):
                 time.sleep(self._polling_interval)
                 exitcode = adb_process.proc.poll()
         else:
-            stdout2 = open(adb_process.stdout_file.name, 'rb')
+            stdout2 = io.open(adb_process.stdout_file.name, 'rb')
             while ((time.time() - start_time) <= float(timeout)) and exitcode is None:
                 try:
                     line = _timed_read_line(stdout2)
@@ -1494,7 +1501,7 @@ class ADBDevice(ADBCommand):
 
             return output
         finally:
-            if adb_process and isinstance(adb_process.stdout_file, file):
+            if adb_process and isinstance(adb_process.stdout_file, io.IOBase):
                 adb_process.stdout_file.close()
 
     # Informational methods
@@ -2092,7 +2099,7 @@ class ADBDevice(ADBCommand):
             else:
                 entry = line
             entries[entry] = 1
-        entry_list = entries.keys()
+        entry_list = list(entries.keys())
         entry_list.sort()
         return entry_list
 
@@ -2265,17 +2272,17 @@ class ADBDevice(ADBCommand):
         """
         with tempfile.NamedTemporaryFile() as tf:
             self.pull(remote, tf.name, timeout=timeout)
-            with open(tf.name) as tf2:
+            with io.open(tf.name, mode='rb') as tf2:
                 # ADB pull does not support offset and length, but we can
                 # instead read only the requested portion of the local file
                 if offset is not None and length is not None:
                     tf2.seek(offset)
-                    return tf2.read(length)
+                    return tf2.read(length).decode("UTF-8", "replace")
                 elif offset is not None:
                     tf2.seek(offset)
-                    return tf2.read()
+                    return tf2.read().decode("UTF-8", "replace")
                 else:
-                    return tf2.read()
+                    return tf2.read().decode("UTF-8", "replace")
 
     def rm(self, path, recursive=False, force=False, timeout=None, root=False):
         """Delete files or directories on the device.
@@ -2499,7 +2506,7 @@ class ADBDevice(ADBCommand):
         :raises: * ADBTimeoutError
                  * ADBError
         """
-        if not isinstance(process_name, basestring):
+        if not isinstance(process_name, six.string_types):
             raise ADBError("Process name %s is not a string" % process_name)
 
         # Filter out extra spaces.
@@ -3027,7 +3034,7 @@ class ADBDevice(ADBCommand):
         # against bool prior to testing it against int in order to
         # prevent falsely identifying a bool value as an int.
         if extras:
-            for (key, val) in extras.iteritems():
+            for (key, val) in extras.items():
                 if isinstance(val, bool):
                     extra_type_param = "--ez"
                 elif isinstance(val, int):
@@ -3082,7 +3089,7 @@ class ADBDevice(ADBCommand):
         if moz_env:
             # moz_env is expected to be a dictionary of environment variables:
             # Fennec itself will set them when launched
-            for (env_count, (env_key, env_val)) in enumerate(moz_env.iteritems()):
+            for (env_count, (env_key, env_val)) in enumerate(moz_env.items()):
                 extras["env" + str(env_count)] = env_key + "=" + env_val
 
         # Additional command line arguments that fennec will read and use (e.g.
@@ -3132,7 +3139,7 @@ class ADBDevice(ADBCommand):
         if moz_env:
             # moz_env is expected to be a dictionary of environment variables:
             # geckoview_example itself will set them when launched
-            for (env_count, (env_key, env_val)) in enumerate(moz_env.iteritems()):
+            for (env_count, (env_key, env_val)) in enumerate(moz_env.items()):
                 extras["env" + str(env_count)] = env_key + "=" + env_val
 
         # Additional command line arguments that the app will read and use (e.g.

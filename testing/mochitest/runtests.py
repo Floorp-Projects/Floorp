@@ -83,6 +83,8 @@ try:
 except ImportError:
     pass
 
+import six
+
 here = os.path.abspath(os.path.dirname(__file__))
 
 NO_TESTS_FOUND = """
@@ -202,7 +204,12 @@ class MessageLogger(object):
     def parse_line(self, line):
         """Takes a given line of input (structured or not) and
         returns a list of structured messages"""
-        line = line.rstrip().decode("UTF-8", "replace")
+        if isinstance(line, six.binary_type):
+            # if line is a sequence of bytes, let's decode it
+            line = line.rstrip().decode("UTF-8", "replace")
+        else:
+            # line is in unicode - so let's use it as it is
+            line = line.rstrip()
 
         messages = []
         for fragment in line.split(MessageLogger.DELIMITER):
