@@ -965,7 +965,8 @@ impl CPPExporter {
         let node_names = self.syntax.interfaces_by_name()
             .keys()
             .map(|n| n.to_string())
-            .sorted();
+            .sorted()
+            .collect_vec();
         let kind_limit = node_names.len();
         buffer.push_str(&format!("\n#define FOR_EACH_BIN_KIND(F) \\\n{nodes}\n",
             nodes = node_names.iter()
@@ -990,7 +991,8 @@ enum class BinASTKind: uint16_t {
 
         let field_names = self.syntax.field_names()
             .keys()
-            .sorted();
+            .sorted()
+            .collect_vec();
         let field_limit = field_names.len();
         buffer.push_str(&format!("\n#define FOR_EACH_BIN_FIELD(F) \\\n{nodes}\n",
             nodes = field_names.iter()
@@ -1177,7 +1179,8 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_{interface_macro_name} = {len}
             .sorted_by(|&(ref symbol_1, ref name_1), &(ref symbol_2, ref name_2)| {
                 Ord::cmp(name_1, name_2)
                     .then_with(|| Ord::cmp(symbol_1, symbol_2))
-            });
+            })
+            .collect_vec();
         let variants_limit = enum_variants.len();
 
         buffer.push_str(&format!("\n#define FOR_EACH_BIN_VARIANT(F) \\\n{nodes}\n",
@@ -1286,7 +1289,8 @@ enum class {name} {{
     fn export_declare_sums_of_interface_methods(&self, buffer: &mut String) {
         let sums_of_interfaces = self.syntax.resolved_sums_of_interfaces_by_name()
             .iter()
-            .sorted_by(|a, b| a.0.cmp(&b.0));
+            .sorted_by(|a, b| a.0.cmp(&b.0))
+            .collect_vec();
         buffer.push_str("
     // ----- Sums of interfaces (by lexicographical order)
     // `ParseNode*` may never be nullptr
@@ -1326,7 +1330,8 @@ enum class {name} {{
 ");
         let interfaces_by_name = self.syntax.interfaces_by_name()
             .iter()
-            .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()));
+            .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()))
+            .collect_vec();
 
         let mut outer_parsers = Vec::with_capacity(interfaces_by_name.len());
         let mut inner_parsers = Vec::with_capacity(interfaces_by_name.len());
@@ -1478,7 +1483,8 @@ impl CPPExporter {
         let extra_params = rules_for_this_sum.extra_params;
         let extra_args = rules_for_this_sum.extra_args;
         let nodes = nodes.iter()
-            .sorted();
+            .sorted()
+            .collect_vec();
         let kind = name.to_class_cases();
 
         if self.refgraph.is_used(name.to_rc_string().clone()) {
