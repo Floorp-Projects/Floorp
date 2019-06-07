@@ -225,6 +225,8 @@ MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
       mDecoder(nullptr),
       mGMPCrashHelper(aParams.mCrashHelper),
       mLastError(NS_OK),
+      mErrorIfNoInitializationData(aParams.mOptions.contains(
+          CreateDecoderParams::Option::ErrorIfNoInitializationData)),
       mType(aParams.mType),
       mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent),
       mDecoderOptions(aParams.mOptions),
@@ -289,8 +291,12 @@ RefPtr<MediaDataDecoder::DecodePromise> MediaChangeMonitor::Decode(
 
     if (rv == NS_ERROR_NOT_INITIALIZED) {
       // We are missing the required init data to create the decoder.
-      // This frame can't be decoded and should be treated as an error.
-      return DecodePromise::CreateAndReject(rv, __func__);
+      if (mErrorIfNoInitializationData) {
+        // This frame can't be decoded and should be treated as an error.
+        return DecodePromise::CreateAndReject(rv, __func__);
+      }
+      // Swallow the frame, and await delivery of init data.
+      return DecodePromise::CreateAndResolve(DecodedData(), __func__);
     }
     if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
       // The decoder is pending initialization.
