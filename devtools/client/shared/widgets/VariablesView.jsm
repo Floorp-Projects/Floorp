@@ -29,6 +29,7 @@ const {KeyCodes} = require("devtools/client/shared/keycodes");
 const {PluralForm} = require("devtools/shared/plural-form");
 const {LocalizationHelper, ELLIPSIS} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(DBG_STRINGS_URI);
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1",
@@ -430,10 +431,9 @@ VariablesView.prototype = {
     // properties to display.
     container.hidden = !this._store.length;
 
-    const searchbox = this._searchboxNode = document.createXULElement("textbox");
+    const searchbox = this._searchboxNode = document.createElementNS(HTML_NS, "input");
     searchbox.className = "variables-view-searchinput devtools-filterinput";
     searchbox.setAttribute("placeholder", this._searchboxPlaceholder);
-    searchbox.setAttribute("flex", "1");
     searchbox.addEventListener("input", this._onSearchboxInput);
     searchbox.addEventListener("keydown", this._onSearchboxKeyDown);
 
@@ -4039,10 +4039,10 @@ Editable.prototype = {
 
     // Create a texbox input element which will be shown in the current
     // element's specified label location.
-    const input = this._input = this._variable.document.createXULElement("textbox");
-    input.className = "plain " + this.className;
+    const input = this._input =
+      this._variable.document.createElementNS(HTML_NS, "input");
+    input.className = this.className;
     input.setAttribute("value", initialString);
-    input.setAttribute("flex", "1");
 
     // Replace the specified label with a textbox input element.
     label.parentNode.replaceChild(input, label);
