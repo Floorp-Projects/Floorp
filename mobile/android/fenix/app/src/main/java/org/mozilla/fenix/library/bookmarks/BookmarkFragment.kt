@@ -24,6 +24,7 @@ import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_bookmark.view.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
@@ -262,17 +263,22 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                         }
                     }
                     is BookmarkAction.Delete -> {
-                        getManagedEmitter<BookmarkChange>()
-                            .onNext(BookmarkChange.Change(currentRoot - it.item.guid))
+                        context?.let { context ->
+                            getManagedEmitter<BookmarkChange>()
+                                .onNext(BookmarkChange.Change(currentRoot - it.item.guid))
 
-                        allowUndo(
-                            view!!,
-                            getString(R.string.bookmark_deletion_snackbar_message, it.item.url.urlToTrimmedHost()),
-                            getString(R.string.bookmark_undo_deletion), { refreshBookmarks() }
-                        ) {
-                            bookmarkStorage()?.deleteNode(it.item.guid)
-                            metrics()?.track(Event.RemoveBookmark)
-                            refreshBookmarks()
+                            launch(Dispatchers.Main) {
+                                allowUndo(
+                                    view!!,
+                                    getString(R.string.bookmark_deletion_snackbar_message,
+                                        it.item.url?.urlToTrimmedHost(context)),
+                                    getString(R.string.bookmark_undo_deletion), { refreshBookmarks() }
+                                ) {
+                                    bookmarkStorage()?.deleteNode(it.item.guid)
+                                    metrics()?.track(Event.RemoveBookmark)
+                                    refreshBookmarks()
+                                }
+                            }
                         }
                     }
                     is BookmarkAction.SwitchMode -> {

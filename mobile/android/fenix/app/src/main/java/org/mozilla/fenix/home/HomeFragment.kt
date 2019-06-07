@@ -134,7 +134,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             ) {
                 SessionControlViewModel(
                     SessionControlState(
-                        getListOfTabs(requireComponents.core.sessionManager),
+                        listOf(),
                         setOf(),
                         requireComponents.core.tabCollectionStorage.cachedTabCollections,
                         mode
@@ -280,13 +280,15 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 }
         }
 
-        getManagedEmitter<SessionControlChange>().onNext(
-            SessionControlChange.Change(
-                tabs = getListOfTabs(sessionManager = requireComponents.core.sessionManager),
-                mode = currentMode(),
-                collections = requireComponents.core.tabCollectionStorage.cachedTabCollections
+        launch(Dispatchers.Main) {
+            getManagedEmitter<SessionControlChange>().onNext(
+                SessionControlChange.Change(
+                    tabs = getListOfTabs(sessionManager = requireComponents.core.sessionManager),
+                    mode = currentMode(),
+                    collections = requireComponents.core.tabCollectionStorage.cachedTabCollections
+                )
             )
-        )
+        }
 
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
         sessionObserver.onStart()
@@ -560,82 +562,84 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         val useCases = context?.components?.useCases?.tabsUseCases ?: return
 
         getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.TabsChange(listOf()))
-        deleteAllSessionsJob = {
+
+        val deleteOperation: (suspend () -> Unit) = {
             currentFilteredSessions.forEach {
                 useCases.removeTab.invoke(it)
             }
         }
+
+        deleteAllSessionsJob = deleteOperation
 
         allowUndo(
             view!!, getString(R.string.snackbar_tabs_deleted),
             getString(R.string.snackbar_deleted_undo), {
                 deleteAllSessionsJob = null
                 emitSessionChanges()
-            }
-        ) {
-            deleteAllSessionsJob = {
-                currentFilteredSessions.forEach {
-                    useCases.removeTab.invoke(it)
-                }
-            }
-        }
+            },
+            operation = deleteOperation
+        )
     }
 
     private fun removeTabWithUndo(sessionId: String) {
-        val sessionManager = requireComponents.core.sessionManager
+        launch(Dispatchers.Main) {
+            val sessionManager = requireComponents.core.sessionManager
 
-        // Update the UI with the tab removed, but don't remove it from storage yet
-        getManagedEmitter<SessionControlChange>().onNext(
-            SessionControlChange.TabsChange(
-                sessionManager.sessions
-                    .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
-                    .filter { it.id != sessionId }
-                    .map {
-                        val selected =
-                            it == sessionManager.selectedSession
-                        Tab(
-                            it.id,
-                            it.url,
-                            it.url.urlToTrimmedHost(),
-                            it.title,
-                            selected,
-                            it.thumbnail
-                        )
-                    }
+            // Update the UI with the tab removed, but don't remove it from storage yet
+            getManagedEmitter<SessionControlChange>().onNext(
+
+                SessionControlChange.TabsChange(
+                    sessionManager.sessions
+                        .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
+                        .filter { it.id != sessionId }
+                        .map {
+                            val selected = it == sessionManager.selectedSession
+                            Tab(
+                                it.id,
+                                it.url,
+                                it.url.urlToTrimmedHost(context!!),
+                                it.title,
+                                selected,
+                                it.thumbnail
+                            )
+                        }
+                )
             )
-        )
 
-        deleteSessionJob = {
-            sessionManager.findSessionById(sessionId)
-                ?.let { session ->
-                    sessionManager.remove(session)
-                }
-        }
-
-        allowUndo(
-            view!!, getString(R.string.snackbar_tab_deleted),
-            getString(R.string.snackbar_deleted_undo), {
-                deleteSessionJob = null
-                emitSessionChanges()
+            val deleteOperation: (suspend () -> Unit) = {
+                sessionManager.findSessionById(sessionId)
+                    ?.let { session ->
+                        sessionManager.remove(session)
+                    }
             }
-        ) {
-            sessionManager.findSessionById(sessionId)
-                ?.let { session ->
-                    sessionManager.remove(session)
-                }
+
+            deleteSessionJob = deleteOperation
+
+            allowUndo(
+                view!!, getString(R.string.snackbar_tab_deleted),
+                getString(R.string.snackbar_deleted_undo), {
+                    deleteSessionJob = null
+                    emitSessionChanges()
+                },
+                operation = deleteOperation
+            )
         }
     }
 
     private fun emitSessionChanges() {
         val sessionManager = context?.components?.core?.sessionManager ?: return
-        getManagedEmitter<SessionControlChange>().onNext(
-            SessionControlChange.TabsChange(
-                getListOfTabs(sessionManager)
+
+        launch(Dispatchers.Main) {
+            getManagedEmitter<SessionControlChange>().onNext(
+                SessionControlChange.TabsChange(
+                    getListOfTabs(sessionManager)
+                )
             )
-        )
+        }
     }
 
-    private fun getListOfTabs(sessionManager: SessionManager): List<Tab> {
+    private suspend fun getListOfTabs(sessionManager: SessionManager): List<Tab> {
+        val context = context ?: return listOf()
         return sessionManager.sessions
             .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
             .map {
@@ -643,7 +647,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 Tab(
                     it.id,
                     it.url,
-                    it.url.urlToTrimmedHost(),
+                    it.url.urlToTrimmedHost(context),
                     it.title,
                     selected,
                     it.thumbnail
@@ -663,24 +667,29 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     ) {
         if (findNavController(this).currentDestination?.id == R.id.createCollectionFragment) return
 
-        val tabs = requireComponents.core.sessionManager.sessions.filter { !it.private }
-            .map { Tab(it.id, it.url, it.url.urlToTrimmedHost(), it.title) }
+        val context = context?.let { it } ?: return
 
-        val viewModel = activity?.run {
-            ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
-        }
-        viewModel?.tabs = tabs
-        val selectedTabs = tabs.find { tab -> tab.sessionId == selectedTabId } ?: if (tabs.size == 1) tabs[0] else null
-        val selectedSet = if (selectedTabs == null) mutableSetOf() else mutableSetOf(selectedTabs)
-        viewModel?.selectedTabs = selectedSet
-        viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
-        viewModel?.selectedTabCollection = selectedTabCollection
-        viewModel?.saveCollectionStep =
-            step ?: viewModel?.getStepForTabsAndCollectionSize() ?: SaveCollectionStep.SelectTabs
+        launch(Dispatchers.Main) {
+            val tabs = requireComponents.core.sessionManager.sessions.filter { !it.private }
+                .map { Tab(it.id, it.url, it.url.urlToTrimmedHost(context), it.title) }
 
-        view?.let {
-            val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
-            nav(R.id.homeFragment, directions)
+            val viewModel = activity?.run {
+                ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
+            }
+            viewModel?.tabs = tabs
+            val selectedTabs =
+                tabs.find { tab -> tab.sessionId == selectedTabId } ?: if (tabs.size == 1) tabs[0] else null
+            val selectedSet = if (selectedTabs == null) mutableSetOf() else mutableSetOf(selectedTabs)
+            viewModel?.selectedTabs = selectedSet
+            viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
+            viewModel?.selectedTabCollection = selectedTabCollection
+            viewModel?.saveCollectionStep =
+                step ?: viewModel?.getStepForTabsAndCollectionSize() ?: SaveCollectionStep.SelectTabs
+
+            view?.let {
+                val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
+                nav(R.id.homeFragment, directions)
+            }
         }
     }
 

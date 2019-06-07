@@ -16,13 +16,14 @@ import kotlinx.android.synthetic.main.collection_home_list_row.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
+import org.mozilla.fenix.components.description
 import org.mozilla.fenix.ext.increaseTapArea
-import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
@@ -92,47 +93,33 @@ class CollectionViewHolder(
     }
 
     private fun updateCollectionUI() {
-        view.collection_title.text = collection.title
+        launch(Dispatchers.Main) {
+            view.collection_title.text = collection.title
+            view.collection_description.text = collection.description(view.context)
 
-        val hostNameList = collection.tabs.map { it.url.urlToTrimmedHost().capitalize() }
+            if (expanded) {
+                (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = 0
+                collection_title.setPadding(0, 0, 0, EXPANDED_PADDING)
+                view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_top_corners)
+                view.collection_description.visibility = View.GONE
 
-        var tabsDisplayed = 0
-        val tabTitlesList = hostNameList.joinToString(", ") {
-            if (it.length > maxTitleLength) {
-                it.substring(
-                    0,
-                    maxTitleLength
-                ) + "..."
+                view.chevron.setBackgroundResource(R.drawable.ic_chevron_up)
             } else {
-                tabsDisplayed += 1
-                it
+                (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = COLLAPSED_MARGIN
+                view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_all_corners)
+                view.collection_description.visibility = View.VISIBLE
+
+                view.chevron.setBackgroundResource(R.drawable.ic_chevron_down)
             }
+
+            view.collection_icon.setColorFilter(
+                ContextCompat.getColor(
+                    view.context,
+                    getIconColor(collection.id)
+                ),
+                android.graphics.PorterDuff.Mode.SRC_IN
+            )
         }
-
-        view.collection_description.text = tabTitlesList
-
-        if (expanded) {
-            (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = 0
-            collection_title.setPadding(0, 0, 0, EXPANDED_PADDING)
-            view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_top_corners)
-            view.collection_description.visibility = View.GONE
-
-            view.chevron.setBackgroundResource(R.drawable.ic_chevron_up)
-        } else {
-            (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = COLLAPSED_MARGIN
-            view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_all_corners)
-            view.collection_description.visibility = View.VISIBLE
-
-            view.chevron.setBackgroundResource(R.drawable.ic_chevron_down)
-        }
-
-        view.collection_icon.setColorFilter(
-            ContextCompat.getColor(
-                view.context,
-                getIconColor(collection.id)
-            ),
-            android.graphics.PorterDuff.Mode.SRC_IN
-        )
     }
 
     private fun handleExpansion(isExpanded: Boolean) {
@@ -145,7 +132,7 @@ class CollectionViewHolder(
 
     @Suppress("ComplexMethod", "MagicNumber")
     private fun getIconColor(id: Long): Int {
-        val sessionColorIndex = (id % 4).toInt()
+        val sessionColorIndex = (id % 5).toInt()
         return when (sessionColorIndex) {
             0 -> R.color.collection_icon_color_violet
             1 -> R.color.collection_icon_color_blue

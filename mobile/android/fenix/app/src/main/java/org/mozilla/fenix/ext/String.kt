@@ -6,8 +6,11 @@
 
 package org.mozilla.fenix.ext
 
+import android.content.Context
 import java.net.MalformedURLException
 import java.net.URL
+import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
+import mozilla.components.support.ktx.kotlin.toUri
 
 /**
  * Replaces the keys with the values with the map provided.
@@ -28,21 +31,14 @@ fun String?.getHostFromUrl(): String? = try {
     null
 }
 
-fun String?.urlToTrimmedHost(): String {
+/**
+ * Trim a host's prefix and suffix
+ */
+suspend fun String.urlToTrimmedHost(context: Context): String {
     return try {
-        val url = URL(this)
-        val firstIndex = url.host.indexOfFirst { it == '.' } + 1
-        val lastIndex = url.host.indexOfLast { it == '.' }
-
-        // Trim all but the title of the website from the hostname. 'www.mozilla.org' becomes 'mozilla'
-        when {
-            firstIndex - 1 == lastIndex -> url.host.substring(0, lastIndex)
-            firstIndex < lastIndex -> url.host.substring(firstIndex, lastIndex)
-            else -> url.host
-        }
+        val host = this.toUri().hostWithoutCommonPrefixes ?: return this
+        context.components.publicSuffixList.stripPublicSuffix(host).await()
     } catch (e: MalformedURLException) {
-        this.getHostFromUrl() ?: ""
-    } catch (e: StringIndexOutOfBoundsException) {
-        this.getHostFromUrl() ?: ""
+        this
     }
 }

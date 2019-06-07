@@ -14,6 +14,8 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tab.collections.TabCollectionStorage
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
+import org.mozilla.fenix.ext.urlToTrimmedHost
+import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.test.Mockable
 
 @Mockable
@@ -87,4 +89,19 @@ class TabCollectionStorage(
         collectionStorage.renameCollection(tabCollection, title)
         notifyObservers { onCollectionRenamed(tabCollection, title) }
     }
+}
+
+suspend fun TabCollection.description(context: Context): String {
+    return this.tabs
+        .map { it.url.urlToTrimmedHost(context).capitalize() }
+        .map {
+            if (it.length > CollectionViewHolder.maxTitleLength) {
+                it.substring(
+                    0,
+                    CollectionViewHolder.maxTitleLength
+                ) + "…"
+            } else {
+                it
+            }
+        }.joinToString(", ")
 }
