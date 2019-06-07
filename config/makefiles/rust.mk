@@ -57,7 +57,9 @@ endif
 
 rustflags_neon =
 ifeq (neon,$(MOZ_FPU))
-rustflags_neon += -C target_feature=+neon
+# Enable neon and disable restriction to 16 FPU registers
+# (CPUs with neon have 32 FPU registers available)
+rustflags_neon += -C target_feature=+neon,-d16
 endif
 
 rustflags_override = $(MOZ_RUST_DEFAULT_FLAGS) $(rustflags_neon)
