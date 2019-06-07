@@ -180,7 +180,7 @@ class ResizableViewport extends PureComponent {
             Browser({
               swapAfterMount,
               userContextId: viewport.userContextId,
-              viewportId: viewport.id,
+              viewport,
               onBrowserMounted,
               onChangeViewportOrientation,
               onContentResize,
