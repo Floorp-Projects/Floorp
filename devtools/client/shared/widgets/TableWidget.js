@@ -554,9 +554,9 @@ TableWidget.prototype = {
    * label is clicked.
    */
   onMousedown: function({target}) {
-    const localName = target.localName;
+    const nodeName = target.nodeName;
 
-    if (localName === "input" || !this._editableFieldsEngine) {
+    if (nodeName === "textbox" || !this._editableFieldsEngine) {
       return;
     }
 
@@ -1736,8 +1736,10 @@ EditableFieldsEngine.prototype = {
   get textbox() {
     if (!this._textbox) {
       const doc = this.root.ownerDocument;
-      this._textbox = doc.createElementNS(HTML_NS, "input");
+      this._textbox = doc.createXULElement("textbox");
       this._textbox.id = this.INPUT_ID;
+
+      this._textbox.setAttribute("flex", "1");
 
       this.onKeydown = this.onKeydown.bind(this);
       this._textbox.addEventListener("keydown", this.onKeydown);
