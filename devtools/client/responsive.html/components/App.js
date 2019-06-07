@@ -6,6 +6,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
@@ -162,17 +163,13 @@ class App extends PureComponent {
     this.props.dispatch(changeUserAgent(userAgent));
   }
 
-  onChangeViewportOrientation(id, type, angle, isViewportRotated = false) {
+  onChangeViewportOrientation(id, { type, angle }) {
     window.postMessage({
       type: "viewport-orientation-change",
       orientationType: type,
       angle,
-      isViewportRotated,
     }, "*");
-
-    if (isViewportRotated) {
-      this.props.dispatch(changeViewportAngle(id, angle));
-    }
+    this.props.dispatch(changeViewportAngle(id, angle));
   }
 
   onContentResize({ width, height }) {
@@ -277,11 +274,11 @@ class App extends PureComponent {
       };
     }
 
-    const currentAngle = viewport.angle;
+    const currentAngle = Services.prefs.getIntPref("devtools.responsive.viewport.angle");
     const angleToRotateTo = currentAngle === 90 ? 0 : 90;
-    const { type, angle } = getOrientation(currentDevice, viewport, angleToRotateTo);
+    const orientation = getOrientation(currentDevice, viewport, angleToRotateTo);
 
-    this.onChangeViewportOrientation(id, type, angle, true);
+    this.onChangeViewportOrientation(id, orientation);
     this.props.dispatch(rotateViewport(id));
   }
 
