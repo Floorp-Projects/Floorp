@@ -636,7 +636,7 @@ a.learn-more-link.webconsole-learn-more-link {
 .webconsole-filteringbar-wrapper {
   display: grid;
   grid-row: 1 / 2;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr max-content auto auto;
   /* Wrap so the "Hidden messages" bar can go to its own row if needed */
   flex-wrap: wrap;
   --primary-toolbar-height: 29px;
@@ -654,10 +654,11 @@ a.learn-more-link.webconsole-learn-more-link {
 .devtools-toolbar.webconsole-filterbar-secondary {
   --separator-inline-margin: 5px;
   display: flex;
-  width: 100%;
   align-items: center;
+  align-self: stretch;
   -moz-user-select: none;
   grid-column: 1 / -1;
+  min-height: var(--primary-toolbar-height);
 }
 
 .split-console-close-button-wrapper {
