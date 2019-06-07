@@ -573,7 +573,6 @@ function runDoorhangerUpdateTest(params, steps) {
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
-        [PREF_APP_UPDATE_IDLETIME, 0],
         [PREF_APP_UPDATE_URL_DETAILS, gDetailsURL],
         [PREF_APP_UPDATE_URL_MANUAL, URL_MANUAL_UPDATE],
       ],

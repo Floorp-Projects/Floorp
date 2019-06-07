@@ -27,8 +27,12 @@
       <button id="create-login-button" data-l10n-id="create-login-button"></button>
     </header>
     <login-list data-l10n-id="login-list"
-                data-l10n-attrs="count"
-                data-l10n-args='{"count": 0}'></login-list>
+                data-l10n-args='{"count": 0}'
+                data-l10n-attrs="count,
+                                 last-changed-option,
+                                 last-used-option,
+                                 name-option,
+                                 sort-label-text"></login-list>
     <login-item data-l10n-id="login-item"
                 data-l10n-args='{"timeCreated": 0, "timeChanged": 0, "timeUsed": 0}'
                 data-l10n-attrs="cancel-button,
@@ -55,6 +59,14 @@
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list.css">
       <div class="meta">
+        <label for="login-sort">
+          <span class="sort-label-text"></span>
+          <select id="login-sort">
+            <option class="name-option" value="name"/>
+            <option class="last-used-option" value="last-used"/>
+            <option class="last-changed-option" value="last-changed"/>
+          </select>
+        </label>
         <span class="count"></span>
       </div>
       <ol>

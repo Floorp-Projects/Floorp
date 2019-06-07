@@ -919,7 +919,7 @@ class FileFinder(BaseFinder):
     '''
 
     def __init__(self, base, find_executables=False, ignore=(),
-                 find_dotfiles=False, **kargs):
+                 ignore_broken_symlinks=False, find_dotfiles=False, **kargs):
         '''
         Create a FileFinder for files under the given base directory.
 
@@ -932,11 +932,15 @@ class FileFinder(BaseFinder):
         ``mozpath.match()``. This means if an entry corresponds
         to a directory, all files under that directory will be ignored. If
         an entry corresponds to a file, that particular file will be ignored.
+        ``ignore_broken_symlinks`` is passed by the packager to work around an
+        issue with the build system not cleaning up stale files in some common
+        cases. See bug 1297381.
         '''
         BaseFinder.__init__(self, base, **kargs)
         self.find_dotfiles = find_dotfiles
         self.find_executables = find_executables
         self.ignore = ignore
+        self.ignore_broken_symlinks = ignore_broken_symlinks
 
     def _find(self, pattern):
         '''
@@ -979,6 +983,9 @@ class FileFinder(BaseFinder):
     def get(self, path):
         srcpath = os.path.join(self.base, path)
         if not os.path.lexists(srcpath):
+            return None
+
+        if self.ignore_broken_symlinks and not os.path.exists(srcpath):
             return None
 
         for p in self.ignore:

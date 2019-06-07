@@ -49,6 +49,10 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
     LowLatency,
     HardwareDecoderNotAllowed,
     FullH264Parsing,
+    ErrorIfNoInitializationData,  // By default frames delivered before
+                                  // initialization data are dropped. Pass this
+                                  // option to raise an error if frames are
+                                  // delivered before initialization data.
 
     SENTINEL  // one past the last valid value
   };

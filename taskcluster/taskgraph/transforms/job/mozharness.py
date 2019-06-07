@@ -17,12 +17,14 @@ from taskgraph.util.schema import Schema
 from voluptuous import Required, Optional, Any
 from voluptuous.validators import Match
 
-from taskgraph.transforms.job import run_job_using
+from taskgraph.transforms.job import (
+    configure_taskdesc_for_run,
+    run_job_using,
+)
 from taskgraph.transforms.job.common import (
     docker_worker_add_workspace_cache,
     setup_secrets,
     docker_worker_add_artifacts,
-    docker_worker_add_tooltool,
     generic_worker_add_artifacts,
     generic_worker_hg_commands,
     support_vcs_checkout,
@@ -139,37 +141,35 @@ mozharness_defaults = {
 def mozharness_on_docker_worker_setup(config, job, taskdesc):
     run = job['run']
 
-    worker = taskdesc['worker']
-    worker['implementation'] = job['worker']['implementation']
+    worker = taskdesc['worker'] = job['worker']
 
-    if not run['use-simple-package']:
+    if not run.pop('use-simple-package', None):
         raise NotImplementedError("Simple packaging cannot be disabled via"
                                   "'use-simple-package' on docker-workers")
-    if not run['use-magic-mh-args']:
+    if not run.pop('use-magic-mh-args', None):
         raise NotImplementedError("Cannot disabled mh magic arg passing via"
                                   "'use-magic-mh-args' on docker-workers")
 
     # Running via mozharness assumes an image that contains build.sh:
     # by default, debian7-amd64-build, but it could be another image (like
     # android-build).
-    taskdesc['worker'].setdefault('docker-image', {'in-tree': 'debian7-amd64-build'})
+    worker.setdefault('docker-image', {'in-tree': 'debian7-amd64-build'})
 
-    taskdesc['worker'].setdefault('artifacts', []).append({
+    worker.setdefault('artifacts', []).append({
         'name': 'public/logs',
         'path': '{workdir}/logs/'.format(**run),
         'type': 'directory'
     })
-    worker['taskcluster-proxy'] = run.get('taskcluster-proxy')
+    worker['taskcluster-proxy'] = run.pop('taskcluster-proxy', None)
     docker_worker_add_artifacts(config, job, taskdesc)
     docker_worker_add_workspace_cache(config, job, taskdesc,
-                                      extra=run.get('extra-workspace-cache-key'))
-    support_vcs_checkout(config, job, taskdesc)
+                                      extra=run.pop('extra-workspace-cache-key', None))
 
     env = worker.setdefault('env', {})
     env.update({
         'GECKO_PATH': '{workdir}/workspace/build/src'.format(**run),
-        'MOZHARNESS_CONFIG': ' '.join(run['config']),
-        'MOZHARNESS_SCRIPT': run['script'],
+        'MOZHARNESS_CONFIG': ' '.join(run.pop('config')),
+        'MOZHARNESS_SCRIPT': run.pop('script'),
         'MH_BRANCH': config.params['project'],
         'MOZ_SOURCE_CHANGESET': get_branch_rev(config),
         'MOZ_SOURCE_REPO': get_branch_repo(config),
@@ -181,19 +181,19 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     })
 
     if 'actions' in run:
-        env['MOZHARNESS_ACTIONS'] = ' '.join(run['actions'])
+        env['MOZHARNESS_ACTIONS'] = ' '.join(run.pop('actions'))
 
     if 'options' in run:
-        env['MOZHARNESS_OPTIONS'] = ' '.join(run['options'])
+        env['MOZHARNESS_OPTIONS'] = ' '.join(run.pop('options'))
 
     if 'config-paths' in run:
-        env['MOZHARNESS_CONFIG_PATHS'] = ' '.join(run['config-paths'])
+        env['MOZHARNESS_CONFIG_PATHS'] = ' '.join(run.pop('config-paths'))
 
     if 'custom-build-variant-cfg' in run:
-        env['MH_CUSTOM_BUILD_VARIANT_CFG'] = run['custom-build-variant-cfg']
+        env['MH_CUSTOM_BUILD_VARIANT_CFG'] = run.pop('custom-build-variant-cfg')
 
     if 'extra-config' in run:
-        env['EXTRA_MOZHARNESS_CONFIG'] = json.dumps(run['extra-config'])
+        env['EXTRA_MOZHARNESS_CONFIG'] = json.dumps(run.pop('extra-config'))
 
     if 'job-script' in run:
         env['JOB_SCRIPT'] = run['job-script']
@@ -205,41 +205,32 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     # that will cause the build process to skip copying the results to the
     # artifacts directory.  This will have no effect for operations that are
     # not builds.
-    if not run['keep-artifacts']:
+    if not run.pop('keep-artifacts'):
         env['DIST_TARGET_UPLOADS'] = ''
         env['DIST_UPLOADS'] = ''
 
     # Xvfb
-    if run['need-xvfb']:
+    if run.pop('need-xvfb'):
         env['NEED_XVFB'] = 'true'
     else:
         env['NEED_XVFB'] = 'false'
-
-    if run['tooltool-downloads']:
-        internal = run['tooltool-downloads'] == 'internal'
-        docker_worker_add_tooltool(config, job, taskdesc, internal=internal)
 
     # Retry if mozharness returns TBPL_RETRY
     worker['retry-exit-status'] = [4]
 
     setup_secrets(config, job, taskdesc)
 
-    command = [
-        '{workdir}/bin/run-task'.format(**run),
-        '--gecko-checkout', env['GECKO_PATH'],
-    ]
-    if run['comm-checkout']:
-        command.append('--comm-checkout={workdir}/workspace/build/src/comm'.format(**run))
-
-    command += [
-        '--',
+    run['using'] = 'run-task'
+    run['command'] = [
         '{workdir}/workspace/build/src/{script}'.format(
             workdir=run['workdir'],
-            script=run.get('job-script', 'taskcluster/scripts/builder/build-linux.sh'),
+            script=run.pop('job-script', 'taskcluster/scripts/builder/build-linux.sh'),
         ),
     ]
+    run.pop('secrets')
+    run.pop('requires-signed-builds')
 
-    worker['command'] = command
+    configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
 
 
 @run_job_using("generic-worker", "mozharness", schema=mozharness_run_schema,

@@ -17,7 +17,42 @@ const AccessibilityTreeFilter = createFactory(ConnectedAccessibilityTreeFilterCl
 const {
   setupStore,
 } = require("devtools/client/accessibility/test/jest/helpers");
-const { FILTERS } = require("devtools/client/accessibility/constants");
+
+const { AUDIT, AUDITING, FILTERS, FILTER_TOGGLE } = require("devtools/client/accessibility/constants");
+const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
+
+function checkFilter(button, expectedText) {
+  expect(button.is("button")).toBe(true);
+  expect(button.hasClass("badge")).toBe(true);
+  expect(button.hasClass("toggle-button")).toBe(true);
+  expect(button.hasClass("audit-badge")).toBe(false);
+  expect(button.prop("aria-pressed")).toBe(false);
+  expect(button.text()).toBe(expectedText);
+}
+
+function checkToggleFilter(wrapper, filter) {
+  const filterInstance = wrapper.find(AccessibilityTreeFilterClass).instance();
+  filterInstance.toggleFilter = jest.fn();
+  filter.simulate("keydown", { key: " " });
+  expect(filterInstance.toggleFilter.mock.calls.length).toBe(1);
+
+  filter.simulate("keydown", { key: "Enter" });
+  expect(filterInstance.toggleFilter.mock.calls.length).toBe(2);
+
+  filter.simulate("click", { clientX: 1 });
+  expect(filterInstance.toggleFilter.mock.calls.length).toBe(3);
+}
+
+function checkFiltersState(wrapper, expected) {
+  const filters = wrapper.find(AccessibilityTreeFilterClass);
+  const filterButtons = filters.find(ToggleButton);
+
+  for (let i = 0; i < filterButtons.length; i++) {
+    const filter = filterButtons.at(i).childAt(0);
+    expect(filter.prop("aria-pressed")).toBe(expected[i].active);
+    expect(filter.prop("aria-busy")).toBe(expected[i].busy);
+  }
+}
 
 describe("AccessibilityTreeFilter component:", () => {
   it("audit filter not filtered", () => {
@@ -34,28 +69,40 @@ describe("AccessibilityTreeFilter component:", () => {
     expect(toolbar.prop("role")).toBe("toolbar");
 
     const filterButtons = filters.find(ToggleButton);
-    expect(filterButtons.length).toBe(1);
+    expect(filterButtons.length).toBe(3);
 
-    const button = filterButtons.at(0).childAt(0);
-    expect(button.is("button")).toBe(true);
-    expect(button.hasClass("badge")).toBe(true);
-    expect(button.hasClass("toggle-button")).toBe(true);
-    expect(button.hasClass("audit-badge")).toBe(false);
-    expect(button.prop("aria-pressed")).toBe(false);
-    expect(button.text()).toBe("accessibility.badge.contrast");
+    const expectedText = [
+      "accessibility.filter.all",
+      "accessibility.badge.contrast",
+      "accessibility.badge.textLabel",
+    ];
+
+    for (let i = 0; i < filterButtons.length; i++) {
+      checkFilter(filterButtons.at(i).childAt(0), expectedText[i]);
+    }
   });
 
-  it("audit filter filtered", () => {
+  it("audit filters filtered", () => {
     const store = setupStore({
-      preloadedState: { audit: { filters: { [FILTERS.CONTRAST]: true }}},
+      preloadedState: { audit: {
+        filters: {
+          [FILTERS.ALL]: true,
+          [FILTERS.CONTRAST]: true,
+          [FILTERS.TEXT_LABEL]: true,
+        },
+        auditing: [],
+      }},
     });
 
     const wrapper = mount(Provider({store}, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
 
-    const button = wrapper.find("button");
-    expect(button.prop("aria-pressed")).toBe(true);
-    expect(button.hasClass("checked")).toBe(true);
+    const buttons = wrapper.find("button");
+    for (let i = 0; i < buttons.length; i++) {
+      const button = buttons.at(i);
+      expect(button.prop("aria-pressed")).toBe(true);
+      expect(button.hasClass("checked")).toBe(true);
+    }
   });
 
   it("audit filter not filtered auditing", () => {
@@ -64,7 +111,7 @@ describe("AccessibilityTreeFilter component:", () => {
         filters: {
           [FILTERS.CONTRAST]: false,
         },
-        auditing: FILTERS.CONTRAST,
+        auditing: [AUDIT_TYPE.CONTRAST],
       }},
     });
 
@@ -84,7 +131,7 @@ describe("AccessibilityTreeFilter component:", () => {
         filters: {
           [FILTERS.CONTRAST]: true,
         },
-        auditing: FILTERS.CONTRAST,
+        auditing: [AUDIT_TYPE.CONTRAST],
       }},
     });
 
@@ -103,15 +150,144 @@ describe("AccessibilityTreeFilter component:", () => {
     const wrapper = mount(Provider({store}, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
 
-    const filterInstance = wrapper.find(AccessibilityTreeFilterClass).instance();
-    filterInstance.toggleFilter = jest.fn();
-    wrapper.find("button.toggle-button.badge").simulate("keydown", { key: " " });
-    expect(filterInstance.toggleFilter.mock.calls.length).toBe(1);
+    const filters = wrapper.find("button.toggle-button.badge");
+    for (let i = 0; i < filters.length; i++) {
+      const filter = filters.at(i);
+      checkToggleFilter(wrapper, filter);
+    }
+  });
 
-    wrapper.find("button.toggle-button.badge").simulate("keydown", { key: "Enter" });
-    expect(filterInstance.toggleFilter.mock.calls.length).toBe(2);
+  it("render filters after state changes", () => {
+    const store = setupStore();
+    const wrapper = mount(Provider({store}, AccessibilityTreeFilter()));
 
-    wrapper.find("button.toggle-button.badge").simulate("click", { clientX: 1 });
-    expect(filterInstance.toggleFilter.mock.calls.length).toBe(3);
+    const tests = [{
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: false, busy: false },
+      ],
+    }, {
+      action: {
+        type: AUDITING,
+        auditing: Object.values(FILTERS),
+      },
+      expected: [
+        { active: false, busy: true },
+        { active: false, busy: true },
+        { active: false, busy: true },
+      ],
+    }, {
+      action: {
+        type: AUDIT,
+        response: [],
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: false, busy: false },
+      ],
+    }, {
+      action: {
+        type: FILTER_TOGGLE,
+        filter: FILTERS.ALL,
+      },
+      expected: [
+        { active: true, busy: false },
+        { active: true, busy: false },
+        { active: true, busy: false },
+      ],
+    }, {
+      action: {
+        type: FILTER_TOGGLE,
+        filter: FILTERS.CONTRAST,
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: true, busy: false },
+      ],
+    }, {
+      action: {
+        type: AUDITING,
+        auditing: [FILTERS.CONTRAST],
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: true },
+        { active: true, busy: false },
+      ],
+    }, {
+      action: {
+        type: AUDIT,
+        response: [],
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: true, busy: false },
+      ],
+    }, {
+      action: {
+        type: FILTER_TOGGLE,
+        filter: FILTERS.CONTRAST,
+      },
+      expected: [
+        { active: true, busy: false },
+        { active: true, busy: false },
+        { active: true, busy: false },
+      ],
+    }, {
+      action: {
+        type: FILTER_TOGGLE,
+        filter: FILTERS.ALL,
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: false, busy: false },
+      ],
+    }, {
+      action: {
+        type: AUDITING,
+        auditing: [FILTERS.TEXT_LABEL],
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: false, busy: true },
+      ],
+    }, {
+      action: {
+        type: AUDIT,
+        response: [],
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: false, busy: false },
+      ],
+    }, {
+      action: {
+        type: FILTER_TOGGLE,
+        filter: FILTERS.TEXT_LABEL,
+      },
+      expected: [
+        { active: false, busy: false },
+        { active: false, busy: false },
+        { active: true, busy: false },
+      ],
+    }];
+
+    for (const test of tests) {
+      const { action, expected } = test;
+      if (action) {
+        store.dispatch(action);
+        wrapper.update();
+      }
+
+      expect(wrapper.html()).toMatchSnapshot();
+      checkFiltersState(wrapper, expected);
+    }
   });
 });
