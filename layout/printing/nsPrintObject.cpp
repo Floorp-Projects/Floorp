@@ -38,7 +38,6 @@ nsPrintObject::nsPrintObject()
       mDontPrint(true),
       mPrintAsIs(false),
       mInvisible(false),
-      mPrintPreview(false),
       mDidCreateDocShell(false),
       mShrinkRatio(1.0),
       mZoomRatio(1.0) {
@@ -60,16 +59,16 @@ nsPrintObject::~nsPrintObject() {
 }
 
 //------------------------------------------------------------------
-nsresult nsPrintObject::Init(nsIDocShell* aDocShell, Document* aDoc,
-                             bool aPrintPreview) {
+nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
+                                         bool aForPrintPreview) {
+  NS_ENSURE_STATE(aDocShell);
   NS_ENSURE_STATE(aDoc);
 
-  mPrintPreview = aPrintPreview;
-
-  if (mPrintPreview || mParent) {
+  if (aForPrintPreview) {
     mDocShell = aDocShell;
   } else {
-    mTreeOwner = do_GetInterface(aDocShell);
+    // When doing an actual print, we create a BrowsingContext/nsDocShell that
+    // is detached from any browser window or tab.
 
     // Create a new BrowsingContext to create our DocShell in.
     RefPtr<BrowsingContext> bc = BrowsingContext::Create(
@@ -85,31 +84,38 @@ nsresult nsPrintObject::Init(nsIDocShell* aDocShell, Document* aDoc,
 
     mDidCreateDocShell = true;
     MOZ_ASSERT(mDocShell->ItemType() == aDocShell->ItemType());
+
+    mTreeOwner = do_GetInterface(aDocShell);
     mDocShell->SetTreeOwner(mTreeOwner);
-  }
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
-  // Keep the document related to this docshell alive
-  nsCOMPtr<Document> dummy = do_GetInterface(mDocShell);
-  mozilla::Unused << dummy;
-
-  nsCOMPtr<nsIContentViewer> viewer;
-  mDocShell->GetContentViewer(getter_AddRefs(viewer));
-  NS_ENSURE_STATE(viewer);
-
-  if (mParent) {
-    nsCOMPtr<nsPIDOMWindowOuter> window = aDoc->GetWindow();
-    if (window) {
-      mContent = window->GetFrameElementInternal();
-    }
-    mDocument = aDoc;
-    return NS_OK;
+    // Make sure nsDocShell::EnsureContentViewer() is called:
+    mozilla::Unused << nsDocShell::Cast(mDocShell)->GetDocument();
   }
 
   mDocument = aDoc->CreateStaticClone(mDocShell);
   NS_ENSURE_STATE(mDocument);
 
+  nsCOMPtr<nsIContentViewer> viewer;
+  mDocShell->GetContentViewer(getter_AddRefs(viewer));
+  NS_ENSURE_STATE(viewer);
   viewer->SetDocument(mDocument);
+
+  return NS_OK;
+}
+
+nsresult nsPrintObject::InitAsNestedObject(nsIDocShell* aDocShell,
+                                           Document* aDoc,
+                                           nsPrintObject* aParent) {
+  NS_ENSURE_STATE(aDocShell);
+  NS_ENSURE_STATE(aDoc);
+
+  mParent = aParent;
+  mDocShell = aDocShell;
+  mDocument = aDoc;
+
+  nsCOMPtr<nsPIDOMWindowOuter> window = aDoc->GetWindow();
+  mContent = window->GetFrameElementInternal();
+
   return NS_OK;
 }
 

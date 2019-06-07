@@ -245,6 +245,8 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
     }
   }
 
+  GetCompositorBridgeChild()->EndCanvasTransaction();
+
   AutoTArray<RenderRootUpdates, wr::kRenderRootCount> renderRootUpdates;
   for (auto& stateManager : mStateManagers) {
     auto renderRoot = stateManager.GetRenderRoot();
@@ -427,6 +429,8 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
       WrBridge()->GetSyncObject()->Synchronize();
     }
   }
+
+  GetCompositorBridgeChild()->EndCanvasTransaction();
 
   {
     AUTO_PROFILER_TRACING("Paint", "ForwardDPTransaction", GRAPHICS);
@@ -734,14 +738,13 @@ WebRenderLayerManager::CreatePersistentBufferProvider(
   // initialized with WebRender to reduce memory usage.
   gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
 
-  if (StaticPrefs::PersistentBufferProviderSharedEnabled()) {
-    RefPtr<PersistentBufferProvider> provider =
-        PersistentBufferProviderShared::Create(aSize, aFormat,
-                                               AsKnowsCompositor());
-    if (provider) {
-      return provider.forget();
-    }
+  RefPtr<PersistentBufferProvider> provider =
+      PersistentBufferProviderShared::Create(aSize, aFormat,
+                                             AsKnowsCompositor());
+  if (provider) {
+    return provider.forget();
   }
+
   return LayerManager::CreatePersistentBufferProvider(aSize, aFormat);
 }
 

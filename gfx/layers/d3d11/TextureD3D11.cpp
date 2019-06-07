@@ -13,11 +13,13 @@
 #include "gfxContext.h"
 #include "mozilla/StaticPrefs.h"
 #include "gfxWindowsPlatform.h"
+#include "MainThreadUtils.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/webrender/RenderD3D11TextureHostOGL.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -726,7 +728,8 @@ already_AddRefed<TextureHost> CreateTextureHostD3D11(
 }
 
 already_AddRefed<DrawTarget> D3D11TextureData::BorrowDrawTarget() {
-  MOZ_ASSERT(NS_IsMainThread() || PaintThread::IsOnPaintThread());
+  MOZ_ASSERT(NS_IsMainThread() || PaintThread::IsOnPaintThread() ||
+             NS_IsInCanvasThread());
 
   if (!mDrawTarget && mTexture) {
     // This may return a null DrawTarget

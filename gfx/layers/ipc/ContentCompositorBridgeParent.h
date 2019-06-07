@@ -9,10 +9,12 @@
 
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace layers {
 
+class CanvasParent;
 class CompositorOptions;
 
 /**
@@ -153,6 +155,9 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
 
   bool DeallocPTextureParent(PTextureParent* actor) override;
 
+  mozilla::ipc::IPCResult RecvInitPCanvasParent(
+      Endpoint<PCanvasParent>&& aEndpoint) final;
+
   bool IsSameProcess() const override;
 
   PCompositorWidgetParent* AllocPCompositorWidgetParent(
@@ -188,6 +193,9 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
 
   bool IsRemote() const override { return true; }
 
+  UniquePtr<SurfaceDescriptor> LookupSurfaceDescriptorForClientDrawTarget(
+      const uintptr_t aDrawTarget) final;
+
  private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~ContentCompositorBridgeParent();
@@ -203,6 +211,8 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   // transaction is received
   bool mNotifyAfterRemotePaint;
   bool mDestroyCalled;
+
+  RefPtr<CanvasParent> mCanvasParent;
 };
 
 }  // namespace layers

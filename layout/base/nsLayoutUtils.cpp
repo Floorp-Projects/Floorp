@@ -7435,7 +7435,7 @@ nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
                                           RefPtr<DrawTarget>& aTarget) {
   SurfaceFromElementResult result;
 
-  nsIntSize size = aOffscreenCanvas->GetWidthHeight();
+  IntSize size = aOffscreenCanvas->GetWidthHeight();
 
   result.mSourceSurface =
       aOffscreenCanvas->GetSurfaceSnapshot(&result.mAlphaType);
@@ -7447,10 +7447,12 @@ nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
     RefPtr<DrawTarget> ref =
         aTarget ? aTarget
                 : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-    RefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(
-        IntSize(size.width, size.height), SurfaceFormat::B8G8R8A8);
-    if (dt) {
-      result.mSourceSurface = dt->Snapshot();
+    if (ref->CanCreateSimilarDrawTarget(size, SurfaceFormat::B8G8R8A8)) {
+      RefPtr<DrawTarget> dt =
+          ref->CreateSimilarDrawTarget(size, SurfaceFormat::B8G8R8A8);
+      if (dt) {
+        result.mSourceSurface = dt->Snapshot();
+      }
     }
   } else if (aTarget) {
     RefPtr<SourceSurface> opt =
@@ -7618,10 +7620,12 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     RefPtr<DrawTarget> ref =
         aTarget ? aTarget
                 : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-    RefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(
-        IntSize(size.width, size.height), SurfaceFormat::B8G8R8A8);
-    if (dt) {
-      result.mSourceSurface = dt->Snapshot();
+    if (ref->CanCreateSimilarDrawTarget(size, SurfaceFormat::B8G8R8A8)) {
+      RefPtr<DrawTarget> dt =
+          ref->CreateSimilarDrawTarget(size, SurfaceFormat::B8G8R8A8);
+      if (dt) {
+        result.mSourceSurface = dt->Snapshot();
+      }
     }
   } else if (aTarget) {
     RefPtr<SourceSurface> opt =

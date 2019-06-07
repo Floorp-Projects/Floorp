@@ -83,6 +83,13 @@ struct ParamTraits<mozilla::layers::LayersBackend>
           mozilla::layers::LayersBackend::LAYERS_LAST> {};
 
 template <>
+struct ParamTraits<mozilla::layers::TextureType>
+    : public ContiguousEnumSerializer<
+          mozilla::layers::TextureType,
+          mozilla::layers::TextureType::Unknown,
+          mozilla::layers::TextureType::Last> {};
+
+template <>
 struct ParamTraits<mozilla::layers::ScaleMode>
     : public ContiguousEnumSerializerInclusive<
           mozilla::layers::ScaleMode, mozilla::layers::ScaleMode::SCALE_NONE,

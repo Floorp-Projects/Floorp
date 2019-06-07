@@ -46,15 +46,18 @@ bool PrintTranslator::TranslateRecording(PRFileDescStream& aRecording) {
   int32_t eventType;
   ReadElement(aRecording, eventType);
   while (aRecording.good()) {
-    UniquePtr<RecordedEvent> recordedEvent(RecordedEvent::LoadEventFromStream(
-        aRecording, static_cast<RecordedEvent::EventType>(eventType)));
+    bool success = RecordedEvent::DoWithEventFromStream(
+        aRecording, static_cast<RecordedEvent::EventType>(eventType),
+        [&](RecordedEvent* recordedEvent) -> bool {
+          // Make sure that the whole event was read from the stream.
+          if (!aRecording.good()) {
+            return false;
+          }
 
-    // Make sure that the whole event was read from the stream successfully.
-    if (!aRecording.good() || !recordedEvent) {
-      return false;
-    }
+          return recordedEvent->PlayEvent(this);
+        });
 
-    if (!recordedEvent->PlayEvent(this)) {
+    if (!success) {
       return false;
     }
 

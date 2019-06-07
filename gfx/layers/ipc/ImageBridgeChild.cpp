@@ -20,6 +20,7 @@
 #include "mozilla/ReentrantMonitor.h"    // for ReentrantMonitor, etc
 #include "mozilla/ipc/MessageChannel.h"  // for MessageChannel, etc
 #include "mozilla/ipc/Transport.h"       // for Transport
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Point.h"           // for IntSize
 #include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/media/MediaSystemResourceManager.h"  // for MediaSystemResourceManager
