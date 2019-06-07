@@ -156,6 +156,7 @@ class CSSWarning extends Component {
       timestampsVisible,
       topLevelClasses: [],
       type,
+      message,
     });
   }
 }
