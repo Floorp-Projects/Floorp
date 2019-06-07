@@ -15,6 +15,9 @@ bool nsWaylandDisplay::mIsDMABufEnabled;
 bool nsWaylandDisplay::mIsDMABufPrefLoaded;
 #endif
 
+#define GBMLIB_NAME "libgbm.so.1"
+#define DRMLIB_NAME "libdrm.so.2"
+
 // nsWaylandDisplay needs to be created for each calling thread(main thread,
 // compositor thread and render thread)
 #define MAX_DISPLAY_CONNECTIONS 3
@@ -378,8 +381,11 @@ bool nsGbmLib::Load() {
   if (!sGbmLibHandle && !sLibLoaded) {
     sLibLoaded = true;
 
-    sGbmLibHandle = dlopen("libgbm.so", RTLD_LAZY | RTLD_LOCAL);
+    sGbmLibHandle = dlopen(GBMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
     if (!sGbmLibHandle) {
+      NS_WARNING(nsPrintfCString("Failed to load %s, dmabuf isn't available.\n",
+                                 GBMLIB_NAME)
+                     .get());
       return false;
     }
 
@@ -401,10 +407,16 @@ bool nsGbmLib::Load() {
         sGbmLibHandle, "gbm_bo_get_stride_for_plane");
     sGetOffset = (GetOffsetFunc)dlsym(sGbmLibHandle, "gbm_bo_get_offset");
 
-    sXf86DrmLibHandle = dlopen("libdrm.so", RTLD_LAZY | RTLD_LOCAL);
+    sXf86DrmLibHandle = dlopen(DRMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
     if (sXf86DrmLibHandle) {
       sDrmPrimeHandleToFD = (DrmPrimeHandleToFDFunc)dlsym(sXf86DrmLibHandle,
                                                           "drmPrimeHandleToFD");
+      if (!sDrmPrimeHandleToFD) {
+        NS_WARNING(nsPrintfCString(
+                       "Failed to load %s, gbm modifiers are not available.\n",
+                       DRMLIB_NAME)
+                       .get());
+      }
     }
   }
 
