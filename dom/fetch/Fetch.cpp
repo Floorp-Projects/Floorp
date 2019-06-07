@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Fetch.h"
-#include "FetchConsumer.h"
 
 #include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
@@ -22,14 +21,13 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/BodyUtil.h"
+#include "mozilla/dom/BodyConsumer.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/FetchDriver.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/Headers.h"
-#include "mozilla/dom/MutableBlobStreamListener.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
@@ -1108,7 +1106,7 @@ template void FetchBody<Response>::SetBodyUsed(JSContext* aCx,
 
 template <class Derived>
 already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
-    JSContext* aCx, FetchConsumeType aType, ErrorResult& aRv) {
+    JSContext* aCx, BodyConsumer::ConsumeType aType, ErrorResult& aRv) {
   aRv.MightThrowJSException();
 
   RefPtr<AbortSignalImpl> signalImpl = DerivedClass()->GetSignalImpl();
@@ -1171,7 +1169,7 @@ already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
     blobStorageType = MutableBlobStorage::eCouldBeInTemporaryFile;
   }
 
-  RefPtr<Promise> promise = FetchBodyConsumer::Create(
+  RefPtr<Promise> promise = BodyConsumer::Create(
       global, mMainThreadEventTarget, bodyStream, signalImpl, aType,
       BodyBlobURISpec(), BodyLocalPath(), MimeType(), blobStorageType, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -1182,13 +1180,13 @@ already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
 }
 
 template already_AddRefed<Promise> FetchBody<Request>::ConsumeBody(
-    JSContext* aCx, FetchConsumeType aType, ErrorResult& aRv);
+    JSContext* aCx, BodyConsumer::ConsumeType aType, ErrorResult& aRv);
 
 template already_AddRefed<Promise> FetchBody<Response>::ConsumeBody(
-    JSContext* aCx, FetchConsumeType aType, ErrorResult& aRv);
+    JSContext* aCx, BodyConsumer::ConsumeType aType, ErrorResult& aRv);
 
 template already_AddRefed<Promise> FetchBody<EmptyBody>::ConsumeBody(
-    JSContext* aCx, FetchConsumeType aType, ErrorResult& aRv);
+    JSContext* aCx, BodyConsumer::ConsumeType aType, ErrorResult& aRv);
 
 template <class Derived>
 void FetchBody<Derived>::SetMimeType() {

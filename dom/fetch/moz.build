@@ -29,7 +29,6 @@ UNIFIED_SOURCES += [
     'ChannelInfo.cpp',
     'EmptyBody.cpp',
     'Fetch.cpp',
-    'FetchConsumer.cpp',
     'FetchDriver.cpp',
     'FetchObserver.cpp',
     'FetchStreamReader.cpp',

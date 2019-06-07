@@ -9,6 +9,7 @@
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsSVGUtils.h"
 #include <limits>
 

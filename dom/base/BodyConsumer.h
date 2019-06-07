@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_FetchConsumer_h
-#define mozilla_dom_FetchConsumer_h
+#ifndef mozilla_dom_BodyConsumer_h
+#define mozilla_dom_BodyConsumer_h
 
-#include "Fetch.h"
 #include "mozilla/dom/AbortSignal.h"
 #include "mozilla/dom/MutableBlobStorage.h"
+#include "nsIInputStreamPump.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
@@ -21,20 +21,27 @@ namespace dom {
 class Promise;
 class ThreadSafeWorkerRef;
 
-// FetchBody is not thread-safe but we need to move it around threads.  In order
-// to keep it alive all the time, we use a ThreadSafeWorkerRef, if created on
-// workers.
-class FetchBodyConsumer final : public nsIObserver,
-                                public nsSupportsWeakReference,
-                                public AbortFollower {
+// In order to keep alive the object all the time, we use a ThreadSafeWorkerRef,
+// if created on workers.
+class BodyConsumer final : public nsIObserver,
+                           public nsSupportsWeakReference,
+                           public AbortFollower {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
+  enum ConsumeType {
+    CONSUME_ARRAYBUFFER,
+    CONSUME_BLOB,
+    CONSUME_FORMDATA,
+    CONSUME_JSON,
+    CONSUME_TEXT,
+  };
+
   static already_AddRefed<Promise> Create(
       nsIGlobalObject* aGlobal, nsIEventTarget* aMainThreadEventTarget,
       nsIInputStream* aBodyStream, AbortSignalImpl* aSignalImpl,
-      FetchConsumeType aType, const nsACString& aBodyBlobURISpec,
+      ConsumeType aType, const nsACString& aBodyBlobURISpec,
       const nsAString& aBodyLocalPath, const nsACString& aBodyMimeType,
       MutableBlobStorage::MutableBlobStorageType aBlobStorageType,
       ErrorResult& aRv);
@@ -64,14 +71,14 @@ class FetchBodyConsumer final : public nsIObserver,
   void Abort() override;
 
  private:
-  FetchBodyConsumer(
-      nsIEventTarget* aMainThreadEventTarget, nsIGlobalObject* aGlobalObject,
-      nsIInputStream* aBodyStream, Promise* aPromise, FetchConsumeType aType,
-      const nsACString& aBodyBlobURISpec, const nsAString& aBodyLocalPath,
-      const nsACString& aBodyMimeType,
-      MutableBlobStorage::MutableBlobStorageType aBlobStorageType);
+  BodyConsumer(nsIEventTarget* aMainThreadEventTarget,
+               nsIGlobalObject* aGlobalObject, nsIInputStream* aBodyStream,
+               Promise* aPromise, ConsumeType aType,
+               const nsACString& aBodyBlobURISpec,
+               const nsAString& aBodyLocalPath, const nsACString& aBodyMimeType,
+               MutableBlobStorage::MutableBlobStorageType aBlobStorageType);
 
-  ~FetchBodyConsumer();
+  ~BodyConsumer();
 
   nsresult GetBodyLocalFile(nsIFile** aFile) const;
 
@@ -95,7 +102,7 @@ class FetchBodyConsumer final : public nsIObserver,
   nsCOMPtr<nsIInputStreamPump> mConsumeBodyPump;
 
   // Only ever set once, always on target thread.
-  FetchConsumeType mConsumeType;
+  ConsumeType mConsumeType;
   RefPtr<Promise> mConsumePromise;
 
   // touched only on the target thread.
@@ -108,4 +115,4 @@ class FetchBodyConsumer final : public nsIObserver,
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_FetchConsumer_h
+#endif  // mozilla_dom_BodyConsumer_h
