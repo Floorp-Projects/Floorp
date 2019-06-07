@@ -151,7 +151,7 @@ this.GeckoDriver = function(server) {
 
   // points to an alert instance if a modal dialog is present
   this.dialog = null;
-  this.dialogHandler = this.globalModalDialogHandler.bind(this);
+  this.dialogHandler = this.modalDialogHandler.bind(this);
 };
 
 Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
@@ -304,13 +304,17 @@ GeckoDriver.prototype.uninit = function() {
  * Callback used to observe the creation of new modal or tab modal dialogs
  * during the session's lifetime.
  */
-GeckoDriver.prototype.globalModalDialogHandler = function(subject, topic) {
-  let winr;
-  if (topic === modal.COMMON_DIALOG_LOADED) {
-    // Always keep a weak reference to the current dialog
-    winr = Cu.getWeakReference(subject);
+GeckoDriver.prototype.modalDialogHandler = function(subject, topic) {
+  logger.trace(`Received observer notification ${topic}`);
+
+  switch (topic) {
+    case modal.COMMON_DIALOG_LOADED:
+    case modal.TABMODAL_DIALOG_LOADED:
+      // Always keep a weak reference to the current dialog
+      let winRef = Cu.getWeakReference(subject);
+      this.dialog = new modal.Dialog(() => this.curBrowser, winRef);
+      break;
   }
-  this.dialog = new modal.Dialog(() => this.curBrowser, winr);
 };
 
 /**
