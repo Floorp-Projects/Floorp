@@ -1149,7 +1149,8 @@ class StorageUI {
       }
     } else if (event.keyCode == KeyCodes.DOM_VK_BACK_SPACE ||
       event.keyCode == KeyCodes.DOM_VK_DELETE) {
-      if (this.table.selectedRow && event.target.nodeName !== "textbox") {
+      if (this.table.selectedRow &&
+          !["input", "textbox"].includes(event.target.localName)) {
         this.onRemoveItem();
         event.stopPropagation();
         event.preventDefault();
