@@ -709,7 +709,7 @@ impl TextureCache {
             self.reached_reclaim_threshold = None;
         }
         if let Some(t) = self.reached_reclaim_threshold {
-            let dur = time.duration_since(t).unwrap_or(Duration::default());
+            let dur = time.duration_since(t).unwrap_or_default();
             if dur >= Duration::from_secs(5) {
                 self.clear_shared();
                 self.reached_reclaim_threshold = None;
@@ -730,7 +730,7 @@ impl TextureCache {
         // depend on allocation patterns of subsequent content.
         let time_since_last_gc = self.now.time()
             .duration_since(self.doc_data.last_shared_cache_expiration.time())
-            .unwrap_or(Duration::default());
+            .unwrap_or_default();
         let do_periodic_gc = time_since_last_gc >= Duration::from_secs(5) &&
             self.shared_textures.size_in_bytes() >= RECLAIM_THRESHOLD_BYTES * 2;
         if do_periodic_gc {
