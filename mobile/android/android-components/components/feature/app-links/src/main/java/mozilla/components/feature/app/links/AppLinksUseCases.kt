@@ -46,6 +46,10 @@ class AppLinksUseCases(
             .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY) ?: emptyList()
     }
 
+    private fun findDefaultActivity(intent: Intent): ResolveInfo? {
+        return context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+    }
+
     private fun findExcludedPackages(randomWebURLString: String): Set<String> {
         // We generate a URL is not likely to be opened by a native app
         // but will fallback to a browser.
@@ -68,13 +72,21 @@ class AppLinksUseCases(
         fun invoke(url: String): AppLinkRedirect {
             val intents = createBrowsableIntents(url)
             val appIntent = if (includeHttpAppLinks) {
-                intents.firstOrNull {
-                    getNonBrowserActivities(it).isNotEmpty()
-                }
+                intents.firstOrNull { getNonBrowserActivities(it).isNotEmpty() }
+                    ?.let {
+                        // The user may have decided to keep opening this type of link in this browser.
+                        if (findDefaultActivity(it)?.activityInfo?.packageName == context.packageName) {
+                            // in which case, this isn't an app intent anymore.
+                            null
+                        } else {
+                            it
+                        }
+                    }
             } else {
-                intents.filter { it.data?.isHttpOrHttps != true }.firstOrNull {
-                    getNonBrowserActivities(it).isNotEmpty()
-                }
+                intents.filter { it.data?.isHttpOrHttps != true }
+                    .firstOrNull {
+                        getNonBrowserActivities(it).isNotEmpty()
+                    }
             }
 
             val webUrls = intents.mapNotNull {
@@ -88,7 +100,9 @@ class AppLinksUseCases(
 
         private fun getNonBrowserActivities(intent: Intent): List<ResolveInfo> {
             return findActivities(intent)
-                .filter { !browserPackageNames.contains(it.activityInfo.packageName) }
+                .map { it.activityInfo.packageName to it }
+                .filter { !browserPackageNames.contains(it.first) }
+                .map { it.second }
         }
 
         private fun createBrowsableIntents(url: String): List<Intent> {
@@ -132,13 +146,7 @@ class AppLinksUseCases(
     ) {
         fun invoke(redirect: AppLinkRedirect) {
             val intent = redirect.appIntent ?: return
-
-            val openInIntent = Intent.createChooser(
-                intent,
-                context.getString(R.string.mozac_feature_applinks_open_in)
-            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
-            context.startActivity(openInIntent)
+            context.startActivity(intent)
         }
     }
 
