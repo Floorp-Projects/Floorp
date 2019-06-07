@@ -87,9 +87,6 @@ class CollectionViewHolder(
         this.collection = collection
         this.expanded = expanded
         updateCollectionUI()
-
-        // See #2625 for why we're invalidating
-        view.invalidate()
     }
 
     private fun updateCollectionUI() {
