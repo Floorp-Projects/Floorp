@@ -172,8 +172,8 @@ class RemoteObjectProxy : public RemoteObjectProxyBase {
  * represents an object implementing the WebIDL interface for
  * aProtoID.
  */
-static inline bool IsRemoteObjectProxy(JSObject* aObj,
-                                       prototypes::ID aProtoID) {
+inline bool IsRemoteObjectProxy(JSObject* aObj,
+                                prototypes::ID aProtoID) {
   if (!js::IsProxy(aObj)) {
     return false;
   }
@@ -184,7 +184,7 @@ static inline bool IsRemoteObjectProxy(JSObject* aObj,
  * Returns true if aObj is a cross-process proxy object, no matter
  * which WebIDL interface it corresponds to.
  */
-static inline bool IsRemoteObjectProxy(JSObject* aObj) {
+inline bool IsRemoteObjectProxy(JSObject* aObj) {
   if (!js::IsProxy(aObj)) {
     return false;
   }
