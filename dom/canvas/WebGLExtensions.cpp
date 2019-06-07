@@ -43,8 +43,9 @@ bool WebGLExtensionFloatBlend::IsSupported(const WebGLContext* const webgl) {
     return false;
 
   const auto& gl = webgl->gl;
-  return !gl->IsGLES() || gl->IsANGLE() ||
-         gl->IsExtensionSupported(gl::GLContext::EXT_float_blend);
+  if (!gl->IsGLES() && gl->Version() >= 300) return true;
+  if (gl->IsGLES() && gl->Version() >= 320) return true;
+  return gl->IsExtensionSupported(gl::GLContext::EXT_float_blend);
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionFloatBlend, EXT_float_blend)
