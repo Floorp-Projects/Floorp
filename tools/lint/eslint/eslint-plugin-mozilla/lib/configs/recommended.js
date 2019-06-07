@@ -84,6 +84,7 @@ module.exports = {
     "fetch-options",
     "mozilla",
     "no-unsanitized",
+    "prettier",
   ],
 
   // When adding items to this file please check for effects on all of toolkit
@@ -340,6 +341,9 @@ module.exports = {
 
     // Prohibit blank lines at the beginning and end of blocks.
     "padded-blocks": ["error", "never"],
+
+    // Formatting.
+    "prettier/prettier": "error",
 
     // Require double-quotes everywhere, except where quotes are escaped
     // or template literals are used.
