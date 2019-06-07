@@ -4143,6 +4143,7 @@ static bool EvalInWorker(JSContext* cx, unsigned argc, Value* vp) {
   if (!workerThreads.append(thread)) {
     ReportOutOfMemory(cx);
     thread->join();
+    js_delete(thread);
     return false;
   }
 
@@ -4337,6 +4338,7 @@ static void KillWorkerThreads(JSContext* cx) {
       thread = workerThreads.popCopy();
     }
     thread->join();
+    js_delete(thread);
   }
 
   workerThreads.clearAndFree();
