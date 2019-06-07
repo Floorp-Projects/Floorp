@@ -115,18 +115,6 @@ let ACTORS = {
 
     allFrames: true,
   },
-
-  InlineSpellChecker: {
-    parent: {
-      moduleURI: "resource://gre/actors/InlineSpellCheckerParent.jsm",
-    },
-
-    child: {
-      moduleURI: "resource://gre/actors/InlineSpellCheckerChild.jsm",
-    },
-
-    allFrames: true,
-  },
 };
 
 let LEGACY_ACTORS = {

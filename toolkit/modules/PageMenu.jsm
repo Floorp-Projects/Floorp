@@ -161,8 +161,10 @@ PageMenu.prototype = {
       } else if (this._browser) {
         let win = target.ownerGlobal;
         let windowUtils = win.windowUtils;
-        win.gContextMenu.doCustomCommand(target.getAttribute(this.GENERATEDITEMID_ATTR),
-                                         windowUtils.isHandlingUserInput);
+        this._browser.messageManager.sendAsyncMessage("ContextMenu:DoCustomCommand", {
+          generatedItemId: target.getAttribute(this.GENERATEDITEMID_ATTR),
+          handlingUserInput: windowUtils.isHandlingUserInput,
+        });
       }
     } else if (type == "popuphidden" && this._popup == target) {
       this.removeGeneratedContent(this._popup);
@@ -242,8 +244,26 @@ function PageMenuParent() {
 
 PageMenuParent.prototype = {
   __proto__: PageMenu.prototype,
+
   /*
-   * Given a JSON menu object and popup, add the context menu to the popup.
+   * Given a target node and popup, add the context menu to the popup. This is
+   * intended to be called when a single process is used. This is equivalent to
+   * calling PageMenuChild.build and PageMenuParent.addToPopup in sequence.
+   *
+   * Returns true if custom menu items were present.
+   */
+  buildAndAddToPopup(aTarget, aPopup) {
+    let menuObject = this.maybeBuild(aTarget);
+    if (!menuObject) {
+      return false;
+    }
+
+    return this.buildAndAttachMenuWithObject(menuObject, null, aPopup);
+  },
+
+  /*
+   * Given a JSON menu object and popup, add the context menu to the popup. This
+   * is intended to be called when the child page is in a different process.
    * aBrowser should be the browser containing the page the context menu is
    * displayed for, which may be null.
    *

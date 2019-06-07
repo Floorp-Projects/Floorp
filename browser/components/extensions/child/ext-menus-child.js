@@ -9,7 +9,7 @@ this.menusChild = class extends ExtensionAPI {
       menus: {
         getTargetElement(targetElementId) {
           let element;
-          let lastMenuTarget = ContextMenuChild.getLastTarget(context.contentWindow.docShell.browsingContext);
+          let lastMenuTarget = ContextMenuChild.getLastTarget(context.messageManager);
           if (lastMenuTarget && Math.floor(lastMenuTarget.timeStamp) === targetElementId) {
             element = lastMenuTarget.targetRef.get();
           }
