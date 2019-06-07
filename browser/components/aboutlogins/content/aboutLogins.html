@@ -26,7 +26,9 @@
       <login-filter data-l10n-id="login-filter"
                     data-l10n-attrs="placeholder"></login-filter>
       <button id="create-login-button" data-l10n-id="create-login-button"></button>
-      <menu-button></menu-button>
+      <menu-button data-l10n-id="menu-button"
+                   data-l10n-attrs="button-title,
+                                    menuitem-preferences"></menu-button>
     </header>
     <login-list data-l10n-id="login-list"
                 data-l10n-args='{"count": 0}'
@@ -132,6 +134,7 @@
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/menu-button.css">
       <button class="menu-button alternate-button"></button>
       <ul class="menu" role="menu" aria-hidden="true">
+        <li role="menuitem" class="menuitem"><button class="menuitem-button menuitem-preferences alternate-button"></button></li>
       </ul>
     </template>
 
