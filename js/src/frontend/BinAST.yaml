@@ -1210,7 +1210,7 @@ ListOfObjectProperty:
       result->setHasNonConstInitializer();
     result->appendWithoutOrderAssumption(item);
 
-ListOfOptionalSpreadElementOrExpression:
+ListOfOptionalExpressionOrSpreadElement:
   type-ok:
     ListNode*
   init:

@@ -152,6 +152,68 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumAssignmentTarget(
 }
 
 /*
+AssignmentTargetOrForInOfBinding ::= ArrayAssignmentTarget
+    AssignmentTargetIdentifier
+    ComputedMemberAssignmentTarget
+    ForInOfBinding
+    ObjectAssignmentTarget
+    StaticMemberAssignmentTarget
+*/
+template <typename Tok>
+JS::Result<ParseNode*> BinASTParser<Tok>::parseAssignmentTargetOrForInOfBinding(
+    const Context& context) {
+  BinASTKind kind;
+  BinASTFields fields(cx_);
+  AutoTaggedTuple guard(*tokenizer_);
+  const auto start = tokenizer_->offset();
+
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
+
+  BINJS_MOZ_TRY_DECL(result, parseSumAssignmentTargetOrForInOfBinding(
+                                 start, kind, fields, context));
+
+  MOZ_TRY(guard.done());
+  return result;
+}
+
+template <typename Tok>
+JS::Result<ParseNode*>
+BinASTParser<Tok>::parseSumAssignmentTargetOrForInOfBinding(
+    const size_t start, const BinASTKind kind, const BinASTFields& fields,
+    const Context& context) {
+  ParseNode* result;
+  switch (kind) {
+    case BinASTKind::ArrayAssignmentTarget:
+      MOZ_TRY_VAR(result, parseInterfaceArrayAssignmentTarget(start, kind,
+                                                              fields, context));
+      break;
+    case BinASTKind::AssignmentTargetIdentifier:
+      MOZ_TRY_VAR(result, parseInterfaceAssignmentTargetIdentifier(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::ComputedMemberAssignmentTarget:
+      MOZ_TRY_VAR(result, parseInterfaceComputedMemberAssignmentTarget(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::ForInOfBinding:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceForInOfBinding(start, kind, fields, context));
+      break;
+    case BinASTKind::ObjectAssignmentTarget:
+      MOZ_TRY_VAR(result, parseInterfaceObjectAssignmentTarget(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::StaticMemberAssignmentTarget:
+      MOZ_TRY_VAR(result, parseInterfaceStaticMemberAssignmentTarget(
+                              start, kind, fields, context));
+      break;
+    default:
+      return raiseInvalidKind("AssignmentTargetOrForInOfBinding", kind);
+  }
+  return result;
+}
+
+/*
 Binding ::= ArrayBinding
     BindingIdentifier
     ObjectBinding
@@ -386,6 +448,202 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumExpression(
 }
 
 /*
+ExpressionOrSpreadElement ::= ArrayExpression
+    AssignmentExpression
+    AwaitExpression
+    BinaryExpression
+    CallExpression
+    ClassExpression
+    CompoundAssignmentExpression
+    ComputedMemberExpression
+    ConditionalExpression
+    EagerArrowExpressionWithExpression
+    EagerArrowExpressionWithFunctionBody
+    EagerFunctionExpression
+    IdentifierExpression
+    LazyArrowExpressionWithExpression
+    LazyArrowExpressionWithFunctionBody
+    LazyFunctionExpression
+    LiteralBooleanExpression
+    LiteralInfinityExpression
+    LiteralNullExpression
+    LiteralNumericExpression
+    LiteralRegExpExpression
+    LiteralStringExpression
+    NewExpression
+    NewTargetExpression
+    ObjectExpression
+    SpreadElement
+    StaticMemberExpression
+    TemplateExpression
+    ThisExpression
+    UnaryExpression
+    UpdateExpression
+    YieldExpression
+    YieldStarExpression
+*/
+template <typename Tok>
+JS::Result<ParseNode*> BinASTParser<Tok>::parseExpressionOrSpreadElement(
+    const Context& context) {
+  BinASTKind kind;
+  BinASTFields fields(cx_);
+  AutoTaggedTuple guard(*tokenizer_);
+  const auto start = tokenizer_->offset();
+
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
+
+  BINJS_MOZ_TRY_DECL(
+      result, parseSumExpressionOrSpreadElement(start, kind, fields, context));
+
+  MOZ_TRY(guard.done());
+  return result;
+}
+
+template <typename Tok>
+JS::Result<ParseNode*> BinASTParser<Tok>::parseSumExpressionOrSpreadElement(
+    const size_t start, const BinASTKind kind, const BinASTFields& fields,
+    const Context& context) {
+  ParseNode* result;
+  switch (kind) {
+    case BinASTKind::ArrayExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceArrayExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::AssignmentExpression:
+      MOZ_TRY_VAR(result, parseInterfaceAssignmentExpression(start, kind,
+                                                             fields, context));
+      break;
+    case BinASTKind::AwaitExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceAwaitExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::BinaryExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceBinaryExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::CallExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceCallExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::ClassExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceClassExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::CompoundAssignmentExpression:
+      MOZ_TRY_VAR(result, parseInterfaceCompoundAssignmentExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::ComputedMemberExpression:
+      MOZ_TRY_VAR(result, parseInterfaceComputedMemberExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::ConditionalExpression:
+      MOZ_TRY_VAR(result, parseInterfaceConditionalExpression(start, kind,
+                                                              fields, context));
+      break;
+    case BinASTKind::EagerArrowExpressionWithExpression:
+      MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::EagerArrowExpressionWithFunctionBody:
+      MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithFunctionBody(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::EagerFunctionExpression:
+      MOZ_TRY_VAR(result, parseInterfaceEagerFunctionExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::IdentifierExpression:
+      MOZ_TRY_VAR(result, parseInterfaceIdentifierExpression(start, kind,
+                                                             fields, context));
+      break;
+    case BinASTKind::LazyArrowExpressionWithExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LazyArrowExpressionWithFunctionBody:
+      MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithFunctionBody(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LazyFunctionExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLazyFunctionExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LiteralBooleanExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralBooleanExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LiteralInfinityExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralInfinityExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LiteralNullExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralNullExpression(start, kind,
+                                                              fields, context));
+      break;
+    case BinASTKind::LiteralNumericExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralNumericExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LiteralRegExpExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralRegExpExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LiteralStringExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralStringExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::NewExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceNewExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::NewTargetExpression:
+      MOZ_TRY_VAR(result, parseInterfaceNewTargetExpression(start, kind, fields,
+                                                            context));
+      break;
+    case BinASTKind::ObjectExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceObjectExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::SpreadElement:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceSpreadElement(start, kind, fields, context));
+      break;
+    case BinASTKind::StaticMemberExpression:
+      MOZ_TRY_VAR(result, parseInterfaceStaticMemberExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::TemplateExpression:
+      MOZ_TRY_VAR(result, parseInterfaceTemplateExpression(start, kind, fields,
+                                                           context));
+      break;
+    case BinASTKind::ThisExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceThisExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::UnaryExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceUnaryExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::UpdateExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceUpdateExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::YieldExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceYieldExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::YieldStarExpression:
+      MOZ_TRY_VAR(result, parseInterfaceYieldStarExpression(start, kind, fields,
+                                                            context));
+      break;
+    default:
+      return raiseInvalidKind("ExpressionOrSpreadElement", kind);
+  }
+  return result;
+}
+
+/*
 ExpressionOrSuper ::= ArrayExpression
     AssignmentExpression
     AwaitExpression
@@ -580,64 +838,147 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumExpressionOrSuper(
   return result;
 }
 
-/*
-ForInOfBindingOrAssignmentTarget ::= ArrayAssignmentTarget
-    AssignmentTargetIdentifier
-    ComputedMemberAssignmentTarget
-    ForInOfBinding
-    ObjectAssignmentTarget
-    StaticMemberAssignmentTarget
-*/
-template <typename Tok>
-JS::Result<ParseNode*> BinASTParser<Tok>::parseForInOfBindingOrAssignmentTarget(
-    const Context& context) {
-  BinASTKind kind;
-  BinASTFields fields(cx_);
-  AutoTaggedTuple guard(*tokenizer_);
-  const auto start = tokenizer_->offset();
-
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
-
-  BINJS_MOZ_TRY_DECL(result, parseSumForInOfBindingOrAssignmentTarget(
-                                 start, kind, fields, context));
-
-  MOZ_TRY(guard.done());
-  return result;
-}
-
 template <typename Tok>
 JS::Result<ParseNode*>
-BinASTParser<Tok>::parseSumForInOfBindingOrAssignmentTarget(
+BinASTParser<Tok>::parseSumExpressionOrVariableDeclaration(
     const size_t start, const BinASTKind kind, const BinASTFields& fields,
     const Context& context) {
   ParseNode* result;
   switch (kind) {
-    case BinASTKind::ArrayAssignmentTarget:
-      MOZ_TRY_VAR(result, parseInterfaceArrayAssignmentTarget(start, kind,
+    case BinASTKind::ArrayExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceArrayExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::AssignmentExpression:
+      MOZ_TRY_VAR(result, parseInterfaceAssignmentExpression(start, kind,
+                                                             fields, context));
+      break;
+    case BinASTKind::AwaitExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceAwaitExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::BinaryExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceBinaryExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::CallExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceCallExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::ClassExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceClassExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::CompoundAssignmentExpression:
+      MOZ_TRY_VAR(result, parseInterfaceCompoundAssignmentExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::ComputedMemberExpression:
+      MOZ_TRY_VAR(result, parseInterfaceComputedMemberExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::ConditionalExpression:
+      MOZ_TRY_VAR(result, parseInterfaceConditionalExpression(start, kind,
                                                               fields, context));
       break;
-    case BinASTKind::AssignmentTargetIdentifier:
-      MOZ_TRY_VAR(result, parseInterfaceAssignmentTargetIdentifier(
+    case BinASTKind::EagerArrowExpressionWithExpression:
+      MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithExpression(
                               start, kind, fields, context));
       break;
-    case BinASTKind::ComputedMemberAssignmentTarget:
-      MOZ_TRY_VAR(result, parseInterfaceComputedMemberAssignmentTarget(
+    case BinASTKind::EagerArrowExpressionWithFunctionBody:
+      MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithFunctionBody(
                               start, kind, fields, context));
       break;
-    case BinASTKind::ForInOfBinding:
+    case BinASTKind::EagerFunctionExpression:
+      MOZ_TRY_VAR(result, parseInterfaceEagerFunctionExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::IdentifierExpression:
+      MOZ_TRY_VAR(result, parseInterfaceIdentifierExpression(start, kind,
+                                                             fields, context));
+      break;
+    case BinASTKind::LazyArrowExpressionWithExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LazyArrowExpressionWithFunctionBody:
+      MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithFunctionBody(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LazyFunctionExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLazyFunctionExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LiteralBooleanExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralBooleanExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LiteralInfinityExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralInfinityExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LiteralNullExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralNullExpression(start, kind,
+                                                              fields, context));
+      break;
+    case BinASTKind::LiteralNumericExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralNumericExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LiteralRegExpExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralRegExpExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::LiteralStringExpression:
+      MOZ_TRY_VAR(result, parseInterfaceLiteralStringExpression(
+                              start, kind, fields, context));
+      break;
+    case BinASTKind::NewExpression:
       MOZ_TRY_VAR(result,
-                  parseInterfaceForInOfBinding(start, kind, fields, context));
+                  parseInterfaceNewExpression(start, kind, fields, context));
       break;
-    case BinASTKind::ObjectAssignmentTarget:
-      MOZ_TRY_VAR(result, parseInterfaceObjectAssignmentTarget(
+    case BinASTKind::NewTargetExpression:
+      MOZ_TRY_VAR(result, parseInterfaceNewTargetExpression(start, kind, fields,
+                                                            context));
+      break;
+    case BinASTKind::ObjectExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceObjectExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::StaticMemberExpression:
+      MOZ_TRY_VAR(result, parseInterfaceStaticMemberExpression(
                               start, kind, fields, context));
       break;
-    case BinASTKind::StaticMemberAssignmentTarget:
-      MOZ_TRY_VAR(result, parseInterfaceStaticMemberAssignmentTarget(
-                              start, kind, fields, context));
+    case BinASTKind::TemplateExpression:
+      MOZ_TRY_VAR(result, parseInterfaceTemplateExpression(start, kind, fields,
+                                                           context));
+      break;
+    case BinASTKind::ThisExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceThisExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::UnaryExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceUnaryExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::UpdateExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceUpdateExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::VariableDeclaration:
+      MOZ_TRY_VAR(result, parseInterfaceVariableDeclaration(start, kind, fields,
+                                                            context));
+      break;
+    case BinASTKind::YieldExpression:
+      MOZ_TRY_VAR(result,
+                  parseInterfaceYieldExpression(start, kind, fields, context));
+      break;
+    case BinASTKind::YieldStarExpression:
+      MOZ_TRY_VAR(result, parseInterfaceYieldStarExpression(start, kind, fields,
+                                                            context));
       break;
     default:
-      return raiseInvalidKind("ForInOfBindingOrAssignmentTarget", kind);
+      return raiseInvalidKind("ExpressionOrVariableDeclaration", kind);
   }
   return result;
 }
@@ -895,202 +1236,6 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumSimpleAssignmentTarget(
 }
 
 /*
-SpreadElementOrExpression ::= ArrayExpression
-    AssignmentExpression
-    AwaitExpression
-    BinaryExpression
-    CallExpression
-    ClassExpression
-    CompoundAssignmentExpression
-    ComputedMemberExpression
-    ConditionalExpression
-    EagerArrowExpressionWithExpression
-    EagerArrowExpressionWithFunctionBody
-    EagerFunctionExpression
-    IdentifierExpression
-    LazyArrowExpressionWithExpression
-    LazyArrowExpressionWithFunctionBody
-    LazyFunctionExpression
-    LiteralBooleanExpression
-    LiteralInfinityExpression
-    LiteralNullExpression
-    LiteralNumericExpression
-    LiteralRegExpExpression
-    LiteralStringExpression
-    NewExpression
-    NewTargetExpression
-    ObjectExpression
-    SpreadElement
-    StaticMemberExpression
-    TemplateExpression
-    ThisExpression
-    UnaryExpression
-    UpdateExpression
-    YieldExpression
-    YieldStarExpression
-*/
-template <typename Tok>
-JS::Result<ParseNode*> BinASTParser<Tok>::parseSpreadElementOrExpression(
-    const Context& context) {
-  BinASTKind kind;
-  BinASTFields fields(cx_);
-  AutoTaggedTuple guard(*tokenizer_);
-  const auto start = tokenizer_->offset();
-
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
-
-  BINJS_MOZ_TRY_DECL(
-      result, parseSumSpreadElementOrExpression(start, kind, fields, context));
-
-  MOZ_TRY(guard.done());
-  return result;
-}
-
-template <typename Tok>
-JS::Result<ParseNode*> BinASTParser<Tok>::parseSumSpreadElementOrExpression(
-    const size_t start, const BinASTKind kind, const BinASTFields& fields,
-    const Context& context) {
-  ParseNode* result;
-  switch (kind) {
-    case BinASTKind::ArrayExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceArrayExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::AssignmentExpression:
-      MOZ_TRY_VAR(result, parseInterfaceAssignmentExpression(start, kind,
-                                                             fields, context));
-      break;
-    case BinASTKind::AwaitExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceAwaitExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::BinaryExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceBinaryExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::CallExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceCallExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::ClassExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceClassExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::CompoundAssignmentExpression:
-      MOZ_TRY_VAR(result, parseInterfaceCompoundAssignmentExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::ComputedMemberExpression:
-      MOZ_TRY_VAR(result, parseInterfaceComputedMemberExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::ConditionalExpression:
-      MOZ_TRY_VAR(result, parseInterfaceConditionalExpression(start, kind,
-                                                              fields, context));
-      break;
-    case BinASTKind::EagerArrowExpressionWithExpression:
-      MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::EagerArrowExpressionWithFunctionBody:
-      MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithFunctionBody(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::EagerFunctionExpression:
-      MOZ_TRY_VAR(result, parseInterfaceEagerFunctionExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::IdentifierExpression:
-      MOZ_TRY_VAR(result, parseInterfaceIdentifierExpression(start, kind,
-                                                             fields, context));
-      break;
-    case BinASTKind::LazyArrowExpressionWithExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LazyArrowExpressionWithFunctionBody:
-      MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithFunctionBody(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LazyFunctionExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLazyFunctionExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LiteralBooleanExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralBooleanExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LiteralInfinityExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralInfinityExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LiteralNullExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralNullExpression(start, kind,
-                                                              fields, context));
-      break;
-    case BinASTKind::LiteralNumericExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralNumericExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LiteralRegExpExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralRegExpExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LiteralStringExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralStringExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::NewExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceNewExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::NewTargetExpression:
-      MOZ_TRY_VAR(result, parseInterfaceNewTargetExpression(start, kind, fields,
-                                                            context));
-      break;
-    case BinASTKind::ObjectExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceObjectExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::SpreadElement:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceSpreadElement(start, kind, fields, context));
-      break;
-    case BinASTKind::StaticMemberExpression:
-      MOZ_TRY_VAR(result, parseInterfaceStaticMemberExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::TemplateExpression:
-      MOZ_TRY_VAR(result, parseInterfaceTemplateExpression(start, kind, fields,
-                                                           context));
-      break;
-    case BinASTKind::ThisExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceThisExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::UnaryExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceUnaryExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::UpdateExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceUpdateExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::YieldExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceYieldExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::YieldStarExpression:
-      MOZ_TRY_VAR(result, parseInterfaceYieldStarExpression(start, kind, fields,
-                                                            context));
-      break;
-    default:
-      return raiseInvalidKind("SpreadElementOrExpression", kind);
-  }
-  return result;
-}
-
-/*
 Statement ::= Block
     BreakStatement
     ClassDeclaration
@@ -1239,151 +1384,6 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumStatement(
   return result;
 }
 
-template <typename Tok>
-JS::Result<ParseNode*>
-BinASTParser<Tok>::parseSumVariableDeclarationOrExpression(
-    const size_t start, const BinASTKind kind, const BinASTFields& fields,
-    const Context& context) {
-  ParseNode* result;
-  switch (kind) {
-    case BinASTKind::ArrayExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceArrayExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::AssignmentExpression:
-      MOZ_TRY_VAR(result, parseInterfaceAssignmentExpression(start, kind,
-                                                             fields, context));
-      break;
-    case BinASTKind::AwaitExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceAwaitExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::BinaryExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceBinaryExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::CallExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceCallExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::ClassExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceClassExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::CompoundAssignmentExpression:
-      MOZ_TRY_VAR(result, parseInterfaceCompoundAssignmentExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::ComputedMemberExpression:
-      MOZ_TRY_VAR(result, parseInterfaceComputedMemberExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::ConditionalExpression:
-      MOZ_TRY_VAR(result, parseInterfaceConditionalExpression(start, kind,
-                                                              fields, context));
-      break;
-    case BinASTKind::EagerArrowExpressionWithExpression:
-      MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::EagerArrowExpressionWithFunctionBody:
-      MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithFunctionBody(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::EagerFunctionExpression:
-      MOZ_TRY_VAR(result, parseInterfaceEagerFunctionExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::IdentifierExpression:
-      MOZ_TRY_VAR(result, parseInterfaceIdentifierExpression(start, kind,
-                                                             fields, context));
-      break;
-    case BinASTKind::LazyArrowExpressionWithExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LazyArrowExpressionWithFunctionBody:
-      MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithFunctionBody(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LazyFunctionExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLazyFunctionExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LiteralBooleanExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralBooleanExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LiteralInfinityExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralInfinityExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LiteralNullExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralNullExpression(start, kind,
-                                                              fields, context));
-      break;
-    case BinASTKind::LiteralNumericExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralNumericExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LiteralRegExpExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralRegExpExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::LiteralStringExpression:
-      MOZ_TRY_VAR(result, parseInterfaceLiteralStringExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::NewExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceNewExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::NewTargetExpression:
-      MOZ_TRY_VAR(result, parseInterfaceNewTargetExpression(start, kind, fields,
-                                                            context));
-      break;
-    case BinASTKind::ObjectExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceObjectExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::StaticMemberExpression:
-      MOZ_TRY_VAR(result, parseInterfaceStaticMemberExpression(
-                              start, kind, fields, context));
-      break;
-    case BinASTKind::TemplateExpression:
-      MOZ_TRY_VAR(result, parseInterfaceTemplateExpression(start, kind, fields,
-                                                           context));
-      break;
-    case BinASTKind::ThisExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceThisExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::UnaryExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceUnaryExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::UpdateExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceUpdateExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::VariableDeclaration:
-      MOZ_TRY_VAR(result, parseInterfaceVariableDeclaration(start, kind, fields,
-                                                            context));
-      break;
-    case BinASTKind::YieldExpression:
-      MOZ_TRY_VAR(result,
-                  parseInterfaceYieldExpression(start, kind, fields, context));
-      break;
-    case BinASTKind::YieldStarExpression:
-      MOZ_TRY_VAR(result, parseInterfaceYieldStarExpression(start, kind, fields,
-                                                            context));
-      break;
-    default:
-      return raiseInvalidKind("VariableDeclarationOrExpression", kind);
-  }
-  return result;
-}
-
 // ----- Interfaces (autogenerated, by lexicographical order)
 // When fields have a non-trivial type, implementation is deanonymized and
 // delegated to another parser.
@@ -1418,7 +1418,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceArrayExpression(
 
   BINJS_MOZ_TRY_DECL(
       elements,
-      parseListOfOptionalSpreadElementOrExpression(Context(
+      parseListOfOptionalExpressionOrSpreadElement(Context(
           FieldContext(BinASTInterfaceAndField::ArrayExpression__Elements))));
 
   if (elements->empty()) {
@@ -3189,7 +3189,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInStatement(
   BINJS_TRY(scope.init(pc_));
 
   BINJS_MOZ_TRY_DECL(
-      left, parseForInOfBindingOrAssignmentTarget(Context(
+      left, parseAssignmentTargetOrForInOfBinding(Context(
                 FieldContext(BinASTInterfaceAndField::ForInStatement__Left))));
 
   BINJS_MOZ_TRY_DECL(right,
@@ -3244,7 +3244,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForStatement(
   BINJS_TRY(scope.init(pc_));
 
   BINJS_MOZ_TRY_DECL(
-      init, parseOptionalVariableDeclarationOrExpression(Context(
+      init, parseOptionalExpressionOrVariableDeclaration(Context(
                 FieldContext(BinASTInterfaceAndField::ForStatement__Init))));
 
   BINJS_MOZ_TRY_DECL(test, parseOptionalExpression(Context(FieldContext(
@@ -5218,7 +5218,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseArguments(
   for (uint32_t i = 0; i < length; ++i) {
     const Context childContext(Context(ListContext(
         context.as<FieldContext>().position, BinASTList::Arguments)));
-    BINJS_MOZ_TRY_DECL(item, parseSpreadElementOrExpression(childContext));
+    BINJS_MOZ_TRY_DECL(item, parseExpressionOrSpreadElement(childContext));
     handler_.addList(/* list = */ result, /* kid = */ item);
   }
 
@@ -5373,7 +5373,7 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfObjectProperty(
 
 template <typename Tok>
 JS::Result<ListNode*>
-BinASTParser<Tok>::parseListOfOptionalSpreadElementOrExpression(
+BinASTParser<Tok>::parseListOfOptionalExpressionOrSpreadElement(
     const Context& context) {
   uint32_t length;
   AutoList guard(*tokenizer_);
@@ -5385,9 +5385,9 @@ BinASTParser<Tok>::parseListOfOptionalSpreadElementOrExpression(
   for (uint32_t i = 0; i < length; ++i) {
     const Context childContext(Context(
         ListContext(context.as<FieldContext>().position,
-                    BinASTList::ListOfOptionalSpreadElementOrExpression)));
+                    BinASTList::ListOfOptionalExpressionOrSpreadElement)));
     BINJS_MOZ_TRY_DECL(item,
-                       parseOptionalSpreadElementOrExpression(childContext));
+                       parseOptionalExpressionOrSpreadElement(childContext));
     if (item) {
       handler_.addArrayElement(result, item);  // Infallible.
     } else {
@@ -5574,7 +5574,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*>
-BinASTParser<Tok>::parseOptionalSpreadElementOrExpression(
+BinASTParser<Tok>::parseOptionalExpressionOrSpreadElement(
     const Context& context) {
   BinASTKind kind;
   BinASTFields fields(cx_);
@@ -5586,8 +5586,30 @@ BinASTParser<Tok>::parseOptionalSpreadElementOrExpression(
     result = nullptr;
   } else {
     const auto start = tokenizer_->offset();
-    MOZ_TRY_VAR(result, parseSumSpreadElementOrExpression(start, kind, fields,
+    MOZ_TRY_VAR(result, parseSumExpressionOrSpreadElement(start, kind, fields,
                                                           context));
+  }
+  MOZ_TRY(guard.done());
+
+  return result;
+}
+
+template <typename Tok>
+JS::Result<ParseNode*>
+BinASTParser<Tok>::parseOptionalExpressionOrVariableDeclaration(
+    const Context& context) {
+  BinASTKind kind;
+  BinASTFields fields(cx_);
+  AutoTaggedTuple guard(*tokenizer_);
+
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
+  ParseNode* result;
+  if (kind == BinASTKind::_Null) {
+    result = nullptr;
+  } else {
+    const auto start = tokenizer_->offset();
+    MOZ_TRY_VAR(result, parseSumExpressionOrVariableDeclaration(
+                            start, kind, fields, context));
   }
   MOZ_TRY(guard.done());
 
@@ -5608,28 +5630,6 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalStatement(
   } else {
     const auto start = tokenizer_->offset();
     MOZ_TRY_VAR(result, parseSumStatement(start, kind, fields, context));
-  }
-  MOZ_TRY(guard.done());
-
-  return result;
-}
-
-template <typename Tok>
-JS::Result<ParseNode*>
-BinASTParser<Tok>::parseOptionalVariableDeclarationOrExpression(
-    const Context& context) {
-  BinASTKind kind;
-  BinASTFields fields(cx_);
-  AutoTaggedTuple guard(*tokenizer_);
-
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
-  ParseNode* result;
-  if (kind == BinASTKind::_Null) {
-    result = nullptr;
-  } else {
-    const auto start = tokenizer_->offset();
-    MOZ_TRY_VAR(result, parseSumVariableDeclarationOrExpression(
-                            start, kind, fields, context));
   }
   MOZ_TRY(guard.done());
 
