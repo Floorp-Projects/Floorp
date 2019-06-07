@@ -8,18 +8,15 @@ import os
 import json
 import taskcluster
 
-def write_secret_to_file(path, data, key, base64decode=False, append=False, prefix=''):
+def write_secret_to_file(path, data, key, base64decode=False, json=False, append=False, prefix=''):
     path = os.path.join(os.path.dirname(__file__), '../../../' + path)
     with open(path, 'a' if append else 'w') as f:
         value = data['secret'][key]
         if base64decode:
             value = base64.b64decode(value)
-
-        try:
-            json_string = json.dumps(value)
-            f.write(prefix + json_string)
-        except ValueError as e:
-            f.write(prefix + value)
+        if json:
+            value = json.dumps(value)
+        f.write(prefix + value)
 
 
 def fetch_secret_from_taskcluster(name):
@@ -35,13 +32,14 @@ def main():
     parser.add_argument('-k', dest='key', action="store", help='key of the secret')
     parser.add_argument('-f', dest="path", action="store", help='file to save secret to')
     parser.add_argument('--decode', dest="decode", action="store_true", default=False, help='base64 decode secret before saving to file')
+    parser.add_argument('--json', dest="json", action="store_true", default=False, help='serializes the secret to JSON format')
     parser.add_argument('--append', dest="append", action="store_true", default=False, help='append secret to existing file')
     parser.add_argument('--prefix', dest="prefix", action="store", default="", help='add prefix when writing secret to file')
 
     result = parser.parse_args()
 
     secret = fetch_secret_from_taskcluster(result.secret)
-    write_secret_to_file(result.path, secret, result.key, result.decode, result.append, result.prefix)
+    write_secret_to_file(result.path, secret, result.key, result.decode, result.json, result.append, result.prefix)
 
 
 if __name__ == "__main__":
