@@ -18,6 +18,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/AbortSignal.h"
+#include "mozilla/dom/BodyConsumer.h"
 #include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/FetchStreamReader.h"
@@ -87,14 +88,6 @@ nsresult ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
                                    nsCString& aContentType,
                                    uint64_t& aContentLength);
 
-enum FetchConsumeType {
-  CONSUME_ARRAYBUFFER,
-  CONSUME_BLOB,
-  CONSUME_FORMDATA,
-  CONSUME_JSON,
-  CONSUME_TEXT,
-};
-
 /*
  * FetchBody's body consumption uses nsIInputStreamPump to read from the
  * underlying stream to a block of memory, which is then adopted by
@@ -139,23 +132,23 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   bool CheckBodyUsed() const;
 
   already_AddRefed<Promise> ArrayBuffer(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, CONSUME_ARRAYBUFFER, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_ARRAYBUFFER, aRv);
   }
 
   already_AddRefed<Promise> Blob(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, CONSUME_BLOB, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_BLOB, aRv);
   }
 
   already_AddRefed<Promise> FormData(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, CONSUME_FORMDATA, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_FORMDATA, aRv);
   }
 
   already_AddRefed<Promise> Json(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, CONSUME_JSON, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_JSON, aRv);
   }
 
   already_AddRefed<Promise> Text(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, CONSUME_TEXT, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_TEXT, aRv);
   }
 
   void GetBody(JSContext* aCx, JS::MutableHandle<JSObject*> aBodyOut,
@@ -218,7 +211,8 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   // AbortFollower
   void Abort() override;
 
-  already_AddRefed<Promise> ConsumeBody(JSContext* aCx, FetchConsumeType aType,
+  already_AddRefed<Promise> ConsumeBody(JSContext* aCx,
+                                        BodyConsumer::ConsumeType aType,
                                         ErrorResult& aRv);
 
  protected:

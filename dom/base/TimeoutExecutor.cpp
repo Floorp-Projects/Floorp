@@ -6,10 +6,12 @@
 
 #include "TimeoutExecutor.h"
 
+#include "mozilla/AbstractEventQueue.h"
 #include "mozilla/dom/TimeoutManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIEventTarget.h"
 #include "nsString.h"
+#include "nsThreadUtils.h"
 
 extern mozilla::LazyLogModule gTimeoutLog;
 
