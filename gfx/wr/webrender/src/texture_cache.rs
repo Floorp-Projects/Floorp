@@ -680,7 +680,7 @@ impl TextureCache {
     }
 
     pub fn requires_frame_build(&self) -> bool {
-        return self.require_frame_build;
+        self.require_frame_build
     }
 
     /// Called at the beginning of each frame.

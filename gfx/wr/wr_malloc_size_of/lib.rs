@@ -54,7 +54,7 @@ impl MallocSizeOfOps {
         // larger than the required alignment, but small enough that it is
         // always in the first page of memory and therefore not a legitimate
         // address.
-        return ptr as *const usize as usize <= 256;
+        ptr as *const usize as usize <= 256
     }
 
     /// Call `size_of_op` on `ptr`, first checking that the allocation isn't
