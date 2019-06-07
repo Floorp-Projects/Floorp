@@ -109,6 +109,11 @@ exclude: true
 [68.26]: ./GeckoSession.MediaDelegate.html#onRecordingStatusChanged-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.MediaDelegate.RecordingDevice:A-
 [68.27]: ./GeckoSession.MediaDelegate.html
 
+- Removed redundant constants in [`MediaSource`][68.28]
+
+[68.28]: ./GeckoSession.MediaSource.html
+
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -315,4 +320,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 0d2e702b588446d97cdeaacca60b75d33f37d6f7
+[api-version]: 29ff764a2ca4aaa16dbe79a269d6c1c8a166775e
