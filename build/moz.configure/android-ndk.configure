@@ -337,28 +337,6 @@ def bindgen_cflags_android(toolchain_flags, stlport_flags, toolchain,
     ]
 
 
-@depends(host, ndk)
-@imports(_from='os.path', _import='exists')
-@imports(_from='os.path', _import='isdir')
-def android_clang_compiler(host, ndk):
-    if not ndk:
-        return
-
-    llvm_format = '%s/toolchains/llvm/prebuilt/%s-%s/bin'
-    llvm_path = llvm_format % (ndk, host.kernel.lower(), host.cpu)
-    if not isdir(llvm_path) and host.cpu == 'x86_64':
-        llvm_path = llvm_format % (ndk, host.kernel.lower(), 'x86')
-
-    if not isdir(llvm_path):
-        die("Couldn't find path to LLVM toolchain at %s" % llvm_path)
-
-    clang = '%s/clang' % llvm_path
-    if not exists(clang):
-        die("Couln't find clang in LLVM toolchain at %s" % clang)
-
-    return clang
-
-
 @depends('--with-android-googlevr-sdk', target)
 @checking('for GoogleVR SDK', lambda x: x.result)
 @imports(_from='os.path', _import='exists')
