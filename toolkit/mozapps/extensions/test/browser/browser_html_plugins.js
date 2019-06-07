@@ -23,6 +23,8 @@ add_task(async function enableHtmlViews() {
     },
     type: "plugin",
   }]);
+
+  Services.telemetry.clearEvents();
 });
 
 add_task(async function testAskToActivate() {
@@ -41,6 +43,7 @@ add_task(async function testAskToActivate() {
   let plugins = await AddonManager.getAddonsByTypes(["plugin"]);
   let flash = plugins.find(
     plugin => plugin.description == TEST_PLUGIN_DESCRIPTION);
+  let addonId = flash.id;
   let win = await loadInitialView("plugin");
   let doc = win.document;
 
@@ -84,7 +87,34 @@ add_task(async function testAskToActivate() {
      "Flash is ask-to-activate");
   ok(flash.isActive, "Flash is active");
 
+  // Check the detail view, too.
+  let loaded = waitForViewLoad(win);
+  card.querySelector("[action=expand]").click();
+  await loaded;
+
+  // Set the state to always activate.
+  card = doc.querySelector("addon-card");
+  panelItems = card.querySelectorAll("panel-item");
+  checkItems(panelItems, "ask-to-activate");
+  updated = BrowserTestUtils.waitForEvent(card, "update");
+  panelItems[1].click();
+  await updated;
+  checkItems(panelItems, "always-activate");
+
   await closeView(win);
+
+  assertAboutAddonsTelemetryEvents([
+    ["addonsManager", "view", "aboutAddons", "list", {type: "plugin"}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "plugin", addonId, view: "list", action: "enable"}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "plugin", addonId, view: "list", action: "disable"}],
+    // Ask-to-activate doesn't trigger a telemetry event.
+    ["addonsManager", "view", "aboutAddons", "detail",
+     {type: "plugin", addonId}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "plugin", addonId, view: "detail", action: "enable"}],
+  ]);
 });
 
 add_task(async function testNoAskToActivate() {
