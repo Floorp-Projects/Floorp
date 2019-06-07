@@ -124,7 +124,8 @@ XPCOMUtils.defineLazyScriptGetter(this, "gSync",
                                   "chrome://browser/content/browser-sync.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gBrowserThumbnails",
                                   "chrome://browser/content/browser-thumbnails.js");
-XPCOMUtils.defineLazyScriptGetter(this, ["openContextMenu", "nsContextMenu"],
+XPCOMUtils.defineLazyScriptGetter(this, ["setContextMenuContentData",
+                                         "openContextMenu", "nsContextMenu"],
                                   "chrome://browser/content/nsContextMenu.js");
 XPCOMUtils.defineLazyScriptGetter(this, ["DownloadsPanel",
                                          "DownloadsOverlayLoader",
@@ -7628,11 +7629,27 @@ function BrowserOpenAddonsMgr(aView) {
 }
 
 function AddKeywordForSearchField() {
-  if (!gContextMenu) {
-    throw new Error("Context menu doesn't seem to be open.");
-  }
+  let mm = gBrowser.selectedBrowser.messageManager;
 
-  gContextMenu.addKeywordForSearchField();
+  let onMessage = (message) => {
+    mm.removeMessageListener("ContextMenu:SearchFieldBookmarkData:Result", onMessage);
+
+    let bookmarkData = message.data;
+    let title = gNavigatorBundle.getFormattedString("addKeywordTitleAutoFill",
+                                                    [bookmarkData.title]);
+    PlacesUIUtils.showBookmarkDialog({ action: "add",
+                                       type: "bookmark",
+                                       uri: makeURI(bookmarkData.spec),
+                                       title,
+                                       keyword: "",
+                                       postData: bookmarkData.postData,
+                                       charSet: bookmarkData.charset,
+                                       hiddenRows: [ "location", "tags" ],
+                                     }, window);
+  };
+  mm.addMessageListener("ContextMenu:SearchFieldBookmarkData:Result", onMessage);
+
+  mm.sendAsyncMessage("ContextMenu:SearchFieldBookmarkData", {}, { target: gContextMenu.target });
 }
 
 /**

@@ -53,10 +53,10 @@ class PluginChild extends ActorChild {
       case "BrowserPlugins:ContextMenuCommand":
         switch (msg.data.command) {
           case "play":
-            this._showClickToPlayNotification(ContextMenuChild.getTarget(this.docShell.browsingContext, msg, "plugin"), true);
+            this._showClickToPlayNotification(ContextMenuChild.getTarget(this.mm, msg, "plugin"), true);
             break;
           case "hide":
-            this.hideClickToPlayOverlay(ContextMenuChild.getTarget(this.docShell.browsingContext, msg, "plugin"));
+            this.hideClickToPlayOverlay(ContextMenuChild.getTarget(this.mm, msg, "plugin"));
             break;
         }
         break;
