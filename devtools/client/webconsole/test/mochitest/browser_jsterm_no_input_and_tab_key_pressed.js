@@ -29,13 +29,13 @@ async function performTests(codeMirror) {
   is(getInputValue(hud), "", "inputnode is empty - matched");
   ok(!isInputFocused(hud), "input isn't focused anymore");
 
-  info("Check that hitting Shift+Tab when input is not empty insert a tab");
+  info("Check that hitting Shift+Tab when input is empty blur the input");
   jsterm.focus();
   EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
   is(getInputValue(hud), "", "inputnode is empty - matched");
   ok(!isInputFocused(hud), "input isn't focused anymore");
-  ok(hasFocus(hud.ui.outputNode.querySelector(".devtools-button.net")),
-    `The "Requests" filter button is now focused`);
+  ok(hasFocus(hud.ui.outputNode.querySelector(".filter-checkbox input")),
+    `The "Persist Logs" checkbox is now focused`);
 
   info("Check that hitting Tab when input is not empty insert a tab");
   jsterm.focus();

@@ -635,11 +635,12 @@ a.learn-more-link.webconsole-learn-more-link {
 */
 .webconsole-filteringbar-wrapper {
   display: grid;
-  grid-row: 1 / 2;
   grid-template-columns: 1fr max-content auto auto;
-  /* Wrap so the "Hidden messages" bar can go to its own row if needed */
-  flex-wrap: wrap;
   --primary-toolbar-height: 29px;
+}
+
+.webconsole-filteringbar-wrapper .devtools-toolbar {
+  background-color: var(--theme-body-background);
 }
 
 .webconsole-filterbar-primary {
@@ -685,12 +686,15 @@ a.learn-more-link.webconsole-learn-more-link {
   background-image: url(chrome://devtools/skin/images/close.svg);
 }
 
-/* set to prevent the filter height from devtools-searchbox */
 .webconsole-filterbar-primary .devtools-searchbox {
   align-self: stretch;
+  /* Prevent the filter height from devtools-searchbox */
   height: unset;
   flex: 1 1 100%;
   margin-inline-start: 1px;
+  /* It's important to keep this in px as it's used in JS to control the display mode
+   * of the filter toolbar. */
+  min-width: 150px;
 }
 
 .webconsole-filterbar-primary .filter-checkbox {
@@ -714,7 +718,7 @@ a.learn-more-link.webconsole-learn-more-link {
 
 @media (max-width: 965px) {
   /* This media query will make filtered message element to be displayed in new
-    line. This width is based on greek localized size since it will longer than
+    line. This width is based on greek localized size since it is longer than
     other localized strings. */
   .webconsole-filterbar-filtered-messages {
     grid-row: 2 / 3;
