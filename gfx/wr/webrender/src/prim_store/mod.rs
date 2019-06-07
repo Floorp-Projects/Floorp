@@ -1626,7 +1626,7 @@ impl PrimitiveScratchBuffer {
     ) {
         self.debug_items.push(DebugItem::Rect {
             rect,
-            color: color.into(),
+            color,
         });
     }
 
@@ -1639,7 +1639,7 @@ impl PrimitiveScratchBuffer {
     ) {
         self.debug_items.push(DebugItem::Text {
             position,
-            color: color.into(),
+            color,
             msg,
         });
     }

@@ -278,7 +278,7 @@ fn skip_slice<'a, T: for<'de> Deserialize<'de>>(mut data: &mut &'a [u8]) -> Item
     *data = rest;
 
     ItemRange {
-        bytes: skip.into(),
+        bytes: skip,
         _boo: PhantomData,
     }
 }
