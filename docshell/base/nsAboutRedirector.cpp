@@ -79,8 +79,7 @@ static const RedirEntry kRedirMap[] = {
     {"credits", "https://www.mozilla.org/credits/",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
     {"license", "chrome://global/content/license.html",
-     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-         nsIAboutModule::MAKE_LINKABLE},
+     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
     {"logo", "chrome://branding/content/about.png",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          // Linkable for testing reasons.
