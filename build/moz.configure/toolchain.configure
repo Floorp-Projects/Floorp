@@ -1596,6 +1596,32 @@ def asan():
 
 add_old_configure_assignment('MOZ_ASAN', asan)
 
+# MSAN
+# ==============================================================
+
+js_option('--enable-memory-sanitizer', help='Enable Memory Sanitizer')
+
+
+@depends(when='--enable-memory-sanitizer')
+def msan():
+    return True
+
+
+add_old_configure_assignment('MOZ_MSAN', msan)
+
+# TSAN
+# ==============================================================
+
+js_option('--enable-thread-sanitizer', help='Enable Thread Sanitizer')
+
+
+@depends(when='--enable-thread-sanitizer')
+def tsan():
+    return True
+
+
+add_old_configure_assignment('MOZ_TSAN', tsan)
+
 # UBSAN
 # ==============================================================
 
@@ -1616,6 +1642,30 @@ def ubsan(options):
     return ','.join(checks)
 
 add_old_configure_assignment('MOZ_UBSAN_CHECKS', ubsan)
+
+
+js_option('--enable-signed-overflow-sanitizer',
+          help='Enable UndefinedBehavior Sanitizer (Signed Integer Overflow Parts)')
+
+
+@depends(when='--enable-signed-overflow-sanitizer')
+def ub_signed_overflow_san():
+    return True
+
+
+add_old_configure_assignment('MOZ_SIGNED_OVERFLOW_SANITIZE', ub_signed_overflow_san)
+
+
+js_option('--enable-unsigned-overflow-sanitizer',
+          help='Enable UndefinedBehavior Sanitizer (Unsigned Integer Overflow Parts)')
+
+
+@depends(when='--enable-unsigned-overflow-sanitizer')
+def ub_unsigned_overflow_san():
+    return True
+
+
+add_old_configure_assignment('MOZ_UNSIGNED_OVERFLOW_SANITIZE', ub_unsigned_overflow_san)
 
 # Security Hardening
 # ==============================================================

@@ -40,10 +40,6 @@ AC_SUBST(MOZ_ASAN)
 dnl ========================================================
 dnl = Use Memory Sanitizer
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(memory-sanitizer,
-[  --enable-memory-sanitizer       Enable Memory Sanitizer (default=no)],
-    MOZ_MSAN=1,
-    MOZ_MSAN= )
 if test -n "$MOZ_MSAN"; then
     CFLAGS="-fsanitize=memory -fsanitize-memory-track-origins $CFLAGS"
     CXXFLAGS="-fsanitize=memory -fsanitize-memory-track-origins $CXXFLAGS"
@@ -58,10 +54,6 @@ AC_SUBST(MOZ_MSAN)
 dnl ========================================================
 dnl = Use Thread Sanitizer
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(thread-sanitizer,
-[  --enable-thread-sanitizer       Enable Thread Sanitizer (default=no)],
-   MOZ_TSAN=1,
-   MOZ_TSAN= )
 if test -n "$MOZ_TSAN"; then
     CFLAGS="-fsanitize=thread $CFLAGS"
     CXXFLAGS="-fsanitize=thread $CXXFLAGS"
@@ -94,16 +86,6 @@ AC_SUBST(MOZ_UBSAN)
 dnl ========================================================
 dnl = Use UndefinedBehavior Sanitizer to find integer overflows
 dnl ========================================================
-
-MOZ_ARG_ENABLE_BOOL(signed-overflow-sanitizer,
-[  --enable-signed-overflow-sanitizer       Enable UndefinedBehavior Sanitizer (Signed Integer Overflow Parts, default=no)],
-   MOZ_SIGNED_OVERFLOW_SANITIZE=1,
-   MOZ_SIGNED_OVERFLOW_SANITIZE= )
-MOZ_ARG_ENABLE_BOOL(unsigned-overflow-sanitizer,
-[  --enable-unsigned-overflow-sanitizer       Enable UndefinedBehavior Sanitizer (Unsigned Integer Overflow Parts, default=no)],
-   MOZ_UNSIGNED_OVERFLOW_SANITIZE=1,
-   MOZ_UNSIGNED_OVERFLOW_SANITIZE= )
-
 if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
     MOZ_UBSAN=1
     SANITIZER_BLACKLISTS=""
