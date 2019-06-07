@@ -98,7 +98,6 @@ function EvaluationResult(props) {
     notes,
     timestampsVisible,
     maybeScrollToBottom,
-    message,
   });
 }
 

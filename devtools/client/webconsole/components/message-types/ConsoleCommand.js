@@ -54,7 +54,6 @@ function ConsoleCommand(props) {
     timeStamp,
     timestampsVisible,
     maybeScrollToBottom,
-    message,
   });
 }
 
