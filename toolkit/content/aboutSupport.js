@@ -56,6 +56,9 @@ var snapshotFormatters = {
     $("buildid-box").textContent = data.buildID;
     if (data.updateChannel)
       $("updatechannel-box").textContent = data.updateChannel;
+    if (AppConstants.MOZ_UPDATER) {
+      $("update-dir-box").textContent = Services.dirsvc.get("UpdRootD", Ci.nsIFile).path;
+    }
     $("profile-dir-box").textContent = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
 
     try {
@@ -1225,16 +1228,7 @@ function safeModeRestart() {
  * Set up event listeners for buttons.
  */
 function setupEventListeners() {
-  let button = $("show-update-history-button");
-  if (button) {
-    button.addEventListener("click", function(event) {
-      let uri = "chrome://mozapps/content/update/history.xul";
-      let features = "chrome,centerscreen,resizable=no,titlebar,toolbar=no," +
-                     "dialog=yes,modal";
-      Services.ww.openWindow(window, uri, "Update:History", features, null);
-    });
-  }
-  button = $("reset-box-button");
+  let button = $("reset-box-button");
   if (button) {
     button.addEventListener("click", function(event) {
       ResetProfile.openConfirmationDialog(window);
@@ -1249,6 +1243,32 @@ function setupEventListeners() {
         safeModeRestart();
       }
     });
+  }
+  if (AppConstants.MOZ_UPDATER) {
+    button = $("update-dir-button");
+    if (button) {
+      button.addEventListener("click", function(event) {
+        // Get the update directory.
+        let updateDir = Services.dirsvc.get("UpdRootD", Ci.nsIFile);
+        if (!updateDir.exists()) {
+          updateDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+        }
+        let updateDirPath = updateDir.path;
+        // Show the update directory.
+        let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
+                                                 "nsIFile", "initWithPath");
+        new nsLocalFile(updateDirPath).reveal();
+      });
+    }
+    button = $("show-update-history-button");
+    if (button) {
+      button.addEventListener("click", function(event) {
+        let uri = "chrome://mozapps/content/update/history.xul";
+        let features = "chrome,centerscreen,resizable=no,titlebar,toolbar=no," +
+                       "dialog=yes,modal";
+        Services.ww.openWindow(window, uri, "Update:History", features, null);
+      });
+    }
   }
   button = $("verify-place-integrity-button");
   if (button) {
