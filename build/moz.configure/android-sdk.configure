@@ -15,10 +15,10 @@ def default_android_sdk_root(host, mozbuild_state_path, _):
         'Linux': 'android-sdk-linux',
         'WINNT': 'android-sdk-windows',
     }.get(host.kernel)
-    if sdk_basename is None:
-        log.warning("%s is unsupported host" % host.kernel)
-        return None
-    return os.path.join(mozbuild_state_path, sdk_basename)
+    if sdk_basename:
+        path = os.path.join(mozbuild_state_path, sdk_basename)
+        if os.path.isdir(path):
+            return path
 
 
 option('--with-android-sdk', nargs=1,
@@ -29,7 +29,10 @@ option('--with-android-sdk', nargs=1,
 @depends('--with-android-sdk')
 @imports(_from='os.path', _import='isdir')
 def android_sdk_root(value):
-    if value and isdir(value[0]):
+    if value:
+        if not isdir(value[0]):
+            die("The path you specified with --with-android-sdk (%s) is not "
+                "a directory" % value[0])
         return value[0]
 
     die("You must specify --with-android-sdk=/path/to/sdk when targeting Android, "
