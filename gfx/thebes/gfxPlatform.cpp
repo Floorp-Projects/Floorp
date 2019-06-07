@@ -73,7 +73,7 @@
 #endif
 
 #ifdef MOZ_WAYLAND
-#  include "mozilla/widget/nsWaylandDisplay.h"
+#  include "mozilla/widget/nsWaylandDisplayShutdown.h"
 #endif
 
 #include "nsGkAtoms.h"
