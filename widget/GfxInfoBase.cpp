@@ -1074,48 +1074,26 @@ GfxInfoBase::LogFailure(const nsACString& failure) {
       << "(LF) " << failure.BeginReading();
 }
 
-/* XPConnect method of returning arrays is very ugly. Would not recommend. */
-NS_IMETHODIMP GfxInfoBase::GetFailures(uint32_t* failureCount,
-                                       int32_t** indices, char*** failures) {
+NS_IMETHODIMP GfxInfoBase::GetFailures(nsTArray<int32_t>& indices,
+                                       nsTArray<nsCString>& failures) {
   MutexAutoLock lock(mMutex);
-
-  NS_ENSURE_ARG_POINTER(failureCount);
-  NS_ENSURE_ARG_POINTER(failures);
-
-  *failures = nullptr;
-  *failureCount = 0;
-
-  // indices is "allowed" to be null, the caller may not care about them,
-  // although calling from JS doesn't seem to get us there.
-  if (indices) *indices = nullptr;
 
   LogForwarder* logForwarder = Factory::GetLogForwarder();
   if (!logForwarder) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  // There are two stirng copies in this method, starting with this one. We are
+  // There are two string copies in this method, starting with this one. We are
   // assuming this is not a big deal, as the size of the array should be small
   // and the strings in it should be small as well (the error messages in the
-  // code.)  The second copy happens with the Clone() calls.  Technically,
-  // we don't need the mutex lock after the StringVectorCopy() call.
+  // code.)  The second copy happens with the AppendElement() calls.
+  // Technically, we don't need the mutex lock after the StringVectorCopy() call.
   LoggingRecord loggedStrings = logForwarder->LoggingRecordCopy();
-  *failureCount = loggedStrings.size();
-
-  if (*failureCount != 0) {
-    *failures = (char**)moz_xmalloc(*failureCount * sizeof(char*));
-    if (indices) {
-      *indices = (int32_t*)moz_xmalloc(*failureCount * sizeof(int32_t));
-    }
-
-    /* copy over the failure messages into the array we just allocated */
-    LoggingRecord::const_iterator it;
-    uint32_t i = 0;
-    for (it = loggedStrings.begin(); it != loggedStrings.end(); ++it, i++) {
-      (*failures)[i] =
-          (char*)moz_xmemdup(Get<1>(*it).c_str(), Get<1>(*it).size() + 1);
-      if (indices) (*indices)[i] = Get<0>(*it);
-    }
+  LoggingRecord::const_iterator it;
+  for (it = loggedStrings.begin(); it != loggedStrings.end(); ++it) {
+    failures.AppendElement(
+        nsDependentCSubstring(Get<1>(*it).c_str(), Get<1>(*it).size()));
+    indices.AppendElement(Get<0>(*it));
   }
 
   return NS_OK;

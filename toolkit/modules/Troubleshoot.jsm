@@ -554,10 +554,9 @@ var dataProviders = {
     if (infoInfo)
       data.info = infoInfo;
 
-    let failureCount = {};
     let failureIndices = {};
 
-    let failures = gfxInfo.getFailures(failureCount, failureIndices);
+    let failures = gfxInfo.getFailures(failureIndices);
     if (failures.length) {
       data.failures = failures;
       if (failureIndices.value.length == failures.length) {
