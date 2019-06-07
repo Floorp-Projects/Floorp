@@ -14,6 +14,7 @@
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/net/IOActivityMonitor.h"
 #include "mozilla/IOInterposer.h"
+#include "nsEscape.h"
 
 // The last VFS version for which this file has been updated.
 #define LAST_KNOWN_VFS_VERSION 3
@@ -318,13 +319,27 @@ already_AddRefed<QuotaObject> GetQuotaObjectFromNameAndParameters(
     return nullptr;
   }
 
+  // Re-escape group and origin to make sure we get the right quota group and
+  // origin.
+  nsAutoCString escGroup;
+  nsresult rv =
+      NS_EscapeURL(nsDependentCString(group), esc_Query, escGroup, fallible);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  nsAutoCString escOrigin;
+  rv = NS_EscapeURL(nsDependentCString(origin), esc_Query, escOrigin, fallible);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   return quotaManager->GetQuotaObject(
-      PersistenceTypeFromText(nsDependentCString(persistenceType)),
-      nsDependentCString(group), nsDependentCString(origin),
-      NS_ConvertUTF8toUTF16(zName));
+      PersistenceTypeFromText(nsDependentCString(persistenceType)), escGroup,
+      escOrigin, NS_ConvertUTF8toUTF16(zName));
 }
 
 void MaybeEstablishQuotaControl(const char* zName, telemetry_file* pFile,
