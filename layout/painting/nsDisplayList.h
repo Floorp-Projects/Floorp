@@ -628,10 +628,6 @@ class nsDisplayListBuilder {
   bool IsBuilding() const { return mIsBuilding; }
   void SetIsBuilding(bool aIsBuilding) {
     mIsBuilding = aIsBuilding;
-    for (nsIFrame* f : mModifiedFramesDuringBuilding) {
-      f->SetFrameIsModified(false);
-    }
-    mModifiedFramesDuringBuilding.Clear();
   }
 
   bool InInvalidSubtree() const { return mInInvalidSubtree; }
@@ -777,11 +773,11 @@ class nsDisplayListBuilder {
    * Get the frame that the caret is supposed to draw in.
    * If the caret is currently invisible, this will be null.
    */
-  nsIFrame* GetCaretFrame() { return CurrentPresShellState()->mCaretFrame; }
+  nsIFrame* GetCaretFrame() { return mCaretFrame; }
   /**
    * Get the rectangle we're supposed to draw the caret into.
    */
-  const nsRect& GetCaretRect() { return CurrentPresShellState()->mCaretRect; }
+  const nsRect& GetCaretRect() { return mCaretRect; }
   /**
    * Get the caret associated with the current presshell.
    */
@@ -1703,17 +1699,6 @@ class nsDisplayListBuilder {
     mBuildingInvisibleItems = aBuildingInvisibleItems;
   }
 
-  bool MarkFrameModifiedDuringBuilding(nsIFrame* aFrame) {
-    if (!aFrame->IsFrameModified()) {
-      mModifiedFramesDuringBuilding.AppendElement(aFrame);
-      aFrame->SetFrameIsModified(true);
-      return true;
-    }
-    return false;
-  }
-
-  void RebuildAllItemsInCurrentSubtree() { mDirtyRect = mVisibleRect; }
-
   /**
    * This is a convenience function to ease the transition until AGRs and ASRs
    * are unified.
@@ -1830,8 +1815,6 @@ class nsDisplayListBuilder {
 #ifdef DEBUG
     mozilla::Maybe<nsAutoLayoutPhase> mAutoLayoutPhase;
 #endif
-    nsIFrame* mCaretFrame;
-    nsRect mCaretRect;
     mozilla::Maybe<OutOfFlowDisplayData> mFixedBackgroundDisplayData;
     uint32_t mFirstFrameMarkedForDisplay;
     uint32_t mFirstFrameWithOOFData;
@@ -1907,8 +1890,6 @@ class nsDisplayListBuilder {
   // Set of frames already counted in budget
   nsTHashtable<nsPtrHashKey<nsIFrame>> mAGRBudgetSet;
 
-  nsTArray<nsIFrame*> mModifiedFramesDuringBuilding;
-
   nsDataHashtable<nsPtrHashKey<RemoteBrowser>, EffectsInfo> mEffectsUpdates;
 
   // Relative to mCurrentFrame.
@@ -1934,6 +1915,10 @@ class nsDisplayListBuilder {
   // If we've encountered a glass item yet, only used during partial display
   // list builds.
   bool mHasGlassItemDuringPartial;
+
+  nsIFrame* mCaretFrame;
+  nsRect mCaretRect;
+
   // A temporary list that we append scroll info items to while building
   // display items for the contents of frames with SVG effects.
   // Only non-null when ShouldBuildScrollInfoItemsForHoisting() is true.
