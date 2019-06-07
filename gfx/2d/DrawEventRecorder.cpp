@@ -45,16 +45,12 @@ void DrawEventRecorderPrivate::StoreSourceSurfaceRecording(
 }
 
 void DrawEventRecorderFile::RecordEvent(const RecordedEvent& aEvent) {
-  WriteElement(mOutputStream, aEvent.mType);
-
   aEvent.RecordToStream(mOutputStream);
 
   Flush();
 }
 
 void DrawEventRecorderMemory::RecordEvent(const RecordedEvent& aEvent) {
-  WriteElement(mOutputStream, aEvent.mType);
-
   aEvent.RecordToStream(mOutputStream);
 }
 

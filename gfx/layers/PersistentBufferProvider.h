@@ -180,6 +180,7 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
 
   RefPtr<gfx::DrawTarget> mDrawTarget;
   RefPtr<gfx::SourceSurface> mSnapshot;
+  RefPtr<gfx::SourceSurface> mPreviousSnapshot;
 };
 
 struct AutoReturnSnapshot final {

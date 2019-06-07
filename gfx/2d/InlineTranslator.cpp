@@ -69,7 +69,7 @@ bool InlineTranslator::TranslateRecording(char* aData, size_t aLen) {
   while (reader.good()) {
     bool success = RecordedEvent::DoWithEvent(
         reader, static_cast<RecordedEvent::EventType>(eventType),
-        [&](RecordedEvent* recordedEvent) {
+        [&](RecordedEvent* recordedEvent) -> bool {
           // Make sure that the whole event was read from the stream
           // successfully.
           if (!reader.good()) {
