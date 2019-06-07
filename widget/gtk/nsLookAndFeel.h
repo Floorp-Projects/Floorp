@@ -95,7 +95,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   bool mCSDMinimizeButton = false;
   bool mCSDCloseButton = false;
   bool mCSDReversedPlacement = false;
-  bool mSystemUsesDarkTheme = false;
   bool mInitialized = false;
 
   void EnsureInit();
