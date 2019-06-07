@@ -16,6 +16,8 @@ const {
   SIDEBAR_CLOSE,
   SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
   TIMESTAMPS_TOGGLE,
+  FILTERBAR_DISPLAY_MODE_SET,
+  FILTERBAR_DISPLAY_MODES,
 } = require("devtools/client/webconsole/constants");
 
 const {
@@ -34,6 +36,7 @@ const UiState = (overrides) => Object.freeze(Object.assign({
   reverseSearchInputVisible: false,
   reverseSearchInitialValue: "",
   editor: false,
+  filterBarDisplayMode: FILTERBAR_DISPLAY_MODES.WIDE,
 }, overrides));
 
 function ui(state = UiState(), action) {
@@ -68,6 +71,11 @@ function ui(state = UiState(), action) {
         ...state,
         reverseSearchInputVisible: !state.reverseSearchInputVisible,
         reverseSearchInitialValue: action.initialValue || "",
+      };
+    case FILTERBAR_DISPLAY_MODE_SET:
+      return {
+        ...state,
+        filterBarDisplayMode: action.displayMode,
       };
   }
 

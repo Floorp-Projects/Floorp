@@ -3815,7 +3815,7 @@ impl Renderer {
                 self.device.blit_render_target_invert_y(
                     draw_target.into(),
                     draw_target.to_framebuffer_rect(src_rect.translate(&-content_origin.to_vector())),
-                    DrawTarget::External { fbo: fbo_id, size: output_size.into() },
+                    DrawTarget::External { fbo: fbo_id, size: output_size },
                     output_size.into(),
                 );
                 handler.unlock(output.pipeline_id);

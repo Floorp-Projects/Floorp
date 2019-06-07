@@ -457,7 +457,7 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
             params: item.params,
             stretch_size: item.stretch_size.into(),
             tile_spacing: item.tile_spacing.into(),
-            brush_segments: brush_segments,
+            brush_segments,
             stops,
             stops_handle: GpuCacheHandle::new(),
         }

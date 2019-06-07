@@ -61,7 +61,7 @@ impl<T> Range<T> {
 
     /// Check for an empty `Range`
     pub fn is_empty(&self) -> bool {
-        !(self.start.0 < self.end.0)
+        self.start.0 >= self.end.0
     }
 }
 

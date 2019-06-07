@@ -143,8 +143,8 @@ add_task(async function test_popup_url() {
                `Urlbar popup action color should be set to ${POPUP_ACTION_COLOR_DARK}`);
 
   let root = document.documentElement;
-  Assert.equal(root.getAttribute("lwt-popup-brighttext"),
-               "",
+  Assert.equal(root.hasAttribute("lwt-popup-brighttext"),
+               false,
                "brighttext should not be set!");
   Assert.equal(root.getAttribute("lwt-popup-darktext"),
                "true",
@@ -202,19 +202,19 @@ add_task(async function test_popup_url() {
   Assert.equal(root.getAttribute("lwt-popup-brighttext"),
                "true",
                "brighttext should be set to true!");
-  Assert.equal(root.getAttribute("lwt-popup-darktext"),
-               "",
+  Assert.equal(root.hasAttribute("lwt-popup-darktext"),
+               false,
                "darktext should not be set!");
 
   await extension.unload();
 
   // Check to see if popup-brighttext and secondary color are not set after
   // unload of theme
-  Assert.equal(root.getAttribute("lwt-popup-brighttext"),
-               "",
+  Assert.equal(root.hasAttribute("lwt-popup-brighttext"),
+               false,
                "brighttext should not be set!");
-  Assert.equal(root.getAttribute("lwt-popup-darktext"),
-               "",
+  Assert.equal(root.hasAttribute("lwt-popup-darktext"),
+               false,
                "darktext should not be set!");
 
   // Calculate what GrayText should be. May differ between platforms.

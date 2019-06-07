@@ -18,6 +18,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/AbortSignal.h"
+#include "mozilla/dom/BodyConsumer.h"
+#include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/FetchStreamReader.h"
 #include "mozilla/dom/RequestBinding.h"
@@ -86,28 +88,6 @@ nsresult ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
                                    nsCString& aContentType,
                                    uint64_t& aContentLength);
 
-template <class Derived>
-class FetchBodyConsumer;
-
-enum FetchConsumeType {
-  CONSUME_ARRAYBUFFER,
-  CONSUME_BLOB,
-  CONSUME_FORMDATA,
-  CONSUME_JSON,
-  CONSUME_TEXT,
-};
-
-class FetchStreamHolder {
- public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
-  virtual void NullifyStream() = 0;
-
-  virtual void MarkAsRead() = 0;
-
-  virtual JSObject* ReadableStreamBody() = 0;
-};
-
 /*
  * FetchBody's body consumption uses nsIInputStreamPump to read from the
  * underlying stream to a block of memory, which is then adopted by
@@ -143,10 +123,8 @@ class FetchStreamHolder {
  * The pump is always released on the main thread.
  */
 template <class Derived>
-class FetchBody : public FetchStreamHolder, public AbortFollower {
+class FetchBody : public BodyStreamHolder, public AbortFollower {
  public:
-  friend class FetchBodyConsumer<Derived>;
-
   bool GetBodyUsed(ErrorResult& aRv) const;
 
   // For use in assertions. On success, returns true if the body is used, false
@@ -154,23 +132,23 @@ class FetchBody : public FetchStreamHolder, public AbortFollower {
   bool CheckBodyUsed() const;
 
   already_AddRefed<Promise> ArrayBuffer(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, CONSUME_ARRAYBUFFER, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_ARRAYBUFFER, aRv);
   }
 
   already_AddRefed<Promise> Blob(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, CONSUME_BLOB, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_BLOB, aRv);
   }
 
   already_AddRefed<Promise> FormData(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, CONSUME_FORMDATA, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_FORMDATA, aRv);
   }
 
   already_AddRefed<Promise> Json(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, CONSUME_JSON, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_JSON, aRv);
   }
 
   already_AddRefed<Promise> Text(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, CONSUME_TEXT, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_TEXT, aRv);
   }
 
   void GetBody(JSContext* aCx, JS::MutableHandle<JSObject*> aBodyOut,
@@ -214,7 +192,7 @@ class FetchBody : public FetchStreamHolder, public AbortFollower {
 
   const nsCString& MimeType() const { return mMimeType; }
 
-  // FetchStreamHolder
+  // BodyStreamHolder
   void NullifyStream() override {
     mReadableStreamBody = nullptr;
     mReadableStreamReader = nullptr;
@@ -233,7 +211,8 @@ class FetchBody : public FetchStreamHolder, public AbortFollower {
   // AbortFollower
   void Abort() override;
 
-  already_AddRefed<Promise> ConsumeBody(JSContext* aCx, FetchConsumeType aType,
+  already_AddRefed<Promise> ConsumeBody(JSContext* aCx,
+                                        BodyConsumer::ConsumeType aType,
                                         ErrorResult& aRv);
 
  protected:
@@ -243,7 +222,7 @@ class FetchBody : public FetchStreamHolder, public AbortFollower {
   WorkerPrivate* mWorkerPrivate;
 
   // This is the ReadableStream exposed to content. It's underlying source is a
-  // FetchStream object.
+  // BodyStream object.
   JS::Heap<JSObject*> mReadableStreamBody;
 
   // This is the Reader used to retrieve data from the body.

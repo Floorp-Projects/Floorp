@@ -139,17 +139,6 @@ devtools/client/debugger/packages/**/fixtures/**
 devtools/client/debugger/node_modules
 devtools/client/debugger/out
 
-# Ignore devtools debugger files
-# Keep in sync with devtools/client/debugger/.prettierignore
-devtools/client/debugger/src/workers/parser/tests/fixtures/functionNames.js
-devtools/client/debugger/src/workers/parser/tests/fixtures/scopes/*.js
-devtools/client/debugger/src/workers/parser/tests/fixtures/pause/*.js
-devtools/client/debugger/src/test/mochitest/examples/babel/polyfill-bundle.js
-devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/input.js
-devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/output.js
-devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/output.js.map
-devtools/client/debugger/src/test/mochitest/examples/ember/quickstart
-
 # Ignore devtools debugger files which aren't intended for linting, and also
 # aren't included in any .eslintignore or .prettierignore file.
 # See https://github.com/firefox-devtools/debugger/blob/master/package.json#L24

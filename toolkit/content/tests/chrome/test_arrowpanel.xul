@@ -192,11 +192,11 @@ function* nextTest()
     }
 
     // Check that the transition occurs for an arrow panel with animate="true"
-    window.addEventListener("transitionend", transitionEnded, false);
+    $("animatepanel").addEventListener("transitionend", transitionEnded, false);
     $("animatepanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
     is($("animatepanel").state, "showing", "state is showing");
     yield;
-    window.removeEventListener("transitionend", transitionEnded, false);
+    $("animatepanel").removeEventListener("transitionend", transitionEnded);
 
     synthesizeKey("KEY_Escape");
     ok(!animatedPopupHidden, "animated popup not hidden yet");

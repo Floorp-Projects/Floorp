@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-        content/browser/search/search.xml                           (content/search.xml)
         content/browser/search/autocomplete-popup.js                (content/autocomplete-popup.js)
         content/browser/search/searchbar.js                         (content/searchbar.js)
         content/browser/search/search-one-offs.js                   (content/search-one-offs.js)

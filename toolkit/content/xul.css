@@ -26,7 +26,13 @@
 @namespace xbl url("http://www.mozilla.org/xbl"); /* namespace for XBL elements */
 
 :root {
+  text-rendering: optimizeLegibility;
+  -moz-control-character-visibility: visible;
   --animation-easing-function: cubic-bezier(.07, .95, 0, 1);
+}
+
+:root:-moz-locale-dir(rtl) {
+  direction: rtl;
 }
 
 /* ::::::::::

@@ -42,7 +42,7 @@ login-item {
 
 #create-login-button {
   margin-inline-start: 18px;
-  margin-inline-end: 0;
+  margin-inline-end: 18px;
 }
 
 :root:not(.official-branding) #branding-logo {

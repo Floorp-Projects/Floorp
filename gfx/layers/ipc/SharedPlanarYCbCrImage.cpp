@@ -47,7 +47,7 @@ size_t SharedPlanarYCbCrImage::SizeOfExcludingThis(
 }
 
 TextureClient* SharedPlanarYCbCrImage::GetTextureClient(
-    KnowsCompositor* aForwarder) {
+    KnowsCompositor* aKnowsCompositor) {
   return mTextureClient.get();
 }
 

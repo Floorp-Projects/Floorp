@@ -39,8 +39,10 @@ class L10n {
         return "Requests";
       case "messageRepeats.tooltip2":
         return "#1 repeat;#1 repeats";
-      case "webconsole.filteredMessages.label":
-        return "#1 item hidden by filters;#1 items hidden by filters";
+      case "webconsole.filteredMessagesByText.label":
+        return "#1 hidden;#1 hidden";
+      case "webconsole.filteredMessagesByText.tooltip":
+        return "#1 item hidden by text filter;#1 items hidden by text filter";
       case "webconsole.group.contentBlocked":
         return "Content blocked messages";
       default:

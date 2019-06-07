@@ -53,20 +53,6 @@ add_task(async function() {
     active: "text,error,warn,info,debug,netxhr",
     inactive: "log,css,net",
   });
-
-  info("Clear the filters using the 'Reset filters' button");
-  const resetButton = await waitFor(() =>
-    hud.ui.window.document.querySelector(".reset-filters-button"));
-  const onResetButtonHidden = waitFor(() =>
-    !hud.ui.window.document.querySelector(".reset-filters-button"));
-  resetButton.click();
-  await onResetButtonHidden;
-
-  checkTelemetryEvent({
-    trigger: "reset",
-    active: "error,warn,log,info,debug,netxhr",
-    inactive: "text,css,net",
-  });
 });
 
 function checkTelemetryEvent(expectedEvent) {

@@ -17,6 +17,7 @@
 namespace mozilla {
 
 static void Start(void* aArg) {
+  NS_SetCurrentThreadName("GraphRunner");
   GraphRunner* th = static_cast<GraphRunner*>(aArg);
   th->Run();
 }

@@ -7,6 +7,8 @@
 #ifndef dom_NodeUbiReporting_h
 #define dom_NodeUbiReporting_h
 
+#include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsINode.h"
 #include "js/UbiNode.h"
 

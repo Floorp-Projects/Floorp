@@ -79,7 +79,7 @@ impl Iterator for RepetitionIterator {
 
         let repetition = Repetition {
             origin: self.current_origin,
-            edge_flags: edge_flags,
+            edge_flags,
         };
 
         self.current_origin.x += self.stride.width;

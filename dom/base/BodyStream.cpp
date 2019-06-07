@@ -4,10 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FetchStream.h"
+#include "BodyStream.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "nsProxyRelease.h"
 #include "nsStreamUtils.h"
 
@@ -16,9 +17,9 @@ static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 namespace mozilla {
 namespace dom {
 
-class FetchStream::WorkerShutdown final : public WorkerControlRunnable {
+class BodyStream::WorkerShutdown final : public WorkerControlRunnable {
  public:
-  WorkerShutdown(WorkerPrivate* aWorkerPrivate, RefPtr<FetchStream> aStream)
+  WorkerShutdown(WorkerPrivate* aWorkerPrivate, RefPtr<BodyStream> aStream)
       : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
         mStream(aStream) {}
 
@@ -36,23 +37,23 @@ class FetchStream::WorkerShutdown final : public WorkerControlRunnable {
                     bool aDispatchResult) override {}
 
  private:
-  RefPtr<FetchStream> mStream;
+  RefPtr<BodyStream> mStream;
 };
 
-NS_IMPL_ISUPPORTS(FetchStream, nsIInputStreamCallback, nsIObserver,
+NS_IMPL_ISUPPORTS(BodyStream, nsIInputStreamCallback, nsIObserver,
                   nsISupportsWeakReference)
 
 /* static */
-void FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
-                         nsIGlobalObject* aGlobal, nsIInputStream* aInputStream,
-                         JS::MutableHandle<JSObject*> aStream,
-                         ErrorResult& aRv) {
+void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
+                        nsIGlobalObject* aGlobal, nsIInputStream* aInputStream,
+                        JS::MutableHandle<JSObject*> aStream,
+                        ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(aCx);
   MOZ_DIAGNOSTIC_ASSERT(aStreamHolder);
   MOZ_DIAGNOSTIC_ASSERT(aInputStream);
 
-  RefPtr<FetchStream> stream =
-      new FetchStream(aGlobal, aStreamHolder, aInputStream);
+  RefPtr<BodyStream> stream =
+      new BodyStream(aGlobal, aStreamHolder, aInputStream);
 
   if (NS_IsMainThread()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -92,7 +93,7 @@ void FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
     return;
   }
 
-  // This will be released in FetchStream::FinalizeCallback().  We are
+  // This will be released in BodyStream::FinalizeCallback().  We are
   // guaranteed the jsapi will call FinalizeCallback when ReadableStream
   // js object is finalized.
   NS_ADDREF(stream.get());
@@ -100,8 +101,8 @@ void FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
   aStream.set(body);
 }
 
-void FetchStream::requestData(JSContext* aCx, JS::HandleObject aStream,
-                              size_t aDesiredSize) {
+void BodyStream::requestData(JSContext* aCx, JS::HandleObject aStream,
+                             size_t aDesiredSize) {
 #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool disturbed;
   if (!JS::ReadableStreamIsDisturbed(aCx, aStream, &disturbed)) {
@@ -167,10 +168,10 @@ void FetchStream::requestData(JSContext* aCx, JS::HandleObject aStream,
   // All good.
 }
 
-void FetchStream::writeIntoReadRequestBuffer(JSContext* aCx,
-                                             JS::HandleObject aStream,
-                                             void* aBuffer, size_t aLength,
-                                             size_t* aByteWritten) {
+void BodyStream::writeIntoReadRequestBuffer(JSContext* aCx,
+                                            JS::HandleObject aStream,
+                                            void* aBuffer, size_t aLength,
+                                            size_t* aByteWritten) {
   MOZ_DIAGNOSTIC_ASSERT(aBuffer);
   MOZ_DIAGNOSTIC_ASSERT(aByteWritten);
 
@@ -206,8 +207,8 @@ void FetchStream::writeIntoReadRequestBuffer(JSContext* aCx,
   // All good.
 }
 
-JS::Value FetchStream::cancel(JSContext* aCx, JS::HandleObject aStream,
-                              JS::HandleValue aReason) {
+JS::Value BodyStream::cancel(JSContext* aCx, JS::HandleObject aStream,
+                             JS::HandleValue aReason) {
   AssertIsOnOwningThread();
 
   if (mState == eInitializing) {
@@ -230,10 +231,10 @@ JS::Value FetchStream::cancel(JSContext* aCx, JS::HandleObject aStream,
   return JS::UndefinedValue();
 }
 
-void FetchStream::onClosed(JSContext* aCx, JS::HandleObject aStream) {}
+void BodyStream::onClosed(JSContext* aCx, JS::HandleObject aStream) {}
 
-void FetchStream::onErrored(JSContext* aCx, JS::HandleObject aStream,
-                            JS::HandleValue aReason) {
+void BodyStream::onErrored(JSContext* aCx, JS::HandleObject aStream,
+                           JS::HandleValue aReason) {
   AssertIsOnOwningThread();
 
   if (mState == eInitializing) {
@@ -248,19 +249,19 @@ void FetchStream::onErrored(JSContext* aCx, JS::HandleObject aStream,
   ReleaseObjects();
 }
 
-void FetchStream::finalize() {
+void BodyStream::finalize() {
   // This can be called in any thread.
 
-  // This takes ownership of the ref created in FetchStream::Create().
-  RefPtr<FetchStream> stream = dont_AddRef(this);
+  // This takes ownership of the ref created in BodyStream::Create().
+  RefPtr<BodyStream> stream = dont_AddRef(this);
 
   stream->ReleaseObjects();
 }
 
-FetchStream::FetchStream(nsIGlobalObject* aGlobal,
-                         FetchStreamHolder* aStreamHolder,
-                         nsIInputStream* aInputStream)
-    : mMutex("FetchStream::mMutex"),
+BodyStream::BodyStream(nsIGlobalObject* aGlobal,
+                       BodyStreamHolder* aStreamHolder,
+                       nsIInputStream* aInputStream)
+    : mMutex("BodyStream::mMutex"),
       mState(eInitializing),
       mGlobal(aGlobal),
       mStreamHolder(aStreamHolder),
@@ -270,11 +271,11 @@ FetchStream::FetchStream(nsIGlobalObject* aGlobal,
   MOZ_DIAGNOSTIC_ASSERT(aStreamHolder);
 }
 
-FetchStream::~FetchStream() {}
+BodyStream::~BodyStream() {}
 
-void FetchStream::ErrorPropagation(JSContext* aCx,
-                                   const MutexAutoLock& aProofOfLock,
-                                   JS::HandleObject aStream, nsresult aError) {
+void BodyStream::ErrorPropagation(JSContext* aCx,
+                                  const MutexAutoLock& aProofOfLock,
+                                  JS::HandleObject aStream, nsresult aError) {
   AssertIsOnOwningThread();
 
   // Nothing to do.
@@ -301,7 +302,7 @@ void FetchStream::ErrorPropagation(JSContext* aCx,
 }
 
 NS_IMETHODIMP
-FetchStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
+BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   AssertIsOnOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(aStream);
 
@@ -359,14 +360,14 @@ FetchStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 }
 
 /* static */
-nsresult FetchStream::RetrieveInputStream(
+nsresult BodyStream::RetrieveInputStream(
     JS::ReadableStreamUnderlyingSource* aUnderlyingReadableStreamSource,
     nsIInputStream** aInputStream) {
   MOZ_ASSERT(aUnderlyingReadableStreamSource);
   MOZ_ASSERT(aInputStream);
 
-  RefPtr<FetchStream> stream =
-      static_cast<FetchStream*>(aUnderlyingReadableStreamSource);
+  RefPtr<BodyStream> stream =
+      static_cast<BodyStream*>(aUnderlyingReadableStreamSource);
   stream->AssertIsOnOwningThread();
 
   // if mOriginalInputStream is null, the reading already started. We don't want
@@ -380,7 +381,7 @@ nsresult FetchStream::RetrieveInputStream(
   return NS_OK;
 }
 
-void FetchStream::Close() {
+void BodyStream::Close() {
   AssertIsOnOwningThread();
 
   MutexAutoLock lock(mMutex);
@@ -400,9 +401,9 @@ void FetchStream::Close() {
   CloseAndReleaseObjects(cx, lock, stream);
 }
 
-void FetchStream::CloseAndReleaseObjects(JSContext* aCx,
-                                         const MutexAutoLock& aProofOfLock,
-                                         JS::HandleObject aStream) {
+void BodyStream::CloseAndReleaseObjects(JSContext* aCx,
+                                        const MutexAutoLock& aProofOfLock,
+                                        JS::HandleObject aStream) {
   AssertIsOnOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(mState != eClosed);
 
@@ -418,12 +419,12 @@ void FetchStream::CloseAndReleaseObjects(JSContext* aCx,
   }
 }
 
-void FetchStream::ReleaseObjects() {
+void BodyStream::ReleaseObjects() {
   MutexAutoLock lock(mMutex);
   ReleaseObjects(lock);
 }
 
-void FetchStream::ReleaseObjects(const MutexAutoLock& aProofOfLock) {
+void BodyStream::ReleaseObjects(const MutexAutoLock& aProofOfLock) {
   // This method can be called on 2 possible threads: the owning one and a JS
   // thread used to release resources. If we are on the JS thread, we need to
   // dispatch a runnable to go back to the owning thread in order to release
@@ -446,9 +447,9 @@ void FetchStream::ReleaseObjects(const MutexAutoLock& aProofOfLock) {
     }
 
     // A normal runnable of the owning thread is the main-thread.
-    RefPtr<FetchStream> self = this;
+    RefPtr<BodyStream> self = this;
     RefPtr<Runnable> r = NS_NewRunnableFunction(
-        "FetchStream::ReleaseObjects", [self]() { self->ReleaseObjects(); });
+        "BodyStream::ReleaseObjects", [self]() { self->ReleaseObjects(); });
     mOwningEventTarget->Dispatch(r.forget());
     return;
   }
@@ -470,8 +471,8 @@ void FetchStream::ReleaseObjects(const MutexAutoLock& aProofOfLock) {
 }
 
 #ifdef DEBUG
-void FetchStream::AssertIsOnOwningThread() {
-  NS_ASSERT_OWNINGTHREAD(FetchStream);
+void BodyStream::AssertIsOnOwningThread() {
+  NS_ASSERT_OWNINGTHREAD(BodyStream);
 }
 #endif
 
@@ -479,8 +480,8 @@ void FetchStream::AssertIsOnOwningThread() {
 // -----------
 
 NS_IMETHODIMP
-FetchStream::Observe(nsISupports* aSubject, const char* aTopic,
-                     const char16_t* aData) {
+BodyStream::Observe(nsISupports* aSubject, const char* aTopic,
+                    const char16_t* aData) {
   AssertIsOnMainThread();
   AssertIsOnOwningThread();
 

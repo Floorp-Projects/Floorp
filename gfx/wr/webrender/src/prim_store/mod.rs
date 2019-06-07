@@ -1626,7 +1626,7 @@ impl PrimitiveScratchBuffer {
     ) {
         self.debug_items.push(DebugItem::Rect {
             rect,
-            color: color.into(),
+            color,
         });
     }
 
@@ -1639,7 +1639,7 @@ impl PrimitiveScratchBuffer {
     ) {
         self.debug_items.push(DebugItem::Text {
             position,
-            color: color.into(),
+            color,
             msg,
         });
     }
@@ -2990,7 +2990,7 @@ impl PrimitiveStore {
                     // Request the render task each frame.
                     gradient.cache_handle = Some(frame_state.resource_cache.request_render_task(
                         RenderTaskCacheKey {
-                            size: size,
+                            size,
                             kind: RenderTaskCacheKeyKind::Gradient(cache_key),
                         },
                         frame_state.gpu_cache,
@@ -3200,7 +3200,7 @@ fn decompose_repeated_primitive(
     for Repetition { origin, .. } in repetitions {
         let mut handle = GpuCacheHandle::new();
         let rect = LayoutRect {
-            origin: origin,
+            origin,
             size: *stretch_size,
         };
 
@@ -3232,7 +3232,7 @@ fn compute_conservative_visible_rect(
     map_local_to_pic: &SpaceMapper<LayoutPixel, PicturePixel>,
 ) -> LayoutRect {
     if let Some(local_bounds) = map_local_to_pic.get_conservative_local_bounds() {
-        return local_clip_rect.intersection(&local_bounds).unwrap_or(LayoutRect::zero())
+        return local_clip_rect.intersection(&local_bounds).unwrap_or_else(LayoutRect::zero)
     }
 
     *local_clip_rect

@@ -338,8 +338,9 @@ const mozilla::AnonymousCounterStyle* Gecko_CounterStyle_GetAnonymous(
 
 // background-image style.
 void Gecko_SetNullImageValue(nsStyleImage* image);
-void Gecko_SetGradientImageValue(nsStyleImage* image,
-                                 nsStyleGradient* gradient);
+
+// NOTE: Takes ownership of the gradient.
+void Gecko_SetGradientImageValue(nsStyleImage*, mozilla::StyleGradient*);
 
 void Gecko_SetLayerImageImageValue(nsStyleImage* image,
                                    const mozilla::StyleComputedImageUrl* url);
@@ -348,13 +349,8 @@ void Gecko_SetImageElement(nsStyleImage* image, nsAtom* atom);
 void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
 void Gecko_InitializeImageCropRect(nsStyleImage* image);
 
-nsStyleGradient* Gecko_CreateGradient(uint8_t shape, uint8_t size,
-                                      bool repeating, bool legacy_syntax,
-                                      bool moz_legacy_syntax, uint32_t stops);
-
 const nsStyleImageRequest* Gecko_GetImageRequest(const nsStyleImage* image);
 nsAtom* Gecko_GetImageElement(const nsStyleImage* image);
-const nsStyleGradient* Gecko_GetGradientImageValue(const nsStyleImage* image);
 
 // list-style-image style.
 void Gecko_SetListStyleImageNone(nsStyleList* style_struct);

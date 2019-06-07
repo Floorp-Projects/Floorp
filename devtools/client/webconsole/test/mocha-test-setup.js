@@ -67,6 +67,14 @@ if (!global.URLSearchParams) {
   global.URLSearchParams = require("url").URLSearchParams;
 }
 
+if (!global.ResizeObserver) {
+  global.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 // Mock ChromeUtils.
 global.ChromeUtils = {
   import: () => {},
