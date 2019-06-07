@@ -18,7 +18,6 @@
 
   <script src="chrome://devtools/content/shared/theme-switching.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
-  <script src="chrome://global/content/editMenuOverlay.js"/>
 
   <popupset id="storagePopupSet">
     <menupopup id="storage-tree-popup">
@@ -48,10 +47,9 @@
     <splitter class="devtools-side-splitter"/>
     <vbox flex="1">
       <hbox id="storage-toolbar" class="devtools-toolbar devtools-input-toolbar">
-        <textbox id="storage-searchbox"
-                 class="devtools-filterinput"
-                 flex="1"
-                 placeholder="&searchBox.placeholder;"/>
+        <html:input id="storage-searchbox"
+                    class="devtools-filterinput"
+                    placeholder="&searchBox.placeholder;"/>
         <hbox class="devtools-separator"/>
         <html:button id="add-button"
                 class="devtools-button add-button"></html:button>
