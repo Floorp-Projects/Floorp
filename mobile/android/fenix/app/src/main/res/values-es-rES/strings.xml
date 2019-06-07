@@ -596,6 +596,8 @@
     <!-- Title for Accessiblity Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Tamaño de la fuente</string>
 
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Eliminar datos del navegador</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title">Abrir pestañas</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
@@ -627,4 +629,39 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">¿Ya tienes una cuenta?</string>
 
-    </resources>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Conoce a %s</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Sácale el mejor provecho a %s.</string>
+    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Iniciar sesión en Firefox</string>
+    <!-- text for the button to stay signed into your Firefox account. -->
+    <string name="onboarding_firefox_account_stay_signed_in">Mantener el inicio de sesión</string>
+    <!-- text for the button to sign out of your Firefox account. -->
+    <string name="onboarding_firefox_account_sign_out">Cerrar sesión</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Protégete</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Tu privacidad</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Hemos diseñado %s para darte control sobre lo que compartes
+        en línea y lo que compartes con nosotros.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Lee nuestro aviso de privacidad</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Comienza a navegar</string>
+
+    <!-- Onboarding theme -->
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Automático</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Se adapta a la configuración de tu dispositivo</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Tema oscuro</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Tema claro</string>
+</resources>
