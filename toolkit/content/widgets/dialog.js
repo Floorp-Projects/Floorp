@@ -57,11 +57,33 @@ class MozDialog extends MozXULElement {
     this.attachShadow({mode: "open"});
   }
 
+  static get observedAttributes() {
+    return super.observedAttributes.concat("subdialog");
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name == "subdialog") {
+      console.assert(newValue, `Turning off subdialog style is not supported`);
+      if (this.isConnectedAndReady && !oldValue && newValue) {
+        this.shadowRoot.appendChild(
+          MozXULElement.parseXULToFragment(this.inContentStyle));
+      }
+      return;
+    }
+    super.attributeChangedCallback(name, oldValue, newValue);
+  }
+
   static get inheritedAttributes() {
     return {
       ".dialog-button-box": "pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient",
       "[dlgtype='accept']": "disabled=buttondisabledaccept",
     };
+  }
+
+  get inContentStyle() {
+    return `
+      <html:link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
+    `;
   }
 
   get _markup() {
@@ -95,6 +117,7 @@ class MozDialog extends MozXULElement {
 
     return `
       <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
+      ${this.hasAttribute("subdialog") ? this.inContentStyle : ""}
       <html:style>
         :host([nobuttonspacer]) .spacer {
           display: none;

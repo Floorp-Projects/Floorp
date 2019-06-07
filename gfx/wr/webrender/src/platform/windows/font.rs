@@ -436,7 +436,7 @@ impl FontContext {
                     top: -bounds.top,
                     width,
                     height,
-                    advance: advance,
+                    advance,
                 }
             })
     }

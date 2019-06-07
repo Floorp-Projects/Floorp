@@ -66,6 +66,7 @@
 --wasm-gc
 --wasm-compiler=ion
 --wasm-compiler=baseline
+--wasm-compiler=cranelift
 --test-wasm-await-tier2
 
 # CPU instruction set-related

@@ -4423,10 +4423,13 @@ mozilla::ipc::IPCResult ContentParent::RecvRequestAnonymousTemporaryFile(
 mozilla::ipc::IPCResult ContentParent::RecvCreateAudioIPCConnection(
     CreateAudioIPCConnectionResolver&& aResolver) {
   FileDescriptor fd = CubebUtils::CreateAudioIPCConnection();
-  if (!fd.IsValid()) {
-    return IPC_FAIL(this, "CubebUtils::CreateAudioIPCConnection failed");
+  FileDescOrError result;
+  if (fd.IsValid()) {
+    result = fd;
+  } else {
+    result = NS_ERROR_FAILURE;
   }
-  aResolver(std::move(fd));
+  aResolver(std::move(result));
   return IPC_OK();
 }
 

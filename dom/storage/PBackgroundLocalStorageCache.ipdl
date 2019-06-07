@@ -28,6 +28,7 @@ child:
   // and this constant factor overhead is very small compared to the upside of
   // filtering.
   async Observe(PrincipalInfo principalInfo,
+                PrincipalInfo cachePrincipalInfo,
                 uint32_t privateBrowsingId,
                 nsString documentURI,
                 nsString key,

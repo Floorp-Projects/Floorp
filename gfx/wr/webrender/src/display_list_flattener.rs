@@ -1456,7 +1456,7 @@ impl<'a> DisplayListFlattener<'a> {
             self.pending_shadow_items.push_back(PendingPrimitive {
                 clip_and_scroll,
                 info: *info,
-                prim: prim.into(),
+                prim,
             }.into());
         }
     }
@@ -2448,7 +2448,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
                 info.clip_rect = clip_rect
                     .intersection(&info.clip_rect)
-                    .unwrap_or(LayoutRect::zero());
+                    .unwrap_or_else(LayoutRect::zero);
             }
 
             LineDecorationCacheKey {

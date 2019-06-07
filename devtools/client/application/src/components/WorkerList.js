@@ -21,13 +21,14 @@ const Localized = createFactory(FluentReact.Localized);
 class WorkerList extends Component {
   static get propTypes() {
     return {
+      canDebugWorkers: PropTypes.bool.isRequired,
       client: PropTypes.object.isRequired,
-      workers: PropTypes.object.isRequired,
+      workers: PropTypes.array.isRequired,
     };
   }
 
   render() {
-    const { workers, client } = this.props;
+    const { canDebugWorkers, client, workers } = this.props;
 
     return [
       article({ className: "workers-container" },
@@ -38,13 +39,13 @@ class WorkerList extends Component {
         ul({},
           workers.map(worker => Worker({
             client,
-            debugDisabled: false,
+            isDebugEnabled: canDebugWorkers,
             worker,
           })))
       ),
       Localized(
         {
-          id: "serviceworker-list-aboutdebugging",
+          id: "serviceworker-list-aboutdebugging2",
           a: a(
             {
               className: "aboutdebugging-plug__link",

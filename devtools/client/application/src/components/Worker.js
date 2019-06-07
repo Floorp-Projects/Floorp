@@ -28,7 +28,7 @@ class Worker extends Component {
   static get propTypes() {
     return {
       client: PropTypes.instanceOf(DebuggerClient).isRequired,
-      debugDisabled: PropTypes.bool,
+      isDebugEnabled: PropTypes.bool.isRequired,
       worker: PropTypes.shape({
         active: PropTypes.bool,
         name: PropTypes.string.isRequired,
@@ -59,6 +59,11 @@ class Worker extends Component {
   }
 
   start() {
+    if (!this.props.isDebugEnabled) {
+      console.log("Service workers cannot be started in multi-e10s");
+      return;
+    }
+
     if (!this.isActive() || this.isRunning()) {
       console.log("Running or inactive service workers cannot be started");
       return;
@@ -104,6 +109,56 @@ class Worker extends Component {
     return getUnicodeUrlPath(parts[parts.length - 1]);
   }
 
+  renderDebugLink() {
+    const { isDebugEnabled } = this.props;
+
+    const shallDisableLink = !this.isRunning() || !isDebugEnabled;
+    const linkClass = shallDisableLink ? "disabled-link" : "";
+
+    const localizationId = isDebugEnabled
+      ? "serviceworker-worker-debug"
+      : "serviceworker-worker-debug-forbidden";
+
+    const link = Localized(
+      {
+        id: localizationId,
+        // The localized title is only displayed if the debug link is disabled.
+        attrs: {
+          title: shallDisableLink,
+        },
+      },
+      a(
+        {
+          onClick: !shallDisableLink ? this.debug : null,
+          className: `${linkClass} worker__debug-link js-debug-link`,
+        }
+      )
+    );
+    return link;
+  }
+
+  renderStartLink() {
+    const { isDebugEnabled } = this.props;
+    const linkClass = !isDebugEnabled ? "disabled-link" : "";
+
+    const link = Localized(
+      {
+        id: "serviceworker-worker-start2",
+        // The localized title is only displayed if the debug link is disabled.
+        attrs: {
+          title: !isDebugEnabled,
+        },
+      },
+      a(
+        {
+          onClick: this.start,
+          className: `worker__start-link js-start-link ${linkClass}`,
+        }
+      )
+    );
+    return link;
+  }
+
   render() {
     const { worker } = this.props;
     const status = this.getServiceWorkerStatus();
@@ -115,28 +170,6 @@ class Worker extends Component {
           onClick: this.unregister,
           className: "devtools-button worker__unregister-button js-unregister-button",
           "data-standalone": true,
-        })
-      ) : null;
-
-    const debugLinkDisabled = this.isRunning() ? "" : "disabled";
-
-    const debugLink = Localized({
-      id: "serviceworker-worker-debug",
-      // The localized title is only displayed if the debug link is disabled.
-      attrs: { title: !this.isRunning() },
-    },
-      a({
-        onClick: this.isRunning() ? this.debug : null,
-        className: `${debugLinkDisabled} worker__debug-link js-debug-link`,
-      })
-    );
-
-    const startLink = !this.isRunning() ?
-      Localized(
-        { id: "serviceworker-worker-start" },
-        a({
-          onClick: this.start,
-          className: "worker__start-link",
         })
       ) : null;
 
@@ -170,7 +203,7 @@ class Worker extends Component {
         dd({},
             span({ title: worker.scope, className: "worker__source-url js-source-url" },
               this.formatSource(worker.url)),
-            debugLink,
+            this.renderDebugLink(),
             lastUpdated ? br({}) : null,
             lastUpdated ? lastUpdated : null),
         Localized({ id: "serviceworker-worker-status" },
@@ -179,9 +212,9 @@ class Worker extends Component {
         dd({},
           Localized(
             { id: "serviceworker-worker-status-" + status },
-            span({}),
+            span({ className: "js-worker-status" }),
           ),
-          startLink
+          !this.isRunning() ? this.renderStartLink() : null,
         )
       )
     );

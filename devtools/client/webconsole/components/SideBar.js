@@ -19,8 +19,9 @@ class SideBar extends Component {
     return {
       serviceContainer: PropTypes.object,
       dispatch: PropTypes.func.isRequired,
-      sidebarVisible: PropTypes.bool,
+      visible: PropTypes.bool,
       grip: PropTypes.object,
+      onResized: PropTypes.func,
     };
   }
 
@@ -32,11 +33,10 @@ class SideBar extends Component {
   shouldComponentUpdate(nextProps) {
     const {
       grip,
-      sidebarVisible,
+      visible,
     } = nextProps;
 
-    return sidebarVisible !== this.props.sidebarVisible
-      || grip !== this.props.grip;
+    return visible !== this.props.visible || grip !== this.props.grip;
   }
 
   onClickSidebarClose() {
@@ -44,13 +44,14 @@ class SideBar extends Component {
   }
 
   render() {
-    if (!this.props.sidebarVisible) {
+    if (!this.props.visible) {
       return null;
     }
 
     const {
       grip,
       serviceContainer,
+      onResized,
     } = this.props;
 
     const objectInspector = getObjectInspector(grip, serviceContainer, {
@@ -83,13 +84,13 @@ class SideBar extends Component {
       initialSize: "200px",
       minSize: "100px",
       vert: true,
+      onControlledPanelResized: onResized,
     });
   }
 }
 
 function mapStateToProps(state, props) {
   return {
-    sidebarVisible: state.ui.sidebarVisible,
     grip: state.ui.gripInSidebar,
   };
 }

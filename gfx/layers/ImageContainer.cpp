@@ -764,12 +764,12 @@ SourceSurfaceImage::SourceSurfaceImage(gfx::SourceSurface* aSourceSurface)
 SourceSurfaceImage::~SourceSurfaceImage() = default;
 
 TextureClient* SourceSurfaceImage::GetTextureClient(
-    KnowsCompositor* aForwarder) {
-  if (!aForwarder) {
+    KnowsCompositor* aKnowsCompositor) {
+  if (!aKnowsCompositor) {
     return nullptr;
   }
 
-  auto entry = mTextureClients.LookupForAdd(aForwarder->GetSerial());
+  auto entry = mTextureClients.LookupForAdd(aKnowsCompositor->GetSerial());
   if (entry) {
     return entry.Data();
   }
@@ -780,11 +780,11 @@ TextureClient* SourceSurfaceImage::GetTextureClient(
   if (surface) {
     // gfx::BackendType::NONE means default to content backend
     textureClient = TextureClient::CreateFromSurface(
-        aForwarder, surface, BackendSelector::Content, mTextureFlags,
+        aKnowsCompositor, surface, BackendSelector::Content, mTextureFlags,
         ALLOC_DEFAULT);
   }
   if (textureClient) {
-    textureClient->SyncWithObject(aForwarder->GetSyncObject());
+    textureClient->SyncWithObject(aKnowsCompositor->GetSyncObject());
     entry.OrInsert([&textureClient]() { return textureClient; });
     return textureClient;
   }

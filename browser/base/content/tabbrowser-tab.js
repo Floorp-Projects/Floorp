@@ -64,27 +64,27 @@ class MozTabbrowserTab extends MozElements.MozTab {
       this._fragment = MozXULElement.parseXULToFragment(`
         <stack class="tab-stack" flex="1">
           <vbox class="tab-background">
-            <hbox class="tab-line"></hbox>
-            <spacer flex="1" class="tab-background-inner"></spacer>
-            <hbox class="tab-bottom-line"></hbox>
+            <hbox class="tab-line"/>
+            <spacer flex="1" class="tab-background-inner"/>
+            <hbox class="tab-bottom-line"/>
           </vbox>
-          <hbox class="tab-loading-burst"></hbox>
+          <hbox class="tab-loading-burst"/>
           <hbox class="tab-content" align="center">
-            <hbox class="tab-throbber" layer="true"></hbox>
-            <hbox class="tab-icon-pending"></hbox>
-            <image class="tab-icon-image" validate="never" role="presentation"></image>
-            <image class="tab-sharing-icon-overlay" role="presentation"></image>
-            <image class="tab-icon-overlay" role="presentation"></image>
+            <hbox class="tab-throbber" layer="true"/>
+            <hbox class="tab-icon-pending"/>
+            <image class="tab-icon-image" validate="never" role="presentation"/>
+            <image class="tab-sharing-icon-overlay" role="presentation"/>
+            <image class="tab-icon-overlay" role="presentation"/>
             <hbox class="tab-label-container"
                   onoverflow="this.setAttribute('textoverflow', 'true');"
                   onunderflow="this.removeAttribute('textoverflow');"
                   flex="1">
-              <label class="tab-text tab-label" role="presentation"></label>
+              <label class="tab-text tab-label" role="presentation"/>
             </hbox>
             <image class="tab-icon-pip"
-                   role="presentation"></image>
-            <image class="tab-icon-sound" role="presentation"></image>
-            <image class="tab-close-button close-icon" role="presentation"></image>
+                   role="presentation"/>
+            <image class="tab-icon-sound" role="presentation"/>
+            <image class="tab-close-button close-icon" role="presentation"/>
           </hbox>
         </stack>
       `);

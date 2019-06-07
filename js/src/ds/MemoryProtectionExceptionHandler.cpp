@@ -530,6 +530,7 @@ static ExceptionHandlerState* sMachExceptionState = nullptr;
  * previously installed handler (which will likely terminate the process).
  */
 static void MachExceptionHandler() {
+  ThisThread::SetName("JS MachExceptionHandler");
   kern_return_t ret;
   MachExceptionParameters& current = sMachExceptionState->current;
   MachExceptionParameters& previous = sMachExceptionState->previous;

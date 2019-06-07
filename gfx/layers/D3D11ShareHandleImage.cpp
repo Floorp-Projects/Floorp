@@ -58,7 +58,7 @@ bool D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator,
 gfx::IntSize D3D11ShareHandleImage::GetSize() const { return mSize; }
 
 TextureClient* D3D11ShareHandleImage::GetTextureClient(
-    KnowsCompositor* aForwarder) {
+    KnowsCompositor* aKnowsCompositor) {
   return mTextureClient;
 }
 

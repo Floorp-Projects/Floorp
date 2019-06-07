@@ -2213,7 +2213,7 @@ impl Device {
                         dest_rect.size.width.abs(),
                         dest_rect.size.height.abs(),
                     ),
-                ).intersection(&dimensions.into()).unwrap_or(DeviceIntRect::zero());
+                ).intersection(&dimensions.into()).unwrap_or_else(DeviceIntRect::zero);
 
                 self.bind_read_target_impl(fbo);
                 self.bind_texture_impl(

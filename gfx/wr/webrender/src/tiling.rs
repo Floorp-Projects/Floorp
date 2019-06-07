@@ -900,7 +900,7 @@ impl TextureCacheRenderTarget {
     fn add_glyph_task(&mut self, task_info: &mut GlyphTask, target_rect: DeviceIntRect) {
         self.glyphs.push(GlyphJob {
             mesh: task_info.mesh.take().unwrap(),
-            target_rect: target_rect,
+            target_rect,
             origin: task_info.origin,
             subpixel_offset: task_info.subpixel_offset,
             render_mode: task_info.render_mode,
@@ -1115,7 +1115,7 @@ impl RenderPass {
                         Some(texture_target) => {
                             let texture = texture_cache
                                 .entry((texture_target, layer))
-                                .or_insert(
+                                .or_insert_with(||
                                     TextureCacheRenderTarget::new(target_kind)
                                 );
                             texture.add_task(task_id, render_tasks);

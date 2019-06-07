@@ -8,6 +8,9 @@
 #include "File.h"
 #include "MemoryBlobImpl.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/BodyStream.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "MultipartBlobImpl.h"
 #include "nsIInputStream.h"
 #include "nsPIDOMWindow.h"
@@ -95,7 +98,7 @@ Blob::Blob(nsISupports* aParent, BlobImpl* aImpl)
   MOZ_ASSERT(mImpl);
 }
 
-Blob::~Blob() {}
+Blob::~Blob() = default;
 
 bool Blob::IsFile() const { return mImpl->IsFile(); }
 
@@ -237,6 +240,124 @@ size_t BindingJSObjectMallocBytes(Blob* aBlob) {
   JS::AutoSuppressGCAnalysis nogc;
 
   return aBlob->GetAllocationSize();
+}
+
+already_AddRefed<Promise> Blob::Text(ErrorResult& aRv) {
+  return ConsumeBody(BodyConsumer::CONSUME_TEXT, aRv);
+}
+
+already_AddRefed<Promise> Blob::ArrayBuffer(ErrorResult& aRv) {
+  return ConsumeBody(BodyConsumer::CONSUME_ARRAYBUFFER, aRv);
+}
+
+already_AddRefed<Promise> Blob::ConsumeBody(
+    BodyConsumer::ConsumeType aConsumeType, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIEventTarget> mainThreadEventTarget;
+  if (!NS_IsMainThread()) {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+    mainThreadEventTarget = workerPrivate->MainThreadEventTarget();
+  } else {
+    mainThreadEventTarget = global->EventTargetFor(TaskCategory::Other);
+  }
+
+  MOZ_ASSERT(mainThreadEventTarget);
+
+  nsCOMPtr<nsIInputStream> inputStream;
+  CreateInputStream(getter_AddRefs(inputStream), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return BodyConsumer::Create(global, mainThreadEventTarget, inputStream,
+                              nullptr, aConsumeType, VoidCString(),
+                              VoidString(), VoidCString(),
+                              MutableBlobStorage::eOnlyInMemory, aRv);
+}
+
+namespace {
+
+class BlobBodyStreamHolder final : public nsISupports, public BodyStreamHolder {
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BlobBodyStreamHolder)
+
+  BlobBodyStreamHolder() { mozilla::HoldJSObjects(this); }
+
+  void NullifyStream() override {
+    mozilla::DropJSObjects(this);
+    mStream = nullptr;
+  }
+
+  void MarkAsRead() override {}
+
+  JSObject* ReadableStreamBody() override { return mStream; }
+
+  void SetStream(JSObject* aObject) {
+    MOZ_ASSERT(aObject);
+    mStream = aObject;
+  }
+
+  // Public to make trace happy.
+  JS::Heap<JSObject*> mStream;
+
+ private:
+  ~BlobBodyStreamHolder() = default;
+};
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(BlobBodyStreamHolder)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BlobBodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BlobBodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(BlobBodyStreamHolder)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStream)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BlobBodyStreamHolder)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(BlobBodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(BlobBodyStreamHolder)
+
+}  // anonymous namespace
+
+void Blob::Stream(JSContext* aCx, JS::MutableHandle<JSObject*> aStream,
+                  ErrorResult& aRv) {
+  nsCOMPtr<nsIInputStream> stream;
+  CreateInputStream(getter_AddRefs(stream), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  RefPtr<BlobBodyStreamHolder> holder = new BlobBodyStreamHolder();
+
+  JS::Rooted<JSObject*> body(aCx);
+  BodyStream::Create(aCx, holder, global, stream, &body, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  MOZ_ASSERT(body);
+
+  holder->SetStream(body);
+  aStream.set(body);
 }
 
 }  // namespace dom
