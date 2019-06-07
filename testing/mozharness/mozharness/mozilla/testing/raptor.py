@@ -18,8 +18,9 @@ import mozharness
 
 from mozharness.base.errors import PythonErrorList
 from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL, INFO
-from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.mozilla.testing.android import AndroidMixin
+from mozharness.mozilla.testing.errors import HarnessErrorList
+from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
@@ -30,12 +31,11 @@ scripts_path = os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file
 external_tools_path = os.path.join(scripts_path, 'external_tools')
 here = os.path.abspath(os.path.dirname(__file__))
 
-RaptorErrorList = PythonErrorList + [
+RaptorErrorList = PythonErrorList + HarnessErrorList + [
     {'regex': re.compile(r'''run-as: Package '.*' is unknown'''), 'level': DEBUG},
-    {'substr': r'''FAIL: Busted:''', 'level': CRITICAL},
-    {'substr': r'''FAIL: failed to cleanup''', 'level': ERROR},
-    {'substr': r'''erfConfigurator.py: Unknown error''', 'level': CRITICAL},
-    {'substr': r'''raptorError''', 'level': CRITICAL},
+    {'substr': r'''raptorDebug''', 'level': DEBUG},
+    {'regex': re.compile(r'''^raptor[a-zA-Z-]*( - )?( )?(?i)error(:)?'''), 'level': ERROR},
+    {'regex': re.compile(r'''^raptor[a-zA-Z-]*( - )?( )?(?i)critical(:)?'''), 'level': CRITICAL},
     {'regex': re.compile(r'''No machine_name called '.*' can be found'''), 'level': CRITICAL},
     {'substr': r"""No such file or directory: 'browser_output.txt'""",
      'level': CRITICAL,
