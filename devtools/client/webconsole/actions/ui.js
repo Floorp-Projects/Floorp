@@ -21,6 +21,7 @@ const {
   SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
   TIMESTAMPS_TOGGLE,
   WARNING_GROUPS_TOGGLE,
+  FILTERBAR_DISPLAY_MODE_SET,
 } = require("devtools/client/webconsole/constants");
 
 function persistToggle() {
@@ -118,8 +119,16 @@ function reverseSearchInputToggle({initialValue} = {}) {
   };
 }
 
+function filterBarDisplayModeSet(displayMode) {
+  return {
+    type: FILTERBAR_DISPLAY_MODE_SET,
+    displayMode,
+  };
+}
+
 module.exports = {
   contentMessagesToggle,
+  filterBarDisplayModeSet,
   initialize,
   persistToggle,
   reverseSearchInputToggle,

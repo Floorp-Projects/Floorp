@@ -19,12 +19,6 @@ function filters(state = FilterState(), action) {
       return cloneState(state, {[filter]: active});
     case constants.FILTERS_CLEAR:
       return FilterState();
-    case constants.DEFAULT_FILTERS_RESET:
-      const newState = cloneState(state);
-      constants.DEFAULT_FILTERS.forEach(filterName => {
-        newState[filterName] = constants.DEFAULT_FILTERS_VALUES[filterName];
-      });
-      return newState;
     case constants.FILTER_TEXT_SET:
       const {text} = action;
       return cloneState(state, {[constants.FILTERS.TEXT]: text});

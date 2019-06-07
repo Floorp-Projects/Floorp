@@ -509,6 +509,8 @@ checkbox:-moz-focusring {
   background-color: transparent;
   border: none;
   flex-grow: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 .devtools-searchbox:focus-within,
@@ -526,6 +528,7 @@ checkbox:-moz-focusring {
 
 /* Clear icon within the searchbox */
 .devtools-searchinput-clear {
+  flex: 0 0 auto;
   align-self: center;
   margin: 0 4px;
   padding: 0;
@@ -554,6 +557,14 @@ checkbox:-moz-focusring {
 
 .devtools-searchbox:not(:hover) .learn-more-link {
   visibility: hidden;
+}
+
+.devtools-searchbox .devtools-searchinput-summary {
+  flex-basis: auto;
+  flex-grow: 0;
+  flex-shrink: 0;
+  color: var(--theme-comment);
+  align-self: center;
 }
 
 /* Autocomplete popup within the searchbox */

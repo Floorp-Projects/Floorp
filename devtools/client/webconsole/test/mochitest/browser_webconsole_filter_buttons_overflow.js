@@ -15,27 +15,36 @@ add_task(async function() {
 
   info("Check filter buttons are inline with filter input when window is large.");
   resizeWindow(1500, win);
-  let primaryFilterBar = await getPrimaryFilterBar(hud);
-  let filterButtons = await getSecondaryFilterBar(hud);
-  let filterInput = await getFilterInput(hud);
-  checkFilterInputWidth(filterInput);
-  is(filterButtons.parentNode, primaryFilterBar,
-    "The filter buttons div should be a child of the primary filter bar.");
-  is(filterButtons.previousSibling.previousSibling, filterInput,
-    "The filter buttons div should appear after a divider after the filter input.");
+  await waitForFilterBarLayout(hud, ".wide");
+  ok(true, "The filter bar has the wide layout");
 
   info("Check filter buttons overflow when window is small.");
   resizeWindow(400, win);
-  primaryFilterBar = await getPrimaryFilterBar(hud);
-  filterButtons = await getSecondaryFilterBar(hud);
-  filterInput = await getFilterInput(hud);
-  checkFilterInputWidth(filterInput);
-  is(filterButtons.parentNode, primaryFilterBar.parentNode,
-    "The filter buttons div should share the same parent as the primary filter bar.");
-  for (const sibling of primaryFilterBar.childNodes) {
-    isnot(filterButtons, sibling,
-      "The filter buttons should not be in the same div as the filter input");
-  }
+  await waitForFilterBarLayout(hud, ".narrow");
+  ok(true, "The filter bar has the narrow layout");
+
+  info("Check that the filter bar layout changes when opening the sidebar");
+  resizeWindow(800, win);
+  await waitForFilterBarLayout(hud, ".wide");
+  const onMessage = waitForMessage(hud, "world");
+  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+    content.console.log({hello: "world"});
+  });
+  const {node} = await onMessage;
+  const object = node.querySelector(".object-inspector .objectBox-object");
+  info("Ctrl+click on an object to put it in the sidebar");
+  const onSidebarShown = waitFor(() => hud.ui.document.querySelector(".sidebar"));
+  EventUtils.sendMouseEvent({
+    type: "click",
+    [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
+  }, object, hud.ui.window);
+  const sidebar = await onSidebarShown;
+  await waitForFilterBarLayout(hud, ".narrow");
+  ok(true, "FilterBar layout changed when opening the sidebar");
+
+  info("Check that filter bar layout changes when closing the sidebar");
+  sidebar.querySelector(".sidebar-close-button").click();
+  await waitForFilterBarLayout(hud, ".wide");
 
   info("Restore the original window size");
   await resizeWindow(initialWindowWidth, win);
@@ -43,41 +52,14 @@ add_task(async function() {
   await closeTabAndToolbox();
 });
 
-async function resizeWindow(width, win) {
+function resizeWindow(width, win) {
   const onResize = once(win, "resize");
   win.resizeTo(width, win.outerHeight);
   info("Wait for window resize event");
-  await onResize;
+  return onResize;
 }
 
-async function getElementBySelector(hud, query) {
-  const outputNode = hud.ui.outputNode;
-
-  const element = await waitFor(() => {
-    return outputNode.querySelector(query);
-  });
-
-  return element;
-}
-
-async function getPrimaryFilterBar(hud) {
-  info("Wait for console filterbar to appear.");
-  return getElementBySelector(hud, ".webconsole-filterbar-primary");
-}
-
-async function getSecondaryFilterBar(hud) {
-  info("Wait for filter buttons to appear.");
-  return getElementBySelector(hud, ".webconsole-filterbar-secondary");
-}
-
-async function getFilterInput(hud) {
-  info("Wait for fitler input to appear.");
-  return getElementBySelector(hud, ".devtools-searchbox");
-}
-
-async function checkFilterInputWidth(input) {
-  const minInputWidth = 250;
-  const inputWidth = parseInt(getComputedStyle(input).width, 10);
-
-  ok(inputWidth >= minInputWidth, "Filter input should be greater than 250.");
+function waitForFilterBarLayout(hud, query) {
+  return waitFor(() =>
+    hud.ui.outputNode.querySelector(`.webconsole-filteringbar-wrapper${query}`));
 }
