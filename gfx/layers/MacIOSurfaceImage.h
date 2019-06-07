@@ -30,7 +30,7 @@ class MacIOSurfaceImage : public Image {
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
-  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  TextureClient* GetTextureClient(KnowsCompositor* aKnowsCompositor) override;
 
   MacIOSurfaceImage* AsMacIOSurfaceImage() override { return this; }
 
