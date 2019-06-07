@@ -49,6 +49,7 @@ UNIFIED_SOURCES += [
     'ObjectEmitter.cpp',
     'ParseContext.cpp',
     'ParseNode.cpp',
+    'ParseNodeVerify.cpp',
     'PropOpEmitter.cpp',
     'SharedContext.cpp',
     'SwitchEmitter.cpp',

@@ -40,6 +40,7 @@
 #include "frontend/FoldConstants.h"
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
+#include "frontend/ParseNodeVerify.h"
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
@@ -410,6 +411,11 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
     error(JSMSG_GARBAGE_AFTER_INPUT, "script", TokenKindToDesc(tt));
     return null();
   }
+
+  if (!CheckParseTree(cx_, alloc_, stmtList)) {
+    return null();
+  }
+
   if (foldConstants_) {
     Node node = stmtList;
     // Don't constant-fold inside "use asm" code, as this could create a parse
@@ -1389,6 +1395,10 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
   }
 #endif
 
+  if (!CheckParseTree(cx_, alloc_, body)) {
+    return null();
+  }
+
   ParseNode* node = body;
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
@@ -1439,6 +1449,10 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
 
   if (!checkStatementsEOF()) {
     return nullptr;
+  }
+
+  if (!CheckParseTree(cx_, alloc_, body)) {
+    return null();
   }
 
   ParseNode* node = body;
@@ -1531,6 +1545,10 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     }
 
     p->value()->setClosedOver();
+  }
+
+  if (!CheckParseTree(cx_, alloc_, stmtList)) {
+    return null();
   }
 
   ParseNode* node = stmtList;
@@ -1814,6 +1832,10 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   }
   if (tt != TokenKind::Eof) {
     error(JSMSG_GARBAGE_AFTER_INPUT, "function body", TokenKindToDesc(tt));
+    return null();
+  }
+
+  if (!CheckParseTree(cx_, alloc_, funNode)) {
     return null();
   }
 
@@ -2887,6 +2909,10 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   if (!functionFormalParametersAndBody(InAllowed, yieldHandling, &funNode,
                                        syntaxKind)) {
     MOZ_ASSERT(directives == newDirectives);
+    return null();
+  }
+
+  if (!CheckParseTree(cx_, alloc_, funNode)) {
     return null();
   }
 
