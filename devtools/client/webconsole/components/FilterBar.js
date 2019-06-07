@@ -47,6 +47,21 @@ class FilterBar extends Component {
 
   constructor(props) {
     super(props);
+
+    this.state = {
+      overflowFilterButtons: false,
+    };
+
+    // Store the width of the filter button container to compare against the
+    // available space beside the filter input. If there is no room for the
+    // filter buttons beside the input, the buttons will overflow to a new row.
+    this._cachedFilterButtonWidth = 0;
+
+    this._resizeTimerId = null;
+    this.resizeHandler = this.resizeHandler.bind(this);
+
+    this.updateCachedFilterButtonsWidth = this.updateCachedFilterButtonsWidth.bind(this);
+    this.updateFilterButtonsOverflow = this.updateFilterButtonsOverflow.bind(this);
     this.onClickMessagesClear = this.onClickMessagesClear.bind(this);
     this.onClickRemoveAllFilters = this.onClickRemoveAllFilters.bind(this);
     this.onSearchBoxChange = this.onSearchBoxChange.bind(this);
@@ -54,6 +69,12 @@ class FilterBar extends Component {
     this.onChangeShowContent = this.onChangeShowContent.bind(this);
     this.renderFiltersConfigBar = this.renderFiltersConfigBar.bind(this);
     this.renderFilteredMessagesBar = this.renderFilteredMessagesBar.bind(this);
+  }
+
+  componentDidMount() {
+    window.addEventListener("resize", this.resizeHandler);
+    this.updateCachedFilterButtonsWidth();
+    this.updateFilterButtonsOverflow();
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -88,7 +109,55 @@ class FilterBar extends Component {
       return true;
     }
 
+    if (nextState.overflowFilterButtons != this.state.overflowFilterButtons) {
+      return true;
+    }
+
     return false;
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.resizeHandler);
+    window.cancelIdleCallback(this._resizeTimerId);
+  }
+
+  /**
+   * Update the width of the filter buttons container.
+   */
+  updateCachedFilterButtonsWidth() {
+    const filterBar = this.wrapperNode.querySelector(".webconsole-filterbar-secondary");
+    this._cachedFilterButtonWidth = parseInt(getComputedStyle(filterBar).width, 10);
+  }
+
+  /**
+   * Update the boolean state that informs where the filter buttons should be rendered.
+   * If the filter buttons are rendered inline with the filter input and the filter
+   * input width is reduced below a threshold, the filter buttons are rendered on a new
+   * row. When the filter buttons are on a separate row and the filter input grows
+   * wide enough to display the filter buttons without dropping below the threshold,
+   * the filter buttons are rendered inline.
+   */
+  updateFilterButtonsOverflow() {
+    const {
+      overflowFilterButtons,
+    } = this.state;
+
+    const filterInput = this.wrapperNode.querySelector(".devtools-searchbox");
+    const filterInputWidth = parseInt(getComputedStyle(filterInput).width, 10);
+    const overflowSize = 250;
+    const inlineSize = overflowSize + this._cachedFilterButtonWidth;
+
+    if (!overflowFilterButtons && filterInputWidth < overflowSize ||
+      overflowFilterButtons && filterInputWidth > inlineSize) {
+      this.setState({ overflowFilterButtons: !this.state.overflowFilterButtons });
+    }
+  }
+
+  resizeHandler(evt) {
+    window.cancelIdleCallback(this._resizeTimerId);
+    this._resizeTimerId = window.requestIdleCallback(() => {
+      this.updateFilterButtonsOverflow();
+    }, { timeout: 100 });
   }
 
   onClickMessagesClear() {
@@ -234,6 +303,10 @@ class FilterBar extends Component {
       showContentMessages,
     } = this.props;
 
+    const {
+      overflowFilterButtons,
+    } = this.state;
+
     const children = [
       dom.div({
         className: "devtools-toolbar devtools-input-toolbar webconsole-filterbar-primary",
@@ -252,6 +325,13 @@ class FilterBar extends Component {
           placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
           keyShortcut: l10n.getStr("webconsole.find.key"),
           onChange: this.onSearchBoxChange,
+        }),
+        !overflowFilterButtons && dom.div({
+          className: "devtools-separator",
+        }),
+        !overflowFilterButtons && this.renderFiltersConfigBar(),
+        !hidePersistLogsCheckbox && dom.div({
+          className: "devtools-separator",
         }),
         !hidePersistLogsCheckbox && FilterCheckbox({
           label: l10n.getStr("webconsole.enablePersistentLogs.label"),
@@ -288,7 +368,7 @@ class FilterBar extends Component {
       ));
     }
 
-    children.push(this.renderFiltersConfigBar());
+    overflowFilterButtons && children.push(this.renderFiltersConfigBar());
 
     return (
       dom.div({
