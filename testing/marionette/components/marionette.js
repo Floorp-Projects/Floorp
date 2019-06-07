@@ -131,6 +131,9 @@ const RECOMMENDED_PREFS = new Map([
   // unloaded
   ["browser.tabs.disableBackgroundZombification", false],
 
+  // Don't unload tabs when available memory is running low
+  ["browser.tabs.unloadOnLowMemory", false],
+
   // Do not warn when closing all open tabs
   ["browser.tabs.warnOnClose", false],
 
