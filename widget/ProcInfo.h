@@ -12,6 +12,10 @@
 
 namespace mozilla {
 
+namespace ipc {
+class GeckoChildProcessHost;
+}
+
 // Process types
 enum class ProcType {
   // These must match the ones in ContentParent.h and E10SUtils.jsm
@@ -72,8 +76,9 @@ typedef MozPromise<ProcInfo, nsresult, true> ProcInfoPromise;
  * Depending on the platform, this call can be quite expensive and the
  * promise may return after several ms.
  */
-RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& type);
+RefPtr<ProcInfoPromise> GetProcInfo(
+    base::ProcessId pid, int32_t childId, const ProcType& type,
+    ipc::GeckoChildProcessHost* childProcess = nullptr);
 
 }  // namespace mozilla
 #endif  // ProcInfo_h
