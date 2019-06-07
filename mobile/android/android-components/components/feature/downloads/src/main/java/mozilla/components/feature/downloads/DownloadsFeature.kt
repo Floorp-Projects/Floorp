@@ -4,10 +4,9 @@
 
 package mozilla.components.feature.downloads
 
-import android.Manifest.permission.INTERNET
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.annotation.SuppressLint
 import android.content.Context
+import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.FragmentManager
@@ -19,10 +18,12 @@ import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.FRA
 import mozilla.components.feature.downloads.manager.AndroidDownloadManager
 import mozilla.components.feature.downloads.manager.DownloadManager
 import mozilla.components.feature.downloads.manager.OnDownloadCompleted
+import mozilla.components.feature.downloads.manager.noop
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.observer.Consumable
+import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 
 /**
@@ -46,14 +47,22 @@ import mozilla.components.support.ktx.android.content.isPermissionGranted
 class DownloadsFeature(
     private val applicationContext: Context,
     override var onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
-    var onDownloadCompleted: OnDownloadCompleted = { _, _ -> },
-    private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext, onDownloadCompleted),
+    onDownloadCompleted: OnDownloadCompleted = noop,
+    private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext),
     sessionManager: SessionManager,
     private val sessionId: String? = null,
     private val fragmentManager: FragmentManager? = null,
     @VisibleForTesting(otherwise = PRIVATE)
     internal var dialog: DownloadDialogFragment = SimpleDownloadDialogFragment.newInstance()
 ) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature, PermissionsFeature {
+
+    var onDownloadCompleted: OnDownloadCompleted
+        get() = downloadManager.onDownloadCompleted
+        set(value) { downloadManager.onDownloadCompleted = value }
+
+    init {
+        this.onDownloadCompleted = onDownloadCompleted
+    }
 
     /**
      * Starts observing downloads on the selected session and sends them to the [DownloadManager]
@@ -72,7 +81,7 @@ class DownloadsFeature(
      */
     override fun stop() {
         super.stop()
-        downloadManager.unregisterListener()
+        downloadManager.unregisterListeners()
     }
 
     /**
@@ -80,16 +89,25 @@ class DownloadsFeature(
      */
     @SuppressLint("MissingPermission")
     override fun onDownload(session: Session, download: Download): Boolean {
-        return if (applicationContext.isPermissionGranted(INTERNET, WRITE_EXTERNAL_STORAGE)) {
+        return if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
             if (fragmentManager != null) {
                 showDialog(download, session)
                 false
             } else {
-                downloadManager.download(download)
-                true
+                startDownload(download)
             }
         } else {
-            onNeedToRequestPermissions(arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE))
+            onNeedToRequestPermissions(downloadManager.permissions)
+            false
+        }
+    }
+
+    private fun startDownload(download: Download): Boolean {
+        val id = downloadManager.download(download)
+        return if (id != null) {
+            true
+        } else {
+            showUnSupportFileErrorMessage()
             false
         }
     }
@@ -99,15 +117,22 @@ class DownloadsFeature(
      * either trigger or clear the pending download.
      */
     override fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
-        if (applicationContext.isPermissionGranted(INTERNET, WRITE_EXTERNAL_STORAGE)) {
+        if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
             activeSession?.let { session ->
-                session.download.consume {
-                    onDownload(session, it)
-                }
+                session.download.consume { onDownload(session, it) }
             }
         } else {
             activeSession?.download = Consumable.empty()
         }
+    }
+
+    private fun showUnSupportFileErrorMessage() {
+        val text = applicationContext.getString(
+            R.string.mozac_feature_downloads_file_not_supported2,
+            applicationContext.appName
+        )
+
+        Toast.makeText(applicationContext, text, Toast.LENGTH_LONG).show()
     }
 
     @SuppressLint("MissingPermission")
@@ -115,8 +140,7 @@ class DownloadsFeature(
         dialog.setDownload(download)
 
         dialog.onStartDownload = {
-            downloadManager.download(download)
-            session.download.consume { true }
+            session.download.consume(this::startDownload)
         }
 
         if (!isAlreadyADialogCreated()) {
@@ -129,13 +153,10 @@ class DownloadsFeature(
     }
 
     private fun reAttachOnStartDownloadListener(previousDialog: DownloadDialogFragment?) {
-        previousDialog?.apply {
-            this@DownloadsFeature.dialog = this
+        previousDialog?.let {
+            dialog = it
             activeSession?.let { session ->
-                session.download.consume {
-                    onDownload(session, it)
-                    false
-                }
+                session.download.consume { download -> onDownload(session, download) }
             }
         }
     }

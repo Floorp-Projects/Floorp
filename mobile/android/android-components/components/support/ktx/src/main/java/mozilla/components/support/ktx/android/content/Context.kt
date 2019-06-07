@@ -49,8 +49,11 @@ fun Context.isOSOnLowMemory(): Boolean {
  * Returns if a list of permission have been granted, if all the permission have been granted
  * returns true otherwise false.
  */
-fun Context.isPermissionGranted(vararg permission: String): Boolean {
+fun Context.isPermissionGranted(permission: Iterable<String>): Boolean {
     return permission.all { checkSelfPermission(this, it) == PERMISSION_GRANTED }
+}
+fun Context.isPermissionGranted(vararg permission: String): Boolean {
+    return isPermissionGranted(permission.asIterable())
 }
 
 /**

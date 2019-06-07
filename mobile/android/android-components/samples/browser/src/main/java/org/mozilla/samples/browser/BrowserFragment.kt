@@ -20,6 +20,7 @@ import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.feature.downloads.DownloadsFeature
+import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
@@ -30,11 +31,12 @@ import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
-import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
+import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.integration.ReaderViewIntegration
@@ -117,15 +119,22 @@ class BrowserFragment : Fragment(), BackHandler {
             .addSearchProvider(
                 components.searchEngineManager.getDefaultSearchEngine(requireContext()),
                 components.searchUseCases.defaultSearch,
-                fetchClient = HttpURLConnectionClient(),
+                fetchClient = components.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS)
             .addClipboardProvider(requireContext(), components.sessionUseCases.loadUrl)
 
         downloadsFeature.set(
             feature = DownloadsFeature(
-                requireContext(),
+                requireContext().applicationContext,
                 sessionManager = components.sessionManager,
                 fragmentManager = childFragmentManager,
+                onDownloadCompleted = { download, id ->
+                    Logger.debug("Download done. ID#$id $download")
+                },
+                downloadManager = FetchDownloadManager(
+                    requireContext().applicationContext,
+                    DownloadService::class
+                ),
                 onNeedToRequestPermissions = { permissions ->
                     requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
                 }),

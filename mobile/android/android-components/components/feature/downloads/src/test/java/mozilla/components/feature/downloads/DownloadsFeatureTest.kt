@@ -47,6 +47,7 @@ class DownloadsFeatureTest {
         val engine = mock<Engine>()
         mockSessionManager = spy(SessionManager(engine))
         mockDownloadManager = mock()
+        `when`(mockDownloadManager.permissions).thenReturn(arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE))
         feature = DownloadsFeature(testContext,
             downloadManager = mockDownloadManager,
             sessionManager = mockSessionManager)
@@ -127,7 +128,7 @@ class DownloadsFeatureTest {
     }
 
     @Test
-    fun `after stop is called and new download must not pass the download to the download manager `() {
+    fun `after stop is called, new download must not pass to the download manager `() {
         val session = Session("https://mozilla.com")
         val download = mock<Download>()
 
@@ -137,14 +138,17 @@ class DownloadsFeatureTest {
         mockSessionManager.add(session)
         mockSessionManager.select(session)
 
+        verify(mockDownloadManager).onDownloadCompleted = any()
+
         session.notifyObservers {
             onDownload(session, download)
         }
 
+        verify(mockDownloadManager).permissions
         verify(mockDownloadManager).download(download)
         feature.stop()
 
-        verify(mockDownloadManager).unregisterListener()
+        verify(mockDownloadManager).unregisterListeners()
 
         session.download = Consumable.from(download)
 
@@ -160,12 +164,12 @@ class DownloadsFeatureTest {
         feature.start()
         val download = startDownload()
 
-        verify(mockDownloadManager, times(0)).download(download)
+        verify(mockDownloadManager, never()).download(download)
         assertTrue(needToRequestPermissionCalled)
     }
 
     @Test
-    fun `when a download came and permissions aren't granted needToRequestPermissions and after onPermissionsGranted the download must be triggered`() {
+    fun `when a downloading & permissions aren't granted needToRequestPermissions, after onPermissionsGranted the download must be triggered`() {
         var needToRequestPermissionCalled = false
 
         feature.onNeedToRequestPermissions = { needToRequestPermissionCalled = true }

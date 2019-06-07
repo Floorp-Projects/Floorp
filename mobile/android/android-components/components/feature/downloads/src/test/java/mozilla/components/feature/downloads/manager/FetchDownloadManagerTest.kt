@@ -4,13 +4,19 @@
 
 package mozilla.components.feature.downloads.manager
 
+import android.Manifest.permission.FOREGROUND_SERVICE
 import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
-import android.app.DownloadManager.Request
+import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
+import android.content.Context
 import android.content.Intent
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Download
+import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.downloads.AbstractFetchDownloadService
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
@@ -20,24 +26,26 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
 
 @RunWith(AndroidJUnit4::class)
-class AndroidDownloadManagerTest {
+class FetchDownloadManagerTest {
 
+    private lateinit var broadcastManager: LocalBroadcastManager
+    private lateinit var service: MockDownloadService
     private lateinit var download: Download
-    private lateinit var downloadManager: AndroidDownloadManager
+    private lateinit var downloadManager: FetchDownloadManager<MockDownloadService>
 
     @Before
     fun setup() {
+        broadcastManager = LocalBroadcastManager.getInstance(testContext)
+        service = MockDownloadService()
         download = Download(
             "http://ipv4.download.thinkbroadband.com/5MB.zip",
             "", "application/zip", 5242880,
             "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
         )
-        downloadManager = AndroidDownloadManager(testContext)
+        downloadManager = FetchDownloadManager(testContext, MockDownloadService::class, broadcastManager)
     }
 
     @Test(expected = SecurityException::class)
@@ -47,6 +55,8 @@ class AndroidDownloadManagerTest {
 
     @Test
     fun `calling download must download the file`() {
+        val context: Context = mock()
+        downloadManager = FetchDownloadManager(context, MockDownloadService::class, broadcastManager)
         var downloadCompleted = false
 
         downloadManager.onDownloadCompleted = { _, _ -> downloadCompleted = true }
@@ -54,6 +64,8 @@ class AndroidDownloadManagerTest {
         grantPermissions()
 
         val id = downloadManager.download(download)!!
+
+        verify(context).startService(any())
 
         notifyDownloadCompleted(id)
 
@@ -79,12 +91,12 @@ class AndroidDownloadManagerTest {
 
         grantPermissions()
 
+        downloadManager.onDownloadCompleted = { _, _ -> downloadCompleted = true }
+
         val id = downloadManager.download(
             downloadWithFileName,
             cookie = "yummy_cookie=choco"
         )!!
-
-        downloadManager.onDownloadCompleted = { _, _ -> downloadCompleted = true }
 
         notifyDownloadCompleted(id)
 
@@ -96,32 +108,17 @@ class AndroidDownloadManagerTest {
         assertFalse(downloadCompleted)
     }
 
-    @Test
-    fun `no null or empty headers can be added to the DownloadManager`() {
-        val mockRequest: Request = mock()
-
-        mockRequest.addRequestHeaderSafely("User-Agent", "")
-
-        verifyZeroInteractions(mockRequest)
-
-        mockRequest.addRequestHeaderSafely("User-Agent", null)
-
-        verifyZeroInteractions(mockRequest)
-
-        val fireFox = "Mozilla/5.0 (Windows NT 5.1; rv:7.0.1) Gecko/20100101 Firefox/7.0.1"
-
-        mockRequest.addRequestHeaderSafely("User-Agent", fireFox)
-
-        verify(mockRequest).addRequestHeader(anyString(), anyString())
-    }
-
     private fun notifyDownloadCompleted(id: Long) {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
-        intent.putExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, id)
-        testContext.sendBroadcast(intent)
+        intent.putExtra(EXTRA_DOWNLOAD_ID, id)
+        broadcastManager.sendBroadcast(intent)
     }
 
     private fun grantPermissions() {
-        grantPermission(INTERNET, WRITE_EXTERNAL_STORAGE)
+        grantPermission(INTERNET, WRITE_EXTERNAL_STORAGE, FOREGROUND_SERVICE)
+    }
+
+    class MockDownloadService : AbstractFetchDownloadService() {
+        override val httpClient: Client = mock()
     }
 }

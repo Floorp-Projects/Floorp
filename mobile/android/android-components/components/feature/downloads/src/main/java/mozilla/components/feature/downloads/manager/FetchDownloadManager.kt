@@ -4,68 +4,72 @@
 
 package mozilla.components.feature.downloads.manager
 
+import android.Manifest.permission.FOREGROUND_SERVICE
 import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
 import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
-import android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.P
 import android.util.LongSparseArray
-import androidx.annotation.RequiresPermission
-import androidx.core.content.getSystemService
-import androidx.core.net.toUri
 import androidx.core.util.isEmpty
 import androidx.core.util.set
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import mozilla.components.browser.session.Download
-import mozilla.components.concept.fetch.Headers.Names.COOKIE
-import mozilla.components.concept.fetch.Headers.Names.REFERRER
-import mozilla.components.concept.fetch.Headers.Names.USER_AGENT
-
-typealias SystemDownloadManager = android.app.DownloadManager
-typealias SystemRequest = android.app.DownloadManager.Request
+import mozilla.components.feature.downloads.AbstractFetchDownloadService
+import mozilla.components.feature.downloads.ext.putDownloadExtra
+import kotlin.random.Random
+import kotlin.reflect.KClass
 
 /**
- * Handles the interactions with the [AndroidDownloadManager].
+ * Handles the interactions with [AbstractFetchDownloadService].
  *
  * @property applicationContext a reference to [Context] applicationContext.
+ * @property service The subclass of [AbstractFetchDownloadService] to use.
  */
-class AndroidDownloadManager(
+class FetchDownloadManager<T : AbstractFetchDownloadService>(
     private val applicationContext: Context,
+    private val service: KClass<T>,
+    private val broadcastManager: LocalBroadcastManager = LocalBroadcastManager.getInstance(applicationContext),
     override var onDownloadCompleted: OnDownloadCompleted = noop
 ) : BroadcastReceiver(), DownloadManager {
 
     private val queuedDownloads = LongSparseArray<Download>()
     private var isSubscribedReceiver = false
 
-    override val permissions = arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE)
+    override val permissions = if (SDK_INT >= P) {
+        arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE, FOREGROUND_SERVICE)
+    } else {
+        arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE)
+    }
 
     /**
-     * Schedules a download through the [AndroidDownloadManager].
+     * Schedules a download through the [AbstractFetchDownloadService].
      * @param download metadata related to the download.
      * @param cookie any additional cookie to add as part of the download request.
      * @return the id reference of the scheduled download.
      */
-    @RequiresPermission(allOf = [INTERNET, WRITE_EXTERNAL_STORAGE])
     override fun download(download: Download, cookie: String): Long? {
-
-        val androidDownloadManager: SystemDownloadManager = applicationContext.getSystemService()!!
-
         if (!download.isScheme(listOf("http", "https"))) {
             // We are ignoring everything that is not http or https. This is a limitation of
-            // Android's download manager. There's no reason to show a download dialog for
-            // something we can't download anyways.
+            // GeckoView: https://bugzilla.mozilla.org/show_bug.cgi?id=1501735 and
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1432949
             return null
         }
 
         validatePermissionGranted(applicationContext)
 
-        val request = download.toAndroidRequest(cookie)
-
-        val downloadID = androidDownloadManager.enqueue(request)
+        val downloadID = Random.nextLong()
         queuedDownloads[downloadID] = download
+
+        val intent = Intent(applicationContext, service.java)
+        intent.putExtra(EXTRA_DOWNLOAD_ID, downloadID)
+        intent.putDownloadExtra(download)
+        applicationContext.startService(intent)
 
         registerBroadcastReceiver()
 
@@ -77,7 +81,7 @@ class AndroidDownloadManager(
      */
     override fun unregisterListeners() {
         if (isSubscribedReceiver) {
-            applicationContext.unregisterReceiver(this)
+            broadcastManager.unregisterReceiver(this)
             isSubscribedReceiver = false
             queuedDownloads.clear()
         }
@@ -86,7 +90,7 @@ class AndroidDownloadManager(
     private fun registerBroadcastReceiver() {
         if (!isSubscribedReceiver) {
             val filter = IntentFilter(ACTION_DOWNLOAD_COMPLETE)
-            applicationContext.registerReceiver(this, filter)
+            broadcastManager.registerReceiver(this, filter)
             isSubscribedReceiver = true
         }
     }
@@ -108,28 +112,4 @@ class AndroidDownloadManager(
 
         if (queuedDownloads.isEmpty()) unregisterListeners()
     }
-}
-
-private fun Download.toAndroidRequest(cookie: String): SystemRequest {
-    val request = SystemRequest(url.toUri())
-        .setNotificationVisibility(VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-
-    if (!contentType.isNullOrEmpty()) {
-        request.setMimeType(contentType)
-    }
-
-    with(request) {
-        addRequestHeaderSafely(USER_AGENT, userAgent)
-        addRequestHeaderSafely(COOKIE, cookie)
-        addRequestHeaderSafely(REFERRER, referrerUrl)
-    }
-
-    request.setDestinationInExternalPublicDir(destinationDirectory, getFileName())
-
-    return request
-}
-
-internal fun SystemRequest.addRequestHeaderSafely(name: String, value: String?) {
-    if (value.isNullOrEmpty()) return
-    addRequestHeader(name, value)
 }

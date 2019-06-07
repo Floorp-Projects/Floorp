@@ -30,10 +30,12 @@ dependencies {
     implementation project(':support-utils')
 
     implementation Dependencies.androidx_core_ktx
+    implementation Dependencies.kotlin_coroutines
     implementation Dependencies.kotlin_stdlib
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
+    testImplementation Dependencies.kotlin_coroutines_test
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
     testImplementation project(':support-test')

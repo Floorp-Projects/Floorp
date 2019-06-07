@@ -56,7 +56,9 @@ open class DefaultComponents(private val applicationContext: Context) {
         SystemEngine(applicationContext, engineSettings)
     }
 
-    val icons by lazy { BrowserIcons(applicationContext, HttpURLConnectionClient()) }
+    val client by lazy { HttpURLConnectionClient() }
+
+    val icons by lazy { BrowserIcons(applicationContext, client) }
 
     // Storage
     val historyStorage by lazy { InMemoryHistoryStorage() }

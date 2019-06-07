@@ -157,6 +157,7 @@ internal class ColorPickerDialogFragment : PromptDialogFragment() {
     }
 }
 
+@Suppress("Deprecation")
 private fun View.changeColor(newColor: Int) {
     background.setColorFilter(newColor, PorterDuff.Mode.MULTIPLY)
 }

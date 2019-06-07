@@ -4,8 +4,6 @@
 
 package mozilla.components.concept.fetch
 
-import java.lang.IllegalArgumentException
-
 /**
  * A collection of HTTP [Headers] (immutable) of a [Request] or [Response].
  */
@@ -52,7 +50,11 @@ interface Headers : Iterable<Header> {
      * @see [Headers.Values]
      */
     object Names {
+        const val CONTENT_DISPOSITION = "Content-Disposition"
+        const val CONTENT_LENGTH = "Content-Length"
         const val CONTENT_TYPE = "Content-Type"
+        const val COOKIE = "Cookie"
+        const val REFERRER = "Referer"
         const val USER_AGENT = "User-Agent"
     }
 
@@ -83,12 +85,13 @@ data class Header(
 /**
  * A collection of HTTP [Headers] (mutable) of a [Request] or [Response].
  */
-class MutableHeaders(
-    vararg pairs: Pair<String, String>
-) : Headers, MutableIterable<Header> {
-    private val headers: MutableList<Header> = pairs.map {
-            (name, value) -> Header(name, value)
-    }.toMutableList()
+class MutableHeaders(headers: List<Header>) : Headers, MutableIterable<Header> {
+
+    private val headers = headers.toMutableList()
+
+    constructor(vararg pairs: Pair<String, String>) : this(
+        pairs.map { (name, value) -> Header(name, value) }.toMutableList()
+    )
 
     /**
      * Gets the [Header] at the specified [index].
@@ -151,4 +154,8 @@ class MutableHeaders(
 
         return append(name, value)
     }
+
+    override fun equals(other: Any?) = other is MutableHeaders && headers == other.headers
+
+    override fun hashCode() = headers.hashCode()
 }

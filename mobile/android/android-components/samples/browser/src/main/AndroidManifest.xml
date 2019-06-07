@@ -67,6 +67,8 @@
             </intent-filter>
         </service>
 
+        <service android:name=".downloads.DownloadService" />
+
     </application>
 
 </manifest>

@@ -7,4 +7,5 @@
     package="mozilla.components.feature.downloads">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 </manifest>
