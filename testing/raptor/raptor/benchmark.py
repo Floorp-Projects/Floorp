@@ -8,11 +8,10 @@ import os
 import shutil
 import socket
 
-from mozlog import get_proxy_logger
-
+from logger.logger import RaptorLogger
 from wptserve import server, handlers
 
-LOG = get_proxy_logger(component="raptor-benchmark")
+LOG = RaptorLogger(component='raptor-benchmark')
 here = os.path.abspath(os.path.dirname(__file__))
 
 

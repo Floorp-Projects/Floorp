@@ -7,10 +7,10 @@ from __future__ import absolute_import
 
 import json
 
-from mozlog import get_proxy_logger
+from logger.logger import RaptorLogger
 
 
-LOG = get_proxy_logger(component='raptor-output-handler')
+LOG = RaptorLogger(component='raptor-output-handler')
 
 
 class OutputHandler(object):
