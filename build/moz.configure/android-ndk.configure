@@ -5,8 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+@depends(mozbuild_state_path, '--help')
+@imports('os')
+@imports(_from='mozboot.android', _import='NDK_VERSION')
+def default_android_ndk_root(mozbuild_state_path, _):
+    path = os.path.join(mozbuild_state_path, 'android-ndk-%s' % NDK_VERSION)
+    if os.path.isdir(path):
+        return path
+
+
 js_option('--with-android-ndk', nargs=1,
-          help='location where the Android NDK can be found')
+          default=default_android_ndk_root,
+          help='location where the Android NDK can be found{|}')
 
 js_option('--with-android-toolchain', nargs=1,
           help='location of the Android toolchain')
@@ -52,11 +62,16 @@ add_old_configure_assignment('android_version', android_version)
 
 
 @depends('--with-android-ndk')
+@imports(_from='os.path', _import='isdir')
 def ndk(value):
-    if not value:
-        die('You must specify --with-android-ndk=/path/to/ndk when '
-            'building for Android')
-    return value[0]
+    if value:
+        if not isdir(value[0]):
+            die("The path you specified with --with-android-ndk (%s) is not "
+                "a directory" % value[0])
+        return value[0]
+
+    die('You must specify --with-android-ndk=/path/to/ndk when targeting Android, '
+        'or try |mach bootstrap|.')
 
 
 set_config('ANDROID_NDK', ndk)

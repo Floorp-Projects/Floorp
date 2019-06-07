@@ -60,8 +60,6 @@ ac_add_options --enable-application=mobile/android
 # ac_add_options --target=x86_64
 
 {extra_lines}
-# With the following Android NDK:
-ac_add_options --with-android-ndk="{ndk_path}"
 <<<
 '''
 
