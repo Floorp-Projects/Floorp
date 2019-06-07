@@ -515,7 +515,7 @@ class LifoAlloc {
   BumpChunkList chunks_;
 
   // List of chunks containing allocated data where each allocation is larger
-  // than the oversize threshold. Each chunk contains exactly on allocation.
+  // than the oversize threshold. Each chunk contains exactly one allocation.
   // This reduces wasted space in the chunk list.
   //
   // Oversize chunks are allocated on demand and freed as soon as they are

@@ -426,8 +426,9 @@ restart:
       *result = false;
       return true;
 
-    case ParseNodeKind::Limit:  // invalid sentinel value
-      MOZ_CRASH("unexpected ParseNodeKind::Limit in node");
+    case ParseNodeKind::LastUnused:
+    case ParseNodeKind::Limit:
+      MOZ_CRASH("unexpected sentinel ParseNodeKind in node");
   }
 
   MOZ_CRASH("invalid node kind");
