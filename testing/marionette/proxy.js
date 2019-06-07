@@ -165,8 +165,6 @@ proxy.AsyncMessageChannel = class {
       // the active command has to be aborted. Therefore remove all handlers,
       // and cancel any ongoing requests in the listener.
       this.dialogueObserver_ = (subject, topic) => {
-        log.trace(`Received observer notification ${topic}`);
-
         this.removeAllListeners_();
         // TODO(ato): It's not ideal to have listener specific behaviour here:
         this.sendAsync("cancelRequest");
