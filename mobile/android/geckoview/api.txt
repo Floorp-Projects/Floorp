@@ -583,14 +583,11 @@ package org.mozilla.geckoview {
 
   public static class GeckoSession.PermissionDelegate.MediaSource {
     ctor protected MediaSource();
-    field public static final int SOURCE_APPLICATION = 2;
-    field public static final int SOURCE_AUDIOCAPTURE = 6;
-    field public static final int SOURCE_BROWSER = 4;
+    field public static final int SOURCE_AUDIOCAPTURE = 3;
     field public static final int SOURCE_CAMERA = 0;
-    field public static final int SOURCE_MICROPHONE = 5;
-    field public static final int SOURCE_OTHER = 7;
+    field public static final int SOURCE_MICROPHONE = 2;
+    field public static final int SOURCE_OTHER = 4;
     field public static final int SOURCE_SCREEN = 1;
-    field public static final int SOURCE_WINDOW = 3;
     field public static final int TYPE_AUDIO = 1;
     field public static final int TYPE_VIDEO = 0;
     field @NonNull public final String id;
