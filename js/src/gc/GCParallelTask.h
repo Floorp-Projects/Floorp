@@ -99,6 +99,10 @@ class GCParallelTask : public RunnableTask {
 
   void runTask() override { func_(this); }
 
+  ThreadType threadType() override {
+    return ThreadType::THREAD_TYPE_GCPARALLEL;
+  }
+
  private:
   void assertNotStarted() const {
     // Don't lock here because that adds extra synchronization in debug
