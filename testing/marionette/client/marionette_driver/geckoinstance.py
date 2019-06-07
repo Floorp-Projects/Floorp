@@ -557,6 +557,9 @@ class DesktopInstance(GeckoInstance):
         # Disable browser animations
         "toolkit.cosmeticAnimations.enabled": False,
 
+        # Don't unload tabs when available memory is running low
+        "browser.tabs.unloadOnLowMemory": False,
+
         # Do not warn when closing all open tabs
         "browser.tabs.warnOnClose": False,
         # Do not warn when closing all other open tabs
