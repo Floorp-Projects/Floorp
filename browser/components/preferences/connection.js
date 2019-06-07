@@ -152,14 +152,14 @@ var gConnectionsDialog = {
     this.updateProtocolPrefs();
 
     var shareProxiesPref = Preferences.get("network.proxy.share_proxy_settings");
-    shareProxiesPref.disabled = proxyTypePref.value != 1 || shareProxiesPref.locked;
+    shareProxiesPref.disabled = proxyTypePref.value != 1;
     var autologinProxyPref = Preferences.get("signon.autologin.proxy");
-    autologinProxyPref.disabled = proxyTypePref.value == 0 || autologinProxyPref.locked;
+    autologinProxyPref.disabled = proxyTypePref.value == 0;
     var noProxiesPref = Preferences.get("network.proxy.no_proxies_on");
-    noProxiesPref.disabled = proxyTypePref.value == 0 || noProxiesPref.locked;
+    noProxiesPref.disabled = proxyTypePref.value == 0;
 
     var autoconfigURLPref = Preferences.get("network.proxy.autoconfig_url");
-    autoconfigURLPref.disabled = proxyTypePref.value != 2 || autoconfigURLPref.locked;
+    autoconfigURLPref.disabled = proxyTypePref.value != 2;
 
     this.updateReloadButton();
   },
