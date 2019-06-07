@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ProcInfo.h"
-#include "mozilla/Sprintf.h"
-#include "mozilla/Logging.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
+
 #include "nsNetCID.h"
 
 #include <cstdio>
@@ -19,7 +19,8 @@
 
 namespace mozilla {
 
-RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const ProcType& type) {
+RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const ProcType& type,
+                                    ipc::GeckoChildProcessHost* childProcess) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
 
@@ -31,7 +32,12 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const 
     return promise;
   }
 
-  auto ResolveGetProcinfo = [holder = std::move(holder), pid, type, childId]() {
+  mach_port_t task = MACH_PORT_NULL;
+  if (childProcess && childProcess->GetChildTask() != MACH_PORT_NULL) {
+    task = childProcess->GetChildTask();
+  }
+
+  auto ResolveGetProcinfo = [holder = std::move(holder), pid, type, childId, task]() {
     ProcInfo info;
     info.pid = pid;
     info.childId = childId;
@@ -58,40 +64,42 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const 
     info.cpuKernel = pti.pti_total_system;
 
     // Now getting threads info
-    mach_port_t task;
-    kern_return_t kret = task_for_pid(mach_task_self(), pid, &task);
-    if (kret != KERN_SUCCESS) {
-      // If we can't get threads detail, we just ignore that.
-      holder->Resolve(info, __func__);
-      return;
+    mach_port_t selectedTask;
+    // If we did not get a task from a child process, we use mach_task_self()
+    if (task == MACH_PORT_NULL) {
+      selectedTask = mach_task_self();
+    } else {
+      selectedTask = task;
     }
-
     // task_threads() gives us a snapshot of the process threads
     // but those threads can go away. All the code below makes
     // the assumption that thread_info() calls may fail, and
     // these errors will be ignored.
     thread_act_port_array_t threadList;
     mach_msg_type_number_t threadCount;
-    kret = task_threads(task, &threadList, &threadCount);
+    kern_return_t kret = task_threads(selectedTask, &threadList, &threadCount);
     if (kret != KERN_SUCCESS) {
       holder->Resolve(info, __func__);
       return;
     }
 
+    mach_msg_type_number_t count;
+
     for (mach_msg_type_number_t i = 0; i < threadCount; i++) {
       // Basic thread info.
-      mach_msg_type_number_t threadInfoCount = THREAD_EXTENDED_INFO_COUNT;
       thread_extended_info_data_t threadInfoData;
-      kret = thread_info(threadList[i], THREAD_EXTENDED_INFO, (thread_info_t)&threadInfoData,
-                         &threadInfoCount);
+      count = THREAD_EXTENDED_INFO_COUNT;
+      kret =
+          thread_info(threadList[i], THREAD_EXTENDED_INFO, (thread_info_t)&threadInfoData, &count);
       if (kret != KERN_SUCCESS) {
         continue;
       }
 
       // Getting the thread id.
       thread_identifier_info identifierInfo;
+      count = THREAD_IDENTIFIER_INFO_COUNT;
       kret = thread_info(threadList[i], THREAD_IDENTIFIER_INFO, (thread_info_t)&identifierInfo,
-                         &threadInfoCount);
+                         &count);
       if (kret != KERN_SUCCESS) {
         continue;
       }
@@ -114,5 +122,4 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const 
   }
   return promise;
 }
-
 }

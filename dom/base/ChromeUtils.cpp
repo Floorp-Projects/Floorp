@@ -30,6 +30,7 @@
 #include "mozilla/dom/WindowBinding.h"  // For IdleRequestCallback/Options
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
+#include "mozilla/net/SocketProcessHost.h"
 #include "IOActivityMonitor.h"
 #include "nsIOService.h"
 #include "nsThreadUtils.h"
@@ -719,14 +720,16 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
               }
 
               promises.AppendElement(mozilla::GetProcInfo(
-                  (base::ProcessId)childPid, contentParent->ChildID(), type));
+                  (base::ProcessId)childPid, contentParent->ChildID(), type,
+                  contentParent->Process()));
             }
 
             // Getting the Socket Process
             int32_t SocketPid = net::gIOService->SocketProcessPid();
             if (SocketPid != 0) {
               promises.AppendElement(mozilla::GetProcInfo(
-                  (base::ProcessId)SocketPid, 0, mozilla::ProcType::Socket));
+                  (base::ProcessId)SocketPid, 0, mozilla::ProcType::Socket,
+                  net::gIOService->SocketProcess()));
             }
 
             // Getting the GPU and RDD processes on supported platforms
@@ -734,16 +737,16 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
             if (pm) {
               base::ProcessId GpuPid = pm->GPUProcessPid();
               if (GpuPid != -1) {
-                promises.AppendElement(
-                    mozilla::GetProcInfo(GpuPid, 0, mozilla::ProcType::Gpu));
+                promises.AppendElement(mozilla::GetProcInfo(
+                    GpuPid, 0, mozilla::ProcType::Gpu, pm->Process()));
               }
             }
             RDDProcessManager* RDDPm = RDDProcessManager::Get();
             if (RDDPm) {
               base::ProcessId RDDPid = RDDPm->RDDProcessPid();
               if (RDDPid != -1) {
-                promises.AppendElement(
-                    mozilla::GetProcInfo(RDDPid, 0, mozilla::ProcType::Rdd));
+                promises.AppendElement(mozilla::GetProcInfo(
+                    RDDPid, 0, mozilla::ProcType::Rdd, RDDPm->Process()));
               }
             }
 
