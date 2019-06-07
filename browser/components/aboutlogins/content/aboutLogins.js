@@ -8,12 +8,13 @@ document.addEventListener("DOMContentLoaded", () => {
   gElements.loginList = document.querySelector("login-list");
   gElements.loginItem = document.querySelector("login-item");
   gElements.loginFilter = document.querySelector("login-filter");
-  gElements.newLoginButton = document.querySelector("#create-login-button");
 
   let {searchParams} = new URL(document.location);
   if (searchParams.get("filter")) {
     gElements.loginFilter.value = searchParams.get("filter");
   }
+
+  gElements.newLoginButton = document.querySelector("#create-login-button");
 
   gElements.newLoginButton.addEventListener("click", () => {
     gElements.loginItem.setLogin({});
