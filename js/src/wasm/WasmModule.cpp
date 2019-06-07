@@ -65,6 +65,9 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask {
   void runTask() override {
     CompileTier2(*compileArgs_, bytecode_->bytes, *module_, &cancelled_);
   }
+  ThreadType threadType() override {
+    return ThreadType::THREAD_TYPE_WASM_TIER2;
+  }
 };
 
 Module::~Module() {
