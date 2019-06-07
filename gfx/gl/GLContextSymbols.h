@@ -351,10 +351,6 @@ struct GLContextSymbols final {
   void(GLAPIENTRY* fGetObjectPtrLabel)(const GLvoid*, GLsizei, GLsizei*,
                                        GLchar*);
 
-  // draw_range_elements
-  void(GLAPIENTRY* fDrawRangeElements)(GLenum, GLuint, GLuint, GLsizei, GLenum,
-                                       const GLvoid*);
-
   // NV_fence
   void(GLAPIENTRY* fGenFences)(GLsizei, GLuint*);
   void(GLAPIENTRY* fDeleteFences)(GLsizei, const GLuint*);

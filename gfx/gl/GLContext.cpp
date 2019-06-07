@@ -137,7 +137,6 @@ static const char* const sExtensionNames[] = {
     "GL_EXT_draw_buffers",
     "GL_EXT_draw_buffers2",
     "GL_EXT_draw_instanced",
-    "GL_EXT_draw_range_elements",
     "GL_EXT_float_blend",
     "GL_EXT_frag_depth",
     "GL_EXT_framebuffer_blit",
@@ -1234,18 +1233,6 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::draw_buffers);
-    }
-
-    if (IsSupported(GLFeature::draw_range_elements)) {
-        const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fDrawRangeElements, {{ "glDrawRangeElements" }} },
-            END_SYMBOLS
-        };
-        const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fDrawRangeElements, {{ "glDrawRangeElementsEXT" }} },
-            END_SYMBOLS
-        };
-        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::draw_range_elements);
     }
 
     if (IsSupported(GLFeature::get_integer_indexed)) {
