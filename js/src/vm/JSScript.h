@@ -985,11 +985,10 @@ class ScriptSource {
                                                 size_t length);
 
  public:
-  // Initialize a fresh |ScriptSource| with uncompressed source.
+  // Initialize a fresh |ScriptSource| with unretrievable, uncompressed source.
   template <typename Unit>
-  MOZ_MUST_USE bool initializeUncompressedSource(JSContext* cx,
-                                                 EntryUnits<Unit>&& source,
-                                                 size_t length);
+  MOZ_MUST_USE bool initializeUnretrievableUncompressedSource(
+      JSContext* cx, EntryUnits<Unit>&& source, size_t length);
 
   // Set the retrieved source for a |ScriptSource| whose source was recorded as
   // missing but retrievable.
