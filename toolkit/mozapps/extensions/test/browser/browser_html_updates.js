@@ -9,6 +9,7 @@ add_task(async function enableHtmlViews() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.htmlaboutaddons.enabled", true]],
   });
+  Services.telemetry.clearEvents();
 });
 
 function loadDetailView(win, id) {
@@ -20,17 +21,18 @@ function loadDetailView(win, id) {
 }
 
 add_task(async function testChangeAutoUpdates() {
+  let id = "test@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test",
-      applications: {gecko: {id: "test@mochi.test"}},
+      applications: {gecko: {id}},
     },
     // Use permanent so the add-on can be updated.
     useAddonManager: "permanent",
   });
 
   await extension.startup();
-  let addon = await AddonManager.getAddonByID("test@mochi.test");
+  let addon = await AddonManager.getAddonByID(id);
 
   let win = await loadInitialView("extension");
   let doc = win.document;
@@ -42,9 +44,9 @@ add_task(async function testChangeAutoUpdates() {
     checkForUpdate: updatesRow.querySelector('[action="update-check"]'),
   });
 
-  await loadDetailView(win, "test@mochi.test");
+  await loadDetailView(win, id);
 
-  let card = doc.querySelector('addon-card[addon-id="test@mochi.test"]');
+  let card = doc.querySelector(`addon-card[addon-id="${id}"]`);
   ok(card.querySelector("addon-details"), "The card now has details");
 
   let updatesRow = card.querySelector(".addon-detail-row-updates");
@@ -69,9 +71,9 @@ add_task(async function testChangeAutoUpdates() {
   await loaded;
 
   // Load the detail view again.
-  await loadDetailView(win, "test@mochi.test");
+  await loadDetailView(win, id);
 
-  card = doc.querySelector('addon-card[addon-id="test@mochi.test"]');
+  card = doc.querySelector(`addon-card[addon-id="${id}"]`);
   updatesRow = card.querySelector(".addon-detail-row-updates");
   inputs = getInputs(updatesRow);
 
@@ -105,6 +107,23 @@ add_task(async function testChangeAutoUpdates() {
 
   await closeView(win);
   await extension.unload();
+
+  assertAboutAddonsTelemetryEvents([
+    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
+    ["addonsManager", "view", "aboutAddons", "detail",
+     {type: "extension", addonId: id}],
+    ["addonsManager", "action", "aboutAddons", "enabled",
+     {type: "extension", addonId: id, action: "setAddonUpdate"}],
+    ["addonsManager", "action", "aboutAddons", "",
+     {type: "extension", addonId: id, action: "setAddonUpdate"}],
+    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
+    ["addonsManager", "view", "aboutAddons", "detail",
+     {type: "extension", addonId: id}],
+    ["addonsManager", "action", "aboutAddons", "default",
+     {type: "extension", addonId: id, action: "setAddonUpdate"}],
+    ["addonsManager", "action", "aboutAddons", "enabled",
+     {type: "extension", addonId: id, action: "setAddonUpdate"}],
+  ]);
 });
 
 async function setupExtensionWithUpdate(id, {releaseNotes} = {}) {
@@ -264,6 +283,7 @@ add_task(async function testUpdateAvailable() {
 });
 
 add_task(async function testReleaseNotesLoad() {
+  Services.telemetry.clearEvents();
   let id = "update-with-notes@mochi.test";
   let extension = await setupExtensionWithUpdate(id, {
     releaseNotes: `
@@ -356,6 +376,20 @@ add_task(async function testReleaseNotesLoad() {
 
   await closeView(win);
   await extension.unload();
+
+  assertAboutAddonsTelemetryEvents([
+    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
+    ["addonsManager", "view", "aboutAddons", "detail",
+     {type: "extension", addonId: id}],
+    ["addonsManager", "action", "aboutAddons", "",
+     {type: "extension", addonId: id, action: "setAddonUpdate"}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "extension", addonId: id, action: "checkForUpdate"}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "extension", addonId: id, action: "releaseNotes"}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "extension", addonId: id, action: "releaseNotes"}],
+  ]);
 });
 
 add_task(async function testReleaseNotesError() {

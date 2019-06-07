@@ -7,10 +7,6 @@ const {
   AddonTestUtils,
 } = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
-const {
-  TelemetryTestUtils,
-} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
-
 AddonTestUtils.initMochitest(this);
 const server = AddonTestUtils.createHttpServer();
 const serverBaseUrl = `http://localhost:${server.identity.primaryPort}/`;
@@ -101,17 +97,9 @@ add_task(async function clientid_enabled() {
 
   await closeView(win);
 
-  TelemetryTestUtils.assertEvents([{
-    method: "link",
-    value: "disconotice",
-    extra: {
-      view: "discover",
-    },
-  }], {
-    category: "addonsManager",
-    method: "link",
-    object: "aboutAddons",
-  });
+  assertAboutAddonsTelemetryEvents([
+    ["addonsManager", "link", "aboutAddons", "disconotice", {view: "discover"}],
+  ], {methods: ["link"]});
 });
 
 // Test that the clientid is not sent when disabled via prefs.

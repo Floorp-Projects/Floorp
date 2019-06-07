@@ -15,6 +15,11 @@ function getAddonCard(doc, addonId) {
   return doc.querySelector(`addon-card[addon-id="${addonId}"]`);
 }
 
+function getDetailRows(card) {
+  return Array.from(card.querySelectorAll(
+    '[name="details"] .addon-detail-row:not([hidden])'));
+}
+
 function checkLabel(row, name) {
   let id;
   if (name == "private-browsing") {
@@ -101,7 +106,7 @@ add_task(async function enableHtmlViews() {
     description: "Short description",
     fullDescription: "Longer description\nWith brs!",
     type: "extension",
-    contributionURL: "http://foo.com",
+    contributionURL: "http://localhost/contribute",
     averageRating: 4.279,
     userPermissions: {
       origins: ["<all_urls>", "file://*/*"],
@@ -143,51 +148,88 @@ add_task(async function enableHtmlViews() {
 });
 
 add_task(async function testOpenDetailView() {
+  Services.telemetry.clearEvents();
+  let id = "test@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test",
-      applications: {gecko: {id: "test@mochi.test"}},
+      applications: {gecko: {id}},
+    },
+    useAddonManager: "temporary",
+  });
+  let id2 = "test2@mochi.test";
+  let extension2 = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "Test",
+      applications: {gecko: {id: id2}},
     },
     useAddonManager: "temporary",
   });
 
   await extension.startup();
+  await extension2.startup();
+
+  const goBack = async win => {
+    let loaded = waitForViewLoad(win);
+    win.managerWindow.document.getElementById("go-back").click();
+    await loaded;
+  };
 
   let win = await loadInitialView("extension");
   let doc = win.document;
 
   // Test click on card to open details.
-  let card = getAddonCard(doc, "test@mochi.test");
+  let card = getAddonCard(doc, id);
   ok(!card.querySelector("addon-details"), "The card doesn't have details");
   let loaded = waitForViewLoad(win);
   EventUtils.synthesizeMouseAtCenter(card, {clickCount: 1}, win);
   await loaded;
 
-  card = getAddonCard(doc, "test@mochi.test");
+  card = getAddonCard(doc, id);
   ok(card.querySelector("addon-details"), "The card now has details");
 
-  loaded = waitForViewLoad(win);
-  win.managerWindow.document.getElementById("go-back").click();
-  await loaded;
+  await goBack(win);
 
   // Test using more options menu.
-  card = getAddonCard(doc, "test@mochi.test");
+  card = getAddonCard(doc, id);
   loaded = waitForViewLoad(win);
   card.querySelector('[action="expand"]').click();
   await loaded;
 
-  card = getAddonCard(doc, "test@mochi.test");
+  card = getAddonCard(doc, id);
   ok(card.querySelector("addon-details"), "The card now has details");
+
+  await goBack(win);
+
+  card = getAddonCard(doc, id2);
+  loaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await loaded;
 
   await closeView(win);
   await extension.unload();
+  await extension2.unload();
+
+  assertAboutAddonsTelemetryEvents([
+    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
+    ["addonsManager", "view", "aboutAddons", "detail",
+     {type: "extension", addonId: id}],
+    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
+    ["addonsManager", "view", "aboutAddons", "detail",
+     {type: "extension", addonId: id}],
+    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
+    ["addonsManager", "view", "aboutAddons", "detail",
+     {type: "extension", addonId: id2}],
+  ]);
 });
 
 add_task(async function testDetailOperations() {
+  Services.telemetry.clearEvents();
+  let id = "test@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test",
-      applications: {gecko: {id: "test@mochi.test"}},
+      applications: {gecko: {id}},
     },
     useAddonManager: "temporary",
   });
@@ -197,13 +239,13 @@ add_task(async function testDetailOperations() {
   let win = await loadInitialView("extension");
   let doc = win.document;
 
-  let card = getAddonCard(doc, "test@mochi.test");
+  let card = getAddonCard(doc, id);
   ok(!card.querySelector("addon-details"), "The card doesn't have details");
   let loaded = waitForViewLoad(win);
   EventUtils.synthesizeMouseAtCenter(card, {clickCount: 1}, win);
   await loaded;
 
-  card = getAddonCard(doc, "test@mochi.test");
+  card = getAddonCard(doc, id);
   let panel = card.querySelector("panel-list");
 
   // Check button visibility.
@@ -236,8 +278,7 @@ add_task(async function testDetailOperations() {
     "The name is updated to the disabled text");
 
   // Enable the add-on.
-  let extensionStarted = AddonTestUtils.promiseWebExtensionStartup(
-    "test@mochi.test");
+  let extensionStarted = AddonTestUtils.promiseWebExtensionStartup(id);
   disableToggled = BrowserTestUtils.waitForEvent(card, "update");
   disableButton.click();
   await Promise.all([disableToggled, extensionStarted]);
@@ -261,9 +302,9 @@ add_task(async function testDetailOperations() {
   // We're on the list view now and there's no card for this extension.
   const addonList = doc.querySelector("addon-list");
   ok(addonList, "There's an addon-list now");
-  ok(!getAddonCard(doc, "test@mochi.test"),
+  ok(!getAddonCard(doc, id),
      "The extension no longer has a card");
-  let addon = await AddonManager.getAddonByID("test@mochi.test");
+  let addon = await AddonManager.getAddonByID(id);
   ok(addon && !!(addon.pendingOperations & AddonManager.PENDING_UNINSTALL),
      "The addon is pending uninstall");
 
@@ -283,14 +324,33 @@ add_task(async function testDetailOperations() {
 
   await closeView(win);
   await extension.unload();
+
+  assertAboutAddonsTelemetryEvents([
+    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
+    ["addonsManager", "view", "aboutAddons", "detail",
+     {type: "extension", addonId: id}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "extension", addonId: id, action: "disable", view: "detail"}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "extension", addonId: id, action: "enable"}],
+    ["addonsManager", "action", "aboutAddons", "cancelled",
+     {type: "extension", addonId: id, action: "uninstall", view: "detail"}],
+    ["addonsManager", "action", "aboutAddons", "accepted",
+     {type: "extension", addonId: id, action: "uninstall", view: "detail"}],
+    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "extension", addonId: id, action: "undo", view: "list"}],
+  ]);
 });
 
 add_task(async function testFullDetails() {
+  Services.telemetry.clearEvents();
+  let id = "addon1@mochi.test";
   let win = await loadInitialView("extension");
   let doc = win.document;
 
   // The list card.
-  let card = getAddonCard(doc, "addon1@mochi.test");
+  let card = getAddonCard(doc, id);
   ok(!card.hasAttribute("expanded"), "The list card is not expanded");
 
   // Make sure the preview is hidden.
@@ -303,7 +363,7 @@ add_task(async function testFullDetails() {
   await loaded;
 
   // This is now the detail card.
-  card = getAddonCard(doc, "addon1@mochi.test");
+  card = getAddonCard(doc, id);
   ok(card.hasAttribute("expanded"), "The detail card is expanded");
 
   // Make sure the preview is hidden.
@@ -323,8 +383,12 @@ add_task(async function testFullDetails() {
   let contrib = details.querySelector(".addon-detail-contribute");
   ok(contrib, "The contribution section is visible");
 
-  let rows = Array.from(
-    card.querySelectorAll('[name="details"] .addon-detail-row'));
+  let waitForTab = BrowserTestUtils.waitForNewTab(
+    gBrowser, "http://localhost/contribute");
+  contrib.querySelector("button").click();
+  BrowserTestUtils.removeTab(await waitForTab);
+
+  let rows = getDetailRows(card);
 
   // Auto updates.
   let row = rows.shift();
@@ -414,6 +478,14 @@ add_task(async function testFullDetails() {
   is(rows.length, 0, "There are no more rows left");
 
   await closeView(win);
+
+  assertAboutAddonsTelemetryEvents([
+    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
+    ["addonsManager", "view", "aboutAddons", "detail",
+     {type: "extension", addonId: id}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "extension", addonId: id, action: "contribute", view: "detail"}],
+  ]);
 });
 
 add_task(async function testMinimalExtension() {
@@ -436,10 +508,9 @@ add_task(async function testMinimalExtension() {
   is(desc.textContent, "", "There is no full description");
 
   let contrib = details.querySelector(".addon-detail-contribute");
-  ok(!contrib, "There is no contribution element");
+  ok(contrib.hidden, "The contribution element is hidden");
 
-  let rows = Array.from(
-    card.querySelectorAll('[name="details"] .addon-detail-row'));
+  let rows = getDetailRows(card);
 
   // Automatic updates.
   let row = rows.shift();
@@ -494,8 +565,7 @@ add_task(async function testDefaultTheme() {
   // Check all the deck buttons are hidden.
   assertDeckHeadingHidden(card.details.tabGroup);
 
-  let rows = Array.from(
-    card.querySelectorAll('[name="details"] .addon-detail-row'));
+  let rows = getDetailRows(card);
 
   // Author.
   let author = rows.shift();
@@ -552,8 +622,7 @@ add_task(async function testStaticTheme() {
   // Check all the deck buttons are hidden.
   assertDeckHeadingHidden(card.details.tabGroup);
 
-  let rows = Array.from(
-    card.querySelectorAll('[name="details"] .addon-detail-row'));
+  let rows = getDetailRows(card);
 
   // Automatic updates.
   let row = rows.shift();
@@ -562,7 +631,7 @@ add_task(async function testStaticTheme() {
   // Author.
   let author = rows.shift();
   checkLabel(author, "author");
-  let text = author.lastChild;
+  let text = author.lastElementChild;
   is(text.textContent, "Artist", "The author is set");
 
   is(rows.length, 0, "There was only 1 row");
@@ -571,10 +640,12 @@ add_task(async function testStaticTheme() {
 });
 
 add_task(async function testPrivateBrowsingExtension() {
+  Services.telemetry.clearEvents();
+  let id = "pb@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "My PB extension",
-      applications: {gecko: {id: "pb@mochi.test"}},
+      applications: {gecko: {id}},
     },
     useAddonManager: "permanent",
   });
@@ -585,10 +656,10 @@ add_task(async function testPrivateBrowsingExtension() {
   let doc = win.document;
 
   // The add-on shouldn't show that it's allowed yet.
-  let card = getAddonCard(doc, "pb@mochi.test");
+  let card = getAddonCard(doc, id);
   let badge = card.querySelector(".addon-badge-private-browsing-allowed");
   ok(badge.hidden, "The PB badge is hidden initially");
-  ok(!await hasPrivateAllowed("pb@mochi.test"), "PB is not allowed");
+  ok(!await hasPrivateAllowed(id), "PB is not allowed");
 
   // Load the detail view.
   let loaded = waitForViewLoad(win);
@@ -596,10 +667,10 @@ add_task(async function testPrivateBrowsingExtension() {
   await loaded;
 
   // The badge is still hidden on the detail view.
-  card = getAddonCard(doc, "pb@mochi.test");
+  card = getAddonCard(doc, id);
   badge = card.querySelector(".addon-badge-private-browsing-allowed");
   ok(badge.hidden, "The PB badge is hidden on the detail view");
-  ok(!await hasPrivateAllowed("pb@mochi.test"), "PB is not allowed");
+  ok(!await hasPrivateAllowed(id), "PB is not allowed");
 
   let pbRow = card.querySelector(".addon-detail-row-private-browsing");
 
@@ -609,7 +680,7 @@ add_task(async function testPrivateBrowsingExtension() {
   allow.click();
   await updated;
   ok(!badge.hidden, "The PB badge is now shown");
-  ok(await hasPrivateAllowed("pb@mochi.test"), "PB is allowed");
+  ok(await hasPrivateAllowed(id), "PB is allowed");
 
   // Disable the add-on and change the value.
   updated = BrowserTestUtils.waitForEvent(card, "update");
@@ -618,7 +689,7 @@ add_task(async function testPrivateBrowsingExtension() {
 
   // It's still allowed in PB.
   ok(!badge.hidden, "The PB badge is shown");
-  ok(await hasPrivateAllowed("pb@mochi.test"), "PB is allowed");
+  ok(await hasPrivateAllowed(id), "PB is allowed");
 
   // Disallow PB.
   updated = BrowserTestUtils.waitForEvent(card, "update");
@@ -626,7 +697,7 @@ add_task(async function testPrivateBrowsingExtension() {
   await updated;
 
   ok(badge.hidden, "The PB badge is hidden");
-  ok(!await hasPrivateAllowed("pb@mochi.test"), "PB is disallowed");
+  ok(!await hasPrivateAllowed(id), "PB is disallowed");
 
   // Allow PB.
   updated = BrowserTestUtils.waitForEvent(card, "update");
@@ -634,10 +705,27 @@ add_task(async function testPrivateBrowsingExtension() {
   await updated;
 
   ok(!badge.hidden, "The PB badge is hidden");
-  ok(await hasPrivateAllowed("pb@mochi.test"), "PB is disallowed");
+  ok(await hasPrivateAllowed(id), "PB is disallowed");
 
-  await extension.unload();
   await closeView(win);
+  await extension.unload();
+
+  assertAboutAddonsTelemetryEvents([
+    ["addonsManager", "view", "aboutAddons", "list", {type: "extension"}],
+    ["addonsManager", "view", "aboutAddons", "detail",
+     {type: "extension", addonId: id}],
+    ["addonsManager", "action", "aboutAddons", "on",
+     {type: "extension", addonId: id, action: "privateBrowsingAllowed",
+      view: "detail"}],
+    ["addonsManager", "action", "aboutAddons", null,
+     {type: "extension", addonId: id, action: "disable"}],
+    ["addonsManager", "action", "aboutAddons", "off",
+     {type: "extension", addonId: id, action: "privateBrowsingAllowed",
+      view: "detail"}],
+    ["addonsManager", "action", "aboutAddons", "on",
+     {type: "extension", addonId: id, action: "privateBrowsingAllowed",
+      view: "detail"}],
+  ]);
 });
 
 add_task(async function testInvalidExtension() {
