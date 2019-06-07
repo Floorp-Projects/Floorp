@@ -37,7 +37,8 @@ class StatusCode extends Component {
 
   render() {
     const { item } = this.props;
-    const { fromCache, fromServiceWorker, status, statusText } = item;
+    const { fromCache, fromServiceWorker, status, statusText, blockedReason } = item;
+    let statusContent = status;
     let code;
 
     if (status) {
@@ -48,6 +49,11 @@ class StatusCode extends Component {
       } else {
         code = status;
       }
+    }
+
+    if (blockedReason) {
+      statusContent = L10N.getStr("networkMenu.blocked");
+      code = "blocked";
     }
 
     // `data-code` refers to the status-code
@@ -65,7 +71,7 @@ class StatusCode extends Component {
         },
         "data-status-code": code,
         "data-code": status,
-      }, status)
+      }, statusContent)
     );
   }
 }

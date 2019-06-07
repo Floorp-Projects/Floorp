@@ -32,6 +32,10 @@
   background-color: var(--status-code-color-5xx);
 }
 
+.status-code[data-status-code^="blocked"] {
+  background-color: var(--timing-blocked-color);
+}
+
 .status-code:not([data-code^="3"]) {
   color: var(--theme-body-background);
 }
