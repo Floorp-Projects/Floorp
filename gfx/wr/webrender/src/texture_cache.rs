@@ -663,7 +663,7 @@ impl TextureCache {
         let document_id = self.now.document_id();
         self.doc_data = self.per_doc_data
                             .remove(&document_id)
-                            .unwrap_or_else(|| PerDocumentData::new());
+                            .unwrap_or_else(PerDocumentData::new);
     }
 
     fn unset_doc_data(&mut self) {
