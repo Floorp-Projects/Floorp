@@ -451,16 +451,12 @@ static void MapContentToWebShells(const UniquePtr<nsPrintObject>& aRootPO,
 }
 
 /**
- * Recursively builds the static clone document tree.
- * XXXjwatt - uh, CreateStaticClone already takes care of recursively creating
- * subdocs (in-process, at least).  nsPrintObject::Init creating a static clone
- * for subdocs is...broken, surely.
  * The outparam aDocList returns a (depth first) flat list of all the
  * nsPrintObjects created.
  */
-static void BuildDocTree(BrowsingContext* aBrowsingContext,
-                         const UniquePtr<nsPrintObject>& aPO,
-                         nsTArray<nsPrintObject*>* aDocList) {
+static void BuildNestedPrintObjects(BrowsingContext* aBrowsingContext,
+                                    const UniquePtr<nsPrintObject>& aPO,
+                                    nsTArray<nsPrintObject*>* aDocList) {
   MOZ_ASSERT(aBrowsingContext, "Pointer is null!");
   MOZ_ASSERT(aDocList, "Pointer is null!");
   MOZ_ASSERT(aPO, "Pointer is null!");
@@ -472,15 +468,14 @@ static void BuildDocTree(BrowsingContext* aBrowsingContext,
       continue;
     }
     auto childPO = MakeUnique<nsPrintObject>();
-    childPO->mParent = aPO.get();
-    nsresult rv = childPO->Init(childBC->GetDocShell(), window->GetExtantDoc(),
-                                aPO->mPrintPreview);
+    nsresult rv = childPO->InitAsNestedObject(
+        childBC->GetDocShell(), window->GetExtantDoc(), aPO.get());
     if (NS_FAILED(rv)) {
       MOZ_ASSERT_UNREACHABLE("Init failed?");
     }
     aPO->mKids.AppendElement(std::move(childPO));
     aDocList->AppendElement(aPO->mKids.LastElement().get());
-    BuildDocTree(childBC, aPO->mKids.LastElement(), aDocList);
+    BuildNestedPrintObjects(childBC, aPO->mKids.LastElement(), aDocList);
   }
 }
 
@@ -645,7 +640,7 @@ bool nsPrintJob::CheckBeforeDestroy() {
 }
 
 //-------------------------------------------------------
-nsresult nsPrintJob::Cancelled() {
+nsresult nsPrintJob::Cancel() {
   if (mPrt && mPrt->mPrintSettings) {
     return mPrt->mPrintSettings->SetIsCancelled(true);
   }
@@ -840,7 +835,8 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     nsAutoScriptBlocker scriptBlocker;
     printData->mPrintObject = MakeUnique<nsPrintObject>();
-    rv = printData->mPrintObject->Init(docShell, aSourceDoc, aIsPrintPreview);
+    rv = printData->mPrintObject->InitAsRootObject(docShell, aSourceDoc,
+                                                   aIsPrintPreview);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_TRUE(
@@ -851,10 +847,9 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     printData->mPrintObject->mFrameType =
         printData->mIsParentAFrameSet ? eFrameSet : eDoc;
 
-    // Builds the static clone doc tree and the "tree" of PrintObjects
-    BuildDocTree(nsDocShell::Cast(printData->mPrintObject->mDocShell)
-                     ->GetBrowsingContext(),
-                 printData->mPrintObject, &printData->mPrintDocList);
+    BuildNestedPrintObjects(nsDocShell::Cast(printData->mPrintObject->mDocShell)
+                                ->GetBrowsingContext(),
+                            printData->mPrintObject, &printData->mPrintDocList);
   }
 
   // The nsAutoScriptBlocker above will now have been destroyed, which may

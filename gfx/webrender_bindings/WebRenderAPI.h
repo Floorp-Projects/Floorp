@@ -18,6 +18,7 @@
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/layers/WebRenderCompositionRecorder.h"
 #include "mozilla/Range.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "GLTypes.h"

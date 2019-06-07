@@ -85,23 +85,33 @@ class DataSourceSurfaceRecording : public DataSourceSurface {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceRecording, override)
   DataSourceSurfaceRecording(UniquePtr<uint8_t[]> aData, IntSize aSize,
-                             int32_t aStride, SurfaceFormat aFormat)
+                             int32_t aStride, SurfaceFormat aFormat,
+                             DrawEventRecorderPrivate* aRecorder)
       : mData(std::move(aData)),
         mSize(aSize),
         mStride(aStride),
-        mFormat(aFormat) {}
+        mFormat(aFormat),
+        mRecorder(aRecorder) {
+    mRecorder->RecordEvent(RecordedSourceSurfaceCreation(
+        ReferencePtr(this), mData.get(), mStride, mSize, mFormat));
+    mRecorder->AddStoredObject(this);
+  }
 
-  ~DataSourceSurfaceRecording() {}
+  ~DataSourceSurfaceRecording() {
+    mRecorder->RemoveStoredObject(this);
+    mRecorder->RecordEvent(
+        RecordedSourceSurfaceDestruction(ReferencePtr(this)));
+  }
 
-  static already_AddRefed<DataSourceSurface> Init(uint8_t* aData, IntSize aSize,
-                                                  int32_t aStride,
-                                                  SurfaceFormat aFormat) {
+  static already_AddRefed<DataSourceSurface> Init(
+      uint8_t* aData, IntSize aSize, int32_t aStride, SurfaceFormat aFormat,
+      DrawEventRecorderPrivate* aRecorder) {
     // XXX: do we need to ensure any alignment here?
     auto data = MakeUnique<uint8_t[]>(aStride * aSize.height);
     if (data) {
       memcpy(data.get(), aData, aStride * aSize.height);
       RefPtr<DataSourceSurfaceRecording> surf = new DataSourceSurfaceRecording(
-          std::move(data), aSize, aStride, aFormat);
+          std::move(data), aSize, aStride, aFormat, aRecorder);
       return surf.forget();
     }
     return nullptr;
@@ -117,6 +127,7 @@ class DataSourceSurfaceRecording : public DataSourceSurface {
   IntSize mSize;
   int32_t mStride;
   SurfaceFormat mFormat;
+  RefPtr<DrawEventRecorderPrivate> mRecorder;
 };
 
 class GradientStopsRecording : public GradientStops {
@@ -368,7 +379,13 @@ already_AddRefed<SourceSurface> DrawTargetRecording::IntoLuminanceSource(
   return retSurf.forget();
 }
 
-void DrawTargetRecording::DetachAllSnapshots() {}
+void DrawTargetRecording::Flush() {
+  mRecorder->RecordEvent(RecordedFlush(this));
+}
+
+void DrawTargetRecording::DetachAllSnapshots() {
+  mRecorder->RecordEvent(RecordedDetachAllSnapshots(this));
+}
 
 void DrawTargetRecording::DrawSurface(SourceSurface* aSurface,
                                       const Rect& aDest, const Rect& aSource,
@@ -480,16 +497,9 @@ DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char* aData,
                                                  const IntSize& aSize,
                                                  int32_t aStride,
                                                  SurfaceFormat aFormat) const {
-  RefPtr<SourceSurface> surf =
-      DataSourceSurfaceRecording::Init(aData, aSize, aStride, aFormat);
-
-  RefPtr<SourceSurface> retSurf =
-      new SourceSurfaceRecording(aSize, aFormat, mRecorder);
-
-  mRecorder->RecordEvent(
-      RecordedSourceSurfaceCreation(retSurf, aData, aStride, aSize, aFormat));
-
-  return retSurf.forget();
+  RefPtr<SourceSurface> surf = DataSourceSurfaceRecording::Init(
+      aData, aSize, aStride, aFormat, mRecorder);
+  return surf.forget();
 }
 
 already_AddRefed<SourceSurface> DrawTargetRecording::OptimizeSourceSurface(

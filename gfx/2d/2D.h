@@ -61,6 +61,7 @@ struct ID3D11Texture2D;
 struct ID3D11Device;
 struct ID2D1Device;
 struct ID2D1DeviceContext;
+struct ID2D1Multithread;
 struct IDWriteFactory;
 struct IDWriteRenderingParams;
 struct IDWriteFontFace;
@@ -1869,6 +1870,17 @@ class GFX2D_API Factory {
 
  private:
   static DrawEventRecorder* mRecorder;
+};
+
+class MOZ_RAII AutoSerializeWithMoz2D final {
+ public:
+  explicit AutoSerializeWithMoz2D(BackendType aBackendType);
+  ~AutoSerializeWithMoz2D();
+
+ private:
+#if defined(WIN32)
+  RefPtr<ID2D1Multithread> mMT;
+#endif
 };
 
 }  // namespace gfx
