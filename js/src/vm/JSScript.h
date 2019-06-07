@@ -560,9 +560,6 @@ class ScriptSource {
 
    public:
     using Base::Base;
-
-    explicit Compressed(CompressedData<Unit>&& data)
-        : Base(std::move(data.raw), data.uncompressedLength) {}
   };
 
   // Source that can be retrieved using the registered source hook.  |Unit|
@@ -599,9 +596,9 @@ class ScriptSource {
                        Retrievable<char16_t>, Missing, BinAST>;
   SourceType data;
 
-  // If the GC attempts to call convertToCompressedSource with PinnedUnits
-  // present, the first PinnedUnits (that is, bottom of the stack) will set
-  // the compressed chars upon destruction.
+  // If the GC calls triggerConvertToCompressedSource with PinnedUnits present,
+  // the first PinnedUnits (that is, bottom of the stack) will install the
+  // compressed chars upon destruction.
   PinnedUnitsBase* pinnedUnitsStack_;
   mozilla::MaybeOneOf<CompressedData<mozilla::Utf8Unit>,
                       CompressedData<char16_t>>
@@ -699,14 +696,11 @@ class ScriptSource {
   // Return a string containing the chars starting at |begin| and ending at
   // |begin + len|.
   //
-  // Warning: this is *not* GC-safe! Any chars to be handed out should use
+  // Warning: this is *not* GC-safe! Any chars to be handed out must use
   // PinnedUnits. See comment below.
   template <typename Unit>
   const Unit* units(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp,
                     size_t begin, size_t len);
-
-  template <typename Unit>
-  void movePendingCompressedSource();
 
  public:
   // When creating a JSString* from TwoByte source characters, we don't try to
@@ -1005,12 +999,18 @@ class ScriptSource {
 
   MOZ_MUST_USE bool tryCompressOffThread(JSContext* cx);
 
-  // Convert this ScriptSource from storing uncompressed source of the given
-  // type, to storing compressed source.  (Raw compressed source is always
-  // single-byte; |Unit| just records the encoding of the uncompressed source.)
+  // *Trigger* the conversion of this ScriptSource from containing uncompressed
+  // |Unit|-encoded source to containing compressed source.  Conversion may not
+  // be complete when this function returns: it'll be delayed if there's ongoing
+  // use of the uncompressed source via |PinnedUnits|, in which case conversion
+  // won't occur until the outermost |PinnedUnits| is destroyed.
+  //
+  // Compressed source is in bytes, no matter that |Unit| might be |char16_t|.
+  // |sourceLength| is the length in code units (not bytes) of the uncompressed
+  // source.
   template <typename Unit>
-  void convertToCompressedSource(SharedImmutableString compressed,
-                                 size_t sourceLength);
+  void triggerConvertToCompressedSource(SharedImmutableString compressed,
+                                        size_t sourceLength);
 
   // Initialize a fresh ScriptSource as containing compressed source of the
   // indicated original encoding.
@@ -1037,18 +1037,18 @@ class ScriptSource {
  private:
   void performTaskWork(SourceCompressionTask* task);
 
-  struct ConvertToCompressedSourceFromTask {
+  struct TriggerConvertToCompressedSourceFromTask {
     ScriptSource* const source_;
     SharedImmutableString& compressed_;
 
-    ConvertToCompressedSourceFromTask(ScriptSource* source,
-                                      SharedImmutableString& compressed)
+    TriggerConvertToCompressedSourceFromTask(ScriptSource* source,
+                                             SharedImmutableString& compressed)
         : source_(source), compressed_(compressed) {}
 
     template <typename Unit>
     void operator()(const Uncompressed<Unit>&) {
-      source_->convertToCompressedSource<Unit>(std::move(compressed_),
-                                               source_->length());
+      source_->triggerConvertToCompressedSource<Unit>(std::move(compressed_),
+                                                      source_->length());
     }
 
     template <typename Unit>
@@ -1076,7 +1076,15 @@ class ScriptSource {
     }
   };
 
-  void convertToCompressedSourceFromTask(SharedImmutableString compressed);
+  template <typename Unit>
+  void convertToCompressedSource(SharedImmutableString compressed,
+                                 size_t uncompressedLength);
+
+  template <typename Unit>
+  void performDelayedConvertToCompressedSource();
+
+  void triggerConvertToCompressedSourceFromTask(
+      SharedImmutableString compressed);
 
  private:
   // It'd be better to make this function take <XDRMode, Unit>, as both

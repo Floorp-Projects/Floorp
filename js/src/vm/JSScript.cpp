@@ -1879,7 +1879,18 @@ const Unit* ScriptSource::chunkUnits(
 }
 
 template <typename Unit>
-void ScriptSource::movePendingCompressedSource() {
+void ScriptSource::convertToCompressedSource(SharedImmutableString compressed,
+                                             size_t uncompressedLength) {
+  MOZ_ASSERT(isUncompressed<Unit>());
+  MOZ_ASSERT(uncompressedData<Unit>()->length() == uncompressedLength);
+
+  data =
+      SourceType(Compressed<Unit>(std::move(compressed), uncompressedLength));
+}
+
+template <typename Unit>
+void ScriptSource::performDelayedConvertToCompressedSource() {
+  // There might not be a conversion to compressed source happening at all.
   if (pendingCompressed_.empty()) {
     return;
   }
@@ -1887,11 +1898,9 @@ void ScriptSource::movePendingCompressedSource() {
   CompressedData<Unit>& pending =
       pendingCompressed_.ref<CompressedData<Unit>>();
 
-  MOZ_ASSERT(!hasCompressedSource());
-  MOZ_ASSERT_IF(hasUncompressedSource(),
-                pending.uncompressedLength == length());
+  convertToCompressedSource<Unit>(std::move(pending.raw),
+                                  pending.uncompressedLength);
 
-  data = SourceType(Compressed<Unit>(std::move(pending)));
   pendingCompressed_.destroy();
 }
 
@@ -1901,7 +1910,7 @@ ScriptSource::PinnedUnits<Unit>::~PinnedUnits() {
     MOZ_ASSERT(*stack_ == this);
     *stack_ = prev_;
     if (!prev_) {
-      source_->movePendingCompressedSource<Unit>();
+      source_->performDelayedConvertToCompressedSource<Unit>();
     }
   }
 }
@@ -2227,21 +2236,27 @@ bool ScriptSource::tryCompressOffThread(JSContext* cx) {
 }
 
 template <typename Unit>
-void ScriptSource::convertToCompressedSource(SharedImmutableString compressed,
-                                             size_t uncompressedLength) {
+void ScriptSource::triggerConvertToCompressedSource(
+    SharedImmutableString compressed, size_t uncompressedLength) {
   MOZ_ASSERT(isUncompressed<Unit>(),
-             "should only be converting uncompressed source to compressed "
-             "source identically encoded");
-  MOZ_ASSERT(length() == uncompressedLength);
+             "should only be triggering compressed source installation to "
+             "overwrite identically-encoded uncompressed source");
+  MOZ_ASSERT(uncompressedData<Unit>()->length() == uncompressedLength);
 
-  if (pinnedUnitsStack_) {
-    MOZ_ASSERT(pendingCompressed_.empty());
-    pendingCompressed_.construct<CompressedData<Unit>>(std::move(compressed),
-                                                       uncompressedLength);
-  } else {
-    data =
-        SourceType(Compressed<Unit>(std::move(compressed), uncompressedLength));
+  // If units aren't pinned -- and they probably won't be, we'd have to have a
+  // GC in the small window of time where a |PinnedUnits| was live -- then we
+  // can immediately convert.
+  if (MOZ_LIKELY(!pinnedUnitsStack_)) {
+    convertToCompressedSource<Unit>(std::move(compressed), uncompressedLength);
+    return;
   }
+
+  // Otherwise, set aside the compressed-data info.  The conversion is performed
+  // when the last |PinnedUnits| dies.
+  MOZ_ASSERT(pendingCompressed_.empty(),
+             "shouldn't be multiple conversions happening");
+  pendingCompressed_.construct<CompressedData<Unit>>(std::move(compressed),
+                                                     uncompressedLength);
 }
 
 template <typename Unit>
@@ -2439,15 +2454,15 @@ void SourceCompressionTask::runTask() {
   source->performTaskWork(this);
 }
 
-void ScriptSource::convertToCompressedSourceFromTask(
+void ScriptSource::triggerConvertToCompressedSourceFromTask(
     SharedImmutableString compressed) {
-  data.match(ConvertToCompressedSourceFromTask(this, compressed));
+  data.match(TriggerConvertToCompressedSourceFromTask(this, compressed));
 }
 
 void SourceCompressionTask::complete() {
   if (!shouldCancel() && resultString_.isSome()) {
     ScriptSource* source = sourceHolder_.get();
-    source->convertToCompressedSourceFromTask(std::move(*resultString_));
+    source->triggerConvertToCompressedSourceFromTask(std::move(*resultString_));
   }
 }
 
