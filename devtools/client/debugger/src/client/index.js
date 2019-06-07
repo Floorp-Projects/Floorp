@@ -88,7 +88,7 @@ export async function onConnect(
     initialState
   );
 
-  await client.onConnect(connection, actions);
+  const connected = client.onConnect(connection, actions);
 
   await syncBreakpoints();
   syncXHRBreakpoints();
@@ -102,5 +102,6 @@ export async function onConnect(
   });
 
   bootstrapApp(store);
+  await connected;
   return { store, actions, selectors, client: commands };
 }
