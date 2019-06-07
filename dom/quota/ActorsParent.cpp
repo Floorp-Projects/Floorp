@@ -3751,21 +3751,12 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     fileSize = aFileSize;
   }
 
-  // Re-escape our parameters above to make sure we get the right quota group.
-  nsAutoCString group;
-  rv = NS_EscapeURL(aGroup, esc_Query, group, fallible);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsAutoCString origin;
-  rv = NS_EscapeURL(aOrigin, esc_Query, origin, fallible);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
   RefPtr<QuotaObject> result;
   {
     MutexAutoLock lock(mQuotaMutex);
 
     GroupInfoPair* pair;
-    if (!mGroupInfoPairs.Get(group, &pair)) {
+    if (!mGroupInfoPairs.Get(aGroup, &pair)) {
       return nullptr;
     }
 
@@ -3775,7 +3766,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
       return nullptr;
     }
 
-    RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(origin);
+    RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
 
     if (!originInfo) {
       return nullptr;
