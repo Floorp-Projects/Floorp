@@ -51,10 +51,8 @@ devtools-tests:
             node devtools-node-test-runner.js --suite=webconsole
     when:
         files-changed:
-            - 'devtools/client/aboutdebugging-new/src/components/**'
-            - 'devtools/client/framework/components/**'
-            - 'devtools/client/webconsole/**'
-            - 'devtools/client/netmonitor/**'
+            - 'devtools/client/**'
+            - 'devtools/shared/**'
 
 eslint-plugin-mozilla:
     description: eslint-plugin-mozilla integration tests
