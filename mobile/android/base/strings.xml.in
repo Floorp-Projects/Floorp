@@ -667,4 +667,5 @@
   <string name="updater_notification_channel">&updater_notification_channel;</string>
   <string name="synced_tabs_notification_channel">&synced_tabs_notification_channel;</string>
   <string name="site_notifications_channel">&site_notifications_channel;</string>
+  <string name="crash_handler_notifications_channel">&crash_handler_notifications_channel;</string>
 </resources>
