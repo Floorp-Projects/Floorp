@@ -15,6 +15,8 @@ learn-more = <span data-l10n-name="link">Learn more</span>
 
 inactive-css-not-grid-or-flex-container = <strong>{ $property }</strong> has no effect on this element since it’s neither a flex container nor a grid container.
 
+inactive-css-not-grid-or-flex-container-or-multicol-container = <strong>{ $property }</strong> has no effect on this element since it’s not a flex container, a grid container, or a multi-column container.
+
 inactive-css-not-grid-or-flex-item = <strong>{ $property }</strong> has no effect on this element since it’s not a grid or flex item.
 
 inactive-css-not-grid-item = <strong>{ $property }</strong> has no effect on this element since it’s not a grid item.
@@ -34,6 +36,8 @@ inactive-css-property-because-of-display = <strong>{ $property }</strong> has no
 ## the problem can be solved.
 
 inactive-css-not-grid-or-flex-container-fix = Try adding <strong>display:grid</strong> or <strong>display:flex</strong>. { learn-more }
+
+inactive-css-not-grid-or-flex-container-or-multicol-container-fix = Try adding either <strong>display:grid</strong>, <strong>display:flex</strong>, or <strong>columns:2</strong>. { learn-more }
 
 inactive-css-not-grid-or-flex-item-fix = Try adding <strong>display:grid</strong>, <strong>display:flex</strong>, <strong>display:inline-grid</strong> or <strong>display:inline-flex</strong>. { learn-more }
 
