@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export default class MenuButton extends HTMLElement {
+import ReflectedFluentElement from "chrome://browser/content/aboutlogins/components/reflected-fluent-element.js";
+
+export default class MenuButton extends ReflectedFluentElement {
   connectedCallback() {
     if (this.children.length) {
       return;
@@ -12,7 +14,26 @@ export default class MenuButton extends HTMLElement {
     this.attachShadow({mode: "open"})
         .appendChild(MenuButtonTemplate.content.cloneNode(true));
 
+    this.reflectFluentStrings();
+
     this.shadowRoot.querySelector(".menu-button").addEventListener("click", this);
+  }
+
+  static get reflectedFluentIDs() {
+    return ["button-title", "menuitem-preferences"];
+  }
+
+  static get observedAttributes() {
+    return MenuButton.reflectedFluentIDs;
+  }
+
+  handleSpecialCaseFluentString(attrName) {
+    if (attrName != "button-title") {
+      return false;
+    }
+
+    this.shadowRoot.querySelector(".menu-button").setAttribute("title", this.getAttribute(attrName));
+    return true;
   }
 
   handleEvent(event) {
@@ -23,6 +44,13 @@ export default class MenuButton extends HTMLElement {
         if (event.currentTarget == document.documentElement &&
             event.target == this &&
             event.originalTarget == this.shadowRoot.querySelector(".menu-button")) {
+          return;
+        }
+        if (event.originalTarget.classList.contains("menuitem-preferences")) {
+          document.dispatchEvent(new CustomEvent("AboutLoginsOpenPreferences", {
+            bubbles: true,
+          }));
+          this.hideMenu();
           return;
         }
         this.toggleMenu();
