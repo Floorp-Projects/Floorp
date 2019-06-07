@@ -18,6 +18,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/AbortSignal.h"
+#include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/FetchStreamReader.h"
 #include "mozilla/dom/RequestBinding.h"
@@ -97,17 +98,6 @@ enum FetchConsumeType {
   CONSUME_TEXT,
 };
 
-class FetchStreamHolder {
- public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
-  virtual void NullifyStream() = 0;
-
-  virtual void MarkAsRead() = 0;
-
-  virtual JSObject* ReadableStreamBody() = 0;
-};
-
 /*
  * FetchBody's body consumption uses nsIInputStreamPump to read from the
  * underlying stream to a block of memory, which is then adopted by
@@ -143,7 +133,7 @@ class FetchStreamHolder {
  * The pump is always released on the main thread.
  */
 template <class Derived>
-class FetchBody : public FetchStreamHolder, public AbortFollower {
+class FetchBody : public BodyStreamHolder, public AbortFollower {
  public:
   friend class FetchBodyConsumer<Derived>;
 
@@ -214,7 +204,7 @@ class FetchBody : public FetchStreamHolder, public AbortFollower {
 
   const nsCString& MimeType() const { return mMimeType; }
 
-  // FetchStreamHolder
+  // BodyStreamHolder
   void NullifyStream() override {
     mReadableStreamBody = nullptr;
     mReadableStreamReader = nullptr;
@@ -243,7 +233,7 @@ class FetchBody : public FetchStreamHolder, public AbortFollower {
   WorkerPrivate* mWorkerPrivate;
 
   // This is the ReadableStream exposed to content. It's underlying source is a
-  // FetchStream object.
+  // BodyStream object.
   JS::Heap<JSObject*> mReadableStreamBody;
 
   // This is the Reader used to retrieve data from the body.
