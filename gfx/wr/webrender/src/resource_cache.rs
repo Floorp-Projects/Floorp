@@ -1200,7 +1200,7 @@ impl ResourceCache {
                         tile_size,
                     );
 
-                    tiles = tiles.intersection(&dirty_tiles).unwrap_or(TileRange::zero());
+                    tiles = tiles.intersection(&dirty_tiles).unwrap_or_else(TileRange::zero);
                 }
 
                 let original_tile_range = tiles;

@@ -2448,7 +2448,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
                 info.clip_rect = clip_rect
                     .intersection(&info.clip_rect)
-                    .unwrap_or(LayoutRect::zero());
+                    .unwrap_or_else(LayoutRect::zero);
             }
 
             LineDecorationCacheKey {
