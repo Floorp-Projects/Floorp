@@ -606,6 +606,15 @@ static inline bool IsMethodDefinitionKind(FunctionSyntaxKind kind) {
          kind == FunctionSyntaxKind::Setter;
 }
 
+// To help diagnose sporadic crashes in the frontend, a few assertions are
+// enabled in early beta builds. (Most are not; those still use MOZ_ASSERT.)
+// See bug 1547561.
+#if defined(EARLY_BETA_OR_EARLIER)
+#  define JS_PARSE_NODE_ASSERT MOZ_RELEASE_ASSERT
+#else
+#  define JS_PARSE_NODE_ASSERT MOZ_ASSERT
+#endif
+
 class ParseNode {
   const ParseNodeKind pn_type; /* ParseNodeKind::PNK_* type */
 
@@ -625,8 +634,8 @@ class ParseNode {
         pn_rhs_anon_fun(false),
         pn_pos(0, 0),
         pn_next(nullptr) {
-    MOZ_ASSERT(ParseNodeKind::Start <= kind);
-    MOZ_ASSERT(kind < ParseNodeKind::Limit);
+    JS_PARSE_NODE_ASSERT(ParseNodeKind::Start <= kind);
+    JS_PARSE_NODE_ASSERT(kind < ParseNodeKind::Limit);
   }
 
   ParseNode(ParseNodeKind kind, const TokenPos& pos)
@@ -635,13 +644,13 @@ class ParseNode {
         pn_rhs_anon_fun(false),
         pn_pos(pos),
         pn_next(nullptr) {
-    MOZ_ASSERT(ParseNodeKind::Start <= kind);
-    MOZ_ASSERT(kind < ParseNodeKind::Limit);
+    JS_PARSE_NODE_ASSERT(ParseNodeKind::Start <= kind);
+    JS_PARSE_NODE_ASSERT(kind < ParseNodeKind::Limit);
   }
 
   ParseNodeKind getKind() const {
-    MOZ_ASSERT(ParseNodeKind::Start <= pn_type);
-    MOZ_ASSERT(pn_type < ParseNodeKind::Limit);
+    JS_PARSE_NODE_ASSERT(ParseNodeKind::Start <= pn_type);
+    JS_PARSE_NODE_ASSERT(pn_type < ParseNodeKind::Limit);
     return pn_type;
   }
   bool isKind(ParseNodeKind kind) const { return getKind() == kind; }
