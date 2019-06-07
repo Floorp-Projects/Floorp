@@ -1220,7 +1220,7 @@ nsresult nsIOService::SetConnectivityInternal(bool aConnectivity) {
 
 NS_IMETHODIMP
 nsIOService::AllowPort(int32_t inPort, const char* scheme, bool* _retval) {
-  int16_t port = inPort;
+  int32_t port = inPort;
   if (port == -1) {
     *_retval = true;
     return NS_OK;
