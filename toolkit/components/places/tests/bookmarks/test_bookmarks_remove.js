@@ -330,3 +330,29 @@ add_task(async function test_nested_content_fails_when_not_allowed() {
   await Assert.rejects(PlacesUtils.bookmarks.remove(folder1, {preventRemovalOfNonEmptyFolders: true}),
                        /Cannot remove a non-empty folder./);
 });
+
+add_task(async function test_remove_bookmark_with_invalid_url() {
+  let guid = "invalid_____";
+  await PlacesUtils.withConnectionWrapper("test_bookmarks_remove", async db => {
+    await db.execute(`
+      INSERT INTO moz_places(url, url_hash, title, rev_host, guid)
+      VALUES ('invalid-uri', hash('invalid-uri'), 'Invalid URI', '.', GENERATE_GUID())
+    `);
+    await db.execute(
+      `INSERT INTO moz_bookmarks (type, fk, parent, position, guid)
+        VALUES (:type,
+                (SELECT id FROM moz_places WHERE url = :url),
+                (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
+                (SELECT MAX(position) + 1 FROM moz_bookmarks WHERE parent = (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid)),
+                :guid)
+      `, {
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        url: "invalid",
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        guid,
+      });
+  });
+  await PlacesUtils.bookmarks.remove(guid);
+  Assert.strictEqual(await PlacesUtils.bookmarks.fetch(guid), null,
+                     "Should not throw and not find the bookmark");
+});
