@@ -3033,7 +3033,7 @@ impl ClipBatcher {
                         self.get_batch_list(is_first_clip)
                             .images
                             .entry(cache_item.texture_id)
-                            .or_insert(Vec::new())
+                            .or_insert_with(Vec::new)
                             .push(ClipMaskInstance {
                                 clip_data_address,
                                 resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
@@ -3075,7 +3075,7 @@ impl ClipBatcher {
                     self.get_batch_list(is_first_clip)
                         .box_shadows
                         .entry(cache_item.texture_id)
-                        .or_insert(Vec::new())
+                        .or_insert_with(Vec::new)
                         .push(ClipMaskInstance {
                             clip_data_address: gpu_address,
                             resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
