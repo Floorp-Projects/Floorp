@@ -16,6 +16,9 @@ import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.FRAGMENT_TAG
+import mozilla.components.feature.downloads.manager.AndroidDownloadManager
+import mozilla.components.feature.downloads.manager.DownloadManager
+import mozilla.components.feature.downloads.manager.OnDownloadCompleted
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.ktx.android.content.isPermissionGranted
@@ -44,7 +47,7 @@ class DownloadsFeature(
     private val applicationContext: Context,
     var onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
     var onDownloadCompleted: OnDownloadCompleted = { _, _ -> },
-    private val downloadManager: DownloadManager = DownloadManager(applicationContext, onDownloadCompleted),
+    private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext, onDownloadCompleted),
     sessionManager: SessionManager,
     private val sessionId: String? = null,
     private val fragmentManager: FragmentManager? = null,

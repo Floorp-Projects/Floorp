@@ -25,8 +25,11 @@ android {
 dependencies {
 
     implementation project(':browser-session')
+    implementation project(':concept-fetch')
     implementation project(':support-ktx')
     implementation project(':support-utils')
+
+    implementation Dependencies.androidx_core_ktx
     implementation Dependencies.kotlin_stdlib
 
     testImplementation Dependencies.testing_junit

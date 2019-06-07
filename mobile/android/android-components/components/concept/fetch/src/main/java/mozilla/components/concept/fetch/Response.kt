@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.fetch
 
+import mozilla.components.concept.fetch.Response.Body
 import java.io.BufferedReader
 import java.io.Closeable
 import java.io.IOException
@@ -11,7 +12,7 @@ import java.io.InputStream
 import java.nio.charset.Charset
 
 /**
- * The [Response] data class represents a reponse to a [Request] send by a [Client].
+ * The [Response] data class represents a response to a [Request] send by a [Client].
  *
  * You can create a [Response] object using the constructor, but you are more likely to encounter a [Response] object
  * being returned as the result of calling [Client.fetch].

@@ -13,6 +13,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.FRAGMENT_TAG
+import mozilla.components.feature.downloads.manager.DownloadManager
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock

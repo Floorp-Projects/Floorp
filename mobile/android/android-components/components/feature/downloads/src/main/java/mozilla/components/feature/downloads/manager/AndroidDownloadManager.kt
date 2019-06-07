@@ -2,58 +2,61 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.downloads
+package mozilla.components.feature.downloads.manager
 
 import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
 import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
-import android.app.DownloadManager.Request
 import android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
 import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Context.DOWNLOAD_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
+import android.util.LongSparseArray
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
+import androidx.core.content.getSystemService
+import androidx.core.net.toUri
+import androidx.core.util.contains
+import androidx.core.util.isEmpty
+import androidx.core.util.set
 import mozilla.components.browser.session.Download
+import mozilla.components.feature.downloads.R
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.utils.DownloadUtils
 
-typealias OnDownloadCompleted = (Download, Long) -> Unit
-typealias AndroidDownloadManager = android.app.DownloadManager
-
-internal const val FILE_NOT_SUPPORTED = -1L
+typealias SystemDownloadManager = android.app.DownloadManager
+typealias SystemRequest = android.app.DownloadManager.Request
 
 /**
  * Handles the interactions with the [AndroidDownloadManager].
  * @property onDownloadCompleted a callback to be notified when a download is completed.
  * @property applicationContext a reference to [Context] applicationContext.
  */
-class DownloadManager(
+class AndroidDownloadManager(
     private val applicationContext: Context,
-    var onDownloadCompleted: OnDownloadCompleted = { _, _ -> }
-) {
+    override var onDownloadCompleted: OnDownloadCompleted = { _, _ -> }
+) : DownloadManager {
 
-    private val queuedDownloads = HashMap<Long, Download>()
+    private val queuedDownloads = LongSparseArray<Download>()
     private var isSubscribedReceiver = false
-    private lateinit var androidDownloadManager: AndroidDownloadManager
+    private lateinit var androidDownloadManager: SystemDownloadManager
 
     /**
      * Schedule a download through the [AndroidDownloadManager].
      * @param download metadata related to the download.
-     * @param refererURL the url from where this download was referred.
+     * @param refererUrl the url from where this download was referred.
      * @param cookie any additional cookie to add as part of the download request.
      * @return the id reference of the scheduled download.
      */
     @RequiresPermission(allOf = [INTERNET, WRITE_EXTERNAL_STORAGE])
-    fun download(
+    override fun download(
         download: Download,
-        refererURL: String = "",
-        cookie: String = ""
+        refererUrl: String,
+        cookie: String
     ): Long {
 
         if (download.isSupportedProtocol()) {
@@ -68,11 +71,11 @@ class DownloadManager(
             throw SecurityException("You must be granted INTERNET and WRITE_EXTERNAL_STORAGE permissions")
         }
 
-        androidDownloadManager = applicationContext.getSystemService(DOWNLOAD_SERVICE) as AndroidDownloadManager
+        androidDownloadManager = applicationContext.getSystemService()!!
 
         val fileName = getFileName(download)
 
-        val request = Request(Uri.parse(download.url))
+        val request = SystemRequest(download.url.toUri())
             .setNotificationVisibility(VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 
         if (!download.contentType.isNullOrEmpty()) {
@@ -82,7 +85,7 @@ class DownloadManager(
         with(request) {
             addRequestHeaderSafely("User-Agent", download.userAgent)
             addRequestHeaderSafely("Cookie", cookie)
-            addRequestHeaderSafely("Referer", refererURL)
+            addRequestHeaderSafely("Referer", refererUrl)
         }
 
         request.setDestinationInExternalPublicDir(download.destinationDirectory, fileName)
@@ -100,7 +103,7 @@ class DownloadManager(
     /**
      * Remove all the listeners.
      */
-    fun unregisterListener() {
+    override fun unregisterListener() {
         if (isSubscribedReceiver) {
             applicationContext.unregisterReceiver(onDownloadComplete)
             isSubscribedReceiver = false
@@ -115,7 +118,7 @@ class DownloadManager(
     }
 
     private fun getFileName(download: Download): String? {
-        return if (!download.fileName.isEmpty()) {
+        return if (download.fileName.isNotEmpty()) {
             download.fileName
         } else {
             DownloadUtils.guessFileName(
@@ -141,7 +144,7 @@ class DownloadManager(
                 download?.let {
                     onDownloadCompleted.invoke(download, downloadID)
                 }
-                queuedDownloads -= (downloadID)
+                queuedDownloads.remove(downloadID)
 
                 if (queuedDownloads.isEmpty()) {
                     unregisterListener()
@@ -165,9 +168,7 @@ class DownloadManager(
     }
 }
 
-internal fun Request.addRequestHeaderSafely(name: String, value: String?) {
-    if (value.isNullOrEmpty()) {
-        return
-    }
+internal fun SystemRequest.addRequestHeaderSafely(name: String, value: String?) {
+    if (value.isNullOrEmpty()) return
     addRequestHeader(name, value)
 }

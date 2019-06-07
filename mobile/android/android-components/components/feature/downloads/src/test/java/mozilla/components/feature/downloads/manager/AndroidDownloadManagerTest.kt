@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.downloads
+package mozilla.components.feature.downloads.manager
 
 import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -24,7 +24,7 @@ import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class DownloadManagerTest {
+class AndroidDownloadManagerTest {
 
     private lateinit var download: Download
     private lateinit var downloadManager: DownloadManager
@@ -36,7 +36,7 @@ class DownloadManagerTest {
             "", "application/zip", 5242880,
             "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
         )
-        downloadManager = DownloadManager(testContext)
+        downloadManager = AndroidDownloadManager(testContext)
     }
 
     @Test(expected = SecurityException::class)
@@ -86,7 +86,7 @@ class DownloadManagerTest {
         val id = downloadManager.download(
             downloadWithFileName,
             cookie = "yummy_cookie=choco",
-            refererURL = "https://www.mozilla.org"
+            refererUrl = "https://www.mozilla.org"
         )
 
         downloadManager.onDownloadCompleted = { _, _ -> downloadCompleted = true }
