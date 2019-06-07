@@ -1062,7 +1062,7 @@ impl BatchBuilder {
                 let batch_key = BatchKey {
                     blend_mode,
                     kind: BatchKind::Brush(batch_kind),
-                    textures: textures,
+                    textures,
                 };
 
                 let clip_task_address = ctx.get_prim_clip_task_address(
@@ -1798,7 +1798,7 @@ impl BatchBuilder {
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
-                    snap_offsets: snap_offsets,
+                    snap_offsets,
                     specific_prim_address: prim_cache_address,
                     transform_id,
                 };
@@ -1871,7 +1871,7 @@ impl BatchBuilder {
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
-                    snap_offsets: snap_offsets,
+                    snap_offsets,
                     specific_prim_address: prim_cache_address,
                     transform_id,
                 };
@@ -1978,7 +1978,7 @@ impl BatchBuilder {
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
-                    snap_offsets: snap_offsets,
+                    snap_offsets,
                     specific_prim_address: prim_cache_address,
                     transform_id,
                 };
@@ -2082,7 +2082,7 @@ impl BatchBuilder {
                     let prim_header = PrimitiveHeader {
                         local_rect: prim_rect,
                         local_clip_rect: prim_info.combined_local_clip_rect,
-                        snap_offsets: snap_offsets,
+                        snap_offsets,
                         specific_prim_address: prim_cache_address,
                         transform_id,
                     };
@@ -2220,7 +2220,7 @@ impl BatchBuilder {
                     let batch_key = BatchKey {
                         blend_mode: non_segmented_blend_mode,
                         kind: BatchKind::Brush(batch_kind),
-                        textures: textures,
+                        textures,
                     };
 
                     let clip_task_address = ctx.get_prim_clip_task_address(
@@ -2557,7 +2557,7 @@ impl BatchBuilder {
         z_id: ZBufferId,
     ) {
         let key = BatchKey {
-            blend_mode: blend_mode,
+            blend_mode,
             kind: BatchKind::Brush(kind),
             textures: BatchTextures::no_texture(),
         };

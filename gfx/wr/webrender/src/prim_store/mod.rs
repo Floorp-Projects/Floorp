@@ -2990,7 +2990,7 @@ impl PrimitiveStore {
                     // Request the render task each frame.
                     gradient.cache_handle = Some(frame_state.resource_cache.request_render_task(
                         RenderTaskCacheKey {
-                            size: size,
+                            size,
                             kind: RenderTaskCacheKeyKind::Gradient(cache_key),
                         },
                         frame_state.gpu_cache,
@@ -3200,7 +3200,7 @@ fn decompose_repeated_primitive(
     for Repetition { origin, .. } in repetitions {
         let mut handle = GpuCacheHandle::new();
         let rect = LayoutRect {
-            origin: origin,
+            origin,
             size: *stretch_size,
         };
 
