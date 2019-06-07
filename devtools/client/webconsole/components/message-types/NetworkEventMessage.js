@@ -178,7 +178,6 @@ function NetworkEventMessage({
     serviceContainer,
     request,
     timestampsVisible,
-    message,
   });
 }
 
