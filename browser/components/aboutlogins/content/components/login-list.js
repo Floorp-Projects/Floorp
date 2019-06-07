@@ -5,6 +5,13 @@
 import LoginListItem from "chrome://browser/content/aboutlogins/components/login-list-item.js";
 import ReflectedFluentElement from "chrome://browser/content/aboutlogins/components/reflected-fluent-element.js";
 
+const collator = new Intl.Collator();
+const sortFnOptions = {
+  name: (a, b) => collator.compare(a.title, b.title),
+  "last-used": (a, b) => (a.timeLastUsed < b.timeLastUsed),
+  "last-changed": (a, b) => (a.timePasswordChanged < b.timePasswordChanged),
+};
+
 export default class LoginList extends ReflectedFluentElement {
   constructor() {
     super();
@@ -25,6 +32,8 @@ export default class LoginList extends ReflectedFluentElement {
 
     this.render();
 
+    this.shadowRoot.getElementById("login-sort")
+                   .addEventListener("change", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
   }
@@ -66,6 +75,12 @@ export default class LoginList extends ReflectedFluentElement {
 
   handleEvent(event) {
     switch (event.type) {
+      case "change": {
+        const sort = event.target.value;
+        this._logins = this._logins.sort((a, b) => sortFnOptions[sort](a, b));
+        this.render();
+        break;
+      }
       case "AboutLoginsFilterLogins": {
         this._filter = event.detail.toLocaleLowerCase();
         this.render();
@@ -86,7 +101,11 @@ export default class LoginList extends ReflectedFluentElement {
   }
 
   static get reflectedFluentIDs() {
-    return ["count"];
+    return ["count",
+            "last-used-option",
+            "last-changed-option",
+            "name-option",
+            "sort-label-text"];
   }
 
   static get observedAttributes() {

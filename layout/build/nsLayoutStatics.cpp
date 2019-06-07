@@ -129,6 +129,7 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsThreadManager.h"
 #include "mozilla/css/ImageLoader.h"
+#include "gfxUserFontSet.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -433,4 +434,6 @@ void nsLayoutStatics::Shutdown() {
   css::ImageLoader::Shutdown();
 
   mozilla::net::UrlClassifierFeatureFactory::Shutdown();
+
+  gfxUserFontEntry::Shutdown();
 }

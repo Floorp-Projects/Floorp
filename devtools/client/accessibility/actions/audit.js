@@ -4,16 +4,21 @@
 
 "use strict";
 
-const { AUDIT, AUDIT_PROGRESS, AUDITING, FILTER_TOGGLE } = require("../constants");
+const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
+const { AUDIT, AUDIT_PROGRESS, AUDITING, FILTER_TOGGLE, FILTERS } = require("../constants");
 
 exports.filterToggle = filter =>
   dispatch => dispatch({ filter, type: FILTER_TOGGLE });
 
 exports.auditing = filter =>
-  dispatch => dispatch({ auditing: filter, type: AUDITING });
+  dispatch => {
+    const auditing = filter === FILTERS.ALL ? Object.values(FILTERS) : [filter];
+    return dispatch({ auditing, type: AUDITING });
+  };
 
 exports.audit = (walker, filter) =>
   dispatch => new Promise(resolve => {
+    const types = filter === FILTERS.ALL ? Object.values(AUDIT_TYPE) : [filter];
     const auditEventHandler = ({ type, ancestries, progress }) => {
       switch (type) {
         case "error":
@@ -35,5 +40,5 @@ exports.audit = (walker, filter) =>
     };
 
     walker.on("audit-event", auditEventHandler);
-    walker.startAudit();
+    walker.startAudit({ types });
   });

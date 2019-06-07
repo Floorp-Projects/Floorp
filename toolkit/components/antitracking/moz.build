@@ -41,4 +41,5 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
+    BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']

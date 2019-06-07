@@ -1,0 +1,437 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+  </head>
+<body>
+  <button id="buttonmenu-1" aria-haspopup="true">I have a popup</button>
+  <label>I have a popup<button id="buttonmenu-2" aria-haspopup="true"></button></label>
+  <button id="buttonmenu-3" aria-haspopup="true"></button>
+  <button id="buttonmenu-4" aria-haspopup="true" aria-label="I have a popup"></button>
+  <label for="buttonmenu-5">I have a popup </label><button id="buttonmenu-5" aria-haspopup="true"></button>
+  <label id="buttonmenu-6-label">I have a popup </label><button id="buttonmenu-6" aria-haspopup="true" aria-labelledby="buttonmenu-6-label"></button>
+  <p id="p1">I am a paragraph</p>
+  <p id="p2"></p>
+  <canvas id="canvas-1"></canvas>
+  <canvas id="canvas-2" aria-label="Canvas label"></canvas>
+  <canvas id="canvas-3" aria-labelledby="canvas-3-heading">
+    <h2 id="canvas-3-heading">Shapes</h2>
+  </canvas>
+  <canvas id="canvas-4">
+      <h2>Shapes</h2>
+  </canvas>
+  <input id="checkbox-1" type="checkbox" name="world" />
+  <label>hello</label><input id="checkbox-2" type="checkbox" name="world" />
+  <label>hello<input id="checkbox-3" type="checkbox" name="world" /></label>
+  <label for="checkbox-4">hello</label><input id="checkbox-4" type="checkbox" name="world" />
+  <input id="checkbox-5" type="checkbox" name="world" aria-label="hello" />
+  <label id="checkbox-6-label">hello</label><input id="checkbox-6" type="checkbox" name="world" aria-labelledby="checkbox-6-label" />
+  <div id="checkbox-7" role="checkbox"></div>
+  <div id="checkbox-8" aria-label="hello" role="checkbox"></div>
+  <div id="checkbox-9-label">hello</div><div id="checkbox-9" aria-labelledby="checkbox-9-label" role="checkbox"></div>
+  <div role="menu">
+    <div id="menuitemcheckbox-1" role="menuitemcheckbox">hello</div>
+    <div id="menuitemcheckbox-2" role="menuitemcheckbox"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" /></div>
+    <div id="menuitemcheckbox-3" role="menuitemcheckbox"></div>
+    <div id="menuitemcheckbox-4" role="menuitemcheckbox"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="" /></div>
+    <div id="menuitemcheckbox-5" role="menuitemcheckbox"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="hello" /></div>
+    <div id="menuitemcheckbox-6" role="menuitemcheckbox">&nbsp;</div>
+  </div>
+  <p id="columnheader-7-label">Budget</p>
+  <p id="rowheader-7-label">Toy Story 3</p>
+  <table>
+    <thead>
+      <tr>
+        <th id="columnheader-1" scope="col">Film Title</th>
+        <th id="columnheader-2" scope="col"></th>
+        <th id="columnheader-3" scope="col">&nbsp;</th>
+        <th id="columnheader-4" scope="col" aria-label="Worldwide Gross"></th>
+        <th id="columnheader-5" scope="col" aria-label=""></th>
+        <th id="columnheader-6" scope="col" aria-label=" "></th>
+        <th id="columnheader-7" scope="col" aria-labelledby="columnheader-7-label"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><th id="rowheader-1" scope="row">Toy Story 3</th></tr>
+      <tr><th id="rowheader-2" scope="row"></th></tr>
+      <tr><th id="rowheader-3" scope="row">&nbsp;</th></tr>
+      <tr><th id="rowheader-4" scope="row" aria-label="Alladin"></th></tr>
+      <tr><th id="rowheader-5" scope="row" aria-label=""></th></tr>
+      <tr><th id="rowheader-6" scope="row" aria-label=" "></th></tr>
+      <tr><th id="rowheader-7" scope="row" aria-labelledby="columnheader-7-label"></th></tr>
+    </tbody>
+  </table>
+  <div role="columnheader" id="columnheader-8">Film Title</div>
+  <div role="columnheader" id="columnheader-9"></div>
+  <div role="columnheader" id="columnheader-10">&nbsp;</div>
+  <div role="columnheader" id="columnheader-11" aria-label="Worldwide Gross"></div>
+  <div role="columnheader" id="columnheader-12" aria-label=""></div>
+  <div role="columnheader" id="columnheader-13" aria-label=" "></div>
+  <div role="columnheader" id="columnheader-14" aria-labelledby="columnheader-7-label"></div>
+  <label for="combobox-1">Choose a pet:</label>
+  <select id="combobox-1">
+    <option id="combobox-option-1" value="">--Please choose an option--</option>
+    <option id="combobox-option-2" value="dog"></option>
+    <option id="combobox-option-3" value="cat">&nbsp;</option>
+    <option id="combobox-option-4" value="" label="--Please choose an option--"></option>
+    <option id="combobox-option-5" value="dog" label=""></option>
+    <option id="combobox-option-6" value="cat" label=" "></option>
+  </select>
+  <select id="combobox-2"></select>
+  <label>Choose a pet:</label><select id="combobox-3"></select>
+  <label>Choose a pet:<select id="combobox-4"></select></label>
+  <select id="combobox-5" aria-label="Choose a pet:"></select>
+  <label id="combobox-6-label">Choose a pet:</label><select id="combobox-6" aria-labelledby="combobox-6-label"></select>
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="diagram-1"
+    xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="diagram-2" aria-label=""
+    xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="diagram-3" aria-label="empty drawing"
+    xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+  <div id="diagram-4-label">Empty drawing</div>
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="diagram-4" aria-labelledby="diagram-4-label"
+    xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+  <div id="diagram-5-label"></div>
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="diagram-5" aria-labelledby="diagram-5-label"
+    xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+  <dialog id="dialog-1" open>
+    <p>Greetings, one and all!</p>
+  </dialog>
+  <dialog id="dialog-2" aria-label="" open>
+    <p>Greetings, one and all!</p>
+  </dialog>
+  <dialog id="dialog-3" aria-label="Greetings" open>
+    <p>Greetings, one and all!</p>
+  </dialog>
+  <dialog id="dialog-4" aria-labelledby="dialog-4-label" open>
+    <p id="dialog-4-label">Greetings, one and all!</p>
+  </dialog>
+  <div role="dialog" id="dialog-5">
+    <p>Greetings, one and all!</p>
+  </div>
+  <div role="dialog" id="dialog-6" aria-label="">
+    <p>Greetings, one and all!</p>
+  </div>
+  <div role="dialog" id="dialog-7" aria-label="Greetings">
+    <p>Greetings, one and all!</p>
+  </div>
+  <div role="dialog" id="dialog-8" aria-labelledby="dialog-8-label">
+    <p id="dialog-8-label">Greetings, one and all!</p>
+  </div>
+  <dialog id="dialog-9" aria-labelledby="dialog-9-label" open>
+    <p id="dialog-9-label"></p>
+  </dialog>
+  <div role="dialog" id="dialog-10" aria-labelledby="dialog-10-label">
+    <p id="dialog-10-label"></p>
+  </div>
+  <div id="editcombobox-1" role="combobox"></div>
+  <div id="editcombobox-2" aria-label="Choose a pet:" role="combobox"></div>
+  <div id="editcombobox-3-label">Choose a pet:</div><div id="editcombobox-3" aria-labelledby="editcombobox-3-label" role="combobox"></div>
+  <label>Customer name: <input id="entry-1"></label>
+  <input id="entry-2">
+  <input id="entry-3" aria-label="Customer name:">
+  <label>Customer name: </label><input id="entry-4">
+  <label for="entry-5">Customer name: </label><input id="entry-5">
+  <label id="entry-6-label">Customer name: </label><input id="entry-6" aria-labelledby="entry-6-label">
+  <div id="entry-7" role="textbox"></div>
+  <div id="entry-8" aria-label="Customer name:" role="textbox"></div>
+  <div id="entry-9-label">Customer name: </div><div id="entry-9" aria-labelledby="entry-9-label" role="textbox"></div>
+  <figure id="figure-1">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+    <figcaption>Figure 1: The four layers of awesome.</figcaption>
+  </figure>
+  <figure id="figure-2">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  </figure>
+  <div id="figure-3" role="figure" aria-labelledby="caption-figure-3">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+    <p id="caption-figure-3">Figure 1: The caption</p>
+  </div>
+  <div id="figure-4" role="figure" aria-labelledby="caption-figure-4">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+    <p id="caption-figure-4"></p>
+  </div>
+  <div id="figure-5" role="figure">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  </div>
+  <img id="img-1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=">
+  <img id="img-2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" aria-label="alt text">
+  <p id="img-3-label">Label</p>
+  <img id="img-3" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" aria-labelledby="img-3-label">
+  <img id="img-4" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  <img id="img-5" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="">
+  <p id="img-6-label"></p>
+  <img id="img-6" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" aria-labelledby="img-6-label">
+  <div id="img-7" role="img"></div>
+  <div id="img-8" role="img" aria-label="alt text"></div>
+  <p id="img-9-label">Label</p>
+  <div id="img-9" role="img" aria-labelledby="img-9-label"></div>
+  <div id="img-10" role="img" aria-label=""></div>
+  <p id="img-11-label"></p>
+  <div id="img-11" role="img" aria-labelledby="img-11-label"></div>
+  <select>
+    <optgroup id="optgroup-1" label="Group 1">
+      <option>Option 1.1</option>
+    </optgroup>
+    <optgroup id="optgroup-2" label="">
+      <option>Option 2.1</option>
+    </optgroup>
+    <optgroup id="optgroup-3">
+      <option>Option 3.1</option>
+    </optgroup>
+    <optgroup id="optgroup-4" aria-label="Group 4">
+      <option>Option 4.1</option>
+    </optgroup>
+    <optgroup id="optgroup-5" aria-labelledby="optgroup-5-label">
+      <option id="optgroup-5-label">Option 5.1</option>
+    </optgroup>
+  </select>
+  <fieldset id="fieldset-1"><legend>Choose your favorite monster</legend></fieldset>
+  <fieldset id="fieldset-2"><legend></legend></fieldset>
+  <fieldset id="fieldset-3"></fieldset>
+  <fieldset id="fieldset-4" aria-label="Choose your favorite monster"></fieldset>
+  <p id="fieldset-5-label">Choose your favorite monster</p>
+  <fieldset id="fieldset-5" aria-labelledby="fieldset-5-label"></fieldset>
+  <h1 id="heading-1"></h1>
+  <h1 id="heading-2">Heading</h1>
+  <h1 id="heading-3">&nbsp;</h1>
+  <h1 id="heading-4" aria-label="Heading"></h1>
+  <h1 id="heading-5" aria-labelledby="heading-5-label"></h1>
+  <p id="heading-5-label">Heading</p>
+  <h1 id="heading-6" aria-label="Heading">H</h1>
+  <h1 id="heading-7" aria-labelledby="heading-7-label">H</h1>
+  <p id="heading-7-label">Heading</p>
+  <div role="heading" aria-level="1" id="heading-8"></div>
+  <div role="heading" aria-level="1" id="heading-9">Heading</div>
+  <div role="heading" aria-level="1" id="heading-10">&nbsp;</div>
+  <div role="heading" aria-level="1" id="heading-11" aria-label="Heading"></div>
+  <div role="heading" aria-level="1" id="heading-12" aria-labelledby="heading-12-label"></div>
+  <p id="heading-12-label">Heading</p>
+  <div role="heading" aria-level="1" id="heading-13" aria-label="Heading">H</div>
+  <div role="heading" aria-level="1" id="heading-14" aria-labelledby="heading-14-label">H</div>
+  <p id="heading-14-label">Heading</p>
+  <map name="imagemap">
+    <area alt="One" shape="rect" coords="0,0,14,28" href="1.html">
+    <area shape="rect" coords="14,0,28,28" href="2.html">
+  </map>
+  <img id="imagemap-1" usemap="#imagemap" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=">
+  <img id="imagemap-2" usemap="#imagemap" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" aria-label="image map name">
+  <p id="imagemap-3-label">image map name</p>
+  <img id="imagemap-3" usemap="#imagemap" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" aria-labelledby="imagemap-3-label">
+  <img id="imagemap-4" usemap="#imagemap" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="image map name">
+  <img id="imagemap-5" usemap="#imagemap" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="">
+  <p id="imagemap-6-label"></p>
+  <img id="imagemap-6" usemap="#imagemap" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" aria-labelledby="img-6-label">
+  <iframe id="iframe-1" title="IFrame Title" src="https://example.com"></iframe>
+  <iframe id="iframe-2" title="" src="https://example.com"></iframe>
+  <iframe id="iframe-3" src="https://example.com"></iframe>
+  <iframe id="iframe-4" aria-label="Bad Title" src="https://example.com"></iframe>
+  <iframe id="iframe-5" aria-label="Bad Title" title="Good Title" src="https://example.com"></iframe>
+  <object id="object-1" type="image/png" data="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII="></object>
+  <object id="object-2" aria-label="Image object" type="image/png" data="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII="></object>
+  <p id="object-3-label">Image object</p>
+  <object id="object-3" aria-labelledby="object-3-label" type="image/png" data="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII="></object>
+  <object id="object-4" type="text/html" data="https://example.com"></object>
+  <embed id="embed-1" type="image/png" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=">
+  <embed id="embed-2" type="video/webm" src="data:video/webm,xxx">
+  <embed id="embed-3" aria-label="Embedded video" type="video/webm" src="data:video/webm,xxx">
+  <p id="embed-4-label">Embedded video</p>
+  <embed id="embed-4" aria-labelledby="embed-4-label" type="video/webm" src="data:video/webm,xxx">
+  <a id="link-1"></a>
+  <a id="link-2">Hello world</a>
+  <a id="link-3" href></a>
+  <a id="link-4" href>Hello world</a>
+  <a id="link-5" href=""></a>
+  <a id="link-6" href="">Hello world</a>
+  <a id="link-7" href="#"></a>
+  <a id="link-8" href="#">Hello world</a>
+  <a id="link-9" href="https://example.com"></a>
+  <a id="link-10" href="https://example.com">Hello world</a>
+  <a id="link-11" aria-label="Hello world" href="https://example.com"></a>
+  <p id="link-12-label">Hello world</p>
+  <a id="link-12" aria-labelledby="link-12-label" href="https://example.com"></a>
+  <div role="link" id="link-13"></div>
+  <div role="link" id="link-14">Hello world</div>
+  <div role="link" id="link-15" aria-label="Hello world"></div>
+  <p id="link-16-label">Hello world</p>
+  <div role="link" id="link-16" aria-labelledby="link-16-label"></div>
+  <p id="mglyph-3-label">Label</p>
+  <p id="mglyph-6-label"></p>
+  <math>
+    <mi><mglyph id="mglyph-1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII="/></mi>
+    <mi><mglyph id="mglyph-2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" aria-label="alt text"/></mi>
+    <mi><mglyph id="mglyph-3" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" aria-labelledby="mglyph-3-label"/></mi>
+    <mi><mglyph id="mglyph-4" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text"/></mi>
+    <mi><mglyph id="mglyph-5" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt=""/></mi>
+    <mi><mglyph id="mglyph-6" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" aria-labelledby="mglyph-6-label"/></mi>
+  </math>
+  <span id="menuitem-1" role="menuitem"></span>
+  <span id="menuitem-2" aria-label="" role="menuitem"></span>
+  <span id="menuitem-3" aria-label="Menu Item" role="menuitem"></span>
+  <p id="menuitem-4-label">Menu Item</p>
+  <span id="menuitem-4" aria-labelledby="menuitem-4-label" role="menuitem"></span>
+  <p id="menuitem-5-label"></p>
+  <span id="menuitem-5" aria-labelledby="menuitem-5-label" role="menuitem"></span>
+  <span id="menuitem-6" role="menuitem">Menu Item</span>
+  <label for="listbox-1">Choose a pet:</label>
+  <select id="listbox-1" size="6">
+    <option id="option-1" value="">--Please choose an option--</option>
+    <option id="option-2" value="dog"></option>
+    <option id="option-3" value="cat">&nbsp;</option>
+    <option id="option-4" value="" label="--Please choose an option--"></option>
+    <option id="option-5" value="dog" label=""></option>
+    <option id="option-6" value="cat" label=" "></option>
+  </select>
+  <select id="listbox-2" size="2"></select>
+  <label>Choose a pet:</label><select id="listbox-3" size="2"></select>
+  <label>Choose a pet:<select id="listbox-4" size="2"></select></label>
+  <select id="listbox-5" aria-label="Choose a pet:" size="2"></select>
+  <label id="listbox-6-label">Choose a pet:</label><select id="listbox-6" aria-labelledby="listbox-6-label" size="2"></select>
+  <div role="listbox">
+    <div role="option" id="option-7">--Please choose an option--</div>
+    <div role="option" id="option-8"></div>
+    <div role="option" id="option-9">&nbsp;</div>
+    <div role="option" id="option-10" aria-label="--Please choose an option--"></div>
+    <div role="option" id="option-11" aria-label=""></div>
+    <div role="option" id="option-12" aria-label=" "></div>
+    <p id="option-13-label">--Please choose an option--</p>
+    <div role="option" id="option-13" aria-labelledby="option-13-label"></div>
+    <p id="option-14-label"></p>
+    <div role="option" id="option-14" aria-labelledby="option-14-label"></div>
+    <p id="option-15-label"> </p>
+    <div role="option" id="option-15" aria-labelledby="option-15-label"></div>
+  </div>
+  <span id="treeitem-1" role="treeitem"></span>
+  <span id="treeitem-2" aria-label="" role="treeitem"></span>
+  <span id="treeitem-3" aria-label="Tree Item" role="treeitem"></span>
+  <p id="treeitem-4-label">Tree Item</p>
+  <span id="treeitem-4" aria-labelledby="treeitem-4-label" role="treeitem"></span>
+  <p id="treeitem-5-label"></p>
+  <span id="treeitem-5" aria-labelledby="treeitem-5-label" role="treeitem"></span>
+  <span id="treeitem-6" role="treeitem">Tree Item</span>
+  <div role="tablist">
+    <span id="tab-1" role="tab"></span>
+    <span id="tab-2" aria-label="" role="tab"></span>
+    <span id="tab-3" aria-label="Tab" role="tab"></span>
+    <p id="tab-4-label">Tab</p>
+    <span id="tab-4" aria-labelledby="tab-4-label" role="tab"></span>
+    <p id="tab-5-label"></p>
+    <span id="tab-5" aria-labelledby="tab-5-label" role="tab"></span>
+    <span id="tab-6" role="tab">Tab</span>
+  </div>
+  <label>Password: <input type="password" id="password-1"></label>
+  <input type="password" id="password-2">
+  <input type="password" id="password-3" aria-label="Password:">
+  <label>Password: </label><input type="password" id="password-4">
+  <label for="password-5">Password: </label><input type="password" id="password-5">
+  <label id="password-6-label">Password: </label><input type="password" id="password-6" aria-labelledby="password-6-label">
+  <label>Progress: <progress id="progress-1"></progress></label>
+  <progress id="progress-2"></progress>
+  <progress id="progress-3" aria-label="Progress:"></progress>
+  <label>Progress: </label><progress id="progress-4"></progress>
+  <label for="progress-5">Progress: </label><progress id="progress-5"></progress>
+  <label id="progress-6-label">Progress: </label><progress id="progress-6" aria-labelledby="progress-6-label"></progress>
+  <label>Progress: <div role="progressbar" id="progress-7"></div></label>
+  <label id="progress-8-label">Progress: <div role="progressbar" id="progress-8" aria-labelledby="progress-8-label"></div></label>
+  <div role="progressbar" id="progress-9"></div>
+  <div role="progressbar" id="progress-10" aria-label="Progress:"></div>
+  <label>Progress: </label><div role="progressbar" id="progress-11"></div>
+  <label for="progress-12">Progress: </label><div role="progressbar" id="progress-12"></div>
+  <label id="progress-13-label">Progress: </label><div role="progressbar" id="progress-13" aria-labelledby="progress-13-label"></div>
+  <button id="button-1">hello</button>
+  <button id="button-2"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" /></button>
+  <button id="button-3"></button>
+  <button id="button-4"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="" /></button>
+  <button id="button-5"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="hello" /></button>
+  <button id="button-6">&nbsp;</button>
+  <label>Button: <button id="button-7"></button></label>
+  <button id="button-8" aria-label="Button:"></button>
+  <label>Button: </label><button id="button-9"></button>
+  <label for="button-10">Button: </label><button id="button-10"></button>
+  <label id="button-11-label">Button: </label><button id="button-11" aria-labelledby="button-11-label"></button>
+  <label>Button: <div role="button" id="button-12"></div></label>
+  <label id="button-13-label">Button: <div role="button" id="button-13" aria-labelledby="button-13-label"></div></label>
+  <div role="button" id="button-14"></div>
+  <div role="button" id="button-15" aria-label="Button:"></div>
+  <label>Button: </label><div role="button" id="button-16"></div>
+  <label for="button-17">Button: </label><div role="button" id="button-17"></div>
+  <label id="button-18-label">Button: </label><div role="button" id="button-18" aria-labelledby="button-18-label"></div>
+  <label>Radio label: <input type="radio" id="radiobutton-1"></label>
+  <input type="radio" id="radiobutton-2">
+  <input type="radio" id="radiobutton-3" aria-label="Radio label:">
+  <label>Radio label: </label><input type="radio" id="radiobutton-4">
+  <label for="radiobutton-5">Radio label: </label><input type="radio" id="radiobutton-5">
+  <label id="radiobutton-6-label">Radio label: </label><input type="radio" id="radiobutton-6" aria-labelledby="radiobutton-6-label">
+  <div id="radiobutton-7" role="radio"></div>
+  <div id="radiobutton-8" aria-label="Radio label:" role="radio"></div>
+  <div id="radiobutton-9-label">Radio label: </div><div id="radiobutton-9" aria-labelledby="radiobutton-9-label" role="radio"></div>
+  <div role="menu">
+    <div id="menuitemradio-1" role="menuitemradio">hello</div>
+    <div id="menuitemradio-2" role="menuitemradio"></div>
+    <div id="menuitemradio-3" role="menuitemradio">&nbsp;</div>
+  </div>
+  <div role="rowheader" id="rowheader-8">Toy Story 3</div>
+  <div role="rowheader" id="rowheader-9"></div>
+  <div role="rowheader" id="rowheader-10">&nbsp;</div>
+  <div role="rowheader" id="rowheader-11" aria-label="Alladin"></div>
+  <div role="rowheader" id="rowheader-12" aria-label=""></div>
+  <div role="rowheader" id="rowheader-13" aria-label=" "></div>
+  <div role="rowheader" id="rowheader-14" aria-labelledby="columnheader-7-label"></div>
+  <label>Slider label: <input type="range" id="slider-1"></label>
+  <input type="range" id="slider-2">
+  <input type="range" id="slider-3" aria-label="Slider label:">
+  <label>Slider label: </label><input type="range" id="slider-4">
+  <label for="slider-5">Slider label: </label><input type="range" id="slider-5">
+  <label id="slider-6-label">Slider label: </label><input type="range" id="slider-6" aria-labelledby="slider-6-label">
+  <div id="slider-7" role="slider"></div>
+  <div id="slider-8" aria-label="Slider label:" role="slider"></div>
+  <div id="slider-9-label">Slider label: </div><div id="slider-9" aria-labelledby="slider-9-label" role="slider"></div>
+  <label>Spin button label: <input type="number" id="spinbutton-1"></label>
+  <input type="number" id="spinbutton-2">
+  <input type="number" id="spinbutton-3" aria-label="Spin button label:">
+  <label>Spin button label: </label><input type="number" id="spinbutton-4">
+  <label for="spinbutton-5">Spin button label: </label><input type="number" id="spinbutton-5">
+  <label id="spinbutton-6-label">Spin button label: </label><input type="number" id="spinbutton-6" aria-labelledby="spinbutton-6-label">
+  <div id="spinbutton-7" role="spinbutton"></div>
+  <div id="spinbutton-8" aria-label="Spin button label:" role="spinbutton"></div>
+  <div id="spinbutton-9-label">Spin button label: </div><div id="spinbutton-9" aria-labelledby="spinbutton-9-label" role="spinbutton"></div>
+  <div id="switch-1" role="switch"></div>
+  <div id="switch-2" aria-label="hello" role="switch"></div>
+  <div id="switch-3-label">hello</div><div id="switch-3" aria-labelledby="switch-3-label" role="switch"></div>
+  <label for="switch-4">hello</label><div id="switch-4" role="switch"></div>
+  <label>hello<div id="switch-5" role="switch"></div></label>
+  <label>Meter label: <meter id="meter-1"></meter></label>
+  <meter id="meter-2"></meter>
+  <meter id="meter-3" aria-label="Meter label:"></meter>
+  <label>Meter label: </label><meter id="meter-4"></meter>
+  <label for="meter-5">Meter label: </label><meter id="meter-5"></meter>
+  <label id="meter-6-label">Meter label: </label><meter id="meter-6" aria-labelledby="meter-6-label"></meter>
+  <div id="meter-7" role="meter"></div>
+  <div id="meter-8" aria-label="Meter label:" role="meter"></div>
+  <div id="meter-9-label">Meter label: </div><div id="meter-9" aria-labelledby="meter-9-label" role="meter"></div>
+  <button aria-pressed="true" id="togglebutton-1" >hello</button>
+  <button aria-pressed="true" id="togglebutton-2"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" /></button>
+  <button aria-pressed="true" id="togglebutton-3"></button>
+  <button aria-pressed="true" id="togglebutton-4"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="" /></button>
+  <button aria-pressed="true" id="togglebutton-5"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="hello" /></button>
+  <button aria-pressed="true" id="togglebutton-6">&nbsp;</button>
+  <label>Button: <button aria-pressed="true" id="togglebutton-7"></button></label>
+  <button aria-pressed="true" id="togglebutton-8" aria-label="Button:"></button>
+  <label>Button: </label><button aria-pressed="true" id="togglebutton-9"></button>
+  <label for="togglebutton-10">Button: </label><button aria-pressed="true" id="togglebutton-10"></button>
+  <label id="togglebutton-11-label">Button: </label><button aria-pressed="true" id="togglebutton-11" aria-labelledby="togglebutton-11-label"></button>
+  <label>Button: <div role="button" aria-pressed="true" id="togglebutton-12"></div></label>
+  <label id="togglebutton-13-label">Button: <div role="button" aria-pressed="true" id="togglebutton-13" aria-labelledby="togglebutton-13-label"></div></label>
+  <div role="button" aria-pressed="true" id="togglebutton-14"></div>
+  <div role="button" aria-pressed="true" id="togglebutton-15" aria-label="Button:"></div>
+  <label>Button: </label><div role="button" aria-pressed="true" id="togglebutton-16"></div>
+  <label for="togglebutton-17">Button: </label><div role="button" aria-pressed="true" id="togglebutton-17"></div>
+  <label id="togglebutton-18-label">Button: </label><div role="button" aria-pressed="true" id="togglebutton-18" aria-labelledby="togglebutton-18-label"></div>
+  <span id="toolbar-1" role="toolbar" aria-label="Toolbar"></span>
+  <span id="toolbar-2" role="toolbar"></span>
+  <p id="toolbar-3-label"></p>
+  <span id="toolbar-3" role="toolbar" aria-labelledby="toolbar-3-label"></span>
+  <p id="toolbar-4-label">Toolbar</p>
+  <span id="toolbar-4" role="toolbar" aria-labelledby="toolbar-4-label"></span>
+</body>
+</html>

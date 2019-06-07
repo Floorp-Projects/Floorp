@@ -19,13 +19,15 @@ const { FILTERS } = require("../constants");
 
 const TELEMETRY_AUDIT_ACTIVATED = "devtools.accessibility.audit_activated";
 const FILTER_LABELS = {
+  [FILTERS.ALL]: "accessibility.filter.all",
   [FILTERS.CONTRAST]: "accessibility.badge.contrast",
+  [FILTERS.TEXT_LABEL]: "accessibility.badge.textLabel",
 };
 
 class AccessibilityTreeFilter extends Component {
   static get propTypes() {
     return {
-      auditing: PropTypes.string.isRequired,
+      auditing: PropTypes.array.isRequired,
       filters: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
       walker: PropTypes.object.isRequired,
@@ -83,7 +85,7 @@ class AccessibilityTreeFilter extends Component {
         label: L10N.getStr(FILTER_LABELS[filterKey]),
         onClick: this.onClick.bind(this, filterKey),
         onKeyDown: this.onKeyDown.bind(this, filterKey),
-        busy: auditing === filterKey,
+        busy: auditing.includes(filterKey),
       }));
 
     return div({

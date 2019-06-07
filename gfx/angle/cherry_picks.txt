@@ -1,3 +1,19 @@
+commit ee49c7b031eaab9d9df23fa7fbc2fb5875397622
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Wed Jun 5 17:32:32 2019 -0700
+
+    Use execv instead of execve w/ environ.
+    
+    Some platforms don't want us messing with environ, and these seem to be
+    equivalent.
+    
+    Bug: angleproject:3506
+    Change-Id: I66804e8accc30421c1cd32c0eda750500e3ecb60
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1646887
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>
+    Reviewed-by: Shahbaz Youssefi <syoussefi@chromium.org>
+    Commit-Queue: Jamie Madill <jmadill@chromium.org>
+
 commit 1d5494fc3e856d4d722e266d2b2075debac5146f
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Thu Apr 25 14:57:26 2019 -0700

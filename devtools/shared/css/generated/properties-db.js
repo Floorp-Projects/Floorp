@@ -3284,6 +3284,7 @@ exports.CSS_PROPERTIES = {
       "text-decoration-style",
       "text-decoration-color",
       "initial-letter",
+      "text-decoration-width",
       "ime-mode",
       "scrollbar-width",
       "user-select",
@@ -10733,12 +10734,16 @@ exports.PREFERENCES = [
     "layout.css.scrollbar-color.enabled"
   ],
   [
-    "text-underline-offset",
-    "layout.css.text-underline-offset.enabled"
-  ],
-  [
     "translate",
     "layout.css.individual-transform.enabled"
+  ],
+  [
+    "text-decoration-width",
+    "layout.css.text-decoration-width.enabled"
+  ],
+  [
+    "text-underline-offset",
+    "layout.css.text-underline-offset.enabled"
   ],
   [
     "-moz-binding",

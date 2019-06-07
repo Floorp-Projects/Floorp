@@ -272,8 +272,8 @@ def target_tasks_mozilla_release(full_task_graph, parameters, graph_config):
 @_target_task('mozilla_esr60_tasks')
 def target_tasks_mozilla_esr60(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a promotable beta or release build
-    of desktop, plus android CI. The candidates build process involves a pipeline
-    of builds and signing, but does not include beetmover or balrog jobs."""
+    of desktop. The candidates build process involves a pipeline of builds and
+    signing, but does not include beetmover or balrog jobs."""
 
     def filter(task):
         if not filter_release_tasks(task, parameters):
@@ -284,11 +284,31 @@ def target_tasks_mozilla_esr60(full_task_graph, parameters, graph_config):
 
         platform = task.attributes.get('build_platform')
 
-        # Android is not built on esr.
+        # Android is not built on esr60.
         if platform and 'android' in platform:
             return False
 
         # All else was already filtered
+        return True
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('mozilla_esr68_tasks')
+def target_tasks_mozilla_esr68(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a promotable beta or release build
+    of desktop, plus android CI. The candidates build process involves a pipeline
+    of builds and signing, but does not include beetmover or balrog jobs."""
+
+    def filter(task):
+        if not filter_release_tasks(task, parameters):
+            return False
+
+        if not standard_filter(task, parameters):
+            return False
+
+        # Unlike esr60, we do want all kinds of fennec builds on esr68.
+
         return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]

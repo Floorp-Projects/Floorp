@@ -132,13 +132,12 @@ fn round_to_pagesize(size: usize) -> usize {
 fn active_resize(env: &Rkv) -> Result<(), StoreError> {
     let info = env.info()?;
     let current_size = info.map_size();
-    let size;
 
-    if current_size < INCREMENTAL_RESIZE_THRESHOLD {
-        size = current_size << 1;
+    let size = if current_size < INCREMENTAL_RESIZE_THRESHOLD {
+        current_size << 1
     } else {
-        size = current_size + INCREMENTAL_RESIZE_STEP;
-    }
+        current_size + INCREMENTAL_RESIZE_STEP
+    };
 
     env.set_map_size(size)?;
     Ok(())

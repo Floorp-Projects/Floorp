@@ -115,8 +115,6 @@ chrome/toolkit/skin/classic/mozapps/extensions/category-dictionaries.svg
 chrome/toolkit/skin/classic/mozapps/extensions/category-experiments.png
 chrome/toolkit/skin/classic/mozapps/extensions/dictionaryGeneric.svg
 chrome/toolkit/skin/classic/mozapps/extensions/experimentGeneric.png
-chrome/toolkit/skin/classic/mozapps/update/buttons.png
-chrome/toolkit/skin/classic/mozapps/update/downloadButtons.png
 components/FxAccountsPush.js
 crashreporter.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib
 crashreporter.app/Contents/Resources/English.lproj/MainMenuRTL.nib/classes.nib

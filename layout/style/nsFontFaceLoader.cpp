@@ -57,6 +57,11 @@ nsFontFaceLoader::nsFontFaceLoader(gfxUserFontEntry* aUserFontEntry,
   MOZ_ASSERT(mFontFaceSet,
              "We should get a valid FontFaceSet from the caller!");
   mStartTime = TimeStamp::Now();
+
+  // We add an explicit load block rather than just rely on the network
+  // request's block, since we need to do some OMT work after the load
+  // is finished before we unblock load.
+  mFontFaceSet->Document()->BlockOnload();
 }
 
 nsFontFaceLoader::~nsFontFaceLoader() {
@@ -71,6 +76,7 @@ nsFontFaceLoader::~nsFontFaceLoader() {
   }
   if (mFontFaceSet) {
     mFontFaceSet->RemoveLoader(this);
+    mFontFaceSet->Document()->UnblockOnload(false);
   }
 }
 
@@ -206,6 +212,11 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
   DropChannel();
 
+  if (mLoadTimer) {
+    mLoadTimer->Cancel();
+    mLoadTimer = nullptr;
+  }
+
   if (!mFontFaceSet) {
     // We've been canceled
     return aStatus;
@@ -257,42 +268,43 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     }
   }
 
+  mFontFaceSet->GetUserFontSet()->RecordFontLoadDone(aStringLen, doneTime);
+
   // The userFontEntry is responsible for freeing the downloaded data
   // (aString) when finished with it; the pointer is no longer valid
   // after FontDataDownloadComplete returns.
   // This is called even in the case of a failed download (HTTP 404, etc),
   // as there may still be data to be freed (e.g. an error page),
   // and we need to load the next source.
-  bool fontUpdate =
-      mUserFontEntry->FontDataDownloadComplete(aString, aStringLen, aStatus);
 
-  mFontFaceSet->GetUserFontSet()->RecordFontLoadDone(aStringLen, doneTime);
+  // FontDataDownloadComplete will load the platform font on a worker thread,
+  // and will call FontLoadComplete when it has finished its work.
+  mUserFontEntry->FontDataDownloadComplete(aString, aStringLen, aStatus, this);
+  return NS_SUCCESS_ADOPTED_DATA;
+}
+
+nsresult nsFontFaceLoader::FontLoadComplete() {
+  MOZ_ASSERT(NS_IsMainThread());
 
   // when new font loaded, need to reflow
-  if (fontUpdate) {
-    nsTArray<gfxUserFontSet*> fontSets;
-    mUserFontEntry->GetUserFontSets(fontSets);
-    for (gfxUserFontSet* fontSet : fontSets) {
-      nsPresContext* ctx = FontFaceSet::GetPresContextFor(fontSet);
-      if (ctx) {
-        // Update layout for the presence of the new font.  Since this is
-        // asynchronous, reflows will coalesce.
-        ctx->UserFontSetUpdated(mUserFontEntry);
-        LOG(("userfonts (%p) reflow for pres context %p\n", this, ctx));
-      }
+  nsTArray<gfxUserFontSet*> fontSets;
+  mUserFontEntry->GetUserFontSets(fontSets);
+  for (gfxUserFontSet* fontSet : fontSets) {
+    nsPresContext* ctx = FontFaceSet::GetPresContextFor(fontSet);
+    if (ctx) {
+      // Update layout for the presence of the new font.  Since this is
+      // asynchronous, reflows will coalesce.
+      ctx->UserFontSetUpdated(mUserFontEntry);
+      LOG(("userfonts (%p) reflow for pres context %p\n", this, ctx));
     }
   }
 
   MOZ_DIAGNOSTIC_ASSERT(mFontFaceSet);
   mFontFaceSet->RemoveLoader(this);
-  // done with font set
+  mFontFaceSet->Document()->UnblockOnload(false);
   mFontFaceSet = nullptr;
-  if (mLoadTimer) {
-    mLoadTimer->Cancel();
-    mLoadTimer = nullptr;
-  }
 
-  return NS_SUCCESS_ADOPTED_DATA;
+  return NS_OK;
 }
 
 // nsIRequestObserver
@@ -323,6 +335,7 @@ void nsFontFaceLoader::Cancel() {
 
   mUserFontEntry->LoadCanceled();
   mUserFontEntry = nullptr;
+  mFontFaceSet->Document()->UnblockOnload(false);
   mFontFaceSet = nullptr;
   if (mLoadTimer) {
     mLoadTimer->Cancel();
