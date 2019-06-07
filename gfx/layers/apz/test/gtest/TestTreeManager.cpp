@@ -115,8 +115,8 @@ TEST_F(APZCTreeManagerTester, Bug1198900) {
   manager->ContentReceivedInputBlock(blockId, /* preventDefault= */ true);
 }
 
-// This test checks that APZ clamps the scroll offset it composites even if
-// the main thread fails to do so. (The main thread will always clamp its
+// The next two tests check that APZ clamps the scroll offset it composites even
+// if the main thread fails to do so. (The main thread will always clamp its
 // scroll offset internally, but it may not send APZ the clamped version for
 // scroll offset synchronization reasons.)
 TEST_F(APZCTreeManagerTester, Bug1551582) {
@@ -144,6 +144,38 @@ TEST_F(APZCTreeManagerTester, Bug1551582) {
   // offset update for the clamped scroll position (200,200).
   ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
     aMetrics.SetScrollableRect(CSSRect(0, 0, 400, 400));
+  });
+  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+
+  // Check that APZ has clamped the scroll offset to (200,200) for us.
+  compositedScrollOffset = apzc->GetCompositedScrollOffset();
+  EXPECT_EQ(CSSPoint(200, 200), compositedScrollOffset);
+}
+TEST_F(APZCTreeManagerTester, Bug1557424) {
+  // The simple layer tree has a scrollable rect of 500x500 and a composition
+  // bounds of 200x200, leading to a scroll range of (0,0,300,300).
+  CreateSimpleScrollingLayer();
+  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+
+  // Simulate the main thread scrolling to the end of the scroll range.
+  ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
+    aMetrics.SetScrollOffset(CSSPoint(300, 300));
+    aMetrics.SetScrollGeneration(1);
+    aMetrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
+  });
+  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+
+  // Sanity check.
+  RefPtr<TestAsyncPanZoomController> apzc = ApzcOf(root);
+  CSSPoint compositedScrollOffset = apzc->GetCompositedScrollOffset();
+  EXPECT_EQ(CSSPoint(300, 300), compositedScrollOffset);
+
+  // Simulate the main thread expanding the composition bounds to 300x300 (and
+  // thereby shrinking the scroll range to (0,0,200,200) without sending a new
+  // scroll offset update for the clamped scroll position (200,200).
+  ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
+    aMetrics.SetCompositionBounds(ParentLayerRect(0, 0, 300, 300));
   });
   manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
 
