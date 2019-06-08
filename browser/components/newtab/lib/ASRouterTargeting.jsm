@@ -81,8 +81,8 @@ function CheckBrowserNeedsUpdate(updateInterval = FRECENT_SITES_UPDATE_INTERVAL)
       return new Promise((resolve, reject) => {
         const now = Date.now();
         const updateServiceListener = {
-          onCheckComplete(request, updates, updateCount) {
-            checker._value = updateCount > 0;
+          onCheckComplete(request, updates) {
+            checker._value = updates.length > 0;
             resolve(checker._value);
           },
           onError(request, update) {
