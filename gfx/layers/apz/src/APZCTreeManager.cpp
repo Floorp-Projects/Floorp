@@ -431,6 +431,9 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
             ++asyncZoomContainerNestingDepth;
           }
 
+          // Note that this check happens after the potential increment of
+          // asyncZoomContainerNestingDepth, to allow the root content
+          // metadata to be on the same node as the async zoom container.
           if (aLayerMetrics.Metrics().IsRootContent() &&
               asyncZoomContainerNestingDepth == 0) {
             haveRootContentOutsideAsyncZoomContainer = true;
@@ -3158,8 +3161,13 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
   if (AsyncPanZoomController* apzc = aNode->GetApzc()) {
     // If the node represents scrollable content, apply the async transform
     // from its APZC.
+    bool visualTransformIsInheritedFromAncestor =
+        apzc->IsRootContent() &&        /* we're the APZC whose visual transform
+                                           might be on the async zoom container */
+        mUsingAsyncZoomContainer &&     /* there is an async zoom container */
+        !aNode->IsAsyncZoomContainer(); /* it's not us */
     AsyncTransformComponents components =
-        mUsingAsyncZoomContainer && apzc->IsRootContent()
+        visualTransformIsInheritedFromAncestor
             ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
             : LayoutAndVisual;
     return aNode->GetTransform() *
