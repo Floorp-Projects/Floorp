@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.PopupWindow
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
@@ -67,6 +68,25 @@ class BrowserMenuTest {
         val recyclerAdapter = recyclerView.adapter!!
         assertNotNull(recyclerAdapter)
         assertEquals(2, recyclerAdapter.itemCount)
+    }
+
+    @Test
+    fun `endOfMenuAlwaysVisible will be forwarded to recyclerview layoutManager`() {
+        val items = listOf(
+            SimpleBrowserMenuItem("Hello") {},
+            SimpleBrowserMenuItem("World") {})
+
+        val adapter = spy(BrowserMenuAdapter(testContext, items))
+        val menu = BrowserMenu(adapter)
+
+        val anchor = Button(testContext)
+        val popup = menu.show(anchor, endOfMenuAlwaysVisible = true)
+
+        val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
+        assertNotNull(recyclerView)
+
+        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+        assertTrue(layoutManager.stackFromEnd)
     }
 
     @Test

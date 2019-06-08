@@ -32,14 +32,22 @@ class BrowserMenu internal constructor(
     private var currentPopup: PopupWindow? = null
     private var menuList: RecyclerView? = null
 
+    /**
+     * @param anchor the view on which to pin the popup window.
+     * @param orientation the preferred orientation to show the popup window.
+     * @param endOfMenuAlwaysVisible when is set to true makes sure the bottom of the menu is always visible otherwise,
+     *  the top of the menu is always visible.
+     */
     @SuppressLint("InflateParams")
-    fun show(anchor: View, orientation: Orientation = DOWN): PopupWindow {
+    fun show(anchor: View, orientation: Orientation = DOWN, endOfMenuAlwaysVisible: Boolean = false): PopupWindow {
         val view = LayoutInflater.from(anchor.context).inflate(R.layout.mozac_browser_menu, null)
 
         adapter.menu = this
 
         menuList = view.findViewById<RecyclerView>(R.id.mozac_browser_menu_recyclerView).apply {
-            layoutManager = LinearLayoutManager(anchor.context, RecyclerView.VERTICAL, false)
+            layoutManager = LinearLayoutManager(anchor.context, RecyclerView.VERTICAL, false).also {
+                it.stackFromEnd = endOfMenuAlwaysVisible
+            }
             adapter = this@BrowserMenu.adapter
         }
 

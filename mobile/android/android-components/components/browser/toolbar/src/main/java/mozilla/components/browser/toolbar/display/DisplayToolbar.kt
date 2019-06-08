@@ -138,10 +138,12 @@ internal class DisplayToolbar(
 
         setOnClickListener {
             menu = menuBuilder?.build(context)
+            val endAlwaysVisible = menuBuilder?.endOfMenuAlwaysVisible ?: false
             menu?.show(
                 anchor = this,
-                orientation = BrowserMenu.determineMenuOrientation(toolbar))
-
+                orientation = BrowserMenu.determineMenuOrientation(toolbar),
+                endOfMenuAlwaysVisible = endAlwaysVisible
+            )
             emitOpenMenuFact(menuBuilder?.extras)
         }
     }
