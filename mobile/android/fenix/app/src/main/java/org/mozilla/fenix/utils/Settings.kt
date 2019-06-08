@@ -7,6 +7,8 @@ package org.mozilla.fenix.utils
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
@@ -18,7 +20,10 @@ import java.security.InvalidParameterException
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  */
 @SuppressWarnings("TooManyFunctions")
-class Settings private constructor(context: Context) {
+class Settings private constructor(
+    context: Context,
+    private val isCrashReportEnabledInBuild: Boolean
+) {
 
     companion object {
         const val autoBounceMaximumCount = 2
@@ -28,9 +33,12 @@ class Settings private constructor(context: Context) {
 
         @JvmStatic
         @Synchronized
-        fun getInstance(context: Context): Settings {
+        fun getInstance(
+            context: Context,
+            isCrashReportEnabledInBuild: Boolean = BuildConfig.CRASH_REPORTING && Config.channel.isReleased
+        ): Settings {
             if (instance == null) {
-                instance = Settings(context.applicationContext)
+                instance = Settings(context.applicationContext, isCrashReportEnabledInBuild)
             }
             return instance ?: throw AssertionError("Instance cleared")
         }
@@ -52,8 +60,8 @@ class Settings private constructor(context: Context) {
         get() = preferences.getString(appContext.getPreferenceKey(R.string.pref_key_search_engine), "") ?: ""
 
     val isCrashReportingEnabled: Boolean
-        get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_crash_reporter), true) &&
-                BuildConfig.CRASH_REPORTING && Config.channel.isReleased
+        get() = isCrashReportEnabledInBuild &&
+                preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_crash_reporter), true)
 
     val isRemoteDebuggingEnabled: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_remote_debugging), false)
@@ -152,7 +160,8 @@ class Settings private constructor(context: Context) {
             else -> appContext.getString(R.string.preference_light_theme)
         }
 
-    private val autoBounceQuickActionSheetCount: Int
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal val autoBounceQuickActionSheetCount: Int
         get() = (preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action), 0))
 
     fun incrementAutomaticBounceQuickActionSheetCount() {

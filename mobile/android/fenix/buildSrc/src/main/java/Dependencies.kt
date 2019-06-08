@@ -26,6 +26,7 @@ private object Versions {
     const val androidx_recyclerview = "1.1.0-alpha06"
     const val androidx_lifecycle_savedstate = "1.0.0-alpha01"
     const val androidx_testing = "1.1.0-alpha08"
+    const val androidx_test_ext = "1.0.0"
     const val androidx_core = "1.1.0-rc01"
     const val androidx_transition = "1.1.0-rc02"
     const val google_material = "1.1.0-alpha07"
@@ -131,6 +132,7 @@ object Deps {
     const val mozilla_support_base = "org.mozilla.components:support-base:${Versions.mozilla_android_components}"
     const val mozilla_support_ktx = "org.mozilla.components:support-ktx:${Versions.mozilla_android_components}"
     const val mozilla_support_rustlog = "org.mozilla.components:support-rustlog:${Versions.mozilla_android_components}"
+    const val mozilla_support_test = "org.mozilla.components:support-test:${Versions.mozilla_android_components}"
 
     const val sentry = "io.sentry:sentry-android:${Versions.sentry}"
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"
@@ -187,6 +189,7 @@ object Deps {
     const val uiautomator = "com.android.support.test.uiautomator:uiautomator-v18:${Versions.uiautomator}"
     const val robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     const val fragment_testing = "androidx.fragment:fragment-testing:${Versions.androidx_testing}"
+    const val androidx_junit = "androidx.test.ext:junit:${Versions.androidx_test_ext}"
     const val places_forUnitTests = "org.mozilla.appservices:places-forUnitTests:${Versions.mozilla_appservices}"
 
     const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${Versions.google_ads_id_version}"
