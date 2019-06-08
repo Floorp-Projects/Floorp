@@ -92,4 +92,7 @@ window.addEventListener("contextmenu", (e) => {
 
   goUpdateGlobalEditMenuItems(true);
   popup.openPopupAtScreen(e.screenX, e.screenY, true);
+  // Don't show any other context menu at the same time. There can be a
+  // context menu from an ancestor too but we only want to show this one.
+  e.preventDefault();
 });

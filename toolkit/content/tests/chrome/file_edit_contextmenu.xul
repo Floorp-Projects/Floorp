@@ -23,8 +23,15 @@
   <command id="cmd_switchTextDirection" oncommand="goDoCommand('cmd_switchTextDirection');"/>
 </commandset>
 
+<menupopup id="outer-context-menu">
+  <menuseparator id="customizeMailToolbarMenuSeparator"/>
+  <menuitem id="hello" label="Hello" accesskey="H"/>
+</menupopup>
+
+<hbox context="outer-context-menu">
 <html:textarea />
 <html:input />
 <textbox is="search-textbox"/>
+</hbox>
 
 </window>
