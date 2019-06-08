@@ -13,10 +13,19 @@
           'type': 'none',
           'dependencies': [
             'lib/ckfw/builtins/builtins.gyp:nssckbi',
-            'lib/freebl/freebl.gyp:freebl3',
             'lib/softoken/softoken.gyp:softokn3',
           ],
           'conditions': [
+            [ 'OS=="solaris" and target_arch=="sparc64"', {
+              'dependencies': [
+                'lib/freebl/freebl.gyp:freebl_64int_3',
+                'lib/freebl/freebl.gyp:freebl_64fpu_3',
+              ],
+            }, {
+              'dependencies': [
+                'lib/freebl/freebl.gyp:freebl3',
+              ],
+            }],
             [ 'moz_fold_libs==0', {
               'dependencies': [
                 'lib/nss/nss.gyp:nss3',

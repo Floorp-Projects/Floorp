@@ -428,6 +428,9 @@ of the attribute codes:
 	<listitem>
 <para><command>J</command> (as an object signer)</para>
 	</listitem>
+	<listitem>
+<para><command>I</command> (as an IPSEC user)</para>
+	</listitem>
 	</itemizedlist></listitem>
       </varlistentry>
 
