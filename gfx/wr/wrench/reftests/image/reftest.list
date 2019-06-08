@@ -1,12 +1,13 @@
-# Some tests in this file skipped on debug Android because of panic,
-# GL error 502 at tex_sub_image_3d_pbo. These are marked with skip_on(android)
-# or skip_on(android,debug). Additionally, the ones marked skip_on(android)
-# fail in opt builds.
+# Some tests in this file skipped on debug Android emulator because of panic,
+# GL error 502 at tex_sub_image_3d_pbo. These are marked with skip_on(android,emulator)
+# or skip_on(android,debug,emulator). Additionally, the ones marked skip_on(android,emulator)
+# fail in opt builds. The ones marked skip_on(android) are like skip_on(android,emulator)
+# but also fail on a Pixel2 in both debug and release.
 
-skip_on(android) == tile-size.yaml tile-size-ref.yaml
-skip_on(android) == very-big.yaml very-big-ref.yaml
+skip_on(android,emulator) == tile-size.yaml tile-size-ref.yaml
+skip_on(android,emulator) == very-big.yaml very-big-ref.yaml
 == very-big-tile-size.yaml very-big-tile-size-ref.yaml
-skip_on(android,debug) == tile-with-spacing.yaml tile-with-spacing-ref.yaml
+skip_on(android,debug,emulator) == tile-with-spacing.yaml tile-with-spacing-ref.yaml
 skip_on(android) fuzzy(1,331264) == tile-repeat-prim-or-decompose.yaml tile-repeat-prim-or-decompose-ref.yaml
 platform(linux,mac) options(allow-mipmaps) == downscale.yaml downscale.png
 skip_on(android) == segments.yaml segments.png

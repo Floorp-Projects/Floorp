@@ -1,5 +1,5 @@
 # Test that a red -> green -> red rect correctly invalidates each frame
-# Skipped on debug Android debug because of panic,
+# Skipped on debug Android emulator because of panic,
 # GL error 502 at blit_framebuffer. It also fails on
-# Android release.
-skip_on(android) dirty([(50,50):256x256]) one-rounded-rect.yaml dirty([(50,50):256x256]) one-rounded-rect-green.yaml dirty([(50,50):256x256]) one-rounded-rect.yaml == one-rounded-rect.yaml
+# Android release emulator.
+skip_on(android,emulator) dirty([(50,50):256x256]) one-rounded-rect.yaml dirty([(50,50):256x256]) one-rounded-rect-green.yaml dirty([(50,50):256x256]) one-rounded-rect.yaml == one-rounded-rect.yaml
