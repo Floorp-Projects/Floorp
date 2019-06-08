@@ -155,6 +155,8 @@ already_AddRefed<SourceSurface> DrawTargetD2D1::IntoLuminanceSource(
     return DrawTarget::IntoLuminanceSource(aLuminanceType, aOpacity);
   }
 
+  Flush();
+
   mLuminanceEffect->SetInput(0, mBitmap);
 
   RefPtr<ID2D1Image> luminanceOutput;
