@@ -1,8 +1,8 @@
 # Dockerfile for running fuzzing tests.
-#
+# Used for ASAN and Coverity based static-analysis.
 # Note that when running this, you need to add `--cap-add SYS_PTRACE` to the
 # docker invocation or ASAN won't work.
-# On taskcluster use `features: ["allowPtrace"]`.
+# On taskcluster for ASAN use `features: ["allowPtrace"]`.
 # See https://github.com/google/sanitizers/issues/764#issuecomment-276700920
 FROM ubuntu:18.04
 LABEL maintainer="Martin Thomson <martin.thomson@gmail.com>"
@@ -28,10 +28,12 @@ RUN apt-get update \
     mercurial \
     ninja-build \
     pkg-config \
+    python-pip \
     valgrind \
     zlib1g-dev \
  && rm -rf /var/lib/apt/lists/* \
- && apt-get autoremove -y && apt-get clean -y
+ && apt-get autoremove -y && apt-get clean -y \
+ && pip install requests
 
 ENV SHELL /bin/bash
 ENV USER worker

@@ -15,6 +15,47 @@
 #include "softoken.h"
 
 /*
+ * ******************** Error mapping *******************************
+ */
+/*
+ * map all the SEC_ERROR_xxx error codes that may be returned by freebl
+ * functions to CKR_xxx.  return CKR_DEVICE_ERROR by default for backward
+ * compatibility.
+ */
+CK_RV
+sftk_MapCryptError(int error)
+{
+    switch (error) {
+        case SEC_ERROR_INVALID_ARGS:
+        case SEC_ERROR_BAD_DATA: /* MP_RANGE gets mapped to this */
+            return CKR_ARGUMENTS_BAD;
+        case SEC_ERROR_INPUT_LEN:
+            return CKR_DATA_LEN_RANGE;
+        case SEC_ERROR_OUTPUT_LEN:
+            return CKR_BUFFER_TOO_SMALL;
+        case SEC_ERROR_LIBRARY_FAILURE:
+            return CKR_GENERAL_ERROR;
+        case SEC_ERROR_NO_MEMORY:
+            return CKR_HOST_MEMORY;
+        case SEC_ERROR_BAD_SIGNATURE:
+            return CKR_SIGNATURE_INVALID;
+        case SEC_ERROR_INVALID_KEY:
+            return CKR_KEY_SIZE_RANGE;
+        case SEC_ERROR_BAD_KEY:        /* an EC public key that fails validation */
+            return CKR_KEY_SIZE_RANGE; /* the closest error code */
+        case SEC_ERROR_UNSUPPORTED_EC_POINT_FORM:
+            return CKR_TEMPLATE_INCONSISTENT;
+        case SEC_ERROR_UNSUPPORTED_KEYALG:
+            return CKR_MECHANISM_INVALID;
+        case SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE:
+            return CKR_DOMAIN_PARAMS_INVALID;
+        /* key pair generation failed after max number of attempts */
+        case SEC_ERROR_NEED_RANDOM:
+            return CKR_FUNCTION_FAILED;
+    }
+    return CKR_DEVICE_ERROR;
+}
+/*
  * ******************** Attribute Utilities *******************************
  */
 
