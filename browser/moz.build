@@ -11,10 +11,6 @@ SPHINX_TREES['browser'] = 'docs'
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
 
-EXTRA_COMPONENTS += [
-    'l10n-registry.manifest',
-]
-
 DIRS += [
     'actors',
     'base',
@@ -101,6 +97,3 @@ with Files("installer/**"):
 
 with Files("tools/**"):
     BUG_COMPONENT = ("Firefox", "General")
-
-with Files('l10n-registry.manifest'):
-    BUG_COMPONENT = ('Core', 'Localization')

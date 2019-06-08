@@ -6,10 +6,6 @@
 
 SPHINX_TREES['/toolkit'] = 'docs'
 
-EXTRA_COMPONENTS += [
-    'l10n-registry.manifest',
-]
-
 DIRS += [
     'actors',
     'components',
@@ -81,6 +77,3 @@ with Files('mozapps/preferences/**'):
 
 with Files('pluginproblem/**'):
     BUG_COMPONENT = ('Core', 'Plug-ins')
-
-with Files('l10n-registry.manifest'):
-    BUG_COMPONENT = ('Core', 'Localization')
