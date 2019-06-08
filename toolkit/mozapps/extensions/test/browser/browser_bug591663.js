@@ -30,6 +30,11 @@ var gExtensionProperties = {
   type: "extension",
 };
 
+// Not implemented yet on HTML about:addons (Bug 1550911).
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 async function test() {
   waitForExplicitFinish();
 

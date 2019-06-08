@@ -4,6 +4,13 @@
 
 // Tests the detail view of plugins
 
+// This test is testing plugin preferences in the XUL about:addons UI, the HTML about:addons
+// doesn't yet supported (tracked by Bug 1552537) and this test cases will be part of the
+// HTML about:addons test files.
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 var gManagerWindow;
 
 async function test() {

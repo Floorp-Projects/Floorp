@@ -7,6 +7,12 @@
 
 var gCategoryUtilities;
 
+// Not implemented yet on HTML about:addons (Bug 1552184), once supported
+// this test case will be included in the HTML about:addons test files.
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 function test() {
   waitForExplicitFinish();
 

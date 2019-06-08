@@ -8,6 +8,13 @@
 var gManagerWindow;
 var gProvider;
 
+// This test is testing XUL about:addons UI (the HTML about:addons has its
+// own test files for these test cases, "Update all now" has been deprecated
+// and not supported in HTML about:addons).
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 async function test() {
   waitForExplicitFinish();
 

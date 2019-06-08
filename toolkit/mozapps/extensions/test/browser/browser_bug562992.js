@@ -16,6 +16,12 @@ var gInstall;
 
 const EXTENSION_NAME = "Wunderbar";
 
+// This test is testing XUL about:addons UI (the HTML about:addons has its
+// own test files for these test cases).
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 async function test() {
   waitForExplicitFinish();
 
