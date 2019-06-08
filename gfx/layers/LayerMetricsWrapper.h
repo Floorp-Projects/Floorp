@@ -416,12 +416,7 @@ class MOZ_STACK_CLASS LayerMetricsWrapper final {
   Maybe<ScrollableLayerGuid::ViewID> IsAsyncZoomContainer() const {
     MOZ_ASSERT(IsValid());
 
-    Maybe<ScrollableLayerGuid::ViewID> result = mLayer->IsAsyncZoomContainer();
-
-    // The async zoom container layer should not have any scroll metadata.
-    MOZ_ASSERT(result.isNothing() || mLayer->GetScrollMetadataCount() == 0);
-
-    return result;
+    return mLayer->IsAsyncZoomContainer();
   }
 
   // Expose an opaque pointer to the layer. Mostly used for printf
