@@ -200,10 +200,23 @@ add_task(async function browseraction_contextmenu_manage_extension() {
     await checkVisibility(menu, true);
 
     info(`Choosing 'Manage Extension' in ${menuId} should load options`);
-    let optionsLoaded = extension.awaitMessage("options-loaded");
+    let addonManagerPromise = BrowserTestUtils.waitForNewTab(win.gBrowser, "about:addons", true);
     let manageExtension = menu.querySelector(".customize-context-manageExtension");
     await closeChromeContextMenu(menuId, manageExtension, win);
-    await optionsLoaded;
+    let managerWindow = (await addonManagerPromise).linkedBrowser.contentWindow;
+    if (managerWindow.useHtmlViews) {
+      // Check the UI to make sure that the correct view is loaded.
+      is(managerWindow.gViewController.currentViewId,
+         `addons://detail/${encodeURIComponent(id)}`,
+         "Expected extension details view in about:addons");
+      // In HTML about:addons, the default view does not show the inline
+      // options browser, so we should not receive an "options-loaded" event.
+      // (if we do, the test will fail due to the unexpected message).
+    } else {
+      info("Waiting for inline options page in XUL about:addons");
+      // In XUL about:addons, the inline options page is shown by default.
+      await extension.awaitMessage("options-loaded");
+    }
 
     info(`Remove the opened tab, and await customize mode to be restored if necessary`);
     let tab = win.gBrowser.selectedTab;
