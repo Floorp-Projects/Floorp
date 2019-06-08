@@ -1,0 +1,9 @@
+#  CAVS 17.8
+#  "SHA-1 Monte" information for "ppcle-nss-64"
+#  SHA tests are configured for BYTE oriented implementations
+#  Generated on Fri Jul 17 16:27:22 2015
+
+[L = 20]
+
+Seed = 15592184db44eeacefa241af37193604de70874c
+

@@ -21,10 +21,12 @@ tasks:
         $if: 'repository.url[-1] == "/"'
         then: {$eval: 'repository.url[:-1]'}
         else: {$eval: 'repository.url'}
+      # scheduler id
+      schedulerId: 'nss-level-${repository.level}'
     in:
       taskId: '${ownTaskId}'
       taskGroupId: '${ownTaskId}'
-      schedulerId: 'nss-level-${repository.level}'
+      schedulerId: '${schedulerId}'
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 day'}
       expires: {$fromNow: '14 days'}
@@ -56,6 +58,7 @@ tasks:
           TC_OWNER: "${push.owner}"
           TC_SOURCE: "${repository.url}"
           TC_PROJECT: ${repository.project}
+          TC_SCHEDULER_ID: "${schedulerId}"
           NSS_PUSHLOG_ID: '${push.pushlog_id}'
           NSS_HEAD_REPOSITORY: '${repository.url}'
           NSS_HEAD_REVISION: '${push.revision}'
