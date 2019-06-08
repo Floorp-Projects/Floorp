@@ -593,14 +593,13 @@ static bool AppendValueAsString(JSContext* aCx, nsTArray<nsString>& aValues,
 static void ReportInvalidPropertyValueToConsole(
     nsCSSPropertyID aProperty, const nsAString& aInvalidPropertyValue,
     dom::Document* aDoc) {
-  const nsString& invalidValue = PromiseFlatString(aInvalidPropertyValue);
-  const NS_ConvertASCIItoUTF16 propertyName(
-      nsCSSProps::GetStringValue(aProperty));
-  const char16_t* params[] = {invalidValue.get(), propertyName.get()};
+  AutoTArray<nsString, 2> params;
+  params.AppendElement(aInvalidPropertyValue);
+  CopyASCIItoUTF16(nsCSSProps::GetStringValue(aProperty),
+                   *params.AppendElement());
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Animation"), aDoc,
-      nsContentUtils::eDOM_PROPERTIES, "InvalidKeyframePropertyValue", params,
-      ArrayLength(params));
+      nsContentUtils::eDOM_PROPERTIES, "InvalidKeyframePropertyValue", params);
 }
 
 /**

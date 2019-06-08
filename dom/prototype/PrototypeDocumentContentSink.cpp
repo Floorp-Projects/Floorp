@@ -566,12 +566,12 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
           // outside the prolog, like it used to. Issue a warning.
 
           if (piProto->mTarget.EqualsLiteral("xml-stylesheet")) {
-            const char16_t* params[] = {piProto->mTarget.get()};
+            AutoTArray<nsString, 1> params = {piProto->mTarget};
 
             nsContentUtils::ReportToConsole(
                 nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XUL Document"),
                 nullptr, nsContentUtils::eXUL_PROPERTIES, "PINotInProlog",
-                params, ArrayLength(params), docURI);
+                params, docURI);
           }
 
           nsIContent* parent = element.get();

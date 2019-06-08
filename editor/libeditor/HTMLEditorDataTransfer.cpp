@@ -1006,12 +1006,12 @@ nsresult HTMLEditor::BlobReader::OnResult(const nsACString& aResult) {
 }
 
 nsresult HTMLEditor::BlobReader::OnError(const nsAString& aError) {
-  const nsPromiseFlatString& flat = PromiseFlatString(aError);
-  const char16_t* error = flat.get();
+  AutoTArray<nsString, 1> error;
+  error.AppendElement(aError);
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Editor"),
       mPointToInsert.GetContainer()->OwnerDoc(),
-      nsContentUtils::eDOM_PROPERTIES, "EditorFileDropFailed", &error, 1);
+      nsContentUtils::eDOM_PROPERTIES, "EditorFileDropFailed", error);
   return NS_OK;
 }
 

@@ -419,16 +419,16 @@ size_t XMLHttpRequestMainThread::SizeOfEventTargetIncludingThis(
   // - lots
 }
 
-static void LogMessage(const char* aWarning, nsPIDOMWindowInner* aWindow,
-                       const char16_t** aParams = nullptr,
-                       uint32_t aParamCount = 0) {
+static void LogMessage(
+    const char* aWarning, nsPIDOMWindowInner* aWindow,
+    const nsTArray<nsString>& aParams = nsTArray<nsString>()) {
   nsCOMPtr<Document> doc;
   if (aWindow) {
     doc = aWindow->GetExtantDoc();
   }
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), doc,
-      nsContentUtils::eDOM_PROPERTIES, aWarning, aParams, aParamCount);
+      nsContentUtils::eDOM_PROPERTIES, aWarning, aParams);
 }
 
 Document* XMLHttpRequestMainThread::GetResponseXML(ErrorResult& aRv) {
@@ -3015,10 +3015,9 @@ void XMLHttpRequestMainThread::SetRequestHeader(const nsACString& aName,
   bool isPrivilegedCaller = IsSystemXHR();
   bool isForbiddenHeader = nsContentUtils::IsForbiddenRequestHeader(aName);
   if (!isPrivilegedCaller && isForbiddenHeader) {
-    NS_ConvertUTF8toUTF16 name(aName);
-    const char16_t* params[] = {name.get()};
-    LogMessage("ForbiddenHeaderWarning", GetOwner(), params,
-               ArrayLength(params));
+    AutoTArray<nsString, 1> params;
+    CopyUTF8toUTF16(aName, *params.AppendElement());
+    LogMessage("ForbiddenHeaderWarning", GetOwner(), params);
     return;
   }
 

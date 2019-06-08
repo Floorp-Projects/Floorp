@@ -39,27 +39,28 @@ NS_IMPL_ISUPPORTS_INHERITED(nsMathMLElement, nsMathMLElementBase, Link)
 static nsresult WarnDeprecated(const char16_t* aDeprecatedAttribute,
                                const char16_t* aFavoredAttribute,
                                Document* aDocument) {
-  const char16_t* argv[] = {aDeprecatedAttribute, aFavoredAttribute};
+  AutoTArray<nsString, 2> argv;
+  argv.AppendElement(aDeprecatedAttribute);
+  argv.AppendElement(aFavoredAttribute);
   return nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, NS_LITERAL_CSTRING("MathML"), aDocument,
-      nsContentUtils::eMATHML_PROPERTIES, "DeprecatedSupersededBy", argv, 2);
+      nsContentUtils::eMATHML_PROPERTIES, "DeprecatedSupersededBy", argv);
 }
 
 static nsresult ReportLengthParseError(const nsString& aValue,
                                        Document* aDocument) {
-  const char16_t* arg = aValue.get();
+  AutoTArray<nsString, 1> arg = {aValue};
   return nsContentUtils::ReportToConsole(
       nsIScriptError::errorFlag, NS_LITERAL_CSTRING("MathML"), aDocument,
-      nsContentUtils::eMATHML_PROPERTIES, "LengthParsingError", &arg, 1);
+      nsContentUtils::eMATHML_PROPERTIES, "LengthParsingError", arg);
 }
 
 static nsresult ReportParseErrorNoTag(const nsString& aValue, nsAtom* aAtom,
                                       Document* aDocument) {
-  const char16_t* argv[] = {aValue.get(), aAtom->GetUTF16String()};
+  AutoTArray<nsString, 2> argv = {aValue, nsDependentAtomString(aAtom)};
   return nsContentUtils::ReportToConsole(
       nsIScriptError::errorFlag, NS_LITERAL_CSTRING("MathML"), aDocument,
-      nsContentUtils::eMATHML_PROPERTIES, "AttributeParsingErrorNoTag", argv,
-      2);
+      nsContentUtils::eMATHML_PROPERTIES, "AttributeParsingErrorNoTag", argv);
 }
 
 nsMathMLElement::nsMathMLElement(

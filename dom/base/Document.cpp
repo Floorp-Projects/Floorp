@@ -2702,7 +2702,8 @@ static void WarnIfSandboxIneffective(nsIDocShell* aDocShell,
     nsContentUtils::ReportToConsole(
         nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Iframe Sandbox"),
         parentDocument, nsContentUtils::eSECURITY_PROPERTIES,
-        "BothAllowScriptsAndSameOriginPresent", nullptr, 0, iframeUri);
+        "BothAllowScriptsAndSameOriginPresent", nsTArray<nsString>(),
+        iframeUri);
   }
 }
 
@@ -8909,8 +8910,7 @@ void Document::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
       // Instead of implying a call to document.open(), ignore the call.
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM Events"), this,
-          nsContentUtils::eDOM_PROPERTIES, "DocumentWriteIgnored", nullptr, 0,
-          mDocumentURI);
+          nsContentUtils::eDOM_PROPERTIES, "DocumentWriteIgnored");
       return;
     }
     // The spec doesn't tell us to ignore opens from here, but we need to
@@ -8927,8 +8927,7 @@ void Document::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
       // Instead of implying a call to document.open(), ignore the call.
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM Events"), this,
-          nsContentUtils::eDOM_PROPERTIES, "DocumentWriteIgnored", nullptr, 0,
-          mDocumentURI);
+          nsContentUtils::eDOM_PROPERTIES, "DocumentWriteIgnored");
       return;
     }
 
@@ -11980,10 +11979,9 @@ bool Document::HasWarnedAbout(DocumentWarnings aWarning) const {
   return mDocWarningWarnedAbout[aWarning];
 }
 
-void Document::WarnOnceAbout(DocumentWarnings aWarning,
-                             bool asError /* = false */,
-                             const char16_t** aParams /* = nullptr */,
-                             uint32_t aParamsLength /* = 0 */) const {
+void Document::WarnOnceAbout(
+    DocumentWarnings aWarning, bool asError /* = false */,
+    const nsTArray<nsString>& aParams /* = empty array */) const {
   MOZ_ASSERT(NS_IsMainThread());
   if (HasWarnedAbout(aWarning)) {
     return;
@@ -11993,8 +11991,7 @@ void Document::WarnOnceAbout(DocumentWarnings aWarning,
       asError ? nsIScriptError::errorFlag : nsIScriptError::warningFlag;
   nsContentUtils::ReportToConsole(flags, NS_LITERAL_CSTRING("DOM Core"), this,
                                   nsContentUtils::eDOM_PROPERTIES,
-                                  kDocumentWarnings[aWarning], aParams,
-                                  aParamsLength);
+                                  kDocumentWarnings[aWarning], aParams);
 }
 
 mozilla::dom::ImageTracker* Document::ImageTracker() {

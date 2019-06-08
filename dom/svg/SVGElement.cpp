@@ -2167,11 +2167,11 @@ void SVGElement::StringListAttributesInfo::Reset(uint8_t aAttrEnum) {
 nsresult SVGElement::ReportAttributeParseFailure(Document* aDocument,
                                                  nsAtom* aAttribute,
                                                  const nsAString& aValue) {
-  const nsString& attributeValue = PromiseFlatString(aValue);
-  const char16_t* strings[] = {aAttribute->GetUTF16String(),
-                               attributeValue.get()};
+  AutoTArray<nsString, 2> strings;
+  strings.AppendElement(nsDependentAtomString(aAttribute));
+  strings.AppendElement(aValue);
   return SVGContentUtils::ReportToConsole(aDocument, "AttributeParseWarning",
-                                          strings, ArrayLength(strings));
+                                          strings);
 }
 
 void SVGElement::RecompileScriptEventListeners() {

@@ -13,17 +13,15 @@ namespace mozilla {
 template <uint32_t N>
 nsresult AnimationPerformanceWarning::ToLocalizedStringWithIntParams(
     const char* aKey, nsAString& aLocalizedString) const {
-  nsAutoString strings[N];
-  const char16_t* charParams[N];
+  AutoTArray<nsString, N> strings;
 
   MOZ_DIAGNOSTIC_ASSERT(mParams->Length() == N);
   for (size_t i = 0, n = mParams->Length(); i < n; i++) {
-    strings[i].AppendInt((*mParams)[i]);
-    charParams[i] = strings[i].get();
+    strings.AppendElement()->AppendInt((*mParams)[i]);
   }
 
   return nsContentUtils::FormatLocalizedString(
-      nsContentUtils::eLAYOUT_PROPERTIES, aKey, charParams, aLocalizedString);
+      nsContentUtils::eLAYOUT_PROPERTIES, aKey, strings, aLocalizedString);
 }
 
 bool AnimationPerformanceWarning::ToLocalizedString(

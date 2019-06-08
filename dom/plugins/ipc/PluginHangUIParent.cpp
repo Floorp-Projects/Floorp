@@ -140,10 +140,9 @@ bool PluginHangUIParent::Init(const nsString& aPluginName) {
   CommandLine commandLine(exePath.value());
 
   nsAutoString localizedStr;
-  const char16_t* formatParams[] = {aPluginName.get()};
-  rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                             "PluginHangUIMessage",
-                                             formatParams, localizedStr);
+  rv = nsContentUtils::FormatLocalizedString(
+      localizedStr, nsContentUtils::eDOM_PROPERTIES, "PluginHangUIMessage",
+      aPluginName);
   if (NS_FAILED(rv)) {
     return false;
   }
