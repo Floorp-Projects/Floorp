@@ -29,6 +29,8 @@ FINAL_TARGET_FILES.actors += [
     'ClickHandlerChild.jsm',
     'ContentSearchChild.jsm',
     'ContextMenuChild.jsm',
+    'ContextMenuParent.jsm',
+    'ContextMenuSpecialProcessChild.jsm',
     'DOMFullscreenChild.jsm',
     'FormValidationChild.jsm',
     'LightweightThemeChild.jsm',
