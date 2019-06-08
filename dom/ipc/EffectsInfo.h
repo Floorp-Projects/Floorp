@@ -19,10 +19,8 @@ namespace dom {
  *       with information on clipping and scaling.
  */
 class EffectsInfo {
-public:
-  EffectsInfo() {
-    *this = EffectsInfo::FullyHidden();
-  }
+ public:
+  EffectsInfo() { *this = EffectsInfo::FullyHidden(); }
   static EffectsInfo FullyVisible() { return EffectsInfo{true}; }
   static EffectsInfo FullyHidden() { return EffectsInfo{false}; }
 
@@ -37,8 +35,8 @@ public:
    * TODO: Add information for ancestor scaling and clipping.
    */
 
-private:
-  explicit EffectsInfo(bool aVisible) : mVisible(aVisible) { }
+ private:
+  explicit EffectsInfo(bool aVisible) : mVisible(aVisible) {}
 };
 
 }  // namespace dom

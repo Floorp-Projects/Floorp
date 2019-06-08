@@ -12,7 +12,7 @@
 #include "mozilla/ipc/ProtocolTypes.h"
 #include "mozilla/ipc/ProtocolUtils.h"  // for IToplevelProtocol
 #include "mozilla/StaticPrefs.h"
-#include "mozilla/TimeStamp.h"          // for TimeStamp
+#include "mozilla/TimeStamp.h"  // for TimeStamp
 #include "mozilla/Unused.h"
 #include "ProcessUtils.h"
 #include "VRChild.h"

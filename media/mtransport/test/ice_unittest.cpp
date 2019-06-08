@@ -1000,9 +1000,8 @@ class IceTestPeer : public sigslot::has_slots<> {
       for (size_t i = 0; i < stream_counter_; ++i) {
         if (GetStream_s(i) == stream) {
           ASSERT_GT(remote_->stream_counter_, i);
-          nsresult res =
-              remote_->GetStream_s(i)->ParseTrickleCandidate(candidate, ufrag,
-                                                             "");
+          nsresult res = remote_->GetStream_s(i)->ParseTrickleCandidate(
+              candidate, ufrag, "");
           ASSERT_TRUE(NS_SUCCEEDED(res));
           return;
         }
@@ -1229,7 +1228,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void ParseCandidate(size_t i, const std::string& candidate,
-                      const std::string &mdns_addr) {
+                      const std::string& mdns_addr) {
     test_utils_->sts_target()->Dispatch(
         WrapRunnable(this, &IceTestPeer::ParseCandidate_s, i, candidate,
                      mdns_addr),

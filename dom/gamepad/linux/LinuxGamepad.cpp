@@ -343,8 +343,9 @@ void StopGamepadMonitoring() {
   gService = nullptr;
 }
 
-void SetGamepadLightIndicatorColor(uint32_t aControllerIdx, uint32_t aLightColorIndex,
-    uint8_t aRed, uint8_t aGreen, uint8_t aBlue) {
+void SetGamepadLightIndicatorColor(uint32_t aControllerIdx,
+                                   uint32_t aLightColorIndex, uint8_t aRed,
+                                   uint8_t aGreen, uint8_t aBlue) {
   // TODO: Bug 1523355.
   NS_WARNING("Linux doesn't support gamepad light indicator.");
 }

@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/ContentClient.h"
-#include "BasicLayers.h"            // for BasicLayerManager
-#include "gfxContext.h"             // for gfxContext, etc
-#include "gfxPlatform.h"            // for gfxPlatform
-#include "gfxEnv.h"                 // for gfxEnv
+#include "BasicLayers.h"  // for BasicLayerManager
+#include "gfxContext.h"   // for gfxContext, etc
+#include "gfxPlatform.h"  // for gfxPlatform
+#include "gfxEnv.h"       // for gfxEnv
 
 #include "gfxPoint.h"               // for IntSize, gfxPoint
 #include "gfxUtils.h"               // for gfxUtils

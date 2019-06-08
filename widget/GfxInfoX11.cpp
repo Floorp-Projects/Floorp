@@ -55,8 +55,8 @@ void GfxInfo::AddCrashReportAnnotations() {
       CrashReporter::Annotation::AdapterDriverVendor, mDriverVendor);
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::AdapterDriverVersion, mDriverVersion);
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IsWayland, mIsWayland);
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::IsWayland,
+                                     mIsWayland);
 }
 
 void GfxInfo::GetData() {

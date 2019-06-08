@@ -8,7 +8,7 @@
 
 #include "mozilla/ComputedTimingFunction.h"  // for ComputedTimingFunction
 #include "mozilla/StaticPrefs.h"
-#include "mozilla/StaticPtr.h"               // for StaticAutoPtr
+#include "mozilla/StaticPtr.h"  // for StaticAutoPtr
 
 #define SVT_LOG(...)
 // #define SVT_LOG(...) printf_stderr("SimpleVelocityTracker: " __VA_ARGS__)

@@ -61,7 +61,6 @@ class nsIContent : public nsINode {
   using IMEState = mozilla::widget::IMEState;
   using BindContext = mozilla::dom::BindContext;
 
-
   void ConstructUbiNode(void* storage) override;
 
 #ifdef MOZILLA_INTERNAL_API

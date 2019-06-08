@@ -83,8 +83,8 @@ nsresult HTMLEmbedElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   if (IsInComposedDoc()) {
     // Don't kick off load from being bound to a plugin document - the plugin
-    // document will call nsObjectLoadingContent::InitializeFromChannel() for the
-    // initial load.
+    // document will call nsObjectLoadingContent::InitializeFromChannel() for
+    // the initial load.
     nsCOMPtr<nsIPluginDocument> pluginDoc =
         do_QueryInterface(&aContext.OwnerDoc());
     if (!pluginDoc) {

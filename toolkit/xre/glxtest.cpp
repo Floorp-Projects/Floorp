@@ -345,7 +345,8 @@ void glxtest() {
     const char* driDriver = glXGetScreenDriverProc(dpy, DefaultScreen(dpy));
     if (driDriver) {
       gotDriDriver = 1;
-      length += snprintf(buf + length, bufsize - length, "DRI_DRIVER\n%s\n", driDriver);
+      length += snprintf(buf + length, bufsize - length, "DRI_DRIVER\n%s\n",
+                         driDriver);
       if (length >= bufsize)
         fatal_error("GL strings length too large for buffer size");
     }

@@ -355,7 +355,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(nsDocumentEncoder, mDocument,
                          mEncodingScope.mSelection, mEncodingScope.mRange,
-                         mEncodingScope.mNode, mSerializer, mCommonAncestorOfRange)
+                         mEncodingScope.mNode, mSerializer,
+                         mCommonAncestorOfRange)
 
 nsDocumentEncoder::nsDocumentEncoder()
     : mEncoding(nullptr), mIsCopying(false), mCachedBuffer(nullptr) {
@@ -1040,7 +1041,8 @@ nsresult nsDocumentEncoder::SerializeRangeToString(nsRange* aRange,
   nsContentUtils::GetAncestorsAndOffsets(
       endContainer, endOffset, &endContainerPath, &endContainerOffsets);
 
-  nsCOMPtr<nsIContent> commonContent = do_QueryInterface(mCommonAncestorOfRange);
+  nsCOMPtr<nsIContent> commonContent =
+      do_QueryInterface(mCommonAncestorOfRange);
   mStartRootIndex = startContainerPath.IndexOf(commonContent);
   mEndRootIndex = endContainerPath.IndexOf(commonContent);
 
