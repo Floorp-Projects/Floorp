@@ -55,6 +55,18 @@ Independent, small visual UI elements to use in applications.
 * [service-telemetry](https://github.com/mozilla-mobile/android-components/tree/master/components/service/telemetry) - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
 * [service-glean](https://github.com/mozilla-mobile/android-components/tree/master/components/service/glean) - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service (eventually replacing `service-telemetry`).
 
+## Samples
+
+* [Reference Browser (full-featured browser)](https://github.com/mozilla-mobile/reference-browser) - Advanced reference browser implementation based on the browser components.
+* [Simple Browser](https://github.com/mozilla-mobile/android-components/blob/master/samples/browser) - Very basic browser implementation based on the browser components.
+* [Crash](https://github.com/mozilla-mobile/android-components/blob/master/samples/crash) - Sample integration for the [lib-crash](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/README.md) component.
+* [DataProtect](https://github.com/mozilla-mobile/android-components/blob/master/samples/dataprotect) - An app demoing how to use the [Dataprotect](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/README.md) component to load and store encrypted data in SharedPreferences.
+* [Firefox Accounts (FxA)](https://github.com/mozilla-mobile/android-components/blob/master/samples/firefox-accounts) - A simple app demoing Firefox Accounts integration.
+* [Firefox Sync](https://github.com/mozilla-mobile/android-components/blob/master/samples/sync) - A simple app demoing general Firefox Sync integration, with bookmarks and history.
+* [Firefox Sync - Logins](https://github.com/mozilla-mobile/android-components/blob/master/samples/sync-logins) - A simple app demoing Firefox Sync (Logins) integration.
+* [Glean](https://github.com/mozilla-mobile/android-components/blob/master/samples/glean) - An app demoing how to use the [Glean](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/README.md) library to collect and send telemetry data.
+* [Toolbar](https://github.com/mozilla-mobile/android-components/blob/master/samples/toolbar) - An app demoing multiple customized toolbars using the [browser-toolbar](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/README.md) component.
+
 ## More
 
 [List of all components in the android-components repository](https://github.com/mozilla-mobile/android-components/blob/master/README.md)
