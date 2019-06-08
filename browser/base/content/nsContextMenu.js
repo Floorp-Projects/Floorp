@@ -33,13 +33,6 @@ function openContextMenu(aMessage) {
   let spellInfo = data.spellInfo;
   let frameReferrerInfo = data.frameReferrerInfo;
 
-  // ContextMenu.jsm sends us the target as a CPOW only so that
-  // we can send that CPOW back down to the content process and
-  // have it resolve to a DOM node. The parent should not attempt
-  // to access any properties on this CPOW (in fact, doing so
-  // will throw an exception).
-  data.context.targetAsCPOW = aMessage.objects.targetAsCPOW;
-
   if (spellInfo) {
     spellInfo.target = aMessage.target.messageManager;
   }
@@ -220,7 +213,7 @@ nsContextMenu.prototype = {
     this.onVideo             = context.onVideo;
 
     this.target = context.target;
-    this.targetAsCPOW = context.targetAsCPOW;
+    this.targetIdentifier = context.targetIdentifier;
 
     this.principal = context.principal;
     this.frameOuterWindowID = context.frameOuterWindowID;
@@ -730,7 +723,9 @@ nsContextMenu.prototype = {
       return;
     }
     let documentURI = gContextMenuContentData.documentURIObject;
-    let fragment = LoginManagerContextMenu.addLoginsToMenu(this.targetAsCPOW, this.browser, documentURI);
+    let fragment = LoginManagerContextMenu.addLoginsToMenu(this.targetIdentifier,
+                                                           this.browser,
+                                                           documentURI);
 
     this.showItem("fill-login-no-logins", !fragment);
 

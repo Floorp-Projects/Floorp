@@ -34,6 +34,8 @@ ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "InsecurePasswordUtils",
                                "resource://gre/modules/InsecurePasswordUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "ContentDOMReference",
+                               "resource://gre/modules/ContentDOMReference.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gNetUtil",
                                    "@mozilla.org/network/util;1",
@@ -304,7 +306,7 @@ this.LoginManagerContent = {
         loginFormOrigin: msg.data.loginFormOrigin,
         loginsFound: LoginHelper.vanillaObjectsToLogins(msg.data.logins),
         recipes: msg.data.recipes,
-        inputElement: msg.objects.inputElement,
+        inputElementIdentifier: msg.data.inputElementIdentifier,
       });
       return;
     }
@@ -684,15 +686,22 @@ this.LoginManagerContent = {
    *            from the origin of the form used for the fill.
    *          recipes:
    *            Fill recipes transmitted together with the original message.
-   *          inputElement:
-   *            Username or password input element from the form we want to fill.
+   *          inputElementIdentifier:
+   *            An identifier generated for the input element via ContentDOMReference.
    *        }
    */
-  fillForm({ topDocument, loginFormOrigin, loginsFound, recipes, inputElement }) {
-    if (!inputElement) {
+  fillForm({ topDocument, loginFormOrigin, loginsFound, recipes, inputElementIdentifier }) {
+    if (!inputElementIdentifier) {
       log("fillForm: No input element specified");
       return;
     }
+
+    let inputElement = ContentDOMReference.resolve(inputElementIdentifier);
+    if (!inputElement) {
+      log("fillForm: Could not resolve inputElementIdentifier to a living element.");
+      return;
+    }
+
     if (LoginHelper.getLoginOrigin(topDocument.documentURI) != loginFormOrigin) {
       if (!inputElement ||
           LoginHelper.getLoginOrigin(inputElement.ownerDocument.documentURI) != loginFormOrigin) {
