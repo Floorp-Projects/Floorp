@@ -55,6 +55,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1513343
       ok(contextmenu, "context menu exists after right click");
       await popupshown;
 
+      // Check that we only got the one context menu, and not two.
+      let outerContextmenu = win.document.getElementById("outer-context-menu");
+      ok(outerContextmenu.state == "closed", "the outer context menu state is is not closed, it's: " + outerContextmenu.state);
+
       ok(!contextmenu.querySelector("[command=cmd_undo]").hasAttribute("disabled"), "undo enabled");
       ok(contextmenu.querySelector("[command=cmd_cut]").hasAttribute("disabled"), "cut disabled");
       ok(contextmenu.querySelector("[command=cmd_copy]").hasAttribute("disabled"), "copy disabled");
