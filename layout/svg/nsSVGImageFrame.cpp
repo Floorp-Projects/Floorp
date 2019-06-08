@@ -182,10 +182,9 @@ gfx::Matrix nsSVGImageFrame::GetRasterImageTransform(int32_t aNativeWidth,
 }
 
 gfx::Matrix nsSVGImageFrame::GetVectorImageTransform() {
-  float x, y, width, height;
+  float x, y;
   SVGImageElement* element = static_cast<SVGImageElement*>(GetContent());
-  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
-      element, &x, &y, &width, &height);
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y>(element, &x, &y);
 
   // No viewBoxTM needed here -- our height/width overrides any concept of
   // "native size" that the SVG image has, and it will handle viewBox and
@@ -194,22 +193,27 @@ gfx::Matrix nsSVGImageFrame::GetVectorImageTransform() {
   return gfx::Matrix::Translation(x, y);
 }
 
-bool nsSVGImageFrame::GetIntrinsicImageSize(
-    mozilla::gfx::Size& aIntrinsicSize) const {
+bool nsSVGImageFrame::GetIntrinsicImageDimensions(
+    mozilla::gfx::Size& aSize, mozilla::AspectRatio& aAspectRatio) const {
   if (!mImageContainer) {
     return false;
   }
 
   int32_t width, height;
   if (NS_FAILED(mImageContainer->GetWidth(&width))) {
-    return false;
+    aSize.width = -1;
+  } else {
+    aSize.width = width;
   }
 
   if (NS_FAILED(mImageContainer->GetHeight(&height))) {
-    return false;
+    aSize.height = -1;
+  } else {
+    aSize.height = height;
   }
 
-  aIntrinsicSize = {float(width), float(height)};
+  Maybe<AspectRatio> asp = mImageContainer->GetIntrinsicRatio();
+  aAspectRatio = asp.valueOr(AspectRatio{});
 
   return true;
 }
