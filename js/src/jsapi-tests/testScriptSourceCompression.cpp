@@ -7,15 +7,16 @@
 
 #include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
 #include "mozilla/Assertions.h"  // MOZ_RELEASE_ASSERT
+#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
-#include <algorithm>  // std::all_of, std::copy_n, std::equal, std::move
+#include <algorithm>  // std::all_of, std::equal, std::move, std::transform
 #include <memory>     // std::uninitialized_fill_n
 #include <stddef.h>   // size_t
 #include <stdint.h>   // uint32_t
 
 #include "jsapi.h"  // JS_FlattenString, JS_GC, JS_Get{Latin1,TwoByte}FlatStringChars, JS_GetStringLength, JS_ValueToFunction
 
-#include "js/CompilationAndEvaluation.h"  // JS::Evaluate
+#include "js/CompilationAndEvaluation.h"  // JS::Evaluate{,DontInflate}
 #include "js/CompileOptions.h"            // JS::CompileOptions
 #include "js/Conversions.h"               // JS::ToString
 #include "js/MemoryFunctions.h"           // JS_malloc
@@ -31,12 +32,13 @@
 #include "vm/JSScript.h"  // JSScript, js::ScriptSource::MinimumCompressibleLength
 
 using mozilla::ArrayLength;
+using mozilla::Utf8Unit;
 
 struct JSContext;
 class JSString;
 
-template <typename CharT>
-using Source = js::UniquePtr<CharT[], JS::FreePolicy>;
+template <typename Unit>
+using Source = js::UniquePtr<Unit[], JS::FreePolicy>;
 
 constexpr size_t ChunkSize = js::Compressor::CHUNK_SIZE;
 constexpr size_t MinimumCompressibleLength =
@@ -45,13 +47,13 @@ constexpr size_t MinimumCompressibleLength =
 // Don't use ' ' to spread stuff across lines.
 constexpr char FillerWhitespace = '\n';
 
-template <typename CharT>
-static Source<CharT> MakeSourceAllWhitespace(JSContext* cx, size_t len) {
-  static_assert(ChunkSize % sizeof(CharT) == 0,
+template <typename Unit>
+static Source<Unit> MakeSourceAllWhitespace(JSContext* cx, size_t len) {
+  static_assert(ChunkSize % sizeof(Unit) == 0,
                 "chunk size presumed to be a multiple of char size");
 
-  Source<CharT> source(
-      reinterpret_cast<CharT*>(JS_malloc(cx, len * sizeof(CharT))));
+  Source<Unit> source(
+      reinterpret_cast<Unit*>(JS_malloc(cx, len * sizeof(Unit))));
   if (source) {
     std::uninitialized_fill_n(source.get(), len, FillerWhitespace);
   }
@@ -59,26 +61,35 @@ static Source<CharT> MakeSourceAllWhitespace(JSContext* cx, size_t len) {
 }
 
 static bool Evaluate(JSContext* cx, const JS::CompileOptions& options,
-                     const char16_t* src, size_t srclen) {
-  JS::SourceText<char16_t> sourceText;
-  if (!sourceText.init(cx, src, srclen, JS::SourceOwnership::Borrowed)) {
-    return false;
-  }
-
+                     JS::SourceText<char16_t>& sourceText) {
   JS::Rooted<JS::Value> dummy(cx);
   return JS::Evaluate(cx, options, sourceText, &dummy);
 }
 
-template <typename CharT>
-static JSFunction* EvaluateChars(JSContext* cx, Source<CharT> chars, size_t len,
+static bool Evaluate(JSContext* cx, const JS::CompileOptions& options,
+                     JS::SourceText<Utf8Unit>& sourceText) {
+  JS::Rooted<JS::Value> dummy(cx);
+  return JS::EvaluateDontInflate(cx, options, sourceText, &dummy);
+}
+
+template <typename Unit>
+static JSFunction* EvaluateChars(JSContext* cx, Source<Unit> chars, size_t len,
                                  char functionName, const char* func) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(func, 1);
 
-  if (!Evaluate(cx, options, chars.get(), len)) {
+  // Evaluate the provided source text, containing a function named
+  // |functionName|.
+  JS::SourceText<Unit> sourceText;
+  if (!sourceText.init(cx, std::move(chars), len)) {
     return nullptr;
   }
 
+  if (!Evaluate(cx, options, sourceText)) {
+    return nullptr;
+  }
+
+  // Evaluate the name of that function.
   JS::Rooted<JS::Value> rval(cx);
   const char16_t name[] = {char16_t(functionName)};
   JS::SourceText<char16_t> srcbuf;
@@ -90,6 +101,7 @@ static JSFunction* EvaluateChars(JSContext* cx, Source<CharT> chars, size_t len,
     return nullptr;
   }
 
+  // Return the function.
   MOZ_RELEASE_ASSERT(rval.isObject());
   return JS_ValueToFunction(cx, rval);
 }
@@ -118,8 +130,8 @@ static_assert(FunctionStart[FunctionNameOffset] == '@',
 static constexpr char FunctionEnd[] = "return 42; }";
 constexpr size_t FunctionEndLength = ArrayLength(FunctionEnd) - 1;
 
-template <typename CharT>
-static void WriteFunctionOfSizeAtOffset(Source<CharT>& source,
+template <typename Unit>
+static void WriteFunctionOfSizeAtOffset(Source<Unit>& source,
                                         size_t usableSourceLen,
                                         char functionName,
                                         size_t functionLength, size_t offset) {
@@ -132,13 +144,20 @@ static void WriteFunctionOfSizeAtOffset(Source<CharT>& source,
   MOZ_RELEASE_ASSERT(offset <= usableSourceLen - functionLength,
                      "function must not extend past usable source");
 
+  // Assigning |char| to |char16_t| is permitted, but we deliberately require a
+  // cast to assign |char| to |Utf8Unit|.  |std::copy_n| would handle the first
+  // case, but the required transformation for UTF-8 demands |std::transform|.
+  auto TransformToUnit = [](char c) { return Unit(c); };
+
   // Fill in the function start.
-  std::copy_n(FunctionStart, FunctionStartLength, &source[offset]);
-  source[offset + FunctionNameOffset] = functionName;
+  std::transform(FunctionStart, FunctionStart + FunctionStartLength,
+                 &source[offset], TransformToUnit);
+  source[offset + FunctionNameOffset] = Unit(functionName);
 
   // Fill in the function end.
-  std::copy_n(FunctionEnd, FunctionEndLength,
-              &source[offset + functionLength - FunctionEndLength]);
+  std::transform(FunctionEnd, FunctionEnd + FunctionEndLength,
+                 &source[offset + functionLength - FunctionEndLength],
+                 TransformToUnit);
 }
 
 static JSString* DecompressSource(JSContext* cx, JS::Handle<JSFunction*> fun) {
@@ -192,18 +211,19 @@ static bool IsExpectedFunctionString(JS::Handle<JSString*> str,
 
 BEGIN_TEST(testScriptSourceCompression_inOneChunk) {
   CHECK(run<char16_t>());
+  CHECK(run<Utf8Unit>());
   return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool run() {
   constexpr size_t len = MinimumCompressibleLength + 55;
-  auto source = MakeSourceAllWhitespace<CharT>(cx, len);
+  auto source = MakeSourceAllWhitespace<Unit>(cx, len);
   CHECK(source);
 
   // Write out a 'b' or 'c' function that is long enough to be compressed,
   // that starts after source start and ends before source end.
-  constexpr char FunctionName = 'a' + sizeof(CharT);
+  constexpr char FunctionName = 'a' + sizeof(Unit);
   WriteFunctionOfSizeAtOffset(source, len, FunctionName,
                               MinimumCompressibleLength,
                               len - MinimumCompressibleLength);
@@ -224,19 +244,20 @@ END_TEST(testScriptSourceCompression_inOneChunk)
 
 BEGIN_TEST(testScriptSourceCompression_endsAtBoundaryInOneChunk) {
   CHECK(run<char16_t>());
+  CHECK(run<Utf8Unit>());
   return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool run() {
-  constexpr size_t len = ChunkSize / sizeof(CharT);
-  auto source = MakeSourceAllWhitespace<CharT>(cx, len);
+  constexpr size_t len = ChunkSize / sizeof(Unit);
+  auto source = MakeSourceAllWhitespace<Unit>(cx, len);
   CHECK(source);
 
   // Write out a 'd' or 'e' function that is long enough to be compressed,
   // that (for no particular reason) starts after source start and ends
   // before usable source end.
-  constexpr char FunctionName = 'c' + sizeof(CharT);
+  constexpr char FunctionName = 'c' + sizeof(Unit);
   WriteFunctionOfSizeAtOffset(source, len, FunctionName,
                               MinimumCompressibleLength,
                               len - MinimumCompressibleLength);
@@ -257,18 +278,19 @@ END_TEST(testScriptSourceCompression_endsAtBoundaryInOneChunk)
 
 BEGIN_TEST(testScriptSourceCompression_isExactChunk) {
   CHECK(run<char16_t>());
+  CHECK(run<Utf8Unit>());
   return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool run() {
-  constexpr size_t len = ChunkSize / sizeof(CharT);
-  auto source = MakeSourceAllWhitespace<CharT>(cx, len);
+  constexpr size_t len = ChunkSize / sizeof(Unit);
+  auto source = MakeSourceAllWhitespace<Unit>(cx, len);
   CHECK(source);
 
   // Write out a 'f' or 'g' function that occupies the entire source (and
   // entire chunk, too).
-  constexpr char FunctionName = 'e' + sizeof(CharT);
+  constexpr char FunctionName = 'e' + sizeof(Unit);
   WriteFunctionOfSizeAtOffset(source, len, FunctionName, len, 0);
 
   JS::Rooted<JSFunction*> fun(cx);
@@ -287,20 +309,21 @@ END_TEST(testScriptSourceCompression_isExactChunk)
 
 BEGIN_TEST(testScriptSourceCompression_crossesChunkBoundary) {
   CHECK(run<char16_t>());
+  CHECK(run<Utf8Unit>());
   return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool run() {
-  constexpr size_t len = ChunkSize / sizeof(CharT) + 293;
-  auto source = MakeSourceAllWhitespace<CharT>(cx, len);
+  constexpr size_t len = ChunkSize / sizeof(Unit) + 293;
+  auto source = MakeSourceAllWhitespace<Unit>(cx, len);
   CHECK(source);
 
   // This function crosses a chunk boundary but does not end at one.
-  constexpr size_t FunctionSize = 177 + ChunkSize / sizeof(CharT);
+  constexpr size_t FunctionSize = 177 + ChunkSize / sizeof(Unit);
 
   // Write out a 'h' or 'i' function.
-  constexpr char FunctionName = 'g' + sizeof(CharT);
+  constexpr char FunctionName = 'g' + sizeof(Unit);
   WriteFunctionOfSizeAtOffset(source, len, FunctionName, FunctionSize, 37);
 
   JS::Rooted<JSFunction*> fun(cx);
@@ -319,22 +342,23 @@ END_TEST(testScriptSourceCompression_crossesChunkBoundary)
 
 BEGIN_TEST(testScriptSourceCompression_crossesChunkBoundary_endsAtBoundary) {
   CHECK(run<char16_t>());
+  CHECK(run<Utf8Unit>());
   return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool run() {
   // Exactly two chunks.
-  constexpr size_t len = (2 * ChunkSize) / sizeof(CharT);
-  auto source = MakeSourceAllWhitespace<CharT>(cx, len);
+  constexpr size_t len = (2 * ChunkSize) / sizeof(Unit);
+  auto source = MakeSourceAllWhitespace<Unit>(cx, len);
   CHECK(source);
 
   // This function crosses a chunk boundary, and it ends exactly at the end
   // of both the second chunk and the full source.
-  constexpr size_t FunctionSize = 1 + ChunkSize / sizeof(CharT);
+  constexpr size_t FunctionSize = 1 + ChunkSize / sizeof(Unit);
 
   // Write out a 'j' or 'k' function.
-  constexpr char FunctionName = 'i' + sizeof(CharT);
+  constexpr char FunctionName = 'i' + sizeof(Unit);
   WriteFunctionOfSizeAtOffset(source, len, FunctionName, FunctionSize,
                               len - FunctionSize);
 
@@ -354,23 +378,24 @@ END_TEST(testScriptSourceCompression_crossesChunkBoundary_endsAtBoundary)
 
 BEGIN_TEST(testScriptSourceCompression_containsWholeChunk) {
   CHECK(run<char16_t>());
+  CHECK(run<Utf8Unit>());
   return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool run() {
-  constexpr size_t len = (2 * ChunkSize) / sizeof(CharT) + 17;
-  auto source = MakeSourceAllWhitespace<CharT>(cx, len);
+  constexpr size_t len = (2 * ChunkSize) / sizeof(Unit) + 17;
+  auto source = MakeSourceAllWhitespace<Unit>(cx, len);
   CHECK(source);
 
   // This function crosses two chunk boundaries and begins/ends in the middle
   // of chunk boundaries.
-  constexpr size_t FunctionSize = 2 + ChunkSize / sizeof(CharT);
+  constexpr size_t FunctionSize = 2 + ChunkSize / sizeof(Unit);
 
   // Write out a 'l' or 'm' function.
-  constexpr char FunctionName = 'k' + sizeof(CharT);
+  constexpr char FunctionName = 'k' + sizeof(Unit);
   WriteFunctionOfSizeAtOffset(source, len, FunctionName, FunctionSize,
-                              ChunkSize / sizeof(CharT) - 1);
+                              ChunkSize / sizeof(Unit) - 1);
 
   JS::Rooted<JSFunction*> fun(cx);
   fun = EvaluateChars(cx, std::move(source), len, FunctionName, __FUNCTION__);
@@ -388,23 +413,24 @@ END_TEST(testScriptSourceCompression_containsWholeChunk)
 
 BEGIN_TEST(testScriptSourceCompression_containsWholeChunk_endsAtBoundary) {
   CHECK(run<char16_t>());
+  CHECK(run<Utf8Unit>());
   return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool run() {
   // Exactly three chunks.
-  constexpr size_t len = (3 * ChunkSize) / sizeof(CharT);
-  auto source = MakeSourceAllWhitespace<CharT>(cx, len);
+  constexpr size_t len = (3 * ChunkSize) / sizeof(Unit);
+  auto source = MakeSourceAllWhitespace<Unit>(cx, len);
   CHECK(source);
 
   // This function crosses two chunk boundaries and ends at a chunk boundary.
-  constexpr size_t FunctionSize = 1 + (2 * ChunkSize) / sizeof(CharT);
+  constexpr size_t FunctionSize = 1 + (2 * ChunkSize) / sizeof(Unit);
 
   // Write out a 'n' or 'o' function.
-  constexpr char FunctionName = 'm' + sizeof(CharT);
+  constexpr char FunctionName = 'm' + sizeof(Unit);
   WriteFunctionOfSizeAtOffset(source, len, FunctionName, FunctionSize,
-                              ChunkSize / sizeof(CharT) - 1);
+                              ChunkSize / sizeof(Unit) - 1);
 
   JS::Rooted<JSFunction*> fun(cx);
   fun = EvaluateChars(cx, std::move(source), len, FunctionName, __FUNCTION__);
@@ -422,24 +448,25 @@ END_TEST(testScriptSourceCompression_containsWholeChunk_endsAtBoundary)
 
 BEGIN_TEST(testScriptSourceCompression_spansMultipleMiddleChunks) {
   CHECK(run<char16_t>());
+  CHECK(run<Utf8Unit>());
   return true;
 }
 
-template <typename CharT>
+template <typename Unit>
 bool run() {
   // Four chunks.
-  constexpr size_t len = (4 * ChunkSize) / sizeof(CharT);
-  auto source = MakeSourceAllWhitespace<CharT>(cx, len);
+  constexpr size_t len = (4 * ChunkSize) / sizeof(Unit);
+  auto source = MakeSourceAllWhitespace<Unit>(cx, len);
   CHECK(source);
 
   // This function spans the two middle chunks and further extends one
   // character to each side.
-  constexpr size_t FunctionSize = 2 + (2 * ChunkSize) / sizeof(CharT);
+  constexpr size_t FunctionSize = 2 + (2 * ChunkSize) / sizeof(Unit);
 
   // Write out a 'p' or 'q' function.
-  constexpr char FunctionName = 'o' + sizeof(CharT);
+  constexpr char FunctionName = 'o' + sizeof(Unit);
   WriteFunctionOfSizeAtOffset(source, len, FunctionName, FunctionSize,
-                              ChunkSize / sizeof(CharT) - 1);
+                              ChunkSize / sizeof(Unit) - 1);
 
   JS::Rooted<JSFunction*> fun(cx);
   fun = EvaluateChars(cx, std::move(source), len, FunctionName, __FUNCTION__);
