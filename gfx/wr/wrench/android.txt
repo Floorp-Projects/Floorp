@@ -59,8 +59,8 @@ Release mode:
     should be signed and installable (you may need to uninstall the debug APK first if you
     have that installed).
 
-Running reftests like a boss:
------------------------------
+Running reftests like a boss (on a local emulator):
+---------------------------------------------------
 
     First, compile wrench as described above (debug mode).
     Then, from the root gecko source dir, run:
@@ -84,3 +84,13 @@ Running reftests like a boss:
     to point to it:
         export WRENCH_APK=gfx/wr/target/android-artifacts/app/build/outputs/apk/app-release-unsigned.apk
         ./mach python testing/mozharness/scripts/android_wrench.py --config testing/mozharness/configs/android/wrench.py
+
+Running reftests like a boss (on a local device):
+-------------------------------------------------
+
+    Same steps as running on a local emulator, except you need to do this:
+        export DEVICE_SERIAL=<your device's serial>
+    before running the `./mach python` command. You can get the serial of
+    your device by running `adb devices` with the device plugged in. When running
+    on a device, the android_emulator_wrench.py script will skip the steps to
+    download the AVDs and start the emulator.
