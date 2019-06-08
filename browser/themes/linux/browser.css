@@ -197,7 +197,7 @@ menuitem.bookmark-item {
 
 #urlbar:not(:-moz-lwtheme):not([focused="true"]),
 #urlbar:not(:-moz-lwtheme).hidden-focus,
-.searchbar-textbox:not(:-moz-lwtheme):not([focused="true"]) {
+#searchbar:not(:-moz-lwtheme):not(:focus-within) {
   border-color: ThreeDShadow;
 }
 
