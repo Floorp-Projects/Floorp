@@ -4,7 +4,7 @@
 
 #include shared,clip_shared
 
-varying vec2 vLocalPos;
+varying vec4 vLocalPos;
 varying vec2 vClipMaskImageUv;
 
 flat varying vec4 vClipMaskUvRect;
@@ -40,9 +40,10 @@ void main(void) {
         cmi.screen_origin,
         cmi.device_pixel_scale
     );
-    vLocalPos = vi.local_pos.xy / vi.local_pos.z;
+    vLocalPos = vi.local_pos;
     vLayer = res.layer;
-    vClipMaskImageUv = (vLocalPos - cmi.tile_rect.p0) / cmi.tile_rect.size;
+    vClipMaskImageUv = (vi.local_pos.xy - cmi.tile_rect.p0 * vi.local_pos.w) / cmi.tile_rect.size;
+
     vec2 texture_size = vec2(textureSize(sColor0, 0));
     vClipMaskUvRect = vec4(res.uv_rect.p0, res.uv_rect.p1 - res.uv_rect.p0) / texture_size.xyxy;
     // applying a half-texel offset to the UV boundaries to prevent linear samples from the outside
@@ -53,17 +54,19 @@ void main(void) {
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
-    float alpha = init_transform_fs(vLocalPos);
+    vec2 local_pos = vLocalPos.xy / vLocalPos.w;
+    float alpha = vLocalPos.w > 0.0 ? init_transform_fs(local_pos) : 0.0;
 
     // TODO: Handle repeating masks?
-    vec2 clamped_mask_uv = clamp(vClipMaskImageUv, vec2(0.0, 0.0), vec2(1.0, 1.0));
+    vec2 clamped_mask_uv = clamp(vClipMaskImageUv, vec2(0.0, 0.0), vLocalPos.ww);
 
     // Ensure we don't draw outside of our tile.
     // FIXME(emilio): Can we do this earlier?
     if (clamped_mask_uv != vClipMaskImageUv)
         discard;
 
-    vec2 source_uv = clamp(clamped_mask_uv * vClipMaskUvRect.zw + vClipMaskUvRect.xy,
+    vec2 source_uv = clamp(
+        clamped_mask_uv / vLocalPos.w * vClipMaskUvRect.zw + vClipMaskUvRect.xy,
         vClipMaskUvInnerRect.xy, vClipMaskUvInnerRect.zw);
     float clip_alpha = texture(sColor0, vec3(source_uv, vLayer)).r; //careful: texture has type A8
     oFragColor = vec4(alpha * clip_alpha, 1.0, 1.0, 1.0);
