@@ -12,12 +12,10 @@ interface nsIFontEnumerator : nsISupports
   /**
    * Return a sorted array of the names of all installed fonts.
    *
-   * @param  aCount     returns number of names returned
-   * @param  aResult    returns array of names
+   * @return array of names
    * @return void
    */
-  void EnumerateAllFonts(out uint32_t aCount,
-    [retval, array, size_is(aCount)] out wstring aResult);
+  Array<AString> EnumerateAllFonts();
 
   /**
    * Return a sorted array of names of fonts that support the given language
@@ -25,12 +23,10 @@ interface nsIFontEnumerator : nsISupports
    *
    * @param  aLangGroup language group
    * @param  aGeneric   CSS generic font
-   * @param  aCount     returns number of names returned
-   * @param  aResult    returns array of names
+   * @return            array of names
    * @return void
    */
-  void EnumerateFonts(in string aLangGroup, in string aGeneric,
-    out uint32_t aCount, [retval, array, size_is(aCount)] out wstring aResult);
+  Array<AString> EnumerateFonts(in string aLangGroup, in string aGeneric);
 
   /**
    * Return a promise that resolves to a sorted array of the names of all
