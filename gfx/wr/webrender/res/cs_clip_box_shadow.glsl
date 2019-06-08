@@ -4,7 +4,7 @@
 
 #include shared,clip_shared
 
-varying vec3 vLocalPos;
+varying vec4 vLocalPos;
 varying vec2 vUv;
 flat varying vec4 vUvBounds;
 flat varying float vLayer;
@@ -58,15 +58,12 @@ void main(void) {
         cmi.screen_origin,
         cmi.device_pixel_scale
     );
-    vLocalPos = vi.local_pos;
     vLayer = res.layer;
     vClipMode = bs_data.clip_mode;
 
-    vec2 uv0 = res.uv_rect.p0;
-    vec2 uv1 = res.uv_rect.p1;
-
     vec2 texture_size = vec2(textureSize(sColor0, 0));
-    vec2 local_pos = vLocalPos.xy / vLocalPos.z;
+    vec2 local_pos = vi.local_pos.xy / vi.local_pos.w;
+    vLocalPos = vi.local_pos;
 
     switch (bs_data.stretch_mode_x) {
         case MODE_STRETCH: {
@@ -98,6 +95,9 @@ void main(void) {
         }
     }
 
+    vUv *= vi.local_pos.w;
+    vec2 uv0 = res.uv_rect.p0;
+    vec2 uv1 = res.uv_rect.p1;
     vUvBounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) / texture_size.xyxy;
     vUvBounds_NoClamp = vec4(uv0, uv1) / texture_size.xyxy;
 }
@@ -105,19 +105,19 @@ void main(void) {
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
-    vec2 local_pos = vLocalPos.xy / vLocalPos.z;
-
-    vec2 uv = clamp(vUv.xy, vec2(0.0), vEdge.xy);
-    uv += max(vec2(0.0), vUv.xy - vEdge.zw);
+    vec2 uv_linear = vUv / vLocalPos.w;
+    vec2 uv = clamp(uv_linear, vec2(0.0), vEdge.xy);
+    uv += max(vec2(0.0), uv_linear - vEdge.zw);
     uv = mix(vUvBounds_NoClamp.xy, vUvBounds_NoClamp.zw, uv);
     uv = clamp(uv, vUvBounds.xy, vUvBounds.zw);
 
-    float in_shadow_rect = init_transform_rough_fs(local_pos);
+    float in_shadow_rect = init_transform_rough_fs(vLocalPos.xy / vLocalPos.w);
 
     float texel = TEX_SAMPLE(sColor0, vec3(uv, vLayer)).r;
 
     float alpha = mix(texel, 1.0 - texel, vClipMode);
+    float result = vLocalPos.w > 0.0 ? mix(vClipMode, alpha, in_shadow_rect) : 0.0;
 
-    oFragColor = vec4(mix(vClipMode, alpha, in_shadow_rect));
+    oFragColor = vec4(result);
 }
 #endif
