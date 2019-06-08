@@ -48,7 +48,7 @@ ClipMaskInstance fetch_clip_item() {
 }
 
 struct ClipVertexInfo {
-    vec3 local_pos;
+    vec4 local_pos;
     RectWithSize clipped_local_rect;
 };
 
@@ -56,6 +56,7 @@ RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
     vec4 p = clamp(vec4(a.p0, a.p0 + a.size), b.p0.xyxy, b.p0.xyxy + b.size.xyxy);
     return RectWithSize(p.xy, max(vec2(0.0), p.zw - p.xy));
 }
+
 
 // The transformed vertex function that always covers the whole clip area,
 // which is the intersection of all clip instances of a given primitive
@@ -86,8 +87,15 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
     pos.xyz /= pos.w;
 
     vec4 p = get_node_pos(pos.xy, clip_transform);
-    vec3 local_pos = p.xyw * pos.w;
+    vec4 local_pos = p * pos.w;
 
+    //TODO: Interpolate in clip space, where "local_pos.w" contains
+    // the W of the homogeneous transform *from* clip space into the world.
+    //    float interpolate_w = 1.0 / local_pos.w;
+    // This is problematic today, because the W<=0 hemisphere is going to be
+    // clipped, while we currently want this shader to fill out the whole rect.
+    // We can therefore simplify this when the clip construction is rewritten
+    // to only affect the areas touched by a clip.
     vec4 vertex_pos = vec4(
         task_origin + sub_rect.p0 + aPosition.xy * sub_rect.size,
         0.0,

@@ -8,7 +8,7 @@
 varying vec2 vLocalPos;
 flat varying vec3 vClipParams;      // xy = box size, z = radius
 #else
-varying vec3 vLocalPos;
+varying vec4 vLocalPos;
 flat varying vec4 vClipCenter_Radius_TL;
 flat varying vec4 vClipCenter_Radius_TR;
 flat varying vec4 vClipCenter_Radius_BL;
@@ -131,10 +131,9 @@ void main(void) {
 #ifdef WR_FEATURE_FAST_PATH
     vec2 local_pos = vLocalPos.xy;
 #else
-    vec2 local_pos = vLocalPos.xy / vLocalPos.z;
+    vec2 local_pos = vLocalPos.xy / vLocalPos.w;
 #endif
-
-    float aa_range = compute_aa_range(local_pos.xy);
+    float aa_range = compute_aa_range(local_pos);
 
 #ifdef WR_FEATURE_FAST_PATH
     float d = sdf_rounded_rect(local_pos, vClipParams);
@@ -155,8 +154,9 @@ void main(void) {
 
     // Select alpha or inverse alpha depending on clip in/out.
     float final_alpha = mix(combined_alpha, 1.0 - combined_alpha, vClipMode);
+    float final_final_alpha = vLocalPos.w > 0.0 ? final_alpha : 0.0;
 
-    oFragColor = vec4(final_alpha, 0.0, 0.0, 1.0);
+    oFragColor = vec4(final_final_alpha, 0.0, 0.0, 1.0);
 #endif
 }
 #endif
