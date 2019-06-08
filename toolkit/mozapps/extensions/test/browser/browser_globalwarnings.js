@@ -4,6 +4,12 @@
 
 // Bug 566194 - safe mode / security & compatibility check status are not exposed in new addon manager UI
 
+// Not yet supported by HTML about:addons (tracked by Bug 1544950), once implemented by the
+// HTML about:addons it will be tested in a separate test file.
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 function test() {
   waitForExplicitFinish();
   run_next_test();
