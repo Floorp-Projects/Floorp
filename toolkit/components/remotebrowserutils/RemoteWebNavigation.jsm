@@ -108,7 +108,7 @@ RemoteWebNavigation.prototype = {
       Ci.nsIRemoteTab.NAVIGATE_URL, {uri, epoch: cancelContentJSEpoch});
     this._sendMessage("WebNavigation:LoadURI", {
       uri: aURI,
-      flags: aLoadURIOptions.loadFlags,
+      loadFlags: aLoadURIOptions.loadFlags,
       referrerInfo: E10SUtils.serializeReferrerInfo(aLoadURIOptions.referrerInfo),
       postData: aLoadURIOptions.postData ? Utils.serializeInputStream(aLoadURIOptions.postData) : null,
       headers: aLoadURIOptions.headers ? Utils.serializeInputStream(aLoadURIOptions.headers) : null,
@@ -125,10 +125,10 @@ RemoteWebNavigation.prototype = {
     });
   },
   reload(aReloadFlags) {
-    this._sendMessage("WebNavigation:Reload", {flags: aReloadFlags});
+    this._sendMessage("WebNavigation:Reload", {loadFlags: aReloadFlags});
   },
   stop(aStopFlags) {
-    this._sendMessage("WebNavigation:Stop", {flags: aStopFlags});
+    this._sendMessage("WebNavigation:Stop", {loadFlags: aStopFlags});
   },
 
   get document() {

@@ -42,10 +42,10 @@ class WebNavigationChild extends ActorChild {
         this.setOriginAttributes(message.data.originAttributes);
         break;
       case "WebNavigation:Reload":
-        this.reload(message.data.flags);
+        this.reload(message.data.loadFlags);
         break;
       case "WebNavigation:Stop":
-        this.stop(message.data.flags);
+        this.stop(message.data.loadFlags);
         break;
     }
   }
@@ -84,7 +84,7 @@ class WebNavigationChild extends ActorChild {
   loadURI(params) {
     let {
       uri,
-      flags,
+      loadFlags,
       referrerInfo,
       postData,
       headers,
@@ -126,7 +126,7 @@ class WebNavigationChild extends ActorChild {
     let loadURIOptions = {
       triggeringPrincipal,
       csp,
-      loadFlags: flags,
+      loadFlags,
       referrerInfo: E10SUtils.deserializeReferrerInfo(referrerInfo),
       postData,
       headers,
@@ -152,11 +152,11 @@ class WebNavigationChild extends ActorChild {
     }
   }
 
-  reload(flags) {
-    this.webNavigation.reload(flags);
+  reload(loadFlags) {
+    this.webNavigation.reload(loadFlags);
   }
 
-  stop(flags) {
-    this.webNavigation.stop(flags);
+  stop(loadFlags) {
+    this.webNavigation.stop(loadFlags);
   }
 }
