@@ -45,11 +45,10 @@ namespace dom {
 namespace {
 
 void SendJSWarning(Document* aDocument, const char* aWarningName,
-                   const char16_t** aWarningArgs, uint32_t aWarningArgsLen) {
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("HTML"), aDocument,
-                                  nsContentUtils::eFORMS_PROPERTIES,
-                                  aWarningName, aWarningArgs, aWarningArgsLen);
+                   const nsTArray<nsString>& aWarningArgs) {
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("HTML"), aDocument,
+      nsContentUtils::eFORMS_PROPERTIES, aWarningName, aWarningArgs);
 }
 
 void RetrieveFileName(Blob* aBlob, nsAString& aFilename) {
@@ -159,7 +158,7 @@ nsresult FSURLEncoded::AddNameValuePair(const nsAString& aName,
 nsresult FSURLEncoded::AddNameBlobOrNullPair(const nsAString& aName,
                                              Blob* aBlob) {
   if (!mWarnedFileControl) {
-    SendJSWarning(mDocument, "ForgotFileEnctypeWarning", nullptr, 0);
+    SendJSWarning(mDocument, "ForgotFileEnctypeWarning", nsTArray<nsString>());
     mWarnedFileControl = true;
   }
 
@@ -223,11 +222,10 @@ void HandleMailtoSubject(nsCString& aPath) {
     nsresult rv = nsContentUtils::GetLocalizedString(
         nsContentUtils::eBRAND_PROPERTIES, "brandShortName", brandName);
     if (NS_FAILED(rv)) return;
-    const char16_t* formatStrings[] = {brandName.get()};
     nsAutoString subjectStr;
     rv = nsContentUtils::FormatLocalizedString(
-        nsContentUtils::eFORMS_PROPERTIES, "DefaultFormSubject", formatStrings,
-        subjectStr);
+        subjectStr, nsContentUtils::eFORMS_PROPERTIES, "DefaultFormSubject",
+        brandName);
     if (NS_FAILED(rv)) return;
     aPath.AppendLiteral("subject=");
     nsCString subjectStrEscaped;
@@ -730,11 +728,11 @@ EncodingFormSubmission::EncodingFormSubmission(
   if (!aEncoding->CanEncodeEverything()) {
     nsAutoCString name;
     aEncoding->Name(name);
-    NS_ConvertUTF8toUTF16 nameUtf16(name);
-    const char16_t* namePtr = nameUtf16.get();
+    AutoTArray<nsString, 1> args;
+    CopyUTF8toUTF16(name, *args.AppendElement());
     SendJSWarning(
         aOriginatingElement ? aOriginatingElement->GetOwnerDocument() : nullptr,
-        "CannotEncodeAllUnicode", &namePtr, 1);
+        "CannotEncodeAllUnicode", args);
   }
 }
 
@@ -890,7 +888,8 @@ nsresult HTMLFormSubmission::GetFromForm(
     Document* doc = aForm->OwnerDoc();
     if (enctype == NS_FORM_ENCTYPE_MULTIPART ||
         enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
-      nsAutoString enctypeStr;
+      AutoTArray<nsString, 1> args;
+      nsString& enctypeStr = *args.AppendElement();
       if (aOriginatingElement &&
           aOriginatingElement->HasAttr(kNameSpaceID_None,
                                        nsGkAtoms::formenctype)) {
@@ -899,8 +898,8 @@ nsresult HTMLFormSubmission::GetFromForm(
       } else {
         aForm->GetAttr(kNameSpaceID_None, nsGkAtoms::enctype, enctypeStr);
       }
-      const char16_t* enctypeStrPtr = enctypeStr.get();
-      SendJSWarning(doc, "ForgotPostWarning", &enctypeStrPtr, 1);
+
+      SendJSWarning(doc, "ForgotPostWarning", args);
     }
     *aFormSubmission = new FSURLEncoded(actionURL, target, encoding, method,
                                         doc, aOriginatingElement);

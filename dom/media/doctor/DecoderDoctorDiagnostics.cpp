@@ -344,7 +344,7 @@ static void DispatchNotification(
 
 static void ReportToConsole(dom::Document* aDocument,
                             const char* aConsoleStringId,
-                            nsTArray<const char16_t*>& aParams) {
+                            const nsTArray<nsString>& aParams) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aDocument);
 
@@ -354,15 +354,14 @@ static void ReportToConsole(dom::Document* aDocument,
       aDocument, aConsoleStringId,
       aParams.IsEmpty() ? "<no params>"
                         : NS_ConvertUTF16toUTF8(aParams[0]).get(),
-      (aParams.Length() < 1 || !aParams[1]) ? "" : ", ",
-      (aParams.Length() < 1 || !aParams[1])
+      (aParams.Length() < 1 || aParams[1].IsEmpty()) ? "" : ", ",
+      (aParams.Length() < 1 || aParams[1].IsEmpty())
           ? ""
           : NS_ConvertUTF16toUTF8(aParams[1]).get(),
       aParams.Length() < 2 ? "" : ", ...");
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Media"), aDocument,
-      nsContentUtils::eDOM_PROPERTIES, aConsoleStringId,
-      aParams.IsEmpty() ? nullptr : aParams.Elements(), aParams.Length());
+      nsContentUtils::eDOM_PROPERTIES, aConsoleStringId, aParams);
 }
 
 static bool AllowNotification(
@@ -428,24 +427,23 @@ static void ReportAnalysis(
   // Report non-solved issues to console.
   if (!aIsSolved) {
     // Build parameter array needed by console message.
-    AutoTArray<const char16_t*, NotificationAndReportStringId::maxReportParams>
-        params;
+    AutoTArray<nsString, NotificationAndReportStringId::maxReportParams> params;
     for (int i = 0; i < NotificationAndReportStringId::maxReportParams; ++i) {
       if (aNotification.mReportParams[i] == ReportParam::None) {
         break;
       }
       switch (aNotification.mReportParams[i]) {
         case ReportParam::Formats:
-          params.AppendElement(aFormats.Data());
+          params.AppendElement(aFormats);
           break;
         case ReportParam::DecodeIssue:
-          params.AppendElement(decodeIssueDescription.Data());
+          params.AppendElement(decodeIssueDescription);
           break;
         case ReportParam::DocURL:
-          params.AppendElement(NS_ConvertUTF8toUTF16(aDocURL).Data());
+          params.AppendElement(NS_ConvertUTF8toUTF16(aDocURL));
           break;
         case ReportParam::ResourceURL:
-          params.AppendElement(aResourceURL.Data());
+          params.AppendElement(aResourceURL);
           break;
         default:
           MOZ_ASSERT_UNREACHABLE("Bad notification parameter choice");

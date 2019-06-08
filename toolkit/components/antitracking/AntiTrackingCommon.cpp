@@ -486,14 +486,14 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
                 urifixup->CreateExposableURI(uri, getter_AddRefs(exposableURI));
             NS_ENSURE_SUCCESS_VOID(rv);
 
-            NS_ConvertUTF8toUTF16 spec(exposableURI->GetSpecOrDefault());
-            const char16_t* params[] = {spec.get()};
+            AutoTArray<nsString, 1> params;
+            CopyUTF8toUTF16(exposableURI->GetSpecOrDefault(),
+                            *params.AppendElement());
 
             nsContentUtils::ReportToConsole(
                 nsIScriptError::warningFlag, category, doc,
-                nsContentUtils::eNECKO_PROPERTIES, message, params,
-                ArrayLength(params), nullptr, sourceLine, lineNumber,
-                columnNumber);
+                nsContentUtils::eNECKO_PROPERTIES, message, params, nullptr,
+                sourceLine, lineNumber, columnNumber);
           }),
       kMaxConsoleOutputDelayMs, EventQueuePriority::Idle);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -542,9 +542,8 @@ void ReportUnblockingToConsole(
               return;
             }
 
-            const char16_t* params[] = {origin.BeginReading(),
-                                        trackingOrigin.BeginReading(),
-                                        grantedOrigin.BeginReading()};
+            // Not adding grantedOrigin yet because we may not want it later.
+            AutoTArray<nsString, 3> params = {origin, trackingOrigin};
             const char* messageWithDifferentOrigin = nullptr;
             const char* messageWithSameOrigin = nullptr;
 
@@ -570,13 +569,14 @@ void ReportUnblockingToConsole(
                   nsIScriptError::warningFlag,
                   NS_LITERAL_CSTRING("Content Blocking"), doc,
                   nsContentUtils::eNECKO_PROPERTIES, messageWithSameOrigin,
-                  params, 2, nullptr, sourceLine, lineNumber, columnNumber);
+                  params, nullptr, sourceLine, lineNumber, columnNumber);
             } else {
+              params.AppendElement(grantedOrigin);
               nsContentUtils::ReportToConsole(
                   nsIScriptError::warningFlag,
                   NS_LITERAL_CSTRING("Content Blocking"), doc,
                   nsContentUtils::eNECKO_PROPERTIES, messageWithDifferentOrigin,
-                  params, 3, nullptr, sourceLine, lineNumber, columnNumber);
+                  params, nullptr, sourceLine, lineNumber, columnNumber);
             }
           }),
       kMaxConsoleOutputDelayMs, EventQueuePriority::Idle);

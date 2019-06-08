@@ -723,16 +723,14 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
       errorFlag = nsIScriptError::errorFlag;
     }
 
-    const nsString& specUTF16 =
-        NS_ConvertUTF8toUTF16(channelURI->GetSpecOrDefault());
-    const nsString& ctypeUTF16 = NS_ConvertASCIItoUTF16(contentType);
-    const char16_t* strings[] = {specUTF16.get(), ctypeUTF16.get()};
+    AutoTArray<nsString, 2> strings;
+    CopyUTF8toUTF16(channelURI->GetSpecOrDefault(), *strings.AppendElement());
+    CopyASCIItoUTF16(contentType, *strings.AppendElement());
 
     nsCOMPtr<nsIURI> referrer = GetReferrerURI();
     nsContentUtils::ReportToConsole(
         errorFlag, NS_LITERAL_CSTRING("CSS Loader"), mLoader->mDocument,
-        nsContentUtils::eCSS_PROPERTIES, errorMessage, strings,
-        ArrayLength(strings), referrer);
+        nsContentUtils::eCSS_PROPERTIES, errorMessage, strings, referrer);
 
     if (errorFlag == nsIScriptError::errorFlag) {
       LOG_WARN(

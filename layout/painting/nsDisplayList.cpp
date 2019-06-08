@@ -2512,21 +2512,15 @@ bool nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
   auto* pc = aFrame->PresContext();
   auto* doc = pc->Document();
   if (!doc->HasWarnedAbout(Document::eIgnoringWillChangeOverBudget)) {
-    nsAutoString usageStr;
-    usageStr.AppendInt(GetLayerizationCost(aSize));
+    AutoTArray<nsString, 2> params;
+    params.AppendElement()->AppendInt(gWillChangeAreaMultiplier);
 
-    nsAutoString multiplierStr;
-    multiplierStr.AppendInt(gWillChangeAreaMultiplier);
-
-    nsAutoString limitStr;
     nsRect area = pc->GetVisibleArea();
     uint32_t budgetLimit = nsPresContext::AppUnitsToIntCSSPixels(area.width) *
                            nsPresContext::AppUnitsToIntCSSPixels(area.height);
-    limitStr.AppendInt(budgetLimit);
+    params.AppendElement()->AppendInt(budgetLimit);
 
-    const char16_t* params[] = {multiplierStr.get(), limitStr.get()};
-    doc->WarnOnceAbout(Document::eIgnoringWillChangeOverBudget, false, params,
-                       ArrayLength(params));
+    doc->WarnOnceAbout(Document::eIgnoringWillChangeOverBudget, false, params);
   }
 
   return false;

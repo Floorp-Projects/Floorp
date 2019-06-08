@@ -2812,14 +2812,13 @@ nsresult NS_ShouldSecureUpgrade(
           nsresult rv = nsContentUtils::GetLocalizedString(
               nsContentUtils::eBRAND_PROPERTIES, "brandShortName", brandName);
           if (NS_SUCCEEDED(rv)) {
-            const char16_t* params[] = {brandName.get(), reportSpec.get(),
-                                        reportScheme.get()};
+            AutoTArray<nsString, 3> params = {brandName, reportSpec,
+                                              reportScheme};
             nsContentUtils::ReportToConsole(
                 nsIScriptError::warningFlag,
                 NS_LITERAL_CSTRING("DATA_URI_BLOCKED"), doc,
                 nsContentUtils::eSECURITY_PROPERTIES,
-                "BrowserUpgradeInsecureDisplayRequest", params,
-                ArrayLength(params));
+                "BrowserUpgradeInsecureDisplayRequest", params);
           }
           Telemetry::AccumulateCategorical(
               Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::BrowserDisplay);

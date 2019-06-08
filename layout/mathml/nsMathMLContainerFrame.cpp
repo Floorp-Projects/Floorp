@@ -1431,31 +1431,34 @@ void nsMathMLContainerFrame::PropagateFrameFlagFor(nsIFrame* aFrame,
   }
 }
 
-nsresult nsMathMLContainerFrame::ReportErrorToConsole(const char* errorMsgId,
-                                                      const char16_t** aParams,
-                                                      uint32_t aParamCount) {
+nsresult nsMathMLContainerFrame::ReportErrorToConsole(
+    const char* errorMsgId, const nsTArray<nsString>& aParams) {
   return nsContentUtils::ReportToConsole(
       nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Layout: MathML"),
       mContent->OwnerDoc(), nsContentUtils::eMATHML_PROPERTIES, errorMsgId,
-      aParams, aParamCount);
+      aParams);
 }
 
 nsresult nsMathMLContainerFrame::ReportParseError(const char16_t* aAttribute,
                                                   const char16_t* aValue) {
-  const char16_t* argv[] = {aValue, aAttribute,
-                            mContent->NodeInfo()->NameAtom()->GetUTF16String()};
-  return ReportErrorToConsole("AttributeParsingError", argv, 3);
+  AutoTArray<nsString, 3> argv;
+  argv.AppendElement(aValue);
+  argv.AppendElement(aAttribute);
+  argv.AppendElement(nsDependentAtomString(mContent->NodeInfo()->NameAtom()));
+  return ReportErrorToConsole("AttributeParsingError", argv);
 }
 
 nsresult nsMathMLContainerFrame::ReportChildCountError() {
-  const char16_t* arg = mContent->NodeInfo()->NameAtom()->GetUTF16String();
-  return ReportErrorToConsole("ChildCountIncorrect", &arg, 1);
+  AutoTArray<nsString, 1> arg = {
+      nsDependentAtomString(mContent->NodeInfo()->NameAtom())};
+  return ReportErrorToConsole("ChildCountIncorrect", arg);
 }
 
 nsresult nsMathMLContainerFrame::ReportInvalidChildError(nsAtom* aChildTag) {
-  const char16_t* argv[] = {aChildTag->GetUTF16String(),
-                            mContent->NodeInfo()->NameAtom()->GetUTF16String()};
-  return ReportErrorToConsole("InvalidChild", argv, 2);
+  AutoTArray<nsString, 2> argv = {
+      nsDependentAtomString(aChildTag),
+      nsDependentAtomString(mContent->NodeInfo()->NameAtom())};
+  return ReportErrorToConsole("InvalidChild", argv);
 }
 
 //==========================

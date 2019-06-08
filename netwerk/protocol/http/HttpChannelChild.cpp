@@ -4029,14 +4029,14 @@ HttpChannelChild::LogMimeTypeMismatch(const nsACString& aMessageName,
     mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
   }
 
-  nsAutoString url(aURL);
-  nsAutoString contentType(aContentType);
-  const char16_t* params[] = {url.get(), contentType.get()};
+  AutoTArray<nsString, 2> params;
+  params.AppendElement(aURL);
+  params.AppendElement(aContentType);
   nsContentUtils::ReportToConsole(
       aWarning ? nsIScriptError::warningFlag : nsIScriptError::errorFlag,
       NS_LITERAL_CSTRING("MIMEMISMATCH"), doc,
       nsContentUtils::eSECURITY_PROPERTIES, nsCString(aMessageName).get(),
-      params, ArrayLength(params));
+      params);
   return NS_OK;
 }
 

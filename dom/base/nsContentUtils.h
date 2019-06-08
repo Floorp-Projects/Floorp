@@ -1095,9 +1095,8 @@ class nsContentUtils {
    *   @param aDocument Reference to the document which triggered the message.
    *   @param aFile Properties file containing localized message.
    *   @param aMessageName Name of localized message.
-   *   @param [aParams=nullptr] (Optional) Parameters to be substituted into
+   *   @param [aParams=empty-array] (Optional) Parameters to be substituted into
               localized message.
-   *   @param [aParamsLength=0] (Optional) Length of aParams.
    *   @param [aURI=nullptr] (Optional) URI of resource containing error.
    *   @param [aSourceLine=EmptyString()] (Optional) The text of the line that
               contains the error (may be empty).
@@ -1127,7 +1126,7 @@ class nsContentUtils {
   static nsresult ReportToConsole(
       uint32_t aErrorFlags, const nsACString& aCategory,
       const Document* aDocument, PropertiesFile aFile, const char* aMessageName,
-      const char16_t** aParams = nullptr, uint32_t aParamsLength = 0,
+      const nsTArray<nsString>& aParams = nsTArray<nsString>(),
       nsIURI* aURI = nullptr, const nsString& aSourceLine = EmptyString(),
       uint32_t aLineNumber = 0, uint32_t aColumnNumber = 0);
 
@@ -1203,22 +1202,21 @@ class nsContentUtils {
   // "*.", it matches any sub-domains.
   static bool IsURIInPrefList(nsIURI* aURI, const char* aPrefName);
 
- private:
-  /**
-   * Fill (with the parameters given) the localized string named |aKey| in
-   * properties file |aFile|.
+  /*&
+   * A convenience version of FormatLocalizedString that can be used if all the
+   * params are in same-typed strings.  The variadic template args need to come
+   * at the end, so we put aResult at the beginning to make sure it's clear
+   * which is the output and which are the inputs.
    */
-  static nsresult FormatLocalizedString(PropertiesFile aFile, const char* aKey,
-                                        const char16_t** aParams,
-                                        uint32_t aParamsLength,
-                                        nsAString& aResult);
-
- public:
-  template <uint32_t N>
-  static nsresult FormatLocalizedString(PropertiesFile aFile, const char* aKey,
-                                        const char16_t* (&aParams)[N],
-                                        nsAString& aResult) {
-    return FormatLocalizedString(aFile, aKey, aParams, N, aResult);
+  template <typename... T>
+  static nsresult FormatLocalizedString(nsAString& aResult,
+                                        PropertiesFile aFile, const char* aKey,
+                                        const T&... aParams) {
+    static_assert(sizeof...(aParams) != 0, "Use GetLocalizedString()");
+    AutoTArray<nsString, sizeof...(aParams)> params = {
+        aParams...,
+    };
+    return FormatLocalizedString(aFile, aKey, params, aResult);
   }
 
   /**

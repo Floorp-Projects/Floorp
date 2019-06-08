@@ -2352,9 +2352,8 @@ void HTMLInputElement::GetDisplayFileName(nsAString& aValue) const {
     nsString count;
     count.AppendInt(int(mFileData->mFilesOrDirectories.Length()));
 
-    const char16_t* params[] = {count.get()};
-    nsContentUtils::FormatLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                          "XFilesSelected", params, value);
+    nsContentUtils::FormatLocalizedString(
+        value, nsContentUtils::eFORMS_PROPERTIES, "XFilesSelected", count);
   }
 
   aValue = value;

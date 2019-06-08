@@ -105,12 +105,12 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
     doc = static_cast<mozilla::dom::BrowserChild*>(browserChild.get())
               ->GetTopLevelDocument();
   }
-  NS_ConvertUTF8toUTF16 specUTF16(NS_UnescapeURL(dataSpec));
-  const char16_t* params[] = {specUTF16.get()};
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DATA_URI_BLOCKED"), doc,
-      nsContentUtils::eSECURITY_PROPERTIES, "BlockTopLevelDataURINavigation",
-      params, ArrayLength(params));
+  AutoTArray<nsString, 1> params;
+  CopyUTF8toUTF16(NS_UnescapeURL(dataSpec), *params.AppendElement());
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("DATA_URI_BLOCKED"), doc,
+                                  nsContentUtils::eSECURITY_PROPERTIES,
+                                  "BlockTopLevelDataURINavigation", params);
   return false;
 }
 
@@ -151,12 +151,12 @@ bool nsContentSecurityManager::AllowInsecureRedirectToDataURI(
   if (node) {
     doc = node->OwnerDoc();
   }
-  NS_ConvertUTF8toUTF16 specUTF16(NS_UnescapeURL(dataSpec));
-  const char16_t* params[] = {specUTF16.get()};
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DATA_URI_BLOCKED"), doc,
-      nsContentUtils::eSECURITY_PROPERTIES, "BlockSubresourceRedirectToData",
-      params, ArrayLength(params));
+  AutoTArray<nsString, 1> params;
+  CopyUTF8toUTF16(NS_UnescapeURL(dataSpec), *params.AppendElement());
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("DATA_URI_BLOCKED"), doc,
+                                  nsContentUtils::eSECURITY_PROPERTIES,
+                                  "BlockSubresourceRedirectToData", params);
   return false;
 }
 
@@ -258,13 +258,12 @@ nsresult nsContentSecurityManager::CheckFTPSubresourceLoad(
 
   nsAutoCString spec;
   uri->GetSpec(spec);
-  NS_ConvertUTF8toUTF16 specUTF16(NS_UnescapeURL(spec));
-  const char16_t* params[] = {specUTF16.get()};
+  AutoTArray<nsString, 1> params;
+  CopyUTF8toUTF16(NS_UnescapeURL(spec), *params.AppendElement());
 
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, NS_LITERAL_CSTRING("FTP_URI_BLOCKED"), doc,
-      nsContentUtils::eSECURITY_PROPERTIES, "BlockSubresourceFTP", params,
-      ArrayLength(params));
+      nsContentUtils::eSECURITY_PROPERTIES, "BlockSubresourceFTP", params);
 
   return NS_ERROR_CONTENT_BLOCKED;
 }

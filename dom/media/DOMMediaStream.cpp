@@ -443,16 +443,14 @@ void DOMMediaStream::AddTrack(MediaStreamTrack& aTrack) {
     LOG(LogLevel::Error, ("DOMMediaStream %p Own MSG %p != aTrack's MSG %p",
                           this, mPlaybackStream->Graph(), aTrack.Graph()));
 
-    nsAutoString trackId;
-    aTrack.GetId(trackId);
-    const char16_t* params[] = {trackId.get()};
+    AutoTArray<nsString, 1> params;
+    aTrack.GetId(*params.AppendElement());
     nsCOMPtr<nsPIDOMWindowInner> pWindow = GetParentObject();
     Document* document = pWindow ? pWindow->GetExtantDoc() : nullptr;
-    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    NS_LITERAL_CSTRING("Media"), document,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "MediaStreamAddTrackDifferentAudioChannel",
-                                    params, ArrayLength(params));
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::errorFlag, NS_LITERAL_CSTRING("Media"), document,
+        nsContentUtils::eDOM_PROPERTIES,
+        "MediaStreamAddTrackDifferentAudioChannel", params);
     return;
   }
 

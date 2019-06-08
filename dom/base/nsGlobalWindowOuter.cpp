@@ -4628,10 +4628,9 @@ void nsGlobalWindowOuter::MakeScriptDialogTitle(
           fixedURI->GetDisplayPrePath(prepath);
 
           NS_ConvertUTF8toUTF16 ucsPrePath(prepath);
-          const char16_t* formatStrings[] = {ucsPrePath.get()};
           nsContentUtils::FormatLocalizedString(
-              nsContentUtils::eCOMMON_DIALOG_PROPERTIES, "ScriptDlgHeading",
-              formatStrings, aOutTitle);
+              aOutTitle, nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
+              "ScriptDlgHeading", ucsPrePath);
         }
       }
     }

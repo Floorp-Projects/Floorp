@@ -83,12 +83,12 @@ static bool IsAncestorBinding(Document* aDocument, nsIURI* aChildBindingURI,
       if (bindingRecursion < NS_MAX_XBL_BINDING_RECURSION) {
         continue;
       }
-      NS_ConvertUTF8toUTF16 bindingURI(aChildBindingURI->GetSpecOrDefault());
-      const char16_t* params[] = {bindingURI.get()};
+      AutoTArray<nsString, 1> params;
+      CopyUTF8toUTF16(aChildBindingURI->GetSpecOrDefault(),
+                      *params.AppendElement());
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XBL"), aDocument,
-          nsContentUtils::eXBL_PROPERTIES, "TooDeepBindingRecursion", params,
-          ArrayLength(params));
+          nsContentUtils::eXBL_PROPERTIES, "TooDeepBindingRecursion", params);
       return true;
     }
   }
@@ -294,10 +294,10 @@ nsresult nsXBLStreamListener::HandleEvent(Event* aEvent) {
             "An XBL file is malformed. Did you forget the XBL namespace on the "
             "bindings tag?");
       }
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("XBL"), nullptr,
-                                      nsContentUtils::eXBL_PROPERTIES,
-                                      "MalformedXBL", nullptr, 0, documentURI);
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XBL"), nullptr,
+          nsContentUtils::eXBL_PROPERTIES, "MalformedXBL", nsTArray<nsString>(),
+          documentURI);
       return NS_ERROR_FAILURE;
     }
 
@@ -771,14 +771,15 @@ nsresult nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
         rv = aDontExtendURIs[index]->Equals(baseBindingURI, &equal);
         NS_ENSURE_SUCCESS(rv, rv);
         if (equal) {
-          NS_ConvertUTF8toUTF16 protoSpec(
-              protoBinding->BindingURI()->GetSpecOrDefault());
-          NS_ConvertUTF8toUTF16 baseSpec(baseBindingURI->GetSpecOrDefault());
-          const char16_t* params[] = {protoSpec.get(), baseSpec.get()};
+          AutoTArray<nsString, 2> params;
+          CopyUTF8toUTF16(protoBinding->BindingURI()->GetSpecOrDefault(),
+                          *params.AppendElement());
+          CopyUTF8toUTF16(baseBindingURI->GetSpecOrDefault(),
+                          *params.AppendElement());
           nsContentUtils::ReportToConsole(
               nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XBL"), nullptr,
               nsContentUtils::eXBL_PROPERTIES, "CircularExtendsBinding", params,
-              ArrayLength(params), boundDocument->GetDocumentURI());
+              boundDocument->GetDocumentURI());
           return NS_ERROR_ILLEGAL_VALUE;
         }
       }

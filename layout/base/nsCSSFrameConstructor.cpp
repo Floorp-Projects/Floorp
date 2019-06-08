@@ -9775,9 +9775,9 @@ void nsCSSFrameConstructor::ProcessChildren(
     if (!aFrame->IsGeneratedContentFrame() &&
         mPresShell->GetPresContext()->IsChrome()) {
       nsIContent* badKid = AnyKidsNeedBlockParent(aFrameList.FirstChild());
-      nsDependentAtomString parentTag(aContent->NodeInfo()->NameAtom()),
-          kidTag(badKid->NodeInfo()->NameAtom());
-      const char16_t* params[] = {parentTag.get(), kidTag.get()};
+      AutoTArray<nsString, 2> params = {
+          nsDependentAtomString(aContent->NodeInfo()->NameAtom()),
+          nsDependentAtomString(badKid->NodeInfo()->NameAtom())};
       const nsStyleDisplay* display = frameComputedStyle->StyleDisplay();
       const char* message = (display->mDisplay == StyleDisplay::MozInlineBox)
                                 ? "NeededToWrapXULInlineBox"
@@ -9785,8 +9785,7 @@ void nsCSSFrameConstructor::ProcessChildren(
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag,
           NS_LITERAL_CSTRING("Layout: FrameConstructor"), mDocument,
-          nsContentUtils::eXUL_PROPERTIES, message, params,
-          ArrayLength(params));
+          nsContentUtils::eXUL_PROPERTIES, message, params);
     }
 
     RefPtr<ComputedStyle> blockSC =

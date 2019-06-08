@@ -148,10 +148,10 @@ void PerformanceObserver::ReportUnsupportedTypesErrorToConsole(
   } else {
     nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(mOwner);
     Document* document = ownerWindow->GetExtantDoc();
-    const char16_t* params[] = {aInvalidTypes.get()};
+    AutoTArray<nsString, 1> params = {aInvalidTypes};
     nsContentUtils::ReportToConsole(
         nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), document,
-        nsContentUtils::eDOM_PROPERTIES, msgId, params, 1);
+        nsContentUtils::eDOM_PROPERTIES, msgId, params);
   }
   return;
 }
