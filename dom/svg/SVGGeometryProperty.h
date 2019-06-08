@@ -50,6 +50,10 @@ struct Width {
   constexpr static auto CtxDirection = SVGContentUtils::X;
   constexpr static auto Getter = &nsStylePosition::mWidth;
   constexpr static auto SizeGetter = &gfx::Size::width;
+  static AspectRatio AspectRatioRelative(AspectRatio aAspectRatio) {
+    return aAspectRatio.Inverted();
+  }
+  constexpr static uint32_t DefaultObjectSize = 300;
   using CounterPart = Height;
 };
 struct Height {
@@ -57,6 +61,10 @@ struct Height {
   constexpr static auto CtxDirection = SVGContentUtils::Y;
   constexpr static auto Getter = &nsStylePosition::mHeight;
   constexpr static auto SizeGetter = &gfx::Size::height;
+  static AspectRatio AspectRatioRelative(AspectRatio aAspectRatio) {
+    return aAspectRatio;
+  }
+  constexpr static uint32_t DefaultObjectSize = 150;
   using CounterPart = Width;
 };
 
@@ -114,6 +122,9 @@ float ResolveImpl(ComputedStyle const& aStyle, SVGElement* aElement,
     // It's not clear per SVG2 spec what should be done for values other
     // than |auto| (e.g. |max-content|). We treat them as nonsense, thus
     // using the initial value behavior, i.e. |auto|.
+    // The following procedure follows the Default Sizing Algorithm as
+    // specified in:
+    // https://svgwg.org/svg2-draft/embedded.html#ImageElement
 
     auto* f = aElement->GetPrimaryFrame();
     MOZ_ASSERT(f && f->IsSVGImageFrame());
@@ -123,30 +134,59 @@ float ResolveImpl(ComputedStyle const& aStyle, SVGElement* aElement,
     auto const& valueOther = aStyle.StylePosition()->*Other::Getter;
 
     gfx::Size intrinsicImageSize;
-    if (!imgf->GetIntrinsicImageSize(intrinsicImageSize)) {
-      // Cannot get intrinsic image size, just return 0.
+    AspectRatio aspectRatio;
+    if (!imgf->GetIntrinsicImageDimensions(intrinsicImageSize, aspectRatio)) {
+      // No image container, just return 0.
       return 0.f;
     }
 
     if (valueOther.IsLengthPercentage()) {
-      // We are |auto|, but the other side has specifed length. Then
-      // we need to preserve aspect ratio.
+      // We are |auto|, but the other side has specifed length.
+      float lengthOther = ResolvePureLengthPercentage<Other::CtxDirection>(
+          aElement, valueOther.AsLengthPercentage());
 
-      float intrinsicLengthOther = intrinsicImageSize.*Other::SizeGetter;
-      if (!intrinsicLengthOther) {
-        // Avoid dividing by 0.
-        return 0.f;
+      if (aspectRatio) {
+        // Preserve aspect ratio if it's present.
+        return Other::AspectRatioRelative(aspectRatio).ApplyTo(lengthOther);
       }
 
-      float intrinsicLength = intrinsicImageSize.*Tag::SizeGetter,
-            lengthOther = ResolvePureLengthPercentage<Other::CtxDirection>(
-                aElement, valueOther.AsLengthPercentage());
+      float intrinsicLength = intrinsicImageSize.*Tag::SizeGetter;
+      if (intrinsicLength >= 0) {
+        // Use the intrinsic length if it's present.
+        return intrinsicLength;
+      }
 
-      return intrinsicLength * lengthOther / intrinsicLengthOther;
+      // No specified size, no aspect ratio, no intrinsic length,
+      // then use default size.
+      return Tag::DefaultObjectSize;
     }
 
-    // So |width| and |height| are both |auto|, just use intrinsic size.
-    return intrinsicImageSize.*Tag::SizeGetter;
+    // |width| and |height| are both |auto|
+    if (intrinsicImageSize.*Tag::SizeGetter >= 0) {
+      return intrinsicImageSize.*Tag::SizeGetter;
+    }
+
+    if (intrinsicImageSize.*Other::SizeGetter >= 0 && aspectRatio) {
+      return Other::AspectRatioRelative(aspectRatio)
+          .ApplyTo(intrinsicImageSize.*Other::SizeGetter);
+    }
+
+    if (aspectRatio) {
+      // Resolve as a contain constraint against the default object size.
+      auto defaultAspectRatioRelative =
+          AspectRatio{float(Other::DefaultObjectSize) / Tag::DefaultObjectSize};
+      auto aspectRatioRelative = Tag::AspectRatioRelative(aspectRatio);
+
+      if (defaultAspectRatioRelative < aspectRatioRelative) {
+        // Using default length in our side and the intrinsic aspect ratio,
+        // the other side cannot be contained.
+        return aspectRatioRelative.Inverted().ApplyTo(Other::DefaultObjectSize);
+      }
+
+      return Tag::DefaultObjectSize;
+    }
+
+    return Tag::DefaultObjectSize;
   }
 
   // For other elements, |auto| and |max-content| etc. are treated as 0.
