@@ -82,41 +82,6 @@
 
       testAccessibleTree("autocomplete", accTree);
 
-      //////////////////////////////////////////////////////////////////////////
-      // textbox@type=autocomplete #2 (child menupoup)
-
-      accTree = {
-        // textbox
-        role: ROLE_AUTOCOMPLETE,
-        children: [
-          {
-            // menupopup
-            role: ROLE_COMBOBOX_LIST, // autocomplete menu popup
-            children: [
-              {
-                // menuitem
-                role: ROLE_COMBOBOX_OPTION,
-                children: []
-              }
-            ]
-          },
-          {
-            // html:input
-            role: ROLE_ENTRY,
-            children: [
-              // no text leaf accessible for text node
-            ]
-          },
-          {
-            // xul:menupopup
-            role: ROLE_COMBOBOX_LIST, // context menu popup
-            children: []
-          }
-        ]
-      };
-
-      testAccessibleTree("autocomplete2", accTree);
-
       SimpleTest.finish()
     }
 
@@ -155,12 +120,6 @@
       <textbox id="autocomplete" type="autocomplete"
                autocompletesearch="unifiedcomplete"
                value="http://mochi.test:8888/redirect-a11y.html"/>
-
-      <textbox id="autocomplete2" type="autocomplete">
-        <menupopup>
-          <menuitem label="item1"/>
-        </menupopup>
-      </textbox>
     </vbox>
   </hbox>
 
