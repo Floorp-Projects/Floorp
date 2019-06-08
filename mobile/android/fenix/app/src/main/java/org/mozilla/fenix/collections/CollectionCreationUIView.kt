@@ -65,6 +65,7 @@ class CollectionCreationUIView(
     private val transition = AutoTransition()
 
     init {
+        job = Job()
         transition.duration = TRANSITION_DURATION
 
         selectTabsConstraints.clone(collection_constraint_layout)
