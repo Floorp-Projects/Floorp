@@ -141,6 +141,8 @@ class DeclarationBlock final {
 
   bool IsReadOnly() const;
 
+  size_t SizeofIncludingThis(MallocSizeOf);
+
   static already_AddRefed<DeclarationBlock> FromCssText(
       const nsAString& aCssText, URLExtraData* aExtraData,
       nsCompatibility aMode, css::Loader* aLoader);
