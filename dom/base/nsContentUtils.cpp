@@ -3591,45 +3591,18 @@ nsresult nsContentUtils::GetLocalizedString(PropertiesFile aFile,
 }
 
 /* static */
-nsresult nsContentUtils::FormatLocalizedString(PropertiesFile aFile,
-                                               const char* aKey,
-                                               const char16_t** aParams,
-                                               uint32_t aParamsLength,
-                                               nsAString& aResult) {
+nsresult nsContentUtils::FormatLocalizedString(
+    PropertiesFile aFile, const char* aKey, const nsTArray<nsString>& aParams,
+    nsAString& aResult) {
   nsresult rv = EnsureStringBundle(aFile);
   NS_ENSURE_SUCCESS(rv, rv);
   nsIStringBundle* bundle = sStringBundles[aFile];
 
-  if (!aParams || !aParamsLength) {
+  if (aParams.IsEmpty()) {
     return bundle->GetStringFromName(aKey, aResult);
   }
 
-  // XXXbz Temporary.  Will change the signature of FormatLocalizedString in the
-  // next changeset, but it has lots of callsites and this changeset was already
-  // getting big.
-  nsTArray<nsString> params(aParamsLength);
-  for (uint32_t i = 0; i < aParamsLength; ++i) {
-    params.AppendElement(aParams[i]);
-  }
-  return bundle->FormatStringFromName(aKey, params, aResult);
-}
-
-/* static */
-nsresult nsContentUtils::FormatLocalizedString(
-    PropertiesFile aFile, const char* aKey,
-    const nsTArray<nsString>& aParamArray, nsAString& aResult) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  UniquePtr<const char16_t*[]> params;
-  uint32_t paramsLength = aParamArray.Length();
-  if (paramsLength > 0) {
-    params = MakeUnique<const char16_t*[]>(paramsLength);
-    for (uint32_t i = 0; i < paramsLength; ++i) {
-      params[i] = aParamArray[i].get();
-    }
-  }
-  return FormatLocalizedString(aFile, aKey, params.get(), paramsLength,
-                               aResult);
+  return bundle->FormatStringFromName(aKey, aParams, aResult);
 }
 
 /* static */
@@ -3655,17 +3628,12 @@ void nsContentUtils::LogSimpleConsoleError(const nsAString& aErrorText,
 nsresult nsContentUtils::ReportToConsole(
     uint32_t aErrorFlags, const nsACString& aCategory,
     const Document* aDocument, PropertiesFile aFile, const char* aMessageName,
-    const char16_t** aParams, uint32_t aParamsLength, nsIURI* aURI,
+    const nsTArray<nsString>& aParams, nsIURI* aURI,
     const nsString& aSourceLine, uint32_t aLineNumber, uint32_t aColumnNumber) {
-  NS_ASSERTION((aParams && aParamsLength) || (!aParams && !aParamsLength),
-               "Supply either both parameters and their number or no"
-               "parameters and 0.");
-
   nsresult rv;
   nsAutoString errorText;
-  if (aParams) {
-    rv = FormatLocalizedString(aFile, aMessageName, aParams, aParamsLength,
-                               errorText);
+  if (!aParams.IsEmpty()) {
+    rv = FormatLocalizedString(aFile, aMessageName, aParams, errorText);
   } else {
     rv = GetLocalizedString(aFile, aMessageName, errorText);
   }
@@ -6465,17 +6433,16 @@ static void ReportPatternCompileFailure(nsAString& aPattern,
   JS::RootedString messageStr(cx, messageVal.toString());
   MOZ_ASSERT(messageStr);
 
-  nsAutoString wideMessage;
-  if (!AssignJSString(cx, wideMessage, messageStr)) {
+  AutoTArray<nsString, 2> strings;
+  strings.AppendElement(aPattern);
+  if (!AssignJSString(cx, *strings.AppendElement(), messageStr)) {
     return;
   }
 
-  const nsString& pattern = PromiseFlatString(aPattern);
-  const char16_t* strings[] = {pattern.get(), wideMessage.get()};
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::errorFlag, NS_LITERAL_CSTRING("DOM"), aDocument,
-      nsContentUtils::eDOM_PROPERTIES, "PatternAttributeCompileFailure",
-      strings, ArrayLength(strings));
+  nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                  NS_LITERAL_CSTRING("DOM"), aDocument,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  "PatternAttributeCompileFailure", strings);
   savedExc.drop();
 }
 

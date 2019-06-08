@@ -71,10 +71,9 @@ nsresult NumericInputTypeBase::GetRangeOverflowMessage(nsAString& aMessage) {
   maxStr.AssignASCII(buf);
   MOZ_ASSERT(ok, "buf not big enough");
 
-  const char16_t* params[] = {maxStr.get()};
   return nsContentUtils::FormatLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, "FormValidationNumberRangeOverflow",
-      params, aMessage);
+      aMessage, nsContentUtils::eDOM_PROPERTIES,
+      "FormValidationNumberRangeOverflow", maxStr);
 }
 
 nsresult NumericInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
@@ -88,10 +87,9 @@ nsresult NumericInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
   minStr.AssignASCII(buf);
   MOZ_ASSERT(ok, "buf not big enough");
 
-  const char16_t* params[] = {minStr.get()};
   return nsContentUtils::FormatLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, "FormValidationNumberRangeUnderflow",
-      params, aMessage);
+      aMessage, nsContentUtils::eDOM_PROPERTIES,
+      "FormValidationNumberRangeUnderflow", minStr);
 }
 
 bool NumericInputTypeBase::ConvertStringToNumber(

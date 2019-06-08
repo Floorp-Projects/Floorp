@@ -73,8 +73,12 @@ static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
 
   // Generate the error message
   nsAutoString blockedMessage;
+  AutoTArray<nsString, 2> params;
+  CopyUTF8toUTF16(spec, *params.AppendElement());
+  if (aParam) {
+    params.AppendElement(aParam);
+  }
   NS_ConvertUTF8toUTF16 specUTF16(spec);
-  const char16_t* params[] = {specUTF16.get(), aParam};
   rv = nsContentUtils::FormatLocalizedString(
       nsContentUtils::eSECURITY_PROPERTIES, aProperty, params, blockedMessage);
 

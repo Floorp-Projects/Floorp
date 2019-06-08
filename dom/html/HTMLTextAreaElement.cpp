@@ -998,10 +998,9 @@ nsresult HTMLTextAreaElement::GetValidationMessage(
       strMaxLength.AppendInt(maxLength);
       strTextLength.AppendInt(textLength);
 
-      const char16_t* params[] = {strMaxLength.get(), strTextLength.get()};
       rv = nsContentUtils::FormatLocalizedString(
-          nsContentUtils::eDOM_PROPERTIES, "FormValidationTextTooLong", params,
-          message);
+          message, nsContentUtils::eDOM_PROPERTIES, "FormValidationTextTooLong",
+          strMaxLength, strTextLength);
       aValidationMessage = message;
     } break;
     case VALIDITY_STATE_TOO_SHORT: {
@@ -1014,10 +1013,9 @@ nsresult HTMLTextAreaElement::GetValidationMessage(
       strMinLength.AppendInt(minLength);
       strTextLength.AppendInt(textLength);
 
-      const char16_t* params[] = {strMinLength.get(), strTextLength.get()};
       rv = nsContentUtils::FormatLocalizedString(
-          nsContentUtils::eDOM_PROPERTIES, "FormValidationTextTooShort", params,
-          message);
+          message, nsContentUtils::eDOM_PROPERTIES,
+          "FormValidationTextTooShort", strMinLength, strTextLength);
       aValidationMessage = message;
     } break;
     case VALIDITY_STATE_VALUE_MISSING: {

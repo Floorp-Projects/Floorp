@@ -191,22 +191,21 @@ void HTMLScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
                                                 OwnerDoc(), baseURI);
 
       if (!mUri) {
-        const char16_t* params[] = {u"src", src.get()};
+        AutoTArray<nsString, 2> params = {NS_LITERAL_STRING("src"), src};
 
         nsContentUtils::ReportToConsole(
             nsIScriptError::warningFlag, NS_LITERAL_CSTRING("HTML"), OwnerDoc(),
             nsContentUtils::eDOM_PROPERTIES, "ScriptSourceInvalidUri", params,
-            ArrayLength(params), nullptr, EmptyString(), GetScriptLineNumber(),
+            nullptr, EmptyString(), GetScriptLineNumber(),
             GetScriptColumnNumber());
       }
     } else {
-      const char16_t* params[] = {u"src"};
+      AutoTArray<nsString, 1> params = {NS_LITERAL_STRING("src")};
 
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, NS_LITERAL_CSTRING("HTML"), OwnerDoc(),
-          nsContentUtils::eDOM_PROPERTIES, "ScriptSourceEmpty", params,
-          ArrayLength(params), nullptr, EmptyString(), GetScriptLineNumber(),
-          GetScriptColumnNumber());
+          nsContentUtils::eDOM_PROPERTIES, "ScriptSourceEmpty", params, nullptr,
+          EmptyString(), GetScriptLineNumber(), GetScriptColumnNumber());
     }
 
     // At this point mUri will be null for invalid URLs.

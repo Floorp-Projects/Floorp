@@ -3293,9 +3293,9 @@ class Document : public nsINode,
   };
 #undef DOCUMENT_WARNING
   bool HasWarnedAbout(DocumentWarnings aWarning) const;
-  void WarnOnceAbout(DocumentWarnings aWarning, bool asError = false,
-                     const char16_t** aParams = nullptr,
-                     uint32_t aParamsLength = 0) const;
+  void WarnOnceAbout(
+      DocumentWarnings aWarning, bool asError = false,
+      const nsTArray<nsString>& aParams = nsTArray<nsString>()) const;
 
   // Posts an event to call UpdateVisibilityState
   void PostVisibilityUpdateEvent();

@@ -1340,7 +1340,7 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
   if (NS_FAILED(rv)) {
     return;
   }
-  const char16_t* params[] = {utf16OldURI.get(), utf16URI.get()};
+  AutoTArray<nsString, 2> params = {utf16OldURI, utf16URI};
   const char* msgName;
   // If there's no query to rewrite, just notify in the developer console
   // that we're changing the embed.
@@ -1351,8 +1351,8 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
   }
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Plugins"),
-      thisContent->OwnerDoc(), nsContentUtils::eDOM_PROPERTIES, msgName, params,
-      ArrayLength(params));
+      thisContent->OwnerDoc(), nsContentUtils::eDOM_PROPERTIES, msgName,
+      params);
 }
 
 bool nsObjectLoadingContent::CheckLoadPolicy(int16_t* aContentPolicy) {

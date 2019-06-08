@@ -112,12 +112,10 @@ PostMessageEvent::Run() {
       rv = nsContentUtils::GetUTFOrigin(mProvidedPrincipal, providedOrigin);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      const char16_t* params[] = {providedOrigin.get(), targetOrigin.get()};
-
       nsAutoString errorText;
-      nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                            "TargetPrincipalDoesNotMatch",
-                                            params, errorText);
+      nsContentUtils::FormatLocalizedString(
+          errorText, nsContentUtils::eDOM_PROPERTIES,
+          "TargetPrincipalDoesNotMatch", providedOrigin, targetOrigin);
 
       nsCOMPtr<nsIScriptError> errorObject =
           do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);

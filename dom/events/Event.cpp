@@ -383,11 +383,10 @@ void Event::PreventDefaultInternal(bool aCalledByDefaultHandler,
     nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(mOwner));
     if (win) {
       if (Document* doc = win->GetExtantDoc()) {
-        nsString type;
-        GetType(type);
-        const char16_t* params[] = {type.get()};
+        AutoTArray<nsString, 1> params;
+        GetType(*params.AppendElement());
         doc->WarnOnceAbout(Document::ePreventDefaultFromPassiveListener, false,
-                           params, ArrayLength(params));
+                           params);
       }
     }
     return;

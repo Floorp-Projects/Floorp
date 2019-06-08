@@ -257,12 +257,12 @@ static void LogMixedContentMessage(
     }
   }
 
-  NS_ConvertUTF8toUTF16 locationSpecUTF16(aContentLocation->GetSpecOrDefault());
-  const char16_t* strings[] = {locationSpecUTF16.get()};
+  AutoTArray<nsString, 1> strings;
+  CopyUTF8toUTF16(aContentLocation->GetSpecOrDefault(),
+                  *strings.AppendElement());
   nsContentUtils::ReportToConsole(severityFlag, messageCategory, aRootDoc,
                                   nsContentUtils::eSECURITY_PROPERTIES,
-                                  messageLookupKey.get(), strings,
-                                  ArrayLength(strings));
+                                  messageLookupKey.get(), strings);
 }
 
 /* nsIChannelEventSink implementation

@@ -436,11 +436,10 @@ float SVGContentUtils::GetFontXHeight(ComputedStyle* aComputedStyle,
          aPresContext->EffectiveTextZoom();
 }
 nsresult SVGContentUtils::ReportToConsole(Document* doc, const char* aWarning,
-                                          const char16_t** aParams,
-                                          uint32_t aParamsLength) {
+                                          const nsTArray<nsString>& aParams) {
   return nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, NS_LITERAL_CSTRING("SVG"), doc,
-      nsContentUtils::eSVG_PROPERTIES, aWarning, aParams, aParamsLength);
+      nsContentUtils::eSVG_PROPERTIES, aWarning, aParams);
 }
 
 bool SVGContentUtils::EstablishesViewport(nsIContent* aContent) {

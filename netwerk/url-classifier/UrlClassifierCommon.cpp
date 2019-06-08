@@ -229,8 +229,8 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
   // Log a warning to the web console.
   nsCOMPtr<nsIURI> uri;
   channel->GetURI(getter_AddRefs(uri));
-  NS_ConvertUTF8toUTF16 spec(uri->GetSpecOrDefault());
-  const char16_t* params[] = {spec.get()};
+  AutoTArray<nsString, 1> params;
+  CopyUTF8toUTF16(uri->GetSpecOrDefault(), *params.AppendElement());
   const char* message;
   nsCString category;
 
@@ -244,7 +244,7 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
 
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, category, doc,
                                   nsContentUtils::eNECKO_PROPERTIES, message,
-                                  params, ArrayLength(params));
+                                  params);
 
   return NS_OK;
 }

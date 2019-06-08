@@ -1075,15 +1075,14 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsresult rv;
       nsAutoString message;
       if (otherAtom) {
-        const char16_t* params[] = {atom->GetUTF16String(),
-                                    otherAtom->GetUTF16String()};
         rv = nsContentUtils::FormatLocalizedString(
-            nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, message);
+            message, nsContentUtils::eHTMLPARSER_PROPERTIES, msgId,
+            nsDependentAtomString(atom), nsDependentAtomString(otherAtom));
         NS_ENSURE_SUCCESS(rv, NS_OK);
       } else if (atom) {
-        const char16_t* params[] = {atom->GetUTF16String()};
         rv = nsContentUtils::FormatLocalizedString(
-            nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, message);
+            message, nsContentUtils::eHTMLPARSER_PROPERTIES, msgId,
+            nsDependentAtomString(atom));
         NS_ENSURE_SUCCESS(rv, NS_OK);
       } else {
         rv = nsContentUtils::GetLocalizedString(

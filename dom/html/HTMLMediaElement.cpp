@@ -592,8 +592,7 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest) {
   // Media element playback is not currently supported when recording or
   // replaying. See bug 1304146.
   if (recordreplay::IsRecordingOrReplaying()) {
-    mElement->ReportLoadError("Media elements not available when recording",
-                              nullptr, 0);
+    mElement->ReportLoadError("Media elements not available when recording");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -648,8 +647,8 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest) {
     code.AppendInt(responseStatus);
     nsAutoString src;
     element->GetCurrentSrc(src);
-    const char16_t* params[] = {code.get(), src.get()};
-    element->ReportLoadError("MediaLoadHttpError", params, ArrayLength(params));
+    AutoTArray<nsString, 2> params = {code, src};
+    element->ReportLoadError("MediaLoadHttpError", params);
     return NS_BINDING_ABORTED;
   }
 
@@ -732,17 +731,16 @@ HTMLMediaElement::MediaLoadListener::GetInterface(const nsIID& aIID,
 }
 
 void HTMLMediaElement::ReportLoadError(const char* aMsg,
-                                       const char16_t** aParams,
-                                       uint32_t aParamCount) {
-  ReportToConsole(nsIScriptError::warningFlag, aMsg, aParams, aParamCount);
+                                       const nsTArray<nsString>& aParams) {
+  ReportToConsole(nsIScriptError::warningFlag, aMsg, aParams);
 }
 
-void HTMLMediaElement::ReportToConsole(uint32_t aErrorFlags, const char* aMsg,
-                                       const char16_t** aParams,
-                                       uint32_t aParamCount) const {
+void HTMLMediaElement::ReportToConsole(
+    uint32_t aErrorFlags, const char* aMsg,
+    const nsTArray<nsString>& aParams) const {
   nsContentUtils::ReportToConsole(aErrorFlags, NS_LITERAL_CSTRING("Media"),
                                   OwnerDoc(), nsContentUtils::eDOM_PROPERTIES,
-                                  aMsg, aParams, aParamCount);
+                                  aMsg, aParams);
 }
 
 class HTMLMediaElement::AudioChannelAgentCallback final
@@ -2060,8 +2058,8 @@ void HTMLMediaElement::SelectResource() {
         return;
       }
     } else {
-      const char16_t* params[] = {src.get()};
-      ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
+      AutoTArray<nsString, 1> params = {src};
+      ReportLoadError("MediaLoadInvalidURI", params);
       rv = MediaResult(rv.Code(), "MediaLoadInvalidURI");
     }
     // The media element has neither a src attribute nor a source element child:
@@ -2321,9 +2319,8 @@ void HTMLMediaElement::LoadFromSourceChildren() {
       diagnostics.StoreFormatDiagnostics(OwnerDoc(), type,
                                          canPlay != CANPLAY_NO, __func__);
       if (canPlay == CANPLAY_NO) {
-        const char16_t* params[] = {type.get(), src.get()};
-        ReportLoadError("MediaLoadUnsupportedTypeAttribute", params,
-                        ArrayLength(params));
+        AutoTArray<nsString, 2> params = {type, src};
+        ReportLoadError("MediaLoadUnsupportedTypeAttribute", params);
         DealWithFailedElement(child);
         return;
       }
@@ -2336,8 +2333,8 @@ void HTMLMediaElement::LoadFromSourceChildren() {
     nsCOMPtr<nsIURI> uri;
     NewURIFromString(src, getter_AddRefs(uri));
     if (!uri) {
-      const char16_t* params[] = {src.get()};
-      ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
+      AutoTArray<nsString, 1> params = {src};
+      ReportLoadError("MediaLoadInvalidURI", params);
       DealWithFailedElement(child);
       return;
     }
@@ -3997,8 +3994,8 @@ nsresult HTMLMediaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
           if (NS_FAILED(rv)) {
             nsAutoString spec;
             GetCurrentSrc(spec);
-            const char16_t* params[] = {spec.get()};
-            ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
+            AutoTArray<nsString, 1> params = {spec};
+            ReportLoadError("MediaLoadInvalidURI", params);
           }
         }
       }
@@ -4430,9 +4427,8 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(
     if (!aCanPlay) {
       nsAutoString src;
       self->GetCurrentSrc(src);
-      const char16_t* params[] = {mimeUTF16.get(), src.get()};
-      self->ReportLoadError("MediaLoadUnsupportedMimeType", params,
-                            ArrayLength(params));
+      AutoTArray<nsString, 2> params = {mimeUTF16, src};
+      self->ReportLoadError("MediaLoadUnsupportedMimeType", params);
     }
   };
 
@@ -5038,8 +5034,8 @@ void HTMLMediaElement::NetworkError(const MediaResult& aError) {
 void HTMLMediaElement::DecodeError(const MediaResult& aError) {
   nsAutoString src;
   GetCurrentSrc(src);
-  const char16_t* params[] = {src.get()};
-  ReportLoadError("MediaLoadDecodeError", params, ArrayLength(params));
+  AutoTArray<nsString, 1> params = {src};
+  ReportLoadError("MediaLoadDecodeError", params);
 
   DecoderDoctorDiagnostics diagnostics;
   diagnostics.StoreDecodeError(OwnerDoc(), aError, src, __func__);

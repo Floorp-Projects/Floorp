@@ -136,20 +136,18 @@ nsresult DateTimeInputTypeBase::GetRangeOverflowMessage(nsAString& aMessage) {
   nsAutoString maxStr;
   mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
 
-  const char16_t* params[] = {maxStr.get()};
   return nsContentUtils::FormatLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, "FormValidationDateTimeRangeOverflow",
-      params, aMessage);
+      aMessage, nsContentUtils::eDOM_PROPERTIES,
+      "FormValidationDateTimeRangeOverflow", maxStr);
 }
 
 nsresult DateTimeInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
   nsAutoString minStr;
   mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
 
-  const char16_t* params[] = {minStr.get()};
   return nsContentUtils::FormatLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, "FormValidationDateTimeRangeUnderflow",
-      params, aMessage);
+      aMessage, nsContentUtils::eDOM_PROPERTIES,
+      "FormValidationDateTimeRangeUnderflow", minStr);
 }
 
 nsresult DateTimeInputTypeBase::MinMaxStepAttrChanged() {

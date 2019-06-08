@@ -492,18 +492,10 @@ class ReportErrorToConsoleRunnable final : public WorkerRunnable {
       return;
     }
 
-    uint16_t paramCount = aParams.Length();
-    const char16_t** params = new const char16_t*[paramCount];
-    for (uint16_t i = 0; i < paramCount; ++i) {
-      params[i] = aParams[i].get();
-    }
-
     // Log a warning to the console.
-    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    NS_LITERAL_CSTRING("DOM"), nullptr,
-                                    nsContentUtils::eDOM_PROPERTIES, aMessage,
-                                    paramCount ? params : nullptr, paramCount);
-    delete[] params;
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), nullptr,
+        nsContentUtils::eDOM_PROPERTIES, aMessage, aParams);
   }
 
  private:

@@ -950,11 +950,14 @@ void nsXBLPrototypeHandler::ReportKeyConflict(const char16_t* aKey,
 
   nsAutoString id;
   aKeyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
-  const char16_t* params[] = {aKey, aModifiers, id.get()};
+  AutoTArray<nsString, 3> params;
+  params.AppendElement(aKey);
+  params.AppendElement(aModifiers);
+  params.AppendElement(id);
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XBL Prototype Handler"),
-      doc, nsContentUtils::eXBL_PROPERTIES, aMessageName, params,
-      ArrayLength(params), nullptr, EmptyString(), mLineNumber);
+      doc, nsContentUtils::eXBL_PROPERTIES, aMessageName, params, nullptr,
+      EmptyString(), mLineNumber);
 }
 
 bool nsXBLPrototypeHandler::ModifiersMatchMask(

@@ -1764,16 +1764,15 @@ already_AddRefed<Promise> Navigator::RequestMediaKeySystemAccess(
 
   if (!mWindow->IsSecureContext()) {
     Document* doc = mWindow->GetExtantDoc();
-    nsString uri;
+    AutoTArray<nsString, 1> params;
+    nsString* uri = params.AppendElement();
     if (doc) {
-      Unused << doc->GetDocumentURI(uri);
+      Unused << doc->GetDocumentURI(*uri);
     }
-    const char16_t* params[] = {uri.get()};
-    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    NS_LITERAL_CSTRING("Media"), doc,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "MediaEMEInsecureContextDeprecatedWarning",
-                                    params, ArrayLength(params));
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Media"), doc,
+        nsContentUtils::eDOM_PROPERTIES,
+        "MediaEMEInsecureContextDeprecatedWarning", params);
   }
 
   Document* doc = mWindow->GetExtantDoc();

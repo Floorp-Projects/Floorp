@@ -1410,14 +1410,13 @@ nsresult ProcessXCTO(nsHttpChannel* aChannel, nsIURI* aURI,
     // since we are getting here, the XCTO header was sent;
     // a non matching value most likely means a mistake happenend;
     // e.g. sending 'nosnif' instead of 'nosniff', let's log a warning.
-    NS_ConvertUTF8toUTF16 char16_header(contentTypeOptionsHeader);
-    const char16_t* params[] = {char16_header.get()};
+    AutoTArray<nsString, 1> params;
+    CopyUTF8toUTF16(contentTypeOptionsHeader, *params.AppendElement());
     RefPtr<Document> doc;
     aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
     nsContentUtils::ReportToConsole(
         nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XCTO"), doc,
-        nsContentUtils::eSECURITY_PROPERTIES, "XCTOHeaderValueMissing", params,
-        ArrayLength(params));
+        nsContentUtils::eSECURITY_PROPERTIES, "XCTOHeaderValueMissing", params);
     return NS_OK;
   }
 
