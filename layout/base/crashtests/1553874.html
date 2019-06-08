@@ -1,0 +1,17 @@
+<html>
+<head>
+    <script>
+      function start () {
+        const style = document.createElement('style')
+        document.head.appendChild(style)
+
+        const ul = document.createElement('ul')
+        ul.textContent = '\uFFFD\n'
+        document.documentElement.appendChild(ul)
+
+        style.sheet.insertRule('ul { line-break: anywhere }', (0))
+      }
+      window.addEventListener('load', start)
+    </script>
+</head>
+</html>
