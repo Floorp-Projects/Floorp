@@ -56,7 +56,6 @@ MainProcessSingleton.prototype = {
     switch (topic) {
     case "app-startup": {
       ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm", null);
-      ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
       Services.obs.addObserver(this, "xpcom-shutdown");
 
       // Load this script early so that console.* is initialized
