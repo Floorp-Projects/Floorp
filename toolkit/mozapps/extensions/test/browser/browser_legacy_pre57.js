@@ -1,3 +1,12 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+// This test is testing XUL about:addons UI not implemented in the HTML about:addons,
+// it may be adapted or tested in a separate test file in Bug 1525184.
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
 
 add_task(async function() {
   const INFO_URL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "webextensions";

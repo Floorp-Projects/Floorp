@@ -4,6 +4,15 @@ const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 
 const MAIN_URL = "https://example.com/" + RELATIVE_DIR + "discovery.html";
 
+// This test is testing XUL about:addons UI (the HTML about:addons is tested in
+// browser_html_discover_view_clientid.js).
+SpecialPowers.pushPrefEnv({
+  set: [
+    ["extensions.htmlaboutaddons.discover.enabled", false],
+    ["extensions.htmlaboutaddons.enabled", false],
+  ],
+});
+
 function waitForHeader() {
   return new Promise(resolve => {
     let observer = (subject, topic, state) => {
