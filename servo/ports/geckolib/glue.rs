@@ -1541,6 +1541,32 @@ pub unsafe extern "C" fn Servo_AuthorStyles_Flush(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_DeclarationBlock_SizeOfIncludingThis(
+    malloc_size_of: GeckoMallocSizeOf,
+    malloc_enclosing_size_of: GeckoMallocSizeOf,
+    declarations: &RawServoDeclarationBlock,
+) -> usize {
+    use malloc_size_of::MallocSizeOf;
+    use malloc_size_of::MallocUnconditionalShallowSizeOf;
+
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+
+    let mut ops = MallocSizeOfOps::new(
+        malloc_size_of.unwrap(),
+        Some(malloc_enclosing_size_of.unwrap()),
+        None,
+    );
+
+    Locked::<PropertyDeclarationBlock>::as_arc(&declarations).with_arc(|declarations| {
+        let mut n = 0;
+        n += declarations.unconditional_shallow_size_of(&mut ops);
+        n += declarations.read_with(&guard).size_of(&mut ops);
+        n
+    })
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_AuthorStyles_SizeOfIncludingThis(
     malloc_size_of: GeckoMallocSizeOf,
     malloc_enclosing_size_of: GeckoMallocSizeOf,
