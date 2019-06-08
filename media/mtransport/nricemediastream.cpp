@@ -286,7 +286,8 @@ nsresult NrIceMediaStream::ParseTrickleCandidate(const std::string& candidate,
                                   << candidate);
 
   int r = nr_ice_peer_ctx_parse_trickle_candidate(
-      ctx_peer_, stream, const_cast<char*>(candidate.c_str()), mdns_addr.c_str());
+      ctx_peer_, stream, const_cast<char*>(candidate.c_str()),
+      mdns_addr.c_str());
 
   if (r) {
     if (r == R_ALREADY) {

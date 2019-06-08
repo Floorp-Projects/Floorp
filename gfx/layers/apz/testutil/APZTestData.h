@@ -15,7 +15,7 @@
 #include "mozilla/DebugOnly.h"        // for DebugOnly
 #include "mozilla/GfxMessageUtils.h"  // for ParamTraits specializations
 #include "mozilla/StaticPrefs.h"
-#include "mozilla/ToString.h"         // for ToString
+#include "mozilla/ToString.h"  // for ToString
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "ipc/IPCMessageUtils.h"

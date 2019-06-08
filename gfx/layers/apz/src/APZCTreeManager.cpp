@@ -35,9 +35,9 @@
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/mozalloc.h"  // for operator new
-#include "mozilla/Preferences.h"        // for Preferences
-#include "mozilla/StaticPrefs.h"        // for StaticPrefs
+#include "mozilla/mozalloc.h"     // for operator new
+#include "mozilla/Preferences.h"  // for Preferences
+#include "mozilla/StaticPrefs.h"  // for StaticPrefs
 #include "mozilla/TouchEvents.h"
 #include "mozilla/EventStateManager.h"  // for WheelPrefs
 #include "mozilla/webrender/WebRenderAPI.h"

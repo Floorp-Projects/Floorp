@@ -133,9 +133,9 @@ Maybe<IntRect> TransformedBounds(Layer* aLayer) {
     return Some(result);
   }
 
-  return Some(TransformRect(
-    aLayer->GetLocalVisibleRegion().GetBounds().ToUnknownRect(),
-    GetTransformForInvalidation(aLayer)));
+  return Some(
+      TransformRect(aLayer->GetLocalVisibleRegion().GetBounds().ToUnknownRect(),
+                    GetTransformForInvalidation(aLayer)));
 }
 
 /**
@@ -181,7 +181,9 @@ struct LayerPropertiesBase : public LayerProperties {
   explicit LayerPropertiesBase(Layer* aLayer)
       : mLayer(aLayer),
         mMaskLayer(nullptr),
-        mVisibleRegion(mLayer->Extend3DContext() ? nsIntRegion() : mLayer->GetLocalVisibleRegion().ToUnknownRegion()),
+        mVisibleRegion(mLayer->Extend3DContext()
+                           ? nsIntRegion()
+                           : mLayer->GetLocalVisibleRegion().ToUnknownRegion()),
         mPostXScale(aLayer->GetPostXScale()),
         mPostYScale(aLayer->GetPostYScale()),
         mOpacity(aLayer->GetLocalOpacity()),
@@ -335,9 +337,7 @@ struct LayerPropertiesBase : public LayerProperties {
                          mTransform);
   }
 
-  Maybe<IntRect> NewTransformedBounds() {
-    return TransformedBounds(mLayer);
-  }
+  Maybe<IntRect> NewTransformedBounds() { return TransformedBounds(mLayer); }
 
   virtual Maybe<IntRect> OldTransformedBounds() {
     return Some(
