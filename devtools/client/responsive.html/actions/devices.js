@@ -221,8 +221,8 @@ module.exports = {
       });
 
       dispatch(changeDevice(id, device.name, deviceType));
-      dispatch(changePixelRatio(id, device.pixelRatio));
       dispatch(changeViewportAngle(id, viewport.angle));
+      dispatch(changePixelRatio(id, device.pixelRatio));
       dispatch(changeUserAgent(device.userAgent));
       dispatch(toggleTouchSimulation(device.touch));
     };
