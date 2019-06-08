@@ -413,8 +413,19 @@ fn main() {
         let mut args = vec!["wrench".to_string()];
 
         if let Ok(wrench_args) = fs::read_to_string("/sdcard/wrench/args") {
-            for arg in wrench_args.split_whitespace() {
-                args.push(arg.to_string());
+            for line in wrench_args.lines() {
+                if line.starts_with("env: ") {
+                    let envvar = &line[5..];
+                    if let Some(ix) = envvar.find('=') {
+                        std::env::set_var(&envvar[0..ix], &envvar[ix + 1..]);
+                    } else {
+                        std::env::set_var(envvar, "");
+                    }
+                    continue;
+                }
+                for arg in line.split_whitespace() {
+                    args.push(arg.to_string());
+                }
             }
         }
 
