@@ -9,6 +9,12 @@ var gManagerWindow;
 var gCategoryUtilities;
 var gProvider;
 
+// This test is testing XUL about:addons UI (and the HTML about:addons
+// actually shows the version also on themes).
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 add_task(async function test() {
   gProvider = new MockProvider();
 

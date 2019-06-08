@@ -3,6 +3,14 @@ const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTest
 let gManagerWindow;
 let gCategoryUtilities;
 
+// This test is testing the theme list at XUL about:addons. HTML about:addons's
+// theme list is already tested in browser_html_list_view.js.
+// The testThemeOrdering part of this test should be adapted when bug 1557768
+// is fixed.
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 registerCleanupFunction(() => {
   // AddonTestUtils with open_manager cause this reference to be maintained and creates a leak.
   gManagerWindow = null;
