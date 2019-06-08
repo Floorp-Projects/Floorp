@@ -435,10 +435,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DateTimePickerParent: "resource://gre/modules/DateTimePickerParent.jsm",
   Discovery: "resource:///modules/Discovery.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
+  FileSource: "resource://gre/modules/L10nRegistry.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   HybridContentTelemetry: "resource://gre/modules/HybridContentTelemetry.jsm",
   Integration: "resource://gre/modules/Integration.jsm",
+  L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
   LiveBookmarkMigrator: "resource:///modules/LiveBookmarkMigrator.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
@@ -1062,6 +1064,14 @@ BrowserGlue.prototype = {
     } else {
       PdfJs.earlyInit();
     }
+
+    // Initialize the default l10n resource sources for L10nRegistry.
+    let locales = Services.locale.packagedLocales;
+    const greSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
+    L10nRegistry.registerSource(greSource);
+
+    const appSource = new FileSource("app", locales, "resource://app/localization/{locale}/");
+    L10nRegistry.registerSource(appSource);
 
     // check if we're in safe mode
     if (Services.appinfo.inSafeMode) {
