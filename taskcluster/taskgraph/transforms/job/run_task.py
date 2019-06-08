@@ -131,6 +131,7 @@ def generic_worker_run_task(config, job, taskdesc):
     worker = taskdesc['worker'] = job['worker']
     is_win = worker['os'] == 'windows'
     is_mac = worker['os'] == 'macosx'
+    is_bitbar = worker['os'] == 'linux-bitbar'
 
     if is_win:
         command = ['C:/mozilla-build/python3/python3.exe', 'run-task']
@@ -172,6 +173,10 @@ def generic_worker_run_task(config, job, taskdesc):
     if run['run-as-root']:
         command.extend(('--user', 'root', '--group', 'root'))
     command.append('--')
+    if is_bitbar:
+        # Use the bitbar wrapper script which sets up the device and adb
+        # environment variables
+        command.append('/builds/taskcluster/script.py')
     command.extend(run_command)
 
     if is_win:
