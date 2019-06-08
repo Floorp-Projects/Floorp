@@ -119,8 +119,8 @@ interface mozILocaleService : nsISupports
    *
    * (See LocaleService.h for a more C++-friendly version of this.)
    */
-  Array<ACString> negotiateLanguages(in Array<ACString> aRequested,
-                                     in Array<ACString> aAvailable,
+  Array<ACString> negotiateLanguages(in Array<AUTF8String> aRequested,
+                                     in Array<AUTF8String> aAvailable,
                                      [optional] in ACString aDefaultLocale,
                                      [optional] in long langNegStrategy);
 
