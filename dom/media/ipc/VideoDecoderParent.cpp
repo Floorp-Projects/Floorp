@@ -148,6 +148,7 @@ mozilla::ipc::IPCResult VideoDecoderParent::RecvInput(
   data->mDuration = aData.base().duration();
   data->mKeyframe = aData.base().keyframe();
   data->mEOS = aData.eos();
+  data->mDiscardPadding = aData.discardPadding();
 
   DeallocShmem(aData.buffer());
 

@@ -23,6 +23,7 @@ struct MediaRawDataIPDL
 {
   MediaDataIPDL base;
   bool eos;
+  uint32_t discardPadding;
   Shmem buffer;
 };
 
