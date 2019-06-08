@@ -89,15 +89,7 @@ class L10nRegistryService {
   constructor() {
     this.sources = new Map();
 
-    if (isParentProcess) {
-      const locales = Services.locale.packagedLocales;
-      for (let {entry, value} of Services.catMan.enumerateCategory("l10n-registry")) {
-        if (!this.hasSource(entry)) {
-          const source = new FileSource(entry, locales, value);
-          this.registerSource(source);
-        }
-      }
-    } else {
+    if (!isParentProcess) {
       this._setSourcesFromSharedData();
       Services.cpmm.sharedData.addEventListener("change", this);
     }
@@ -245,14 +237,11 @@ class L10nRegistryService {
       });
     }
     Services.ppmm.sharedData.set("L10nRegistry:Sources", sources);
+    Services.ppmm.sharedData.flush();
   }
 
   _setSourcesFromSharedData() {
     let sources = Services.cpmm.sharedData.get("L10nRegistry:Sources");
-    if (!sources) {
-      console.warn(`[l10nregistry] Failed to fetch sources from shared data.`);
-      return;
-    }
     for (let [name, data] of sources.entries()) {
       if (!this.hasSource(name)) {
         const source = new FileSource(name, data.locales, data.prePath);

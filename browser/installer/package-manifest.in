@@ -188,9 +188,6 @@
 
 @RESPATH@/components/Push.manifest
 
-@RESPATH@/components/l10n-registry.manifest
-@RESPATH@/browser/components/l10n-registry.manifest
-
 ; CDP remote agent
 #ifdef ENABLE_REMOTE_AGENT
 @RESPATH@/chrome/remote@JAREXT@
