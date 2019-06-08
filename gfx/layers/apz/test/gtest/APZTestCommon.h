@@ -363,8 +363,9 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
   }
 
   CSSPoint GetCompositedScrollOffset() const {
-    return GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForCompositing)
-        / GetFrameMetrics().GetZoom();
+    return GetCurrentAsyncScrollOffset(
+               AsyncPanZoomController::eForCompositing) /
+           GetFrameMetrics().GetZoom();
   }
 
   void SetWaitForMainThread() { mWaitForMainThread = true; }

@@ -622,8 +622,8 @@ nsresult AddonManagerStartup::EnumerateJAR(nsIURI* uri,
     MOZ_TRY(ParseJARURI(jarURI, getter_AddRefs(fileURI), entry));
 
     MOZ_TRY_VAR(file, GetFile(fileURI));
-    MOZ_TRY(zipCache->GetInnerZip(file, Substring(entry, 1),
-                                  getter_AddRefs(zip)));
+    MOZ_TRY(
+        zipCache->GetInnerZip(file, Substring(entry, 1), getter_AddRefs(zip)));
   } else {
     MOZ_TRY_VAR(file, GetFile(uri));
     MOZ_TRY(zipCache->GetZip(file, getter_AddRefs(zip)));

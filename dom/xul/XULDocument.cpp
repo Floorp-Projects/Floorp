@@ -274,9 +274,7 @@ nsresult XULDocument::StartDocumentLoad(const char* aCommand,
   return NS_OK;
 }
 
-void XULDocument::EndLoad() {
-  Document::EndLoad();
-}
+void XULDocument::EndLoad() { Document::EndLoad(); }
 
 //----------------------------------------------------------------------
 //

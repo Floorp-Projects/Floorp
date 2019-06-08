@@ -634,8 +634,8 @@ static uint32_t ConvertToXPOffset(nsIContent* aContent,
   // On Windows, the length of a native newline ("\r\n") is twice the length of
   // the XP newline ("\n"), so XP offset is equal to the length of the native
   // offset minus the number of newlines encountered in the string.
-  return aNativeOffset - CountNewlinesInNativeLength(aContent->AsText(),
-                                                     aNativeOffset);
+  return aNativeOffset -
+         CountNewlinesInNativeLength(aContent->AsText(), aNativeOffset);
 #else
   // On other platforms, the native and XP newlines are the same.
   return aNativeOffset;
