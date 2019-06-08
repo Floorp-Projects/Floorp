@@ -21,6 +21,12 @@ function getTestPluginPref() {
   return `${prefix}test`;
 }
 
+// This test is testing XUL about:addons UI (the HTML about:addons tests should verify
+// this in their own test files).
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 registerCleanupFunction(() => {
   Services.prefs.unlockPref(getTestPluginPref());
   Services.prefs.clearUserPref(getTestPluginPref());

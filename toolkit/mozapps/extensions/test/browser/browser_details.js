@@ -17,6 +17,14 @@ var gVersion = Services.appinfo.version;
 var gDate = new Date(2010, 7, 1);
 var infoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
 
+// This test is testing XUL about:addons UI (the HTML about:addons has its
+// own test files for these test cases).
+SpecialPowers.pushPrefEnv({
+  set: [
+    ["extensions.htmlaboutaddons.enabled", false],
+  ],
+});
+
 async function open_details(aId, aType, aCallback) {
   requestLongerTimeout(2);
 
@@ -162,7 +170,6 @@ async function end_test() {
 
 // Opens and tests the details view for add-on 2
 add_test(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
   open_details("addon2@tests.mozilla.org", "extension", async () => {
     is(get("detail-name").textContent, "Test add-on 2", "Name should be correct");
     is_element_visible(get("detail-version"), "Version should not be hidden");
@@ -204,7 +211,6 @@ add_test(async function() {
     is_element_hidden(get("detail-error-link"), "Error link should be hidden");
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
-    await SpecialPowers.popPrefEnv();
     run_next_test();
   });
 });
@@ -214,7 +220,6 @@ add_test(async function() {
 add_test(async function() {
   // This is a duplicate of addon-2, so we're only testing that private browsing is
   // not visible.
-  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
   open_details("addon-theme@tests.mozilla.org", "theme", async () => {
     is(get("detail-name").textContent, "Test add-on theme", "Name should be correct");
     is_element_visible(get("detail-version"), "Version should not be hidden");
@@ -225,7 +230,6 @@ add_test(async function() {
     is_element_hidden(get("detail-privateBrowsing-row-footer"), "Private browsing footer should be hidden");
     is(get("detail-privateBrowsing").value, "0", "Private browsing should be off");
 
-    await SpecialPowers.popPrefEnv();
     run_next_test();
   });
 });

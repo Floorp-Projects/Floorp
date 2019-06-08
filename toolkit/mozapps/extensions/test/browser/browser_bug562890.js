@@ -6,6 +6,12 @@
  * Tests the Preferences button for addons in list view
  */
 
+// This test is testing XUL about:addons UI (the HTML about:addons has its
+// own test files for these test cases).
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 async function test() {
   requestLongerTimeout(2);
 

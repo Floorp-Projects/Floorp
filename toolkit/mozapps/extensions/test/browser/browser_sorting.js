@@ -8,6 +8,12 @@
 var gManagerWindow;
 var gProvider;
 
+// This test is testing XUL about:addons UI features that are not supported in the
+// HTML about:addons.
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 async function test() {
   waitForExplicitFinish();
 

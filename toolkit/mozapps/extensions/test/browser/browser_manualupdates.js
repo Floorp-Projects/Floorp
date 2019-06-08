@@ -9,6 +9,12 @@ var gManagerWindow;
 var gCategoryUtilities;
 var gAvailableCategory;
 
+// This test is testing XUL about:addons UI (the HTML about:addons has its
+// own test files for these test cases).
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 async function test() {
   waitForExplicitFinish();
 
