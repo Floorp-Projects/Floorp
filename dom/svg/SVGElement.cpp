@@ -2375,5 +2375,20 @@ void SVGElement::FlushAnimations() {
   }
 }
 
+void SVGElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
+                                        size_t* aNodeSize) const {
+  Element::AddSizeOfExcludingThis(aSizes, aNodeSize);
+
+  // These are owned by the element and not referenced from the stylesheets.
+  // They're referenced from the rule tree, but the rule nodes don't measure
+  // their style source (since they're non-owning), so unconditionally reporting
+  // them even though it's a refcounted object is ok.
+  if (mContentDeclarationBlock) {
+    aSizes.mLayoutSvgMappedDeclarations +=
+        mContentDeclarationBlock->SizeofIncludingThis(
+            aSizes.mState.mMallocSizeOf);
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla
