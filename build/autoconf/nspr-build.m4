@@ -51,30 +51,19 @@ MOZ_ARG_WITH_BOOL(system-nspr,
                           --with-system-nspr.)],
     _USE_SYSTEM_NSPR=1 )
 
-JS_POSIX_NSPR=unset
+JS_WITHOUT_NSPR=unset
 ifdef([CONFIGURING_JS],[
     if test -n "$JS_STANDALONE"; then
-      case "$target" in
-        *linux*|*darwin*|*dragonfly*|*freebsd*|*netbsd*|*openbsd*)
-          if test -z "$_HAS_NSPR"; then
-            JS_POSIX_NSPR_DEFAULT=1
-          fi
-          ;;
-      esac
+      if test -z "$_HAS_NSPR"; then
+        JS_WITHOUT_NSPR_DEFAULT=1
+      fi
     fi
-
-    MOZ_ARG_ENABLE_BOOL(posix-nspr-emulation,
-[  --enable-posix-nspr-emulation
-                          Enable emulation of NSPR for POSIX systems],
-    JS_POSIX_NSPR=1,
-    JS_POSIX_NSPR=)
 ])
 
 dnl Pass at most one of
 dnl   --with-system-nspr
 dnl   --with-nspr-cflags/libs
 dnl   --enable-nspr-build
-dnl   --enable-posix-nspr-emulation
 
 AC_MSG_CHECKING([NSPR selection])
 nspr_opts=
@@ -91,11 +80,11 @@ if test -n "$MOZ_BUILD_NSPR"; then
     nspr_opts="x$nspr_opts"
     which_nspr="source-tree"
 fi
-if test "$JS_POSIX_NSPR" = unset; then
-    JS_POSIX_NSPR=
+if test "$JS_WITHOUT_NSPR" = unset; then
+    JS_WITHOUT_NSPR=
 else
     nspr_opts="x$nspr_opts"
-    which_nspr="posix-wrapper"
+    which_nspr="without-nspr"
 fi
 
 if test -z "$nspr_opts"; then
@@ -104,14 +93,13 @@ if test -z "$nspr_opts"; then
       MOZ_BUILD_NSPR=1
       which_nspr="source-tree"
     else
-      dnl JS configure defaults to emulated NSPR if available, falling back
-      dnl to nsprpub.
-      JS_POSIX_NSPR="$JS_POSIX_NSPR_DEFAULT"
-      if test -z "$JS_POSIX_NSPR"; then
+      dnl JS configure defaults to no NSPR, falling back to nsprpub.
+      JS_WITHOUT_NSPR="$JS_WITHOUT_NSPR_DEFAULT"
+      if test -z "$JS_WITHOUT_NSPR"; then
         MOZ_BUILD_NSPR=1
         which_nspr="source-tree"
       else
-        which_nspr="posix-wrapper"
+        which_nspr="without-nspr"
       fi
    fi
 fi
@@ -125,10 +113,10 @@ fi
 AC_SUBST(MOZ_BUILD_NSPR)
 
 if test "$MOZ_BUILD_APP" = js; then
-  if test "$JS_POSIX_NSPR" = 1; then
-    AC_DEFINE(JS_POSIX_NSPR)
+  if test "$JS_WITHOUT_NSPR" = 1; then
+    AC_DEFINE(JS_WITHOUT_NSPR)
   fi
-  AC_SUBST(JS_POSIX_NSPR)
+  AC_SUBST(JS_WITHOUT_NSPR)
 fi
 
 # A (sub)configure invoked by the toplevel configure will always receive
@@ -158,7 +146,7 @@ if test -n "$MOZ_SYSTEM_NSPR" -o -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
     CFLAGS=$_SAVE_CFLAGS
     NSPR_INCLUDE_DIR=`echo ${NSPR_CFLAGS} | sed -e 's/.*-I\([[^ ]]*\).*/\1/'`
     NSPR_LIB_DIR=`echo ${NSPR_LIBS} | sed -e 's/.*-L\([[^ ]]*\).*/\1/'`
-elif test -z "$JS_POSIX_NSPR"; then
+elif test -z "$JS_WITHOUT_NSPR"; then
     NSPR_INCLUDE_DIR="${DIST}/include/nspr"
     NSPR_CFLAGS="-I${NSPR_INCLUDE_DIR}"
     if test -n "$GNU_CC"; then
@@ -192,7 +180,7 @@ if test -n "$MOZ_SYSTEM_NSPR"; then
     CFLAGS=$_SAVE_CFLAGS
     # piggy back on $MOZ_SYSTEM_NSPR to set a variable for the nspr check for js.pc
     PKGCONF_REQUIRES_PRIVATE="Requires.private: nspr >= $NSPR_MINVER"
-elif test -n "$JS_POSIX_NSPR"; then
+elif test -n "$JS_WITHOUT_NSPR"; then
     PKGCONF_REQUIRES_PRIVATE=
 fi
 AC_SUBST([PKGCONF_REQUIRES_PRIVATE])
