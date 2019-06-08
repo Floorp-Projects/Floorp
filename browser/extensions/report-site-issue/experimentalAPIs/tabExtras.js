@@ -96,7 +96,7 @@ this.tabExtras = class extends ExtensionAPI {
 
     return {
       tabExtras: {
-        async loadURIWithPostData(tabId, url, postData, postDataContentType) {
+        async loadURIWithPostData(tabId, url, postDataString, postDataContentType) {
           const tab = tabManager.get(tabId);
           if (!tab || !tab.browser) {
             return Promise.reject("Invalid tab");
@@ -108,18 +108,18 @@ this.tabExtras = class extends ExtensionAPI {
             return Promise.reject("Invalid url");
           }
 
-          if (typeof postData !== "string" && !(postData instanceof String)) {
-            return Promise.reject("postData must be a string");
+          if (typeof postDataString !== "string" && !(postDataString instanceof String)) {
+            return Promise.reject("postDataString must be a string");
           }
 
           const stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
                                .createInstance(Ci.nsIStringInputStream);
-          stringStream.data = postData;
-          const post = Cc["@mozilla.org/network/mime-input-stream;1"]
-                       .createInstance(Ci.nsIMIMEInputStream);
-          post.addHeader("Content-Type", postDataContentType ||
-                                         "application/x-www-form-urlencoded");
-          post.setData(stringStream);
+          stringStream.data = postDataString;
+          const postData = Cc["@mozilla.org/network/mime-input-stream;1"]
+                           .createInstance(Ci.nsIMIMEInputStream);
+          postData.addHeader("Content-Type", postDataContentType ||
+                                             "application/x-www-form-urlencoded");
+          postData.setData(stringStream);
 
           return new Promise(resolve => {
             const listener = {
@@ -136,7 +136,7 @@ this.tabExtras = class extends ExtensionAPI {
 
             let loadURIOptions = {
               triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
-              postData: post,
+              postData,
             };
             tab.browser.webNavigation.loadURI(url, loadURIOptions);
           });

@@ -1198,13 +1198,14 @@ function _loadURI(browser, uri, params = {}) {
   }
 
   let {
-    flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
     triggeringPrincipal,
     referrerInfo,
     postData,
     userContextId,
     csp,
   } = params || {};
+  let loadFlags = params.loadFlags || params.flags ||
+                  Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
 
   if (!triggeringPrincipal) {
     throw new Error("Must load with a triggering Principal");
@@ -1216,7 +1217,7 @@ function _loadURI(browser, uri, params = {}) {
     mustChangeProcess,
     newFrameloader,
   } = E10SUtils.shouldLoadURIInBrowser(browser, uri, gMultiProcessBrowser,
-                                       gFissionBrowser, flags);
+                                       gFissionBrowser, loadFlags);
   if (uriObject && handleUriInChrome(browser, uriObject)) {
     // If we've handled the URI in Chrome then just return here.
     return;
@@ -1234,7 +1235,7 @@ function _loadURI(browser, uri, params = {}) {
   let loadURIOptions = {
     triggeringPrincipal,
     csp,
-    loadFlags: flags,
+    loadFlags,
     referrerInfo,
     postData,
   };
@@ -1263,7 +1264,7 @@ function _loadURI(browser, uri, params = {}) {
         triggeringPrincipal: triggeringPrincipal
           ? E10SUtils.serializePrincipal(triggeringPrincipal)
           : null,
-        flags,
+        flags: loadFlags,
         referrerInfo: E10SUtils.serializeReferrerInfo(referrerInfo),
         remoteType: requiredRemoteType,
         postData,
