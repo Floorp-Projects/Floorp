@@ -129,7 +129,7 @@
 @BINPATH@/components/HandlerService.js
 @BINPATH@/components/servicesComponents.manifest
 @BINPATH@/components/servicesSettings.manifest
-@BINPATH@/components/l10n-registry.js
+@BINPATH@/components/l10n-registry.manifest
 
 #ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/TelemetryStartup.manifest
