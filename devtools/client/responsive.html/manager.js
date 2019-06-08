@@ -583,12 +583,15 @@ ResponsiveUI.prototype = {
   },
 
   async onChangeDevice(event) {
-    const { device, viewport } = event.data;
     const { pixelRatio, touch, userAgent } = event.data.device;
-
     let reloadNeeded = false;
     await this.updateDPPX(pixelRatio);
-    await this.updateScreenOrientation(getOrientation(device, viewport), true);
+
+    // Get the orientation values of the device we are changing to and update.
+    const { device, viewport } = event.data;
+    const { type, angle } = getOrientation(device, viewport);
+    await this.updateScreenOrientation(type, angle);
+
     reloadNeeded |= await this.updateUserAgent(userAgent) &&
                     this.reloadOnChange("userAgent");
     reloadNeeded |= await this.updateTouchSimulation(touch) &&
@@ -669,8 +672,8 @@ ResponsiveUI.prototype = {
   },
 
   async onRotateViewport(event) {
-    const { orientationType: type, angle } = event.data;
-    await this.updateScreenOrientation({ type, angle }, false);
+    const { orientationType: type, angle, isViewportRotated } = event.data;
+    await this.updateScreenOrientation(type, angle, isViewportRotated);
   },
 
   /**
@@ -695,10 +698,10 @@ ResponsiveUI.prototype = {
       Services.prefs.getIntPref("devtools.responsive.viewport.width", 0);
 
     let reloadNeeded = false;
-    const viewportOrientation = this.getInitialViewportOrientation({ width, height });
+    const { type, angle } = this.getInitialViewportOrientation({ width, height });
 
     await this.updateDPPX(pixelRatio);
-    await this.updateScreenOrientation(viewportOrientation, true);
+    await this.updateScreenOrientation(type, angle);
 
     if (touchSimulationEnabled) {
       reloadNeeded |= await this.updateTouchSimulation(touchSimulationEnabled) &&
@@ -797,23 +800,31 @@ ResponsiveUI.prototype = {
   /**
    * Sets the screen orientation values of the simulated device.
    *
-   * @param {Object} orientation
-   *        The orientation to update the current device screen to.
-   * @param {Boolean} changeDevice
+   * @param {String} type
+   *        The orientation type to update the current device screen to.
+   * @param {Number} angle
+   *        The rotation angle to update the current device screen to.
+   * @param {Boolean} isViewportRotated
    *        Whether or not the reason for updating the screen orientation is a result
-   *        of actually rotating the device via the RDM toolbar or if the user switched to
-   *        another device.
+   *        of actually rotating the device via the RDM toolbar. If true, then an
+   *        "orientationchange" event is simulated. Otherwise, the screen orientation is
+   *        updated because of changing devices, opening RDM, or the page has been
+   *        reloaded/navigated to, so we should not be simulating "orientationchange".
    */
-  async updateScreenOrientation(orientation, changeDevice = false) {
+  async updateScreenOrientation(type, angle, isViewportRotated = false) {
     const targetFront = await this.client.mainRoot.getTab();
     const simulateOrientationChangeSupported =
     await targetFront.actorHasMethod("emulation", "simulateScreenOrientationChange");
 
     // Ensure that simulateScreenOrientationChange is supported.
     if (simulateOrientationChangeSupported) {
-      const { type, angle } = orientation;
       await this.emulationFront.simulateScreenOrientationChange(type, angle,
-                                                                changeDevice);
+                                                                isViewportRotated);
+    }
+
+    // Used by tests.
+    if (!isViewportRotated) {
+      this.emit("only-viewport-orientation-changed");
     }
   },
 
