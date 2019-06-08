@@ -26,6 +26,7 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
@@ -116,6 +117,7 @@ class SearchFragment : Fragment(), BackHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        search_scan_button.visibility = if (context?.hasCamera() == true) View.VISIBLE else View.GONE
         layoutComponents(view.search_layout)
 
         qrFeature.set(

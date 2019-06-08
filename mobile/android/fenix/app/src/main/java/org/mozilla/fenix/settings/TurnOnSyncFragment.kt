@@ -13,6 +13,7 @@ import androidx.preference.PreferenceFragmentCompat
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.support.ktx.android.content.hasCamera
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -55,6 +56,7 @@ class TurnOnSyncFragment : PreferenceFragmentCompat(), AccountObserver {
         preferenceSignIn?.onPreferenceClickListener = getClickListenerForSignIn()
         preferenceNewAccount?.onPreferenceClickListener = getClickListenerForCreateAccount()
         preferencePairSignIn?.onPreferenceClickListener = getClickListenerForPairing()
+        preferencePairSignIn?.isVisible = context?.hasCamera() ?: true
     }
 
     private fun getClickListenerForSignIn(): Preference.OnPreferenceClickListener {
