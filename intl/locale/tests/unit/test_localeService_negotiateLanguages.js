@@ -86,6 +86,9 @@ const data = {
       [["2"], ["ąóżł"], []],
       [[[""]], ["fr-FR"], []],
     ],
+    "should not match on invalid input": [
+      [["en"], ["ťŮ"], []],
+    ],
   },
   "matching": {
     "should match only one per requested": [
@@ -131,7 +134,7 @@ function run_test()
   }
 
   // Verify that we error out when requested or available is not an array.
-  for ([req, avail] in [
+  for (const [req, avail] in [
     [null, ["fr-FR"]],
 		[undefined, ["fr-FR"]],
 		[2, ["fr-FR"]],
