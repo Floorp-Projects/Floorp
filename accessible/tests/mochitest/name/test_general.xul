@@ -144,13 +144,7 @@
       // Name from the @title attribute of <toolbaritem/> (original bug 237249).
 
       // Direct child of toolbaritem.
-      var textboxAcc = testName("toolbaritem_textbox", "ooospspss");
-
-      // Element from anonymous content of direct child of toolbaritem.
-      var entryAcc = textboxAcc.firstChild;
-      testRole(entryAcc, ROLE_ENTRY);
-      is(entryAcc.name, "ooospspss",
-         "Wrong name for text entry of autocomplete textbox 'toolbaritem_textbox'.");
+      var toolbarItemChildAcc = testName("toolbaritem_child", "ooospspss");
 
       // Child from subtree of toolbaritem.
       testName("toolbaritem_hboxbutton", "ooospspss");
@@ -330,14 +324,13 @@
   <!-- and the name from label of a toolbarbutton -->
   <toolbar>
     <toolbaritem title="ooospspss">
-      <textbox id="toolbaritem_textbox"
-               flex="1"
-               type="autocomplete"
-               enablehistory="true">
+      <box id="toolbaritem_child"
+           role="group"
+           flex="1">
         <hbox role="button" id="toolbaritem_hboxbutton">
-           <description value="button"/>
+          <description value="button"/>
         </hbox>
-      </textbox>
+      </box>
     </toolbaritem>
     <toolbarbutton id="toolbarbuttonwithlabel">
       <label flex="1">I am the button</label>

@@ -14,8 +14,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test_support_toolbar_field_properties() {
-  let searchbar = BrowserSearch.searchBar;
-
   const TOOLBAR_FIELD_BACKGROUND = "#ff00ff";
   const TOOLBAR_FIELD_COLOR = "#00ff00";
   const TOOLBAR_FIELD_BORDER = "#aaaaff";
@@ -51,7 +49,7 @@ add_task(async function test_support_toolbar_field_properties() {
   let toolbox = document.querySelector("#navigator-toolbox");
   let fields = [
     toolbox.querySelector("#urlbar"),
-    searchbar.querySelector(".searchbar-textbox"),
+    BrowserSearch.searchBar,
   ].filter(field => {
     let bounds = field.getBoundingClientRect();
     return bounds.width > 0 && bounds.height > 0;

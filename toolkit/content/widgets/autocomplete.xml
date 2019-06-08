@@ -12,17 +12,12 @@
   <binding id="autocomplete"
            extends="chrome://global/content/bindings/textbox.xml#textbox">
     <content sizetopopup="pref">
-      <children includes="image|box"/>
-
       <xul:moz-input-box anonid="moz-input-box" flex="1">
-        <children/>
         <html:input anonid="input" class="textbox-input"
                     allowevents="true"
                     autocomplete="off"
                     xbl:inherits="value,type=inputtype,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint"/>
       </xul:moz-input-box>
-      <children includes="hbox"/>
-
       <xul:popupset anonid="popupset" class="autocomplete-result-popupset"/>
     </content>
 

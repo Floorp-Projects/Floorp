@@ -43,17 +43,14 @@ class MozSearchbar extends MozXULElement {
 
     this.content = MozXULElement.parseXULToFragment(`
       <stringbundle src="chrome://browser/locale/search.properties"></stringbundle>
-      <textbox class="searchbar-textbox" type="autocomplete" inputtype="search" placeholder="&searchInput.placeholder;" flex="1" autocompletepopup="PopupSearchAutoComplete" autocompletesearch="search-autocomplete" autocompletesearchparam="searchbar-history" maxrows="10" completeselectedindex="true" minresultsforpopup="0">
-        <box>
-          <hbox class="searchbar-search-button" tooltiptext="&searchIcon.tooltip;">
-            <image class="searchbar-search-icon"></image>
-            <image class="searchbar-search-icon-overlay"></image>
-          </hbox>
-        </box>
-        <hbox class="search-go-container">
-          <image class="search-go-button urlbar-icon" hidden="true" onclick="handleSearchCommand(event);" tooltiptext="&contentSearchSubmit.tooltip;"></image>
-        </hbox>
-      </textbox>
+      <hbox class="searchbar-search-button" tooltiptext="&searchIcon.tooltip;">
+        <image class="searchbar-search-icon"></image>
+        <image class="searchbar-search-icon-overlay"></image>
+      </hbox>
+      <textbox class="searchbar-textbox" type="autocomplete" inputtype="search" placeholder="&searchInput.placeholder;" flex="1" autocompletepopup="PopupSearchAutoComplete" autocompletesearch="search-autocomplete" autocompletesearchparam="searchbar-history" maxrows="10" completeselectedindex="true" minresultsforpopup="0"/>
+      <hbox class="search-go-container">
+        <image class="search-go-button urlbar-icon" hidden="true" onclick="handleSearchCommand(event);" tooltiptext="&contentSearchSubmit.tooltip;"></image>
+      </hbox>
     `, ["chrome://browser/locale/browser.dtd"]);
   }
 
@@ -75,7 +72,6 @@ class MozSearchbar extends MozXULElement {
     window.addEventListener("unload", this.destroy);
     this._ignoreFocus = false;
 
-    this._clickClosedPopup = false;
     this._engines = null;
 
     this.FormHistory = (ChromeUtils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
@@ -434,12 +430,6 @@ class MozSearchbar extends MozXULElement {
     }, true);
 
     this.addEventListener("mousedown", (event) => {
-      if (event.originalTarget.classList.contains("searchbar-search-button")) {
-        this._clickClosedPopup = this._textbox.popup._isHiding;
-      }
-    }, true);
-
-    this.addEventListener("mousedown", (event) => {
       // Ignore right clicks
       if (event.button != 0) {
         return;
@@ -457,14 +447,12 @@ class MozSearchbar extends MozXULElement {
 
       let isIconClick = event.originalTarget.classList.contains("searchbar-search-button");
 
-      // Ignore clicks on the icon if they were made to close the popup
-      if (isIconClick && this._clickClosedPopup) {
-        return;
-      }
-
-      // Open the suggestions whenever clicking on the search icon or if there
-      // is text in the textbox.
-      if (isIconClick || this._textbox.value) {
+      // Hide popup when icon is clicked while popup is open
+      if (isIconClick && this.textbox.popup.popupOpen) {
+        this.textbox.popup.closePopup();
+      } else if (isIconClick || this._textbox.value) {
+        // Open the suggestions whenever clicking on the search icon or if there
+        // is text in the textbox.
         this.openSuggestionsPanel(true);
       }
     });
@@ -647,19 +635,14 @@ class MozSearchbar extends MozXULElement {
 
         document.popupNode = null;
 
-        let outerRect = this.textbox.getBoundingClientRect();
-        let innerRect = this.textbox.inputField.getBoundingClientRect();
-        let width = RTL_UI ?
-          innerRect.right - outerRect.left :
-          outerRect.right - innerRect.left;
+        let anchor = this.closest("searchbar");
+        let { width } = anchor.getBoundingClientRect();
         popup.setAttribute("width", width > 100 ? width : 100);
 
         // invalidate() depends on the width attribute
         popup._invalidate();
 
-        let yOffset = outerRect.bottom - innerRect.bottom;
-        popup.openPopup(this.textbox.inputField, "after_start",
-                        0, yOffset, false, false);
+        popup.openPopup(anchor, "after_start");
       }
     };
 

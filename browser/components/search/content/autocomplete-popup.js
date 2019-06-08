@@ -56,13 +56,6 @@ class MozSearchAutocompleteRichlistboxPopup extends MozElements.MozAutocompleteR
       this.updateHeader();
     });
 
-    this.addEventListener("popuphiding", (event) => {
-      this._isHiding = true;
-      Services.tm.dispatchToMainThread(() => {
-        this._isHiding = false;
-      });
-    });
-
     /**
      * This handles clicks on the topmost "Foo Search" header in the
      * popup (hbox.search-panel-header]).
@@ -79,14 +72,6 @@ class MozSearchAutocompleteRichlistboxPopup extends MozElements.MozAutocompleteR
       }
       this.oneOffButtons.handleSearchCommand(event, engine);
     });
-
-    /**
-     * Popup rollup is triggered by native events before the mousedown event
-     * reaches the DOM. The will be set to true by the popuphiding event and
-     * false after the mousedown event has been triggered to detect what
-     * caused rollup.
-     */
-    this._isHiding = false;
 
     this._bundle = null;
   }
