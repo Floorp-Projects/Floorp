@@ -9,13 +9,13 @@ color_targets(1) alpha_targets(0) == opacity-combined.yaml opacity-combined-ref.
 == filter-brightness-2.yaml filter-brightness-2-ref.yaml
 == filter-brightness-3.yaml filter-brightness-3-ref.yaml
 == filter-brightness-4.yaml filter-brightness-4-ref.yaml
-skip_on(android) == filter-component-transfer.yaml filter-component-transfer-ref.yaml  # fails on Android
-== filter-color-matrix.yaml filter-color-matrix-ref.yaml
+skip_on(android,emulator) == filter-component-transfer.yaml filter-component-transfer-ref.yaml  # fails on Android emulator
+skip_on(android,device) == filter-color-matrix.yaml filter-color-matrix-ref.yaml  # fails on Pixel2
 == filter-contrast-gray-alpha-1.yaml filter-contrast-gray-alpha-1-ref.yaml
 == filter-invert.yaml filter-invert-ref.yaml
 == filter-invert-2.yaml filter-invert-2-ref.yaml
 platform(linux,mac) fuzzy(1,133) == filter-large-blur-radius.yaml filter-large-blur-radius.png
-skip_on(android) == draw_calls(4) color_targets(4) alpha_targets(0) filter-small-blur-radius.yaml filter-small-blur-radius.png  # fails on Android
+skip_on(android) == draw_calls(4) color_targets(4) alpha_targets(0) filter-small-blur-radius.yaml filter-small-blur-radius.png  # fails on Android emulator and Pixel2
 == filter-saturate-red-1.yaml filter-saturate-red-1-ref.yaml
 == filter-saturate-red-2.yaml filter-saturate-red-2-ref.yaml
 == filter-saturate-red-3.yaml filter-saturate-red-3-ref.yaml
@@ -29,19 +29,19 @@ skip_on(android) == draw_calls(4) color_targets(4) alpha_targets(0) filter-small
 == filter-saturate-green-alpha-1.yaml filter-saturate-green-alpha-1-ref.yaml
 == filter-saturate-blue-alpha-1.yaml filter-saturate-blue-alpha-1-ref.yaml
 == filter-hue-rotate-1.yaml filter-hue-rotate-1-ref.yaml
-== filter-hue-rotate-alpha-1.yaml filter-hue-rotate-alpha-1-ref.yaml
-skip_on(android) fuzzy(1,14) == filter-long-chain.yaml filter-long-chain.png  # fails on Android
+skip_on(android,device) == filter-hue-rotate-alpha-1.yaml filter-hue-rotate-alpha-1-ref.yaml  # Fails on Pixel2
+skip_on(android) fuzzy(1,14) == filter-long-chain.yaml filter-long-chain.png  # fails on Android emulator and Pixel2
 platform(linux,mac) == filter-drop-shadow.yaml filter-drop-shadow.png
 platform(linux,mac) == filter-drop-shadow-on-viewport-edge.yaml filter-drop-shadow-on-viewport-edge.png
 platform(linux,mac) == blend-clipped.yaml blend-clipped.png
 platform(linux,mac) == filter-drop-shadow-clip.yaml filter-drop-shadow-clip.png
 == filter-segments.yaml filter-segments-ref.yaml
 == iframe-dropshadow.yaml iframe-dropshadow-ref.yaml
-skip_on(android) == filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.yaml  # Android debug: GL error 502 at blit_framebuffer, Android opt: fails
+skip_on(android) == filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.yaml  # Android debug: GL error 502 at blit_framebuffer (emulator) or draw_elements_instanced (Pixel2); Android opt: fails
 == fuzzy(3,20000) srgb-to-linear.yaml srgb-to-linear-ref.yaml
 != srgb-to-linear-2.yaml srgb-to-linear-ref.yaml
 != filter-blur-huge.yaml blank.yaml
 != filter-drop-shadow-huge.yaml blank.yaml
 == filter-blur-scaled.yaml filter-blur-scaled-ref.yaml
-skip_on(android) == filter-blur-scaled-xonly.yaml filter-blur-scaled-xonly.png  # fails on Android
+skip_on(android) == filter-blur-scaled-xonly.yaml filter-blur-scaled-xonly.png  # fails on Android emulator and Pixel2
 == filter-flood.yaml filter-flood-ref.yaml
