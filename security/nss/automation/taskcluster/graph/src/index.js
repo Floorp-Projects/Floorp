@@ -3,12 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as try_syntax from "./try_syntax";
+import * as queue from "./queue";
 import extend from "./extend";
 
 const main = async () => {
   // Init try syntax filter.
   if (process.env.TC_PROJECT == "nss-try") {
     await try_syntax.initFilter();
+  } else {
+    // Coverity should not be run on landings, only by request (typically
+    // by Phabricator).
+    queue.filter(task => {
+      return task.symbol != "coverity";
+    });
   }
 
   // Extend the task graph.

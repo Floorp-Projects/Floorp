@@ -222,6 +222,43 @@
        ]
       },
     },
+    {
+      'target_name': 'freebl_64int_3',
+      'includes': [
+        'freebl_base.gypi',
+      ],
+      'type': 'shared_library',
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
+        'hw-acc-crypto',
+      ],
+    },
+    {
+      'target_name': 'freebl_64fpu_3',
+      'includes': [
+        'freebl_base.gypi',
+      ],
+      'type': 'shared_library',
+      'sources': [
+        'mpi/mpi_sparc.c',
+        'mpi/mpv_sparcv9.s',
+        'mpi/montmulfv9.s',
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
+        'hw-acc-crypto',
+      ],
+      'asflags_mozilla': [
+        '-mcpu=v9', '-Wa,-xarch=v9a'
+      ],
+      'defines': [
+        'MP_NO_MP_WORD',
+        'MP_USE_UINT_DIGIT',
+        'MP_ASSEMBLY_MULTIPLY',
+        'MP_USING_MONT_MULF',
+        'MP_MONT_USE_MP_MUL',
+      ],
+    },
   ],
   'conditions': [
     [ 'OS=="linux"', {

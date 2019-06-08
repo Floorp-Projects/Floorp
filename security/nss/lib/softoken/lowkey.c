@@ -261,6 +261,7 @@ NSSLOWKEYPublicKey *
 nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
 {
     NSSLOWKEYPublicKey *pubk;
+    SECItem publicValue;
     PLArenaPool *arena;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -301,6 +302,19 @@ nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
 
                 pubk->arena = arena;
                 pubk->keyType = privk->keyType;
+                /* if the public key value doesn't exist, calculate it */
+                if (privk->u.dsa.publicValue.len == 0) {
+                    rv = DH_Derive(&privk->u.dsa.params.base, &privk->u.dsa.params.prime,
+                                   &privk->u.dsa.privateValue, &publicValue, 0);
+                    if (rv != SECSuccess) {
+                        break;
+                    }
+                    rv = SECITEM_CopyItem(privk->arena, &privk->u.dsa.publicValue, &publicValue);
+                    SECITEM_FreeItem(&publicValue, PR_FALSE);
+                    if (rv != SECSuccess) {
+                        break;
+                    }
+                }
                 rv = SECITEM_CopyItem(arena, &pubk->u.dsa.publicValue,
                                       &privk->u.dsa.publicValue);
                 if (rv != SECSuccess)
@@ -327,6 +341,19 @@ nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
 
                 pubk->arena = arena;
                 pubk->keyType = privk->keyType;
+                /* if the public key value doesn't exist, calculate it */
+                if (privk->u.dh.publicValue.len == 0) {
+                    rv = DH_Derive(&privk->u.dh.base, &privk->u.dh.prime,
+                                   &privk->u.dh.privateValue, &publicValue, 0);
+                    if (rv != SECSuccess) {
+                        break;
+                    }
+                    rv = SECITEM_CopyItem(privk->arena, &privk->u.dh.publicValue, &publicValue);
+                    SECITEM_FreeItem(&publicValue, PR_FALSE);
+                    if (rv != SECSuccess) {
+                        break;
+                    }
+                }
                 rv = SECITEM_CopyItem(arena, &pubk->u.dh.publicValue,
                                       &privk->u.dh.publicValue);
                 if (rv != SECSuccess)

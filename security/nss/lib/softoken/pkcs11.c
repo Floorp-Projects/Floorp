@@ -328,6 +328,8 @@ static const struct mechanismList mechanisms[] = {
     { CKM_AES_CTS, { 16, 32, CKF_EN_DE }, PR_TRUE },
     { CKM_AES_CTR, { 16, 32, CKF_EN_DE }, PR_TRUE },
     { CKM_AES_GCM, { 16, 32, CKF_EN_DE }, PR_TRUE },
+    { CKM_AES_XCBC_MAC_96, { 16, 16, CKF_SN_VR }, PR_TRUE },
+    { CKM_AES_XCBC_MAC, { 16, 16, CKF_SN_VR }, PR_TRUE },
     /* ------------------------- Camellia Operations --------------------- */
     { CKM_CAMELLIA_KEY_GEN, { 16, 32, CKF_GENERATE }, PR_TRUE },
     { CKM_CAMELLIA_ECB, { 16, 32, CKF_EN_DE_WR_UN }, PR_TRUE },
@@ -510,7 +512,11 @@ static const struct mechanismList mechanisms[] = {
     { CKM_NSS_JPAKE_FINAL_SHA512, { 0, 0, CKF_DERIVE }, PR_TRUE },
     /* -------------------- Constant Time TLS MACs ----------------------- */
     { CKM_NSS_HMAC_CONSTANT_TIME, { 0, 0, CKF_DIGEST }, PR_TRUE },
-    { CKM_NSS_SSL3_MAC_CONSTANT_TIME, { 0, 0, CKF_DIGEST }, PR_TRUE }
+    { CKM_NSS_SSL3_MAC_CONSTANT_TIME, { 0, 0, CKF_DIGEST }, PR_TRUE },
+    /* --------------------IPSEC ----------------------- */
+    { CKM_NSS_IKE_PRF_PLUS_DERIVE, { 8, 255 * 64, CKF_DERIVE }, PR_TRUE },
+    { CKM_NSS_IKE_PRF_DERIVE, { 8, 64, CKF_DERIVE }, PR_TRUE },
+    { CKM_NSS_IKE1_PRF_DERIVE, { 8, 64, CKF_DERIVE }, PR_TRUE }
 };
 static const CK_ULONG mechanismCount = sizeof(mechanisms) / sizeof(mechanisms[0]);
 
@@ -2198,6 +2204,119 @@ sftk_GetPrivKey(SFTKObject *object, CK_KEY_TYPE key_type, CK_RV *crvp)
     object->objectInfo = priv;
     object->infoFree = (SFTKFree)nsslowkey_DestroyPrivateKey;
     return priv;
+}
+
+/* populate a public key object from a lowpublic keys structure */
+CK_RV
+sftk_PutPubKey(SFTKObject *publicKey, SFTKObject *privateKey, CK_KEY_TYPE keyType, NSSLOWKEYPublicKey *pubKey)
+{
+    CK_OBJECT_CLASS classType = CKO_PUBLIC_KEY;
+    CK_BBOOL cktrue = CK_TRUE;
+    CK_RV crv = CKR_OK;
+    sftk_DeleteAttributeType(publicKey, CKA_CLASS);
+    sftk_DeleteAttributeType(publicKey, CKA_KEY_TYPE);
+    sftk_DeleteAttributeType(publicKey, CKA_VALUE);
+
+    switch (keyType) {
+        case CKK_RSA:
+            sftk_DeleteAttributeType(publicKey, CKA_MODULUS);
+            sftk_DeleteAttributeType(publicKey, CKA_PUBLIC_EXPONENT);
+            /* format the keys */
+            /* fill in the RSA dependent paramenters in the public key */
+            crv = sftk_AddAttributeType(publicKey, CKA_MODULUS,
+                                        sftk_item_expand(&pubKey->u.rsa.modulus));
+            if (crv != CKR_OK) {
+                break;
+            }
+            crv = sftk_AddAttributeType(publicKey, CKA_PUBLIC_EXPONENT,
+                                        sftk_item_expand(&pubKey->u.rsa.publicExponent));
+            break;
+        case CKK_DSA:
+            sftk_DeleteAttributeType(publicKey, CKA_PRIME);
+            sftk_DeleteAttributeType(publicKey, CKA_SUBPRIME);
+            sftk_DeleteAttributeType(publicKey, CKA_BASE);
+            crv = sftk_AddAttributeType(publicKey, CKA_PRIME,
+                                        sftk_item_expand(&pubKey->u.dsa.params.prime));
+            if (crv != CKR_OK) {
+                break;
+            }
+            crv = sftk_AddAttributeType(publicKey, CKA_SUBPRIME,
+                                        sftk_item_expand(&pubKey->u.dsa.params.subPrime));
+            if (crv != CKR_OK) {
+                break;
+            }
+            crv = sftk_AddAttributeType(publicKey, CKA_BASE,
+                                        sftk_item_expand(&pubKey->u.dsa.params.base));
+            if (crv != CKR_OK) {
+                break;
+            }
+            crv = sftk_AddAttributeType(publicKey, CKA_VALUE,
+                                        sftk_item_expand(&pubKey->u.dsa.publicValue));
+            break;
+        case CKK_DH:
+            sftk_DeleteAttributeType(publicKey, CKA_PRIME);
+            sftk_DeleteAttributeType(publicKey, CKA_BASE);
+            crv = sftk_AddAttributeType(publicKey, CKA_PRIME,
+                                        sftk_item_expand(&pubKey->u.dh.prime));
+            if (crv != CKR_OK) {
+                break;
+            }
+            crv = sftk_AddAttributeType(publicKey, CKA_BASE,
+                                        sftk_item_expand(&pubKey->u.dh.base));
+            if (crv != CKR_OK) {
+                break;
+            }
+            crv = sftk_AddAttributeType(publicKey, CKA_VALUE,
+                                        sftk_item_expand(&pubKey->u.dh.publicValue));
+            break;
+        case CKK_EC:
+            sftk_DeleteAttributeType(publicKey, CKA_EC_PARAMS);
+            sftk_DeleteAttributeType(publicKey, CKA_EC_POINT);
+            crv = sftk_AddAttributeType(publicKey, CKA_EC_PARAMS,
+                                        sftk_item_expand(&pubKey->u.ec.ecParams.DEREncoding));
+            if (crv != CKR_OK) {
+                break;
+            }
+            crv = sftk_AddAttributeType(publicKey, CKA_EC_POINT,
+                                        sftk_item_expand(&pubKey->u.ec.publicValue));
+            break;
+        default:
+            return CKR_KEY_TYPE_INCONSISTENT;
+    }
+    crv = sftk_AddAttributeType(publicKey, CKA_CLASS, &classType,
+                                sizeof(CK_OBJECT_CLASS));
+    if (crv != CKR_OK)
+        return crv;
+    crv = sftk_AddAttributeType(publicKey, CKA_KEY_TYPE, &keyType,
+                                sizeof(CK_KEY_TYPE));
+    if (crv != CKR_OK)
+        return crv;
+    /* now handle the operator attributes */
+    if (sftk_isTrue(privateKey, CKA_DECRYPT)) {
+        crv = sftk_forceAttribute(publicKey, CKA_ENCRYPT, &cktrue, sizeof(CK_BBOOL));
+        if (crv != CKR_OK) {
+            return crv;
+        }
+    }
+    if (sftk_isTrue(privateKey, CKA_SIGN)) {
+        crv = sftk_forceAttribute(publicKey, CKA_VERIFY, &cktrue, sizeof(CK_BBOOL));
+        if (crv != CKR_OK) {
+            return crv;
+        }
+    }
+    if (sftk_isTrue(privateKey, CKA_SIGN_RECOVER)) {
+        crv = sftk_forceAttribute(publicKey, CKA_VERIFY_RECOVER, &cktrue, sizeof(CK_BBOOL));
+        if (crv != CKR_OK) {
+            return crv;
+        }
+    }
+    if (sftk_isTrue(privateKey, CKA_DERIVE)) {
+        crv = sftk_forceAttribute(publicKey, CKA_DERIVE, &cktrue, sizeof(CK_BBOOL));
+        if (crv != CKR_OK) {
+            return crv;
+        }
+    }
+    return crv;
 }
 
 /*
