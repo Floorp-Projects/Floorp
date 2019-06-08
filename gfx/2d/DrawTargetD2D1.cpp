@@ -1673,12 +1673,13 @@ static D2D1_RECT_F IntersectRect(const D2D1_RECT_F& aRect1,
 
 bool DrawTargetD2D1::GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect,
                                             bool& aIsPixelAligned) {
+  aIsPixelAligned = true;
+  aClipRect = D2D1::RectF(0, 0, mSize.width, mSize.height);
+
   if (!CurrentLayer().mPushedClips.size()) {
     return false;
   }
 
-  aIsPixelAligned = true;
-  aClipRect = D2D1::RectF(0, 0, mSize.width, mSize.height);
   for (auto iter = CurrentLayer().mPushedClips.begin();
        iter != CurrentLayer().mPushedClips.end(); iter++) {
     if (iter->mGeometry) {
