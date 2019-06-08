@@ -29,10 +29,12 @@ Compiling and running:
     Install the APK:
         adb install -r ../target/android-artifacts/app/build/outputs/apk/app-debug.apk
 
-    Set command line arguments:
+    Set command line arguments and env vars for wrench:
         adb shell
         mkdir /sdcard/wrench
         echo "load reftests/aa/rounded-rects.yaml" >/sdcard/wrench/args
+        echo "env: WRENCH_REFTEST_CONDITION_EMULATOR=1" >>/sdcard/wrench/args # If you're using the emulator
+        echo "env: WRENCH_REFTEST_CONDITION_DEVICE=1" >>/sdcard/wrench/args # If you're using a device
         exit
 
     Push reftests (if you need these files for what you're doing):
