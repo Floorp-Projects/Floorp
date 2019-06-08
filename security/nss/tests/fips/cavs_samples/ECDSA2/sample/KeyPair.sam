@@ -1,0 +1,142 @@
+#  CAVS 17.8
+#  "Key Pair" information for "ppcle-nss-64"
+#  Curves selected: P-256 P-384 P-521
+#  Generated on Fri Jul 17 23:42:11 2015
+
+
+
+[P-256]
+
+[B.4.1 Key Pair Generation Using Random Bits]
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+
+[P-384]
+
+[B.4.1 Key Pair Generation Using Random Bits]
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+
+[P-521]
+
+[B.4.1 Key Pair Generation Using Random Bits]
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+d = ?
+Qx = ?
+Qy = ?
+
+

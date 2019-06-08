@@ -1,0 +1,309 @@
+#  CAVS 17.8
+#  "SHA-512 Monte" information for "ppcle-nss-64"
+#  SHA-512 tests are configured for BYTE oriented implementations
+#  Generated on Fri Jul 17 16:27:28 2015
+
+[L = 64]
+
+Seed = edea4630a80b2fd0f2e6ad615aa2dfd90a9060b49bb1bf992e782f3ab8d07f7c9d614cd8810f75005ac4cfc6ca701a3aad4e3413ee688d519e5ddb2047620ffe
+
+COUNT = 0
+MD = 2f00efc03eeca8d87c59913213b58a9e79bece812ec751d79acf5cad412be4c1c0dd0c02712544703a1162f450100057b9c84e1df34f8661762ef586bac1fd7e
+
+COUNT = 1
+MD = 382d01e7b2263f76705da3dd57bc49456feb507b1e6186fb693d959b07640135007f42314f7737e238c995c86c70fdce0982e5ba1e0720b3ce39877eeca95fe0
+
+COUNT = 2
+MD = 576db4cbf66e034e6117faa4ce30960ecdcb026b1f382380866d4a27f68f09d72964b78f5778bc815dc4c7c687ce58a6027f9a62965933730b216a792edef447
+
+COUNT = 3
+MD = ?
+
+COUNT = 4
+MD = ?
+
+COUNT = 5
+MD = ?
+
+COUNT = 6
+MD = ?
+
+COUNT = 7
+MD = ?
+
+COUNT = 8
+MD = ?
+
+COUNT = 9
+MD = ?
+
+COUNT = 10
+MD = ?
+
+COUNT = 11
+MD = ?
+
+COUNT = 12
+MD = ?
+
+COUNT = 13
+MD = ?
+
+COUNT = 14
+MD = ?
+
+COUNT = 15
+MD = ?
+
+COUNT = 16
+MD = ?
+
+COUNT = 17
+MD = ?
+
+COUNT = 18
+MD = ?
+
+COUNT = 19
+MD = ?
+
+COUNT = 20
+MD = ?
+
+COUNT = 21
+MD = ?
+
+COUNT = 22
+MD = ?
+
+COUNT = 23
+MD = ?
+
+COUNT = 24
+MD = ?
+
+COUNT = 25
+MD = ?
+
+COUNT = 26
+MD = ?
+
+COUNT = 27
+MD = ?
+
+COUNT = 28
+MD = ?
+
+COUNT = 29
+MD = ?
+
+COUNT = 30
+MD = ?
+
+COUNT = 31
+MD = ?
+
+COUNT = 32
+MD = ?
+
+COUNT = 33
+MD = ?
+
+COUNT = 34
+MD = ?
+
+COUNT = 35
+MD = ?
+
+COUNT = 36
+MD = ?
+
+COUNT = 37
+MD = ?
+
+COUNT = 38
+MD = ?
+
+COUNT = 39
+MD = ?
+
+COUNT = 40
+MD = ?
+
+COUNT = 41
+MD = ?
+
+COUNT = 42
+MD = ?
+
+COUNT = 43
+MD = ?
+
+COUNT = 44
+MD = ?
+
+COUNT = 45
+MD = ?
+
+COUNT = 46
+MD = ?
+
+COUNT = 47
+MD = ?
+
+COUNT = 48
+MD = ?
+
+COUNT = 49
+MD = ?
+
+COUNT = 50
+MD = ?
+
+COUNT = 51
+MD = ?
+
+COUNT = 52
+MD = ?
+
+COUNT = 53
+MD = ?
+
+COUNT = 54
+MD = ?
+
+COUNT = 55
+MD = ?
+
+COUNT = 56
+MD = ?
+
+COUNT = 57
+MD = ?
+
+COUNT = 58
+MD = ?
+
+COUNT = 59
+MD = ?
+
+COUNT = 60
+MD = ?
+
+COUNT = 61
+MD = ?
+
+COUNT = 62
+MD = ?
+
+COUNT = 63
+MD = ?
+
+COUNT = 64
+MD = ?
+
+COUNT = 65
+MD = ?
+
+COUNT = 66
+MD = ?
+
+COUNT = 67
+MD = ?
+
+COUNT = 68
+MD = ?
+
+COUNT = 69
+MD = ?
+
+COUNT = 70
+MD = ?
+
+COUNT = 71
+MD = ?
+
+COUNT = 72
+MD = ?
+
+COUNT = 73
+MD = ?
+
+COUNT = 74
+MD = ?
+
+COUNT = 75
+MD = ?
+
+COUNT = 76
+MD = ?
+
+COUNT = 77
+MD = ?
+
+COUNT = 78
+MD = ?
+
+COUNT = 79
+MD = ?
+
+COUNT = 80
+MD = ?
+
+COUNT = 81
+MD = ?
+
+COUNT = 82
+MD = ?
+
+COUNT = 83
+MD = ?
+
+COUNT = 84
+MD = ?
+
+COUNT = 85
+MD = ?
+
+COUNT = 86
+MD = ?
+
+COUNT = 87
+MD = ?
+
+COUNT = 88
+MD = ?
+
+COUNT = 89
+MD = ?
+
+COUNT = 90
+MD = ?
+
+COUNT = 91
+MD = ?
+
+COUNT = 92
+MD = ?
+
+COUNT = 93
+MD = ?
+
+COUNT = 94
+MD = ?
+
+COUNT = 95
+MD = ?
+
+COUNT = 96
+MD = ?
+
+COUNT = 97
+MD = ?
+
+COUNT = 98
+MD = ?
+
+COUNT = 99
+MD = ?
+
