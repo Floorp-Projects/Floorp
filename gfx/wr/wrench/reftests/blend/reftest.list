@@ -1,7 +1,8 @@
 # Some tests in this file skipped on debug Android because of panic,
-# GL error 502 at blit_framebuffer. These are marked with skip_on(android)
-# or skip_on(android,debug). Additionally, the ones marked skip_on(android)
-# fail in opt builds.
+# GL error 502 at blit_framebuffer (on emulator) or GL error 502 at
+# draw_elements_instanced (on a Pixel2 device). These are marked with
+# skip_on(android) or skip_on(android,debug). Additionally, the ones
+# marked skip_on(android) fail in opt builds on both emulator and device.
 
 skip_on(android,debug) == multiply.yaml multiply-ref.yaml
 skip_on(android) == multiply-2.yaml multiply-2-ref.yaml
@@ -11,7 +12,7 @@ skip_on(android) fuzzy(1,30000) == difference-transparent.yaml difference-transp
 skip_on(android) == darken.yaml darken-ref.yaml
 skip_on(android) == lighten.yaml lighten-ref.yaml
 
-skip_on(android,debug) == repeated-difference.yaml repeated-difference-ref.yaml
+skip_on(android,debug) skip_on(android,device,release) == repeated-difference.yaml repeated-difference-ref.yaml  # Fails on a Pixel2 in release mode
 
 == isolated.yaml isolated-ref.yaml
 skip_on(android) == isolated-2.yaml isolated-2-ref.yaml

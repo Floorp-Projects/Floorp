@@ -1,7 +1,7 @@
 platform(linux,mac) == local-clip.yaml local-clip.png
 platform(linux,mac) == rotated-clip.yaml rotated-clip.png
 platform(linux,mac) == rotated-clip-large.yaml rotated-clip-large.png
-skip_on(android) == image-rotated-clip.yaml image-rotated-clip.png  # Fails on Android
+skip_on(android,emulator) == image-rotated-clip.yaml image-rotated-clip.png  # Fails on Android emulator
 # Something leaks the state: the test passes if only run `reftest reftests/transform`
 # but fails when all the tests are run
 platform(linux,mac) fuzzy(1,4) == rotated-image.yaml rotated-image.png
@@ -23,14 +23,14 @@ platform(linux,mac) == nested-preserve-3d.yaml nested-preserve-3d.png
 platform(linux,mac) fuzzy(1,283) == near-plane-clip.yaml near-plane-clip.png
 platform(linux,mac) == perspective-mask.yaml perspective-mask.png
 rotate-clip.yaml rotate-clip-ref.yaml
-skip_on(android) == clip-translate.yaml clip-translate-ref.yaml  # Fails on Android
+skip_on(android,emulator) == clip-translate.yaml clip-translate-ref.yaml  # Fails on Android emulator
 platform(linux,mac) == perspective-clip.yaml perspective-clip.png
 platform(linux,mac) fuzzy(1,2) == perspective-clip-1.yaml perspective-clip-1.png
 platform(linux,mac) fuzzy(1,2) == perspective-shadow.yaml perspective-shadow.png
 # ENABLE ME (Bug 1474294) == perspective-box-shadow.yaml perspective-box-shadow-ref.yaml
 == complex-preserve-3d.yaml blank.yaml
 platform(linux,mac) fuzzy(9,348) == perspective-border-radius.yaml perspective-border-radius.png
-== snapped-preserve-3d.yaml snapped-preserve-3d-ref.yaml
+fuzzy(1,6) == snapped-preserve-3d.yaml snapped-preserve-3d-ref.yaml
 platform(linux,mac) fuzzy(1,122) == border-scale.yaml border-scale.png
 platform(linux,mac) fuzzy(1,16) == border-scale-2.yaml border-scale-2.png
 platform(linux,mac) fuzzy(1,69) == border-scale-3.yaml border-scale-3.png

@@ -6,7 +6,7 @@
 != shadow-cover-1.yaml blank.yaml
 != shadow-cover-2.yaml blank.yaml
 
-skip_on(android) == shadow.yaml shadow-ref.yaml  # Fails on Android
+skip_on(android) == shadow.yaml shadow-ref.yaml  # Fails on Android emulator and Pixel2
 == shadow-huge.yaml shadow-huge-ref.yaml
 != shadow-cover-1.yaml shadow-cover-2.yaml
 != shadow-many.yaml shadow.yaml
@@ -14,9 +14,9 @@ skip_on(android) == shadow.yaml shadow-ref.yaml  # Fails on Android
 != shadow-clipped-text.yaml blank.yaml
 != non-opaque.yaml non-opaque-notref.yaml
 == decorations.yaml decorations-ref.yaml
-skip_on(android) fuzzy(1,173) == decorations-suite.yaml decorations-suite.png  # Fails on Android
+skip_on(android) fuzzy(1,173) == decorations-suite.yaml decorations-suite.png  # Fails on Android emulator and Pixel2
 == 1658.yaml 1658-ref.yaml
-skip_on(android,debug) fuzzy(1,5) == split-batch.yaml split-batch-ref.yaml  # Android: GL error 502 at blit_framebuffer
+skip_on(android,debug,emulator) fuzzy(1,5) == split-batch.yaml split-batch-ref.yaml  # Android emulator: GL error 502 at blit_framebuffer
 # Next 3 tests affected by bug 1548099 on Android
 skip_on(android) == shadow-red.yaml shadow-red-ref.yaml
 skip_on(android) fuzzy(1,735) == shadow-grey.yaml shadow-grey-ref.yaml
@@ -58,16 +58,16 @@ platform(linux) == writing-modes.yaml writing-modes-ref.yaml
 platform(linux) == blurred-shadow-local-clip-rect.yaml blurred-shadow-local-clip-rect-ref.png
 fuzzy(1,1) platform(linux) == two-shadows.yaml two-shadows.png
 == shadow-clip.yaml shadow-clip-ref.yaml
-skip_on(android) == shadow-fast-clip.yaml shadow-fast-clip-ref.yaml  # Fails on Android
-skip_on(android) == shadow-partial-glyph.yaml shadow-partial-glyph-ref.yaml  # Fails on Android
+skip_on(android,emulator) == shadow-fast-clip.yaml shadow-fast-clip-ref.yaml  # Fails on Android emulator
+skip_on(android) == shadow-partial-glyph.yaml shadow-partial-glyph-ref.yaml  # Fails on Android emulator and Pixel2
 fuzzy(1,107) platform(linux) == shadow-transforms.yaml shadow-transforms.png
 fuzzy(1,113) platform(linux) == raster-space.yaml raster-space.png
-skip_on(android,debug) skip_on(mac,>=10.14) != allow-subpixel.yaml allow-subpixel-ref.yaml  # Android: GL error 502 at blit_framebuffer
-== bg-color.yaml bg-color-ref.yaml
+skip_on(android,debug,emulator) skip_on(android,debug,device) skip_on(mac,>=10.14) != allow-subpixel.yaml allow-subpixel-ref.yaml  # Android emulator: GL error 502 at blit_framebuffer; android device: GL error 502 at draw_elements_instanced
+skip_on(android,device) == bg-color.yaml bg-color-ref.yaml  # Fails on Pixel2
 != large-glyphs.yaml blank.yaml
 == snap-text-offset.yaml snap-text-offset-ref.yaml
 == shadow-border.yaml shadow-solid-ref.yaml
-skip_on(android) == shadow-image.yaml shadow-solid-ref.yaml  # Fails on Android
-skip_on(android) options(disable-aa) == snap-clip.yaml snap-clip-ref.yaml  # Fails on Android
+skip_on(android,emulator) == shadow-image.yaml shadow-solid-ref.yaml  # Fails on Android emulator
+skip_on(android,emulator) options(disable-aa) == snap-clip.yaml snap-clip-ref.yaml  # Fails on Android emulator
 platform(linux) == perspective-clip.yaml perspective-clip.png
-options(disable-subpixel) == raster-space-snap.yaml raster-space-snap-ref.yaml
+fuzzy(1,6) options(disable-subpixel) == raster-space-snap.yaml raster-space-snap-ref.yaml
