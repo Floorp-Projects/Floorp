@@ -96,6 +96,7 @@ class AndroidEmulatorWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin
         args_file = os.path.join(
             self.query_abs_dirs()['abs_work_dir'], "wrench_args")
         with open(args_file, 'w') as argfile:
+            argfile.write("env: WRENCH_REFTEST_CONDITION_EMULATOR=1\n")
             argfile.write("reftest")
         self.device.push(args_file, '/sdcard/wrench/args')
 

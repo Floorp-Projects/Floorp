@@ -10,7 +10,7 @@ use image::png::PNGEncoder;
 use image::{ColorType, ImageFormat};
 use crate::parse_function::parse_function;
 use crate::png::save_flipped;
-use std::cmp;
+use std::{cmp, env};
 use std::fmt::{Display, Error, Formatter};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -369,10 +369,15 @@ impl ReftestEnvironment {
             return true;
         }
         match (&self.version, &semver::VersionReq::parse(condition)) {
-            (None, _) => false,
-            (_, Err(_)) => false,
-            (Some(v), Ok(r)) => r.matches(v),
-        }
+            (Some(v), Ok(r)) => {
+                if r.matches(v) {
+                    return true;
+                }
+            },
+            _ => (),
+        };
+        let envkey = format!("WRENCH_REFTEST_CONDITION_{}", condition.to_uppercase());
+        env::var(envkey).is_ok()
     }
 
     fn platform() -> &'static str {
