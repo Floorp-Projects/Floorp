@@ -64,7 +64,7 @@ Running reftests like a boss:
 
     First, compile wrench as described above (debug mode).
     Then, from the root gecko source dir, run:
-        ./mach python testing/mozharness/scripts/android_emulator_wrench.py --config testing/mozharness/configs/android/wrench.py
+        ./mach python testing/mozharness/scripts/android_wrench.py --config testing/mozharness/configs/android/wrench.py
     This will automatically do the following:
         - Download the blessed android AVDs from taskcluster
         - Start the emulator (using your ~/.mozbuild/android-sdk-linux emulator binaries)
@@ -83,4 +83,4 @@ Running reftests like a boss:
     instructions above and set the WRENCH_APK env var to point to the APK:
     to point to it:
         export WRENCH_APK=gfx/wr/target/android-artifacts/app/build/outputs/apk/app-release-unsigned.apk
-        ./mach python testing/mozharness/scripts/android_emulator_wrench.py --config testing/mozharness/configs/android/wrench.py
+        ./mach python testing/mozharness/scripts/android_wrench.py --config testing/mozharness/configs/android/wrench.py

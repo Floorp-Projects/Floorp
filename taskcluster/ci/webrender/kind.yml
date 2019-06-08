@@ -308,7 +308,7 @@ jobs:
                 # need hard-coded URLs until bug 1551875 is fixed
                 TASKCLUSTER_ROOT_URL: 'https://taskcluster.net'
                 TASKCLUSTER_PROXY_URL: 'http://taskcluster'
-                MOZHARNESS_SCRIPT: android_emulator_wrench.py
+                MOZHARNESS_SCRIPT: android_wrench.py
                 MOZHARNESS_CONFIG: android/wrench.py
                 NEED_WINDOW_MANAGER: 'true'
         dependencies:
@@ -330,7 +330,7 @@ jobs:
         when:
             files-changed:
                 - 'gfx/wr/**'
-                - 'testing/mozharness/scripts/android_emulator_wrench.py'
+                - 'testing/mozharness/scripts/android_wrench.py'
                 - 'testing/mozharness/configs/android/wrench.py'
 
     android-release:
@@ -348,7 +348,7 @@ jobs:
                 # need hard-coded URLs until bug 1551875 is fixed
                 TASKCLUSTER_ROOT_URL: 'https://taskcluster.net'
                 TASKCLUSTER_PROXY_URL: 'http://taskcluster'
-                MOZHARNESS_SCRIPT: android_emulator_wrench.py
+                MOZHARNESS_SCRIPT: android_wrench.py
                 MOZHARNESS_CONFIG: android/wrench.py
                 NEED_WINDOW_MANAGER: 'true'
         dependencies:
@@ -370,5 +370,5 @@ jobs:
         when:
             files-changed:
                 - 'gfx/wr/**'
-                - 'testing/mozharness/scripts/android_emulator_wrench.py'
+                - 'testing/mozharness/scripts/android_wrench.py'
                 - 'testing/mozharness/configs/android/wrench.py'

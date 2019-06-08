@@ -24,9 +24,9 @@ from mozharness.mozilla.testing.android import AndroidMixin
 from mozharness.mozilla.testing.testbase import TestingMixin
 
 
-class AndroidEmulatorWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
+class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
     def __init__(self, require_config_file=False):
-        super(AndroidEmulatorWrench, self).__init__()
+        super(AndroidWrench, self).__init__()
         self.device_serial = 'emulator-5554'
         self.use_gles3 = True
         self._errored = False
@@ -40,7 +40,7 @@ class AndroidEmulatorWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin
         abs_dirs['abs_work_dir'] = os.path.expanduser("~/.wrench")
         if os.environ.get('MOZ_AUTOMATION', '0') == '1':
             # In automation use the standard work dir if there is one
-            parent_abs_dirs = super(AndroidEmulatorWrench, self).query_abs_dirs()
+            parent_abs_dirs = super(AndroidWrench, self).query_abs_dirs()
             if 'abs_work_dir' in parent_abs_dirs:
                 abs_dirs['abs_work_dir'] = parent_abs_dirs['abs_work_dir']
 
@@ -65,7 +65,7 @@ class AndroidEmulatorWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin
         logcat_cmd = [self.adb_path, '-s', self.device_serial, 'logcat', '-c']
         self.info(' '.join(logcat_cmd))
         subprocess.check_call(logcat_cmd)
-        super(AndroidEmulatorWrench, self).logcat_start()
+        super(AndroidWrench, self).logcat_start()
 
     def wait_until_process_done(self, process_name, timeout):
         """Waits until the specified process has exited. Polls the process list
@@ -208,6 +208,6 @@ class AndroidEmulatorWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin
 
 
 if __name__ == '__main__':
-    test = AndroidEmulatorWrench()
+    test = AndroidWrench()
     test.do_test()
     test.check_errors()
