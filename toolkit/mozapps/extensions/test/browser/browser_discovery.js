@@ -12,6 +12,14 @@ var gProvider;
 
 var gLoadCompleteCallback = null;
 
+// This test file is testing the old XUL disco pane.
+SpecialPowers.pushPrefEnv({
+  set: [
+    ["extensions.htmlaboutaddons.enabled", false],
+    ["extensions.htmlaboutaddons.discover.enabled", false],
+  ],
+});
+
 var gProgressListener = {
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     // Only care about the network stop status events

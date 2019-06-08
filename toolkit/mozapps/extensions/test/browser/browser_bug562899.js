@@ -12,6 +12,12 @@ PromiseTestUtils.whitelistRejectionsGlobally(/this\._errorLink/);
 var gManagerWindow;
 var gCategoryUtilities;
 
+// This test is testing XUL about:addons UI (the HTML about:addons has its
+// own test files and these test cases should be added in Bug 1552170).
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 async function test() {
   waitForExplicitFinish();
 
