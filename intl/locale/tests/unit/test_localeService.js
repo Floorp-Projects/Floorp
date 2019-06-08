@@ -191,7 +191,7 @@ add_test(function test_availableLocales() {
  * This test verifies that all values coming from the pref are sanitized.
  */
 add_test(function test_requestedLocales_sanitize() {
-  Services.prefs.setCharPref(PREF_REQUESTED_LOCALES, "de,2,#$@#,pl,ąó,!a2,DE-at,,;");
+  Services.prefs.setStringPref(PREF_REQUESTED_LOCALES, "de,2,#$@#,pl,ąó,!a2,DE-at,,;");
 
   let locales = localeService.requestedLocales;
   Assert.equal(locales[0], "de");
