@@ -33,8 +33,8 @@ var CI = SpecialPowers.Ci;
 
 var fe =
   CC["@mozilla.org/gfx/fontenumerator;1"].createInstance(CI.nsIFontEnumerator);
-var serifFonts = fe.EnumerateFonts("x-western", "serif", {});
-var monospaceFonts = fe.EnumerateFonts("x-western", "monospace", {});
+var serifFonts = fe.EnumerateFonts("x-western", "serif");
+var monospaceFonts = fe.EnumerateFonts("x-western", "monospace");
 
 function table_width_for_font(font) {
   tableElement.style.fontFamily = '"' + font + '"';
