@@ -28,7 +28,7 @@ var CI = SpecialPowers.Ci;
 
 var fe =
   CC["@mozilla.org/gfx/fontenumerator;1"].createInstance(CI.nsIFontEnumerator);
-var allFonts = fe.EnumerateFonts(null, null, {});
+var allFonts = fe.EnumerateFonts(null, null);
 
 var idx = 0;
 var list = "";
