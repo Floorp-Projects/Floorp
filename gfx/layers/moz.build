@@ -248,6 +248,7 @@ EXPORTS.mozilla.layers += [
     'TextureSourceProvider.h',
     'TextureWrapperImage.h',
     'TransactionIdAllocator.h',
+    'TreeTraversal.h',
     'UpdateImageHelper.h',
     'wr/AsyncImagePipelineManager.h',
     'wr/ClipManager.h',
