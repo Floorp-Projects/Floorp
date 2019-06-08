@@ -27,14 +27,16 @@ XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
 
 var gContextMenuContentData = null;
 
-function openContextMenu(aMessage) {
+function openContextMenu(aMessage, aBrowser, aActor) {
   let data = aMessage.data;
-  let browser = aMessage.target;
+  let browser = aBrowser;
+  let actor = aActor;
   let spellInfo = data.spellInfo;
   let frameReferrerInfo = data.frameReferrerInfo;
+  let principal = data.principal;
 
   if (spellInfo) {
-    spellInfo.target = aMessage.target.messageManager;
+    spellInfo.target = browser.messageManager;
   }
 
   let documentURIObject = makeURI(data.docLocation,
@@ -46,12 +48,23 @@ function openContextMenu(aMessage) {
       E10SUtils.deserializeReferrerInfo(frameReferrerInfo);
   }
 
+  // For now, JS Window Actors don't deserialize Principals automatically, so we
+  // have to do it ourselves. See bug 1557852.
+  if (principal) {
+    principal = E10SUtils.deserializePrincipal(principal);
+  }
+
+  if (data.context.principal) {
+    data.context.principal = E10SUtils.deserializePrincipal(data.context.principal);
+  }
+
   gContextMenuContentData = { context: data.context,
                               popupNodeSelectors: data.popupNodeSelectors,
                               browser,
+                              actor,
                               editFlags: data.editFlags,
                               spellInfo,
-                              principal: data.principal,
+                              principal,
                               customMenuItems: data.customMenuItems,
                               documentURIObject,
                               docLocation: data.docLocation,
@@ -221,9 +234,10 @@ nsContextMenu.prototype = {
     this.inSyntheticDoc = context.inSyntheticDoc;
     this.inAboutDevtoolsToolbox = context.inAboutDevtoolsToolbox;
 
-
     // Everything after this isn't sent directly from ContextMenu
-    this.ownerDoc = this.target.ownerDocument;
+    if (this.target) {
+      this.ownerDoc = this.target.ownerDocument;
+    }
 
     this.csp = E10SUtils.deserializeCSP(context.csp);
 
@@ -233,8 +247,15 @@ nsContextMenu.prototype = {
                            ? gContextMenuContentData.popupNodeSelectors
                            : [];
 
-    this.browser = gContextMenuContentData.browser;
-    this.selectionInfo = gContextMenuContentData.selectionInfo;
+    if (gContextMenuContentData) {
+      this.browser = gContextMenuContentData.browser;
+      this.selectionInfo = gContextMenuContentData.selectionInfo;
+      this.actor = gContextMenuContentData.actor;
+    } else {
+      this.browser = this.ownerDoc.defaultView.docShell.chromeEventHandler;
+      this.selectionInfo = BrowserUtils.getSelectionDetails(window);
+      this.actor = this.browser.browsingContext.currentWindowGlobal.getActor("ContextMenu");
+    }
 
     const {gBrowser} = this.browser.ownerGlobal;
 
@@ -246,11 +267,11 @@ nsContextMenu.prototype = {
       !!gBrowser.getTabForBrowser(this.browser) : false;
 
     if (context.shouldInitInlineSpellCheckerUINoChildren) {
-      InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
+      InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo, this.actor.manager);
     }
 
     if (context.shouldInitInlineSpellCheckerUIWithChildren) {
-      InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
+      InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo, this.actor.manager);
       let canSpell = InlineSpellCheckerUI.canSpellCheck && this.canSpellCheck;
       this.showItem("spell-check-enabled", canSpell);
       this.showItem("spell-separator", canSpell);
@@ -258,8 +279,8 @@ nsContextMenu.prototype = {
   },  // setContext
 
   hiding: function CM_hiding() {
-    if (this.browser && this.browser.messageManager) {
-      this.browser.messageManager.sendAsyncMessage("ContextMenu:Hiding");
+    if (this.actor) {
+      this.actor.hiding();
     }
 
     gContextMenuContentData = null;
@@ -722,6 +743,7 @@ nsContextMenu.prototype = {
     if (!showFill || disableFill) {
       return;
     }
+
     let documentURI = gContextMenuContentData.documentURIObject;
     let fragment = LoginManagerContextMenu.addLoginsToMenu(this.targetIdentifier,
                                                            this.browser,
@@ -835,8 +857,7 @@ nsContextMenu.prototype = {
   // Reload clicked-in frame.
   reloadFrame(aEvent) {
     let forceReload = aEvent.shiftKey;
-    this.browser.messageManager.sendAsyncMessage("ContextMenu:ReloadFrame",
-                                                 null, { target: this.target, forceReload });
+    this.actor.reloadFrame(this.targetIdentifier, forceReload);
   },
 
   // Open clicked-in frame in its own window.
@@ -929,22 +950,11 @@ nsContextMenu.prototype = {
     urlSecurityCheck(this.mediaURL,
                      this.principal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-
-    this.browser.messageManager.sendAsyncMessage("ContextMenu:ReloadImage",
-                                                 null, { target: this.target });
+    this.actor.reloadImage(this.targetIdentifier);
   },
 
-  _canvasToBlobURL(target) {
-    let mm = this.browser.messageManager;
-    return new Promise(function(resolve) {
-      mm.sendAsyncMessage("ContextMenu:Canvas:ToBlobURL", {}, { target });
-
-      let onMessage = (message) => {
-        mm.removeMessageListener("ContextMenu:Canvas:ToBlobURL:Result", onMessage);
-        resolve(message.data.blobURL);
-      };
-      mm.addMessageListener("ContextMenu:Canvas:ToBlobURL:Result", onMessage);
-    });
+  _canvasToBlobURL(targetIdentifier) {
+    return this.actor.canvasToBlobURL(targetIdentifier);
   },
 
   // Change current window to the URL of the image, video, or audio.
@@ -952,7 +962,7 @@ nsContextMenu.prototype = {
     let referrerInfo = gContextMenuContentData.referrerInfo;
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     if (this.onCanvas) {
-      this._canvasToBlobURL(this.target).then(function(blobURL) {
+      this._canvasToBlobURL(this.targetIdentifier).then(function(blobURL) {
         openUILink(blobURL, e, { referrerInfo,
                                  triggeringPrincipal: systemPrincipal});
       }, Cu.reportError);
@@ -969,7 +979,6 @@ nsContextMenu.prototype = {
   },
 
   saveVideoFrameAsImage() {
-    let mm = this.browser.messageManager;
     let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
 
     let name = "";
@@ -984,17 +993,11 @@ nsContextMenu.prototype = {
     if (!name)
       name = "snapshot.jpg";
 
-    mm.sendAsyncMessage("ContextMenu:SaveVideoFrameAsImage", {}, {
-      target: this.target,
-    });
-
     // Cache this because we fetch the data async
     let {documentURIObject} = gContextMenuContentData;
 
-    let onMessage = (message) => {
-      mm.removeMessageListener("ContextMenu:SaveVideoFrameAsImage:Result", onMessage);
+    this.actor.saveVideoFrameAsImage(this.targetIdentifier).then(dataURL => {
       // FIXME can we switch this to a blob URL?
-      let dataURL = message.data.dataURL;
       saveImageURL(dataURL, name, "SaveImageTitle",
                    true, // bypass cache
                    false, // don't skip prompt for where to save
@@ -1004,8 +1007,7 @@ nsContextMenu.prototype = {
                    null, // content disposition
                    isPrivate,
                    this.principal);
-    };
-    mm.addMessageListener("ContextMenu:SaveVideoFrameAsImage:Result", onMessage);
+    });
   },
 
   leaveDOMFullScreen() {
@@ -1025,23 +1027,17 @@ nsContextMenu.prototype = {
   },
 
   setDesktopBackground() {
-    let mm = this.browser.messageManager;
+    if (!Services.policies.isAllowed("setDesktopBackground")) {
+      return;
+    }
 
-    mm.sendAsyncMessage("ContextMenu:SetAsDesktopBackground", null,
-                        { target: this.target });
-
-    let onMessage = (message) => {
-      mm.removeMessageListener("ContextMenu:SetAsDesktopBackground:Result",
-                               onMessage);
-
-      if (message.data.disable ||
-          !Services.policies.isAllowed("setDesktopBackground")) {
+    this.actor.setAsDesktopBackground(this.targetIdentifier).then(({ failed, dataURL, imageName }) => {
+      if (failed) {
         return;
       }
 
       let image = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
-      image.src = message.data.dataUrl;
-      let imageName = message.data.imageName;
+      image.src = dataURL;
 
       // Confirm since it's annoying if you hit this accidentally.
       const kDesktopBackgroundURL =
@@ -1065,9 +1061,7 @@ nsContextMenu.prototype = {
                    "centerscreen,chrome,dialog,modal,dependent",
                    image, imageName);
       }
-    };
-
-    mm.addMessageListener("ContextMenu:SetAsDesktopBackground:Result", onMessage);
+    });
   },
 
   // Save URL of clicked-on frame.
@@ -1244,7 +1238,7 @@ nsContextMenu.prototype = {
     let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
     if (this.onCanvas) {
       // Bypass cache, since it's a data: URL.
-      this._canvasToBlobURL(this.target).then(function(blobURL) {
+      this._canvasToBlobURL(this.targetIdentifier).then(function(blobURL) {
         saveImageURL(blobURL, "canvas.png", "SaveImageTitle",
                      true, false, referrerURI, null, null, null,
                      isPrivate,
@@ -1313,6 +1307,22 @@ nsContextMenu.prototype = {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                     getService(Ci.nsIClipboardHelper);
     clipboard.copyString(linkURL);
+  },
+
+  addKeywordForSearchField() {
+    this.actor.getSearchFieldBookmarkData(this.targetIdentifier).then(data => {
+      let title = gNavigatorBundle.getFormattedString("addKeywordTitleAutoFill",
+                                                      [data.title]);
+      PlacesUIUtils.showBookmarkDialog({ action: "add",
+                                         type: "bookmark",
+                                         uri: makeURI(data.spec),
+                                         title,
+                                         keyword: "",
+                                         postData: data.postData,
+                                         charSet: data.charset,
+                                         hiddenRows: [ "location", "tags" ],
+                                       }, window);
+    });
   },
 
   /**
@@ -1432,17 +1442,11 @@ nsContextMenu.prototype = {
 
   addBookmarkForFrame: function CM_addBookmarkForFrame() {
     let uri = gContextMenuContentData.documentURIObject;
-    let mm = this.browser.messageManager;
 
-    let onMessage = (message) => {
-      mm.removeMessageListener("ContextMenu:BookmarkFrame:Result", onMessage);
-
-      window.top.PlacesCommandHook.bookmarkLink(uri.spec, message.data.title)
+    this.actor.getFrameTitle(this.targetIdentifier).then(title => {
+      window.top.PlacesCommandHook.bookmarkLink(uri.spec, title)
                                   .catch(Cu.reportError);
-    };
-    mm.addMessageListener("ContextMenu:BookmarkFrame:Result", onMessage);
-
-    mm.sendAsyncMessage("ContextMenu:BookmarkFrame", null, { target: this.target });
+    });
   },
 
   savePageAs: function CM_savePageAs() {
@@ -1458,14 +1462,7 @@ nsContextMenu.prototype = {
   },
 
   mediaCommand: function CM_mediaCommand(command, data) {
-    let mm = this.browser.messageManager;
-    let win = this.browser.ownerGlobal;
-    let windowUtils = win.windowUtils;
-    mm.sendAsyncMessage("ContextMenu:MediaCommand",
-                        {command,
-                         data,
-                         handlingUserInput: windowUtils.isHandlingUserInput},
-                        {element: this.target});
+    this.actor.mediaCommand(this.targetIdentifier, command, data);
   },
 
   copyMediaLocation() {
@@ -1527,5 +1524,9 @@ nsContextMenu.prototype = {
       excludeUserContextId: gContextMenuContentData.userContextId,
     };
     return createUserContextMenu(aEvent, createMenuOptions);
+  },
+
+  doCustomCommand(generatedItemId, handlingUserInput) {
+    this.actor.doCustomCommand(generatedItemId, handlingUserInput);
   },
 };
