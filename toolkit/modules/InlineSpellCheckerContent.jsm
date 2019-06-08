@@ -12,10 +12,10 @@ var EXPORTED_SYMBOLS = [ "InlineSpellCheckerContent" ];
 
 var InlineSpellCheckerContent = {
   _spellChecker: null,
-  _manager: null,
+  _actor: null,
 
-  initContextMenu(event, editFlags, messageManager) {
-    this._manager = messageManager;
+  initContextMenu(event, editFlags, actor) {
+    this._actor = actor;
 
     let spellChecker;
     if (!(editFlags & (SpellCheckHelper.TEXTAREA | SpellCheckHelper.INPUT))) {
@@ -31,8 +31,6 @@ var InlineSpellCheckerContent = {
     }
 
     this._spellChecker.initFromEvent(event.rangeParent, event.rangeOffset);
-
-    this._addMessageListeners();
 
     if (!spellChecker.canSpellCheck) {
       return { canSpellCheck: false,
@@ -66,10 +64,7 @@ var InlineSpellCheckerContent = {
   },
 
   uninitContextMenu() {
-    for (let i of this._messages)
-      this._manager.removeMessageListener(i, this);
-
-    this._manager = null;
+    this._actor = null;
     this._spellChecker = null;
   },
 
@@ -94,42 +89,19 @@ var InlineSpellCheckerContent = {
     return suggestions;
   },
 
-  _messages: [
-      "InlineSpellChecker:selectDictionary",
-      "InlineSpellChecker:replaceMisspelling",
-      "InlineSpellChecker:toggleEnabled",
-
-      "InlineSpellChecker:recheck",
-
-      "InlineSpellChecker:uninit",
-    ],
-
-  _addMessageListeners() {
-    for (let i of this._messages)
-      this._manager.addMessageListener(i, this);
+  selectDictionary(localeCode) {
+    this._spellChecker.selectDictionary(localeCode);
   },
 
-  receiveMessage(msg) {
-    switch (msg.name) {
-      case "InlineSpellChecker:selectDictionary":
-        this._spellChecker.selectDictionary(msg.data.localeCode);
-        break;
+  replaceMisspelling(index) {
+    this._spellChecker.replaceMisspelling(index);
+  },
 
-      case "InlineSpellChecker:replaceMisspelling":
-        this._spellChecker.replaceMisspelling(msg.data.index);
-        break;
+  toggleEnabled() {
+    this._spellChecker.toggleEnabled();
+  },
 
-      case "InlineSpellChecker:toggleEnabled":
-        this._spellChecker.toggleEnabled();
-        break;
-
-      case "InlineSpellChecker:recheck":
-        this._spellChecker.mInlineSpellChecker.enableRealTimeSpell = true;
-        break;
-
-      case "InlineSpellChecker:uninit":
-        this.uninitContextMenu();
-        break;
-    }
+  recheck() {
+    this._spellChecker.mInlineSpellChecker.enableRealTimeSpell = true;
   },
 };
