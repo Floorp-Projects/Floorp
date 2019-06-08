@@ -44,7 +44,7 @@ var browser = BrowserApp.addTab("about:blank").browser;
   // N.b.: the write to the Fennec DB happens before the Gecko notification
   // is fired.  This is delicate.
   function add_history_visit(url) {
-    browser.loadURI(url, null, null);
+    browser.loadURI(url);
     return promiseLinkVisit(url);
   }
 

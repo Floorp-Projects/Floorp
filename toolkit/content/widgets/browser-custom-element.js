@@ -836,23 +836,24 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
   /**
    * throws exception for unknown schemes
    */
-  loadURI(aURI, aParams) {
+  loadURI(aURI, aParams = {}) {
     if (!aURI) {
       aURI = "about:blank";
     }
     let {
-      flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
         referrerInfo,
         triggeringPrincipal,
         postData,
         headers,
         csp,
-    } = aParams || {};
+    } = aParams;
+    let loadFlags = aParams.loadFlags || aParams.flags ||
+                    Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     let loadURIOptions = {
       triggeringPrincipal,
       csp,
       referrerInfo,
-      loadFlags: flags,
+      loadFlags,
       postData,
       headers,
     };
