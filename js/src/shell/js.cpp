@@ -23,9 +23,6 @@
 #include "mozilla/Variant.h"
 
 #include <chrono>
-#ifdef JS_POSIX_NSPR
-#  include <dlfcn.h>
-#endif
 #ifdef XP_WIN
 #  include <direct.h>
 #  include <process.h>
@@ -62,7 +59,7 @@
 #include "jsfriendapi.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#ifndef JS_POSIX_NSPR
+#ifndef JS_WITHOUT_NSPR
 #  include "prerror.h"
 #  include "prlink.h"
 #endif
@@ -169,30 +166,6 @@ using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 using mozilla::Utf8Unit;
 using mozilla::Variant;
-
-// Avoid an unnecessary NSPR dependency on Linux and OS X just for the shell.
-#ifdef JS_POSIX_NSPR
-
-enum PRLibSpecType { PR_LibSpec_Pathname };
-
-struct PRLibSpec {
-  PRLibSpecType type;
-  union {
-    const char* pathname;
-  } value;
-};
-
-typedef void PRLibrary;
-
-#  define PR_LD_NOW RTLD_NOW
-#  define PR_LD_GLOBAL RTLD_GLOBAL
-
-static PRLibrary* PR_LoadLibraryWithFlags(PRLibSpec libSpec, int flags) {
-  return dlopen(libSpec.value.pathname, flags);
-}
-
-static void PR_UnloadLibrary(PRLibrary* dll) { dlclose(dll); }
-#endif
 
 enum JSShellExitCode {
   EXITCODE_RUNTIME_ERROR = 3,
@@ -10864,6 +10837,7 @@ static void PreInit() {
 #endif
 }
 
+#ifndef JS_WITHOUT_NSPR
 class AutoLibraryLoader {
   Vector<PRLibrary*, 4, SystemAllocPolicy> libraries;
 
@@ -10880,12 +10854,8 @@ class AutoLibraryLoader {
     libSpec.value.pathname = path;
     PRLibrary* dll = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_GLOBAL);
     if (!dll) {
-#ifdef JS_POSIX_NSPR
-      fprintf(stderr, "LoadLibrary '%s' failed: %s\n", path, dlerror());
-#else
       fprintf(stderr, "LoadLibrary '%s' failed with code %d\n", path,
               PR_GetError());
-#endif
       MOZ_CRASH("Failed to load library");
     }
 
@@ -10893,6 +10863,7 @@ class AutoLibraryLoader {
     return dll;
   }
 };
+#endif
 
 int main(int argc, char** argv, char** envp) {
   PreInit();
@@ -11260,6 +11231,12 @@ int main(int argc, char** argv, char** envp) {
     coverage::EnableLCov();
   }
 
+#ifdef JS_WITHOUT_NSPR
+  if (!op.getMultiStringOption("dll").empty()) {
+    fprintf(stderr, "Error: --dll requires NSPR support!\n");
+    return EXIT_FAILURE;
+  }
+#else
   AutoLibraryLoader loader;
   MultiStringRange dllPaths = op.getMultiStringOption("dll");
   while (!dllPaths.empty()) {
@@ -11267,6 +11244,7 @@ int main(int argc, char** argv, char** envp) {
     loader.load(path);
     dllPaths.popFront();
   }
+#endif
 
   if (op.getBoolOption("suppress-minidump")) {
     js::NoteIntentionalCrash();
