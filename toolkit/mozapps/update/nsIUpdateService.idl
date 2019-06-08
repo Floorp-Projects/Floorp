@@ -240,12 +240,8 @@ interface nsIUpdateCheckListener : nsISupports
    *          The XMLHttpRequest handling the update check.
    * @param   updates
    *          An array of nsIUpdate objects listing available updates.
-   * @param   updateCount
-   *          The size of the |updates| array.
    */
-  void onCheckComplete(in jsval request,
-                       [array, size_is(updateCount)] in nsIUpdate updates,
-                       in unsigned long updateCount);
+  void onCheckComplete(in jsval request, in Array<nsIUpdate> updates);
 
   /**
    * An error occurred while loading the remote update service file.
@@ -309,11 +305,8 @@ interface nsIApplicationUpdateService : nsISupports
    * Selects the best update to install from a list of available updates.
    * @param   updates
    *          An array of updates that are available
-   * @param   updateCount
-   *          The length of the |updates| array
    */
-  nsIUpdate selectUpdate([array, size_is(updateCount)] in nsIUpdate updates,
-                         in unsigned long updateCount);
+  nsIUpdate selectUpdate(in Array<nsIUpdate> updates);
 
   /**
    * Adds a listener that receives progress and state information about the

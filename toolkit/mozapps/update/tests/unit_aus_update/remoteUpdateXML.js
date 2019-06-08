@@ -42,7 +42,7 @@ async function run_test() {
     // bug 470244 and until this is fixed this will not test the value for
     // detailsURL when it isn't specified in the update xml.
 
-    let bestUpdate = gAUS.selectUpdate(aArgs.updates, aArgs.updateCount).
+    let bestUpdate = gAUS.selectUpdate(aArgs.updates).
                      QueryInterface(Ci.nsIWritablePropertyBag);
     Assert.equal(bestUpdate.type, "minor",
                  "the update type attribute" + MSG_SHOULD_EQUAL);
@@ -159,7 +159,7 @@ async function run_test() {
   updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   await waitForUpdateCheck(true).then((aArgs) => {
-    Assert.equal(aArgs.updateCount, 0,
+    Assert.equal(aArgs.updates.length, 0,
                  "the update count" + MSG_SHOULD_EQUAL);
   });
 
@@ -191,7 +191,7 @@ async function run_test() {
   updates += getRemoteUpdateString(updateProps, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   await waitForUpdateCheck(true, {updateCount: 2}).then((aArgs) => {
-    let bestUpdate = gAUS.selectUpdate(aArgs.updates, aArgs.updateCount);
+    let bestUpdate = gAUS.selectUpdate(aArgs.updates);
     Assert.ok(!bestUpdate,
               "there shouldn't be an update available");
   });
@@ -205,7 +205,7 @@ async function run_test() {
   updates = getRemoteUpdateString(updateProps, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   await waitForUpdateCheck(true, {updateCount: 1}).then((aArgs) => {
-    let bestUpdate = gAUS.selectUpdate(aArgs.updates, aArgs.updateCount);
+    let bestUpdate = gAUS.selectUpdate(aArgs.updates);
     Assert.ok(!!bestUpdate,
               "there should be one update available");
     Assert.equal(bestUpdate.appVersion, "1.0",

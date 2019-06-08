@@ -2252,7 +2252,7 @@ UpdateService.prototype = {
     this._attemptResume();
   },
 
-  onCheckComplete: function AUS_onCheckComplete(request, updates, updateCount) {
+  onCheckComplete: function AUS_onCheckComplete(request, updates) {
     this._selectAndInstallUpdate(updates);
   },
 
@@ -2613,7 +2613,7 @@ UpdateService.prototype = {
       return;
     }
 
-    var update = this.selectUpdate(updates, updates.length);
+    var update = this.selectUpdate(updates);
     if (!update || update.elevationFailure) {
       return;
     }
@@ -3541,7 +3541,7 @@ Checker.prototype = {
       }
 
       // Tell the callback about the updates
-      this._callback.onCheckComplete(event.target, updates, updates.length);
+      this._callback.onCheckComplete(event.target, updates);
     } catch (e) {
       LOG("Checker:onLoad - there was a problem checking for updates. " +
           "Exception: " + e);
