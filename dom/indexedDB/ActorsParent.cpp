@@ -16958,7 +16958,8 @@ nsresult Maintenance::DirectoryWork() {
 
   for (const PersistenceType persistenceType : kPersistenceTypes) {
     // Loop over "<persistence>" directories.
-    if (IsAborted()) {
+    if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+        IsAborted()) {
       return NS_ERROR_ABORT;
     }
 
@@ -17012,7 +17013,8 @@ nsresult Maintenance::DirectoryWork() {
 
     while (true) {
       // Loop over "<origin>/idb" directories.
-      if (IsAborted()) {
+      if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+          IsAborted()) {
         return NS_ERROR_ABORT;
       }
 
@@ -17088,7 +17090,8 @@ nsresult Maintenance::DirectoryWork() {
 
       while (true) {
         // Loop over files in the "idb" directory.
-        if (IsAborted()) {
+        if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+            IsAborted()) {
           return NS_ERROR_ABORT;
         }
 
@@ -17932,7 +17935,8 @@ DatabaseMaintenance::AutoProgressHandler::OnProgress(
   MOZ_ASSERT(mConnection == aConnection);
   MOZ_ASSERT(_retval);
 
-  *_retval = mMaintenance->IsAborted();
+  *_retval = QuotaClient::IsShuttingDownOnNonBackgroundThread() ||
+             mMaintenance->IsAborted();
 
   return NS_OK;
 }
