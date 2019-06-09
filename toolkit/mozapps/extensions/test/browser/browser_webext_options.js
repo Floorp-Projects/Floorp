@@ -4,6 +4,12 @@
 
 ChromeUtils.import("resource://testing-common/ContentTask.jsm", {});
 
+// This test is testing XUL about:addons UI (the HTML about:addons preferences
+// panel is already tested in browser_html_options_ui.js).
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 // Wrapper to run a test that consists of:
 //  1. opening the add-ons manager viewing the list of extensions
 //  2. installing an extension (using the provider installer callable)

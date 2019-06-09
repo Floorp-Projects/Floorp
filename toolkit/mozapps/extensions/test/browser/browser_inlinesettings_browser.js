@@ -9,6 +9,13 @@ let {ExtensionTestCommon} = ChromeUtils.import("resource://testing-common/Extens
 
 ChromeUtils.import("resource://testing-common/ContentTask.jsm", {});
 
+// This test is testing resizing of the inline options in XUL about:addons. The
+// behavior in HTML about:addons is checked in the testInlineOptions task of
+// browser_html_options_ui.js.
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 var gAddon;
 var gOtherAddon;
 var gManagerWindow;

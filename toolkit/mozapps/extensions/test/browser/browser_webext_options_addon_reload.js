@@ -5,6 +5,12 @@
 const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
+// This test is testing XUL about:addons UI (the HTML about:addons options page
+// is tested by the testCardRerender test in browser_html_options_ui.js).
+SpecialPowers.pushPrefEnv({
+  set: [["extensions.htmlaboutaddons.enabled", false]],
+});
+
 // This test function helps to detect when an addon options browser have been inserted
 // in the about:addons page.
 function waitOptionsBrowserInserted() {
