@@ -2243,6 +2243,8 @@ class LSRequestBase : public DatastoreOperationBase,
                 const LSRequestParams& aParams,
                 const Maybe<ContentParentId>& aContentParentId);
 
+  void StringifyState(nsCString& aResult) const;
+
   void Dispatch();
 
  protected:
@@ -2393,6 +2395,8 @@ class PrepareDatastoreOp
 
     return mOrigin;
   }
+
+  void StringifyNestedState(nsCString& aResult) const;
 
   bool RequestedDirectoryLock() const {
     AssertIsOnOwningThread();
@@ -6317,6 +6321,43 @@ LSRequestBase::~LSRequestBase() {
                 mState == State::Initial || mState == State::Completed);
 }
 
+void LSRequestBase::StringifyState(nsCString& aResult) const {
+  AssertIsOnOwningThread();
+
+  switch (mState) {
+    case State::Initial:
+      aResult.AssignLiteral("Initial");
+      return;
+
+    case State::StartingRequest:
+      aResult.AssignLiteral("StartingRequest");
+      return;
+
+    case State::Nesting:
+      aResult.AssignLiteral("Nesting");
+      return;
+
+    case State::SendingReadyMessage:
+      aResult.AssignLiteral("SendingReadyMessage");
+      return;
+
+    case State::WaitingForFinish:
+      aResult.AssignLiteral("WaitingForFinish");
+      return;
+
+    case State::SendingResults:
+      aResult.AssignLiteral("SendingResults");
+      return;
+
+    case State::Completed:
+      aResult.AssignLiteral("Completed");
+      return;
+
+    default:
+      MOZ_CRASH("Bad state!");
+  }
+}
+
 void LSRequestBase::Dispatch() {
   AssertIsOnOwningThread();
 
@@ -6337,39 +6378,7 @@ void LSRequestBase::LogState() {
   LS_LOG(("LSRequestBase [%p]", this));
 
   nsCString state;
-
-  switch (mState) {
-    case State::Initial:
-      state.AssignLiteral("Initial");
-      break;
-
-    case State::StartingRequest:
-      state.AssignLiteral("StartingRequest");
-      break;
-
-    case State::Nesting:
-      state.AssignLiteral("Nesting");
-      break;
-
-    case State::SendingReadyMessage:
-      state.AssignLiteral("SendingReadyMessage");
-      break;
-
-    case State::WaitingForFinish:
-      state.AssignLiteral("WaitingForFinish");
-      break;
-
-    case State::SendingResults:
-      state.AssignLiteral("SendingResults");
-      break;
-
-    case State::Completed:
-      state.AssignLiteral("Completed");
-      break;
-
-    default:
-      MOZ_CRASH("Bad state!");
-  }
+  StringifyState(state);
 
   LS_LOG(("  mState: %s", state.get()));
 
@@ -6696,6 +6705,55 @@ PrepareDatastoreOp::~PrepareDatastoreOp() {
   MOZ_ASSERT_IF(MayProceedOnNonOwningThread(),
                 mState == State::Initial || mState == State::Completed);
   MOZ_ASSERT(!mLoadDataOp);
+}
+
+void PrepareDatastoreOp::StringifyNestedState(nsCString& aResult) const {
+  AssertIsOnOwningThread();
+
+  switch (mNestedState) {
+    case NestedState::BeforeNesting:
+      aResult.AssignLiteral("BeforeNesting");
+      return;
+
+    case NestedState::CheckExistingOperations:
+      aResult.AssignLiteral("CheckExistingOperations");
+      return;
+
+    case NestedState::CheckClosingDatastore:
+      aResult.AssignLiteral("CheckClosingDatastore");
+      return;
+
+    case NestedState::PreparationPending:
+      aResult.AssignLiteral("PreparationPending");
+      return;
+
+    case NestedState::QuotaManagerPending:
+      aResult.AssignLiteral("QuotaManagerPending");
+      return;
+
+    case NestedState::DirectoryOpenPending:
+      aResult.AssignLiteral("DirectoryOpenPending");
+      return;
+
+    case NestedState::DatabaseWorkOpen:
+      aResult.AssignLiteral("DatabaseWorkOpen");
+      return;
+
+    case NestedState::BeginLoadData:
+      aResult.AssignLiteral("BeginLoadData");
+      return;
+
+    case NestedState::DatabaseWorkLoadData:
+      aResult.AssignLiteral("DatabaseWorkLoadData");
+      return;
+
+    case NestedState::AfterNesting:
+      aResult.AssignLiteral("AfterNesting");
+      return;
+
+    default:
+      MOZ_CRASH("Bad state!");
+  }
 }
 
 nsresult PrepareDatastoreOp::Start() {
@@ -7703,51 +7761,7 @@ void PrepareDatastoreOp::LogNestedState() {
   AssertIsOnOwningThread();
 
   nsCString nestedState;
-
-  switch (mNestedState) {
-    case NestedState::BeforeNesting:
-      nestedState.AssignLiteral("BeforeNesting");
-      break;
-
-    case NestedState::CheckExistingOperations:
-      nestedState.AssignLiteral("CheckExistingOperations");
-      break;
-
-    case NestedState::CheckClosingDatastore:
-      nestedState.AssignLiteral("CheckClosingDatastore");
-      break;
-
-    case NestedState::PreparationPending:
-      nestedState.AssignLiteral("PreparationPending");
-      break;
-
-    case NestedState::QuotaManagerPending:
-      nestedState.AssignLiteral("QuotaManagerPending");
-      break;
-
-    case NestedState::DirectoryOpenPending:
-      nestedState.AssignLiteral("DirectoryOpenPending");
-      break;
-
-    case NestedState::DatabaseWorkOpen:
-      nestedState.AssignLiteral("DatabaseWorkOpen");
-      break;
-
-    case NestedState::BeginLoadData:
-      nestedState.AssignLiteral("BeginLoadData");
-      break;
-
-    case NestedState::DatabaseWorkLoadData:
-      nestedState.AssignLiteral("DatabaseWorkLoadData");
-      break;
-
-    case NestedState::AfterNesting:
-      nestedState.AssignLiteral("AfterNesting");
-      break;
-
-    default:
-      MOZ_CRASH("Bad state!");
-  }
+  StringifyNestedState(nestedState);
 
   LS_LOG(("  mNestedState: %s", nestedState.get()));
 
@@ -9117,7 +9131,47 @@ void QuotaClient::ShutdownTimedOut() {
   if (gPrepareDatastoreOps) {
     data.Append("gPrepareDatastoreOps: ");
     data.AppendInt(static_cast<uint32_t>(gPrepareDatastoreOps->Length()));
-    data.Append("\n");
+
+    nsTHashtable<nsCStringHashKey> ids;
+    for (uint32_t index = 0; index < gPrepareDatastoreOps->Length(); index++) {
+      CheckedUnsafePtr<PrepareDatastoreOp>& prepareDatastoreOp =
+          (*gPrepareDatastoreOps)[index];
+
+      nsCString origin;
+      if (prepareDatastoreOp->OriginIsKnown()) {
+        origin = prepareDatastoreOp->Origin();
+        SanitizeOrigin(origin);
+      }
+
+      nsCString state;
+      prepareDatastoreOp->StringifyState(state);
+
+      nsCString nestedState;
+      prepareDatastoreOp->StringifyNestedState(nestedState);
+
+      NS_NAMED_LITERAL_CSTRING(delimiter, "*");
+
+      nsCString id = origin + delimiter + state + delimiter + nestedState;
+
+      ids.PutEntry(id);
+    }
+
+    data.Append(" (");
+
+    bool first = true;
+    for (auto iter = ids.ConstIter(); !iter.Done(); iter.Next()) {
+      if (first) {
+        first = false;
+      } else {
+        data.Append(", ");
+      }
+
+      const nsACString& id = iter.Get()->GetKey();
+
+      data.Append(id);
+    }
+
+    data.Append(")\n");
   }
 
   if (gDatastores) {

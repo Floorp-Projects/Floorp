@@ -23,6 +23,40 @@ NS_NAMED_LITERAL_CSTRING(kExternalError, "external");
 
 LogModule* GetQuotaManagerLogger() { return gLogger; }
 
+void SanitizeCString(nsACString& aString) {
+  char* iter = aString.BeginWriting();
+  char* end = aString.EndWriting();
+
+  while (iter != end) {
+    char c = *iter;
+
+    if (IsAsciiAlpha(c)) {
+      *iter = 'a';
+    } else if (IsAsciiDigit(c)) {
+      *iter = 'D';
+    }
+
+    ++iter;
+  }
+}
+
+void SanitizeOrigin(nsACString& aOrigin) {
+  int32_t colonPos = aOrigin.FindChar(':');
+  if (colonPos >= 0) {
+    const nsACString& prefix(Substring(aOrigin, 0, colonPos));
+
+    nsCString normSuffix(Substring(aOrigin, colonPos));
+    SanitizeCString(normSuffix);
+
+    aOrigin = prefix + normSuffix;
+  } else {
+    nsCString origin(aOrigin);
+    SanitizeCString(origin);
+
+    aOrigin = origin;
+  }
+}
+
 }  // namespace quota
 }  // namespace dom
 }  // namespace mozilla
