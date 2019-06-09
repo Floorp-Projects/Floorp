@@ -53,15 +53,14 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
   settingsX->SetPrinterNameFromPrintInfo();
   printSettingsSvc->InitPrintSettingsFromPrefs(settingsX, true, nsIPrintSettings::kInitSaveAll);
   // Set the print job title
-  char16_t** docTitles;
-  uint32_t titleCount;
-  nsresult rv = aWebBrowserPrint->EnumerateDocumentNames(&titleCount, &docTitles);
-  if (NS_SUCCEEDED(rv) && titleCount > 0) {
+  nsAutoString docName;
+  nsresult rv = aWebBrowserPrint->GetDocumentName(docName);
+  if (NS_SUCCEEDED(rv)) {
     // Print Core of Application Service sent print job with names exceeding
     // 255 bytes. This is a workaround until fix it.
     // (https://openradar.appspot.com/34428043)
     nsAutoString adjustedTitle;
-    PrintTarget::AdjustPrintJobNameForIPP(nsDependentString(docTitles[0]), adjustedTitle);
+    PrintTarget::AdjustPrintJobNameForIPP(docName, adjustedTitle);
     CFStringRef cfTitleString = CFStringCreateWithCharacters(
         NULL, reinterpret_cast<const UniChar*>(adjustedTitle.BeginReading()),
         adjustedTitle.Length());
@@ -69,12 +68,6 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
       ::PMPrintSettingsSetJobName(settingsX->GetPMPrintSettings(), cfTitleString);
       CFRelease(cfTitleString);
     }
-    for (int32_t i = titleCount - 1; i >= 0; i--) {
-      free(docTitles[i]);
-    }
-    free(docTitles);
-    docTitles = NULL;
-    titleCount = 0;
   }
 
   NSPrintInfo* printInfo = settingsX->GetCocoaPrintInfo();
