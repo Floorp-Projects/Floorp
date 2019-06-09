@@ -52,7 +52,7 @@ var clipboard = Services.clipboard;
   }
 
 setClipboardData(getTransferableFile(dir1));
-is(clipboard.hasDataMatchingFlavors(["application/x-moz-file"], 1, 1), true);
+is(clipboard.hasDataMatchingFlavors(["application/x-moz-file"], 1), true);
 var data = getClipboardData("application/x-moz-file");
 var file = data.value.QueryInterface(Ci.nsIFile);
 ok(file.isDirectory(), true);

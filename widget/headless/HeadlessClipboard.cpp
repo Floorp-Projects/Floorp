@@ -77,22 +77,18 @@ HeadlessClipboard::EmptyClipboard(int32_t aWhichClipboard) {
 }
 
 NS_IMETHODIMP
-HeadlessClipboard::HasDataMatchingFlavors(const char** aFlavorList,
-                                          uint32_t aLength,
-                                          int32_t aWhichClipboard,
-                                          bool* aHasType) {
+HeadlessClipboard::HasDataMatchingFlavors(
+    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+    bool* aHasType) {
   *aHasType = false;
   if (aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   // Retrieve the union of all aHasType in aFlavorList
-  for (uint32_t i = 0; i < aLength; ++i) {
-    const char* flavor = aFlavorList[i];
-    if (!flavor) {
-      continue;
-    }
-    if (!strcmp(flavor, kUnicodeMime) && mClipboard->HasText()) {
+  for (auto& flavor : aFlavorList) {
+    if (flavor.EqualsLiteral(kUnicodeMime) && mClipboard->HasText()) {
       *aHasType = true;
+      break;
     }
   }
   return NS_OK;

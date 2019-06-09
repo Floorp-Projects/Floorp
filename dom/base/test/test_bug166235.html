@@ -50,8 +50,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
     window.getSelection().selectAllChildren(document.getElementById(id));
     documentViewer.copySelection();
 
-    is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), true);
-    is(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), true);
+    is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1), true);
+    is(clipboard.hasDataMatchingFlavors(["text/html"], 1), true);
   }
   function getClipboardData(mime) {
     var transferable = Cc['@mozilla.org/widget/transferable;1']

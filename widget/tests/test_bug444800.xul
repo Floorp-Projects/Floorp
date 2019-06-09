@@ -46,7 +46,7 @@ function runImageClipboardTests(aCBSvc, aImageType)
 {
   // Verify that hasDataMatchingFlavors() is working correctly.
   var typeArray = [ aImageType ];
-  var hasImage = aCBSvc.hasDataMatchingFlavors(typeArray, typeArray.length,
+  var hasImage = aCBSvc.hasDataMatchingFlavors(typeArray,
                                                knsIClipboard.kGlobalClipboard);
   ok(hasImage, aImageType + " - hasDataMatchingFlavors()");
 
