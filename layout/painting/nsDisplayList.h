@@ -1774,6 +1774,8 @@ class nsDisplayListBuilder {
 
     void RemoveModifiedFramesAndRects();
 
+    size_t SizeOfExcludingThis(mozilla::MallocSizeOf) const;
+
     typedef mozilla::gfx::ArrayView<pixman_box32_t> BoxArrayView;
 
     nsRegion ToRegion() const { return nsRegion(BoxArrayView(mRects)); }
@@ -1849,6 +1851,8 @@ class nsDisplayListBuilder {
                  "Someone forgot to enter a presshell");
     return &mPresShellStates[mPresShellStates.Length() - 1];
   }
+
+  void AddSizeOfExcludingThis(nsWindowSizes&) const;
 
   struct DocumentWillChangeBudget {
     DocumentWillChangeBudget() : mBudget(0) {}
@@ -2661,6 +2665,8 @@ class nsDisplayItem : public nsDisplayItemBase {
    * by RetaineDisplayListBuilder.
    */
   virtual void InvalidateCachedChildInfo(nsDisplayListBuilder* aBuilder) {}
+
+  virtual void AddSizeOfExcludingThis(nsWindowSizes&) const {}
 
   /**
    * @param aSnap set to true if the edges of the rectangles of the opaque
@@ -3783,6 +3789,8 @@ class RetainedDisplayList : public nsDisplayList {
     nsDisplayList::DeleteAll(aBuilder);
   }
 
+  void AddSizeOfExcludingThis(nsWindowSizes&) const;
+
   DirectedAcyclicGraph<MergedListUnits> mDAG;
 
   // Temporary state initialized during the preprocess pass
@@ -3877,10 +3885,12 @@ class nsDisplayHitTestInfoItem : public nsPaintedDisplayItem {
     return mHitTestInfo->mFlags;
   }
 
-  bool HasHitTestInfo() const override { return mHitTestInfo.get(); }
+  bool HasHitTestInfo() const final { return mHitTestInfo.get(); }
+
+  void AddSizeOfExcludingThis(nsWindowSizes&) const override;
 
 #ifdef DEBUG
-  bool IsHitTestItem() const override { return true; }
+  bool IsHitTestItem() const final { return true; }
 #endif
 
  protected:
@@ -7068,6 +7078,8 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
   bool IsParticipating3DContext() {
     return mFrame->Extend3DContext() || Combines3DTransformWithAncestors();
   }
+
+  void AddSizeOfExcludingThis(nsWindowSizes&) const override;
 
  private:
   void ComputeBounds(nsDisplayListBuilder* aBuilder);

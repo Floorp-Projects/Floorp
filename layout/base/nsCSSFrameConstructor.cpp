@@ -30,6 +30,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/StaticPrefs.h"
+#include "RetainedDisplayListBuilder.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCSSPseudoElements.h"
 #include "nsAtom.h"
@@ -11961,6 +11962,10 @@ void nsCSSFrameConstructor::AddSizeOfIncludingThis(
     nsWindowSizes& aSizes) const {
   if (nsIFrame* rootFrame = GetRootFrame()) {
     rootFrame->AddSizeOfExcludingThisForTree(aSizes);
+    if (RetainedDisplayListBuilder* builder =
+            rootFrame->GetProperty(RetainedDisplayListBuilder::Cached())) {
+      builder->AddSizeOfIncludingThis(aSizes);
+    }
   }
 
   // This must be done after measuring from the frame tree, since frame

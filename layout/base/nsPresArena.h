@@ -59,9 +59,10 @@ class nsPresArena {
 
   /**
    * Increment nsWindowSizes with sizes of interesting objects allocated in this
-   * arena.
+   * arena, and put the general unclassified size in `aArenaSize`.
    */
-  void AddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const;
+  void AddSizeOfExcludingThis(nsWindowSizes&,
+                              size_t nsWindowSizes::*aArenaSize) const;
 
   void Check() { mPool.Check(); }
 
