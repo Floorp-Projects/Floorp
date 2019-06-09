@@ -125,6 +125,10 @@ void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr);
 
 LogModule* GetQuotaManagerLogger();
 
+void SanitizeCString(nsACString& aString);
+
+void SanitizeOrigin(nsACString& aOrigin);
+
 }  // namespace quota
 }  // namespace dom
 }  // namespace mozilla
