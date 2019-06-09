@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
@@ -32,7 +31,7 @@ class CrashReporterFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val crash = Crash.fromIntent(CrashReporterFragmentArgs.fromBundle(arguments!!).crashIntent)
 
-        view.findViewById<TextView>(R.id.title).text =
+        title.text =
             getString(R.string.tab_crash_title_2, context!!.getString(R.string.app_name))
 
         requireContext().components.analytics.metrics.track(Event.CrashReporterOpened)

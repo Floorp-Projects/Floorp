@@ -9,15 +9,14 @@ import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
-import android.widget.Switch
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.functions.Consumer
+import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.*
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
@@ -40,38 +39,9 @@ class QuickSettingsUIView(
 ) : UIView<QuickSettingsState, QuickSettingsAction, QuickSettingsChange>(
     container, actionEmitter, changesObservable
 ) {
-    private val securityInfoLabel: TextView
-    private val urlLabel: TextView
-    private val trackingProtectionSwitch: Switch
-    private val trackingProtectionAction: TextView
-    private val reportSiteIssueAction: TextView
-    private val cameraActionLabel: TextView
-    private val cameraLabel: TextView
-    private val microphoneActionLabel: TextView
-    private val microphoneLabel: TextView
-    private val locationActionLabel: TextView
-    private val locationLabel: TextView
-    private val notificationActionLabel: TextView
-    private val notificationLabel: TextView
     private val blockedByAndroidPhoneFeatures = mutableListOf<PhoneFeature>()
     private val context get() = view.context
     private val settings: Settings = Settings.getInstance(context)
-
-    init {
-        urlLabel = view.findViewById<AppCompatTextView>(R.id.url)
-        securityInfoLabel = view.findViewById<AppCompatTextView>(R.id.security_info)
-        trackingProtectionSwitch = view.findViewById(R.id.tracking_protection)
-        trackingProtectionAction = view.findViewById(R.id.tracking_protection_action)
-        reportSiteIssueAction = view.findViewById(R.id.report_site_issue_action)
-        cameraActionLabel = view.findViewById<AppCompatTextView>(R.id.camera_action_label)
-        cameraLabel = view.findViewById<AppCompatTextView>(R.id.camera_icon)
-        microphoneActionLabel = view.findViewById<AppCompatTextView>(R.id.microphone_action_label)
-        microphoneLabel = view.findViewById<AppCompatTextView>(R.id.microphone_icon)
-        locationLabel = view.findViewById<AppCompatTextView>(R.id.location_icon)
-        locationActionLabel = view.findViewById<AppCompatTextView>(R.id.location_action_label)
-        notificationActionLabel = view.findViewById<AppCompatTextView>(R.id.notification_action_label)
-        notificationLabel = view.findViewById<AppCompatTextView>(R.id.notification_icon)
-    }
 
     override fun updateView() = Consumer<QuickSettingsState> { state ->
         when (state.mode) {
@@ -96,7 +66,7 @@ class QuickSettingsUIView(
     }
 
     private fun bindUrl(url: String) {
-        urlLabel.text = url.toUri().hostWithoutCommonPrefixes
+        this.url.text = url.toUri().hostWithoutCommonPrefixes
     }
 
     private fun bindTrackingProtectionInfo(isTrackingProtectionOn: Boolean) {
@@ -105,11 +75,11 @@ class QuickSettingsUIView(
             if (isTrackingProtectionOn) R.drawable.ic_tracking_protection else
                 R.drawable.ic_tracking_protection_disabled
         val icon = AppCompatResources.getDrawable(context, drawableId)
-        trackingProtectionSwitch.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
-        trackingProtectionSwitch.isChecked = isTrackingProtectionOn
-        trackingProtectionSwitch.isEnabled = globalTPSetting
+        tracking_protection.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
+        tracking_protection.isChecked = isTrackingProtectionOn
+        tracking_protection.isEnabled = globalTPSetting
 
-        trackingProtectionSwitch.setOnCheckedChangeListener { _, isChecked ->
+        tracking_protection.setOnCheckedChangeListener { _, isChecked ->
             actionEmitter.onNext(
                 QuickSettingsAction.ToggleTrackingProtection(
                     isChecked
@@ -120,8 +90,8 @@ class QuickSettingsUIView(
 
     private fun bindTrackingProtectionAction() {
         val globalTPSetting = Settings.getInstance(context).shouldUseTrackingProtection
-        trackingProtectionAction.visibility = if (globalTPSetting) View.GONE else View.VISIBLE
-        trackingProtectionAction.setOnClickListener {
+        tracking_protection_action.visibility = if (globalTPSetting) View.GONE else View.VISIBLE
+        tracking_protection_action.setOnClickListener {
             actionEmitter.onNext(
                 QuickSettingsAction.SelectTrackingProtectionSettings
             )
@@ -129,7 +99,7 @@ class QuickSettingsUIView(
     }
 
     private fun bindReportSiteIssueAction(url: String) {
-        reportSiteIssueAction.setOnClickListener {
+        report_site_issue_action.setOnClickListener {
             actionEmitter.onNext(
                 QuickSettingsAction.SelectReportProblem(url)
             )
@@ -153,8 +123,8 @@ class QuickSettingsUIView(
 
         val icon = AppCompatResources.getDrawable(context, drawableId)
         icon?.setTint(ContextCompat.getColor(context, drawableTint))
-        securityInfoLabel.setText(stringId)
-        securityInfoLabel.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
+        security_info.setText(stringId)
+        security_info.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
     }
 
     private fun bindPhoneFeatureItem(phoneFeature: PhoneFeature, sitePermissions: SitePermissions? = null) {
@@ -249,10 +219,10 @@ class QuickSettingsUIView(
     private val PhoneFeature.labelAndAction
         get(): Pair<TextView, TextView> {
             return when (this) {
-                CAMERA -> cameraLabel to cameraActionLabel
-                LOCATION -> locationLabel to locationActionLabel
-                MICROPHONE -> microphoneLabel to microphoneActionLabel
-                NOTIFICATION -> notificationLabel to notificationActionLabel
+                CAMERA -> camera_icon to camera_action_label
+                LOCATION -> location_icon to location_action_label
+                MICROPHONE -> microphone_icon to microphone_action_label
+                NOTIFICATION -> notification_icon to notification_action_label
             }
         }
 

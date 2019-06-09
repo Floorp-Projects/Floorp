@@ -8,11 +8,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.NavHostFragment.findNavController
+import kotlinx.android.synthetic.main.fragment_pair.*
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -33,13 +33,8 @@ class PairFragment : Fragment(), BackHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val instructionsText = view.findViewById(R.id.pair_instructions) as TextView
-        instructionsText.setText(
-            HtmlCompat.fromHtml(
-                getString(R.string.pair_instructions),
-                HtmlCompat.FROM_HTML_MODE_LEGACY
-            )
-        )
+        pair_instructions.text = HtmlCompat.fromHtml(getString(R.string.pair_instructions),
+            HtmlCompat.FROM_HTML_MODE_LEGACY)
 
         qrFeature.set(
             QrFeature(

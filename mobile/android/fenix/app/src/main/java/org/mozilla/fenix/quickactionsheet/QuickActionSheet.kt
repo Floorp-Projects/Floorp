@@ -16,7 +16,7 @@ import org.mozilla.fenix.R
 import android.os.Bundle
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import android.widget.ImageButton
+import kotlinx.android.synthetic.main.layout_quick_action_sheet.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -39,8 +39,6 @@ class QuickActionSheet @JvmOverloads constructor(
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
 
-    private lateinit var handle: ImageButton
-    private lateinit var linearLayout: LinearLayout
     private lateinit var quickActionSheetBehavior: QuickActionSheetBehavior
 
     init {
@@ -50,9 +48,8 @@ class QuickActionSheet @JvmOverloads constructor(
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         job = Job()
-        handle = findViewById(R.id.quick_action_sheet_handle)
-        linearLayout = findViewById(R.id.quick_action_sheet)
-        quickActionSheetBehavior = BottomSheetBehavior.from(linearLayout.parent as View) as QuickActionSheetBehavior
+        quickActionSheetBehavior = BottomSheetBehavior.from(quick_action_sheet.parent as View)
+                as QuickActionSheetBehavior
         quickActionSheetBehavior.isHideable = false
         setupHandle()
     }
@@ -63,14 +60,14 @@ class QuickActionSheet @JvmOverloads constructor(
     }
 
     private fun setupHandle() {
-        handle.setOnClickListener {
+        quick_action_sheet_handle.setOnClickListener {
             quickActionSheetBehavior.state = when (quickActionSheetBehavior.state) {
                 BottomSheetBehavior.STATE_EXPANDED -> BottomSheetBehavior.STATE_COLLAPSED
                 else -> BottomSheetBehavior.STATE_EXPANDED
             }
         }
 
-        handle.setAccessibilityDelegate(HandleAccessibilityDelegate(quickActionSheetBehavior))
+        quick_action_sheet_handle.setAccessibilityDelegate(HandleAccessibilityDelegate(quickActionSheetBehavior))
     }
 
     fun bounceSheet() {
