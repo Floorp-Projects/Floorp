@@ -59,13 +59,11 @@ interface nsIClipboard : nsISupports
     * any of the flavors in the given list.
     *
     * @param  aFlavorList     An array of ASCII strings.
-    * @param  aLength         The length of the aFlavorList.
     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
     * @outResult - if data is present matching one of
     * @result NS_OK if successful.
     */
-    boolean hasDataMatchingFlavors ( [array, size_is(aLength)] in string aFlavorList,
-                                     in unsigned long aLength,
+    boolean hasDataMatchingFlavors ( in Array<ACString> aFlavorList,
                                      in long aWhichClipboard ) ;
 
    /**

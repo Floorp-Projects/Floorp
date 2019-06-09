@@ -58,11 +58,11 @@ function testCopyImage () {
   //--------- Let's check the content of the clipboard now.
 
   // Does the clipboard contain text/unicode data ?
-  ok(clipboard.hasDataMatchingFlavors(["text/unicode"], 1, clipboard.kGlobalClipboard), "clipboard contains unicode text");
+  ok(clipboard.hasDataMatchingFlavors(["text/unicode"], clipboard.kGlobalClipboard), "clipboard contains unicode text");
   // Does the clipboard contain text/html data ?
-  ok(clipboard.hasDataMatchingFlavors(["text/html"], 1, clipboard.kGlobalClipboard), "clipboard contains html text");
+  ok(clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard), "clipboard contains html text");
   // Does the clipboard contain image data ?
-  ok(clipboard.hasDataMatchingFlavors(["image/png"], 1, clipboard.kGlobalClipboard), "clipboard contains image");
+  ok(clipboard.hasDataMatchingFlavors(["image/png"], clipboard.kGlobalClipboard), "clipboard contains image");
 
   // Is the text/uncodie data correct ?
   testClipboardValue('text/unicode', 'about:logo');

@@ -292,7 +292,7 @@ add_task(async function testAccessibleCarets_designMode() {
 
   let flavors = ["text/unicode"];
   let clipboardHasText = Services.clipboard.hasDataMatchingFlavors(
-    flavors, flavors.length, Ci.nsIClipboard.kGlobalClipboard);
+    flavors, Ci.nsIClipboard.kGlobalClipboard);
   is(clipboardHasText, true, "There should now be paste-able text in the clipboard.");
 
   // Toggle designMode on/off/on, check UI expectations.

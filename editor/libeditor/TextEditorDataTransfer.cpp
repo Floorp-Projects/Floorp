@@ -459,12 +459,12 @@ bool TextEditor::CanPaste(int32_t aClipboardType) const {
   }
 
   // the flavors that we can deal with
-  const char* textEditorFlavors[] = {kUnicodeMime};
+  AutoTArray<nsCString, 1> textEditorFlavors = {
+      nsDependentCString(kUnicodeMime)};
 
   bool haveFlavors;
-  rv = clipboard->HasDataMatchingFlavors(textEditorFlavors,
-                                         ArrayLength(textEditorFlavors),
-                                         aClipboardType, &haveFlavors);
+  rv = clipboard->HasDataMatchingFlavors(textEditorFlavors, aClipboardType,
+                                         &haveFlavors);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }

@@ -59,17 +59,17 @@ function hasExpectedFlavors() {
   var cb = Cc["@mozilla.org/widget/clipboard;1"].
            getService(Ci.nsIClipboard);
 
-  ok(cb.hasDataMatchingFlavors(["text/unicode"], 1, cb.kGlobalClipboard),
+  ok(cb.hasDataMatchingFlavors(["text/unicode"], cb.kGlobalClipboard),
      "The clipboard has text/unicode");
 
   // Android only supports plain text
   if (!navigator.appVersion.includes("Android")) {
-    ok(cb.hasDataMatchingFlavors(["text/html"], 1, cb.kGlobalClipboard),
+    ok(cb.hasDataMatchingFlavors(["text/html"], cb.kGlobalClipboard),
        "The clipboard has text/html");
   }
 
   if (navigator.appVersion.includes("Win")) {
-    ok(cb.hasDataMatchingFlavors(["application/x-moz-nativehtml"], 1, cb.kGlobalClipboard),
+    ok(cb.hasDataMatchingFlavors(["application/x-moz-nativehtml"], cb.kGlobalClipboard),
        "The clipboard has application/x-moz-nativehtml");
   }
 }

@@ -45,9 +45,9 @@ async function testCopyPaste (isXHTML) {
     await SimpleTest.promiseClipboardChange(() => true,
                                             () => { documentViewer.copySelection(); });
     if (!suppressUnicodeCheck)
-      ok(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), "check text/unicode");
+      ok(clipboard.hasDataMatchingFlavors(["text/unicode"], 1), "check text/unicode");
     if (!suppressHTMLCheck)
-      ok(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), "check text/html");
+      ok(clipboard.hasDataMatchingFlavors(["text/html"], 1), "check text/html");
   }
   function clear(node, suppressUnicodeCheck) {
     textarea.blur();

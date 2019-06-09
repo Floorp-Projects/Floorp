@@ -360,13 +360,13 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
 
 // returns true if we have *any* of the passed in flavors available for pasting
 NS_IMETHODIMP
-nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
-                                    int32_t aWhichClipboard, bool* outResult) {
+nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+                                    bool* outResult) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   *outResult = false;
 
-  if ((aWhichClipboard != kGlobalClipboard) || !aFlavorList) return NS_OK;
+  if (aWhichClipboard != kGlobalClipboard) return NS_OK;
 
   // first see if we have data for this in our cached transferable
   if (mTransferable) {
@@ -376,7 +376,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
       for (uint32_t j = 0; j < flavors.Length(); j++) {
         const nsCString& transferableFlavorStr = flavors[j];
 
-        for (uint32_t k = 0; k < aLength; k++) {
+        for (uint32_t k = 0; k < aFlavorList.Length(); k++) {
           if (transferableFlavorStr.Equals(aFlavorList[k])) {
             *outResult = true;
             return NS_OK;
@@ -388,8 +388,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
 
   NSPasteboard* generalPBoard = [NSPasteboard generalPasteboard];
 
-  for (uint32_t i = 0; i < aLength; i++) {
-    nsDependentCString mimeType(aFlavorList[i]);
+  for (auto& mimeType : aFlavorList) {
     NSString* pboardType = nil;
 
     if (nsClipboard::IsStringType(mimeType, &pboardType)) {
@@ -399,7 +398,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
         *outResult = true;
         break;
       }
-    } else if (!strcmp(aFlavorList[i], kCustomTypesMime)) {
+    } else if (mimeType.EqualsLiteral(kCustomTypesMime)) {
       NSString* availableType = [generalPBoard
           availableTypeFromArray:
               [NSArray arrayWithObject:[UTIHelper stringFromPboardType:kMozCustomTypesPboardType]]];
@@ -407,8 +406,8 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
         *outResult = true;
         break;
       }
-    } else if (!strcmp(aFlavorList[i], kJPEGImageMime) || !strcmp(aFlavorList[i], kJPGImageMime) ||
-               !strcmp(aFlavorList[i], kPNGImageMime) || !strcmp(aFlavorList[i], kGIFImageMime)) {
+    } else if (mimeType.EqualsLiteral(kJPEGImageMime) || mimeType.EqualsLiteral(kJPGImageMime) ||
+               mimeType.EqualsLiteral(kPNGImageMime) || mimeType.EqualsLiteral(kGIFImageMime)) {
       NSString* availableType = [generalPBoard
           availableTypeFromArray:
               [NSArray arrayWithObjects:[UTIHelper stringFromPboardType:NSPasteboardTypeTIFF],

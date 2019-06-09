@@ -676,10 +676,9 @@ void DataTransfer::GetExternalClipboardFormats(const int32_t& aWhichClipboard,
 
   if (aPlainTextOnly) {
     bool hasType;
-    static const char* unicodeMime[] = {kUnicodeMime};
-    nsresult rv = clipboard->HasDataMatchingFlavors(
-        unicodeMime,
-        /* number of flavors to check */ 1, aWhichClipboard, &hasType);
+    AutoTArray<nsCString, 1> unicodeMime = {nsDependentCString(kUnicodeMime)};
+    nsresult rv = clipboard->HasDataMatchingFlavors(unicodeMime,
+                                                    aWhichClipboard, &hasType);
     NS_SUCCEEDED(rv);
     if (hasType) {
       aResult->AppendElement(kUnicodeMime);
@@ -694,9 +693,9 @@ void DataTransfer::GetExternalClipboardFormats(const int32_t& aWhichClipboard,
 
   for (uint32_t f = 0; f < mozilla::ArrayLength(formats); ++f) {
     bool hasType;
-    nsresult rv = clipboard->HasDataMatchingFlavors(
-        &(formats[f]),
-        /* number of flavors to check */ 1, aWhichClipboard, &hasType);
+    AutoTArray<nsCString, 1> format = {nsDependentCString(formats[f])};
+    nsresult rv =
+        clipboard->HasDataMatchingFlavors(format, aWhichClipboard, &hasType);
     NS_SUCCEEDED(rv);
     if (hasType) {
       aResult->AppendElement(formats[f]);
