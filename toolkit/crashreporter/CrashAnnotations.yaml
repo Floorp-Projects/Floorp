@@ -507,6 +507,16 @@ LocalStorageShutdownTimeout:
     This annotation is present if LocalStorage shutdown was not finished in time
     and the browser was crashed instead of waiting for LocalStorage shutdown to
     finish. The condition that caused the hang is contained in the annotation.
+    The condition is constructed by stringifying status of global arrays and
+    hash tables that blocked LocalStorage shutdown (gPrepareDatastoreOps,
+    gDatastores and gLiveDatabases). gDatastores and gLiveDatabases currently
+    only report the number of elements. gPrepareDatastoreOps reports the number
+    of elements and status of individual elements (duplicit entries are removed):
+    "gPrepareDatastoreOps: N (element1, element2, elementN)" where N is the
+    number of elements. Status of individual elements is constructed by taking
+    PrepareDatastoreOp's sanitized origin string, stringified state and
+    stringified nested state. A full example:
+    "gPrepareDatastoreOps: 1 (http://aaa.aaa.aaa*Nesting*DatabaseWorkOpen)"
   type: string
   content: false
   ping: true
