@@ -208,7 +208,8 @@ class nsPrintJob final : public nsIObserver,
                              nsAString& aTitle, nsAString& aURLStr,
                              eDocTitleDefault aDefType);
 
-  bool CheckBeforeDestroy();
+  bool CheckBeforeDestroy() const { return mPrt && mPrt->mPreparingForPrint; }
+
   nsresult Cancel();
 
   mozilla::PresShell* GetPrintPreviewPresShell() {
