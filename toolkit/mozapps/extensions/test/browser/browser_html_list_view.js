@@ -336,9 +336,10 @@ add_task(async function testKeyboardSupport() {
   space();
   await shown;
   is(moreOptionsMenu.open, true, "The menu is open");
-  tab();
-  tab();
-  tab();
+  for (let it of moreOptionsMenu.querySelectorAll("panel-item:not([hidden])")) {
+    tab();
+    isFocused(it, `After tab, focus item "${it.getAttribute("action")}"`);
+  }
   isFocused(expandButton, "The last item is focused");
   tab();
   is(moreOptionsMenu.open, false, "Tabbing out of the menu closes it");
