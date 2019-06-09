@@ -349,6 +349,11 @@ static void CollectWindowReports(nsGlobalWindowInner* aWindow,
               "allocated in its arena and not measured elsewhere, "
               "within a window.");
 
+  REPORT_SIZE("/layout/display-list", mLayoutRetainedDisplayListSize,
+              "Memory used by the retained display list data, "
+              "along with any structures allocated in its arena and not "
+              "measured elsewhere, within a window.");
+
   REPORT_SIZE("/layout/style-sets/stylist/rule-tree",
               mLayoutStyleSetsStylistRuleTree,
               "Memory used by rule trees within style sets within a window.");

@@ -154,6 +154,7 @@ class nsWindowSizes {
   MACRO(Style, mLayoutShadowDomStyleSheetsSize)              \
   MACRO(Style, mLayoutShadowDomAuthorStyles)                 \
   MACRO(Other, mLayoutPresShellSize)                         \
+  MACRO(Other, mLayoutRetainedDisplayListSize)               \
   MACRO(Style, mLayoutStyleSetsStylistRuleTree)              \
   MACRO(Style, mLayoutStyleSetsStylistElementAndPseudosMaps) \
   MACRO(Style, mLayoutStyleSetsStylistInvalidationMap)       \

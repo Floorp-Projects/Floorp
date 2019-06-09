@@ -117,7 +117,7 @@ void nsPresArena<ArenaSize>::Free(uint32_t aCode, void* aPtr) {
 
 template <size_t ArenaSize>
 void nsPresArena<ArenaSize>::AddSizeOfExcludingThis(
-    nsWindowSizes& aSizes) const {
+    nsWindowSizes& aSizes, size_t nsWindowSizes::*aArenaSize) const {
   // We do a complicated dance here because we want to measure the
   // space taken up by the different kinds of objects in the arena,
   // but we don't have pointers to those objects.  And even if we did,
@@ -162,7 +162,7 @@ void nsPresArena<ArenaSize>::AddSizeOfExcludingThis(
     totalSizeInFreeLists += totalSize;
   }
 
-  aSizes.mLayoutPresShellSize += mallocSize - totalSizeInFreeLists;
+  aSizes.*aArenaSize += mallocSize - totalSizeInFreeLists;
 }
 
 // Explicitly instantiate templates for the used nsPresArena allocator sizes.

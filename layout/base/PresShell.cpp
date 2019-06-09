@@ -10650,7 +10650,8 @@ PresShell* PresShell::GetRootPresShell() {
 
 void PresShell::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const {
   MallocSizeOf mallocSizeOf = aSizes.mState.mMallocSizeOf;
-  mFrameArena.AddSizeOfExcludingThis(aSizes);
+  mFrameArena.AddSizeOfExcludingThis(aSizes,
+                                     &nsWindowSizes::mLayoutPresShellSize);
   aSizes.mLayoutPresShellSize += mallocSizeOf(this);
   if (mCaret) {
     aSizes.mLayoutPresShellSize += mCaret->SizeOfIncludingThis(mallocSizeOf);
