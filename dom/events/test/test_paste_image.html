@@ -89,13 +89,13 @@
     var clipboard = SpecialPowers.Cc["@mozilla.org/widget/clipboard;1"]
                                  .getService(SpecialPowers.Ci.nsIClipboard);
     // does the clipboard contain text/unicode data ?
-    ok(clipboard.hasDataMatchingFlavors(["text/unicode"], 1, clipboard.kGlobalClipboard),
+    ok(clipboard.hasDataMatchingFlavors(["text/unicode"], clipboard.kGlobalClipboard),
        "clipboard contains unicode text");
     // does the clipboard contain text/html data ?
-    ok(clipboard.hasDataMatchingFlavors(["text/html"], 1, clipboard.kGlobalClipboard),
+    ok(clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard),
        "clipboard contains html text");
     // does the clipboard contain image data ?
-    ok(clipboard.hasDataMatchingFlavors(["image/png"], 1, clipboard.kGlobalClipboard),
+    ok(clipboard.hasDataMatchingFlavors(["image/png"], clipboard.kGlobalClipboard),
        "clipboard contains image");
 
     window.addEventListener("paste", onPaste);

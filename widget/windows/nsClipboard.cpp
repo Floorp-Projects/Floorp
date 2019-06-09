@@ -1037,37 +1037,37 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(const char** aFlavorList,
-                                                  uint32_t aLength,
-                                                  int32_t aWhichClipboard,
-                                                  bool* _retval) {
+NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(
+    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+    bool* _retval) {
   *_retval = false;
-  if (aWhichClipboard != kGlobalClipboard || !aFlavorList) {
+  if (aWhichClipboard != kGlobalClipboard) {
     return NS_OK;
   }
 
-  for (uint32_t i = 0; i < aLength; ++i) {
+  for (auto& flavor : aFlavorList) {
 #ifdef DEBUG
-    if (strcmp(aFlavorList[i], kTextMime) == 0) {
+    if (flavor.EqualsLiteral(kTextMime)) {
       NS_WARNING(
           "DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode "
           "INSTEAD");
     }
 #endif
 
-    UINT format = GetFormat(aFlavorList[i]);
+    UINT format = GetFormat(flavor.get());
     if (IsClipboardFormatAvailable(format)) {
       *_retval = true;
       break;
     } else {
       // We haven't found the exact flavor the client asked for, but maybe we
       // can still find it from something else that's on the clipboard...
-      if (strcmp(aFlavorList[i], kUnicodeMime) == 0) {
+      if (flavor.EqualsLiteral(kUnicodeMime)) {
         // client asked for unicode and it wasn't present, check if we have
         // CF_TEXT. We'll handle the actual data substitution in the data
         // object.
         if (IsClipboardFormatAvailable(GetFormat(kTextMime))) {
           *_retval = true;
+          break;
         }
       }
     }

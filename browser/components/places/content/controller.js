@@ -329,7 +329,7 @@ PlacesController.prototype = {
     var flavors = PlacesUIUtils.PLACES_FLAVORS;
     var clipboard = this.clipboard;
     var hasPlacesData =
-      clipboard.hasDataMatchingFlavors(flavors, flavors.length,
+      clipboard.hasDataMatchingFlavors(flavors,
                                        Ci.nsIClipboard.kGlobalClipboard);
     if (hasPlacesData)
       return this._view.insertionPoint != null;

@@ -503,7 +503,7 @@ var ActionBarHandler = {
           }
           // Can't paste if Clipboard empty.
           let flavors = ["text/unicode"];
-          return Services.clipboard.hasDataMatchingFlavors(flavors, flavors.length,
+          return Services.clipboard.hasDataMatchingFlavors(flavors,
             Ci.nsIClipboard.kGlobalClipboard);
         },
       },

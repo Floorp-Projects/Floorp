@@ -126,7 +126,7 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
 }
 
 NS_IMETHODIMP
-nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
+nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                     int32_t aWhichClipboard, bool* aHasText) {
   *aHasText = false;
   if (aWhichClipboard != kGlobalClipboard) return NS_ERROR_NOT_IMPLEMENTED;
@@ -135,10 +135,10 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  for (uint32_t k = 0; k < aLength; k++) {
+  for (auto& flavor : aFlavorList) {
     bool hasData =
         java::Clipboard::HasData(java::GeckoAppShell::GetApplicationContext(),
-                                 NS_ConvertASCIItoUTF16(aFlavorList[k]));
+                                 NS_ConvertASCIItoUTF16(flavor));
     if (hasData) {
       *aHasText = true;
       return NS_OK;

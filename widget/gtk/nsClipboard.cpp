@@ -331,9 +331,11 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
 }
 
 NS_IMETHODIMP
-nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
+nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                     int32_t aWhichClipboard, bool* _retval) {
-  if (!aFlavorList || !_retval) return NS_ERROR_NULL_POINTER;
+  if (!_retval) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   *_retval = false;
 
@@ -343,9 +345,9 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
 
   // Walk through the provided types and try to match it to a
   // provided type.
-  for (uint32_t i = 0; i < aLength && !*_retval; i++) {
+  for (auto& flavor : aFlavorList) {
     // We special case text/unicode here.
-    if (!strcmp(aFlavorList[i], kUnicodeMime) &&
+    if (flavor.EqualsLiteral(kUnicodeMime) &&
         gtk_targets_include_text(targets, targetNums)) {
       *_retval = true;
       break;
@@ -355,12 +357,13 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
       gchar* atom_name = gdk_atom_name(targets[j]);
       if (!atom_name) continue;
 
-      if (!strcmp(atom_name, aFlavorList[i])) *_retval = true;
-
+      if (flavor.Equals(atom_name)) {
+        *_retval = true;
+      }
       // X clipboard supports image/jpeg, but we want to emulate support
       // for image/jpg as well
-      if (!strcmp(aFlavorList[i], kJPGImageMime) &&
-          !strcmp(atom_name, kJPEGImageMime)) {
+      else if (flavor.EqualsLiteral(kJPGImageMime) &&
+               !strcmp(atom_name, kJPEGImageMime)) {
         *_retval = true;
       }
 

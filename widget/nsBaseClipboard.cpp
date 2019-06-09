@@ -98,8 +98,7 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
 }
 
 NS_IMETHODIMP
-nsBaseClipboard::HasDataMatchingFlavors(const char** aFlavorList,
-                                        uint32_t aLength,
+nsBaseClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                         int32_t aWhichClipboard,
                                         bool* outResult) {
   *outResult = true;  // say we always do.

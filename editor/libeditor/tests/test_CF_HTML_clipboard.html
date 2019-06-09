@@ -43,7 +43,7 @@ function copyCF_HTML(cfhtml, success, failure) {
     }
 
     var flavors = [CF_HTML];
-    if (!cb.hasDataMatchingFlavors(flavors, flavors.length, cb.kGlobalClipboard)) {
+    if (!cb.hasDataMatchingFlavors(flavors, cb.kGlobalClipboard)) {
       setTimeout(function() { copyCF_HTML_worker(successFn, failureFn); }, 100);
       return;
     }

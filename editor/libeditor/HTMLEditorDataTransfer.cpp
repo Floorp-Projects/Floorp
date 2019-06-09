@@ -1439,10 +1439,10 @@ bool HTMLEditor::HavePrivateHTMLFlavor(nsIClipboard* aClipboard) {
   NS_ENSURE_TRUE(aClipboard, false);
   bool bHavePrivateHTMLFlavor = false;
 
-  const char* flavArray[] = {kHTMLContext};
+  AutoTArray<nsCString, 1> flavArray = {nsDependentCString(kHTMLContext)};
 
   if (NS_SUCCEEDED(aClipboard->HasDataMatchingFlavors(
-          flavArray, ArrayLength(flavArray), nsIClipboard::kGlobalClipboard,
+          flavArray, nsIClipboard::kGlobalClipboard,
           &bHavePrivateHTMLFlavor))) {
     return bHavePrivateHTMLFlavor;
   }
@@ -1643,20 +1643,21 @@ bool HTMLEditor::CanPaste(int32_t aClipboardType) const {
 
   // Use the flavors depending on the current editor mask
   if (IsPlaintextEditor()) {
+    AutoTArray<nsCString, ArrayLength(textEditorFlavors)> flavors;
+    flavors.AppendElements<const char*>(Span<const char*>(textEditorFlavors));
     bool haveFlavors;
-    rv = clipboard->HasDataMatchingFlavors(textEditorFlavors,
-                                           ArrayLength(textEditorFlavors),
-                                           aClipboardType, &haveFlavors);
+    rv = clipboard->HasDataMatchingFlavors(flavors, aClipboardType,
+                                           &haveFlavors);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
     }
     return haveFlavors;
   }
 
+  AutoTArray<nsCString, ArrayLength(textHtmlEditorFlavors)> flavors;
+  flavors.AppendElements<const char*>(Span<const char*>(textHtmlEditorFlavors));
   bool haveFlavors;
-  rv = clipboard->HasDataMatchingFlavors(textHtmlEditorFlavors,
-                                         ArrayLength(textHtmlEditorFlavors),
-                                         aClipboardType, &haveFlavors);
+  rv = clipboard->HasDataMatchingFlavors(flavors, aClipboardType, &haveFlavors);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }

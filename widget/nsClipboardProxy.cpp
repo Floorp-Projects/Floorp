@@ -111,20 +111,13 @@ nsClipboardProxy::EmptyClipboard(int32_t aWhichClipboard) {
 }
 
 NS_IMETHODIMP
-nsClipboardProxy::HasDataMatchingFlavors(const char** aFlavorList,
-                                         uint32_t aLength,
+nsClipboardProxy::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                          int32_t aWhichClipboard,
                                          bool* aHasType) {
   *aHasType = false;
 
-  nsTArray<nsCString> types;
-  nsCString* t = types.AppendElements(aLength);
-  for (uint32_t j = 0; j < aLength; ++j) {
-    t[j].Rebind(aFlavorList[j], nsCharTraits<char>::length(aFlavorList[j]));
-  }
-
-  ContentChild::GetSingleton()->SendClipboardHasType(types, aWhichClipboard,
-                                                     aHasType);
+  ContentChild::GetSingleton()->SendClipboardHasType(aFlavorList,
+                                                     aWhichClipboard, aHasType);
 
   return NS_OK;
 }

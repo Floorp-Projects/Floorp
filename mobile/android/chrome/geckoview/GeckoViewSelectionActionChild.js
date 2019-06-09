@@ -33,7 +33,7 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
       id: "org.mozilla.geckoview.PASTE",
       predicate: e => e.selectionEditable &&
                       Services.clipboard.hasDataMatchingFlavors(
-                          ["text/unicode"], 1, Ci.nsIClipboard.kGlobalClipboard),
+                          ["text/unicode"], Ci.nsIClipboard.kGlobalClipboard),
       perform: _ => this._performPaste(),
     }, {
       id: "org.mozilla.geckoview.DELETE",
