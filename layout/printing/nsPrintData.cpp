@@ -33,7 +33,6 @@ nsPrintData::nsPrintData(ePrintDataType aType)
       mOnStartSent(false),
       mIsAborted(false),
       mPreparingForPrint(false),
-      mDocWasToBeDestroyed(false),
       mShrinkToFit(false),
       mNumPrintablePages(0),
       mNumPagesPrinted(0),

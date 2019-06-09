@@ -631,15 +631,6 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
 }
 
 //-------------------------------------------------------
-bool nsPrintJob::CheckBeforeDestroy() {
-  if (mPrt && mPrt->mPreparingForPrint) {
-    mPrt->mDocWasToBeDestroyed = true;
-    return true;
-  }
-  return false;
-}
-
-//-------------------------------------------------------
 nsresult nsPrintJob::Cancel() {
   if (mPrt && mPrt->mPrintSettings) {
     return mPrt->mPrintSettings->SetIsCancelled(true);
