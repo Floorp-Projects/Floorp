@@ -418,6 +418,12 @@ static bool CheckParentFrames(nsPIDOMWindowOuter* aWindow,
   if (NS_FAILED(NS_NewURI(getter_AddRefs(aboutAddons), "about:addons"))) {
     return false;
   }
+  nsCOMPtr<nsIURI> htmlAboutAddons;
+  if (NS_FAILED(
+          NS_NewURI(getter_AddRefs(htmlAboutAddons),
+                    "chrome://mozapps/content/extensions/aboutaddons.html"))) {
+    return false;
+  }
 
   auto* piWin = aWindow;
   while ((piWin = piWin->GetScriptableParentOrNull())) {
@@ -427,9 +433,10 @@ static bool CheckParentFrames(nsPIDOMWindowOuter* aWindow,
     if (nsContentUtils::IsSystemPrincipal(principal)) {
       // The add-on manager is a special case, since it contains extension
       // options pages in same-type <browser> frames.
+      nsIURI* uri = win->GetDocumentURI();
       bool equals;
-      if (NS_SUCCEEDED(win->GetDocumentURI()->Equals(aboutAddons, &equals)) &&
-          equals) {
+      if ((NS_SUCCEEDED(uri->Equals(aboutAddons, &equals)) && equals) ||
+          (NS_SUCCEEDED(uri->Equals(htmlAboutAddons, &equals)) && equals)) {
         return true;
       }
     }
