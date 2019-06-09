@@ -27,6 +27,8 @@
 #urlbar,
 #searchbar {
   -moz-appearance: none;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
   background-clip: content-box;
   border: 1px solid @fieldBorderColor@;
   border-radius: var(--toolbarbutton-border-radius);
