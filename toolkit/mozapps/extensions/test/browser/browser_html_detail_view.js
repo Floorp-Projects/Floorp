@@ -255,7 +255,7 @@ add_task(async function testDetailOperations() {
   let removeButton = panel.querySelector('[action="remove"]');
   ok(!removeButton.hidden, "The remove button is visible");
 
-  let separator = panel.querySelector("panel-item-separator");
+  let separator = panel.querySelector("panel-item-separator:last-of-type");
   ok(separator.hidden, "The separator is hidden");
 
   let expandButton = panel.querySelector('[action="expand"]');
