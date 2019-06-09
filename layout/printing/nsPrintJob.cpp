@@ -1106,35 +1106,12 @@ int32_t nsPrintJob::GetPrintPreviewNumPages() {
   return numPages;
 }
 
-//----------------------------------------------------------------------------------
-// Enumerate all the documents for their titles
-nsresult nsPrintJob::EnumerateDocumentNames(uint32_t* aCount,
-                                            char16_t*** aResult) {
-  NS_ENSURE_ARG(aCount);
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aCount = 0;
-  *aResult = nullptr;
-
-  int32_t numDocs = mPrt->mPrintDocList.Length();
-  char16_t** array = (char16_t**)moz_xmalloc(numDocs * sizeof(char16_t*));
-
-  for (int32_t i = 0; i < numDocs; i++) {
-    nsPrintObject* po = mPrt->mPrintDocList.ElementAt(i);
-    NS_ASSERTION(po, "nsPrintObject can't be null!");
-    nsAutoString docTitleStr;
-    nsAutoString docURLStr;
-    GetDocumentTitleAndURL(po->mDocument, docTitleStr, docURLStr);
-
-    // Use the URL if the doc is empty
-    if (docTitleStr.IsEmpty() && !docURLStr.IsEmpty()) {
-      docTitleStr = docURLStr;
-    }
-    array[i] = ToNewUnicode(docTitleStr);
+nsresult nsPrintJob::GetDocumentName(nsAString& aDocName) {
+  nsAutoString docURLStr;
+  GetDocumentTitleAndURL(mPrt->mPrintObject->mDocument, aDocName, docURLStr);
+  if (aDocName.IsEmpty() && !docURLStr.IsEmpty()) {
+    aDocName = docURLStr;
   }
-  *aCount = numDocs;
-  *aResult = array;
-
   return NS_OK;
 }
 
