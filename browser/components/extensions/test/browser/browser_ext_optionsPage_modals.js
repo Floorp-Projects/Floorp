@@ -64,8 +64,7 @@ add_task(async function test_tab_options_modals() {
   info("Wait the options_ui modal to be opened");
   await onceModalOpened;
 
-  const optionsBrowser = gBrowser.selectedBrowser.contentDocument
-                                 .getElementById("addon-options");
+  const optionsBrowser = getInlineOptionsBrowser(gBrowser.selectedBrowser);
 
   let stack;
 

@@ -17,6 +17,7 @@
  *          openTabContextMenu closeTabContextMenu
  *          openToolsMenu closeToolsMenu
  *          imageBuffer imageBufferFromDataURI
+ *          getInlineOptionsBrowser
  *          getListStyleImage getPanelForNode
  *          awaitExtensionPanel awaitPopupResize
  *          promiseContentDimensions alterContent
@@ -119,6 +120,13 @@ function imageBufferFromDataURI(encodedImageData) {
 
 let img = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==";
 var imageBuffer = imageBufferFromDataURI(img);
+
+function getInlineOptionsBrowser(aboutAddonsBrowser) {
+  let {contentWindow} = aboutAddonsBrowser;
+  let htmlBrowser = contentWindow.document.getElementById("html-view-browser");
+  return htmlBrowser.contentDocument.getElementById("addon-inline-options") ||
+    contentWindow.document.getElementById("addon-options");
+}
 
 function getListStyleImage(button) {
   let style = button.ownerGlobal.getComputedStyle(button);

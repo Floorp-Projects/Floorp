@@ -173,6 +173,7 @@ add_task(async function testInlineOptions() {
   await extension.unload();
 });
 
+// Regression test against bug 1409697
 add_task(async function testCardRerender() {
   let id = "rerender@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
