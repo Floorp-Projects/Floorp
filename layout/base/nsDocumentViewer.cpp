@@ -3748,6 +3748,15 @@ nsDocumentViewer::GetCurrentPrintSettings(
 }
 
 NS_IMETHODIMP
+nsDocumentViewer::GetDocumentName(nsAString& aDocName) {
+#  ifdef NS_PRINTING
+  return mPrintJob->GetDocumentName(aDocName);
+#  else
+  return NS_ERROR_FAILURE;
+#  endif
+}
+
+NS_IMETHODIMP
 nsDocumentViewer::Cancel() {
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
   return mPrintJob->Cancel();
@@ -3762,22 +3771,6 @@ nsDocumentViewer::ExitPrintPreview() {
     ReturnToGalleyPresentation();
   }
   return NS_OK;
-}
-
-//----------------------------------------------------------------------------------
-// Enumerate all the documents for their titles
-NS_IMETHODIMP
-nsDocumentViewer::EnumerateDocumentNames(uint32_t* aCount,
-                                         char16_t*** aResult) {
-#  ifdef NS_PRINTING
-  NS_ENSURE_ARG(aCount);
-  NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
-
-  return mPrintJob->EnumerateDocumentNames(aCount, aResult);
-#  else
-  return NS_ERROR_FAILURE;
-#  endif
 }
 
 NS_IMETHODIMP
