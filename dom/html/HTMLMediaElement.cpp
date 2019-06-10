@@ -1763,6 +1763,7 @@ void HTMLMediaElement::AbortExistingLoads() {
     DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
   }
 
+  bool hadVideo = HasVideo();
   mErrorSink->ResetError();
   mCurrentPlayRangeStart = -1.0;
   mLoadedDataFired = false;
@@ -1809,6 +1810,12 @@ void HTMLMediaElement::AbortExistingLoads() {
     }
     DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
     UpdateAudioChannelPlayingState();
+  }
+
+  if (IsVideo() && hadVideo) {
+    // Ensure we render transparent black after resetting video resolution.
+    Maybe<nsIntSize> size = Some(nsIntSize(0, 0));
+    Invalidate(true, size, false);
   }
 
   // We may have changed mPaused, mAutoplaying, and other
