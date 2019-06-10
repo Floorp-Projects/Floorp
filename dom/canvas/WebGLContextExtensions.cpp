@@ -107,18 +107,7 @@ bool WebGLContext::IsExtensionSupported(dom::CallerType callerType,
 bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const {
   if (mDisableExtensions) return false;
 
-  bool shouldResistFingerprinting =
-      mCanvasElement ?
-                     // If we're constructed from a canvas element
-          nsContentUtils::ShouldResistFingerprinting(GetOwnerDoc())
-                     :
-                     // If we're constructed from an offscreen canvas
-          (mOffscreenCanvas->GetOwnerGlobal()
-               ? nsContentUtils::ShouldResistFingerprinting(
-                     mOffscreenCanvas->GetOwnerGlobal()->PrincipalOrNull())
-               :
-               // Last resort, just check the global preference
-               nsContentUtils::ShouldResistFingerprinting());
+  bool shouldResistFingerprinting = ShouldResistFingerprinting();
 
   switch (ext) {
     // In alphabetical order

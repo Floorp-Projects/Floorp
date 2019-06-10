@@ -80,6 +80,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/XULCommandEvent.h"
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
@@ -1975,6 +1976,16 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIPrincipal* aPrincipal) {
     return false;
   }
   bool isChrome = nsContentUtils::IsSystemPrincipal(aPrincipal);
+  return !isChrome && ShouldResistFingerprinting();
+}
+
+/* static */
+bool nsContentUtils::ShouldResistFingerprinting(WorkerPrivate* aWorkerPrivate) {
+  if (!aWorkerPrivate) {
+    // We may be on a non-worker thread!
+    return ShouldResistFingerprinting();
+  }
+  bool isChrome = aWorkerPrivate->UsesSystemPrincipal();
   return !isChrome && ShouldResistFingerprinting();
 }
 
