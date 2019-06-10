@@ -571,9 +571,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   class SourceQuery;
   class ObjectQuery;
 
+  enum class FromSweep { No, Yes };
+
   MOZ_MUST_USE bool addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> obj);
   void removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
-                            WeakGlobalObjectSet::Enum* debugEnum);
+                            WeakGlobalObjectSet::Enum* debugEnum,
+                            FromSweep fromSweep);
 
   enum class CallUncaughtExceptionHook { No, Yes };
 
