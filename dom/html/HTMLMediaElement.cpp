@@ -4756,6 +4756,7 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
   mSrcStream->UnregisterTrackListener(mMediaStreamTrackListener.get());
   mMediaStreamTrackListener = nullptr;
   mSrcStreamTracksAvailable = false;
+  mSrcStreamPlaybackEnded = false;
 
   mSrcStream->RemovePrincipalChangeObserver(this);
   mSrcStreamVideoPrincipal = nullptr;
