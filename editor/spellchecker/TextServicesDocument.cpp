@@ -1094,6 +1094,7 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
 
   nsresult rv = textEditor->InsertTextAsAction(aText);
   if (NS_FAILED(rv)) {
+    NS_WARNING("InsertTextAsAction() failed");
     return rv;
   }
 

@@ -4430,7 +4430,8 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
   // require additional parameter, we can use `DoCommand()`.
   if (adjustedValue.IsEmpty() || paramType == EditorCommandParamType::None) {
     MOZ_ASSERT(!(paramType & EditorCommandParamType::Bool));
-    rv = editorCommand->DoCommand(commandData.mCommand, *maybeHTMLEditor);
+    rv = editorCommand->DoCommand(commandData.mCommand, *maybeHTMLEditor,
+                                  &aSubjectPrincipal);
     return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
   }
 
@@ -4442,7 +4443,7 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
                adjustedValue.EqualsLiteral("false"));
     rv = editorCommand->DoCommandParam(
         commandData.mCommand, Some(adjustedValue.EqualsLiteral("true")),
-        *maybeHTMLEditor);
+        *maybeHTMLEditor, &aSubjectPrincipal);
     return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
   }
 
@@ -4454,7 +4455,7 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
   if (!!(paramType & EditorCommandParamType::String)) {
     MOZ_ASSERT(!adjustedValue.IsVoid());
     rv = editorCommand->DoCommandParam(commandData.mCommand, adjustedValue,
-                                       *maybeHTMLEditor);
+                                       *maybeHTMLEditor, &aSubjectPrincipal);
     return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
   }
 
@@ -4464,7 +4465,7 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
     NS_ConvertUTF16toUTF8 utf8Value(adjustedValue);
     MOZ_ASSERT(!utf8Value.IsVoid());
     rv = editorCommand->DoCommandParam(commandData.mCommand, utf8Value,
-                                       *maybeHTMLEditor);
+                                       *maybeHTMLEditor, &aSubjectPrincipal);
     return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
   }
 

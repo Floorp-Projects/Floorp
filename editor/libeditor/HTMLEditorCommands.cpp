@@ -17,6 +17,7 @@
 #include "nsGkAtoms.h"                // for nsGkAtoms, nsGkAtoms::font, etc
 #include "nsIClipboard.h"             // for nsIClipboard, etc
 #include "nsIEditingSession.h"
+#include "nsIPrincipal.h"     // for nsIPrincipal
 #include "nsLiteralString.h"  // for NS_LITERAL_STRING
 #include "nsReadableUtils.h"  // for EmptyString
 #include "nsString.h"         // for nsAutoString, nsString, etc
@@ -65,7 +66,8 @@ bool StateUpdatingCommandBase::IsCommandEnabled(Command aCommand,
 }
 
 nsresult StateUpdatingCommandBase::DoCommand(Command aCommand,
-                                             TextEditor& aTextEditor) const {
+                                             TextEditor& aTextEditor,
+                                             nsIPrincipal* aPrincipal) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
@@ -74,7 +76,8 @@ nsresult StateUpdatingCommandBase::DoCommand(Command aCommand,
   if (NS_WARN_IF(!tagName)) {
     return NS_ERROR_UNEXPECTED;
   }
-  return ToggleState(MOZ_KnownLive(tagName), MOZ_KnownLive(htmlEditor));
+  return ToggleState(MOZ_KnownLive(tagName), MOZ_KnownLive(htmlEditor),
+                     aPrincipal);
 }
 
 nsresult StateUpdatingCommandBase::GetCommandStateParams(
@@ -114,14 +117,18 @@ bool PasteNoFormattingCommand::IsCommandEnabled(Command aCommand,
 }
 
 nsresult PasteNoFormattingCommand::DoCommand(Command aCommand,
-                                             TextEditor& aTextEditor) const {
+                                             TextEditor& aTextEditor,
+                                             nsIPrincipal* aPrincipal) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
   // Known live because we hold a ref above in "editor"
-  return MOZ_KnownLive(htmlEditor)
-      ->PasteNoFormatting(nsIClipboard::kGlobalClipboard);
+  nsresult rv = MOZ_KnownLive(htmlEditor)
+                    ->PasteNoFormattingAsAction(nsIClipboard::kGlobalClipboard,
+                                                aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "PasteNoFormattingAsAction() failed");
+  return rv;
 }
 
 nsresult PasteNoFormattingCommand::GetCommandStateParams(
@@ -162,7 +169,8 @@ nsresult StyleUpdatingCommand::GetCurrentState(nsAtom* aTagName,
 }
 
 nsresult StyleUpdatingCommand::ToggleState(nsAtom* aTagName,
-                                           HTMLEditor* aHTMLEditor) const {
+                                           HTMLEditor* aHTMLEditor,
+                                           nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -195,37 +203,35 @@ nsresult StyleUpdatingCommand::ToggleState(nsAtom* aTagName,
     //     needs to undo twice.
     if (aTagName == nsGkAtoms::b) {
       nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
-          *nsGkAtoms::strong, nullptr);
+          *nsGkAtoms::strong, nullptr, aPrincipal);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else if (aTagName == nsGkAtoms::i) {
-      nsresult rv =
-          aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::em, nullptr);
+      nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
+          *nsGkAtoms::em, nullptr, aPrincipal);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else if (aTagName == nsGkAtoms::strike) {
-      nsresult rv =
-          aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::s, nullptr);
+      nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
+          *nsGkAtoms::s, nullptr, aPrincipal);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
-    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(*aTagName, nullptr);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
-  }
-
-  nsresult rv =
-      aHTMLEditor->SetInlinePropertyAsAction(*aTagName, nullptr, EmptyString());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(*aTagName, nullptr,
+                                                            aPrincipal);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "RemoveInlinePropertyAsAction() failed");
     return rv;
   }
-  return NS_OK;
+
+  nsresult rv = aHTMLEditor->SetInlinePropertyAsAction(
+      *aTagName, nullptr, EmptyString(), aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetInlinePropertyAsAction() failed");
+  return rv;
 }
 
 /*****************************************************************************
@@ -252,8 +258,8 @@ nsresult ListCommand::GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
   return NS_OK;
 }
 
-nsresult ListCommand::ToggleState(nsAtom* aTagName,
-                                  HTMLEditor* aHTMLEditor) const {
+nsresult ListCommand::ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
+                                  nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -273,11 +279,14 @@ nsresult ListCommand::ToggleState(nsAtom* aTagName,
 
   nsDependentAtomString listType(aTagName);
   if (inList) {
-    rv = aHTMLEditor->RemoveList(listType);
-  } else {
-    rv = aHTMLEditor->MakeOrChangeList(listType, false, EmptyString());
+    rv = aHTMLEditor->RemoveListAsAction(listType, aPrincipal);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RemoveListAsAction() failed");
+    return rv;
   }
 
+  rv = aHTMLEditor->MakeOrChangeListAsAction(listType, false, EmptyString(),
+                                             aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "MakeOrChangeListAsAction() failed");
   return rv;
 }
 
@@ -315,8 +324,8 @@ nsresult ListItemCommand::GetCurrentState(nsAtom* aTagName,
   return NS_OK;
 }
 
-nsresult ListItemCommand::ToggleState(nsAtom* aTagName,
-                                      HTMLEditor* aHTMLEditor) const {
+nsresult ListItemCommand::ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
+                                      nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -341,14 +350,19 @@ nsresult ListItemCommand::ToggleState(nsAtom* aTagName,
     if (localName.IsEmpty() || bMixed) {
       return NS_OK;
     }
-    return aHTMLEditor->RemoveList(localName);
+    rv = aHTMLEditor->RemoveListAsAction(localName, aPrincipal);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RemoveListAsAction() failed");
+    return rv;
   }
 
   // Set to the requested paragraph type
   // XXX Note: This actually doesn't work for "LI",
   //    but we currently don't use this for non DL lists anyway.
   // Problem: won't this replace any current block paragraph style?
-  return aHTMLEditor->SetParagraphFormat(nsDependentAtomString(aTagName));
+  nsresult rv = aHTMLEditor->SetParagraphFormatAsAction(
+      nsDependentAtomString(aTagName), aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetParagraphFormatAsAction() failed");
+  return rv;
 }
 
 /*****************************************************************************
@@ -382,14 +396,16 @@ bool RemoveListCommand::IsCommandEnabled(Command aCommand,
   return bMixed || !localName.IsEmpty();
 }
 
-nsresult RemoveListCommand::DoCommand(Command aCommand,
-                                      TextEditor& aTextEditor) const {
+nsresult RemoveListCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+                                      nsIPrincipal* aPrincipal) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
   // This removes any list type
-  return htmlEditor->RemoveList(EmptyString());
+  nsresult rv = htmlEditor->RemoveListAsAction(EmptyString(), aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RemoveListAsAction() failed");
+  return rv;
 }
 
 nsresult RemoveListCommand::GetCommandStateParams(
@@ -417,17 +433,15 @@ bool IndentCommand::IsCommandEnabled(Command aCommand,
   return htmlEditor->IsSelectionEditable();
 }
 
-nsresult IndentCommand::DoCommand(Command aCommand,
-                                  TextEditor& aTextEditor) const {
+nsresult IndentCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+                                  nsIPrincipal* aPrincipal) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
-  nsresult rv = MOZ_KnownLive(htmlEditor)->IndentAsAction();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  nsresult rv = MOZ_KnownLive(htmlEditor)->IndentAsAction(aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "IndentAsAction() failed");
+  return rv;
 }
 
 nsresult IndentCommand::GetCommandStateParams(
@@ -455,17 +469,15 @@ bool OutdentCommand::IsCommandEnabled(Command aCommand,
   return htmlEditor->IsSelectionEditable();
 }
 
-nsresult OutdentCommand::DoCommand(Command aCommand,
-                                   TextEditor& aTextEditor) const {
+nsresult OutdentCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+                                   nsIPrincipal* aPrincipal) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
-  nsresult rv = MOZ_KnownLive(htmlEditor)->OutdentAsAction();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  nsresult rv = MOZ_KnownLive(htmlEditor)->OutdentAsAction(aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "OutdentAsAction() failed");
+  return rv;
 }
 
 nsresult OutdentCommand::GetCommandStateParams(
@@ -493,7 +505,8 @@ bool MultiStateCommandBase::IsCommandEnabled(Command aCommand,
 }
 
 nsresult MultiStateCommandBase::DoCommand(Command aCommand,
-                                          TextEditor& aTextEditor) const {
+                                          TextEditor& aTextEditor,
+                                          nsIPrincipal* aPrincipal) const {
   NS_WARNING(
       "who is calling MultiStateCommandBase::DoCommand (no implementation)?");
   return NS_OK;
@@ -501,7 +514,8 @@ nsresult MultiStateCommandBase::DoCommand(Command aCommand,
 
 nsresult MultiStateCommandBase::DoCommandParam(Command aCommand,
                                                const nsAString& aStringParam,
-                                               TextEditor& aTextEditor) const {
+                                               TextEditor& aTextEditor,
+                                               nsIPrincipal* aPrincipal) const {
   NS_WARNING_ASSERTION(aCommand != Command::FormatJustify,
                        "Command::FormatJustify should be used only for "
                        "IsCommandEnabled() and GetCommandStateParams()");
@@ -509,7 +523,7 @@ nsresult MultiStateCommandBase::DoCommandParam(Command aCommand,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = SetState(MOZ_KnownLive(htmlEditor), aStringParam);
+  nsresult rv = SetState(MOZ_KnownLive(htmlEditor), aStringParam, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetState() failed");
   return rv;
 }
@@ -552,12 +566,13 @@ nsresult ParagraphStateCommand::GetCurrentState(
 }
 
 nsresult ParagraphStateCommand::SetState(HTMLEditor* aHTMLEditor,
-                                         const nsAString& aNewState) const {
+                                         const nsAString& aNewState,
+                                         nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsresult rv = aHTMLEditor->SetParagraphFormat(aNewState);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetParagraphFormat() failed");
+  nsresult rv = aHTMLEditor->SetParagraphFormatAsAction(aNewState, aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetParagraphFormatAsAction() failed");
   return rv;
 }
 
@@ -584,7 +599,8 @@ nsresult FontFaceStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
 }
 
 nsresult FontFaceStateCommand::SetState(HTMLEditor* aHTMLEditor,
-                                        const nsAString& aNewState) const {
+                                        const nsAString& aNewState,
+                                        nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -592,35 +608,35 @@ nsresult FontFaceStateCommand::SetState(HTMLEditor* aHTMLEditor,
   if (aNewState.EqualsLiteral("tt")) {
     // The old "teletype" attribute
     nsresult rv = aHTMLEditor->SetInlinePropertyAsAction(
-        *nsGkAtoms::tt, nullptr, EmptyString());
+        *nsGkAtoms::tt, nullptr, EmptyString(), aPrincipal);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     // Clear existing font face
     rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::font,
-                                                   nsGkAtoms::face);
+                                                   nsGkAtoms::face, aPrincipal);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "RemoveInlinePropertyAsAction() failed");
     return rv;
   }
 
   // Remove any existing TT nodes
-  nsresult rv =
-      aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::tt, nullptr);
+  nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::tt,
+                                                          nullptr, aPrincipal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   if (aNewState.IsEmpty() || aNewState.EqualsLiteral("normal")) {
     rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::font,
-                                                   nsGkAtoms::face);
+                                                   nsGkAtoms::face, aPrincipal);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "RemoveInlinePropertyAsAction() failed");
     return rv;
   }
 
   rv = aHTMLEditor->SetInlinePropertyAsAction(*nsGkAtoms::font, nsGkAtoms::face,
-                                              aNewState);
+                                              aNewState, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetInlinePropertyAsAction() failed");
   return rv;
 }
@@ -663,7 +679,8 @@ nsresult FontSizeStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
 //   medium
 //   normal
 nsresult FontSizeStateCommand::SetState(HTMLEditor* aHTMLEditor,
-                                        const nsAString& aNewState) const {
+                                        const nsAString& aNewState,
+                                        nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -671,26 +688,27 @@ nsresult FontSizeStateCommand::SetState(HTMLEditor* aHTMLEditor,
   if (!aNewState.IsEmpty() && !aNewState.EqualsLiteral("normal") &&
       !aNewState.EqualsLiteral("medium")) {
     nsresult rv = aHTMLEditor->SetInlinePropertyAsAction(
-        *nsGkAtoms::font, nsGkAtoms::size, aNewState);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
+        *nsGkAtoms::font, nsGkAtoms::size, aNewState, aPrincipal);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "SetInlinePropertyAsAction() failed");
+    return rv;
   }
 
   // remove any existing font size, big or small
-  nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::font,
-                                                          nsGkAtoms::size);
+  nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
+      *nsGkAtoms::font, nsGkAtoms::size, aPrincipal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::big, nullptr);
+  rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::big, nullptr,
+                                                 aPrincipal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::small, nullptr);
+  rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::small, nullptr,
+                                                 aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "RemoveInlinePropertyAsAction() failed");
   return rv;
@@ -723,22 +741,22 @@ nsresult FontColorStateCommand::GetCurrentState(
 }
 
 nsresult FontColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
-                                         const nsAString& aNewState) const {
+                                         const nsAString& aNewState,
+                                         nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
 
   if (aNewState.IsEmpty() || aNewState.EqualsLiteral("normal")) {
-    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::font,
-                                                            nsGkAtoms::color);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
+    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
+        *nsGkAtoms::font, nsGkAtoms::color, aPrincipal);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "RemoveInlinePropertyAsAction() failed");
+    return rv;
   }
 
   nsresult rv = aHTMLEditor->SetInlinePropertyAsAction(
-      *nsGkAtoms::font, nsGkAtoms::color, aNewState);
+      *nsGkAtoms::font, nsGkAtoms::color, aNewState, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetInlinePropertyAsAction() failed");
   return rv;
 }
@@ -767,23 +785,23 @@ nsresult HighlightColorStateCommand::GetCurrentState(
   return NS_OK;
 }
 
-nsresult HighlightColorStateCommand::SetState(
-    HTMLEditor* aHTMLEditor, const nsAString& aNewState) const {
+nsresult HighlightColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
+                                              const nsAString& aNewState,
+                                              nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
 
   if (aNewState.IsEmpty() || aNewState.EqualsLiteral("normal")) {
-    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::font,
-                                                            nsGkAtoms::bgcolor);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
+    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
+        *nsGkAtoms::font, nsGkAtoms::bgcolor, aPrincipal);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "RemoveInlinePropertyAsAction() failed");
+    return rv;
   }
 
   nsresult rv = aHTMLEditor->SetInlinePropertyAsAction(
-      *nsGkAtoms::font, nsGkAtoms::bgcolor, aNewState);
+      *nsGkAtoms::font, nsGkAtoms::bgcolor, aNewState, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetInlinePropertyAsAction() failed");
   return rv;
 }
@@ -813,13 +831,14 @@ nsresult BackgroundColorStateCommand::GetCurrentState(
   return NS_OK;
 }
 
-nsresult BackgroundColorStateCommand::SetState(
-    HTMLEditor* aHTMLEditor, const nsAString& aNewState) const {
+nsresult BackgroundColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
+                                               const nsAString& aNewState,
+                                               nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsresult rv = aHTMLEditor->SetBackgroundColor(aNewState);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetBackgroundColor() failed");
+  nsresult rv = aHTMLEditor->SetBackgroundColorAsAction(aNewState, aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetBackgroundColorAsAction() failed");
   return rv;
 }
 
@@ -868,12 +887,13 @@ nsresult AlignCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
 }
 
 nsresult AlignCommand::SetState(HTMLEditor* aHTMLEditor,
-                                const nsAString& aNewState) const {
+                                const nsAString& aNewState,
+                                nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsresult rv = aHTMLEditor->Align(aNewState);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Align() failed");
+  nsresult rv = aHTMLEditor->AlignAsAction(aNewState, aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AlignAsAction() failed");
   return rv;
 }
 
@@ -904,14 +924,18 @@ nsresult AbsolutePositioningCommand::GetCurrentState(
 }
 
 nsresult AbsolutePositioningCommand::ToggleState(
-    nsAtom* aTagName, HTMLEditor* aHTMLEditor) const {
+    nsAtom* aTagName, HTMLEditor* aHTMLEditor, nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
 
   RefPtr<Element> container =
       aHTMLEditor->GetAbsolutelyPositionedSelectionContainer();
-  return aHTMLEditor->SetSelectionToAbsoluteOrStatic(!container);
+  nsresult rv = aHTMLEditor->SetSelectionToAbsoluteOrStaticAsAction(!container,
+                                                                    aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "SetSelectionToAbsoluteOrStaticAsAction() failed");
+  return rv;
 }
 
 /*****************************************************************************
@@ -940,12 +964,15 @@ bool DecreaseZIndexCommand::IsCommandEnabled(Command aCommand,
 }
 
 nsresult DecreaseZIndexCommand::DoCommand(Command aCommand,
-                                          TextEditor& aTextEditor) const {
+                                          TextEditor& aTextEditor,
+                                          nsIPrincipal* aPrincipal) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  return htmlEditor->AddZIndex(-1);
+  nsresult rv = htmlEditor->AddZIndexAsAction(-1, aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddZIndexAsAction() failed");
+  return rv;
 }
 
 nsresult DecreaseZIndexCommand::GetCommandStateParams(
@@ -977,12 +1004,15 @@ bool IncreaseZIndexCommand::IsCommandEnabled(Command aCommand,
 }
 
 nsresult IncreaseZIndexCommand::DoCommand(Command aCommand,
-                                          TextEditor& aTextEditor) const {
+                                          TextEditor& aTextEditor,
+                                          nsIPrincipal* aPrincipal) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  return htmlEditor->AddZIndex(1);
+  nsresult rv = htmlEditor->AddZIndexAsAction(1, aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddZIndexAsAction() failed");
+  return rv;
 }
 
 nsresult IncreaseZIndexCommand::GetCommandStateParams(
@@ -1012,12 +1042,17 @@ bool RemoveStylesCommand::IsCommandEnabled(Command aCommand,
 }
 
 nsresult RemoveStylesCommand::DoCommand(Command aCommand,
-                                        TextEditor& aTextEditor) const {
+                                        TextEditor& aTextEditor,
+                                        nsIPrincipal* aPrincipal) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
-  return MOZ_KnownLive(htmlEditor)->RemoveAllInlineProperties();
+  nsresult rv =
+      MOZ_KnownLive(htmlEditor)->RemoveAllInlinePropertiesAsAction(aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "RemoveAllInlinePropertiesAsAction() failed");
+  return rv;
 }
 
 nsresult RemoveStylesCommand::GetCommandStateParams(
@@ -1047,12 +1082,15 @@ bool IncreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
 }
 
 nsresult IncreaseFontSizeCommand::DoCommand(Command aCommand,
-                                            TextEditor& aTextEditor) const {
+                                            TextEditor& aTextEditor,
+                                            nsIPrincipal* aPrincipal) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
-  return MOZ_KnownLive(htmlEditor)->IncreaseFontSize();
+  nsresult rv = MOZ_KnownLive(htmlEditor)->IncreaseFontSizeAsAction(aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "IncreaseFontSizeAsAction() failed");
+  return rv;
 }
 
 nsresult IncreaseFontSizeCommand::GetCommandStateParams(
@@ -1082,12 +1120,15 @@ bool DecreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
 }
 
 nsresult DecreaseFontSizeCommand::DoCommand(Command aCommand,
-                                            TextEditor& aTextEditor) const {
+                                            TextEditor& aTextEditor,
+                                            nsIPrincipal* aPrincipal) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
-  return MOZ_KnownLive(htmlEditor)->DecreaseFontSize();
+  nsresult rv = MOZ_KnownLive(htmlEditor)->DecreaseFontSizeAsAction(aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DecreaseFontSizeAsAction() failed");
+  return rv;
 }
 
 nsresult DecreaseFontSizeCommand::GetCommandStateParams(
@@ -1115,8 +1156,8 @@ bool InsertHTMLCommand::IsCommandEnabled(Command aCommand,
   return htmlEditor->IsSelectionEditable();
 }
 
-nsresult InsertHTMLCommand::DoCommand(Command aCommand,
-                                      TextEditor& aTextEditor) const {
+nsresult InsertHTMLCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+                                      nsIPrincipal* aPrincipal) const {
   // If InsertHTMLCommand is called with no parameters, it was probably called
   // with an empty string parameter ''. In this case, it should act the same as
   // the delete command
@@ -1124,14 +1165,16 @@ nsresult InsertHTMLCommand::DoCommand(Command aCommand,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = MOZ_KnownLive(htmlEditor)->InsertHTML(EmptyString());
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertHTML() failed");
+  nsresult rv =
+      MOZ_KnownLive(htmlEditor)->InsertHTMLAsAction(EmptyString(), aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertHTMLAsAction() failed");
   return rv;
 }
 
 nsresult InsertHTMLCommand::DoCommandParam(Command aCommand,
                                            const nsAString& aStringParam,
-                                           TextEditor& aTextEditor) const {
+                                           TextEditor& aTextEditor,
+                                           nsIPrincipal* aPrincipal) const {
   if (NS_WARN_IF(aStringParam.IsVoid())) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -1140,8 +1183,9 @@ nsresult InsertHTMLCommand::DoCommandParam(Command aCommand,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = MOZ_KnownLive(htmlEditor)->InsertHTML(aStringParam);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertHTML() failed");
+  nsresult rv =
+      MOZ_KnownLive(htmlEditor)->InsertHTMLAsAction(aStringParam, aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertHTMLAsAction() failed");
   return rv;
 }
 
@@ -1171,8 +1215,8 @@ bool InsertTagCommand::IsCommandEnabled(Command aCommand,
 }
 
 // corresponding STATE_ATTRIBUTE is: src (img) and href (a)
-nsresult InsertTagCommand::DoCommand(Command aCommand,
-                                     TextEditor& aTextEditor) const {
+nsresult InsertTagCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
+                                     nsIPrincipal* aPrincipal) const {
   nsAtom* tagName = GetTagName(aCommand);
   if (NS_WARN_IF(tagName != nsGkAtoms::hr)) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1190,14 +1234,17 @@ nsresult InsertTagCommand::DoCommand(Command aCommand,
     return NS_ERROR_FAILURE;
   }
   nsresult rv =
-      MOZ_KnownLive(htmlEditor)->InsertElementAtSelection(newElement, true);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertElementAtSelection() failed");
+      MOZ_KnownLive(htmlEditor)
+          ->InsertElementAtSelectionAsAction(newElement, true, aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "InsertElementAtSelectionAsAction() failed");
   return rv;
 }
 
 nsresult InsertTagCommand::DoCommandParam(Command aCommand,
                                           const nsAString& aStringParam,
-                                          TextEditor& aTextEditor) const {
+                                          TextEditor& aTextEditor,
+                                          nsIPrincipal* aPrincipal) const {
   MOZ_ASSERT(aCommand != Command::InsertHorizontalRule);
 
   if (NS_WARN_IF(aStringParam.IsEmpty())) {
@@ -1239,15 +1286,18 @@ nsresult InsertTagCommand::DoCommandParam(Command aCommand,
   // do actual insertion
   if (tagName == nsGkAtoms::a) {
     nsresult rv =
-        MOZ_KnownLive(htmlEditor)->InsertLinkAroundSelection(newElement);
+        MOZ_KnownLive(htmlEditor)
+            ->InsertLinkAroundSelectionAsAction(newElement, aPrincipal);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "InsertLinkAroundSelection() failed");
+                         "InsertLinkAroundSelectionAsAction() failed");
     return rv;
   }
 
   nsresult rv =
-      MOZ_KnownLive(htmlEditor)->InsertElementAtSelection(newElement, true);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertElementAtSelection() failed");
+      MOZ_KnownLive(htmlEditor)
+          ->InsertElementAtSelectionAsAction(newElement, true, aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "InsertElementAtSelectionAsAction() failed");
   return rv;
 }
 

@@ -792,7 +792,11 @@ EditorBase::GetTransactionManager(nsITransactionManager** aTransactionManager) {
 }
 
 NS_IMETHODIMP
-EditorBase::Undo(uint32_t aCount) { return NS_ERROR_NOT_IMPLEMENTED; }
+EditorBase::Undo(uint32_t aCount) {
+  nsresult rv = MOZ_KnownLive(AsTextEditor())->UndoAsAction(aCount);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to do Undo");
+  return rv;
+}
 
 NS_IMETHODIMP
 EditorBase::CanUndo(bool* aIsEnabled, bool* aCanUndo) {
@@ -805,7 +809,11 @@ EditorBase::CanUndo(bool* aIsEnabled, bool* aCanUndo) {
 }
 
 NS_IMETHODIMP
-EditorBase::Redo(uint32_t aCount) { return NS_ERROR_NOT_IMPLEMENTED; }
+EditorBase::Redo(uint32_t aCount) {
+  nsresult rv = MOZ_KnownLive(AsTextEditor())->RedoAsAction(aCount);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to do Redo");
+  return rv;
+}
 
 NS_IMETHODIMP
 EditorBase::CanRedo(bool* aIsEnabled, bool* aCanRedo) {
@@ -1097,7 +1105,11 @@ EditorBase::SetDocumentCharacterSet(const nsACString& characterSet) {
 }
 
 NS_IMETHODIMP
-EditorBase::Cut() { return NS_ERROR_NOT_IMPLEMENTED; }
+EditorBase::Cut() {
+  nsresult rv = MOZ_KnownLive(AsTextEditor())->CutAsAction();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to do Cut");
+  return rv;
+}
 
 NS_IMETHODIMP
 EditorBase::CanCut(bool* aCanCut) {
@@ -1131,18 +1143,18 @@ EditorBase::CanDelete(bool* aCanDelete) {
 
 NS_IMETHODIMP
 EditorBase::Paste(int32_t aClipboardType) {
-  // MOZ_KnownLive because we know "this" must be alive.
   nsresult rv =
       MOZ_KnownLive(AsTextEditor())->PasteAsAction(aClipboardType, true);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to do Paste");
+  return rv;
 }
 
 NS_IMETHODIMP
 EditorBase::PasteTransferable(nsITransferable* aTransferable) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv =
+      MOZ_KnownLive(AsTextEditor())->PasteTransferableAsAction(aTransferable);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to do Paste transferable");
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -4578,8 +4590,9 @@ nsresult EditorBase::DetermineCurrentDirection() {
   return NS_OK;
 }
 
-nsresult EditorBase::ToggleTextDirection() {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eSetTextDirection);
+nsresult EditorBase::ToggleTextDirectionAsAction(nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eSetTextDirection,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -4857,7 +4870,8 @@ void EditorBase::AutoSelectionRestorer::Abort() {
  *****************************************************************************/
 
 EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
-    const EditorBase& aEditorBase, EditAction aEditAction)
+    const EditorBase& aEditorBase, EditAction aEditAction,
+    nsIPrincipal* aPrincipal /* = nullptr */)
     : mEditorBase(const_cast<EditorBase&>(aEditorBase)),
       mParentData(aEditorBase.mEditActionData),
       mData(VoidString()),

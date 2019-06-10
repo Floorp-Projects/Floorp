@@ -16,6 +16,7 @@
 class nsIContent;
 class nsIDocumentEncoder;
 class nsIOutputStream;
+class nsIPrincipal;
 class nsISelectionController;
 class nsITransferable;
 
@@ -62,14 +63,29 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD SetDocumentCharacterSet(const nsACString& characterSet) override;
 
-  // If there are some good name to create non-virtual Undo()/Redo() methods,
-  // we should create them and those methods should just run them.
-  MOZ_CAN_RUN_SCRIPT
-  NS_IMETHOD Undo(uint32_t aCount) final;
-  MOZ_CAN_RUN_SCRIPT
-  NS_IMETHOD Redo(uint32_t aCount) final;
+  /**
+   * Do "undo" or "redo".
+   *
+   * @param aCount              How many count of transactions should be
+   *                            handled.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult UndoAsAction(uint32_t aCount,
+                                           nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult RedoAsAction(uint32_t aCount,
+                                           nsIPrincipal* aPrincipal = nullptr);
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Cut() override;
+  /**
+   * Do "cut".
+   *
+   * @param aPrincipal          If you know current context is subject
+   *                            principal or system principal, set it.
+   *                            When nullptr, this checks it automatically.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult CutAsAction(nsIPrincipal* aPrincipal = nullptr);
+
   bool CanCut() const;
   NS_IMETHOD Copy() override;
   bool CanCopy() const;
@@ -83,8 +99,16 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   using EditorBase::CanDelete;
   using EditorBase::CanPaste;
 
-  MOZ_CAN_RUN_SCRIPT
-  NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
+  /**
+   * Paste aTransferable at Selection.
+   *
+   * @param aTransferable       Must not be nullptr.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteTransferableAsAction(
+      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr);
 
   NS_IMETHOD OutputToString(const nsAString& aFormatType, uint32_t aFlags,
                             nsAString& aOutputString) override;
@@ -131,9 +155,13 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    *                            nsIClipboard::kSelectionClipboard.
    * @param aDispatchPasteEvent true if this should dispatch ePaste event
    *                            before pasting.  Otherwise, false.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent);
+  MOZ_CAN_RUN_SCRIPT nsresult PasteAsAction(int32_t aClipboardType,
+                                            bool aDispatchPasteEvent,
+                                            nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * InsertTextAsAction() inserts aStringToInsert at selection.
@@ -142,8 +170,12 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * as part of edit action, you probably should use InsertTextAsSubAction().
    *
    * @param aStringToInsert     The string to insert.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  nsresult InsertTextAsAction(const nsAString& aStringToInsert);
+  nsresult InsertTextAsAction(const nsAString& aStringToInsert,
+                              nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * PasteAsQuotationAsAction() pastes content in clipboard as quotation.
@@ -154,10 +186,13 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    *                            nsIClipboard::kSelectionClipboard.
    * @param aDispatchPasteEvent true if this should dispatch ePaste event
    *                            before pasting.  Otherwise, false.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult PasteAsQuotationAsAction(int32_t aClipboardType,
-                                            bool aDispatchPasteEvent);
+  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsQuotationAsAction(
+      int32_t aClipboardType, bool aDispatchPasteEvent,
+      nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * DeleteSelectionAsAction() removes selection content or content around
@@ -168,10 +203,13 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aDirection          How much range should be removed.
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DeleteSelectionAsAction(EDirection aDirection,
-                                   EStripWrappers aStripWrappers);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteSelectionAsAction(EDirection aDirection, EStripWrappers aStripWrappers,
+                          nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * The maximum number of characters allowed.
@@ -184,10 +222,13 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * Replace existed string with a string.
    * This is fast path to replace all string when using single line control.
    *
-   * @ param aString   the string to be set
+   * @param aString             The string to be set
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetText(const nsAString& aString);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  SetTextAsAction(const nsAString& aString, nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * Replace text in aReplaceRange or all text in this editor with aString and
@@ -196,16 +237,24 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aString             The string to set.
    * @param aReplaceRange       The range to be replaced.
    *                            If nullptr, all contents will be replaced.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult ReplaceTextAsAction(const nsAString& aString,
-                               nsRange* aReplaceRange = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  ReplaceTextAsAction(const nsAString& aString, nsRange* aReplaceRange,
+                      nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * InsertLineBreakAsAction() is called when user inputs a line break with
    * Enter or something.
+   *
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertLineBreakAsAction();
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertLineBreakAsAction(
+      nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * OnCompositionStart() is called when editor receives eCompositionStart

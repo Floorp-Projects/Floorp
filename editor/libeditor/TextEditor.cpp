@@ -43,6 +43,7 @@
 #include "nsIContent.h"
 #include "nsIDocumentEncoder.h"
 #include "nsINode.h"
+#include "nsIPrincipal.h"
 #include "nsISelectionController.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITransferable.h"
@@ -346,7 +347,7 @@ nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
     case NS_VK_ALT:
       // These keys are handled on EditorBase
       return EditorBase::HandleKeyPressEvent(aKeyboardEvent);
-    case NS_VK_BACK:
+    case NS_VK_BACK: {
       if (aKeyboardEvent->IsControl() || aKeyboardEvent->IsAlt() ||
           aKeyboardEvent->IsMeta() || aKeyboardEvent->IsOS()) {
         return NS_OK;
@@ -354,7 +355,8 @@ nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
       DeleteSelectionAsAction(nsIEditor::ePrevious, nsIEditor::eStrip);
       aKeyboardEvent->PreventDefault();  // consumed
       return NS_OK;
-    case NS_VK_DELETE:
+    }
+    case NS_VK_DELETE: {
       // on certain platforms (such as windows) the shift key
       // modifies what delete does (cmd_cut in this case).
       // bailing here to allow the keybindings to do the cut.
@@ -366,6 +368,7 @@ nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
       DeleteSelectionAsAction(nsIEditor::eNext, nsIEditor::eStrip);
       aKeyboardEvent->PreventDefault();  // consumed
       return NS_OK;
+    }
     case NS_VK_TAB: {
       if (IsTabbable()) {
         return NS_OK;  // let it be used for focus switching
@@ -414,8 +417,9 @@ nsresult TextEditor::OnInputText(const nsAString& aStringToInsert) {
   return NS_OK;
 }
 
-nsresult TextEditor::InsertLineBreakAsAction() {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
+nsresult TextEditor::InsertLineBreakAsAction(nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -629,14 +633,13 @@ nsresult TextEditor::ExtendSelectionForDelete(nsIEditor::EDirection* aAction) {
 NS_IMETHODIMP
 TextEditor::DeleteSelection(EDirection aAction, EStripWrappers aStripWrappers) {
   nsresult rv = DeleteSelectionAsAction(aAction, aStripWrappers);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to do delete selection");
+  return rv;
 }
 
 nsresult TextEditor::DeleteSelectionAsAction(EDirection aDirection,
-                                             EStripWrappers aStripWrappers) {
+                                             EStripWrappers aStripWrappers,
+                                             nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
   // Showing this assertion is fine if this method is called by outside via
   // mutation event listener or something.  Otherwise, this is called by
@@ -668,7 +671,7 @@ nsresult TextEditor::DeleteSelectionAsAction(EDirection aDirection,
       break;
   }
 
-  AutoEditActionDataSetter editActionData(*this, editAction);
+  AutoEditActionDataSetter editActionData(*this, editAction, aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -960,13 +963,12 @@ nsresult TextEditor::DeleteSelectionAndPrepareToCreateNode() {
 NS_IMETHODIMP
 TextEditor::InsertText(const nsAString& aStringToInsert) {
   nsresult rv = InsertTextAsAction(aStringToInsert);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert text");
+  return rv;
 }
 
-nsresult TextEditor::InsertTextAsAction(const nsAString& aStringToInsert) {
+nsresult TextEditor::InsertTextAsAction(const nsAString& aStringToInsert,
+                                        nsIPrincipal* aPrincipal) {
   // Showing this assertion is fine if this method is called by outside via
   // mutation event listener or something.  Otherwise, this is called by
   // wrong method.
@@ -975,7 +977,8 @@ nsresult TextEditor::InsertTextAsAction(const nsAString& aStringToInsert) {
                "operation "
                "unless mutation event listener nests some operations");
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1088,10 +1091,12 @@ nsresult TextEditor::InsertLineBreakAsSubAction() {
   return NS_OK;
 }
 
-nsresult TextEditor::SetText(const nsAString& aString) {
+nsresult TextEditor::SetTextAsAction(const nsAString& aString,
+                                     nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aString.FindChar(static_cast<char16_t>('\r')) == kNotFound);
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eSetText);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eSetText,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1104,9 +1109,11 @@ nsresult TextEditor::SetText(const nsAString& aString) {
   return NS_OK;
 }
 
-nsresult TextEditor::ReplaceTextAsAction(
-    const nsAString& aString, nsRange* aReplaceRange /* = nullptr */) {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eReplaceText);
+nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
+                                         nsRange* aReplaceRange,
+                                         nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eReplaceText,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1605,8 +1612,7 @@ TextEditor::SetNewlineHandling(int32_t aNewlineHandling) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TextEditor::Undo(uint32_t aCount) {
+nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
   // If we don't have transaction in the undo stack, we shouldn't notify
   // anybody of trying to undo since it's not useful notification but we
   // need to pay some runtime cost.
@@ -1622,7 +1628,7 @@ TextEditor::Undo(uint32_t aCount) {
     return NS_OK;
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eUndo);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eUndo, aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1667,8 +1673,7 @@ TextEditor::Undo(uint32_t aCount) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TextEditor::Redo(uint32_t aCount) {
+nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
   // If we don't have transaction in the redo stack, we shouldn't notify
   // anybody of trying to redo since it's not useful notification but we
   // need to pay some runtime cost.
@@ -1684,7 +1689,7 @@ TextEditor::Redo(uint32_t aCount) {
     return NS_OK;
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eRedo);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eRedo, aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1765,9 +1770,8 @@ bool TextEditor::FireClipboardEvent(EventMessage aEventMessage,
   return !mDidPreDestroy;
 }
 
-NS_IMETHODIMP
-TextEditor::Cut() {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eCut);
+nsresult TextEditor::CutAsAction(nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eCut, aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1966,11 +1970,13 @@ nsresult TextEditor::ComputeValueInternal(const nsAString& aFormatType,
 }
 
 nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
-                                              bool aDispatchPasteEvent) {
+                                              bool aDispatchPasteEvent,
+                                              nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
              aClipboardType == nsIClipboard::kSelectionClipboard);
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePasteAsQuotation);
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePasteAsQuotation,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }

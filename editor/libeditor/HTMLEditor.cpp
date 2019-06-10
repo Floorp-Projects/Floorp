@@ -31,6 +31,7 @@
 #include "nsISelectionController.h"
 #include "nsILinkHandler.h"
 #include "nsIInlineSpellChecker.h"
+#include "nsIPrincipal.h"
 
 #include "mozilla/css/Loader.h"
 
@@ -1008,8 +1009,9 @@ HTMLEditor::InsertLineBreak() {
   return NS_OK;
 }
 
-nsresult HTMLEditor::InsertLineBreakAsAction() {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
+nsresult HTMLEditor::InsertLineBreakAsAction(nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1024,9 +1026,10 @@ nsresult HTMLEditor::InsertLineBreakAsAction() {
   return NS_OK;
 }
 
-nsresult HTMLEditor::InsertParagraphSeparatorAsAction() {
+nsresult HTMLEditor::InsertParagraphSeparatorAsAction(
+    nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
-      *this, EditAction::eInsertParagraphSeparator);
+      *this, EditAction::eInsertParagraphSeparator, aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1551,12 +1554,20 @@ EditorRawDOMPoint HTMLEditor::GetBetterInsertionPointFor(
 
 NS_IMETHODIMP
 HTMLEditor::InsertElementAtSelection(Element* aElement, bool aDeleteSelection) {
+  nsresult rv = InsertElementAtSelectionAsAction(aElement, aDeleteSelection);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed to insert element at selection");
+  return rv;
+}
+
+nsresult HTMLEditor::InsertElementAtSelectionAsAction(
+    Element* aElement, bool aDeleteSelection, nsIPrincipal* aPrincipal) {
   if (NS_WARN_IF(!aElement)) {
     return NS_ERROR_INVALID_ARG;
   }
 
   AutoEditActionDataSetter editActionData(
-      *this, HTMLEditUtils::GetEditActionForInsert(*aElement));
+      *this, HTMLEditUtils::GetEditActionForInsert(*aElement), aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1801,8 +1812,15 @@ nsresult HTMLEditor::CollapseSelectionAfter(Element& aElement) {
 
 NS_IMETHODIMP
 HTMLEditor::SetParagraphFormat(const nsAString& aParagraphFormat) {
-  AutoEditActionDataSetter editActionData(*this,
-                                          EditAction::eInsertBlockElement);
+  nsresult rv = SetParagraphFormatAsAction(aParagraphFormat);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to set paragraph format");
+  return rv;
+}
+
+nsresult HTMLEditor::SetParagraphFormatAsAction(
+    const nsAString& aParagraphFormat, nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(
+      *this, EditAction::eInsertBlockElement, aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2086,6 +2104,15 @@ HTMLEditor::GetAlignment(bool* aMixed, nsIHTMLEditor::EAlignment* aAlign) {
 NS_IMETHODIMP
 HTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList,
                              const nsAString& aBulletType) {
+  nsresult rv = MakeOrChangeListAsAction(aListType, entireList, aBulletType);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to make or change list");
+  return rv;
+}
+
+nsresult HTMLEditor::MakeOrChangeListAsAction(const nsAString& aListType,
+                                              bool entireList,
+                                              const nsAString& aBulletType,
+                                              nsIPrincipal* aPrincipal) {
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2095,7 +2122,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList,
     return NS_ERROR_INVALID_ARG;
   }
   AutoEditActionDataSetter editActionData(
-      *this, HTMLEditUtils::GetEditActionForInsert(*listAtom));
+      *this, HTMLEditUtils::GetEditActionForInsert(*listAtom), aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2115,7 +2142,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList,
   subActionInfo.bulletType = &aBulletType;
   nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
 
   if (!handled && SelectionRefPtr()->IsCollapsed()) {
@@ -2147,7 +2174,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList,
           MOZ_KnownLive(*pointToInsertList.GetChild()), atStartOfSelection,
           SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
-        return splitNodeResult.Rv();
+        return EditorBase::ToGenericNSResult(splitNodeResult.Rv());
       }
       pointToInsertList = splitNodeResult.SplitPoint();
       if (NS_WARN_IF(!pointToInsertList.IsSet())) {
@@ -2172,19 +2199,26 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList,
     ErrorResult error;
     SelectionRefPtr()->Collapse(RawRangeBoundary(newItem, 0), error);
     if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
+      return EditorBase::ToGenericNSResult(error.StealNSResult());
     }
   }
 
   rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLEditor::RemoveList(const nsAString& aListType) {
+  nsresult rv = RemoveListAsAction(aListType);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove list");
+  return rv;
+}
+
+nsresult HTMLEditor::RemoveListAsAction(const nsAString& aListType,
+                                        nsIPrincipal* aPrincipal) {
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2202,7 +2236,7 @@ HTMLEditor::RemoveList(const nsAString& aListType) {
     return NS_ERROR_INVALID_ARG;
   }
   AutoEditActionDataSetter editActionData(
-      *this, HTMLEditUtils::GetEditActionForRemoveList(*listAtom));
+      *this, HTMLEditUtils::GetEditActionForRemoveList(*listAtom), aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2218,14 +2252,14 @@ HTMLEditor::RemoveList(const nsAString& aListType) {
   bool cancel, handled;
   nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
 
   // no default behavior for this yet.  what would it mean?
 
   rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -2359,27 +2393,24 @@ NS_IMETHODIMP
 HTMLEditor::Indent(const nsAString& aIndent) {
   if (aIndent.LowerCaseEqualsLiteral("indent")) {
     nsresult rv = IndentAsAction();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to indent");
+    return rv;
   }
   if (aIndent.LowerCaseEqualsLiteral("outdent")) {
     nsresult rv = OutdentAsAction();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to outdent");
+    return rv;
   }
   return NS_ERROR_INVALID_ARG;
 }
 
-nsresult HTMLEditor::IndentAsAction() {
+nsresult HTMLEditor::IndentAsAction(nsIPrincipal* aPrincipal) {
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eIndent);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eIndent,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2387,17 +2418,18 @@ nsresult HTMLEditor::IndentAsAction() {
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   nsresult rv = IndentOrOutdentAsSubAction(EditSubAction::eIndent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
 
-nsresult HTMLEditor::OutdentAsAction() {
+nsresult HTMLEditor::OutdentAsAction(nsIPrincipal* aPrincipal) {
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eOutdent);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eOutdent,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2405,7 +2437,7 @@ nsresult HTMLEditor::OutdentAsAction() {
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   nsresult rv = IndentOrOutdentAsSubAction(EditSubAction::eOutdent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -2512,8 +2544,15 @@ nsresult HTMLEditor::IndentOrOutdentAsSubAction(
 
 NS_IMETHODIMP
 HTMLEditor::Align(const nsAString& aAlignType) {
+  nsresult rv = AlignAsAction(aAlignType);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to align content");
+  return EditorBase::ToGenericNSResult(rv);
+}
+
+nsresult HTMLEditor::AlignAsAction(const nsAString& aAlignType,
+                                   nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
-      *this, HTMLEditUtils::GetEditActionForAlignment(aAlignType));
+      *this, HTMLEditUtils::GetEditActionForAlignment(aAlignType), aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -2532,12 +2571,12 @@ HTMLEditor::Align(const nsAString& aAlignType) {
   subActionInfo.alignType = &aAlignType;
   nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
 
   rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -2898,12 +2937,20 @@ HTMLEditor::CreateElementWithDefaults(const nsAString& aTagName,
 
 NS_IMETHODIMP
 HTMLEditor::InsertLinkAroundSelection(Element* aAnchorElement) {
+  nsresult rv = InsertLinkAroundSelectionAsAction(aAnchorElement);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed to insert link around selection");
+  return rv;
+}
+
+nsresult HTMLEditor::InsertLinkAroundSelectionAsAction(
+    Element* aAnchorElement, nsIPrincipal* aPrincipal) {
   if (NS_WARN_IF(!aAnchorElement)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  AutoEditActionDataSetter editActionData(*this,
-                                          EditAction::eInsertLinkElement);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLinkElement,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -4486,8 +4533,15 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
 
 NS_IMETHODIMP
 HTMLEditor::SetBackgroundColor(const nsAString& aColor) {
-  AutoEditActionDataSetter editActionData(*this,
-                                          EditAction::eSetBackgroundColor);
+  nsresult rv = SetBackgroundColorAsAction(aColor);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to set background color");
+  return rv;
+}
+
+nsresult HTMLEditor::SetBackgroundColorAsAction(const nsAString& aColor,
+                                                nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(
+      *this, EditAction::eSetBackgroundColor, aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -4496,11 +4550,13 @@ HTMLEditor::SetBackgroundColor(const nsAString& aColor) {
     // if we are in CSS mode, we have to apply the background color to the
     // containing block (or the body if we have no block-level element in
     // the document)
-    return SetCSSBackgroundColorWithTransaction(aColor);
+    return EditorBase::ToGenericNSResult(
+        SetCSSBackgroundColorWithTransaction(aColor));
   }
 
   // but in HTML mode, we can only set the document's background color
-  return SetHTMLBackgroundColorWithTransaction(aColor);
+  return EditorBase::ToGenericNSResult(
+      SetHTMLBackgroundColorWithTransaction(aColor));
 }
 
 nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
