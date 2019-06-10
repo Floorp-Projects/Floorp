@@ -91,8 +91,8 @@ class VideoOutput : public DirectMediaStreamTrackListener {
         // We ignore null images.
         continue;
       }
-      images.AppendElement(
-          ImageContainer::NonOwningImage(image, chunk.mTimeStamp, frameId));
+      images.AppendElement(ImageContainer::NonOwningImage(
+          image, chunk.mTimeStamp, frameId, mProducerID));
 
       lastPrincipalHandle = chunk.GetPrincipalHandle();
     }
@@ -198,6 +198,8 @@ class VideoOutput : public DirectMediaStreamTrackListener {
   nsTArray<Pair<ImageContainer::FrameID, VideoChunk>> mFrames;
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
   const RefPtr<AbstractThread> mMainThread;
+  const layers::ImageContainer::ProducerID mProducerID =
+      layers::ImageContainer::AllocateProducerID();
 };
 
 }  // namespace mozilla
