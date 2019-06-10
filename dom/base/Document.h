@@ -3459,21 +3459,22 @@ class Document : public nsINode,
                      const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal,
                      mozilla::ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT
-  bool ExecCommand(const nsAString& aCommandID, bool aDoShowUI,
+  bool ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
                    const nsAString& aValue, nsIPrincipal& aSubjectPrincipal,
-                   mozilla::ErrorResult& rv);
-  bool QueryCommandEnabled(const nsAString& aCommandID,
+                   mozilla::ErrorResult& aRv);
+  bool QueryCommandEnabled(const nsAString& aHTMLCommandName,
                            nsIPrincipal& aSubjectPrincipal,
-                           mozilla::ErrorResult& rv);
-  bool QueryCommandIndeterm(const nsAString& aCommandID,
-                            mozilla::ErrorResult& rv);
-  bool QueryCommandState(const nsAString& aCommandID, mozilla::ErrorResult& rv);
-  bool QueryCommandSupported(const nsAString& aCommandID,
+                           mozilla::ErrorResult& aRv);
+  bool QueryCommandIndeterm(const nsAString& aHTMLCommandName,
+                            mozilla::ErrorResult& aRv);
+  bool QueryCommandState(const nsAString& aHTMLCommandName,
+                         mozilla::ErrorResult& aRv);
+  bool QueryCommandSupported(const nsAString& aHTMLCommandName,
                              mozilla::dom::CallerType aCallerType,
-                             mozilla::ErrorResult& rv);
+                             mozilla::ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT
-  void QueryCommandValue(const nsAString& aCommandID, nsAString& aValue,
-                         mozilla::ErrorResult& rv);
+  void QueryCommandValue(const nsAString& aHTMLCommandName, nsAString& aValue,
+                         mozilla::ErrorResult& aRv);
   nsIHTMLCollection* Applets();
   nsIHTMLCollection* Anchors();
   TimeStamp LastFocusTime() const;
