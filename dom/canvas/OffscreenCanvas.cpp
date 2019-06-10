@@ -259,8 +259,7 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
         doc ? nsContentUtils::ShouldResistFingerprinting(doc) : false;
   } else {
     dom::WorkerPrivate* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
-    usePlaceholder = nsContentUtils::ShouldResistFingerprinting(
-        workerPrivate->GetPrincipal());
+    usePlaceholder = nsContentUtils::ShouldResistFingerprinting(workerPrivate);
   }
   CanvasRenderingContextHelper::ToBlob(aCx, global, callback, aType, aParams,
                                        usePlaceholder, aRv);

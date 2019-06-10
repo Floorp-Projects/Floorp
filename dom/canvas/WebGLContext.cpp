@@ -29,6 +29,7 @@
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/WebGLContextEvent.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/EnumeratedArrayCycleCollection.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessPriorityManager.h"
@@ -2332,6 +2333,25 @@ bool WebGLContext::ValidateDeleteObject(
   if (object->IsDeleteRequested()) return false;
 
   return true;
+}
+
+bool WebGLContext::ShouldResistFingerprinting() const {
+  if (NS_IsMainThread()) {
+    if (mCanvasElement) {
+      // If we're constructed from a canvas element
+      return nsContentUtils::ShouldResistFingerprinting(GetOwnerDoc());
+    }
+    if (mOffscreenCanvas->GetOwnerGlobal()) {
+      // If we're constructed from an offscreen canvas
+      return nsContentUtils::ShouldResistFingerprinting(
+          mOffscreenCanvas->GetOwnerGlobal()->PrincipalOrNull());
+    }
+    // Last resort, just check the global preference
+    return nsContentUtils::ShouldResistFingerprinting();
+  }
+  dom::WorkerPrivate* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+  return nsContentUtils::ShouldResistFingerprinting(workerPrivate);
 }
 
 // --

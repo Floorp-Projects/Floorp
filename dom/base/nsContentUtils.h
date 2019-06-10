@@ -151,6 +151,7 @@ class ContentParent;
 class BrowserChild;
 class Selection;
 class BrowserParent;
+class WorkerPrivate;
 }  // namespace dom
 
 namespace ipc {
@@ -307,6 +308,8 @@ class nsContentUtils {
   static bool ShouldResistFingerprinting();
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell);
   static bool ShouldResistFingerprinting(nsIPrincipal* aPrincipal);
+  static bool ShouldResistFingerprinting(
+      mozilla::dom::WorkerPrivate* aWorkerPrivate);
   static bool ShouldResistFingerprinting(const Document* aDoc);
 
   // Prevent system colors from being exposed to CSS or canvas.

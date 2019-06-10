@@ -2006,6 +2006,8 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
 
   // --
 
+  bool ShouldResistFingerprinting() const;
+
  public:
   void LoseOldestWebGLContextIfLimitExceeded();
   void UpdateLastUseIndex();
