@@ -345,7 +345,7 @@ class Raptor(object):
             ]
 
             if not self.config["playback_upstream_cert"]:
-                self.log.info("No upstream certificate sniffing")
+                LOG.info("No upstream certificate sniffing")
                 args.insert(0, "--no-upstream-cert")
             self.playback.config["playback_tool_args"] = args
         elif version == "4.0.4":
@@ -357,7 +357,7 @@ class Raptor(object):
                 "server_replay_files={}".format(" ".join(recording_paths)),
             ]
             if not self.config["playback_upstream_cert"]:
-                self.log.info("No upstream certificate sniffing")
+                LOG.info("No upstream certificate sniffing")
                 args = ["--set", "upstream_cert=false"] + args
             self.playback.config["playback_tool_args"] = args
         else:
