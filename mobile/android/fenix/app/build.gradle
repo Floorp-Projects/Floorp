@@ -455,7 +455,8 @@ afterEvaluate {
                     }
                 }
                 // Check whether it was already megazorded.
-                if (! dependency.requested.name.endsWith("-withoutLib")) {
+                // Hack: sync15 is pure kotlin, and thus not part of the megazord.
+                if (! dependency.requested.name.endsWith("-withoutLib") && dependency.requested.name != "sync15") {
                     // Use either the -forUnitTests megazord, or the default one.
                     def substitution
                     if (dependency.requested.name.endsWith("-forUnitTests")) {
