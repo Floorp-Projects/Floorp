@@ -1010,12 +1010,18 @@ class MOZ_RAII AutoSetGeneratorRunning {
 /* static */
 bool Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
                                     jsbytecode* pc, bool frameOk) {
+  MOZ_ASSERT_IF(!frame.isWasmDebugFrame(), pc);
+
   mozilla::DebugOnly<Handle<GlobalObject*>> debuggeeGlobal = cx->global();
 
   // Determine if we are suspending this frame or popping it forever.
   bool suspending = false;
   Rooted<AbstractGeneratorObject*> genObj(cx);
   if (frame.isGeneratorFrame()) {
+    // Since generators are never wasm, we can assume pc is not nullptr, and
+    // that analyzing bytecode is meaningful.
+    MOZ_ASSERT(!frame.isWasmDebugFrame());
+
     // If we're leaving successfully at a yield opcode, we're probably
     // suspending; the `isClosed()` check detects a debugger forced return
     // from an `onStep` handler, which looks almost the same.
@@ -1026,7 +1032,7 @@ bool Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
     // possibility, so it's fine to call genObj->isClosed().
     genObj = GetGeneratorObjectForFrame(cx, frame);
     suspending =
-        frameOk && pc &&
+        frameOk &&
         (*pc == JSOP_INITIALYIELD || *pc == JSOP_YIELD || *pc == JSOP_AWAIT) &&
         !genObj->isClosed();
   }
