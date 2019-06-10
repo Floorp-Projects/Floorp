@@ -79,8 +79,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.urlToTrimmedHost
-import org.mozilla.fenix.home.sessioncontrol.Tab
+import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -747,7 +746,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private fun showSaveToCollection() {
         val context = context ?: return
         getSessionById()?.let {
-            val tabs = Tab(it.id, it.url, it.url.urlToTrimmedHost(context), it.title)
+            val tabs = it.toTab(context)
             val viewModel = activity?.run {
                 ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
             }

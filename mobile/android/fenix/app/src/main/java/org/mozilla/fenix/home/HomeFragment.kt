@@ -57,7 +57,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.urlToTrimmedHost
+import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.Mode
 import org.mozilla.fenix.home.sessioncontrol.OnboardingAction
@@ -577,14 +577,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                     .filter { it.id != sessionId }
                     .map {
                         val selected = it == sessionManager.selectedSession
-                        Tab(
-                            it.id,
-                            it.url,
-                            it.url.urlToTrimmedHost(context!!),
-                            it.title,
-                            selected,
-                            it.thumbnail
-                        )
+                        it.toTab(context!!, selected)
                     }
             )
         )
@@ -624,14 +617,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
             .map {
                 val selected = it == sessionManager.selectedSession
-                Tab(
-                    it.id,
-                    it.url,
-                    it.url.urlToTrimmedHost(context),
-                    it.title,
-                    selected,
-                    it.thumbnail
-                )
+                it.toTab(context, selected)
             }
     }
 
@@ -650,7 +636,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         val context = context?.let { it } ?: return
 
         val tabs = requireComponents.core.sessionManager.sessions.filter { !it.private }
-            .map { Tab(it.id, it.url, it.url.urlToTrimmedHost(context), it.title) }
+            .map { it.toTab(context) }
 
         val viewModel = activity?.run {
             ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
