@@ -210,8 +210,9 @@ void TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name) {
 
 // Trace an edge that crosses compartment boundaries. If the compartment of the
 // destination thing is not being GC'd, then the edge will not be traced.
+template <typename T>
 void TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src,
-                               WriteBarriered<Value>* dst, const char* name);
+                               WriteBarriered<T>* dst, const char* name);
 
 // As above but with manual barriers.
 template <typename T>
