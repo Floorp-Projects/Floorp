@@ -705,7 +705,7 @@ class MOZ_RAII AutoProfilerTextMarker {
       : mMarkerName(aMarkerName),
         mText(aText),
         mCategoryPair(aCategoryPair),
-        mStartTime(TimeStamp::Now()),
+        mStartTime(TimeStamp::NowUnfuzzed()),
         mCause(std::move(aCause)),
         mDocShellId(aDocShellId),
         mDocShellHistoryId(aDocShellHistoryId) {
@@ -714,7 +714,7 @@ class MOZ_RAII AutoProfilerTextMarker {
 
   ~AutoProfilerTextMarker() {
     profiler_add_text_marker(mMarkerName, mText, mCategoryPair, mStartTime,
-                             TimeStamp::Now(), mDocShellId, mDocShellHistoryId,
+                             TimeStamp::NowUnfuzzed(), mDocShellId, mDocShellHistoryId,
                              std::move(mCause));
   }
 

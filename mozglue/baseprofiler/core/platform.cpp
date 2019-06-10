@@ -1527,7 +1527,7 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
   // ProcessStartTime)) to convert CorePS::ProcessStartTime() into that form.
-  TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
+  TimeDuration delta = TimeStamp::NowUnfuzzed() - CorePS::ProcessStartTime();
   aWriter.DoubleProperty(
       "startTime", MicrosecondsSince1970() / 1000.0 - delta.ToMilliseconds());
 
@@ -1913,13 +1913,13 @@ void SamplerThread::Run() {
   // This will be positive if we are running behind schedule (sampling less
   // frequently than desired) and negative if we are ahead of schedule.
   TimeDuration lastSleepOvershoot = 0;
-  TimeStamp sampleStart = TimeStamp::Now();
+  TimeStamp sampleStart = TimeStamp::NowUnfuzzed();
 
   while (true) {
     // This scope is for |lock|. It ends before we sleep below.
     {
       PSAutoLock lock;
-      TimeStamp lockAcquired = TimeStamp::Now();
+      TimeStamp lockAcquired = TimeStamp::NowUnfuzzed();
 
       if (!ActivePS::Exists(lock)) {
         return;
@@ -1935,7 +1935,7 @@ void SamplerThread::Run() {
       ActivePS::ClearExpiredExitProfiles(lock);
 
       ActivePS::Buffer(lock).DeleteExpiredStoredMarkers();
-      TimeStamp expiredMarkersCleaned = TimeStamp::Now();
+      TimeStamp expiredMarkersCleaned = TimeStamp::NowUnfuzzed();
 
       if (!ActivePS::IsPaused(lock)) {
         const Vector<LiveProfiledThreadData>& liveThreads =
@@ -1946,7 +1946,7 @@ void SamplerThread::Run() {
 
         // handle per-process generic counters
         const Vector<BaseProfilerCount*>& counters = CorePS::Counters(lock);
-        TimeStamp now = TimeStamp::Now();
+        TimeStamp now = TimeStamp::NowUnfuzzed();
         for (auto& counter : counters) {
           // create Buffer entries for each counter
           buffer.AddEntry(ProfileBufferEntry::CounterId(counter));
@@ -1964,7 +1964,7 @@ void SamplerThread::Run() {
             buffer.AddEntry(ProfileBufferEntry::Number(number));
           }
         }
-        TimeStamp countersSampled = TimeStamp::Now();
+        TimeStamp countersSampled = TimeStamp::NowUnfuzzed();
 
         for (auto& thread : liveThreads) {
           RegisteredThread* registeredThread = thread.mRegisteredThread;
@@ -1985,7 +1985,7 @@ void SamplerThread::Run() {
             }
           }
 
-          now = TimeStamp::Now();
+          now = TimeStamp::NowUnfuzzed();
           SuspendAndSampleAndResumeThread(
               lock, *registeredThread, [&](const Registers& aRegs) {
                 DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
@@ -2001,7 +2001,7 @@ void SamplerThread::Run() {
         // SuspendAndSampleAndResumeThread, which is why it is done here.
         CorePS::Lul(lock)->MaybeShowStats();
 #  endif
-        TimeStamp threadsSampled = TimeStamp::Now();
+        TimeStamp threadsSampled = TimeStamp::NowUnfuzzed();
 
         buffer.AddEntry(
             ProfileBufferEntry::ProfilerOverheadTime(delta.ToMilliseconds()));
@@ -2018,7 +2018,7 @@ void SamplerThread::Run() {
       Maybe<double> duration = ActivePS::Duration(lock);
       if (duration) {
         ActivePS::Buffer(lock).DiscardSamplesBeforeTime(
-            (TimeStamp::Now() - TimeDuration::FromSeconds(*duration) -
+            (TimeStamp::NowUnfuzzed() - TimeDuration::FromSeconds(*duration) -
              CorePS::ProcessStartTime())
                 .ToMilliseconds());
       }
@@ -2032,12 +2032,12 @@ void SamplerThread::Run() {
     // actual sleep intervals.
     TimeStamp targetSleepEndTime =
         sampleStart + TimeDuration::FromMicroseconds(mIntervalMicroseconds);
-    TimeStamp beforeSleep = TimeStamp::Now();
+    TimeStamp beforeSleep = TimeStamp::NowUnfuzzed();
     TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
     double sleepTime = std::max(
         0.0, (targetSleepDuration - lastSleepOvershoot).ToMicroseconds());
     SleepMicro(static_cast<uint32_t>(sleepTime));
-    sampleStart = TimeStamp::Now();
+    sampleStart = TimeStamp::NowUnfuzzed();
     lastSleepOvershoot =
         sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
   }
@@ -3045,7 +3045,7 @@ bool profiler_thread_is_sleeping() {
 double profiler_time() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
+  TimeDuration delta = TimeStamp::NowUnfuzzed() - CorePS::ProcessStartTime();
   return delta.ToMilliseconds();
 }
 
@@ -3067,7 +3067,7 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
 
   int tid = profiler_current_thread_id();
 
-  TimeStamp now = TimeStamp::Now();
+  TimeStamp now = TimeStamp::NowUnfuzzed();
 
   Registers regs;
 #  if defined(HAVE_NATIVE_UNWIND)
@@ -3109,7 +3109,7 @@ static void racy_profiler_add_marker(
 
   TimeStamp origin = (aPayload && !aPayload->GetStartTime().IsNull())
                          ? aPayload->GetStartTime()
-                         : TimeStamp::Now();
+                         : TimeStamp::NowUnfuzzed();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
   racyRegisteredThread->AddPendingMarker(
       aMarkerName, aCategoryPair, std::move(aPayload), delta.ToMilliseconds());
@@ -3155,7 +3155,7 @@ void profiler_add_marker_for_thread(int aThreadId,
   // Create the ProfilerMarker which we're going to store.
   TimeStamp origin = (aPayload && !aPayload->GetStartTime().IsNull())
                          ? aPayload->GetStartTime()
-                         : TimeStamp::Now();
+                         : TimeStamp::NowUnfuzzed();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
   ProfilerMarker* marker =
       new ProfilerMarker(aMarkerName, aCategoryPair, aThreadId,
