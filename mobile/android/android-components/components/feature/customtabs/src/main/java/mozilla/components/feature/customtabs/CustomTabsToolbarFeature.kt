@@ -39,7 +39,8 @@ class CustomTabsToolbarFeature(
     private val shareListener: (() -> Unit)? = null,
     private val closeListener: () -> Unit
 ) : LifecycleAwareFeature, BackHandler {
-    private val context = toolbar.context
+    private val context
+        get() = toolbar.context
     internal var initialized = false
     internal var readableColor = Color.WHITE
 

@@ -40,7 +40,7 @@ internal class TabCollectionAdapter(
 
     private fun restore(context: Context, engine: Engine, tabs: List<TabEntity>): SessionManager.Snapshot {
         val items = tabs.mapNotNull { tab ->
-            tab.getStateFile(context).readSnapshotItem(engine)
+            tab.getStateFile(context.filesDir).readSnapshotItem(engine)
         }
         return SessionManager.Snapshot(items, SessionManager.NO_SELECTION)
     }

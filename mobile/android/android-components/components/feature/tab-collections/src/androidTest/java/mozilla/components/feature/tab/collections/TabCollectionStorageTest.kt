@@ -56,7 +56,7 @@ class TabCollectionStorageTest {
 
     @After
     fun tearDown() {
-        TabEntity.getStateDirectory(context).truncateDirectory()
+        TabEntity.getStateDirectory(context.filesDir).truncateDirectory()
 
         executor.shutdown()
     }
@@ -280,12 +280,12 @@ class TabCollectionStorageTest {
         )
 
         assertEquals(2, storage.getTabCollectionsCount())
-        assertEquals(2, TabEntity.getStateDirectory(context).listFiles().size)
+        assertEquals(2, TabEntity.getStateDirectory(context.filesDir).listFiles().size)
 
         storage.removeAllCollections()
 
         assertEquals(0, storage.getTabCollectionsCount())
-        assertEquals(0, TabEntity.getStateDirectory(context).listFiles().size)
+        assertEquals(0, TabEntity.getStateDirectory(context.filesDir).listFiles().size)
     }
 
     private fun getAllCollections(): List<TabCollection> {

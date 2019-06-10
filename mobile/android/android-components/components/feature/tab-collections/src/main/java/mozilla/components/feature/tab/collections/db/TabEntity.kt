@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.tab.collections.db
 
-import android.content.Context
 import android.util.AtomicFile
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -49,13 +48,13 @@ internal data class TabEntity(
     @ColumnInfo(name = "created_at")
     var createdAt: Long
 ) {
-    internal fun getStateFile(context: Context): AtomicFile {
-        return AtomicFile(File(getStateDirectory(context), stateFile))
+    internal fun getStateFile(filesDir: File): AtomicFile {
+        return AtomicFile(File(getStateDirectory(filesDir), stateFile))
     }
 
     companion object {
-        internal fun getStateDirectory(context: Context): File {
-            return File(context.filesDir, "mozac.feature.tab.collections").apply {
+        internal fun getStateDirectory(filesDir: File): File {
+            return File(filesDir, "mozac.feature.tab.collections").apply {
                 mkdirs()
             }
         }

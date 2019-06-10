@@ -17,14 +17,16 @@ import mozilla.components.feature.tab.collections.db.TabCollectionDatabase
 import mozilla.components.feature.tab.collections.db.TabCollectionEntity
 import mozilla.components.feature.tab.collections.db.TabEntity
 import mozilla.components.support.ktx.java.io.truncateDirectory
+import java.io.File
 import java.util.UUID
 
 /**
  * A storage implementation that saves snapshots of tabs / sessions in named collections.
  */
 class TabCollectionStorage(
-    private val context: Context,
-    private val sessionManager: SessionManager
+    context: Context,
+    private val sessionManager: SessionManager,
+    private val filesDir: File = context.filesDir
 ) {
     internal var database: Lazy<TabCollectionDatabase> = lazy { TabCollectionDatabase.get(context) }
 
@@ -65,7 +67,7 @@ class TabCollectionStorage(
 
             val snapshot = sessionManager.createSessionSnapshot(session)
 
-            val success = entity.getStateFile(context).writeSnapshotItem(snapshot)
+            val success = entity.getStateFile(filesDir).writeSnapshotItem(snapshot)
             if (success) {
                 database.value.tabDao().insertTab(entity)
             }
@@ -82,7 +84,7 @@ class TabCollectionStorage(
         val collectionEntity = (collection as TabCollectionAdapter).entity.collection
         val tabEntity = (tab as TabAdapter).entity
 
-        tabEntity.getStateFile(context)
+        tabEntity.getStateFile(filesDir)
             .delete()
 
         database.value.tabDao().deleteTab(tabEntity)
@@ -142,7 +144,7 @@ class TabCollectionStorage(
             .deleteTabCollection(collectionWithTabs.collection)
 
         collectionWithTabs.tabs.forEach { tab ->
-            tab.getStateFile(context).delete()
+            tab.getStateFile(filesDir).delete()
         }
     }
 
@@ -152,7 +154,7 @@ class TabCollectionStorage(
     fun removeAllCollections() {
         database.value.clearAllTables()
 
-        TabEntity.getStateDirectory(context)
+        TabEntity.getStateDirectory(filesDir)
             .truncateDirectory()
     }
 
