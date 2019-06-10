@@ -20,7 +20,7 @@ FINAL_TARGET_FILES.content += [
     'content/MockFilePicker.jsm',
     'content/MockPermissionPrompt.jsm',
     'content/MozillaLogger.js',
-    'content/specialpowers.js',
+    'content/SpecialPowers.jsm',
     'content/SpecialPowersAPI.jsm',
     'content/specialpowersFrameScript.js',
     'content/SpecialPowersObserver.jsm',

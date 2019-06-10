@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* import-globals-from specialpowers.js */
+/* import-globals-from SpecialPowers.jsm */
 
 function MozillaLogger(aPath) {
 }
