@@ -48,7 +48,11 @@ async function overflowTabs() {
   while (gBrowser.tabs.length < tabCountForOverflow) {
     BrowserTestUtils.addTab(gBrowser, "about:blank", { skipAnimation: true, index: 0 });
   }
-  await window.promiseDocumentFlushed(() => {});
+
+  // Make sure scrolling finished.
+  await new Promise(resolve => {
+    arrowScrollbox.addEventListener("scrollend", resolve, { once: true });
+  });
 }
 
 function getLastCloseButton() {
