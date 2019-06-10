@@ -71,7 +71,7 @@ export class DebugLine extends PureComponent<Props> {
     const doc = getDocument(sourceId);
 
     let { line, column } = toEditorPosition(frame.location);
-    const { markTextClass, lineClass } = this.getTextClasses(why);
+    let { markTextClass, lineClass } = this.getTextClasses(why);
     doc.addLineClass(line, "line", lineClass);
 
     const lineText = doc.getLine(line);
@@ -80,6 +80,10 @@ export class DebugLine extends PureComponent<Props> {
     // If component updates because user clicks on
     // another source tab, codeMirror will be null.
     const columnEnd = doc.cm ? getTokenEnd(doc.cm, line, column) : null;
+
+    if (columnEnd === null) {
+      markTextClass += " to-line-end";
+    }
 
     this.debugExpression = doc.markText(
       { ch: column, line },

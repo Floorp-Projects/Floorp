@@ -265,6 +265,7 @@ export function getTokenEnd(codeMirror: Object, line: number, column: number) {
     line: line,
     ch: column + 1,
   });
+  const tokenString = token.string;
 
-  return token.end;
+  return tokenString === "{" || tokenString === "[" ? null : token.end;
 }
