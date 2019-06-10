@@ -11,6 +11,7 @@
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/InternalMutationEvent.h"
 #include "mozilla/mozInlineSpellChecker.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
@@ -3419,6 +3420,98 @@ nsresult HTMLEditor::DeleteAllChildrenWithTransaction(Element& aElement) {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+  }
+  return NS_OK;
+}
+
+nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
+    const EditorDOMPoint& aPoint) {
+  MOZ_ASSERT(aPoint.IsSet());
+  MOZ_ASSERT(mPlaceholderBatch);
+
+  // First, check there is visible contents before the point in current block.
+  WSRunObject wsObj(this, aPoint);
+  if (!(wsObj.mStartReason & WSType::thisBlock)) {
+    // If there is visible node before the point, we shouldn't remove the
+    // parent block.
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  }
+  if (NS_WARN_IF(!wsObj.mStartReasonNode) ||
+      NS_WARN_IF(!wsObj.mStartReasonNode->GetParentNode())) {
+    return NS_ERROR_FAILURE;
+  }
+  if (wsObj.GetEditingHost() == wsObj.mStartReasonNode) {
+    // If we reach editing host, there is no parent blocks which can be removed.
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  }
+  if (HTMLEditUtils::IsTableCellOrCaption(*wsObj.mStartReasonNode)) {
+    // If we reach a <td>, <th> or <caption>, we shouldn't remove it even
+    // becomes empty because removing such element changes the structure of
+    // the <table>.
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  }
+
+  // Next, check there is visible contents after the point in current block.
+  WSType wsType = WSType::none;
+  wsObj.NextVisibleNode(aPoint, &wsType);
+  if (wsType == WSType::br) {
+    // If the <br> element is visible, we shouldn't remove the parent block.
+    if (IsVisibleBRElement(wsObj.mEndReasonNode)) {
+      return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+    }
+    if (wsObj.mEndReasonNode->GetNextSibling()) {
+      EditorRawDOMPoint afterBRElement;
+      afterBRElement.SetAfter(wsObj.mEndReasonNode);
+      WSRunObject wsRunObjAfterBR(this, afterBRElement);
+      WSType wsTypeAfterBR = WSType::none;
+      wsRunObjAfterBR.NextVisibleNode(afterBRElement, &wsTypeAfterBR);
+      if (wsTypeAfterBR != WSType::thisBlock) {
+        // If we couldn't reach the block's end after the invisible <br>,
+        // that means that there is visible content.
+        return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+      }
+    }
+  } else if (wsType != WSType::thisBlock) {
+    // If we couldn't reach the block's end, the block has visible content.
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  }
+
+  // Delete the parent block.
+  EditorDOMPoint nextPoint(wsObj.mStartReasonNode->GetParentNode(), 0);
+  nsresult rv =
+      DeleteNodeWithTransaction(MOZ_KnownLive(*wsObj.mStartReasonNode));
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  // If we reach editing host, return NS_OK.
+  if (nextPoint.GetContainer() == wsObj.GetEditingHost()) {
+    return NS_OK;
+  }
+
+  // Otherwise, we need to check whether we're still in empty block or not.
+
+  // If we have mutation event listeners, the next point is now outside of
+  // editing host or editing hos has been changed.
+  if (HasMutationEventListeners(NS_EVENT_BITS_MUTATION_NODEREMOVED |
+                                NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
+                                NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
+    Element* editingHost = GetActiveEditingHost();
+    if (NS_WARN_IF(!editingHost) ||
+        NS_WARN_IF(editingHost != wsObj.GetEditingHost())) {
+      return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+    }
+    if (NS_WARN_IF(!EditorUtils::IsDescendantOf(*nextPoint.GetContainer(),
+                                                *editingHost))) {
+      return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+    }
+  }
+
+  rv = DeleteParentBlocksWithTransactionIfEmpty(nextPoint);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
   return NS_OK;
 }
