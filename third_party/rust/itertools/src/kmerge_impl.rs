@@ -3,6 +3,7 @@ use size_hint;
 use Itertools;
 
 use std::mem::replace;
+use std::fmt;
 
 macro_rules! clone_fields {
     ($name:ident, $base:expr, $($field:ident),+) => (
@@ -21,6 +22,7 @@ macro_rules! clone_fields {
 ///
 /// The meanings of `PartialOrd` and `Ord` are reversed so as to turn the heap used in
 /// `KMerge` into a min-heap.
+#[derive(Debug)]
 struct HeadTail<I>
     where I: Iterator
 {
@@ -116,6 +118,13 @@ pub struct KMerge<I>
     heap: Vec<HeadTail<I>>,
 }
 
+impl<I> fmt::Debug for KMerge<I>
+    where I: Iterator + fmt::Debug,
+          I::Item: fmt::Debug,
+{
+    debug_fmt_fields!(KMerge, heap);
+}
+
 /// Create an iterator that merges elements of the contained iterators using
 /// the ordering function.
 ///
@@ -190,6 +199,13 @@ pub struct KMergeBy<I, F>
 {
     heap: Vec<HeadTail<I>>,
     less_than: F,
+}
+
+impl<I, F> fmt::Debug for KMergeBy<I, F>
+    where I: Iterator + fmt::Debug,
+          I::Item: fmt::Debug,
+{
+    debug_fmt_fields!(KMergeBy, heap);
 }
 
 /// Create an iterator that merges elements of the contained iterators.

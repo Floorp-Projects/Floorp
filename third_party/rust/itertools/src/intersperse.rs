@@ -11,6 +11,7 @@ use super::size_hint;
 ///
 /// See [`.intersperse()`](../trait.Itertools.html#method.intersperse) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Debug)]
 pub struct Intersperse<I>
     where I: Iterator
 {
