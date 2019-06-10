@@ -319,6 +319,8 @@ pref(gfx.font_rendering.graphite.enabled,true) == glyph-decomposition-graphite.h
 
 == auto-hyphenation-transformed-1.html auto-hyphenation-transformed-1-ref.html
 
+== hyphenation-caps-1.html hyphenation-caps-1-ref.html
+
 == hyphenation-control-1.html hyphenation-control-1-ref.html
 == hyphenation-control-2.html hyphenation-control-2-ref.html
 == hyphenation-control-3.html hyphenation-control-3-ref.html
