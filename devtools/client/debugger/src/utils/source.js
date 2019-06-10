@@ -367,9 +367,9 @@ export function getMode(
     }
   }
 
-  // if the url ends with .marko we set the name to Javascript so
-  // syntax highlighting works for marko too
-  if (url && url.match(/\.marko$/i)) {
+  // if the url ends with .marko or .es6 we set the name to Javascript so
+  // syntax highlighting works for these file extensions too
+  if (url && url.match(/\.marko|\.es6$/i)) {
     return { name: "javascript" };
   }
 
