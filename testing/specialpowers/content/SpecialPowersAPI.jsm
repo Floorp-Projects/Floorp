@@ -41,21 +41,6 @@ function bindDOMWindowUtils(aWindow) {
   return aWindow && WrapPrivileged.wrap(aWindow.windowUtils);
 }
 
-function SpecialPowersAPI() {
-  this._consoleListeners = [];
-  this._encounteredCrashDumpFiles = [];
-  this._unexpectedCrashDumpFiles = { };
-  this._crashDumpDir = null;
-  this._mfl = null;
-  this._prefEnvUndoStack = [];
-  this._pendingPrefs = [];
-  this._applyingPrefs = false;
-  this._permissionsUndoStack = [];
-  this._pendingPermissions = [];
-  this._applyingPermissions = false;
-  this._observingPermissions = false;
-}
-
 
 // SPConsoleListener reflects nsIConsoleMessage objects into JS in a
 // tidy, XPCOM-hiding way.  Messages that are nsIScriptError objects
@@ -128,7 +113,25 @@ SPConsoleListener.prototype = {
                                           Ci.nsIObserver]),
 };
 
-SpecialPowersAPI.prototype = {
+class SpecialPowersAPI {
+  constructor() {
+    this._consoleListeners = [];
+    this._encounteredCrashDumpFiles = [];
+    this._unexpectedCrashDumpFiles = { };
+    this._crashDumpDir = null;
+    this._mfl = null;
+    this._applyingPrefs = false;
+    this._applyingPermissions = false;
+    this._observingPermissions = false;
+    this._asyncObservers = new WeakMap();
+    this._xpcomabi = null;
+    this._os = null;
+    this._pu = null;
+
+
+    this._nextExtensionID = 0;
+    this._extensionListeners = null;
+  }
 
   /*
    * Privileged object wrapping API
@@ -158,9 +161,9 @@ SpecialPowersAPI.prototype = {
    *    properties. This is explained in a comment in the wrapper code above,
    *    and shouldn't be a problem.
    */
-  wrap(obj) { return WrapPrivileged.wrap(obj); },
-  unwrap(obj) { return WrapPrivileged.unwrap(obj); },
-  isWrapper(val) { return WrapPrivileged.isWrapper(val); },
+  wrap(obj) { return WrapPrivileged.wrap(obj); }
+  unwrap(obj) { return WrapPrivileged.unwrap(obj); }
+  isWrapper(val) { return WrapPrivileged.isWrapper(val); }
 
   /*
    * When content needs to pass a callback or a callback object to an API
@@ -169,8 +172,8 @@ SpecialPowersAPI.prototype = {
    * need a layer to wrap the values in SpecialPowers wrappers before they ever
    * reach content.
    */
-  wrapCallback(func) { return WrapPrivileged.wrapCallback(func); },
-  wrapCallbackObject(obj) { return WrapPrivileged.wrapCallbackObject(obj); },
+  wrapCallback(func) { return WrapPrivileged.wrapCallback(func); }
+  wrapCallbackObject(obj) { return WrapPrivileged.wrapCallbackObject(obj); }
 
   /*
    * Used for assigning a property to a SpecialPowers wrapper, without unwrapping
@@ -182,14 +185,14 @@ SpecialPowersAPI.prototype = {
 
     obj = WrapPrivileged.unwrap(obj);
     return Reflect.set(obj, prop, val);
-  },
+  }
 
   /*
    * Create blank privileged objects to use as out-params for privileged functions.
    */
   createBlankObject() {
     return {};
-  },
+  }
 
   /*
    * Because SpecialPowers wrappers don't preserve identity, comparing with ==
@@ -200,19 +203,19 @@ SpecialPowersAPI.prototype = {
    */
   compare(a, b) {
     return WrapPrivileged.unwrap(a) === WrapPrivileged.unwrap(b);
-  },
+  }
 
   get MockFilePicker() {
     return MockFilePicker;
-  },
+  }
 
   get MockColorPicker() {
     return MockColorPicker;
-  },
+  }
 
   get MockPermissionPrompt() {
     return MockPermissionPrompt;
-  },
+  }
 
   /*
    * Load a privileged script that runs same-process. This is different from
@@ -234,7 +237,7 @@ SpecialPowersAPI.prototype = {
     }
 
     return mc.port2;
-  },
+  }
 
   loadChromeScript(urlOrFunction, sandboxOptions) {
     // Create a unique id for this chrome script
@@ -357,40 +360,40 @@ SpecialPowersAPI.prototype = {
     };
 
     return this.wrap(chromeScript);
-  },
+  }
 
   importInMainProcess(importString) {
     var message = this._sendSyncMessage("SPImportInMainProcess", importString)[0];
     if (message.hadError) {
       throw new Error("SpecialPowers.importInMainProcess failed with error " + message.errorMessage);
     }
-  },
+  }
 
   get Services() {
     return WrapPrivileged.wrap(Services);
-  },
+  }
 
   /*
    * A getter for the privileged Components object we have.
    */
   getFullComponents() {
     return Components;
-  },
+  }
 
   /*
    * Convenient shortcuts to the standard Components abbreviations.
    */
-  get Cc() { return WrapPrivileged.wrap(this.getFullComponents().classes); },
-  get Ci() { return WrapPrivileged.wrap(this.getFullComponents().interfaces); },
-  get Cu() { return WrapPrivileged.wrap(this.getFullComponents().utils); },
-  get Cr() { return WrapPrivileged.wrap(this.getFullComponents().results); },
+  get Cc() { return WrapPrivileged.wrap(this.getFullComponents().classes); }
+  get Ci() { return WrapPrivileged.wrap(this.getFullComponents().interfaces); }
+  get Cu() { return WrapPrivileged.wrap(this.getFullComponents().utils); }
+  get Cr() { return WrapPrivileged.wrap(this.getFullComponents().results); }
 
   getDOMWindowUtils(aWindow) {
     if (aWindow == this.window.get() && this.DOMWindowUtils != null)
       return this.DOMWindowUtils;
 
     return bindDOMWindowUtils(aWindow);
-  },
+  }
 
   /*
    * A method to get a DOMParser that can't parse XUL.
@@ -399,11 +402,11 @@ SpecialPowersAPI.prototype = {
     // If we create it with a system subject principal (so it gets a
     // nullprincipal), it won't be able to parse XUL by default.
     return WrapPrivileged.wrap(new DOMParser());
-  },
+  }
 
-  get InspectorUtils() { return WrapPrivileged.wrap(InspectorUtils); },
+  get InspectorUtils() { return WrapPrivileged.wrap(InspectorUtils); }
 
-  get PromiseDebugging() { return WrapPrivileged.wrap(PromiseDebugging); },
+  get PromiseDebugging() { return WrapPrivileged.wrap(PromiseDebugging); }
 
   waitForCrashes(aExpectingProcessCrash) {
     return new Promise((resolve, reject) => {
@@ -428,7 +431,7 @@ SpecialPowersAPI.prototype = {
         crashIds,
       });
     });
-  },
+  }
 
   removeExpectedCrashDumpFiles(aExpectingProcessCrash) {
     var success = true;
@@ -443,7 +446,7 @@ SpecialPowersAPI.prototype = {
     }
     this._encounteredCrashDumpFiles.length = 0;
     return success;
-  },
+  }
 
   findUnexpectedCrashDumpFiles() {
     var self = this;
@@ -456,7 +459,7 @@ SpecialPowersAPI.prototype = {
       self._unexpectedCrashDumpFiles[aFilename] = true;
     });
     return crashDumpFiles;
-  },
+  }
 
   removePendingCrashDumpFiles() {
     var message = {
@@ -464,7 +467,7 @@ SpecialPowersAPI.prototype = {
     };
     var removed = this._sendSyncMessage("SPProcessCrashService", message)[0];
     return removed;
-  },
+  }
 
   _setTimeout(callback) {
     // for mochitest-browser
@@ -473,7 +476,7 @@ SpecialPowersAPI.prototype = {
     // for mochitest-plain
     else
       this.mm.content.setTimeout(callback, 0);
-  },
+  }
 
   _delayCallbackTwice(callback) {
      let delayedCallback = () => {
@@ -487,7 +490,7 @@ SpecialPowersAPI.prototype = {
        delayAgain(delayAgain.bind(this, callback));
      };
      return delayedCallback;
-  },
+  }
 
   /* apply permissions to the system and when the test case is finished (SimpleTest.finish())
      we will revert the permission back to the original.
@@ -595,7 +598,7 @@ SpecialPowersAPI.prototype = {
     } else {
       this._setTimeout(callback);
     }
-  },
+  }
 
   /*
    * This function should be used when specialpowers is in content process but
@@ -620,26 +623,13 @@ SpecialPowersAPI.prototype = {
       "observerTopic": topic,
     };
     this._sendSyncMessage("SPObserverService", msg);
-  },
+  }
 
   permChangedProxy(aMessage) {
     let permission = aMessage.json.permission;
     let aData = aMessage.json.aData;
     this._permissionObserver.observe(permission, aData);
-  },
-
-  permissionObserverProxy: {
-    // 'this' in permChangedObserverProxy is the permChangedObserverProxy
-    // object itself. The '_specialPowersAPI' will be set to the 'SpecialPowersAPI'
-    // object to call the member function in SpecialPowersAPI.
-    _specialPowersAPI: null,
-    observe(aSubject, aTopic, aData) {
-      if (aTopic == "perm-changed") {
-        var permission = aSubject.QueryInterface(Ci.nsIPermission);
-        this._specialPowersAPI._permissionObserver.observe(permission, aData);
-      }
-    },
-  },
+  }
 
   popPermissions(callback) {
     if (this._permissionsUndoStack.length > 0) {
@@ -655,62 +645,20 @@ SpecialPowersAPI.prototype = {
       }
       this._setTimeout(callback);
     }
-  },
+  }
 
   flushPermissions(callback) {
     while (this._permissionsUndoStack.length > 1)
       this.popPermissions(null);
 
     this.popPermissions(callback);
-  },
+  }
 
 
   setTestPluginEnabledState(newEnabledState, pluginName) {
     return this._sendSyncMessage("SPSetTestPluginEnabledState",
                                  { newEnabledState, pluginName })[0];
-  },
-
-
-  _permissionObserver: {
-    _self: null,
-    _lastPermission: {},
-    _callBack: null,
-    _nextCallback: null,
-    _obsDataMap: {
-      "deleted": "remove",
-      "added": "add",
-    },
-    observe(permission, aData) {
-      if (this._self._applyingPermissions) {
-        if (permission.type == this._lastPermission.type) {
-          this._self._setTimeout(this._callback);
-          this._self._setTimeout(this._nextCallback);
-          this._callback = null;
-          this._nextCallback = null;
-        }
-      } else {
-        var found = false;
-        for (var i = 0; !found && i < this._self._permissionsUndoStack.length; i++) {
-          var undos = this._self._permissionsUndoStack[i];
-          for (var j = 0; j < undos.length; j++) {
-            var undo = undos[j];
-            if (undo.op == this._obsDataMap[aData] &&
-                undo.type == permission.type) {
-              // Remove this undo item if it has been done by others(not
-              // specialpowers itself.)
-              undos.splice(j, 1);
-              found = true;
-              break;
-            }
-          }
-          if (!undos.length) {
-            // Remove the empty row in permissionsUndoStack
-            this._self._permissionsUndoStack.splice(i, 1);
-          }
-        }
-      }
-    },
-  },
+  }
 
   /*
     Iterate through one atomic set of permissions actions and perform allow/deny as appropriate.
@@ -742,7 +690,7 @@ SpecialPowersAPI.prototype = {
       var perm = pendingActions[idx];
       this._sendSyncMessage("SPPermissionManager", perm)[0];
     }
-  },
+  }
 
   /**
    * Helper to resolve a promise by calling the resolve function and call an
@@ -754,7 +702,7 @@ SpecialPowersAPI.prototype = {
     if (callback) {
       callback();
     }
-  },
+  }
 
   /**
    * Take in a list of pref changes to make, then invokes |callback| and resolves
@@ -871,7 +819,7 @@ SpecialPowersAPI.prototype = {
         this._setTimeout(done);
       }
     });
-  },
+  }
 
   popPrefEnv(callback = null) {
     return new Promise(resolve => {
@@ -886,7 +834,7 @@ SpecialPowersAPI.prototype = {
         this._setTimeout(done);
       }
     });
-  },
+  }
 
   flushPrefEnv(callback = null) {
     while (this._prefEnvUndoStack.length > 1)
@@ -896,7 +844,7 @@ SpecialPowersAPI.prototype = {
       let done = this._resolveAndCallOptionalCallback.bind(this, resolve, callback);
       this.popPrefEnv(done);
     });
-  },
+  }
 
   _isPrefActionNeeded(prefAction) {
     if (prefAction.action === "clear") {
@@ -912,7 +860,7 @@ SpecialPowersAPI.prototype = {
     }
     // Only "clear" and "set" actions are supported.
     return false;
-  },
+  }
 
   /*
     Iterate through one atomic set of pref actions and perform sets/clears as appropriate.
@@ -966,29 +914,18 @@ SpecialPowersAPI.prototype = {
         this.clearUserPref(pref.name);
       }
     }
-  },
-
-  _proxiedObservers: {
-    "specialpowers-http-notify-request": function(aMessage) {
-      let uri = aMessage.json.uri;
-      Services.obs.notifyObservers(null, "specialpowers-http-notify-request", uri);
-    },
-
-    "specialpowers-service-worker-shutdown": function(aMessage) {
-      Services.obs.notifyObservers(null, "specialpowers-service-worker-shutdown");
-    },
-  },
+  }
 
   _addObserverProxy(notification) {
     if (notification in this._proxiedObservers) {
       this._addMessageListener(notification, this._proxiedObservers[notification]);
     }
-  },
+  }
   _removeObserverProxy(notification) {
     if (notification in this._proxiedObservers) {
       this._removeMessageListener(notification, this._proxiedObservers[notification]);
     }
-  },
+  }
 
   addObserver(obs, notification, weak) {
     this._addObserverProxy(notification);
@@ -996,14 +933,14 @@ SpecialPowersAPI.prototype = {
     if (typeof obs == "object" && obs.observe.name != "SpecialPowersCallbackWrapper")
       obs.observe = WrapPrivileged.wrapCallback(obs.observe);
     Services.obs.addObserver(obs, notification, weak);
-  },
+  }
   removeObserver(obs, notification) {
     this._removeObserverProxy(notification);
     Services.obs.removeObserver(Cu.waiveXrays(obs), notification);
-  },
+  }
   notifyObservers(subject, topic, data) {
     Services.obs.notifyObservers(subject, topic, data);
-  },
+  }
 
   /**
    * An async observer is useful if you're listening for a
@@ -1014,7 +951,6 @@ SpecialPowersAPI.prototype = {
    * from a runnabled labeled by the SystemGroup. An async observer
    * avoids this problem.
    */
-  _asyncObservers: new WeakMap(),
   addAsyncObserver(obs, notification, weak) {
     obs = Cu.waiveXrays(obs);
     if (typeof obs == "object" && obs.observe.name != "SpecialPowersCallbackWrapper") {
@@ -1031,24 +967,24 @@ SpecialPowersAPI.prototype = {
     };
     this._asyncObservers.set(obs, asyncObs);
     Services.obs.addObserver(asyncObs, notification, weak);
-  },
+  }
   removeAsyncObserver(obs, notification) {
     let asyncObs = this._asyncObservers.get(Cu.waiveXrays(obs));
     Services.obs.removeObserver(asyncObs, notification);
-  },
+  }
 
   can_QI(obj) {
     return obj.QueryInterface !== undefined;
-  },
+  }
   do_QueryInterface(obj, iface) {
     return obj.QueryInterface(Ci[iface]);
-  },
+  }
 
   call_Instanceof(obj1, obj2) {
      obj1 = WrapPrivileged.unwrap(obj1);
      obj2 = WrapPrivileged.unwrap(obj2);
      return obj1 instanceof obj2;
-  },
+  }
 
   // Returns a privileged getter from an object. GetOwnPropertyDescriptor does
   // not work here because xray wrappers don't properly implement it.
@@ -1059,35 +995,35 @@ SpecialPowersAPI.prototype = {
   // call it without paradoxically spawning the plugin.
   do_lookupGetter(obj, name) {
     return Object.prototype.__lookupGetter__.call(obj, name);
-  },
+  }
 
   // Mimic the get*Pref API
   getBoolPref(prefName, defaultValue) {
     return this._getPref(prefName, "BOOL", { defaultValue });
-  },
+  }
   getIntPref(prefName, defaultValue) {
     return this._getPref(prefName, "INT", { defaultValue });
-  },
+  }
   getCharPref(prefName, defaultValue) {
     return this._getPref(prefName, "CHAR", { defaultValue });
-  },
+  }
   getComplexValue(prefName, iid) {
     return this._getPref(prefName, "COMPLEX", { iid });
-  },
+  }
 
   // Mimic the set*Pref API
   setBoolPref(prefName, value) {
     return this._setPref(prefName, "BOOL", value);
-  },
+  }
   setIntPref(prefName, value) {
     return this._setPref(prefName, "INT", value);
-  },
+  }
   setCharPref(prefName, value) {
     return this._setPref(prefName, "CHAR", value);
-  },
+  }
   setComplexValue(prefName, iid, value) {
     return this._setPref(prefName, "COMPLEX", value, iid);
-  },
+  }
 
   // Mimic the clearUserPref API
   clearUserPref(prefName) {
@@ -1097,7 +1033,7 @@ SpecialPowersAPI.prototype = {
       prefType: "",
     };
     this._sendSyncMessage("SPPrefService", msg);
-  },
+  }
 
   // Private pref functions to communicate to chrome
   _getPref(prefName, prefType, { defaultValue, iid }) {
@@ -1113,7 +1049,7 @@ SpecialPowersAPI.prototype = {
       throw new Error(`Error getting pref '${prefName}'`);
     }
     return val[0];
-  },
+  }
   _setPref(prefName, prefType, prefValue, iid) {
     let msg = {
       op: "set",
@@ -1123,62 +1059,62 @@ SpecialPowersAPI.prototype = {
       prefValue,
     };
     return this._sendSyncMessage("SPPrefService", msg)[0];
-  },
+  }
 
   _getDocShell(window) {
     return window.docShell;
-  },
+  }
   _getMUDV(window) {
     return this._getDocShell(window).contentViewer;
-  },
+  }
   // XXX: these APIs really ought to be removed, they're not e10s-safe.
   // (also they're pretty Firefox-specific)
   _getTopChromeWindow(window) {
     return window.docShell.rootTreeItem.domWindow
                  .QueryInterface(Ci.nsIDOMChromeWindow);
-  },
+  }
   _getAutoCompletePopup(window) {
     return this._getTopChromeWindow(window).document
                                            .getElementById("PopupAutoComplete");
-  },
+  }
   addAutoCompletePopupEventListener(window, eventname, listener) {
     this._getAutoCompletePopup(window).addEventListener(eventname,
                                                         listener);
-  },
+  }
   removeAutoCompletePopupEventListener(window, eventname, listener) {
     this._getAutoCompletePopup(window).removeEventListener(eventname,
                                                            listener);
-  },
+  }
   get formHistory() {
     let tmp = {};
     ChromeUtils.import("resource://gre/modules/FormHistory.jsm", tmp);
     return WrapPrivileged.wrap(tmp.FormHistory);
-  },
+  }
   getFormFillController(window) {
     return Cc["@mozilla.org/satchel/form-fill-controller;1"]
              .getService(Ci.nsIFormFillController);
-  },
+  }
   attachFormFillControllerTo(window) {
     this.getFormFillController()
         .attachPopupElementToBrowser(this._getDocShell(window),
                                      this._getAutoCompletePopup(window));
-  },
+  }
   detachFormFillControllerFrom(window) {
     this.getFormFillController().detachFromBrowser(this._getDocShell(window));
-  },
+  }
   isBackButtonEnabled(window) {
     return !this._getTopChromeWindow(window).document
                                       .getElementById("Browser:Back")
                                       .hasAttribute("disabled");
-  },
+  }
   // XXX end of problematic APIs
 
   addChromeEventListener(type, listener, capture, allowUntrusted) {
     this.mm.addEventListener(type, listener, capture, allowUntrusted);
-  },
+  }
   removeChromeEventListener(type, listener, capture) {
     this.mm.removeEventListener(type, listener, capture);
-  },
+  }
 
   // Note: each call to registerConsoleListener MUST be paired with a
   // call to postConsoleSentinel; when the callback receives the
@@ -1192,43 +1128,43 @@ SpecialPowersAPI.prototype = {
 
     // listen for dom/console events as well
     Services.obs.addObserver(listener, "console-api-log-event");
-  },
+  }
   postConsoleSentinel() {
     Services.console.logStringMessage("SENTINEL");
-  },
+  }
   resetConsole() {
     Services.console.reset();
-  },
+  }
 
   getFullZoom(window) {
     return this._getMUDV(window).fullZoom;
-  },
+  }
   getDeviceFullZoom(window) {
     return this._getMUDV(window).deviceFullZoom;
-  },
+  }
   setFullZoom(window, zoom) {
     this._getMUDV(window).fullZoom = zoom;
-  },
+  }
   getTextZoom(window) {
     return this._getMUDV(window).textZoom;
-  },
+  }
   setTextZoom(window, zoom) {
     this._getMUDV(window).textZoom = zoom;
-  },
+  }
 
   getOverrideDPPX(window) {
     return this._getMUDV(window).overrideDPPX;
-  },
+  }
   setOverrideDPPX(window, dppx) {
     this._getMUDV(window).overrideDPPX = dppx;
-  },
+  }
 
   emulateMedium(window, mediaType) {
     this._getMUDV(window).emulateMedium(mediaType);
-  },
+  }
   stopEmulatingMedium(window) {
     this._getMUDV(window).stopEmulatingMedium();
-  },
+  }
 
   snapshotWindowWithOptions(win, rect, bgcolor, options) {
     var el = this.window.get().document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
@@ -1257,40 +1193,40 @@ SpecialPowersAPI.prototype = {
                    bgcolor,
                    flags);
     return el;
-  },
+  }
 
   snapshotWindow(win, withCaret, rect, bgcolor) {
     return this.snapshotWindowWithOptions(win, rect, bgcolor,
                                           { DRAWWINDOW_DRAW_CARET: withCaret });
-  },
+  }
 
   snapshotRect(win, rect, bgcolor) {
     return this.snapshotWindowWithOptions(win, rect, bgcolor);
-  },
+  }
 
   gc() {
     this.DOMWindowUtils.garbageCollect();
-  },
+  }
 
   forceGC() {
     Cu.forceGC();
-  },
+  }
 
   forceShrinkingGC() {
     Cu.forceShrinkingGC();
-  },
+  }
 
   forceCC() {
     Cu.forceCC();
-  },
+  }
 
   finishCC() {
     Cu.finishCC();
-  },
+  }
 
   ccSlice(budget) {
     Cu.ccSlice(budget);
-  },
+  }
 
   // Due to various dependencies between JS objects and C++ objects, an ordinary
   // forceGC doesn't necessarily clear all unused objects, thus the GC and CC
@@ -1312,11 +1248,11 @@ SpecialPowersAPI.prototype = {
     }
 
     Cu.schedulePreciseGC(genGCCallback(callback));
-  },
+  }
 
   nondeterministicGetWeakMapKeys(m) {
     return ChromeUtils.nondeterministicGetWeakMapKeys(m);
-  },
+  }
 
   getMemoryReports() {
     try {
@@ -1324,20 +1260,18 @@ SpecialPowersAPI.prototype = {
         .getService(Ci.nsIMemoryReporterManager)
         .getReports(() => {}, null, () => {}, null, false);
     } catch (e) { }
-  },
+  }
 
   setGCZeal(zeal) {
     Cu.setGCZeal(zeal);
-  },
+  }
 
   isMainProcess() {
     try {
       return Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
     } catch (e) { }
     return true;
-  },
-
-  _xpcomabi: null,
+  }
 
   get XPCOMABI() {
     if (this._xpcomabi != null)
@@ -1347,7 +1281,7 @@ SpecialPowersAPI.prototype = {
 
     this._xpcomabi = xulRuntime.XPCOMABI;
     return this._xpcomabi;
-  },
+  }
 
   // The optional aWin parameter allows the caller to specify a given window in
   // whose scope the runnable should be dispatched. If aFun throws, the
@@ -1359,9 +1293,7 @@ SpecialPowersAPI.prototype = {
         runnable = Cu.createObjectIn(aWin);
     runnable.run = aFun;
     Cu.dispatch(runnable, aWin);
-  },
-
-  _os: null,
+  }
 
   get OS() {
     if (this._os != null)
@@ -1369,14 +1301,14 @@ SpecialPowersAPI.prototype = {
 
     this._os = Services.appinfo.OS;
     return this._os;
-  },
+  }
 
   addSystemEventListener(target, type, listener, useCapture) {
     Services.els.addSystemEventListener(target, type, listener, useCapture);
-  },
+  }
   removeSystemEventListener(target, type, listener, useCapture) {
     Services.els.removeSystemEventListener(target, type, listener, useCapture);
-  },
+  }
 
   // helper method to check if the event is consumed by either default group's
   // event listener or system group's event listener.
@@ -1384,7 +1316,7 @@ SpecialPowersAPI.prototype = {
     // FYI: Event.defaultPrevented returns false in content context if the
     //      event is consumed only by system group's event listeners.
     return event.defaultPrevented;
-  },
+  }
 
   getDOMRequestService() {
     var serv = Services.DOMRequest;
@@ -1396,39 +1328,39 @@ SpecialPowersAPI.prototype = {
       res[prop] = function() { return serv[prop].apply(serv, arguments); };
     }
     return res;
-  },
+  }
 
   setLogFile(path) {
     this._mfl = new MozillaFileLogger(path);
-  },
+  }
 
   log(data) {
     this._mfl.log(data);
-  },
+  }
 
   closeLogFile() {
     this._mfl.close();
-  },
+  }
 
   addCategoryEntry(category, entry, value, persists, replace) {
     Services.catMan
       .addCategoryEntry(category, entry, value, persists, replace);
-  },
+  }
 
   deleteCategoryEntry(category, entry, persists) {
     Services.catMan
       .deleteCategoryEntry(category, entry, persists);
-  },
+  }
   openDialog(win, args) {
     return win.openDialog.apply(win, args);
-  },
+  }
   // This is a blocking call which creates and spins a native event loop
   spinEventLoop(win) {
     // simply do a sync XHR back to our windows location.
     var syncXHR = new win.XMLHttpRequest();
     syncXHR.open("GET", win.location, false);
     syncXHR.send();
-  },
+  }
 
   // :jdm gets credit for this.  ex: getPrivilegedProps(window, 'location.href');
   getPrivilegedProps(obj, props) {
@@ -1442,25 +1374,25 @@ SpecialPowersAPI.prototype = {
       }
     }
     return obj;
-  },
+  }
 
   getFocusedElementForWindow(targetWindow, aDeep) {
     var outParam = {};
     Services.focus.getFocusedElementForWindow(targetWindow, aDeep, outParam);
     return outParam.value;
-  },
+  }
 
   get focusManager() {
     return Services.focus;
-  },
+  }
 
   activeWindow() {
     return Services.focus.activeWindow;
-  },
+  }
 
   focusedWindow() {
     return Services.focus.focusedWindow;
-  },
+  }
 
   focus(aWindow) {
     // This is called inside TestRunner._makeIframe without aWindow, because of assertions in oop mochitests
@@ -1479,7 +1411,7 @@ SpecialPowersAPI.prototype = {
        */
     }
     mm.sendAsyncMessage("SpecialPowers.Focus", {});
-  },
+  }
 
   getClipboardData(flavor, whichClipboard) {
     if (whichClipboard === undefined)
@@ -1500,17 +1432,17 @@ SpecialPowersAPI.prototype = {
       return "";
 
     return data.QueryInterface(Ci.nsISupportsString).data;
-  },
+  }
 
   clipboardCopyString(str) {
     Cc["@mozilla.org/widget/clipboardhelper;1"].
       getService(Ci.nsIClipboardHelper).
       copyString(str);
-  },
+  }
 
   supportsSelectionClipboard() {
     return Services.clipboard.supportsSelectionClipboard();
-  },
+  }
 
   swapFactoryRegistration(cid, contractID, newFactory) {
     newFactory = Cu.waiveXrays(newFactory);
@@ -1534,35 +1466,35 @@ SpecialPowersAPI.prototype = {
                                        contractID,
                                        newFactory);
     return {"originalCID": currentCID};
-  },
+  }
 
   _getElement(aWindow, id) {
     return ((typeof(id) == "string") ?
         aWindow.document.getElementById(id) : id);
-  },
+  }
 
   dispatchEvent(aWindow, target, event) {
     var el = this._getElement(aWindow, target);
     return el.dispatchEvent(event);
-  },
+  }
 
   get isDebugBuild() {
     delete SpecialPowersAPI.prototype.isDebugBuild;
 
     var debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
     return SpecialPowersAPI.prototype.isDebugBuild = debug.isDebugBuild;
-  },
+  }
   assertionCount() {
     var debugsvc = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
     return debugsvc.assertionCount;
-  },
+  }
 
   /**
    * Get the message manager associated with an <iframe mozbrowser>.
    */
   getBrowserFrameMessageManager(aFrameElement) {
     return this.wrap(aFrameElement.frameLoader.messageManager);
-  },
+  }
 
   _getPrincipalFromArg(arg) {
     let principal;
@@ -1583,7 +1515,7 @@ SpecialPowersAPI.prototype = {
     }
 
     return principal;
-  },
+  }
 
   addPermission(type, allow, arg, expireType, expireTime) {
     let principal = this._getPrincipalFromArg(arg);
@@ -1609,7 +1541,7 @@ SpecialPowersAPI.prototype = {
     };
 
     this._sendSyncMessage("SPPermissionManager", msg);
-  },
+  }
 
   removePermission(type, arg) {
     let principal = this._getPrincipalFromArg(arg);
@@ -1624,7 +1556,7 @@ SpecialPowersAPI.prototype = {
     };
 
     this._sendSyncMessage("SPPermissionManager", msg);
-  },
+  }
 
   hasPermission(type, arg) {
     let principal = this._getPrincipalFromArg(arg);
@@ -1639,7 +1571,7 @@ SpecialPowersAPI.prototype = {
     };
 
     return this._sendSyncMessage("SPPermissionManager", msg)[0];
-  },
+  }
 
   testPermission(type, value, arg) {
     let principal = this._getPrincipalFromArg(arg);
@@ -1654,11 +1586,11 @@ SpecialPowersAPI.prototype = {
       "principal": principal,
     };
     return this._sendSyncMessage("SPPermissionManager", msg)[0];
-  },
+  }
 
   isContentWindowPrivate(win) {
     return PrivateBrowsingUtils.isContentWindowPrivate(win);
-  },
+  }
 
   notifyObserversInParentProcess(subject, topic, data) {
     if (subject) {
@@ -1674,19 +1606,19 @@ SpecialPowersAPI.prototype = {
       "observerData": data,
     };
     this._sendSyncMessage("SPObserverService", msg);
-  },
+  }
 
   removeAllServiceWorkerData() {
     return WrapPrivileged.wrap(this._removeServiceWorkerData("SPRemoveAllServiceWorkers"));
-  },
+  }
 
   removeServiceWorkerDataForExampleDomain() {
     return WrapPrivileged.wrap(this._removeServiceWorkerData("SPRemoveServiceWorkerDataForExampleDomain"));
-  },
+  }
 
   cleanUpSTSData(origin, flags) {
     return this._sendSyncMessage("SPCleanUpSTSData", {origin, flags: flags || 0});
-  },
+  }
 
   requestDumpCoverageCounters(cb) {
     // We want to avoid a roundtrip between child and parent.
@@ -1703,7 +1635,7 @@ SpecialPowersAPI.prototype = {
       this._addMessageListener("SPRequestDumpCoverageCounters", messageListener);
       this._sendAsyncMessage("SPRequestDumpCoverageCounters", {});
     });
-  },
+  }
 
   requestResetCoverageCounters(cb) {
     // We want to avoid a roundtrip between child and parent.
@@ -1720,10 +1652,7 @@ SpecialPowersAPI.prototype = {
       this._addMessageListener("SPRequestResetCoverageCounters", messageListener);
       this._sendAsyncMessage("SPRequestResetCoverageCounters", {});
     });
-  },
-
-  _nextExtensionID: 0,
-  _extensionListeners: null,
+  }
 
   loadExtension(ext, handler) {
     if (this._extensionListeners == null) {
@@ -1808,20 +1737,20 @@ SpecialPowersAPI.prototype = {
 
     this._extensionListeners.add(listener);
     return extension;
-  },
+  }
 
   invalidateExtensionStorageCache() {
     this.notifyObserversInParentProcess(null, "extension-invalidate-storage-cache", "");
-  },
+  }
 
   allowMedia(window, enable) {
     this._getDocShell(window).allowMedia = enable;
-  },
+  }
 
   createChromeCache(name, url) {
     let principal = this._getPrincipalFromArg(url);
     return WrapPrivileged.wrap(new this.mm.content.CacheStorage(name, principal));
-  },
+  }
 
   loadChannelAndReturnStatus(url, loadUsingSystemPrincipal) {
     const BinaryInputStream =
@@ -1858,9 +1787,7 @@ SpecialPowersAPI.prototype = {
       channel.documentURI = uri;
       channel.asyncOpen(listener);
     });
-  },
-
-  _pu: null,
+  }
 
   get ParserUtils() {
     if (this._pu != null)
@@ -1883,7 +1810,7 @@ SpecialPowersAPI.prototype = {
       },
     };
     return this._pu;
-  },
+  }
 
   createDOMWalker(node, showAnonymousContent) {
     node = WrapPrivileged.unwrap(node);
@@ -1900,22 +1827,22 @@ SpecialPowersAPI.prototype = {
         return WrapPrivileged.wrap(walker.lastChild());
       },
     };
-  },
+  }
 
   observeMutationEvents(mo, node, nativeAnonymousChildList, subtree) {
     WrapPrivileged.unwrap(mo).observe(WrapPrivileged.unwrap(node),
                                       {nativeAnonymousChildList, subtree});
-  },
+  }
 
   doCommand(window, cmd) {
     return this._getDocShell(window).doCommand(cmd);
-  },
+  }
 
   setCommandNode(window, node) {
     return this._getDocShell(window).contentViewer
                .QueryInterface(Ci.nsIContentViewerEdit)
                .setCommandNode(node);
-  },
+  }
 
   /* Bug 1339006 Runnables of nsIURIClassifier.classify may be labeled by
    * SystemGroup, but some test cases may run as web content. That would assert
@@ -1940,7 +1867,7 @@ SpecialPowersAPI.prototype = {
 
     return classifierService.classify(WrapPrivileged.unwrap(principal), eventTarget,
                                       wrapCallback);
-  },
+  }
 
   // TODO: Bug 1353701 - Supports custom event target for labelling.
   doUrlClassifyLocal(uri, tables, callback) {
@@ -1962,11 +1889,86 @@ SpecialPowersAPI.prototype = {
                                                             [feature],
                                                             Ci.nsIUrlClassifierFeature.blacklist,
                                                             wrapCallback);
+  }
+}
+
+SpecialPowersAPI.prototype._proxiedObservers = {
+  "specialpowers-http-notify-request": function(aMessage) {
+    let uri = aMessage.json.uri;
+    Services.obs.notifyObservers(null, "specialpowers-http-notify-request", uri);
   },
 
-  EARLY_BETA_OR_EARLIER: AppConstants.EARLY_BETA_OR_EARLIER,
-
+  "specialpowers-service-worker-shutdown": function(aMessage) {
+    Services.obs.notifyObservers(null, "specialpowers-service-worker-shutdown");
+  },
 };
+
+SpecialPowersAPI.prototype.permissionObserverProxy = {
+  // 'this' in permChangedObserverProxy is the permChangedObserverProxy
+  // object itself. The '_specialPowersAPI' will be set to the 'SpecialPowersAPI'
+  // object to call the member function in SpecialPowersAPI.
+  _specialPowersAPI: null,
+  observe(aSubject, aTopic, aData) {
+    if (aTopic == "perm-changed") {
+      var permission = aSubject.QueryInterface(Ci.nsIPermission);
+      this._specialPowersAPI._permissionObserver.observe(permission, aData);
+    }
+  },
+};
+
+SpecialPowersAPI.prototype._permissionObserver = {
+  _self: null,
+  _lastPermission: {},
+  _callBack: null,
+  _nextCallback: null,
+  _obsDataMap: {
+    "deleted": "remove",
+    "added": "add",
+  },
+  observe(permission, aData) {
+    if (this._self._applyingPermissions) {
+      if (permission.type == this._lastPermission.type) {
+        this._self._setTimeout(this._callback);
+        this._self._setTimeout(this._nextCallback);
+        this._callback = null;
+        this._nextCallback = null;
+      }
+    } else {
+      var found = false;
+      for (var i = 0; !found && i < this._self._permissionsUndoStack.length; i++) {
+        var undos = this._self._permissionsUndoStack[i];
+        for (var j = 0; j < undos.length; j++) {
+          var undo = undos[j];
+          if (undo.op == this._obsDataMap[aData] &&
+              undo.type == permission.type) {
+            // Remove this undo item if it has been done by others(not
+            // specialpowers itself.)
+            undos.splice(j, 1);
+            found = true;
+            break;
+          }
+        }
+        if (!undos.length) {
+          // Remove the empty row in permissionsUndoStack
+          this._self._permissionsUndoStack.splice(i, 1);
+        }
+      }
+    }
+  },
+};
+
+SpecialPowersAPI.prototype.EARLY_BETA_OR_EARLIER = AppConstants.EARLY_BETA_OR_EARLIER;
+
+// Due to an unfortunate accident of history, when this API was
+// subclassed using `Thing.prototype = new SpecialPowersAPI()`, existing
+// code depends on all SpecialPowers instances using the same arrays for
+// these.
+Object.assign(SpecialPowersAPI.prototype, {
+  _prefEnvUndoStack: [],
+  _pendingPrefs: [],
+  _permissionsUndoStack: [],
+  _pendingPermissions: [],
+});
 
 this.SpecialPowersAPI = SpecialPowersAPI;
 this.bindDOMWindowUtils = bindDOMWindowUtils;
