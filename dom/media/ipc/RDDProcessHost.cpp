@@ -146,7 +146,6 @@ void RDDProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(!mRDDChild);
 
   mLaunchPhase = LaunchPhase::Complete;
-  mPrefSerializer = nullptr;
 
   if (aSucceeded) {
     mProcessToken = ++sRDDProcessTokenCounter;
@@ -154,6 +153,12 @@ void RDDProcessHost::InitAfterConnect(bool aSucceeded) {
     DebugOnly<bool> rv =
         mRDDChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
+
+    // Only clear mPrefSerializer in the success case to avoid a
+    // possible race in the case case of a timeout on Windows launch.
+    // See Bug 1555076 comment 7:
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1555076#c7
+    mPrefSerializer = nullptr;
 
     bool startMacSandbox = false;
 
