@@ -623,6 +623,23 @@ class HTMLEditor final : public TextEditor,
                                      uint32_t aOffset, uint32_t aLength);
 
   /**
+   * DeleteParentBlocksIfEmpty() removes parent block elements if they
+   * don't have visible contents.  Note that due performance issue of
+   * WSRunObject, this call may be expensive.  And also note that this
+   * removes a empty block with a transaction.  So, please make sure that
+   * you've already created `AutoPlaceholderBatch`.
+   *
+   * @param aPoint      The point whether this method climbing up the DOM
+   *                    tree to remove empty parent blocks.
+   * @return            NS_OK if one or more empty block parents are deleted.
+   *                    NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND if the point is
+   *                    not in empty block.
+   *                    Or NS_ERROR_* if something unexpected occurs.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  DeleteParentBlocksWithTransactionIfEmpty(const EditorDOMPoint& aPoint);
+
+  /**
    * InsertTextWithTransaction() inserts aStringToInsert at aPointToInsert.
    */
   MOZ_CAN_RUN_SCRIPT
