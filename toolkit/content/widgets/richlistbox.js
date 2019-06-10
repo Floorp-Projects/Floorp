@@ -3,8 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// This is loaded into chrome windows with the subscript loader. If you need to
-// define globals, wrap in a block to prevent leaking onto `window`.
+// This is loaded into all XUL windows. Wrap in a block to prevent
+// leaking to window scope.
+{
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 /**
  * XUL:richlistbox element.
@@ -862,8 +864,9 @@ MozElements.MozRichlistitem = class MozRichlistitem extends MozElements.BaseText
       var control = this.control;
       if (!control || control.disabled)
         return;
-      if ((!event.ctrlKey || (/Mac/.test(navigator.platform) && event.button == 2)) &&
-        !event.shiftKey && !event.metaKey) {
+      if ((!event.ctrlKey || (AppConstants.platform == "macosx" && event.button == 2)) &&
+          !event.shiftKey &&
+          !event.metaKey) {
         if (!this.selected) {
           control.selectItem(this);
         }
@@ -990,4 +993,5 @@ MozXULElement.implementCustomInterface(
 // Remove documentURI check when new about:addons interface is finished, see 1554238.
 if (document.documentURI != "about:addons") {
   customElements.define("richlistitem", MozElements.MozRichlistitem);
+}
 }

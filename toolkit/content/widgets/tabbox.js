@@ -8,6 +8,7 @@
 // a block to prevent accidentally leaking globals onto `window`.
 {
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 let imports = {};
 ChromeUtils.defineModuleGetter(imports, "ShortcutUtils",
@@ -16,7 +17,7 @@ ChromeUtils.defineModuleGetter(imports, "ShortcutUtils",
 class MozTabbox extends MozXULElement {
   constructor() {
     super();
-    this._handleMetaAltArrows = /Mac/.test(navigator.platform);
+    this._handleMetaAltArrows = AppConstants.platform == "macosx";
     this.disconnectedCallback = this.disconnectedCallback.bind(this);
   }
 
@@ -258,7 +259,7 @@ MozElements.MozTab = class MozTab extends MozElements.BaseText {
     this.addEventListener("mousedown", this);
     this.addEventListener("keydown", this);
 
-    this.arrowKeysShouldWrap = /Mac/.test(navigator.platform);
+    this.arrowKeysShouldWrap = AppConstants.platform == "macosx";
   }
 
   static get inheritedAttributes() {
