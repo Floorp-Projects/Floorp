@@ -3587,7 +3587,8 @@ void Debugger::sweepAll(FreeOp* fop) {
          e.popFront()) {
       GlobalObject* global = e.front().unbarrieredGet();
       if (debuggerDying || IsAboutToBeFinalizedUnbarriered(&global)) {
-        dbg->removeDebuggeeGlobal(fop, e.front().unbarrieredGet(), &e);
+        dbg->removeDebuggeeGlobal(fop, e.front().unbarrieredGet(), &e,
+                                  FromSweep::Yes);
       }
     }
 
@@ -3604,7 +3605,8 @@ void Debugger::detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global) {
   const GlobalObject::DebuggerVector* debuggers = global->getDebuggers();
   MOZ_ASSERT(!debuggers->empty());
   while (!debuggers->empty()) {
-    debuggers->back()->removeDebuggeeGlobal(fop, global, nullptr);
+    debuggers->back()->removeDebuggeeGlobal(fop, global, nullptr,
+                                            FromSweep::No);
   }
 }
 
@@ -4098,7 +4100,8 @@ bool Debugger::removeDebuggee(JSContext* cx, unsigned argc, Value* vp) {
   ExecutionObservableRealms obs(cx);
 
   if (dbg->debuggees.has(global)) {
-    dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), global, nullptr);
+    dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), global, nullptr,
+                              FromSweep::No);
 
     // Only update the realm if there are no Debuggers left, as it's
     // expensive to check if no other Debugger has a live script or frame
@@ -4123,7 +4126,8 @@ bool Debugger::removeAllDebuggees(JSContext* cx, unsigned argc, Value* vp) {
 
   for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
     Rooted<GlobalObject*> global(cx, e.front());
-    dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), global, &e);
+    dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), global, &e,
+                              FromSweep::No);
 
     // See note about adding to the observable set in removeDebuggee.
     if (global->getDebuggers()->empty() && !obs.add(global->realm())) {
@@ -4475,7 +4479,8 @@ static WeakHeapPtr<Debugger*>* findDebuggerInVector(
 }
 
 void Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
-                                    WeakGlobalObjectSet::Enum* debugEnum) {
+                                    WeakGlobalObjectSet::Enum* debugEnum,
+                                    FromSweep fromSweep) {
   // The caller might have found global by enumerating this->debuggees; if
   // so, use HashSet::Enum::removeFront rather than HashSet::remove below,
   // to avoid invalidating the live enumerator.
@@ -4502,13 +4507,17 @@ void Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
 
   // Clear this global's generators from generatorFrames as well.
   //
-  // This method can be called either from script (dbg.removeDebuggee) or
-  // from an awkward time during GC sweeping. In the latter case, skip this
-  // loop to avoid touching dead objects. It's correct because, when we're
-  // called from GC, all `global`'s generators are guaranteed to be dying:
-  // live generators would keep the global alive and we wouldn't be here. GC
-  // will sweep dead keys from the weakmap.
-  if (!global->zone()->isGCSweeping()) {
+  // This method can be called either from script (dbg.removeDebuggee) or during
+  // GC sweeping, because the Debugger, debuggee global, or both are being GC'd.
+  //
+  // When called from script, it's okay to iterate over generatorFrames and
+  // touch its keys and values (even when an incremental GC is in progress).
+  // When called from GC, it's not okay; the keys and values may be dying. But
+  // in that case, we can actually just skip the loop entirely! If the Debugger
+  // is going away, it doesn't care about the state of its generatorFrames
+  // table, and the Debugger.Frame finalizer will fix up the generator observer
+  // counts.
+  if (fromSweep == FromSweep::No) {
     generatorFrames.removeIf([global, fop](JSObject* key, JSObject* value) {
       auto& genObj = key->as<AbstractGeneratorObject>();
       auto& frameObj = value->as<DebuggerFrame>();
@@ -9092,6 +9101,14 @@ bool DebuggerFrame::setGenerator(
     return false;
   }
 
+  {
+    AutoRealm ar(cx, script);
+    if (!script->incrementGeneratorObserverCount(cx)) {
+      js_delete(info);
+      return false;
+    }
+  }
+
   setReservedSlot(GENERATOR_INFO_SLOT, PrivateValue(info));
   return true;
 }
@@ -9102,14 +9119,16 @@ void DebuggerFrame::clearGenerator(FreeOp* fop) {
   }
 
   GeneratorInfo* info = generatorInfo();
-  if (!IsAboutToBeFinalized(&info->generatorScript())) {
+  HeapPtr<JSScript*>& generatorScript = info->generatorScript();
+  if (!IsAboutToBeFinalized(&generatorScript)) {
+    generatorScript->decrementGeneratorObserverCount(fop);
     bool isStepper = !getReservedSlot(ONSTEP_HANDLER_SLOT).isUndefined();
     if (isStepper) {
-      info->generatorScript()->decrementStepperCount(fop);
+      generatorScript->decrementStepperCount(fop);
     }
   }
 
-  fop->delete_(generatorInfo());
+  fop->delete_(info);
   setReservedSlot(GENERATOR_INFO_SLOT, UndefinedValue());
 }
 
