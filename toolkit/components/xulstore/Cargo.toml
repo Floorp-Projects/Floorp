@@ -14,9 +14,8 @@ log = "0.4"
 moz_task = { path = "../../../xpcom/rust/moz_task" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }
 nserror = { path = "../../../xpcom/rust/nserror" }
-rkv = "0.9.6"
+rkv = "0.9.3"
 serde_json = "1"
-tempfile = "3"
 xpcom = { path = "../../../xpcom/rust/xpcom" }
 
 # Get rid of failure's dependency on backtrace. Eventually
