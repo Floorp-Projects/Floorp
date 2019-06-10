@@ -32,6 +32,7 @@ import org.json.JSONObject
 import org.junit.Assert
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
+import java.util.UUID
 import java.util.concurrent.ExecutionException
 
 /**
@@ -160,12 +161,18 @@ internal fun getContextWithMockedInfo(): Context {
 }
 
 /**
+ * Represents the Worker status returned by [getWorkerStatus]
+ */
+internal class WorkerStatus(val isEnqueued: Boolean, val workerId: UUID? = null)
+
+/**
  * Helper function to check to see if a worker has been scheduled with the [WorkManager]
  *
  * @param tag a string representing the worker tag
- * @return True if the task found in [WorkManager], false otherwise
+ * @return Pair<Boolean, UUID> first contains True if the task found in [WorkManager], False otherwise
+ *         AND second contains the UUID of the running task so its constraints can be met.
  */
-internal fun isWorkScheduled(tag: String): Boolean {
+internal fun getWorkerStatus(tag: String): WorkerStatus {
     val instance = WorkManager.getInstance()
     val statuses = instance.getWorkInfosByTag(tag)
     try {
@@ -173,7 +180,7 @@ internal fun isWorkScheduled(tag: String): Boolean {
         for (workInfo in workInfoList) {
             val state = workInfo.state
             if ((state === WorkInfo.State.RUNNING) || (state === WorkInfo.State.ENQUEUED)) {
-                return true
+                return WorkerStatus(true, workInfo.id)
             }
         }
     } catch (e: ExecutionException) {
@@ -182,7 +189,7 @@ internal fun isWorkScheduled(tag: String): Boolean {
         // Do nothing but will return false
     }
 
-    return false
+    return WorkerStatus(false, null)
 }
 
 /**
@@ -195,7 +202,7 @@ internal fun waitForEnqueuedWorker(workTag: String, timeoutMillis: Long = 5000) 
     runBlocking {
         withTimeout(timeoutMillis) {
             do {
-                if (isWorkScheduled(workTag)) {
+                if (getWorkerStatus(workTag).isEnqueued) {
                     return@withTimeout
                 }
             } while (true)
@@ -210,12 +217,13 @@ internal fun waitForEnqueuedWorker(workTag: String, timeoutMillis: Long = 5000) 
  */
 internal fun triggerWorkManager() {
     // Check that the work is scheduled
+    val status = getWorkerStatus(PingUploadWorker.PING_WORKER_TAG)
     Assert.assertTrue("A scheduled PingUploadWorker must exist",
-        isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
+        status.isEnqueued)
 
-    // Since WorkManager does not properly run in tests, simulate the work being done
-    // We also assertTrue here to ensure that uploadPings() was successful
-    Assert.assertTrue("Upload Pings must return true", PingUploadWorker.uploadPings())
+    // Trigger WorkManager using TestDriver
+    val workManagerTestInitHelper = WorkManagerTestInitHelper.getTestDriver()
+    workManagerTestInitHelper.setAllConstraintsMet(status.workerId!!)
 }
 
 /**

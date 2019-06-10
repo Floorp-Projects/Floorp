@@ -238,7 +238,7 @@ class GleanTest {
         runBlocking {
             gleanSpy.handleBackgroundEvent()
         }
-        assertFalse(isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
+        assertFalse(getWorkerStatus(PingUploadWorker.PING_WORKER_TAG).isEnqueued)
     }
 
     @Test
@@ -248,7 +248,7 @@ class GleanTest {
         runBlocking {
             Glean.handleBackgroundEvent()
         }
-        assertFalse(isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
+        assertFalse(getWorkerStatus(PingUploadWorker.PING_WORKER_TAG).isEnqueued)
     }
 
     @Test

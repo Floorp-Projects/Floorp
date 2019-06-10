@@ -8,7 +8,7 @@ import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.checkPingSchema
 import mozilla.components.service.glean.getContextWithMockedInfo
 import mozilla.components.service.glean.getMockWebServer
-import mozilla.components.service.glean.isWorkScheduled
+import mozilla.components.service.glean.getWorkerStatus
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.triggerWorkManager
@@ -131,7 +131,7 @@ class PingTypeTest {
         Glean.sendPingsByName(listOf("unknown"))
 
         assertFalse("We shouldn't have any pings scheduled",
-            isWorkScheduled(PingUploadWorker.PING_WORKER_TAG)
+            getWorkerStatus(PingUploadWorker.PING_WORKER_TAG).isEnqueued
         )
     }
 

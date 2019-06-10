@@ -18,7 +18,7 @@ import mozilla.components.service.glean.checkPingSchema
 import mozilla.components.service.glean.triggerWorkManager
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.getMockWebServer
-import mozilla.components.service.glean.isWorkScheduled
+import mozilla.components.service.glean.getWorkerStatus
 import mozilla.components.service.glean.utils.getISOTimeString
 import mozilla.components.service.glean.utils.parseISOTimeString
 import org.json.JSONObject
@@ -429,13 +429,13 @@ class MetricsPingSchedulerTest {
         val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
 
         // No work should be enqueued at the beginning of the test.
-        assertFalse(isWorkScheduled(MetricsPingWorker.TAG))
+        assertFalse(getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
 
         // Manually schedule a collection task for today.
         mps.schedulePingCollection(Calendar.getInstance(), sendTheNextCalendarDay = false)
 
         // We expect the worker to be scheduled.
-        assertTrue(isWorkScheduled(MetricsPingWorker.TAG))
+        assertTrue(getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
     }
 
     // @Test
