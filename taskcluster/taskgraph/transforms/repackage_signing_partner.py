@@ -12,7 +12,6 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.partners import check_if_partners_enabled
 from taskgraph.util.scriptworker import (
-    add_scope_prefix,
     get_signing_cert_scope_per_platform,
     get_worker_type_for_scope,
 )
@@ -83,7 +82,6 @@ def make_repackage_signing_description(config, jobs):
                 ],
                 "formats": ["sha2signcode", "autograph_gpg"]
             }]
-            scopes.append(add_scope_prefix(config, "signing:format:sha2signcode"))
         elif 'mac' in build_platform:
             upstream_artifacts = [{
                 "taskId": {"task-reference": "<repackage>"},

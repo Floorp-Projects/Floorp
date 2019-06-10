@@ -11,7 +11,6 @@ import os
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job, sorted_unique_list
 from taskgraph.util.scriptworker import (
-    add_scope_prefix,
     get_signing_cert_scope_per_platform,
     get_worker_type_for_scope,
 )
@@ -144,11 +143,7 @@ def make_task_description(config, jobs):
             build_platform, is_nightly, config
         )
 
-        scopes = [signing_cert_scope] + list({
-            add_scope_prefix(config, 'signing:format:{}'.format(format))
-            for artifact in upstream_artifacts
-            for format in artifact['formats']
-        })
+        scopes = [signing_cert_scope]
 
         task = {
             'label': label,
