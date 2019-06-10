@@ -15,8 +15,38 @@ var EXPORTED_SYMBOLS = ["SpecialPowersObserver"];
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const CHILD_SCRIPT_API = "resource://specialpowers/specialpowersFrameScript.js";
-const CHILD_LOGGER_SCRIPT = "resource://specialpowers/MozillaLogger.js";
+const MESSAGE_NAMES = [
+  "SPCheckServiceWorkers",
+  "SPChromeScriptMessage",
+  "SPCleanUpSTSData",
+  "SPExtensionMessage",
+  "SPImportInMainProcess",
+  "SPLoadChromeScript",
+  "SPLoadExtension",
+  "SPObserverService",
+  "SPPermissionManager",
+  "SPPingService",
+  "SPPrefService",
+  "SPProcessCrashManagerWait",
+  "SPProcessCrashService",
+  "SPQuotaManager",
+  "SPRemoveAllServiceWorkers",
+  "SPRemoveServiceWorkerDataForExampleDomain",
+  "SPRequestDumpCoverageCounters",
+  "SPRequestResetCoverageCounters",
+  "SPSetTestPluginEnabledState",
+  "SPStartupExtension",
+  "SPUnloadExtension",
+  "SpecialPowers.CreateFiles",
+  "SpecialPowers.Focus",
+  "SpecialPowers.Quit",
+  "SpecialPowers.RemoveFiles",
+];
+
+const FRAME_SCRIPTS = [
+  "resource://specialpowers/specialpowersFrameScript.js",
+  "resource://specialpowers/MozillaLogger.js",
+];
 
 
 // Glue to add in the observer API to this object.  This allows us to share code with chrome tests
@@ -24,7 +54,7 @@ Services.scriptloader.loadSubScript("resource://specialpowers/SpecialPowersObser
 
 /* XPCOM gunk */
 function SpecialPowersObserver() {
-  this._isFrameScriptLoaded = false;
+  this._initialized = false;
   this._messageManager = Services.mm;
   this._serviceWorkerListener = null;
 }
@@ -35,57 +65,35 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
 SpecialPowersObserver.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
 
 SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData) {
-  switch (aTopic) {
-    case "chrome-document-global-created":
-      this._loadFrameScript();
-      break;
-
-    case "http-on-modify-request":
-      if (aSubject instanceof Ci.nsIChannel) {
-        let uri = aSubject.URI.spec;
-        this._sendAsyncMessage("specialpowers-http-notify-request", { uri });
-      }
-      break;
-
-    default:
-      this._observe(aSubject, aTopic, aData);
-      break;
+  if (aTopic == "http-on-modify-request") {
+    if (aSubject instanceof Ci.nsIChannel) {
+      let uri = aSubject.URI.spec;
+      this._sendAsyncMessage("specialpowers-http-notify-request", { uri });
+    }
+  } else {
+    this._observe(aSubject, aTopic, aData);
   }
 };
 
 SpecialPowersObserver.prototype._loadFrameScript = function() {
-  if (!this._isFrameScriptLoaded) {
-    // Register for any messages our API needs us to handle
-    this._messageManager.addMessageListener("SPPrefService", this);
-    this._messageManager.addMessageListener("SPProcessCrashManagerWait", this);
-    this._messageManager.addMessageListener("SPProcessCrashService", this);
-    this._messageManager.addMessageListener("SPPingService", this);
-    this._messageManager.addMessageListener("SpecialPowers.Quit", this);
-    this._messageManager.addMessageListener("SpecialPowers.Focus", this);
-    this._messageManager.addMessageListener("SpecialPowers.CreateFiles", this);
-    this._messageManager.addMessageListener("SpecialPowers.RemoveFiles", this);
-    this._messageManager.addMessageListener("SPPermissionManager", this);
-    this._messageManager.addMessageListener("SPObserverService", this);
-    this._messageManager.addMessageListener("SPLoadChromeScript", this);
-    this._messageManager.addMessageListener("SPImportInMainProcess", this);
-    this._messageManager.addMessageListener("SPChromeScriptMessage", this);
-    this._messageManager.addMessageListener("SPQuotaManager", this);
-    this._messageManager.addMessageListener("SPSetTestPluginEnabledState", this);
-    this._messageManager.addMessageListener("SPLoadExtension", this);
-    this._messageManager.addMessageListener("SPStartupExtension", this);
-    this._messageManager.addMessageListener("SPUnloadExtension", this);
-    this._messageManager.addMessageListener("SPExtensionMessage", this);
-    this._messageManager.addMessageListener("SPCleanUpSTSData", this);
-    this._messageManager.addMessageListener("SPRequestDumpCoverageCounters", this);
-    this._messageManager.addMessageListener("SPRequestResetCoverageCounters", this);
-    this._messageManager.addMessageListener("SPCheckServiceWorkers", this);
-    this._messageManager.addMessageListener("SPRemoveAllServiceWorkers", this);
-    this._messageManager.addMessageListener("SPRemoveServiceWorkerDataForExampleDomain", this);
+  // Register for any messages our API needs us to handle
+  for (let name of MESSAGE_NAMES) {
+    this._messageManager.addMessageListener(name, this);
+  }
 
-    this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
-    this._messageManager.loadFrameScript(CHILD_SCRIPT_API, true);
-    this._isFrameScriptLoaded = true;
-    this._createdFiles = null;
+  for (let script of FRAME_SCRIPTS) {
+    this._messageManager.loadFrameScript(script, true);
+  }
+  this._createdFiles = null;
+};
+
+SpecialPowersObserver.prototype._unloadFrameScript = function() {
+  for (let name of MESSAGE_NAMES) {
+    this._messageManager.removeMessageListener(name, this);
+  }
+
+  for (let script of FRAME_SCRIPTS) {
+    this._messageManager.removeDelayedFrameScript(script);
   }
 };
 
@@ -98,8 +106,9 @@ SpecialPowersObserver.prototype._receiveMessage = function(aMessage) {
 };
 
 SpecialPowersObserver.prototype.init = function() {
-  var obs = Services.obs;
-  obs.addObserver(this, "chrome-document-global-created");
+  if (this._initialized) {
+    throw new Error("Already initialized");
+  }
 
   // Register special testing modules.
   var testsURI = Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -110,7 +119,7 @@ SpecialPowersObserver.prototype.init = function() {
   Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
                  autoRegister(manifestFile);
 
-  obs.addObserver(this, "http-on-modify-request");
+  Services.obs.addObserver(this, "http-on-modify-request");
 
   // We would like to check that tests don't leave service workers around
   // after they finish, but that information lives in the parent process.
@@ -135,11 +144,17 @@ SpecialPowersObserver.prototype.init = function() {
   swm.addListener(this._serviceWorkerListener);
 
   this._loadFrameScript();
+
+  this._initialized = true;
 };
 
 SpecialPowersObserver.prototype.uninit = function() {
+  if (!this._initialized) {
+    throw new Error("Not initialized");
+  }
+  this._initialized = false;
+
   var obs = Services.obs;
-  obs.removeObserver(this, "chrome-document-global-created");
   obs.removeObserver(this, "http-on-modify-request");
   this._registerObservers._topics.forEach((element) => {
     obs.removeObserver(this._registerObservers, element);
@@ -150,37 +165,7 @@ SpecialPowersObserver.prototype.uninit = function() {
               .getService(Ci.nsIServiceWorkerManager);
   swm.removeListener(this._serviceWorkerListener);
 
-  if (this._isFrameScriptLoaded) {
-    this._messageManager.removeMessageListener("SPPrefService", this);
-    this._messageManager.removeMessageListener("SPProcessCrashManagerWait", this);
-    this._messageManager.removeMessageListener("SPProcessCrashService", this);
-    this._messageManager.removeMessageListener("SPPingService", this);
-    this._messageManager.removeMessageListener("SpecialPowers.Quit", this);
-    this._messageManager.removeMessageListener("SpecialPowers.Focus", this);
-    this._messageManager.removeMessageListener("SpecialPowers.CreateFiles", this);
-    this._messageManager.removeMessageListener("SpecialPowers.RemoveFiles", this);
-    this._messageManager.removeMessageListener("SPPermissionManager", this);
-    this._messageManager.removeMessageListener("SPObserverService", this);
-    this._messageManager.removeMessageListener("SPLoadChromeScript", this);
-    this._messageManager.removeMessageListener("SPImportInMainProcess", this);
-    this._messageManager.removeMessageListener("SPChromeScriptMessage", this);
-    this._messageManager.removeMessageListener("SPQuotaManager", this);
-    this._messageManager.removeMessageListener("SPSetTestPluginEnabledState", this);
-    this._messageManager.removeMessageListener("SPLoadExtension", this);
-    this._messageManager.removeMessageListener("SPStartupExtension", this);
-    this._messageManager.removeMessageListener("SPUnloadExtension", this);
-    this._messageManager.removeMessageListener("SPExtensionMessage", this);
-    this._messageManager.removeMessageListener("SPCleanUpSTSData", this);
-    this._messageManager.removeMessageListener("SPRequestDumpCoverageCounters", this);
-    this._messageManager.removeMessageListener("SPRequestResetCoverageCounters", this);
-    this._messageManager.removeMessageListener("SPCheckServiceWorkers", this);
-    this._messageManager.removeMessageListener("SPRemoveAllServiceWorkers", this);
-    this._messageManager.removeMessageListener("SPRemoveServiceWorkerDataForExampleDomain", this);
-
-    this._messageManager.removeDelayedFrameScript(CHILD_LOGGER_SCRIPT);
-    this._messageManager.removeDelayedFrameScript(CHILD_SCRIPT_API);
-    this._isFrameScriptLoaded = false;
-  }
+  this._unloadFrameScript();
 };
 
 SpecialPowersObserver.prototype._addProcessCrashObservers = function() {
