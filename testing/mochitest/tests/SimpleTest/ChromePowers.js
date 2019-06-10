@@ -9,12 +9,7 @@ function ChromePowers(window) {
 
   this.chromeWindow = window;
 
-  if (typeof(window) == "ChromeWindow" && typeof(content.window) == "Window") {
-    this.DOMWindowUtils = bindDOMWindowUtils(content.window);
-    this.window = Cu.getWeakReference(content.window);
-  } else {
-    this.DOMWindowUtils = bindDOMWindowUtils(window);
-  }
+  this.DOMWindowUtils = bindDOMWindowUtils(window);
 
   this.spObserver = new SpecialPowersObserverAPI();
   this.spObserver._sendReply = this._sendReply.bind(this);
@@ -106,15 +101,12 @@ ChromePowers.prototype.executeAfterFlushingMessageQueue = function(aCallback) {
   aCallback();
 };
 
-if ((window.parent !== null) &&
-    (window.parent !== undefined) &&
-    (window.parent.wrappedJSObject.SpecialPowers) &&
-    !(window.wrappedJSObject.SpecialPowers)) {
-  window.wrappedJSObject.SpecialPowers = window.parent.SpecialPowers;
+if (window.parent.SpecialPowers && !window.SpecialPowers) {
+  window.SpecialPowers = window.parent.SpecialPowers;
 } else {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   Services.scriptloader.loadSubScript("resource://specialpowers/SpecialPowersObserverAPI.js", this);
 
-  window.wrappedJSObject.SpecialPowers = new ChromePowers(window);
+  window.SpecialPowers = new ChromePowers(window);
 }
 
