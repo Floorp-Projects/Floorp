@@ -139,23 +139,27 @@ pub struct AlphaBatchList {
     current_batch_index: usize,
     current_z_id: ZBufferId,
     break_advanced_blend_batches: bool,
+    lookback_count: usize,
 }
 
 impl AlphaBatchList {
-    fn new(break_advanced_blend_batches: bool) -> Self {
+    fn new(break_advanced_blend_batches: bool, lookback_count: usize) -> Self {
         AlphaBatchList {
             batches: Vec::new(),
             item_rects: Vec::new(),
             current_z_id: ZBufferId::invalid(),
             current_batch_index: usize::MAX,
             break_advanced_blend_batches,
+            lookback_count,
         }
     }
 
     pub fn set_params_and_get_batch(
         &mut self,
         key: BatchKey,
-        bounding_rect: &PictureRect,
+        // The bounding box of everything at this Z plane. We expect potentially
+        // multiple primitive segments coming with the same `z_id`.
+        z_bounding_rect: &PictureRect,
         z_id: ZBufferId,
     ) -> &mut Vec<PrimitiveInstanceData> {
         if z_id != self.current_z_id ||
@@ -166,12 +170,12 @@ impl AlphaBatchList {
 
             match key.blend_mode {
                 BlendMode::SubpixelWithBgColor => {
-                    'outer_multipass: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10) {
+                    'outer_multipass: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(self.lookback_count) {
                         // Some subpixel batches are drawn in two passes. Because of this, we need
                         // to check for overlaps with every batch (which is a bit different
                         // than the normal batching below).
                         for item_rect in &self.item_rects[batch_index] {
-                            if item_rect.intersects(bounding_rect) {
+                            if item_rect.intersects(z_bounding_rect) {
                                 break 'outer_multipass;
                             }
                         }
@@ -186,7 +190,7 @@ impl AlphaBatchList {
                     // don't try to find a batch
                 }
                 _ => {
-                    'outer_default: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10) {
+                    'outer_default: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(self.lookback_count) {
                         // For normal batches, we only need to check for overlaps for batches
                         // other than the first batch we consider. If the first batch
                         // is compatible, then we know there isn't any potential overlap
@@ -198,7 +202,7 @@ impl AlphaBatchList {
 
                         // check for intersections
                         for item_rect in &self.item_rects[batch_index] {
-                            if item_rect.intersects(bounding_rect) {
+                            if item_rect.intersects(z_bounding_rect) {
                                 break 'outer_default;
                             }
                         }
@@ -214,8 +218,12 @@ impl AlphaBatchList {
             }
 
             self.current_batch_index = selected_batch_index.unwrap();
-            self.item_rects[self.current_batch_index].push(*bounding_rect);
+            self.item_rects[self.current_batch_index].push(*z_bounding_rect);
             self.current_z_id = z_id;
+        } else if cfg!(debug_assertions) {
+            // If it's a different segment of the same (larger) primitive, we expect the bounding box
+            // to be the same - coming from the primitive itself, not the segment.
+            assert_eq!(self.item_rects[self.current_batch_index].last(), Some(z_bounding_rect));
         }
 
         &mut self.batches[self.current_batch_index].instances
@@ -226,26 +234,31 @@ pub struct OpaqueBatchList {
     pub pixel_area_threshold_for_new_batch: f32,
     pub batches: Vec<PrimitiveBatch>,
     pub current_batch_index: usize,
+    lookback_count: usize,
 }
 
 impl OpaqueBatchList {
-    fn new(pixel_area_threshold_for_new_batch: f32) -> Self {
+    fn new(pixel_area_threshold_for_new_batch: f32, lookback_count: usize) -> Self {
         OpaqueBatchList {
             batches: Vec::new(),
             pixel_area_threshold_for_new_batch,
             current_batch_index: usize::MAX,
+            lookback_count,
         }
     }
 
     pub fn set_params_and_get_batch(
         &mut self,
         key: BatchKey,
-        bounding_rect: &PictureRect,
+        // The bounding box of everything at the current Z, whatever it is. We expect potentially
+        // multiple primitive segments produced by a primitive, which we allow to check
+        // `current_batch_index` instead of iterating the batches.
+        z_bounding_rect: &PictureRect,
     ) -> &mut Vec<PrimitiveInstanceData> {
         if self.current_batch_index == usize::MAX ||
            !self.batches[self.current_batch_index].key.is_compatible_with(&key) {
             let mut selected_batch_index = None;
-            let item_area = bounding_rect.size.area();
+            let item_area = z_bounding_rect.size.area();
 
             // If the area of this primitive is larger than the given threshold,
             // then it is large enough to warrant breaking a batch for. In this
@@ -259,7 +272,7 @@ impl OpaqueBatchList {
                 }
             } else {
                 // Otherwise, look back through a reasonable number of batches.
-                for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10) {
+                for (batch_index, batch) in self.batches.iter().enumerate().rev().take(self.lookback_count) {
                     if batch.key.is_compatible_with(&key) {
                         selected_batch_index = Some(batch_index);
                         break;
@@ -307,14 +320,15 @@ impl BatchList {
         regions: Vec<DeviceIntRect>,
         tile_blits: Vec<TileBlit>,
         break_advanced_blend_batches: bool,
+        lookback_count: usize,
     ) -> Self {
         // The threshold for creating a new batch is
         // one quarter the screen size.
         let batch_area_threshold = (screen_size.width * screen_size.height) as f32 / 4.0;
 
         BatchList {
-            alpha_batch_list: AlphaBatchList::new(break_advanced_blend_batches),
-            opaque_batch_list: OpaqueBatchList::new(batch_area_threshold),
+            alpha_batch_list: AlphaBatchList::new(break_advanced_blend_batches, lookback_count),
+            opaque_batch_list: OpaqueBatchList::new(batch_area_threshold, lookback_count),
             regions,
             tile_blits,
         }
@@ -466,6 +480,7 @@ pub struct AlphaBatchBuilder {
     pub batch_lists: Vec<BatchList>,
     screen_size: DeviceIntSize,
     break_advanced_blend_batches: bool,
+    lookback_count: usize,
     render_task_id: RenderTaskId,
 }
 
@@ -473,6 +488,7 @@ impl AlphaBatchBuilder {
     pub fn new(
         screen_size: DeviceIntSize,
         break_advanced_blend_batches: bool,
+        lookback_count: usize,
         render_task_id: RenderTaskId,
     ) -> Self {
         let batch_lists = vec![
@@ -481,6 +497,7 @@ impl AlphaBatchBuilder {
                 Vec::new(),
                 Vec::new(),
                 break_advanced_blend_batches,
+                lookback_count,
             ),
         ];
 
@@ -488,6 +505,7 @@ impl AlphaBatchBuilder {
             batch_lists,
             screen_size,
             break_advanced_blend_batches,
+            lookback_count,
             render_task_id,
         }
     }
@@ -502,6 +520,7 @@ impl AlphaBatchBuilder {
             regions,
             tile_blits,
             self.break_advanced_blend_batches,
+            self.lookback_count,
         ));
     }
 
@@ -573,6 +592,7 @@ impl BatchBuilder {
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
         root_spatial_node_index: SpatialNodeIndex,
+        surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
     ) {
         // Add each run in this picture to the batch.
@@ -587,6 +607,7 @@ impl BatchBuilder {
                 prim_headers,
                 transforms,
                 root_spatial_node_index,
+                surface_spatial_node_index,
                 z_generator,
             );
         }
@@ -607,6 +628,7 @@ impl BatchBuilder {
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
         root_spatial_node_index: SpatialNodeIndex,
+        surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
     ) {
         if prim_instance.visibility_info == PrimitiveVisibilityIndex::INVALID {
@@ -645,6 +667,11 @@ impl BatchBuilder {
 
         if is_chased {
             println!("\tbatch {:?} with bound {:?}", prim_rect, bounding_rect);
+        }
+
+        if !bounding_rect.is_empty() {
+            debug_assert_eq!(prim_info.clip_chain.pic_spatial_node_index, surface_spatial_node_index,
+                "The primitive's bounding box is specified in a different coordinate system from the current batch!");
         }
 
         match prim_instance.kind {
@@ -1010,10 +1037,10 @@ impl BatchBuilder {
                     // Convert all children of the 3D hierarchy root into batches.
                     Picture3DContext::In { root_data: Some(ref list), .. } => {
                         for child in list {
-                            let prim_instance = &picture.prim_list.prim_instances[child.anchor];
-                            let prim_info = &ctx.scratch.prim_info[prim_instance.visibility_info.0 as usize];
+                            let child_prim_instance = &picture.prim_list.prim_instances[child.anchor];
+                            let child_prim_info = &ctx.scratch.prim_info[child_prim_instance.visibility_info.0 as usize];
 
-                            let child_pic_index = match prim_instance.kind {
+                            let child_pic_index = match child_prim_instance.kind {
                                 PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
                                 PrimitiveInstanceKind::LineDecoration { .. } |
                                 PrimitiveInstanceKind::TextRun { .. } |
@@ -1032,13 +1059,13 @@ impl BatchBuilder {
 
                             // Get clip task, if set, for the picture primitive.
                             let clip_task_address = ctx.get_prim_clip_task_address(
-                                prim_info.clip_task_index,
+                                child_prim_info.clip_task_index,
                                 render_tasks,
                             ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
                             let prim_header = PrimitiveHeader {
                                 local_rect: pic.snapped_local_rect,
-                                local_clip_rect: prim_info.combined_local_clip_rect,
+                                local_clip_rect: child_prim_info.combined_local_clip_rect,
                                 snap_offsets,
                                 specific_prim_address: GpuCacheAddress::INVALID,
                                 transform_id: transforms
@@ -1111,10 +1138,8 @@ impl BatchBuilder {
                             render_tasks,
                         ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
-                        let surface = ctx
-                            .surfaces[raster_config.surface_index.0]
-                            .render_tasks
-                            .map(|s| s.root);
+                        let surface = &ctx.surfaces[raster_config.surface_index.0];
+                        let surface_task = surface.render_tasks.map(|s| s.root);
 
                         match raster_config.composite_mode {
                             PictureCompositeMode::TileCache { .. } => {
@@ -1124,6 +1149,14 @@ impl BatchBuilder {
                                 // picture like a normal pass-through picture, adding
                                 // any child primitives into the parent surface batches.
                                 if !tile_cache.is_enabled {
+                                    // Forcefully break the batches if the
+                                    if surface.surface_spatial_node_index != surface_spatial_node_index {
+                                        batcher.push_new_batch_list(
+                                            Vec::new(),
+                                            Vec::new(),
+                                        );
+                                    }
+
                                     self.add_pic_to_batch(
                                         picture,
                                         batcher,
@@ -1134,8 +1167,16 @@ impl BatchBuilder {
                                         prim_headers,
                                         transforms,
                                         root_spatial_node_index,
+                                        surface.surface_spatial_node_index,
                                         z_generator,
                                     );
+
+                                    if surface.surface_spatial_node_index != surface_spatial_node_index {
+                                        batcher.push_new_batch_list(
+                                            Vec::new(),
+                                            Vec::new(),
+                                        );
+                                    }
 
                                     return;
                                 }
@@ -1268,6 +1309,7 @@ impl BatchBuilder {
                                             prim_headers,
                                             transforms,
                                             root_spatial_node_index,
+                                            surface.surface_spatial_node_index,
                                             z_generator,
                                         );
 
@@ -1286,7 +1328,7 @@ impl BatchBuilder {
                                             BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
                                         );
                                         let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                            surface.expect("bug: surface must be allocated by now"),
+                                            surface_task.expect("bug: surface must be allocated by now"),
                                             gpu_cache,
                                         );
                                         let key = BatchKey::new(
@@ -1347,7 +1389,7 @@ impl BatchBuilder {
                                         let content_key = BatchKey::new(kind, non_segmented_blend_mode, content_textures);
 
                                         // Retrieve the UV rect addresses for shadow/content.
-                                        let cache_task_id = surface
+                                        let cache_task_id = surface_task
                                             .expect("bug: surface must be allocated by now");
                                         let shadow_uv_rect_address = render_tasks[cache_task_id]
                                             .get_texture_address(gpu_cache)
@@ -1465,7 +1507,7 @@ impl BatchBuilder {
                                         };
 
                                         let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                            surface.expect("bug: surface must be allocated by now"),
+                                            surface_task.expect("bug: surface must be allocated by now"),
                                             gpu_cache,
                                         );
 
@@ -1515,7 +1557,7 @@ impl BatchBuilder {
                                 let user_data = filter_data.gpu_cache_handle.as_int(gpu_cache);
 
                                 let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                    surface.expect("bug: surface must be allocated by now"),
+                                    surface_task.expect("bug: surface must be allocated by now"),
                                     gpu_cache,
                                 );
 
@@ -1551,7 +1593,7 @@ impl BatchBuilder {
                             }
                             PictureCompositeMode::MixBlend(mode) if ctx.use_advanced_blending => {
                                 let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                    surface.expect("bug: surface must be allocated by now"),
+                                    surface_task.expect("bug: surface must be allocated by now"),
                                     gpu_cache,
                                 );
                                 let key = BatchKey::new(
@@ -1586,7 +1628,7 @@ impl BatchBuilder {
                                 );
                             }
                             PictureCompositeMode::MixBlend(mode) => {
-                                let cache_task_id = surface.expect("bug: surface must be allocated by now");
+                                let cache_task_id = surface_task.expect("bug: surface must be allocated by now");
                                 let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
 
                                 let key = BatchKey::new(
@@ -1627,7 +1669,7 @@ impl BatchBuilder {
                                 );
                             }
                             PictureCompositeMode::Blit(_) => {
-                                let cache_task_id = surface.expect("bug: surface must be allocated by now");
+                                let cache_task_id = surface_task.expect("bug: surface must be allocated by now");
                                 let uv_rect_address = render_tasks[cache_task_id]
                                     .get_texture_address(gpu_cache)
                                     .as_int();
@@ -1710,6 +1752,7 @@ impl BatchBuilder {
                             prim_headers,
                             transforms,
                             root_spatial_node_index,
+                            surface_spatial_node_index,
                             z_generator,
                         );
                     }
