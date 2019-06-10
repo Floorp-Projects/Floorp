@@ -76,7 +76,14 @@ abstract class SearchEngineListPreference : Preference, CompoundButton.OnChecked
             return
         }
 
-        val defaultSearchEngine =
+        // To get the default search engine we have to pass in a name that doesn't exist
+        // https://github.com/mozilla-mobile/android-components/issues/3344
+        val defaultSearchEngine = context.components.search.searchEngineManager.getDefaultSearchEngine(
+            context,
+            "."
+        )
+
+        val selectedSearchEngine =
             context.components.search.searchEngineManager.getDefaultSearchEngine(
                 context,
                 Settings.getInstance(context).defaultSearchEngineName
@@ -90,17 +97,22 @@ abstract class SearchEngineListPreference : Preference, CompoundButton.OnChecked
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
 
-        for (i in searchEngines.indices) {
-            val engine = searchEngines[i]
+        val setupSearchEngineItem: (Int, SearchEngine) -> Unit = { index, engine ->
             val engineId = engine.identifier
             val engineItem = makeButtonFromSearchEngine(engine, layoutInflater, context.resources)
-            engineItem.id = i
+            engineItem.id = index
             engineItem.tag = engineId
-            if (engineId == defaultSearchEngine) {
+            if (engineId == selectedSearchEngine) {
                 updateDefaultItem(engineItem.radio_button)
             }
             searchEngineGroup!!.addView(engineItem, layoutParams)
         }
+
+        setupSearchEngineItem(0, defaultSearchEngine)
+
+        searchEngines
+            .filter { it.identifier != defaultSearchEngine.identifier }
+            .forEachIndexed(setupSearchEngineItem)
     }
 
     private fun makeButtonFromSearchEngine(
