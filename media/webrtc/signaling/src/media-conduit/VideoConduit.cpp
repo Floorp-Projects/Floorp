@@ -612,6 +612,12 @@ MediaConduitErrorCode WebrtcVideoConduit::CreateSendStream() {
   MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
 
+  nsAutoString codecName;
+  codecName.AssignASCII(
+      mSendStreamConfig.encoder_settings.payload_name.c_str());
+  Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_VIDEO_SEND_CODEC_USED,
+                       codecName, 1);
+
   webrtc::VideoCodecType encoder_type =
       SupportedCodecType(webrtc::PayloadStringToCodecType(
           mSendStreamConfig.encoder_settings.payload_name));
@@ -667,6 +673,11 @@ MediaConduitErrorCode WebrtcVideoConduit::CreateRecvStream() {
 
   mRecvStreamConfig.decoders.clear();
   for (auto& config : mRecvCodecList) {
+    nsAutoString codecName;
+    codecName.AssignASCII(config->mName.c_str());
+    Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_VIDEO_RECV_CODEC_USED,
+                         codecName, 1);
+
     decoder_type =
         SupportedCodecType(webrtc::PayloadStringToCodecType(config->mName));
     if (decoder_type == webrtc::VideoCodecType::kVideoCodecUnknown) {
