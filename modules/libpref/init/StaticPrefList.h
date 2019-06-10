@@ -2263,6 +2263,19 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Prefs starting with "fission."
+//---------------------------------------------------------------------------
+
+// This pref has no effect within fission windows, it only controls the
+// behaviour within non-fission windows.
+VARCACHE_PREF(
+  Live,
+  "fission.preserve_browsing_contexts",
+  fission_preserve_browsing_contexts,
+  bool, false
+)
+
+//---------------------------------------------------------------------------
 // Prefs starting with "full-screen-api."
 //---------------------------------------------------------------------------
 
