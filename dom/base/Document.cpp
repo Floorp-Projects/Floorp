@@ -32,6 +32,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/URLExtraData.h"
 #include <algorithm>
 
@@ -44,9 +45,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
-#include "nsIEditor.h"
-#include "nsIEditorStyleSheets.h"
-#include "nsIPlaintextEditor.h"
 #include "nsITextControlFrame.h"
 #include "nsCommandManager.h"
 #include "nsCommandParams.h"
@@ -4304,95 +4302,175 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
     }
   }
 
-  // special case for cut & copy
-  // cut & copy are allowed in non editable documents
+  // Next, consider context of command handling which is automatically resolved
+  // by order of controllers in `nsCommandManager::GetControllerForCommand()`.
+  // The order is:
+  //   1. HTMLEditor for the document, if there is.
+  //   2. TextEditor if there is an active element and it has TextEditor like
+  //      <input type="text"> or <textarea>.
+  //   3. Retarget to the DocShell or nsCommandManager as what we've done.
+  // XXX Chromium handles `execCommand()` in <input type="text"> or
+  //     <textarea> when it's in an editing host and has focus.  So, our
+  //     traditional behavior is different and does not make sense.
+  RefPtr<TextEditor> maybeHTMLEditor;
   if (commandData.IsCutOrCopyCommand()) {
-    // For cut & copy commands, we need the behaviour from
-    // nsWindowRoot::GetControllers which is to look at the focused element, and
-    // defer to a focused textbox's controller The code past taken by other
-    // commands in ExecCommand always uses the window directly, rather than
-    // deferring to the textbox, which is desireable for most editor commands,
-    // but not 'cut' and 'copy' (as those should allow copying out of embedded
-    // editors). This behaviour is invoked if we call DoCommand directly on the
-    // docShell.
-    nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
-    if (docShell) {
+    // Note that we used to use DocShell to handle `cut` and `copy` command
+    // for dispatching corresponding events for making possible web apps to
+    // implement their own editor without editable elements but supports
+    // standard shortcut keys, etc.  In this case, we prefer to use active
+    // element's editor to keep same behavior.
+    maybeHTMLEditor = nsContentUtils::GetActiveEditor(GetPresContext());
+  } else {
+    maybeHTMLEditor = nsContentUtils::GetHTMLEditor(GetPresContext());
+    if (!maybeHTMLEditor) {
+      maybeHTMLEditor = nsContentUtils::GetActiveEditor(GetPresContext());
+    }
+  }
+
+  // Then, retrieve editor command class instance which should handle it
+  // and can handle it now.
+  RefPtr<EditorCommand> editorCommand;
+  if (!maybeHTMLEditor) {
+    // If the command is available without editor, we should redirect the
+    // command to focused descendant with DocShell.
+    if (commandData.IsAvailableOnlyWhenEditable()) {
+      return false;
+    }
+  } else {
+    // Otherwise, we should use EditorCommand instance (which is singleton
+    // instance) when it's enabled.
+    editorCommand = commandData.mGetEditorCommandFunc();
+    if (NS_WARN_IF(!editorCommand)) {
+      rv.Throw(NS_ERROR_FAILURE);
+      return false;
+    }
+
+    if (!editorCommand->IsCommandEnabled(commandData.mCommand,
+                                         maybeHTMLEditor)) {
+      // If the EditorCommand instance is disabled, we should do nothing if
+      // the command requires an editor.
+      if (commandData.IsAvailableOnlyWhenEditable()) {
+        // Return false if editor specific commands is disabled (bug 760052).
+        return false;
+      }
+      // Otherwise, we should redirect it to focused descendant with DocShell.
+      editorCommand = nullptr;
+    }
+  }
+
+  // If we cannot use EditorCommand instance directly, we need to handle the
+  // command with traditional path (i.e., with DocShell or nsCommandManager).
+  if (!editorCommand) {
+    MOZ_ASSERT(!commandData.IsAvailableOnlyWhenEditable());
+
+    // Special case clipboard write commands like Command::Cut and
+    // Command::Copy.  For such commands, we need the behaviour from
+    // nsWindowRoot::GetControllers() which is to look at the focused element,
+    // and defer to a focused textbox's controller.  The code past taken by
+    // other commands in ExecCommand() always uses the window directly, rather
+    // than deferring to the textbox, which is desireable for most editor
+    // commands, but not these commands (as those should allow copying out of
+    // embedded editors). This behaviour is invoked if we call DoCommand()
+    // directly on the docShell.
+    // XXX This means that we allow web app to pick up selected content in
+    //     descendant document and write it into the clipboard when a
+    //     descendant document has focus.  However, Chromium does not allow
+    //     this and this seems that it's not good behavior from point of view
+    //     of security.  We should treat this issue in another bug.
+    if (commandData.IsCutOrCopyCommand()) {
+      nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
+      if (!docShell) {
+        return false;
+      }
       nsresult res = docShell->DoCommand(commandData.mXULCommandName);
       if (res == NS_SUCCESS_DOM_NO_OPERATION) {
         return false;
       }
       return NS_SUCCEEDED(res);
     }
-    return false;
-  }
 
-  // get command manager and dispatch command to our window if it's acceptable
-  RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
-  if (!commandManager) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return false;
-  }
+    // Otherwise (currently, only clipboard read commands like Command::Paste),
+    // we don't need to redirect the command to focused subdocument.
+    // Therefore, we should handle it with nsCommandManager as used to be.
+    // It may dispatch only preceding event of editing on non-editable element
+    // to make web apps possible to handle standard shortcut key, etc in
+    // their own editor.
+    RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
+    if (!commandManager) {
+      rv.Throw(NS_ERROR_FAILURE);
+      return false;
+    }
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
-  if (!window) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return false;
-  }
+    nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
+    if (!window) {
+      rv.Throw(NS_ERROR_FAILURE);
+      return false;
+    }
 
-  // Return false for disabled commands (bug 760052)
-  if (!commandManager->IsCommandEnabled(
-          nsDependentCString(commandData.mXULCommandName), window)) {
-    return false;
-  }
+    // Return false for disabled commands (bug 760052)
+    if (!commandManager->IsCommandEnabled(
+            nsDependentCString(commandData.mXULCommandName), window)) {
+      return false;
+    }
 
-  EditorCommandParamType expectedParamType =
-      EditorCommand::GetParamType(commandData.mCommand);
-  if (adjustedValue.IsEmpty() ||
-      expectedParamType == EditorCommandParamType::None) {
-    MOZ_ASSERT(!(EditorCommand::GetParamType(commandData.mCommand) &
-                 EditorCommandParamType::Bool));
+    MOZ_ASSERT(commandData.IsPasteCommand());
     rv =
         commandManager->DoCommand(commandData.mXULCommandName, nullptr, window);
-    return !rv.Failed();
+    return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
   }
 
-  // we have a command that requires a parameter, create params
-  RefPtr<nsCommandParams> params = new nsCommandParams();
-  if (!!(expectedParamType & EditorCommandParamType::Bool)) {
-    MOZ_ASSERT(!!(expectedParamType & EditorCommandParamType::StateAttribute));
+  // Now, our target is fixed to the editor.  So, we can use EditorCommand
+  // with the editor directly.
+  MOZ_ASSERT(maybeHTMLEditor);
+
+  EditorCommandParamType paramType =
+      EditorCommand::GetParamType(commandData.mCommand);
+
+  // If we don't have meaningful parameter or the EditorCommand does not
+  // require additional parameter, we can use `DoCommand()`.
+  if (adjustedValue.IsEmpty() || paramType == EditorCommandParamType::None) {
+    MOZ_ASSERT(!(paramType & EditorCommandParamType::Bool));
+    rv = editorCommand->DoCommand(commandData.mCommand, *maybeHTMLEditor);
+    return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
+  }
+
+  // If the EditorCommand requires `bool` parameter, `adjustedValue` must be
+  // "true" or "false" here.  So, we can use `DoCommandParam()` which takes
+  // a `bool` value.
+  if (!!(paramType & EditorCommandParamType::Bool)) {
     MOZ_ASSERT(adjustedValue.EqualsLiteral("true") ||
                adjustedValue.EqualsLiteral("false"));
-    rv =
-        params->SetBool("state_attribute", adjustedValue.EqualsLiteral("true"));
-    if (rv.Failed()) {
-      return false;
-    }
-  } else if (!!(expectedParamType & EditorCommandParamType::String)) {
-    if (!!(expectedParamType & EditorCommandParamType::StateAttribute)) {
-      rv = params->SetString("state_attribute", adjustedValue);
-      if (rv.Failed()) {
-        return false;
-      }
-    } else {
-      MOZ_ASSERT(!!(expectedParamType & EditorCommandParamType::StateData));
-      rv = params->SetString("state_data", adjustedValue);
-      if (rv.Failed()) {
-        return false;
-      }
-    }
-  } else if (!!(expectedParamType & EditorCommandParamType::CString)) {
-    MOZ_ASSERT(!!(expectedParamType & EditorCommandParamType::StateAttribute));
-    NS_ConvertUTF16toUTF8 utf8Value(adjustedValue);
-    rv = params->SetCString("state_attribute", utf8Value);
-    if (rv.Failed()) {
-      return false;
-    }
-  } else {
-    MOZ_ASSERT_UNREACHABLE(
-        "Not yet implemented to handle new EditorCommandParamType");
+    rv = editorCommand->DoCommandParam(
+        commandData.mCommand, Some(adjustedValue.EqualsLiteral("true")),
+        *maybeHTMLEditor);
+    return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
   }
-  rv = commandManager->DoCommand(commandData.mXULCommandName, params, window);
-  return !rv.Failed();
+
+  // Now, the EditorCommand requires `nsAString` or `nsACString` parameter
+  // in this case.  However, `paramType` may contain both `String` and
+  // `CString` but in such case, we should use `DoCommandParam()` which
+  // takes `nsAString`.  So, we should check whether `paramType` contains
+  // `String` or not first.
+  if (!!(paramType & EditorCommandParamType::String)) {
+    MOZ_ASSERT(!adjustedValue.IsVoid());
+    rv = editorCommand->DoCommandParam(commandData.mCommand, adjustedValue,
+                                       *maybeHTMLEditor);
+    return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
+  }
+
+  // Finally, `paramType` should have `CString`.  We should use
+  // `DoCommandParam()` which takes `nsACString`.
+  if (!!(paramType & EditorCommandParamType::CString)) {
+    NS_ConvertUTF16toUTF8 utf8Value(adjustedValue);
+    MOZ_ASSERT(!utf8Value.IsVoid());
+    rv = editorCommand->DoCommandParam(commandData.mCommand, utf8Value,
+                                       *maybeHTMLEditor);
+    return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
+  }
+
+  MOZ_ASSERT_UNREACHABLE(
+      "Not yet implemented to handle new EditorCommandParamType");
+  return false;
 }
 
 bool Document::QueryCommandEnabled(const nsAString& commandID,
