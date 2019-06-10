@@ -39,6 +39,36 @@ const getNodeDisplayName = function(rawNode) {
   return (rawNode.prefix ? rawNode.prefix + ":" : "") + rawNode.localName;
 };
 
+/**
+ * Returns flex and grid information about a DOM node.
+ * In particular is it a grid flex/container and/or item?
+ *
+ * @param  {DOMNode} node
+ *         The node for which then information is required
+ * @return {Object}
+ *         An object like { grid: { isContainer, isItem }, flex: { isContainer, isItem } }
+ */
+function getNodeGridFlexType(node) {
+  return {
+    grid: getNodeGridType(node),
+    flex: getNodeFlexType(node),
+  };
+}
+
+function getNodeFlexType(node) {
+  return {
+    isContainer: node.getAsFlexContainer && !!node.getAsFlexContainer(),
+    isItem: !!node.parentFlexElement,
+  };
+}
+
+function getNodeGridType(node) {
+  return {
+    isContainer: node.getGridFragments && node.getGridFragments().length,
+    isItem: !!findGridParentContainerForNode(node),
+  };
+}
+
 function nodeDocument(node) {
   if (Cu.isDeadWrapper(node)) {
     return null;
@@ -352,6 +382,7 @@ module.exports = {
   getClosestBackgroundColor,
   getClosestBackgroundImage,
   getNodeDisplayName,
+  getNodeGridFlexType,
   imageToImageData,
   isNodeDead,
   nodeDocument,
