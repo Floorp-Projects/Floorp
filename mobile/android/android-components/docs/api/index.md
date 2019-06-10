@@ -155,7 +155,6 @@
 | [mozilla.components.support.ktx.android.content](mozilla.components.support.ktx.android.content/index.md) |  |
 | [mozilla.components.support.ktx.android.content.res](mozilla.components.support.ktx.android.content.res/index.md) |  |
 | [mozilla.components.support.ktx.android.graphics](mozilla.components.support.ktx.android.graphics/index.md) |  |
-| [mozilla.components.support.ktx.android.graphics.drawable](mozilla.components.support.ktx.android.graphics.drawable/index.md) |  |
 | [mozilla.components.support.ktx.android.net](mozilla.components.support.ktx.android.net/index.md) |  |
 | [mozilla.components.support.ktx.android.org.json](mozilla.components.support.ktx.android.org.json/index.md) |  |
 | [mozilla.components.support.ktx.android.os](mozilla.components.support.ktx.android.os/index.md) |  |

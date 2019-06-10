@@ -2,7 +2,7 @@
 
 # IconRequest
 
-`data class IconRequest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L14)
+`data class IconRequest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L16)
 
 A request to load an [Icon](../-icon/index.md).
 

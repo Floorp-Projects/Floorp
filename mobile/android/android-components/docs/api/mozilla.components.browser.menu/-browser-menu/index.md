@@ -2,7 +2,7 @@
 
 # BrowserMenu
 
-`class BrowserMenu` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenu.kt#L24)
+`class BrowserMenu` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenu.kt#L29)
 
 A popup menu composed of BrowserMenuItem objects.
 
@@ -18,7 +18,7 @@ A popup menu composed of BrowserMenuItem objects.
 |---|---|
 | [dismiss](dismiss.md) | `fun dismiss(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [invalidate](invalidate.md) | `fun invalidate(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [show](show.md) | `fun show(anchor: `[`View`](https://developer.android.com/reference/android/view/View.html)`, orientation: `[`Orientation`](-orientation/index.md)` = Orientation.DOWN): `[`PopupWindow`](https://developer.android.com/reference/android/widget/PopupWindow.html) |
+| [show](show.md) | `fun show(anchor: `[`View`](https://developer.android.com/reference/android/view/View.html)`, orientation: `[`Orientation`](-orientation/index.md)` = DOWN): `[`PopupWindow`](https://developer.android.com/reference/android/widget/PopupWindow.html) |
 
 ### Companion Object Functions
 

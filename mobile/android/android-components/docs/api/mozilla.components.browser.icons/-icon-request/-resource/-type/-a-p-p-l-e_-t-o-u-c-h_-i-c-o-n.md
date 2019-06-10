@@ -2,7 +2,7 @@
 
 # APPLE_TOUCH_ICON
 
-`APPLE_TOUCH_ICON` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L64)
+`APPLE_TOUCH_ICON` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L66)
 
 An Apple touch icon.
 

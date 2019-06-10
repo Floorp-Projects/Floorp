@@ -2,16 +2,4 @@
 
 # WEB_CONTENT
 
-`WEB_CONTENT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestOption.kt#L19)
-
-### Inherited Properties
-
-| Name | Summary |
-|---|---|
-| [mask](mask.md) | `val mask: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
-
-### Inherited Functions
-
-| Name | Summary |
-|---|---|
-| [toMask](to-mask.md) | `fun toMask(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+`WEB_CONTENT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestMetadata.kt#L37)
