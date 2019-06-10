@@ -951,6 +951,37 @@ webrtc.nicer:
       - 'main'
       - 'content'
 
+webrtc.video:
+  recv_codec_used:
+    bug_numbers:
+      - 1556766
+    description: >
+      The video codec used for receiving video on a WebRTC call.
+    expires: "never"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dminor@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'content'
+
+  send_codec_used:
+    bug_numbers:
+      - 1556766
+    description: >
+      The video codec used for sending video on a WebRTC call.
+    expires: "never"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dminor@mozilla.com
+      - nohlmeier@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'content'
+
 webrtc.sdp:
   parser_diff:
     bug_numbers:
