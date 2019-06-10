@@ -3642,6 +3642,9 @@ static void PR_CALLBACK ReadAheadDlls_ThreadStart(void*) {
 
   // Load explorerframe.dll for WinTaskbar::Initialize
   ReadAheadDll(L"ExplorerFrame.dll");
+
+  // Load WinTypes.dll for nsOSHelperAppService::GetApplicationDescription
+  ReadAheadDll(L"WinTypes.dll");
 }
 #endif
 
