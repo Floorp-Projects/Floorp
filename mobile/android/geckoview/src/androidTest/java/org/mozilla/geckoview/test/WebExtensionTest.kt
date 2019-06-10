@@ -481,9 +481,9 @@ class WebExtensionTest : BaseSessionTest() {
         }
 
         extension = WebExtension("resource://android/assets/web_extensions/extension-page-update/")
-        extension.setMessageDelegate(messageDelegate, "browser")
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(extension))
+        mainSession.setMessageDelegate(messageDelegate, "browser")
 
         mainSession.loadUri("http://example.com");
 
