@@ -5,7 +5,7 @@
 let mm = this;
 
 ChromeUtils.import("resource://specialpowers/SpecialPowersAPI.jsm", this);
-ChromeUtils.import("resource://specialpowers/specialpowers.js", this);
+ChromeUtils.import("resource://specialpowers/SpecialPowers.jsm", this);
 
 // This is a frame script, so it may be running in a content process.
 // In any event, it is targeted at a specific "tab", so we listen for

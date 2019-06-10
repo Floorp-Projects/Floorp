@@ -20,7 +20,7 @@ const kDumpAllStacks = false;
 const whitelist = {
   modules: new Set([
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
-    "resource://specialpowers/specialpowers.js",
+    "resource://specialpowers/SpecialPowers.jsm",
     "resource://specialpowers/SpecialPowersAPI.jsm",
     "resource://specialpowers/WrapPrivileged.jsm",
 

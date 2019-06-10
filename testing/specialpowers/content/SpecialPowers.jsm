@@ -5,15 +5,13 @@
  * order to be used as a replacement for UniversalXPConnect
  */
 
-/* globals bindDOMWindowUtils, SpecialPowersAPI */
-
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Services.scriptloader.loadSubScript("resource://specialpowers/MozillaLogger.js", this);
 
 var EXPORTED_SYMBOLS = ["SpecialPowers", "attachSpecialPowersToWindow"];
 
-ChromeUtils.import("resource://specialpowers/SpecialPowersAPI.jsm", this);
+const {bindDOMWindowUtils, SpecialPowersAPI} = ChromeUtils.import("resource://specialpowers/SpecialPowersAPI.jsm");
 
 Cu.forcePermissiveCOWs();
 
@@ -318,11 +316,3 @@ function attachSpecialPowersToWindow(aWindow, mm) {
 
 this.SpecialPowers = SpecialPowers;
 this.attachSpecialPowersToWindow = attachSpecialPowersToWindow;
-
-// In the case of Chrome mochitests that inject specialpowers.js as
-// a regular content script
-if (typeof window != "undefined") {
-  window.addMessageListener = function() {};
-  window.removeMessageListener = function() {};
-  window.wrappedJSObject.SpecialPowers = new SpecialPowers(window, window);
-}
