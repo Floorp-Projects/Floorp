@@ -38,7 +38,7 @@ job-defaults:
         limit-locales:
             by-release-level:
                 staging: true
-                production: false
+                production: true
 
 jobs:
     linux-shippable:
