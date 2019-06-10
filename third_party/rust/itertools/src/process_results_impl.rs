@@ -5,6 +5,7 @@
 /// Used by [`process_results`](../fn.process_results.html), see its docs
 /// for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Debug)]
 pub struct ProcessResults<'a, I, E: 'a> {
     error: &'a mut Result<(), E>,
     iter: I,
