@@ -3952,15 +3952,9 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowPostMessage(
     return IPC_OK();
   }
 
-  RefPtr<BrowsingContext> sourceBc = aData.source();
-  if (!sourceBc) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ChildIPC: Trying to use a dead or detached context"));
-    return IPC_OK();
-  }
-
   // Create and asynchronously dispatch a runnable which will handle actual DOM
   // event creation and dispatch.
+  RefPtr<BrowsingContext> sourceBc = aData.source();
   RefPtr<PostMessageEvent> event = new PostMessageEvent(
       sourceBc, aData.origin(), window, providedPrincipal,
       aData.callerDocumentURI(), aData.isFromPrivateWindow());
