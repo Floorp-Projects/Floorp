@@ -27,8 +27,11 @@ const BASE_TEST_MANIFEST = {
   },
 };
 const DEFAULT_BUILTIN_THEME_ID = "default-theme@mozilla.org";
+const EXT_DICTIONARY_ADDON_ID = "fake-dictionary@mochi.test";
+const EXT_LANGPACK_ADDON_ID = "fake-langpack@mochi.test";
 const EXT_WITH_PRIVILEGED_URL_ID = "ext-with-privileged-url@mochi.test";
 const EXT_SYSTEM_ADDON_ID = "test-system-addon@mochi.test";
+const EXT_UNSUPPORTED_TYPE_ADDON_ID = "report-unsupported-type@mochi.test";
 const THEME_NO_UNINSTALL_ID = "theme-without-perm-can-uninstall@mochi.test";
 
 let gProvider;
@@ -254,6 +257,21 @@ add_task(async function setup() {
     creator: {name: "creator", url: "http://example.com/creator"},
     type: "extension",
     isSystem: true,
+  }, {
+    id: EXT_UNSUPPORTED_TYPE_ADDON_ID,
+    name: "This is a fake unsupported addon type",
+    version: "1.1",
+    type: "unsupported_addon_type",
+  }, {
+    id: EXT_LANGPACK_ADDON_ID,
+    name: "This is a fake langpack",
+    version: "1.1",
+    type: "locale",
+  }, {
+    id: EXT_DICTIONARY_ADDON_ID,
+    name: "This is a fake dictionary",
+    version: "1.1",
+    type: "dictionary",
   }]);
 });
 
@@ -1099,5 +1117,35 @@ add_task(async function test_report_action_hidden_on_builtin_addons() {
 add_task(async function test_report_action_hidden_on_system_addons() {
   await openAboutAddons("extension");
   await assertReportActionHidden(gManagerWindow, EXT_SYSTEM_ADDON_ID);
+  await closeAboutAddons();
+});
+
+add_task(async function test_report_action_hidden_on_dictionary_addons() {
+  await openAboutAddons("dictionary");
+  await assertReportActionHidden(gManagerWindow, EXT_DICTIONARY_ADDON_ID);
+  await closeAboutAddons();
+});
+
+add_task(async function test_report_action_hidden_on_langpack_addons() {
+  await openAboutAddons("locale");
+  await assertReportActionHidden(gManagerWindow, EXT_LANGPACK_ADDON_ID);
+  await closeAboutAddons();
+});
+
+// This test verifies that triggering a report that would be immediately
+// cancelled (e.g. because abuse reports for that extension type are not
+// supported) the abuse report frame is being hidden as expected.
+add_task(async function test_frame_hidden_on_report_unsupported_addontype() {
+  await openAboutAddons();
+  const el = getAbuseReportFrame();
+
+  const onceCancelled = BrowserTestUtils.waitForEvent(
+    el, "abuse-report:cancel");
+  triggerNewAbuseReport(EXT_UNSUPPORTED_TYPE_ADDON_ID, "menu");
+
+  await onceCancelled;
+
+  is(el.hidden, true, `report frame hidden on automatically cancelled report`);
+
   await closeAboutAddons();
 });
