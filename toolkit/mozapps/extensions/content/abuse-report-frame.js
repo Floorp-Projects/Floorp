@@ -148,11 +148,11 @@
         // Set the addon id on the addon-abuse-report webcomponent instance
         // embedded in the XUL browser.
         this.promiseAbuseReport.then(abuseReport => {
+          this.hidden = false;
           abuseReport.addEventListener("abuse-report:updated", this, {once: true});
           abuseReport.addEventListener("abuse-report:submit", this, {once: true});
           abuseReport.addEventListener("abuse-report:cancel", this, {once: true});
           abuseReport.setAbuseReport(report);
-          this.hidden = false;
           // Hide the content of the underlying about:addons page from
           // screen readers.
           this.aboutAddonsContent.setAttribute("aria-hidden", true);
