@@ -199,9 +199,9 @@ void GPUProcessManager::DisableGPUProcess(const char* aMessage) {
   // need to rebind to the UI process.
   HandleProcessLost();
 
-  // On Windows, always fallback to software.
+  // On Windows and Linux, always fallback to software.
   // The assumption is that something in the graphics driver is crashing.
-#if XP_WIN
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   FallbackToSoftware("GPU Process is disabled, fallback to software solution.");
 #endif
 }
@@ -494,9 +494,11 @@ void GPUProcessManager::OnRemoteProcessDeviceReset(GPUProcessHost* aHost) {
 void GPUProcessManager::FallbackToSoftware(const char* aMessage) {
   gfxConfig::SetFailed(Feature::HW_COMPOSITING, FeatureStatus::Blocked,
                        aMessage);
+#ifdef XP_WIN
   gfxConfig::SetFailed(Feature::D3D11_COMPOSITING, FeatureStatus::Blocked,
                        aMessage);
   gfxConfig::SetFailed(Feature::DIRECT2D, FeatureStatus::Blocked, aMessage);
+#endif
 }
 
 void GPUProcessManager::NotifyListenersOnCompositeDeviceReset() {
