@@ -24,7 +24,7 @@ geckoview-junit:
     run-on-projects:
         by-test-platform:
             android-em-4.3-arm7-api-16/opt: ['try']
-            default: built-projects
+            default: ['try', 'trunk', 'mozilla-beta', 'mozilla-release']
     mozharness:
         script: android_emulator_unittest.py
         config:
