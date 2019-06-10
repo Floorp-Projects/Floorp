@@ -49,7 +49,6 @@ FINAL_TARGET_FILES.content.tests.SimpleTest += [
     '../modules/StructuredLog.jsm',
     '../specialpowers/content/MozillaLogger.js',
     '../specialpowers/content/specialpowers.js',
-    '../specialpowers/content/specialpowersAPI.js',
     '../specialpowers/content/SpecialPowersObserverAPI.js',
     'tests/SimpleTest/AsyncUtilsContent.js',
     'tests/SimpleTest/ChromePowers.js',
