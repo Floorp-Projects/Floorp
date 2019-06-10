@@ -8,8 +8,8 @@ use nserror::{
     NS_ERROR_NULL_POINTER, NS_ERROR_UNEXPECTED,
 };
 use nsstring::nsCString;
-use rkv::{migrate::MigrateError, StoreError};
-use std::{io::Error as IoError, str::Utf8Error, string::FromUtf16Error, sync::PoisonError};
+use rkv::StoreError;
+use std::{str::Utf8Error, string::FromUtf16Error, sync::PoisonError};
 
 #[derive(Debug, Fail)]
 pub enum KeyValueError {
@@ -18,12 +18,6 @@ pub enum KeyValueError {
 
     #[fail(display = "error converting string: {:?}", _0)]
     ConvertString(FromUtf16Error),
-
-    #[fail(display = "I/O error: {:?}", _0)]
-    IoError(IoError),
-
-    #[fail(display = "migrate error: {:?}", _0)]
-    MigrateError(MigrateError),
 
     #[fail(display = "no interface '{}'", _0)]
     NoInterface(&'static str),
@@ -67,14 +61,12 @@ impl From<KeyValueError> for nsresult {
         match err {
             KeyValueError::ConvertBytes(_) => NS_ERROR_FAILURE,
             KeyValueError::ConvertString(_) => NS_ERROR_FAILURE,
-            KeyValueError::IoError(_) => NS_ERROR_FAILURE,
             KeyValueError::NoInterface(_) => NS_ERROR_NO_INTERFACE,
             KeyValueError::Nsresult(_, result) => result,
             KeyValueError::NullPointer => NS_ERROR_NULL_POINTER,
             KeyValueError::PoisonError => NS_ERROR_UNEXPECTED,
             KeyValueError::Read => NS_ERROR_FAILURE,
             KeyValueError::StoreError(_) => NS_ERROR_FAILURE,
-            KeyValueError::MigrateError(_) => NS_ERROR_FAILURE,
             KeyValueError::UnsupportedOwned => NS_ERROR_NOT_IMPLEMENTED,
             KeyValueError::UnexpectedValue => NS_ERROR_UNEXPECTED,
             KeyValueError::UnsupportedVariant(_) => NS_ERROR_NOT_IMPLEMENTED,
@@ -82,21 +74,9 @@ impl From<KeyValueError> for nsresult {
     }
 }
 
-impl From<IoError> for KeyValueError {
-    fn from(err: IoError) -> KeyValueError {
-        KeyValueError::IoError(err)
-    }
-}
-
 impl From<StoreError> for KeyValueError {
     fn from(err: StoreError) -> KeyValueError {
         KeyValueError::StoreError(err)
-    }
-}
-
-impl From<MigrateError> for KeyValueError {
-    fn from(err: MigrateError) -> KeyValueError {
-        KeyValueError::MigrateError(err)
     }
 }
 

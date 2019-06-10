@@ -5,7 +5,6 @@
 
 const {KeyValueService} = ChromeUtils.import("resource://gre/modules/kvstore.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   do_get_profile();
@@ -547,29 +546,4 @@ add_task(async function enumeration() {
   await database.delete("double-key");
   await database.delete("string-key");
   await database.delete("bool-key");
-});
-
-add_task(async function migration() {
-  const currentDir = await OS.File.getCurrentDirectory();
-  const databaseDir = await makeDatabaseDir("migration");
-
-  // We're testing migration from a different architecture to our own,
-  // so we choose the 32-bit database if we're a 64-bit build, and vice-versa.
-  const testEnvDir = Services.appinfo.is64Bit ? "test-env-32" : "test-env-64";
-
-  await OS.File.copy(
-    OS.Path.join(currentDir, testEnvDir, "data.mdb"),
-    OS.Path.join(databaseDir, "data.mdb")
-  );
-  await OS.File.copy(
-    OS.Path.join(currentDir, testEnvDir, "lock.mdb"),
-    OS.Path.join(databaseDir, "lock.mdb")
-  );
-
-  const database = await KeyValueService.getOrCreate(databaseDir, "db");
-
-  Assert.strictEqual(await database.get("int-key"), 1234);
-  Assert.strictEqual(await database.get("double-key"), 56.78);
-  Assert.strictEqual(await database.get("string-key"), "Héllo, wőrld!");
-  Assert.strictEqual(await database.get("bool-key"), true);
 });
