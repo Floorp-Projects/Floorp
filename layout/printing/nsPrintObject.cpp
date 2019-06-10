@@ -65,6 +65,13 @@ nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
   NS_ENSURE_STATE(aDoc);
 
   if (aForPrintPreview) {
+    nsCOMPtr<nsIContentViewer> viewer;
+    aDocShell->GetContentViewer(getter_AddRefs(viewer));
+    if (viewer && viewer->GetDocument() && viewer->GetDocument()->IsShowing()) {
+      // We're about to discard this document, and it needs mIsShowing to be
+      // false to avoid triggering the assertion in its dtor.
+      viewer->GetDocument()->OnPageHide(false, nullptr);
+    }
     mDocShell = aDocShell;
   } else {
     // When doing an actual print, we create a BrowsingContext/nsDocShell that

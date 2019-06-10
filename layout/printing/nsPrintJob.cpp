@@ -815,15 +815,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   NS_ENSURE_SUCCESS(rv, rv);
 
   {
-    if (aIsPrintPreview) {
-      nsCOMPtr<nsIContentViewer> viewer;
-      docShell->GetContentViewer(getter_AddRefs(viewer));
-      if (viewer && viewer->GetDocument() &&
-          viewer->GetDocument()->IsShowing()) {
-        viewer->GetDocument()->OnPageHide(false, nullptr);
-      }
-    }
-
     nsAutoScriptBlocker scriptBlocker;
     printData->mPrintObject = MakeUnique<nsPrintObject>();
     rv = printData->mPrintObject->InitAsRootObject(docShell, aSourceDoc,
@@ -2630,16 +2621,6 @@ void nsPrintJob::SetIsPrintPreview(bool aIsPrintPreview) {
   if (mDocViewerPrint) {
     mDocViewerPrint->SetIsPrintPreview(aIsPrintPreview);
   }
-}
-
-//---------------------------------------------------------------------
-void nsPrintJob::CleanupDocTitleArray(char16_t**& aArray, int32_t& aCount) {
-  for (int32_t i = aCount - 1; i >= 0; i--) {
-    free(aArray[i]);
-  }
-  free(aArray);
-  aArray = nullptr;
-  aCount = 0;
 }
 
 /** ---------------------------------------------------
