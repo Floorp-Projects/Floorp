@@ -9045,18 +9045,27 @@ class DebuggerFrame::GeneratorInfo {
   // permanently.
   HeapPtr<Value> unwrappedGenerator_;
 
+  // A cross-compartment reference to the generator's script.
+  HeapPtr<JSScript*> generatorScript_;
+
  public:
-  explicit GeneratorInfo(Handle<AbstractGeneratorObject*> unwrappedGenerator)
-      : unwrappedGenerator_(ObjectValue(*unwrappedGenerator)) {}
+  GeneratorInfo(Handle<AbstractGeneratorObject*> unwrappedGenerator,
+                HandleScript generatorScript)
+      : unwrappedGenerator_(ObjectValue(*unwrappedGenerator)),
+        generatorScript_(generatorScript) {}
 
   void trace(JSTracer* tracer, DebuggerFrame& frameObj) {
     TraceCrossCompartmentEdge(tracer, &frameObj, &unwrappedGenerator_,
                               "Debugger.Frame generator object");
+    TraceCrossCompartmentEdge(tracer, &frameObj, &generatorScript_,
+                              "Debugger.Frame generator script");
   }
 
   AbstractGeneratorObject& unwrappedGenerator() const {
     return unwrappedGenerator_.toObject().as<AbstractGeneratorObject>();
   }
+
+  HeapPtr<JSScript*>& generatorScript() { return generatorScript_; }
 };
 
 bool DebuggerFrame::setGenerator(
@@ -9064,13 +9073,19 @@ bool DebuggerFrame::setGenerator(
   cx->check(this);
 
   RootedNativeObject owner(cx, this->owner()->toJSObject());
-  Rooted<CrossCompartmentKey> key(
+  RootedScript script(cx, unwrappedGenObj->callee().nonLazyScript());
+
+  Rooted<CrossCompartmentKey> generatorKey(
       cx, CrossCompartmentKey::DebuggeeFrameGenerator(owner, unwrappedGenObj));
-  if (!compartment()->putWrapper(cx, key, ObjectValue(*this))) {
+  Rooted<CrossCompartmentKey> scriptKey(
+      cx, CrossCompartmentKey::DebuggeeFrameGeneratorScript(owner, script));
+
+  if (!compartment()->putWrapper(cx, generatorKey, ObjectValue(*this)) ||
+      !compartment()->putWrapper(cx, scriptKey, ObjectValue(*this))) {
     return false;
   }
 
-  auto* info = cx->new_<GeneratorInfo>(unwrappedGenObj);
+  auto* info = cx->new_<GeneratorInfo>(unwrappedGenObj, script);
   if (!info) {
     JS_ReportOutOfMemory(cx);
     return false;
