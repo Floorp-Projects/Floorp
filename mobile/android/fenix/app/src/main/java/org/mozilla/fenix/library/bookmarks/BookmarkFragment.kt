@@ -18,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.NavController
@@ -398,8 +399,9 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     }
 
     private fun BookmarkNode.copyUrl(context: Context) {
-        val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipBoard.primaryClip = ClipData.newPlainText(url, url)
+        context.getSystemService<ClipboardManager>()?.apply {
+            primaryClip = ClipData.newPlainText(url, url)
+        }
     }
 
     @SuppressWarnings("ReturnCount")

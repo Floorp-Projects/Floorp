@@ -15,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.getSystemService
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.TabData
 import mozilla.components.support.base.log.logger.Logger
@@ -95,8 +96,7 @@ class NotificationManager(private val context: Context) {
         }
         // Register the channel with the system. Once this is done, we can't change importance or other notification
         // channel behaviour. We will be able to change 'name' and 'description' if we so choose.
-        val notificationManager: NotificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager: NotificationManager = context.getSystemService()!!
         notificationManager.createNotificationChannel(channel)
     }
 

@@ -6,8 +6,8 @@ package org.mozilla.fenix.settings.quicksettings
 
 import android.content.Context
 import android.view.ViewGroup
+import androidx.core.net.toUri
 import mozilla.components.feature.sitepermissions.SitePermissions
-import mozilla.components.support.ktx.kotlin.toUri
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.mvi.Change

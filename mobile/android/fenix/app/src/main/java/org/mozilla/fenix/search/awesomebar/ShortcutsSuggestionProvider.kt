@@ -22,6 +22,10 @@ class ShortcutsSuggestionProvider(
     override val shouldClearSuggestions: Boolean
         get() = false
 
+    private val settingsIcon by lazy {
+        context.getDrawable(R.drawable.ic_settings)?.toBitmap()
+    }
+
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
         val suggestions = mutableListOf<AwesomeBar.Suggestion>()
 
@@ -42,9 +46,7 @@ class ShortcutsSuggestionProvider(
         suggestions.add(
             AwesomeBar.Suggestion(
                 provider = this,
-                icon = { _, _ ->
-                    context.getDrawable(R.drawable.ic_settings)?.toBitmap()
-                },
+                icon = { _, _ -> settingsIcon },
                 title = context.getString(R.string.search_shortcuts_engine_settings),
                 onSuggestionClicked = {
                     selectShortcutEngineSettings()

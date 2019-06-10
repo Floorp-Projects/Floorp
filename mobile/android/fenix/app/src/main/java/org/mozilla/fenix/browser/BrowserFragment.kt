@@ -15,6 +15,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.content.getSystemService
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.NavHostFragment.findNavController
@@ -52,7 +54,6 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
-import mozilla.components.support.ktx.kotlin.toUri
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FenixViewModelProvider
@@ -818,8 +819,9 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     }
 
     private fun Session.copyUrl(context: Context) {
-        val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipBoard.primaryClip = ClipData.newPlainText(url, url)
+        context.getSystemService<ClipboardManager>()?.apply {
+            primaryClip = ClipData.newPlainText(url, url)
+        }
     }
 
     private fun subscribeToSession(): Session.Observer {
