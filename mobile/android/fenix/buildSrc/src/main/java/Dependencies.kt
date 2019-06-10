@@ -154,6 +154,7 @@ object Deps {
     const val androidx_navigation_ui = "androidx.navigation:navigation-ui:${Versions.androidx_navigation}"
     const val androidx_recyclerview = "androidx.recyclerview:recyclerview:${Versions.androidx_recyclerview}"
     const val androidx_core = "androidx.core:core:${Versions.androidx_core}"
+    const val androidx_core_ktx = "androidx.core:core-ktx:${Versions.androidx_core}"
     const val androidx_transition = "androidx.transition:transition:${Versions.androidx_transition}"
     const val google_material = "com.google.android.material:material:${Versions.google_material}"
 

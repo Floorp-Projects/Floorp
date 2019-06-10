@@ -1,10 +1,10 @@
 package org.mozilla.fenix.search.awesomebar
 
 import android.content.Context
+import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.concept.awesomebar.AwesomeBar
-import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
 import org.mozilla.fenix.R
 import java.util.UUID
 

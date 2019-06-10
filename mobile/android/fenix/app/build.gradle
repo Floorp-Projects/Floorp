@@ -352,6 +352,7 @@ dependencies {
     implementation Deps.androidx_lifecycle_viewmodel_ktx
     implementation Deps.androidx_lifecycle_viewmodel_ss
     implementation Deps.androidx_core
+    implementation Deps.androidx_core_ktx
     implementation Deps.androidx_transition
     implementation Deps.google_material
 
