@@ -4584,9 +4584,36 @@ class HTMLMediaElement::MediaStreamTrackListener
     if (!mElement) {
       return;
     }
-    LOG(LogLevel::Debug, ("%p, mSrcStream %p became active", mElement.get(),
-                          mElement->mSrcStream.get()));
-    mElement->CheckAutoplayDataReady();
+
+    // mediacapture-main says:
+    // Note that once ended equals true the HTMLVideoElement will not play media
+    // even if new MediaStreamTracks are added to the MediaStream (causing it to
+    // return to the active state) unless autoplay is true or the web
+    // application restarts the element, e.g., by calling play().
+    //
+    // This is vague on exactly how to go from becoming active to playing, when
+    // autoplaying. However, per the media element spec, to play an autoplaying
+    // media element, we must load the source and reach readyState
+    // HAVE_ENOUGH_DATA [1]. Hence, a MediaStream being assigned to a media
+    // element and becoming active runs the load algorithm, so that it can
+    // eventually be played.
+    //
+    // [1]
+    // https://html.spec.whatwg.org/multipage/media.html#ready-states:event-media-play
+
+    LOG(LogLevel::Debug, ("%p, mSrcStream %p became active, checking if we "
+                          "need to run the load algorithm",
+                          mElement.get(), mElement->mSrcStream.get()));
+    if (!mElement->IsPlaybackEnded()) {
+      return;
+    }
+    if (!mElement->Autoplay()) {
+      return;
+    }
+    LOG(LogLevel::Info, ("%p, mSrcStream %p became active on autoplaying, "
+                         "ended element. Reloading.",
+                         mElement.get(), mElement->mSrcStream.get()));
+    mElement->DoLoad();
   }
 
   void NotifyInactive() override {
@@ -4737,7 +4764,6 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
 
   ChangeNetworkState(NETWORK_IDLE);
   ChangeDelayLoadStatus(false);
-  CheckAutoplayDataReady();
 
   // FirstFrameLoaded() will be called when the stream has tracks.
 }
@@ -5573,9 +5599,6 @@ void HTMLMediaElement::ChangeNetworkState(nsMediaNetworkState aState) {
 }
 
 bool HTMLMediaElement::CanActivateAutoplay() {
-  // For stream inputs, we activate autoplay on HAVE_NOTHING because
-  // this element itself might be blocking the stream from making progress by
-  // being paused. We only check that it has data by checking its active state.
   // We also activate autoplay when playing a media source since the data
   // download is controlled by the script and there is no way to evaluate
   // MediaDecoder::CanPlayThrough().
@@ -5618,10 +5641,7 @@ bool HTMLMediaElement::CanActivateAutoplay() {
     }
   }
 
-  bool hasData = (mDecoder && mReadyState >= HAVE_ENOUGH_DATA) ||
-                 (mSrcStream && mSrcStream->Active());
-
-  return hasData;
+  return mReadyState >= HAVE_ENOUGH_DATA;
 }
 
 void HTMLMediaElement::CheckAutoplayDataReady() {
