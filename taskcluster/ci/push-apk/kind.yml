@@ -36,7 +36,7 @@ job-defaults:
         platform: Android/opt
         tier: 2
         kind: other
-    run-on-projects: ['try', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+    run-on-projects: ['try', 'mozilla-beta', 'mozilla-esr68']
 
 jobs:
     push-apk-nightly/opt:
