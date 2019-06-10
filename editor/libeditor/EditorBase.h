@@ -33,6 +33,7 @@
 #include "nsISupportsImpl.h"         // for EditorBase::Release, etc.
 #include "nsIWeakReferenceUtils.h"   // for nsWeakPtr
 #include "nsLiteralString.h"         // for NS_LITERAL_STRING
+#include "nsPIDOMWindow.h"           // for nsPIDOMWindowInner, etc.
 #include "nsString.h"                // for nsCString
 #include "nsTArray.h"                // for nsTArray and nsAutoTArray
 #include "nsWeakReference.h"         // for nsSupportsWeakReference
@@ -46,6 +47,7 @@ class nsIDocumentStateListener;
 class nsIEditActionListener;
 class nsIEditorObserver;
 class nsINode;
+class nsIPrincipal;
 class nsISupports;
 class nsITransferable;
 class nsITransaction;
@@ -195,6 +197,22 @@ class EditorBase : public nsIEditor,
   bool Destroyed() const { return mDidPreDestroy; }
 
   Document* GetDocument() const { return mDocument; }
+  nsPIDOMWindowOuter* GetWindow() const {
+    return mDocument ? mDocument->GetWindow() : nullptr;
+  }
+  nsPIDOMWindowInner* GetInnerWindow() const {
+    return mDocument ? mDocument->GetInnerWindow() : nullptr;
+  }
+  bool HasMutationEventListeners(
+      uint32_t aMutationEventType = 0xFFFFFFFF) const {
+    if (!mIsHTMLEditorClass) {
+      // DOM mutation event listeners cannot catch the changes of
+      // <input type="text"> nor <textarea>.
+      return false;
+    }
+    nsPIDOMWindowInner* window = GetInnerWindow();
+    return window ? window->HasMutationListeners(aMutationEventType) : false;
+  }
 
   PresShell* GetPresShell() const {
     return mDocument ? mDocument->GetPresShell() : nullptr;
@@ -283,9 +301,13 @@ class EditorBase : public nsIEditor,
 
   /**
    * ToggleTextDirection() toggles text-direction of the root element.
+   *
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult ToggleTextDirection();
+  MOZ_CAN_RUN_SCRIPT nsresult
+  ToggleTextDirectionAsAction(nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * SwitchTextDirectionTo() sets the text-direction of the root element to
@@ -598,8 +620,13 @@ class EditorBase : public nsIEditor,
    */
   class MOZ_STACK_CLASS AutoEditActionDataSetter final {
    public:
+    // NOTE: aPrincipal will be used when we implement "beforeinput" event.
+    //       It's set only when maybe we shouldn't dispatch it because of
+    //       called by JS.  I.e., if this is nullptr, we can always dispatch
+    //       it.
     AutoEditActionDataSetter(const EditorBase& aEditorBase,
-                             EditAction aEditAction);
+                             EditAction aEditAction,
+                             nsIPrincipal* aPrincipal = nullptr);
     ~AutoEditActionDataSetter();
 
     void UpdateEditAction(EditAction aEditAction) { mEditAction = aEditAction; }

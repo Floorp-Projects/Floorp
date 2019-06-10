@@ -1,7 +1,5 @@
 //! Miscellaneous utilities.
 
-extern crate inflector;
-
 pub trait ToStr {
     /// Return the value as a `str`.
     fn to_str(&self) -> &str;
@@ -96,13 +94,20 @@ pub trait ToCases: ToStr {
     }
 }
 
-impl<T> ToCases for T where T: ToStr {
+impl<T> ToCases for T
+where
+    T: ToStr,
+{
     fn to_class_cases(&self) -> String {
         match self.to_str() {
             "" => "Null".to_string(),
             other => {
                 let result = inflector::cases::pascalcase::to_pascal_case(other);
-                assert!(result.to_str().len() != 0, "Could not convert '{}' to class case", other );
+                assert!(
+                    result.to_str().len() != 0,
+                    "Could not convert '{}' to class case",
+                    other
+                );
                 result
             }
         }
@@ -151,7 +156,11 @@ impl<T> ToCases for T where T: ToStr {
             "" => "_Null".to_string(),
             _ => {
                 let class_cased = self.to_class_cases();
-                assert!(&class_cased != "", "FIXME: `to_class_cases` does not handle {} yet", self.to_str());
+                assert!(
+                    &class_cased != "",
+                    "FIXME: `to_class_cases` does not handle {} yet",
+                    self.to_str()
+                );
                 class_cased
             }
         }
@@ -169,8 +178,11 @@ impl<T> ToCases for T where T: ToStr {
             "result" => "result_".to_string(),
             "kind" => "kind_".to_string(),
             // Special cases
-            "" => unimplemented!("FIXME: `to_cpp_field_case` does not handle {} yet", self.to_str()),
-            _ => snake
+            "" => unimplemented!(
+                "FIXME: `to_cpp_field_case` does not handle {} yet",
+                self.to_str()
+            ),
+            _ => snake,
         }
     }
     fn to_rust_identifier_case(&self) -> String {
@@ -180,8 +192,11 @@ impl<T> ToCases for T where T: ToStr {
             "super" => "super_".to_string(),
             "type" => "type_".to_string(),
             "" if self.to_str() == "" => "null".to_string(),
-            "" => unimplemented!("FIXME: `to_rust_identifier_case` does not handle {} yet", self.to_str()),
-            _ => snake
+            "" => unimplemented!(
+                "FIXME: `to_rust_identifier_case` does not handle {} yet",
+                self.to_str()
+            ),
+            _ => snake,
         }
     }
 }
@@ -227,7 +242,10 @@ pub trait Reindentable {
     fn fit(&self, prefix: &str, width: usize) -> String;
 }
 
-impl<T> Reindentable for T where T: ToStr {
+impl<T> Reindentable for T
+where
+    T: ToStr,
+{
     fn reindent(&self, prefix: &str) -> String {
         use itertools::Itertools;
 
@@ -236,19 +254,24 @@ impl<T> Reindentable for T where T: ToStr {
         // Determine the number of whitespace chars on the first line.
         // Trim that many whitespace chars on the following lines.
         if let Some(first_line) = str.lines().next() {
-            let indent_len = first_line.chars()
+            let indent_len = first_line
+                .chars()
                 .take_while(|c| char::is_whitespace(*c))
                 .count();
-            format!("{}", str.lines()
-                .map(|line|
-                    if line.len() > indent_len {
-                        format!("{prefix}{text}",
+            format!(
+                "{}",
+                str.lines()
+                    .map(|line| if line.len() > indent_len {
+                        format!(
+                            "{prefix}{text}",
                             prefix = prefix,
-                            text = line[indent_len..].to_string())
+                            text = line[indent_len..].to_string()
+                        )
                     } else {
                         "".to_string()
                     })
-                .format("\n"))
+                    .format("\n")
+            )
         } else {
             "".to_string()
         }
@@ -261,7 +284,8 @@ impl<T> Reindentable for T where T: ToStr {
         // Determine the number of whitespace chars on the first line.
         // Trim that many whitespace chars on the following lines.
         if let Some(first_line) = str.lines().next() {
-            let indent_len = first_line.chars()
+            let indent_len = first_line
+                .chars()
                 .take_while(|c| char::is_whitespace(*c))
                 .count();
             let mut lines = vec![];
@@ -274,7 +298,8 @@ impl<T> Reindentable for T where T: ToStr {
                     eprintln!("Line still contains {} ({})", rest, gobbled);
                     if rest.len() + prefix.len() > columns {
                         // Try and find the largest prefix of `text` that fits within `columns`.
-                        let mut iterator = rest.chars()
+                        let mut iterator = rest
+                            .chars()
                             .enumerate()
                             .filter(|&(_, c)| char::is_whitespace(c));
                         let mut last_whitespace_before_break = None;
@@ -292,40 +317,33 @@ impl<T> Reindentable for T where T: ToStr {
                             (None, None) => {
                                 eprintln!("Ok, string didn't contain any whitespace: '{}'", rest);
                                 // Oh, `rest` does not contain any whitespace. Well, use everything.
-                                lines.push(format!("{prefix}{rest}",
-                                    prefix = prefix,
-                                    rest = rest));
-                                continue 'per_line
+                                lines.push(format!("{prefix}{rest}", prefix = prefix, rest = rest));
+                                continue 'per_line;
                             }
                             (Some(pos), _) | (None, Some(pos)) if pos != 0 => {
                                 eprintln!("Best whitespace found at {}", pos);
                                 // Use `rest[0..pos]`, trimmed right.
                                 gobbled += pos + 1;
-                                let line = format!("{prefix}{rest}",
+                                let line = format!(
+                                    "{prefix}{rest}",
                                     prefix = prefix,
-                                    rest = rest[0..pos].trim_right());
+                                    rest = rest[0..pos].trim_end()
+                                );
                                 lines.push(line)
                             }
-                            _else => {
-                                panic!("{:?}", _else)
-                            }
+                            _else => panic!("{:?}", _else),
                         }
                     } else {
-                        let line = format!("{prefix}{rest}",
-                            prefix = prefix,
-                            rest = rest);
+                        let line = format!("{prefix}{rest}", prefix = prefix, rest = rest);
                         lines.push(line);
-                        continue 'per_line
+                        continue 'per_line;
                     }
                 }
             }
-            format!("{lines}",
-                lines = lines.iter()
-                    .format("\n"))
+            format!("{lines}", lines = lines.iter().format("\n"))
         } else {
             "".to_string()
         }
-
     }
 }
 
@@ -333,13 +351,13 @@ impl Reindentable for Option<String> {
     fn reindent(&self, prefix: &str) -> String {
         match *self {
             None => "".to_string(),
-            Some(ref string) => string.reindent(prefix)
+            Some(ref string) => string.reindent(prefix),
         }
     }
     fn fit(&self, prefix: &str, columns: usize) -> String {
         match *self {
             None => "".to_string(),
-            Some(ref string) => string.fit(prefix, columns)
+            Some(ref string) => string.fit(prefix, columns),
         }
     }
 }
@@ -364,15 +382,15 @@ pub mod name_sorter {
 
         /// Return the number of items in the sorter.
         pub fn len(&self) -> usize {
-            debug_assert!( {
+            debug_assert!({
                 // Let's check that the length is always the sum of sublengths.
-                let len = self.per_length.values()
-                    .map(|v| {
-                        match v {
-                            &Node::Leaf(Some(_)) => 1,
-                            &Node::Leaf(_) => panic!("Invariant error: empty leaf!"),
-                            &Node::Internal { ref len, .. } => *len
-                        }
+                let len = self
+                    .per_length
+                    .values()
+                    .map(|v| match v {
+                        &Node::Leaf(Some(_)) => 1,
+                        &Node::Leaf(_) => panic!("Invariant error: empty leaf!"),
+                        &Node::Internal { ref len, .. } => *len,
                     })
                     .fold(0, |x, y| (x + y));
                 len == self.len
@@ -431,12 +449,12 @@ pub mod name_sorter {
         }
 
         pub fn iter(&self) -> impl Iterator<Item = (usize, &Node<T>)> {
-            self.per_length.iter()
-                .map(|(&len, node)| (len, node))
+            self.per_length.iter().map(|(&len, node)| (len, node))
         }
 
         pub fn get(&self, key: &str) -> Option<&T> {
-            self.per_length.get(&key.len())
+            self.per_length
+                .get(&key.len())
                 .and_then(|node| node.get(key))
         }
     }
@@ -451,18 +469,17 @@ pub mod name_sorter {
 
             /// Number of leaves in this subtree.
             len: usize,
-        }
+        },
     }
     impl<T> Node<T> {
         fn get(&self, key: &str) -> Option<&T> {
             match (self, key.chars().next()) {
                 (&Node::Leaf(Some(ref result)), None) => Some(result),
-                (&Node::Internal { ref children, ..}, Some(c)) => {
+                (&Node::Internal { ref children, .. }, Some(c)) => {
                     debug_assert!(children.len() != 0);
-                    children.get(&c)
-                        .and_then(|node| node.get(&key[1..]))
+                    children.get(&c).and_then(|node| node.get(&key[1..]))
                 }
-                _ => panic!("Invariant error: length")
+                _ => panic!("Invariant error: length"),
             }
         }
 
@@ -474,14 +491,21 @@ pub mod name_sorter {
                     std::mem::swap(&mut data, old);
                     data
                 }
-                (&mut Node::Internal { ref mut children, ref mut len }, Some(c)) => {
+                (
+                    &mut Node::Internal {
+                        ref mut children,
+                        ref mut len,
+                    },
+                    Some(c),
+                ) => {
                     let result = {
                         let entry = if key.len() == 1 {
-                            children.entry(c)
-                                .or_insert_with(|| Node::Leaf(None))
+                            children.entry(c).or_insert_with(|| Node::Leaf(None))
                         } else {
-                            children.entry(c)
-                                .or_insert_with(|| Node::Internal { children: HashMap::new(), len: 0})
+                            children.entry(c).or_insert_with(|| Node::Internal {
+                                children: HashMap::new(),
+                                len: 0,
+                            })
                         };
                         entry.insert(&key[1..], value)
                     };
@@ -492,14 +516,17 @@ pub mod name_sorter {
                     debug_assert!(children.len() != 0);
                     result
                 }
-                _ => panic!("Invariant error: length")
+                _ => panic!("Invariant error: length"),
             }
         }
         fn new(key: &str, value: T) -> Self {
             if key.len() == 0 {
                 Node::Leaf(Some(value))
             } else {
-                let mut node = Node::Internal { children: HashMap::new(), len : 0};
+                let mut node = Node::Internal {
+                    children: HashMap::new(),
+                    len: 0,
+                };
                 assert!(node.insert(key, value).is_none());
                 node
             }

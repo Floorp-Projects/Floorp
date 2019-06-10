@@ -18,6 +18,7 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EditorCommands.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/HTMLEditor.h"
@@ -31,6 +32,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/URLExtraData.h"
 #include <algorithm>
 
@@ -43,9 +45,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
-#include "nsIEditor.h"
-#include "nsIEditorStyleSheets.h"
-#include "nsIPlaintextEditor.h"
 #include "nsITextControlFrame.h"
 #include "nsCommandManager.h"
 #include "nsCommandParams.h"
@@ -1160,6 +1159,19 @@ Document::FrameRequest::FrameRequest(FrameRequestCallback& aCallback,
 // ==================================================================
 // =
 // ==================================================================
+
+Document::InternalCommandDataHashtable*
+    Document::sInternalCommandDataHashtable = nullptr;
+
+// static
+void Document::Shutdown() {
+  if (sInternalCommandDataHashtable) {
+    sInternalCommandDataHashtable->Clear();
+    delete sInternalCommandDataHashtable;
+    sInternalCommandDataHashtable = nullptr;
+  }
+}
+
 Document::Document(const char* aContentType)
     : nsINode(nullptr),
       DocumentOrShadowRoot(*this),
@@ -3709,261 +3721,571 @@ nsCommandManager* Document::GetMidasCommandManager() {
   return mMidasCommandManager;
 }
 
-struct MidasCommand {
-  const char* incomingCommandString;
-  const char* internalCommandString;
-  const char* internalParamString;
-  bool useNewParam;
-  bool convertToBoolean;
-};
-
-static const struct MidasCommand gMidasCommandTable[] = {
-    // clang-format off
-  { "bold",          "cmd_bold",            "", true,  false },
-  { "italic",        "cmd_italic",          "", true,  false },
-  { "underline",     "cmd_underline",       "", true,  false },
-  { "strikethrough", "cmd_strikethrough",   "", true,  false },
-  { "subscript",     "cmd_subscript",       "", true,  false },
-  { "superscript",   "cmd_superscript",     "", true,  false },
-  { "cut",           "cmd_cut",             "", true,  false },
-  { "copy",          "cmd_copy",            "", true,  false },
-  { "paste",         "cmd_paste",           "", true,  false },
-  { "delete",        "cmd_deleteCharBackward", "", true,  false },
-  { "forwarddelete", "cmd_deleteCharForward", "", true,  false },
-  { "selectall",     "cmd_selectAll",       "", true,  false },
-  { "undo",          "cmd_undo",            "", true,  false },
-  { "redo",          "cmd_redo",            "", true,  false },
-  { "indent",        "cmd_indent",          "", true,  false },
-  { "outdent",       "cmd_outdent",         "", true,  false },
-  { "backcolor",     "cmd_highlight",       "", false, false },
-  { "forecolor",     "cmd_fontColor",       "", false, false },
-  { "hilitecolor",   "cmd_highlight",       "", false, false },
-  { "fontname",      "cmd_fontFace",        "", false, false },
-  { "fontsize",      "cmd_fontSize",        "", false, false },
-  { "increasefontsize", "cmd_increaseFont", "", false, false },
-  { "decreasefontsize", "cmd_decreaseFont", "", false, false },
-  { "inserthorizontalrule", "cmd_insertHR", "", true,  false },
-  { "createlink",    "cmd_insertLinkNoUI",  "", false, false },
-  { "insertimage",   "cmd_insertImageNoUI", "", false, false },
-  { "inserthtml",    "cmd_insertHTML",      "", false, false },
-  { "inserttext",    "cmd_insertText",      "", false, false },
-  { "gethtml",       "cmd_getContents",     "", false, false },
-  { "justifyleft",   "cmd_align",       "left", true,  false },
-  { "justifyright",  "cmd_align",      "right", true,  false },
-  { "justifycenter", "cmd_align",     "center", true,  false },
-  { "justifyfull",   "cmd_align",    "justify", true,  false },
-  { "removeformat",  "cmd_removeStyles",    "", true,  false },
-  { "unlink",        "cmd_removeLinks",     "", true,  false },
-  { "insertorderedlist",   "cmd_ol",        "", true,  false },
-  { "insertunorderedlist", "cmd_ul",        "", true,  false },
-  { "insertparagraph", "cmd_insertParagraph", "", true,  false },
-  { "insertlinebreak", "cmd_insertLineBreak", "", true,  false },
-  { "formatblock",   "cmd_paragraphState",  "", false, false },
-  { "heading",       "cmd_paragraphState",  "", false, false },
-  { "styleWithCSS",  "cmd_setDocumentUseCSS", "", false, true },
-  { "contentReadOnly", "cmd_setDocumentReadOnly", "", false, true },
-  { "insertBrOnReturn", "cmd_insertBrOnReturn", "", false, true },
-  { "defaultParagraphSeparator", "cmd_defaultParagraphSeparator", "", false, false },
-  { "enableObjectResizing", "cmd_enableObjectResizing", "", false, true },
-  { "enableInlineTableEditing", "cmd_enableInlineTableEditing", "", false, true },
-  { "enableAbsolutePositionEditing", "cmd_enableAbsolutePositionEditing", "", false, true },
+// static
+void Document::EnsureInitializeInternalCommandDataHashtable() {
+  if (sInternalCommandDataHashtable) {
+    return;
+  }
+  sInternalCommandDataHashtable = new InternalCommandDataHashtable();
+  // clang-format off
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("bold"),
+      InternalCommandData(
+          "cmd_bold",
+          Command::FormatBold,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("italic"),
+      InternalCommandData(
+          "cmd_italic",
+          Command::FormatItalic,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("underline"),
+      InternalCommandData(
+          "cmd_underline",
+          Command::FormatUnderline,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("strikethrough"),
+      InternalCommandData(
+          "cmd_strikethrough",
+          Command::FormatStrikeThrough,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("subscript"),
+      InternalCommandData(
+          "cmd_subscript",
+          Command::FormatSubscript,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("superscript"),
+      InternalCommandData(
+          "cmd_superscript",
+          Command::FormatSuperscript,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("cut"),
+      InternalCommandData(
+          "cmd_cut",
+          Command::Cut,
+          ExecCommandParam::Ignore,
+          CutCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("copy"),
+      InternalCommandData(
+          "cmd_copy",
+          Command::Copy,
+          ExecCommandParam::Ignore,
+          CopyCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("paste"),
+      InternalCommandData(
+          "cmd_paste",
+          Command::Paste,
+          ExecCommandParam::Ignore,
+          PasteCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("delete"),
+      InternalCommandData(
+          "cmd_deleteCharBackward",
+          Command::DeleteCharBackward,
+          ExecCommandParam::Ignore,
+          DeleteCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("forwarddelete"),
+      InternalCommandData(
+          "cmd_deleteCharForward",
+          Command::DeleteCharForward,
+          ExecCommandParam::Ignore,
+          DeleteCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("selectall"),
+      InternalCommandData(
+          "cmd_selectAll",
+          Command::SelectAll,
+          ExecCommandParam::Ignore,
+          SelectAllCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("undo"),
+      InternalCommandData(
+          "cmd_undo",
+          Command::HistoryUndo,
+          ExecCommandParam::Ignore,
+          UndoCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("redo"),
+      InternalCommandData(
+          "cmd_redo",
+          Command::HistoryRedo,
+          ExecCommandParam::Ignore,
+          RedoCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("indent"),
+      InternalCommandData("cmd_indent",
+          Command::FormatIndent,
+          ExecCommandParam::Ignore,
+          IndentCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("outdent"),
+      InternalCommandData(
+          "cmd_outdent",
+          Command::FormatOutdent,
+          ExecCommandParam::Ignore,
+          OutdentCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("backcolor"),
+      InternalCommandData(
+          "cmd_highlight",
+          Command::FormatBackColor,
+          ExecCommandParam::String,
+          HighlightColorStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("hilitecolor"),
+      InternalCommandData(
+          "cmd_highlight",
+          Command::FormatBackColor,
+          ExecCommandParam::String,
+          HighlightColorStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("forecolor"),
+      InternalCommandData(
+          "cmd_fontColor",
+          Command::FormatFontColor,
+          ExecCommandParam::String,
+          FontColorStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("fontname"),
+      InternalCommandData(
+          "cmd_fontFace",
+          Command::FormatFontName,
+          ExecCommandParam::String,
+          FontFaceStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("fontsize"),
+      InternalCommandData(
+          "cmd_fontSize",
+          Command::FormatFontSize,
+          ExecCommandParam::String,
+          FontSizeStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("increasefontsize"),
+      InternalCommandData(
+          "cmd_increaseFont",
+          Command::FormatIncreaseFontSize,
+          ExecCommandParam::Ignore,
+          IncreaseFontSizeCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("decreasefontsize"),
+      InternalCommandData(
+          "cmd_decreaseFont",
+          Command::FormatDecreaseFontSize,
+          ExecCommandParam::Ignore,
+          DecreaseFontSizeCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("inserthorizontalrule"),
+      InternalCommandData(
+          "cmd_insertHR",
+          Command::InsertHorizontalRule,
+          ExecCommandParam::Ignore,
+          InsertTagCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("createlink"),
+      InternalCommandData(
+          "cmd_insertLinkNoUI",
+          Command::InsertLink,
+          ExecCommandParam::String,
+          InsertTagCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertimage"),
+      InternalCommandData(
+          "cmd_insertImageNoUI",
+          Command::InsertImage,
+          ExecCommandParam::String,
+          InsertTagCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("inserthtml"),
+      InternalCommandData(
+          "cmd_insertHTML",
+          Command::InsertHTML,
+          ExecCommandParam::String,
+          InsertHTMLCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("inserttext"),
+      InternalCommandData(
+          "cmd_insertText",
+          Command::InsertText,
+          ExecCommandParam::String,
+          InsertPlaintextCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("gethtml"),
+      InternalCommandData(
+          "cmd_getContents",
+          Command::GetHTML,
+          ExecCommandParam::Ignore,
+          nullptr));  // Not defined in EditorCommands.h
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("justifyleft"),
+      InternalCommandData(
+          "cmd_align",
+          Command::FormatJustifyLeft,
+          ExecCommandParam::Ignore,  // Will be set to "left"
+          AlignCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("justifyright"),
+      InternalCommandData(
+          "cmd_align",
+          Command::FormatJustifyRight,
+          ExecCommandParam::Ignore,  // Will be set to "right"
+          AlignCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("justifycenter"),
+      InternalCommandData(
+          "cmd_align",
+          Command::FormatJustifyCenter,
+          ExecCommandParam::Ignore,  // Will be set to "center"
+          AlignCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("justifyfull"),
+      InternalCommandData(
+          "cmd_align",
+          Command::FormatJustifyFull,
+          ExecCommandParam::Ignore,  // Will be set to "justify"
+          AlignCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("removeformat"),
+      InternalCommandData(
+          "cmd_removeStyles",
+          Command::FormatRemove,
+          ExecCommandParam::Ignore,
+          RemoveStylesCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("unlink"),
+      InternalCommandData(
+          "cmd_removeLinks",
+          Command::FormatRemoveLink,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertorderedlist"),
+      InternalCommandData(
+          "cmd_ol",
+          Command::InsertOrderedList,
+          ExecCommandParam::Ignore,
+          ListCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertunorderedlist"),
+      InternalCommandData(
+          "cmd_ul",
+          Command::InsertUnorderedList,
+          ExecCommandParam::Ignore,
+          ListCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertparagraph"),
+      InternalCommandData(
+          "cmd_insertParagraph",
+          Command::InsertParagraph,
+          ExecCommandParam::Ignore,
+          InsertParagraphCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertlinebreak"),
+      InternalCommandData(
+          "cmd_insertLineBreak",
+          Command::InsertLineBreak,
+          ExecCommandParam::Ignore,
+          InsertLineBreakCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("formatblock"),
+      InternalCommandData(
+          "cmd_paragraphState",
+          Command::FormatBlock,
+          ExecCommandParam::String,
+          ParagraphStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("heading"),
+      InternalCommandData(
+          "cmd_paragraphState",
+          Command::FormatBlock,
+          ExecCommandParam::String,
+          ParagraphStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("styleWithCSS"),
+      InternalCommandData(
+          "cmd_setDocumentUseCSS",
+          Command::SetDocumentUseCSS,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("usecss"),  // Legacy command
+      InternalCommandData(
+          "cmd_setDocumentUseCSS",
+          Command::SetDocumentUseCSS,
+          ExecCommandParam::InvertedBoolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("contentReadOnly"),
+      InternalCommandData(
+          "cmd_setDocumentReadOnly",
+          Command::SetDocumentReadOnly,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("readonly"),  // Legacy command
+      InternalCommandData(
+          "cmd_setDocumentReadOnly",
+          Command::SetDocumentReadOnly,
+          ExecCommandParam::InvertedBoolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertBrOnReturn"),
+      InternalCommandData(
+          "cmd_insertBrOnReturn",
+          Command::SetDocumentInsertBROnEnterKeyPress,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("defaultParagraphSeparator"),
+      InternalCommandData(
+          "cmd_defaultParagraphSeparator",
+          Command::SetDocumentDefaultParagraphSeparator,
+          ExecCommandParam::String,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("enableObjectResizing"),
+      InternalCommandData(
+          "cmd_enableObjectResizing",
+          Command::ToggleObjectResizers,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("enableInlineTableEditing"),
+      InternalCommandData(
+          "cmd_enableInlineTableEditing",
+          Command::ToggleInlineTableEditor,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("enableAbsolutePositionEditing"),
+      InternalCommandData(
+          "cmd_enableAbsolutePositionEditing",
+          Command::ToggleAbsolutePositionEditor,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
 #if 0
-// no editor support to remove alignments right now
-  { "justifynone",   "cmd_align",           "", true,  false },
+  // with empty string
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("justifynone"),
+      InternalCommandData(
+          "cmd_align",
+          Command::Undefined,
+          ExecCommandParam::Ignore,
+          nullptr));  // Not implemented yet.
+  // REQUIRED SPECIAL REVIEW special review
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("saveas"),
+      InternalCommandData(
+          "cmd_saveAs",
+          Command::Undefined,
+          ExecCommandParam::Boolean,
+          nullptr));  // Not implemented yet.
+  // REQUIRED SPECIAL REVIEW special review
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("print"),
+      InternalCommandData(
+          "cmd_print",
+          Command::Undefined,
+          ExecCommandParam::Boolean,
+          nullptr));  // Not implemented yet.
+#endif  // #if 0
+  // clang-format on
+}
 
-// the following will need special review before being turned on
-  { "saveas",        "cmd_saveAs",          "", true,  false },
-  { "print",         "cmd_print",           "", true,  false },
-#endif
-  { nullptr, nullptr, nullptr, false, false }
-    // clang-format on
-};
-
-#define MidasCommandCount \
-  ((sizeof(gMidasCommandTable) / sizeof(struct MidasCommand)) - 1)
-
-static const char* const gBlocks[] = {
-    // clang-format off
-  "ADDRESS",
-  "BLOCKQUOTE",
-  "DD",
-  "DIV",
-  "DL",
-  "DT",
-  "H1",
-  "H2",
-  "H3",
-  "H4",
-  "H5",
-  "H6",
-  "P",
-  "PRE"
-    // clang-format on
-};
-
-static bool ConvertToMidasInternalCommandInner(
-    const nsAString& inCommandID, const nsAString& inParam,
-    nsACString& outCommandID, nsACString& outParam, bool& outIsBoolean,
-    bool& outBooleanValue, bool aIgnoreParams) {
-  NS_ConvertUTF16toUTF8 convertedCommandID(inCommandID);
-
-  // Hack to support old boolean commands that were backwards (see bug 301490).
-  bool invertBool = false;
-  if (convertedCommandID.LowerCaseEqualsLiteral("usecss")) {
-    convertedCommandID.AssignLiteral("styleWithCSS");
-    invertBool = true;
-  } else if (convertedCommandID.LowerCaseEqualsLiteral("readonly")) {
-    convertedCommandID.AssignLiteral("contentReadOnly");
-    invertBool = true;
+Document::InternalCommandData Document::ConvertToInternalCommand(
+    const nsAString& aHTMLCommandName,
+    const nsAString& aValue /* = EmptyString() */,
+    nsAString* aAdjustedValue /* = nullptr */) {
+  MOZ_ASSERT(!aAdjustedValue || aAdjustedValue->IsEmpty());
+  EnsureInitializeInternalCommandDataHashtable();
+  InternalCommandData commandData;
+  if (!sInternalCommandDataHashtable->Get(aHTMLCommandName, &commandData)) {
+    return InternalCommandData();
   }
-
-  size_t i;
-  bool found = false;
-  for (i = 0; i < MidasCommandCount; ++i) {
-    if (convertedCommandID.Equals(gMidasCommandTable[i].incomingCommandString,
-                                  nsCaseInsensitiveCStringComparator())) {
-      found = true;
-      break;
-    }
+  if (!aAdjustedValue) {
+    // No further work to do
+    return commandData;
   }
+  switch (commandData.mExecCommandParam) {
+    case ExecCommandParam::Ignore:
+      // Just have to copy it, no checking
+      switch (commandData.mCommand) {
+        case Command::FormatJustifyLeft:
+          aAdjustedValue->AssignLiteral("left");
+          break;
+        case Command::FormatJustifyRight:
+          aAdjustedValue->AssignLiteral("right");
+          break;
+        case Command::FormatJustifyCenter:
+          aAdjustedValue->AssignLiteral("center");
+          break;
+        case Command::FormatJustifyFull:
+          aAdjustedValue->AssignLiteral("justify");
+          break;
+        default:
+          MOZ_ASSERT(EditorCommand::GetParamType(commandData.mCommand) ==
+                     EditorCommandParamType::None);
+          break;
+      }
+      return commandData;
 
-  if (!found) {
-    // reset results if the command is not found in our table
-    outCommandID.SetLength(0);
-    outParam.SetLength(0);
-    outIsBoolean = false;
+    case ExecCommandParam::Boolean:
+      MOZ_ASSERT(!!(EditorCommand::GetParamType(commandData.mCommand) &
+                    EditorCommandParamType::Bool));
+      // If this is a boolean value and it's not explicitly false (e.g. no
+      // value).  We default to "true" (see bug 301490).
+      if (!aValue.LowerCaseEqualsLiteral("false")) {
+        aAdjustedValue->AssignLiteral("true");
+      } else {
+        aAdjustedValue->AssignLiteral("false");
+      }
+      return commandData;
+
+    case ExecCommandParam::InvertedBoolean:
+      MOZ_ASSERT(!!(EditorCommand::GetParamType(commandData.mCommand) &
+                    EditorCommandParamType::Bool));
+      // For old backwards commands we invert the check.
+      if (aValue.LowerCaseEqualsLiteral("false")) {
+        aAdjustedValue->AssignLiteral("true");
+      } else {
+        aAdjustedValue->AssignLiteral("false");
+      }
+      return commandData;
+
+    case ExecCommandParam::String:
+      MOZ_ASSERT(!!(
+          EditorCommand::GetParamType(commandData.mCommand) &
+          (EditorCommandParamType::String | EditorCommandParamType::CString)));
+      switch (commandData.mCommand) {
+        case Command::FormatBlock: {
+          const char16_t* start = aValue.BeginReading();
+          const char16_t* end = aValue.EndReading();
+          if (start != end && *start == '<' && *(end - 1) == '>') {
+            ++start;
+            --end;
+          }
+          // XXX Should we reorder this array with actual usage?
+          static const nsStaticAtom* kFormattableBlockTags[] = {
+              // clang-format off
+            nsGkAtoms::address,
+            nsGkAtoms::blockquote,
+            nsGkAtoms::dd,
+            nsGkAtoms::div,
+            nsGkAtoms::dl,
+            nsGkAtoms::dt,
+            nsGkAtoms::h1,
+            nsGkAtoms::h2,
+            nsGkAtoms::h3,
+            nsGkAtoms::h4,
+            nsGkAtoms::h5,
+            nsGkAtoms::h6,
+            nsGkAtoms::p,
+            nsGkAtoms::pre,
+              // clang-format on
+          };
+          nsAutoString value(nsDependentSubstring(start, end));
+          ToLowerCase(value);
+          const nsStaticAtom* valueAtom = NS_GetStaticAtom(value);
+          for (const nsStaticAtom* kTag : kFormattableBlockTags) {
+            if (valueAtom == kTag) {
+              kTag->ToString(*aAdjustedValue);
+              return commandData;
+            }
+          }
+          return InternalCommandData();
+        }
+        case Command::FormatFontSize: {
+          // Per editing spec as of April 23, 2012, we need to reject the value
+          // if it's not a valid floating-point number surrounded by optional
+          // whitespace.  Otherwise, we parse it as a legacy font size.  For
+          // now, we just parse as a legacy font size regardless (matching
+          // WebKit) -- bug 747879.
+          int32_t size = nsContentUtils::ParseLegacyFontSize(aValue);
+          if (!size) {
+            return InternalCommandData();
+          }
+          MOZ_ASSERT(aAdjustedValue->IsEmpty());
+          aAdjustedValue->AppendInt(size);
+          return commandData;
+        }
+        case Command::InsertImage:
+        case Command::InsertLink:
+          if (aValue.IsEmpty()) {
+            // Invalid value, return false
+            return InternalCommandData();
+          }
+          aAdjustedValue->Assign(aValue);
+          return commandData;
+        case Command::SetDocumentDefaultParagraphSeparator:
+          if (!aValue.LowerCaseEqualsLiteral("div") &&
+              !aValue.LowerCaseEqualsLiteral("p") &&
+              !aValue.LowerCaseEqualsLiteral("br")) {
+            // Invalid value
+            return InternalCommandData();
+          }
+          aAdjustedValue->Assign(aValue);
+          return commandData;
+        default:
+          aAdjustedValue->Assign(aValue);
+          return commandData;
+      }
+
+    default:
+      MOZ_ASSERT_UNREACHABLE("New ExecCommandParam value hasn't been handled");
+      return InternalCommandData();
+  }
+}
+
+bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
+                           const nsAString& aValue,
+                           nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
+  // Only allow on HTML documents.
+  if (!IsHTMLOrXHTML()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_EXEC_COMMAND);
     return false;
   }
 
-  // set outCommandID (what we use internally)
-  outCommandID.Assign(gMidasCommandTable[i].internalCommandString);
-
-  // set outParam & outIsBoolean based on flags from the table
-  outIsBoolean = gMidasCommandTable[i].convertToBoolean;
-
-  if (aIgnoreParams) {
-    // No further work to do
-    return true;
-  }
-
-  if (gMidasCommandTable[i].useNewParam) {
-    // Just have to copy it, no checking
-    outParam.Assign(gMidasCommandTable[i].internalParamString);
-    return true;
-  }
-
-  // handle checking of param passed in
-  if (outIsBoolean) {
-    // If this is a boolean value and it's not explicitly false (e.g. no value)
-    // we default to "true". For old backwards commands we invert the check (see
-    // bug 301490).
-    if (invertBool) {
-      outBooleanValue = inParam.LowerCaseEqualsLiteral("false");
-    } else {
-      outBooleanValue = !inParam.LowerCaseEqualsLiteral("false");
-    }
-    outParam.Truncate();
-
-    return true;
-  }
-
-  // String parameter -- see if we need to convert it (necessary for
-  // cmd_paragraphState and cmd_fontSize)
-  if (outCommandID.EqualsLiteral("cmd_paragraphState")) {
-    const char16_t* start = inParam.BeginReading();
-    const char16_t* end = inParam.EndReading();
-    if (start != end && *start == '<' && *(end - 1) == '>') {
-      ++start;
-      --end;
-    }
-
-    NS_ConvertUTF16toUTF8 convertedParam(Substring(start, end));
-    size_t j;
-    for (j = 0; j < ArrayLength(gBlocks); ++j) {
-      if (convertedParam.Equals(gBlocks[j],
-                                nsCaseInsensitiveCStringComparator())) {
-        outParam.Assign(gBlocks[j]);
-        break;
-      }
-    }
-
-    if (j == ArrayLength(gBlocks)) {
-      outParam.Truncate();
-    }
-  } else if (outCommandID.EqualsLiteral("cmd_fontSize")) {
-    // Per editing spec as of April 23, 2012, we need to reject the value if
-    // it's not a valid floating-point number surrounded by optional whitespace.
-    // Otherwise, we parse it as a legacy font size.  For now, we just parse as
-    // a legacy font size regardless (matching WebKit) -- bug 747879.
-    outParam.Truncate();
-    int32_t size = nsContentUtils::ParseLegacyFontSize(inParam);
-    if (size) {
-      outParam.AppendInt(size);
-    }
-  } else {
-    CopyUTF16toUTF8(inParam, outParam);
-  }
-
-  return true;
-}
-
-static bool ConvertToMidasInternalCommand(const nsAString& inCommandID,
-                                          const nsAString& inParam,
-                                          nsACString& outCommandID,
-                                          nsACString& outParam,
-                                          bool& outIsBoolean,
-                                          bool& outBooleanValue) {
-  return ConvertToMidasInternalCommandInner(inCommandID, inParam, outCommandID,
-                                            outParam, outIsBoolean,
-                                            outBooleanValue, false);
-}
-
-static bool ConvertToMidasInternalCommand(const nsAString& inCommandID,
-                                          nsACString& outCommandID) {
-  nsAutoCString dummyCString;
-  nsAutoString dummyString;
-  bool dummyBool;
-  return ConvertToMidasInternalCommandInner(inCommandID, dummyString,
-                                            outCommandID, dummyCString,
-                                            dummyBool, dummyBool, true);
-}
-
-bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
-                           const nsAString& value,
-                           nsIPrincipal& aSubjectPrincipal, ErrorResult& rv) {
-  // Only allow on HTML documents.
-  if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_EXEC_COMMAND);
+  // if they are requesting UI from us, let's fail since we have no UI
+  if (aShowUI) {
     return false;
   }
 
   //  for optional parameters see dom/src/base/nsHistory.cpp: HistoryImpl::Go()
   //  this might add some ugly JS dependencies?
 
-  nsAutoCString cmdToDispatch, paramStr;
-  bool isBool, boolVal;
-  if (!ConvertToMidasInternalCommand(commandID, value, cmdToDispatch, paramStr,
-                                     isBool, boolVal)) {
+  nsAutoString adjustedValue;
+  InternalCommandData commandData =
+      ConvertToInternalCommand(aHTMLCommandName, aValue, &adjustedValue);
+  if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
-
-  bool isCutCopy = (commandID.LowerCaseEqualsLiteral("cut") ||
-                    commandID.LowerCaseEqualsLiteral("copy"));
-  bool isPaste = commandID.LowerCaseEqualsLiteral("paste");
 
   // if editing is not on, bail
-  if (!isCutCopy && !isPaste && !IsEditingOnAfterFlush()) {
+  if (commandData.IsAvailableOnlyWhenEditable() && !IsEditingOnAfterFlush()) {
     return false;
   }
 
-  // if they are requesting UI from us, let's fail since we have no UI
-  if (doShowUI) {
+  if (commandData.mCommand == Command::GetHTML) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
-  // special case for cut & copy
-  // cut & copy are allowed in non editable documents
-  if (isCutCopy) {
+  // Do security check first.
+  if (commandData.IsCutOrCopyCommand()) {
     if (!nsContentUtils::IsCutCopyAllowed(&aSubjectPrincipal)) {
       // We have rejected the event due to it not being performed in an
       // input-driven context therefore, we report the error to the console.
@@ -3973,121 +4295,207 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
                                       "ExecCommandCutCopyDeniedNotInputDriven");
       return false;
     }
-
-    // For cut & copy commands, we need the behaviour from
-    // nsWindowRoot::GetControllers which is to look at the focused element, and
-    // defer to a focused textbox's controller The code past taken by other
-    // commands in ExecCommand always uses the window directly, rather than
-    // deferring to the textbox, which is desireable for most editor commands,
-    // but not 'cut' and 'copy' (as those should allow copying out of embedded
-    // editors). This behaviour is invoked if we call DoCommand directly on the
-    // docShell.
-    nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
-    if (docShell) {
-      nsresult res = docShell->DoCommand(cmdToDispatch.get());
-      if (res == NS_SUCCESS_DOM_NO_OPERATION) {
-        return false;
-      }
-      return NS_SUCCEEDED(res);
-    }
-    return false;
-  }
-
-  if (commandID.LowerCaseEqualsLiteral("gethtml")) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return false;
-  }
-
-  if (isPaste && !nsContentUtils::PrincipalHasPermission(
-                     &aSubjectPrincipal, nsGkAtoms::clipboardRead)) {
-    return false;
-  }
-
-  // get command manager and dispatch command to our window if it's acceptable
-  RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
-  if (!commandManager) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return false;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
-  if (!window) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return false;
-  }
-
-  if ((cmdToDispatch.EqualsLiteral("cmd_fontSize") ||
-       cmdToDispatch.EqualsLiteral("cmd_insertImageNoUI") ||
-       cmdToDispatch.EqualsLiteral("cmd_insertLinkNoUI") ||
-       cmdToDispatch.EqualsLiteral("cmd_paragraphState")) &&
-      paramStr.IsEmpty()) {
-    // Invalid value, return false
-    return false;
-  }
-
-  if (cmdToDispatch.EqualsLiteral("cmd_defaultParagraphSeparator") &&
-      !paramStr.LowerCaseEqualsLiteral("div") &&
-      !paramStr.LowerCaseEqualsLiteral("p") &&
-      !paramStr.LowerCaseEqualsLiteral("br")) {
-    // Invalid value
-    return false;
-  }
-
-  // Return false for disabled commands (bug 760052)
-  if (!commandManager->IsCommandEnabled(cmdToDispatch, window)) {
-    return false;
-  }
-
-  if (!isBool && paramStr.IsEmpty()) {
-    rv = commandManager->DoCommand(cmdToDispatch.get(), nullptr, window);
-  } else {
-    // we have a command that requires a parameter, create params
-    RefPtr<nsCommandParams> params = new nsCommandParams();
-    if (isBool) {
-      rv = params->SetBool("state_attribute", boolVal);
-    } else if (cmdToDispatch.EqualsLiteral("cmd_fontFace") ||
-               cmdToDispatch.EqualsLiteral("cmd_insertImageNoUI") ||
-               cmdToDispatch.EqualsLiteral("cmd_insertLinkNoUI")) {
-      rv = params->SetString("state_attribute", value);
-    } else if (cmdToDispatch.EqualsLiteral("cmd_insertHTML") ||
-               cmdToDispatch.EqualsLiteral("cmd_insertText")) {
-      rv = params->SetString("state_data", value);
-    } else {
-      rv = params->SetCString("state_attribute", paramStr);
-    }
-    if (rv.Failed()) {
+  } else if (commandData.IsPasteCommand()) {
+    if (!nsContentUtils::PrincipalHasPermission(&aSubjectPrincipal,
+                                                nsGkAtoms::clipboardRead)) {
       return false;
     }
-    rv = commandManager->DoCommand(cmdToDispatch.get(), params, window);
   }
 
-  return !rv.Failed();
+  // Next, consider context of command handling which is automatically resolved
+  // by order of controllers in `nsCommandManager::GetControllerForCommand()`.
+  // The order is:
+  //   1. HTMLEditor for the document, if there is.
+  //   2. TextEditor if there is an active element and it has TextEditor like
+  //      <input type="text"> or <textarea>.
+  //   3. Retarget to the DocShell or nsCommandManager as what we've done.
+  // XXX Chromium handles `execCommand()` in <input type="text"> or
+  //     <textarea> when it's in an editing host and has focus.  So, our
+  //     traditional behavior is different and does not make sense.
+  RefPtr<TextEditor> maybeHTMLEditor;
+  if (commandData.IsCutOrCopyCommand()) {
+    // Note that we used to use DocShell to handle `cut` and `copy` command
+    // for dispatching corresponding events for making possible web apps to
+    // implement their own editor without editable elements but supports
+    // standard shortcut keys, etc.  In this case, we prefer to use active
+    // element's editor to keep same behavior.
+    maybeHTMLEditor = nsContentUtils::GetActiveEditor(GetPresContext());
+  } else {
+    maybeHTMLEditor = nsContentUtils::GetHTMLEditor(GetPresContext());
+    if (!maybeHTMLEditor) {
+      maybeHTMLEditor = nsContentUtils::GetActiveEditor(GetPresContext());
+    }
+  }
+
+  // Then, retrieve editor command class instance which should handle it
+  // and can handle it now.
+  RefPtr<EditorCommand> editorCommand;
+  if (!maybeHTMLEditor) {
+    // If the command is available without editor, we should redirect the
+    // command to focused descendant with DocShell.
+    if (commandData.IsAvailableOnlyWhenEditable()) {
+      return false;
+    }
+  } else {
+    // Otherwise, we should use EditorCommand instance (which is singleton
+    // instance) when it's enabled.
+    editorCommand = commandData.mGetEditorCommandFunc();
+    if (NS_WARN_IF(!editorCommand)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return false;
+    }
+
+    if (!editorCommand->IsCommandEnabled(commandData.mCommand,
+                                         maybeHTMLEditor)) {
+      // If the EditorCommand instance is disabled, we should do nothing if
+      // the command requires an editor.
+      if (commandData.IsAvailableOnlyWhenEditable()) {
+        // Return false if editor specific commands is disabled (bug 760052).
+        return false;
+      }
+      // Otherwise, we should redirect it to focused descendant with DocShell.
+      editorCommand = nullptr;
+    }
+  }
+
+  // If we cannot use EditorCommand instance directly, we need to handle the
+  // command with traditional path (i.e., with DocShell or nsCommandManager).
+  if (!editorCommand) {
+    MOZ_ASSERT(!commandData.IsAvailableOnlyWhenEditable());
+
+    // Special case clipboard write commands like Command::Cut and
+    // Command::Copy.  For such commands, we need the behaviour from
+    // nsWindowRoot::GetControllers() which is to look at the focused element,
+    // and defer to a focused textbox's controller.  The code past taken by
+    // other commands in ExecCommand() always uses the window directly, rather
+    // than deferring to the textbox, which is desireable for most editor
+    // commands, but not these commands (as those should allow copying out of
+    // embedded editors). This behaviour is invoked if we call DoCommand()
+    // directly on the docShell.
+    // XXX This means that we allow web app to pick up selected content in
+    //     descendant document and write it into the clipboard when a
+    //     descendant document has focus.  However, Chromium does not allow
+    //     this and this seems that it's not good behavior from point of view
+    //     of security.  We should treat this issue in another bug.
+    if (commandData.IsCutOrCopyCommand()) {
+      nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
+      if (!docShell) {
+        return false;
+      }
+      nsresult rv = docShell->DoCommand(commandData.mXULCommandName);
+      if (rv == NS_SUCCESS_DOM_NO_OPERATION) {
+        return false;
+      }
+      return NS_SUCCEEDED(rv);
+    }
+
+    // Otherwise (currently, only clipboard read commands like Command::Paste),
+    // we don't need to redirect the command to focused subdocument.
+    // Therefore, we should handle it with nsCommandManager as used to be.
+    // It may dispatch only preceding event of editing on non-editable element
+    // to make web apps possible to handle standard shortcut key, etc in
+    // their own editor.
+    RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
+    if (!commandManager) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return false;
+    }
+
+    nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
+    if (!window) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return false;
+    }
+
+    // Return false for disabled commands (bug 760052)
+    if (!commandManager->IsCommandEnabled(
+            nsDependentCString(commandData.mXULCommandName), window)) {
+      return false;
+    }
+
+    MOZ_ASSERT(commandData.IsPasteCommand());
+    aRv =
+        commandManager->DoCommand(commandData.mXULCommandName, nullptr, window);
+    return !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !aRv.Failed();
+  }
+
+  // Now, our target is fixed to the editor.  So, we can use EditorCommand
+  // with the editor directly.
+  MOZ_ASSERT(maybeHTMLEditor);
+
+  EditorCommandParamType paramType =
+      EditorCommand::GetParamType(commandData.mCommand);
+
+  // If we don't have meaningful parameter or the EditorCommand does not
+  // require additional parameter, we can use `DoCommand()`.
+  if (adjustedValue.IsEmpty() || paramType == EditorCommandParamType::None) {
+    MOZ_ASSERT(!(paramType & EditorCommandParamType::Bool));
+    aRv = editorCommand->DoCommand(commandData.mCommand, *maybeHTMLEditor,
+                                   &aSubjectPrincipal);
+    return !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !aRv.Failed();
+  }
+
+  // If the EditorCommand requires `bool` parameter, `adjustedValue` must be
+  // "true" or "false" here.  So, we can use `DoCommandParam()` which takes
+  // a `bool` value.
+  if (!!(paramType & EditorCommandParamType::Bool)) {
+    MOZ_ASSERT(adjustedValue.EqualsLiteral("true") ||
+               adjustedValue.EqualsLiteral("false"));
+    aRv = editorCommand->DoCommandParam(
+        commandData.mCommand, Some(adjustedValue.EqualsLiteral("true")),
+        *maybeHTMLEditor, &aSubjectPrincipal);
+    return !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !aRv.Failed();
+  }
+
+  // Now, the EditorCommand requires `nsAString` or `nsACString` parameter
+  // in this case.  However, `paramType` may contain both `String` and
+  // `CString` but in such case, we should use `DoCommandParam()` which
+  // takes `nsAString`.  So, we should check whether `paramType` contains
+  // `String` or not first.
+  if (!!(paramType & EditorCommandParamType::String)) {
+    MOZ_ASSERT(!adjustedValue.IsVoid());
+    aRv = editorCommand->DoCommandParam(commandData.mCommand, adjustedValue,
+                                        *maybeHTMLEditor, &aSubjectPrincipal);
+    return !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !aRv.Failed();
+  }
+
+  // Finally, `paramType` should have `CString`.  We should use
+  // `DoCommandParam()` which takes `nsACString`.
+  if (!!(paramType & EditorCommandParamType::CString)) {
+    NS_ConvertUTF16toUTF8 utf8Value(adjustedValue);
+    MOZ_ASSERT(!utf8Value.IsVoid());
+    aRv = editorCommand->DoCommandParam(commandData.mCommand, utf8Value,
+                                        *maybeHTMLEditor, &aSubjectPrincipal);
+    return !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !aRv.Failed();
+  }
+
+  MOZ_ASSERT_UNREACHABLE(
+      "Not yet implemented to handle new EditorCommandParamType");
+  return false;
 }
 
-bool Document::QueryCommandEnabled(const nsAString& commandID,
+bool Document::QueryCommandEnabled(const nsAString& aHTMLCommandName,
                                    nsIPrincipal& aSubjectPrincipal,
-                                   ErrorResult& rv) {
+                                   ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_ENABLED);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_ENABLED);
     return false;
   }
 
-  nsAutoCString cmdToDispatch;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+  InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
+  if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
 
   // cut & copy are always allowed
-  bool isCutCopy = commandID.LowerCaseEqualsLiteral("cut") ||
-                   commandID.LowerCaseEqualsLiteral("copy");
-  if (isCutCopy) {
+  if (commandData.IsCutOrCopyCommand()) {
     return nsContentUtils::IsCutCopyAllowed(&aSubjectPrincipal);
   }
 
   // Report false for restricted commands
-  bool restricted = commandID.LowerCaseEqualsLiteral("paste");
-  if (restricted && !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
+  if (commandData.IsPasteCommand() &&
+      !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
     return false;
   }
 
@@ -4099,29 +4507,30 @@ bool Document::QueryCommandEnabled(const nsAString& commandID,
   // get command manager and dispatch command to our window if it's acceptable
   RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
   if (!commandManager) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
   nsPIDOMWindowOuter* window = GetWindow();
   if (!window) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
-  return commandManager->IsCommandEnabled(cmdToDispatch, window);
+  return commandManager->IsCommandEnabled(
+      nsDependentCString(commandData.mXULCommandName), window);
 }
 
-bool Document::QueryCommandIndeterm(const nsAString& commandID,
-                                    ErrorResult& rv) {
+bool Document::QueryCommandIndeterm(const nsAString& aHTMLCommandName,
+                                    ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_INDETERM);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_INDETERM);
     return false;
   }
 
-  nsAutoCString cmdToDispatch;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+  InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
+  if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
 
@@ -4133,19 +4542,20 @@ bool Document::QueryCommandIndeterm(const nsAString& commandID,
   // get command manager and dispatch command to our window if it's acceptable
   RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
   if (!commandManager) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
   nsPIDOMWindowOuter* window = GetWindow();
   if (!window) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  rv = commandManager->GetCommandState(cmdToDispatch.get(), window, params);
-  if (rv.Failed()) {
+  aRv = commandManager->GetCommandState(commandData.mXULCommandName, window,
+                                        params);
+  if (aRv.Failed()) {
     return false;
   }
 
@@ -4155,17 +4565,16 @@ bool Document::QueryCommandIndeterm(const nsAString& commandID,
   return params->GetBool("state_mixed");
 }
 
-bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
+bool Document::QueryCommandState(const nsAString& aHTMLCommandName,
+                                 ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_STATE);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_STATE);
     return false;
   }
 
-  nsAutoCString cmdToDispatch, paramToCheck;
-  bool dummy, dummy2;
-  if (!ConvertToMidasInternalCommand(commandID, commandID, cmdToDispatch,
-                                     paramToCheck, dummy, dummy2)) {
+  InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
+  if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
 
@@ -4177,25 +4586,26 @@ bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
   // get command manager and dispatch command to our window if it's acceptable
   RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
   if (!commandManager) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
   nsPIDOMWindowOuter* window = GetWindow();
   if (!window) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
-  if (commandID.LowerCaseEqualsLiteral("usecss")) {
+  if (aHTMLCommandName.LowerCaseEqualsLiteral("usecss")) {
     // Per spec, state is supported for styleWithCSS but not useCSS, so we just
     // return false always.
     return false;
   }
 
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  rv = commandManager->GetCommandState(cmdToDispatch.get(), window, params);
-  if (rv.Failed()) {
+  aRv = commandManager->GetCommandState(commandData.mXULCommandName, window,
+                                        params);
+  if (aRv.Failed()) {
     return false;
   }
 
@@ -4205,11 +4615,44 @@ bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
   // parameters.  When getting the state of this command, we need to
   // return the boolean for this particular alignment rather than the
   // string of 'which alignment is this?'
-  if (cmdToDispatch.EqualsLiteral("cmd_align")) {
-    nsAutoCString actualAlignmentType;
-    rv = params->GetCString("state_attribute", actualAlignmentType);
-    return !rv.Failed() && !actualAlignmentType.IsEmpty() &&
-           paramToCheck == actualAlignmentType;
+  switch (commandData.mCommand) {
+    case Command::FormatJustifyLeft: {
+      nsAutoCString currentValue;
+      aRv = params->GetCString("state_attribute", currentValue);
+      if (aRv.Failed()) {
+        return false;
+      }
+      return currentValue.EqualsLiteral("left");
+    }
+    case Command::FormatJustifyRight: {
+      nsAutoCString currentValue;
+      aRv = params->GetCString("state_attribute", currentValue);
+      if (aRv.Failed()) {
+        return false;
+      }
+      return currentValue.EqualsLiteral("right");
+    }
+    case Command::FormatJustifyCenter: {
+      nsAutoCString currentValue;
+      aRv = params->GetCString("state_attribute", currentValue);
+      if (aRv.Failed()) {
+        return false;
+      }
+      return currentValue.EqualsLiteral("center");
+    }
+    case Command::FormatJustifyFull: {
+      nsAutoCString currentValue;
+      aRv = params->GetCString("state_attribute", currentValue);
+      if (aRv.Failed()) {
+        return false;
+      }
+      return currentValue.EqualsLiteral("justify");
+    }
+    default:
+      // If command does not have a state_all value, this call fails and sets
+      // retval to false.  This is fine -- we want to return false in that case
+      // anyway (bug 738385), so we just succeed and return false regardless.
+      return params->GetBool("state_all");
   }
 
   // If command does not have a state_all value, this call fails and sets
@@ -4218,11 +4661,16 @@ bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
   return params->GetBool("state_all");
 }
 
-bool Document::QueryCommandSupported(const nsAString& commandID,
-                                     CallerType aCallerType, ErrorResult& rv) {
+bool Document::QueryCommandSupported(const nsAString& aHTMLCommandName,
+                                     CallerType aCallerType, ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_SUPPORTED);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_SUPPORTED);
+    return false;
+  }
+
+  InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
+  if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
 
@@ -4233,37 +4681,34 @@ bool Document::QueryCommandSupported(const nsAString& commandID,
   // For that reason, we report the support status of corresponding
   // command accordingly.
   if (aCallerType != CallerType::System) {
-    if (commandID.LowerCaseEqualsLiteral("paste")) {
+    if (commandData.IsPasteCommand()) {
       return false;
     }
-    if (!StaticPrefs::dom_allow_cut_copy()) {
+    if (commandData.IsCutOrCopyCommand() &&
+        !StaticPrefs::dom_allow_cut_copy()) {
       // XXXbz should we worry about correctly reporting "true" in the
       // "restricted, but we're an addon with clipboardWrite permissions" case?
       // See also nsContentUtils::IsCutCopyAllowed.
-      if (commandID.LowerCaseEqualsLiteral("cut") ||
-          commandID.LowerCaseEqualsLiteral("copy")) {
-        return false;
-      }
+      return false;
     }
   }
 
-  // commandID is supported if it can be converted to a Midas command
-  nsAutoCString cmdToDispatch;
-  return ConvertToMidasInternalCommand(commandID, cmdToDispatch);
+  // aHTMLCommandName is supported if it can be converted to a Midas command
+  return true;
 }
 
-void Document::QueryCommandValue(const nsAString& commandID, nsAString& aValue,
-                                 ErrorResult& rv) {
+void Document::QueryCommandValue(const nsAString& aHTMLCommandName,
+                                 nsAString& aValue, ErrorResult& aRv) {
   aValue.Truncate();
 
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_VALUE);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_VALUE);
     return;
   }
 
-  nsAutoCString cmdToDispatch, paramStr;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+  InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
+  if (commandData.mCommand == Command::DoNothing) {
     // Return empty string
     return;
   }
@@ -4276,43 +4721,45 @@ void Document::QueryCommandValue(const nsAString& commandID, nsAString& aValue,
   // get command manager and dispatch command to our window if it's acceptable
   RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
   if (!commandManager) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
   if (!window) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   // this is a special command since we are calling DoCommand rather than
   // GetCommandState like the other commands
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  if (cmdToDispatch.EqualsLiteral("cmd_getContents")) {
-    rv = params->SetBool("selection_only", true);
-    if (rv.Failed()) {
+  if (commandData.mCommand == Command::GetHTML) {
+    aRv = params->SetBool("selection_only", true);
+    if (aRv.Failed()) {
       return;
     }
-    rv = params->SetCString("format", NS_LITERAL_CSTRING("text/html"));
-    if (rv.Failed()) {
+    aRv = params->SetCString("format", NS_LITERAL_CSTRING("text/html"));
+    if (aRv.Failed()) {
       return;
     }
-    rv = commandManager->DoCommand(cmdToDispatch.get(), params, window);
-    if (rv.Failed()) {
+    aRv =
+        commandManager->DoCommand(commandData.mXULCommandName, params, window);
+    if (aRv.Failed()) {
       return;
     }
     params->GetString("result", aValue);
     return;
   }
 
-  rv = params->SetCString("state_attribute", paramStr);
-  if (rv.Failed()) {
+  aRv = params->SetCString("state_attribute", EmptyCString());
+  if (aRv.Failed()) {
     return;
   }
 
-  rv = commandManager->GetCommandState(cmdToDispatch.get(), window, params);
-  if (rv.Failed()) {
+  aRv = commandManager->GetCommandState(commandData.mXULCommandName, window,
+                                        params);
+  if (aRv.Failed()) {
     return;
   }
 

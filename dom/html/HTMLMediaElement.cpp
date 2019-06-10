@@ -44,6 +44,7 @@
 #include "SVGObserverUtils.h"
 #include "TimeRanges.h"
 #include "VideoFrameContainer.h"
+#include "VideoOutput.h"
 #include "VideoStreamTrack.h"
 #include "base/basictypes.h"
 #include "jsapi.h"
@@ -372,44 +373,25 @@ class nsSourceErrorEventRunner : public nsMediaEvent {
 
 /**
  * This listener observes the first video frame to arrive with a non-empty size,
- * and calls HTMLMediaElement::UpdateInitialMediaSize() with that size.
+ * and renders it to its VideoFrameContainer.
  */
-class HTMLMediaElement::VideoFrameListener
-    : public DirectMediaStreamTrackListener {
+class HTMLMediaElement::FirstFrameListener : public VideoOutput {
  public:
-  explicit VideoFrameListener(HTMLMediaElement* aElement)
-      : mElement(aElement),
-        mMainThreadEventTarget(aElement->MainThreadEventTarget()),
-        mInitialSizeFound(false) {
+  FirstFrameListener(VideoFrameContainer* aContainer,
+                     AbstractThread* aMainThread)
+      : VideoOutput(aContainer, aMainThread) {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mElement);
-    MOZ_ASSERT(mMainThreadEventTarget);
   }
 
-  void Forget() {
-    MOZ_ASSERT(NS_IsMainThread());
-    mElement = nullptr;
-  }
-
-  void ReceivedSize(gfx::IntSize aSize) {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (!mElement) {
-      return;
-    }
-
-    mElement->UpdateInitialMediaSize(aSize);
-  }
-
+  // NB that this overrides VideoOutput::NotifyRealtimeTrackData, so we can
+  // filter out all frames but the first one with a real size. This allows us to
+  // later re-use the logic in VideoOutput for rendering that frame.
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
                                StreamTime aTrackOffset,
                                const MediaSegment& aMedia) override {
-    if (mInitialSizeFound) {
-      return;
-    }
+    MOZ_ASSERT(aMedia.GetType() == MediaSegment::VIDEO);
 
-    if (aMedia.GetType() != MediaSegment::VIDEO) {
-      MOZ_ASSERT(false, "Should only lock on to a video track");
+    if (mInitialSizeFound) {
       return;
     }
 
@@ -417,29 +399,24 @@ class HTMLMediaElement::VideoFrameListener
     for (VideoSegment::ConstChunkIterator c(video); !c.IsEnded(); c.Next()) {
       if (c->mFrame.GetIntrinsicSize() != gfx::IntSize(0, 0)) {
         mInitialSizeFound = true;
-        // This is fine to dispatch straight to main thread (instead of via
-        // ...AfterStreamUpdate()) since it reflects state of the element,
-        // not the stream. Events reflecting stream or track state should be
-        // dispatched so their order is preserved.
-        mMainThreadEventTarget->Dispatch(NewRunnableMethod<gfx::IntSize>(
-            "dom::HTMLMediaElement::VideoFrameListener::ReceivedSize", this,
-            &VideoFrameListener::ReceivedSize, c->mFrame.GetIntrinsicSize()));
+
+        // Pick the first frame and run it through the rendering code.
+        VideoSegment segment;
+        segment.AppendFrame(do_AddRef(c->mFrame.GetImage()),
+                            c->mFrame.GetIntrinsicSize(),
+                            c->mFrame.GetPrincipalHandle(),
+                            c->mFrame.GetForceBlack(), c->mTimeStamp);
+        VideoOutput::NotifyRealtimeTrackData(aGraph, aTrackOffset, segment);
         return;
       }
     }
   }
 
  private:
-  // These fields may only be accessed on the main thread
-  WeakPtr<HTMLMediaElement> mElement;
-  // We hold mElement->MainThreadEventTarget() here because the mElement could
-  // be reset in Forget().
-  nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
-
-  // These fields may only be accessed on the MSG's appending thread.
-  // (this is a direct listener so we get called by whoever is producing
-  // this track's data)
-  bool mInitialSizeFound;
+  // Whether a frame with a concrete size has been received. May only be
+  // accessed on the MSG's appending thread. (this is a direct listener so we
+  // get called by whoever is producing this track's data)
+  bool mInitialSizeFound = false;
 };
 
 class HTMLMediaElement::StreamCaptureTrackSource
@@ -1750,11 +1727,10 @@ void HTMLMediaElement::AbortExistingLoads() {
 
   bool fireTimeUpdate = false;
 
-  // We need to remove VideoFrameListener before VideoTracks get emptied.
-  if (mVideoFrameListener) {
-    mSelectedVideoStreamTrack->RemoveDirectListener(mVideoFrameListener);
-    mVideoFrameListener->Forget();
-    mVideoFrameListener = nullptr;
+  // We need to remove FirstFrameListener before VideoTracks get emptied.
+  if (mFirstFrameListener) {
+    mSelectedVideoStreamTrack->RemoveVideoOutput(mFirstFrameListener);
+    mFirstFrameListener = nullptr;
   }
 
   // When aborting the existing loads, empty the objects in audio track list and
@@ -1787,6 +1763,7 @@ void HTMLMediaElement::AbortExistingLoads() {
     DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
   }
 
+  bool hadVideo = HasVideo();
   mErrorSink->ResetError();
   mCurrentPlayRangeStart = -1.0;
   mLoadedDataFired = false;
@@ -1833,6 +1810,12 @@ void HTMLMediaElement::AbortExistingLoads() {
     }
     DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
     UpdateAudioChannelPlayingState();
+  }
+
+  if (IsVideo() && hadVideo) {
+    // Ensure we render transparent black after resetting video resolution.
+    Maybe<nsIntSize> size = Some(nsIntSize(0, 0));
+    Invalidate(true, size, false);
   }
 
   // We may have changed mPaused, mAutoplaying, and other
@@ -2138,21 +2121,24 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack) {
   if (mSrcStream) {
     if (aTrack->AsVideoTrack()) {
       MOZ_ASSERT(!mSelectedVideoStreamTrack);
-      MOZ_ASSERT(!mVideoFrameListener);
 
       mSelectedVideoStreamTrack = aTrack->AsVideoTrack()->GetVideoStreamTrack();
       VideoFrameContainer* container = GetVideoFrameContainer();
-      if (mSrcStreamIsPlaying && container) {
-        mSelectedVideoStreamTrack->AddVideoOutput(container);
-        MaybeBeginCloningVisually();
-      }
-      HTMLVideoElement* self = static_cast<HTMLVideoElement*>(this);
-      if (self->VideoWidth() <= 1 && self->VideoHeight() <= 1) {
-        // MediaInfo uses dummy values of 1 for width and height to
-        // mark video as valid. We need a new stream size listener
-        // if size is 0x0 or 1x1.
-        mVideoFrameListener = new VideoFrameListener(this);
-        mSelectedVideoStreamTrack->AddDirectListener(mVideoFrameListener);
+      if (container) {
+        HTMLVideoElement* self = static_cast<HTMLVideoElement*>(this);
+        if (mSrcStreamIsPlaying) {
+          mSelectedVideoStreamTrack->AddVideoOutput(container);
+          MaybeBeginCloningVisually();
+        } else if (self->VideoWidth() <= 1 && self->VideoHeight() <= 1) {
+          // MediaInfo uses dummy values of 1 for width and height to
+          // mark video as valid. We need a new first-frame listener
+          // if size is 0x0 or 1x1.
+          if (!mFirstFrameListener) {
+            mFirstFrameListener =
+                new FirstFrameListener(container, mAbstractMainThread);
+          }
+          mSelectedVideoStreamTrack->AddVideoOutput(mFirstFrameListener);
+        }
       }
     }
 
@@ -2205,12 +2191,11 @@ void HTMLMediaElement::NotifyMediaTrackDisabled(MediaTrack* aTrack) {
     }
   } else if (aTrack->AsVideoTrack()) {
     if (mSrcStream) {
-      MOZ_ASSERT(mSelectedVideoStreamTrack);
-      if (mSelectedVideoStreamTrack && mVideoFrameListener) {
-        mSelectedVideoStreamTrack->RemoveDirectListener(mVideoFrameListener);
-        mVideoFrameListener->Forget();
-        mVideoFrameListener = nullptr;
+      if (mFirstFrameListener) {
+        mSelectedVideoStreamTrack->RemoveVideoOutput(mFirstFrameListener);
+        mFirstFrameListener = nullptr;
       }
+
       VideoFrameContainer* container = GetVideoFrameContainer();
       if (mSrcStreamIsPlaying && container) {
         mSelectedVideoStreamTrack->RemoveVideoOutput(container);
@@ -4599,9 +4584,36 @@ class HTMLMediaElement::MediaStreamTrackListener
     if (!mElement) {
       return;
     }
-    LOG(LogLevel::Debug, ("%p, mSrcStream %p became active", mElement.get(),
-                          mElement->mSrcStream.get()));
-    mElement->CheckAutoplayDataReady();
+
+    // mediacapture-main says:
+    // Note that once ended equals true the HTMLVideoElement will not play media
+    // even if new MediaStreamTracks are added to the MediaStream (causing it to
+    // return to the active state) unless autoplay is true or the web
+    // application restarts the element, e.g., by calling play().
+    //
+    // This is vague on exactly how to go from becoming active to playing, when
+    // autoplaying. However, per the media element spec, to play an autoplaying
+    // media element, we must load the source and reach readyState
+    // HAVE_ENOUGH_DATA [1]. Hence, a MediaStream being assigned to a media
+    // element and becoming active runs the load algorithm, so that it can
+    // eventually be played.
+    //
+    // [1]
+    // https://html.spec.whatwg.org/multipage/media.html#ready-states:event-media-play
+
+    LOG(LogLevel::Debug, ("%p, mSrcStream %p became active, checking if we "
+                          "need to run the load algorithm",
+                          mElement.get(), mElement->mSrcStream.get()));
+    if (!mElement->IsPlaybackEnded()) {
+      return;
+    }
+    if (!mElement->Autoplay()) {
+      return;
+    }
+    LOG(LogLevel::Info, ("%p, mSrcStream %p became active on autoplaying, "
+                         "ended element. Reloading.",
+                         mElement.get(), mElement->mSrcStream.get()));
+    mElement->DoLoad();
   }
 
   void NotifyInactive() override {
@@ -4681,6 +4693,18 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
       VideoFrameContainer* container = GetVideoFrameContainer();
       if (mSelectedVideoStreamTrack && container) {
         mSelectedVideoStreamTrack->RemoveVideoOutput(container);
+
+        HTMLVideoElement* self = static_cast<HTMLVideoElement*>(this);
+        if (self->VideoWidth() <= 1 && self->VideoHeight() <= 1) {
+          // MediaInfo uses dummy values of 1 for width and height to
+          // mark video as valid. We need a new first-frame listener
+          // if size is 0x0 or 1x1.
+          if (!mFirstFrameListener) {
+            mFirstFrameListener =
+                new FirstFrameListener(container, mAbstractMainThread);
+          }
+          mSelectedVideoStreamTrack->AddVideoOutput(mFirstFrameListener);
+        }
       }
 
       SetCapturedOutputStreamsEnabled(false);  // Mute
@@ -4702,7 +4726,7 @@ void HTMLMediaElement::UpdateSrcStreamTime() {
 }
 
 void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
-  NS_ASSERTION(!mSrcStream && !mVideoFrameListener,
+  NS_ASSERTION(!mSrcStream && !mFirstFrameListener,
                "Should have been ended already");
 
   mSrcStream = aStream;
@@ -4740,7 +4764,6 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
 
   ChangeNetworkState(NETWORK_IDLE);
   ChangeDelayLoadStatus(false);
-  CheckAutoplayDataReady();
 
   // FirstFrameLoaded() will be called when the stream has tracks.
 }
@@ -4750,19 +4773,16 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
 
   UpdateSrcMediaStreamPlaying(REMOVING_SRC_STREAM);
 
-  if (mVideoFrameListener) {
-    MOZ_ASSERT(mSelectedVideoStreamTrack);
-    if (mSelectedVideoStreamTrack) {
-      mSelectedVideoStreamTrack->RemoveDirectListener(mVideoFrameListener);
-    }
-    mVideoFrameListener->Forget();
+  if (mFirstFrameListener) {
+    mSelectedVideoStreamTrack->RemoveVideoOutput(mFirstFrameListener);
   }
   mSelectedVideoStreamTrack = nullptr;
-  mVideoFrameListener = nullptr;
+  mFirstFrameListener = nullptr;
 
   mSrcStream->UnregisterTrackListener(mMediaStreamTrackListener.get());
   mMediaStreamTrackListener = nullptr;
   mSrcStreamTracksAvailable = false;
+  mSrcStreamPlaybackEnded = false;
 
   mSrcStream->RemovePrincipalChangeObserver(this);
   mSrcStreamVideoPrincipal = nullptr;
@@ -5579,9 +5599,6 @@ void HTMLMediaElement::ChangeNetworkState(nsMediaNetworkState aState) {
 }
 
 bool HTMLMediaElement::CanActivateAutoplay() {
-  // For stream inputs, we activate autoplay on HAVE_NOTHING because
-  // this element itself might be blocking the stream from making progress by
-  // being paused. We only check that it has data by checking its active state.
   // We also activate autoplay when playing a media source since the data
   // download is controlled by the script and there is no way to evaluate
   // MediaDecoder::CanPlayThrough().
@@ -5624,10 +5641,7 @@ bool HTMLMediaElement::CanActivateAutoplay() {
     }
   }
 
-  bool hasData = (mDecoder && mReadyState >= HAVE_ENOUGH_DATA) ||
-                 (mSrcStream && mSrcStream->Active());
-
-  return hasData;
+  return mReadyState >= HAVE_ENOUGH_DATA;
 }
 
 void HTMLMediaElement::CheckAutoplayDataReady() {
@@ -5921,6 +5935,8 @@ void HTMLMediaElement::Invalidate(bool aImageSizeChanged,
 }
 
 void HTMLMediaElement::UpdateMediaSize(const nsIntSize& aSize) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (IsVideo() && mReadyState != HAVE_NOTHING &&
       mMediaInfo.mVideo.mDisplay != aSize) {
     DispatchAsyncEvent(NS_LITERAL_STRING("resize"));
@@ -5928,25 +5944,12 @@ void HTMLMediaElement::UpdateMediaSize(const nsIntSize& aSize) {
 
   mMediaInfo.mVideo.mDisplay = aSize;
   UpdateReadyStateInternal();
-}
 
-void HTMLMediaElement::UpdateInitialMediaSize(const nsIntSize& aSize) {
-  if (!mMediaInfo.HasVideo()) {
-    UpdateMediaSize(aSize);
+  if (mFirstFrameListener) {
+    mSelectedVideoStreamTrack->RemoveVideoOutput(mFirstFrameListener);
+    // The first-frame listener won't be needed again for this stream.
+    mFirstFrameListener = nullptr;
   }
-
-  if (!mVideoFrameListener) {
-    return;
-  }
-
-  if (!mSelectedVideoStreamTrack) {
-    MOZ_ASSERT(false);
-    return;
-  }
-
-  mSelectedVideoStreamTrack->RemoveDirectListener(mVideoFrameListener);
-  mVideoFrameListener->Forget();
-  mVideoFrameListener = nullptr;
 }
 
 void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement,

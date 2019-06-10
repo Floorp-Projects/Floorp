@@ -740,8 +740,8 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_ARRAY_BINDING = 2;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(ArrayExpression, Elements, 0,                                         \
-    LIST(ListOfOptionalSpreadElementOrExpression,                         \
-         OptionalSpreadElementOrExpression),                              \
+    LIST(ListOfOptionalExpressionOrSpreadElement,                         \
+         OptionalExpressionOrSpreadElement),                              \
     "ArrayExpression::elements")
 
 // The number of fields of interface ArrayExpression.
@@ -1103,7 +1103,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_BREAK_STATEMENT = 1;
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                        \
   F(CallExpression, Callee, 0, SUM(ExpressionOrSuper),                        \
     "CallExpression::callee")                                                 \
-  F(CallExpression, Arguments, 1, LIST(Arguments, SpreadElementOrExpression), \
+  F(CallExpression, Arguments, 1, LIST(Arguments, ExpressionOrSpreadElement), \
     "CallExpression::arguments")
 
 // The number of fields of interface CallExpression.
@@ -1417,7 +1417,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_EMPTY_STATEMENT = 0;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(Export, Declaration, 0,                                               \
-    SUM(FunctionDeclarationOrClassDeclarationOrVariableDeclaration),      \
+    SUM(ClassDeclarationOrFunctionDeclarationOrVariableDeclaration),      \
     "Export::declaration")
 
 // The number of fields of interface Export.
@@ -1438,7 +1438,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_EXPORT_ALL_FROM = 1;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(ExportDefault, Body, 0,                                               \
-    SUM(FunctionDeclarationOrClassDeclarationOrExpression),               \
+    SUM(ClassDeclarationOrExpressionOrFunctionDeclaration),               \
     "ExportDefault::body")
 
 // The number of fields of interface ExportDefault.
@@ -1518,7 +1518,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_FOR_IN_OF_BINDING = 2;
 #define FOR_EACH_BIN_FIELD_IN_INTERFACE_FOR_IN_STATEMENT(                 \
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
-  F(ForInStatement, Left, 0, SUM(ForInOfBindingOrAssignmentTarget),       \
+  F(ForInStatement, Left, 0, SUM(AssignmentTargetOrForInOfBinding),       \
     "ForInStatement::left")                                               \
   F(ForInStatement, Right, 1, SUM(Expression), "ForInStatement::right")   \
   F(ForInStatement, Body, 2, SUM(Statement), "ForInStatement::body")
@@ -1530,7 +1530,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_FOR_IN_STATEMENT = 3;
 #define FOR_EACH_BIN_FIELD_IN_INTERFACE_FOR_OF_STATEMENT(                 \
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
-  F(ForOfStatement, Left, 0, SUM(ForInOfBindingOrAssignmentTarget),       \
+  F(ForOfStatement, Left, 0, SUM(AssignmentTargetOrForInOfBinding),       \
     "ForOfStatement::left")                                               \
   F(ForOfStatement, Right, 1, SUM(Expression), "ForOfStatement::right")   \
   F(ForOfStatement, Body, 2, SUM(Statement), "ForOfStatement::body")
@@ -1542,7 +1542,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_FOR_OF_STATEMENT = 3;
 #define FOR_EACH_BIN_FIELD_IN_INTERFACE_FOR_STATEMENT(                         \
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,      \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                         \
-  F(ForStatement, Init, 0, OPTIONAL_SUM(VariableDeclarationOrExpression),      \
+  F(ForStatement, Init, 0, OPTIONAL_SUM(ExpressionOrVariableDeclaration),      \
     "ForStatement::init")                                                      \
   F(ForStatement, Test, 1, OPTIONAL_SUM(Expression), "ForStatement::test")     \
   F(ForStatement, Update, 2, OPTIONAL_SUM(Expression), "ForStatement::update") \
@@ -1912,8 +1912,8 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_LITERAL_STRING_EXPRESSION = 1;
   F(Module, Directives, 1, LIST(ListOfDirective, Directive),              \
     "Module::directives")                                                 \
   F(Module, Items, 2,                                                     \
-    LIST(ListOfImportDeclarationOrExportDeclarationOrStatement,           \
-         ImportDeclarationOrExportDeclarationOrStatement),                \
+    LIST(ListOfExportDeclarationOrImportDeclarationOrStatement,           \
+         ExportDeclarationOrImportDeclarationOrStatement),                \
     "Module::items")
 
 // The number of fields of interface Module.
@@ -1924,7 +1924,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_MODULE = 3;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,    \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                       \
   F(NewExpression, Callee, 0, SUM(Expression), "NewExpression::callee")      \
-  F(NewExpression, Arguments, 1, LIST(Arguments, SpreadElementOrExpression), \
+  F(NewExpression, Arguments, 1, LIST(Arguments, ExpressionOrSpreadElement), \
     "NewExpression::arguments")
 
 // The number of fields of interface NewExpression.
@@ -2371,7 +2371,7 @@ enum class BinASTStringEnum : uint16_t {
 const size_t BINASTSTRINGENUM_LIMIT = 6;
 
 #define FOR_EACH_BIN_LIST(F)                                               \
-  F(Arguments, SpreadElementOrExpression, "Arguments")                     \
+  F(Arguments, ExpressionOrSpreadElement, "Arguments")                     \
   F(FunctionBody, Statement, "FunctionBody")                               \
   F(ListOfAssertedBoundName, AssertedBoundName, "ListOfAssertedBoundName") \
   F(ListOfAssertedDeclaredName, AssertedDeclaredName,                      \
@@ -2387,23 +2387,23 @@ const size_t BINASTSTRINGENUM_LIMIT = 6;
   F(ListOfBindingProperty, BindingProperty, "ListOfBindingProperty")       \
   F(ListOfClassElement, ClassElement, "ListOfClassElement")                \
   F(ListOfDirective, Directive, "ListOfDirective")                         \
+  F(ListOfExportDeclarationOrImportDeclarationOrStatement,                 \
+    ExportDeclarationOrImportDeclarationOrStatement,                       \
+    "ListOfExportDeclarationOrImportDeclarationOrStatement")               \
   F(ListOfExportFromSpecifier, ExportFromSpecifier,                        \
     "ListOfExportFromSpecifier")                                           \
   F(ListOfExportLocalSpecifier, ExportLocalSpecifier,                      \
     "ListOfExportLocalSpecifier")                                          \
   F(ListOfExpressionOrTemplateElement, ExpressionOrTemplateElement,        \
     "ListOfExpressionOrTemplateElement")                                   \
-  F(ListOfImportDeclarationOrExportDeclarationOrStatement,                 \
-    ImportDeclarationOrExportDeclarationOrStatement,                       \
-    "ListOfImportDeclarationOrExportDeclarationOrStatement")               \
   F(ListOfImportSpecifier, ImportSpecifier, "ListOfImportSpecifier")       \
   F(ListOfObjectProperty, ObjectProperty, "ListOfObjectProperty")          \
   F(ListOfOptionalBindingOrBindingWithInitializer,                         \
     OptionalBindingOrBindingWithInitializer,                               \
     "ListOfOptionalBindingOrBindingWithInitializer")                       \
-  F(ListOfOptionalSpreadElementOrExpression,                               \
-    OptionalSpreadElementOrExpression,                                     \
-    "ListOfOptionalSpreadElementOrExpression")                             \
+  F(ListOfOptionalExpressionOrSpreadElement,                               \
+    OptionalExpressionOrSpreadElement,                                     \
+    "ListOfOptionalExpressionOrSpreadElement")                             \
   F(ListOfParameter, Parameter, "ListOfParameter")                         \
   F(ListOfStatement, Statement, "ListOfStatement")                         \
   F(ListOfSwitchCase, SwitchCase, "ListOfSwitchCase")                      \
@@ -2426,27 +2426,29 @@ const size_t BINAST_NUMBER_OF_LIST_TYPES = 22;
   F(AssignmentTarget, "AssignmentTarget")                                 \
   F(AssignmentTargetOrAssignmentTargetWithInitializer,                    \
     "AssignmentTargetOrAssignmentTargetWithInitializer")                  \
+  F(AssignmentTargetOrForInOfBinding, "AssignmentTargetOrForInOfBinding") \
   F(AssignmentTargetPattern, "AssignmentTargetPattern")                   \
   F(AssignmentTargetProperty, "AssignmentTargetProperty")                 \
   F(Binding, "Binding")                                                   \
   F(BindingOrBindingWithInitializer, "BindingOrBindingWithInitializer")   \
   F(BindingPattern, "BindingPattern")                                     \
   F(BindingProperty, "BindingProperty")                                   \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration,                    \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration")                  \
+  F(ClassDeclarationOrFunctionDeclarationOrVariableDeclaration,           \
+    "ClassDeclarationOrFunctionDeclarationOrVariableDeclaration")         \
   F(ExportDeclaration, "ExportDeclaration")                               \
+  F(ExportDeclarationOrImportDeclarationOrStatement,                      \
+    "ExportDeclarationOrImportDeclarationOrStatement")                    \
   F(Expression, "Expression")                                             \
+  F(ExpressionOrSpreadElement, "ExpressionOrSpreadElement")               \
   F(ExpressionOrSuper, "ExpressionOrSuper")                               \
   F(ExpressionOrTemplateElement, "ExpressionOrTemplateElement")           \
-  F(ForInOfBindingOrAssignmentTarget, "ForInOfBindingOrAssignmentTarget") \
+  F(ExpressionOrVariableDeclaration, "ExpressionOrVariableDeclaration")   \
   F(FunctionDeclaration, "FunctionDeclaration")                           \
-  F(FunctionDeclarationOrClassDeclarationOrExpression,                    \
-    "FunctionDeclarationOrClassDeclarationOrExpression")                  \
-  F(FunctionDeclarationOrClassDeclarationOrVariableDeclaration,           \
-    "FunctionDeclarationOrClassDeclarationOrVariableDeclaration")         \
   F(FunctionExpression, "FunctionExpression")                             \
   F(Getter, "Getter")                                                     \
   F(ImportDeclaration, "ImportDeclaration")                               \
-  F(ImportDeclarationOrExportDeclarationOrStatement,                      \
-    "ImportDeclarationOrExportDeclarationOrStatement")                    \
   F(IterationStatement, "IterationStatement")                             \
   F(Literal, "Literal")                                                   \
   F(Method, "Method")                                                     \
@@ -2457,9 +2459,7 @@ const size_t BINAST_NUMBER_OF_LIST_TYPES = 22;
   F(PropertyName, "PropertyName")                                         \
   F(Setter, "Setter")                                                     \
   F(SimpleAssignmentTarget, "SimpleAssignmentTarget")                     \
-  F(SpreadElementOrExpression, "SpreadElementOrExpression")               \
-  F(Statement, "Statement")                                               \
-  F(VariableDeclarationOrExpression, "VariableDeclarationOrExpression")
+  F(Statement, "Statement")
 
 enum class BinASTSum : uint16_t {
 #define EMIT_ENUM(name, _user) name,

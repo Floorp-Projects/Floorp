@@ -4101,9 +4101,6 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
     mCacheOpenFunc = [openURI, extension, cacheEntryOpenFlags,
                       cacheStorage](nsHttpChannel* self) -> void {
       MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread");
-      if (self->mNetworkTriggered) {
-        self->mRaceCacheWithNetwork = true;
-      }
       cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, self);
     };
 
@@ -9986,7 +9983,12 @@ nsresult nsHttpChannel::TriggerNetwork() {
     return NS_OK;
   }
 
-  if (AwaitingCacheCallbacks()) {
+  // If |mCacheOpenFunc| is assigned, we're delaying opening the entry to
+  // simulate racing. Although cache entry opening hasn't started yet, we're
+  // actually racing, so we must set mRaceCacheWithNetwork to true now.
+  if (mCacheOpenFunc) {
+    mRaceCacheWithNetwork = true;
+  } else if (AwaitingCacheCallbacks()) {
     mRaceCacheWithNetwork = sRCWNEnabled;
   }
 

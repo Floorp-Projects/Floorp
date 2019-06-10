@@ -18,21 +18,25 @@ def find_hg_revision_push_info(repository, revision):
     pushlog_id of the revision."""
     pushlog_url = PUSHLOG_TMPL.format(repository, revision)
 
+    def extract_pushes(response_json):
+        pushes = response_json['pushes']
+        if len(pushes) != 1:
+            raise RuntimeError(
+                "Found {} pushlog_ids, expected 1, for {} revision {}: {}".format(
+                    len(pushes), repository, revision, pushes
+                )
+            )
+        return pushes
+
     def query_pushlog(url):
         r = requests.get(pushlog_url, timeout=60)
         r.raise_for_status()
-        return r
-    r = retry(
+        return extract_pushes(r.json())
+
+    pushes = retry(
         query_pushlog, args=(pushlog_url,),
         attempts=5, sleeptime=10,
     )
-    pushes = r.json()['pushes']
-    if len(pushes) != 1:
-        raise RuntimeError(
-            "Unable to find a single pushlog_id for {} revision {}: {}".format(
-                repository, revision, pushes
-            )
-        )
     pushid = pushes.keys()[0]
     return {
         'pushdate': pushes[pushid]['date'],

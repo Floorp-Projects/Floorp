@@ -2317,8 +2317,12 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
             // In this case, we need to dispatch "input" event because
             // web apps may need to know the user's operation.
             RefPtr<nsRange> range;  // See bug 1506439
+            // In this case, we need to dispatch "beforeinput" events since
+            // we're emulating the user's input.  Passing nullptr as
+            // nsIPrincipal means that that may be user's input.  So, let's
+            // do it.
             DebugOnly<nsresult> rv =
-                textEditor->ReplaceTextAsAction(newValue, range);
+                textEditor->ReplaceTextAsAction(newValue, range, nullptr);
             NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                  "Failed to set the new value");
           } else if (aFlags & eSetValue_ForXUL) {
@@ -2350,13 +2354,19 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
                 StringTail(newValue, newlength - currentLength);
 
             if (insertValue.IsEmpty()) {
+              // In this case, we makes the editor stop dispatching "input"
+              // event so that passing nullptr as nsIPrincipal is safe for
+              // now.
               DebugOnly<nsresult> rv = textEditor->DeleteSelectionAsAction(
-                  nsIEditor::eNone, nsIEditor::eStrip);
+                  nsIEditor::eNone, nsIEditor::eStrip, nullptr);
               NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                    "Failed to remove the text");
             } else {
+              // In this case, we makes the editor stop dispatching "input"
+              // event so that passing nullptr as nsIPrincipal is safe for
+              // now.
               DebugOnly<nsresult> rv =
-                  textEditor->InsertTextAsAction(insertValue);
+                  textEditor->InsertTextAsAction(insertValue, nullptr);
               NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                    "Failed to insert the new value");
             }
@@ -2377,7 +2387,9 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
               selection->RemoveAllRangesTemporarily();
             }
 
-            textEditor->SetText(newValue);
+            // In this case, we makes the editor stop dispatching "input" event
+            // so that passing nullptr as nsIPrincipal is safe for now.
+            textEditor->SetTextAsAction(newValue, nullptr);
 
             // Call the listener's HandleValueChanged() callback manually, since
             // we don't use the transaction manager in this path and it could be
