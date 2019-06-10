@@ -27,7 +27,7 @@ job-defaults:
         platform: Android/opt
         tier: 1
         kind: test
-    run-on-projects: ['try', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+    run-on-projects: ['try', 'mozilla-beta', 'mozilla-esr68']
 
 jobs:
     push-apk-checks-nightly/opt:
