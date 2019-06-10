@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ChromeUtils.import("resource://specialpowers/SpecialPowersAPI.jsm", this);
+
 function ChromePowers(window) {
   this.window = Cu.getWeakReference(window);
 
@@ -110,6 +112,9 @@ if ((window.parent !== null) &&
     !(window.wrappedJSObject.SpecialPowers)) {
   window.wrappedJSObject.SpecialPowers = window.parent.SpecialPowers;
 } else {
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Services.scriptloader.loadSubScript("resource://specialpowers/SpecialPowersObserverAPI.js", this);
+
   window.wrappedJSObject.SpecialPowers = new ChromePowers(window);
 }
 
