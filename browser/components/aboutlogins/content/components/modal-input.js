@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import {recordTelemetryEvent} from "chrome://browser/content/aboutlogins/aboutLoginsUtils.js";
 import ReflectedFluentElement from "chrome://browser/content/aboutlogins/components/reflected-fluent-element.js";
 
 export default class ModalInput extends ReflectedFluentElement {
@@ -103,9 +104,13 @@ export default class ModalInput extends ReflectedFluentElement {
     if (revealCheckbox.checked) {
       lockedValue.textContent = this.value;
       unlockedValue.setAttribute("type", "text");
+
+      recordTelemetryEvent({object: "password", method: "show"});
     } else {
       lockedValue.textContent = this.constructor.LOCKED_PASSWORD_DISPLAY;
       unlockedValue.setAttribute("type", "password");
+
+      recordTelemetryEvent({object: "password", method: "hide"});
     }
     this.updateRevealCheckboxTitle();
   }
