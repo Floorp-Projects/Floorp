@@ -100,7 +100,8 @@ enum class ZealMode {
   _(LazyScriptData)                        \
   _(MapObjectTable)                        \
   _(BigIntDigits)                          \
-  _(ScopeData)
+  _(ScopeData)                             \
+  _(WeakMapObject)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
