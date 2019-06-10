@@ -159,4 +159,8 @@
     <color name="device_type_desktop_background">#F091C3</color>
     <color name="device_type_mobile_background">#D4C1FA</color>
     <color name="device_foreground">#20123A</color>
+
+    <!-- Launcher Icon colors -->
+    <color name="default_launcher_background">#FDFDFD</color>
+    <color name="debug_launcher_background">#220033</color>
 </resources>
