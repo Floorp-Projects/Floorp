@@ -5311,8 +5311,13 @@ void ScrollFrameHelper::PostOverflowEvent() {
     return;
   }
 
+  nsRootPresContext* rpc = mOuter->PresContext()->GetRootPresContext();
+  if (!rpc) {
+    return;
+  }
+
   mAsyncScrollPortEvent = new AsyncScrollPortEvent(this);
-  nsContentUtils::AddScriptRunner(mAsyncScrollPortEvent.get());
+  rpc->AddWillPaintObserver(mAsyncScrollPortEvent.get());
 }
 
 nsIFrame* ScrollFrameHelper::GetFrameForDir() const {
