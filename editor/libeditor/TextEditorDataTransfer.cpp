@@ -359,8 +359,10 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
 }
 
 nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
-                                   bool aDispatchPasteEvent) {
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste);
+                                   bool aDispatchPasteEvent,
+                                   nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -414,9 +416,10 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TextEditor::PasteTransferable(nsITransferable* aTransferable) {
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste);
+nsresult TextEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
+                                               nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
