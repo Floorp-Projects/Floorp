@@ -3078,17 +3078,7 @@ void ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
   // viewport scrollbars. They would create layerization problems. This wouldn't
   // normally be an issue but themes can add overflow areas to scrollbar parts.
   if (mIsRoot) {
-    nsRect scrollPartsClip =
-        mOuter->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(mOuter);
-    if (!StaticPrefs::LayoutUseContainersForRootFrames() &&
-        mOuter->PresContext()->IsRootContentDocument()) {
-      // With containerless scrolling, the resolution does not apply to the
-      // scroll parts. We need to apply it to their clip manually to avoid it
-      // cutting off the scrollbars when zoomed in.
-      double res = mOuter->PresShell()->GetResolution();
-      scrollPartsClip.width = NSToCoordRound(scrollPartsClip.width * res);
-      scrollPartsClip.height = NSToCoordRound(scrollPartsClip.height * res);
-    }
+    nsRect scrollPartsClip(aBuilder->ToReferenceFrame(mOuter), TrueOuterSize());
     clipState.ClipContentDescendants(scrollPartsClip);
   }
 
@@ -5690,6 +5680,15 @@ class MOZ_RAII AutoMinimumScaleSizeChangeDetector final {
   nsSize mPreviousMinimumScaleSize;
   bool mPreviousIsUsingMinimumScaleSize;
 };
+
+nsSize ScrollFrameHelper::TrueOuterSize() const {
+  if (RefPtr<MobileViewportManager> manager =
+          mOuter->PresShell()->GetMobileViewportManager()) {
+    return LayoutDeviceSize::ToAppUnits(
+        manager->DisplaySize(), mOuter->PresContext()->AppUnitsPerDevPixel());
+  }
+  return mOuter->GetSize();
+}
 
 void ScrollFrameHelper::UpdateMinimumScaleSize(
     const nsRect& aScrollableOverflow, const nsSize& aICBSize) {
