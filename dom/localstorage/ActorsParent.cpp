@@ -4648,6 +4648,34 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mConnection);
 
+  class MOZ_STACK_CLASS AutoDetach final {
+    nsCOMPtr<mozIStorageConnection> mConnection;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+   public:
+    explicit AutoDetach(
+        mozIStorageConnection* aConnection MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mConnection(aConnection) {
+      MOZ_ASSERT(aConnection);
+
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    ~AutoDetach() {
+      if (mConnection) {
+        nsresult rv = DetachShadowDatabase(mConnection);
+        Unused << NS_WARN_IF(NS_FAILED(rv));
+      }
+    }
+
+    void release() { mConnection = nullptr; }
+
+   private:
+    explicit AutoDetach(const AutoDetach&) = delete;
+    AutoDetach& operator=(const AutoDetach&) = delete;
+    AutoDetach& operator=(AutoDetach&&) = delete;
+  };
+
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
@@ -4659,6 +4687,8 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
 
   Maybe<MutexAutoLock> shadowDatabaseLock;
 
+  Maybe<AutoDetach> autoDetach;
+
   if (mShadowWrites) {
     MOZ_ASSERT(mConnection->mQuotaClient);
 
@@ -4669,6 +4699,8 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    autoDetach.emplace(storageConnection);
   }
 
   CachedStatement stmt;
@@ -4718,10 +4750,14 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
   }
 
   if (mShadowWrites) {
+    autoDetach->release();
+
     rv = DetachShadowDatabase(storageConnection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    autoDetach.reset();
 
     shadowDatabaseLock.reset();
   }
