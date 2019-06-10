@@ -516,6 +516,7 @@ pub struct PictureTask {
     pub content_origin: DeviceIntPoint,
     pub uv_rect_handle: GpuCacheHandle,
     pub root_spatial_node_index: SpatialNodeIndex,
+    pub surface_spatial_node_index: SpatialNodeIndex,
     uv_rect_kind: UvRectKind,
     device_pixel_scale: DevicePixelScale,
 }
@@ -754,6 +755,7 @@ impl RenderTask {
         content_origin: DeviceIntPoint,
         uv_rect_kind: UvRectKind,
         root_spatial_node_index: SpatialNodeIndex,
+        surface_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
     ) -> Self {
         let size = match location {
@@ -777,6 +779,7 @@ impl RenderTask {
                 uv_rect_handle: GpuCacheHandle::new(),
                 uv_rect_kind,
                 root_spatial_node_index,
+                surface_spatial_node_index,
                 device_pixel_scale,
             }),
             clear_mode: ClearMode::Transparent,
