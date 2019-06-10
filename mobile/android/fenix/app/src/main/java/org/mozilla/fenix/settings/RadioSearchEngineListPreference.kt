@@ -25,10 +25,6 @@ class RadioSearchEngineListPreference : SearchEngineListPreference {
         defStyleAttr
     )
 
-    override fun onBindViewHolder(holder: PreferenceViewHolder?) {
-        super.onBindViewHolder(holder)
-    }
-
     override fun updateDefaultItem(defaultButton: CompoundButton) {
         defaultButton.isChecked = true
     }
