@@ -8,7 +8,9 @@
         onload="setTimeout(nextTest, 0);"
         title="bug 396649 test">
 
-  <script src="chrome://mochikit/content/tests/SimpleTest/specialpowersAPI.js"/>
+  <script>
+    ChromeUtils.import("resource://specialpowers/SpecialPowersAPI.jsm", this);
+  </script>
   <script src="chrome://mochikit/content/tests/SimpleTest/SpecialPowersObserverAPI.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/ChromePowers.js"/>
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
