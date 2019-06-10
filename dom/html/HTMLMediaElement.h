@@ -736,7 +736,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   class ErrorSink;
   class MediaLoadListener;
   class MediaStreamTrackListener;
-  class VideoFrameListener;
+  class FirstFrameListener;
   class ShutdownObserver;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
@@ -1334,9 +1334,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // The next track id to use for a captured MediaDecoder.
   TrackID mNextAvailableMediaDecoderOutputTrackID = 1;
 
-  // Holds a reference to the size-getting track listener attached to
+  // Holds a reference to the first-frame-getting track listener attached to
   // mSelectedVideoStreamTrack.
-  RefPtr<VideoFrameListener> mVideoFrameListener;
+  RefPtr<FirstFrameListener> mFirstFrameListener;
   // The currently selected video stream track.
   RefPtr<VideoStreamTrack> mSelectedVideoStreamTrack;
 
