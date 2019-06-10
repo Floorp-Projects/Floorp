@@ -88,6 +88,7 @@ add_task(async function test_filtered_list() {
   is(countSpan.textContent, "2", "Count should match full list length");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
     bubbles: true,
+    composed: true,
     detail: "user1",
   }));
   is(countSpan.textContent, "1", "Count should match result amount");
@@ -97,6 +98,7 @@ add_task(async function test_filtered_list() {
   ok(loginListItems[1].hidden, "user2 should be hidden");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
     bubbles: true,
+    composed: true,
     detail: "user2",
   }));
   is(countSpan.textContent, "1", "Count should match result amount");
@@ -105,6 +107,7 @@ add_task(async function test_filtered_list() {
   ok(!loginListItems[1].hidden, "user2 should be visible");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
     bubbles: true,
+    composed: true,
     detail: "user",
   }));
   is(countSpan.textContent, "2", "Count should match result amount");
@@ -113,6 +116,7 @@ add_task(async function test_filtered_list() {
   ok(!loginListItems[1].hidden, "user2 should be visible");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
     bubbles: true,
+    composed: true,
     detail: "foo",
   }));
   is(countSpan.textContent, "0", "Count should match result amount");
@@ -121,6 +125,7 @@ add_task(async function test_filtered_list() {
   ok(loginListItems[1].hidden, "user2 should be hidden");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
     bubbles: true,
+    composed: true,
     detail: "",
   }));
   is(countSpan.textContent, "2", "Count should be reset to full list length");
