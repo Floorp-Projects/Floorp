@@ -392,7 +392,7 @@ class PrintingChild extends ActorChild {
   }
 
   navigate(navType, pageNum) {
-    this.docShell.initOrReusePrintPreviewViewer().printPreviewNavigate(navType, pageNum);
+    this.docShell.initOrReusePrintPreviewViewer().printPreviewScrollToPage(navType, pageNum);
   }
 }
 

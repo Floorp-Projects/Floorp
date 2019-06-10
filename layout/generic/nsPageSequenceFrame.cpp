@@ -558,6 +558,14 @@ nsresult nsPageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback,
         ctx->InitializeWithDrawTarget(nullptr, WrapNotNull(canvasTarget));
 
         // Start the rendering process.
+        // Note: Other than drawing to our CanvasRenderingContext2D, the
+        // callback cannot access or mutate our static clone document.  It is
+        // evaluated in its original context (the window of the original
+        // document) of course, and our canvas has a strong ref to the
+        // original HTMLCanvasElement (in mOriginalCanvas) so that if the
+        // callback calls GetCanvas() on our CanvasRenderingContext2D (passed
+        // to it via a MozCanvasPrintState argument) it will be given the
+        // original 'canvas' element.
         AutoWeakFrame weakFrame = this;
         canvas->DispatchPrintCallback(aCallback);
         NS_ENSURE_STATE(weakFrame.IsAlive());
