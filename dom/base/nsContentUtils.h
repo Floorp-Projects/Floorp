@@ -2651,6 +2651,16 @@ class nsContentUtils {
   static mozilla::HTMLEditor* GetHTMLEditor(nsPresContext* aPresContext);
 
   /**
+   * Returns pointer to a text editor if <input> or <textarea> element is
+   * active element in the document for aPresContext, or pointer to HTML
+   * editor if there is (i.e., even if non-editable element has focus or
+   * nobody has focus).  The reason is, HTML editor may handle some input
+   * even if there is no active editing host.
+   * Note that this does not return editor in descendant documents.
+   */
+  static mozilla::TextEditor* GetActiveEditor(nsPresContext* aPresContext);
+
+  /**
    * Returns a LogModule that dump calls from content script are logged to.
    * This can be enabled with the 'Dump' module, and is useful for synchronizing
    * content JS to other logging modules.
