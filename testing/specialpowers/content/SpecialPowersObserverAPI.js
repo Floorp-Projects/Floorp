@@ -27,13 +27,6 @@ SpecialPowersError.prototype.toString = function() {
   return `${this.name}: ${this.message}`;
 };
 
-this.SpecialPowersObserverAPI = function SpecialPowersObserverAPI() {
-  this._crashDumpDir = null;
-  this._processCrashObserversRegistered = false;
-  this._chromeScriptListeners = [];
-  this._extensions = new Map();
-};
-
 function parseKeyValuePairs(text) {
   var lines = text.split("\n");
   var data = {};
@@ -84,7 +77,13 @@ function getTestPlugin(pluginName) {
   return null;
 }
 
-SpecialPowersObserverAPI.prototype = {
+class SpecialPowersObserverAPI {
+  constructor() {
+    this._crashDumpDir = null;
+    this._processCrashObserversRegistered = false;
+    this._chromeScriptListeners = [];
+    this._extensions = new Map();
+  }
 
   _observe(aSubject, aTopic, aData) {
     function addDumpIDToMessage(propertyName) {
@@ -126,7 +125,7 @@ SpecialPowersObserverAPI.prototype = {
         this._sendAsyncMessage("SPProcessCrashService", message);
         break;
     }
-  },
+  }
 
   _getCrashDumpDir() {
     if (!this._crashDumpDir) {
@@ -134,7 +133,7 @@ SpecialPowersObserverAPI.prototype = {
       this._crashDumpDir.append("minidumps");
     }
     return this._crashDumpDir;
-  },
+  }
 
   _getPendingCrashDumpDir() {
     if (!this._pendingCrashDumpDir) {
@@ -143,7 +142,7 @@ SpecialPowersObserverAPI.prototype = {
       this._pendingCrashDumpDir.append("pending");
     }
     return this._pendingCrashDumpDir;
-  },
+  }
 
   _getExtraData(dumpId) {
     let extraFile = this._getCrashDumpDir().clone();
@@ -152,7 +151,7 @@ SpecialPowersObserverAPI.prototype = {
       return null;
     }
     return parseKeyValuePairsFromFile(extraFile);
-  },
+  }
 
   _deleteCrashDumpFiles(aFilenames) {
     var crashDumpDir = this._getCrashDumpDir();
@@ -171,7 +170,7 @@ SpecialPowersObserverAPI.prototype = {
       }
     });
     return success;
-  },
+  }
 
   _findCrashDumpFiles(aToIgnore) {
     var crashDumpDir = this._getCrashDumpDir();
@@ -189,7 +188,7 @@ SpecialPowersObserverAPI.prototype = {
       }
     }
     return crashDumpFiles.concat();
-  },
+  }
 
   _deletePendingCrashDumpFiles() {
     var crashDumpDir = this._getPendingCrashDumpDir();
@@ -205,11 +204,11 @@ SpecialPowersObserverAPI.prototype = {
       }
     }
     return removed;
-  },
+  }
 
   _getURI(url) {
     return Services.io.newURI(url);
-  },
+  }
 
   _readUrlAsString(aUrl) {
     // Fetch script content as we can't use scriptloader's loadSubScript
@@ -249,13 +248,13 @@ SpecialPowersObserverAPI.prototype = {
     }
 
     return output;
-  },
+  }
 
   _sendReply(aMessage, aReplyName, aReplyMsg) {
     let mm = aMessage.target.frameLoader
                      .messageManager;
     mm.sendAsyncMessage(aReplyName, aReplyMsg);
-  },
+  }
 
   _notifyCategoryAndObservers(subject, topic, data) {
     const serviceMarker = "service,";
@@ -295,7 +294,7 @@ SpecialPowersObserverAPI.prototype = {
         observer.observe(subject, topic, data);
       } catch (e) { }
     });
-  },
+  }
 
   /**
    * messageManager callback function
@@ -698,5 +697,5 @@ SpecialPowersObserverAPI.prototype = {
     // we should never be arriving here anyway.
     throw new SpecialPowersError("Unreached code"); // eslint-disable-line no-unreachable
     return undefined;
-  },
-};
+  }
+}
