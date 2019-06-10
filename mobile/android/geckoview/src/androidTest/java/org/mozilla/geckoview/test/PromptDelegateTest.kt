@@ -20,6 +20,7 @@ import org.junit.runner.RunWith
 @ReuseSession(false)
 @WithDevToolsAPI
 class PromptDelegateTest : BaseSessionTest() {
+    @Ignore("disable test for frequently failing Bug 1535423")
     @Test fun popupTest() {
         // Ensure popup blocking is enabled for this test.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to true))
