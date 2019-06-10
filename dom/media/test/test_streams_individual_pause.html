@@ -11,70 +11,67 @@
 <video id="video1" autoplay></video>
 <video id="video2" autoplay></video>
 <script class="testbody" type="text/javascript">
+function getVideoImagePixelData(v) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(v, 0, 0);
+  const imgData = ctx.getImageData(canvas.width/2, canvas.height/2, 1, 1).data;
+  return "r" + imgData[0] +
+         "g" + imgData[1] +
+         "b" + imgData[2] +
+         "a" + imgData[3];
+}
+
 async function startTest() {
-  function getVideoImagePixelData(v) {
-    let canvas = document.createElement("canvas");
-    let ctx = canvas.getContext("2d");
-    ctx.drawImage(v, 0, 0);
-    let imgData = ctx.getImageData(canvas.width/2, canvas.height/2, 1, 1).data;
-    return "r" + imgData[0] +
-           "g" + imgData[1] +
-           "b" + imgData[2] +
-           "a" + imgData[3];
+  // This test expects fake devices so that the video color will change
+  // over time, explicitly request fakes.
+  await pushGetUserMediaTestPrefs({fakeAudio: true, fakeVideo: true});
+  const stream = await navigator.mediaDevices.getUserMedia({video: true});
+  const video1 = document.getElementById('video1');
+  const video2 = document.getElementById('video2');
+
+  video1.srcObject = stream;
+  video2.srcObject = stream;
+
+  await new Promise(r => video1.onplaying = r);
+  video1.pause();
+  await new Promise(r => video1.onpause = r);
+
+  const v1PausedImageData = getVideoImagePixelData(video1);
+  const v2PausedImageData = getVideoImagePixelData(video2);
+
+  while (getVideoImagePixelData(video2) == v2PausedImageData) {
+    info("video2 has not progressed. Waiting.");
+    await new Promise(r => video2.ontimeupdate = r);
   }
 
-  try {
-    // This test expects fake devices so that the video color will change
-    // over time, explicitly request fakes.
-    await pushGetUserMediaTestPrefs({fakeAudio: true, fakeVideo: true});
-    let stream = await navigator.mediaDevices.getUserMedia({video: true});
-    let video1 = document.getElementById('video1');
-    let video2 = document.getElementById('video2');
+  // Wait for a while to be sure video1 would have gotten a frame
+  // if it is playing.
+  for (let i = 3; i != 0; i--) {
+    await new Promise(r => video2.ontimeupdate = r);
+  }
+  info("video2 progressed OK");
 
-    video1.srcObject = stream;
-    video2.srcObject = stream;
+  isnot(video1.currentTime, video2.currentTime,
+        "v1 and v2 should not be at the same currentTime");
+  is(getVideoImagePixelData(video1), v1PausedImageData,
+     "video1 video frame should not have updated since video1 paused");
 
-    video1.onplaying = () => video1.pause();
-
-    let v1PausedImageData;
-    let v2PausedImageData;
-
-    video1.onpause = function() {
-      v1PausedImageData = getVideoImagePixelData(video1);
-      v2PausedImageData = getVideoImagePixelData(video2);
-      v2TimesToTest = 3;
-      video2.ontimeupdate = function() {
-        if (getVideoImagePixelData(video2) === v2PausedImageData) {
-          // Wait until video2 has progressed it's video.
-          // If it doesn't, we'll time out and fail.
-          info("video2 has not progressed. Waiting.");
-          return;
-        }
-
-        if (--v2TimesToTest > 0) {
-          // Wait for a while to be sure video1 would have gotten a frame
-          // if it is playing.
-          info("video2 progressed OK");
-          return;
-        }
-
-        video2.ontimeupdate = null;
-        ok(true, "video2 is playing");
-        isnot(video1.currentTime, video2.currentTime,
-              "v1 and v2 should not be at the same currentTime");
-        is(v1PausedImageData, getVideoImagePixelData(video1),
-           "video1 video frame should not have updated since video1 paused");
-        SimpleTest.finish();
-      };
-    };
-  } catch (error) {
-    ok(false, "getUserMedia should not fail, got " + error.name);
-    SimpleTest.finish();
+  for (const t of stream.getTracks()) {
+    t.stop();
   }
 }
 
 SimpleTest.waitForExplicitFinish();
-startTest();
+(async function() {
+  try {
+    await startTest();
+  } catch(error) {
+    ok(false, "getUserMedia should not fail, got " + error.name);
+  } finally {
+    SimpleTest.finish();
+  }
+})();
 </script>
 </body>
 </html>
