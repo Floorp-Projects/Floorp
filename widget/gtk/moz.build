@@ -103,7 +103,6 @@ if CONFIG['MOZ_WAYLAND']:
     ]
     EXPORTS.mozilla.widget += [
         'nsWaylandDisplay.h',
-        'nsWaylandDisplayShutdown.h',
     ]
 
 if CONFIG['MOZ_WAYLAND'] and CONFIG['HAVE_LIBDRM']:
