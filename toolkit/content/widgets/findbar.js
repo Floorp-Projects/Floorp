@@ -9,6 +9,7 @@
 // a block to prevent accidentally leaking globals onto `window`.
 {
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 class MozFindbar extends XULElement {
   constructor() {
@@ -255,7 +256,7 @@ class MozFindbar extends XULElement {
     });
 
     this._findField.addEventListener("focus", (event) => {
-      if (/Mac/.test(navigator.platform)) {
+      if (AppConstants.platform == "macosx") {
         this._onFindFieldFocus();
       }
       this._updateBrowserWithState();
@@ -1167,7 +1168,7 @@ class MozFindbar extends XULElement {
     if (aIsInitialSelection && !this._startFindDeferred)
       return;
 
-    if (/Mac/.test(window.navigator.platform) && aIsInitialSelection && !aSelectionString) {
+    if (AppConstants.platform == "macosx" && aIsInitialSelection && !aSelectionString) {
       let clipboardSearchString = this.browser.finder.clipboardSearchString;
       if (clipboardSearchString)
         aSelectionString = clipboardSearchString;

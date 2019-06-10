@@ -279,7 +279,7 @@ class MozDialog extends MozXULElement {
               // so return focus to the tab itself
               initialFocusedElt.focus();
             }
-          } else if (!/Mac/.test(navigator.platform) &&
+          } else if (AppConstants.platform != "macosx" &&
                      focusedElt.hasAttribute("dlgtype") &&
                      focusedElt != defaultButton) {
             defaultButton.focus();
@@ -405,7 +405,7 @@ class MozDialog extends MozXULElement {
       }
 
       // show the spacer on Windows only when the extra2 button is present
-      if (/Win/.test(navigator.platform)) {
+      if (AppConstants.platform == "win") {
         let spacer = this.shadowRoot.querySelector(".spacer");
         spacer.removeAttribute("hidden");
         spacer.setAttribute("flex", shown.extra2 ? "1" : "0");
