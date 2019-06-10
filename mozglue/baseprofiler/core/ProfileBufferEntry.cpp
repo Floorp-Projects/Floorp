@@ -1267,7 +1267,7 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
       case ProfileBufferEntry::Kind::Time:
         // Copy with new time
         AddEntry(ProfileBufferEntry::Time(
-            (TimeStamp::Now() - aProcessStartTime).ToMilliseconds()));
+            (TimeStamp::NowUnfuzzed() - aProcessStartTime).ToMilliseconds()));
         break;
       case ProfileBufferEntry::Kind::Marker:
       case ProfileBufferEntry::Kind::ResidentMemory:
