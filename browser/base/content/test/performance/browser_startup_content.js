@@ -22,6 +22,7 @@ const whitelist = {
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
     "resource://specialpowers/specialpowers.js",
     "resource://specialpowers/specialpowersAPI.js",
+    "resource://specialpowers/WrapPrivileged.jsm",
 
     "resource://gre/modules/ContentProcessSingleton.jsm",
 
