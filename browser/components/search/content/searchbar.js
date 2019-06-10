@@ -635,14 +635,13 @@ class MozSearchbar extends MozXULElement {
 
         document.popupNode = null;
 
-        let anchor = this.closest("searchbar");
-        let { width } = anchor.getBoundingClientRect();
+        let { width } = this.getBoundingClientRect();
         popup.setAttribute("width", width > 100 ? width : 100);
 
         // invalidate() depends on the width attribute
         popup._invalidate();
 
-        popup.openPopup(anchor, "after_start");
+        popup.openPopup(this, "after_start");
       }
     };
 
