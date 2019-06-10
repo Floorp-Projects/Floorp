@@ -37,6 +37,10 @@ nsIGlobalObject::~nsIGlobalObject() {
 }
 
 nsIPrincipal* nsIGlobalObject::PrincipalOrNull() {
+  if (!NS_IsMainThread()) {
+    return nullptr;
+  }
+
   JSObject* global = GetGlobalJSObjectPreserveColor();
   if (NS_WARN_IF(!global)) return nullptr;
 
