@@ -19,7 +19,7 @@ android {
         targetSdkVersion 28
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
-        versionName "8.0.13"
+        versionName "8.0.14"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true
@@ -213,9 +213,9 @@ dependencies {
     focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
     focusImplementation 'com.android.installreferrer:installreferrer:1.0' // Required by Adjust
 
-    armImplementation "org.mozilla.geckoview:geckoview-nightly-armeabi-v7a:${geckoview_version}"
-    x86Implementation "org.mozilla.geckoview:geckoview-nightly-x86:${geckoview_version}"
-    aarch64Implementation "org.mozilla.geckoview:geckoview-nightly-arm64-v8a:${geckoview_version}"
+    armImplementation "org.mozilla.geckoview:geckoview-beta-armeabi-v7a:${geckoview_version}"
+    x86Implementation "org.mozilla.geckoview:geckoview-beta-x86:${geckoview_version}"
+    aarch64Implementation "org.mozilla.geckoview:geckoview-beta-arm64-v8a:${geckoview_version}"
     implementation "androidx.palette:palette:$support_libraries_version"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"

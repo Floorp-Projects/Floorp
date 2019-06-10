@@ -7,9 +7,9 @@ buildscript {
     ext.kotlin_version = '1.3.0'
     ext.coroutines_version = '1.0.1'
     ext.geckoview_revision = '97dae745c1b3ef2292127ba1c4e90b1345c8f576'
-    ext.geckoview_version = '68.0.20190520095418' // GV 68 Nightly Branch 5.31.2019
+    ext.geckoview_version = '68.0.20190604110028' // GV 68 Beta Branch 6.04.2019
     ext.spotbugs_version = '3.1.4'
-    ext.mozilla_components_version = '0.53.0'
+    ext.mozilla_components_version = '0.55.0'
 
     repositories {
         google()

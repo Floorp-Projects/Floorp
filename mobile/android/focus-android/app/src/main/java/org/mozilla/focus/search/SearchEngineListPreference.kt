@@ -64,7 +64,7 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
     fun refetchSearchEngines() {
         launch(Main) {
             searchEngines = context.components.searchEngineManager
-                    .load(this@SearchEngineListPreference.context)
+                    .loadAsync(this@SearchEngineListPreference.context)
                     .await()
                     .list
                     .sortedBy { it.name }
