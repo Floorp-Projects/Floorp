@@ -15,6 +15,8 @@ data class Size(
     val width: Int,
     val height: Int
 ) {
+    override fun toString() = if (this == ANY) "any" else "${width}x$height"
+
     companion object {
         /**
          * Represents the "any" size.

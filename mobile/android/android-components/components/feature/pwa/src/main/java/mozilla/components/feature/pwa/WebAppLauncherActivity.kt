@@ -6,13 +6,17 @@ package mozilla.components.feature.pwa
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.kotlin.toUri
 
 /**
  * This activity is launched by Web App shortcuts on the home screen.
@@ -20,36 +24,48 @@ import mozilla.components.support.ktx.kotlin.toUri
  * Based on the Web App Manifest (display) it will decide whether the app is launched in the browser or in a
  * standalone activity.
  */
-class WebAppLauncherActivity : AppCompatActivity() {
+class WebAppLauncherActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private val logger = Logger("WebAppLauncherActivity")
+    private lateinit var storage: ManifestStorage
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        storage = ManifestStorage(this)
 
-        val manifest = loadManifest()
-
-        routeManifest(manifest)
+        intent.data?.let { startUrl ->
+            launch {
+                val manifest = loadManifest(startUrl.toString())
+                routeManifest(startUrl, manifest)
+            }
+        }
 
         finish()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        coroutineContext.cancel()
+    }
+
     @VisibleForTesting(otherwise = PRIVATE)
-    internal fun routeManifest(manifest: WebAppManifest) {
-        when (manifest.display) {
-            WebAppManifest.DisplayMode.FULLSCREEN, WebAppManifest.DisplayMode.STANDALONE -> launchWebAppShell()
+    internal fun routeManifest(startUrl: Uri, manifest: WebAppManifest?) {
+        when (manifest?.display) {
+            WebAppManifest.DisplayMode.FULLSCREEN, WebAppManifest.DisplayMode.STANDALONE -> launchWebAppShell(startUrl)
 
             // We do not implement "minimal-ui" mode. Following the Web App Manifest spec we fallback to
             // using "browser" in this case.
-            WebAppManifest.DisplayMode.MINIMAL_UI -> launchBrowser(manifest)
+            WebAppManifest.DisplayMode.MINIMAL_UI, WebAppManifest.DisplayMode.BROWSER -> launchBrowser(startUrl)
 
-            WebAppManifest.DisplayMode.BROWSER -> launchBrowser(manifest)
+            // If no manifest is saved for this site, just open the browser.
+            null -> launchBrowser(startUrl)
         }
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal fun launchBrowser(manifest: WebAppManifest) {
-        val intent = Intent(Intent.ACTION_VIEW, manifest.startUrl.toUri())
-        intent.`package` = packageName
+    internal fun launchBrowser(startUrl: Uri) {
+        val intent = Intent(Intent.ACTION_VIEW, startUrl).apply {
+            `package` = packageName
+        }
 
         try {
             startActivity(intent)
@@ -59,34 +75,28 @@ class WebAppLauncherActivity : AppCompatActivity() {
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal fun launchWebAppShell() {
-        val intent = Intent()
-        intent.action = AbstractWebAppShellActivity.INTENT_ACTION
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-        intent.`package` = packageName
+    internal fun launchWebAppShell(startUrl: Uri) {
+        val intent = Intent(AbstractWebAppShellActivity.INTENT_ACTION).apply {
+            data = startUrl
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            `package` = packageName
+        }
 
         try {
             startActivity(intent)
         } catch (e: ActivityNotFoundException) {
             logger.error("Packages does not handle AbstractWebAppShellActivity intent. Can't launch web app.", e)
+            // Fall back to normal browser
+            launchBrowser(startUrl)
         }
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal fun loadManifest(): WebAppManifest {
-        // We do not "install" web apps yet. So there's no place we can load a manifest from yet.
-        // https://github.com/mozilla-mobile/android-components/issues/2382
-        return createTestManifest()
+    internal suspend fun loadManifest(startUrl: String): WebAppManifest? {
+        return storage.loadManifest(startUrl)
     }
-}
 
-/**
- * Just a test manifest we use for testing until we save and load the actual manifests.
- * https://github.com/mozilla-mobile/android-components/issues/2382
- */
-internal fun createTestManifest(): WebAppManifest {
-    return WebAppManifest(
-        name = "Demo",
-        startUrl = "https://www.mozilla.org",
-        display = WebAppManifest.DisplayMode.FULLSCREEN)
+    companion object {
+        const val INTENT_ACTION = "mozilla.components.feature.pwa.PWA_LAUNCHER"
+    }
 }

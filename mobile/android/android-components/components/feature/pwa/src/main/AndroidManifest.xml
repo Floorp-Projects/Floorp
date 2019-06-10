@@ -8,8 +8,11 @@
 
         <activity android:name=".WebAppLauncherActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:exported="true" />
-
+            android:exported="true">
+            <intent-filter>
+                <action android:name="mozilla.components.feature.pwa.PWA_LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

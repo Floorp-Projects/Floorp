@@ -12,8 +12,8 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
  * Sets the requested orientation of the [Activity] to the orientation provided by the given [WebAppManifest] (See
  * [WebAppManifest.orientation] and [WebAppManifest.Orientation].
  */
-fun Activity.applyOrientation(manifest: WebAppManifest) {
-    when (manifest.orientation) {
+fun Activity.applyOrientation(manifest: WebAppManifest?) {
+    when (manifest?.orientation) {
         WebAppManifest.Orientation.NATURAL ->
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
 

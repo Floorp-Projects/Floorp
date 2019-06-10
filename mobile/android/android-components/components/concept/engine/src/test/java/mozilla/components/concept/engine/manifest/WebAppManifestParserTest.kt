@@ -189,7 +189,7 @@ class WebAppManifestParserTest {
         assertEquals(0, manifest.icons.size)
     }
 
-    @Test
+     @Test
     fun `Parsing manifest with no name`() {
         val json = loadManifest("minimal_short_name.json")
         val result = WebAppManifestParser().parse(json)
@@ -271,6 +271,14 @@ class WebAppManifestParserTest {
     }
 
     @Test
+    fun `Parsing invalid JSON string`() {
+        val json = loadManifestAsString("invalid_json.json")
+        val result = WebAppManifestParser().parse(json)
+
+        assertTrue(result is WebAppManifestParser.Result.Failure)
+    }
+
+    @Test
     fun `Parsing invalid JSON missing name fields`() {
         val json = loadManifest("invalid_missing_name.json")
         val result = WebAppManifestParser().parse(json)
@@ -324,12 +332,45 @@ class WebAppManifestParserTest {
         }
     }
 
-    private fun loadManifest(fileName: String): JSONObject =
-        JSONObject(javaClass.getResourceAsStream("/manifests/$fileName")!!
+    @Test
+    fun `Serializing minimal manifest`() {
+        val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
+        val json = WebAppManifestParser().serialize(manifest)
+
+        assertEquals("Mozilla", json.getString("name"))
+        assertEquals("https://mozilla.org", json.getString("start_url"))
+    }
+
+    @Test
+    fun `Serialize and parse W3 typical manifest`() {
+        val result = WebAppManifestParser().parse(loadManifest("spec_typical.json"))
+        val manifest = (result as WebAppManifestParser.Result.Success).manifest
+
+        assertEquals(
+            result,
+            WebAppManifestParser().parse(WebAppManifestParser().serialize(manifest))
+        )
+    }
+
+    @Test
+    fun `Serialize and parse unusual manifest`() {
+        val result = WebAppManifestParser().parse(loadManifest("unusual.json"))
+        val manifest = (result as WebAppManifestParser.Result.Success).manifest
+
+        assertEquals(
+            result,
+            WebAppManifestParser().parse(WebAppManifestParser().serialize(manifest))
+        )
+    }
+
+    private fun loadManifestAsString(fileName: String): String =
+        javaClass.getResourceAsStream("/manifests/$fileName")!!
             .bufferedReader().use {
                 it.readText()
             }.also {
                 assertNotNull(it)
             }
-        )
+
+    private fun loadManifest(fileName: String): JSONObject =
+        JSONObject(loadManifestAsString(fileName))
 }

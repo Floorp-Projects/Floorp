@@ -8,6 +8,7 @@ import android.graphics.Color
 import androidx.annotation.ColorInt
 import mozilla.components.support.ktx.android.org.json.asSequence
 import mozilla.components.support.ktx.android.org.json.tryGetString
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -48,7 +49,7 @@ class WebAppManifestParser {
                 name = name,
                 shortName = shortName,
                 startUrl = json.getString("start_url"),
-                display = getDisplayMode(json),
+                display = parseDisplayMode(json),
                 backgroundColor = parseColor(json.tryGetString("background_color")),
                 description = json.tryGetString("description"),
                 icons = parseIcons(json),
@@ -62,11 +63,38 @@ class WebAppManifestParser {
             Result.Failure(e)
         }
     }
+
+    /**
+     * Parses the provided JSON and returns a [WebAppManifest] (wrapped in [Result.Success] if parsing was successful.
+     * Otherwise [Result.Failure].
+     */
+    fun parse(json: String): Result {
+        return try {
+            parse(JSONObject(json))
+        } catch (e: JSONException) {
+            Result.Failure(e)
+        }
+    }
+
+    fun serialize(manifest: WebAppManifest) = JSONObject().apply {
+        put("name", manifest.name)
+        putOpt("short_name", manifest.shortName)
+        put("start_url", manifest.startUrl)
+        putOpt("display", serializeEnumName(manifest.display.name))
+        putOpt("background_color", serializeColor(manifest.backgroundColor))
+        putOpt("description", manifest.description)
+        putOpt("icons", serializeIcons(manifest.icons))
+        putOpt("scope", manifest.scope)
+        putOpt("theme_color", serializeColor(manifest.themeColor))
+        putOpt("dir", serializeEnumName(manifest.dir.name))
+        putOpt("lang", manifest.lang)
+        putOpt("orientation", serializeEnumName(manifest.orientation.name))
+    }
 }
 
 private val whitespace = "\\s+".toRegex()
 
-private fun getDisplayMode(json: JSONObject): WebAppManifest.DisplayMode {
+private fun parseDisplayMode(json: JSONObject): WebAppManifest.DisplayMode {
     return when (json.optString("display")) {
         "standalone" -> WebAppManifest.DisplayMode.STANDALONE
         "fullscreen" -> WebAppManifest.DisplayMode.FULLSCREEN
@@ -147,4 +175,23 @@ private fun parseOrientation(json: JSONObject) = when (json.optString("orientati
     "landscape-primary" -> WebAppManifest.Orientation.LANDSCAPE_PRIMARY
     "landscape-secondary" -> WebAppManifest.Orientation.LANDSCAPE_SECONDARY
     else -> WebAppManifest.Orientation.ANY
+}
+
+private fun serializeEnumName(name: String) = name.toLowerCase().replace('_', '-')
+
+@Suppress("MagicNumber")
+private fun serializeColor(color: Int?): String? = color?.let {
+    String.format("#%06X", 0xFFFFFF and color)
+}
+
+private fun serializeIcons(icons: List<WebAppManifest.Icon>): JSONArray {
+    val list = icons.map { icon ->
+        JSONObject().apply {
+            put("src", icon.src)
+            put("sizes", icon.sizes.joinToString(" ") { it.toString() })
+            putOpt("type", icon.type)
+            put("purpose", icon.purpose.joinToString(" ") { serializeEnumName(it.name) })
+        }
+    }
+    return JSONArray(list)
 }

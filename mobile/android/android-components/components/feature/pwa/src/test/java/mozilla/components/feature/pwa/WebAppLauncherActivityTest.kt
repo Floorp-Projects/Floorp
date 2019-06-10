@@ -6,6 +6,7 @@ package mozilla.components.feature.pwa
 
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.core.net.toUri
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -31,9 +32,9 @@ class WebAppLauncherActivityTest {
             display = WebAppManifest.DisplayMode.BROWSER
         )
 
-        activity.routeManifest(manifest)
+        activity.routeManifest(manifest.startUrl.toUri(), manifest)
 
-        verify(activity).launchBrowser(manifest)
+        verify(activity).launchBrowser(manifest.startUrl.toUri())
     }
 
     @Test
@@ -47,15 +48,15 @@ class WebAppLauncherActivityTest {
             display = WebAppManifest.DisplayMode.MINIMAL_UI
         )
 
-        activity.routeManifest(manifest)
+        activity.routeManifest(manifest.startUrl.toUri(), manifest)
 
-        verify(activity).launchBrowser(manifest)
+        verify(activity).launchBrowser(manifest.startUrl.toUri())
     }
 
     @Test
     fun `DisplayMode-fullscreen launches web app shell`() {
         val activity = spy(WebAppLauncherActivity())
-        doNothing().`when`(activity).launchWebAppShell()
+        doNothing().`when`(activity).launchWebAppShell("https://www.mozilla.org".toUri())
 
         val manifest = WebAppManifest(
             name = "Test",
@@ -63,15 +64,15 @@ class WebAppLauncherActivityTest {
             display = WebAppManifest.DisplayMode.FULLSCREEN
         )
 
-        activity.routeManifest(manifest)
+        activity.routeManifest(manifest.startUrl.toUri(), manifest)
 
-        verify(activity).launchWebAppShell()
+        verify(activity).launchWebAppShell(manifest.startUrl.toUri())
     }
 
     @Test
     fun `DisplayMode-standalone launches web app shell`() {
         val activity = spy(WebAppLauncherActivity())
-        doNothing().`when`(activity).launchWebAppShell()
+        doNothing().`when`(activity).launchWebAppShell("https://www.mozilla.org".toUri())
 
         val manifest = WebAppManifest(
             name = "Test",
@@ -79,9 +80,9 @@ class WebAppLauncherActivityTest {
             display = WebAppManifest.DisplayMode.STANDALONE
         )
 
-        activity.routeManifest(manifest)
+        activity.routeManifest(manifest.startUrl.toUri(), manifest)
 
-        verify(activity).launchWebAppShell()
+        verify(activity).launchWebAppShell(manifest.startUrl.toUri())
     }
 
     @Test
@@ -96,7 +97,7 @@ class WebAppLauncherActivityTest {
             display = WebAppManifest.DisplayMode.BROWSER
         )
 
-        activity.launchBrowser(manifest)
+        activity.launchBrowser(manifest.startUrl.toUri())
 
         val captor = argumentCaptor<Intent>()
         verify(activity).startActivity(captor.capture())
@@ -112,12 +113,15 @@ class WebAppLauncherActivityTest {
         doReturn("test").`when`(activity).packageName
         doNothing().`when`(activity).startActivity(any())
 
-        activity.launchWebAppShell()
+        val url = "https://example.com".toUri()
+
+        activity.launchWebAppShell(url)
 
         val captor = argumentCaptor<Intent>()
         verify(activity).startActivity(captor.capture())
 
         assertEquals(AbstractWebAppShellActivity.INTENT_ACTION, captor.value.action)
+        assertEquals(url, captor.value.data)
         assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK, captor.value.flags)
         assertEquals("test", captor.value.`package`)
     }

@@ -90,6 +90,9 @@ permalink: /changelog/
 * **feature-tab-collections**
   * Behavior change: `TabCollection` instances returned by `TabCollectionStorage` are now ordered by the last time they have been updated (instead of the time they have been created).
 
+* **feature-pwa**
+  * Added preliminary support for pinning websites to the home screen.
+
 * **lib-crash**
   * [Restrictions to background activity starts](https://developer.android.com/preview/privacy/background-activity-starts) in Android Q+ make it impossible to launch the crash reporter prompt after certain crashes. In those situations the library will show a "crash notification" instead. Clicking on the notification will launch the crash reporter prompt allowing the user to submit a crash report.
 
