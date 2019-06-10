@@ -7,6 +7,7 @@
 package mozilla.components.browser.domains
 
 import android.preference.PreferenceManager
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.domains.DomainAutoCompleteProvider.AutocompleteSource.CUSTOM_LIST
 import mozilla.components.browser.domains.DomainAutoCompleteProvider.AutocompleteSource.DEFAULT_LIST
 import mozilla.components.support.test.robolectric.testContext
@@ -16,12 +17,11 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
 /**
  * While [DomainAutoCompleteProvider] exists (even if it's deprecated) we need to test it.
  */
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class DomainAutoCompleteProviderTest {
 
     @After
