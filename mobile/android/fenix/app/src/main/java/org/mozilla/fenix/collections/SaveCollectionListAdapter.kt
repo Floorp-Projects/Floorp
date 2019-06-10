@@ -16,7 +16,6 @@ import kotlinx.android.synthetic.main.collections_list_item.view.collection_icon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.description
 import org.mozilla.fenix.home.sessioncontrol.Tab
@@ -82,18 +81,16 @@ class CollectionViewHolder(
 
     fun bind(collection: TabCollection) {
         this.collection = collection
-        launch(Dispatchers.Main) {
-            view.collection_item.text = collection.title
-            view.collection_description.text = collection.description(view.context)
+        view.collection_item.text = collection.title
+        view.collection_description.text = collection.description(view.context)
 
-            view.collection_icon.setColorFilter(
-                ContextCompat.getColor(
-                    view.context,
-                    getIconColor(collection.id)
-                ),
-                android.graphics.PorterDuff.Mode.SRC_IN
-            )
-        }
+        view.collection_icon.setColorFilter(
+            ContextCompat.getColor(
+                view.context,
+                getIconColor(collection.id)
+            ),
+            android.graphics.PorterDuff.Mode.SRC_IN
+        )
     }
 
     @Suppress("ComplexMethod", "MagicNumber")

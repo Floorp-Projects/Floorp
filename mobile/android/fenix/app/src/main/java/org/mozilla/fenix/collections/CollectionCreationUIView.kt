@@ -25,7 +25,6 @@ import kotlinx.android.synthetic.main.component_collection_creation.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.R
@@ -268,18 +267,16 @@ class CollectionCreationUIView(
             is SaveCollectionStep.RenameCollection -> {
                 view.tab_list.isClickable = false
 
-                launch(Dispatchers.Main) {
-                    it.selectedTabCollection?.let { tabCollection ->
-                        tabCollection.tabs.map { tab ->
-                            Tab(
-                                tab.id.toString(),
-                                tab.url,
-                                tab.url.urlToTrimmedHost(view.context),
-                                tab.title
-                            )
-                        }.let { tabs ->
-                            collectionCreationTabListAdapter.updateData(tabs, tabs.toSet(), true)
-                        }
+                it.selectedTabCollection?.let { tabCollection ->
+                    tabCollection.tabs.map { tab ->
+                        Tab(
+                            tab.id.toString(),
+                            tab.url,
+                            tab.url.urlToTrimmedHost(view.context),
+                            tab.title
+                        )
+                    }.let { tabs ->
+                        collectionCreationTabListAdapter.updateData(tabs, tabs.toSet(), true)
                     }
                 }
 

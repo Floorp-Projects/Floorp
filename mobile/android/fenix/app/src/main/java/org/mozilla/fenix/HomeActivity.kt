@@ -57,6 +57,8 @@ open class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        components.publicSuffixList.prefetch()
         browsingModeManager = createBrowsingModeManager()
         themeManager = createThemeManager(
             when (browsingModeManager.isPrivate) {

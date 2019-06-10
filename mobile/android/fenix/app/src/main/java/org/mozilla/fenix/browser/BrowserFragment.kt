@@ -747,22 +747,20 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private fun showSaveToCollection() {
         val context = context ?: return
         getSessionById()?.let {
-            launch(Dispatchers.Main) {
-                val tabs = Tab(it.id, it.url, it.url.urlToTrimmedHost(context), it.title)
-                val viewModel = activity?.run {
-                    ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
-                }
-                viewModel?.tabs = listOf(tabs)
-                val selectedSet = mutableSetOf(tabs)
-                viewModel?.selectedTabs = selectedSet
-                viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
-                viewModel?.saveCollectionStep =
-                    viewModel?.tabCollections?.getStepForCollectionsSize() ?: SaveCollectionStep.SelectCollection
-                viewModel?.snackbarAnchorView = nestedScrollQuickAction
-                view?.let {
-                    val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
-                    nav(R.id.browserFragment, directions)
-                }
+            val tabs = Tab(it.id, it.url, it.url.urlToTrimmedHost(context), it.title)
+            val viewModel = activity?.run {
+                ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
+            }
+            viewModel?.tabs = listOf(tabs)
+            val selectedSet = mutableSetOf(tabs)
+            viewModel?.selectedTabs = selectedSet
+            viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
+            viewModel?.saveCollectionStep =
+                viewModel?.tabCollections?.getStepForCollectionsSize() ?: SaveCollectionStep.SelectCollection
+            viewModel?.snackbarAnchorView = nestedScrollQuickAction
+            view?.let {
+                val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
+                nav(R.id.browserFragment, directions)
             }
         }
     }

@@ -91,7 +91,7 @@ class TabCollectionStorage(
     }
 }
 
-suspend fun TabCollection.description(context: Context): String {
+fun TabCollection.description(context: Context): String {
     return this.tabs
         .map { it.url.urlToTrimmedHost(context).capitalize() }
         .map {

@@ -16,7 +16,6 @@ import kotlinx.android.synthetic.main.collection_home_list_row.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.R
@@ -82,33 +81,31 @@ class CollectionViewHolder(
     }
 
     private fun updateCollectionUI() {
-        launch(Dispatchers.Main) {
-            view.collection_title.text = collection.title
-            view.collection_description.text = collection.description(view.context)
+        view.collection_title.text = collection.title
+        view.collection_description.text = collection.description(view.context)
 
-            if (expanded) {
-                (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = 0
-                collection_title.setPadding(0, 0, 0, EXPANDED_PADDING)
-                view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_top_corners)
-                view.collection_description.visibility = View.GONE
+        if (expanded) {
+            (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = 0
+            collection_title.setPadding(0, 0, 0, EXPANDED_PADDING)
+            view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_top_corners)
+            view.collection_description.visibility = View.GONE
 
-                view.chevron.setBackgroundResource(R.drawable.ic_chevron_up)
-            } else {
-                (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = COLLAPSED_MARGIN
-                view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_all_corners)
-                view.collection_description.visibility = View.VISIBLE
+            view.chevron.setBackgroundResource(R.drawable.ic_chevron_up)
+        } else {
+            (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = COLLAPSED_MARGIN
+            view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_all_corners)
+            view.collection_description.visibility = View.VISIBLE
 
-                view.chevron.setBackgroundResource(R.drawable.ic_chevron_down)
-            }
-
-            view.collection_icon.setColorFilter(
-                ContextCompat.getColor(
-                    view.context,
-                    getIconColor(collection.id)
-                ),
-                android.graphics.PorterDuff.Mode.SRC_IN
-            )
+            view.chevron.setBackgroundResource(R.drawable.ic_chevron_down)
         }
+
+        view.collection_icon.setColorFilter(
+            ContextCompat.getColor(
+                view.context,
+                getIconColor(collection.id)
+            ),
+            android.graphics.PorterDuff.Mode.SRC_IN
+        )
     }
 
     private fun handleExpansion(isExpanded: Boolean) {

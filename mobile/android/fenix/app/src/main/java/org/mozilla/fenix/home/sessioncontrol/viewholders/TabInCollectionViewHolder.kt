@@ -79,9 +79,8 @@ class TabInCollectionViewHolder(
     }
 
     private fun updateTabUI() {
-        launch(Dispatchers.Main) {
-            collection_tab_hostname.text = tab.url.urlToTrimmedHost(view.context)
-        }
+        collection_tab_hostname.text = tab.url.urlToTrimmedHost(view.context)
+
         collection_tab_title.text = tab.title
         launch(Dispatchers.IO) {
             val bitmap = collection_tab_icon.context.components.core.icons
