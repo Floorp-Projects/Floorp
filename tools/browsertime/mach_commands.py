@@ -379,7 +379,7 @@ class MachBrowsertime(MachCommandBase):
     def browsertime(self, args, verbose=False,
                     setup=False, clobber=False, skip_cache=False,
                     check=False):
-        self._set_log_level(True)
+        self._set_log_level(verbose)
 
         if setup:
             return self.setup(should_clobber=clobber)
