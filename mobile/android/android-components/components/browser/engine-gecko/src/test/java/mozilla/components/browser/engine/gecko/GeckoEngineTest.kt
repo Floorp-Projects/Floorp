@@ -5,13 +5,14 @@
 package mozilla.components.browser.engine.gecko
 
 import android.app.Activity
-import android.content.Context
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -29,31 +30,29 @@ import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class GeckoEngineTest {
 
     private val runtime: GeckoRuntime = mock(GeckoRuntime::class.java)
-    private val context: Context = mock(Context::class.java)
 
     @Test
     fun createView() {
-        assertTrue(GeckoEngine(context, runtime = runtime).createView(
+        assertTrue(GeckoEngine(testContext, runtime = runtime).createView(
             Robolectric.buildActivity(Activity::class.java).get()
         ) is GeckoEngineView)
     }
 
     @Test
     fun createSession() {
-        assertTrue(GeckoEngine(context, runtime = runtime).createSession() is GeckoEngineSession)
+        assertTrue(GeckoEngine(testContext, runtime = runtime).createSession() is GeckoEngineSession)
     }
 
     @Test
     fun name() {
-        assertEquals("Gecko", GeckoEngine(context, runtime = runtime).name())
+        assertEquals("Gecko", GeckoEngine(testContext, runtime = runtime).name())
     }
 
     @Test
@@ -68,7 +67,7 @@ class GeckoEngineTest {
         `when`(runtimeSettings.automaticFontSizeAdjustment).thenReturn(true)
         `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
         `when`(runtime.settings).thenReturn(runtimeSettings)
-        val engine = GeckoEngine(context, runtime = runtime, defaultSettings = defaultSettings)
+        val engine = GeckoEngine(testContext, runtime = runtime, defaultSettings = defaultSettings)
 
         assertTrue(engine.settings.javascriptEnabled)
         engine.settings.javascriptEnabled = false
@@ -132,7 +131,7 @@ class GeckoEngineTest {
         `when`(runtime.settings).thenReturn(runtimeSettings)
         `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
 
-        val engine = GeckoEngine(context, DefaultSettings(
+        val engine = GeckoEngine(testContext, DefaultSettings(
                 trackingProtectionPolicy = TrackingProtectionPolicy.all(),
                 javascriptEnabled = false,
                 webFontsEnabled = false,
@@ -164,7 +163,7 @@ class GeckoEngineTest {
     fun `speculativeConnect forwards call to executor`() {
         val executor: GeckoWebExecutor = mock()
 
-        val engine = GeckoEngine(context, runtime = runtime, executorProvider = { executor })
+        val engine = GeckoEngine(testContext, runtime = runtime, executorProvider = { executor })
 
         engine.speculativeConnect("https://www.mozilla.org")
 
@@ -174,7 +173,7 @@ class GeckoEngineTest {
     @Test
     fun `install web extension successfully`() {
         val runtime = mock(GeckoRuntime::class.java)
-        val engine = GeckoEngine(context, runtime = runtime)
+        val engine = GeckoEngine(testContext, runtime = runtime)
         var onSuccessCalled = false
         var onErrorCalled = false
         var result = GeckoResult<Void>()
@@ -199,7 +198,7 @@ class GeckoEngineTest {
     @Test
     fun `install web extension failure`() {
         val runtime = mock(GeckoRuntime::class.java)
-        val engine = GeckoEngine(context, runtime = runtime)
+        val engine = GeckoEngine(testContext, runtime = runtime)
         var onErrorCalled = false
         val expected = IOException()
         var result = GeckoResult<Void>()
@@ -220,7 +219,7 @@ class GeckoEngineTest {
     fun `WHEN GeckoRuntime is shutting down THEN GeckoEngine throws runtime exception`() {
         val runtime: GeckoRuntime = mock()
 
-        GeckoEngine(context, runtime = runtime)
+        GeckoEngine(testContext, runtime = runtime)
 
         val captor = argumentCaptor<GeckoRuntime.Delegate>()
         verify(runtime).delegate = captor.capture()

@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -20,9 +21,8 @@ import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class GeckoEngineViewTest {
 
     private val context: Context

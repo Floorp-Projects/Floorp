@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko.fetch
 
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.support.test.any
@@ -30,7 +31,6 @@ import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.WebRequest
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
-import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 import java.nio.charset.Charset
 import java.util.concurrent.TimeoutException
@@ -43,7 +43,7 @@ import java.util.concurrent.TimeoutException
  * functionality of [GeckoViewFetchClient]. That's why end-to-end tests are
  * provided in instrumented tests.
  */
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.FetchTestCases() {
     override fun createNewClient(): Client {
         val client = GeckoViewFetchClient(ApplicationProvider.getApplicationContext(), mock(GeckoRuntime::class.java))

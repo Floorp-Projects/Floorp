@@ -4,7 +4,7 @@
 
 package org.mozilla.geckoview
 
-import mozilla.components.test.ReflectionUtils
+import org.robolectric.util.ReflectionHelpers.setField
 
 class MockWebResponseInfo(
     uri: String,
@@ -13,9 +13,9 @@ class MockWebResponseInfo(
     filename: String?
 ) : GeckoSession.WebResponseInfo() {
     init {
-        ReflectionUtils.setField(this, "uri", uri)
-        ReflectionUtils.setField(this, "contentType", contentType)
-        ReflectionUtils.setField(this, "filename", filename)
-        ReflectionUtils.setField(this, "contentLength", contentLength)
+        setField(this, "uri", uri)
+        setField(this, "contentType", contentType)
+        setField(this, "filename", filename)
+        setField(this, "contentLength", contentLength)
     }
 }

@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko.prompt
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.MessageHandler
@@ -11,9 +12,8 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class GeckoWebExtensionTest {
 
     // There is not much to test here in beta. All functionality is in nightly only.

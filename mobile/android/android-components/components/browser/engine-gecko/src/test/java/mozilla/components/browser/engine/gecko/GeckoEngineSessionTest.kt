@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.os.Handler
 import android.os.Message
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
@@ -24,7 +25,6 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.expectException
 import mozilla.components.support.test.mock
 import mozilla.components.support.utils.ThreadUtils
-import mozilla.components.test.ReflectionUtils
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -61,10 +61,10 @@ import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebRequestError.ERROR_CATEGORY_UNKNOWN
 import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
-import org.robolectric.RobolectricTestRunner
+import org.robolectric.util.ReflectionHelpers.setField
 import java.util.concurrent.Executors
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class GeckoEngineSessionTest {
     private lateinit var geckoSession: GeckoSession
     private lateinit var geckoSessionProvider: () -> GeckoSession
@@ -423,7 +423,7 @@ class GeckoEngineSessionTest {
 
     class MockSecurityInformation(origin: String) : SecurityInformation() {
         init {
-            ReflectionUtils.setField(this, "origin", origin)
+            setField(this, "origin", origin)
         }
     }
 

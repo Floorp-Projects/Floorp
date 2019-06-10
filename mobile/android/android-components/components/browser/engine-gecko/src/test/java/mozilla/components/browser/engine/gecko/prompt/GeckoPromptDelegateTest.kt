@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko.prompt
 import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.prompt.Choice
@@ -15,47 +16,46 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Lev
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level.PASSWORD_ENCRYPTED
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level.SECURED
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Method.HOST
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_SECURE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_PW_ENCRYPTED
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_ONLY_PASSWORD
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_PREVIOUS_FAILED
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_HOST
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
+import mozilla.components.support.ktx.kotlin.toDate
 import mozilla.components.support.test.mock
+import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
-import org.mozilla.geckoview.GeckoRuntime
-import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MULTIPLE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_SINGLE
-import org.robolectric.RobolectricTestRunner
-import mozilla.components.support.ktx.kotlin.toDate
-import org.junit.Assert
-import org.junit.Assert.assertNotNull
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_HOST
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_ONLY_PASSWORD
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_PREVIOUS_FAILED
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_PW_ENCRYPTED
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_SECURE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEGATIVE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEUTRAL
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_POSITIVE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MULTIPLE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_SINGLE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_MONTH
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_TIME
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_WEEK
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback
 import java.security.InvalidParameterException
-import java.util.Date
 import java.util.Calendar
 import java.util.Calendar.YEAR
+import java.util.Date
 
 typealias GeckoChoice = GeckoSession.PromptDelegate.Choice
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class GeckoPromptDelegateTest {
 
     @Test

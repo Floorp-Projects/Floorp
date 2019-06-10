@@ -5,22 +5,21 @@
 package mozilla.components.browser.engine.gecko.permission
 
 import android.Manifest
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.support.test.mock
-import mozilla.components.test.ReflectionUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoSession
-import org.robolectric.RobolectricTestRunner
-
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
+import org.robolectric.util.ReflectionHelpers.setField
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class GeckoPermissionRequestTest {
 
     @Test
@@ -185,10 +184,10 @@ class GeckoPermissionRequestTest {
 
     class MockMediaSource(id: String, name: String, source: Int, type: Int) : MediaSource() {
         init {
-            ReflectionUtils.setField(this, "id", id)
-            ReflectionUtils.setField(this, "name", name)
-            ReflectionUtils.setField(this, "source", source)
-            ReflectionUtils.setField(this, "type", type)
+            setField(this, "id", id)
+            setField(this, "name", name)
+            setField(this, "source", source)
+            setField(this, "type", type)
         }
     }
 }
