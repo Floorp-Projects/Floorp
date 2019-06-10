@@ -187,6 +187,37 @@ class SearchEngineManagerTest {
     }
 
     @Test
+    fun `manager returns first engine as provided default if default cannot be found`() = runBlockingTest {
+        val provider = mockProvider(listOf(
+                mockSearchEngine("mozsearch"),
+                mockSearchEngine("google"),
+                mockSearchEngine("bing")))
+
+        val manager = SearchEngineManager(listOf(provider))
+
+        val default = manager.getProvidedDefaultSearchEngine(testContext)
+        assertEquals("mozsearch", default.identifier)
+    }
+
+    @Test
+    fun `manager returns default engine as provided default from the provider`() = runBlockingTest {
+        val mozSearchEngine = mockSearchEngine("mozsearch")
+        val provider = mockProvider(
+            engines = listOf(
+                mockSearchEngine("google"),
+                mozSearchEngine,
+                mockSearchEngine("bing")
+            ),
+            default = mozSearchEngine
+        )
+
+        val manager = SearchEngineManager(listOf(provider))
+
+        val default = manager.getProvidedDefaultSearchEngine(testContext)
+        assertEquals("mozsearch", default.identifier)
+    }
+
+    @Test
     fun `manager registers for locale changes`() = runBlockingTest {
         val provider = spy(mockProvider(listOf(
             mockSearchEngine("mozsearch"),

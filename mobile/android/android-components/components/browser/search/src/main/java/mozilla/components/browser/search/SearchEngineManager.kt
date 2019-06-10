@@ -91,12 +91,22 @@ class SearchEngineManager(
     @Synchronized
     fun getDefaultSearchEngine(context: Context, name: String = EMPTY): SearchEngine {
         val searchEngineList = getSearchEngineList(context)
-        val providedDefault = searchEngineList.default ?: searchEngineList.list[0]
+        val providedDefault = getProvidedDefaultSearchEngine(context)
 
         return when (name) {
             EMPTY -> defaultSearchEngine ?: providedDefault
             else -> searchEngineList.list.find { it.name == name } ?: providedDefault
         }
+    }
+
+    /**
+     * Returns the provided default search engine or the first search engine if the default
+     * is not set.
+     */
+    @Synchronized
+    fun getProvidedDefaultSearchEngine(context: Context): SearchEngine {
+        val searchEngineList = getSearchEngineList(context)
+        return searchEngineList.default ?: searchEngineList.list[0]
     }
 
     /**
