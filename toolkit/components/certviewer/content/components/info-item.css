@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  line-height: 24px;
+  display: contents;
+}
+
+label {
+  text-align: right;
+  margin-inline-end: 0;
+}
+
+.long-hex {
+  max-width: 100%;
+  overflow: hidden;
+  word-break: break-all;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
