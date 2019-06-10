@@ -117,7 +117,7 @@ void TraceLoggerThread::initGraph() {
   MOZ_ASSERT(traceLoggerState);
   bool graphFile = traceLoggerState->isGraphFileEnabled();
   double delta =
-      traceLoggerState->getTimeStampOffset(mozilla::TimeStamp::Now());
+      traceLoggerState->getTimeStampOffset(mozilla::TimeStamp::NowUnfuzzed());
   uint64_t start = static_cast<uint64_t>(delta);
   if (!graph_->init(start, graphFile)) {
     graph_ = nullptr;
@@ -971,7 +971,7 @@ void TraceLoggerThread::log(uint32_t id) {
   // we record the time it took to make more space. To log this information
   // we need 2 extra free entries.
   if (!events_.hasSpaceForAdd(3)) {
-    mozilla::TimeStamp start = mozilla::TimeStamp::Now();
+    mozilla::TimeStamp start = mozilla::TimeStamp::NowUnfuzzed();
 
     if (!events_.ensureSpaceBeforeAdd(3)) {
       if (graph_.get()) {
@@ -1001,12 +1001,12 @@ void TraceLoggerThread::log(uint32_t id) {
       entryStart.textId = TraceLogger_Internal;
 
       EventEntry& entryStop = events_.pushUninitialized();
-      entryStop.time = mozilla::TimeStamp::Now();
+      entryStop.time = mozilla::TimeStamp::NowUnfuzzed();
       entryStop.textId = TraceLogger_Stop;
     }
   }
 
-  mozilla::TimeStamp time = mozilla::TimeStamp::Now();
+  mozilla::TimeStamp time = mozilla::TimeStamp::NowUnfuzzed();
 
   EventEntry& entry = events_.pushUninitialized();
   entry.time = time;
@@ -1256,7 +1256,7 @@ bool TraceLoggerThreadState::init() {
     spewErrors = false;
   }
 
-  startTime = mozilla::TimeStamp::Now();
+  startTime = mozilla::TimeStamp::NowUnfuzzed();
 
 #ifdef DEBUG
   initialized = true;

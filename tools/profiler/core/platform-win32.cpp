@@ -224,7 +224,7 @@ void SamplerThread::SleepMicro(uint32_t aMicroseconds) {
   if (mIntervalMicroseconds >= 1000) {
     ::Sleep(std::max(1u, aMicroseconds / 1000));
   } else {
-    TimeStamp start = TimeStamp::Now();
+    TimeStamp start = TimeStamp::NowUnfuzzed();
     TimeStamp end = start + TimeDuration::FromMicroseconds(aMicroseconds);
 
     // First, sleep for as many whole milliseconds as possible.
@@ -233,7 +233,7 @@ void SamplerThread::SleepMicro(uint32_t aMicroseconds) {
     }
 
     // Then, spin until enough time has passed.
-    while (TimeStamp::Now() < end) {
+    while (TimeStamp::NowUnfuzzed() < end) {
       YieldProcessor();
     }
   }
