@@ -117,8 +117,6 @@ cfg_if! {
     }
 }
 
-const DEFAULT_BATCH_LOOKBACK_COUNT: usize = 10;
-
 /// Is only false if no WR instances have ever been created.
 static HAS_BEEN_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
@@ -2220,7 +2218,6 @@ impl Renderer {
             gpu_supports_fast_clears: options.gpu_supports_fast_clears,
             gpu_supports_advanced_blend: ext_blend_equation_advanced,
             advanced_blend_is_coherent: ext_blend_equation_advanced_coherent,
-            batch_lookback_count: options.batch_lookback_count,
         };
         info!("WR {:?}", config);
 
@@ -5679,9 +5676,6 @@ pub struct RendererOptions {
     /// and not complete. This option will probably be removed once support is
     /// complete, and WR can implicitly choose whether to make use of PLS.
     pub allow_pixel_local_storage_support: bool,
-    /// Number of batches to look back in history for adding the current
-    /// transparent instance into.
-    pub batch_lookback_count: usize,
     /// Start the debug server for this renderer.
     pub start_debug_server: bool,
 }
@@ -5725,7 +5719,6 @@ impl Default for RendererOptions {
             allow_dual_source_blending: true,
             allow_advanced_blend_equation: false,
             allow_pixel_local_storage_support: false,
-            batch_lookback_count: DEFAULT_BATCH_LOOKBACK_COUNT,
             // For backwards compatibility we set this to true by default, so
             // that if the debugger feature is enabled, the debug server will
             // be started automatically. Users can explicitly disable this as
