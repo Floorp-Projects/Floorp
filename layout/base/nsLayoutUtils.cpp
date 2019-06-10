@@ -4099,13 +4099,13 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
 
 #ifdef MOZ_DUMP_PAINTING
   gfxUtils::sDumpPaintFile = savedDumpFile;
+#endif
 
   if (StaticPrefs::DumpClientLayers()) {
     std::stringstream ss;
     FrameLayerBuilder::DumpRetainedLayerTree(layerManager, ss, false);
     print_stderr(ss);
   }
-#endif
 
   // Update the widget's opaque region information. This sets
   // glass boundaries on Windows. Also set up the window dragging region
