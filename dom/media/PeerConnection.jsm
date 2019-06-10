@@ -446,6 +446,27 @@ class RTCPeerConnection {
       this._mustValidateRTCConfiguration(rtcConfig,
         "RTCPeerConnection constructor passed invalid RTCConfiguration");
     }
+
+    let certificates = rtcConfig.certificates || [];
+
+    if (certificates.some(c => c.expires <= Date.now())) {
+      throw new this._win.DOMException(
+        "Unable to create RTCPeerConnection with an expired certificate",
+        "InvalidAccessError");
+    }
+
+    // TODO(bug 1531875): Check origin of certs
+
+    // TODO(bug 1176518): Remove this code once we support multiple certs
+    let certificate;
+    if (certificates.length == 1) {
+      certificate = certificates[0];
+    } else if (certificates.length) {
+      throw new this._win.DOMException(
+        "RTCPeerConnection does not currently support multiple certificates",
+        "NotSupportedError");
+    }
+
     var principal = Cu.getWebIDLCallerPrincipal();
     this._isChrome = principal.isSystemPrincipal;
 
@@ -485,7 +506,7 @@ class RTCPeerConnection {
     this._impl.initialize(observer, this._win, rtcConfig,
                           Services.tm.currentThread);
 
-    this._certificateReady = this._initCertificate(rtcConfig.certificates);
+    this._certificateReady = this._initCertificate(certificate);
     this._initIdp();
     _globalPCList.notifyLifecycleObservers(this, "initialized");
   }
@@ -503,22 +524,7 @@ class RTCPeerConnection {
     return this._config;
   }
 
-  async _initCertificate(certificates = []) {
-    let certificate;
-    if (certificates.length > 1) {
-      throw new this._win.DOMException(
-        "RTCPeerConnection does not currently support multiple certificates",
-        "NotSupportedError");
-    }
-    if (certificates.length) {
-      certificate = certificates.find(c => c.expires > Date.now());
-      if (!certificate) {
-        throw new this._win.DOMException(
-          "Unable to create RTCPeerConnection with an expired certificate",
-          "InvalidParameterError");
-      }
-    }
-
+  async _initCertificate(certificate) {
     if (!certificate) {
       certificate = await this._win.RTCPeerConnection.generateCertificate({
         name: "ECDSA", namedCurve: "P-256",
