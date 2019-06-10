@@ -14,6 +14,9 @@
 #include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+
 already_AddRefed<nsFrameLoader> nsFrameLoaderOwner::GetFrameLoader() {
   return do_AddRef(mFrameLoader);
 }
@@ -30,6 +33,35 @@ nsFrameLoaderOwner::GetBrowsingContext() {
   return nullptr;
 }
 
+bool nsFrameLoaderOwner::UseRemoteSubframes() {
+  RefPtr<Element> owner = do_QueryObject(this);
+  MOZ_ASSERT(this);
+
+  nsILoadContext* loadContext = owner->OwnerDoc()->GetLoadContext();
+  MOZ_DIAGNOSTIC_ASSERT(loadContext);
+
+  return loadContext->UseRemoteSubframes();
+}
+
+bool nsFrameLoaderOwner::ShouldPreserveBrowsingContext(
+    const mozilla::dom::RemotenessOptions& aOptions) {
+  if (aOptions.mReplaceBrowsingContext) {
+    return false;
+  }
+
+  // Don't preserve contexts if this is a chrome (parent process) window
+  // that is changing from remote to local.
+  if (XRE_IsParentProcess() && (!aOptions.mRemoteType.WasPassed() ||
+                                aOptions.mRemoteType.Value().IsVoid())) {
+    return false;
+  }
+
+  // We will preserve our browsing context if either fission is enabled, or the
+  // `preserve_browsing_contexts` pref is active.
+  return UseRemoteSubframes() ||
+         StaticPrefs::fission_preserve_browsing_contexts();
+}
+
 void nsFrameLoaderOwner::ChangeRemoteness(
     const mozilla::dom::RemotenessOptions& aOptions, mozilla::ErrorResult& rv) {
   RefPtr<mozilla::dom::BrowsingContext> bc;
@@ -37,18 +69,7 @@ void nsFrameLoaderOwner::ChangeRemoteness(
   // If we already have a Frameloader, destroy it, possibly preserving its
   // browsing context.
   if (mFrameLoader) {
-    // Don't preserve contexts if this is a chrome (parent process) window that
-    // is changing from remote to local.
-    bool isChromeRemoteToLocal =
-        XRE_IsParentProcess() && (!aOptions.mRemoteType.WasPassed() ||
-                                  aOptions.mRemoteType.Value().IsVoid());
-
-    // If this is a process switch due to a difference in Cross Origin Opener
-    // Policy, do not preserve the browsing context. Otherwise, save off the
-    // browsing context and use it when creating our new FrameLoader.
-    if (!aOptions.mReplaceBrowsingContext && !isChromeRemoteToLocal &&
-        mozilla::Preferences::GetBool("fission.preserve_browsing_contexts",
-                                      false)) {
+    if (ShouldPreserveBrowsingContext(aOptions)) {
       bc = mFrameLoader->GetBrowsingContext();
       mFrameLoader->SkipBrowsingContextDetach();
     }

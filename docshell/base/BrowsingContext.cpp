@@ -827,9 +827,7 @@ void BrowsingContext::Transaction::Apply(BrowsingContext* aBrowsingContext,
 }
 
 BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
-  MOZ_ASSERT(!mozilla::Preferences::GetBool(
-                 "fission.preserve_browsing_contexts", false) ||
-             IsContent());
+  // FIXME: We should assert that we're loaded in-content here. (bug 1553804)
 
   IPCInitializer init;
   init.mId = Id();
