@@ -210,11 +210,26 @@
   text-overflow: ellipsis;
 }
 
-:-moz-native-anonymous [class$=infobar-dimensions] {
-  color: var(--highlighter-infobar-color);
+:-moz-native-anonymous [class$=infobar-dimensions],
+:-moz-native-anonymous [class$=infobar-grid-type],
+:-moz-native-anonymous [class$=infobar-flex-type] {
   border-inline-start: 1px solid #5a6169;
   margin-inline-start: 6px;
   padding-inline-start: 6px;
+}
+
+:-moz-native-anonymous [class$=infobar-grid-type]:empty,
+:-moz-native-anonymous [class$=infobar-flex-type]:empty {
+  display: none;
+}
+
+:-moz-native-anonymous [class$=infobar-dimensions] {
+  color: var(--highlighter-infobar-color);
+}
+
+:-moz-native-anonymous [class$=infobar-grid-type],
+:-moz-native-anonymous [class$=infobar-flex-type] {
+  color: var(--grey-40);
 }
 
 /* CSS Grid Highlighter */
