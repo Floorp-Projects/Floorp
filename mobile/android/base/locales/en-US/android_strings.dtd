@@ -68,6 +68,11 @@
 <!ENTITY  sending_crash_report "Sending crash report\u2026">
 <!ENTITY  crash_close_label "Close">
 <!ENTITY  crash_restart_label "Restart &brandShortName;">
+<!-- Localization note (crash_notification_title, crash_notification_message, crash_notification_negative_button_text)
+     Text displayed in a system notification to allow starting the Crash Reporter (Android Q and later).-->
+<!ENTITY  crash_notification_title "&brandShortName; crashed">
+<!ENTITY  crash_notification_message "Tap to report to &vendorShortName;">
+<!ENTITY  crash_notification_negative_button_text "Ignore">
 
 <!ENTITY url_bar_default_text2 "Search or enter address">
 
