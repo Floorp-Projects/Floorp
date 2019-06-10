@@ -419,7 +419,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         }
     }
 
-    @Suppress("ComplexMethod", "NestedBlockDepth")
+    @Suppress("ComplexMethod")
     private fun handleCollectionAction(action: CollectionAction) {
         when (action) {
             is CollectionAction.Expand -> {
@@ -447,39 +447,16 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             }
             is CollectionAction.OpenTab -> {
                 invokePendingDeleteJobs()
-                context?.let { context ->
-                    val tabSnapshot = action.tab.restore(context, requireComponents.core.engine, action.tab)
-                    if (tabSnapshot.isEmpty()) {
-                        // We were unable to create a snapshot, so just load the tab instead
-                        (activity as HomeActivity).openToBrowserAndLoad(
-                            searchTermOrURL = action.tab.url,
-                            newTab = true,
-                            from = BrowserDirection.FromHome
-                        )
-                    } else {
-                        requireComponents.core.sessionManager.restore(
-                            tabSnapshot,
-                            true
-                        )
-                        (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
-                    }
-                }
+                (activity as HomeActivity).openToBrowserAndLoad(
+                    searchTermOrURL = action.tab.url,
+                    newTab = true,
+                    from = BrowserDirection.FromHome
+                )
             }
             is CollectionAction.OpenTabs -> {
                 invokePendingDeleteJobs()
-                context?.let { context ->
-                    action.collection.tabs.forEach {
-                        val tabSnapshot = it.restore(context, requireComponents.core.engine, it)
-                        if (tabSnapshot.isEmpty()) {
-                            // We were unable to create a snapshot, so just load the tab instead
-                            requireComponents.useCases.tabsUseCases.addTab.invoke(it.url)
-                        } else {
-                            requireComponents.core.sessionManager.restore(
-                                tabSnapshot,
-                                requireComponents.core.sessionManager.selectedSession == null
-                            )
-                        }
-                    }
+                action.collection.tabs.forEach {
+                    requireComponents.useCases.tabsUseCases.addTab.invoke(it.url)
                 }
             }
             is CollectionAction.ShareTabs -> {
