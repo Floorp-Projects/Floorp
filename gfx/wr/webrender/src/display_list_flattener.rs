@@ -507,12 +507,12 @@ impl<'a> DisplayListFlattener<'a> {
             }
         );
 
-        let tile_cache = TileCache::new(
+        let tile_cache = Box::new(TileCache::new(
             main_scroll_root,
             &prim_list.prim_instances,
             *self.pipeline_clip_chain_stack.last().unwrap(),
             &self.prim_store.pictures,
-        );
+        ));
 
         let pic_index = self.prim_store.pictures.alloc().init(PicturePrimitive::new_image(
             Some(PictureCompositeMode::TileCache { clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0) }),
