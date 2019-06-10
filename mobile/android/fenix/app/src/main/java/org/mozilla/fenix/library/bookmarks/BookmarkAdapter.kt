@@ -176,14 +176,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
             bookmark_overflow.increaseTapArea(bookmarkOverflowExtraDips)
             bookmark_overflow.setOnClickListener {
-                val location = IntArray(2)
-                it.getLocationInWindow(location)
-                bookmarkItemMenu.menuBuilder.build(containerView.context).show(
-                    anchor = it,
-                    orientation = if (location[1] > (it.rootView.measuredHeight / 2))
-                        BrowserMenu.Orientation.UP else
-                        BrowserMenu.Orientation.DOWN
-                )
+                bookmarkItemMenu.menuBuilder.build(containerView.context).show(anchor = it)
             }
             bookmark_title.text = if (item.title.isNullOrBlank()) item.url else item.title
             bookmark_url.text = item.url
