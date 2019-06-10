@@ -5,6 +5,7 @@
 package mozilla.components.browser.search.provider
 
 import android.content.Context
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
@@ -13,9 +14,8 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class AssetsSearchEngineProviderTest {
 
     @Test

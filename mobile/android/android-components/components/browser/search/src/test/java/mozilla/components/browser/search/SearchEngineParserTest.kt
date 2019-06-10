@@ -4,17 +4,18 @@
 
 package mozilla.components.browser.search
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SearchEngineParserTest {
+
     @Test
     fun `SearchEngine can be parsed from assets`() {
         val searchEngine = SearchEngineParser().load(

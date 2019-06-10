@@ -29,6 +29,8 @@ android {
             }
         }
     }
+
+    testOptions.unitTests.includeAndroidResources = true
 }
 
 
@@ -43,7 +45,7 @@ dependencies {
     testImplementation Dependencies.kotlin_coroutines_test
 
     testImplementation Dependencies.androidx_test_core
-    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
 }

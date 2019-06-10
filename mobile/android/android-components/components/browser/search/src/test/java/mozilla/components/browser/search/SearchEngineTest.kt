@@ -6,17 +6,18 @@ package mozilla.components.browser.search
 
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
-import org.robolectric.RobolectricTestRunner
 import java.util.UUID
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SearchEngineTest {
+
     @Test
     fun `Build and verify basic search URL for search engine`() {
         val resultUri = Uri.parse("https://www.mozilla.org/?q={searchTerms}")

@@ -4,16 +4,16 @@
 
 package mozilla.components.browser.search.provider.localization
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import java.util.Locale
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class LocaleSearchLocalizationProviderTest {
     private var cachedLocale: Locale? = null
 
