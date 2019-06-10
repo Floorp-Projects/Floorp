@@ -4,7 +4,10 @@
 
 toolkit.jar:
   content/global/certviewer/certviewer.html                         (content/certviewer.html)
-  content/global/certviewer/certviewer.css                          (content/certviewer.css)
   content/global/certviewer/certviewer.js                           (content/certviewer.js)
+  content/global/certviewer/certviewer.css                          (content/certviewer.css)
+  content/global/certviewer/components/dummy-info.js                (content/components/dummy-info.js)
   content/global/certviewer/components/info-item.js                 (content/components/info-item.js)
   content/global/certviewer/components/info-item.css                (content/components/info-item.css)
+  content/global/certviewer/components/handshake-section.js         (content/components/handshake-section.js)
+  content/global/certviewer/components/handshake-section.css        (content/components/handshake-section.css)
