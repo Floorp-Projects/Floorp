@@ -4250,17 +4250,17 @@ Document::InternalCommandData Document::ConvertToInternalCommand(
   }
 }
 
-bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
-                           const nsAString& value,
-                           nsIPrincipal& aSubjectPrincipal, ErrorResult& rv) {
+bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
+                           const nsAString& aValue,
+                           nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_EXEC_COMMAND);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_EXEC_COMMAND);
     return false;
   }
 
   // if they are requesting UI from us, let's fail since we have no UI
-  if (doShowUI) {
+  if (aShowUI) {
     return false;
   }
 
@@ -4269,7 +4269,7 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
 
   nsAutoString adjustedValue;
   InternalCommandData commandData =
-      ConvertToInternalCommand(commandID, value, &adjustedValue);
+      ConvertToInternalCommand(aHTMLCommandName, aValue, &adjustedValue);
   if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
@@ -4280,7 +4280,7 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
   }
 
   if (commandData.mCommand == Command::GetHTML) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
@@ -4341,7 +4341,7 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
     // instance) when it's enabled.
     editorCommand = commandData.mGetEditorCommandFunc();
     if (NS_WARN_IF(!editorCommand)) {
-      rv.Throw(NS_ERROR_FAILURE);
+      aRv.Throw(NS_ERROR_FAILURE);
       return false;
     }
 
@@ -4382,11 +4382,11 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
       if (!docShell) {
         return false;
       }
-      nsresult res = docShell->DoCommand(commandData.mXULCommandName);
-      if (res == NS_SUCCESS_DOM_NO_OPERATION) {
+      nsresult rv = docShell->DoCommand(commandData.mXULCommandName);
+      if (rv == NS_SUCCESS_DOM_NO_OPERATION) {
         return false;
       }
-      return NS_SUCCEEDED(res);
+      return NS_SUCCEEDED(rv);
     }
 
     // Otherwise (currently, only clipboard read commands like Command::Paste),
@@ -4397,13 +4397,13 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
     // their own editor.
     RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
     if (!commandManager) {
-      rv.Throw(NS_ERROR_FAILURE);
+      aRv.Throw(NS_ERROR_FAILURE);
       return false;
     }
 
     nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
     if (!window) {
-      rv.Throw(NS_ERROR_FAILURE);
+      aRv.Throw(NS_ERROR_FAILURE);
       return false;
     }
 
@@ -4414,9 +4414,9 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
     }
 
     MOZ_ASSERT(commandData.IsPasteCommand());
-    rv =
+    aRv =
         commandManager->DoCommand(commandData.mXULCommandName, nullptr, window);
-    return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
+    return !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !aRv.Failed();
   }
 
   // Now, our target is fixed to the editor.  So, we can use EditorCommand
@@ -4430,9 +4430,9 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
   // require additional parameter, we can use `DoCommand()`.
   if (adjustedValue.IsEmpty() || paramType == EditorCommandParamType::None) {
     MOZ_ASSERT(!(paramType & EditorCommandParamType::Bool));
-    rv = editorCommand->DoCommand(commandData.mCommand, *maybeHTMLEditor,
-                                  &aSubjectPrincipal);
-    return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
+    aRv = editorCommand->DoCommand(commandData.mCommand, *maybeHTMLEditor,
+                                   &aSubjectPrincipal);
+    return !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !aRv.Failed();
   }
 
   // If the EditorCommand requires `bool` parameter, `adjustedValue` must be
@@ -4441,10 +4441,10 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
   if (!!(paramType & EditorCommandParamType::Bool)) {
     MOZ_ASSERT(adjustedValue.EqualsLiteral("true") ||
                adjustedValue.EqualsLiteral("false"));
-    rv = editorCommand->DoCommandParam(
+    aRv = editorCommand->DoCommandParam(
         commandData.mCommand, Some(adjustedValue.EqualsLiteral("true")),
         *maybeHTMLEditor, &aSubjectPrincipal);
-    return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
+    return !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !aRv.Failed();
   }
 
   // Now, the EditorCommand requires `nsAString` or `nsACString` parameter
@@ -4454,9 +4454,9 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
   // `String` or not first.
   if (!!(paramType & EditorCommandParamType::String)) {
     MOZ_ASSERT(!adjustedValue.IsVoid());
-    rv = editorCommand->DoCommandParam(commandData.mCommand, adjustedValue,
-                                       *maybeHTMLEditor, &aSubjectPrincipal);
-    return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
+    aRv = editorCommand->DoCommandParam(commandData.mCommand, adjustedValue,
+                                        *maybeHTMLEditor, &aSubjectPrincipal);
+    return !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !aRv.Failed();
   }
 
   // Finally, `paramType` should have `CString`.  We should use
@@ -4464,9 +4464,9 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
   if (!!(paramType & EditorCommandParamType::CString)) {
     NS_ConvertUTF16toUTF8 utf8Value(adjustedValue);
     MOZ_ASSERT(!utf8Value.IsVoid());
-    rv = editorCommand->DoCommandParam(commandData.mCommand, utf8Value,
-                                       *maybeHTMLEditor, &aSubjectPrincipal);
-    return !rv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !rv.Failed();
+    aRv = editorCommand->DoCommandParam(commandData.mCommand, utf8Value,
+                                        *maybeHTMLEditor, &aSubjectPrincipal);
+    return !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION) && !aRv.Failed();
   }
 
   MOZ_ASSERT_UNREACHABLE(
@@ -4474,16 +4474,16 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
   return false;
 }
 
-bool Document::QueryCommandEnabled(const nsAString& commandID,
+bool Document::QueryCommandEnabled(const nsAString& aHTMLCommandName,
                                    nsIPrincipal& aSubjectPrincipal,
-                                   ErrorResult& rv) {
+                                   ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_ENABLED);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_ENABLED);
     return false;
   }
 
-  InternalCommandData commandData = ConvertToInternalCommand(commandID);
+  InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
   if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
@@ -4507,13 +4507,13 @@ bool Document::QueryCommandEnabled(const nsAString& commandID,
   // get command manager and dispatch command to our window if it's acceptable
   RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
   if (!commandManager) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
   nsPIDOMWindowOuter* window = GetWindow();
   if (!window) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
@@ -4521,15 +4521,15 @@ bool Document::QueryCommandEnabled(const nsAString& commandID,
       nsDependentCString(commandData.mXULCommandName), window);
 }
 
-bool Document::QueryCommandIndeterm(const nsAString& commandID,
-                                    ErrorResult& rv) {
+bool Document::QueryCommandIndeterm(const nsAString& aHTMLCommandName,
+                                    ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_INDETERM);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_INDETERM);
     return false;
   }
 
-  InternalCommandData commandData = ConvertToInternalCommand(commandID);
+  InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
   if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
@@ -4542,20 +4542,20 @@ bool Document::QueryCommandIndeterm(const nsAString& commandID,
   // get command manager and dispatch command to our window if it's acceptable
   RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
   if (!commandManager) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
   nsPIDOMWindowOuter* window = GetWindow();
   if (!window) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  rv = commandManager->GetCommandState(commandData.mXULCommandName, window,
-                                       params);
-  if (rv.Failed()) {
+  aRv = commandManager->GetCommandState(commandData.mXULCommandName, window,
+                                        params);
+  if (aRv.Failed()) {
     return false;
   }
 
@@ -4565,14 +4565,15 @@ bool Document::QueryCommandIndeterm(const nsAString& commandID,
   return params->GetBool("state_mixed");
 }
 
-bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
+bool Document::QueryCommandState(const nsAString& aHTMLCommandName,
+                                 ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_STATE);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_STATE);
     return false;
   }
 
-  InternalCommandData commandData = ConvertToInternalCommand(commandID);
+  InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
   if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
@@ -4585,26 +4586,26 @@ bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
   // get command manager and dispatch command to our window if it's acceptable
   RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
   if (!commandManager) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
   nsPIDOMWindowOuter* window = GetWindow();
   if (!window) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
-  if (commandID.LowerCaseEqualsLiteral("usecss")) {
+  if (aHTMLCommandName.LowerCaseEqualsLiteral("usecss")) {
     // Per spec, state is supported for styleWithCSS but not useCSS, so we just
     // return false always.
     return false;
   }
 
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  rv = commandManager->GetCommandState(commandData.mXULCommandName, window,
-                                       params);
-  if (rv.Failed()) {
+  aRv = commandManager->GetCommandState(commandData.mXULCommandName, window,
+                                        params);
+  if (aRv.Failed()) {
     return false;
   }
 
@@ -4617,32 +4618,32 @@ bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
   switch (commandData.mCommand) {
     case Command::FormatJustifyLeft: {
       nsAutoCString currentValue;
-      rv = params->GetCString("state_attribute", currentValue);
-      if (rv.Failed()) {
+      aRv = params->GetCString("state_attribute", currentValue);
+      if (aRv.Failed()) {
         return false;
       }
       return currentValue.EqualsLiteral("left");
     }
     case Command::FormatJustifyRight: {
       nsAutoCString currentValue;
-      rv = params->GetCString("state_attribute", currentValue);
-      if (rv.Failed()) {
+      aRv = params->GetCString("state_attribute", currentValue);
+      if (aRv.Failed()) {
         return false;
       }
       return currentValue.EqualsLiteral("right");
     }
     case Command::FormatJustifyCenter: {
       nsAutoCString currentValue;
-      rv = params->GetCString("state_attribute", currentValue);
-      if (rv.Failed()) {
+      aRv = params->GetCString("state_attribute", currentValue);
+      if (aRv.Failed()) {
         return false;
       }
       return currentValue.EqualsLiteral("center");
     }
     case Command::FormatJustifyFull: {
       nsAutoCString currentValue;
-      rv = params->GetCString("state_attribute", currentValue);
-      if (rv.Failed()) {
+      aRv = params->GetCString("state_attribute", currentValue);
+      if (aRv.Failed()) {
         return false;
       }
       return currentValue.EqualsLiteral("justify");
@@ -4660,15 +4661,15 @@ bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
   return params->GetBool("state_all");
 }
 
-bool Document::QueryCommandSupported(const nsAString& commandID,
-                                     CallerType aCallerType, ErrorResult& rv) {
+bool Document::QueryCommandSupported(const nsAString& aHTMLCommandName,
+                                     CallerType aCallerType, ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_SUPPORTED);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_SUPPORTED);
     return false;
   }
 
-  InternalCommandData commandData = ConvertToInternalCommand(commandID);
+  InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
   if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
@@ -4692,21 +4693,21 @@ bool Document::QueryCommandSupported(const nsAString& commandID,
     }
   }
 
-  // commandID is supported if it can be converted to a Midas command
+  // aHTMLCommandName is supported if it can be converted to a Midas command
   return true;
 }
 
-void Document::QueryCommandValue(const nsAString& commandID, nsAString& aValue,
-                                 ErrorResult& rv) {
+void Document::QueryCommandValue(const nsAString& aHTMLCommandName,
+                                 nsAString& aValue, ErrorResult& aRv) {
   aValue.Truncate();
 
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
-    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_VALUE);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_VALUE);
     return;
   }
 
-  InternalCommandData commandData = ConvertToInternalCommand(commandID);
+  InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
   if (commandData.mCommand == Command::DoNothing) {
     // Return empty string
     return;
@@ -4720,13 +4721,13 @@ void Document::QueryCommandValue(const nsAString& commandID, nsAString& aValue,
   // get command manager and dispatch command to our window if it's acceptable
   RefPtr<nsCommandManager> commandManager = GetMidasCommandManager();
   if (!commandManager) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
   if (!window) {
-    rv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
@@ -4734,30 +4735,31 @@ void Document::QueryCommandValue(const nsAString& commandID, nsAString& aValue,
   // GetCommandState like the other commands
   RefPtr<nsCommandParams> params = new nsCommandParams();
   if (commandData.mCommand == Command::GetHTML) {
-    rv = params->SetBool("selection_only", true);
-    if (rv.Failed()) {
+    aRv = params->SetBool("selection_only", true);
+    if (aRv.Failed()) {
       return;
     }
-    rv = params->SetCString("format", NS_LITERAL_CSTRING("text/html"));
-    if (rv.Failed()) {
+    aRv = params->SetCString("format", NS_LITERAL_CSTRING("text/html"));
+    if (aRv.Failed()) {
       return;
     }
-    rv = commandManager->DoCommand(commandData.mXULCommandName, params, window);
-    if (rv.Failed()) {
+    aRv =
+        commandManager->DoCommand(commandData.mXULCommandName, params, window);
+    if (aRv.Failed()) {
       return;
     }
     params->GetString("result", aValue);
     return;
   }
 
-  rv = params->SetCString("state_attribute", EmptyCString());
-  if (rv.Failed()) {
+  aRv = params->SetCString("state_attribute", EmptyCString());
+  if (aRv.Failed()) {
     return;
   }
 
-  rv = commandManager->GetCommandState(commandData.mXULCommandName, window,
-                                       params);
-  if (rv.Failed()) {
+  aRv = commandManager->GetCommandState(commandData.mXULCommandName, window,
+                                        params);
+  if (aRv.Failed()) {
     return;
   }
 
