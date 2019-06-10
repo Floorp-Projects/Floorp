@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import {recordTelemetryEvent} from "chrome://browser/content/aboutlogins/aboutLoginsUtils.js";
 import ReflectedFluentElement from "chrome://browser/content/aboutlogins/components/reflected-fluent-element.js";
 
 export default class LoginItem extends ReflectedFluentElement {
@@ -146,6 +147,11 @@ export default class LoginItem extends ReflectedFluentElement {
         if (event.target.classList.contains("cancel-button")) {
           this.toggleEditing();
           this.render();
+
+          recordTelemetryEvent({
+            object: this._login.guid ? "existing_login" : "new_login",
+            method: "cancel",
+          });
           return;
         }
         if (event.target.classList.contains("copy-password-button")) {
@@ -159,10 +165,14 @@ export default class LoginItem extends ReflectedFluentElement {
             bubbles: true,
             detail: this._login,
           }));
+
+          recordTelemetryEvent({object: "existing_login", method: "delete"});
           return;
         }
         if (event.target.classList.contains("edit-button")) {
           this.toggleEditing();
+
+          recordTelemetryEvent({object: "existing_login", method: "edit"});
           return;
         }
         if (event.target.classList.contains("open-site-button")) {
@@ -170,6 +180,8 @@ export default class LoginItem extends ReflectedFluentElement {
             bubbles: true,
             detail: this._login,
           }));
+
+          recordTelemetryEvent({object: "existing_login", method: "open_site"});
           return;
         }
         if (event.target.classList.contains("save-changes-button")) {
@@ -183,11 +195,15 @@ export default class LoginItem extends ReflectedFluentElement {
               bubbles: true,
               detail: loginUpdates,
             }));
+
+            recordTelemetryEvent({object: "existing_login", method: "save"});
           } else {
             document.dispatchEvent(new CustomEvent("AboutLoginsCreateLogin", {
               bubbles: true,
               detail: loginUpdates,
             }));
+
+            recordTelemetryEvent({object: "new_login", method: "save"});
           }
         }
         break;
