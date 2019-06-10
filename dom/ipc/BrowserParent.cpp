@@ -3558,12 +3558,6 @@ void BrowserParent::StartPersistence(
   // (The actor will be destroyed on constructor failure.)
 }
 
-void BrowserParent::SkipBrowsingContextDetach() {
-  RefPtr<nsFrameLoader> fl = GetFrameLoader();
-  MOZ_ASSERT(fl);
-  fl->SkipBrowsingContextDetach();
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvLookUpDictionary(
     const nsString& aText, nsTArray<FontRange>&& aFontRangeArray,
     const bool& aIsVertical, const LayoutDeviceIntPoint& aPoint) {
