@@ -137,6 +137,43 @@ def release(channel, is_staging, version_name):
     return (build_tasks, signing_tasks, push_tasks)
 
 
+def nightly_to_production_app(is_staging, version_name):
+    # Since the Fenix nightly was launched, we've pushed it to the production app "org.mozilla.fenix" on the
+    # "nightly" track. We're moving towards having each channel be published to its own app, but we need to
+    # keep updating this "backwards-compatible" nightly for a while yet
+    channel = 'nightly'
+    variants = get_variants_for_build_type(channel)
+    architectures = [variant.abi for variant in variants]
+    apk_paths = ["public/target.{}.apk".format(arch) for arch in architectures]
+
+    build_tasks = {}
+    signing_tasks = {}
+    push_tasks = {}
+
+    build_task_id = taskcluster.slugId()
+    build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(architectures, channel, is_staging, version_name)
+
+    signing_task_id = taskcluster.slugId()
+    signing_tasks[signing_task_id] = BUILDER.craft_release_signing_task(
+        build_task_id,
+        apk_paths=apk_paths,
+        channel='production',  # Since we're publishing to the "production" app, we need to sign for production
+        index_channel=channel,
+        is_staging=is_staging,
+    )
+
+    push_task_id = taskcluster.slugId()
+    push_tasks[push_task_id] = BUILDER.craft_push_task(
+        signing_task_id,
+        apks=apk_paths,
+        channel='production',  # We're publishing to the "production" app on the "nightly" track
+        override_google_play_track='nightly',
+        is_staging=is_staging,
+    )
+
+    return (build_tasks, signing_tasks, push_tasks)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Creates and submit a graph of tasks on Taskcluster.'
@@ -153,7 +190,7 @@ if __name__ == "__main__":
     nightly_parser = subparsers.add_parser('nightly')
     nightly_parser.add_argument('--staging', action='store_true')
 
-    release_parser = subparsers.add_parser('beta')
+    release_parser = subparsers.add_parser('github-release')
     release_parser.add_argument('tag')
 
     result = parser.parse_args()
@@ -168,13 +205,18 @@ if __name__ == "__main__":
         ordered_groups_of_tasks = raptor(result.staging)
     elif command == 'nightly':
         formatted_date = datetime.datetime.now().strftime('%y%V')
-        ordered_groups_of_tasks = release('nightly', result.staging, '1.0.{}'.format(formatted_date))
-    elif command == 'beta':
-        semver = re.compile(r'^v\d+\.\d+\.\d+-beta\.\d+$')
-        if not semver.match(result.tag):
-            raise ValueError('Github tag must be in beta semver format and prefixed with a "v", e.g.: "v1.0.0-beta.0"')
+        ordered_groups_of_tasks = nightly_to_production_app(result.staging, '1.0.{}'.format(formatted_date))
+    elif command == 'github-release':
         version = result.tag[1:]  # remove prefixed "v"
-        ordered_groups_of_tasks = release('beta', False, version)
+        beta_semver = re.compile(r'^v\d+\.\d+\.\d+-beta\.\d+$')
+        production_semver = re.compile(r'^v\d+\.\d+\.\d+(-rc\.\d+)?$')
+        if beta_semver.match(result.tag):
+            ordered_groups_of_tasks = release('beta', False, version)
+        elif production_semver.match(result.tag):
+            ordered_groups_of_tasks = release('production', False, version)
+        else:
+            raise ValueError('Github tag must be in semver format and prefixed with a "v", '
+                             'e.g.: "v1.0.0-beta.0" (beta), "v1.0.0-rc.0" (production) or "v1.0.0" (production)')
     else:
         raise Exception('Unsupported command "{}"'.format(command))
 

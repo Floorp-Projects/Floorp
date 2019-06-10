@@ -181,13 +181,13 @@ tasks:
                         git fetch ${repository} refs/tags/${head_rev}
                         && git config advice.detachedHead false
                         && git checkout FETCH_HEAD
-                        && python automation/taskcluster/decision_task.py beta ${event.release.tag_name}
+                        && python automation/taskcluster/decision_task.py github-release ${event.release.tag_name}
                   extra:
                     treeherder:
-                      symbol: beta-D
+                      symbol: D-github-release
                   metadata:
-                    name: Fenix Beta Decision Task
-                    description: Building and releasing Fenix to the beta channel - triggered by release ${event.release.tag_name}
+                    name: Fenix Github Release Decision Task
+                    description: Building and releasing Fenix ${event.release.tag_name}
           - $if: 'tasks_for == "cron"'
             then:
               $let:

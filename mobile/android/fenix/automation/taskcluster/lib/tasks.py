@@ -423,21 +423,22 @@ class TaskBuilder(object):
         )
 
     def craft_release_signing_task(
-        self, build_task_id, apk_paths, channel, is_staging,
+        self, build_task_id, apk_paths, channel, is_staging, index_channel=None
     ):
-        capitalized_channel = upper_case_first_letter(channel)
+        index_channel = index_channel or channel
         staging_prefix = '.staging' if is_staging else ''
 
         routes = [
             "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.latest".format(
-                staging_prefix, channel, self.date.year, self.date.month, self.date.day
+                staging_prefix, index_channel, self.date.year, self.date.month, self.date.day
             ),
             "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.revision.{}".format(
-                staging_prefix, channel, self.date.year, self.date.month, self.date.day, self.commit
+                staging_prefix, index_channel, self.date.year, self.date.month, self.date.day, self.commit
             ),
-            "index.project.mobile.fenix.v2{}.{}.latest".format(staging_prefix, channel),
+            "index.project.mobile.fenix.v2{}.{}.latest".format(staging_prefix, index_channel),
         ]
 
+        capitalized_channel = upper_case_first_letter(channel)
         return self._craft_signing_task(
             name="Signing {} task".format(capitalized_channel),
             description="Sign {} builds of Fenix".format(capitalized_channel),
@@ -456,7 +457,7 @@ class TaskBuilder(object):
         )
 
     def craft_push_task(
-        self, signing_task_id, apks, channel, is_staging=False
+        self, signing_task_id, apks, channel, is_staging=False, override_google_play_track=None
     ):
         payload = {
             "commit": True,
@@ -470,6 +471,9 @@ class TaskBuilder(object):
                 }
             ]
         }
+
+        if override_google_play_track:
+            payload['google_play_track'] = override_google_play_track
 
         return self._craft_default_task_definition(
             worker_type='mobile-pushapk-dep-v1' if is_staging else 'mobile-pushapk-v1',
