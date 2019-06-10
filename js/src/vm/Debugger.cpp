@@ -1014,8 +1014,27 @@ bool Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
 
   mozilla::DebugOnly<Handle<GlobalObject*>> debuggeeGlobal = cx->global();
 
-  // Determine if we are suspending this frame or popping it forever.
   bool suspending = false;
+  bool success = false;
+  auto frameMapsGuard = MakeScopeExit([&] {
+    // Clean up all Debugger.Frame instances on exit. On suspending, pass
+    // the flag that says to leave those frames `.live`. Note that if
+    // suspending && !success, the generator is closed, not suspended.
+    removeFromFrameMapsAndClearBreakpointsIn(cx, frame, suspending && success);
+  });
+
+  // The onPop handler and associated clean up logic should not run multiple
+  // times on the same frame. If slowPathOnLeaveFrame has already been
+  // called, the frame will not be present in the Debugger frame maps.
+  Rooted<DebuggerFrameVector> frames(cx, DebuggerFrameVector(cx));
+  if (!getDebuggerFrames(frame, &frames)) {
+    return false;
+  }
+  if (frames.empty()) {
+    return frameOk;
+  }
+
+  // Determine if we are suspending this frame or popping it forever.
   Rooted<AbstractGeneratorObject*> genObj(cx);
   if (frame.isGeneratorFrame()) {
     // Since generators are never wasm, we can assume pc is not nullptr, and
@@ -1035,25 +1054,6 @@ bool Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
         frameOk &&
         (*pc == JSOP_INITIALYIELD || *pc == JSOP_YIELD || *pc == JSOP_AWAIT) &&
         !genObj->isClosed();
-  }
-
-  bool success = false;
-  auto frameMapsGuard = MakeScopeExit([&] {
-    // Clean up all Debugger.Frame instances on exit. On suspending, pass
-    // the flag that says to leave those frames `.live`. Note that if
-    // suspending && !success, the generator is closed, not suspended.
-    removeFromFrameMapsAndClearBreakpointsIn(cx, frame, suspending && success);
-  });
-
-  // The onPop handler and associated clean up logic should not run multiple
-  // times on the same frame. If slowPathOnLeaveFrame has already been
-  // called, the frame will not be present in the Debugger frame maps.
-  Rooted<DebuggerFrameVector> frames(cx, DebuggerFrameVector(cx));
-  if (!getDebuggerFrames(frame, &frames)) {
-    return false;
-  }
-  if (frames.empty()) {
-    return frameOk;
   }
 
   // Save the frame's completion value.
