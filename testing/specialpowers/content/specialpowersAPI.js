@@ -8,7 +8,6 @@
 "use strict";
 
 /* import-globals-from MozillaLogger.js */
-/* globals XPCNativeWrapper */
 
 var EXPORTED_SYMBOLS = ["SpecialPowersAPI", "bindDOMWindowUtils"];
 
@@ -24,6 +23,8 @@ ChromeUtils.defineModuleGetter(this, "MockColorPicker",
                                "resource://specialpowers/MockColorPicker.jsm");
 ChromeUtils.defineModuleGetter(this, "MockPermissionPrompt",
                                "resource://specialpowers/MockPermissionPrompt.jsm");
+ChromeUtils.defineModuleGetter(this, "WrapPrivileged",
+                               "resource://specialpowers/WrapPrivileged.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "NetUtil",
@@ -37,6 +38,10 @@ ChromeUtils.defineModuleGetter(this, "PerTestCoverageUtils",
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
 // would crash if used outside of automation.
 Cu.forcePermissiveCOWs();
+
+function bindDOMWindowUtils(aWindow) {
+  return aWindow && WrapPrivileged.wrap(aWindow.windowUtils);
+}
 
 function SpecialPowersAPI() {
   this._consoleListeners = [];
@@ -53,268 +58,6 @@ function SpecialPowersAPI() {
   this._observingPermissions = false;
 }
 
-function bindDOMWindowUtils(aWindow) {
-  if (!aWindow)
-    return undefined;
-
-  var util = aWindow.windowUtils;
-  return wrapPrivileged(util);
-}
-
-function isWrappable(x) {
-  if (typeof x === "object")
-    return x !== null;
-  return typeof x === "function";
-}
-
-function isWrapper(x) {
-  return isWrappable(x) && (typeof x.SpecialPowers_wrappedObject !== "undefined");
-}
-
-function unwrapIfWrapped(x) {
-  return isWrapper(x) ? unwrapPrivileged(x) : x;
-}
-
-function wrapIfUnwrapped(x) {
-  return isWrapper(x) ? x : wrapPrivileged(x);
-}
-
-function isObjectOrArray(obj) {
-  if (Object(obj) !== obj)
-    return false;
-  let arrayClasses = ["Object", "Array", "Int8Array", "Uint8Array",
-                      "Int16Array", "Uint16Array", "Int32Array",
-                      "Uint32Array", "Float32Array", "Float64Array",
-                      "Uint8ClampedArray"];
-  let className = Cu.getClassName(obj, true);
-  return arrayClasses.includes(className);
-}
-
-// In general, we want Xray wrappers for content DOM objects, because waiving
-// Xray gives us Xray waiver wrappers that clamp the principal when we cross
-// compartment boundaries. However, there are some exceptions where we want
-// to use a waiver:
-//
-// * Xray adds some gunk to toString(), which has the potential to confuse
-//   consumers that aren't expecting Xray wrappers. Since toString() is a
-//   non-privileged method that returns only strings, we can just waive Xray
-//   for that case.
-//
-// * We implement Xrays to pure JS [[Object]] and [[Array]] instances that
-//   filter out tricky things like callables. This is the right thing for
-//   security in general, but tends to break tests that try to pass object
-//   literals into SpecialPowers. So we waive [[Object]] and [[Array]]
-//   instances before inspecting properties.
-//
-// * When we don't have meaningful Xray semantics, we create an Opaque
-//   XrayWrapper for security reasons. For test code, we generally want to see
-//   through that sort of thing.
-function waiveXraysIfAppropriate(obj, propName) {
-  if (propName == "toString" || isObjectOrArray(obj) ||
-      /Opaque/.test(Object.prototype.toString.call(obj))) {
-    return XPCNativeWrapper.unwrap(obj);
-}
-  return obj;
-}
-
-// We can't call apply() directy on Xray-wrapped functions, so we have to be
-// clever.
-function doApply(fun, invocant, args) {
-  // We implement Xrays to pure JS [[Object]] instances that filter out tricky
-  // things like callables. This is the right thing for security in general,
-  // but tends to break tests that try to pass object literals into
-  // SpecialPowers. So we waive [[Object]] instances when they're passed to a
-  // SpecialPowers-wrapped callable.
-  //
-  // Note that the transitive nature of Xray waivers means that any property
-  // pulled off such an object will also be waived, and so we'll get principal
-  // clamping for Xrayed DOM objects reached from literals, so passing things
-  // like {l : xoWin.location} won't work. Hopefully the rabbit hole doesn't
-  // go that deep.
-  args = args.map(x => isObjectOrArray(x) ? Cu.waiveXrays(x) : x);
-  return Reflect.apply(fun, invocant, args);
-}
-
-function wrapPrivileged(obj) {
-  // Primitives pass straight through.
-  if (!isWrappable(obj))
-    return obj;
-
-  // No double wrapping.
-  if (isWrapper(obj))
-    throw new Error("Trying to double-wrap object!");
-
-  let dummy;
-  if (typeof obj === "function")
-    dummy = function() {};
-  else
-    dummy = Object.create(null);
-
-  return new Proxy(dummy, new SpecialPowersHandler(obj));
-}
-
-function unwrapPrivileged(x) {
-  // We don't wrap primitives, so sometimes we have a primitive where we'd
-  // expect to have a wrapper. The proxy pretends to be the type that it's
-  // emulating, so we can just as easily check isWrappable() on a proxy as
-  // we can on an unwrapped object.
-  if (!isWrappable(x))
-    return x;
-
-  // If we have a wrappable type, make sure it's wrapped.
-  if (!isWrapper(x))
-    throw new Error("Trying to unwrap a non-wrapped object!");
-
-  var obj = x.SpecialPowers_wrappedObject;
-  // unwrapped.
-  return obj;
-}
-
-function specialPowersHasInstance(value) {
-  // Because we return wrapped versions of this function, when it's called its
-  // wrapper will unwrap the "this" as well as the function itself.  So our
-  // "this" is the unwrapped thing we started out with.
-  return value instanceof this;
-}
-
-function SpecialPowersHandler(wrappedObject) {
-  this.wrappedObject = wrappedObject;
-}
-
-SpecialPowersHandler.prototype = {
-  construct(target, args) {
-    // The arguments may or may not be wrappers. Unwrap them if necessary.
-    var unwrappedArgs = Array.prototype.slice.call(args).map(unwrapIfWrapped);
-
-    // We want to invoke "obj" as a constructor, but using unwrappedArgs as
-    // the arguments.  Make sure to wrap and re-throw exceptions!
-    try {
-      return wrapIfUnwrapped(Reflect.construct(this.wrappedObject, unwrappedArgs));
-    } catch (e) {
-      throw wrapIfUnwrapped(e);
-    }
-  },
-
-  apply(target, thisValue, args) {
-    // The invocant and arguments may or may not be wrappers. Unwrap
-    // them if necessary.
-    var invocant = unwrapIfWrapped(thisValue);
-    var unwrappedArgs = Array.prototype.slice.call(args).map(unwrapIfWrapped);
-
-    try {
-      return wrapIfUnwrapped(doApply(this.wrappedObject, invocant, unwrappedArgs));
-    } catch (e) {
-      // Wrap exceptions and re-throw them.
-      throw wrapIfUnwrapped(e);
-    }
-  },
-
-  has(target, prop) {
-    if (prop === "SpecialPowers_wrappedObject")
-      return true;
-
-    return Reflect.has(this.wrappedObject, prop);
-  },
-
-  get(target, prop, receiver) {
-    if (prop === "SpecialPowers_wrappedObject")
-      return this.wrappedObject;
-
-    let obj = waiveXraysIfAppropriate(this.wrappedObject, prop);
-    let val = Reflect.get(obj, prop);
-    if (val === undefined && prop == Symbol.hasInstance) {
-      // Special-case Symbol.hasInstance to pass the hasInstance check on to our
-      // target.  We only do this when the target doesn't have its own
-      // Symbol.hasInstance already.  Once we get rid of JS engine class
-      // instance hooks (bug 1448218) and always use Symbol.hasInstance, we can
-      // remove this bit (bug 1448400).
-      return wrapPrivileged(specialPowersHasInstance);
-    }
-    return wrapIfUnwrapped(val);
-  },
-
-  set(target, prop, val, receiver) {
-    if (prop === "SpecialPowers_wrappedObject")
-      return false;
-
-    let obj = waiveXraysIfAppropriate(this.wrappedObject, prop);
-    return Reflect.set(obj, prop, unwrapIfWrapped(val));
-  },
-
-  delete(target, prop) {
-    if (prop === "SpecialPowers_wrappedObject")
-      return false;
-
-    return Reflect.deleteProperty(this.wrappedObject, prop);
-  },
-
-  defineProperty(target, prop, descriptor) {
-    throw new Error("Can't call defineProperty on SpecialPowers wrapped object");
-  },
-
-  getOwnPropertyDescriptor(target, prop) {
-    // Handle our special API.
-    if (prop === "SpecialPowers_wrappedObject") {
-      return { value: this.wrappedObject, writeable: true,
-               configurable: true, enumerable: false };
-    }
-
-    let obj = waiveXraysIfAppropriate(this.wrappedObject, prop);
-    let desc = Reflect.getOwnPropertyDescriptor(obj, prop);
-
-    if (desc === undefined) {
-      if (prop == Symbol.hasInstance) {
-        // Special-case Symbol.hasInstance to pass the hasInstance check on to
-        // our target.  We only do this when the target doesn't have its own
-        // Symbol.hasInstance already.  Once we get rid of JS engine class
-        // instance hooks (bug 1448218) and always use Symbol.hasInstance, we
-        // can remove this bit (bug 1448400).
-        return { value: wrapPrivileged(specialPowersHasInstance),
-                 writeable: true, configurable: true, enumerable: false };
-      }
-
-      return undefined;
-    }
-
-    // Transitively maintain the wrapper membrane.
-    function wrapIfExists(key) {
-      if (key in desc)
-        desc[key] = wrapIfUnwrapped(desc[key]);
-    }
-
-    wrapIfExists("value");
-    wrapIfExists("get");
-    wrapIfExists("set");
-
-    // A trapping proxy's properties must always be configurable, but sometimes
-    // we come across non-configurable properties. Tell a white lie.
-    desc.configurable = true;
-
-    return desc;
-  },
-
-  ownKeys(target) {
-    // Insert our special API. It's not enumerable, but ownKeys()
-    // includes non-enumerable properties.
-    let props = ["SpecialPowers_wrappedObject"];
-
-    // Do the normal thing.
-    let flt = (a) => !props.includes(a);
-    props = props.concat(Reflect.ownKeys(this.wrappedObject).filter(flt));
-
-    // If we've got an Xray wrapper, include the expandos as well.
-    if ("wrappedJSObject" in this.wrappedObject) {
-      props = props.concat(Reflect.ownKeys(this.wrappedObject.wrappedJSObject)
-                           .filter(flt));
-    }
-
-    return props;
-  },
-
-  preventExtensions(target) {
-    throw new Error("Can't call preventExtensions on SpecialPowers wrapped object");
-  },
-};
 
 // SPConsoleListener reflects nsIConsoleMessage objects into JS in a
 // tidy, XPCOM-hiding way.  Messages that are nsIScriptError objects
@@ -387,33 +130,6 @@ SPConsoleListener.prototype = {
                                           Ci.nsIObserver]),
 };
 
-function wrapCallback(cb) {
-  return function SpecialPowersCallbackWrapper() {
-    var args = Array.prototype.map.call(arguments, wrapIfUnwrapped);
-    return cb.apply(this, args);
-  };
-}
-
-function wrapCallbackObject(obj) {
-  obj = Cu.waiveXrays(obj);
-  var wrapper = {};
-  for (var i in obj) {
-    if (typeof obj[i] == "function")
-      wrapper[i] = wrapCallback(obj[i]);
-    else
-      wrapper[i] = obj[i];
-  }
-  return wrapper;
-}
-
-function setWrapped(obj, prop, val) {
-  if (!isWrapper(obj))
-    throw new Error("You only need to use this for SpecialPowers wrapped objects");
-
-  obj = unwrapPrivileged(obj);
-  return Reflect.set(obj, prop, val);
-}
-
 SpecialPowersAPI.prototype = {
 
   /*
@@ -444,9 +160,9 @@ SpecialPowersAPI.prototype = {
    *    properties. This is explained in a comment in the wrapper code above,
    *    and shouldn't be a problem.
    */
-  wrap: wrapIfUnwrapped,
-  unwrap: unwrapIfWrapped,
-  isWrapper,
+  wrap(obj) { return WrapPrivileged.wrap(obj); },
+  unwrap(obj) { return WrapPrivileged.unwrap(obj); },
+  isWrapper(val) { return WrapPrivileged.isWrapper(val); },
 
   /*
    * When content needs to pass a callback or a callback object to an API
@@ -455,14 +171,20 @@ SpecialPowersAPI.prototype = {
    * need a layer to wrap the values in SpecialPowers wrappers before they ever
    * reach content.
    */
-  wrapCallback,
-  wrapCallbackObject,
+  wrapCallback(func) { return WrapPrivileged.wrapCallback(func); },
+  wrapCallbackObject(obj) { return WrapPrivileged.wrapCallbackObject(obj); },
 
   /*
    * Used for assigning a property to a SpecialPowers wrapper, without unwrapping
    * the value that is assigned.
    */
-  setWrapped,
+  setWrapped(obj, prop, val) {
+    if (!WrapPrivileged.isWrapper(obj))
+      throw new Error("You only need to use this for SpecialPowers wrapped objects");
+
+    obj = WrapPrivileged.unwrap(obj);
+    return Reflect.set(obj, prop, val);
+  },
 
   /*
    * Create blank privileged objects to use as out-params for privileged functions.
@@ -479,7 +201,7 @@ SpecialPowersAPI.prototype = {
    * values.
    */
   compare(a, b) {
-    return unwrapIfWrapped(a) === unwrapIfWrapped(b);
+    return WrapPrivileged.unwrap(a) === WrapPrivileged.unwrap(b);
   },
 
   get MockFilePicker() {
@@ -510,7 +232,7 @@ SpecialPowersAPI.prototype = {
       let blobUrl = URL.createObjectURL(blob);
       Services.scriptloader.loadSubScript(blobUrl, sb);
     } catch (e) {
-      throw wrapIfUnwrapped(e);
+      throw WrapPrivileged.wrap(e);
     }
 
     return mc.port2;
@@ -647,7 +369,7 @@ SpecialPowersAPI.prototype = {
   },
 
   get Services() {
-    return wrapPrivileged(Services);
+    return WrapPrivileged.wrap(Services);
   },
 
   /*
@@ -660,10 +382,10 @@ SpecialPowersAPI.prototype = {
   /*
    * Convenient shortcuts to the standard Components abbreviations.
    */
-  get Cc() { return wrapPrivileged(this.getFullComponents().classes); },
-  get Ci() { return wrapPrivileged(this.getFullComponents().interfaces); },
-  get Cu() { return wrapPrivileged(this.getFullComponents().utils); },
-  get Cr() { return wrapPrivileged(this.getFullComponents().results); },
+  get Cc() { return WrapPrivileged.wrap(this.getFullComponents().classes); },
+  get Ci() { return WrapPrivileged.wrap(this.getFullComponents().interfaces); },
+  get Cu() { return WrapPrivileged.wrap(this.getFullComponents().utils); },
+  get Cr() { return WrapPrivileged.wrap(this.getFullComponents().results); },
 
   getDOMWindowUtils(aWindow) {
     if (aWindow == this.window.get() && this.DOMWindowUtils != null)
@@ -678,12 +400,12 @@ SpecialPowersAPI.prototype = {
   getNoXULDOMParser() {
     // If we create it with a system subject principal (so it gets a
     // nullprincipal), it won't be able to parse XUL by default.
-    return wrapPrivileged(new DOMParser());
+    return WrapPrivileged.wrap(new DOMParser());
   },
 
-  get InspectorUtils() { return wrapPrivileged(InspectorUtils); },
+  get InspectorUtils() { return WrapPrivileged.wrap(InspectorUtils); },
 
-  get PromiseDebugging() { return wrapPrivileged(PromiseDebugging); },
+  get PromiseDebugging() { return WrapPrivileged.wrap(PromiseDebugging); },
 
   waitForCrashes(aExpectingProcessCrash) {
     return new Promise((resolve, reject) => {
@@ -1278,7 +1000,7 @@ SpecialPowersAPI.prototype = {
     this._addObserverProxy(notification);
     obs = Cu.waiveXrays(obs);
     if (typeof obs == "object" && obs.observe.name != "SpecialPowersCallbackWrapper")
-      obs.observe = wrapCallback(obs.observe);
+      obs.observe = WrapPrivileged.wrapCallback(obs.observe);
     Services.obs.addObserver(obs, notification, weak);
   },
   removeObserver(obs, notification) {
@@ -1302,7 +1024,7 @@ SpecialPowersAPI.prototype = {
   addAsyncObserver(obs, notification, weak) {
     obs = Cu.waiveXrays(obs);
     if (typeof obs == "object" && obs.observe.name != "SpecialPowersCallbackWrapper") {
-      obs.observe = wrapCallback(obs.observe);
+      obs.observe = WrapPrivileged.wrapCallback(obs.observe);
     }
     let asyncObs = (...args) => {
       Services.tm.dispatchToMainThread(() => {
@@ -1329,8 +1051,8 @@ SpecialPowersAPI.prototype = {
   },
 
   call_Instanceof(obj1, obj2) {
-     obj1 = unwrapIfWrapped(obj1);
-     obj2 = unwrapIfWrapped(obj2);
+     obj1 = WrapPrivileged.unwrap(obj1);
+     obj2 = WrapPrivileged.unwrap(obj2);
      return obj1 instanceof obj2;
   },
 
@@ -1436,7 +1158,7 @@ SpecialPowersAPI.prototype = {
   get formHistory() {
     let tmp = {};
     ChromeUtils.import("resource://gre/modules/FormHistory.jsm", tmp);
-    return wrapPrivileged(tmp.FormHistory);
+    return WrapPrivileged.wrap(tmp.FormHistory);
   },
   getFormFillController(window) {
     return Cc["@mozilla.org/satchel/form-fill-controller;1"]
@@ -1862,7 +1584,7 @@ SpecialPowersAPI.prototype = {
     } else if (arg.nodePrincipal) {
       // It's a document.
       // In some tests the arg is a wrapped DOM element, so we unwrap it first.
-      principal = unwrapIfWrapped(arg).nodePrincipal;
+      principal = WrapPrivileged.unwrap(arg).nodePrincipal;
     } else {
       let uri = Services.io.newURI(arg.url);
       let attrs = arg.originAttributes || {};
@@ -1964,11 +1686,11 @@ SpecialPowersAPI.prototype = {
   },
 
   removeAllServiceWorkerData() {
-    return wrapIfUnwrapped(this._removeServiceWorkerData("SPRemoveAllServiceWorkers"));
+    return WrapPrivileged.wrap(this._removeServiceWorkerData("SPRemoveAllServiceWorkers"));
   },
 
   removeServiceWorkerDataForExampleDomain() {
-    return wrapIfUnwrapped(this._removeServiceWorkerData("SPRemoveServiceWorkerDataForExampleDomain"));
+    return WrapPrivileged.wrap(this._removeServiceWorkerData("SPRemoveServiceWorkerDataForExampleDomain"));
   },
 
   cleanUpSTSData(origin, flags) {
@@ -2107,7 +1829,7 @@ SpecialPowersAPI.prototype = {
 
   createChromeCache(name, url) {
     let principal = this._getPrincipalFromArg(url);
-    return wrapIfUnwrapped(new this.mm.content.CacheStorage(name, principal));
+    return WrapPrivileged.wrap(new this.mm.content.CacheStorage(name, principal));
   },
 
   loadChannelAndReturnStatus(url, loadUsingSystemPrincipal) {
@@ -2164,16 +1886,16 @@ SpecialPowersAPI.prototype = {
       },
       parseFragment(fragment, flags, isXML, baseURL, element) {
         let baseURI = baseURL ? NetUtil.newURI(baseURL) : null;
-        return pu.parseFragment(unwrapIfWrapped(fragment),
+        return pu.parseFragment(WrapPrivileged.unwrap(fragment),
                                 flags, isXML, baseURI,
-                                unwrapIfWrapped(element));
+                                WrapPrivileged.unwrap(element));
       },
     };
     return this._pu;
   },
 
   createDOMWalker(node, showAnonymousContent) {
-    node = unwrapIfWrapped(node);
+    node = WrapPrivileged.unwrap(node);
     let walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].
                  createInstance(Ci.inIDeepTreeWalker);
     walker.showAnonymousContent = showAnonymousContent;
@@ -2181,17 +1903,17 @@ SpecialPowersAPI.prototype = {
     walker.currentNode = node;
     return {
       get firstChild() {
-        return wrapIfUnwrapped(walker.firstChild());
+        return WrapPrivileged.wrap(walker.firstChild());
       },
       get lastChild() {
-        return wrapIfUnwrapped(walker.lastChild());
+        return WrapPrivileged.wrap(walker.lastChild());
       },
     };
   },
 
   observeMutationEvents(mo, node, nativeAnonymousChildList, subtree) {
-    unwrapIfWrapped(mo).observe(unwrapIfWrapped(node),
-                                {nativeAnonymousChildList, subtree});
+    WrapPrivileged.unwrap(mo).observe(WrapPrivileged.unwrap(node),
+                                      {nativeAnonymousChildList, subtree});
   },
 
   doCommand(window, cmd) {
@@ -2225,7 +1947,7 @@ SpecialPowersAPI.prototype = {
       });
     };
 
-    return classifierService.classify(unwrapIfWrapped(principal), eventTarget,
+    return classifierService.classify(WrapPrivileged.unwrap(principal), eventTarget,
                                       wrapCallback);
   },
 
@@ -2237,15 +1959,15 @@ SpecialPowersAPI.prototype = {
     let wrapCallback = results => {
       Services.tm.dispatchToMainThread(() => {
         if (typeof callback == "function") {
-          callback(wrapIfUnwrapped(results));
+          callback(WrapPrivileged.wrap(results));
         } else {
-          callback.onClassifyComplete.call(undefined, wrapIfUnwrapped(results));
+          callback.onClassifyComplete.call(undefined, WrapPrivileged.wrap(results));
         }
       });
     };
 
     let feature = classifierService.createFeatureWithTables("test", tables.split(","), []);
-    return classifierService.asyncClassifyLocalWithFeatures(unwrapIfWrapped(uri),
+    return classifierService.asyncClassifyLocalWithFeatures(WrapPrivileged.unwrap(uri),
                                                             [feature],
                                                             Ci.nsIUrlClassifierFeature.blacklist,
                                                             wrapCallback);
