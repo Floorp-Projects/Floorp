@@ -29,6 +29,7 @@
 #include "nsIContent.h"
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
+#include "nsIPrincipal.h"
 #include "nsISupportsImpl.h"
 #include "nsLiteralString.h"
 #include "nsRange.h"
@@ -60,10 +61,12 @@ bool HTMLEditor::IsEmptyTextNode(nsINode& aNode) {
 
 nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
                                                nsAtom* aAttribute,
-                                               const nsAString& aValue) {
+                                               const nsAString& aValue,
+                                               nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
       *this,
-      HTMLEditUtils::GetEditActionForFormatText(aProperty, aAttribute, true));
+      HTMLEditUtils::GetEditActionForFormatText(aProperty, aAttribute, true),
+      aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1238,8 +1241,15 @@ nsresult HTMLEditor::GetInlinePropertyWithAttrValue(
 
 NS_IMETHODIMP
 HTMLEditor::RemoveAllInlineProperties() {
+  nsresult rv = RemoveAllInlinePropertiesAsAction();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove all inline styles");
+  return rv;
+}
+
+nsresult HTMLEditor::RemoveAllInlinePropertiesAsAction(
+    nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
-      *this, EditAction::eRemoveAllInlineStyleProperties);
+      *this, EditAction::eRemoveAllInlineStyleProperties, aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1256,10 +1266,12 @@ HTMLEditor::RemoveAllInlineProperties() {
 }
 
 nsresult HTMLEditor::RemoveInlinePropertyAsAction(nsAtom& aProperty,
-                                                  nsAtom* aAttribute) {
+                                                  nsAtom* aAttribute,
+                                                  nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
       *this,
-      HTMLEditUtils::GetEditActionForFormatText(aProperty, aAttribute, false));
+      HTMLEditUtils::GetEditActionForFormatText(aProperty, aAttribute, false),
+      aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1467,8 +1479,14 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
 
 NS_IMETHODIMP
 HTMLEditor::IncreaseFontSize() {
-  AutoEditActionDataSetter editActionData(*this,
-                                          EditAction::eIncrementFontSize);
+  nsresult rv = IncreaseFontSizeAsAction();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to increase font size");
+  return rv;
+}
+
+nsresult HTMLEditor::IncreaseFontSizeAsAction(nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eIncrementFontSize,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1482,8 +1500,14 @@ HTMLEditor::IncreaseFontSize() {
 
 NS_IMETHODIMP
 HTMLEditor::DecreaseFontSize() {
-  AutoEditActionDataSetter editActionData(*this,
-                                          EditAction::eDecrementFontSize);
+  nsresult rv = DecreaseFontSizeAsAction();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to decrease font size");
+  return rv;
+}
+
+nsresult HTMLEditor::DecreaseFontSizeAsAction(nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eDecrementFontSize,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
