@@ -19,6 +19,7 @@
   --accessibility-unfocused-tree-focused-node-twisty-fill: var(--theme-icon-dimmed-color);
   --accessibility-link-color: var(--blue-60);
   --accessibility-link-color-active: var(--blue-70);
+  --accessibility-body-background-a90: rgba(255, 255, 255, 0.9);
   --badge-active-background-color: var(--blue-50);
   --badge-active-border-color: #FFFFFFB3;
   --badge-interactive-background-color: var(--grey-20);
@@ -34,6 +35,7 @@
   --accessibility-unfocused-tree-focused-node-twisty-fill: var(--theme-selection-color);
   --accessibility-link-color: var(--theme-highlight-blue);
   --accessibility-link-color-active: var(--blue-40);
+  --accessibility-body-background-a90: rgba(42, 42, 46, 0.9);
   --badge-active-background-color: var(--blue-60);
   --badge-active-border-color: #FFF6;
   --badge-interactive-background-color: var(--grey-70);
@@ -192,7 +194,7 @@ body {
   width: 100%;
   height: 100%;
   z-index: 9999;
-  background: rgba(255,255,255,0.9);
+  background: var(--accessibility-body-background-a90);
   padding-block-start: 30vh;
   font: message-box;
   font-size: 12px;
