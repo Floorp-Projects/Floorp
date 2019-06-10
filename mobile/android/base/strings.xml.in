@@ -71,6 +71,9 @@
   <string name="sending_crash_report">&sending_crash_report;</string>
   <string name="crash_close_label">&crash_close_label;</string>
   <string name="crash_restart_label">&crash_restart_label;</string>
+  <string name="crash_notification_title">&crash_notification_title;</string>
+  <string name="crash_notification_message">&crash_notification_message;</string>
+  <string name="crash_notification_negative_button_text">&crash_notification_negative_button_text;</string>
 
   <string name="url_bar_default_text">&url_bar_default_text2;</string>
   <string name="url_bar_qrcode_text">&url_bar_qrcode_text2;</string>

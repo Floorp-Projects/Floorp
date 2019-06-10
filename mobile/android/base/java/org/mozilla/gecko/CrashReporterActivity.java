@@ -139,6 +139,8 @@ public class CrashReporterActivity extends AppCompatActivity
     @Override
     @SuppressLint("WrongThread") // We don't have a worker thread for the TelemetryDispatcher
     public void onCreate(Bundle savedInstanceState) {
+        informReporterStarted();
+
         super.onCreate(savedInstanceState);
         // mHandler is created here so runnables can be run on the main thread
         mHandler = new Handler();
@@ -595,5 +597,12 @@ public class CrashReporterActivity extends AppCompatActivity
 
     private String unescape(String string) {
         return string.replaceAll("\\\\\\\\", "\\").replaceAll("\\\\n", "\n").replaceAll("\\\\t", "\t");
+    }
+
+    /**
+     * Inform other parts of the app that user started the crash reporting process.
+     */
+    private void informReporterStarted() {
+        CrashHandlerService.reportingStarted(this);
     }
 }
