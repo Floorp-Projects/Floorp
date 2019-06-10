@@ -162,6 +162,27 @@ function getOptionsType(addon, type) {
   return OPTIONS_TYPE_MAP[addon.optionsType];
 }
 
+// Check whether the options page can be loaded in the current browser window.
+async function isAddonOptionsUIAllowed(addon) {
+  if (addon.type !== "extension" || !getOptionsType(addon)) {
+    // Themes never have options pages.
+    // Some plugins have preference pages, and they can always be shown.
+    // Extensions do not need to be checked if they do not have options pages.
+    return true;
+  }
+  if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
+    return true;
+  }
+  if (addon.incognito === "not_allowed") {
+    return false;
+  }
+  // The current page is in a private browsing window, and the add-on does not
+  // have the permission to access private browsing windows. Block access.
+  return allowPrivateBrowsingByDefault ||
+    // Note: This function is async because isAllowedInPrivateBrowsing is async.
+    isAllowedInPrivateBrowsing(addon);
+}
+
 /**
  * This function is set in initialize() by the parent about:addons window. It
  * is a helper for gViewController.loadView().
@@ -630,6 +651,11 @@ class AddonOptions extends HTMLElement {
       case "preferences":
         el.hidden = getOptionsType(addon) !== "tab" &&
           (getOptionsType(addon) !== "inline" || card.expanded);
+        if (!el.hidden) {
+          isAddonOptionsUIAllowed(addon).then(allowed => {
+            el.hidden = !allowed;
+          });
+        }
         break;
     }
   }
@@ -1104,6 +1130,11 @@ class AddonDetails extends HTMLElement {
     notesBtn.hidden = !this.releaseNotesUri;
     let prefsBtn = getButtonByName("preferences");
     prefsBtn.hidden = getOptionsType(addon) !== "inline";
+    if (!prefsBtn.hidden) {
+      isAddonOptionsUIAllowed(addon).then(allowed => {
+        prefsBtn.hidden = !allowed;
+      });
+    }
 
     // Hide the tab group if "details" is the only visible button.
     this.tabGroup.hidden = Array.from(this.tabGroup.children).every(button => {
@@ -1517,6 +1548,13 @@ class AddonCard extends HTMLElement {
   }
 
   onEnabled(addon) {
+    this.reloading = false;
+    this.update();
+  }
+
+  onInstalled(addon) {
+    // When a temporary addon is reloaded, onInstalled is triggered instead of
+    // onEnabled.
     this.reloading = false;
     this.update();
   }
@@ -2584,7 +2622,8 @@ class DetailView {
     card.setAddon(addon);
     card.expand();
     await card.render();
-    if (this.selectedTab === "preferences") {
+    if (this.selectedTab === "preferences" &&
+        (await isAddonOptionsUIAllowed(addon))) {
       card.showPrefs();
     }
 
