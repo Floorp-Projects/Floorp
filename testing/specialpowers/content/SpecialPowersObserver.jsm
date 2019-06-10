@@ -52,141 +52,223 @@ const FRAME_SCRIPTS = [
 // Glue to add in the observer API to this object.  This allows us to share code with chrome tests
 Services.scriptloader.loadSubScript("resource://specialpowers/SpecialPowersObserverAPI.js");
 
-/* XPCOM gunk */
-function SpecialPowersObserver() {
-  this._initialized = false;
-  this._messageManager = Services.mm;
-  this._serviceWorkerListener = null;
-}
+class SpecialPowersObserver extends SpecialPowersObserverAPI {
+  constructor() {
+    super();
+    this._initialized = false;
+    this._messageManager = Services.mm;
+    this._serviceWorkerListener = null;
+  }
 
-
-SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
-
-SpecialPowersObserver.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
-
-SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData) {
-  if (aTopic == "http-on-modify-request") {
-    if (aSubject instanceof Ci.nsIChannel) {
-      let uri = aSubject.URI.spec;
-      this._sendAsyncMessage("specialpowers-http-notify-request", { uri });
+  observe(aSubject, aTopic, aData) {
+    if (aTopic == "http-on-modify-request") {
+      if (aSubject instanceof Ci.nsIChannel) {
+        let uri = aSubject.URI.spec;
+        this._sendAsyncMessage("specialpowers-http-notify-request", { uri });
+      }
+    } else {
+      this._observe(aSubject, aTopic, aData);
     }
-  } else {
-    this._observe(aSubject, aTopic, aData);
-  }
-};
-
-SpecialPowersObserver.prototype._loadFrameScript = function() {
-  // Register for any messages our API needs us to handle
-  for (let name of MESSAGE_NAMES) {
-    this._messageManager.addMessageListener(name, this);
   }
 
-  for (let script of FRAME_SCRIPTS) {
-    this._messageManager.loadFrameScript(script, true);
-  }
-  this._createdFiles = null;
-};
+  _loadFrameScript() {
+    // Register for any messages our API needs us to handle
+    for (let name of MESSAGE_NAMES) {
+      this._messageManager.addMessageListener(name, this);
+    }
 
-SpecialPowersObserver.prototype._unloadFrameScript = function() {
-  for (let name of MESSAGE_NAMES) {
-    this._messageManager.removeMessageListener(name, this);
-  }
-
-  for (let script of FRAME_SCRIPTS) {
-    this._messageManager.removeDelayedFrameScript(script);
-  }
-};
-
-SpecialPowersObserver.prototype._sendAsyncMessage = function(msgname, msg) {
-  this._messageManager.broadcastAsyncMessage(msgname, msg);
-};
-
-SpecialPowersObserver.prototype._receiveMessage = function(aMessage) {
-  return this._receiveMessageAPI(aMessage);
-};
-
-SpecialPowersObserver.prototype.init = function() {
-  if (this._initialized) {
-    throw new Error("Already initialized");
+    for (let script of FRAME_SCRIPTS) {
+      this._messageManager.loadFrameScript(script, true);
+    }
+    this._createdFiles = null;
   }
 
-  // Register special testing modules.
-  var testsURI = Services.dirsvc.get("ProfD", Ci.nsIFile);
-  testsURI.append("tests.manifest");
-  var manifestFile = Services.io.newFileURI(testsURI).
-                       QueryInterface(Ci.nsIFileURL).file;
+  _unloadFrameScript() {
+    for (let name of MESSAGE_NAMES) {
+      this._messageManager.removeMessageListener(name, this);
+    }
 
-  Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
-                 autoRegister(manifestFile);
-
-  Services.obs.addObserver(this, "http-on-modify-request");
-
-  // We would like to check that tests don't leave service workers around
-  // after they finish, but that information lives in the parent process.
-  // Ideally, we'd be able to tell the child processes whenever service
-  // workers are registered or unregistered so they would know at all times,
-  // but service worker lifetimes are complicated enough to make that
-  // difficult. For the time being, let the child process know when a test
-  // registers a service worker so it can ask, synchronously, at the end if
-  // the service worker had unregister called on it.
-  let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
-              .getService(Ci.nsIServiceWorkerManager);
-  let self = this;
-  this._serviceWorkerListener = {
-    onRegister() {
-      self.onRegister();
-    },
-
-    onUnregister() {
-      // no-op
-    },
-  };
-  swm.addListener(this._serviceWorkerListener);
-
-  this._loadFrameScript();
-
-  this._initialized = true;
-};
-
-SpecialPowersObserver.prototype.uninit = function() {
-  if (!this._initialized) {
-    throw new Error("Not initialized");
-  }
-  this._initialized = false;
-
-  var obs = Services.obs;
-  obs.removeObserver(this, "http-on-modify-request");
-  this._registerObservers._topics.forEach((element) => {
-    obs.removeObserver(this._registerObservers, element);
-  });
-  this._removeProcessCrashObservers();
-
-  let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
-              .getService(Ci.nsIServiceWorkerManager);
-  swm.removeListener(this._serviceWorkerListener);
-
-  this._unloadFrameScript();
-};
-
-SpecialPowersObserver.prototype._addProcessCrashObservers = function() {
-  if (this._processCrashObserversRegistered) {
-    return;
+    for (let script of FRAME_SCRIPTS) {
+      this._messageManager.removeDelayedFrameScript(script);
+    }
   }
 
-  Services.obs.addObserver(this, "plugin-crashed");
-  Services.obs.addObserver(this, "ipc:content-shutdown");
-  this._processCrashObserversRegistered = true;
-};
-
-SpecialPowersObserver.prototype._removeProcessCrashObservers = function() {
-  if (!this._processCrashObserversRegistered) {
-    return;
+  _sendAsyncMessage(msgname, msg) {
+    this._messageManager.broadcastAsyncMessage(msgname, msg);
   }
 
-  Services.obs.removeObserver(this, "plugin-crashed");
-  Services.obs.removeObserver(this, "ipc:content-shutdown");
-  this._processCrashObserversRegistered = false;
-};
+  _receiveMessage(aMessage) {
+    return this._receiveMessageAPI(aMessage);
+  }
+
+  init() {
+    if (this._initialized) {
+      throw new Error("Already initialized");
+    }
+
+    // Register special testing modules.
+    var testsURI = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    testsURI.append("tests.manifest");
+    var manifestFile = Services.io.newFileURI(testsURI).
+                         QueryInterface(Ci.nsIFileURL).file;
+
+    Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
+                   autoRegister(manifestFile);
+
+    Services.obs.addObserver(this, "http-on-modify-request");
+
+    // We would like to check that tests don't leave service workers around
+    // after they finish, but that information lives in the parent process.
+    // Ideally, we'd be able to tell the child processes whenever service
+    // workers are registered or unregistered so they would know at all times,
+    // but service worker lifetimes are complicated enough to make that
+    // difficult. For the time being, let the child process know when a test
+    // registers a service worker so it can ask, synchronously, at the end if
+    // the service worker had unregister called on it.
+    let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
+                .getService(Ci.nsIServiceWorkerManager);
+    let self = this;
+    this._serviceWorkerListener = {
+      onRegister() {
+        self.onRegister();
+      },
+
+      onUnregister() {
+        // no-op
+      },
+    };
+    swm.addListener(this._serviceWorkerListener);
+
+    this._loadFrameScript();
+
+    this._initialized = true;
+  }
+
+  uninit() {
+    if (!this._initialized) {
+      throw new Error("Not initialized");
+    }
+    this._initialized = false;
+
+    var obs = Services.obs;
+    obs.removeObserver(this, "http-on-modify-request");
+    this._registerObservers._topics.forEach((element) => {
+      obs.removeObserver(this._registerObservers, element);
+    });
+    this._removeProcessCrashObservers();
+
+    let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
+                .getService(Ci.nsIServiceWorkerManager);
+    swm.removeListener(this._serviceWorkerListener);
+
+    this._unloadFrameScript();
+  }
+
+  _addProcessCrashObservers() {
+    if (this._processCrashObserversRegistered) {
+      return;
+    }
+
+    Services.obs.addObserver(this, "plugin-crashed");
+    Services.obs.addObserver(this, "ipc:content-shutdown");
+    this._processCrashObserversRegistered = true;
+  }
+
+  _removeProcessCrashObservers() {
+    if (!this._processCrashObserversRegistered) {
+      return;
+    }
+
+    Services.obs.removeObserver(this, "plugin-crashed");
+    Services.obs.removeObserver(this, "ipc:content-shutdown");
+    this._processCrashObserversRegistered = false;
+  }
+
+  /**
+   * messageManager callback function
+   * This will get requests from our API in the window and process them in chrome for it
+   **/
+  receiveMessage(aMessage) {
+    switch (aMessage.name) {
+      case "SPPingService":
+        if (aMessage.json.op == "ping") {
+          aMessage.target.frameLoader
+                  .messageManager
+                  .sendAsyncMessage("SPPingService", { op: "pong" });
+        }
+        break;
+      case "SpecialPowers.Quit":
+        Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+        break;
+      case "SpecialPowers.Focus":
+        aMessage.target.focus();
+        break;
+      case "SpecialPowers.CreateFiles":
+        let filePaths = [];
+        if (!this._createdFiles) {
+          this._createdFiles = [];
+        }
+        let createdFiles = this._createdFiles;
+        try {
+          let promises = [];
+          aMessage.data.forEach(function(request) {
+            const filePerms = 0o666;
+            let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
+            if (request.name) {
+              testFile.appendRelativePath(request.name);
+            } else {
+              testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, filePerms);
+            }
+            let outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+            outStream.init(testFile, 0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
+                           filePerms, 0);
+            if (request.data) {
+              outStream.write(request.data, request.data.length);
+            }
+            outStream.close();
+            promises.push(File.createFromFileName(testFile.path, request.options).then(function(file) {
+              filePaths.push(file);
+            }));
+            createdFiles.push(testFile);
+          });
+
+          Promise.all(promises).then(function() {
+            aMessage.target.frameLoader
+                    .messageManager
+                    .sendAsyncMessage("SpecialPowers.FilesCreated", filePaths);
+          }, function(e) {
+            aMessage.target.frameLoader
+                    .messageManager
+                    .sendAsyncMessage("SpecialPowers.FilesError", e.toString());
+          });
+        } catch (e) {
+            aMessage.target.frameLoader
+                    .messageManager
+                    .sendAsyncMessage("SpecialPowers.FilesError", e.toString());
+        }
+
+        break;
+      case "SpecialPowers.RemoveFiles":
+        if (this._createdFiles) {
+          this._createdFiles.forEach(function(testFile) {
+            try {
+              testFile.remove(false);
+            } catch (e) {}
+          });
+          this._createdFiles = null;
+        }
+        break;
+      default:
+        return this._receiveMessage(aMessage);
+    }
+    return undefined;
+  }
+
+  onRegister() {
+    this._sendAsyncMessage("SPServiceWorkerRegistered",
+      { registered: true });
+  }
+}
 
 SpecialPowersObserver.prototype._registerObservers = {
   _self: null,
@@ -218,89 +300,4 @@ SpecialPowersObserver.prototype._registerObservers = {
         this._self._sendAsyncMessage("specialpowers-" + aTopic, msg);
     }
   },
-};
-
-/**
- * messageManager callback function
- * This will get requests from our API in the window and process them in chrome for it
- **/
-SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
-  switch (aMessage.name) {
-    case "SPPingService":
-      if (aMessage.json.op == "ping") {
-        aMessage.target.frameLoader
-                .messageManager
-                .sendAsyncMessage("SPPingService", { op: "pong" });
-      }
-      break;
-    case "SpecialPowers.Quit":
-      Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
-      break;
-    case "SpecialPowers.Focus":
-      aMessage.target.focus();
-      break;
-    case "SpecialPowers.CreateFiles":
-      let filePaths = [];
-      if (!this._createdFiles) {
-        this._createdFiles = [];
-      }
-      let createdFiles = this._createdFiles;
-      try {
-        let promises = [];
-        aMessage.data.forEach(function(request) {
-          const filePerms = 0o666;
-          let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-          if (request.name) {
-            testFile.appendRelativePath(request.name);
-          } else {
-            testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, filePerms);
-          }
-          let outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-          outStream.init(testFile, 0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-                         filePerms, 0);
-          if (request.data) {
-            outStream.write(request.data, request.data.length);
-          }
-          outStream.close();
-          promises.push(File.createFromFileName(testFile.path, request.options).then(function(file) {
-            filePaths.push(file);
-          }));
-          createdFiles.push(testFile);
-        });
-
-        Promise.all(promises).then(function() {
-          aMessage.target.frameLoader
-                  .messageManager
-                  .sendAsyncMessage("SpecialPowers.FilesCreated", filePaths);
-        }, function(e) {
-          aMessage.target.frameLoader
-                  .messageManager
-                  .sendAsyncMessage("SpecialPowers.FilesError", e.toString());
-        });
-      } catch (e) {
-          aMessage.target.frameLoader
-                  .messageManager
-                  .sendAsyncMessage("SpecialPowers.FilesError", e.toString());
-      }
-
-      break;
-    case "SpecialPowers.RemoveFiles":
-      if (this._createdFiles) {
-        this._createdFiles.forEach(function(testFile) {
-          try {
-            testFile.remove(false);
-          } catch (e) {}
-        });
-        this._createdFiles = null;
-      }
-      break;
-    default:
-      return this._receiveMessage(aMessage);
-  }
-  return undefined;
-};
-
-SpecialPowersObserver.prototype.onRegister = function() {
-  this._sendAsyncMessage("SPServiceWorkerRegistered",
-    { registered: true });
 };
