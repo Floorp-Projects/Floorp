@@ -4108,92 +4108,65 @@ void Document::EnsureInitializeInternalCommandDataHashtable() {
   // clang-format on
 }
 
-static const char* const gBlocks[] = {
-    // clang-format off
-  "ADDRESS",
-  "BLOCKQUOTE",
-  "DD",
-  "DIV",
-  "DL",
-  "DT",
-  "H1",
-  "H2",
-  "H3",
-  "H4",
-  "H5",
-  "H6",
-  "P",
-  "PRE"
-    // clang-format on
-};
-
-bool Document::ConvertToMidasInternalCommandInner(
-    const nsAString& inCommandID, const nsAString& inParam,
-    nsACString& outCommandID, nsACString& outParam, bool& outIsBoolean,
-    bool& outBooleanValue, bool aIgnoreParams) {
+Document::InternalCommandData Document::ConvertToInternalCommand(
+    const nsAString& aHTMLCommandName,
+    const nsAString& aValue /* = EmptyString() */,
+    nsAString* aAdjustedValue /* = nullptr */) {
+  MOZ_ASSERT(!aAdjustedValue || aAdjustedValue->IsEmpty());
   EnsureInitializeInternalCommandDataHashtable();
-
   InternalCommandData commandData;
-  if (!sInternalCommandDataHashtable->Get(inCommandID, &commandData)) {
-    // reset results if the command is not found in our table
-    outCommandID.Truncate();
-    outParam.Truncate();
-    outIsBoolean = false;
-    return false;
+  if (!sInternalCommandDataHashtable->Get(aHTMLCommandName, &commandData)) {
+    return InternalCommandData();
   }
-
-  // set outCommandID (what we use internally)
-  outCommandID.Assign(commandData.mXULCommandName);
-
-  // set outParam & outIsBoolean based on flags from the table
-  outIsBoolean = !!(EditorCommand::GetParamType(commandData.mCommand) &
-                    EditorCommandParamType::Bool);
-
-  if (aIgnoreParams) {
+  if (!aAdjustedValue) {
     // No further work to do
-    return true;
+    return commandData;
   }
-
   switch (commandData.mExecCommandParam) {
     case ExecCommandParam::Ignore:
       // Just have to copy it, no checking
       switch (commandData.mCommand) {
         case Command::FormatJustifyLeft:
-          outParam.AssignLiteral("left");
+          aAdjustedValue->AssignLiteral("left");
           break;
         case Command::FormatJustifyRight:
-          outParam.AssignLiteral("right");
+          aAdjustedValue->AssignLiteral("right");
           break;
         case Command::FormatJustifyCenter:
-          outParam.AssignLiteral("center");
+          aAdjustedValue->AssignLiteral("center");
           break;
         case Command::FormatJustifyFull:
-          outParam.AssignLiteral("justify");
+          aAdjustedValue->AssignLiteral("justify");
           break;
         default:
           MOZ_ASSERT(EditorCommand::GetParamType(commandData.mCommand) ==
                      EditorCommandParamType::None);
-          outParam.Truncate();
           break;
       }
-      return true;
+      return commandData;
 
     case ExecCommandParam::Boolean:
       MOZ_ASSERT(!!(EditorCommand::GetParamType(commandData.mCommand) &
                     EditorCommandParamType::Bool));
       // If this is a boolean value and it's not explicitly false (e.g. no
       // value).  We default to "true" (see bug 301490).
-      outBooleanValue = !inParam.LowerCaseEqualsLiteral("false");
-      outParam.Truncate();
-      return true;
+      if (!aValue.LowerCaseEqualsLiteral("false")) {
+        aAdjustedValue->AssignLiteral("true");
+      } else {
+        aAdjustedValue->AssignLiteral("false");
+      }
+      return commandData;
 
     case ExecCommandParam::InvertedBoolean:
       MOZ_ASSERT(!!(EditorCommand::GetParamType(commandData.mCommand) &
                     EditorCommandParamType::Bool));
       // For old backwards commands we invert the check.
-      outBooleanValue = inParam.LowerCaseEqualsLiteral("false");
-      outParam.Truncate();
-      return true;
+      if (aValue.LowerCaseEqualsLiteral("false")) {
+        aAdjustedValue->AssignLiteral("true");
+      } else {
+        aAdjustedValue->AssignLiteral("false");
+      }
+      return commandData;
 
     case ExecCommandParam::String:
       MOZ_ASSERT(!!(
@@ -4201,26 +4174,41 @@ bool Document::ConvertToMidasInternalCommandInner(
           (EditorCommandParamType::String | EditorCommandParamType::CString)));
       switch (commandData.mCommand) {
         case Command::FormatBlock: {
-          const char16_t* start = inParam.BeginReading();
-          const char16_t* end = inParam.EndReading();
+          const char16_t* start = aValue.BeginReading();
+          const char16_t* end = aValue.EndReading();
           if (start != end && *start == '<' && *(end - 1) == '>') {
             ++start;
             --end;
           }
-          NS_ConvertUTF16toUTF8 convertedParam(Substring(start, end));
-          size_t j;
-          for (j = 0; j < ArrayLength(gBlocks); ++j) {
-            if (convertedParam.Equals(gBlocks[j],
-                                      nsCaseInsensitiveCStringComparator())) {
-              outParam.Assign(gBlocks[j]);
+          // XXX Should we reorder this array with actual usage?
+          static const nsStaticAtom* kFormattableBlockTags[] = {
+              // clang-format off
+            nsGkAtoms::address,
+            nsGkAtoms::blockquote,
+            nsGkAtoms::dd,
+            nsGkAtoms::div,
+            nsGkAtoms::dl,
+            nsGkAtoms::dt,
+            nsGkAtoms::h1,
+            nsGkAtoms::h2,
+            nsGkAtoms::h3,
+            nsGkAtoms::h4,
+            nsGkAtoms::h5,
+            nsGkAtoms::h6,
+            nsGkAtoms::p,
+            nsGkAtoms::pre,
+              // clang-format on
+          };
+          nsAutoString value(nsDependentSubstring(start, end));
+          ToLowerCase(value);
+          const nsStaticAtom* valueAtom = NS_GetStaticAtom(value);
+          for (const nsStaticAtom* kTag : kFormattableBlockTags) {
+            if (valueAtom == kTag) {
+              kTag->ToString(*aAdjustedValue);
               break;
             }
           }
-
-          if (j == ArrayLength(gBlocks)) {
-            outParam.Truncate();
-          }
-          return true;
+          return commandData;
         }
         case Command::FormatFontSize: {
           // Per editing spec as of April 23, 2012, we need to reject the value
@@ -4228,42 +4216,22 @@ bool Document::ConvertToMidasInternalCommandInner(
           // whitespace.  Otherwise, we parse it as a legacy font size.  For
           // now, we just parse as a legacy font size regardless (matching
           // WebKit) -- bug 747879.
-          outParam.Truncate();
-          int32_t size = nsContentUtils::ParseLegacyFontSize(inParam);
+          int32_t size = nsContentUtils::ParseLegacyFontSize(aValue);
           if (size) {
-            outParam.AppendInt(size);
+            MOZ_ASSERT(aAdjustedValue->IsEmpty());
+            aAdjustedValue->AppendInt(size);
           }
-          return true;
+          return commandData;
         }
         default:
-          CopyUTF16toUTF8(inParam, outParam);
-          return true;
+          aAdjustedValue->Assign(aValue);
+          return commandData;
       }
+
     default:
       MOZ_ASSERT_UNREACHABLE("New ExecCommandParam value hasn't been handled");
-      return false;
+      return InternalCommandData();
   }
-}
-
-bool Document::ConvertToMidasInternalCommand(const nsAString& inCommandID,
-                                             const nsAString& inParam,
-                                             nsACString& outCommandID,
-                                             nsACString& outParam,
-                                             bool& outIsBoolean,
-                                             bool& outBooleanValue) {
-  return ConvertToMidasInternalCommandInner(inCommandID, inParam, outCommandID,
-                                            outParam, outIsBoolean,
-                                            outBooleanValue, false);
-}
-
-bool Document::ConvertToMidasInternalCommand(const nsAString& inCommandID,
-                                             nsACString& outCommandID) {
-  nsAutoCString dummyCString;
-  nsAutoString dummyString;
-  bool dummyBool;
-  return ConvertToMidasInternalCommandInner(inCommandID, dummyString,
-                                            outCommandID, dummyCString,
-                                            dummyBool, dummyBool, true);
 }
 
 bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
@@ -4275,33 +4243,34 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
     return false;
   }
 
-  //  for optional parameters see dom/src/base/nsHistory.cpp: HistoryImpl::Go()
-  //  this might add some ugly JS dependencies?
-
-  nsAutoCString cmdToDispatch, paramStr;
-  bool isBool, boolVal;
-  if (!ConvertToMidasInternalCommand(commandID, value, cmdToDispatch, paramStr,
-                                     isBool, boolVal)) {
-    return false;
-  }
-
-  bool isCutCopy = (commandID.LowerCaseEqualsLiteral("cut") ||
-                    commandID.LowerCaseEqualsLiteral("copy"));
-  bool isPaste = commandID.LowerCaseEqualsLiteral("paste");
-
-  // if editing is not on, bail
-  if (!isCutCopy && !isPaste && !IsEditingOnAfterFlush()) {
-    return false;
-  }
-
   // if they are requesting UI from us, let's fail since we have no UI
   if (doShowUI) {
     return false;
   }
 
+  //  for optional parameters see dom/src/base/nsHistory.cpp: HistoryImpl::Go()
+  //  this might add some ugly JS dependencies?
+
+  nsAutoString adjustedValue;
+  InternalCommandData commandData =
+      ConvertToInternalCommand(commandID, value, &adjustedValue);
+  if (commandData.mCommand == Command::DoNothing) {
+    return false;
+  }
+
+  // if editing is not on, bail
+  if (commandData.IsAvailableOnlyWhenEditable() && !IsEditingOnAfterFlush()) {
+    return false;
+  }
+
+  if (commandData.mCommand == Command::GetHTML) {
+    rv.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+
   // special case for cut & copy
   // cut & copy are allowed in non editable documents
-  if (isCutCopy) {
+  if (commandData.IsCutOrCopyCommand()) {
     if (!nsContentUtils::IsCutCopyAllowed(&aSubjectPrincipal)) {
       // We have rejected the event due to it not being performed in an
       // input-driven context therefore, we report the error to the console.
@@ -4322,7 +4291,7 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
     // docShell.
     nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
     if (docShell) {
-      nsresult res = docShell->DoCommand(cmdToDispatch.get());
+      nsresult res = docShell->DoCommand(commandData.mXULCommandName);
       if (res == NS_SUCCESS_DOM_NO_OPERATION) {
         return false;
       }
@@ -4331,13 +4300,9 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
     return false;
   }
 
-  if (commandID.LowerCaseEqualsLiteral("gethtml")) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return false;
-  }
-
-  if (isPaste && !nsContentUtils::PrincipalHasPermission(
-                     &aSubjectPrincipal, nsGkAtoms::clipboardRead)) {
+  if (commandData.IsPasteCommand() &&
+      !nsContentUtils::PrincipalHasPermission(&aSubjectPrincipal,
+                                              nsGkAtoms::clipboardRead)) {
     return false;
   }
 
@@ -4354,51 +4319,81 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
     return false;
   }
 
-  if ((cmdToDispatch.EqualsLiteral("cmd_fontSize") ||
-       cmdToDispatch.EqualsLiteral("cmd_insertImageNoUI") ||
-       cmdToDispatch.EqualsLiteral("cmd_insertLinkNoUI") ||
-       cmdToDispatch.EqualsLiteral("cmd_paragraphState")) &&
-      paramStr.IsEmpty()) {
-    // Invalid value, return false
-    return false;
-  }
-
-  if (cmdToDispatch.EqualsLiteral("cmd_defaultParagraphSeparator") &&
-      !paramStr.LowerCaseEqualsLiteral("div") &&
-      !paramStr.LowerCaseEqualsLiteral("p") &&
-      !paramStr.LowerCaseEqualsLiteral("br")) {
-    // Invalid value
-    return false;
+  switch (commandData.mCommand) {
+    case Command::FormatFontSize:
+    case Command::InsertImage:
+    case Command::InsertLink:
+    case Command::FormatBlock:
+      if (adjustedValue.IsEmpty()) {
+        // Invalid value, return false
+        return false;
+      }
+      break;
+    case Command::SetDocumentDefaultParagraphSeparator:
+      if (!adjustedValue.LowerCaseEqualsLiteral("div") &&
+          !adjustedValue.LowerCaseEqualsLiteral("p") &&
+          !adjustedValue.LowerCaseEqualsLiteral("br")) {
+        // Invalid value
+        return false;
+      }
+      break;
+    default:
+      break;
   }
 
   // Return false for disabled commands (bug 760052)
-  if (!commandManager->IsCommandEnabled(cmdToDispatch, window)) {
+  if (!commandManager->IsCommandEnabled(
+          nsDependentCString(commandData.mXULCommandName), window)) {
     return false;
   }
 
-  if (!isBool && paramStr.IsEmpty()) {
-    rv = commandManager->DoCommand(cmdToDispatch.get(), nullptr, window);
-  } else {
-    // we have a command that requires a parameter, create params
-    RefPtr<nsCommandParams> params = new nsCommandParams();
-    if (isBool) {
-      rv = params->SetBool("state_attribute", boolVal);
-    } else if (cmdToDispatch.EqualsLiteral("cmd_fontFace") ||
-               cmdToDispatch.EqualsLiteral("cmd_insertImageNoUI") ||
-               cmdToDispatch.EqualsLiteral("cmd_insertLinkNoUI")) {
-      rv = params->SetString("state_attribute", value);
-    } else if (cmdToDispatch.EqualsLiteral("cmd_insertHTML") ||
-               cmdToDispatch.EqualsLiteral("cmd_insertText")) {
-      rv = params->SetString("state_data", value);
-    } else {
-      rv = params->SetCString("state_attribute", paramStr);
-    }
+  EditorCommandParamType expectedParamType =
+      EditorCommand::GetParamType(commandData.mCommand);
+  if (adjustedValue.IsEmpty() ||
+      expectedParamType == EditorCommandParamType::None) {
+    MOZ_ASSERT(!(EditorCommand::GetParamType(commandData.mCommand) &
+                 EditorCommandParamType::Bool));
+    rv =
+        commandManager->DoCommand(commandData.mXULCommandName, nullptr, window);
+    return !rv.Failed();
+  }
+
+  // we have a command that requires a parameter, create params
+  RefPtr<nsCommandParams> params = new nsCommandParams();
+  if (!!(expectedParamType & EditorCommandParamType::Bool)) {
+    MOZ_ASSERT(!!(expectedParamType & EditorCommandParamType::StateAttribute));
+    MOZ_ASSERT(adjustedValue.EqualsLiteral("true") ||
+               adjustedValue.EqualsLiteral("false"));
+    rv =
+        params->SetBool("state_attribute", adjustedValue.EqualsLiteral("true"));
     if (rv.Failed()) {
       return false;
     }
-    rv = commandManager->DoCommand(cmdToDispatch.get(), params, window);
+  } else if (!!(expectedParamType & EditorCommandParamType::String)) {
+    if (!!(expectedParamType & EditorCommandParamType::StateAttribute)) {
+      rv = params->SetString("state_attribute", adjustedValue);
+      if (rv.Failed()) {
+        return false;
+      }
+    } else {
+      MOZ_ASSERT(!!(expectedParamType & EditorCommandParamType::StateData));
+      rv = params->SetString("state_data", adjustedValue);
+      if (rv.Failed()) {
+        return false;
+      }
+    }
+  } else if (!!(expectedParamType & EditorCommandParamType::CString)) {
+    MOZ_ASSERT(!!(expectedParamType & EditorCommandParamType::StateAttribute));
+    NS_ConvertUTF16toUTF8 utf8Value(adjustedValue);
+    rv = params->SetCString("state_attribute", utf8Value);
+    if (rv.Failed()) {
+      return false;
+    }
+  } else {
+    MOZ_ASSERT_UNREACHABLE(
+        "Not yet implemented to handle new EditorCommandParamType");
   }
-
+  rv = commandManager->DoCommand(commandData.mXULCommandName, params, window);
   return !rv.Failed();
 }
 
@@ -4411,21 +4406,19 @@ bool Document::QueryCommandEnabled(const nsAString& commandID,
     return false;
   }
 
-  nsAutoCString cmdToDispatch;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+  InternalCommandData commandData = ConvertToInternalCommand(commandID);
+  if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
 
   // cut & copy are always allowed
-  bool isCutCopy = commandID.LowerCaseEqualsLiteral("cut") ||
-                   commandID.LowerCaseEqualsLiteral("copy");
-  if (isCutCopy) {
+  if (commandData.IsCutOrCopyCommand()) {
     return nsContentUtils::IsCutCopyAllowed(&aSubjectPrincipal);
   }
 
   // Report false for restricted commands
-  bool restricted = commandID.LowerCaseEqualsLiteral("paste");
-  if (restricted && !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
+  if (commandData.IsPasteCommand() &&
+      !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
     return false;
   }
 
@@ -4447,7 +4440,8 @@ bool Document::QueryCommandEnabled(const nsAString& commandID,
     return false;
   }
 
-  return commandManager->IsCommandEnabled(cmdToDispatch, window);
+  return commandManager->IsCommandEnabled(
+      nsDependentCString(commandData.mXULCommandName), window);
 }
 
 bool Document::QueryCommandIndeterm(const nsAString& commandID,
@@ -4458,8 +4452,8 @@ bool Document::QueryCommandIndeterm(const nsAString& commandID,
     return false;
   }
 
-  nsAutoCString cmdToDispatch;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+  InternalCommandData commandData = ConvertToInternalCommand(commandID);
+  if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
 
@@ -4482,7 +4476,8 @@ bool Document::QueryCommandIndeterm(const nsAString& commandID,
   }
 
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  rv = commandManager->GetCommandState(cmdToDispatch.get(), window, params);
+  rv = commandManager->GetCommandState(commandData.mXULCommandName, window,
+                                       params);
   if (rv.Failed()) {
     return false;
   }
@@ -4500,10 +4495,10 @@ bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
     return false;
   }
 
-  nsAutoCString cmdToDispatch, paramToCheck;
-  bool dummy, dummy2;
-  if (!ConvertToMidasInternalCommand(commandID, commandID, cmdToDispatch,
-                                     paramToCheck, dummy, dummy2)) {
+  nsAutoString adjustedValue;
+  InternalCommandData commandData =
+      ConvertToInternalCommand(commandID, EmptyString(), &adjustedValue);
+  if (commandData.mCommand == Command::DoNothing) {
     return false;
   }
 
@@ -4532,7 +4527,8 @@ bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
   }
 
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  rv = commandManager->GetCommandState(cmdToDispatch.get(), window, params);
+  rv = commandManager->GetCommandState(commandData.mXULCommandName, window,
+                                       params);
   if (rv.Failed()) {
     return false;
   }
@@ -4543,11 +4539,27 @@ bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
   // parameters.  When getting the state of this command, we need to
   // return the boolean for this particular alignment rather than the
   // string of 'which alignment is this?'
-  if (cmdToDispatch.EqualsLiteral("cmd_align")) {
-    nsAutoCString actualAlignmentType;
-    rv = params->GetCString("state_attribute", actualAlignmentType);
-    return !rv.Failed() && !actualAlignmentType.IsEmpty() &&
-           paramToCheck == actualAlignmentType;
+  switch (commandData.mCommand) {
+    case Command::FormatJustifyLeft:
+    case Command::FormatJustifyRight:
+    case Command::FormatJustifyCenter:
+    case Command::FormatJustifyFull: {
+      if (NS_WARN_IF(adjustedValue.IsEmpty())) {
+        return false;
+      }
+      nsAutoCString currentValue;
+      rv = params->GetCString("state_attribute", currentValue);
+      if (rv.Failed()) {
+        return false;
+      }
+      NS_LossyConvertUTF16toASCII asciiValue(adjustedValue);
+      return asciiValue == currentValue;
+    }
+    default:
+      // If command does not have a state_all value, this call fails and sets
+      // retval to false.  This is fine -- we want to return false in that case
+      // anyway (bug 738385), so we just succeed and return false regardless.
+      return params->GetBool("state_all");
   }
 
   // If command does not have a state_all value, this call fails and sets
@@ -4564,6 +4576,11 @@ bool Document::QueryCommandSupported(const nsAString& commandID,
     return false;
   }
 
+  InternalCommandData commandData = ConvertToInternalCommand(commandID);
+  if (commandData.mCommand == Command::DoNothing) {
+    return false;
+  }
+
   // Gecko technically supports all the clipboard commands including
   // cut/copy/paste, but non-privileged content will be unable to call
   // paste, and depending on the pref "dom.allow_cut_copy", cut and copy
@@ -4571,23 +4588,20 @@ bool Document::QueryCommandSupported(const nsAString& commandID,
   // For that reason, we report the support status of corresponding
   // command accordingly.
   if (aCallerType != CallerType::System) {
-    if (commandID.LowerCaseEqualsLiteral("paste")) {
+    if (commandData.IsPasteCommand()) {
       return false;
     }
-    if (!StaticPrefs::dom_allow_cut_copy()) {
+    if (commandData.IsCutOrCopyCommand() &&
+        !StaticPrefs::dom_allow_cut_copy()) {
       // XXXbz should we worry about correctly reporting "true" in the
       // "restricted, but we're an addon with clipboardWrite permissions" case?
       // See also nsContentUtils::IsCutCopyAllowed.
-      if (commandID.LowerCaseEqualsLiteral("cut") ||
-          commandID.LowerCaseEqualsLiteral("copy")) {
-        return false;
-      }
+      return false;
     }
   }
 
   // commandID is supported if it can be converted to a Midas command
-  nsAutoCString cmdToDispatch;
-  return ConvertToMidasInternalCommand(commandID, cmdToDispatch);
+  return true;
 }
 
 void Document::QueryCommandValue(const nsAString& commandID, nsAString& aValue,
@@ -4600,8 +4614,8 @@ void Document::QueryCommandValue(const nsAString& commandID, nsAString& aValue,
     return;
   }
 
-  nsAutoCString cmdToDispatch, paramStr;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+  InternalCommandData commandData = ConvertToInternalCommand(commandID);
+  if (commandData.mCommand == Command::DoNothing) {
     // Return empty string
     return;
   }
@@ -4627,7 +4641,7 @@ void Document::QueryCommandValue(const nsAString& commandID, nsAString& aValue,
   // this is a special command since we are calling DoCommand rather than
   // GetCommandState like the other commands
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  if (cmdToDispatch.EqualsLiteral("cmd_getContents")) {
+  if (commandData.mCommand == Command::GetHTML) {
     rv = params->SetBool("selection_only", true);
     if (rv.Failed()) {
       return;
@@ -4636,7 +4650,7 @@ void Document::QueryCommandValue(const nsAString& commandID, nsAString& aValue,
     if (rv.Failed()) {
       return;
     }
-    rv = commandManager->DoCommand(cmdToDispatch.get(), params, window);
+    rv = commandManager->DoCommand(commandData.mXULCommandName, params, window);
     if (rv.Failed()) {
       return;
     }
@@ -4644,12 +4658,13 @@ void Document::QueryCommandValue(const nsAString& commandID, nsAString& aValue,
     return;
   }
 
-  rv = params->SetCString("state_attribute", paramStr);
+  rv = params->SetCString("state_attribute", EmptyCString());
   if (rv.Failed()) {
     return;
   }
 
-  rv = commandManager->GetCommandState(cmdToDispatch.get(), window, params);
+  rv = commandManager->GetCommandState(commandData.mXULCommandName, window,
+                                       params);
   if (rv.Failed()) {
     return;
   }
