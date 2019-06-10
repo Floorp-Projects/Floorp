@@ -700,19 +700,9 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       break;
     }
     case eIntID_SystemUsesDarkTheme: {
-      // It seems GTK doesn't have an API to query if the current theme is
-      // "light" or "dark", so we synthesize it from the CSS2 Window/WindowText
-      // colors instead, by comparing their luminosity.
-      nscolor fg, bg;
-      if (NS_SUCCEEDED(NativeGetColor(ColorID::Windowtext, fg)) &&
-          NS_SUCCEEDED(NativeGetColor(ColorID::Window, bg))) {
-        aResult = (RelativeLuminanceUtils::Compute(bg) <
-                   RelativeLuminanceUtils::Compute(fg))
-                      ? 1
-                      : 0;
-        break;
-      }
-      MOZ_FALLTHROUGH;
+      EnsureInit();
+      aResult = mSystemUsesDarkTheme;
+      break;
     }
     default:
       aResult = 0;
@@ -838,7 +828,24 @@ void nsLookAndFeel::EnsureInit() {
   GdkColor colorValue;
   GdkColor* colorValuePtr;
 
-  if (mInitialized) return;
+  if (mInitialized) {
+    return;
+  }
+
+  // Gtk manages a screen's CSS in the settings object so we
+  // ask Gtk to create it explicitly. Otherwise we may end up
+  // with wrong color theme, see Bug 972382
+  GdkScreen* screen = gdk_screen_get_default();
+  if (MOZ_UNLIKELY(!screen)) {
+    NS_WARNING("EnsureInit: No screen");
+    return;
+  }
+  GtkSettings* settings = gtk_settings_get_for_screen(screen);
+  if (MOZ_UNLIKELY(!settings)) {
+    NS_WARNING("EnsureInit: No settings");
+    return;
+  }
+
   mInitialized = true;
 
   // gtk does non threadsafe refcounting
@@ -847,15 +854,16 @@ void nsLookAndFeel::EnsureInit() {
   GdkRGBA color;
   GtkStyleContext* style;
 
-  // Gtk manages a screen's CSS in the settings object so we
-  // ask Gtk to create it explicitly. Otherwise we may end up
-  // with wrong color theme, see Bug 972382
-  GtkSettings* settings = gtk_settings_get_for_screen(gdk_screen_get_default());
-
-  if (MOZ_UNLIKELY(!settings)) {
-    NS_WARNING("EnsureInit: No settings");
-    return;
-  }
+  // It seems GTK doesn't have an API to query if the current theme is
+  // "light" or "dark", so we synthesize it from the CSS2 Window/WindowText
+  // colors instead, by comparing their luminosity.
+  GdkRGBA bg, fg;
+  style = GetStyleContext(MOZ_GTK_WINDOW);
+  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &bg);
+  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &fg);
+  mSystemUsesDarkTheme =
+      (RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(bg)) <
+       RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(fg)));
 
   // Dark themes interacts poorly with widget styling (see bug 1216658).
   // We disable dark themes by default for all processes (chrome, web content)
