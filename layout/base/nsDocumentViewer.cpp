@@ -379,8 +379,6 @@ class nsDocumentViewer final : public nsIContentViewer,
                                    bool aIsPrintingOrPP, bool aStartAtTop);
 #endif  // NS_PRINTING
 
-  void ReturnToGalleyPresentation();
-
   // Whether we should attach to the top level widget. This is true if we
   // are sharing/recycling a single base widget and not creating multiple
   // child widgets.
@@ -3628,7 +3626,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
 
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsDocumentViewer::PrintPreviewNavigate(int16_t aType, int32_t aPageNum) {
+nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   if (!GetIsPrintPreview() || mPrintJob->GetIsCreatingPrintPreview())
     return NS_ERROR_FAILURE;
 
@@ -3762,14 +3760,67 @@ nsDocumentViewer::Cancel() {
   return mPrintJob->Cancel();
 }
 
+#  if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
+// Reset ESM focus for all descendent doc shells.
+static void ResetFocusState(nsIDocShell* aDocShell) {
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
+  aDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeContent,
+                                   nsIDocShell::ENUMERATE_FORWARDS,
+                                   getter_AddRefs(docShellEnumerator));
+
+  nsCOMPtr<nsISupports> currentContainer;
+  bool hasMoreDocShells;
+  while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) &&
+         hasMoreDocShells) {
+    docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
+    nsCOMPtr<nsPIDOMWindowOuter> win = do_GetInterface(currentContainer);
+    if (win) {
+      fm->ClearFocus(win);
+    }
+  }
+}
+#  endif  // NS_PRINTING && NS_PRINT_PREVIEW
+
 NS_IMETHODIMP
 nsDocumentViewer::ExitPrintPreview() {
-  if (GetIsPrinting()) return NS_ERROR_FAILURE;
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
 
-  if (GetIsPrintPreview()) {
-    ReturnToGalleyPresentation();
+  if (GetIsPrinting()) {
+    // Block exiting the print preview window if we're in the middle of an
+    // actual print.
+    return NS_ERROR_FAILURE;
   }
+
+  if (!GetIsPrintPreview()) {
+    NS_ERROR("Wow, we should never get here!");
+    return NS_OK;
+  }
+
+#  if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
+  mPrintJob->TurnScriptingOn(true);
+  mPrintJob->Destroy();
+  mPrintJob = nullptr;
+
+  // Nowadays we use a static clone document for printing, and print preview is
+  // in a separate tab that gets closed after print preview finishes.  Probably
+  // nothing below this line is necessary anymore.
+
+  SetIsPrintPreview(false);
+
+  nsCOMPtr<nsIDocShell> docShell(mContainer);
+  ResetFocusState(docShell);
+
+  SetTextZoom(mTextZoom);
+  SetFullZoom(mPageZoom);
+  SetOverrideDPPX(mOverrideDPPX);
+  Show();
+#  endif  // NS_PRINTING && NS_PRINT_PREVIEW
+
   return NS_OK;
 }
 
@@ -3973,55 +4024,6 @@ void nsDocumentViewer::IncrementDestroyBlockedCount() {
 
 void nsDocumentViewer::DecrementDestroyBlockedCount() {
   --mDestroyBlockedCount;
-}
-
-//------------------------------------------------------------
-
-#if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
-//------------------------------------------------------------
-// Reset ESM focus for all descendent doc shells.
-static void ResetFocusState(nsIDocShell* aDocShell) {
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (!fm) return;
-
-  nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
-  aDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeContent,
-                                   nsIDocShell::ENUMERATE_FORWARDS,
-                                   getter_AddRefs(docShellEnumerator));
-
-  nsCOMPtr<nsISupports> currentContainer;
-  bool hasMoreDocShells;
-  while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) &&
-         hasMoreDocShells) {
-    docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
-    nsCOMPtr<nsPIDOMWindowOuter> win = do_GetInterface(currentContainer);
-    if (win) fm->ClearFocus(win);
-  }
-}
-#endif  // NS_PRINTING && NS_PRINT_PREVIEW
-
-void nsDocumentViewer::ReturnToGalleyPresentation() {
-#if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
-  if (!GetIsPrintPreview()) {
-    NS_ERROR("Wow, we should never get here!");
-    return;
-  }
-
-  SetIsPrintPreview(false);
-
-  mPrintJob->TurnScriptingOn(true);
-  mPrintJob->Destroy();
-  mPrintJob = nullptr;
-
-  nsCOMPtr<nsIDocShell> docShell(mContainer);
-  ResetFocusState(docShell);
-
-  SetTextZoom(mTextZoom);
-  SetFullZoom(mPageZoom);
-  SetOverrideDPPX(mOverrideDPPX);
-  Show();
-
-#endif  // NS_PRINTING && NS_PRINT_PREVIEW
 }
 
 //------------------------------------------------------------
