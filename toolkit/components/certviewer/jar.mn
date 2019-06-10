@@ -4,4 +4,5 @@
 
 toolkit.jar:
   content/global/certviewer/certviewer.html                         (content/certviewer.html)
+  content/global/certviewer/certviewer.css                          (content/certviewer.css)
   content/global/certviewer/certviewer.js                           (content/certviewer.js)
