@@ -24,8 +24,6 @@ export default class LoginItem extends ReflectedFluentElement {
     this.reflectFluentStrings();
 
     for (let selector of [
-      ".copy-password-button",
-      ".copy-username-button",
       ".delete-button",
       ".edit-button",
       ".open-site-button",
@@ -152,12 +150,6 @@ export default class LoginItem extends ReflectedFluentElement {
             object: this._login.guid ? "existing_login" : "new_login",
             method: "cancel",
           });
-          return;
-        }
-        if (event.target.classList.contains("copy-password-button")) {
-          return;
-        }
-        if (event.target.classList.contains("copy-username-button")) {
           return;
         }
         if (event.target.classList.contains("delete-button")) {
