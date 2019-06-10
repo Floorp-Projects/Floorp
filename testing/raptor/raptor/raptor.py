@@ -354,7 +354,7 @@ class Raptor(object):
                 script,
                 "-v",
                 "--set",
-                "server_replay={}".format(" ".join(recording_paths)),
+                "server_replay_files={}".format(" ".join(recording_paths)),
             ]
             if not self.config["playback_upstream_cert"]:
                 self.log.info("No upstream certificate sniffing")
