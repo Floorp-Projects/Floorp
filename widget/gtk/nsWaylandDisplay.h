@@ -107,6 +107,7 @@ class nsWaylandDisplay {
 };
 
 void WaylandDispatchDisplays();
+void WaylandDisplayShutdown();
 nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay = nullptr);
 
 #ifdef HAVE_LIBDRM
