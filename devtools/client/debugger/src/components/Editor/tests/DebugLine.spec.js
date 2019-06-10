@@ -126,12 +126,12 @@ describe("DebugLine Component", () => {
           [
             { ch: 2, line: toEditorLine("foo", firstLine) },
             { ch: null, line: toEditorLine("foo", firstLine) },
-            { className: "debug-expression" },
+            { className: "debug-expression to-line-end" },
           ],
           [
             { ch: 2, line: toEditorLine("foo", secondLine) },
             { ch: null, line: toEditorLine("foo", secondLine) },
-            { className: "debug-expression" },
+            { className: "debug-expression to-line-end" },
           ],
         ]);
 

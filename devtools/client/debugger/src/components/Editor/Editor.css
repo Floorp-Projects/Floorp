@@ -109,6 +109,10 @@ html[dir="rtl"] .editor-mount {
   background-color: var(--debug-expression-background);
 }
 
+.to-line-end ~ .CodeMirror-widget {
+  background-color: var(--debug-expression-background);
+}
+
 .debug-expression-error {
   background-color: var(--debug-expression-error-background);
 }
