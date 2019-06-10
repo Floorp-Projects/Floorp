@@ -80,7 +80,7 @@ abstract class SearchEngineListPreference : Preference, CompoundButton.OnChecked
         // https://github.com/mozilla-mobile/android-components/issues/3344
         val defaultSearchEngine = context.components.search.searchEngineManager.getDefaultSearchEngine(
             context,
-            "."
+            THIS_IS_A_HACK_FIX_ME
         )
 
         val selectedSearchEngine =
@@ -152,5 +152,9 @@ abstract class SearchEngineListPreference : Preference, CompoundButton.OnChecked
                 }
             }
         }
+    }
+
+    companion object {
+        private const val THIS_IS_A_HACK_FIX_ME = "."
     }
 }

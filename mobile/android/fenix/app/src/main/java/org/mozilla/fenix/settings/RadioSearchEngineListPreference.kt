@@ -7,7 +7,6 @@ package org.mozilla.fenix.settings
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.CompoundButton
-import androidx.preference.PreferenceViewHolder
 import mozilla.components.browser.search.SearchEngine
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
