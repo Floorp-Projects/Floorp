@@ -184,6 +184,12 @@ this.VideoControlsImplWidget = class {
         this._isAudioOnly = val;
         this.setFullscreenButtonState();
 
+        if (val) {
+          this.pictureInPictureToggleButton.setAttribute("hidden", true);
+        } else {
+          this.pictureInPictureToggleButton.removeAttribute("hidden");
+        }
+
         if (!this.isTopLevelSyntheticDocument) {
           return;
         }
@@ -289,7 +295,6 @@ this.VideoControlsImplWidget = class {
 
         if (this.isAudioOnly) {
           this.startFadeOut(this.clickToPlay, true);
-          this.pictureInPictureToggleButton.setAttribute("hidden", true);
         }
 
         // If the first frame hasn't loaded, kick off a throbber fade-in.
