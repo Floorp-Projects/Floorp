@@ -85,6 +85,7 @@ function PageError(props) {
     notes,
     timestampsVisible,
     maybeScrollToBottom,
+    message,
   });
 }
 
