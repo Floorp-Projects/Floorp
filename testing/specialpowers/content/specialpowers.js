@@ -13,7 +13,7 @@ Services.scriptloader.loadSubScript("resource://specialpowers/MozillaLogger.js",
 
 var EXPORTED_SYMBOLS = ["SpecialPowers", "attachSpecialPowersToWindow"];
 
-ChromeUtils.import("resource://specialpowers/specialpowersAPI.js", this);
+ChromeUtils.import("resource://specialpowers/SpecialPowersAPI.jsm", this);
 
 Cu.forcePermissiveCOWs();
 
