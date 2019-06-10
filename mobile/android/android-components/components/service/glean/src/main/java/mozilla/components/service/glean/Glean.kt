@@ -36,8 +36,9 @@ import mozilla.components.service.glean.utils.ensureDirectoryExists
 import mozilla.components.service.glean.utils.getLocaleTag
 import mozilla.components.service.glean.utils.parseISOTimeString
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.content.isMainProcess
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 open class GleanInternalAPI internal constructor () {
     private val logger = Logger("glean/Glean")
 
@@ -88,6 +89,13 @@ open class GleanInternalAPI internal constructor () {
         applicationContext: Context,
         configuration: Configuration = Configuration()
     ) {
+        // In certain situations Glean.initialize may be called from a process other than the main
+        // process.  In this case we want initialize to be a no-op and just return.
+        if (!applicationContext.isMainProcess()) {
+            logger.error("Attempted to initialize Glean on a process other than the main process")
+            return
+        }
+
         if (isInitialized()) {
             logger.error("Glean should not be initialized multiple times")
             return
