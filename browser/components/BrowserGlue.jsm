@@ -52,10 +52,11 @@ let LEGACY_ACTORS = {
       events: {
         "AboutLoginsCreateLogin": {wantUntrusted: true},
         "AboutLoginsDeleteLogin": {wantUntrusted: true},
+        "AboutLoginsInit": {wantUntrusted: true},
         "AboutLoginsOpenPreferences": {wantUntrusted: true},
         "AboutLoginsOpenSite": {wantUntrusted: true},
+        "AboutLoginsRecordTelemetryEvent": {wantUntrusted: true},
         "AboutLoginsUpdateLogin": {wantUntrusted: true},
-        "AboutLoginsInit": {wantUntrusted: true},
       },
       messages: [
         "AboutLogins:AllLogins",
