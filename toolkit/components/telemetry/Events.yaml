@@ -388,38 +388,6 @@ pwmgr:
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
-  mgmt_interaction:
-    description: >
-      These events record interactions on the about:logins page. Sort methods have an accompanying
-      value that specifies what order the list of logins is sorted with: {last_changed, last_used, title}.
-    objects: [
-      "existing_login",
-      "list",
-      "new_login",
-      "password",
-      "username",
-    ]
-    methods: [
-      "cancel",
-      "copy",
-      "delete",
-      "edit",
-      "filter",
-      "hide",
-      "new",
-      "open_site",
-      "save",
-      "select",
-      "show",
-      "sort",
-    ]
-    bug_numbers:
-      - 1548463
-    description: An action was taken on the about:logins page
-    expiry_version: "74"
-    notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "jaws@mozilla.com"]
-    release_channel_collection: opt-out
-    record_in_processes: [content]
 
 fxa_avatar_menu:
   click:
