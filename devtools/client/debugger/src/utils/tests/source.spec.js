@@ -461,6 +461,16 @@ describe("sources", () => {
       );
       expect(getMode(source, content)).toEqual({ name: "javascript" });
     });
+
+    it("es6", () => {
+      const { source, content } = makeMockSourceAndContent(
+        "http://localhost.com:7999/increment/sometestfile.es6",
+        undefined,
+        "does not matter",
+        "function foo(){}"
+      );
+      expect(getMode(source, content)).toEqual({ name: "javascript" });
+    });
   });
 
   describe("getSourceLineCount", () => {
