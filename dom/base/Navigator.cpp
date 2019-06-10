@@ -958,9 +958,6 @@ void Navigator::RegisterProtocolHandler(const nsAString& aScheme,
   }
 
   nsCOMPtr<Document> doc = mWindow->GetDoc();
-  if (!mWindow->IsSecureContext()) {
-    doc->WarnOnceAbout(Document::eRegisterProtocolHandlerInsecure);
-  }
 
   // Determine if doc is allowed to assign this handler
   nsIURI* docURI = doc->GetDocumentURIObject();
