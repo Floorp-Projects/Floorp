@@ -5,8 +5,10 @@
 package mozilla.components.browser.engine.system.matcher
 
 import android.content.Context
+import android.content.res.Resources
 import android.net.Uri
 import android.util.JsonReader
+import androidx.annotation.RawRes
 import java.io.InputStreamReader
 import java.io.Reader
 import java.nio.charset.StandardCharsets.UTF_8
@@ -155,20 +157,37 @@ class UrlMatcher {
         /**
          * Creates a new matcher instance for the provided URL lists.
          *
+         * @deprecated Pass resources directly
          * @param blackListFile resource ID to a JSON file containing the black list
          * @param overrides array of resource ID to JSON files containing black list overrides
          * @param whiteListFile resource ID to a JSON file containing the white list
          */
         fun createMatcher(
             context: Context,
-            blackListFile: Int,
+            @RawRes blackListFile: Int,
             overrides: IntArray?,
-            whiteListFile: Int,
+            @RawRes whiteListFile: Int,
+            enabledCategories: Set<String> = supportedCategories
+        ): UrlMatcher =
+            createMatcher(context.resources, blackListFile, overrides, whiteListFile, enabledCategories)
+
+        /**
+         * Creates a new matcher instance for the provided URL lists.
+         *
+         * @param blackListFile resource ID to a JSON file containing the black list
+         * @param overrides array of resource ID to JSON files containing black list overrides
+         * @param whiteListFile resource ID to a JSON file containing the white list
+         */
+        fun createMatcher(
+            resources: Resources,
+            @RawRes blackListFile: Int,
+            overrides: IntArray?,
+            @RawRes whiteListFile: Int,
             enabledCategories: Set<String> = supportedCategories
         ): UrlMatcher {
-            val blackListReader = InputStreamReader(context.resources.openRawResource(blackListFile), UTF_8)
-            val whiteListReader = InputStreamReader(context.resources.openRawResource(whiteListFile), UTF_8)
-            val overrideReaders = overrides?.map { InputStreamReader(context.resources.openRawResource(it), UTF_8) }
+            val blackListReader = InputStreamReader(resources.openRawResource(blackListFile), UTF_8)
+            val whiteListReader = InputStreamReader(resources.openRawResource(whiteListFile), UTF_8)
+            val overrideReaders = overrides?.map { InputStreamReader(resources.openRawResource(it), UTF_8) }
             return createMatcher(blackListReader, overrideReaders, whiteListReader, enabledCategories)
         }
 
