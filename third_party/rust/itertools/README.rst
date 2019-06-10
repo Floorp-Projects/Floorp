@@ -21,7 +21,7 @@ How to use with cargo:
 .. code:: toml
 
     [dependencies]
-    itertools = "0.7.3"
+    itertools = "0.8"
 
 How to use in your crate:
 
@@ -31,15 +31,70 @@ How to use in your crate:
 
     use itertools::Itertools;
 
-How to contribute:
+How to contribute
+-----------------
 
 - Fix a bug or implement a new thing
 - Include tests for your new feature, preferably a quickcheck test
 - Make a Pull Request
 
+For new features, please first consider filing a PR to `rust-lang/rust <https://github.com/rust-lang/rust/>`_,
+adding your new feature to the `Iterator` trait of the standard library, if you believe it is reasonable.
+If it isn't accepted there, proposing it for inclusion in ``itertools`` is a good idea.
+The reason for doing is this is so that we avoid future breakage as with ``.flatten()``.
+However, if your feature involves heap allocation, such as storing elements in a ``Vec<T>``,
+then it can't be accepted into ``libcore``, and you should propose it for ``itertools`` directly instead.
 
 Recent Changes
 --------------
+
+- 0.8.0
+
+  - Added new adaptor ``.map_into()`` for conversions using ``Into`` by @vorner
+  - Improved ``Itertools`` docs by @JohnHeitmann
+  - The return type of ``.sorted/_by/_by_key()`` is now an iterator, not a Vec.
+  - The return type of the ``izip!(x, y)`` macro with exactly two arguments
+    is now the usual ``Iterator::zip``.
+  - Remove ``.flatten()`` in favour of std's ``.flatten()``
+  - Deprecate ``.foreach()`` in favour of std's ``.for_each()``
+  - Deprecate ``.step()`` in favour of std's ``.step_by()``
+  - Deprecate ``repeat_call`` in favour of std's ``repeat_with``
+  - Deprecate ``.fold_while()`` in favour of std's ``.try_fold()``
+  - Require Rust 1.24 as minimal version.
+
+- 0.7.11
+
+  - Add convenience methods to ``EitherOrBoth``, making it more similar to ``Option``
+    and ``Either`` by @jethrogb
+
+- 0.7.10
+
+  - No changes.
+
+- 0.7.9
+
+  - New inclusion policy: See the readme about suggesting features for std before
+    accepting them in itertools.
+  - The ``FoldWhile`` type now implements ``Eq`` and ``PartialEq`` by @jturner314
+
+- 0.7.8
+
+  - Add new iterator method ``.tree_fold1()`` which is like ``.fold1()``
+    except items are combined in a tree structure (see its docs).
+    By @scottmcm
+  - Add more ``Debug`` impls by @phimuemue: KMerge, KMergeBy, MergeJoinBy,
+    ConsTuples, Intersperse, ProcessResults, RcIter, Tee, TupleWindows, Tee,
+    ZipLongest, ZipEq, Zip.
+
+- 0.7.7
+
+  - Add new iterator method ``.into_group_map() -> HashMap<K, Vec<V>>``
+    which turns an iterator of ``(K, V)`` elements into such a hash table,
+    where values are grouped by key. By @tobz1000
+  - Add new free function ``flatten`` for the ``.flatten()`` adaptor.
+    **NOTE:** recent Rust nightlies have ``Iterator::flatten`` and thus a clash
+    with our flatten adaptor. One workaround is to use the itertools ``flatten``
+    free function.
 
 - 0.7.6
 

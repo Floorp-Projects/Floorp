@@ -1,7 +1,7 @@
 use spec::*;
 use util::*;
 
-use std::collections::{ HashMap, HashSet };
+use std::collections::{HashMap, HashSet};
 
 use itertools::Itertools;
 
@@ -87,7 +87,9 @@ impl TypeDeanonymizer {
         for (_, interface) in spec.interfaces_by_name() {
             for field in interface.contents().fields() {
                 if field.is_lazy() {
-                    let skip_name = result.builder.field_name(format!("{}_skip", field.name().to_str()).to_str());
+                    let skip_name = result
+                        .builder
+                        .field_name(format!("{}_skip", field.name().to_str()).to_str());
                     skip_name_map.insert(field.name(), skip_name);
                 }
             }
@@ -108,17 +110,25 @@ impl TypeDeanonymizer {
             }
 
             // Copy the declaration.
-            let mut declaration = result.builder.add_interface(name)
-                .unwrap();
+            let mut declaration = result.builder.add_interface(name).unwrap();
             for field in fields.drain(..) {
                 // Create *_skip field just before the lazy field.
                 // See also tagged_tuple in write.rs.
                 if field.is_lazy() {
-                    declaration.with_field(skip_name_map.get(field.name()).unwrap(),
-                                           Type::offset().required());
+                    declaration.with_field(
+                        skip_name_map.get(field.name()).unwrap(),
+                        Type::offset().required(),
+                    );
                 }
-                declaration.with_field_laziness(field.name(), field.type_().clone(),
-                                                field.laziness());
+                declaration.with_field_laziness(
+                    field.name(),
+                    field.type_().clone(),
+                    field.laziness(),
+                );
+            }
+
+            if let Some(ref field_name) = interface.scoped_dictionary() {
+                declaration.with_scoped_dictionary(field_name);
             }
         }
         // Copy and deanonymize typedefs
@@ -126,18 +136,15 @@ impl TypeDeanonymizer {
             result.builder.import_node_name(name);
             if result.builder.get_typedef(name).is_some() {
                 // Already imported by following links.
-                continue
+                continue;
             }
             result.import_type(spec, &definition, Some(name.clone()));
         }
         // Copy and deanonymize string enums
         for (name, definition) in spec.string_enums_by_name() {
             result.builder.import_node_name(name);
-            let mut strings: Vec<_> = definition.strings()
-                .iter()
-                .collect();
-            let mut declaration = result.builder.add_string_enum(name)
-                .unwrap();
+            let mut strings: Vec<_> = definition.strings().iter().collect();
+            let mut declaration = result.builder.add_string_enum(name).unwrap();
             for string in strings.drain(..) {
                 declaration.with_string(&string);
             }
@@ -162,17 +169,20 @@ impl TypeDeanonymizer {
     }
 
     /// Returns `(sum, name)` where `sum` is `Some(names)` iff this type can be resolved to a sum of interfaces.
-    fn import_type(&mut self, spec: &Spec, type_: &Type, public_name: Option<NodeName>) -> (Option<HashSet<NodeName>>, NodeName) {
+    fn import_type(
+        &mut self,
+        spec: &Spec,
+        type_: &Type,
+        public_name: Option<NodeName>,
+    ) -> (Option<HashSet<NodeName>>, NodeName) {
         debug!(target: "export_utils", "import_type {:?} => {:?}", public_name, type_);
         if type_.is_optional() {
             let (_, spec_name) = self.import_typespec(spec, &type_.spec, None);
-            let my_name =
-                match public_name {
-                    None => self.builder.node_name(&format!("Optional{}", spec_name)),
-                    Some(ref name) => name.clone()
-                };
-            let deanonymized = Type::named(&spec_name).optional()
-                .unwrap(); // Named types can always be made optional.
+            let my_name = match public_name {
+                None => self.builder.node_name(&format!("Optional{}", spec_name)),
+                Some(ref name) => name.clone(),
+            };
+            let deanonymized = Type::named(&spec_name).optional().unwrap(); // Named types can always be made optional.
             if let Some(ref mut typedef) = self.builder.add_typedef(&my_name) {
                 debug!(target: "export_utils", "import_type introduced {:?}", my_name);
                 typedef.with_type(deanonymized.clone());
@@ -184,17 +194,22 @@ impl TypeDeanonymizer {
             self.import_typespec(spec, &type_.spec, public_name)
         }
     }
-    fn import_typespec(&mut self, spec: &Spec, type_spec: &TypeSpec, public_name: Option<NodeName>) -> (Option<HashSet<NodeName>>, NodeName) {
+    fn import_typespec(
+        &mut self,
+        spec: &Spec,
+        type_spec: &TypeSpec,
+        public_name: Option<NodeName>,
+    ) -> (Option<HashSet<NodeName>>, NodeName) {
         debug!(target: "export_utils", "import_typespec {:?} => {:?}", public_name, type_spec);
         match *type_spec {
-            TypeSpec::Boolean |
-            TypeSpec::Number |
-            TypeSpec::UnsignedLong |
-            TypeSpec::PropertyKey |
-            TypeSpec::IdentifierName |
-            TypeSpec::String |
-            TypeSpec::Offset |
-            TypeSpec::Void    => {
+            TypeSpec::Boolean
+            | TypeSpec::Number
+            | TypeSpec::UnsignedLong
+            | TypeSpec::PropertyKey
+            | TypeSpec::IdentifierName
+            | TypeSpec::String
+            | TypeSpec::Offset
+            | TypeSpec::Void => {
                 if let Some(ref my_name) = public_name {
                     if let Some(ref mut typedef) = self.builder.add_typedef(&my_name) {
                         debug!(target: "export_utils", "import_typespec: Defining {name} (primitive)", name = my_name.to_str());
@@ -230,9 +245,7 @@ impl TypeDeanonymizer {
                     NamedType::Interface(_) => {
                         // - May use in a sum.
                         // - If a rewriting takes place, it didn't change the names.
-                        let sum = [link.clone()].iter()
-                            .cloned()
-                            .collect();
+                        let sum = [link.clone()].iter().cloned().collect();
                         (Some(sum), None, None)
                     }
                 };
@@ -242,17 +255,46 @@ impl TypeDeanonymizer {
                     // If we have a public name, alias it to `content`
                     if let Some(content) = rewrite {
                         let deanonymized = match primitive {
-                            None |
-                            Some(IsNullable { is_nullable: true, .. }) |
-                            Some(IsNullable { content: Primitive::Interface(_), .. }) => Type::named(&content).required(),
-                            Some(IsNullable { content: Primitive::String, .. }) => Type::string().required(),
-                            Some(IsNullable { content: Primitive::IdentifierName, .. }) => Type::identifier_name().required(),
-                            Some(IsNullable { content: Primitive::PropertyKey, .. }) => Type::property_key().required(),
-                            Some(IsNullable { content: Primitive::Number, .. }) => Type::number().required(),
-                            Some(IsNullable { content: Primitive::UnsignedLong, .. }) => Type::unsigned_long().required(),
-                            Some(IsNullable { content: Primitive::Boolean, .. }) => Type::bool().required(),
-                            Some(IsNullable { content: Primitive::Offset, .. }) => Type::offset().required(),
-                            Some(IsNullable { content: Primitive::Void, .. }) => Type::void().required(),
+                            None
+                            | Some(IsNullable {
+                                is_nullable: true, ..
+                            })
+                            | Some(IsNullable {
+                                content: Primitive::Interface(_),
+                                ..
+                            }) => Type::named(&content).required(),
+                            Some(IsNullable {
+                                content: Primitive::String,
+                                ..
+                            }) => Type::string().required(),
+                            Some(IsNullable {
+                                content: Primitive::IdentifierName,
+                                ..
+                            }) => Type::identifier_name().required(),
+                            Some(IsNullable {
+                                content: Primitive::PropertyKey,
+                                ..
+                            }) => Type::property_key().required(),
+                            Some(IsNullable {
+                                content: Primitive::Number,
+                                ..
+                            }) => Type::number().required(),
+                            Some(IsNullable {
+                                content: Primitive::UnsignedLong,
+                                ..
+                            }) => Type::unsigned_long().required(),
+                            Some(IsNullable {
+                                content: Primitive::Boolean,
+                                ..
+                            }) => Type::bool().required(),
+                            Some(IsNullable {
+                                content: Primitive::Offset,
+                                ..
+                            }) => Type::offset().required(),
+                            Some(IsNullable {
+                                content: Primitive::Void,
+                                ..
+                            }) => Type::void().required(),
                         };
                         debug!(target: "export_utils", "import_typespec aliasing {:?} => {:?}",
                             my_name, deanonymized);
@@ -276,27 +318,22 @@ impl TypeDeanonymizer {
             }
             TypeSpec::Array {
                 ref contents,
-                ref supports_empty
+                ref supports_empty,
             } => {
                 let (_, contents_name) = self.import_type(spec, contents, None);
-                let my_name =
-                    match public_name {
-                        None => self.builder.node_name(&format!("{non_empty}ListOf{content}",
-                            non_empty =
-                                if *supports_empty {
-                                    ""
-                                } else {
-                                    "NonEmpty"
-                                },
-                            content = contents_name.to_str())),
-                        Some(ref name) => name.clone()
-                    };
-                let deanonymized =
-                    if *supports_empty {
-                        Type::named(&contents_name).array()
-                    } else {
-                        Type::named(&contents_name).non_empty_array()
-                    };
+                let my_name = match public_name {
+                    None => self.builder.node_name(&format!(
+                        "{non_empty}ListOf{content}",
+                        non_empty = if *supports_empty { "" } else { "NonEmpty" },
+                        content = contents_name.to_str()
+                    )),
+                    Some(ref name) => name.clone(),
+                };
+                let deanonymized = if *supports_empty {
+                    Type::named(&contents_name).array()
+                } else {
+                    Type::named(&contents_name).non_empty_array()
+                };
                 if let Some(ref mut typedef) = self.builder.add_typedef(&my_name) {
                     debug!(target: "export_utils", "import_typespec: Defining {name} (name to list)",
                         name = my_name.to_str());
@@ -324,22 +361,22 @@ impl TypeDeanonymizer {
                         full_sum.insert(item);
                     }
                 }
-                let my_name =
-                    match public_name {
-                        None => self.builder.node_name(&format!("{}",
-                            names.drain(..)
-                                .format("Or"))),
-                        Some(ref name) => name.clone()
-                    };
+                let my_name = match public_name {
+                    None => self.builder.node_name(&format!(
+                        "{}",
+                        names.into_iter().sorted().into_iter().format("Or")
+                    )),
+                    Some(ref name) => name.clone(),
+                };
                 for subsum_name in subsums {
                     // So, `my_name` is a superset of `subsum_name`.
-                    let mut supersum_entry = self.supersums_of.entry(subsum_name.clone())
+                    let mut supersum_entry = self
+                        .supersums_of
+                        .entry(subsum_name.clone())
                         .or_insert_with(|| HashSet::new());
                     supersum_entry.insert(my_name.clone());
                 }
-                let sum : Vec<_> = full_sum.iter()
-                    .map(Type::named)
-                    .collect();
+                let sum: Vec<_> = full_sum.iter().map(Type::named).collect();
                 let deanonymized = Type::sum(&sum).required();
                 if let Some(ref mut typedef) = self.builder.add_typedef(&my_name) {
                     debug!(target: "export_utils", "import_typespec: Defining {name} (name to sum)", name = my_name.to_str());
@@ -367,34 +404,32 @@ impl TypeName {
 
     pub fn type_spec(spec: &TypeSpec) -> String {
         match *spec {
-            TypeSpec::Array { ref contents, supports_empty: false } =>
-                format!("NonEmptyListOf{}", Self::type_(contents)),
-            TypeSpec::Array { ref contents, supports_empty: true } =>
-                format!("ListOf{}", Self::type_(contents)),
-            TypeSpec::NamedType(ref name) =>
-                name.to_string().clone(),
-            TypeSpec::Offset =>
-                "_Offset".to_string(),
-            TypeSpec::Boolean =>
-                "_Bool".to_string(),
-            TypeSpec::Number =>
-                "_Number".to_string(),
-            TypeSpec::UnsignedLong =>
-                "_UnsignedLong".to_string(),
-            TypeSpec::String =>
-                "_String".to_string(),
-            TypeSpec::Void =>
-                "_Void".to_string(),
-            TypeSpec::IdentifierName =>
-                "IdentifierName".to_string(),
-            TypeSpec::PropertyKey =>
-                "PropertyKey".to_string(),
-            TypeSpec::TypeSum(ref sum) => {
-                format!("{}", sum.types()
+            TypeSpec::Array {
+                ref contents,
+                supports_empty: false,
+            } => format!("NonEmptyListOf{}", Self::type_(contents)),
+            TypeSpec::Array {
+                ref contents,
+                supports_empty: true,
+            } => format!("ListOf{}", Self::type_(contents)),
+            TypeSpec::NamedType(ref name) => name.to_string().clone(),
+            TypeSpec::Offset => "_Offset".to_string(),
+            TypeSpec::Boolean => "_Bool".to_string(),
+            TypeSpec::Number => "_Number".to_string(),
+            TypeSpec::UnsignedLong => "_UnsignedLong".to_string(),
+            TypeSpec::String => "_String".to_string(),
+            TypeSpec::Void => "_Void".to_string(),
+            TypeSpec::IdentifierName => "IdentifierName".to_string(),
+            TypeSpec::PropertyKey => "PropertyKey".to_string(),
+            TypeSpec::TypeSum(ref sum) => format!(
+                "{}",
+                sum.types()
                     .iter()
                     .map(Self::type_spec)
-                    .format("Or"))
-            }
+                    .sorted()
+                    .into_iter()
+                    .format("Or")
+            ),
         }
     }
 }
@@ -410,35 +445,34 @@ impl ToWebidl {
             TypeSpec::Offset => {
                 return None;
             }
-            TypeSpec::Array { ref contents, ref supports_empty } => {
-                match Self::type_(&*contents, prefix, indent) {
-                    None => { return None; }
-                    Some(description) => format!("{emptiness}FrozenArray<{}>",
-                        description,
-                        emptiness = if *supports_empty { "" } else {"[NonEmpty] "} ),
+            TypeSpec::Array {
+                ref contents,
+                ref supports_empty,
+            } => match Self::type_(&*contents, prefix, indent) {
+                None => {
+                    return None;
                 }
-            }
-            TypeSpec::Boolean =>
-                "bool".to_string(),
-            TypeSpec::String =>
-                "string".to_string(),
-            TypeSpec::PropertyKey =>
-                "[PropertyKey] string".to_string(),
-            TypeSpec::IdentifierName =>
-                "[IdentifierName] string".to_string(),
-            TypeSpec::Number =>
-                "number".to_string(),
-            TypeSpec::UnsignedLong =>
-                "unsigned long".to_string(),
-            TypeSpec::NamedType(ref name) =>
-                name.to_str().to_string(),
-            TypeSpec::TypeSum(ref sum) => {
-                format!("({})", sum.types()
+                Some(description) => format!(
+                    "{emptiness}FrozenArray<{}>",
+                    description,
+                    emptiness = if *supports_empty { "" } else { "[NonEmpty] " }
+                ),
+            },
+            TypeSpec::Boolean => "bool".to_string(),
+            TypeSpec::String => "string".to_string(),
+            TypeSpec::PropertyKey => "[PropertyKey] string".to_string(),
+            TypeSpec::IdentifierName => "[IdentifierName] string".to_string(),
+            TypeSpec::Number => "number".to_string(),
+            TypeSpec::UnsignedLong => "unsigned long".to_string(),
+            TypeSpec::NamedType(ref name) => name.to_str().to_string(),
+            TypeSpec::TypeSum(ref sum) => format!(
+                "({})",
+                sum.types()
                     .iter()
                     .filter_map(|x| Self::spec(x, "", indent))
-                    .format(" or "))
-            }
-            TypeSpec::Void => "void".to_string()
+                    .format(" or ")
+            ),
+            TypeSpec::Void => "void".to_string(),
         };
         Some(result)
     }
@@ -448,27 +482,38 @@ impl ToWebidl {
         let pretty_type = Self::spec(type_.spec(), prefix, indent);
         match pretty_type {
             None => None,
-            Some(pretty_type) => Some(format!("{}{}",
+            Some(pretty_type) => Some(format!(
+                "{}{}",
                 pretty_type,
-                if type_.is_optional() { "?" } else { "" }))
+                if type_.is_optional() { "?" } else { "" }
+            )),
         }
     }
 
     /// Export an Interface
     pub fn interface(interface: &Interface, prefix: &str, indent: &str) -> String {
-        let mut result = format!("{prefix} interface {name} : Node {{\n", prefix=prefix, name=interface.name().to_str());
+        let mut result = format!(
+            "{prefix} interface {name} : Node {{\n",
+            prefix = prefix,
+            name = interface.name().to_str()
+        );
         {
-            let prefix = format!("{prefix}{indent}",
-                prefix=prefix,
-                indent=indent);
+            let prefix = format!("{prefix}{indent}", prefix = prefix, indent = indent);
             for field in interface.contents().fields() {
                 match Self::type_(field.type_(), &prefix, indent) {
-                    None => /* generated field, ignore */ {},
+                    None =>
+                        /* generated field, ignore */
+                        {}
                     Some(description) => {
                         if let Some(ref doc) = field.doc() {
-                            result.push_str(&format!("{prefix}// {doc}\n", prefix = prefix, doc = doc));
+                            result.push_str(&format!(
+                                "{prefix}// {doc}\n",
+                                prefix = prefix,
+                                doc = doc
+                            ));
                         }
-                        result.push_str(&format!("{prefix}{description} {name};\n",
+                        result.push_str(&format!(
+                            "{prefix}{description} {name};\n",
                             prefix = prefix,
                             name = field.name().to_str(),
                             description = description
@@ -480,7 +525,7 @@ impl ToWebidl {
                 }
             }
         }
-        result.push_str(&format!("{prefix} }}\n", prefix=prefix));
+        result.push_str(&format!("{prefix} }}\n", prefix = prefix));
         result
     }
 }

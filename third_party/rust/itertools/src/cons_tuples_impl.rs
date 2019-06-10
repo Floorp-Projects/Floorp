@@ -42,6 +42,7 @@ impl_cons_iter!(A, B, C, D, E, F, G, H,);
 ///
 /// Used by the `iproduct!()` macro.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Debug)]
 pub struct ConsTuples<I, J>
     where I: Iterator<Item=J>,
 {

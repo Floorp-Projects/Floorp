@@ -12,7 +12,7 @@ use either_or_both::EitherOrBoth;
 /// This iterator is *fused*.
 ///
 /// See [`.zip_longest()`](../trait.Itertools.html#method.zip_longest) for more information.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct ZipLongest<T, U> {
     a: Fuse<T>,

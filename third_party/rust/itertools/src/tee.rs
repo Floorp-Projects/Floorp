@@ -5,6 +5,7 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 
 /// Common buffer object for the two tee halves
+#[derive(Debug)]
 struct TeeBuffer<A, I> {
     backlog: VecDeque<A>,
     iter: I,
@@ -16,6 +17,7 @@ struct TeeBuffer<A, I> {
 ///
 /// See [`.tee()`](../trait.Itertools.html#method.tee) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Debug)]
 pub struct Tee<I>
     where I: Iterator
 {

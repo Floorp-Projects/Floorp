@@ -55,17 +55,13 @@ impl<I, V, F> Iterator for UniqueBy<I, V, F>
     type Item = I::Item;
 
     fn next(&mut self) -> Option<I::Item> {
-        loop {
-            match self.iter.next() {
-                None => return None,
-                Some(v) => {
-                    let key = (self.f)(&v);
-                    if self.used.insert(key, ()).is_none() {
-                        return Some(v);
-                    }
-                }
+        while let Some(v) = self.iter.next() {
+            let key = (self.f)(&v);
+            if self.used.insert(key, ()).is_none() {
+                return Some(v);
             }
         }
+        None
     }
 
     #[inline]
@@ -87,21 +83,14 @@ impl<I> Iterator for Unique<I>
     type Item = I::Item;
 
     fn next(&mut self) -> Option<I::Item> {
-        loop {
-            match self.iter.iter.next() {
-                None => return None,
-                Some(v) => {
-                    match self.iter.used.entry(v) {
-                        Entry::Occupied(_) => { }
-                        Entry::Vacant(entry) => {
-                            let elt = entry.key().clone();
-                            entry.insert(());
-                            return Some(elt);
-                        }
-                    }
-                }
+        while let Some(v) = self.iter.iter.next() {
+            if let Entry::Vacant(entry) = self.iter.used.entry(v) {
+                let elt = entry.key().clone();
+                entry.insert(());
+                return Some(elt);
             }
         }
+        None
     }
 
     #[inline]

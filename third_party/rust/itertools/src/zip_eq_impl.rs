@@ -3,7 +3,7 @@ use super::size_hint;
 /// An iterator which iterates two other iterators simultaneously
 ///
 /// See [`.zip_eq()`](../trait.Itertools.html#method.zip_eq) for more information.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct ZipEq<I, J> {
     a: I,
