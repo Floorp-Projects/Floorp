@@ -2,19 +2,40 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RadioButton xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/radio_button"
-    android:layout_width="match_parent"
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="@dimen/search_engine_radio_button_height"
-    android:layout_gravity="start"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="?android:selectableItemBackground"
-    android:button="@null"
-    android:drawableStart="@drawable/ic_close"
-    android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
-    android:drawablePadding="16dp"
-    android:paddingStart="@dimen/radio_button_padding_horizontal"
-    android:paddingTop="@dimen/radio_button_padding_vertical"
-    android:paddingEnd="@dimen/radio_button_padding_horizontal"
-    android:paddingBottom="@dimen/radio_button_padding_vertical"
-    android:textAlignment="textStart"
-    android:textAppearance="?android:attr/textAppearanceListItem" />
+    android:clickable="true"
+    android:focusable="true">
+    <RadioButton
+        android:id="@+id/radio_button"
+        android:layout_width="@dimen/search_engine_radio_button_height"
+        android:layout_height="@dimen/search_engine_radio_button_height"
+        android:button="@null"
+        android:textAlignment="textStart"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        android:layout_marginStart="@dimen/radio_button_padding_horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+    <ImageView
+        android:id="@+id/engine_icon"
+        android:importantForAccessibility="no"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        app:layout_constraintStart_toEndOf="@id/radio_button"
+        app:layout_constraintTop_toTopOf="@id/radio_button"
+        app:layout_constraintBottom_toBottomOf="@id/radio_button" />
+    <TextView
+        android:id="@+id/engine_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/radio_button_padding_horizontal"
+        android:layout_marginEnd="@dimen/radio_button_padding_horizontal"
+        app:layout_constraintStart_toEndOf="@id/engine_icon"
+        app:layout_constraintTop_toTopOf="@id/engine_icon"
+        app:layout_constraintEnd_toEndOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

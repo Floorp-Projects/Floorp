@@ -9,12 +9,15 @@ import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.RadioGroup
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
+import kotlinx.android.synthetic.main.search_engine_radio_button.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -25,7 +28,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
 
-abstract class SearchEngineListPreference : Preference, CoroutineScope {
+abstract class SearchEngineListPreference : Preference, CompoundButton.OnCheckedChangeListener, CoroutineScope {
     private val job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
@@ -62,6 +65,7 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
         super.onDetached()
     }
 
+    protected abstract fun onSearchEngineSelected(searchEngine: SearchEngine)
     protected abstract fun updateDefaultItem(defaultButton: CompoundButton)
 
     private fun refreshSearchEngineViews(context: Context) {
@@ -93,7 +97,7 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
             engineItem.id = i
             engineItem.tag = engineId
             if (engineId == defaultSearchEngine) {
-                updateDefaultItem(engineItem)
+                updateDefaultItem(engineItem.radio_button)
             }
             searchEngineGroup!!.addView(engineItem, layoutParams)
         }
@@ -103,19 +107,38 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
         engine: SearchEngine,
         layoutInflater: LayoutInflater,
         res: Resources
-    ): CompoundButton {
-        val buttonItem = layoutInflater.inflate(itemResId, null) as CompoundButton
-        buttonItem.text = engine.name
+    ): View {
+        val wrapper = layoutInflater.inflate(itemResId, null) as ConstraintLayout
+        wrapper.setOnClickListener { wrapper.radio_button.isChecked = true }
+        wrapper.radio_button.setOnCheckedChangeListener(this)
+        val buttonItem = wrapper.radio_button
+        wrapper.engine_text.text = engine.name
         val iconSize = res.getDimension(R.dimen.preference_icon_drawable_size).toInt()
         val engineIcon = BitmapDrawable(res, engine.icon)
         engineIcon.setBounds(0, 0, iconSize, iconSize)
+        wrapper.engine_icon.setImageDrawable(engineIcon)
         val attr =
             ThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
         val buttonDrawable = ContextCompat.getDrawable(context, attr)
         buttonDrawable.apply {
             this?.setBounds(0, 0, this.intrinsicWidth, this.intrinsicHeight)
         }
-        buttonItem.setCompoundDrawables(engineIcon, null, buttonDrawable, null)
-        return buttonItem
+        buttonItem.setCompoundDrawablesRelative(buttonDrawable, null, null, null)
+        return wrapper
+    }
+
+    override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
+        searchEngines.forEach { engine ->
+            val wrapper: ConstraintLayout = searchEngineGroup?.findViewWithTag(engine.identifier) ?: return
+
+            when (wrapper.radio_button == buttonView) {
+                true -> onSearchEngineSelected(engine)
+                false -> {
+                    wrapper.radio_button.setOnCheckedChangeListener(null)
+                    wrapper.radio_button.isChecked = false
+                    wrapper.radio_button.setOnCheckedChangeListener(this)
+                }
+            }
+        }
     }
 }
