@@ -67,6 +67,7 @@ function WarningGroup(props) {
     timestampsVisible,
     topLevelClasses,
     type,
+    message,
   });
 }
 
