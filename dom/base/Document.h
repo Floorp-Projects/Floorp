@@ -4173,6 +4173,14 @@ class Document : public nsINode,
 
   /**
    * ConvertToInternalCommand() returns a copy of InternalCommandData instance.
+   * Note that if aAdjustedValue is non-nullptr, this method checks whether
+   * aValue is proper value or not unless InternalCommandData::mExecCommandParam
+   * is ExecCommandParam::Ignore.  For example, if aHTMLCommandName is
+   * "defaultParagraphSeparator", the value has to be one of "div", "p" or
+   * "br".  If aValue is invalid value for InternalCommandData::mCommand, this
+   * returns a copy of instance created with default constructor.  I.e., its
+   * mCommand is set to Command::DoNothing.  So, this treats aHTMLCommandName
+   * is unsupported in such case.
    *
    * @param aHTMLCommandName    Command name in HTML, e.g., used by
    *                            execCommand().
@@ -4184,10 +4192,11 @@ class Document : public nsINode,
    * @return                    Returns a copy of instance created with the
    *                            default constructor if there is no
    *                            corresponding internal command for
-   *                            aHTMLCommandName.  I.e., in this case, mCommand
-   *                            will be set to Command::DoNothing.
-   *                            Otherwise, returns a copy of instance registered
-   *                            in sInternalCommandDataHashtable.
+   *                            aHTMLCommandName or aValue is invalid for
+   *                            found internal command when aAdjustedValue
+   *                            is not nullptr.  Otherwise, returns a copy of
+   *                            instance registered in
+   *                            sInternalCommandDataHashtable.
    */
   static InternalCommandData ConvertToInternalCommand(
       const nsAString& aHTMLCommandName,
