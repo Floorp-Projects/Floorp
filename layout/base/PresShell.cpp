@@ -4462,12 +4462,6 @@ nsresult PresShell::RenderDocument(const nsRect& aRect,
   NS_ENSURE_TRUE(!(aFlags & RenderDocumentFlags::IsUntrusted),
                  NS_ERROR_NOT_IMPLEMENTED);
 
-  nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
-  if (rootPresContext) {
-    rootPresContext->FlushWillPaintObservers();
-    if (mIsDestroying) return NS_OK;
-  }
-
   nsAutoScriptBlocker blockScripts;
 
   // Set up the rectangle as the path in aThebesContext
@@ -8836,17 +8830,6 @@ void PresShell::WillPaint() {
   if (!mIsActive || mPaintingSuppressed || !IsVisible()) {
     return;
   }
-
-  nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
-  if (!rootPresContext) {
-    // In some edge cases, such as when we don't have a root frame yet,
-    // we can't find the root prescontext. There's nothing to do in that
-    // case.
-    return;
-  }
-
-  rootPresContext->FlushWillPaintObservers();
-  if (mIsDestroying) return;
 
   // Process reflows, if we have them, to reduce flicker due to invalidates and
   // reflow being interspersed.  Note that we _do_ allow this to be
