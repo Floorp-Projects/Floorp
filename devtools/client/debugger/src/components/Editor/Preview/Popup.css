@@ -44,22 +44,22 @@
   text-decoration: underline;
 }
 
-.preview-selection:hover {
+.preview-token:hover {
   cursor: default;
 }
 
-.preview-selection,
-.debug-expression.preview-selection {
+.preview-token,
+.debug-expression.preview-token {
   background-color: var(--theme-highlight-yellow);
 }
 
-.theme-dark .preview-selection,
-.theme-dark .debug-expression.preview-selection {
+.theme-dark .preview-token,
+.theme-dark .debug-expression.preview-token {
   background-color: #743884;
 }
 
-.theme-dark .cm-s-mozilla .preview-selection,
-.theme-dark .cm-s-mozilla .debug-expression.preview-selection {
+.theme-dark .cm-s-mozilla .preview-token,
+.theme-dark .cm-s-mozilla .debug-expression.preview-token {
   color: #e7ebee;
 }
 
