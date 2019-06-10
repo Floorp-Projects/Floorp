@@ -219,6 +219,10 @@ private val Event.wrapper
         is Event.SyncAccountSignOut -> EventWrapper<NoExtraKeys>(
             { SyncAccount.signOut.record(it) }
         )
+        is Event.PreferenceToggled -> EventWrapper(
+            { Events.preferenceToggled.record(it) },
+            { Events.preferenceToggledKeys.valueOf(it) }
+        )
 
         // Don't track other events with Glean
         else -> null
