@@ -7,6 +7,7 @@ package mozilla.components.browser.menu.item
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
 import mozilla.components.support.test.robolectric.testContext
@@ -17,9 +18,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SimpleBrowserMenuItemTest {
 
     @Test

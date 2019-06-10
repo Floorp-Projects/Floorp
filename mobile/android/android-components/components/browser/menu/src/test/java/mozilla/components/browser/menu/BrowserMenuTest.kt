@@ -4,17 +4,17 @@
 
 package mozilla.components.browser.menu
 
-import android.content.Context
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.PopupWindow
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.recyclerview.widget.RecyclerView
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -26,14 +26,11 @@ import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowDisplay
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class BrowserMenuTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `show returns non-null popup window`() {
@@ -41,11 +38,11 @@ class BrowserMenuTest {
             SimpleBrowserMenuItem("Hello") {},
             SimpleBrowserMenuItem("World") {})
 
-        val adapter = BrowserMenuAdapter(context, items)
+        val adapter = BrowserMenuAdapter(testContext, items)
 
         val menu = BrowserMenu(adapter)
 
-        val anchor = Button(context)
+        val anchor = Button(testContext)
         val popup = menu.show(anchor)
 
         assertNotNull(popup)
@@ -57,11 +54,11 @@ class BrowserMenuTest {
             SimpleBrowserMenuItem("Hello") {},
             SimpleBrowserMenuItem("World") {})
 
-        val adapter = BrowserMenuAdapter(context, items)
+        val adapter = BrowserMenuAdapter(testContext, items)
 
         val menu = BrowserMenu(adapter)
 
-        val anchor = Button(context)
+        val anchor = Button(testContext)
         val popup = menu.show(anchor)
 
         val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
@@ -78,11 +75,11 @@ class BrowserMenuTest {
             SimpleBrowserMenuItem("Hello") {},
             SimpleBrowserMenuItem("World") {})
 
-        val adapter = spy(BrowserMenuAdapter(context, items))
+        val adapter = spy(BrowserMenuAdapter(testContext, items))
 
         val menu = BrowserMenu(adapter)
 
-        val anchor = Button(context)
+        val anchor = Button(testContext)
         val popup = menu.show(anchor)
 
         val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
@@ -96,7 +93,7 @@ class BrowserMenuTest {
     @Test
     fun `invalidate is a no-op if the menu is closed`() {
         val items = listOf(SimpleBrowserMenuItem("Hello") {})
-        val menu = BrowserMenu(BrowserMenuAdapter(context, items))
+        val menu = BrowserMenu(BrowserMenuAdapter(testContext, items))
 
         menu.invalidate()
     }
@@ -107,11 +104,11 @@ class BrowserMenuTest {
             SimpleBrowserMenuItem("Hello") {},
             SimpleBrowserMenuItem("World") {})
 
-        val adapter = BrowserMenuAdapter(context, items)
+        val adapter = BrowserMenuAdapter(testContext, items)
 
         val menu = BrowserMenu(adapter)
 
-        val anchor = Button(context)
+        val anchor = Button(testContext)
         val popup = menu.show(anchor)
 
         assertTrue(popup.isShowing)
@@ -123,11 +120,11 @@ class BrowserMenuTest {
             SimpleBrowserMenuItem("Hello") {},
             SimpleBrowserMenuItem("World") {})
 
-        val adapter = BrowserMenuAdapter(context, items)
+        val adapter = BrowserMenuAdapter(testContext, items)
 
         val menu = BrowserMenu(adapter)
 
-        val anchor = Button(context)
+        val anchor = Button(testContext)
         val popup = menu.show(anchor)
 
         assertTrue(popup.isShowing)
@@ -150,7 +147,7 @@ class BrowserMenuTest {
         val params = CoordinatorLayout.LayoutParams(100, 100)
         params.gravity = Gravity.BOTTOM
 
-        val view = View(context)
+        val view = View(testContext)
         view.layoutParams = params
 
         assertEquals(
@@ -164,7 +161,7 @@ class BrowserMenuTest {
         val params = CoordinatorLayout.LayoutParams(100, 100)
         params.gravity = Gravity.TOP
 
-        val view = View(context)
+        val view = View(testContext)
         view.layoutParams = params
 
         assertEquals(
@@ -283,7 +280,7 @@ class BrowserMenuTest {
     }
 
     private fun createMockViewWith(y: Int): View {
-        val view = spy(View(context))
+        val view = spy(View(testContext))
         doAnswer { invocation ->
             val locationInWindow = (invocation.getArgument(0) as IntArray)
             locationInWindow[0] = 0
