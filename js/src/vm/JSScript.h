@@ -257,6 +257,18 @@ class DebugScript {
   friend class JS::Realm;
 
   /*
+   * If this is a generator script, this is the number of Debugger.Frames
+   * referring to calls to this generator, whether live or suspended. Closed
+   * generators do not contribute a count.
+   *
+   * When greater than zero, this script should be compiled with debug
+   * instrumentation to call Debugger::onResumeFrame at each resumption site, so
+   * that Debugger can reconnect any extant Debugger.Frames with the new
+   * concrete frame.
+   */
+  uint32_t generatorObserverCount;
+
+  /*
    * The number of Debugger.Frame objects that refer to frames running this
    * script and that have onStep handlers. When nonzero, the interpreter and JIT
    * must arrange to call Debugger::onSingleStep before each bytecode, or at
@@ -282,7 +294,9 @@ class DebugScript {
    * True if this DebugScript carries any useful information. If false, it
    * should be removed from its JSScript.
    */
-  bool needed() const { return stepperCount > 0 || numSites > 0; }
+  bool needed() const {
+    return generatorObserverCount > 0 || stepperCount > 0 || numSites > 0;
+  }
 };
 
 using UniqueDebugScript = js::UniquePtr<DebugScript, JS::FreePolicy>;
@@ -2931,6 +2945,15 @@ class JSScript : public js::gc::TenuredCell {
     return hasDebugScript() ? debugScript()->stepperCount : 0;
   }
 #endif
+
+  /*
+   * Increment or decrement the generator observer count. If the count is
+   * non-zero then the script reports resumptions to the debugger.
+   *
+   * Only incrementing is fallible, as it could allocate a DebugScript.
+   */
+  bool incrementGeneratorObserverCount(JSContext* cx);
+  void decrementGeneratorObserverCount(js::FreeOp* fop);
 
   void finalize(js::FreeOp* fop);
 
