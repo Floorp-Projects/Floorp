@@ -81,7 +81,7 @@ def add_command_arguments(config, tasks):
             'platform={}'.format(platform),
         ]
         if task['extra']['limit-locales']:
-            for locale in all_locales:
+            for locale in sorted(all_locales):
                 task['run']['options'].append('limit-locale={}'.format(locale))
         if 'partner' in config.kind and config.params['release_partners']:
             for partner in config.params['release_partners']:
