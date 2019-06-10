@@ -4135,7 +4135,9 @@ class Document : public nsINode,
 
   struct InternalCommandData {
     const char* mXULCommandName;
-    mozilla::Command mCommand;           // uint8_t
+    mozilla::Command mCommand;  // uint8_t
+    // How ConvertToInternalCommand() to treats aValue.
+    // Its callers don't need to check this.
     ExecCommandParam mExecCommandParam;  // uint8_t
     GetEditorCommandFunc* mGetEditorCommandFunc;
 
@@ -4157,13 +4159,11 @@ class Document : public nsINode,
              mCommand != mozilla::Command::Copy &&
              mCommand != mozilla::Command::Paste;
     }
-    bool IsClipboardWriteCommand() const {
+    bool IsCutOrCopyCommand() const {
       return mCommand == mozilla::Command::Cut ||
              mCommand == mozilla::Command::Copy;
     }
-    bool IsClipboardReadCommand() const {
-      return mCommand == mozilla::Command::Paste;
-    }
+    bool IsPasteCommand() const { return mCommand == mozilla::Command::Paste; }
   };
 
   /**
@@ -4171,25 +4171,28 @@ class Document : public nsINode,
    */
   static void EnsureInitializeInternalCommandDataHashtable();
 
-  // this function will return false if the command is not recognized
-  // inCommandID will be converted as necessary for internal operations
-  // inParam will be converted as necessary for internal operations
-  // outParam will be Empty if no parameter is needed or if returning a boolean
-  // outIsBoolean will determine whether to send param as a boolean or string
-  // outBooleanParam will not be set unless outIsBoolean
-  static bool ConvertToMidasInternalCommand(const nsAString& inCommandID,
-                                            const nsAString& inParam,
-                                            nsACString& outCommandID,
-                                            nsACString& outParam,
-                                            bool& isBoolean, bool& boolValue);
-
-  static bool ConvertToMidasInternalCommand(const nsAString& inCommandID,
-                                            nsACString& outCommandID);
-
-  static bool ConvertToMidasInternalCommandInner(
-      const nsAString& inCommandID, const nsAString& inParam,
-      nsACString& outCommandID, nsACString& outParam, bool& outIsBoolean,
-      bool& outBooleanValue, bool aIgnoreParams);
+  /**
+   * ConvertToInternalCommand() returns a copy of InternalCommandData instance.
+   *
+   * @param aHTMLCommandName    Command name in HTML, e.g., used by
+   *                            execCommand().
+   * @param aValue              The value which is set to the 3rd parameter
+   *                            of execCommand().
+   * @param aAdjustedValue      [out] Must be empty string if set non-nullptr.
+   *                            Will be set to adjusted value for executing
+   *                            the internal command.
+   * @return                    Returns a copy of instance created with the
+   *                            default constructor if there is no
+   *                            corresponding internal command for
+   *                            aHTMLCommandName.  I.e., in this case, mCommand
+   *                            will be set to Command::DoNothing.
+   *                            Otherwise, returns a copy of instance registered
+   *                            in sInternalCommandDataHashtable.
+   */
+  static InternalCommandData ConvertToInternalCommand(
+      const nsAString& aHTMLCommandName,
+      const nsAString& aValue = EmptyString(),
+      nsAString* aAdjustedValue = nullptr);
 
   // Mapping table from HTML command name to internal command.
   typedef nsDataHashtable<nsStringCaseInsensitiveHashKey, InternalCommandData>
