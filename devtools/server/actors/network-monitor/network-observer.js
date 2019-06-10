@@ -293,6 +293,8 @@ NetworkObserver.prototype = {
       return;
     }
 
+    const blockedOrFailed = topic === "http-on-failed-opening-request";
+
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
     if (!matchRequest(channel, this.filters)) {
@@ -308,7 +310,7 @@ NetworkObserver.prototype = {
 
     const setCookieHeaders = [];
 
-    if (!blockedReason) {
+    if (!blockedOrFailed) {
       channel.visitOriginalResponseHeaders({
         visitHeader: function(name, value) {
           const lowerName = name.toLowerCase();
@@ -337,7 +339,7 @@ NetworkObserver.prototype = {
     const httpVersionMin = {};
 
     channel.QueryInterface(Ci.nsIHttpChannelInternal);
-    if (!blockedReason) {
+    if (!blockedOrFailed) {
       channel.getResponseVersion(httpVersionMaj, httpVersionMin);
 
       response.status = channel.responseStatus;
