@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons.loader
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
@@ -28,11 +29,11 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class HttpIconLoaderTest {
+
     @Test
     fun `Loader downloads data and uses appropriate headers`() {
         val clients = listOf(

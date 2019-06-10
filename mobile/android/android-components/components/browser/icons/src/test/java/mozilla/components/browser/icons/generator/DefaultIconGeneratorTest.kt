@@ -4,28 +4,25 @@
 
 package mozilla.components.browser.icons.generator
 
-import android.content.Context
 import android.graphics.Bitmap
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.ktx.android.content.res.pxToDp
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class DefaultIconGeneratorTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun getRepresentativeCharacter() = runBlocking {
-        val generator = DefaultIconGenerator(context)
+        val generator = DefaultIconGenerator(testContext)
 
         assertEquals("M", generator.getRepresentativeCharacter("https://mozilla.org"))
         assertEquals("W", generator.getRepresentativeCharacter("http://wikipedia.org"))
@@ -75,7 +72,7 @@ class DefaultIconGeneratorTest {
 
     @Test
     fun pickColor() {
-        val generator = DefaultIconGenerator(context)
+        val generator = DefaultIconGenerator(testContext)
 
         val color = generator.pickColor("http://m.facebook.com")
 
@@ -96,15 +93,15 @@ class DefaultIconGeneratorTest {
 
     @Test
     fun generate() = runBlocking {
-        val generator = DefaultIconGenerator(context)
+        val generator = DefaultIconGenerator(testContext)
 
-        val icon = generator.generate(context, IconRequest(
+        val icon = generator.generate(testContext, IconRequest(
             url = "https://m.facebook.com"))
 
         assertNotNull(icon.bitmap)
         assertNotNull(icon.color)
 
-        val dp32 = context.resources.pxToDp(32)
+        val dp32 = testContext.resources.pxToDp(32)
         assertEquals(dp32, icon.bitmap!!.width)
         assertEquals(dp32, icon.bitmap!!.height)
 

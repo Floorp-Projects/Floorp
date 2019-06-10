@@ -4,26 +4,23 @@
 
 package mozilla.components.browser.icons.utils
 
-import android.content.Context
 import android.graphics.Bitmap
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.`when`
-import org.robolectric.RobolectricTestRunner
 import java.io.OutputStream
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class DiskCacheTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `Writing and reading resources`() {
@@ -50,9 +47,9 @@ class DiskCacheTest {
         )
 
         val request = IconRequest("https://www.mozilla.org", resources = resources)
-        cache.putResources(context, request)
+        cache.putResources(testContext, request)
 
-        val restoredResources = cache.getResources(context, request)
+        val restoredResources = cache.getResources(testContext, request)
         assertEquals(3, restoredResources.size)
         assertEquals(resources, restoredResources)
     }
@@ -78,9 +75,9 @@ class DiskCacheTest {
             true
         }
 
-        cache.putIconBitmap(context, resource, bitmap)
+        cache.putIconBitmap(testContext, resource, bitmap)
 
-        val data = cache.getIconData(context, resource)
+        val data = cache.getIconData(testContext, resource)
         assertNotNull(data!!)
         assertEquals("Hello World", String(data))
     }

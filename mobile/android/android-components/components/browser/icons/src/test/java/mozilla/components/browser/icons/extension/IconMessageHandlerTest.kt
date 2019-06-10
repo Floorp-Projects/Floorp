@@ -5,6 +5,7 @@
 package mozilla.components.browser.icons.extension
 
 import android.graphics.Bitmap
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -24,10 +25,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class IconMessageHandlerTest {
+
     @Test
     fun `Complex message (TheVerge) is transformed into IconRequest and loaded`() = runBlocking {
         val session: Session = mock()

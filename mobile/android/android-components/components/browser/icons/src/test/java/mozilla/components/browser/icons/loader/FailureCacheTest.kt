@@ -4,16 +4,17 @@
 
 package mozilla.components.browser.icons.loader
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class FailureCacheTest {
+
     @Test
     fun `Cache should remember URLs for limited amount of time`() {
         val cache = spy(FailureCache())

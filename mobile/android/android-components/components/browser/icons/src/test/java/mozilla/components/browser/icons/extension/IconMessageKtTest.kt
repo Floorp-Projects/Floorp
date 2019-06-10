@@ -4,15 +4,16 @@
 
 package mozilla.components.browser.icons.extension
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.engine.manifest.Size
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class IconMessageKtTest {
+
     @Test
     fun `Serializing and deserializing icon resources`() {
         val resources = listOf(

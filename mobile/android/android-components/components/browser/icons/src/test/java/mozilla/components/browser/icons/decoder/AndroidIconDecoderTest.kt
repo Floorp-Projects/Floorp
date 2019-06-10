@@ -5,6 +5,7 @@
 package mozilla.components.browser.icons.decoder
 
 import android.graphics.Bitmap
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertNotNull
@@ -15,10 +16,10 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.spy
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class AndroidIconDecoderTest {
+
     @Test
     fun `WHEN decoding PNG THEN returns non-null bitmap`() {
         val decoder = AndroidIconDecoder()

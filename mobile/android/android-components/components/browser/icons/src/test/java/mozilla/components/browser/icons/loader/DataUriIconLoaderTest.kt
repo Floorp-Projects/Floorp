@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons.loader
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.test.mock
@@ -12,10 +13,10 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class DataUriIconLoaderTest {
+
     @Test
     fun `Loader returns null for http(s) urls`() {
         val loader = DataUriIconLoader()
