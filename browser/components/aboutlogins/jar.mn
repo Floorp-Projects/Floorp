@@ -25,4 +25,5 @@ browser.jar:
   content/browser/aboutlogins/aboutLogins.css   (content/aboutLogins.css)
   content/browser/aboutlogins/aboutLogins.js    (content/aboutLogins.js)
   content/browser/aboutlogins/aboutLogins.html  (content/aboutLogins.html)
+  content/browser/aboutlogins/aboutLoginsUtils.js (content/aboutLoginsUtils.js)
   content/browser/aboutlogins/common.css        (content/common.css)
