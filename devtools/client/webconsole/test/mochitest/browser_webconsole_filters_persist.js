@@ -54,9 +54,9 @@ async function getFilterButtons(hud) {
   });
   ok(filterBar, "Filter bar is shown when filter icon is clicked.");
 
-  return filterBar.querySelectorAll(".devtools-button");
+  return filterBar.querySelectorAll(".devtools-togglebutton");
 }
 
 function filterIsEnabled(button) {
-  return button.classList.contains("checked");
+  return button.getAttribute("aria-pressed") === "true";
 }

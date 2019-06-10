@@ -217,24 +217,14 @@ class Toolbar extends Component {
    */
   renderFilterButtons(requestFilterTypes) {
     // Render list of filter-buttons.
-    const buttons = Object.entries(requestFilterTypes).map(([type, checked]) => {
-      const classList = ["devtools-button", `requests-list-filter-${type}-button`];
-      checked && classList.push("checked");
-
-      return (
-        button({
-          className: classList.join(" "),
-          key: type,
-          onClick: this.toggleRequestFilterType,
-          onKeyDown: this.toggleRequestFilterType,
-          "aria-pressed": checked,
-          "data-key": type,
-        },
-          TOOLBAR_FILTER_LABELS[type]
-        )
-      );
-    });
-
+    const buttons = Object.entries(requestFilterTypes).map(([type, checked]) => button({
+      className: `devtools-togglebutton requests-list-filter-${type}-button`,
+      key: type,
+      onClick: this.toggleRequestFilterType,
+      onKeyDown: this.toggleRequestFilterType,
+      "aria-pressed": checked,
+      "data-key": type,
+    }, TOOLBAR_FILTER_LABELS[type]));
     return div({ className: "requests-list-filter-buttons" }, buttons);
   }
 

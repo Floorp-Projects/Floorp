@@ -19,12 +19,9 @@ FilterButton.propTypes = {
 function FilterButton(props) {
   const {active, label, filterKey, dispatch} = props;
   const classList = [
-    "devtools-button",
+    "devtools-togglebutton",
     filterKey,
   ];
-  if (active) {
-    classList.push("checked");
-  }
 
   return dom.button({
     "aria-pressed": active === true,

@@ -92,6 +92,14 @@
   --theme-popup-color: -moz-fieldText;
   --theme-popup-border-color: ThreeDShadow;
   --theme-popup-dimmed: hsla(0,0%,80%,.3);
+
+  /* Styling for devtool buttons */
+  --theme-toolbarbutton-background: none;
+  --theme-toolbarbutton-color: var(--grey-70);
+  --theme-toolbarbutton-hover-background: var(--grey-90-a05);
+  --theme-toolbarbutton-checked-background: var(--grey-90-a20);
+  --theme-toolbarbutton-checked-color: var(--grey-90);
+  --theme-toolbarbutton-checked-hover-color: var(--grey-90-a15);
 }
 
 /*
@@ -182,6 +190,14 @@
   --theme-popup-color: rgb(249,249,250);
   --theme-popup-border-color: #27272b;
   --theme-popup-dimmed: rgba(249,249,250,.1);
+
+  /* Styling for devtool buttons */
+  --theme-toolbarbutton-background: none;
+  --theme-toolbarbutton-color: var(--grey-40);
+  --theme-toolbarbutton-hover-background: var(--grey-10-a15);
+  --theme-toolbarbutton-checked-background: var(--grey-10-a30);
+  --theme-toolbarbutton-checked-color: var(--grey-30);
+  --theme-toolbarbutton-checked-hover-color: var(--grey-10-a25);
 }
 
 :root {
@@ -247,6 +263,8 @@
   --yellow-80: #715100;
 
   --grey-10: #f9f9fa;
+  --grey-10-a25: rgba(249, 249, 250, 0.25);
+  --grey-10-a30: rgba(249, 249, 250, 0.3);
   --grey-20: #ededf0;
   --grey-25: #e0e0e2;
   --grey-30: #d7d7db;
@@ -260,4 +278,6 @@
   --grey-80: #2a2a2e;
   --grey-85: #1b1b1d;
   --grey-90: #0c0c0d;
+  --grey-90-a15: rgba(12, 12, 13, 0.15);
+  --grey-90-a20: rgba(12, 12, 13, 0.2);
 }
