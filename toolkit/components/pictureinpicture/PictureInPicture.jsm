@@ -212,7 +212,8 @@ var PictureInPicture = {
     // to position it in the bottom right corner. Since we know the width of the
     // available rect, we need to subtract the dimensions of the window we're
     // opening to get the top left coordinates that openWindow expects.
-    let pipLeft = screenWidth.value - resultWidth;
+    let isRTL = Services.locale.isAppLocaleRTL;
+    let pipLeft = isRTL ? 0 : screenWidth.value - resultWidth;
     let pipTop = screenHeight.value - resultHeight;
     let features = `${PLAYER_FEATURES},top=${pipTop},left=${pipLeft},` +
                    `outerWidth=${resultWidth},outerHeight=${resultHeight}`;
