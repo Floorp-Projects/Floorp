@@ -662,6 +662,7 @@ define(function(require, exports, module) {
           TreeHeader(props),
           dom.tbody({
             role: "presentation",
+            tabIndex: -1,
           }, rows)
         )
       );
