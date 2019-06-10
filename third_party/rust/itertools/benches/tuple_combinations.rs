@@ -6,7 +6,7 @@ extern crate itertools;
 use test::{black_box, Bencher};
 use itertools::Itertools;
 
-// aproximate 100_000 iterations for each combination
+// approximate 100_000 iterations for each combination
 const N1: usize = 100_000;
 const N2: usize = 448;
 const N3: usize = 86;

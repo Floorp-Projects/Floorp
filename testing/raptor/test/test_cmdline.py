@@ -17,6 +17,7 @@ def test_verify_options(filedir):
                      page_timeout=60000,
                      debug='True',
                      power_test=False,
+                     cpu_test=False,
                      memory_test=False)
     parser = ArgumentParser()
 
@@ -34,6 +35,7 @@ def test_verify_options(filedir):
                      is_release_build=False,
                      host='sophie',
                      power_test=False,
+                     cpu_test=False,
                      memory_test=False)
     verify_options(parser, args)  # assert no exception
 
@@ -45,6 +47,7 @@ def test_verify_options(filedir):
                      is_release_build=False,
                      host='sophie',
                      power_test=False,
+                     cpu_test=False,
                      memory_test=False)
     verify_options(parser, args)  # assert no exception
 
@@ -56,6 +59,19 @@ def test_verify_options(filedir):
                      is_release_build=False,
                      host='sophie',
                      power_test=False,
+                     cpu_test=False,
+                     memory_test=False)
+    verify_options(parser, args)  # assert no exception
+
+    args = Namespace(app='geckoview',
+                     binary='org.mozilla.geckoview_example',
+                     activity='org.mozilla.geckoview_example.GeckoViewActivity',
+                     intent='android.intent.action.MAIN',
+                     gecko_profile='False',
+                     is_release_build=False,
+                     host='sophie',
+                     power_test=False,
+                     cpu_test=True,
                      memory_test=False)
     verify_options(parser, args)  # assert no exception
 
@@ -67,6 +83,7 @@ def test_verify_options(filedir):
                      is_release_build=False,
                      host='sophie',
                      power_test=False,
+                     cpu_test=False,
                      memory_test=False)
     parser = ArgumentParser()
 

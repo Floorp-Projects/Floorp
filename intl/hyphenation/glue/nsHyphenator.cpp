@@ -108,14 +108,20 @@ void nsHyphenator::HyphenateWord(const nsAString& aString, uint32_t aStart,
     uint32_t origCh = ch;
     ch = ToLowerCase(ch);
 
-    // Avoid hyphenating capitalized words (bug 1550532) unless explicitly
-    // allowed by prefs for the language in use.
-    if (firstLetter) {
-      if (!mHyphenateCapitalized && ch != origCh) {
+    if (ch != origCh) {
+      if (firstLetter) {
+        // Avoid hyphenating capitalized words (bug 1550532) unless explicitly
+        // allowed by prefs for the language in use.
+        if (!mHyphenateCapitalized) {
+          return;
+        }
+      } else {
+        // Also never auto-hyphenate a word that has internal caps, as it may
+        // well be an all-caps acronym or a quirky name like iTunes.
         return;
       }
-      firstLetter = false;
     }
+    firstLetter = false;
 
     if (ch < 0x80) {  // U+0000 - U+007F
       utf8.Append(ch);

@@ -58,6 +58,7 @@ from memory import generate_android_memory_profile
 from power import init_android_power_test, finish_android_power_test
 from results import RaptorResultsHandler
 from utils import view_gecko_profile
+from cpu import generate_android_cpu_profile
 
 
 LOG = RaptorLogger(component='raptor-main')
@@ -82,7 +83,7 @@ class Raptor(object):
 
     def __init__(self, app, binary, run_local=False, obj_path=None, profile_class=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
-                 symbols_path=None, host=None, power_test=False, memory_test=False,
+                 symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
                  is_release_build=False, debug_mode=False, post_startup_delay=None,
                  interrupt_handler=None, e10s=True, **kwargs):
 
@@ -104,6 +105,7 @@ class Raptor(object):
             'host': host,
             'power_test': power_test,
             'memory_test': memory_test,
+            'cpu_test': cpu_test,
             'is_release_build': is_release_build,
             'enable_control_server_wait': memory_test,
             'e10s': e10s,
@@ -1001,7 +1003,6 @@ class RaptorAndroid(Raptor):
         finally:
             if self.config['power_test']:
                 finish_android_power_test(self, test['name'])
-
             self.run_test_teardown()
 
     def run_test_cold(self, test, timeout=None):
@@ -1081,6 +1082,10 @@ class RaptorAndroid(Raptor):
             # now start the browser/app under test
             self.launch_firefox_android_app(test['name'])
 
+            # If we are measuring CPU, let's grab a snapshot
+            if self.config['cpu_test']:
+                generate_android_cpu_profile(self, test['name'])
+
             # set our control server flag to indicate we are running the browser/app
             self.control_server._finished = False
 
@@ -1117,6 +1122,10 @@ class RaptorAndroid(Raptor):
 
         # now start the browser/app under test
         self.launch_firefox_android_app(test['name'])
+
+        # If we are collecting CPU info, let's grab the details
+        if self.config['cpu_test']:
+            generate_android_cpu_profile(self, test['name'])
 
         # set our control server flag to indicate we are running the browser/app
         self.control_server._finished = False
@@ -1200,6 +1209,7 @@ def main(args=sys.argv[1:]):
                           symbols_path=args.symbols_path,
                           host=args.host,
                           power_test=args.power_test,
+                          cpu_test=args.cpu_test,
                           memory_test=args.memory_test,
                           is_release_build=args.is_release_build,
                           debug_mode=args.debug_mode,

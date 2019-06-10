@@ -7,6 +7,9 @@
 use std::fmt::Display;
 use std::iter::{self, Zip};
 #[cfg(feature = "use_std")]
+type VecIntoIter<T> = ::std::vec::IntoIter<T>;
+
+#[cfg(feature = "use_std")]
 use Itertools;
 
 pub use adaptors::{
@@ -211,9 +214,11 @@ pub fn join<I>(iterable: I, sep: &str) -> String
     iterable.into_iter().join(sep)
 }
 
-/// Collect all the iterable's elements into a sorted vector in ascending order.
+/// Sort all iterator elements into a new iterator in ascending order.
 ///
-/// `IntoIterator` enabled version of `iterable.sorted()`.
+/// `IntoIterator` enabled version of [`iterable.sorted()`][1].
+///
+/// [1]: trait.Itertools.html#method.sorted
 ///
 /// ```
 /// use itertools::sorted;
@@ -222,7 +227,7 @@ pub fn join<I>(iterable: I, sep: &str) -> String
 /// assert_equal(sorted("rust".chars()), "rstu".chars());
 /// ```
 #[cfg(feature = "use_std")]
-pub fn sorted<I>(iterable: I) -> Vec<I::Item>
+pub fn sorted<I>(iterable: I) -> VecIntoIter<I::Item>
     where I: IntoIterator,
           I::Item: Ord
 {

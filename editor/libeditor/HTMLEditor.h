@@ -136,8 +136,9 @@ class HTMLEditor final : public TextEditor,
   virtual bool CanPaste(int32_t aClipboardType) const override;
   using EditorBase::CanPaste;
 
-  MOZ_CAN_RUN_SCRIPT
-  NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteTransferableAsAction(
+      nsITransferable* aTransferable,
+      nsIPrincipal* aPrincipal = nullptr) override;
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode) override;
 
@@ -155,6 +156,19 @@ class HTMLEditor final : public TextEditor,
   virtual nsresult GetPreferredIMEState(widget::IMEState* aState) override;
 
   /**
+   * PasteNoFormatting() pastes content in clipboard without any style
+   * information.
+   *
+   * @param aSelectionType      nsIClipboard::kGlobalClipboard or
+   *                            nsIClipboard::kSelectionClipboard.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult PasteNoFormattingAsAction(
+      int32_t aSelectionType, nsIPrincipal* aPrincipal = nullptr);
+
+  /**
    * PasteAsQuotationAsAction() pastes content in clipboard with newly created
    * blockquote element.  If the editor is in plaintext mode, will paste the
    * content with appending ">" to start of each line.
@@ -163,10 +177,13 @@ class HTMLEditor final : public TextEditor,
    *                            nsIClipboard::kSelectionClipboard.
    * @param aDispatchPasteEvent true if this should dispatch ePaste event
    *                            before pasting.  Otherwise, false.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult PasteAsQuotationAsAction(int32_t aClipboardType,
-                                            bool aDispatchPasteEvent) override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsQuotationAsAction(
+      int32_t aClipboardType, bool aDispatchPasteEvent,
+      nsIPrincipal* aPrincipal = nullptr) override;
 
   /**
    * Can we paste |aTransferable| or, if |aTransferable| is null, will a call
@@ -179,14 +196,30 @@ class HTMLEditor final : public TextEditor,
   /**
    * InsertLineBreakAsAction() is called when user inputs a line break with
    * Shift + Enter or something.
+   *
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertLineBreakAsAction() override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertLineBreakAsAction(
+      nsIPrincipal* aPrincipal = nullptr) override;
 
   /**
    * InsertParagraphSeparatorAsAction() is called when user tries to separate
    * current paragraph with Enter key press in HTMLEditor or something.
+   *
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  nsresult InsertParagraphSeparatorAsAction();
+  nsresult InsertParagraphSeparatorAsAction(nsIPrincipal* aPrincipal = nullptr);
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InsertElementAtSelectionAsAction(Element* aElement, bool aDeleteSelection,
+                                   nsIPrincipal* aPrincipal = nullptr);
+
+  MOZ_CAN_RUN_SCRIPT nsresult InsertLinkAroundSelectionAsAction(
+      Element* aAnchorElement, nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * CreateElementWithDefaults() creates new element whose name is
@@ -207,9 +240,28 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * Indent or outdent content around Selection.
+   *
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult IndentAsAction();
-  MOZ_CAN_RUN_SCRIPT nsresult OutdentAsAction();
+  MOZ_CAN_RUN_SCRIPT nsresult
+  IndentAsAction(nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  OutdentAsAction(nsIPrincipal* aPrincipal = nullptr);
+
+  MOZ_CAN_RUN_SCRIPT nsresult SetParagraphFormatAsAction(
+      const nsAString& aParagraphFormat, nsIPrincipal* aPrincipal = nullptr);
+
+  nsresult AlignAsAction(const nsAString& aAlignType,
+                         nsIPrincipal* aPrincipal = nullptr);
+
+  nsresult RemoveListAsAction(const nsAString& aListType,
+                              nsIPrincipal* aPrincipal = nullptr);
+
+  MOZ_CAN_RUN_SCRIPT nsresult MakeOrChangeListAsAction(
+      const nsAString& aListType, bool entireList, const nsAString& aBulletType,
+      nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * event callback when a mouse button is pressed
@@ -328,10 +380,15 @@ class HTMLEditor final : public TextEditor,
   /**
    * extracts the selection from the normal flow of the document and
    * positions it.
+   *
    * @param aEnabled [IN] true to absolutely position the selection,
    *                      false to put it back in the normal flow
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  nsresult SetSelectionToAbsoluteOrStatic(bool aEnabled);
+  nsresult SetSelectionToAbsoluteOrStaticAsAction(
+      bool aEnabled, nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * returns the absolute z-index of a positioned element. Never returns 'auto'
@@ -342,19 +399,31 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * adds aChange to the z-index of the currently positioned element.
+   *
    * @param aChange [IN] relative change to apply to current z-index
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  nsresult AddZIndex(int32_t aChange);
+  nsresult AddZIndexAsAction(int32_t aChange,
+                             nsIPrincipal* aPrincipal = nullptr);
+
+  MOZ_CAN_RUN_SCRIPT nsresult SetBackgroundColorAsAction(
+      const nsAString& aColor, nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * SetInlinePropertyAsAction() sets a property which changes inline style of
    * text.  E.g., bold, italic, super and sub.
    * This automatically removes exclusive style, however, treats all changes
    * as a transaction.
+   *
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetInlinePropertyAsAction(nsAtom& aProperty, nsAtom* aAttribute,
-                                     const nsAString& aValue);
+  MOZ_CAN_RUN_SCRIPT nsresult SetInlinePropertyAsAction(
+      nsAtom& aProperty, nsAtom* aAttribute, const nsAString& aValue,
+      nsIPrincipal* aPrincipal = nullptr);
 
   nsresult GetInlineProperty(nsAtom* aProperty, nsAtom* aAttribute,
                              const nsAString& aValue, bool* aFirst, bool* aAny,
@@ -378,9 +447,21 @@ class HTMLEditor final : public TextEditor,
    *                    nsGkAtoms::fase, nsGkAtoms::size, nsGkAtoms::color or
    *                    nsGkAtoms::bgcolor.  Otherwise, set nullptr.
    *                    Must not use nsGkAtoms::_empty here.
+   * @param aPrincipal  Set subject principal if it may be called by JS.  If
+   *                    set to nullptr, will be treated as called by system.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult RemoveInlinePropertyAsAction(nsAtom& aProperty, nsAtom* aAttribute);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  RemoveInlinePropertyAsAction(nsAtom& aProperty, nsAtom* aAttribute,
+                               nsIPrincipal* aPrincipal = nullptr);
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  RemoveAllInlinePropertiesAsAction(nsIPrincipal* aPrincipal = nullptr);
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  IncreaseFontSizeAsAction(nsIPrincipal* aPrincipal = nullptr);
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DecreaseFontSizeAsAction(nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * GetFontColorState() returns foreground color information in first
@@ -494,6 +575,9 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT
   nsresult InsertTextWithQuotations(const nsAString& aStringToInsert);
 
+  MOZ_CAN_RUN_SCRIPT nsresult InsertHTMLAsAction(
+      const nsAString& aInString, nsIPrincipal* aPrincipal = nullptr);
+
  protected:  // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
@@ -537,6 +621,23 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT
   nsresult DeleteTextWithTransaction(dom::CharacterData& aTextNode,
                                      uint32_t aOffset, uint32_t aLength);
+
+  /**
+   * DeleteParentBlocksIfEmpty() removes parent block elements if they
+   * don't have visible contents.  Note that due performance issue of
+   * WSRunObject, this call may be expensive.  And also note that this
+   * removes a empty block with a transaction.  So, please make sure that
+   * you've already created `AutoPlaceholderBatch`.
+   *
+   * @param aPoint      The point whether this method climbing up the DOM
+   *                    tree to remove empty parent blocks.
+   * @return            NS_OK if one or more empty block parents are deleted.
+   *                    NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND if the point is
+   *                    not in empty block.
+   *                    Or NS_ERROR_* if something unexpected occurs.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  DeleteParentBlocksWithTransactionIfEmpty(const EditorDOMPoint& aPoint);
 
   /**
    * InsertTextWithTransaction() inserts aStringToInsert at aPointToInsert.

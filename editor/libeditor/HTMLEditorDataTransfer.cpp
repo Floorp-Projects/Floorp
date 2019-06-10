@@ -49,6 +49,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
 #include "nsIParserUtils.h"
+#include "nsIPrincipal.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISupportsUtils.h"
@@ -173,7 +174,15 @@ nsresult HTMLEditor::LoadHTML(const nsAString& aInputString) {
 
 NS_IMETHODIMP
 HTMLEditor::InsertHTML(const nsAString& aInString) {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertHTML);
+  nsresult rv = InsertHTMLAsAction(aInString);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert HTML");
+  return rv;
+}
+
+nsresult HTMLEditor::InsertHTMLAsAction(const nsAString& aInString,
+                                        nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertHTML,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1536,8 +1545,10 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType,
   return NS_OK;
 }
 
-nsresult HTMLEditor::PasteTransferable(nsITransferable* aTransferable) {
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste);
+nsresult HTMLEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
+                                               nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1564,7 +1575,15 @@ nsresult HTMLEditor::PasteTransferable(nsITransferable* aTransferable) {
  */
 NS_IMETHODIMP
 HTMLEditor::PasteNoFormatting(int32_t aSelectionType) {
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste);
+  nsresult rv = PasteNoFormattingAsAction(aSelectionType);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to paste without format");
+  return rv;
+}
+
+nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
+                                               nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1701,11 +1720,13 @@ bool HTMLEditor::CanPasteTransferable(nsITransferable* aTransferable) {
 }
 
 nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
-                                              bool aDispatchPasteEvent) {
+                                              bool aDispatchPasteEvent,
+                                              nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
              aClipboardType == nsIClipboard::kSelectionClipboard);
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePasteAsQuotation);
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePasteAsQuotation,
+                                          aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }

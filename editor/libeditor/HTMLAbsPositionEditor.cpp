@@ -31,6 +31,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsINode.h"
+#include "nsIPrincipal.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"
 #include "nsLiteralString.h"
@@ -44,11 +45,12 @@ namespace mozilla {
 
 using namespace dom;
 
-nsresult HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled) {
+nsresult HTMLEditor::SetSelectionToAbsoluteOrStaticAsAction(
+    bool aEnabled, nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoEditActionDataSetter editActionData(
-      *this, EditAction::eSetPositionToAbsoluteOrStatic);
+      *this, EditAction::eSetPositionToAbsoluteOrStatic, aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -142,11 +144,12 @@ void HTMLEditor::SetZIndex(Element& aElement, int32_t aZindex) {
   mCSSEditUtils->SetCSSProperty(aElement, *nsGkAtoms::z_index, zIndexStr);
 }
 
-nsresult HTMLEditor::AddZIndex(int32_t aChange) {
+nsresult HTMLEditor::AddZIndexAsAction(int32_t aChange,
+                                       nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoEditActionDataSetter editActionData(
-      *this, EditAction::eIncreaseOrDecreaseZIndex);
+      *this, EditAction::eIncreaseOrDecreaseZIndex, aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
