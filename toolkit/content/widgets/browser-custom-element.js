@@ -8,6 +8,7 @@
 // leaking to window scope.
 {
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 let LazyModules = {};
 
@@ -1537,7 +1538,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       // Exclude second-rate platforms
       this._autoScrollPopup.setAttribute("transparent", !/BeOS|OS\/2/.test(navigator.appVersion));
       // Enable translucency on Windows and Mac
-      this._autoScrollPopup.setAttribute("translucent", /Win|Mac/.test(navigator.platform));
+      this._autoScrollPopup.setAttribute("translucent",
+        AppConstants.platform == "win" || AppConstants.platform == "macosx");
     }
 
     this._autoScrollPopup.setAttribute("scrolldir", scrolldir);
