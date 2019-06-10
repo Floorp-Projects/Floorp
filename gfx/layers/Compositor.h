@@ -470,7 +470,6 @@ class Compositor : public TextureSourceProvider {
   virtual LayersBackend GetBackendType() const = 0;
 
   virtual CompositorD3D11* AsCompositorD3D11() { return nullptr; }
-  virtual BasicCompositor* AsBasicCompositor() { return nullptr; }
 
   Compositor* AsCompositor() override { return this; }
 
