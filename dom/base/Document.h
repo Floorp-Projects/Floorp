@@ -135,6 +135,7 @@ struct nsFont;
 namespace mozilla {
 class AbstractThread;
 class CSSStyleSheet;
+class EditorCommand;
 class Encoding;
 class ErrorResult;
 class EventStates;
@@ -472,6 +473,11 @@ class Document : public nsINode,
  public:
   typedef dom::ExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
   typedef net::ReferrerPolicy ReferrerPolicyEnum;
+
+  /**
+   * Called when XPCOM shutdown.
+   */
+  static void Shutdown();
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Document)
 
@@ -3453,21 +3459,22 @@ class Document : public nsINode,
                      const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal,
                      mozilla::ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT
-  bool ExecCommand(const nsAString& aCommandID, bool aDoShowUI,
+  bool ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
                    const nsAString& aValue, nsIPrincipal& aSubjectPrincipal,
-                   mozilla::ErrorResult& rv);
-  bool QueryCommandEnabled(const nsAString& aCommandID,
+                   mozilla::ErrorResult& aRv);
+  bool QueryCommandEnabled(const nsAString& aHTMLCommandName,
                            nsIPrincipal& aSubjectPrincipal,
-                           mozilla::ErrorResult& rv);
-  bool QueryCommandIndeterm(const nsAString& aCommandID,
-                            mozilla::ErrorResult& rv);
-  bool QueryCommandState(const nsAString& aCommandID, mozilla::ErrorResult& rv);
-  bool QueryCommandSupported(const nsAString& aCommandID,
+                           mozilla::ErrorResult& aRv);
+  bool QueryCommandIndeterm(const nsAString& aHTMLCommandName,
+                            mozilla::ErrorResult& aRv);
+  bool QueryCommandState(const nsAString& aHTMLCommandName,
+                         mozilla::ErrorResult& aRv);
+  bool QueryCommandSupported(const nsAString& aHTMLCommandName,
                              mozilla::dom::CallerType aCallerType,
-                             mozilla::ErrorResult& rv);
+                             mozilla::ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT
-  void QueryCommandValue(const nsAString& aCommandID, nsAString& aValue,
-                         mozilla::ErrorResult& rv);
+  void QueryCommandValue(const nsAString& aHTMLCommandName, nsAString& aValue,
+                         mozilla::ErrorResult& aRv);
   nsIHTMLCollection* Applets();
   nsIHTMLCollection* Anchors();
   TimeStamp LastFocusTime() const;
@@ -4111,6 +4118,97 @@ class Document : public nsINode,
   void* GenerateParserKey(void);
 
  private:
+  // ExecCommandParam indicates how HTMLDocument.execCommand() treats given the
+  // parameter.
+  enum class ExecCommandParam : uint8_t {
+    // Always ignore it.
+    Ignore,
+    // Treat the given parameter as-is.  If the command requires it, use it.
+    // Otherwise, ignore it.
+    String,
+    // Always treat it as boolean parameter.
+    Boolean,
+    // Always treat it as boolean, but inverted.
+    InvertedBoolean,
+  };
+
+  typedef mozilla::EditorCommand*(GetEditorCommandFunc)();
+
+  struct InternalCommandData {
+    const char* mXULCommandName;
+    mozilla::Command mCommand;  // uint8_t
+    // How ConvertToInternalCommand() to treats aValue.
+    // Its callers don't need to check this.
+    ExecCommandParam mExecCommandParam;  // uint8_t
+    GetEditorCommandFunc* mGetEditorCommandFunc;
+
+    InternalCommandData()
+        : mXULCommandName(nullptr),
+          mCommand(mozilla::Command::DoNothing),
+          mExecCommandParam(ExecCommandParam::Ignore),
+          mGetEditorCommandFunc(nullptr) {}
+    InternalCommandData(const char* aXULCommandName, mozilla::Command aCommand,
+                        ExecCommandParam aExecCommandParam,
+                        GetEditorCommandFunc aGetEditorCommandFunc)
+        : mXULCommandName(aXULCommandName),
+          mCommand(aCommand),
+          mExecCommandParam(aExecCommandParam),
+          mGetEditorCommandFunc(aGetEditorCommandFunc) {}
+
+    bool IsAvailableOnlyWhenEditable() const {
+      return mCommand != mozilla::Command::Cut &&
+             mCommand != mozilla::Command::Copy &&
+             mCommand != mozilla::Command::Paste;
+    }
+    bool IsCutOrCopyCommand() const {
+      return mCommand == mozilla::Command::Cut ||
+             mCommand == mozilla::Command::Copy;
+    }
+    bool IsPasteCommand() const { return mCommand == mozilla::Command::Paste; }
+  };
+
+  /**
+   * Helper method to initialize sInternalCommandDataHashtable.
+   */
+  static void EnsureInitializeInternalCommandDataHashtable();
+
+  /**
+   * ConvertToInternalCommand() returns a copy of InternalCommandData instance.
+   * Note that if aAdjustedValue is non-nullptr, this method checks whether
+   * aValue is proper value or not unless InternalCommandData::mExecCommandParam
+   * is ExecCommandParam::Ignore.  For example, if aHTMLCommandName is
+   * "defaultParagraphSeparator", the value has to be one of "div", "p" or
+   * "br".  If aValue is invalid value for InternalCommandData::mCommand, this
+   * returns a copy of instance created with default constructor.  I.e., its
+   * mCommand is set to Command::DoNothing.  So, this treats aHTMLCommandName
+   * is unsupported in such case.
+   *
+   * @param aHTMLCommandName    Command name in HTML, e.g., used by
+   *                            execCommand().
+   * @param aValue              The value which is set to the 3rd parameter
+   *                            of execCommand().
+   * @param aAdjustedValue      [out] Must be empty string if set non-nullptr.
+   *                            Will be set to adjusted value for executing
+   *                            the internal command.
+   * @return                    Returns a copy of instance created with the
+   *                            default constructor if there is no
+   *                            corresponding internal command for
+   *                            aHTMLCommandName or aValue is invalid for
+   *                            found internal command when aAdjustedValue
+   *                            is not nullptr.  Otherwise, returns a copy of
+   *                            instance registered in
+   *                            sInternalCommandDataHashtable.
+   */
+  static InternalCommandData ConvertToInternalCommand(
+      const nsAString& aHTMLCommandName,
+      const nsAString& aValue = EmptyString(),
+      nsAString* aAdjustedValue = nullptr);
+
+  // Mapping table from HTML command name to internal command.
+  typedef nsDataHashtable<nsStringCaseInsensitiveHashKey, InternalCommandData>
+      InternalCommandDataHashtable;
+  static InternalCommandDataHashtable* sInternalCommandDataHashtable;
+
   void RecordContentBlockingLog(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
       const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason =

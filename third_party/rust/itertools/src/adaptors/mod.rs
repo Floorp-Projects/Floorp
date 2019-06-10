@@ -13,7 +13,6 @@ use std::mem::replace;
 use std::iter::{Fuse, Peekable, FromIterator};
 use std::marker::PhantomData;
 use size_hint;
-use fold;
 
 macro_rules! clone_fields {
     ($name:ident, $base:expr, $($field:ident),+) => (
@@ -362,7 +361,7 @@ impl<I, J> Iterator for Product<I, J>
     }
 }
 
-/// A “meta iterator adaptor”. Its closure recives a reference to the iterator
+/// A “meta iterator adaptor”. Its closure receives a reference to the iterator
 /// and may pick off as many elements as it likes, to produce the next iterator element.
 ///
 /// Iterator element type is *X*, if the return type of `F` is *Option\<X\>*.
@@ -408,6 +407,8 @@ impl<B, F, I> Iterator for Batching<I, F>
 /// then skipping forward *n-1* elements.
 ///
 /// See [`.step()`](../trait.Itertools.html#method.step) for more information.
+#[deprecated(note="Use std .step_by() instead", since="0.8")]
+#[allow(deprecated)]
 #[derive(Clone, Debug)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Step<I> {
@@ -418,6 +419,7 @@ pub struct Step<I> {
 /// Create a `Step` iterator.
 ///
 /// **Panics** if the step is 0.
+#[allow(deprecated)]
 pub fn step<I>(iter: I, step: usize) -> Step<I>
     where I: Iterator
 {
@@ -428,6 +430,7 @@ pub fn step<I>(iter: I, step: usize) -> Step<I>
     }
 }
 
+#[allow(deprecated)]
 impl<I> Iterator for Step<I>
     where I: Iterator
 {
@@ -455,6 +458,7 @@ impl<I> Iterator for Step<I>
 }
 
 // known size
+#[allow(deprecated)]
 impl<I> ExactSizeIterator for Step<I>
     where I: ExactSizeIterator
 {}
@@ -1034,60 +1038,62 @@ impl_tuple_combination!(Tuple2Combination Tuple1Combination ; A, A, A ; a);
 impl_tuple_combination!(Tuple3Combination Tuple2Combination ; A, A, A, A ; a b);
 impl_tuple_combination!(Tuple4Combination Tuple3Combination ; A, A, A, A, A; a b c);
 
-
-/// An iterator adapter to simply flatten a structure.
+/// An iterator adapter to apply `Into` conversion to each element.
 ///
-/// See [`.flatten()`](../trait.Itertools.html#method.flatten) for more information.
-#[derive(Clone, Debug)]
+/// See [`.map_into()`](../trait.Itertools.html#method.map_into) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
-pub struct Flatten<I, J> {
+pub struct MapInto<I, R> {
     iter: I,
-    front: Option<J>,
+    _res: PhantomData<fn() -> R>,
 }
 
-/// Create a new `Flatten` iterator.
-pub fn flatten<I, J>(iter: I) -> Flatten<I, J> {
-    Flatten {
+/// Create a new [`MapInto`](struct.MapInto.html) iterator.
+pub fn map_into<I, R>(iter: I) -> MapInto<I, R> {
+    MapInto {
         iter: iter,
-        front: None,
+        _res: PhantomData,
     }
 }
 
-impl<I, J> Iterator for Flatten<I, J>
+impl<I, R> Iterator for MapInto<I, R>
     where I: Iterator,
-          I::Item: IntoIterator<IntoIter=J, Item=J::Item>,
-          J: Iterator,
+          I::Item: Into<R>,
 {
-    type Item = J::Item;
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            if let Some(ref mut f) = self.front {
-                match f.next() {
-                    elt @ Some(_) => return elt,
-                    None => { }
-                }
-            }
-            if let Some(next_front) = self.iter.next() {
-                self.front = Some(next_front.into_iter());
-            } else {
-                break;
-            }
-        }
-        None
+    type Item = R;
+
+    fn next(&mut self) -> Option<R> {
+        self.iter
+            .next()
+            .map(|i| i.into())
     }
 
-    // special case to convert segmented iterator into consecutive loops
-    fn fold<Acc, G>(self, init: Acc, mut f: G) -> Acc
-        where G: FnMut(Acc, Self::Item) -> Acc,
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+
+    fn fold<Acc, Fold>(self, init: Acc, mut fold_f: Fold) -> Acc
+        where Fold: FnMut(Acc, Self::Item) -> Acc,
     {
-        let mut accum = init;
-        if let Some(iter) = self.front {
-            accum = fold(iter, accum, &mut f);
-        }
-        self.iter.fold(accum, move |accum, iter| fold(iter, accum, &mut f))
+        self.iter.fold(init, move |acc, v| fold_f(acc, v.into()))
     }
-
 }
+
+impl<I, R> DoubleEndedIterator for MapInto<I, R>
+    where I: DoubleEndedIterator,
+          I::Item: Into<R>,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter
+            .next_back()
+            .map(|i| i.into())
+    }
+}
+
+impl<I, R> ExactSizeIterator for MapInto<I, R>
+where
+    I: ExactSizeIterator,
+    I::Item: Into<R>,
+{}
 
 /// An iterator adapter to apply a transformation within a nested `Result`.
 ///

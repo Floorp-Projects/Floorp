@@ -89,6 +89,8 @@ def create_parser(mach_interface=False):
             "The host ip address must be specified via the --host command line argument.")
     add_arg('--memory-test', dest="memory_test", action="store_true",
             help="Use Raptor to measure memory usage.")
+    add_arg('--cpu-test', dest="cpu_test", action="store_true",
+            help="Use Raptor to measure CPU usage. Currently supported for Android only.")
     add_arg('--is-release-build', dest="is_release_build", default=False,
             action='store_true',
             help="Whether the build is a release build which requires workarounds "

@@ -12,8 +12,9 @@
 
 [package]
 name = "itertools"
-version = "0.7.6"
+version = "0.8.0"
 authors = ["bluss"]
+exclude = ["/bors.toml"]
 description = "Extra iterator adaptors, iterator methods, free functions, and macros."
 documentation = "https://docs.rs/itertools/"
 keywords = ["iterator", "data-structure", "zip", "product", "group-by"]
@@ -35,8 +36,11 @@ default-features = false
 version = "0.2"
 
 [dev-dependencies.quickcheck]
-version = "0.5"
+version = "0.7"
 default-features = false
+
+[dev-dependencies.rand]
+version = "0.6"
 
 [features]
 default = ["use_std"]

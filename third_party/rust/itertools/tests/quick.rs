@@ -6,6 +6,7 @@
 #[macro_use] extern crate itertools;
 
 extern crate quickcheck;
+extern crate rand;
 
 use std::default::Default;
 
@@ -28,6 +29,8 @@ use itertools::free::{
     zip_eq,
 };
 
+use rand::Rng;
+use rand::seq::SliceRandom;
 use quickcheck::TestResult;
 
 /// Trait for size hint modifier types
@@ -77,8 +80,8 @@ impl qc::Arbitrary for Inexact {
         let ue_choices = &[0, ue_value, usize::max_value()];
         let oe_choices = &[0, oe_value, usize::max_value()];
         Inexact {
-            underestimate: *g.choose(ue_choices).unwrap(),
-            overestimate: *g.choose(oe_choices).unwrap(),
+            underestimate: *ue_choices.choose(g).unwrap(),
+            overestimate: *oe_choices.choose(g).unwrap(),
         }
     }
 
@@ -402,6 +405,7 @@ quickcheck! {
         assert_eq!(answer.into_iter().last(), a.clone().multi_cartesian_product().last());
     }
 
+    #[allow(deprecated)]
     fn size_step(a: Iter<i16, Exact>, s: usize) -> bool {
         let mut s = s;
         if s == 0 {
@@ -411,6 +415,8 @@ quickcheck! {
         correct_size_hint(filt.step(s)) &&
             exact_size(a.step(s))
     }
+
+    #[allow(deprecated)]
     fn equal_step(a: Iter<i16>, s: usize) -> bool {
         let mut s = s;
         if s == 0 {
@@ -423,6 +429,8 @@ quickcheck! {
             keep
         }))
     }
+
+    #[allow(deprecated)]
     fn equal_step_vec(a: Vec<i16>, s: usize) -> bool {
         let mut s = s;
         if s == 0 {
@@ -601,16 +609,6 @@ quickcheck! {
             inter = !inter;
         }
         true
-    }
-
-    fn equal_flatten(a: Vec<Option<i32>>) -> bool {
-        itertools::equal(a.iter().flatten(),
-                         a.iter().filter_map(|x| x.as_ref()))
-    }
-
-    fn equal_flatten_vec(a: Vec<Vec<u8>>) -> bool {
-        itertools::equal(a.iter().flatten(),
-                         a.iter().flat_map(|x| x))
     }
 
     fn equal_combinations_2(a: Vec<u8>) -> bool {
@@ -908,6 +906,20 @@ quickcheck! {
     }
 }
 
+quickcheck! {
+    fn correct_group_map_modulo_key(a: Vec<u8>, modulo: u8) -> () {
+        let modulo = if modulo == 0 { 1 } else { modulo }; // Avoid `% 0`
+        let count = a.len();
+        let lookup = a.into_iter().map(|i| (i % modulo, i)).into_group_map();
+
+        assert_eq!(lookup.values().flat_map(|vals| vals.iter()).count(), count);
+
+        for (&key, vals) in lookup.iter() {
+            assert!(vals.iter().all(|&val| val % modulo == key));
+        }
+    }
+}
+
 /// A peculiar type: Equality compares both tuple items, but ordering only the
 /// first item.  This is so we can check the stability property easily.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -969,5 +981,37 @@ quickcheck! {
             _ => MinMaxResult::MinMax(min.unwrap(), max.unwrap()),
         };
         TestResult::from_bool(minmax == expected)
+    }
+}
+
+quickcheck! {
+    #[allow(deprecated)]
+    fn tree_fold1_f64(mut a: Vec<f64>) -> TestResult {
+        fn collapse_adjacent<F>(x: Vec<f64>, mut f: F) -> Vec<f64>
+            where F: FnMut(f64, f64) -> f64
+        {
+            let mut out = Vec::new();
+            for i in (0..x.len()).step(2) {
+                if i == x.len()-1 {
+                    out.push(x[i])
+                } else {
+                    out.push(f(x[i], x[i+1]));
+                }
+            }
+            out
+        }
+
+        if a.iter().any(|x| x.is_nan()) {
+            return TestResult::discard();
+        }
+
+        let actual = a.iter().cloned().tree_fold1(f64::atan2);
+
+        while a.len() > 1 {
+            a = collapse_adjacent(a, f64::atan2);
+        }
+        let expected = a.pop();
+
+        TestResult::from_bool(actual == expected)
     }
 }

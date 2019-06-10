@@ -6802,6 +6802,40 @@ HTMLEditor* nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext) {
 }
 
 // static
+TextEditor* nsContentUtils::GetActiveEditor(nsPresContext* aPresContext) {
+  if (!aPresContext) {
+    return nullptr;
+  }
+
+  nsPIDOMWindowOuter* window = aPresContext->Document()->GetWindow();
+  if (!window) {
+    return nullptr;
+  }
+
+  // If it's in designMode, nobody can have focus.  Therefore, the HTMLEditor
+  // handles all events.  I.e., it's focused editor in this case.
+  if (aPresContext->Document()->HasFlag(NODE_IS_EDITABLE)) {
+    return GetHTMLEditor(aPresContext);
+  }
+
+  // If focused element is associated with TextEditor, it must be <input>
+  // element or <textarea> element.  Let's return it even if it's in a
+  // contenteditable element.
+  nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
+  if (Element* focusedElement = nsFocusManager::GetFocusedDescendant(
+          window, nsFocusManager::SearchRange::eOnlyCurrentWindow,
+          getter_AddRefs(focusedWindow))) {
+    if (TextEditor* textEditor = focusedElement->GetTextEditorInternal()) {
+      return textEditor;
+    }
+  }
+
+  // Otherwise, HTMLEditor may handle inputs even non-editable element has
+  // focus or nobody has focus.
+  return GetHTMLEditor(aPresContext);
+}
+
+// static
 bool nsContentUtils::IsForbiddenRequestHeader(const nsACString& aHeader) {
   if (IsForbiddenSystemRequestHeader(aHeader)) {
     return true;
