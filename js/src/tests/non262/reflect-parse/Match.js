@@ -62,12 +62,8 @@ var Match =
 
     var quote = uneval;
 
-    function MatchError(msg) {
-        this.message = msg;
-    }
-
-    MatchError.prototype = {
-        toString: function() {
+    class MatchError extends Error {
+        toString() {
             return "match error: " + this.message;
         }
     };
@@ -137,7 +133,15 @@ var Match =
         for (var key in exp) {
             if (!(key in act))
                 throw new MatchError("expected property " + quote(key) + " not found in " + quote(act));
-            match(act[key], exp[key]);
+            try {
+                match(act[key], exp[key]);
+            } catch (inner) {
+                if (!(inner instanceof MatchError)) {
+                    throw inner;
+                }
+                inner.message = `matching property ${uneval(key)}:\n${inner.message}`;
+                throw inner;
+            }
         }
 
         return true;
@@ -164,7 +168,15 @@ var Match =
             if (i in exp) {
                 if (!(i in act))
                     throw new MatchError("expected array property " + i + " not found in " + quote(act));
-                match(act[i], exp[i]);
+                try {
+                    match(act[i], exp[i]);
+                } catch (inner) {
+                    if (!(inner instanceof MatchError)) {
+                        throw inner;
+                    }
+                    inner.message = `matching array element [${i}]:\n${inner.message}`;
+                    throw inner;
+                }
             }
         }
 
