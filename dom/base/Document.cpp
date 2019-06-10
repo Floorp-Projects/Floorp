@@ -18,6 +18,7 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EditorCommands.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/HTMLEditor.h"
@@ -1160,6 +1161,19 @@ Document::FrameRequest::FrameRequest(FrameRequestCallback& aCallback,
 // ==================================================================
 // =
 // ==================================================================
+
+Document::InternalCommandDataHashtable*
+    Document::sInternalCommandDataHashtable = nullptr;
+
+// static
+void Document::Shutdown() {
+  if (sInternalCommandDataHashtable) {
+    sInternalCommandDataHashtable->Clear();
+    delete sInternalCommandDataHashtable;
+    sInternalCommandDataHashtable = nullptr;
+  }
+}
+
 Document::Document(const char* aContentType)
     : nsINode(nullptr),
       DocumentOrShadowRoot(*this),
@@ -3709,78 +3723,390 @@ nsCommandManager* Document::GetMidasCommandManager() {
   return mMidasCommandManager;
 }
 
-struct MidasCommand {
-  const char* incomingCommandString;
-  const char* internalCommandString;
-  const char* internalParamString;
-  bool useNewParam;
-  bool convertToBoolean;
-};
-
-static const struct MidasCommand gMidasCommandTable[] = {
-    // clang-format off
-  { "bold",          "cmd_bold",            "", true,  false },
-  { "italic",        "cmd_italic",          "", true,  false },
-  { "underline",     "cmd_underline",       "", true,  false },
-  { "strikethrough", "cmd_strikethrough",   "", true,  false },
-  { "subscript",     "cmd_subscript",       "", true,  false },
-  { "superscript",   "cmd_superscript",     "", true,  false },
-  { "cut",           "cmd_cut",             "", true,  false },
-  { "copy",          "cmd_copy",            "", true,  false },
-  { "paste",         "cmd_paste",           "", true,  false },
-  { "delete",        "cmd_deleteCharBackward", "", true,  false },
-  { "forwarddelete", "cmd_deleteCharForward", "", true,  false },
-  { "selectall",     "cmd_selectAll",       "", true,  false },
-  { "undo",          "cmd_undo",            "", true,  false },
-  { "redo",          "cmd_redo",            "", true,  false },
-  { "indent",        "cmd_indent",          "", true,  false },
-  { "outdent",       "cmd_outdent",         "", true,  false },
-  { "backcolor",     "cmd_highlight",       "", false, false },
-  { "forecolor",     "cmd_fontColor",       "", false, false },
-  { "hilitecolor",   "cmd_highlight",       "", false, false },
-  { "fontname",      "cmd_fontFace",        "", false, false },
-  { "fontsize",      "cmd_fontSize",        "", false, false },
-  { "increasefontsize", "cmd_increaseFont", "", false, false },
-  { "decreasefontsize", "cmd_decreaseFont", "", false, false },
-  { "inserthorizontalrule", "cmd_insertHR", "", true,  false },
-  { "createlink",    "cmd_insertLinkNoUI",  "", false, false },
-  { "insertimage",   "cmd_insertImageNoUI", "", false, false },
-  { "inserthtml",    "cmd_insertHTML",      "", false, false },
-  { "inserttext",    "cmd_insertText",      "", false, false },
-  { "gethtml",       "cmd_getContents",     "", false, false },
-  { "justifyleft",   "cmd_align",       "left", true,  false },
-  { "justifyright",  "cmd_align",      "right", true,  false },
-  { "justifycenter", "cmd_align",     "center", true,  false },
-  { "justifyfull",   "cmd_align",    "justify", true,  false },
-  { "removeformat",  "cmd_removeStyles",    "", true,  false },
-  { "unlink",        "cmd_removeLinks",     "", true,  false },
-  { "insertorderedlist",   "cmd_ol",        "", true,  false },
-  { "insertunorderedlist", "cmd_ul",        "", true,  false },
-  { "insertparagraph", "cmd_insertParagraph", "", true,  false },
-  { "insertlinebreak", "cmd_insertLineBreak", "", true,  false },
-  { "formatblock",   "cmd_paragraphState",  "", false, false },
-  { "heading",       "cmd_paragraphState",  "", false, false },
-  { "styleWithCSS",  "cmd_setDocumentUseCSS", "", false, true },
-  { "contentReadOnly", "cmd_setDocumentReadOnly", "", false, true },
-  { "insertBrOnReturn", "cmd_insertBrOnReturn", "", false, true },
-  { "defaultParagraphSeparator", "cmd_defaultParagraphSeparator", "", false, false },
-  { "enableObjectResizing", "cmd_enableObjectResizing", "", false, true },
-  { "enableInlineTableEditing", "cmd_enableInlineTableEditing", "", false, true },
-  { "enableAbsolutePositionEditing", "cmd_enableAbsolutePositionEditing", "", false, true },
+// static
+void Document::EnsureInitializeInternalCommandDataHashtable() {
+  if (sInternalCommandDataHashtable) {
+    return;
+  }
+  sInternalCommandDataHashtable = new InternalCommandDataHashtable();
+  // clang-format off
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("bold"),
+      InternalCommandData(
+          "cmd_bold",
+          Command::FormatBold,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("italic"),
+      InternalCommandData(
+          "cmd_italic",
+          Command::FormatItalic,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("underline"),
+      InternalCommandData(
+          "cmd_underline",
+          Command::FormatUnderline,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("strikethrough"),
+      InternalCommandData(
+          "cmd_strikethrough",
+          Command::FormatStrikeThrough,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("subscript"),
+      InternalCommandData(
+          "cmd_subscript",
+          Command::FormatSubscript,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("superscript"),
+      InternalCommandData(
+          "cmd_superscript",
+          Command::FormatSuperscript,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("cut"),
+      InternalCommandData(
+          "cmd_cut",
+          Command::Cut,
+          ExecCommandParam::Ignore,
+          CutCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("copy"),
+      InternalCommandData(
+          "cmd_copy",
+          Command::Copy,
+          ExecCommandParam::Ignore,
+          CopyCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("paste"),
+      InternalCommandData(
+          "cmd_paste",
+          Command::Paste,
+          ExecCommandParam::Ignore,
+          PasteCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("delete"),
+      InternalCommandData(
+          "cmd_deleteCharBackward",
+          Command::DeleteCharBackward,
+          ExecCommandParam::Ignore,
+          DeleteCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("forwarddelete"),
+      InternalCommandData(
+          "cmd_deleteCharForward",
+          Command::DeleteCharForward,
+          ExecCommandParam::Ignore,
+          DeleteCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("selectall"),
+      InternalCommandData(
+          "cmd_selectAll",
+          Command::SelectAll,
+          ExecCommandParam::Ignore,
+          SelectAllCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("undo"),
+      InternalCommandData(
+          "cmd_undo",
+          Command::HistoryUndo,
+          ExecCommandParam::Ignore,
+          UndoCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("redo"),
+      InternalCommandData(
+          "cmd_redo",
+          Command::HistoryRedo,
+          ExecCommandParam::Ignore,
+          RedoCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("indent"),
+      InternalCommandData("cmd_indent",
+          Command::FormatIndent,
+          ExecCommandParam::Ignore,
+          IndentCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("outdent"),
+      InternalCommandData(
+          "cmd_outdent",
+          Command::FormatOutdent,
+          ExecCommandParam::Ignore,
+          OutdentCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("backcolor"),
+      InternalCommandData(
+          "cmd_highlight",
+          Command::FormatBackColor,
+          ExecCommandParam::String,
+          HighlightColorStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("hilitecolor"),
+      InternalCommandData(
+          "cmd_highlight",
+          Command::FormatBackColor,
+          ExecCommandParam::String,
+          HighlightColorStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("forecolor"),
+      InternalCommandData(
+          "cmd_fontColor",
+          Command::FormatFontColor,
+          ExecCommandParam::String,
+          FontColorStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("fontname"),
+      InternalCommandData(
+          "cmd_fontFace",
+          Command::FormatFontName,
+          ExecCommandParam::String,
+          FontFaceStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("fontsize"),
+      InternalCommandData(
+          "cmd_fontSize",
+          Command::FormatFontSize,
+          ExecCommandParam::String,
+          FontSizeStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("increasefontsize"),
+      InternalCommandData(
+          "cmd_increaseFont",
+          Command::FormatIncreaseFontSize,
+          ExecCommandParam::Ignore,
+          IncreaseFontSizeCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("decreasefontsize"),
+      InternalCommandData(
+          "cmd_decreaseFont",
+          Command::FormatDecreaseFontSize,
+          ExecCommandParam::Ignore,
+          DecreaseFontSizeCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("inserthorizontalrule"),
+      InternalCommandData(
+          "cmd_insertHR",
+          Command::InsertHorizontalRule,
+          ExecCommandParam::Ignore,
+          InsertTagCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("createlink"),
+      InternalCommandData(
+          "cmd_insertLinkNoUI",
+          Command::InsertLink,
+          ExecCommandParam::String,
+          InsertTagCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertimage"),
+      InternalCommandData(
+          "cmd_insertImageNoUI",
+          Command::InsertImage,
+          ExecCommandParam::String,
+          InsertTagCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("inserthtml"),
+      InternalCommandData(
+          "cmd_insertHTML",
+          Command::InsertHTML,
+          ExecCommandParam::String,
+          InsertHTMLCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("inserttext"),
+      InternalCommandData(
+          "cmd_insertText",
+          Command::InsertText,
+          ExecCommandParam::String,
+          InsertPlaintextCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("gethtml"),
+      InternalCommandData(
+          "cmd_getContents",
+          Command::GetHTML,
+          ExecCommandParam::Ignore,
+          nullptr));  // Not defined in EditorCommands.h
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("justifyleft"),
+      InternalCommandData(
+          "cmd_align",
+          Command::FormatJustifyLeft,
+          ExecCommandParam::Ignore,  // Will be set to "left"
+          AlignCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("justifyright"),
+      InternalCommandData(
+          "cmd_align",
+          Command::FormatJustifyRight,
+          ExecCommandParam::Ignore,  // Will be set to "right"
+          AlignCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("justifycenter"),
+      InternalCommandData(
+          "cmd_align",
+          Command::FormatJustifyCenter,
+          ExecCommandParam::Ignore,  // Will be set to "center"
+          AlignCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("justifyfull"),
+      InternalCommandData(
+          "cmd_align",
+          Command::FormatJustifyFull,
+          ExecCommandParam::Ignore,  // Will be set to "justify"
+          AlignCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("removeformat"),
+      InternalCommandData(
+          "cmd_removeStyles",
+          Command::FormatRemove,
+          ExecCommandParam::Ignore,
+          RemoveStylesCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("unlink"),
+      InternalCommandData(
+          "cmd_removeLinks",
+          Command::FormatRemoveLink,
+          ExecCommandParam::Ignore,
+          StyleUpdatingCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertorderedlist"),
+      InternalCommandData(
+          "cmd_ol",
+          Command::InsertOrderedList,
+          ExecCommandParam::Ignore,
+          ListCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertunorderedlist"),
+      InternalCommandData(
+          "cmd_ul",
+          Command::InsertUnorderedList,
+          ExecCommandParam::Ignore,
+          ListCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertparagraph"),
+      InternalCommandData(
+          "cmd_insertParagraph",
+          Command::InsertParagraph,
+          ExecCommandParam::Ignore,
+          InsertParagraphCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertlinebreak"),
+      InternalCommandData(
+          "cmd_insertLineBreak",
+          Command::InsertLineBreak,
+          ExecCommandParam::Ignore,
+          InsertLineBreakCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("formatblock"),
+      InternalCommandData(
+          "cmd_paragraphState",
+          Command::FormatBlock,
+          ExecCommandParam::String,
+          ParagraphStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("heading"),
+      InternalCommandData(
+          "cmd_paragraphState",
+          Command::FormatBlock,
+          ExecCommandParam::String,
+          ParagraphStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("styleWithCSS"),
+      InternalCommandData(
+          "cmd_setDocumentUseCSS",
+          Command::SetDocumentUseCSS,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("usecss"),  // Legacy command
+      InternalCommandData(
+          "cmd_setDocumentUseCSS",
+          Command::SetDocumentUseCSS,
+          ExecCommandParam::InvertedBoolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("contentReadOnly"),
+      InternalCommandData(
+          "cmd_setDocumentReadOnly",
+          Command::SetDocumentReadOnly,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("readonly"),  // Legacy command
+      InternalCommandData(
+          "cmd_setDocumentReadOnly",
+          Command::SetDocumentReadOnly,
+          ExecCommandParam::InvertedBoolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("insertBrOnReturn"),
+      InternalCommandData(
+          "cmd_insertBrOnReturn",
+          Command::SetDocumentInsertBROnEnterKeyPress,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("defaultParagraphSeparator"),
+      InternalCommandData(
+          "cmd_defaultParagraphSeparator",
+          Command::SetDocumentDefaultParagraphSeparator,
+          ExecCommandParam::String,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("enableObjectResizing"),
+      InternalCommandData(
+          "cmd_enableObjectResizing",
+          Command::ToggleObjectResizers,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("enableInlineTableEditing"),
+      InternalCommandData(
+          "cmd_enableInlineTableEditing",
+          Command::ToggleInlineTableEditor,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("enableAbsolutePositionEditing"),
+      InternalCommandData(
+          "cmd_enableAbsolutePositionEditing",
+          Command::ToggleAbsolutePositionEditor,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance));
 #if 0
-// no editor support to remove alignments right now
-  { "justifynone",   "cmd_align",           "", true,  false },
-
-// the following will need special review before being turned on
-  { "saveas",        "cmd_saveAs",          "", true,  false },
-  { "print",         "cmd_print",           "", true,  false },
-#endif
-  { nullptr, nullptr, nullptr, false, false }
-    // clang-format on
-};
-
-#define MidasCommandCount \
-  ((sizeof(gMidasCommandTable) / sizeof(struct MidasCommand)) - 1)
+  // with empty string
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("justifynone"),
+      InternalCommandData(
+          "cmd_align",
+          Command::Undefined,
+          ExecCommandParam::Ignore,
+          nullptr));  // Not implemented yet.
+  // REQUIRED SPECIAL REVIEW special review
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("saveas"),
+      InternalCommandData(
+          "cmd_saveAs",
+          Command::Undefined,
+          ExecCommandParam::Boolean,
+          nullptr));  // Not implemented yet.
+  // REQUIRED SPECIAL REVIEW special review
+  sInternalCommandDataHashtable->Put(
+      NS_LITERAL_STRING("print"),
+      InternalCommandData(
+          "cmd_print",
+          Command::Undefined,
+          ExecCommandParam::Boolean,
+          nullptr));  // Not implemented yet.
+#endif  // #if 0
+  // clang-format on
+}
 
 static const char* const gBlocks[] = {
     // clang-format off
@@ -3801,125 +4127,137 @@ static const char* const gBlocks[] = {
     // clang-format on
 };
 
-static bool ConvertToMidasInternalCommandInner(
+bool Document::ConvertToMidasInternalCommandInner(
     const nsAString& inCommandID, const nsAString& inParam,
     nsACString& outCommandID, nsACString& outParam, bool& outIsBoolean,
     bool& outBooleanValue, bool aIgnoreParams) {
-  NS_ConvertUTF16toUTF8 convertedCommandID(inCommandID);
+  EnsureInitializeInternalCommandDataHashtable();
 
-  // Hack to support old boolean commands that were backwards (see bug 301490).
-  bool invertBool = false;
-  if (convertedCommandID.LowerCaseEqualsLiteral("usecss")) {
-    convertedCommandID.AssignLiteral("styleWithCSS");
-    invertBool = true;
-  } else if (convertedCommandID.LowerCaseEqualsLiteral("readonly")) {
-    convertedCommandID.AssignLiteral("contentReadOnly");
-    invertBool = true;
-  }
-
-  size_t i;
-  bool found = false;
-  for (i = 0; i < MidasCommandCount; ++i) {
-    if (convertedCommandID.Equals(gMidasCommandTable[i].incomingCommandString,
-                                  nsCaseInsensitiveCStringComparator())) {
-      found = true;
-      break;
-    }
-  }
-
-  if (!found) {
+  InternalCommandData commandData;
+  if (!sInternalCommandDataHashtable->Get(inCommandID, &commandData)) {
     // reset results if the command is not found in our table
-    outCommandID.SetLength(0);
-    outParam.SetLength(0);
+    outCommandID.Truncate();
+    outParam.Truncate();
     outIsBoolean = false;
     return false;
   }
 
   // set outCommandID (what we use internally)
-  outCommandID.Assign(gMidasCommandTable[i].internalCommandString);
+  outCommandID.Assign(commandData.mXULCommandName);
 
   // set outParam & outIsBoolean based on flags from the table
-  outIsBoolean = gMidasCommandTable[i].convertToBoolean;
+  outIsBoolean = !!(EditorCommand::GetParamType(commandData.mCommand) &
+                    EditorCommandParamType::Bool);
 
   if (aIgnoreParams) {
     // No further work to do
     return true;
   }
 
-  if (gMidasCommandTable[i].useNewParam) {
-    // Just have to copy it, no checking
-    outParam.Assign(gMidasCommandTable[i].internalParamString);
-    return true;
-  }
-
-  // handle checking of param passed in
-  if (outIsBoolean) {
-    // If this is a boolean value and it's not explicitly false (e.g. no value)
-    // we default to "true". For old backwards commands we invert the check (see
-    // bug 301490).
-    if (invertBool) {
-      outBooleanValue = inParam.LowerCaseEqualsLiteral("false");
-    } else {
-      outBooleanValue = !inParam.LowerCaseEqualsLiteral("false");
-    }
-    outParam.Truncate();
-
-    return true;
-  }
-
-  // String parameter -- see if we need to convert it (necessary for
-  // cmd_paragraphState and cmd_fontSize)
-  if (outCommandID.EqualsLiteral("cmd_paragraphState")) {
-    const char16_t* start = inParam.BeginReading();
-    const char16_t* end = inParam.EndReading();
-    if (start != end && *start == '<' && *(end - 1) == '>') {
-      ++start;
-      --end;
-    }
-
-    NS_ConvertUTF16toUTF8 convertedParam(Substring(start, end));
-    size_t j;
-    for (j = 0; j < ArrayLength(gBlocks); ++j) {
-      if (convertedParam.Equals(gBlocks[j],
-                                nsCaseInsensitiveCStringComparator())) {
-        outParam.Assign(gBlocks[j]);
-        break;
+  switch (commandData.mExecCommandParam) {
+    case ExecCommandParam::Ignore:
+      // Just have to copy it, no checking
+      switch (commandData.mCommand) {
+        case Command::FormatJustifyLeft:
+          outParam.AssignLiteral("left");
+          break;
+        case Command::FormatJustifyRight:
+          outParam.AssignLiteral("right");
+          break;
+        case Command::FormatJustifyCenter:
+          outParam.AssignLiteral("center");
+          break;
+        case Command::FormatJustifyFull:
+          outParam.AssignLiteral("justify");
+          break;
+        default:
+          MOZ_ASSERT(EditorCommand::GetParamType(commandData.mCommand) ==
+                     EditorCommandParamType::None);
+          outParam.Truncate();
+          break;
       }
-    }
+      return true;
 
-    if (j == ArrayLength(gBlocks)) {
+    case ExecCommandParam::Boolean:
+      MOZ_ASSERT(!!(EditorCommand::GetParamType(commandData.mCommand) &
+                    EditorCommandParamType::Bool));
+      // If this is a boolean value and it's not explicitly false (e.g. no
+      // value).  We default to "true" (see bug 301490).
+      outBooleanValue = !inParam.LowerCaseEqualsLiteral("false");
       outParam.Truncate();
-    }
-  } else if (outCommandID.EqualsLiteral("cmd_fontSize")) {
-    // Per editing spec as of April 23, 2012, we need to reject the value if
-    // it's not a valid floating-point number surrounded by optional whitespace.
-    // Otherwise, we parse it as a legacy font size.  For now, we just parse as
-    // a legacy font size regardless (matching WebKit) -- bug 747879.
-    outParam.Truncate();
-    int32_t size = nsContentUtils::ParseLegacyFontSize(inParam);
-    if (size) {
-      outParam.AppendInt(size);
-    }
-  } else {
-    CopyUTF16toUTF8(inParam, outParam);
-  }
+      return true;
 
-  return true;
+    case ExecCommandParam::InvertedBoolean:
+      MOZ_ASSERT(!!(EditorCommand::GetParamType(commandData.mCommand) &
+                    EditorCommandParamType::Bool));
+      // For old backwards commands we invert the check.
+      outBooleanValue = inParam.LowerCaseEqualsLiteral("false");
+      outParam.Truncate();
+      return true;
+
+    case ExecCommandParam::String:
+      MOZ_ASSERT(!!(
+          EditorCommand::GetParamType(commandData.mCommand) &
+          (EditorCommandParamType::String | EditorCommandParamType::CString)));
+      switch (commandData.mCommand) {
+        case Command::FormatBlock: {
+          const char16_t* start = inParam.BeginReading();
+          const char16_t* end = inParam.EndReading();
+          if (start != end && *start == '<' && *(end - 1) == '>') {
+            ++start;
+            --end;
+          }
+          NS_ConvertUTF16toUTF8 convertedParam(Substring(start, end));
+          size_t j;
+          for (j = 0; j < ArrayLength(gBlocks); ++j) {
+            if (convertedParam.Equals(gBlocks[j],
+                                      nsCaseInsensitiveCStringComparator())) {
+              outParam.Assign(gBlocks[j]);
+              break;
+            }
+          }
+
+          if (j == ArrayLength(gBlocks)) {
+            outParam.Truncate();
+          }
+          return true;
+        }
+        case Command::FormatFontSize: {
+          // Per editing spec as of April 23, 2012, we need to reject the value
+          // if it's not a valid floating-point number surrounded by optional
+          // whitespace.  Otherwise, we parse it as a legacy font size.  For
+          // now, we just parse as a legacy font size regardless (matching
+          // WebKit) -- bug 747879.
+          outParam.Truncate();
+          int32_t size = nsContentUtils::ParseLegacyFontSize(inParam);
+          if (size) {
+            outParam.AppendInt(size);
+          }
+          return true;
+        }
+        default:
+          CopyUTF16toUTF8(inParam, outParam);
+          return true;
+      }
+    default:
+      MOZ_ASSERT_UNREACHABLE("New ExecCommandParam value hasn't been handled");
+      return false;
+  }
 }
 
-static bool ConvertToMidasInternalCommand(const nsAString& inCommandID,
-                                          const nsAString& inParam,
-                                          nsACString& outCommandID,
-                                          nsACString& outParam,
-                                          bool& outIsBoolean,
-                                          bool& outBooleanValue) {
+bool Document::ConvertToMidasInternalCommand(const nsAString& inCommandID,
+                                             const nsAString& inParam,
+                                             nsACString& outCommandID,
+                                             nsACString& outParam,
+                                             bool& outIsBoolean,
+                                             bool& outBooleanValue) {
   return ConvertToMidasInternalCommandInner(inCommandID, inParam, outCommandID,
                                             outParam, outIsBoolean,
                                             outBooleanValue, false);
 }
 
-static bool ConvertToMidasInternalCommand(const nsAString& inCommandID,
-                                          nsACString& outCommandID) {
+bool Document::ConvertToMidasInternalCommand(const nsAString& inCommandID,
+                                             nsACString& outCommandID) {
   nsAutoCString dummyCString;
   nsAutoString dummyString;
   bool dummyBool;
