@@ -2207,7 +2207,7 @@ pub struct PicturePrimitive {
 
     /// If Some(..) the tile cache that is associated with this picture.
     #[cfg_attr(feature = "capture", serde(skip))] //TODO
-    pub tile_cache: Option<TileCache>,
+    pub tile_cache: Option<Box<TileCache>>,
 
     /// The config options for this picture.
     options: PictureOptions,
@@ -2315,7 +2315,7 @@ impl PicturePrimitive {
         requested_raster_space: RasterSpace,
         prim_list: PrimitiveList,
         spatial_node_index: SpatialNodeIndex,
-        tile_cache: Option<TileCache>,
+        tile_cache: Option<Box<TileCache>>,
         options: PictureOptions,
     ) -> Self {
         PicturePrimitive {

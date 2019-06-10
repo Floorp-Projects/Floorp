@@ -130,7 +130,7 @@ pub struct FrameVisibilityState<'a> {
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
     pub scratch: &'a mut PrimitiveScratchBuffer,
-    pub tile_cache: Option<TileCache>,
+    pub tile_cache: Option<Box<TileCache>>,
     pub retained_tiles: &'a mut RetainedTiles,
     pub data_stores: &'a mut DataStores,
     pub clip_chain_stack: ClipChainStack,
