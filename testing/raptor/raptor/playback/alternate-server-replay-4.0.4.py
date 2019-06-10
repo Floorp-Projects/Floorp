@@ -87,7 +87,7 @@ class AlternateServerPlayback:
 
     def load(self, loader):
         loader.add_option(
-            "server_replay",
+            "server_replay_files",
             typing.Sequence[str],
             [],
             "Replay server responses from a saved file.",
@@ -154,9 +154,9 @@ class AlternateServerPlayback:
             return self.flowmap[hsh][-1]
 
     def configure(self, updated):
-        if not self.configured and ctx.options.server_replay:
+        if not self.configured and ctx.options.server_replay_files:
             self.configured = True
-            self.load_files(ctx.options.server_replay)
+            self.load_files(ctx.options.server_replay_files)
 
     def request(self, f):
         if self.flowmap:
