@@ -331,9 +331,10 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
   MOZ_ASSERT(aChildData);
-  NS_SetCurrentThreadName("MainThread");
 
   recordreplay::Initialize(aArgc, aArgv);
+
+  NS_SetCurrentThreadName("MainThread");
 
 #ifdef MOZ_ASAN_REPORTER
   // In ASan reporter builds, we need to set ASan's log_path as early as

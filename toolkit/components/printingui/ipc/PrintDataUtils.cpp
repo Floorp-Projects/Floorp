@@ -86,7 +86,8 @@ MockWebBrowserPrint::PrintPreview(nsIPrintSettings* aThePrintSettings,
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::PrintPreviewNavigate(int16_t aNavType, int32_t aPageNum) {
+MockWebBrowserPrint::PrintPreviewScrollToPage(int16_t aNavType,
+                                              int32_t aPageNum) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
