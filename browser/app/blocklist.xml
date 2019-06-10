@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1559739185033" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1559836209248" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3170,6 +3170,18 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="a7bc4a56-2f54-4791-b644-0ed2403bb9db" id="/^((\{8dcc43e0-bd17-44db-a0a1-4cf179f4a97f\})|(\{a4ef8092-6d9b-4ca2-bc6a-021fc9e8e156\})|(\{9fb5bfd6-27d6-4321-8af9-47b6ceacac3f\})|(\{3c9052cd-10e7-4ccf-9dda-8524cccf66a7\})|(\{da554ce8-5c96-4511-93f2-4e00a85aeb20\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="5c7614a2-793c-454d-967e-35b06de2cbd1" id="{ca6a76c4-1831-4e90-9ed8-2a3768114563}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="67ab85b2-4241-4f2a-8589-801b4221b79d" id="/^((\{4580e89a-d987-4a54-acd5-103eb91374df\})|(\{04767859-e649-473a-9ff8-1491f9217a2f\})|(add-on@fdvoyzaxvni)|(add-on@mxdshahek)|(add-on@plgargwikihoves)|(add-on@plgbrhovtwitpor)|(add-on@plgeshovwikies)|(add-on@plgfrhovinstafr)|(add-on@plgfrscroltwofr)|(add-on@plgnlscroltwonl)|(add-on@plgsngicosnsac)|(app@clzohispatolas)|(app@plgarghovtwitt)|(app@plgargtydownesp)|(app@plgautriczoomde)|(app@plgcohovtwites)|(app@plgdehotwittde)|(app@plgdeudownlde)|(app@plgeshovtwittes)|(app@plgindhovtwiten)|(app@plgitscroltwoit)|(app@plgnlhovtwittnl)|(app@plgphscroltwoen)|(app@plgsajjhamzooph)|(app@plgsingchewmve)|(appapp@plgindzoplshind)|(application@arzoplgirasta)|(application@blibluk)|(application@breplgdownporbr)|(application@es9hsgaedr)|(application@es10gfjqzma)|(application@gerluk)|(application@grasow)|(application@plgbehovtwittnl)|(application@plgbelgdownflam)|(application@plgbescroltwonl)|(application@plgbrhovwikibr)|(application@plgdescroltwode)|(application@plgfihovinstafi)|(application@plgindiendownen)|(application@plgindzoplshind)|(application@plgphhovtwiten)|(application@twexispolavieda)|(ext@es8dffdsghe)|(ext@plgagscroltwoes)|(ext@plgbehovtwittfr)|(ext@plgbelgizompnl)|(ext@plgbgzowomawfr)|(ext@plgesscroltwoes)|(ext@plgithovinstait)|(ext@plgsescroltwose)|(ext@plgukscroltwoen)|(ext@sgdlpictomagi)|(ext@uksfdahdhsc)|(extension@es5dssdsj)|(extension@itsfahqiaxb)|(extension@plgauthovtwitde)|(extension@plgbrscroltwopt)|(extension@plgdehoverwikde)|(extension@plgfrdownlnewfr)|(extension@plgfrhoverwikfr)|(extension@plgfrsearchfr)|(plg@defdgajbisl)|(plg@es6fdhfec)|(plg@es7fdsfddqa)|(plg@esfdhalmbwn)|(plg@frhadiadsk)|(plg@indplgomenawc)|(plg@plgbescroltwofr)|(plg@plgbrhovinstapt)|(plg@plgbrsearchpt)|(plg@plgesdownopenew)|(plg@plgitadownaudit)|(plg@plgithovertwitt)|(plg@plgnlhovwikinl)|(plg@plgnlscroltwonl)|(plg@plgnorvegzoom)|(plg@plgsuhovtwittde)|(plg@plgukhovwikien)|(plg@singplganowong)|(plugin@frmdehpzamdoas)|(plugin@pldinddowninen)|(plugin@plgdahovinstada)|(plugin@plgdesearchde)|(plugin@plghowtwifr)|(plugin@plgitsearchit)|(plugin@plgitwikihoveit)|(plugin@plgnohovtwitno)|(plugin@plgpaysbasdownl)|(plugin@plgukendowauden)|(plugin@plgukhovtwitten)|(plugin@ptgouloumette)|(plugin@sgpongextejmk))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3f781593-e000-464e-b46e-204201f42003" id="/^((\{f7b6b9aa-4564-443b-9da0-a194492cecb9\})|(\{f20526fe-45cb-441b-96e1-6d8aad20b97f\})|(\{2a7ada19-27c1-4f16-b67d-64344e85565f\})|(\{7faf6c45-9883-49c8-9d90-c70fd4fb72bd\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
