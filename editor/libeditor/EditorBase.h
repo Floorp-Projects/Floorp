@@ -33,6 +33,7 @@
 #include "nsISupportsImpl.h"         // for EditorBase::Release, etc.
 #include "nsIWeakReferenceUtils.h"   // for nsWeakPtr
 #include "nsLiteralString.h"         // for NS_LITERAL_STRING
+#include "nsPIDOMWindow.h"           // for nsPIDOMWindowInner, etc.
 #include "nsString.h"                // for nsCString
 #include "nsTArray.h"                // for nsTArray and nsAutoTArray
 #include "nsWeakReference.h"         // for nsSupportsWeakReference
@@ -196,6 +197,22 @@ class EditorBase : public nsIEditor,
   bool Destroyed() const { return mDidPreDestroy; }
 
   Document* GetDocument() const { return mDocument; }
+  nsPIDOMWindowOuter* GetWindow() const {
+    return mDocument ? mDocument->GetWindow() : nullptr;
+  }
+  nsPIDOMWindowInner* GetInnerWindow() const {
+    return mDocument ? mDocument->GetInnerWindow() : nullptr;
+  }
+  bool HasMutationEventListeners(
+      uint32_t aMutationEventType = 0xFFFFFFFF) const {
+    if (!mIsHTMLEditorClass) {
+      // DOM mutation event listeners cannot catch the changes of
+      // <input type="text"> nor <textarea>.
+      return false;
+    }
+    nsPIDOMWindowInner* window = GetInnerWindow();
+    return window ? window->HasMutationListeners(aMutationEventType) : false;
+  }
 
   PresShell* GetPresShell() const {
     return mDocument ? mDocument->GetPresShell() : nullptr;
