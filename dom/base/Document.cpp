@@ -4286,8 +4286,7 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
     return false;
   }
 
-  // special case for cut & copy
-  // cut & copy are allowed in non editable documents
+  // Do security check first.
   if (commandData.IsCutOrCopyCommand()) {
     if (!nsContentUtils::IsCutCopyAllowed(&aSubjectPrincipal)) {
       // We have rejected the event due to it not being performed in an
@@ -4298,7 +4297,16 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
                                       "ExecCommandCutCopyDeniedNotInputDriven");
       return false;
     }
+  } else if (commandData.IsPasteCommand()) {
+    if (!nsContentUtils::PrincipalHasPermission(&aSubjectPrincipal,
+                                                nsGkAtoms::clipboardRead)) {
+      return false;
+    }
+  }
 
+  // special case for cut & copy
+  // cut & copy are allowed in non editable documents
+  if (commandData.IsCutOrCopyCommand()) {
     // For cut & copy commands, we need the behaviour from
     // nsWindowRoot::GetControllers which is to look at the focused element, and
     // defer to a focused textbox's controller The code past taken by other
@@ -4315,12 +4323,6 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
       }
       return NS_SUCCEEDED(res);
     }
-    return false;
-  }
-
-  if (commandData.IsPasteCommand() &&
-      !nsContentUtils::PrincipalHasPermission(&aSubjectPrincipal,
-                                              nsGkAtoms::clipboardRead)) {
     return false;
   }
 
