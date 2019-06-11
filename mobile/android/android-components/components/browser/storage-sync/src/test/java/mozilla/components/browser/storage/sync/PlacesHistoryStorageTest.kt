@@ -4,7 +4,7 @@
 
 package mozilla.components.browser.storage.sync
 
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.InternalPanic
 import mozilla.appservices.places.PlacesException
@@ -34,17 +34,16 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import java.util.Date
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class PlacesHistoryStorageTest {
 
     private lateinit var history: PlacesHistoryStorage
 
     @Before
     fun setup() = runBlocking {
-        history = PlacesHistoryStorage(ApplicationProvider.getApplicationContext())
+        history = PlacesHistoryStorage(testContext)
         // There's a database on disk which needs to be cleaned up between tests.
         history.deleteEverything()
     }
