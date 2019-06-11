@@ -56,7 +56,6 @@ class CollectionCreationTabListAdapter(
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
         val tab = tabs[position]
         val isSelected = selectedTabs.contains(tab)
-        holder.bind(tab, isSelected, hideCheckboxes)
         holder.view.tab_selected_checkbox.setOnCheckedChangeListener { _, isChecked ->
             val action = if (isChecked) {
                 selectedTabs.add(tab)
@@ -67,6 +66,7 @@ class CollectionCreationTabListAdapter(
             }
             actionEmitter.onNext(action)
         }
+        holder.bind(tab, isSelected, hideCheckboxes)
     }
 
     override fun getItemCount(): Int = tabs.size
