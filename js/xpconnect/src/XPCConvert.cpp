@@ -408,31 +408,38 @@ bool XPCConvert::NativeData2JS(JSContext* cx, MutableHandleValue d,
 
 /***************************************************************************/
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 static bool CheckChar16InCharRange(char16_t c) {
   if (ILLEGAL_RANGE(c)) {
     /* U+0080/U+0100 - U+FFFF data lost. */
-    static const size_t MSG_BUF_SIZE = 64;
-    char msg[MSG_BUF_SIZE];
-    snprintf(msg, MSG_BUF_SIZE,
-             "char16_t out of char range; high bits of data lost: 0x%x",
-             int(c));
-    NS_WARNING(msg);
+    MOZ_CRASH("char16_t out of char range; high bits of data lost");
     return false;
   }
 
   return true;
 }
 
+#  ifdef STRICT_CHECK_OF_UNICODE
 template <typename CharT>
 static void CheckCharsInCharRange(const CharT* chars, size_t len) {
-  for (size_t i = 0; i < len; i++) {
-    if (!CheckChar16InCharRange(chars[i])) {
-      break;
-    }
+  if (!IsASCII(MakeSpan(chars, len))) {
+    MOZ_CRASH("char16_t out of char range; high bits of data lost");
   }
 }
-#endif
+
+static void CheckCharsInCharRange(const unsigned char* chars, size_t len) {
+  return CheckCharsInCharRange(reinterpret_cast<const char*>(chars), len);
+}
+#  else   // STRICT_CHECK_OF_UNICODE
+static void CheckCharsInCharRange(const char* chars, size_t len) = delete;
+
+static void CheckCharsInCharRange(const char16_t* chars, size_t len) {
+  if (!IsUTF16Latin1(MakeSpan(chars, len))) {
+    MOZ_CRASH("char16_t out of char range; high bits of data lost");
+  }
+}
+#  endif  // STRICT_CHECK_OF_UNICODE
+#endif    // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
 template <typename T>
 bool ConvertToPrimitive(JSContext* cx, HandleValue v, T* retval) {
@@ -491,7 +498,7 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
           return false;
         }
       }
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       CheckChar16InCharRange(ch);
 #endif
       *((char*)d) = char(ch);
@@ -600,8 +607,9 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
         return false;
       }
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       if (JS_StringHasLatin1Chars(str)) {
+#  ifdef STRICT_CHECK_OF_UNICODE
         size_t len;
         AutoCheckCannotGC nogc;
         const Latin1Char* chars =
@@ -609,6 +617,7 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
         if (chars) {
           CheckCharsInCharRange(chars, len);
         }
+#  endif  // STRICT_CHECK_OF_UNICODE
       } else {
         size_t len;
         AutoCheckCannotGC nogc;
@@ -618,7 +627,7 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
           CheckCharsInCharRange(chars, len);
         }
       }
-#endif  // DEBUG
+#endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
       size_t length = JS_GetStringEncodingLength(cx, str);
       if (length == size_t(-1)) {
@@ -732,6 +741,28 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
       if (!str) {
         return false;
       }
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      if (JS_StringHasLatin1Chars(str)) {
+#  ifdef STRICT_CHECK_OF_UNICODE
+        size_t len;
+        AutoCheckCannotGC nogc;
+        const Latin1Char* chars =
+            JS_GetLatin1StringCharsAndLength(cx, nogc, str, &len);
+        if (chars) {
+          CheckCharsInCharRange(chars, len);
+        }
+#  endif  // STRICT_CHECK_OF_UNICODE
+      } else {
+        size_t len;
+        AutoCheckCannotGC nogc;
+        const char16_t* chars =
+            JS_GetTwoByteStringCharsAndLength(cx, nogc, str, &len);
+        if (chars) {
+          CheckCharsInCharRange(chars, len);
+        }
+      }
+#endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
       size_t length = JS_GetStringEncodingLength(cx, str);
       if (length == size_t(-1)) {
