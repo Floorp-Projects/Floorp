@@ -6270,6 +6270,10 @@ double HTMLMediaElement::MozFragmentEnd() {
 
 void HTMLMediaElement::SetDefaultPlaybackRate(double aDefaultPlaybackRate,
                                               ErrorResult& aRv) {
+  if (mSrcAttrStream) {
+    return;
+  }
+
   if (aDefaultPlaybackRate < 0) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return;
@@ -6286,6 +6290,10 @@ void HTMLMediaElement::SetDefaultPlaybackRate(double aDefaultPlaybackRate,
 }
 
 void HTMLMediaElement::SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv) {
+  if (mSrcAttrStream) {
+    return;
+  }
+
   // Changing the playback rate of a media that has more than two channels is
   // not supported.
   if (aPlaybackRate < 0) {
