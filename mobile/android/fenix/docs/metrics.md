@@ -746,7 +746,41 @@ Items that are added to the metrics ping
         <td>default_moz_browser</td>
         <td>string</td>
         <td>The name of the default browser on device if and only if it's a Mozilla owned product, otherwise empty string</td>
-        <td><a href=https://github.com/mozilla-mobile/fenix/pull/1953/">link</a></td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1953/">link</a></td>
+        <td></td>
+        <td>2019-09-01</td>
+    </tr>
+    <tr>
+        <td>search.default_engine.code</td>
+        <td>string</td>
+        <td>If the search engine is pre-loaded with Fenix this value
+      will be the search engine identifier. If it's a custom search engine
+      (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the
+      value will be "custom"</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/issues/1607">link</a></td>
+        <td></td>
+        <td>2019-09-01</td>
+    </tr>
+    <tr>
+        <td>search.default_engine.name</td>
+        <td>string</td>
+        <td>If the search engine is pre-loaded with Fenix this value
+      will be the search engine name. If it's a custom search engine
+      (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the
+      value will be "custom"</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1953/">link</a></td>
+        <td></td>
+        <td>2019-09-01</td>
+    </tr>
+    <tr>
+        <td>search.default_engine.submission_url</td>
+        <td>string</td>
+        <td>If the search engine is pre-loaded with Fenix this value
+      will be he base URL we use to build the search query for the search engine.
+      For example: https://mysearchengine.com/?query=%s. If it's a custom search engine
+      (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the
+      value will be "custom"</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1953/">link</a></td>
         <td></td>
         <td>2019-09-01</td>
     </tr>
