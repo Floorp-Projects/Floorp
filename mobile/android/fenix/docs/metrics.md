@@ -325,4 +325,117 @@ tracking_protection</td>
 </table>
 </pre>
 
+## bookmarks_management
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>open_in_new_tab</td>
+        <td>event</td>
+        <td>A user opened a bookmark in a new tab.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/1708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+
+    <tr>
+        <td>open_in_new_tabs</td>
+        <td>event</td>
+        <td>A user opened multiple bookmarks at once in new tabs.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/1708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+
+    <tr>
+        <td>open_in_private_tab</td>
+        <td>event</td>
+        <td>A user opened a bookmark in a new private tab.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/1708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+
+    <tr>
+        <td>open_in_private_tabs</td>
+        <td>event</td>
+        <td>A user opened multiple bookmarks at once in new private tabs.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/1708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+
+    <tr>
+        <td>edited</td>
+        <td>event</td>
+        <td>A user edited the title and/or URL of an existing bookmark.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/1708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+
+    <tr>
+        <td>moved</td>
+        <td>event</td>
+        <td>A user moved an existing bookmark or folder to another folder.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/1708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+
+    <tr>
+        <td>removed</td>
+        <td>event</td>
+        <td>A user removed a bookmark item.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/1708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+
+    <tr>
+        <td>multi_removed</td>
+        <td>event</td>
+        <td>A user removed multiple bookmarks at once.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/1708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+
+    <tr>
+        <td>shared</td>
+        <td>event</td>
+        <td>A user shared a bookmark.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/1708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+
+    <tr>
+        <td>copied</td>
+        <td>event</td>
+        <td>A user copied a bookmark.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/1708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+
+    <tr>
+        <td>folder_add</td>
+        <td>event</td>
+        <td>A user added a new bookmark folder.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/1708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
+
 ## Metrics
