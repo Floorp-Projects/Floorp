@@ -157,7 +157,7 @@
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">기기명</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing">동기화중</string>
+    <string name="sync_syncing_in_progress">동기화 중…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">동기화 실패. 마지막 성공: %s</string>
     <!-- Label summary showing never synced -->
@@ -604,6 +604,9 @@
     <!-- Title for Accessiblity Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">자동 글꼴 크기 조정</string>
 
+    <!-- Summary for Accessiblity Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">글꼴 크기는 Android 설정과 맞춰집니다. 이 곳의 글꼴 크기 관리는 비활성화합니다.</string>
+
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">인터넷 사용 정보 삭제</string>
     <!-- Title for the tabs item in Delete browsing data -->
@@ -613,4 +616,85 @@
     <!-- Title for the data and history items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_data_title">탐색 기록 및 사이트 데이터</string>
 
-    </resources>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 주소</string>
+    <!-- Title for the collections item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_collections_title">컬렉션</string>
+    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
+        number of collections that will be deleted -->
+    <string name="preferences_delete_browsing_data_collections_subtitle">%d개 컬랙션</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">탐색 정보 삭제</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
+    <string name="preferences_delete_browsing_data_prompt_message">%s가 탐색 기록을 삭제하도록 허용 하시겠습니까?</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="preferences_delete_browsing_data_prompt_cancel">허용하지 않음</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="preferences_delete_browsing_data_prompt_allow">허용</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">탐색 정보가 삭제되었습니다</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">%s에 오신걸 환영합니다!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">계정이 이미 있으신가요?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">%s에 대해 알기</string>
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">테마 선택</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description">어두운 테마를 사용: 배터리와 눈에 더 좋습니다.</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">%s를 최대한 활용하세요.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated -->
+    <string name="onboarding_firefox_account_auto_signin_header">이 휴대 전화에서 다른 Firefox 브라우저에 로그인했습니다.</string>
+    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Firefox에 로그인</string>
+    <!-- text for the button to stay signed into your Firefox account. -->
+    <string name="onboarding_firefox_account_stay_signed_in">로그인 유지</string>
+    <!-- text for the button to sign out of your Firefox account. -->
+    <string name="onboarding_firefox_account_sign_out">로그아웃</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">스스로를 보호</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description">%s는 웹에서 사용자를 추적하는 광고 추적기를 차단합니다.
+    </string>
+
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">개인적인 탐색</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description">%s 아이콘이 보이면 개인 정보 보호 브라우징을 하고 있다는 의미입니다.
+   </string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">개인 정보 보호</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">우리는 %s가 무엇을 온라인에서 공유하고 우리와 공유할지 
+         사용자가 제어할 수 있게 만들었습니다.
+    
+    </string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">개인 정보 보호 정책 읽기</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">탐색 시작</string>
+
+    <!-- Onboarding theme -->
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">자동</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">사용자 기기 설정을 따름</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">어두운 테마</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">밝은 테마</string>
+</resources>

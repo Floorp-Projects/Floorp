@@ -22,7 +22,7 @@
     <string name="private_browsing_title">Ti trovi in una sessione anonima</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s cancella la cronologia di ricerca e navigazione quando si chiude una sessione anonima. Nonostante questa modalità non ti renda completamente anonimo nei confronti dei siti web o del tuo fornitore di servizi internet, si tratta comunque di uno strumento utile per impedire ad altri utilizzatori di questo dispositivo di ottenere informazioni sulla tua attività online.\n\nMiti comuni sulla navigazione anonima</string>
+    <string name="private_browsing_explanation">%1$s cancella la cronologia di ricerca e navigazione quando si chiude una sessione anonima. Nonostante questa modalità non ti renda completamente anonimo nei confronti dei siti web o del tuo fornitore di servizi internet, si tratta comunque di uno strumento utile per impedire ad altri utilizzatori di questo dispositivo di ottenere informazioni sulla tua attività online.\n\nMiti da sfatare sulla navigazione anonima</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Elimina sessione</string>
 

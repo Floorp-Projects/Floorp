@@ -194,7 +194,7 @@
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Für alle Websites aktivieren</string>
 
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Global ausgeschaltet, öffnen Sie die Einstellungen, um ihn einzuschalten.</string>
+    <string name="preferences_tracking_protection_turned_off_globally">Global ausgeschaltet. Öffnen Sie die Einstellungen, um diesen einzuschalten.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetrie</string>
