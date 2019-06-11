@@ -1,6 +1,6 @@
 [package]
 name = "binast"
-version = "0.2.0"
+version = "0.1.1"
 authors = ["David Teller <D.O.Teller@gmail.com>"]
 autobins = false
 
