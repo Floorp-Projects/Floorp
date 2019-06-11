@@ -130,8 +130,6 @@ _Combined components to implement feature-specific use cases._
 
 * ⚪ [**Session**](components/feature/session/README.md) - A component that connects an (concept) engine implementation with the browser session and storage modules.
 
-* 🔴 [**Session-Bundling**](components/feature/session-bundling/README.md) - A session storage implementation that saves the state of sessions in grouped bundles (e.g. by time) in a database.
-
 * 🔴 [**Sync**](components/feature/sync/README.md) -A component that provides synchronization orchestration for groups of (concept) SyncableStore objects.
 
 * 🔴 [**Tabs**](components/feature/tabs/README.md) - A component that connects a tabs tray implementation with the session and toolbar modules.
@@ -156,13 +154,9 @@ _Generic low-level UI components for building apps._
 
 * 🔵 [**Colors**](components/ui/colors/README.md) - The standard set of [Photon](https://design.firefox.com/photon/) colors.
 
-* ⚪ [**Doorhanger**](components/ui/doorhanger/README.md) - A generic floating heads-up popup that can be anchored to a view.
-
 * 🔵 [**Fonts**](components/ui/fonts/README.md) - The standard set of fonts used by Mozilla Android products.
 
 * 🔵 [**Icons**](components/ui/icons/README.md) - A collection of often used browser icons.
-
-* 🔵 [**Progress**](components/ui/progress/README.md) - An animated progress bar following the Photon Design System.
 
 * ⚪ [**Tabcounter**](components/ui/tabcounter/README.md) - A button that shows the current tab count and can animate state changes.
 
