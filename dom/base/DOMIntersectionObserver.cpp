@@ -282,7 +282,7 @@ void DOMIntersectionObserver::Update(Document* aDocument,
     nscoord basis = side == eSideTop || side == eSideBottom ? rootRect.Height()
                                                             : rootRect.Width();
     rootMargin.Side(side) =
-        nsLayoutUtils::ComputeCBDependentValue(basis, mRootMargin.Get(side));
+        mRootMargin.Get(side).Resolve(basis, NSToCoordRoundWithClamp);
   }
 
   for (Element* target : mObservationTargets) {
