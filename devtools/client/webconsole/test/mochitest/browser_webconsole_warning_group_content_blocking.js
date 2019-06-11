@@ -17,7 +17,8 @@ const TRACKER_URL = "http://tracking.example.com/";
 const IMG_FILE = "browser/devtools/client/webconsole/test/mochitest/test-image.png";
 const TRACKER_IMG = "http://tracking.example.org/" + IMG_FILE;
 
-const CONTENT_BLOCKING_GROUP_LABEL = "Content blocked messages";
+const CONTENT_BLOCKING_GROUP_LABEL =
+  "The resource at “<URL>” was blocked because content blocking is enabled.";
 
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const COOKIE_BEHAVIORS = {
@@ -82,48 +83,47 @@ add_task(async function testForeignCookieBlockedMessage() {
   info("Test foreign cookie blocked message");
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.REJECT_FOREIGN);
-  const getWarningMsg = url => `Request to access cookie or storage on “${url}” was ` +
-    `blocked because we are blocking all third-party`;
-  await testStorageAccessBlockedGrouping(getWarningMsg);
+  await testStorageAccessBlockedGrouping("Request to access cookie or storage on " +
+    "“<URL>” was blocked because we are blocking all third-party storage access " +
+    "requests and content blocking is enabled.");
 });
 
 add_task(async function testLimitForeignCookieBlockedMessage() {
   info("Test unvisited eTLD foreign cookies blocked message");
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.LIMIT_FOREIGN);
-  const getWarningMsg = url => `Request to access cookie or storage on “${url}” was ` +
-    `blocked because we are blocking all third-party`;
-  await testStorageAccessBlockedGrouping(getWarningMsg);
+  await testStorageAccessBlockedGrouping("Request to access cookie or storage on " +
+    "“<URL>” was blocked because we are blocking all third-party storage access " +
+    "requests and content blocking is enabled.");
 });
 
 add_task(async function testAllCookieBlockedMessage() {
   info("Test all cookies blocked message");
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.REJECT);
-  const getWarningMsg = url => `Request to access cookie or storage on “${url}” was ` +
-    `blocked because we are blocking all storage access requests`;
-  await testStorageAccessBlockedGrouping(getWarningMsg);
+  await testStorageAccessBlockedGrouping("Request to access cookie or storage on " +
+    "“<URL>” was blocked because we are blocking all storage access requests.");
 });
 
 add_task(async function testTrackerCookieBlockedMessage() {
   info("Test tracker cookie blocked message");
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.REJECT_TRACKER);
-  const getWarningMsg = url => `Request to access cookie or storage on “${url}” was ` +
-    `blocked because it came from a tracker`;
-  await testStorageAccessBlockedGrouping(getWarningMsg);
+  await testStorageAccessBlockedGrouping("Request to access cookie or storage on " +
+    "“<URL>” was blocked because it came from a tracker and content blocking is " +
+    "enabled.");
 });
 
 add_task(async function testCookieBlockedByPermissionMessage() {
   info("Test cookie blocked by permission message");
   // Turn off tracking protection and add a block permission on the URL.
   await pushPref("privacy.trackingprotection.enabled", false);
-  const p = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin("http://tracking.example.org/");
+  const p = Services.scriptSecurityManager
+    .createCodebasePrincipalFromOrigin("http://tracking.example.org/");
   Services.perms.addFromPrincipal(p, "cookie", Ci.nsIPermissionManager.DENY_ACTION);
 
-  const getWarningMsg = url => `Request to access cookies or storage on “${url}” was ` +
-    `blocked because of custom cookie permission`;
-  await testStorageAccessBlockedGrouping(getWarningMsg);
+  await testStorageAccessBlockedGrouping("Request to access cookies or storage on " +
+    "“<URL>” was blocked because of custom cookie permission.");
 
   // Remove the custom permission.
   Services.perms.removeFromPrincipal(p, "cookie");
@@ -132,29 +132,33 @@ add_task(async function testCookieBlockedByPermissionMessage() {
 /**
  * Test that storage access blocked messages are grouped by emitting 2 messages.
  *
- * @param {Function} getWarningMessage: A function that takes an URL string as a parameter
- *                                  and returns the corresponding warning message.
+ * @param {String} groupLabel: The warning group label that should be created.
+ *                             It should contain "<URL>".
  */
-async function testStorageAccessBlockedGrouping(getWarningMessage) {
+async function testStorageAccessBlockedGrouping(groupLabel) {
   const {hud, win, tab} = await openNewWindowAndConsole(TEST_URI);
   const now = Date.now();
 
   hud.ui.clearOutput();
+
+  const getWarningMessage = url => groupLabel.replace("<URL>", url);
+
   const onStorageAccessBlockedMessage =
     waitForMessage(hud, getWarningMessage(`${TRACKER_IMG}?1&${now}`), ".warn");
   emitStorageAccessBlockedMessage(tab, `${TRACKER_IMG}?1&${now}`);
   await onStorageAccessBlockedMessage;
 
   info("Emit a new content blocking message to check that it causes a grouping");
+
   const onContentBlockingWarningGroupMessage =
-    waitForMessage(hud, CONTENT_BLOCKING_GROUP_LABEL, ".warn");
+    waitForMessage(hud, groupLabel, ".warn");
   emitStorageAccessBlockedMessage(tab, `${TRACKER_IMG}?2&${now}`);
   const {node} = await onContentBlockingWarningGroupMessage;
   is(node.querySelector(".warning-group-badge").textContent, "2",
     "The badge has the expected text");
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
+    `▶︎⚠ ${groupLabel} 2`,
   ]);
 
   info("Open the group");
@@ -162,7 +166,7 @@ async function testStorageAccessBlockedGrouping(getWarningMessage) {
   await waitFor(() => findMessage(hud, TRACKER_IMG));
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
+    `▼︎⚠ ${groupLabel} 2`,
     `| ${getWarningMessage(TRACKER_IMG + "?1&" + now)}`,
     `| ${getWarningMessage(TRACKER_IMG + "?2&" + now)}`,
   ]);

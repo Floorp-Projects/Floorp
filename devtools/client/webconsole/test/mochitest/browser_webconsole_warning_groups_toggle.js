@@ -25,9 +25,10 @@ registerCleanupFunction(function() {
 
 pushPref("privacy.trackingprotection.enabled", true);
 
-add_task(async function testContentBlockingMessage() {
-  const CONTENT_BLOCKING_GROUP_LABEL = "Content blocked messages";
+const CONTENT_BLOCKING_GROUP_LABEL =
+  "The resource at “<URL>” was blocked because content blocking is enabled.";
 
+add_task(async function testContentBlockingMessage() {
   // Enable persist log
   await pushPref("devtools.webconsole.persistlog", true);
 
@@ -38,16 +39,16 @@ add_task(async function testContentBlockingMessage() {
 
   info("Log a few content blocking messages and simple ones");
   let onContentBlockingWarningMessage = waitForMessage(hud, `${BLOCKED_URL}?1`, ".warn");
-  emitStorageAccessBlockedMessage(hud);
+  emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
   await logString(hud, "simple message 1");
 
   onContentBlockingWarningMessage = waitForMessage(hud, `${BLOCKED_URL}?2`, ".warn");
-  emitStorageAccessBlockedMessage(hud);
+  emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
 
   onContentBlockingWarningMessage = waitForMessage(hud, `${BLOCKED_URL}?3`, ".warn");
-  emitStorageAccessBlockedMessage(hud);
+  emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
 
   checkConsoleOutputForWarningGroup(hud, [
@@ -70,7 +71,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Add a new warning message and check it's placed in the closed group");
-  emitStorageAccessBlockedMessage(hud);
+  emitContentBlockedMessage(hud);
   await waitForBadgeNumber(warningGroupMessage1, "4");
 
   info("Re-enable the warningGroup feature pref and check warnings are displayed");
@@ -126,7 +127,7 @@ add_task(async function testContentBlockingMessage() {
   info("Add one warning message and one simple message");
   await waitFor(() => findMessage(hud, `${BLOCKED_URL}?4`));
   onContentBlockingWarningMessage = waitForMessage(hud, BLOCKED_URL, ".warn");
-  emitStorageAccessBlockedMessage(hud);
+  emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
   await logString(hud, "simple message 2");
 
@@ -161,7 +162,7 @@ add_task(async function testContentBlockingMessage() {
   info("Add a second warning and check it's placed in the second, closed, group");
   const onContentBlockingWarningGroupMessage =
     waitForMessage(hud, CONTENT_BLOCKING_GROUP_LABEL, ".warn");
-  emitStorageAccessBlockedMessage(hud);
+  emitContentBlockedMessage(hud);
   const warningGroupMessage2 = (await onContentBlockingWarningGroupMessage).node;
   await waitForBadgeNumber(warningGroupMessage2, "2");
 
@@ -203,7 +204,7 @@ let cpt = 0;
  * tagged as tracker. The image is loaded with a incremented counter query parameter
  * each time so we can get the warning message.
  */
-function emitStorageAccessBlockedMessage(hud) {
+function emitContentBlockedMessage(hud) {
   const url = `${BLOCKED_URL}?${++cpt}`;
   ContentTask.spawn(gBrowser.selectedBrowser, url, function(innerURL) {
     content.wrappedJSObject.loadImage(innerURL);

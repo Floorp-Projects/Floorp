@@ -139,6 +139,7 @@ const chromeRDPEnums = {
     START_GROUP_COLLAPSED: "startGroupCollapsed",
     END_GROUP: "endGroup",
     CONTENT_BLOCKING_GROUP: "contentBlockingWarningGroup",
+    TRACKING_PROTECTION_GROUP: "trackingProtectionWarningGroup",
     CORS_GROUP: "CORSWarningGroup",
     CSP_GROUP: "CSPWarningGroup",
     ASSERT: "assert",
