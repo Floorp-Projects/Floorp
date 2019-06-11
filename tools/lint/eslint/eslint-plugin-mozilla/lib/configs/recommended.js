@@ -50,6 +50,13 @@ module.exports = {
   },
 
   "overrides": [{
+    // eslint-plugin-html handles eol-last slightly different - it applies to
+    // each set of script tags, so we turn it off here.
+    "files": "**/*.*html",
+    "rules": {
+      "eol-last": "off",
+    },
+  }, {
     // Turn off use-services for xml files. XBL bindings are going away, and
     // working out the valid globals for those is difficult.
     "files": "**/*.xml",
@@ -81,6 +88,7 @@ module.exports = {
 
   // When adding items to this file please check for effects on sub-directories.
   "plugins": [
+    "html",
     "fetch-options",
     "no-unsanitized",
     "prettier",
@@ -388,5 +396,12 @@ module.exports = {
 
     // Requires or disallows a whitespace (space or tab) beginning a comment
     "spaced-comment": ["error", "always", { "markers": ["#"] }],
+  },
+
+  // To avoid bad interactions of the html plugin with the xml preprocessor in
+  // eslint-plugin-mozilla, we turn off processing of the html plugin for .xml
+  // files.
+  "settings": {
+    "html/xml-extensions": [ ".xhtml" ],
   },
 };
