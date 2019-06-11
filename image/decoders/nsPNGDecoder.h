@@ -101,7 +101,6 @@ class nsPNGDecoder : public Decoder {
   bool mFrameIsHidden;
   bool mDisablePremultipliedAlpha;
   bool mGotInfoCallback;
-  bool mUsePipeTransform;
 
   struct AnimFrameInfo {
     AnimFrameInfo();
