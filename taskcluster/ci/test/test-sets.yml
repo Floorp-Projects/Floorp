@@ -309,7 +309,7 @@ marionette-media-tests:
 
 macosx1014-64-tests:
     - cppunit
-    # - crashtest
+    - crashtest
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
     # - gtest
@@ -339,11 +339,10 @@ macosx1014-64-tests:
     # - xpcshell
 
 macosx1014-64-qr-tests:
-    # - crashtest
+    - crashtest
     - reftest
 
 macosx64-tests:
-    - crashtest
     - gtest
     - jsreftest
     - mochitest
@@ -372,9 +371,6 @@ macosx64-talos:
     - talos-perf-reftest-singletons
     # - talos-tabswitch # Bug 1453007 times out
     # - talos-h1 # too long to unpack profile- Bug 1442893
-
-macosx64-qr-tests:
-    - crashtest
 
 linux32-tests:
     - web-platform-tests
