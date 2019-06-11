@@ -417,7 +417,17 @@ struct HuffmanEntry {
   const T value;
 };
 
+// The default inline buffer length for instances of HuffmanTable.
+// Specific type (e.g. booleans) will override this to provide something
+// more suited to their type.
 const size_t HUFFMAN_TABLE_DEFAULT_INLINE_BUFFER_LENGTH = 8;
+
+// A flag that determines only whether a value is `null`.
+// Used for optional interface.
+enum class Nullable {
+  Null,
+  NonNull,
+};
 
 template <typename T, int N = HUFFMAN_TABLE_DEFAULT_INLINE_BUFFER_LENGTH>
 class HuffmanTableImpl {
@@ -438,6 +448,10 @@ class HuffmanTableImpl {
 
   HuffmanTableImpl() = delete;
   HuffmanTableImpl(HuffmanTableImpl&) = delete;
+
+  size_t length() const { return values.length(); }
+  const HuffmanEntry<T>* begin() const { return values.begin(); }
+  const HuffmanEntry<T>* end() const { return values.end(); }
 
  private:
   // The entries in this Huffman table.
@@ -475,6 +489,24 @@ struct HuffmanTableIndexedSymbolsBool {
   HuffmanTableIndexedSymbolsBool(JSContext* cx) : impl(cx) {}
 };
 
+struct HuffmanTableIndexedSymbolsMaybeInterface {
+  HuffmanTableImpl<Nullable, 2> impl;
+  HuffmanTableIndexedSymbolsMaybeInterface(JSContext* cx) : impl(cx) {}
+
+  // `true` if this table only contains values for `null`.
+  bool isAlwaysNull() const {
+    MOZ_ASSERT(impl.length() > 0);
+
+    // By definition, we have either 1 or 2 values.
+    // By definition, if we have 2 values, one of them is not null.
+    if (impl.length() != 1) {
+      return false;
+    }
+    // Otherwise, check the single value.
+    return impl.begin()->value == Nullable::Null;
+  }
+};
+
 struct HuffmanTableIndexedSymbolsStringEnum {
   HuffmanTableImpl<uint8_t> impl;
 };
@@ -491,8 +523,8 @@ struct HuffmanTableIndexedSymbolsOptionalLiteralString {
 using HuffmanTable = mozilla::Variant<
     HuffmanTableUnreachable,  // Default value.
     HuffmanTableExplicitSymbolsF64, HuffmanTableExplicitSymbolsU32,
-    HuffmanTableIndexedSymbolsTag, HuffmanTableIndexedSymbolsBool,
-    HuffmanTableIndexedSymbolsStringEnum,
+    HuffmanTableIndexedSymbolsTag, HuffmanTableIndexedSymbolsMaybeInterface,
+    HuffmanTableIndexedSymbolsBool, HuffmanTableIndexedSymbolsStringEnum,
     HuffmanTableIndexedSymbolsLiteralString,
     HuffmanTableIndexedSymbolsOptionalLiteralString>;
 
