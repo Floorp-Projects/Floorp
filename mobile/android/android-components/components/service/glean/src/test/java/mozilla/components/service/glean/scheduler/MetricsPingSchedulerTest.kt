@@ -426,13 +426,15 @@ class MetricsPingSchedulerTest {
 
     @Test
     fun `schedulePingCollection must correctly append a work request to the WorkManager`() {
-        val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
+        // Replacing the singleton's metricsPingScheduler here since doWork() refers to it when
+        // the worker runs, otherwise we can get a lateinit property is not initialized error.
+        Glean.metricsPingScheduler = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
 
         // No work should be enqueued at the beginning of the test.
         assertFalse(getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
 
         // Manually schedule a collection task for today.
-        mps.schedulePingCollection(Calendar.getInstance(), sendTheNextCalendarDay = false)
+        Glean.metricsPingScheduler.schedulePingCollection(Calendar.getInstance(), sendTheNextCalendarDay = false)
 
         // We expect the worker to be scheduled.
         assertTrue(getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
