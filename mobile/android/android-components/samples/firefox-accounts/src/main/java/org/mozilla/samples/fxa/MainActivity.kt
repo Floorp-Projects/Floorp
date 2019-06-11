@@ -30,9 +30,9 @@ import kotlin.coroutines.CoroutineContext
 @Suppress("TooManyFunctions")
 open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
     private lateinit var account: FirefoxAccount
-    private var scopesWithoutKeys: Array<String> = arrayOf("profile")
-    private var scopesWithKeys: Array<String> = arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
-    private var scopes: Array<String> = scopesWithoutKeys
+    private var scopesWithoutKeys: Set<String> = setOf("profile")
+    private var scopesWithKeys: Set<String> = setOf("profile", "https://identity.mozilla.com/apps/oldsync")
+    private var scopes: Set<String> = scopesWithoutKeys
     private var wantsKeys: Boolean = false
 
     private lateinit var qrFeature: QrFeature

@@ -32,6 +32,7 @@ permalink: /changelog/
   * `FxaAccountManager` will now attempt to automatically recover from a certain class of temporary auth problems.
   * `FirefoxAccount` grew a new method: `checkAuthorizationStatusAsync`, used to facilitate above flows.
   * It is no longer necessary to pass in the "profile" scope to `FxaAccountManager`, as it will always obtain it regardless. Specifying that scope has no effect.
+  * ⚠️ **This is a breaking change**: `FirefoxAccount` methods that used to take `Array<String>` of scopes now take `Set<String>` of scopes.
 
 * **browser-domains**
   * New domain autocomplete providers `ShippedDomainsProvider` and `CustomDomainsProvider` that
