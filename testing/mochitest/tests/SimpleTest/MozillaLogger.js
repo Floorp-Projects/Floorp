@@ -4,11 +4,26 @@
 
 "use strict";
 
-/* import-globals-from SpecialPowers.jsm */
-
 function formatLogMessage(msg) {
   return msg.info.join(" ") + "\n";
 }
+
+function importJSM(jsm) {
+  if (typeof ChromeUtils === "object") {
+    return ChromeUtils.import(jsm);
+  }
+  /* globals SpecialPowers */
+  let obj = {};
+  SpecialPowers.Cu.import(jsm, obj);
+  return SpecialPowers.wrap(obj);
+}
+
+let CC = (typeof Components === "object"
+            ? Components
+            : SpecialPowers.wrap(SpecialPowers.Components)).Constructor;
+
+let ConverterOutputStream = CC("@mozilla.org/intl/converter-output-stream;1",
+                               "nsIConverterOutputStream", "init");
 
 class MozillaLogger {
   get logCallback() {
@@ -26,38 +41,6 @@ class MozillaLogger {
 
 
 /**
- * SpecialPowersLogger, inherits from MozillaLogger and utilizes SpecialPowers.
- * intented to be used in content scripts to write to a file
- */
-class SpecialPowersLogger extends MozillaLogger {
-  constructor(aPath) {
-    super();
-
-    SpecialPowers.setLogFile(aPath);
-  }
-
-  get logCallback() {
-    return (msg) => {
-      var data = formatLogMessage(msg);
-      this.log(data);
-
-      if (data.includes("SimpleTest FINISH")) {
-        this.close();
-      }
-    };
-  }
-
-  log(msg) {
-    SpecialPowers.log(msg);
-  }
-
-  close() {
-    SpecialPowers.closeLogFile();
-  }
-}
-
-
-/**
  * MozillaFileLogger, a log listener that can write to a local file.
  * intended to be run from chrome space
  */
@@ -68,16 +51,14 @@ class MozillaFileLogger extends MozillaLogger {
   constructor(aPath) {
     super();
 
-    const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+    const {FileUtils} = importJSM("resource://gre/modules/FileUtils.jsm");
 
     this._file = FileUtils.File(aPath);
     this._foStream = FileUtils.openFileOutputStream(
         this._file, (FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
                      FileUtils.MODE_APPEND));
 
-    this._converter = Cc["@mozilla.org/intl/converter-output-stream;1"]
-                        .createInstance(Ci.nsIConverterOutputStream);
-    this._converter.init(this._foStream, "UTF-8");
+    this._converter = ConverterOutputStream(this._foStream, "UTF-8");
   }
 
   get logCallback() {
@@ -110,5 +91,4 @@ class MozillaFileLogger extends MozillaLogger {
 }
 
 this.MozillaLogger = MozillaLogger;
-this.SpecialPowersLogger = SpecialPowersLogger;
 this.MozillaFileLogger = MozillaFileLogger;
