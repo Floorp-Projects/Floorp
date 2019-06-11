@@ -5423,6 +5423,8 @@ static StaticMutex sOncePrefMutex;
   void StaticPrefs::Set##id(StripAtomic<cpp_type> aValue) {                    \
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread() && XRE_IsParentProcess(),          \
                           "pref '" name "' being set outside parent process"); \
+    MOZ_DIAGNOSTIC_ASSERT(UpdatePolicy::policy == UpdatePolicy::Live ||        \
+                          !sOncePrefRead);                                     \
     SetPref(Get##id##PrefName(), aValue);                                      \
     if (UpdatePolicy::policy == UpdatePolicy::Once) {                          \
       sVarCache_##id =                                                         \
