@@ -7,8 +7,7 @@ package mozilla.components.browser.session.storage
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
@@ -19,6 +18,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -36,15 +36,12 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SessionStorageTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `Restored snapshot should contain sessions of saved snapshot`() {
@@ -76,7 +73,7 @@ class SessionStorageTest {
         )
 
         // Persist the snapshot
-        val storage = SessionStorage(context, engine)
+        val storage = SessionStorage(testContext, engine)
         val persisted = storage.save(sessionsSnapshot)
         assertTrue(persisted)
 
@@ -110,7 +107,7 @@ class SessionStorageTest {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
 
-        val storage = spy(SessionStorage(context, engine))
+        val storage = spy(SessionStorage(testContext, engine))
         storage.save(SessionManager.Snapshot(emptyList(), SessionManager.NO_SELECTION))
 
         verify(storage).clear()
@@ -140,7 +137,7 @@ class SessionStorageTest {
         )
 
         // Persist the snapshot
-        val storage = SessionStorage(context, engine)
+        val storage = SessionStorage(testContext, engine)
         val persisted = storage.save(sessionsSnapshot)
         assertTrue(persisted)
 
@@ -156,7 +153,7 @@ class SessionStorageTest {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
 
-        val storage = SessionStorage(context, engine)
+        val storage = SessionStorage(testContext, engine)
 
         val session = Session("http://mozilla.org")
         val engineSession = mock(EngineSession::class.java)
@@ -385,7 +382,7 @@ class SessionStorageTest {
 
         val lifecycle = LifecycleRegistry(mock(LifecycleOwner::class.java))
 
-        val storage = SessionStorage(context, engine)
+        val storage = SessionStorage(testContext, engine)
         storage.autoSave(mock())
             .periodicallyInForeground(300, TimeUnit.SECONDS, scheduler, lifecycle)
 

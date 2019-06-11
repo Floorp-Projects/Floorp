@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session.storage
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -11,10 +12,10 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SnapshotSerializerTest {
+
     @Test
     fun `Serialize and deserialize session`() {
         val originalSession = Session(

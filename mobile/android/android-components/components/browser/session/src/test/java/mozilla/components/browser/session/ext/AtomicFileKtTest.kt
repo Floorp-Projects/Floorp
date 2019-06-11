@@ -4,9 +4,8 @@
 
 package mozilla.components.browser.session.ext
 
-import android.content.Context
 import android.util.AtomicFile
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SnapshotSerializer
@@ -16,6 +15,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -23,16 +23,13 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
-import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.util.UUID
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class AtomicFileKtTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `writeSnapshot - Fails write on IOException`() {
@@ -62,7 +59,7 @@ class AtomicFileKtTest {
 
     @Test
     fun `readSnapshot - Returns null on corrupt JSON`() {
-        val file = getFileForEngine(context, engine = mock())
+        val file = getFileForEngine(testContext, engine = mock())
 
         val stream = file.startWrite()
         stream.bufferedWriter().write("{ name: 'Foo")
