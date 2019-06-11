@@ -18,6 +18,8 @@ class AudioWorkletImpl;
 
 namespace dom {
 
+class AudioWorkletProcessorConstructor;
+
 class AudioWorkletGlobalScope final : public WorkletGlobalScope {
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -30,7 +32,8 @@ class AudioWorkletGlobalScope final : public WorkletGlobalScope {
                         JS::MutableHandle<JSObject*> aReflector) override;
 
   void RegisterProcessor(JSContext* aCx, const nsAString& aName,
-                         VoidFunction& aProcessorCtor, ErrorResult& aRv);
+                         AudioWorkletProcessorConstructor& aProcessorCtor,
+                         ErrorResult& aRv);
 
   WorkletImpl* Impl() const override;
 
@@ -56,7 +59,7 @@ class AudioWorkletGlobalScope final : public WorkletGlobalScope {
   double mCurrentTime;
   float mSampleRate;
 
-  typedef nsRefPtrHashtable<nsStringHashKey, VoidFunction>
+  typedef nsRefPtrHashtable<nsStringHashKey, AudioWorkletProcessorConstructor>
       NodeNameToProcessorDefinitionMap;
   NodeNameToProcessorDefinitionMap mNameToProcessorMap;
 };
