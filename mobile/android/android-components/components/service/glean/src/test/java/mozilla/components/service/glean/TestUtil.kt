@@ -230,7 +230,7 @@ internal fun triggerWorkManager() {
  * This is a helper class to facilitate testing of ping tagging
  */
 internal class TestPingTagClient(
-    private val responseUrl: String = Configuration.DEFAULT_DEBUGVIEW_ENDPOINT,
+    private val responseUrl: String = Configuration.DEFAULT_TELEMETRY_ENDPOINT,
     private val responseStatus: Int = 200,
     private val responseHeaders: Headers = MutableHeaders(),
     private val responseBody: Response.Body = Response.Body.empty(),

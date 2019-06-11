@@ -65,7 +65,6 @@ data class Configuration internal constructor(
 
     companion object {
         const val DEFAULT_TELEMETRY_ENDPOINT = "https://incoming.telemetry.mozilla.org"
-        const val DEFAULT_DEBUGVIEW_ENDPOINT = "https://stage.ingestion.nonprod.dataops.mozgcp.net"
         const val DEFAULT_USER_AGENT = "Glean/${BuildConfig.LIBRARY_VERSION} (Android)"
         const val DEFAULT_CONNECTION_TIMEOUT = 10000L
         const val DEFAULT_READ_TIMEOUT = 30000L

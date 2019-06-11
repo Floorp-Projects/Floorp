@@ -10,7 +10,6 @@ import mozilla.components.concept.fetch.Response
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.lib.fetch.okhttp.OkHttpClient
 import mozilla.components.service.glean.BuildConfig
-import mozilla.components.service.glean.TestPingTagClient
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.getMockWebServer
 import mozilla.components.support.test.any
@@ -286,27 +285,5 @@ class HttpPingUploaderTest {
 
         val request = uploader.buildRequest(testPath, testPing, debugConfig)
         assertEquals("this-ping-is-tagged", request.headers!!["X-Debug-ID"])
-    }
-
-    @Test
-    fun `server is correctly redirected when pings are tagged`() {
-        val pingTag = "this-ping-is-tagged"
-
-        // The TestClient class found at the bottom of this file is used to intercept the request
-        // in order to check that the header has been added and the URL has been redirected.
-        val testClient = TestPingTagClient(
-            responseUrl = Configuration.DEFAULT_DEBUGVIEW_ENDPOINT,
-            debugHeaderValue = pingTag)
-
-        // Use the test client in the Glean configuration
-        val testConfig = testDefaultConfig.copy(
-            httpClient = lazy { testClient },
-            pingTag = pingTag
-        )
-
-        // This should trigger the call to `fetch()` within the TestPingTagClient which will perform
-        // both a check against the url and that a header was added.
-        val client = HttpPingUploader()
-        assertTrue(client.upload(testPath, testPing, testConfig))
     }
 }
