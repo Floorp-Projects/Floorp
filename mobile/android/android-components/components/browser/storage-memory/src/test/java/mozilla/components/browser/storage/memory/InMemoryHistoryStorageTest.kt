@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.storage.memory
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.VisitType
@@ -11,11 +12,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import java.lang.Thread.sleep
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class InMemoryHistoryStorageTest {
+
     @Test
     fun `store can be used to track visit information`() = runBlocking {
         val history = InMemoryHistoryStorage()
