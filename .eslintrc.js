@@ -40,24 +40,10 @@ module.exports = {
     "plugin:mozilla/recommended"
   ],
   "plugins": [
-    "html",
     "mozilla"
   ],
-  // To avoid bad interactions of the html plugin with the xml preprocessor in
-  // eslint-plugin-mozilla, we turn off processing of the html plugin for .xml
-  // files.
-  "settings": {
-    "html/xml-extensions": [ ".xhtml" ]
-  },
 
   "overrides": [{
-    // eslint-plugin-html handles eol-last slightly different - it applies to
-    // each set of script tags, so we turn it off here.
-    "files": "**/*.*html",
-    "rules": {
-      "eol-last": "off",
-    }
-  }, {
     // These xbl bindings are assumed to be in the browser-window environment,
     // we would mark it in the files, but ESLint made this more difficult with
     // our xml processor, so we list them here. Bug 1397874 & co are working
@@ -88,7 +74,6 @@ module.exports = {
     // This would be expensive and slow, and it isn't worth it for head files.
     // We could get developers to declare as exported, but that doesn't seem worth it.
     "files": xpcshellTestPaths.map(path => `${path}head*.js`),
-
     "rules": {
       "no-unused-vars": ["error", {
         "args": "none",
