@@ -5,7 +5,7 @@
 package mozilla.components.service.fxa
 
 import android.content.Context
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
@@ -28,6 +28,7 @@ import mozilla.components.service.fxa.manager.authErrorRegistry
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -44,7 +45,6 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 import kotlin.coroutines.CoroutineContext
 
 // Same as the actual account manager, except we get to control how FirefoxAccountShaped instances
@@ -69,10 +69,8 @@ class TestableFxaAccountManager(
     }
 }
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class FxaAccountManagerTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @After
     fun cleanup() {
@@ -164,7 +162,7 @@ class FxaAccountManagerTest {
         val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
-            context, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
+            testContext, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
             listOf(DeviceCapability.SEND_TAB), this.coroutineContext
         ) {
             account
@@ -200,7 +198,7 @@ class FxaAccountManagerTest {
         val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
-                context, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
+            testContext, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
                 listOf(DeviceCapability.SEND_TAB), this.coroutineContext
         ) {
             account
@@ -237,7 +235,7 @@ class FxaAccountManagerTest {
 
         val accountObserver: AccountObserver = mock()
         val manager = TestableFxaAccountManager(
-                context, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
+            testContext, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
                 listOf(DeviceCapability.SEND_TAB), this.coroutineContext
         ) {
             account
@@ -275,7 +273,7 @@ class FxaAccountManagerTest {
 
         val accountObserver: AccountObserver = mock()
         val manager = TestableFxaAccountManager(
-                context, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
+            testContext, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
                 listOf(DeviceCapability.SEND_TAB), this.coroutineContext
         ) {
             account
@@ -308,7 +306,7 @@ class FxaAccountManagerTest {
         // We are not using the "prepareHappy..." helper method here, because our account isn't a mock,
         // but an actual implementation of the interface.
         val manager = TestableFxaAccountManager(
-                context,
+            testContext,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile", "test-scope"),
                 accountStorage,
@@ -422,7 +420,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenThrow(readException)
 
         val manager = TestableFxaAccountManager(
-            context,
+            testContext,
             Config.release("dummyId", "bad://url"),
             arrayOf("profile"),
             accountStorage, coroutineContext = this.coroutineContext
@@ -469,7 +467,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                context,
+            testContext,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile"),
                 accountStorage, coroutineContext = this.coroutineContext
@@ -507,7 +505,7 @@ class FxaAccountManagerTest {
         `when`(constellation.ensureCapabilitiesAsync(any())).thenReturn(CompletableDeferred(true))
 
         val manager = TestableFxaAccountManager(
-                context,
+            testContext,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile"),
                 accountStorage,
@@ -631,7 +629,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                context,
+            testContext,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile", "test-scope"),
                 accountStorage, coroutineContext = coroutineContext
@@ -884,7 +882,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                context,
+            testContext,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile", "test-scope"),
                 accountStorage, coroutineContext = this.coroutineContext
@@ -1015,7 +1013,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                context,
+            testContext,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile", "test-scope"),
                 accountStorage, coroutineContext = this.coroutineContext
@@ -1138,7 +1136,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                context,
+            testContext,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile", "test-scope"),
                 accountStorage, coroutineContext = this.coroutineContext
@@ -1181,7 +1179,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                context,
+            testContext,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile", "test-scope"),
                 accountStorage, coroutineContext = coroutineContext
@@ -1214,7 +1212,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                context,
+            testContext,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile", "test-scope"),
                 accountStorage, coroutineContext = coroutineContext
