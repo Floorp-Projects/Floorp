@@ -8,7 +8,7 @@ description = "Shared Rust code for libxul"
 [dependencies]
 geckoservo = { path = "../../../../servo/ports/geckolib", optional = true }
 kvstore = { path = "../../../components/kvstore" }
-lmdb-rkv-sys = { version = "0.8.3", features = ["mdb_idl_logn_9"] }
+lmdb-rkv-sys = { version = "0.8.4", features = ["mdb_idl_logn_9"] }
 mp4parse_capi = { path = "../../../../media/mp4parse-rust/mp4parse_capi" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
