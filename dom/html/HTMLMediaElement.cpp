@@ -2684,7 +2684,7 @@ already_AddRefed<Promise> HTMLMediaElement::Seek(double aTime,
 
   StopSuspendingAfterFirstFrame();
 
-  if (mSrcStream) {
+  if (mSrcAttrStream) {
     // do nothing since media streams have an empty Seekable range.
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
