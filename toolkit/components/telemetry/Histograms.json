@@ -14866,5 +14866,16 @@
       "Transaction"
     ],
     "description": "Numbers of HTTP transactions and connections by type. There are some categories separated by labels based on 5 parameters: 1. normal browsing or private browsing 2. system principal or not 3. first party or third party 4. class of service (Leader/Background/Others) 5. tracking classification (Basic/Content/FingerprintingContent)."
+  },
+  "THREAD_WAKEUP": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["opettay@mozilla.com" ],
+    "bug_numbers": [1554292],
+    "expires_in_version": "71",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "keyed": true,
+    "description": "How many milliseconds it took before 100 wakeups for the thread was done because of new Runnables."
   }
 }

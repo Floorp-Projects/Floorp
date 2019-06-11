@@ -8,10 +8,29 @@
   <head>
     <meta name="viewport" content="width=device-width" />
     <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
+    <script defer="defer" src="chrome://global/content/certviewer/certviewer.js"></script>
+    <script defer="defer" src="chrome://global/content/certviewer/components/info-item.js"></script>
+    <script defer="defer" src="chrome://global/content/certviewer/components/dummy-info.js"></script>
+    <script defer="defer" src="chrome://global/content/certviewer/components/handshake-section.js"></script>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" href="chrome://global/content/certviewer/certviewer.css">
     <title>about:certificate</title>
-    <script src="chrome://global/content/certviewer/certviewer.js"></script>
   </head>
   <body>
     <h1>Certificate Viewer</h1>
+
+    <handshake-section></handshake-section> 
+    
+    <template id="handshake-section-template" class="section">
+      <link rel="stylesheet" href="chrome://global/content/certviewer/components/handshake-section.css">
+      <h1 class="title"></h1>
+    </template>
+
+    <template id="info-item-template">
+      <link rel="stylesheet" href="chrome://global/content/certviewer/components/info-item.css">
+      <label></label>
+      <span class="info"></span>
+    </template>
+
   </body>
 </html>

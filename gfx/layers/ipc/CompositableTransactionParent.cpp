@@ -278,12 +278,33 @@ RefPtr<CompositableHost> CompositableParentManager::AddCompositable(
 }
 
 RefPtr<CompositableHost> CompositableParentManager::FindCompositable(
-    const CompositableHandle& aHandle) {
+    const CompositableHandle& aHandle, bool aAllowDisablingWebRender) {
   auto iter = mCompositables.find(aHandle.Value());
   if (iter == mCompositables.end()) {
     return nullptr;
   }
-  return iter->second;
+
+  RefPtr<CompositableHost> host = iter->second;
+  if (!aAllowDisablingWebRender) {
+    return host;
+  }
+
+  if (!host->AsWebRenderImageHost() || !host->GetAsyncRef()) {
+    return host;
+  }
+
+  // Try to replace WebRenderImageHost of ImageBridge to ImageHost.
+  RefPtr<CompositableHost> newHost = CompositableHost::Create(
+      host->GetTextureInfo(), /* aUseWebRender */ false);
+  if (!newHost || !newHost->AsImageHost()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return host;
+  }
+
+  newHost->SetAsyncRef(host->GetAsyncRef());
+  mCompositables[aHandle.Value()] = newHost;
+
+  return newHost;
 }
 
 void CompositableParentManager::ReleaseCompositable(

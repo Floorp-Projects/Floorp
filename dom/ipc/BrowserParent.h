@@ -695,8 +695,6 @@ class BrowserParent final : public PBrowserParent,
 
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
-  void SkipBrowsingContextDetach();
-
   bool GetDocShellIsActive();
   void SetDocShellIsActive(bool aDocShellIsActive);
 

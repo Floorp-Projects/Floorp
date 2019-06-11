@@ -16,7 +16,7 @@
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/menu-button.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/modal-input.js"></script>
-    <script defer="defer" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
+    <script type="module" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://browser/content/aboutlogins/aboutLogins.css">
   </head>
@@ -106,14 +106,16 @@
           <span class="username-label field-label"></span>
           <modal-input name="username"/>
         </label>
-        <copy-to-clipboard-button class="copy-username-button"></copy-to-clipboard-button>
+        <copy-to-clipboard-button class="copy-username-button"
+                                  data-telemetry-object="username"></copy-to-clipboard-button>
       </div>
       <div class="detail-row">
         <label>
           <span class="password-label field-label"></span>
           <modal-input type="password" name="password" required />
         </label>
-        <copy-to-clipboard-button class="copy-password-button"></copy-to-clipboard-button>
+        <copy-to-clipboard-button class="copy-password-button"
+                                  data-telemetry-object="password"></copy-to-clipboard-button>
       </div>
       <p class="time-created meta-info"></p>
       <p class="time-changed meta-info"></p>

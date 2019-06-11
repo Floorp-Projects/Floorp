@@ -23,4 +23,5 @@
     <item type="id" name="action_button"/>
     <item type="id" name="page_progress"/>
     <item type="id" name="mediaControlNotification"/>
+    <item type="id" name="crashReporterNotification"/>
 </resources>

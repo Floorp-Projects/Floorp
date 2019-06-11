@@ -38,7 +38,8 @@ class CompositableParentManager : public HostIPCAllocator {
   RefPtr<CompositableHost> AddCompositable(const CompositableHandle& aHandle,
                                            const TextureInfo& aInfo,
                                            bool aUseWebRender);
-  RefPtr<CompositableHost> FindCompositable(const CompositableHandle& aHandle);
+  RefPtr<CompositableHost> FindCompositable(
+      const CompositableHandle& aHandle, bool aAllowDisablingWebRender = false);
 
  protected:
   /**
