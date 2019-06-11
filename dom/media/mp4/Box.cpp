@@ -188,6 +188,13 @@ ByteSlice Box::ReadAsSlice() {
     length = mRange.mEnd - mChildOffset;
   }
 
+  const uint8_t* data =
+      mContext->mSource->GetContiguousAccess(mChildOffset, length);
+  if (data) {
+    // We can direct access the underlying storage of the ByteStream.
+    return ByteSlice{data, size_t(length)};
+  }
+
   uint8_t* p = mContext->mAllocator.Allocate(size_t(length));
   size_t bytes;
   if (!mContext->mSource->CachedReadAt(mChildOffset, p, length, &bytes) ||
