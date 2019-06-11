@@ -114,7 +114,7 @@ class SaturateOp {
 
 /**
  * |Saturate<T>| is a value type for saturation arithmetics. It's
- * build on top of |SaturateOp<T>|.
+ * built on top of |SaturateOp<T>|.
  */
 template <typename T>
 class Saturate {
