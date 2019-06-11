@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.tabs.tabstray
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.TabsUseCases
@@ -12,10 +13,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class TabsTrayInteractorTest {
+
     @Test
     fun `interactor registers and unregisters from tabstray`() {
         val tabsTray: TabsTray = mock()

@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.tabs
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
@@ -19,10 +20,10 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class TabsUseCasesTest {
+
     @Test
     fun `SelectTabUseCase - session will be selected in session manager`() {
         val sessionManager: SessionManager = mock()

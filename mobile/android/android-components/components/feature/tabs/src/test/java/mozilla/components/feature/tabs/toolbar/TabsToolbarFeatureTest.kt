@@ -9,13 +9,14 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 class TabsToolbarFeatureTest {
+
     @Test
     fun `feature adds "tabs" button to toolbar`() {
         val toolbar: Toolbar = mock()
@@ -30,8 +31,8 @@ class TabsToolbarFeatureTest {
         val toolbar: Toolbar = mock()
         val sessionManager: SessionManager = mock()
         val session: Session = mock()
-        `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
-        `when`(session.isCustomTabSession()).thenReturn(true)
+        whenever(sessionManager.findSessionById(anyString())).thenReturn(session)
+        whenever(session.isCustomTabSession()).thenReturn(true)
 
         TabsToolbarFeature(toolbar, sessionManager, "123") {}
 
@@ -43,8 +44,8 @@ class TabsToolbarFeatureTest {
         val toolbar: Toolbar = mock()
         val sessionManager: SessionManager = mock()
         val session: Session = mock()
-        `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
-        `when`(session.isCustomTabSession()).thenReturn(false)
+        whenever(sessionManager.findSessionById(anyString())).thenReturn(session)
+        whenever(session.isCustomTabSession()).thenReturn(false)
 
         TabsToolbarFeature(toolbar, sessionManager, "123") {}
 

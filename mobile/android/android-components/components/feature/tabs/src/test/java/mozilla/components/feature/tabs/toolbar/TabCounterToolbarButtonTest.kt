@@ -6,6 +6,7 @@ package mozilla.components.feature.tabs.toolbar
 
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.test.any
@@ -20,10 +21,10 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class TabCounterToolbarButtonTest {
+
     @Test
     fun `TabCounter has initial count set`() {
         val sessionManager = SessionManager(mock())
