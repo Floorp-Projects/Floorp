@@ -23,7 +23,7 @@ using namespace js;
 using namespace js::gc;
 
 WeakMapBase::WeakMapBase(JSObject* memOf, Zone* zone)
-    : memberOf(memOf), zone_(zone), markColor(CellColor::White) {
+    : memberOf(memOf), zone_(zone), marked(false), markColor(MarkColor::Black) {
   MOZ_ASSERT_IF(memberOf, memberOf->compartment()->zone() == zone);
 }
 
@@ -32,14 +32,8 @@ WeakMapBase::~WeakMapBase() {
 }
 
 void WeakMapBase::unmarkZone(JS::Zone* zone) {
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!zone->gcWeakKeys().clear()) {
-    oomUnsafe.crash("clearing weak keys table");
-  }
-  MOZ_ASSERT(zone->gcNurseryWeakKeys().count() == 0);
-
   for (WeakMapBase* m : zone->gcWeakMapList()) {
-    m->markColor = CellColor::White;
+    m->marked = false;
   }
 }
 
@@ -58,7 +52,7 @@ bool WeakMapBase::checkMarkingForZone(JS::Zone* zone) {
 
   bool ok = true;
   for (WeakMapBase* m : zone->gcWeakMapList()) {
-    if (IsMarked(m->markColor) && !m->checkMarking()) {
+    if (m->marked && !m->checkMarking()) {
       ok = false;
     }
   }
@@ -70,7 +64,7 @@ bool WeakMapBase::checkMarkingForZone(JS::Zone* zone) {
 bool WeakMapBase::markZoneIteratively(JS::Zone* zone, GCMarker* marker) {
   bool markedAny = false;
   for (WeakMapBase* m : zone->gcWeakMapList()) {
-    if (IsMarked(m->markColor) && m->markEntries(marker)) {
+    if (m->marked && m->markEntries(marker)) {
       markedAny = true;
     }
   }
@@ -89,7 +83,7 @@ bool WeakMapBase::findSweepGroupEdges(JS::Zone* zone) {
 void WeakMapBase::sweepZone(JS::Zone* zone) {
   for (WeakMapBase* m = zone->gcWeakMapList().getFirst(); m;) {
     WeakMapBase* next = m->getNext();
-    if (IsMarked(m->markColor)) {
+    if (m->marked) {
       m->sweep();
     } else {
       m->clearAndCompact();
@@ -100,7 +94,7 @@ void WeakMapBase::sweepZone(JS::Zone* zone) {
 
 #ifdef DEBUG
   for (WeakMapBase* m : zone->gcWeakMapList()) {
-    MOZ_ASSERT(m->isInList() && IsMarked(m->markColor));
+    MOZ_ASSERT(m->isInList() && m->marked);
   }
 #endif
 }
@@ -117,24 +111,21 @@ void WeakMapBase::traceAllMappings(WeakMapTracer* tracer) {
 }
 
 bool WeakMapBase::saveZoneMarkedWeakMaps(JS::Zone* zone,
-                                         WeakMapColors& markedWeakMaps) {
+                                         WeakMapSet& markedWeakMaps) {
   for (WeakMapBase* m : zone->gcWeakMapList()) {
-    if (IsMarked(m->markColor)) {
-      if (!markedWeakMaps.put(m, m->markColor)) {
-        return false;
-      }
+    if (m->marked && !markedWeakMaps.put(m)) {
+      return false;
     }
   }
   return true;
 }
 
-void WeakMapBase::restoreMarkedWeakMaps(WeakMapColors& markedWeakMaps) {
-  for (WeakMapColors::Range r = markedWeakMaps.all(); !r.empty();
-       r.popFront()) {
-    WeakMapBase* map = r.front().key();
+void WeakMapBase::restoreMarkedWeakMaps(WeakMapSet& markedWeakMaps) {
+  for (WeakMapSet::Range r = markedWeakMaps.all(); !r.empty(); r.popFront()) {
+    WeakMapBase* map = r.front();
     MOZ_ASSERT(map->zone()->isGCMarking());
-    MOZ_ASSERT(map->markColor == CellColor::White);
-    map->markColor = r.front().value();
+    MOZ_ASSERT(!map->marked);
+    map->marked = true;
   }
 }
 
@@ -143,15 +134,17 @@ size_t ObjectValueMap::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
 }
 
 bool ObjectValueMap::findZoneEdges() {
-  // For weakmap keys with delegates in a different zone, add a zone edge to
-  // ensure that the delegate zone finishes marking before the key zone.
-  //
-  // Possibly add an edge the other direction too, because scanning the
-  // gcWeakKeys for a zone containing a delegate might end up marking a value
-  // in the map/key zone.
+  /*
+   * For unmarked weakmap keys with delegates in a different zone, add a zone
+   * edge to ensure that the delegate zone finishes marking before the key
+   * zone.
+   */
   JS::AutoSuppressGCAnalysis nogc;
   for (Range r = all(); !r.empty(); r.popFront()) {
     JSObject* key = r.front().key();
+    if (key->asTenured().isMarkedBlack()) {
+      continue;
+    }
     JSObject* delegate = getDelegate(key);
     if (!delegate) {
       continue;
@@ -162,30 +155,6 @@ bool ObjectValueMap::findZoneEdges() {
     }
     if (!delegateZone->addSweepGroupEdgeTo(key->zone())) {
       return false;
-    }
-
-    // The various cases depend on the order that the map and key are marked:
-    //
-    // If the key is marked:
-    //   key marked, then map marked:
-    //    - value was marked with map
-    //   map marked, key already in map, key marked before weak marking mode:
-    //    - key added to weakKeys when map marked
-    //    - value marked during enterWeakMarkingMode: this requires the
-    //      delegate's zone to be marked before the key zone, since only the
-    //      delegate will be in weakKeys.
-    //   map marked, key already in map, key marked after weak marking mode:
-    //    - during key marking, weakKeys[key] triggers marking of value
-    //   map marked, key inserted into map, key marked:
-    //    - value marked by insert barrier
-    //
-    // In all cases, a marked key will have already marked the value, so there
-    // is no need for a key->delegate zone. We still need the delegate->key
-    // edge for the enterWeakMarkingMode case described above.
-    if (!key->asTenured().isMarkedBlack()) {
-      if (!key->zone()->addSweepGroupEdgeTo(delegateZone)) {
-        return false;
-      }
     }
   }
   return true;
