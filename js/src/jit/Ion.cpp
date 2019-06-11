@@ -810,10 +810,11 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   size_t paddedRuntimeSize = AlignBytes(runtimeSize, DataAlignment);
   size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
 
-  size_t bytes = paddedSnapshotsSize + paddedRecoversSize + paddedBailoutSize +
-                 paddedConstantsSize + paddedSafepointIndicesSize +
-                 paddedOsiIndicesSize + paddedICEntriesSize +
-                 paddedRuntimeSize + paddedSafepointSize;
+  size_t bytes = paddedRuntimeSize + paddedICEntriesSize +
+                 paddedSafepointIndicesSize + paddedSafepointSize +
+                 paddedBailoutSize + paddedOsiIndicesSize +
+                 paddedSnapshotsSize + paddedRecoversSize + paddedConstantsSize;
+
   IonScript* script = cx->pod_malloc_with_extra<IonScript, uint8_t>(bytes);
   if (!script) {
     return nullptr;
@@ -858,6 +859,9 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   script->constantTable_ = offsetCursor;
   script->constantEntries_ = constants;
   offsetCursor += paddedConstantsSize;
+
+  script->allocBytes_ = sizeof(IonScript) + bytes;
+  MOZ_ASSERT(offsetCursor == script->allocBytes_);
 
   script->frameSlots_ = frameSlots;
   script->argumentSlots_ = argumentSlots;
@@ -3129,11 +3133,15 @@ size_t jit::SizeOfIonData(JSScript* script,
 
 void jit::DestroyJitScripts(FreeOp* fop, JSScript* script) {
   if (script->hasIonScript()) {
-    jit::IonScript::Destroy(fop, script->ionScript());
+    IonScript* ion = script->ionScript();
+    script->clearIonScript();
+    jit::IonScript::Destroy(fop, ion);
   }
 
   if (script->hasBaselineScript()) {
-    jit::BaselineScript::Destroy(fop, script->baselineScript());
+    BaselineScript* baseline = script->baselineScript();
+    script->clearBaselineScript();
+    jit::BaselineScript::Destroy(fop, baseline);
   }
 
   if (script->hasJitScript()) {
