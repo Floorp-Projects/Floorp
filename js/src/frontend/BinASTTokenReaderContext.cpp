@@ -45,7 +45,20 @@ const uint32_t MAX_LIST_LENGTH =
 // The number of elements in each sum.
 // Note: `extern` is needed to forward declare.
 extern const size_t SUM_LIMITS[BINAST_NUMBER_OF_SUM_TYPES];
+
+// For each sum, an array of BinASTKind corresponding to the possible value.
+// The length of `SUM_RESOLUTIONS[i]` is `SUM_LIMITS[i]`.
+// Note: `extern` is needed to forward declare.
 extern const BinASTKind* SUM_RESOLUTIONS[BINAST_NUMBER_OF_SUM_TYPES];
+
+// The number of elements in each enum.
+// Note: `extern` is needed to forward declare.
+extern const size_t STRING_ENUM_LIMITS[BINASTSTRINGENUM_LIMIT];
+
+// For each string enum, an array of BinASTVariant corresponding to the possible
+// value. The length of `STRING_ENUM_RESOLUTIONS[i]` is `STRING_ENUM_LIMITS[i]`.
+// Note: `extern` is needed to forward declare.
+extern const BinASTVariant* STRING_ENUM_RESOLUTIONS[BINASTSTRINGENUM_LIMIT];
 
 #define WRAP_INTERFACE(TYPE) Interface::Maker(BinASTKind::TYPE)
 #define WRAP_MAYBE_INTERFACE(TYPE) MaybeInterface::Maker(BinASTKind::TYPE)
@@ -702,11 +715,23 @@ class HuffmanPreludeReader {
 
   // A choice between several strings. May not be null.
   struct StringEnum : EntryBase {
+    using SymbolType = BinASTVariant;
+    using Table = HuffmanTableIndexedSymbolsStringEnum;
+
     // The values in the enum.
     const BinASTStringEnum contents;
     StringEnum(const NormalizedInterfaceAndField identity,
                const BinASTStringEnum contents)
         : EntryBase(identity), contents(contents) {}
+
+    size_t maxNumberOfSymbols() const {
+      return STRING_ENUM_LIMITS[static_cast<size_t>(contents)];
+    }
+
+    BinASTVariant variantAt(size_t index) const {
+      MOZ_ASSERT(index < maxNumberOfSymbols());
+      return STRING_ENUM_RESOLUTIONS[static_cast<size_t>(contents)][index];
+    }
 
     // Utility struct, used in macros to call the constructor as
     // `StringEnum::Maker(kind)(identity)`.
@@ -1198,6 +1223,41 @@ class HuffmanPreludeReader {
     return Ok();
   }
 
+  // ------ String Enums
+  // varnum index in the enum
+
+  // Read the number of symbols from the grammar.
+  template <>
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(
+      const StringEnum& entry) {
+    return entry.maxNumberOfSymbols();
+  }
+
+  // Read a single symbol from the grammar.
+  template <>
+  MOZ_MUST_USE JS::Result<BinASTVariant> readSymbol(const StringEnum& entry,
+                                                    size_t index) {
+    return entry.variantAt(index);
+  }
+
+  // Reading a single-value table of string indices.
+  template <>
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<StringEnum>(
+      HuffmanTableIndexedSymbolsStringEnum& table, const StringEnum& entry) {
+    BINJS_MOZ_TRY_DECL(
+        index, reader.readVarU32<BinASTTokenReaderContext::Compression::Yes>());
+    if (index > entry.maxNumberOfSymbols()) {
+      return raiseInvalidTableData(entry.identity);
+    }
+
+    BinASTVariant symbol = entry.variantAt(index);
+    // Note: The `std::move` is useless for performance, but necessary to keep
+    // a consistent API.
+    // NOLINTNEXTLINE(performance-move-const-arg)
+    MOZ_TRY(table.impl.initWithSingleValue(cx_, std::move(symbol)));
+    return Ok();
+  }
+
  private:
   // An auxiliary storage of bit lengths.
   // Used to avoid (re)allocating a vector of bit lengths each time we read a
@@ -1335,15 +1395,11 @@ class HuffmanPreludeReader {
       return owner.readTable<MaybeString>(entry);
     }
 
-    MOZ_MUST_USE JS::Result<Ok> operator()(const UnsignedLong& entry) {
-      // FIXME: Read table.
-      // FIXME: Initialize table.
-      MOZ_CRASH("Unimplemented");
-      return Ok();
+    MOZ_MUST_USE JS::Result<Ok> operator()(const StringEnum& entry) {
+      return owner.readTable<StringEnum>(entry);
     }
 
-    MOZ_MUST_USE JS::Result<Ok> operator()(const StringEnum& entry) {
-      // FIXME: Enqueue symbols.
+    MOZ_MUST_USE JS::Result<Ok> operator()(const UnsignedLong& entry) {
       // FIXME: Read table.
       // FIXME: Initialize table.
       MOZ_CRASH("Unimplemented");
@@ -1430,7 +1486,7 @@ const size_t SUM_LIMITS[]{
   BinASTKind::INTERFACE_NAME,
 #define WITH_SUM(_ENUM_NAME, _HUMAN_NAME, MACRO_NAME, _TYPE_NAME) \
   const BinASTKind SUM_RESOLUTION_##MACRO_NAME[]{                 \
-      FOR_EACH_BIN_INTERFACE_IN_SUM_##ARROW_EXPRESSION(WITH_SUM_CONTENTS)};
+      FOR_EACH_BIN_INTERFACE_IN_SUM_##MACRO_NAME(WITH_SUM_CONTENTS)};
 FOR_EACH_BIN_SUM(WITH_SUM)
 #undef WITH_SUM
 #undef WITH_SUM_CONTENTS
@@ -1440,6 +1496,30 @@ const BinASTKind* SUM_RESOLUTIONS[BINAST_NUMBER_OF_SUM_TYPES]{
   SUM_RESOLUTION_##MACRO_NAME,
     FOR_EACH_BIN_SUM(WITH_SUM)
 #undef WITH_SUM
+};
+
+// The number of possible interfaces in each string enum, indexed by
+// `static_cast<size_t>(BinASTStringEnum)`.
+const size_t STRING_ENUM_LIMITS[]{
+#define WITH_ENUM(name, _, MACRO_NAME) BIN_AST_STRING_ENUM_##MACRO_NAME##_LIMIT,
+    FOR_EACH_BIN_STRING_ENUM(WITH_ENUM)
+#undef WITH_ENUM
+};
+
+#define WITH_ENUM_CONTENTS(_ENUM_NAME, VARIANT_NAME, _HUMAN_NAME) \
+  BinASTVariant::VARIANT_NAME,
+#define WITH_ENUM(_ENUM_NAME, _, MACRO_NAME)                              \
+  const BinASTVariant STRING_ENUM_RESOLUTION_##MACRO_NAME[]{              \
+      FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_##MACRO_NAME##_BY_STRING_ORDER( \
+          WITH_ENUM_CONTENTS)};
+FOR_EACH_BIN_STRING_ENUM(WITH_ENUM)
+#undef WITH_ENUM
+#undef WITH_ENUM_CONTENTS
+
+const BinASTVariant* STRING_ENUM_RESOLUTIONS[BINASTSTRINGENUM_LIMIT]{
+#define WITH_ENUM(name, _, MACRO_NAME) STRING_ENUM_RESOLUTION_##MACRO_NAME,
+    FOR_EACH_BIN_STRING_ENUM(WITH_ENUM)
+#undef WITH_ENUM
 };
 
 }  // namespace frontend
