@@ -90,6 +90,7 @@ class WebAppManifestParser {
     }
 }
 
+private const val HEX_RADIX = 16
 private val whitespace = "\\s+".toRegex()
 
 private fun parseDisplayMode(json: JSONObject): WebAppManifest.DisplayMode {

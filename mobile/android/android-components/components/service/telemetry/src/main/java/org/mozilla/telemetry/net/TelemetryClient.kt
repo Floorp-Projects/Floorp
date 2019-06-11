@@ -8,6 +8,7 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.Response
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.telemetry.config.TelemetryConfiguration
 import java.io.IOException
@@ -22,7 +23,7 @@ class TelemetryClient(
 ) {
     private val logger = Logger("telemetry/client")
 
-    @Suppress("MagicNumber", "ReturnCount")
+    @Suppress("LongMethod")
     fun uploadPing(configuration: TelemetryConfiguration, path: String, serializedPing: String): Boolean {
         val request = Request(
             url = configuration.serverEndpoint + path,
@@ -45,16 +46,16 @@ class TelemetryClient(
 
         logger.debug("Ping upload: $status")
 
-        when (status) {
-            in 200..299 -> {
+        return when (status) {
+            in Response.SUCCESS_STATUS_RANGE -> {
                 // Known success errors (2xx):
                 // 200 - OK. Request accepted into the pipeline.
 
                 // We treat all success codes as successful upload even though we only expect 200.
-                return true
+                true
             }
 
-            in 400..499 -> {
+            in Response.CLIENT_ERROR_STATUS_RANGE -> {
                 // Known client (4xx) errors:
                 // 404 - not found - POST/PUT to an unknown namespace
                 // 405 - wrong request type (anything other than POST/PUT)
@@ -67,7 +68,7 @@ class TelemetryClient(
                 // to recover from this by re-trying again, so we just log and error and report a
                 // successful upload to the service.
                 logger.error("Server returned client error code: $status")
-                return true
+                true
             }
 
             else -> {
@@ -76,7 +77,7 @@ class TelemetryClient(
 
                 // For all other errors we log a warning an try again at a later time.
                 logger.warn("Server returned response code: $status")
-                return false
+                false
             }
         }
     }

@@ -39,7 +39,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
  */
-@Suppress("TooManyFunctions", "MagicNumber", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass")
 class ToolbarActivity : AppCompatActivity() {
     private val shippedDomainsProvider = ShippedDomainsProvider()
     private val customDomainsProvider = CustomDomainsProvider()
@@ -267,7 +267,7 @@ class ToolbarActivity : AppCompatActivity() {
     /**
      * A large dark toolbar with padding, flexible space and branding.
      */
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "MagicNumber")
     private fun setupSeedlingToolbar() {
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Setup background and size/padding
@@ -390,7 +390,7 @@ class ToolbarActivity : AppCompatActivity() {
         // Add a fixed size element for spacing and a branding image
         // //////////////////////////////////////////////////////////////////////////////////////////
 
-        val space = Toolbar.ActionSpace(128.dpToPx(resources.displayMetrics))
+        val space = Toolbar.ActionSpace(SPACING_SIZE_DP.dpToPx(resources.displayMetrics))
 
         toolbar.addBrowserAction(space)
 
@@ -458,7 +458,7 @@ class ToolbarActivity : AppCompatActivity() {
 
         job = CoroutineScope(Dispatchers.Main).launch {
             try {
-                loop@ for (progress in 0..100 step 5) {
+                loop@ for (progress in PROGRESS_RANGE step RELOAD_STEP_SIZE) {
                     if (!isActive) {
                         break@loop
                     }
@@ -469,7 +469,7 @@ class ToolbarActivity : AppCompatActivity() {
                         view.progress = progress
                     }
 
-                    delay(progress * 5L)
+                    delay(progress * RELOAD_STEP_SIZE.toLong())
                 }
             } catch (t: Throwable) {
                 if (view == null) {
@@ -492,4 +492,10 @@ class ToolbarActivity : AppCompatActivity() {
     }
 
     private fun Resources.getThemedDrawable(@DrawableRes resId: Int) = getDrawable(resId, theme)
+
+    companion object {
+        private val PROGRESS_RANGE = 0..100
+        private const val SPACING_SIZE_DP = 128
+        private const val RELOAD_STEP_SIZE = 5
+    }
 }

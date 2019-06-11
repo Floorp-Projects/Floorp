@@ -26,6 +26,7 @@ import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.share
+import mozilla.components.support.utils.ColorUtils.getReadableTextColor
 
 /**
  * Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig.
@@ -236,25 +237,5 @@ class CustomTabsToolbarFeature(
     companion object {
         const val TITLE_TEXT_SIZE = 15f
         const val URL_TEXT_SIZE = 12f
-        @Suppress("MagicNumber")
-        internal fun getReadableTextColor(backgroundColor: Int): Int {
-            val greyValue = greyscaleFromRGB(backgroundColor)
-            // 186 chosen rather than the seemingly obvious 128 because of gamma.
-            return if (greyValue < 186) {
-                Color.WHITE
-            } else {
-                Color.BLACK
-            }
-        }
-
-        @Suppress("MagicNumber")
-        private fun greyscaleFromRGB(color: Int): Int {
-            val red = Color.red(color)
-            val green = Color.green(color)
-            val blue = Color.blue(color)
-            // Magic weighting taken from a stackoverflow post, supposedly related to how
-            // humans perceive color.
-            return (0.299 * red + 0.587 * green + 0.114 * blue).toInt()
-        }
     }
 }

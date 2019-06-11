@@ -10,7 +10,6 @@ import mozilla.components.support.ktx.kotlin.toBitmap
 
 const val MAX_BITS_PER_PIXEL = 32
 
-@Suppress("MagicNumber")
 internal data class IconDirectoryEntry(
     val width: Int,
     val height: Int,
@@ -51,6 +50,7 @@ internal data class IconDirectoryEntry(
         else -> 0
     }
 
+    @Suppress("MagicNumber")
     fun toBitmap(data: ByteArray): Bitmap? {
         if (payloadIsPNG) {
             // PNG payload. Simply extract it and let Android decode it.

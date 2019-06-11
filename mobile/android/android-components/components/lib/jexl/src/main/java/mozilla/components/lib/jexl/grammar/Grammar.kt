@@ -49,9 +49,7 @@ class Grammar {
             Token.Type.BINARY_OP,
             40
         ) { left, right ->
-            val result = left.div(right)
-
-            when (result) {
+            when (val result = left.div(right)) {
                 is JexlInteger -> result
                 is JexlDouble -> JexlInteger(
                     floor(

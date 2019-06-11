@@ -5,6 +5,8 @@
 package mozilla.components.concept.fetch
 
 import mozilla.components.concept.fetch.Response.Body
+import mozilla.components.concept.fetch.Response.Companion.CLIENT_ERROR_STATUS_RANGE
+import mozilla.components.concept.fetch.Response.Companion.SUCCESS_STATUS_RANGE
 import java.io.BufferedReader
 import java.io.Closeable
 import java.io.IOException
@@ -122,18 +124,21 @@ data class Response(
             fun empty() = Body("".byteInputStream())
         }
     }
+
+    companion object {
+        val SUCCESS_STATUS_RANGE = 200..299
+        val CLIENT_ERROR_STATUS_RANGE = 400..499
+    }
 }
 
 /**
  * Returns true if the response was successful (status in the range 200-299) or false otherwise.
  */
-@Suppress("MagicNumber")
 val Response.isSuccess: Boolean
-    get() = status in 200..299
+    get() = status in SUCCESS_STATUS_RANGE
 
 /**
  * Returns true if the response was a client error (status in the range 400-499) or false otherwise.
  */
-@Suppress("MagicNumber")
 val Response.isClientError: Boolean
-    get() = status in 400..499
+    get() = status in CLIENT_ERROR_STATUS_RANGE

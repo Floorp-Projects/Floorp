@@ -33,7 +33,7 @@ class DefaultIconGenerator(
     @ArrayRes private val backgroundColorsRes: Int = R.array.mozac_browser_icons_photon_palette
 ) : IconGenerator {
 
-    @Suppress("MagicNumber")
+    @Suppress("LongMethod")
     override fun generate(context: Context, request: IconRequest): Icon {
         val size = context.resources.getDimension(request.size.dimen)
         val sizePx = size.toInt()
@@ -56,7 +56,7 @@ class DefaultIconGenerator(
         // size of 112dp we'd use a text size of 14dp (112 / 8).
         val textSize = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
-            size / 8.0f,
+            size * TARGET_ICON_RATIO,
             context.resources.displayMetrics
         )
 
@@ -135,5 +135,9 @@ class DefaultIconGenerator(
         }
 
         return "?"
+    }
+
+    companion object {
+        private const val TARGET_ICON_RATIO = 1 / 8f
     }
 }

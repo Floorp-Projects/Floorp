@@ -6,19 +6,21 @@ package mozilla.components.browser.toolbar.behavior
 
 import android.animation.ValueAnimator
 import android.content.Context
-import androidx.core.view.ViewCompat
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.ViewCompat
 import com.google.android.material.snackbar.Snackbar
 import mozilla.components.browser.toolbar.BrowserToolbar
 import kotlin.math.max
 import kotlin.math.min
 
 private const val SNAP_ANIMATION_DURATION = 150L
+
+private const val SMALL_ELEVATION_CHANGE = 0.01f
 
 /**
  * A [CoordinatorLayout.Behavior] implementation to be used when placing [BrowserToolbar] at the bottom of the screen.
@@ -61,7 +63,6 @@ class BrowserToolbarBottomBehavior(
         }
     }
 
-    @Suppress("MagicNumber")
     override fun onStopNestedScroll(
         coordinatorLayout: CoordinatorLayout,
         child: BrowserToolbar,
@@ -69,7 +70,7 @@ class BrowserToolbarBottomBehavior(
         type: Int
     ) {
         if (shouldSnapAfterScroll || type == ViewCompat.TYPE_NON_TOUCH) {
-            if (child.translationY >= (child.height * 0.5f)) {
+            if (child.translationY >= (child.height / 2f)) {
                 animateSnap(child, SnapDirection.DOWN)
             } else {
                 animateSnap(child, SnapDirection.UP)
@@ -105,7 +106,6 @@ class BrowserToolbarBottomBehavior(
         start()
     }
 
-    @Suppress("MagicNumber")
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun positionSnackbar(child: View, snackbarLayout: Snackbar.SnackbarLayout) {
         val params = snackbarLayout.layoutParams as CoordinatorLayout.LayoutParams
@@ -120,7 +120,7 @@ class BrowserToolbarBottomBehavior(
         // In order to avoid the snackbar casting a shadow on the toolbar we adjust the elevation of the snackbar here.
         // We still place it slightly behind the toolbar so that it will not animate over the toolbar but instead pop
         // out from under the toolbar.
-        snackbarLayout.elevation = child.elevation - 0.01f
+        snackbarLayout.elevation = child.elevation - SMALL_ELEVATION_CHANGE
     }
 }
 

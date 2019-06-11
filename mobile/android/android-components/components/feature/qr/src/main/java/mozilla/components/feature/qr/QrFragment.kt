@@ -57,6 +57,8 @@ import java.util.Collections
 import java.util.Comparator
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * A [Fragment] that displays a QR scanner.
@@ -248,7 +250,7 @@ class QrFragment : Fragment() {
      * @param width The width of available size for camera preview
      * @param height The height of available size for camera preview
      */
-    @Suppress("ComplexMethod", "MagicNumber")
+    @Suppress("ComplexMethod", "LongMethod")
     internal fun setUpCameraOutputs(width: Int, height: Int) {
         val manager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager? ?: return
 
@@ -256,7 +258,7 @@ class QrFragment : Fragment() {
             val characteristics = manager.getCameraCharacteristics(cameraId)
 
             val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
-            if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+            if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
                 continue
             }
 
@@ -269,14 +271,12 @@ class QrFragment : Fragment() {
             val displayRotation = activity?.windowManager?.defaultDisplay?.rotation
 
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) as Int
-            var swappedDimensions = false
-            when (displayRotation) {
-                Surface.ROTATION_0, Surface.ROTATION_180 -> if (sensorOrientation == 90 || sensorOrientation == 270) {
-                    swappedDimensions = true
-                }
-                Surface.ROTATION_90, Surface.ROTATION_270 -> if (sensorOrientation == 0 || sensorOrientation == 180) {
-                    swappedDimensions = true
-                }
+
+            @Suppress("MagicNumber")
+            val swappedDimensions = when (displayRotation) {
+                Surface.ROTATION_0, Surface.ROTATION_180 -> sensorOrientation == 90 || sensorOrientation == 270
+                Surface.ROTATION_90, Surface.ROTATION_270 -> sensorOrientation == 0 || sensorOrientation == 180
+                else -> false
             }
 
             val displaySize = Point()
@@ -293,13 +293,8 @@ class QrFragment : Fragment() {
                 maxPreviewHeight = displaySize.x
             }
 
-            if (maxPreviewWidth > MAX_PREVIEW_WIDTH) {
-                maxPreviewWidth = MAX_PREVIEW_WIDTH
-            }
-
-            if (maxPreviewHeight > MAX_PREVIEW_HEIGHT) {
-                maxPreviewHeight = MAX_PREVIEW_HEIGHT
-            }
+            maxPreviewWidth = min(maxPreviewWidth, MAX_PREVIEW_WIDTH)
+            maxPreviewHeight = min(maxPreviewHeight, MAX_PREVIEW_HEIGHT)
 
             previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java),
                     rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
@@ -369,28 +364,27 @@ class QrFragment : Fragment() {
     /**
      * Configures the necessary [android.graphics.Matrix] transformation to `textureView`.
      * This method should be called after the camera preview size is determined in
-     * setUpCameraOutputs and also the size of `textureView` is fixed.
+     * [setUpCameraOutputs] and also the size of `textureView` is fixed.
      *
      * @param viewWidth The width of `textureView`
      * @param viewHeight The height of `textureView`
      */
-    @Suppress("MagicNumber")
+    @Suppress("LongMethod")
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {
-        val activity = activity
-        if (null == previewSize || null == activity) {
-            return
-        }
-        val size = previewSize as Size
+        val activity = activity ?: return
+        val size = previewSize ?: return
         val rotation = activity.windowManager.defaultDisplay.rotation
         val matrix = Matrix()
         val viewRect = RectF(0f, 0f, viewWidth.toFloat(), viewHeight.toFloat())
         val bufferRect = RectF(0f, 0f, size.height.toFloat(), size.width.toFloat())
         val centerX = viewRect.centerX()
         val centerY = viewRect.centerY()
+
+        @Suppress("MagicNumber")
         if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
             bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY())
             matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL)
-            val scale = Math.max(viewHeight.toFloat() / size.height, viewWidth.toFloat() / size.width)
+            val scale = max(viewHeight.toFloat() / size.height, viewWidth.toFloat() / size.width)
             matrix.postScale(scale, scale, centerX, centerY)
             matrix.postRotate((90 * (rotation - 2)).toFloat(), centerX, centerY)
         } else if (Surface.ROTATION_180 == rotation) {

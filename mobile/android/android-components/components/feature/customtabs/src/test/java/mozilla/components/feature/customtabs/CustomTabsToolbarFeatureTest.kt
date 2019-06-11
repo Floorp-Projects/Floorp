@@ -143,17 +143,6 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
-    fun getReadableTextColor() {
-        // White text color for a black background
-        val white = CustomTabsToolbarFeature.getReadableTextColor(0)
-        assertEquals(Color.WHITE, white)
-
-        // Black text color for a white background
-        val black = CustomTabsToolbarFeature.getReadableTextColor(0xFFFFFF)
-        assertEquals(Color.BLACK, black)
-    }
-
-    @Test
     fun `initialize calls addCloseButton`() {
         val session: Session = mock()
         val toolbar = BrowserToolbar(testContext)

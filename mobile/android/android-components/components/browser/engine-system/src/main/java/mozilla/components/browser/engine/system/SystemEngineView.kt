@@ -721,13 +721,12 @@ class SystemEngineView @JvmOverloads constructor(
         return areDialogsAbusedByTime() || areDialogsAbusedByCount()
     }
 
-    @Suppress("MagicNumber")
     internal fun areDialogsAbusedByTime(): Boolean {
         return if (jsAlertCount == 0) {
             false
         } else {
             val now = Date()
-            val diffInSeconds = (now.time - lastDialogShownAt.time) / 1000 // 1 second equal to 1000 milliseconds
+            val diffInSeconds = (now.time - lastDialogShownAt.time) / SECOND_MS
             diffInSeconds < MAX_SUCCESSIVE_DIALOG_SECONDS_LIMIT
         }
     }
@@ -766,6 +765,9 @@ class SystemEngineView @JvmOverloads constructor(
 
         // Maximum realm length to be shown in authentication dialog.
         internal const val MAX_REALM_LENGTH: Int = 50
+
+        // Number of milliseconds in 1 second.
+        internal const val SECOND_MS: Int = 1000
 
         @Volatile
         internal var URL_MATCHER: UrlMatcher? = null

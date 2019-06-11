@@ -19,6 +19,8 @@ import androidx.recyclerview.widget.RecyclerView
 
 private const val KEY_SELECTED_COLOR = "KEY_SELECTED_COLOR"
 
+private const val RGB_BIT_MASK = 0xffffff
+
 /**
  * [androidx.fragment.app.DialogFragment] implementation for a color picker dialog.
  */
@@ -146,7 +148,6 @@ internal fun String.toColor(): Int {
     }
 }
 
-@Suppress("MagicNumber")
 internal fun Int.toHexColor(): String {
-    return String.format("#%06x", 0xffffff and this)
+    return String.format("#%06x", RGB_BIT_MASK and this)
 }
