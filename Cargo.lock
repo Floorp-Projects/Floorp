@@ -2463,22 +2463,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "rsdparsa"
-version = "0.1.0"
-dependencies = [
- "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.88 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_derive 1.0.88 (git+https://github.com/servo/serde?branch=deserialize_from_enums10)",
-]
-
-[[package]]
 name = "rsdparsa_capi"
 version = "0.1.0"
 dependencies = [
  "libc 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "nserror 0.1.0",
- "rsdparsa 0.1.0",
+ "webrtc-sdp 0.1.0",
 ]
 
 [[package]]
@@ -3432,6 +3423,16 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "nom 4.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "webrtc-sdp"
+version = "0.1.0"
+dependencies = [
+ "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.88 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.88 (git+https://github.com/servo/serde?branch=deserialize_from_enums10)",
+ "serde_json 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
