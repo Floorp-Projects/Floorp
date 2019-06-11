@@ -4,35 +4,26 @@
 
 package mozilla.components.feature.prompts
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
-import android.content.DialogInterface
 import android.content.DialogInterface.BUTTON_POSITIVE
-import android.view.ContextThemeWrapper
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import mozilla.components.support.test.mock
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.ext.appCompatContext
 import mozilla.components.feature.prompts.R.id
 import mozilla.components.support.ktx.android.view.isVisible
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class TextPromptDialogFragmentTest {
-
-    private val context: Context
-        get() = ContextThemeWrapper(
-            ApplicationProvider.getApplicationContext<Context>(),
-            androidx.appcompat.R.style.Theme_AppCompat
-        )
 
     @Test
     fun `build dialog`() {
@@ -41,7 +32,7 @@ class TextPromptDialogFragmentTest {
             TextPromptDialogFragment.newInstance("sessionId", "title", "label", "defaultValue", true)
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -78,7 +69,7 @@ class TextPromptDialogFragmentTest {
             TextPromptDialogFragment.newInstance("sessionId", "title", "label", "defaultValue", false)
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -100,12 +91,12 @@ class TextPromptDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
-        val positiveButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE)
+        val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
 
         verify(mockFeature).onConfirm("sessionId", false to "defaultValue")
@@ -122,7 +113,7 @@ class TextPromptDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -148,7 +139,7 @@ class TextPromptDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         fragment.onCancel(null)
 

@@ -21,7 +21,7 @@ import android.webkit.MimeTypeMap
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
@@ -40,6 +40,7 @@ import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -47,20 +48,18 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import java.security.InvalidParameterException
 import java.util.Date
 import java.util.UUID
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class PromptFeatureTest {
 
     private lateinit var mockSessionManager: SessionManager
@@ -69,7 +68,7 @@ class PromptFeatureTest {
 
     @Before
     fun setup() {
-        val engine = Mockito.mock(Engine::class.java)
+        val engine = mock<Engine>()
         mockFragmentManager = mockFragmentManager()
 
         mockSessionManager = spy(SessionManager(engine))
@@ -521,13 +520,12 @@ class PromptFeatureTest {
         val code = 1
         var onRequestPermissionWasCalled = false
         val filePickerRequest = PromptRequest.File(emptyArray(), false, { _, _ -> }, { _, _ -> }) {}
-        val context = ApplicationProvider.getApplicationContext<Context>()
 
         promptFeature = PromptFeature(null, mockFragment, mockSessionManager, null, mockFragmentManager) {
             onRequestPermissionWasCalled = true
         }
 
-        doReturn(context).`when`(mockFragment).requireContext()
+        doReturn(testContext).`when`(mockFragment).requireContext()
 
         promptFeature.handleFilePickerRequest(filePickerRequest)
 
@@ -540,13 +538,12 @@ class PromptFeatureTest {
         val mockFragment: Fragment = mock()
         var onRequestPermissionWasCalled = false
         val filePickerRequest = PromptRequest.File(emptyArray(), false, { _, _ -> }, { _, _ -> }) {}
-        val context = ApplicationProvider.getApplicationContext<Context>()
 
         promptFeature = PromptFeature(null, mockFragment, mockSessionManager, null, mockFragmentManager) {
             onRequestPermissionWasCalled = true
         }
 
-        doReturn(context).`when`(mockFragment).requireContext()
+        doReturn(testContext).`when`(mockFragment).requireContext()
 
         grantPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
 
@@ -1048,9 +1045,8 @@ class PromptFeatureTest {
 
     private fun stubContext() {
         val mockFragment: Fragment = mock()
-        val context = ApplicationProvider.getApplicationContext<Context>()
 
-        doReturn(context).`when`(mockFragment).requireContext()
+        doReturn(testContext).`when`(mockFragment).requireContext()
 
         promptFeature = PromptFeature(null, mockFragment, mockSessionManager, null, mockFragmentManager) {}
     }

@@ -4,40 +4,33 @@
 
 package mozilla.components.feature.prompts
 
-import android.content.Context
 import android.content.DialogInterface.BUTTON_NEGATIVE
-import android.content.DialogInterface.BUTTON_POSITIVE
 import android.content.DialogInterface.BUTTON_NEUTRAL
+import android.content.DialogInterface.BUTTON_POSITIVE
 import android.os.Build.VERSION_CODES.LOLLIPOP
-
-import android.view.ContextThemeWrapper
 import android.widget.DatePicker
 import android.widget.TextView
 import android.widget.TimePicker
 import androidx.appcompat.app.AlertDialog
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.ext.appCompatContext
 import mozilla.components.feature.prompts.TimePickerDialogFragment.Companion.SELECTION_TYPE_DATE_AND_TIME
 import mozilla.components.feature.prompts.TimePickerDialogFragment.Companion.SELECTION_TYPE_TIME
 import mozilla.components.support.ktx.kotlin.toDate
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.verify
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
-import org.robolectric.RobolectricTestRunner
+import org.mockito.Mockito.verify
 import org.robolectric.annotation.Config
 import java.util.Calendar
 import java.util.Date
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class TimePickerDialogFragmentTest {
-    private val context: Context
-        get() = ContextThemeWrapper(
-                ApplicationProvider.getApplicationContext(),
-                R.style.Theme_AppCompat
-        )
 
     @Test
     fun `build dialog`() {
@@ -48,7 +41,7 @@ class TimePickerDialogFragmentTest {
                 TimePickerDialogFragment.newInstance("sessionId", "title", initialDate, minDate, maxDate)
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -83,7 +76,7 @@ class TimePickerDialogFragmentTest {
         )
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -108,7 +101,7 @@ class TimePickerDialogFragmentTest {
                 TimePickerDialogFragment.newInstance("sessionId", "", Date(), null, null)
         )
         fragment.feature = mockFeature
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
         fragment.onCancel(null)
         verify(mockFeature).onCancel("sessionId")
     }
@@ -142,7 +135,7 @@ class TimePickerDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -180,7 +173,7 @@ class TimePickerDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -207,7 +200,7 @@ class TimePickerDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -229,7 +222,7 @@ class TimePickerDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()

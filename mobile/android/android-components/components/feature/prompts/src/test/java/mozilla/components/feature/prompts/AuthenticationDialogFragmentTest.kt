@@ -4,14 +4,13 @@
 
 package mozilla.components.feature.prompts
 
-import android.content.Context
 import android.content.DialogInterface
-import android.view.ContextThemeWrapper
 import android.view.View.GONE
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.ext.appCompatContext
 import mozilla.components.feature.prompts.R.id
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -20,16 +19,9 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class AuthenticationDialogFragmentTest {
-
-    private val context: Context
-        get() = ContextThemeWrapper(
-            ApplicationProvider.getApplicationContext<Context>(),
-            androidx.appcompat.R.style.Theme_AppCompat
-        )
 
     @Test
     fun `build dialog`() {
@@ -45,7 +37,7 @@ class AuthenticationDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -89,7 +81,7 @@ class AuthenticationDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -114,7 +106,7 @@ class AuthenticationDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -122,7 +114,7 @@ class AuthenticationDialogFragmentTest {
 
         val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
 
-        val defaultTitle = context.getString(AuthenticationDialogFragment.DEFAULT_TITLE)
+        val defaultTitle = appCompatContext.getString(AuthenticationDialogFragment.DEFAULT_TITLE)
         assertEquals(titleTextView.text.toString(), defaultTitle)
     }
 
@@ -144,7 +136,7 @@ class AuthenticationDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -173,7 +165,7 @@ class AuthenticationDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         fragment.onCancel(null)
 

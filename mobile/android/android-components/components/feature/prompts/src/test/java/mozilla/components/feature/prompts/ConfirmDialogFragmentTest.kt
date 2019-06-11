@@ -4,29 +4,21 @@
 
 package mozilla.components.feature.prompts
 
-import android.content.Context
 import android.content.DialogInterface
-import android.view.ContextThemeWrapper
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.ext.appCompatContext
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ConfirmDialogFragmentTest {
-
-    private val context: Context
-        get() = ContextThemeWrapper(
-            ApplicationProvider.getApplicationContext<Context>(),
-            androidx.appcompat.R.style.Theme_AppCompat
-        )
 
     @Test
     fun `build dialog`() {
@@ -41,7 +33,7 @@ class ConfirmDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -79,7 +71,7 @@ class ConfirmDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -107,7 +99,7 @@ class ConfirmDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()

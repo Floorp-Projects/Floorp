@@ -4,33 +4,26 @@
 
 package mozilla.components.feature.prompts
 
-import android.content.Context
 import android.content.DialogInterface
-import androidx.recyclerview.widget.RecyclerView
-import android.view.ContextThemeWrapper
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.test.core.app.ApplicationProvider
+import androidx.recyclerview.widget.RecyclerView
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.ext.appCompatContext
 import mozilla.components.feature.prompts.ColorPickerDialogFragment.ColorAdapter
 import mozilla.components.feature.prompts.ColorPickerDialogFragment.ColorViewHolder
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ColorPickerDialogFragmentTest {
-
-    private val context: Context
-        get() = ContextThemeWrapper(
-            ApplicationProvider.getApplicationContext<Context>(),
-            androidx.appcompat.R.style.Theme_AppCompat
-        )
 
     @Test
     fun `build dialog`() {
@@ -39,7 +32,7 @@ class ColorPickerDialogFragmentTest {
             ColorPickerDialogFragment.newInstance("sessionId", "#e66465")
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -60,7 +53,7 @@ class ColorPickerDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -84,7 +77,7 @@ class ColorPickerDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -106,7 +99,7 @@ class ColorPickerDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         fragment.onCancel(null)
 
@@ -119,10 +112,10 @@ class ColorPickerDialogFragmentTest {
         val fragment = spy(
             ColorPickerDialogFragment.newInstance("sessionId", "#e66465")
         )
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val adapter = getAdapterFrom(fragment)
-        val holder = adapter.onCreateViewHolder(LinearLayout(context), 0) as ColorViewHolder
+        val holder = adapter.onCreateViewHolder(LinearLayout(testContext), 0) as ColorViewHolder
         val labelView = holder.itemView as TextView
         adapter.bindViewHolder(holder, 0)
 
@@ -136,10 +129,10 @@ class ColorPickerDialogFragmentTest {
         val fragment = spy(
             ColorPickerDialogFragment.newInstance("sessionId", "#e66465")
         )
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val adapter = getAdapterFrom(fragment)
-        val holder = adapter.onCreateViewHolder(LinearLayout(context), 0) as ColorViewHolder
+        val holder = adapter.onCreateViewHolder(LinearLayout(testContext), 0) as ColorViewHolder
         val colorItem = holder.itemView as TextView
         adapter.bindViewHolder(holder, 0)
 

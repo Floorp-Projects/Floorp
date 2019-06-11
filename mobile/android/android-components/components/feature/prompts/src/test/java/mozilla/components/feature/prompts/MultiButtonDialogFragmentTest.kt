@@ -4,16 +4,15 @@
 
 package mozilla.components.feature.prompts
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import android.content.DialogInterface
 import android.content.DialogInterface.BUTTON_POSITIVE
-import android.view.ContextThemeWrapper
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import mozilla.components.support.test.mock
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.ext.appCompatContext
 import mozilla.components.feature.prompts.R.id
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -22,16 +21,9 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class MultiButtonDialogFragmentTest {
-
-    private val context: Context
-        get() = ContextThemeWrapper(
-            ApplicationProvider.getApplicationContext<Context>(),
-            androidx.appcompat.R.style.Theme_AppCompat
-        )
 
     @Test
     fun `Build dialog`() {
@@ -48,7 +40,7 @@ class MultiButtonDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -57,7 +49,7 @@ class MultiButtonDialogFragmentTest {
         val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
         val messageTextView = dialog.findViewById<TextView>(android.R.id.message)
         val checkBox = dialog.findViewById<CheckBox>(id.no_more_dialogs_check_box)
-        val positiveButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE)
+        val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         val negativeButton = (dialog).getButton(DialogInterface.BUTTON_NEGATIVE)
         val neutralButton = (dialog).getButton(DialogInterface.BUTTON_NEUTRAL)
 
@@ -90,7 +82,7 @@ class MultiButtonDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -118,12 +110,12 @@ class MultiButtonDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
-        val positiveButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE)
+        val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)
         positiveButton.performClick()
 
         verify(mockFeature).onConfirm("sessionId", false to MultiButtonDialogFragment.ButtonType.POSITIVE)
@@ -146,7 +138,7 @@ class MultiButtonDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -174,7 +166,7 @@ class MultiButtonDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -202,7 +194,7 @@ class MultiButtonDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -234,7 +226,7 @@ class MultiButtonDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(appCompatContext).`when`(fragment).requireContext()
 
         fragment.onCancel(null)
 
