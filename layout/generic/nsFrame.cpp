@@ -987,14 +987,7 @@ void nsIFrame::DiscardOldItems() {
   }
 
   for (nsDisplayItemBase* i : *items) {
-    // Only discard items that are invalidated by this frame,
-    // as we're only guaranteed to rebuild those items. Table
-    // background items are created by the relevant table part,
-    // but have the cell frame as the primary frame, and we don't
-    // want to remove them if this is the cell.
-    if (i->FrameForInvalidation() == this) {
-      i->DiscardIfOldItem();
-    }
+    i->DiscardIfOldItem();
   }
 }
 
