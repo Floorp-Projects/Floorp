@@ -433,9 +433,9 @@ class FileObject : public NativeObject {
   static void finalize(FreeOp* fop, JSObject* obj) {
     FileObject* fileObj = &obj->as<FileObject>();
     RCFile* file = fileObj->rcFile();
+    RemoveCellMemory(obj, sizeof(*file), MemoryUse::FileObjectFile);
     if (file->release()) {
-      fileObj->setRCFile(nullptr);
-      fop->delete_(file);
+      fop->delete_(obj);
     }
   }
 
@@ -458,7 +458,7 @@ class FileObject : public NativeObject {
 
  private:
   void setRCFile(RCFile* file) {
-    js::SetReservedSlot(this, FILE_SLOT, PrivateValue(file));
+    InitReservedSlot(this, FILE_SLOT, file, MemoryUse::FileObjectFile);
   }
 };
 
