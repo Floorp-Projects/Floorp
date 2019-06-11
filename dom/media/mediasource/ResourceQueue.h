@@ -62,6 +62,8 @@ class ResourceQueue : private nsDeque {
   void Dump(const char* aPath);
 #endif
 
+  const uint8_t* GetContiguousAccess(int64_t aOffset, size_t aSize);
+
  private:
   ResourceItem* ResourceAt(uint32_t aIndex) const;
 

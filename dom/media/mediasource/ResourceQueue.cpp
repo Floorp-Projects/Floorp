@@ -50,6 +50,20 @@ uint64_t ResourceQueue::GetOffset() { return mOffset; }
 
 uint64_t ResourceQueue::GetLength() { return mLogicalLength; }
 
+const uint8_t* ResourceQueue::GetContiguousAccess(int64_t aOffset,
+                                                  size_t aSize) {
+  uint32_t offset = 0;
+  uint32_t start = GetAtOffset(aOffset, &offset);
+  if (start >= GetSize()) {
+    return nullptr;
+  }
+  ResourceItem* item = ResourceAt(start);
+  if (offset + aSize > item->mData->Length()) {
+    return nullptr;
+  }
+  return item->mData->Elements() + offset;
+}
+
 void ResourceQueue::CopyData(uint64_t aOffset, uint32_t aCount, char* aDest) {
   uint32_t offset = 0;
   uint32_t start = GetAtOffset(aOffset, &offset);

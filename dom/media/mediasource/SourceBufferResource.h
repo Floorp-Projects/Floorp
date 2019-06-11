@@ -110,6 +110,10 @@ class SourceBufferResource final
     return mInputBuffer.GetLength() - mInputBuffer.GetOffset();
   }
 
+  const uint8_t* GetContiguousAccess(int64_t aOffset, size_t aSize) {
+    return mInputBuffer.GetContiguousAccess(aOffset, aSize);
+  }
+
 #if defined(DEBUG)
   void Dump(const char* aPath) { mInputBuffer.Dump(aPath); }
 #endif
