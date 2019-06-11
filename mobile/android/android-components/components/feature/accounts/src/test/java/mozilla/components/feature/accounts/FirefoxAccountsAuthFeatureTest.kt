@@ -24,7 +24,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 // Same as the actual account manager, except we get to control how FirefoxAccountShaped instances
 // are created. This is necessary because due to some build issues (native dependencies not available
@@ -36,12 +36,13 @@ class TestableFxaAccountManager(
     scopes: Array<String>,
     val block: () -> OAuthAccount = { mock() }
 ) : FxaAccountManager(context, config, scopes, DeviceTuple("test", DeviceType.MOBILE, listOf()), null) {
+
     override fun createAccount(config: Config): OAuthAccount {
         return block()
     }
 }
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class FirefoxAccountsAuthFeatureTest {
 
     @Test
