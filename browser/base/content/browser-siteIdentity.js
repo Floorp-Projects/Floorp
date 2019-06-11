@@ -325,8 +325,7 @@ var gIdentityHandler = {
   },
 
   enableMixedContentProtection() {
-    gBrowser.selectedBrowser.messageManager.sendAsyncMessage(
-      "MixedContent:ReenableProtection", {});
+    gBrowser.selectedBrowser.sendMessageToActor("MixedContent:ReenableProtection", {}, "BrowserTab");
     BrowserReload();
     PanelMultiView.hidePopup(this._identityPopup);
   },

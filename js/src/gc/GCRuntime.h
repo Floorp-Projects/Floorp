@@ -258,13 +258,18 @@ class GCRuntime {
   uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
   MOZ_MUST_USE bool triggerGC(JS::GCReason reason);
-  // Check whether to trigger a zone GC. During an incremental GC, optionally
-  // count |nbytes| towards the threshold for performing the next slice.
+  // Check whether to trigger a zone GC after allocating GC cells. During an
+  // incremental GC, optionally count |nbytes| towards the threshold for
+  // performing the next slice.
   void maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes = 0);
+  // Check whether to trigger a zone GC after malloc memory.
+  void maybeMallocTriggerZoneGC(Zone* zone);
   // The return value indicates if we were able to do the GC.
   bool triggerZoneGC(Zone* zone, JS::GCReason reason, size_t usedBytes,
                      size_t thresholdBytes);
   void maybeGC(Zone* zone);
+  bool checkEagerAllocTrigger(const HeapSize& size,
+                              const ZoneThreshold& threshold);
   // The return value indicates whether a major GC was performed.
   bool gcIfRequested();
   void gc(JSGCInvocationKind gckind, JS::GCReason reason);

@@ -16,6 +16,29 @@ ChromeUtils.defineModuleGetter(this, "ActorManagerParent",
 const PREF_PDFJS_ENABLED_CACHE_STATE = "pdfjs.enabledCache.state";
 
 let ACTORS = {
+  BrowserTab: {
+    parent: {
+      moduleURI: "resource:///actors/BrowserTabParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/BrowserTabChild.jsm",
+
+      events: {
+        "DOMWindowCreated": {},
+        "MozAfterPaint": {},
+        "MozDOMPointerLock:Entered": {},
+        "MozDOMPointerLock:Exited": {},
+      },
+      messages: [
+        "Browser:Reload",
+        "Browser:AppTab",
+        "Browser:HasSiblings",
+        "MixedContent:ReenableProtection",
+        "UpdateCharacterSet",
+      ],
+    },
+  },
+
   ContextMenu: {
     parent: {
       moduleURI: "resource:///actors/ContextMenuParent.jsm",
@@ -26,6 +49,18 @@ let ACTORS = {
       events: {
         "contextmenu": { mozSystemGroup: true },
       },
+    },
+
+    allFrames: true,
+  },
+
+  SwitchDocumentDirection: {
+    child: {
+      moduleURI: "resource:///actors/SwitchDocumentDirectionChild.jsm",
+
+      messages: [
+        "SwitchDocumentDirection",
+      ],
     },
 
     allFrames: true,
@@ -95,30 +130,6 @@ let LEGACY_ACTORS = {
       allFrames: true,
       messages: [
         "DeceptiveBlockedDetails",
-      ],
-    },
-  },
-
-  BrowserTab: {
-    child: {
-      module: "resource:///actors/BrowserTabChild.jsm",
-      group: "browsers",
-
-      events: {
-        "DOMWindowCreated": {once: true},
-        "MozAfterPaint": {once: true},
-        "MozDOMPointerLock:Entered": {},
-        "MozDOMPointerLock:Exited": {},
-      },
-
-      messages: [
-        "AllowScriptsToClose",
-        "Browser:AppTab",
-        "Browser:HasSiblings",
-        "Browser:Reload",
-        "MixedContent:ReenableProtection",
-        "SwitchDocumentDirection",
-        "UpdateCharacterSet",
       ],
     },
   },
