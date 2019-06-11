@@ -72,17 +72,11 @@ class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild,
 
   PRemoteDecoderChild* AllocPRemoteDecoderChild(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
-      const CreateDecoderParams::OptionSet& aOptions, bool* aSuccess,
-      nsCString* aErrorDescription);
-  bool DeallocPRemoteDecoderChild(PRemoteDecoderChild* actor);
-
-  PVideoDecoderChild* AllocPVideoDecoderChild(
-      const VideoInfo& aVideoInfo, const float& aFramerate,
       const CreateDecoderParams::OptionSet& aOptions,
       const layers::TextureFactoryIdentifier& aIdentifier, bool* aSuccess,
       nsCString* aBlacklistedD3D11Driver, nsCString* aBlacklistedD3D9Driver,
       nsCString* aErrorDescription);
-  bool DeallocPVideoDecoderChild(PVideoDecoderChild* actor);
+  bool DeallocPRemoteDecoderChild(PRemoteDecoderChild* actor);
 
  private:
   // Main thread only
