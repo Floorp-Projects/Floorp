@@ -300,8 +300,12 @@ class IntervalSet {
   }
 
   SelfType& Add(const SelfType& aIntervals) {
-    mIntervals.AppendElements(aIntervals.mIntervals);
-    Normalize();
+    if (aIntervals.mIntervals.Length() == 1) {
+      Add(aIntervals.mIntervals[0]);
+    } else {
+      mIntervals.AppendElements(aIntervals.mIntervals);
+      Normalize();
+    }
     return *this;
   }
 
