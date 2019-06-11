@@ -218,7 +218,7 @@ export class Outline extends Component<Props, State> {
 
   renderFooter() {
     return (
-      <div className="outline-footer bottom">
+      <div className="outline-footer">
         <button
           onClick={this.props.onAlphabetizeClick}
           className={this.props.alphabetizeOutline ? "active" : ""}
