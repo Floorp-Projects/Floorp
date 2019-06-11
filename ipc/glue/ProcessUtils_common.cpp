@@ -110,6 +110,11 @@ SharedPreferenceDeserializer::~SharedPreferenceDeserializer() {
 bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
     char* aPrefsHandleStr, char* aPrefMapHandleStr, char* aPrefsLenStr,
     char* aPrefMapSizeStr) {
+#ifdef XP_WIN
+  MOZ_ASSERT(aPrefsHandleStr && aPrefMapHandleStr, "Can't be null");
+#endif
+  MOZ_ASSERT(aPrefsLenStr && aPrefMapSizeStr, "Can't be null");
+
   // Parses an arg containing a pointer-sized-integer.
   auto parseUIntPtrArg = [](char*& aArg) {
     // ContentParent uses %zu to print a word-sized unsigned integer. So
@@ -124,7 +129,7 @@ bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
   };
 
   mPrefsHandle = Some(parseHandleArg(aPrefsHandleStr));
-  if (aPrefsHandleStr[0] != '\0') {
+  if (!aPrefsHandleStr || aPrefsHandleStr[0] != '\0') {
     return false;
   }
 
@@ -133,7 +138,7 @@ bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
   // closed.
   FileDescriptor::UniquePlatformHandle handle(
       parseHandleArg(aPrefMapHandleStr));
-  if (aPrefMapHandleStr[0] != '\0') {
+  if (!aPrefMapHandleStr || aPrefMapHandleStr[0] != '\0') {
     return false;
   }
 
@@ -141,12 +146,12 @@ bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
 #endif
 
   mPrefsLen = Some(parseUIntPtrArg(aPrefsLenStr));
-  if (aPrefsLenStr[0] != '\0') {
+  if (!aPrefsLenStr || aPrefsLenStr[0] != '\0') {
     return false;
   }
 
   mPrefMapSize = Some(parseUIntPtrArg(aPrefMapSizeStr));
-  if (aPrefMapSizeStr[0] != '\0') {
+  if (!aPrefMapSizeStr || aPrefMapSizeStr[0] != '\0') {
     return false;
   }
 
