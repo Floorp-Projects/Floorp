@@ -3699,6 +3699,16 @@ class Document : public nsINode,
 
   void PropagateUseCounters(Document* aParentDocument);
 
+  void AddToVisibleContentHeuristic(size_t aNumber) {
+    if (MOZ_UNLIKELY(SIZE_MAX - mVisibleContentHeuristic < aNumber)) {
+      mVisibleContentHeuristic = SIZE_MAX;
+    } else {
+      mVisibleContentHeuristic += aNumber;
+    }
+  }
+
+  size_t GetVisibleContentHeuristic() const { return mVisibleContentHeuristic; }
+
   // Called to track whether this document has had any interaction.
   // This is used to track whether we should permit "beforeunload".
   void SetUserHasInteracted();
@@ -4894,6 +4904,16 @@ class Document : public nsINode,
 
   // The CSS property use counters.
   UniquePtr<StyleUseCounters> mStyleUseCounters;
+
+  // An ever-increasing heuristic number that is higher the more content is
+  // likely to be visible in the page.
+  //
+  // Right now it effectively measures amount of text content that has ever been
+  // connected to the document in some way, and is not under a <script> or
+  // <style>.
+  //
+  // Note that this is only measured during load.
+  size_t mVisibleContentHeuristic = 0;
 
   // Whether the user has interacted with the document or not:
   bool mUserHasInteracted;
