@@ -47,6 +47,6 @@
   <vbox id="appDetails">
     <separator class="thin"/>
     <label id="appType"/>
-    <textbox id="appLocation" readonly="true" class="plain"/>
+    <html:input type="text" id="appLocation" readonly="readonly" style="margin-inline: 0;"/>
   </vbox>
 </dialog>

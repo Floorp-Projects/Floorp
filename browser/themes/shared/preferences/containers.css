@@ -10,6 +10,10 @@
   --preference-active-color: #858585;
 }
 
+#name {
+  -moz-box-flex: 1;
+}
+
 .radio-buttons {
   display: flex;
   margin-inline-start: 0.35rem;
