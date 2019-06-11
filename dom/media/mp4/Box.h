@@ -41,12 +41,16 @@ class Box {
 
   Box Next() const;
   Box FirstChild() const;
+  // Reads the box contents, excluding the header.
   nsTArray<uint8_t> Read() const;
+
+  // Reads the complete box; its header and body.
+  nsTArray<uint8_t> ReadCompleteBox() const;
+
+  // Reads from the content of the box, excluding header.
   bool Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange) const;
 
   static const uint64_t kMAX_BOX_READ;
-
-  const nsTArray<uint8_t>& Header() const { return mHeader; }
 
  private:
   bool Contains(MediaByteRange aRange) const;
@@ -55,7 +59,6 @@ class Box {
   uint64_t mBodyOffset;
   uint64_t mChildOffset;
   AtomType mType;
-  nsTArray<uint8_t> mHeader;
   const Box* mParent;
 };
 

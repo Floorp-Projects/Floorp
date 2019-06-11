@@ -68,7 +68,6 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
       bytes != sizeof(header)) {
     return;
   }
-  mHeader.AppendElements(header, sizeof(header));
 
   uint64_t size = BigEndian::readUint32(header);
   if (size == 1) {
@@ -87,7 +86,6 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
     }
     size = BigEndian::readUint64(bigLength);
     mBodyOffset = bigLengthRange.mEnd;
-    mHeader.AppendElements(bigLength, sizeof(bigLength));
   } else if (size == 0) {
     // box extends to end of file.
     size = mContext->mByteRanges.LastInterval().mEnd - aOffset;
@@ -134,6 +132,21 @@ Box Box::FirstChild() const {
   return Box(mContext, mChildOffset, this);
 }
 
+nsTArray<uint8_t> Box::ReadCompleteBox() const {
+  const size_t length = mRange.mEnd - mRange.mStart;
+  nsTArray<uint8_t> out(length);
+  out.SetLength(length);
+  size_t bytesRead = 0;
+  if (!mContext->mSource->CachedReadAt(mRange.mStart, out.Elements(), length,
+                                       &bytesRead) ||
+      bytesRead != length) {
+    // Byte ranges are being reported incorrectly
+    NS_WARNING("Read failed in mozilla::Box::ReadCompleteBox()");
+    return nsTArray<uint8_t>(0);
+  }
+  return out;
+}
+
 nsTArray<uint8_t> Box::Read() const {
   nsTArray<uint8_t> out;
   Unused << Read(&out, mRange);
@@ -161,4 +174,5 @@ bool Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange) const {
   }
   return true;
 }
+
 }  // namespace mozilla

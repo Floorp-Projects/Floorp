@@ -455,8 +455,7 @@ Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
       mPsshes.AppendElement();
     }
     nsTArray<uint8_t>& pssh = mPsshes.LastElement();
-    pssh.AppendElements(box.Header());
-    pssh.AppendElements(box.Read());
+    pssh.AppendElements(std::move(box.ReadCompleteBox()));
   }
 
   if (IsValid()) {
