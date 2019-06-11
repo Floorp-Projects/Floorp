@@ -3795,7 +3795,6 @@ void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
         break;
       case HAVE_METADATA:
       case HAVE_CURRENT_DATA:
-        FireTimeUpdate(false);
         DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
         break;
       case HAVE_FUTURE_DATA:
