@@ -4,11 +4,11 @@
 
 package mozilla.components.browser.tabstray
 
-import android.content.Context
 import android.widget.LinearLayout
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,12 +16,9 @@ import org.mockito.Mockito
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class TabsAdapterTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `itemCount will reflect number of sessions`() {
@@ -54,7 +51,7 @@ class TabsAdapterTest {
         val adapter = TabsAdapter()
         adapter.tabsTray = mockTabsTrayWithStyles()
 
-        val view = LinearLayout(context)
+        val view = LinearLayout(testContext)
 
         val holder1 = adapter.createViewHolder(view, 0)
         val holder2 = adapter.createViewHolder(view, 0)

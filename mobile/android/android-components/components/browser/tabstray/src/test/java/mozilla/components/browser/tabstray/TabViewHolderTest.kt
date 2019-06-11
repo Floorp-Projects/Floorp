@@ -4,17 +4,17 @@
 
 package mozilla.components.browser.tabstray
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.test.mock
 import mozilla.components.support.base.observer.ObserverRegistry
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -25,16 +25,13 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class TabViewHolderTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `URL from session is assigned to view`() {
-        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val urlView = view.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
 
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())
@@ -50,7 +47,7 @@ class TabViewHolderTest {
 
     @Test
     fun `Holder registers to session and updates view`() {
-        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val urlView = view.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
 
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())
@@ -67,7 +64,7 @@ class TabViewHolderTest {
 
     @Test
     fun `After unbind holder is no longer registered to session`() {
-        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val urlView = view.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
 
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())
@@ -90,7 +87,7 @@ class TabViewHolderTest {
             it.register(observer)
         }
 
-        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())
 
         val session = Session("https://www.mozilla.org")
@@ -108,7 +105,7 @@ class TabViewHolderTest {
             it.register(observer)
         }
 
-        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())
 
         val session = Session("https://www.mozilla.org")
@@ -126,7 +123,7 @@ class TabViewHolderTest {
             it.register(observer)
         }
 
-        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())
 
         val session = Session("https://www.mozilla.org")
@@ -144,7 +141,7 @@ class TabViewHolderTest {
             it.register(observer)
         }
 
-        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())
 
         val session = Session("https://www.mozilla.org")
@@ -164,7 +161,7 @@ class TabViewHolderTest {
             it.register(observer)
         }
 
-        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())
         val session = spy(Session("https://www.mozilla.org"))
 
@@ -183,7 +180,7 @@ class TabViewHolderTest {
 
     @Test
     fun `thumbnail from session is assigned to thumbnail image view`() {
-        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val thumbnailView = view.findViewById<ImageView>(R.id.mozac_browser_tabstray_thumbnail)
 
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())

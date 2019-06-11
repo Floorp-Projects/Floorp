@@ -6,32 +6,30 @@
 
 package mozilla.components.browser.tabstray.thumbnail
 
-import android.content.Context
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
-import org.robolectric.RobolectricTestRunner
+import org.robolectric.Robolectric.buildAttributeSet
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class TabThumbnailViewTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `view should always use Matrix ScaleType`() {
-        val view = TabThumbnailView(context, mock())
+        val view = TabThumbnailView(testContext, emptyAttributeSet())
         assertEquals(ImageView.ScaleType.MATRIX, view.scaleType)
     }
 
     @Test
     fun `view updates matrix when changed`() {
-        val view = TabThumbnailView(context, mock())
+        val view = TabThumbnailView(testContext, emptyAttributeSet())
         val matrix = view.imageMatrix
         val drawable: Drawable = mock()
 
@@ -48,7 +46,7 @@ class TabThumbnailViewTest {
 
     @Test
     fun `view updates don't change matrix if no changes to frame`() {
-        val view = TabThumbnailView(context, mock())
+        val view = TabThumbnailView(testContext, emptyAttributeSet())
         val drawable: Drawable = mock()
 
         `when`(drawable.intrinsicWidth).thenReturn(5)
@@ -66,3 +64,5 @@ class TabThumbnailViewTest {
         assertEquals(matrix, matrix2)
     }
 }
+
+private fun emptyAttributeSet() = buildAttributeSet().build()

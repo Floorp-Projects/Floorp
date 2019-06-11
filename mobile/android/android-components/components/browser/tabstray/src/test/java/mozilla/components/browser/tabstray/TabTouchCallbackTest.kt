@@ -6,15 +6,15 @@
 
 package mozilla.components.browser.tabstray
 
-import android.content.Context
 import android.view.LayoutInflater
 import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
@@ -22,13 +22,9 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class TabTouchCallbackTest {
-
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `onSwiped notifies observers`() {
@@ -53,7 +49,7 @@ class TabTouchCallbackTest {
 
     @Test
     fun `onChildDraw alters alpha of ViewHolder on swipe gesture`() {
-        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val holder = TabViewHolder(view, TabViewHolderTest.mockTabsTrayWithStyles())
         val callback = TabTouchCallback(mock())
 
