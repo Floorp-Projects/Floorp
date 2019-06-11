@@ -175,4 +175,48 @@ bool Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange) const {
   return true;
 }
 
+ByteSlice Box::ReadAsSlice() {
+  if (!mContext) {
+    return ByteSlice{nullptr, 0};
+  }
+  int64_t length;
+  if (!mContext->mSource->Length(&length)) {
+    // The HTTP server didn't give us a length to work with.
+    // Limit the read to kMAX_BOX_READ max.
+    length = std::min(mRange.mEnd - mChildOffset, kMAX_BOX_READ);
+  } else {
+    length = mRange.mEnd - mChildOffset;
+  }
+
+  uint8_t* p = mContext->mAllocator.Allocate(size_t(length));
+  size_t bytes;
+  if (!mContext->mSource->CachedReadAt(mChildOffset, p, length, &bytes) ||
+      bytes != length) {
+    // Byte ranges are being reported incorrectly
+    NS_WARNING("Read failed in mozilla::Box::ReadAsSlice()");
+    return ByteSlice{nullptr, 0};
+  }
+  return ByteSlice{p, size_t(length)};
+}
+
+const size_t BLOCK_CAPACITY = 16 * 1024;
+
+uint8_t* BumpAllocator::Allocate(size_t aNumBytes) {
+  if (aNumBytes > BLOCK_CAPACITY) {
+    mBuffers.AppendElement(nsTArray<uint8_t>(aNumBytes));
+    mBuffers.LastElement().SetLength(aNumBytes);
+    return mBuffers.LastElement().Elements();
+  }
+  for (nsTArray<uint8_t>& buffer : mBuffers) {
+    if (buffer.Length() + aNumBytes < BLOCK_CAPACITY) {
+      size_t offset = buffer.Length();
+      buffer.SetLength(buffer.Length() + aNumBytes);
+      return buffer.Elements() + offset;
+    }
+  }
+  mBuffers.AppendElement(nsTArray<uint8_t>(BLOCK_CAPACITY));
+  mBuffers.LastElement().SetLength(aNumBytes);
+  return mBuffers.LastElement().Elements();
+}
+
 }  // namespace mozilla
