@@ -992,10 +992,6 @@ nsXREDirProvider::DoStartup() {
       if (policies) {
         policies->Observe(nullptr, "policies-startup", nullptr);
       }
-
-      // We may have modified the existing preferences, it's time to complete
-      // setting up the Once StaticPreferences.
-      mozilla::Preferences::RefreshStaticPrefsValues();
     }
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)

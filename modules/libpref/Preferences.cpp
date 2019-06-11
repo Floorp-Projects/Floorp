@@ -30,6 +30,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/SystemGroup.h"
@@ -3710,21 +3711,9 @@ void Preferences::InitializeUserPrefs() {
 
   sPreferences->NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
 
-  RefreshStaticPrefsValues();
-
   // At this point all the prefs files have been read and telemetry has been
   // initialized. Send all the file load measurements to telemetry.
   SendTelemetryLoadData();
-}
-
-/* static */
-void Preferences::RefreshStaticPrefsValues() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  // Ensure that StaticPref of type `Once` are properly set to the underlying
-  // Preference value as they may have been updated with a user-set or
-  // enterprise policies value.
-  StaticPrefs::InitOncePrefs();
 }
 
 NS_IMETHODIMP
@@ -4667,12 +4656,6 @@ static nsresult pref_ReadDefaultPrefs(const RefPtr<nsZipArchive> jarReader,
     }
   }
 
-  if (aIsStartup) {
-    // Ensure that StaticPref of type `Once` are properly set to the underlying
-    // Preference value.
-    StaticPrefs::InitOncePrefs();
-  }
-
   if (XRE_IsParentProcess()) {
     SetupTelemetryPref();
   }
@@ -5378,6 +5361,27 @@ static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
   }
 }
 
+static Atomic<bool> sOncePrefRead(false);
+static StaticMutex sOncePrefMutex;
+
+/* static */ void StaticPrefs::MaybeInitOncePrefs() {
+  if (!XRE_IsParentProcess() || sOncePrefRead) {
+    // `Once` StaticPrefs have already been initialized to their default value.
+    return;
+  }
+  StaticMutexAutoLock lock(sOncePrefMutex);
+  if (NS_IsMainThread()) {
+    InitOncePrefs();
+  } else {
+    RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+        "Preferences::MaybeInitOncePrefs", [&]() { InitOncePrefs(); });
+    // This logic needs to run on the main thread
+    mozilla::SyncRunnable::DispatchToThread(
+        SystemGroup::EventTargetFor(mozilla::TaskCategory::Other), runnable);
+  }
+  sOncePrefRead = true;
+}
+
 // For a VarCache pref like this:
 //
 //   VARCACHE_PREF(Once, "my.varcache", my_varcache, int32_t, 99)
@@ -5385,6 +5389,13 @@ static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
 // we generate a static variable definition and a setter like:
 //
 //   int32_t StaticPrefs::sVarCache_my_varcache(99);
+//   int32_t StaticPrefs::my_varcache() {
+//     if (UpdatePolicy::Skip != UpdatePolicy::Once) {
+//       return sVarCache_myvarcache;
+//     }
+//     MaybeInitOncePrefs();
+//     return sVarCache_myvarcache;
+//   }
 //   void StaticPrefs::Setmy_varcache(int32_t aValue) {
 //     SetPref(Getmy_varcachePrefName(), aValue);
 //     if (UpdatePolicy::policy == UpdatePolicy::Once) {
@@ -5395,8 +5406,20 @@ static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
 //   }
 
 #define PREF(name, cpp_type, value)
-#define VARCACHE_PREF(policy, name, id, cpp_type, value)                       \
-  cpp_type StaticPrefs::sVarCache_##id(value);                                 \
+#define VARCACHE_PREF(policy, name, id, cpp_type, default_value)               \
+  cpp_type StaticPrefs::sVarCache_##id(default_value);                         \
+  StripAtomic<cpp_type> StaticPrefs::id() {                                    \
+    if (UpdatePolicy::policy != UpdatePolicy::Once) {                          \
+      MOZ_DIAGNOSTIC_ASSERT(                                                   \
+          UpdatePolicy::policy == UpdatePolicy::Skip ||                        \
+              IsAtomic<cpp_type>::value || NS_IsMainThread(),                  \
+          "Non-atomic static pref '" name                                      \
+          "' being accessed on background thread by getter");                  \
+      return sVarCache_##id;                                                   \
+    }                                                                          \
+    MaybeInitOncePrefs();                                                      \
+    return sVarCache_##id;                                                     \
+  }                                                                            \
   void StaticPrefs::Set##id(StripAtomic<cpp_type> aValue) {                    \
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread() && XRE_IsParentProcess(),          \
                           "pref '" name "' being set outside parent process"); \
@@ -5527,6 +5550,7 @@ void StaticPrefs::RegisterOncePrefs(SharedPrefMapBuilder& aBuilder) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_DIAGNOSTIC_ASSERT(!gSharedMap,
                         "Must be called before gSharedMap has been created");
+  MaybeInitOncePrefs();
   // For prefs like these:
   //
   //   VARCACHE_PREF(Once, "my.varcache", my_varcache, int32_t, 99)

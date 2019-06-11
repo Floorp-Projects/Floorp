@@ -72,10 +72,12 @@
 //   * Skip: Set the value to <default-value>, skip any Preferences calls. This
 //     policy should be rarely used and its use is discouraged.
 //
-//   * Once: Evaluate the pref once, and unchanged during the session once
-//     enterprise policies have been loaded. This is useful for features where
-//     you want to ignore any pref changes until the start of the next browser
-//     session.
+//   * Once: Set the value once at startup, and then leave it unchanged after
+//     that. (The exact point at which all Once pref values is set is when the
+//     first Once getter is called.) This is useful for graphics prefs where we
+//     often don't want a new pref value to apply until restart. Otherwise, this
+//     update policy is best avoided because its behaviour can cause confusion
+//     and bugs.
 //
 // - <pref-name-string> is the same as for normal prefs.
 //
