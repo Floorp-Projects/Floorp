@@ -8,15 +8,12 @@
 do_get_profile(); // must be called before getting nsIX509CertDB
 
 const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
+const {RemoteSecuritySettings} = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 const {TelemetryTestUtils} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 const {X509} = ChromeUtils.import("resource://gre/modules/psm/X509.jsm");
 
-let remoteSecSetting;
-if (AppConstants.MOZ_NEW_CERT_STORAGE) {
-  const {RemoteSecuritySettings} = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
-  remoteSecSetting = new RemoteSecuritySettings();
-}
+const {IntermediatePreloadsClient} = RemoteSecuritySettings.init();
 
 let server;
 
@@ -86,7 +83,7 @@ async function syncAndDownload(filenames, options = {}) {
     clear = true,
   } = options;
 
-  const localDB = await remoteSecSetting.client.openCollection();
+  const localDB = await IntermediatePreloadsClient.client.openCollection();
   if (clear) {
     await localDB.clear();
   }
@@ -134,7 +131,7 @@ async function syncAndDownload(filenames, options = {}) {
  * Return the list of records whose attachmnet was downloaded.
  */
 async function locallyDownloaded() {
-  return remoteSecSetting.client.get({
+  return IntermediatePreloadsClient.client.get({
     filters: { cert_import_complete: true },
     syncIfEmpty: false,
   });
@@ -290,11 +287,11 @@ add_task({
   await checkCertErrorGeneric(certDB, ee_cert, PRErrorCodeSuccess,
                               certificateUsageSSLServer);
 
-  let localDB = await remoteSecSetting.client.openCollection();
+  let localDB = await IntermediatePreloadsClient.client.openCollection();
   let { data } = await localDB.list();
   ok(data.length > 0, "should have some entries");
   // simulate a sync (syncAndDownload doesn't actually... sync.)
-  await remoteSecSetting.client.emit("sync", {
+  await IntermediatePreloadsClient.client.emit("sync", {
     "data": {
       current: data,
       created: data,
@@ -366,7 +363,7 @@ add_task({
 
   equal((await locallyDownloaded()).length, 2, "There should have been 2 downloads");
 
-  let localDB = await remoteSecSetting.client.openCollection();
+  let localDB = await IntermediatePreloadsClient.client.openCollection();
   let { data } = await localDB.list();
   ok(data.length > 0, "should have some entries");
   let subject = data[0].subjectDN;
@@ -374,7 +371,7 @@ add_task({
   let resultsBefore = certStorage.findCertsBySubject(stringToArray(atob(subject)));
   equal(resultsBefore.length, 1, "should find the intermediate in cert storage before");
   // simulate a sync where we deleted the entry
-  await remoteSecSetting.client.emit("sync", {
+  await IntermediatePreloadsClient.client.emit("sync", {
     "data": {
       current: [],
       created: [],
