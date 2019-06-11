@@ -5,6 +5,7 @@
 package mozilla.components.feature.pwa
 
 import android.content.Intent
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -15,10 +16,10 @@ import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class WebAppLauncherActivityTest {
+
     @Test
     fun `DisplayMode-Browser launches browser`() {
         val activity = spy(WebAppLauncherActivity())
