@@ -510,7 +510,7 @@ struct HuffmanTableIndexedSymbolsMaybeInterface {
 };
 
 struct HuffmanTableIndexedSymbolsStringEnum {
-  HuffmanTableImpl<uint8_t> impl;
+  HuffmanTableImpl<BinASTVariant> impl;
   HuffmanTableIndexedSymbolsStringEnum(JSContext* cx) : impl(cx) {}
 };
 

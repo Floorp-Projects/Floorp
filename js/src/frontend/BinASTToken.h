@@ -3418,16 +3418,18 @@ enum class BinASTVariant : uint16_t {
 // The number of distinct values of BinASTVariant.
 const size_t BINASTVARIANT_LIMIT = 49;
 
-#define FOR_EACH_BIN_STRING_ENUM(F)                           \
-  F(AssertedDeclaredKind, "AssertedDeclaredKind")             \
-  F(BinaryOperator, "BinaryOperator")                         \
-  F(CompoundAssignmentOperator, "CompoundAssignmentOperator") \
-  F(UnaryOperator, "UnaryOperator")                           \
-  F(UpdateOperator, "UpdateOperator")                         \
-  F(VariableDeclarationKind, "VariableDeclarationKind")
+#define FOR_EACH_BIN_STRING_ENUM(F)                                       \
+  F(AssertedDeclaredKind, "AssertedDeclaredKind", ASSERTED_DECLARED_KIND) \
+  F(BinaryOperator, "BinaryOperator", BINARY_OPERATOR)                    \
+  F(CompoundAssignmentOperator, "CompoundAssignmentOperator",             \
+    COMPOUND_ASSIGNMENT_OPERATOR)                                         \
+  F(UnaryOperator, "UnaryOperator", UNARY_OPERATOR)                       \
+  F(UpdateOperator, "UpdateOperator", UPDATE_OPERATOR)                    \
+  F(VariableDeclarationKind, "VariableDeclarationKind",                   \
+    VARIABLE_DECLARATION_KIND)
 
 enum class BinASTStringEnum : uint16_t {
-#define EMIT_ENUM(name, _) name,
+#define EMIT_ENUM(NAME, _HUMAN_NAME, _MACRO_NAME) NAME,
   FOR_EACH_BIN_STRING_ENUM(EMIT_ENUM)
 #undef EMIT_ENUM
 };
