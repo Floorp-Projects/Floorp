@@ -8474,10 +8474,9 @@ static bool UpdateCompositionBoundsForRCDRSF(ParentLayerRect& aCompBounds,
 #endif
 
   if (widget) {
-    LayoutDeviceIntRect widgetBounds = widget->GetBounds();
-    widgetBounds.MoveTo(0, 0);
     aCompBounds = ParentLayerRect(ViewAs<ParentLayerPixel>(
-        widgetBounds,
+        LayoutDeviceIntRect(LayoutDeviceIntPoint(),
+                            widget->GetCompositionSize()),
         PixelCastJustification::LayoutDeviceIsParentLayerForRCDRSF));
     return true;
   }
