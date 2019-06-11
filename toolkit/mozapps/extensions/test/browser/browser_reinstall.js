@@ -94,9 +94,8 @@ async function check_addon(aAddon, aVersion) {
     if (aAddon.userDisabled) {
       Assert.deepEqual(l10nAttrs, {id: "addon-name-disabled", args: {name: aAddon.name}},
                        "localized addon name is marked as disabled");
-     } else {
-       Assert.deepEqual(l10nAttrs, {id: null, args: null},
-                        "localized addon name is not marked as disabled");
+    } else {
+      ok(!l10nAttrs.id, "localized addon name is not marked as disabled");
     }
 
     return;
