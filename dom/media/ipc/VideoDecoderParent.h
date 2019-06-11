@@ -9,7 +9,7 @@
 #include "ImageContainer.h"
 #include "MediaData.h"
 #include "PlatformDecoderModule.h"
-#include "VideoDecoderManagerParent.h"
+#include "RemoteDecoderManagerParent.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/PVideoDecoderParent.h"
 #include "mozilla/layers/TextureForwarder.h"
@@ -27,7 +27,7 @@ class VideoDecoderParent final : public PVideoDecoderParent {
   // that reference us.
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoDecoderParent)
 
-  VideoDecoderParent(VideoDecoderManagerParent* aParent,
+  VideoDecoderParent(RemoteDecoderManagerParent* aParent,
                      const VideoInfo& aVideoInfo, float aFramerate,
                      const CreateDecoderParams::OptionSet& aOptions,
                      const layers::TextureFactoryIdentifier& aIdentifier,
@@ -53,7 +53,7 @@ class VideoDecoderParent final : public PVideoDecoderParent {
   ~VideoDecoderParent();
   void ProcessDecodedData(MediaDataDecoder::DecodedData&& aData);
 
-  RefPtr<VideoDecoderManagerParent> mParent;
+  RefPtr<RemoteDecoderManagerParent> mParent;
   RefPtr<VideoDecoderParent> mIPDLSelfRef;
   RefPtr<TaskQueue> mManagerTaskQueue;
   RefPtr<TaskQueue> mDecodeTaskQueue;

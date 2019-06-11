@@ -15,7 +15,7 @@ include protocol PVRGPU;
 include protocol PVRManager;
 include protocol PVsyncBridge;
 include protocol PUiCompositorController;
-include protocol PVideoDecoderManager;
+include protocol PRemoteDecoderManager;
 
 using base::ProcessId from "base/process.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
@@ -71,7 +71,7 @@ parent:
   async NewContentCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
   async NewContentImageBridge(Endpoint<PImageBridgeParent> endpoint);
   async NewContentVRManager(Endpoint<PVRManagerParent> endpoint);
-  async NewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent> endpoint);
+  async NewContentRemoteDecoderManager(Endpoint<PRemoteDecoderManagerParent> endpoint);
 
   // Called to notify the GPU process of who owns a layersId.
   sync AddLayerTreeIdMapping(LayerTreeIdMapping mapping);

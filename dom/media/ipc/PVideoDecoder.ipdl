@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PVideoDecoderManager;
+include protocol PRemoteDecoderManager;
 include PMediaDecoderParams;
 include LayersSurfaces;
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
@@ -26,7 +26,7 @@ struct VideoDataIPDL
 // GPU process. We run a separate IPDL thread for both sides.
 async protocol PVideoDecoder
 {
-  manager PVideoDecoderManager;
+  manager PRemoteDecoderManager;
 parent:
   async Init();
 

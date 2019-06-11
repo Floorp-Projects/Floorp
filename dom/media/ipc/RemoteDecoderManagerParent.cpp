@@ -11,12 +11,37 @@
 
 #include "RemoteAudioDecoder.h"
 #include "RemoteVideoDecoder.h"
+#include "VideoDecoderParent.h"
 #include "VideoUtils.h"  // for MediaThreadType
+
+#include "ImageContainer.h"
+#include "mozilla/layers/VideoBridgeChild.h"
+#include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/SyncRunnable.h"
 
 namespace mozilla {
 
+#ifdef XP_WIN
+extern const nsCString GetFoundD3D11BlacklistedDLL();
+extern const nsCString GetFoundD3D9BlacklistedDLL();
+#endif  // XP_WIN
+
+using namespace ipc;
+using namespace layers;
+using namespace gfx;
+
 StaticRefPtr<nsIThread> sRemoteDecoderManagerParentThread;
 StaticRefPtr<TaskQueue> sRemoteDecoderManagerTaskQueue;
+
+SurfaceDescriptorGPUVideo RemoteDecoderManagerParent::StoreImage(
+    Image* aImage, TextureClient* aTexture) {
+  SurfaceDescriptorGPUVideo ret;
+  aTexture->GPUVideoDesc(&ret);
+
+  mImageMap[ret.handle()] = aImage;
+  mTextureMap[ret.handle()] = aTexture;
+  return ret;
+}
 
 class RemoteDecoderManagerThreadHolder {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderManagerThreadHolder)
@@ -88,6 +113,12 @@ bool RemoteDecoderManagerParent::StartupThreads() {
                              }),
       NS_DISPATCH_NORMAL);
 #endif
+  if (XRE_IsGPUProcess()) {
+    sRemoteDecoderManagerParentThread->Dispatch(
+        NS_NewRunnableFunction("RemoteDecoderManagerParent::StartupThreads",
+                               []() { layers::VideoBridgeChild::Startup(); }),
+        NS_DISPATCH_NORMAL);
+  }
 
   sRemoteDecoderManagerTaskQueue = new TaskQueue(
       managerThread.forget(),
@@ -107,13 +138,23 @@ void RemoteDecoderManagerParent::ShutdownThreads() {
   }
 }
 
+void RemoteDecoderManagerParent::ShutdownVideoBridge() {
+  if (sRemoteDecoderManagerParentThread) {
+    RefPtr<Runnable> task = NS_NewRunnableFunction(
+        "RemoteDecoderManagerParent::ShutdownVideoBridge",
+        []() { VideoBridgeChild::Shutdown(); });
+    SyncRunnable::DispatchToThread(sRemoteDecoderManagerParentThread, task);
+  }
+}
+
 bool RemoteDecoderManagerParent::OnManagerThread() {
   return NS_GetCurrentThread() == sRemoteDecoderManagerParentThread;
 }
 
 bool RemoteDecoderManagerParent::CreateForContent(
     Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_RDD);
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_RDD ||
+             XRE_GetProcessType() == GeckoProcessType_GPU);
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!StartupThreads()) {
@@ -181,6 +222,36 @@ bool RemoteDecoderManagerParent::DeallocPRemoteDecoderParent(
   return true;
 }
 
+PVideoDecoderParent* RemoteDecoderManagerParent::AllocPVideoDecoderParent(
+    const VideoInfo& aVideoInfo, const float& aFramerate,
+    const CreateDecoderParams::OptionSet& aOptions,
+    const layers::TextureFactoryIdentifier& aIdentifier, bool* aSuccess,
+    nsCString* aBlacklistedD3D11Driver, nsCString* aBlacklistedD3D9Driver,
+    nsCString* aErrorDescription) {
+  RefPtr<TaskQueue> decodeTaskQueue =
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                    "VideoDecoderParent::mDecodeTaskQueue");
+
+  auto* parent =
+      new VideoDecoderParent(this, aVideoInfo, aFramerate, aOptions,
+                             aIdentifier, sRemoteDecoderManagerTaskQueue,
+                             decodeTaskQueue, aSuccess, aErrorDescription);
+
+#ifdef XP_WIN
+  *aBlacklistedD3D11Driver = GetFoundD3D11BlacklistedDLL();
+  *aBlacklistedD3D9Driver = GetFoundD3D9BlacklistedDLL();
+#endif  // XP_WIN
+
+  return parent;
+}
+
+bool RemoteDecoderManagerParent::DeallocPVideoDecoderParent(
+    PVideoDecoderParent* actor) {
+  VideoDecoderParent* parent = static_cast<VideoDecoderParent*>(actor);
+  parent->Destroy();
+  return true;
+}
+
 void RemoteDecoderManagerParent::Open(
     Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) {
   if (!aEndpoint.Bind(this)) {
@@ -191,5 +262,55 @@ void RemoteDecoderManagerParent::Open(
 }
 
 void RemoteDecoderManagerParent::ActorDealloc() { Release(); }
+
+mozilla::ipc::IPCResult RemoteDecoderManagerParent::RecvReadback(
+    const SurfaceDescriptorGPUVideo& aSD, SurfaceDescriptor* aResult) {
+  RefPtr<Image> image = mImageMap[aSD.handle()];
+  if (!image) {
+    *aResult = null_t();
+    return IPC_OK();
+  }
+
+  RefPtr<SourceSurface> source = image->GetAsSourceSurface();
+  if (!source) {
+    *aResult = null_t();
+    return IPC_OK();
+  }
+
+  SurfaceFormat format = source->GetFormat();
+  IntSize size = source->GetSize();
+  size_t length = ImageDataSerializer::ComputeRGBBufferSize(size, format);
+
+  Shmem buffer;
+  if (!length ||
+      !AllocShmem(length, Shmem::SharedMemory::TYPE_BASIC, &buffer)) {
+    *aResult = null_t();
+    return IPC_OK();
+  }
+
+  RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(
+      gfx::BackendType::CAIRO, buffer.get<uint8_t>(), size,
+      ImageDataSerializer::ComputeRGBStride(format, size.width), format);
+  if (!dt) {
+    DeallocShmem(buffer);
+    *aResult = null_t();
+    return IPC_OK();
+  }
+
+  dt->CopySurface(source, IntRect(0, 0, size.width, size.height), IntPoint());
+  dt->Flush();
+
+  *aResult = SurfaceDescriptorBuffer(RGBDescriptor(size, format, true),
+                                     MemoryOrShmem(std::move(buffer)));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+RemoteDecoderManagerParent::RecvDeallocateSurfaceDescriptorGPUVideo(
+    const SurfaceDescriptorGPUVideo& aSD) {
+  mImageMap.erase(aSD.handle());
+  mTextureMap.erase(aSD.handle());
+  return IPC_OK();
+}
 
 }  // namespace mozilla
