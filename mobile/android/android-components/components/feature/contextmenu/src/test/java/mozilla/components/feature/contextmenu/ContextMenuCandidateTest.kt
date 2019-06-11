@@ -8,6 +8,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -28,9 +29,8 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ContextMenuCandidateTest {
 
     private lateinit var snackbarDelegate: TestSnackbarDelegate

@@ -4,12 +4,11 @@
 
 package mozilla.components.feature.contextmenu
 
-import android.content.Context
 import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
@@ -20,6 +19,7 @@ import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -30,13 +30,10 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.robolectric.RobolectricTestRunner
 import java.util.UUID
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ContextMenuFeatureTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `New HitResult for selected session will cause fragment transaction`() {
@@ -50,7 +47,7 @@ class ContextMenuFeatureTest {
         val feature = ContextMenuFeature(
             fragmentManager,
             sessionManager,
-            ContextMenuCandidate.defaultCandidates(context, mock(), mock()),
+            ContextMenuCandidate.defaultCandidates(testContext, mock(), mock()),
             engineView)
 
         feature.start()
@@ -74,7 +71,7 @@ class ContextMenuFeatureTest {
         val feature = ContextMenuFeature(
             fragmentManager,
             sessionManager,
-            ContextMenuCandidate.defaultCandidates(context, mock(), mock()),
+            ContextMenuCandidate.defaultCandidates(testContext, mock(), mock()),
             engineView)
 
         feature.start()
@@ -106,7 +103,7 @@ class ContextMenuFeatureTest {
         val feature = ContextMenuFeature(
             fragmentManager,
             sessionManager,
-            ContextMenuCandidate.defaultCandidates(context, mock(), mock()),
+            ContextMenuCandidate.defaultCandidates(testContext, mock(), mock()),
             engineView)
 
         feature.start()
@@ -137,7 +134,7 @@ class ContextMenuFeatureTest {
         val feature = ContextMenuFeature(
             fragmentManager,
             sessionManager,
-            ContextMenuCandidate.defaultCandidates(context, mock(), mock()),
+            ContextMenuCandidate.defaultCandidates(testContext, mock(), mock()),
             engineView)
 
         feature.start()
@@ -166,7 +163,7 @@ class ContextMenuFeatureTest {
         val feature = ContextMenuFeature(
             fragmentManager,
             sessionManager,
-            ContextMenuCandidate.defaultCandidates(context, mock(), mock()),
+            ContextMenuCandidate.defaultCandidates(testContext, mock(), mock()),
             engineView)
 
         feature.start()
@@ -214,7 +211,7 @@ class ContextMenuFeatureTest {
         val feature = ContextMenuFeature(
             mock(),
             sessionManager,
-            ContextMenuCandidate.defaultCandidates(context, mock(), mock()),
+            ContextMenuCandidate.defaultCandidates(testContext, mock(), mock()),
             engineView)
 
         assertFalse(session.hitResult.isConsumed())
