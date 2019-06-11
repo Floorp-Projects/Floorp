@@ -1953,26 +1953,6 @@ var gBrowserInit = {
       scheduleIdleTask(() => Win7Features.onOpenWindow());
     }
 
-    scheduleIdleTask(() => {
-      if (Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
-        return;
-      }
-
-      setTimeout(() => {
-        if (window.closed) {
-          return;
-        }
-
-        let browser = gBrowser.selectedBrowser;
-        let browserBounds = window.windowUtils.getBoundsWithoutFlushing(browser);
-
-        Services.telemetry.keyedScalarAdd(
-          "resistfingerprinting.content_window_size",
-          `${browserBounds.width}x${browserBounds.height}`,
-          1);
-      }, 300 * 1000);
-    });
-
     scheduleIdleTask(async () => {
       NewTabPagePreloading.maybeCreatePreloadedBrowser(window);
     });
