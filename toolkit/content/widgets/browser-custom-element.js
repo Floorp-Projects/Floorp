@@ -250,6 +250,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
     this._contentPrincipal = null;
 
+    this._contentStoragePrincipal = null;
+
     this._csp = null;
 
     this._contentRequestContextID = null;
@@ -634,6 +636,10 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
   get contentPrincipal() {
     return this.isRemoteBrowser ? this._contentPrincipal : this.contentDocument.nodePrincipal;
+  }
+
+  get contentStoragePrincipal() {
+    return this.isRemoteBrowser ? this._contentStoragePrincipal : this.contentDocument.effectiveStoragePrincipal;
   }
 
   get csp() {
