@@ -618,23 +618,82 @@ class MemoryCounter {
                      const AutoLockGC& lock);
 };
 
-// This class encapsulates the data that determines when we need to do a zone
-// GC.
-class ZoneHeapThreshold {
-  // The "growth factor" for computing our next thresholds after a GC.
-  GCLockData<float> gcHeapGrowthFactor_;
+/*
+ * Tracks the used sizes for owned heap data and automatically maintains the
+ * memory usage relationship between GCRuntime and Zones.
+ */
+class HeapSize {
+  /*
+   * A heap usage that contains our parent's heap usage, or null if this is
+   * the top-level usage container.
+   */
+  HeapSize* const parent_;
 
-  // GC trigger threshold for allocations on the GC heap.
+  /*
+   * The approximate number of bytes in use on the GC heap, to the nearest
+   * ArenaSize. This does not include any malloc data. It also does not
+   * include not-actively-used addresses that are still reserved at the OS
+   * level for GC usage. It is atomic because it is updated by both the active
+   * and GC helper threads.
+   */
+  mozilla::Atomic<size_t, mozilla::ReleaseAcquire,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      gcBytes_;
+
+ public:
+  explicit HeapSize(HeapSize* parent) : parent_(parent), gcBytes_(0) {}
+
+  size_t gcBytes() const { return gcBytes_; }
+
+  void addGCArena() { addBytes(ArenaSize); }
+  void removeGCArena() { removeBytes(ArenaSize); }
+
+  void addBytes(size_t nbytes) {
+    mozilla::DebugOnly<size_t> initialBytes(gcBytes_);
+    MOZ_ASSERT(initialBytes + nbytes > initialBytes);
+    gcBytes_ += nbytes;
+    if (parent_) {
+      parent_->addBytes(nbytes);
+    }
+  }
+  void removeBytes(size_t nbytes) {
+    MOZ_ASSERT(gcBytes_ >= nbytes);
+    gcBytes_ -= nbytes;
+    if (parent_) {
+      parent_->removeBytes(nbytes);
+    }
+  }
+
+  /* Pair to adoptArenas. Adopts the attendant usage statistics. */
+  void adopt(HeapSize& other) {
+    gcBytes_ += other.gcBytes_;
+    other.gcBytes_ = 0;
+  }
+};
+
+// Base class for GC heap and malloc thresholds.
+class ZoneThreshold {
+ protected:
+  // GC trigger threshold.
   mozilla::Atomic<size_t, mozilla::Relaxed,
                   mozilla::recordreplay::Behavior::DontPreserve>
       gcTriggerBytes_;
 
  public:
-  ZoneHeapThreshold() : gcHeapGrowthFactor_(3.0f), gcTriggerBytes_(0) {}
-
-  float gcHeapGrowthFactor() const { return gcHeapGrowthFactor_; }
   size_t gcTriggerBytes() const { return gcTriggerBytes_; }
   float eagerAllocTrigger(bool highFrequencyGC) const;
+};
+
+// This class encapsulates the data that determines when we need to do a zone GC
+// base on GC heap size.
+class ZoneHeapThreshold : public ZoneThreshold {
+  // The "growth factor" for computing our next thresholds after a GC.
+  GCLockData<float> gcHeapGrowthFactor_;
+
+ public:
+  ZoneHeapThreshold() : gcHeapGrowthFactor_(3.0f) {}
+
+  float gcHeapGrowthFactor() const { return gcHeapGrowthFactor_; }
 
   void updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
                      const GCSchedulingTunables& tunables,
@@ -651,6 +710,19 @@ class ZoneHeapThreshold {
                                         const AutoLockGC& lock);
 };
 
+// This class encapsulates the data that determines when we need to do a zone
+// GC based on malloc data.
+class ZoneMallocThreshold : public ZoneThreshold {
+ public:
+  void updateAfterGC(size_t lastBytes, const GCSchedulingTunables& tunables,
+                     const GCSchedulingState& state, const AutoLockGC& lock);
+
+ private:
+  static size_t computeZoneTriggerBytes(float growthFactor, size_t lastBytes,
+                                        const GCSchedulingTunables& tunables,
+                                        const AutoLockGC& lock);
+};
+
 #ifdef DEBUG
 
 // Counts memory associated with GC things in a zone.
@@ -661,8 +733,8 @@ class ZoneHeapThreshold {
 class MemoryTracker {
  public:
   MemoryTracker();
-  ~MemoryTracker();
   void fixupAfterMovingGC();
+  void checkEmptyOnDestroy();
 
   void adopt(MemoryTracker& other);
 

@@ -1460,8 +1460,7 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
         return false;
       }
       for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->threshold.updateAfterGC(zone->totalBytes(), GC_NORMAL, tunables,
-                                      schedulingState, lock);
+        zone->updateAllGCThresholds(*this, lock);
       }
   }
 
@@ -1720,8 +1719,7 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
     default:
       tunables.resetParameter(key, lock);
       for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->threshold.updateAfterGC(zone->totalBytes(), GC_NORMAL, tunables,
-                                      schedulingState, lock);
+        zone->updateAllGCThresholds(*this, lock);
       }
   }
 }
@@ -2071,7 +2069,7 @@ void GCRuntime::setMaxMallocBytes(size_t value, const AutoLockGC& lock) {
   }
 }
 
-float ZoneHeapThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
+float ZoneThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
   float eagerTriggerFactor = highFrequencyGC
                                  ? HighFrequencyEagerAllocTriggerFactor
                                  : LowFrequencyEagerAllocTriggerFactor;
@@ -2165,6 +2163,22 @@ void ZoneHeapThreshold::updateForRemovedArena(
   }
 
   gcTriggerBytes_ -= amount;
+}
+
+/* static */
+size_t ZoneMallocThreshold::computeZoneTriggerBytes(
+    float growthFactor, size_t lastBytes, const GCSchedulingTunables& tunables,
+    const AutoLockGC& lock) {
+  size_t base = Max(lastBytes, tunables.maxMallocBytes());
+  float trigger = float(base) * growthFactor;
+  return size_t(trigger);
+}
+
+void ZoneMallocThreshold::updateAfterGC(size_t lastBytes,
+                                        const GCSchedulingTunables& tunables,
+                                        const GCSchedulingState& state,
+                                        const AutoLockGC& lock) {
+  gcTriggerBytes_ = computeZoneTriggerBytes(2.0, lastBytes, tunables, lock);
 }
 
 MemoryCounter::MemoryCounter()
@@ -3422,10 +3436,6 @@ bool GCRuntime::triggerGC(JS::GCReason reason) {
   return true;
 }
 
-void js::gc::MaybeAllocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc) {
-  rt->gc.maybeAllocTriggerZoneGC(Zone::from(zoneAlloc));
-}
-
 void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes) {
   if (!CurrentThreadCanAccessRuntime(rt)) {
     // Zones in use by a helper thread can't be collected.
@@ -3435,9 +3445,9 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes) {
 
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
-  size_t usedBytes = zone->totalBytes();  // This already includes |nbytes|.
+  size_t usedBytes =
+      zone->zoneSize.gcBytes();  // This already includes |nbytes|.
   size_t thresholdBytes = zone->threshold.gcTriggerBytes();
-
   if (usedBytes >= thresholdBytes) {
     // The threshold has been surpassed, immediately trigger a GC, which
     // will be done non-incrementally.
@@ -3475,6 +3485,39 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes) {
       zone->gcDelayBytes = tunables.zoneAllocDelayBytes();
       return;
     }
+  }
+}
+
+void js::gc::MaybeMallocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc) {
+  rt->gc.maybeMallocTriggerZoneGC(Zone::from(zoneAlloc));
+}
+
+void GCRuntime::maybeMallocTriggerZoneGC(Zone* zone) {
+  if (!CurrentThreadCanAccessRuntime(rt)) {
+    // Zones in use by a helper thread can't be collected.
+    MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone());
+    return;
+  }
+
+  MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
+
+  size_t usedBytes = zone->gcMallocBytes.gcBytes();
+  size_t thresholdBytes = zone->gcMallocThreshold.gcTriggerBytes();
+  if (usedBytes >= thresholdBytes) {
+    // The threshold has been surpassed, immediately trigger a GC, which
+    // will be done non-incrementally.
+    triggerZoneGC(zone, JS::GCReason::TOO_MUCH_MALLOC, usedBytes,
+                  thresholdBytes);
+    return;
+  }
+
+  float zoneGCThresholdFactor = tunables.allocThresholdFactor();
+  size_t igcThresholdBytes = thresholdBytes * zoneGCThresholdFactor;
+  if (usedBytes >= igcThresholdBytes) {
+    // Start or continue an in progress incremental GC.
+    triggerZoneGC(zone, JS::GCReason::INCREMENTAL_MALLOC_TRIGGER, usedBytes,
+                  igcThresholdBytes);
+    return;
   }
 }
 
@@ -3532,15 +3575,28 @@ void GCRuntime::maybeGC(Zone* zone) {
     return;
   }
 
-  float threshold = zone->threshold.eagerAllocTrigger(
-      schedulingState.inHighFrequencyGCMode());
-  float usedBytes = zone->totalBytes();
-  if (usedBytes > 1024 * 1024 && usedBytes >= threshold &&
-      !isIncrementalGCInProgress() && !isBackgroundSweeping()) {
-    stats().recordTrigger(usedBytes, threshold);
+  if (isIncrementalGCInProgress() || isBackgroundSweeping()) {
+    return;
+  }
+
+  if (checkEagerAllocTrigger(zone->zoneSize, zone->threshold) ||
+      checkEagerAllocTrigger(zone->gcMallocBytes, zone->gcMallocThreshold)) {
     PrepareZoneForGC(zone);
     startGC(GC_NORMAL, JS::GCReason::EAGER_ALLOC_TRIGGER);
   }
+}
+
+bool GCRuntime::checkEagerAllocTrigger(const HeapSize& size,
+                                       const ZoneThreshold& threshold) {
+  float thresholdBytes =
+      threshold.eagerAllocTrigger(schedulingState.inHighFrequencyGCMode());
+  float usedBytes = size.gcBytes();
+  if (usedBytes <= 1024 * 1024 || usedBytes < thresholdBytes) {
+    return false;
+  }
+
+  stats().recordTrigger(usedBytes, thresholdBytes);
+  return true;
 }
 
 void GCRuntime::triggerFullGCForAtoms(JSContext* cx) {
@@ -5938,8 +5994,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(FreeOp* fop,
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
     AutoLockGC lock(rt);
     zone->changeGCState(Zone::Sweep, Zone::Finished);
-    zone->threshold.updateAfterGC(zone->totalBytes(), invocationKind, tunables,
-                                  schedulingState, lock);
+    zone->updateAllGCThresholds(*this, lock);
     zone->updateAllGCMallocCountersOnGCEnd(lock);
     zone->arenas.unmarkPreMarkedFreeCells();
   }
@@ -7440,12 +7495,22 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
       continue;
     }
 
-    if (zone->totalBytes() >= zone->threshold.gcTriggerBytes()) {
+    if (zone->zoneSize.gcBytes() >= zone->threshold.gcTriggerBytes()) {
       CheckZoneIsScheduled(zone, reason, "GC bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::GCBytesTrigger);
       if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
         resetReason = AbortReason::GCBytesTrigger;
+      }
+    }
+
+    if (zone->gcMallocBytes.gcBytes() >=
+        zone->gcMallocThreshold.gcTriggerBytes()) {
+      CheckZoneIsScheduled(zone, reason, "malloc bytes");
+      budget.makeUnlimited();
+      stats().nonincremental(AbortReason::MallocBytesTrigger);
+      if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
+        resetReason = AbortReason::MallocBytesTrigger;
       }
     }
 
@@ -7493,8 +7558,12 @@ static void ScheduleZones(GCRuntime* gc) {
 
     // This is a heuristic to reduce the total number of collections.
     bool inHighFrequencyMode = gc->schedulingState.inHighFrequencyGCMode();
-    if (zone->totalBytes() >=
+    if (zone->zoneSize.gcBytes() >=
         zone->threshold.eagerAllocTrigger(inHighFrequencyMode)) {
+      zone->scheduleGC();
+    }
+    if (zone->gcMallocBytes.gcBytes() >=
+        zone->gcMallocThreshold.eagerAllocTrigger(inHighFrequencyMode)) {
       zone->scheduleGC();
     }
 
@@ -8025,6 +8094,7 @@ void GCRuntime::minorGC(JS::GCReason reason, gcstats::PhaseKind phase) {
 
   for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
     maybeAllocTriggerZoneGC(zone);
+    maybeMallocTriggerZoneGC(zone);
   }
 }
 
@@ -8209,6 +8279,7 @@ void gc::MergeRealms(Realm* source, Realm* target) {
   JSRuntime* rt = source->runtimeFromMainThread();
   rt->gc.mergeRealms(source, target);
   rt->gc.maybeAllocTriggerZoneGC(target->zone());
+  rt->gc.maybeMallocTriggerZoneGC(target->zone());
 }
 
 void GCRuntime::mergeRealms(Realm* source, Realm* target) {

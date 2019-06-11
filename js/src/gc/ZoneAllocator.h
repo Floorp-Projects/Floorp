@@ -21,7 +21,7 @@ class Zone;
 namespace js {
 
 namespace gc {
-void MaybeAllocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc);
+void MaybeMallocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc);
 }
 
 // Base class of JS::Zone that provides malloc memory allocation and accounting.
@@ -51,8 +51,7 @@ class ZoneAllocator : public JS::shadow::Zone,
   }
   void adoptMallocBytes(ZoneAllocator* other) {
     gcMallocCounter.adopt(other->gcMallocCounter);
-    gcMallocBytes += other->gcMallocBytes;
-    other->gcMallocBytes = 0;
+    gcMallocBytes.adopt(other->gcMallocBytes);
 #ifdef DEBUG
     gcMallocTracker.adopt(other->gcMallocTracker);
 #endif
@@ -66,6 +65,7 @@ class ZoneAllocator : public JS::shadow::Zone,
 
   void updateAllGCMallocCountersOnGCStart();
   void updateAllGCMallocCountersOnGCEnd(const js::AutoLockGC& lock);
+  void updateAllGCThresholds(gc::GCRuntime& gc, const js::AutoLockGC& lock);
   js::gc::TriggerKind shouldTriggerGCForTooMuchMalloc();
 
   // Memory accounting APIs for malloc memory owned by GC cells.
@@ -73,10 +73,8 @@ class ZoneAllocator : public JS::shadow::Zone,
   void addCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use) {
     MOZ_ASSERT(cell);
     MOZ_ASSERT(nbytes);
-    mozilla::DebugOnly<size_t> initialBytes(gcMallocBytes);
-    MOZ_ASSERT(initialBytes + nbytes > initialBytes);
+    gcMallocBytes.addBytes(nbytes);
 
-    gcMallocBytes += nbytes;
     // We don't currently check GC triggers here.
 
 #ifdef DEBUG
@@ -87,9 +85,7 @@ class ZoneAllocator : public JS::shadow::Zone,
   void removeCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use) {
     MOZ_ASSERT(cell);
     MOZ_ASSERT(nbytes);
-    MOZ_ASSERT(gcMallocBytes >= nbytes);
-
-    gcMallocBytes -= nbytes;
+    gcMallocBytes.removeBytes(nbytes);
 
 #ifdef DEBUG
     gcMallocTracker.untrackMemory(cell, nbytes, use);
@@ -113,36 +109,29 @@ class ZoneAllocator : public JS::shadow::Zone,
 
   void incPolicyMemory(js::ZoneAllocPolicy* policy, size_t nbytes) {
     MOZ_ASSERT(nbytes);
-    mozilla::DebugOnly<size_t> initialBytes(gcMallocBytes);
-    MOZ_ASSERT(initialBytes + nbytes > initialBytes);
-
-    gcMallocBytes += nbytes;
+    gcMallocBytes.addBytes(nbytes);
 
 #ifdef DEBUG
     gcMallocTracker.incPolicyMemory(policy, nbytes);
 #endif
 
-    maybeAllocTriggerZoneGC();
+    maybeMallocTriggerZoneGC();
   }
   void decPolicyMemory(js::ZoneAllocPolicy* policy, size_t nbytes) {
     MOZ_ASSERT(nbytes);
-    MOZ_ASSERT(gcMallocBytes >= nbytes);
-
-    gcMallocBytes -= nbytes;
+    gcMallocBytes.removeBytes(nbytes);
 
 #ifdef DEBUG
     gcMallocTracker.decPolicyMemory(policy, nbytes);
 #endif
   }
 
-  size_t totalBytes() const { return zoneSize.gcBytes() + gcMallocBytes; }
-
-  // Check allocation threshold and trigger a zone GC if necessary.
-  void maybeAllocTriggerZoneGC() {
+  // Check malloc allocation threshold and trigger a zone GC if necessary.
+  void maybeMallocTriggerZoneGC() {
     JSRuntime* rt = runtimeFromAnyThread();
-    if (totalBytes() >= threshold.gcTriggerBytes() &&
+    if (gcMallocBytes.gcBytes() >= threshold.gcTriggerBytes() &&
         rt->heapState() == JS::HeapState::Idle) {
-      gc::MaybeAllocTriggerZoneGC(rt, this);
+      gc::MaybeMallocTriggerZoneGC(rt, this);
     }
   }
 
@@ -164,10 +153,10 @@ class ZoneAllocator : public JS::shadow::Zone,
                                       js::gc::TriggerKind trigger);
 
  public:
-  // Track heap size under this Zone.
+  // Track GC heap size under this Zone.
   js::gc::HeapSize zoneSize;
 
-  // Thresholds used to trigger GC.
+  // Thresholds used to trigger GC based on heap size.
   js::gc::ZoneHeapThreshold threshold;
 
   // Amount of data to allocate before triggering a new incremental slice for
@@ -180,12 +169,15 @@ class ZoneAllocator : public JS::shadow::Zone,
   // free. Currently this is used for all internal malloc allocations.
   js::gc::MemoryCounter gcMallocCounter;
 
+ public:
   // Malloc counter used for allocations where size information is
   // available. Used for some internal and all tracked external allocations.
-  mozilla::Atomic<size_t, mozilla::Relaxed,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      gcMallocBytes;
+  js::gc::HeapSize gcMallocBytes;
 
+  // Thresholds used to trigger GC based on malloc allocations.
+  js::gc::ZoneMallocThreshold gcMallocThreshold;
+
+ private:
 #ifdef DEBUG
   // In debug builds, malloc allocations can be tracked to make debugging easier
   // (possible?) if allocation and free sizes don't balance.

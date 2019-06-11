@@ -6,64 +6,66 @@
 
 var EXPORTED_SYMBOLS = ["BrowserTabChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
                                "resource://gre/modules/E10SUtils.jsm");
 
-class BrowserTabChild extends ActorChild {
+class BrowserTabChild extends JSWindowActorChild {
+  constructor() {
+    super();
+    this.handledWindowCreated = false;
+    this.handledFirstPaint = false;
+  }
+
   handleEvent(event) {
     switch (event.type) {
-    case "DOMWindowCreated":
-      let loadContext = this.mm.docShell.QueryInterface(Ci.nsILoadContext);
+    case "DOMWindowCreated": {
+      if (this.handledWindowCreated) {
+        return;
+      }
+      this.handledWindowCreated = true;
+
+      let context = this.manager.browsingContext;
+      let loadContext = context.docShell.QueryInterface(Ci.nsILoadContext);
       let userContextId = loadContext.originAttributes.userContextId;
 
-      this.mm.sendAsyncMessage("Browser:WindowCreated", { userContextId });
+      this.sendAsyncMessage("Browser:WindowCreated", { userContextId });
       break;
+    }
 
     case "MozAfterPaint":
-      this.mm.sendAsyncMessage("Browser:FirstPaint");
+      if (this.handledFirstPaint) {
+        return;
+      }
+      this.handledFirstPaint = true;
+      this.sendAsyncMessage("Browser:FirstPaint", {});
       break;
 
     case "MozDOMPointerLock:Entered":
-      this.mm.sendAsyncMessage("PointerLock:Entered", {
+      this.sendAsyncMessage("PointerLock:Entered", {
         originNoSuffix: event.target.nodePrincipal.originNoSuffix,
       });
       break;
 
     case "MozDOMPointerLock:Exited":
-      this.mm.sendAsyncMessage("PointerLock:Exited");
+      this.sendAsyncMessage("PointerLock:Exited");
       break;
     }
   }
 
-  switchDocumentDirection(window = this.content) {
-   // document.dir can also be "auto", in which case it won't change
-    if (window.document.dir == "ltr" || window.document.dir == "") {
-      window.document.dir = "rtl";
-    } else if (window.document.dir == "rtl") {
-      window.document.dir = "ltr";
-    }
-    for (let i = 0; i < window.frames.length; i++) {
-      this.switchDocumentDirection(window.frames[i]);
-    }
-  }
-
   receiveMessage(message) {
-    switch (message.name) {
-      case "AllowScriptsToClose":
-        this.content.windowUtils.allowScriptsToClose();
-        break;
+    let context = this.manager.browsingContext;
+    let docShell = context.docShell;
 
+    switch (message.name) {
       case "Browser:AppTab":
-        if (this.docShell) {
-          this.docShell.isAppTab = message.data.isAppTab;
+        if (docShell) {
+          docShell.isAppTab = message.data.isAppTab;
         }
         break;
 
       case "Browser:HasSiblings":
         try {
-          let browserChild = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+          let browserChild = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIBrowserChild);
           let hasSiblings = message.data;
           browserChild.hasSiblings = hasSiblings;
@@ -78,8 +80,7 @@ class BrowserTabChild extends ActorChild {
          * window (such as view-source) that has no session history, fall
          * back on using the web navigation's reload method.
          */
-
-        let webNav = this.docShell.QueryInterface(Ci.nsIWebNavigation);
+        let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
         try {
           if (webNav.sessionHistory) {
             webNav = webNav.sessionHistory;
@@ -89,23 +90,20 @@ class BrowserTabChild extends ActorChild {
 
         let reloadFlags = message.data.flags;
         try {
-          E10SUtils.wrapHandlingUserInput(this.content, message.data.handlingUserInput,
+          E10SUtils.wrapHandlingUserInput(this.document.defaultView,
+                                          message.data.handlingUserInput,
                                           () => webNav.reload(reloadFlags));
         } catch (e) {
         }
         break;
 
       case "MixedContent:ReenableProtection":
-        this.docShell.mixedContentChannel = null;
-        break;
-
-      case "SwitchDocumentDirection":
-        this.switchDocumentDirection();
+        docShell.mixedContentChannel = null;
         break;
 
       case "UpdateCharacterSet":
-        this.docShell.charset = message.data.value;
-        this.docShell.gatherCharsetMenuTelemetry();
+        docShell.charset = message.data.value;
+        docShell.gatherCharsetMenuTelemetry();
         break;
     }
   }
