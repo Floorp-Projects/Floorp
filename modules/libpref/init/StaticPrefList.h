@@ -6540,7 +6540,7 @@ VARCACHE_PREF(
 )
 
 VARCACHE_PREF(
-  Once,
+  Live,
   "webgl.force-layers-readback",
   WebGLForceLayersReadback,
   bool, false
