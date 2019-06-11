@@ -30,4 +30,16 @@ internal class TabAdapter(
         val item = entity.getStateFile(context.filesDir).readSnapshotItem(engine)
         return SessionManager.Snapshot(if (item == null) emptyList() else listOf(item), SessionManager.NO_SELECTION)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is TabAdapter) {
+            return false
+        }
+
+        return entity == other.entity
+    }
+
+    override fun hashCode(): Int {
+        return entity.hashCode()
+    }
 }

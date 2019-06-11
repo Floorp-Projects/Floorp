@@ -44,4 +44,16 @@ internal class TabCollectionAdapter(
         }
         return SessionManager.Snapshot(items, SessionManager.NO_SELECTION)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is TabCollectionAdapter) {
+            return false
+        }
+
+        return entity == other.entity
+    }
+
+    override fun hashCode(): Int {
+        return entity.hashCode()
+    }
 }
