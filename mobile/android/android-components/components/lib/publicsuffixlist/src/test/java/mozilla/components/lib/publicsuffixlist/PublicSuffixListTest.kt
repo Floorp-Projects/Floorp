@@ -1,23 +1,20 @@
 package mozilla.components.lib.publicsuffixlist
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class PublicSuffixListTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     private val publicSuffixList
-        get() = PublicSuffixList(context)
+        get() = PublicSuffixList(testContext)
 
     @Test
     fun `Verify getPublicSuffixPlusOne for known domains`() = runBlocking {
@@ -336,12 +333,12 @@ class PublicSuffixListTest {
     @Test
     fun `Accessing with and without prefetch`() = runBlocking {
         run {
-            val publicSuffixList = PublicSuffixList(context)
+            val publicSuffixList = PublicSuffixList(testContext)
             assertEquals("org", publicSuffixList.getPublicSuffix("mozilla.org").await())
         }
 
         run {
-            val publicSuffixList = PublicSuffixList(context).apply {
+            val publicSuffixList = PublicSuffixList(testContext).apply {
                 prefetch().await()
             }
             assertEquals("org", publicSuffixList.getPublicSuffix("mozilla.org").await())
