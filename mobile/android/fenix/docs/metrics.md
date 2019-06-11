@@ -649,5 +649,52 @@ tracking_protection</td>
 </table>
 </pre>
 
+## sync_account
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>opened</td>
+        <td>event</td>
+        <td>A user opened the sync account page</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>closed</td>
+        <td>event</td>
+        <td>A user closed the sync account page</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>sync_now</td>
+        <td>event</td>
+        <td>A user pressed the sync now button on the sync account page</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>sign_out</td>
+        <td>event</td>
+        <td>A user pressed the sign out button on the sync account page</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
+
 
 ## Metrics
