@@ -55,10 +55,10 @@ void StoreBuffer::GenericBuffer::trace(JSTracer* trc) {
 }
 
 StoreBuffer::StoreBuffer(JSRuntime* rt, const Nursery& nursery)
-    : bufferVal(this),
-      bufStrCell(this),
-      bufObjCell(this),
-      bufferSlot(this),
+    : bufferVal(this, JS::GCReason::FULL_VALUE_BUFFER),
+      bufStrCell(this, JS::GCReason::FULL_CELL_PTR_STR_BUFFER),
+      bufObjCell(this, JS::GCReason::FULL_CELL_PTR_OBJ_BUFFER),
+      bufferSlot(this, JS::GCReason::FULL_SLOT_BUFFER),
       bufferWholeCell(this),
       bufferGeneric(this),
       cancelIonCompilations_(false),

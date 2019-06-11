@@ -1705,7 +1705,6 @@ var gBrowserInit = {
     }
 
     FullScreen.init();
-    PointerLock.init();
 
     if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
       MenuTouchModeObserver.init();
@@ -1774,17 +1773,12 @@ var gBrowserInit = {
   _setInitialFocus() {
     let initiallyFocusedElement = document.commandDispatcher.focusedElement;
 
-    let firstBrowserPaintDeferred = {};
-    firstBrowserPaintDeferred.promise = new Promise(resolve => {
-      firstBrowserPaintDeferred.resolve = resolve;
+    this._firstBrowserPaintDeferred = {};
+    this._firstBrowserPaintDeferred.promise = new Promise(resolve => {
+      this._firstBrowserPaintDeferred.resolve = resolve;
     });
 
     let mm = window.messageManager;
-    mm.addMessageListener("Browser:FirstPaint", function onFirstPaint() {
-      mm.removeMessageListener("Browser:FirstPaint", onFirstPaint);
-      firstBrowserPaintDeferred.resolve();
-    });
-
     let initialBrowser = gBrowser.selectedBrowser;
     mm.addMessageListener("Browser:FirstNonBlankPaint",
                           function onFirstNonBlankPaint() {
@@ -1807,7 +1801,7 @@ var gBrowserInit = {
       if (gBrowser.selectedBrowser.isRemoteBrowser) {
         // If the initial browser is remote, in order to optimize for first paint,
         // we'll defer switching focus to that browser until it has painted.
-        firstBrowserPaintDeferred.promise.then(() => {
+        this._firstBrowserPaintDeferred.promise.then(() => {
           // If focus didn't move while we were waiting for first paint, we're okay
           // to move to the browser.
           if (document.commandDispatcher.focusedElement == initiallyFocusedElement) {
@@ -3484,10 +3478,8 @@ function BrowserReloadWithFlags(reloadFlags) {
   }
 
   function sendReloadMessage(tab) {
-    tab.linkedBrowser
-         .messageManager
-         .sendAsyncMessage("Browser:Reload",
-                           { flags: reloadFlags, handlingUserInput });
+    tab.linkedBrowser.sendMessageToActor("Browser:Reload",
+                                         { flags: reloadFlags, handlingUserInput }, "BrowserTab");
   }
 }
 

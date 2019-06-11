@@ -831,54 +831,6 @@ static_assert(
         offsetof(Chunk, trailer) + offsetof(ChunkTrailer, storeBuffer),
     "The hardcoded API storeBuffer offset must match the actual offset.");
 
-/*
- * Tracks the used sizes for owned heap data and automatically maintains the
- * memory usage relationship between GCRuntime and Zones.
- */
-class HeapSize {
-  /*
-   * A heap usage that contains our parent's heap usage, or null if this is
-   * the top-level usage container.
-   */
-  HeapSize* const parent_;
-
-  /*
-   * The approximate number of bytes in use on the GC heap, to the nearest
-   * ArenaSize. This does not include any malloc data. It also does not
-   * include not-actively-used addresses that are still reserved at the OS
-   * level for GC usage. It is atomic because it is updated by both the active
-   * and GC helper threads.
-   */
-  mozilla::Atomic<size_t, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      gcBytes_;
-
- public:
-  explicit HeapSize(HeapSize* parent) : parent_(parent), gcBytes_(0) {}
-
-  size_t gcBytes() const { return gcBytes_; }
-
-  void addGCArena() {
-    gcBytes_ += ArenaSize;
-    if (parent_) {
-      parent_->addGCArena();
-    }
-  }
-  void removeGCArena() {
-    MOZ_ASSERT(gcBytes_ >= ArenaSize);
-    gcBytes_ -= ArenaSize;
-    if (parent_) {
-      parent_->removeGCArena();
-    }
-  }
-
-  /* Pair to adoptArenas. Adopts the attendant usage statistics. */
-  void adopt(HeapSize& other) {
-    gcBytes_ += other.gcBytes_;
-    other.gcBytes_ = 0;
-  }
-};
-
 inline void Arena::checkAddress() const {
   mozilla::DebugOnly<uintptr_t> addr = uintptr_t(this);
   MOZ_ASSERT(addr);
