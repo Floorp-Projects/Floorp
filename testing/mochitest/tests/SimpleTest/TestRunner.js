@@ -209,7 +209,7 @@ TestRunner.setFailureFile = function(fileName) {
 
 TestRunner.generateFailureList = function () {
     if (TestRunner._failureFile) {
-        var failures = new SpecialPowersLogger(TestRunner._failureFile);
+        var failures = new MozillaFileLogger(TestRunner._failureFile);
         failures.log(JSON.stringify(TestRunner._failedTests));
         failures.close();
     }
