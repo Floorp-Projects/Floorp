@@ -9,26 +9,25 @@ package mozilla.components.feature.app.links
 import android.content.Context
 import android.content.Intent
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentTransaction
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
-import org.mockito.Mockito
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.verifyZeroInteractions
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class AppLinksFeatureTest {
+
     private lateinit var mockContext: Context
     private lateinit var mockSessionManager: SessionManager
     private lateinit var mockFragmentManager: FragmentManager
@@ -44,15 +43,15 @@ class AppLinksFeatureTest {
 
     @Before
     fun setup() {
-        mockContext = mock(Context::class.java)
+        mockContext = mock()
 
-        val engine = mock(Engine::class.java)
+        val engine = mock<Engine>()
         mockSessionManager = spy(SessionManager(engine))
-        mockFragmentManager = mock(FragmentManager::class.java)
-        mockUseCases = mock(AppLinksUseCases::class.java)
+        mockFragmentManager = mock()
+        mockUseCases = mock()
 
-        mockGetRedirect = mock(AppLinksUseCases.GetAppLinkRedirect::class.java)
-        mockOpenRedirect = mock(AppLinksUseCases.OpenAppLinkRedirect::class.java)
+        mockGetRedirect = mock()
+        mockOpenRedirect = mock()
         `when`(mockUseCases.interceptedAppLinkRedirect).thenReturn(mockGetRedirect)
         `when`(mockUseCases.openAppLink).thenReturn(mockOpenRedirect)
 
@@ -74,7 +73,7 @@ class AppLinksFeatureTest {
     }
 
     private fun createSession(isPrivate: Boolean): Session {
-        val session = mock(Session::class.java)
+        val session = mock<Session>()
         `when`(session.private).thenReturn(isPrivate)
         return session
     }
@@ -185,7 +184,7 @@ class AppLinksFeatureTest {
     fun `an external app is not opened if it is typed in to the URL bar`() {
         val mockDialog = spy(RedirectDialogFragment::class.java)
 
-        `when`(mockFragmentManager.beginTransaction()).thenReturn(mozilla.components.support.test.mock())
+        `when`(mockFragmentManager.beginTransaction()).thenReturn(mock())
 
         val featureWithDialog =
             AppLinksFeature(
@@ -211,10 +210,10 @@ class AppLinksFeatureTest {
 
     @Test
     fun `in non-private mode an external app is opened without a dialog`() {
-        val mockDialog = Mockito.spy(RedirectDialogFragment::class.java)
-        val mockFragmentManager = mock(FragmentManager::class.java)
+        val mockDialog = spy(RedirectDialogFragment::class.java)
+        val mockFragmentManager = mock<FragmentManager>()
 
-        `when`(mockFragmentManager.beginTransaction()).thenReturn(mock(FragmentTransaction::class.java))
+        `when`(mockFragmentManager.beginTransaction()).thenReturn(mock())
 
         val featureWithDialog =
             AppLinksFeature(

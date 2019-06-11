@@ -10,7 +10,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -20,19 +22,18 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class AppLinksUseCasesTest {
+
     private val appUrl = "https://example.com"
     private val appPackage = "com.example.app"
     private val browserPackage = "com.browser"
 
     private fun createContext(vararg urlToPackages: Pair<String, String>): Context {
-        val pm = ApplicationProvider.getApplicationContext<Context>().packageManager
+        val pm = testContext.packageManager
         val packageManager = shadowOf(pm)
 
         urlToPackages.forEach { (urlString, packageName) ->
@@ -47,7 +48,7 @@ class AppLinksUseCasesTest {
             packageManager.addResolveInfoForIntentNoDefaults(intent, resolveInfo)
         }
 
-        val context = mock(Context::class.java)
+        val context = mock<Context>()
         `when`(context.packageManager).thenReturn(pm)
 
         return context
