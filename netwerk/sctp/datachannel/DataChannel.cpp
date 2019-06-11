@@ -612,7 +612,6 @@ void DataChannelConnection::SetMaxMessageSize(bool aMaxMessageSizeSet,
   mMaxMessageSizeSet = aMaxMessageSizeSet;
   mMaxMessageSize = aMaxMessageSize;
 
-  bool ppidFragmentationEnforced = false;
   nsresult rv;
   nsCOMPtr<nsIPrefService> prefs =
       do_GetService("@mozilla.org/preferences-service;1", &rv);
@@ -620,15 +619,6 @@ void DataChannelConnection::SetMaxMessageSize(bool aMaxMessageSizeSet,
     nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
 
     if (branch) {
-      if (!NS_FAILED(branch->GetBoolPref(
-              "media.peerconnection.sctp.force_ppid_fragmentation",
-              &mPpidFragmentation))) {
-        // Ensure that forced on/off PPID fragmentation does not get overridden
-        // when Firefox has been detected.
-        mMaxMessageSizeSet = true;
-        ppidFragmentationEnforced = true;
-      }
-
       int32_t temp;
       if (!NS_FAILED(branch->GetIntPref(
               "media.peerconnection.sctp.force_maximum_message_size", &temp))) {
@@ -653,9 +643,6 @@ void DataChannelConnection::SetMaxMessageSize(bool aMaxMessageSizeSet,
     mMaxMessageSize = WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_REMOTE;
   }
 
-  LOG(("Use PPID-based fragmentation/reassembly: %s (enforced=%s)",
-       mPpidFragmentation ? "yes" : "no",
-       ppidFragmentationEnforced ? "yes" : "no"));
   LOG(("Maximum message size (outgoing data): %" PRIu64
        " (set=%s, enforced=%s)",
        mMaxMessageSize, mMaxMessageSizeSet ? "yes" : "no",
@@ -1767,12 +1754,6 @@ void DataChannelConnection::HandleAssociationChangeEvent(
         // Check for older Firefox by looking at the amount of incoming streams
         LOG(("Negotiated number of incoming streams: %" PRIu16,
              sac->sac_inbound_streams));
-        if (!mMaxMessageSizeSet &&
-            sac->sac_inbound_streams ==
-                WEBRTC_DATACHANNEL_STREAMS_OLDER_FIREFOX) {
-          LOG(("Older Firefox detected, using PPID-based fragmentation"));
-          mPpidFragmentation = true;
-        }
 
         Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
             DataChannelOnMessageAvailable::ON_CONNECTION, this)));
@@ -2721,63 +2702,10 @@ int DataChannelConnection::SendDataMsg(DataChannel& channel,
   // We *really* don't want to do this from main thread! - and
   // SendDataMsgInternalOrBuffer avoids blocking.
 
-  if (mPpidFragmentation) {
-    // TODO: Bug 1381136, remove this block and all other code that uses PPIDs
-    //       for fragmentation and reassembly once older Firefoxes without EOR
-    //       are no longer supported as target clients.
-
-    // Use the deprecated PPID-level fragmentation if enabled. Should be enabled
-    // in case we can be certain that the other peer is an older Firefox browser
-    // that does support PPID-level fragmentation/reassembly.
-
-    // PPID-level fragmentation can only be applied on reliable data channels.
-    if (len > DATA_CHANNEL_MAX_BINARY_FRAGMENT &&
-        channel.mPrPolicy == DATA_CHANNEL_RELIABLE &&
-        !(channel.mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED)) {
-      LOG((
-          "Sending data message (total=%zu) using deprecated PPID-based chunks",
-          len));
-
-      size_t left = len;
-      while (left > 0) {
-        // Note: For correctness, chunkLen should also consider mMaxMessageSize
-        //       as minimum but as this block is going to be removed soon, I
-        //       see no need for it.
-        size_t chunkLen =
-            std::min<size_t>(left, DATA_CHANNEL_MAX_BINARY_FRAGMENT);
-        left -= chunkLen;
-        uint32_t ppid = left > 0 ? ppidPartial : ppidFinal;
-
-        // Send the chunk
-        // Note that these might end up being deferred and queued.
-        LOG(("Send chunk (len=%zu, left=%zu, total=%zu, ppid %u", chunkLen,
-             left, len, ppid));
-        int error = SendDataMsgInternalOrBuffer(channel, data, chunkLen, ppid);
-        if (error) {
-          LOG(("*** send chunk fail %d", error));
-          return error;
-        }
-
-        // Update data position
-        data += chunkLen;
-      }
-
-      // Sending chunks complete
-      LOG(("Sent %zu chunks using deprecated PPID-based fragmentation",
-           (size_t)(len + DATA_CHANNEL_MAX_BINARY_FRAGMENT - 1) /
-               DATA_CHANNEL_MAX_BINARY_FRAGMENT));
-      return 0;
-    }
-
-    // Cannot do PPID-based fragmentaton on unreliable channels
-    NS_WARNING_ASSERTION(len <= DATA_CHANNEL_MAX_BINARY_FRAGMENT,
-                         "Sending too-large data on unreliable channel!");
-  } else {
-    if (mMaxMessageSize != 0 && len > mMaxMessageSize) {
-      LOG(("Message rejected, too large (%zu > %" PRIu64 ")", len,
-           mMaxMessageSize));
-      return EMSGSIZE;
-    }
+  if (mMaxMessageSize != 0 && len > mMaxMessageSize) {
+    LOG(("Message rejected, too large (%zu > %" PRIu64 ")", len,
+         mMaxMessageSize));
+    return EMSGSIZE;
   }
 
   // This will use EOR-based fragmentation if the message is too large (> 64
