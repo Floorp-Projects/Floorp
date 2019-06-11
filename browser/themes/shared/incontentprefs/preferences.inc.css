@@ -288,6 +288,7 @@ button > hbox > label {
 }
 
 #downloadFolder {
+  -moz-box-flex: 1;
   margin-inline-start: 0;
   padding-inline-start: 30px;
   background-repeat: no-repeat;
@@ -606,6 +607,7 @@ button > hbox > label {
 }
 
 #fxaSyncComputerName {
+  -moz-box-flex: 1;
   margin-inline-start: 0;
   margin-bottom: 4px;
 }

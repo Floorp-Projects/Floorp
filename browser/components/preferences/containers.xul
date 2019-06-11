@@ -31,7 +31,7 @@
       <label id="nameLabel" control="name"
              data-l10n-id="containers-name-label"
              data-l10n-attrs="style"/>
-      <textbox id="name" data-l10n-id="containers-name-text" flex="1" oninput="gContainersManager.checkForm();" />
+      <html:input id="name" type="text" data-l10n-id="containers-name-text" oninput="gContainersManager.checkForm();" />
     </hbox>
     <hbox align="center" id="iconWrapper">
       <label id="iconLabel" control="icon"

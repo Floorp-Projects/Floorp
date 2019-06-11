@@ -36,9 +36,10 @@
     <separator class="thin"/>
     <label id="urlLabel" control="url" data-l10n-id="permissions-address"/>
     <hbox align="start">
-      <textbox id="url" flex="1"
-               oninput="gPermissionManager.onHostInput(event.target);"
-               onkeypress="gPermissionManager.onHostKeyPress(event);"/>
+      <html:input id="url" type="text"
+                  style="-moz-box-flex: 1;"
+                  oninput="gPermissionManager.onHostInput(event.target);"
+                  onkeypress="gPermissionManager.onHostKeyPress(event);"/>
     </hbox>
     <hbox pack="end">
       <button id="btnBlock" disabled="true" data-l10n-id="permissions-block"

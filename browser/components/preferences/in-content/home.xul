@@ -29,10 +29,11 @@
     <label control="homeMode" data-l10n-id="home-homepage-mode-label" flex="1" />
 
     <vbox class="homepageMenuItemContainer" flex="1">
-      <textbox id="homePrefHidden"
-              preference="browser.startup.homepage"
-              onsyncfrompreference="return gHomePane.syncFromHomePref();"
-              hidden="true" />
+      <html:input id="homePrefHidden"
+                  type="text"
+                  preference="browser.startup.homepage"
+                  onsyncfrompreference="return gHomePane.syncFromHomePref();"
+                  hidden="true" />
       <menulist id="homeMode"
                 class="check-home-page-controlled"
                 data-preference-related="browser.startup.homepage">
