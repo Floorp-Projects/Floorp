@@ -182,7 +182,7 @@
     <groupbox>
       <label control="fxaSyncComputerName"><html:h2 data-l10n-id="sync-device-name-header"/></label>
       <hbox id="fxaDeviceName">
-        <textbox id="fxaSyncComputerName" flex="1" disabled="true"/>
+        <html:input id="fxaSyncComputerName" type="text" disabled="true"/>
         <button id="fxaChangeDeviceName"
                 is="highlightable-button"
                 data-l10n-id="sync-device-name-change"/>

@@ -361,9 +361,10 @@
       <radio id="saveTo"
              value="true"
              data-l10n-id="download-save-to"/>
-      <textbox id="downloadFolder" flex="1"
-               readonly="true"
-               aria-labelledby="saveTo"/>
+      <html:input id="downloadFolder"
+                  type="text"
+                  readonly="readonly"
+                  aria-labelledby="saveTo"/>
       <button id="chooseFolder"
               is="highlightable-button"
               class="accessory-button"
