@@ -6,13 +6,14 @@ package mozilla.components.lib.crash
 
 import android.content.ComponentName
 import android.content.Intent
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class NativeCodeCrashTest {
+
     @Test
     fun `Creating NativeCodeCrash object from sample GeckoView intent`() {
         val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")

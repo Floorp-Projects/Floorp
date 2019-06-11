@@ -5,12 +5,12 @@
 package mozilla.components.lib.crash.handler
 
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -19,12 +19,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.spy
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class CrashHandlerServiceTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @After
     fun tearDown() {
@@ -46,7 +43,7 @@ class CrashHandlerServiceTest {
                     caughtCrash = crash
                 }
             })
-        ).install(context)
+        ).install(testContext)
 
         val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
         intent.component = ComponentName(

@@ -6,14 +6,14 @@ package mozilla.components.lib.crash
 
 import android.app.Activity
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.expectException
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -26,14 +26,11 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import java.lang.reflect.Modifier
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class CrashReporterTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Before
     fun setUp() {
@@ -46,7 +43,7 @@ class CrashReporterTest {
 
         CrashReporter(
             services = listOf(mock())
-        ).install(context)
+        ).install(testContext)
 
         val newHandler = Thread.getDefaultUncaughtExceptionHandler()
         assertNotNull(newHandler)
@@ -57,7 +54,7 @@ class CrashReporterTest {
     @Test(expected = IllegalArgumentException::class)
     fun `CrashReporter throws if no service is defined`() {
         CrashReporter(emptyList())
-            .install(context)
+            .install(testContext)
     }
 
     @Test
@@ -67,11 +64,11 @@ class CrashReporterTest {
         val reporter = spy(CrashReporter(
             services = listOf(service),
             shouldPrompt = CrashReporter.Prompt.NEVER
-        ).install(context))
+        ).install(testContext))
 
         val crash: Crash.UncaughtExceptionCrash = mock()
 
-        reporter.onCrash(context, crash)
+        reporter.onCrash(testContext, crash)
 
         verify(reporter).submitReport(crash)
         verify(reporter, never()).showPrompt(any(), eq(crash))
@@ -86,11 +83,11 @@ class CrashReporterTest {
         val reporter = spy(CrashReporter(
             services = listOf(service),
             shouldPrompt = CrashReporter.Prompt.ALWAYS
-        ).install(context))
+        ).install(testContext))
 
         val crash: Crash.UncaughtExceptionCrash = mock()
 
-        reporter.onCrash(context, crash)
+        reporter.onCrash(testContext, crash)
 
         verify(reporter, never()).submitReport(crash)
         verify(reporter).showPrompt(any(), eq(crash))
@@ -105,11 +102,11 @@ class CrashReporterTest {
         val reporter = spy(CrashReporter(
             services = listOf(service),
             shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH
-        ).install(context))
+        ).install(testContext))
 
         val crash: Crash.UncaughtExceptionCrash = mock()
 
-        reporter.onCrash(context, crash)
+        reporter.onCrash(testContext, crash)
 
         verify(reporter).submitReport(crash)
         verify(reporter, never()).showPrompt(any(), eq(crash))
@@ -124,11 +121,11 @@ class CrashReporterTest {
         val reporter = spy(CrashReporter(
             services = listOf(service),
             shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH
-        ).install(context))
+        ).install(testContext))
 
         val crash: Crash.NativeCodeCrash = mock()
 
-        reporter.onCrash(context, crash)
+        reporter.onCrash(testContext, crash)
 
         verify(reporter, never()).submitReport(crash)
         verify(reporter).showPrompt(any(), eq(crash))
@@ -141,7 +138,7 @@ class CrashReporterTest {
         val reporter = spy(CrashReporter(
             services = listOf(mock()),
             shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH
-        ).install(context))
+        ).install(testContext))
 
         assertTrue(reporter.enabled)
     }
@@ -153,12 +150,12 @@ class CrashReporterTest {
         val reporter = spy(CrashReporter(
             services = listOf(service),
             shouldPrompt = CrashReporter.Prompt.ALWAYS
-        ).install(context))
+        ).install(testContext))
 
         reporter.enabled = false
 
         val crash: Crash.UncaughtExceptionCrash = mock()
-        reporter.onCrash(context, crash)
+        reporter.onCrash(testContext, crash)
 
         verify(reporter, never()).submitReport(crash)
         verify(reporter, never()).showPrompt(any(), eq(crash))
@@ -186,7 +183,7 @@ class CrashReporterTest {
         val reporter = spy(CrashReporter(
             services = listOf(service),
             shouldPrompt = CrashReporter.Prompt.NEVER
-        ).install(context))
+        ).install(testContext))
 
         reporter.onCrash(
             mock(),
@@ -218,7 +215,7 @@ class CrashReporterTest {
             CrashReporter.requireInstance
         }
 
-        reporter.install(context)
+        reporter.install(testContext)
 
         assertNotNull(CrashReporter.requireInstance)
     }

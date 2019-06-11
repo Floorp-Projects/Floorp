@@ -4,8 +4,7 @@
 
 package mozilla.components.lib.crash.service
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.sentry.SentryClient
 import io.sentry.SentryClientFactory
 import io.sentry.dsn.Dsn
@@ -13,6 +12,7 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -20,12 +20,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SentryServiceTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `SentryService disables exception handler and forwards tags`() {
@@ -41,7 +38,7 @@ class SentryServiceTest {
         }
 
         SentryService(
-            context,
+            testContext,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = factory,
             tags = mapOf(
@@ -69,7 +66,7 @@ class SentryServiceTest {
         }
 
         val service = SentryService(
-            context,
+            testContext,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = factory)
 
@@ -84,7 +81,7 @@ class SentryServiceTest {
         val client: SentryClient = mock()
 
         val service = SentryService(
-            context,
+            testContext,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
@@ -101,7 +98,7 @@ class SentryServiceTest {
         val client: SentryClient = mock()
 
         val service = SentryService(
-            context,
+            testContext,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
@@ -117,7 +114,7 @@ class SentryServiceTest {
         val client: SentryClient = mock()
 
         SentryService(
-            context,
+            testContext,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
@@ -133,7 +130,7 @@ class SentryServiceTest {
         val client: SentryClient = mock()
         val environmentString = "production"
 
-        SentryService(context,
+        SentryService(testContext,
                 "https://fake:notreal@sentry.prod.example.net/405",
                 clientFactory = object : SentryClientFactory() {
                     override fun createSentryClient(dsn: Dsn?): SentryClient = client
@@ -141,7 +138,7 @@ class SentryServiceTest {
                 environment = environmentString)
         verify(client).environment = eq(environmentString)
 
-        SentryService(context,
+        SentryService(testContext,
                 "https://fake:notreal@sentry.prod.example.net/405",
                 clientFactory = object : SentryClientFactory() {
                     override fun createSentryClient(dsn: Dsn?): SentryClient = client
