@@ -224,24 +224,13 @@ var PointerlockFsWarning = {
 };
 
 var PointerLock = {
+ entered(originNoSuffix) {
+   PointerlockFsWarning.showPointerLock(originNoSuffix);
+ },
 
-  init() {
-    window.messageManager.addMessageListener("PointerLock:Entered", this);
-    window.messageManager.addMessageListener("PointerLock:Exited", this);
-  },
-
-  receiveMessage(aMessage) {
-    switch (aMessage.name) {
-      case "PointerLock:Entered": {
-        PointerlockFsWarning.showPointerLock(aMessage.data.originNoSuffix);
-        break;
-      }
-      case "PointerLock:Exited": {
-        PointerlockFsWarning.close();
-        break;
-      }
-    }
-  },
+ exited() {
+  PointerlockFsWarning.close();
+ },
 };
 
 var FullScreen = {

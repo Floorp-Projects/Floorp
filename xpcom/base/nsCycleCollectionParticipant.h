@@ -178,15 +178,15 @@ class NS_NO_VTABLE nsCycleCollectionParticipant {
   // outgoing edges at all in the cycle collection graph or they know for sure
   // they're alive _and_ none of their outgoing edges are to gray (in the GC
   // sense) gcthings.  See also nsWrapperCache::HasNothingToTrace and
-  // nsWrapperCache::IsBlackAndDoesNotNeedTracing.  The restriction on not
-  // having outgoing edges to gray gcthings is because if we _do_ have them that
-  // means we have a "strong" edge to a JS thing and since we're alive we need
-  // to trace through it and mark keep them alive.  Outgoing edges to C++ things
-  // don't matter here, because the criteria for when a CC participant is
-  // considered alive are slightly different for JS and C++ things: JS things
-  // are only considered alive when reachable via an edge from a live thing,
-  // while C++ things are also considered alive when their refcount exceeds the
-  // number of edges via which they are reachable.
+  // nsWrapperCache::HasKnownLiveWrapperAndDoesNotNeedTracing. The restriction
+  // on not having outgoing edges to gray gcthings is because if we _do_ have
+  // them that means we have a "strong" edge to a JS thing and since we're alive
+  // we need to trace through it and mark keep them alive.  Outgoing edges to
+  // C++ things don't matter here, because the criteria for when a CC
+  // participant is considered alive are slightly different for JS and C++
+  // things: JS things are only considered alive when reachable via an edge from
+  // a live thing, while C++ things are also considered alive when their
+  // refcount exceeds the number of edges via which they are reachable.
   bool CanSkipInCC(void* aPtr) {
     return mMightSkip ? CanSkipInCCReal(aPtr) : false;
   }
