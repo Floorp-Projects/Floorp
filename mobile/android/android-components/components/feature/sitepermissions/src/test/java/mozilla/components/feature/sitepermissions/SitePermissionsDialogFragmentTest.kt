@@ -4,14 +4,13 @@
 
 package mozilla.components.feature.sitepermissions
 
-import android.content.Context
-import android.view.ContextThemeWrapper
 import android.view.Gravity.TOP
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature.PromptsStyling
 import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.support.test.mock
@@ -23,16 +22,9 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SitePermissionsDialogFragmentTest {
-
-    private val context: Context
-        get() = ContextThemeWrapper(
-            testContext,
-            R.style.Theme_AppCompat
-        )
 
     @Test
     fun `build dialog`() {
@@ -46,7 +38,7 @@ class SitePermissionsDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
@@ -70,7 +62,7 @@ class SitePermissionsDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
@@ -94,7 +86,7 @@ class SitePermissionsDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
@@ -117,7 +109,7 @@ class SitePermissionsDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
@@ -145,7 +137,7 @@ class SitePermissionsDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
         doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
 
         val dialog = fragment.onCreateDialog(null)
@@ -173,7 +165,7 @@ class SitePermissionsDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
         doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
 
         val dialog = fragment.onCreateDialog(null)
@@ -201,7 +193,7 @@ class SitePermissionsDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
         doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
 
         val dialog = fragment.onCreateDialog(null)
@@ -229,7 +221,7 @@ class SitePermissionsDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
         doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
 
         val dialog = fragment.onCreateDialog(null)
@@ -258,7 +250,7 @@ class SitePermissionsDialogFragmentTest {
 
         fragment.feature = mockFeature
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -282,7 +274,7 @@ class SitePermissionsDialogFragmentTest {
             )
         )
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()

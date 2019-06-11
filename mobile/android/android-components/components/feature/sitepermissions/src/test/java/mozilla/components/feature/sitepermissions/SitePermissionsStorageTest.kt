@@ -8,13 +8,14 @@ import androidx.paging.DataSource
 import androidx.room.DatabaseConfiguration
 import androidx.room.InvalidationTracker
 import androidx.sqlite.db.SupportSQLiteOpenHelper
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.BLUETOOTH
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.CAMERA
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCATION
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCAL_STORAGE
+import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCATION
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.MICROPHONE
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.NOTIFICATION
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDao
@@ -28,11 +29,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.verify
 import org.mockito.Mockito.spy
-import org.robolectric.RobolectricTestRunner
+import org.mockito.Mockito.verify
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SitePermissionsStorageTest {
 
     private lateinit var mockDAO: SitePermissionsDao
@@ -80,12 +80,12 @@ class SitePermissionsStorageTest {
 
         verify(mockDAO).getSitePermissions()
 
-        assertEquals(map[LOCAL_STORAGE]!!.size, 2)
+        assertEquals(2, map[LOCAL_STORAGE]?.size)
         assertFalse(LOCATION in map)
         assertFalse(NOTIFICATION in map)
         assertFalse(CAMERA in map)
-        assertEquals(map[BLUETOOTH]!!.size, 2)
-        assertEquals(map[MICROPHONE]!!.size, 2)
+        assertEquals(2, map[BLUETOOTH]?.size)
+        assertEquals(2, map[MICROPHONE]?.size)
     }
 
     @Test
