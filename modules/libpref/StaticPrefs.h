@@ -18,6 +18,8 @@
 
 namespace mozilla {
 
+class SharedPrefMapBuilder;
+
 // These typedefs are for use within StaticPrefList.h.
 
 typedef const char* String;
@@ -116,9 +118,12 @@ class StaticPrefs {
 #undef PREF
 #undef VARCACHE_PREF
 
- public:
+ private:
+  friend class Preferences;
   static void InitAll(bool aIsStartup);
   static void InitOncePrefs();
+  static void InitOncePrefsFromShared();
+  static void RegisterOncePrefs(SharedPrefMapBuilder& aBuilder);
 };
 
 }  // namespace mozilla
