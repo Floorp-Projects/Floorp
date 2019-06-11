@@ -33,13 +33,15 @@ SimpleTest.waitForFocus(async function() {
     await SpecialPowers.pushPrefEnv({"set": [["layout.word_select.eat_space_to_next_word", eatSpaceToNextWord]]});
 
     editor.innerHTML = "<p>This <b>is</b> an <i>example </i>text.<br></p>" +
-                       "<p>and an image <img src=\"green.png\"> is here.</p>";
+                       "<p>and an image <img src=\"green.png\"> is here.</p>" +
+                       "<p>An anchor with href attr <a href=\"about:blank\">is</a> here.</p>";
     editor.focus();
     editor.scrollTop; // flush layout.
 
     let b = editor.firstChild.firstChild.nextSibling;
     let i = b.nextSibling.nextSibling;
     let img = editor.firstChild.nextSibling.firstChild.nextSibling;
+    let href = editor.firstChild.nextSibling.nextSibling.firstChild.nextSibling;
 
     // double clicking usual inline element shouldn't cause "selecting" the element.
     synthesizeMouseAtCenter(b, {clickCount: 1});
@@ -82,13 +84,13 @@ SimpleTest.waitForFocus(async function() {
     // Both clicking and double-clicking on <img> element should "select" it.
     synthesizeMouseAtCenter(img, {clickCount: 1});
     is(selection.getRangeAt(0).startContainer, img.parentElement,
-       "#0-3 Clicking in <b> element should set start of selection to the <img> element (eat_space_to_next_word: {$eatSpaceToNextWord})");
+       "#0-3 Clicking in <img> element should set start of selection to the <img> element (eat_space_to_next_word: {$eatSpaceToNextWord})");
     is(selection.getRangeAt(0).startOffset, 1,
-       "#0-3 Clicking in <b> element should set start of selection to the <img> element (eat_space_to_next_word: {$eatSpaceToNextWord})");
+       "#0-3 Clicking in <img> element should set start of selection to the <img> element (eat_space_to_next_word: {$eatSpaceToNextWord})");
     is(selection.getRangeAt(0).endContainer, img.parentElement,
-       "#0-3 Clicking in <b> element should set end of selection to start of next text node (eat_space_to_next_word: {$eatSpaceToNextWord})");
+       "#0-3 Clicking in <img> element should set end of selection to start of next text node (eat_space_to_next_word: {$eatSpaceToNextWord})");
     is(selection.getRangeAt(0).endOffset, 2,
-       "#0-3 Clicking in <b> element should set end of selection to start of next text node (eat_space_to_next_word: {$eatSpaceToNextWord})");
+       "#0-3 Clicking in <img> element should set end of selection to start of next text node (eat_space_to_next_word: {$eatSpaceToNextWord})");
 
     is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
        img,
@@ -97,17 +99,50 @@ SimpleTest.waitForFocus(async function() {
     synthesizeMouseAtCenter(img, {clickCount: 1});
     synthesizeMouseAtCenter(img, {clickCount: 2});
     is(selection.getRangeAt(0).startContainer, img.parentElement,
-       "#0-4 Double-clicking in <b> element should set start of selection to the <img> element (eat_space_to_next_word: {$eatSpaceToNextWord})");
+       "#0-4 Double-clicking in <img> element should set start of selection to the <img> element (eat_space_to_next_word: {$eatSpaceToNextWord})");
     is(selection.getRangeAt(0).startOffset, 1,
-       "#0-4 Double-clicking in <b> element should set start of selection to the <img> element (eat_space_to_next_word: {$eatSpaceToNextWord})");
+       "#0-4 Double-clicking in <img> element should set start of selection to the <img> element (eat_space_to_next_word: {$eatSpaceToNextWord})");
     is(selection.getRangeAt(0).endContainer, img.parentElement,
-       "#0-4 Double-clicking in <b> element should set end of selection to start of next text node (eat_space_to_next_word: {$eatSpaceToNextWord})");
+       "#0-4 Double-clicking in <img> element should set end of selection to start of next text node (eat_space_to_next_word: {$eatSpaceToNextWord})");
     is(selection.getRangeAt(0).endOffset, 2,
-       "#0-4 Double-clicking in <b> element should set end of selection to start of next text node (eat_space_to_next_word: {$eatSpaceToNextWord})");
+       "#0-4 Double-clicking in <img> element should set end of selection to start of next text node (eat_space_to_next_word: {$eatSpaceToNextWord})");
 
     is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
        img,
        "#0-4 nsIHTMLEditor::getSelectedElement(\"\") should return the <img> element after double-clicking in it (eat_space_to_next_word: {$eatSpaceToNextWord})");
+
+    // Puts caret into the <a href> element.
+    synthesizeMouseAtCenter(href, {clickCount: 1});
+    is(selection.getRangeAt(0).startContainer, href.firstChild,
+       "#0-5 Clicking in <a href> element should set start of selection to the text node in it (eat_space_to_next_word: {$eatSpaceToNextWord})");
+    is(selection.isCollapsed, true,
+       "#0-5 Clicking in <a href> element should cause collapsing Selection (eat_space_to_next_word: {$eatSpaceToNextWord})");
+
+    is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+       null,
+       "#0-5 nsIHTMLEditor::getSelectedElement(\"\") should return null after clicking in the <a href> element (eat_space_to_next_word: {$eatSpaceToNextWord})");
+    is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+       href,
+       "#0-5 nsIHTMLEditor::getSelectedElement(\"href\") should return the <a href> element after clicking in it (eat_space_to_next_word: {$eatSpaceToNextWord})");
+
+    // Selects the <a href> element with a double-click.
+    synthesizeMouseAtCenter(href, {clickCount: 1});
+    synthesizeMouseAtCenter(href, {clickCount: 2});
+    is(selection.getRangeAt(0).startContainer, href.parentElement,
+       "#0-6 Double-clicking in <a href> element should set start of selection to the element (eat_space_to_next_word: {$eatSpaceToNextWord})");
+    is(selection.getRangeAt(0).startOffset, 1,
+       "#0-6 Double-clicking in <a href> element should set start of selection to the element (eat_space_to_next_word: {$eatSpaceToNextWord})");
+    is(selection.getRangeAt(0).endContainer, href.parentElement,
+       "#0-6 Double-clicking in <a href> element should set end of selection to start of next <br> element (eat_space_to_next_word: {$eatSpaceToNextWord})");
+    is(selection.getRangeAt(0).endOffset, 2,
+       "#0-6 Double-clicking in <a href> element should set end of selection to start of next <br> element (eat_space_to_next_word: {$eatSpaceToNextWord})");
+
+    is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+       href,
+       "#0-6 nsIHTMLEditor::getSelectedElement(\"\") should return the <a href> element after double-clicking in it (eat_space_to_next_word: {$eatSpaceToNextWord})");
+    is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+       href,
+       "#0-6 nsIHTMLEditor::getSelectedElement(\"href\") should return the <a href> element after double-clicking in it (eat_space_to_next_word: {$eatSpaceToNextWord})");
   }
 
   editor.innerHTML = "<p>p1<b>b1</b><i>i1</i></p>";
@@ -700,6 +735,49 @@ SimpleTest.waitForFocus(async function() {
   is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
      null,
      "#7-1 nsIHTMLEditor::getSelectedElement(\"anchor\") should return null when Selection starts from a text node in <b> element and ends at start of following text node");
+
+  editor.innerHTML = "<p>p1<b>b1</b><br></p>";
+  editor.focus();
+
+  // <p>p1[<b>b1</b>}<br></p>
+  // This is usual case of double-clicking in the <b> element.
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild, 2);
+  range.setEnd(editor.firstChild, 2);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#8-1 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection starts from previous text node of <b> element and ends before the following <br> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     null,
+     "#8-1 nsIHTMLEditor::getSelectedElement(\"href\") should return null when Selection starts from previous text node of <b> element and ends before the following <br> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     null,
+     "#8-1 nsIHTMLEditor::getSelectedElement(\"anchor\") should return null when Selection starts from previous text node of <b> element and ends before the following <br> element");
+
+
+  editor.innerHTML = "<p><b>b1</b><br></p>";
+  editor.focus();
+
+  // <p><b>[b1</b>}<br></p>
+  // This is usual case of double-clicking in the <b> element.
+  range = document.createRange();
+  range.setStart(editor.firstChild.firstChild.firstChild, 0);
+  range.setEnd(editor.firstChild, 1);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("")),
+     null,
+     "#9-1 nsIHTMLEditor::getSelectedElement(\"\") should return null when Selection starts from a text node in <b> element and ends before the following <br> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("href")),
+     null,
+     "#9-1 nsIHTMLEditor::getSelectedElement(\"href\") should return null when Selection starts from a text node in <b> element and ends before the following <br> element");
+  is(SpecialPowers.unwrap(getHTMLEditor().getSelectedElement("anchor")),
+     null,
+     "#9-1 nsIHTMLEditor::getSelectedElement(\"anchor\") should return null when Selection starts from a text node in <b> element and ends before the following <br> element");
 
   SimpleTest.finish();
 });
