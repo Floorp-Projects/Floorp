@@ -780,7 +780,7 @@ int ParseFTPList(const char* line, struct list_state* state,
       p = &(line[toklen[0]]);
       /* \s(\d\d-\d\d-\d\d)\s+(\d\d:\d\d)\s */
       if (numtoks >= 4 && toklen[0] <= 18 && IsAsciiDigit(*tokens[0]) &&
-          (linelen - toklen[0]) >= (53 - 18) && p[18 - 18] == ' ' &&
+          (linelen - toklen[0]) >= (54 - 18) && p[18 - 18] == ' ' &&
           p[34 - 18] == ' ' && p[37 - 18] == '-' && p[40 - 18] == '-' &&
           p[43 - 18] == ' ' && p[45 - 18] == ' ' && p[48 - 18] == ':' &&
           p[51 - 18] == ' ' && IsAsciiDigit(p[35 - 18]) &&
@@ -788,7 +788,8 @@ int ParseFTPList(const char* line, struct list_state* state,
           IsAsciiDigit(p[39 - 18]) && IsAsciiDigit(p[41 - 18]) &&
           IsAsciiDigit(p[42 - 18]) && IsAsciiDigit(p[46 - 18]) &&
           IsAsciiDigit(p[47 - 18]) && IsAsciiDigit(p[49 - 18]) &&
-          IsAsciiDigit(p[50 - 18])) {
+          IsAsciiDigit(p[50 - 18]) &&
+          (linelen_sans_wsp - toklen[0]) > (53 - 18)) {
         lstyle = 'O'; /* OS/2 */
         if (!state->lstyle) {
           for (pos = 1; lstyle && pos < toklen[0]; pos++) {
