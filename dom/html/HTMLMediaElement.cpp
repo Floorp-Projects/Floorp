@@ -2797,6 +2797,9 @@ already_AddRefed<Promise> HTMLMediaElement::Seek(double aTime,
 
 double HTMLMediaElement::Duration() const {
   if (mSrcStream) {
+    if (mSrcStreamPlaybackEnded) {
+      return CurrentTime();
+    }
     return std::numeric_limits<double>::infinity();
   }
 
