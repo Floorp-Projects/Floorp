@@ -248,6 +248,7 @@ export default class LoginItem extends ReflectedFluentElement {
       this.removeAttribute("isNewLogin");
     }
 
+    this.shadowRoot.querySelector(".delete-button").disabled = this.hasAttribute("isNewLogin");
     this.shadowRoot.querySelector(".edit-button").disabled = shouldEdit;
     this.shadowRoot.querySelectorAll("modal-input")
                    .forEach(el => el.toggleAttribute("editing", shouldEdit));
