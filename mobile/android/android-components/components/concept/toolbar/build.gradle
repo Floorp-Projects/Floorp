@@ -19,6 +19,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    testOptions.unitTests.includeAndroidResources = true
 }
 
 dependencies {
@@ -29,7 +31,7 @@ dependencies {
     api project(':support-base')
     implementation project(':support-ktx')
 
-    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
     testImplementation project(':support-test')
