@@ -135,7 +135,7 @@ def create_isolate_failure_tasks(task_definition, failures, level):
                 'type': 'integer',
                 'default': 1,
                 'minimum': 1,
-                'maximum': 20,
+                'maximum': 100,
                 'title': 'Times',
                 'description': 'How many times to run each task.',
             }
