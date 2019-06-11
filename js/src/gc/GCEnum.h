@@ -103,7 +103,8 @@ enum class ZealMode {
   _(ScopeData)                             \
   _(WeakMapObject)                         \
   _(ShapeKids)                             \
-  _(ShapeCache)
+  _(ShapeCache)                            \
+  _(ModuleBindingMap)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
