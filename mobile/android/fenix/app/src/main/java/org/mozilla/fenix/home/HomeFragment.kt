@@ -165,9 +165,11 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
         val listener = object : ViewTreeObserver.OnPreDrawListener {
             override fun onPreDraw(): Boolean {
-                restoreLayoutState()
-                startPostponedEnterTransition()
-                sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(this)
+                launch {
+                    delay(ANIM_SCROLL_DELAY)
+                    restoreLayoutState()
+                    startPostponedEnterTransition()
+                }.invokeOnCompletion { sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(this) }
                 return true
             }
         }
