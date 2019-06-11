@@ -16,6 +16,7 @@ module.exports = {
 
   "extends": [
     "eslint:recommended",
+    "plugin:prettier/recommended",
   ],
 
   "globals": {
@@ -82,7 +83,6 @@ module.exports = {
     "html",
     "fetch-options",
     "no-unsanitized",
-    "prettier",
   ],
 
   // When adding items to this file please check for effects on all of toolkit
@@ -265,9 +265,6 @@ module.exports = {
 
     // Require object-literal shorthand with ES6 method syntax
     "object-shorthand": ["error", "always", { "avoidQuotes": true }],
-
-    // Formatting.
-    "prettier/prettier": "error",
 
     // XXX Bug 1487642 - decide if we want to enable this or not.
     // Require generator functions to contain yield
