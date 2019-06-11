@@ -45,7 +45,6 @@ const MESSAGE_NAMES = [
 
 const FRAME_SCRIPTS = [
   "resource://specialpowers/specialpowersFrameScript.js",
-  "resource://specialpowers/MozillaLogger.js",
 ];
 
 
