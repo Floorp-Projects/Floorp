@@ -78,6 +78,7 @@
 | [mozilla.components.feature.contextmenu](mozilla.components.feature.contextmenu/index.md) |  |
 | [mozilla.components.feature.customtabs](mozilla.components.feature.customtabs/index.md) |  |
 | [mozilla.components.feature.downloads](mozilla.components.feature.downloads/index.md) |  |
+| [mozilla.components.feature.downloads.manager](mozilla.components.feature.downloads.manager/index.md) |  |
 | [mozilla.components.feature.findinpage](mozilla.components.feature.findinpage/index.md) |  |
 | [mozilla.components.feature.findinpage.view](mozilla.components.feature.findinpage.view/index.md) |  |
 | [mozilla.components.feature.intent](mozilla.components.feature.intent/index.md) |  |

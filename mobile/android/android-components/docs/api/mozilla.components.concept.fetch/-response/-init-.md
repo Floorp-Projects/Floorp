@@ -4,7 +4,7 @@
 
 `Response(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, status: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, headers: `[`Headers`](../-headers/index.md)`, body: `[`Body`](-body/index.md)`)`
 
-The [Response](index.md) data class represents a reponse to a [Request](../-request/index.md) send by a [Client](../-client/index.md).
+The [Response](index.md) data class represents a response to a [Request](../-request/index.md) send by a [Client](../-client/index.md).
 
 You can create a [Response](index.md) object using the constructor, but you are more likely to encounter a [Response](index.md) object
 being returned as the result of calling [Client.fetch](../-client/fetch.md).

@@ -2,7 +2,7 @@
 
 # Body
 
-`class Body : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L54)
+`class Body : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L55)
 
 A [Body](./index.md) returned along with the [Request](../../-request/index.md).
 

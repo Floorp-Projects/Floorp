@@ -2,7 +2,7 @@
 
 # TabCollectionStorage
 
-`class TabCollectionStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tab-collections/src/main/java/mozilla/components/feature/tab/collections/TabCollectionStorage.kt#L25)
+`class TabCollectionStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tab-collections/src/main/java/mozilla/components/feature/tab/collections/TabCollectionStorage.kt#L26)
 
 A storage implementation that saves snapshots of tabs / sessions in named collections.
 
@@ -10,7 +10,7 @@ A storage implementation that saves snapshots of tabs / sessions in named collec
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `TabCollectionStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>A storage implementation that saves snapshots of tabs / sessions in named collections. |
+| [&lt;init&gt;](-init-.md) | `TabCollectionStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, filesDir: `[`File`](https://developer.android.com/reference/java/io/File.html)` = context.filesDir)`<br>A storage implementation that saves snapshots of tabs / sessions in named collections. |
 
 ### Functions
 

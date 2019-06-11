@@ -36,6 +36,7 @@ Value type that represents the state of a browser session. Changes can be observ
 | [download](download.md) | `var download: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`Download`](../-download/index.md)`>`<br>Last download request if it wasn't consumed by at least one observer. |
 | [findResults](find-results.md) | `var findResults: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`FindResult`](-find-result/index.md)`>`<br>List of results of that latest "find in page" operation. |
 | [fullScreenMode](full-screen-mode.md) | `var fullScreenMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Exits fullscreen mode if it's in that state. |
+| [hasParentSession](has-parent-session.md) | `val hasParentSession: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if this [Session](./index.md) has a parent [Session](./index.md). |
 | [hitResult](hit-result.md) | `var hitResult: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`HitResult`](../../mozilla.components.concept.engine/-hit-result/index.md)`>`<br>The target of the latest long click operation. |
 | [icon](icon.md) | `var icon: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?`<br>An icon for the currently visible page. |
 | [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

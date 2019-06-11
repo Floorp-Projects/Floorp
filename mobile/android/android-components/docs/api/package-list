@@ -165,6 +165,7 @@ mozilla.components.feature.awesomebar.provider
 mozilla.components.feature.contextmenu
 mozilla.components.feature.customtabs
 mozilla.components.feature.downloads
+mozilla.components.feature.downloads.manager
 mozilla.components.feature.findinpage
 mozilla.components.feature.findinpage.view
 mozilla.components.feature.intent

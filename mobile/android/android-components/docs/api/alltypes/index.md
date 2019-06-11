@@ -17,7 +17,7 @@
 | [android.app.Activity](../mozilla.components.feature.pwa.ext/android.app.-activity/index.md) (extensions in package mozilla.components.feature.pwa.ext) |  |
 | [android.app.Activity](../mozilla.components.support.ktx.android.view/android.app.-activity/index.md) (extensions in package mozilla.components.support.ktx.android.view) |  |
 | [mozilla.components.browser.session.utils.AllSessionsObserver](../mozilla.components.browser.session.utils/-all-sessions-observer/index.md) | This class is a combination of [Session.Observer](../mozilla.components.browser.session/-session/-observer/index.md) and [SessionManager.Observer](../mozilla.components.browser.session/-session-manager/-observer/index.md). It observers all [Session](../mozilla.components.browser.session/-session/index.md) instances that get added to the [SessionManager](../mozilla.components.browser.session/-session-manager/index.md) and automatically unsubscribes from [Session](../mozilla.components.browser.session/-session/index.md) instances that get removed. |
-| [mozilla.components.feature.downloads.AndroidDownloadManager](../mozilla.components.feature.downloads/-android-download-manager.md) |  |
+| [mozilla.components.feature.downloads.manager.AndroidDownloadManager](../mozilla.components.feature.downloads.manager/-android-download-manager/index.md) | Handles the interactions with the [AndroidDownloadManager](../mozilla.components.feature.downloads.manager/-android-download-manager/index.md). |
 | [mozilla.components.browser.icons.decoder.AndroidIconDecoder](../mozilla.components.browser.icons.decoder/-android-icon-decoder/index.md) | [IconDecoder](../mozilla.components.browser.icons.decoder/-icon-decoder/index.md) that will use Android's [BitmapFactory](https://developer.android.com/reference/android/graphics/BitmapFactory.html) in order to decode the byte data. |
 | [mozilla.components.support.base.log.sink.AndroidLogSink](../mozilla.components.support.base.log.sink/-android-log-sink/index.md) | LogSink implementation that writes to Android's log. |
 | [mozilla.components.ui.progress.AnimatedProgressBar](../mozilla.components.ui.progress/-animated-progress-bar/index.md) | An animated progress bar following the Photon Design System. |
@@ -95,7 +95,6 @@
 | [mozilla.components.service.fxa.Config](../mozilla.components.service.fxa/-config.md) |  |
 | [mozilla.components.service.experiments.Configuration](../mozilla.components.service.experiments/-configuration/index.md) | The Configuration class describes how to configure Experiments. |
 | [mozilla.components.service.glean.config.Configuration](../mozilla.components.service.glean.config/-configuration/index.md) | The Configuration class describes how to configure the Glean. |
-| [mozilla.components.browser.storage.sync.Connection](../mozilla.components.browser.storage.sync/-connection/index.md) | A slight abstraction over [PlacesApi](#). |
 | [mozilla.components.concept.sync.ConstellationState](../mozilla.components.concept.sync/-constellation-state/index.md) | Describes current device and other devices in the constellation. |
 | [mozilla.components.support.base.observer.Consumable](../mozilla.components.support.base.observer/-consumable/index.md) | A generic wrapper for values that can get consumed. |
 | [mozilla.components.support.base.observer.ConsumableStream](../mozilla.components.support.base.observer/-consumable-stream/index.md) | A generic wrapper for a stream of values that can be consumed. Values will be consumed first in, first out. |
@@ -157,7 +156,7 @@
 | [kotlin.Double](../mozilla.components.lib.jexl.ext/kotlin.-double/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
 | [mozilla.components.browser.session.Download](../mozilla.components.browser.session/-download/index.md) | Value type that represents a Download. |
 | [mozilla.components.feature.downloads.DownloadDialogFragment](../mozilla.components.feature.downloads/-download-dialog-fragment/index.md) | This is a general representation of a dialog meant to be used in collaboration with [DownloadsFeature](../mozilla.components.feature.downloads/-downloads-feature/index.md) to show a dialog before a download is triggered. If [SimpleDownloadDialogFragment](../mozilla.components.feature.downloads/-simple-download-dialog-fragment/index.md) is not flexible enough for your use case you should inherit for this class. Be mindful to call [onStartDownload](../mozilla.components.feature.downloads/-download-dialog-fragment/on-start-download.md) when you want to start the download. |
-| [mozilla.components.feature.downloads.DownloadManager](../mozilla.components.feature.downloads/-download-manager/index.md) | Handles the interactions with the [AndroidDownloadManager](../mozilla.components.feature.downloads/-android-download-manager.md). |
+| [mozilla.components.feature.downloads.manager.DownloadManager](../mozilla.components.feature.downloads.manager/-download-manager/index.md) |  |
 | [mozilla.components.browser.session.state.DownloadState](../mozilla.components.browser.session.state/-download-state/index.md) | Value type that represents a Download. |
 | [mozilla.components.support.utils.DownloadUtils](../mozilla.components.support.utils/-download-utils/index.md) |  |
 | [mozilla.components.feature.downloads.DownloadsFeature](../mozilla.components.feature.downloads/-downloads-feature/index.md) | Feature implementation to provide download functionality for the selected session. The feature will subscribe to the selected session and listen for downloads. |
@@ -334,7 +333,7 @@
 | [mozilla.components.lib.fetch.okhttp.OkHttpClient](../mozilla.components.lib.fetch.okhttp/-ok-http-client/index.md) | [Client](../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp. |
 | [mozilla.components.ui.autocomplete.OnCommitListener](../mozilla.components.ui.autocomplete/-on-commit-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnDispatchKeyEventPreImeListener](../mozilla.components.ui.autocomplete/-on-dispatch-key-event-pre-ime-listener.md) |  |
-| [mozilla.components.feature.downloads.OnDownloadCompleted](../mozilla.components.feature.downloads/-on-download-completed.md) |  |
+| [mozilla.components.feature.downloads.manager.OnDownloadCompleted](../mozilla.components.feature.downloads.manager/-on-download-completed.md) |  |
 | [mozilla.components.ui.autocomplete.OnFilterListener](../mozilla.components.ui.autocomplete/-on-filter-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnKeyPreImeListener](../mozilla.components.ui.autocomplete/-on-key-pre-ime-listener.md) |  |
 | [mozilla.components.feature.downloads.OnNeedToRequestPermissions](../mozilla.components.feature.downloads/-on-need-to-request-permissions.md) |  |
@@ -405,7 +404,7 @@
 | [mozilla.components.service.sync.logins.RequestFailedException](../mozilla.components.service.sync.logins/-request-failed-exception.md) | This error is emitted if a request to a sync server failed. |
 | [mozilla.components.concept.engine.request.RequestInterceptor](../mozilla.components.concept.engine.request/-request-interceptor/index.md) | Interface for classes that want to intercept load requests to allow custom behavior. |
 | [android.content.res.Resources](../mozilla.components.support.ktx.android.content.res/android.content.res.-resources/index.md) (extensions in package mozilla.components.support.ktx.android.content.res) |  |
-| [mozilla.components.concept.fetch.Response](../mozilla.components.concept.fetch/-response/index.md) | The [Response](../mozilla.components.concept.fetch/-response/index.md) data class represents a reponse to a [Request](../mozilla.components.concept.fetch/-request/index.md) send by a [Client](../mozilla.components.concept.fetch/-client/index.md). |
+| [mozilla.components.concept.fetch.Response](../mozilla.components.concept.fetch/-response/index.md) | The [Response](../mozilla.components.concept.fetch/-response/index.md) data class represents a response to a [Request](../mozilla.components.concept.fetch/-request/index.md) send by a [Client](../mozilla.components.concept.fetch/-client/index.md). |
 | [mozilla.components.browser.search.suggestions.ResponseParser](../mozilla.components.browser.search.suggestions/-response-parser.md) |  |
 | [mozilla.components.browser.engine.system.matcher.ReversibleString](../mozilla.components.browser.engine.system.matcher/-reversible-string/index.md) | A String wrapper utility that allows for efficient string reversal. We regularly need to reverse strings. The standard way of doing this in Java would be to copy the string to reverse (e.g. using StringBuffer.reverse()). This seems wasteful when we only read our Strings character by character, in which case can just transpose positions as needed. |
 | [mozilla.components.support.rustlog.RustLog](../mozilla.components.support.rustlog/-rust-log/index.md) |  |
@@ -494,11 +493,13 @@
 | [mozilla.components.service.fretboard.scheduler.workmanager.SyncWorker](../mozilla.components.service.fretboard.scheduler.workmanager/-sync-worker/index.md) |  |
 | [mozilla.components.service.sync.logins.SyncableLoginsStore](../mozilla.components.service.sync.logins/-syncable-logins-store/index.md) | Wraps [AsyncLoginsStorage](../mozilla.components.service.sync.logins/-async-logins-storage/index.md) instance along with a lazy encryption key. |
 | [mozilla.components.concept.sync.SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md) | Describes a "sync" entry point for a storage layer. |
+| [mozilla.components.feature.downloads.manager.SystemDownloadManager](../mozilla.components.feature.downloads.manager/-system-download-manager.md) |  |
 | [mozilla.components.browser.engine.system.SystemEngine](../mozilla.components.browser.engine.system/-system-engine/index.md) | WebView-based implementation of the Engine interface. |
 | [mozilla.components.browser.engine.system.SystemEngineSession](../mozilla.components.browser.engine.system/-system-engine-session/index.md) | WebView-based EngineSession implementation. |
 | [mozilla.components.browser.engine.system.SystemEngineSessionState](../mozilla.components.browser.engine.system/-system-engine-session-state/index.md) |  |
 | [mozilla.components.browser.engine.system.SystemEngineView](../mozilla.components.browser.engine.system/-system-engine-view/index.md) | WebView-based implementation of EngineView. |
 | [mozilla.components.browser.engine.system.permission.SystemPermissionRequest](../mozilla.components.browser.engine.system.permission/-system-permission-request/index.md) | WebView-based implementation of [PermissionRequest](../mozilla.components.concept.engine.permission/-permission-request/index.md). |
+| [mozilla.components.feature.downloads.manager.SystemRequest](../mozilla.components.feature.downloads.manager/-system-request.md) |  |
 | [mozilla.components.browser.engine.system.window.SystemWindowRequest](../mozilla.components.browser.engine.system.window/-system-window-request/index.md) | WebView-based implementation of [WindowRequest](../mozilla.components.concept.engine.window/-window-request/index.md). |
 | [mozilla.components.feature.tab.collections.Tab](../mozilla.components.feature.tab.collections/-tab/index.md) | A tab of a [TabCollection](../mozilla.components.feature.tab.collections/-tab-collection/index.md). |
 | [mozilla.components.feature.tab.collections.TabCollection](../mozilla.components.feature.tab.collections/-tab-collection/index.md) | A collection of tabs. |
