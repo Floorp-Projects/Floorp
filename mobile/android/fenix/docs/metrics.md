@@ -438,4 +438,43 @@ tracking_protection</td>
 </table>
 </pre>
 
+## custom_tab
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>closed</td>
+        <td>event</td>
+        <td>A user closed the custom tab</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1697">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>action_button</td>
+        <td>event</td>
+        <td>A user pressed the action button provided by the launching app</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1697">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>menu</td>
+        <td>event</td>
+        <td>A user opened the custom tabs menu</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1697">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
+
 ## Metrics
