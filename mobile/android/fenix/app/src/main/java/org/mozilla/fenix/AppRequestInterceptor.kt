@@ -9,6 +9,7 @@ import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import org.mozilla.fenix.browser.UserAgentRewriter
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
@@ -18,17 +19,20 @@ import java.net.URL
 
 class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
-        adjustTrackingProtection(uri, context, session)
+        val host = try {
+            URL(uri).host
+        } catch (e: MalformedURLException) {
+            uri
+        }
+
+        UserAgentRewriter.maybeRewriteUserAgent(session, host)
+
+        adjustTrackingProtection(host, context, session)
         // Accounts uses interception to check for a "success URL" in the sign-in flow to finalize authentication.
         return context.components.services.accountsAuthFeature.interceptor.onLoadRequest(session, uri)
     }
 
-    private fun adjustTrackingProtection(url: String, context: Context, session: EngineSession) {
-        val host = try {
-            URL(url).host
-        } catch (e: MalformedURLException) {
-            url
-        }
+    private fun adjustTrackingProtection(host: String, context: Context, session: EngineSession) {
         val trackingProtectionException = ExceptionDomains.load(context).contains(host)
         val trackingProtectionEnabled = Settings.getInstance(context).shouldUseTrackingProtection
         if (trackingProtectionException || !trackingProtectionEnabled) {
