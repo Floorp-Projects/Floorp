@@ -223,8 +223,11 @@ nsDeckFrame::DoXULLayout(nsBoxLayoutState& aState) {
   nscoord count = 0;
   while (box) {
     // make collapsed children not show up
-    if (count != mIndex) HideBox(box);
-
+    if (count != mIndex) {
+      HideBox(box);
+    } else {
+      ShowBox(box);
+    }
     box = GetNextXULBox(box);
     count++;
   }
