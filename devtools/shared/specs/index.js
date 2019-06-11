@@ -264,6 +264,11 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/webconsole",
   },
   {
+    types: ["webSocket"],
+    spec: "devtools/shared/specs/websocket",
+    front: "devtools/shared/fronts/websocket",
+  },
+  {
     types: ["pushSubscription"],
     spec: "devtools/shared/specs/worker/push-subscription",
     front: "devtools/shared/fronts/worker/push-subscription",
