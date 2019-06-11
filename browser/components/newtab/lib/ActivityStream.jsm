@@ -92,10 +92,6 @@ const PREFS_CONFIG = new Map([
     title: "Remove adult pages from sites, highlights, etc.",
     value: true,
   }],
-  ["prerender", {
-    title: "Use the prerendered version of activity-stream.html. This is set automatically by PrefsFeed.jsm.",
-    value: true,
-  }],
   ["showSearch", {
     title: "Show the Search bar",
     value: true,

@@ -9,4 +9,3 @@
 document.addEventListener("DOMContentLoaded", (e) => {
   RPMSendAsyncMessage("getCertificate");
 });
-

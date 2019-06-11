@@ -130,6 +130,8 @@ class CompositableHost {
     return gfx::IntSize();
   }
 
+  const TextureInfo& GetTextureInfo() const { return mTextureInfo; }
+
   /**
    * Adds a mask effect using this texture as the mask, if possible.
    * @return true if the effect was added, false otherwise.

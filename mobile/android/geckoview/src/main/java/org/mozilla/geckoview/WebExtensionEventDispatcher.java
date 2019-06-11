@@ -73,12 +73,7 @@ import java.util.Map;
         if ("content_child".equals(envType)) {
             environmentType = WebExtension.MessageSender.ENV_TYPE_CONTENT_SCRIPT;
         } else if ("addon_child".equals(envType)) {
-            if (session != null) {
-                // This message came from a content process but it claims to be from an extension
-                // environment, which can't be true. This maybe caused by a compromised content process.
-                // TODO: Bug 1534640, we need to check for extension process here too.
-                return null;
-            }
+            // TODO Bug 1554277: check that this message is coming from the right process
             environmentType = WebExtension.MessageSender.ENV_TYPE_EXTENSION;
         } else {
             environmentType = WebExtension.MessageSender.ENV_TYPE_UNKNOWN;

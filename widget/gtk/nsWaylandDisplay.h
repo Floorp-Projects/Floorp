@@ -68,16 +68,14 @@ class nsWaylandDisplay {
 #ifdef HAVE_LIBDRM
   void SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf);
   zwp_linux_dmabuf_v1* GetDmabuf() { return mDmabuf; };
-
   gbm_device* GetGbmDevice();
-
   // Returns -1 if we fails to gbm device file descriptor.
   int GetGbmDeviceFd();
-
   bool IsExplicitSyncEnabled() { return mExplicitSync; }
   GbmFormat* GetGbmFormat(bool aHasAlpha);
   void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
                          uint32_t mModifierLo);
+  static bool IsDMABufEnabled() { return mIsDMABufEnabled; };
 #endif
 
  private:
@@ -99,14 +97,17 @@ class nsWaylandDisplay {
   zwp_linux_dmabuf_v1* mDmabuf;
   gbm_device* mGbmDevice;
   int mGbmFd;
-  bool mGdmConfigured;
-  bool mExplicitSync;
   GbmFormat mXRGBFormat;
   GbmFormat mARGBFormat;
+  bool mGdmConfigured;
+  bool mExplicitSync;
+  static bool mIsDMABufEnabled;
+  static bool mIsDMABufPrefLoaded;
 #endif
 };
 
 void WaylandDispatchDisplays();
+void WaylandDisplayShutdown();
 nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay = nullptr);
 
 #ifdef HAVE_LIBDRM

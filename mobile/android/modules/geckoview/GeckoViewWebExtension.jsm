@@ -78,7 +78,15 @@ class GeckoViewConnection {
 
   get dispatcher() {
     if (this.sender.envType === "addon_child") {
-      // For background scripts, use the global event handler
+      // If this is a WebExtension Page we will have a GeckoSession associated
+      // to it and thus a dispatcher.
+      const dispatcher = GeckoViewUtils.getDispatcherForWindow(this.target.ownerGlobal);
+      if (dispatcher) {
+        return dispatcher;
+      }
+
+      // No dispatcher means this message is coming from a background script,
+      // use the global event handler
       return EventDispatcher.instance;
     } else if (this.sender.envType === "content_child"
         && this.allowContentMessaging) {

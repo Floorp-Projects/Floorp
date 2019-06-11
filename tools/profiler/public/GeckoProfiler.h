@@ -750,7 +750,7 @@ class MOZ_RAII AutoProfilerTextMarker {
       : mMarkerName(aMarkerName),
         mText(aText),
         mCategoryPair(aCategoryPair),
-        mStartTime(mozilla::TimeStamp::Now()),
+        mStartTime(mozilla::TimeStamp::NowUnfuzzed()),
         mCause(std::move(aCause)),
         mDocShellId(aDocShellId),
         mDocShellHistoryId(aDocShellHistoryId) {
@@ -759,7 +759,7 @@ class MOZ_RAII AutoProfilerTextMarker {
 
   ~AutoProfilerTextMarker() {
     profiler_add_text_marker(mMarkerName, mText, mCategoryPair, mStartTime,
-                             mozilla::TimeStamp::Now(), mDocShellId,
+                             mozilla::TimeStamp::NowUnfuzzed(), mDocShellId,
                              mDocShellHistoryId, std::move(mCause));
   }
 

@@ -32,6 +32,14 @@
 
 namespace js {
 
+class AbstractGeneratorObject;
+class Breakpoint;
+class DebuggerMemory;
+class PromiseObject;
+class ScriptedOnStepHandler;
+class ScriptedOnPopHandler;
+class WasmInstanceObject;
+
 /**
  * Tells how the JS engine should resume debuggee execution after firing a
  * debugger hook.  Most debugger hooks get to choose how the debuggee proceeds;
@@ -79,13 +87,6 @@ enum class ResumeMode {
   Return,
 };
 
-class AbstractGeneratorObject;
-class Breakpoint;
-class DebuggerMemory;
-class PromiseObject;
-class ScriptedOnStepHandler;
-class ScriptedOnPopHandler;
-class WasmInstanceObject;
 
 typedef HashSet<WeakHeapPtrGlobalObject,
                 MovableCellHasher<WeakHeapPtrGlobalObject>, ZoneAllocPolicy>
@@ -571,9 +572,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   class SourceQuery;
   class ObjectQuery;
 
+  enum class FromSweep { No, Yes };
+
   MOZ_MUST_USE bool addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> obj);
   void removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
-                            WeakGlobalObjectSet::Enum* debugEnum);
+                            WeakGlobalObjectSet::Enum* debugEnum,
+                            FromSweep fromSweep);
 
   enum class CallUncaughtExceptionHook { No, Yes };
 

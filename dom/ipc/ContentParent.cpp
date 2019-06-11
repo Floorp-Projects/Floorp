@@ -5748,7 +5748,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
   }
 
   if (parent && !parent->IsOwnedByProcess(ChildID())) {
-    // Where trying attach a child BrowsingContext to a parent
+    // We're trying attach a child BrowsingContext to a parent
     // BrowsingContext in another process. This is illegal since the
     // only thing that could create that child BrowsingContext is a
     // parent docshell in the same process as that BrowsingContext.
@@ -5801,7 +5801,7 @@ mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
   }
 
   if (!aContext->Canonical()->IsOwnedByProcess(ChildID())) {
-    // Where trying to detach a child BrowsingContext in another child
+    // We're trying to detach a child BrowsingContext in another child
     // process. This is illegal since the owner of the BrowsingContext
     // is the proccess with the in-process docshell, which is tracked
     // by OwnerProcessId.
@@ -5831,7 +5831,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCacheBrowsingContextChildren(
   }
 
   if (!aContext->Canonical()->IsOwnedByProcess(ChildID())) {
-    // Where trying to cache a child BrowsingContext in another child
+    // We're trying to cache a child BrowsingContext in another child
     // process. This is illegal since the owner of the BrowsingContext
     // is the proccess with the in-process docshell, which is tracked
     // by OwnerProcessId.
@@ -5861,7 +5861,7 @@ mozilla::ipc::IPCResult ContentParent::RecvRestoreBrowsingContextChildren(
   }
 
   if (!aContext->Canonical()->IsOwnedByProcess(ChildID())) {
-    // Where trying to cache a child BrowsingContext in another child
+    // We're trying to cache a child BrowsingContext in another child
     // process. This is illegal since the owner of the BrowsingContext
     // is the proccess with the in-process docshell, which is tracked
     // by OwnerProcessId.

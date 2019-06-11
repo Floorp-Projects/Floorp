@@ -486,7 +486,7 @@ interface nsITelemetry : nsISupports
    *
    * @param aCategory The category name.
    * @param aMethod The method name.
-   * @param aMethod The object name.
+   * @param aObject The object name.
    * @param aValue An optional string value to record.
    * @param aExtra An optional object of the form (string -> string).
    *               It should only contain registered extra keys.

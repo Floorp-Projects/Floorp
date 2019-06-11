@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <style>
+      .flex {
+        display: flex;
+      }
+
+      .grid {
+        display: grid;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="flex-container" class="flex">
+      <div id="flex-item"></div>
+      <div id="flex-container-item" class="flex"></div>
+    </div>
+
+    <div id="grid-container" class="grid">
+      <div id="grid-item"></div>
+      <div id="grid-container-item" class="grid"></div>
+    </div>
+
+    <div id="flex-container-with-grid" class="flex">
+      <div id="flex-item-grid-container" class="grid"></div>
+    </div>
+
+    <div id="flex-text-container" class="flex">
+      flex item (node text)
+    </div>
+
+    <div id="grid-text-container" class="grid">
+      grid item (node text). The text content for this text node needs to be long enough
+      so that the inspector does not inline it. Indeed we want to be able to select and
+      highlight it independently in the inspector so we can test the grid item infobar.
+    </div>
+  </body>
+</html>
