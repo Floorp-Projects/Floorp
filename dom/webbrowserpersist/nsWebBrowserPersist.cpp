@@ -1091,15 +1091,15 @@ nsresult nsWebBrowserPersist::SendErrorStatusChange(bool aIsReadError,
   // Get the file path or spec from the supplied URI
   nsCOMPtr<nsIFile> file;
   GetLocalFileFromURI(aURI, getter_AddRefs(file));
-  nsAutoString path;
+  AutoTArray<nsString, 1> strings;
   nsresult rv;
   if (file) {
-    file->GetPath(path);
+    file->GetPath(*strings.AppendElement());
   } else {
     nsAutoCString fileurl;
     rv = aURI->GetSpec(fileurl);
     NS_ENSURE_SUCCESS(rv, rv);
-    AppendUTF8toUTF16(fileurl, path);
+    CopyUTF8toUTF16(fileurl, *strings.AppendElement());
   }
 
   const char* msgId;
@@ -1146,9 +1146,7 @@ nsresult nsWebBrowserPersist::SendErrorStatusChange(bool aIsReadError,
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && bundle, NS_ERROR_FAILURE);
 
   nsAutoString msgText;
-  const char16_t* strings[1];
-  strings[0] = path.get();
-  rv = bundle->FormatStringFromName(msgId, strings, 1, msgText);
+  rv = bundle->FormatStringFromName(msgId, strings, msgText);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   mProgressListener->OnStatusChange(nullptr, aRequest, aResult, msgText.get());

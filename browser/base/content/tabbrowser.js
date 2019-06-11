@@ -4283,7 +4283,7 @@ window._gBrowser = {
         }
       }
       if (tab.userContextId) {
-        label = gTabBrowserBundle.formatStringFromName("tabs.containers.tooltip", [label, ContextualIdentityService.getUserContextLabel(tab.userContextId)], 2);
+        label = gTabBrowserBundle.formatStringFromName("tabs.containers.tooltip", [label, ContextualIdentityService.getUserContextLabel(tab.userContextId)]);
       }
     }
 

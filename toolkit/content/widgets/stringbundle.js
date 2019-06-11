@@ -49,7 +49,7 @@ class MozStringbundle extends MozXULElement {
 
   getFormattedString(aStringKey, aStringsArray) {
     try {
-      return this.stringBundle.formatStringFromName(aStringKey, aStringsArray, aStringsArray.length);
+      return this.stringBundle.formatStringFromName(aStringKey, aStringsArray);
     } catch (e) {
       dump("*** Failed to format string " + aStringKey + " in bundle: " + this.src + "\n");
       throw e;

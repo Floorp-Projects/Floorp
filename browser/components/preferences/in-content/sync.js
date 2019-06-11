@@ -436,7 +436,7 @@ var gSyncPane = {
       let sb = this._accountsStringBundle;
       let title = sb.GetStringFromName("verification" + maybeNot + "SentTitle");
       let email = !isError && data ? data.email : "";
-      let body = sb.formatStringFromName("verification" + maybeNot + "SentBody", [email], 1);
+      let body = sb.formatStringFromName("verification" + maybeNot + "SentBody", [email]);
       new Notification(title, { body });
     };
 

@@ -821,11 +821,12 @@ nsresult nsMixedContentBlocker::ShouldLoad(
     nsAutoCString spec;
     rv = aContentLocation->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ConvertUTF8toUTF16 reportSpec(spec);
 
-    const char16_t* params[] = {reportSpec.get()};
+    AutoTArray<nsString, 1> params;
+    CopyUTF8toUTF16(spec, *params.AppendElement());
+
     CSP_LogLocalizedStr(
-        "blockAllMixedContent", params, ArrayLength(params),
+        "blockAllMixedContent", params,
         EmptyString(),  // aSourceFile
         EmptyString(),  // aScriptSample
         0,              // aLineNumber

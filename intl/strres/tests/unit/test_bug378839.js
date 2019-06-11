@@ -58,7 +58,7 @@ function run_test() {
     var bundle_message = bundle.GetStringFromName(name_message);
     Assert.equal(bundle_message, value_message);
 
-    var bundle_hello = bundle.formatStringFromName(name_hello, [var_hello], 1);
+    var bundle_hello = bundle.formatStringFromName(name_hello, [var_hello]);
     Assert.equal(bundle_hello, value_hello);
 }
     

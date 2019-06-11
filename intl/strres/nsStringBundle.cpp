@@ -572,29 +572,29 @@ nsresult SharedStringBundle::GetStringImpl(const nsACString& aName,
 }
 
 NS_IMETHODIMP
-nsStringBundleBase::FormatStringFromID(int32_t aID, const char16_t** aParams,
-                                       uint32_t aLength, nsAString& aResult) {
+nsStringBundleBase::FormatStringFromID(int32_t aID,
+                                       const nsTArray<nsString>& aParams,
+                                       nsAString& aResult) {
   nsAutoCString idStr;
   idStr.AppendInt(aID, 10);
-  return FormatStringFromName(idStr.get(), aParams, aLength, aResult);
+  return FormatStringFromName(idStr.get(), aParams, aResult);
 }
 
 // this function supports at most 10 parameters.. see below for why
 NS_IMETHODIMP
 nsStringBundleBase::FormatStringFromAUTF8Name(const nsACString& aName,
-                                              const char16_t** aParams,
-                                              uint32_t aLength,
+                                              const nsTArray<nsString>& aParams,
                                               nsAString& aResult) {
-  return FormatStringFromName(PromiseFlatCString(aName).get(), aParams, aLength,
+  return FormatStringFromName(PromiseFlatCString(aName).get(), aParams,
                               aResult);
 }
 
 // this function supports at most 10 parameters.. see below for why
 NS_IMETHODIMP
 nsStringBundleBase::FormatStringFromName(const char* aName,
-                                         const char16_t** aParams,
-                                         uint32_t aLength, nsAString& aResult) {
-  NS_ASSERTION(aParams && aLength,
+                                         const nsTArray<nsString>& aParams,
+                                         nsAString& aResult) {
+  NS_ASSERTION(!aParams.IsEmpty(),
                "FormatStringFromName() without format parameters: use "
                "GetStringFromName() instead");
 
@@ -602,7 +602,7 @@ nsStringBundleBase::FormatStringFromName(const char* aName,
   nsresult rv = GetStringFromName(aName, formatStr);
   if (NS_FAILED(rv)) return rv;
 
-  return FormatString(formatStr.get(), aParams, aLength, aResult);
+  return FormatString(formatStr.get(), aParams, aResult);
 }
 
 NS_IMETHODIMP
@@ -650,10 +650,10 @@ StringMapEnumerator::GetNext(nsISupports** aNext) {
 }
 
 nsresult nsStringBundleBase::FormatString(const char16_t* aFormatStr,
-                                          const char16_t** aParams,
-                                          uint32_t aLength,
+                                          const nsTArray<nsString>& aParams,
                                           nsAString& aResult) {
-  NS_ENSURE_ARG(aLength <= 10);  // enforce 10-parameter limit
+  auto length = aParams.Length();
+  NS_ENSURE_ARG(length <= 10);  // enforce 10-parameter limit
 
   // implementation note: you would think you could use vsmprintf
   // to build up an arbitrary length array.. except that there
@@ -661,13 +661,17 @@ nsresult nsStringBundleBase::FormatString(const char16_t* aFormatStr,
   // Don't believe me? See:
   //   http://www.eskimo.com/~scs/C-faq/q15.13.html
   // -alecf
-  nsTextFormatter::ssprintf(
-      aResult, aFormatStr, aLength >= 1 ? aParams[0] : nullptr,
-      aLength >= 2 ? aParams[1] : nullptr, aLength >= 3 ? aParams[2] : nullptr,
-      aLength >= 4 ? aParams[3] : nullptr, aLength >= 5 ? aParams[4] : nullptr,
-      aLength >= 6 ? aParams[5] : nullptr, aLength >= 7 ? aParams[6] : nullptr,
-      aLength >= 8 ? aParams[7] : nullptr, aLength >= 9 ? aParams[8] : nullptr,
-      aLength >= 10 ? aParams[9] : nullptr);
+  nsTextFormatter::ssprintf(aResult, aFormatStr,
+                            length >= 1 ? aParams[0].get() : nullptr,
+                            length >= 2 ? aParams[1].get() : nullptr,
+                            length >= 3 ? aParams[2].get() : nullptr,
+                            length >= 4 ? aParams[3].get() : nullptr,
+                            length >= 5 ? aParams[4].get() : nullptr,
+                            length >= 6 ? aParams[5].get() : nullptr,
+                            length >= 7 ? aParams[6].get() : nullptr,
+                            length >= 8 ? aParams[7].get() : nullptr,
+                            length >= 9 ? aParams[8].get() : nullptr,
+                            length >= 10 ? aParams[9].get() : nullptr);
 
   return NS_OK;
 }
@@ -900,27 +904,23 @@ nsStringBundleService::CreateBundle(const char* aURLSpec,
 
 #define GLOBAL_PROPERTIES "chrome://global/locale/global-strres.properties"
 
-nsresult nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle,
-                                                 nsresult aStatus,
-                                                 uint32_t argCount,
-                                                 char16_t** argArray,
-                                                 nsAString& result) {
+nsresult nsStringBundleService::FormatWithBundle(
+    nsIStringBundle* bundle, nsresult aStatus,
+    const nsTArray<nsString>& argArray, nsAString& result) {
   nsresult rv;
 
   // try looking up the error message with the int key:
   uint16_t code = NS_ERROR_GET_CODE(aStatus);
-  rv = bundle->FormatStringFromID(code, (const char16_t**)argArray, argCount,
-                                  result);
+  rv = bundle->FormatStringFromID(code, argArray, result);
 
   // If the int key fails, try looking up the default error message. E.g. print:
   //   An unknown error has occurred (0x804B0003).
   if (NS_FAILED(rv)) {
-    nsAutoString statusStr;
-    statusStr.AppendInt(static_cast<uint32_t>(aStatus), 16);
-    const char16_t* otherArgArray[1];
-    otherArgArray[0] = statusStr.get();
+    AutoTArray<nsString, 1> otherArgArray;
+    otherArgArray.AppendElement()->AppendInt(static_cast<uint32_t>(aStatus),
+                                             16);
     uint16_t code = NS_ERROR_GET_CODE(NS_ERROR_FAILURE);
-    rv = bundle->FormatStringFromID(code, otherArgArray, 1, result);
+    rv = bundle->FormatStringFromID(code, otherArgArray, result);
   }
 
   return rv;
@@ -949,23 +949,17 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
   const nsDependentString args(aStatusArg);
   argCount = args.CountChar(char16_t('\n')) + 1;
   NS_ENSURE_ARG(argCount <= 10);  // enforce 10-parameter limit
-  char16_t* argArray[10];
+  AutoTArray<nsString, 10> argArray;
 
-  // convert the aStatusArg into a char16_t array
+  // convert the aStatusArg into an nsString array
   if (argCount == 1) {
-    // avoid construction for the simple case:
-    argArray[0] = (char16_t*)aStatusArg;
+    argArray.AppendElement(aStatusArg);
   } else if (argCount > 1) {
     int32_t offset = 0;
     for (i = 0; i < argCount; i++) {
       int32_t pos = args.FindChar('\n', offset);
       if (pos == -1) pos = args.Length();
-      argArray[i] = ToNewUnicode(Substring(args, offset, pos - offset));
-      if (argArray[i] == nullptr) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        argCount = i - 1;  // don't try to free uninitialized memory
-        goto done;
-      }
+      argArray.AppendElement(Substring(args, offset, pos - offset));
       offset = pos + 1;
     }
   }
@@ -975,18 +969,12 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
                                            getter_Copies(stringBundleURL));
   if (NS_SUCCEEDED(rv)) {
     getStringBundle(stringBundleURL.get(), getter_AddRefs(bundle));
-    rv = FormatWithBundle(bundle, aStatus, argCount, argArray, result);
+    rv = FormatWithBundle(bundle, aStatus, argArray, result);
   }
   if (NS_FAILED(rv)) {
     getStringBundle(GLOBAL_PROPERTIES, getter_AddRefs(bundle));
-    rv = FormatWithBundle(bundle, aStatus, argCount, argArray, result);
+    rv = FormatWithBundle(bundle, aStatus, argArray, result);
   }
 
-done:
-  if (argCount > 1) {
-    for (i = 0; i < argCount; i++) {
-      if (argArray[i]) free(argArray[i]);
-    }
-  }
   return rv;
 }

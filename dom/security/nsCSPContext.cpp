@@ -804,8 +804,8 @@ void nsCSPContext::flushConsoleMessages() {
   mConsoleMsgQueue.Clear();
 }
 
-void nsCSPContext::logToConsole(const char* aName, const char16_t** aParams,
-                                uint32_t aParamsLength,
+void nsCSPContext::logToConsole(const char* aName,
+                                const nsTArray<nsString>& aParams,
                                 const nsAString& aSourceName,
                                 const nsAString& aSourceLine,
                                 uint32_t aLineNumber, uint32_t aColumnNumber,
@@ -817,7 +817,7 @@ void nsCSPContext::logToConsole(const char* aName, const char16_t** aParams,
   // let's check if we have to queue up console messages
   if (mQueueUpMessages) {
     nsAutoString msg;
-    CSP_GetLocalizedStr(aName, aParams, aParamsLength, msg);
+    CSP_GetLocalizedStr(aName, aParams, msg);
     ConsoleMsgQueueElem& elem = *mConsoleMsgQueue.AppendElement();
     elem.mMsg = msg;
     elem.mSourceName = PromiseFlatString(aSourceName);
@@ -836,9 +836,9 @@ void nsCSPContext::logToConsole(const char* aName, const char16_t** aParams,
         !!doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId;
   }
 
-  CSP_LogLocalizedStr(aName, aParams, aParamsLength, aSourceName, aSourceLine,
-                      aLineNumber, aColumnNumber, aSeverityFlag, category,
-                      mInnerWindowID, privateWindow);
+  CSP_LogLocalizedStr(aName, aParams, aSourceName, aSourceLine, aLineNumber,
+                      aColumnNumber, aSeverityFlag, category, mInnerWindowID,
+                      privateWindow);
 }
 
 /**
@@ -1054,12 +1054,11 @@ nsresult nsCSPContext::SendReports(
     // try to create a new uri from every report-uri string
     rv = NS_NewURI(getter_AddRefs(reportURI), reportURIs[r]);
     if (NS_FAILED(rv)) {
-      const char16_t* params[] = {reportURIs[r].get()};
+      AutoTArray<nsString, 1> params = {reportURIs[r]};
       CSPCONTEXTLOG(("Could not create nsIURI for report URI %s",
                      reportURICstring.get()));
-      logToConsole("triedToSendReport", params, ArrayLength(params),
-                   aViolationEventInit.mSourceFile, aViolationEventInit.mSample,
-                   aViolationEventInit.mLineNumber,
+      logToConsole("triedToSendReport", params, aViolationEventInit.mSourceFile,
+                   aViolationEventInit.mSample, aViolationEventInit.mLineNumber,
                    aViolationEventInit.mColumnNumber,
                    nsIScriptError::errorFlag);
       continue;  // don't return yet, there may be more URIs
@@ -1091,12 +1090,11 @@ nsresult nsCSPContext::SendReports(
          isHttpScheme);
 
     if (!isHttpScheme) {
-      const char16_t* params[] = {reportURIs[r].get()};
-      logToConsole("reportURInotHttpsOrHttp2", params, ArrayLength(params),
-                   aViolationEventInit.mSourceFile, aViolationEventInit.mSample,
-                   aViolationEventInit.mLineNumber,
-                   aViolationEventInit.mColumnNumber,
-                   nsIScriptError::errorFlag);
+      AutoTArray<nsString, 1> params = {reportURIs[r]};
+      logToConsole(
+          "reportURInotHttpsOrHttp2", params, aViolationEventInit.mSourceFile,
+          aViolationEventInit.mSample, aViolationEventInit.mLineNumber,
+          aViolationEventInit.mColumnNumber, nsIScriptError::errorFlag);
       continue;
     }
 
@@ -1164,12 +1162,11 @@ nsresult nsCSPContext::SendReports(
     // reports don't go out, but it's good to log the error locally.
 
     if (NS_FAILED(rv)) {
-      const char16_t* params[] = {reportURIs[r].get()};
+      AutoTArray<nsString, 1> params = {reportURIs[r]};
       CSPCONTEXTLOG(("AsyncOpen failed for report URI %s",
                      NS_ConvertUTF16toUTF8(params[0]).get()));
-      logToConsole("triedToSendReport", params, ArrayLength(params),
-                   aViolationEventInit.mSourceFile, aViolationEventInit.mSample,
-                   aViolationEventInit.mLineNumber,
+      logToConsole("triedToSendReport", params, aViolationEventInit.mSourceFile,
+                   aViolationEventInit.mSample, aViolationEventInit.mLineNumber,
                    aViolationEventInit.mColumnNumber,
                    nsIScriptError::errorFlag);
     } else {
@@ -1325,12 +1322,12 @@ class CSPReportSenderRunnable final : public Runnable {
     if (blockedContentSource.Length() > 0) {
       nsString blockedContentSource16 =
           NS_ConvertUTF8toUTF16(blockedContentSource);
-      const char16_t* params[] = {mViolatedDirective.get(),
-                                  blockedContentSource16.get()};
+      AutoTArray<nsString, 2> params = {mViolatedDirective,
+                                        blockedContentSource16};
       mCSPContext->logToConsole(
           mReportOnlyFlag ? "CSPROViolationWithURI" : "CSPViolationWithURI",
-          params, ArrayLength(params), mSourceFile, mScriptSample, mLineNum,
-          mColumnNum, nsIScriptError::errorFlag);
+          params, mSourceFile, mScriptSample, mLineNum, mColumnNum,
+          nsIScriptError::errorFlag);
     }
 
     // 4) fire violation event
@@ -1604,10 +1601,9 @@ nsCSPContext::GetCSPSandboxFlags(uint32_t* aOutSandboxFlags) {
            "sandbox in: %s",
            NS_ConvertUTF16toUTF8(policy).get()));
 
-      const char16_t* params[] = {policy.get()};
-      logToConsole("ignoringReportOnlyDirective", params, ArrayLength(params),
-                   EmptyString(), EmptyString(), 0, 0,
-                   nsIScriptError::warningFlag);
+      AutoTArray<nsString, 1> params = {policy};
+      logToConsole("ignoringReportOnlyDirective", params, EmptyString(),
+                   EmptyString(), 0, 0, nsIScriptError::warningFlag);
     }
   }
 

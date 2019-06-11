@@ -218,7 +218,7 @@ class MozSearchAutocompleteRichlistboxPopup extends MozElements.MozAutocompleteR
         this.removeAttribute("src");
       }
 
-      let headerText = this.bundle.formatStringFromName("searchHeader", [currentEngine.name], 1);
+      let headerText = this.bundle.formatStringFromName("searchHeader", [currentEngine.name]);
       this.searchbarEngineName.setAttribute("value", headerText);
       this.searchbarEngine.engine = currentEngine;
     });

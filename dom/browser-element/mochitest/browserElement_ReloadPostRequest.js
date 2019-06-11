@@ -25,7 +25,7 @@ function getExpectedStrings() {
   try {
     let brandName = brandBundle.GetStringFromName("brandShortName");
     result.message = appBundle.formatStringFromName("confirmRepostPrompt",
-                                                    [brandName], 1);
+                                                    [brandName]);
   } catch (e) {
     // for the case that we don't have brandShortName
     result.message = appBundle.GetStringFromName("confirmRepostPrompt");

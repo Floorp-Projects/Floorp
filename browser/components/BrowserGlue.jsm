@@ -1259,15 +1259,15 @@ BrowserGlue.prototype = {
 
     let message;
     if (reason == "unused") {
-      message = resetBundle.formatStringFromName("resetUnusedProfile.message", [productName], 1);
+      message = resetBundle.formatStringFromName("resetUnusedProfile.message", [productName]);
     } else if (reason == "uninstall") {
-      message = resetBundle.formatStringFromName("resetUninstalled.message", [productName], 1);
+      message = resetBundle.formatStringFromName("resetUninstalled.message", [productName]);
     } else {
       throw new Error(`Unknown reason (${reason}) given to _resetProfileNotification.`);
     }
     let buttons = [
       {
-        label:     resetBundle.formatStringFromName("refreshProfile.resetButton.label", [productName], 1),
+        label:     resetBundle.formatStringFromName("refreshProfile.resetButton.label", [productName]),
         accessKey: resetBundle.GetStringFromName("refreshProfile.resetButton.accesskey"),
         callback() {
           ResetProfile.openConfirmationDialog(win);
@@ -2175,7 +2175,7 @@ BrowserGlue.prototype = {
     var applicationName = gBrandBundle.GetStringFromName("brandShortName");
     var placesBundle = Services.strings.createBundle("chrome://browser/locale/places/places.properties");
     var title = placesBundle.GetStringFromName("lockPrompt.title");
-    var text = placesBundle.formatStringFromName("lockPrompt.text", [applicationName], 1);
+    var text = placesBundle.formatStringFromName("lockPrompt.text", [applicationName]);
     var buttonText = placesBundle.GetStringFromName("lockPromptInfoButton.label");
     var accessKey = placesBundle.GetStringFromName("lockPromptInfoButton.accessKey");
 
@@ -2208,7 +2208,7 @@ BrowserGlue.prototype = {
     let productName = gBrandBundle.GetStringFromName("brandShortName");
     let title = bundle.GetStringFromName("syncStartNotification.title");
     let body = bundle.formatStringFromName("syncStartNotification.body2",
-                                            [productName], 1);
+                                            [productName]);
 
     let clickCallback = (subject, topic, data) => {
       if (topic != "alertclickcallback")
@@ -2788,7 +2788,7 @@ BrowserGlue.prototype = {
         // we have separate strings to handle those cases. (See Also
         // unnamedTabsArrivingNotificationNoDevice.body below)
         if (deviceName) {
-          title = bundle.formatStringFromName("tabArrivingNotificationWithDevice.title", [deviceName], 1);
+          title = bundle.formatStringFromName("tabArrivingNotificationWithDevice.title", [deviceName]);
         } else {
           title = bundle.GetStringFromName("tabArrivingNotification.title");
         }
@@ -2801,7 +2801,7 @@ BrowserGlue.prototype = {
           body = win.gURLBar.trimValue(body);
         }
         if (wasTruncated) {
-          body = bundle.formatStringFromName("singleTabArrivingWithTruncatedURL.body", [body], 1);
+          body = bundle.formatStringFromName("singleTabArrivingWithTruncatedURL.body", [body]);
         }
       } else {
         title = bundle.GetStringFromName("multipleTabsArrivingNotification.title");
@@ -2876,7 +2876,7 @@ BrowserGlue.prototype = {
     let title = accountsBundle.GetStringFromName("deviceConnectedTitle");
     let body = accountsBundle.formatStringFromName("deviceConnectedBody" +
                                                    (deviceName ? "" : ".noDeviceName"),
-                                                   [deviceName], 1);
+                                                   [deviceName]);
 
     let clickCallback = async (subject, topic, data) => {
       if (topic != "alertclickcallback")

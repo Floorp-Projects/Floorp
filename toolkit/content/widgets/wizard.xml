@@ -370,13 +370,13 @@
             if (/Mac/.test(navigator.platform)) {
               label = this._bundle.GetStringFromName("default-first-title-mac");
             } else {
-              label = this._bundle.formatStringFromName("default-first-title", [this.title], 1);
+              label = this._bundle.formatStringFromName("default-first-title", [this.title]);
             }
           } else if (!label && this.onLastPage && this._bundle) {
             if (/Mac/.test(navigator.platform)) {
               label = this._bundle.GetStringFromName("default-last-title-mac");
             } else {
-              label = this._bundle.formatStringFromName("default-last-title", [this.title], 1);
+              label = this._bundle.formatStringFromName("default-last-title", [this.title]);
             }
           }
           this._wizardHeader.

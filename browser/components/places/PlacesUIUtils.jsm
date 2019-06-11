@@ -226,7 +226,7 @@ var PlacesUIUtils = {
   },
 
   getFormattedString: function PUIU_getFormattedString(key, params) {
-    return bundle.formatStringFromName(key, params, params.length);
+    return bundle.formatStringFromName(key, params);
   },
 
   /**

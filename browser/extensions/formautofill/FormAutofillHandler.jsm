@@ -25,7 +25,7 @@ ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
 XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
   const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
   return FormAutofillUtils.stringBundle.formatStringFromName(
-    `useCreditCardPasswordPrompt.${AppConstants.platform}`, [brandShortName], 1);
+    `useCreditCardPasswordPrompt.${AppConstants.platform}`, [brandShortName]);
 });
 
 this.log = null;

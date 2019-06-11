@@ -1519,10 +1519,11 @@ nsresult HTMLFormElement::GetActionURL(nsIURI** aActionURL,
   NS_ENSURE_SUCCESS(rv, rv);
   if (isHttpScheme && document->GetUpgradeInsecureRequests(false)) {
     // let's use the old specification before the upgrade for logging
+    AutoTArray<nsString, 2> params;
     nsAutoCString spec;
     rv = actionURL->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ConvertUTF8toUTF16 reportSpec(spec);
+    CopyUTF8toUTF16(spec, *params.AppendElement());
 
     // upgrade the actionURL from http:// to use https://
     nsCOMPtr<nsIURI> upgradedActionURL;
@@ -1534,11 +1535,10 @@ nsresult HTMLFormElement::GetActionURL(nsIURI** aActionURL,
     nsAutoCString scheme;
     rv = actionURL->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ConvertUTF8toUTF16 reportScheme(scheme);
+    CopyUTF8toUTF16(scheme, *params.AppendElement());
 
-    const char16_t* params[] = {reportSpec.get(), reportScheme.get()};
     CSP_LogLocalizedStr(
-        "upgradeInsecureRequest", params, ArrayLength(params),
+        "upgradeInsecureRequest", params,
         EmptyString(),  // aSourceFile
         EmptyString(),  // aScriptSample
         0,              // aLineNumber

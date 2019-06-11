@@ -515,7 +515,7 @@ function internalPersist(persistArgs) {
       var nameWithoutExtension = getFileBaseName(filesFolder.leafName);
       var filesFolderLeafName =
         ContentAreaUtils.stringBundle
-                        .formatStringFromName("filesFolder", [nameWithoutExtension], 1);
+                        .formatStringFromName("filesFolder", [nameWithoutExtension]);
 
       filesFolder.leafName = filesFolderLeafName;
     }

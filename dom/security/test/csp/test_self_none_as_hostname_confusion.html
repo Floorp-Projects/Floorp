@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=587377
 var stringBundleService = SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"]
                           .getService(SpecialPowers.Ci.nsIStringBundleService);
 var localizer = stringBundleService.createBundle("chrome://global/locale/security/csp.properties");
-var confusionMsg = localizer.formatStringFromName("hostNameMightBeKeyword", ["SELF", "self"], 2);
+var confusionMsg = localizer.formatStringFromName("hostNameMightBeKeyword", ["SELF", "self"]);
 
 function cleanup() {
   SpecialPowers.postConsoleSentinel();

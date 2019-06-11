@@ -396,7 +396,7 @@ var SiteDataManager = {
       Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1 +
       Services.prompt.BUTTON_POS_0_DEFAULT;
     let title = gStringBundle.GetStringFromName("clearSiteDataPromptTitle");
-    let text = gStringBundle.formatStringFromName("clearSiteDataPromptText", [brandName], 1);
+    let text = gStringBundle.formatStringFromName("clearSiteDataPromptText", [brandName]);
     let btn0Label = gStringBundle.GetStringFromName("clearSiteDataNow");
 
     let result = Services.prompt.confirmEx(

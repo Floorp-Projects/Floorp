@@ -652,7 +652,7 @@ class SearchOneOffs {
       }
       button.id = this.telemetryOrigin + "-add-engine-" +
         this._fixUpEngineNameForID(engine.title);
-      let label = this.bundle.formatStringFromName("cmd_addFoundEngine", [engine.title], 1);
+      let label = this.bundle.formatStringFromName("cmd_addFoundEngine", [engine.title]);
       button.setAttribute("label", label);
       button.setAttribute("crop", "end");
       button.setAttribute("tooltiptext", engine.title + "\n" + engine.uri);
@@ -1210,8 +1210,7 @@ class SearchOneOffs {
           );
           let text = searchBundle.formatStringFromName(
             "error_duplicate_engine_msg",
-            [brandName, target.getAttribute("uri")],
-            2
+            [brandName, target.getAttribute("uri")]
           );
           Services.prompt.QueryInterface(Ci.nsIPromptFactory);
           let prompt = Services.prompt.getPrompt(

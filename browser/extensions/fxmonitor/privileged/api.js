@@ -92,7 +92,7 @@ this.FirefoxMonitor = {
   },
 
   getFormattedString(aKey, args) {
-    return this.strings.formatStringFromName(aKey, args, args.length);
+    return this.strings.formatStringFromName(aKey, args);
   },
 
   // We used to persist the list of hosts we've already warned the

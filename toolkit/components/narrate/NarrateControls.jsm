@@ -269,13 +269,13 @@ NarrateControls.prototype = {
         // Use a localized language name, and have the language tag in
         // parenthisis. This is to avoid six languages called "English".
         return gStrings.formatStringFromName("voiceLabel",
-          [this._getLanguageName(voice.lang) || voice.name, voice.lang], 2);
+          [this._getLanguageName(voice.lang) || voice.name, voice.lang]);
       default:
         // On Mac the language is not included in the name, find a localized
         // language name or show the tag if none exists.
         // This is the ideal naming scheme so it is also the "default".
         return gStrings.formatStringFromName("voiceLabel",
-          [voice.name, this._getLanguageName(voice.lang) || voice.lang], 2);
+          [voice.name, this._getLanguageName(voice.lang) || voice.lang]);
     }
   },
 

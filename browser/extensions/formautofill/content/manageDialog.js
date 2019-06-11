@@ -26,7 +26,7 @@ ChromeUtils.defineModuleGetter(this, "OSKeyStore",
 XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
   const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
   return FormAutofillUtils.stringBundle.formatStringFromName(
-    `editCreditCardPasswordPrompt.${AppConstants.platform}`, [brandShortName], 1);
+    `editCreditCardPasswordPrompt.${AppConstants.platform}`, [brandShortName]);
 });
 
 this.log = null;

@@ -1619,7 +1619,7 @@ function Update(update) {
     let brandBundle = Services.strings.createBundle(URI_BRAND_PROPERTIES);
     let appName = brandBundle.GetStringFromName("brandShortName");
     this.name = gUpdateBundle.formatStringFromName("updateName",
-                                                   [appName, this.displayVersion], 2);
+                                                   [appName, this.displayVersion]);
   }
 }
 Update.prototype = {

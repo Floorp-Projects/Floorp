@@ -1406,8 +1406,7 @@ LoginManagerPrompter.prototype = {
    */
   _getLocalizedString(key, formatArgs) {
     if (formatArgs) {
-      return this._strBundle.formatStringFromName(
-        key, formatArgs, formatArgs.length);
+      return this._strBundle.formatStringFromName(key, formatArgs);
     }
     return this._strBundle.GetStringFromName(key);
   },

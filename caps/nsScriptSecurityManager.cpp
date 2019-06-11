@@ -984,10 +984,10 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
     nsCOMPtr<nsIStringBundle> bundle = BundleHelper::GetOrCreate();
     if (bundle) {
       nsAutoString message;
-      NS_ConvertASCIItoUTF16 ucsTargetScheme(targetScheme);
-      const char16_t* formatStrings[] = {ucsTargetScheme.get()};
+      AutoTArray<nsString, 1> formatStrings;
+      CopyASCIItoUTF16(targetScheme, *formatStrings.AppendElement());
       rv = bundle->FormatStringFromName("ProtocolFlagError", formatStrings,
-                                        ArrayLength(formatStrings), message);
+                                        message);
       if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIConsoleService> console(
             do_GetService("@mozilla.org/consoleservice;1"));
@@ -1024,11 +1024,10 @@ nsresult nsScriptSecurityManager::ReportError(const char* aMessageTag,
 
   // Localize the error message
   nsAutoString message;
-  NS_ConvertASCIItoUTF16 ucsSourceSpec(sourceSpec);
-  NS_ConvertASCIItoUTF16 ucsTargetSpec(targetSpec);
-  const char16_t* formatStrings[] = {ucsSourceSpec.get(), ucsTargetSpec.get()};
-  rv = bundle->FormatStringFromName(aMessageTag, formatStrings,
-                                    ArrayLength(formatStrings), message);
+  AutoTArray<nsString, 2> formatStrings;
+  CopyASCIItoUTF16(sourceSpec, *formatStrings.AppendElement());
+  CopyASCIItoUTF16(targetSpec, *formatStrings.AppendElement());
+  rv = bundle->FormatStringFromName(aMessageTag, formatStrings, message);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIConsoleService> console(
@@ -1289,13 +1288,13 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext* cx, const nsIID& aIID,
   nsresult rv;
   nsAutoString errorMsg;
   if (originUTF16.IsEmpty()) {
-    const char16_t* formatStrings[] = {classInfoUTF16.get()};
-    rv = bundle->FormatStringFromName("CreateWrapperDenied", formatStrings, 1,
+    AutoTArray<nsString, 1> formatStrings = {classInfoUTF16};
+    rv = bundle->FormatStringFromName("CreateWrapperDenied", formatStrings,
                                       errorMsg);
   } else {
-    const char16_t* formatStrings[] = {classInfoUTF16.get(), originUTF16.get()};
+    AutoTArray<nsString, 2> formatStrings = {classInfoUTF16, originUTF16};
     rv = bundle->FormatStringFromName("CreateWrapperDeniedForOrigin",
-                                      formatStrings, 2, errorMsg);
+                                      formatStrings, errorMsg);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

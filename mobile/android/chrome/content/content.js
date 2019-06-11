@@ -141,11 +141,11 @@ var AboutNetErrorListener = {
       msg2 = nss_error_id_str;
     }
     let msg = gPipNSSBundle.formatStringFromName("SSLConnectionErrorPrefix2",
-                                                 [hostString, msg2], 2);
+                                                 [hostString, msg2]);
 
     if (nss_error_id_str) {
       msg += gPipNSSBundle.formatStringFromName("certErrorCodePrefix3",
-                                                [nss_error_id_str], 1);
+                                                [nss_error_id_str]);
     }
     return msg;
   },
@@ -183,7 +183,7 @@ var AboutCertErrorListener = {
 
   _setTechDetailsMsgPart1(hostString, securityInfo, technicalInfo, doc) {
     let msg = gPipNSSBundle.formatStringFromName("certErrorIntro",
-                                                 [hostString], 1);
+                                                 [hostString]);
     msg += "\n\n";
 
     if (securityInfo.isUntrusted && !securityInfo.serverCert.isSelfSigned) {
@@ -208,7 +208,7 @@ var AboutCertErrorListener = {
         // This error code currently only exists for the Symantec distrust, we may need to adjust
         // it to fit other distrusts later.
         case MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
-          msg += gPipNSSBundle.formatStringFromName("certErrorTrust_Symantec", [hostString], 1) + "\n";
+          msg += gPipNSSBundle.formatStringFromName("certErrorTrust_Symantec", [hostString]) + "\n";
           break;
         case SEC_ERROR_UNTRUSTED_CERT:
         default:
@@ -250,7 +250,7 @@ var AboutCertErrorListener = {
       let introContent = doc.getElementById("introContent");
       let description = doc.createElement("p");
       description.textContent = gPipNSSBundle.formatStringFromName(
-        "certErrorSymantecDistrustDescription", [hostString], 1);
+        "certErrorSymantecDistrustDescription", [hostString]);
       introContent.append(description);
 
       // The regular "what should I do" message does not make sense in this case.
@@ -338,7 +338,7 @@ var AboutCertErrorListener = {
         }
       } else {
         let msg = gPipNSSBundle.formatStringFromName("certErrorMismatch",
-                                                    [hostString], 1);
+                                                    [hostString]);
         technicalInfo.append(msg + "\n");
       }
     }
@@ -351,15 +351,15 @@ var AboutCertErrorListener = {
       if (validity.notBefore) {
         if (nowTime > validity.notAfter) {
           msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow",
-                                                   [validity.notAfterLocalTime, now], 2) + "\n";
+                                                   [validity.notAfterLocalTime, now]) + "\n";
         } else {
           msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow",
-                                                   [validity.notBeforeLocalTime, now], 2) + "\n";
+                                                   [validity.notBeforeLocalTime, now]) + "\n";
         }
       } else {
         // If something goes wrong, we assume the cert expired.
         msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow",
-                                                 ["", now], 2) + "\n";
+                                                 ["", now]) + "\n";
       }
       technicalInfo.append(msg);
     }
@@ -367,7 +367,7 @@ var AboutCertErrorListener = {
 
     // Add link to certificate and error message.
     let errorCodeMsg = gPipNSSBundle.formatStringFromName("certErrorCodePrefix3",
-                                                          [securityInfo.errorCodeString], 1);
+                                                          [securityInfo.errorCodeString]);
     technicalInfo.append(errorCodeMsg);
   },
 

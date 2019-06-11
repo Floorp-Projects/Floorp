@@ -48,7 +48,7 @@ function runTests(sw) {
     var statusBarField = sp.editor.container.ownerDocument.querySelector("#statusbar-line-col");
     const { line, ch } = sp.editor.getCursor();
     is(statusBarField.textContent, sp.strings.formatStringFromName(
-      "scratchpad.statusBarLineCol", [ line + 1, ch + 1], 2), "statusbar text is correct (" + statusBarField.textContent + ")");
+      "scratchpad.statusBarLineCol", [ line + 1, ch + 1]), "statusbar text is correct (" + statusBarField.textContent + ")");
     finish();
   }, error => {
     ok(false, error);

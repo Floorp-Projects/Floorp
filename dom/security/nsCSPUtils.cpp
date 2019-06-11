@@ -117,8 +117,8 @@ bool CSP_ShouldResponseInheritCSP(nsIChannel* aChannel) {
   return isBlob || isData || isFS || isJS;
 }
 
-void CSP_GetLocalizedStr(const char* aName, const char16_t** aParams,
-                         uint32_t aLength, nsAString& outResult) {
+void CSP_GetLocalizedStr(const char* aName, const nsTArray<nsString>& aParams,
+                         nsAString& outResult) {
   nsCOMPtr<nsIStringBundle> keyStringBundle;
   nsCOMPtr<nsIStringBundleService> stringBundleService =
       mozilla::services::GetStringBundleService();
@@ -133,7 +133,7 @@ void CSP_GetLocalizedStr(const char* aName, const char16_t** aParams,
   if (!keyStringBundle) {
     return;
   }
-  keyStringBundle->FormatStringFromName(aName, aParams, aLength, outResult);
+  keyStringBundle->FormatStringFromName(aName, aParams, outResult);
 }
 
 void CSP_LogStrMessage(const nsAString& aMsg) {
@@ -204,14 +204,14 @@ void CSP_LogMessage(const nsAString& aMessage, const nsAString& aSourceName,
 /**
  * Combines CSP_LogMessage and CSP_GetLocalizedStr into one call.
  */
-void CSP_LogLocalizedStr(const char* aName, const char16_t** aParams,
-                         uint32_t aLength, const nsAString& aSourceName,
+void CSP_LogLocalizedStr(const char* aName, const nsTArray<nsString>& aParams,
+                         const nsAString& aSourceName,
                          const nsAString& aSourceLine, uint32_t aLineNumber,
                          uint32_t aColumnNumber, uint32_t aFlags,
                          const nsACString& aCategory, uint64_t aInnerWindowID,
                          bool aFromPrivateWindow) {
   nsAutoString logMsg;
-  CSP_GetLocalizedStr(aName, aParams, aLength, logMsg);
+  CSP_GetLocalizedStr(aName, aParams, logMsg);
   CSP_LogMessage(logMsg, aSourceName, aSourceLine, aLineNumber, aColumnNumber,
                  aFlags, aCategory, aInnerWindowID, aFromPrivateWindow);
 }

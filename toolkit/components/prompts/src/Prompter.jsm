@@ -115,7 +115,7 @@ var PromptUtilsTemp = {
 
     getLocalizedString(key, formatArgs) {
         if (formatArgs)
-            return this.strBundle.formatStringFromName(key, formatArgs, formatArgs.length);
+            return this.strBundle.formatStringFromName(key, formatArgs);
         return this.strBundle.GetStringFromName(key);
     },
 

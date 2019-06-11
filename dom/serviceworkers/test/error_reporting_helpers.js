@@ -41,7 +41,7 @@ function expect_console_message(/* msgId, args, ... */) {
       expectations.push({errorMessage: localizer.GetStringFromName(msgId)});
     } else {
       expectations.push({
-        errorMessage: localizer.formatStringFromName(msgId, args, args.length)
+        errorMessage: localizer.formatStringFromName(msgId, args)
       });
     }
   }

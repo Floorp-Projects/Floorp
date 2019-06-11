@@ -183,7 +183,7 @@ function displayError(funcname, message) {
                        .createBundle("chrome://autoconfig/locale/autoconfig.properties");
 
          var title = bundle.GetStringFromName("autoConfigTitle");
-         var msg = bundle.formatStringFromName("autoConfigMsg", [funcname], 1);
+         var msg = bundle.formatStringFromName("autoConfigMsg", [funcname]);
          promptService.alert(null, title, msg + " " + message);
     } catch (e) { }
 }

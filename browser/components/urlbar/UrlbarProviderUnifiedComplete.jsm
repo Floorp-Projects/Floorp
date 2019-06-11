@@ -268,7 +268,7 @@ function makeUrlbarResult(tokens, info) {
         let title = info.comment;
         if (tokens && tokens.length > 1) {
           title = bundle.formatStringFromName("bookmarkKeywordSearch",
-            [info.comment, tokens.slice(1).map(t => t.value).join(" ")], 2);
+            [info.comment, tokens.slice(1).map(t => t.value).join(" ")]);
         }
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.KEYWORD,

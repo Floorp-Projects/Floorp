@@ -384,7 +384,7 @@ var defaultEngineObj = async function() {
   let bundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
   return {
     name: engine.name,
-    placeholder: bundle.formatStringFromName("searchWithEngine", [engine.name], 1),
+    placeholder: bundle.formatStringFromName("searchWithEngine", [engine.name]),
     iconData: await iconDataFromURI(uriFavicon),
   };
 };

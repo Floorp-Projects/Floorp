@@ -247,7 +247,7 @@ class _RFPHelper {
     let navigatorBundle = Services.strings.createBundle(
       "chrome://browser/locale/browser.properties");
     let message = navigatorBundle.formatStringFromName(
-      "privacy.spoof_english", [brandShortName], 1);
+      "privacy.spoof_english", [brandShortName]);
     let response = Services.prompt.confirmEx(
       null, "", message, flags, null, null, null, null, {value: false});
 

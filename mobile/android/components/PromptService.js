@@ -684,15 +684,15 @@ var PromptUtils = {
 
     let text;
     if (isProxy) {
-      text = this.bundle.formatStringFromName("EnterLoginForProxy3", [realm, displayHost], 2);
+      text = this.bundle.formatStringFromName("EnterLoginForProxy3", [realm, displayHost]);
     } else if (isPassOnly) {
-      text = this.bundle.formatStringFromName("EnterPasswordFor", [username, displayHost], 2);
+      text = this.bundle.formatStringFromName("EnterPasswordFor", [username, displayHost]);
     } else if (isCrossOrig) {
-      text = this.bundle.formatStringFromName("EnterUserPasswordForCrossOrigin2", [displayHost], 1);
+      text = this.bundle.formatStringFromName("EnterUserPasswordForCrossOrigin2", [displayHost]);
     } else if (!realm) {
-      text = this.bundle.formatStringFromName("EnterUserPasswordFor2", [displayHost], 1);
+      text = this.bundle.formatStringFromName("EnterUserPasswordFor2", [displayHost]);
     } else {
-      text = this.bundle.formatStringFromName("EnterLoginForRealm3", [realm, displayHost], 2);
+      text = this.bundle.formatStringFromName("EnterLoginForRealm3", [realm, displayHost]);
     }
 
     return text;

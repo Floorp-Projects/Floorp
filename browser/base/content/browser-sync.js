@@ -404,14 +404,14 @@ var gSync = {
 
     // At this point we consider sync to be configured (but still can be in an error state).
     if (status == UIState.STATUS_LOGIN_FAILED) {
-      let tooltipDescription = this.fxaStrings.formatStringFromName("reconnectDescription", [state.email], 1);
+      let tooltipDescription = this.fxaStrings.formatStringFromName("reconnectDescription", [state.email]);
       let errorLabel = this.appMenuStatus.getAttribute("errorlabel");
       this.appMenuContainer.setAttribute("fxastatus", "login-failed");
       this.appMenuLabel.setAttribute("label", errorLabel);
       this.appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       return;
     } else if (status == UIState.STATUS_NOT_VERIFIED) {
-      let tooltipDescription = this.fxaStrings.formatStringFromName("verifyDescription", [state.email], 1);
+      let tooltipDescription = this.fxaStrings.formatStringFromName("verifyDescription", [state.email]);
       let unverifiedLabel = this.appMenuStatus.getAttribute("unverifiedlabel");
       this.appMenuContainer.setAttribute("fxastatus", "unverified");
       this.appMenuLabel.setAttribute("label", unverifiedLabel);
@@ -937,13 +937,13 @@ var gSync = {
     let tooltiptext;
     if (status == UIState.STATUS_NOT_VERIFIED) {
       // "needs verification"
-      tooltiptext = this.fxaStrings.formatStringFromName("verifyDescription", [state.email], 1);
+      tooltiptext = this.fxaStrings.formatStringFromName("verifyDescription", [state.email]);
     } else if (status == UIState.STATUS_NOT_CONFIGURED) {
       // "needs setup".
       tooltiptext = this.syncStrings.GetStringFromName("signInToSync.description");
     } else if (status == UIState.STATUS_LOGIN_FAILED) {
       // "need to reconnect/re-enter your password"
-      tooltiptext = this.fxaStrings.formatStringFromName("reconnectDescription", [state.email], 1);
+      tooltiptext = this.fxaStrings.formatStringFromName("reconnectDescription", [state.email]);
     } else {
       // Sync appears configured - format the "last synced at" time.
       tooltiptext = this.formatLastSyncDate(state.lastSync);
@@ -969,7 +969,7 @@ var gSync = {
       return null;
     }
     const relativeDateStr = this.relativeTimeFormat.formatBestUnit(date);
-    return this.syncStrings.formatStringFromName("lastSync2.label", [relativeDateStr], 1);
+    return this.syncStrings.formatStringFromName("lastSync2.label", [relativeDateStr]);
   },
 
   onClientsSynced() {

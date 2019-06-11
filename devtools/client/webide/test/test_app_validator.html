@@ -92,7 +92,7 @@
         const validator = createHosted("wrong-launch-path");
         validator.validate().then(() => {
           is(validator.errors.length, 1, "app with non-existant launch path got an error");
-          is(validator.errors[0], strings.formatStringFromName("validator.accessFailedLaunchPathBadHttpCode", [fakeOrigin + "wrong-path.html", 404], 2),
+          is(validator.errors[0], strings.formatStringFromName("validator.accessFailedLaunchPathBadHttpCode", [fakeOrigin + "wrong-path.html", 404]),
                "with the right error message");
           is(validator.warnings.length, 0, "but no warning");
           next();
@@ -105,7 +105,7 @@
           const file = nsFile(validator.location);
           file.append("wrong-path.html");
           const url = Services.io.newFileURI(file);
-          is(validator.errors[0], strings.formatStringFromName("validator.accessFailedLaunchPath", [url.spec], 1),
+          is(validator.errors[0], strings.formatStringFromName("validator.accessFailedLaunchPath", [url.spec]),
                "with the expected message");
           is(validator.warnings.length, 0, "but no warning");
 
@@ -118,7 +118,7 @@
         const validator = createHosted("non-absolute-path");
         validator.validate().then(() => {
           is(validator.errors.length, 1, "app with non absolute path got an error");
-          is(validator.errors[0], strings.formatStringFromName("validator.nonAbsoluteLaunchPath", ["non-absolute.html"], 1),
+          is(validator.errors[0], strings.formatStringFromName("validator.nonAbsoluteLaunchPath", ["non-absolute.html"]),
                "with expected message");
           is(validator.warnings.length, 0, "but no warning");
           next();
@@ -128,7 +128,7 @@
         const validator = createPackaged("non-absolute-path");
         validator.validate().then(() => {
           is(validator.errors.length, 1, "app with non absolute path got an error");
-          is(validator.errors[0], strings.formatStringFromName("validator.nonAbsoluteLaunchPath", ["non-absolute.html"], 1),
+          is(validator.errors[0], strings.formatStringFromName("validator.nonAbsoluteLaunchPath", ["non-absolute.html"]),
                "with expected message");
           is(validator.warnings.length, 0, "but no warning");
           next();

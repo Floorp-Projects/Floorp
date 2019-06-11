@@ -72,8 +72,7 @@ class CryptoError extends Error {
    */
   format(scope) {
     let params = [scope, ...this.params].map(String);
-    return gDOMBundle.formatStringFromName(this.property, params,
-                                           params.length);
+    return gDOMBundle.formatStringFromName(this.property, params);
   }
 }
 

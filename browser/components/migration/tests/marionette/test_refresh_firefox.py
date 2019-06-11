@@ -566,7 +566,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
             container = Services.dirsvc.get("Home", Ci.nsIFile);
           }
           let bundle = Services.strings.createBundle("chrome://mozapps/locale/profile/profileSelection.properties");
-          let dirName = bundle.formatStringFromName("resetBackupDirectory", [Services.appinfo.name], 1);
+          let dirName = bundle.formatStringFromName("resetBackupDirectory", [Services.appinfo.name]);
           container.append(dirName);
           container.append(arguments[0]);
           return container.path;

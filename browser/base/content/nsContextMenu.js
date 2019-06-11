@@ -350,7 +350,7 @@ nsContextMenu.prototype = {
         ContextualIdentityService.getUserContextLabel(gContextMenuContentData.userContextId);
       item.setAttribute("label",
          gBrowserBundle.formatStringFromName("userContextOpenLink.label",
-                                             [label], 1));
+                                             [label]));
     }
 
     var shouldShow = this.onSaveableLink || isMailtoInternal || this.onPlainTextLink;
