@@ -1268,7 +1268,7 @@ dependencies = [
  "gkrust_utils 0.1.0",
  "jsrust_shared 0.1.0",
  "kvstore 0.1.0",
- "lmdb-rkv-sys 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lmdb-rkv-sys 0.8.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "mozurl 0.0.1",
  "mp4parse_capi 0.11.2",
@@ -1633,12 +1633,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
- "lmdb-rkv-sys 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lmdb-rkv-sys 0.8.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "lmdb-rkv-sys"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cc 1.0.34 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3886,7 +3886,7 @@ dependencies = [
 "checksum libz-sys 1.0.16 (registry+https://github.com/rust-lang/crates.io-index)" = "3fdd64ef8ee652185674455c1d450b83cbc8ad895625d543b5324d923f82e4d8"
 "checksum linked-hash-map 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "70fb39025bc7cdd76305867c4eccf2f2dcf6e9a57f5b21a93e1c2d86cd03ec9e"
 "checksum lmdb-rkv 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)" = "1452294309db7977dc75e1e8135a8c654d9e52e04ff0c0bd06c880897a91defd"
-"checksum lmdb-rkv-sys 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)" = "1470e0168f1832e35afd6d0931ae60db625685332837b97aa156773ec9c5e393"
+"checksum lmdb-rkv-sys 0.8.4 (registry+https://github.com/rust-lang/crates.io-index)" = "4d7d61f709086e3efb2f7255ad01cf1d7f9e407b7dfe96d83cd15e76ee8283b4"
 "checksum lock_api 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "62ebf1391f6acad60e5c8b43706dde4582df75c06698ab44511d15016bc2442c"
 "checksum log 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "e19e8d5c34a3e0e2223db8e060f9e8264aeeb5c5fc64a4ee9965c062211c024b"
 "checksum log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "c84ec4b527950aa83a329754b01dbe3f58361d1c5efacd1f6d68c494d08a17c6"
