@@ -511,14 +511,17 @@ struct HuffmanTableIndexedSymbolsMaybeInterface {
 
 struct HuffmanTableIndexedSymbolsStringEnum {
   HuffmanTableImpl<uint8_t> impl;
+  HuffmanTableIndexedSymbolsStringEnum(JSContext* cx) : impl(cx) {}
 };
 
 struct HuffmanTableIndexedSymbolsLiteralString {
-  HuffmanTableImpl<uint16_t> impl;
+  HuffmanTableImpl<JSAtom*> impl;
+  HuffmanTableIndexedSymbolsLiteralString(JSContext* cx) : impl(cx) {}
 };
 
 struct HuffmanTableIndexedSymbolsOptionalLiteralString {
-  HuffmanTableImpl<uint16_t> impl;
+  HuffmanTableImpl<JSAtom*> impl;
+  HuffmanTableIndexedSymbolsOptionalLiteralString(JSContext* cx) : impl(cx) {}
 };
 
 // A single Huffman table.
