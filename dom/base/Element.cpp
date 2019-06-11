@@ -1717,10 +1717,16 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
     nsNodeUtils::NativeAnonymousChildListChange(this, false);
   }
 
-  // Ensure we only add to the table once, in the case we move the ShadowRoot
-  // around.
-  if (HasID() && aContext.SubtreeRootChanges()) {
-    AddToIdTable(DoGetID());
+  // Ensure we only run this once, in the case we move the ShadowRoot around.
+  if (aContext.SubtreeRootChanges()) {
+    if (HasPartAttribute()) {
+      if (ShadowRoot* shadow = GetContainingShadow()) {
+        shadow->PartAdded(*this);
+      }
+    }
+    if (HasID()) {
+      AddToIdTable(DoGetID());
+    }
   }
 
   if (MayHaveStyle() && !IsXULElement()) {
@@ -1798,24 +1804,27 @@ RemoveFromBindingManagerRunnable::Run() {
   return NS_OK;
 }
 
-static bool ShouldRemoveFromIdTableOnUnbind(const Element& aElement,
-                                            bool aNullParent) {
-  if (aElement.IsInUncomposedDoc()) {
-    return true;
-  }
-
-  if (!aElement.IsInShadowTree()) {
-    return false;
-  }
-
-  return aNullParent || !aElement.GetParent()->IsInShadowTree();
+bool WillDetachFromShadowOnUnbind(const Element& aElement, bool aNullParent) {
+  // If our parent still is in a shadow tree by now, and we're not removing
+  // ourselves from it, then we're still going to be in a shadow tree after
+  // this.
+  return aElement.IsInShadowTree() &&
+         (aNullParent || !aElement.GetParent()->IsInShadowTree());
 }
 
 void Element::UnbindFromTree(bool aNullParent) {
+  const bool detachingFromShadow =
+      WillDetachFromShadowOnUnbind(*this, aNullParent);
   // Make sure to only remove from the ID table if our subtree root is actually
   // changing.
-  if (ShouldRemoveFromIdTableOnUnbind(*this, aNullParent)) {
+  if (IsInUncomposedDoc() || detachingFromShadow) {
     RemoveFromIdTable();
+  }
+
+  if (detachingFromShadow && HasPartAttribute()) {
+    if (ShadowRoot* shadow = GetContainingShadow()) {
+      shadow->PartRemoved(*this);
+    }
   }
 
   // Make sure to unbind this node before doing the kids
@@ -2602,6 +2611,28 @@ nsresult Element::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
     }
   }
 
+  return NS_OK;
+}
+
+nsresult Element::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                               const nsAttrValue* aValue,
+                               const nsAttrValue* aOldValue,
+                               nsIPrincipal* aMaybeScriptedPrincipal,
+                               bool aNotify) {
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::part) {
+    bool isPart = !!aValue;
+    if (HasPartAttribute() != isPart) {
+      SetHasPartAttribute(isPart);
+      if (ShadowRoot* shadow = GetContainingShadow()) {
+        if (isPart) {
+          shadow->PartAdded(*this);
+        } else {
+          shadow->PartRemoved(*this);
+        }
+      }
+    }
+    MOZ_ASSERT(HasPartAttribute() == isPart);
+  }
   return NS_OK;
 }
 
