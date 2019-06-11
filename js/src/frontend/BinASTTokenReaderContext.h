@@ -426,12 +426,15 @@ class HuffmanTableImpl {
   HuffmanTableImpl(HuffmanTableImpl&& other) noexcept
       : values(std::move(other.values)) {}
 
+  // Initialize a Huffman table containing a single value.
   JS::Result<Ok> initWithSingleValue(JSContext* cx, T&& value);
 
-  JS::Result<Ok> initBegin(JSContext* cx, size_t numberOfSymbols);
-  JS::Result<Ok> initSymbol(size_t index, T&& value);
-  JS::Result<Ok> initBitLength(size_t index, uint8_t bitLength);
-  JS::Result<Ok> initDone();
+  // Initialize a Huffman table containing `numberOfSymbols`.
+  // Symbols must be added with `addSymbol`.
+  JS::Result<Ok> init(JSContext* cx, size_t numberOfSymbols);
+
+  // Add a symbol to a value.
+  JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bits_length, T&& value);
 
   HuffmanTableImpl() = delete;
   HuffmanTableImpl(HuffmanTableImpl&) = delete;
