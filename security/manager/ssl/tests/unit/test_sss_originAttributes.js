@@ -75,7 +75,7 @@ function doTest(originAttributes1, originAttributes2, shouldShare) {
        "URI should be not be secure after removeState");
   }
   // Set HPKP for originAttributes1.
-  sss.setKeyPins(host, false, Date.now() + 1234567890, 2,
+  sss.setKeyPins(host, false, Date.now() + 1234567890,
                  [NON_ISSUED_KEY_HASH, PINNING_ROOT_KEY_HASH], false,
                  originAttributes1);
   ok(sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0,
@@ -114,7 +114,7 @@ function testInvalidOriginAttributes(originAttributes) {
     }
   }
 
-  throws(() => sss.setKeyPins(host, false, Date.now() + 1234567890, 2,
+  throws(() => sss.setKeyPins(host, false, Date.now() + 1234567890,
                               [NON_ISSUED_KEY_HASH, PINNING_ROOT_KEY_HASH],
                               false, originAttributes),
          /NS_ERROR_ILLEGAL_VALUE/,
