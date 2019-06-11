@@ -1584,9 +1584,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   uint8_t mPosition;  // NS_STYLE_POSITION_*
 
   mozilla::StyleFloat mFloat;
-  // Save mFloat for position:absolute/fixed; otherwise equal to mFloat.
-  mozilla::StyleFloat mOriginalFloat;
-
   mozilla::StyleClear mBreakType;
   mozilla::StyleBreakWithin mBreakInside;
   mozilla::StyleBreakBetween mBreakBefore;
