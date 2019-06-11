@@ -11,7 +11,6 @@ IPDL_SOURCES += [
     'PRemoteDecoder.ipdl',
     'PRemoteDecoderManager.ipdl',
     'PVideoDecoder.ipdl',
-    'PVideoDecoderManager.ipdl',
 ]
 
 EXPORTS.mozilla += [
@@ -29,8 +28,6 @@ EXPORTS.mozilla += [
     'RemoteDecoderParent.h',
     'RemoteMediaDataDecoder.h',
     'VideoDecoderChild.h',
-    'VideoDecoderManagerChild.h',
-    'VideoDecoderManagerParent.h',
     'VideoDecoderParent.h',
 ]
 
@@ -54,8 +51,6 @@ SOURCES += [
     'RemoteMediaDataDecoder.cpp',
     'RemoteVideoDecoder.cpp',
     'VideoDecoderChild.cpp',
-    'VideoDecoderManagerChild.cpp',
-    'VideoDecoderManagerParent.cpp',
     'VideoDecoderParent.cpp',
 ]
 

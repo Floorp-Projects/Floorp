@@ -12,7 +12,7 @@
 #include "mozilla/layers/ImageClient.h"
 #include "MediaInfo.h"
 #include "PDMFactory.h"
-#include "VideoDecoderManagerParent.h"
+#include "RemoteDecoderManagerParent.h"
 #ifdef XP_WIN
 #  include "WMFDecoderModule.h"
 #endif
@@ -41,7 +41,7 @@ class KnowsCompositorVideo : public layers::KnowsCompositor {
 };
 
 VideoDecoderParent::VideoDecoderParent(
-    VideoDecoderManagerParent* aParent, const VideoInfo& aVideoInfo,
+    RemoteDecoderManagerParent* aParent, const VideoInfo& aVideoInfo,
     float aFramerate, const CreateDecoderParams::OptionSet& aOptions,
     const layers::TextureFactoryIdentifier& aIdentifier,
     TaskQueue* aManagerTaskQueue, TaskQueue* aDecodeTaskQueue, bool* aSuccess,

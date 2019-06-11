@@ -107,7 +107,7 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
     const VideoInfo& aVideoInfo, float aFramerate,
     const CreateDecoderParams::OptionSet& aOptions) {
   RefPtr<RemoteDecoderManagerChild> manager =
-      RemoteDecoderManagerChild::GetSingleton();
+      RemoteDecoderManagerChild::GetRDDProcessSingleton();
 
   // The manager isn't available because RemoteDecoderManagerChild has been
   // initialized with null end points and we don't want to decode video on RDD

@@ -7,7 +7,7 @@
 #include "GPUVideoImage.h"
 #include "ImageContainer.h"
 #include "MediaInfo.h"
-#include "VideoDecoderManagerChild.h"
+#include "RemoteDecoderManagerChild.h"
 #include "base/thread.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/layers/TextureClient.h"
@@ -36,7 +36,7 @@ static void ReportUnblacklistingTelemetry(
 #endif  // XP_WIN
 
 VideoDecoderChild::VideoDecoderChild()
-    : mThread(VideoDecoderManagerChild::GetManagerThread()),
+    : mThread(RemoteDecoderManagerChild::GetManagerThread()),
       mCanSend(false),
       mInitialized(false),
       mIsHardwareAccelerated(false),
@@ -138,7 +138,7 @@ void VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
     // Make sure shutdown self reference is null. Since ref is captured by the
     // lambda it is not necessary to keep it any longer.
     mShutdownSelfRef = nullptr;
-    GetManager()->RunWhenRecreated(
+    GetManager()->RunWhenGPUProcessRecreated(
         NS_NewRunnableFunction("VideoDecoderChild::ActorDestroy", [=]() {
           MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
           error.SetGPUCrashTimeStamp(ref->mGPUCrashTime);
@@ -169,15 +169,15 @@ MediaResult VideoDecoderChild::InitIPDL(
     const VideoInfo& aVideoInfo, float aFramerate,
     const CreateDecoderParams::OptionSet& aOptions,
     const layers::TextureFactoryIdentifier& aIdentifier) {
-  RefPtr<VideoDecoderManagerChild> manager =
-      VideoDecoderManagerChild::GetSingleton();
+  RefPtr<RemoteDecoderManagerChild> manager =
+      RemoteDecoderManagerChild::GetGPUProcessSingleton();
 
-  // The manager isn't available because VideoDecoderManagerChild has been
+  // The manager isn't available because RemoteDecoderManagerChild has been
   // initialized with null end points and we don't want to decode video on GPU
   // process anymore. Return false here so that we can fallback to other PDMs.
   if (!manager) {
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                       RESULT_DETAIL("VideoDecoderManager is not available."));
+                       RESULT_DETAIL("RemoteDecoderManager is not available."));
   }
 
   // The manager doesn't support sending messages because we've just crashed
@@ -340,11 +340,11 @@ void VideoDecoderChild::AssertOnManagerThread() const {
   MOZ_ASSERT(NS_GetCurrentThread() == mThread);
 }
 
-VideoDecoderManagerChild* VideoDecoderChild::GetManager() {
+RemoteDecoderManagerChild* VideoDecoderChild::GetManager() {
   if (!mCanSend) {
     return nullptr;
   }
-  return static_cast<VideoDecoderManagerChild*>(Manager());
+  return static_cast<RemoteDecoderManagerChild*>(Manager());
 }
 
 }  // namespace mozilla
