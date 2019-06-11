@@ -5,6 +5,7 @@
 package mozilla.components.feature.awesomebar
 
 import android.view.View
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any
@@ -19,9 +20,8 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class AwesomeBarFeatureTest {
 
     @Test

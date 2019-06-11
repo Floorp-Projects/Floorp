@@ -5,6 +5,7 @@
 package mozilla.components.feature.awesomebar.provider
 
 import androidx.core.graphics.drawable.toBitmap
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
@@ -30,11 +31,10 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
 private const val GOOGLE_MOCK_RESPONSE = "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]"
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SearchSuggestionProviderTest {
 
     @Test

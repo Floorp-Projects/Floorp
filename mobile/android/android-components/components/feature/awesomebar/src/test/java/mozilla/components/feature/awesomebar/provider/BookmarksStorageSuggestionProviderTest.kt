@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
@@ -15,10 +16,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import java.util.UUID
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class BookmarksStorageSuggestionProviderTest {
 
     private val bookmarks = testableBookmarksStorage()
