@@ -525,20 +525,17 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
       isMainThread ? xpc::WindowGlobalOrNull(aPromise) : nullptr;
 
   js::ErrorReport report(aCx);
-  if (report.init(aCx, result, js::ErrorReport::NoSideEffects)) {
+  RefPtr<Exception> exn;
+  if (result.isObject() &&
+      (NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, &result, exn)) ||
+       NS_SUCCEEDED(UNWRAP_OBJECT(Exception, &result, exn)))) {
+    xpcReport->Init(aCx, exn, isChrome, win ? win->WindowID() : 0);
+  } else if (report.init(aCx, result, js::ErrorReport::NoSideEffects)) {
     xpcReport->Init(report.report(), report.toStringResult().c_str(), isChrome,
                     win ? win->WindowID() : 0);
   } else {
     JS_ClearPendingException(aCx);
-
-    RefPtr<Exception> exn;
-    if (result.isObject() &&
-        (NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, &result, exn)) ||
-         NS_SUCCEEDED(UNWRAP_OBJECT(Exception, &result, exn)))) {
-      xpcReport->Init(aCx, exn, isChrome, win ? win->WindowID() : 0);
-    } else {
-      return;
-    }
+    return;
   }
 
   // Now post an event to do the real reporting async
