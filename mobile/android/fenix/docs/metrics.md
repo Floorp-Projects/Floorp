@@ -786,3 +786,39 @@ Items that are added to the metrics ping
     </tr>
 </table>
 </pre>
+
+
+## Activation
+
+Data that is sent in the activation ping
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>identifier</td>
+        <td>string</td>
+        <td>An hashed and salted version of the Google Advertising ID from the device.
+      This will never be sent in a ping that also contains the client_id.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209">link</a></td>
+        <td></td>
+        <td>2019-10-01</td>
+    </tr>
+    <tr>
+        <td>activation_id</td>
+        <td>uuid</td>
+        <td>An alternate identifier, not correlated with the client_id, generated once
+      and only sent with the activation ping.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209">link</a></td>
+        <td></td>
+        <td>2019-10-01</td>
+    </tr>
+</table>
+</pre>
