@@ -225,26 +225,6 @@ class MarkStackIter {
 
 } /* namespace gc */
 
-enum MarkingState : uint8_t {
-  // Have not yet started marking.
-  NotActive,
-
-  // Main marking mode. Weakmap marking will be populating the weakKeys tables
-  // but not consulting them. The state will transition to WeakMarking until it
-  // is done, then back to RegularMarking.
-  RegularMarking,
-
-  // Same as RegularMarking except now every marked obj/script is immediately
-  // looked up in the weakKeys table to see if it is a weakmap key, and
-  // therefore might require marking its value. Transitions back to
-  // RegularMarking when done.
-  WeakMarking,
-
-  // Same as RegularMarking, but we OOMed (or obeyed a directive in the test
-  // marking queue) and fell back to iterating until the next GC.
-  IterativeMarking
-};
-
 class GCMarker : public JSTracer {
  public:
   explicit GCMarker(JSRuntime* rt);
@@ -311,23 +291,11 @@ class GCMarker : public JSTracer {
   void enterWeakMarkingMode();
   void leaveWeakMarkingMode();
   void abortLinearWeakMarking() {
-    if (state == MarkingState::WeakMarking) {
-      leaveWeakMarkingMode();
-    }
-    state = MarkingState::IterativeMarking;
+    leaveWeakMarkingMode();
+    linearWeakMarkingDisabled_ = true;
   }
 
   void delayMarkingChildren(gc::Cell* cell);
-
-  // Remove <map,toRemove> from the weak keys table indexed by 'key'.
-  void forgetWeakKey(js::gc::WeakKeyTable& weakKeys, WeakMapBase* map,
-                     gc::Cell* keyOrDelegate, gc::Cell* keyToRemove);
-
-  // Purge all mention of 'map' from the weak keys table.
-  void forgetWeakMap(WeakMapBase* map, Zone* zone);
-
-  // 'delegate' is no longer the delegate of 'key'.
-  void severWeakDelegate(JSObject* key, JSObject* delegate);
 
   bool isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 
@@ -365,8 +333,6 @@ class GCMarker : public JSTracer {
 
   template <typename T>
   void markImplicitEdges(T* oldThing);
-
-  bool isWeakMarking() const { return state == MarkingState::WeakMarking; }
 
  private:
 #ifdef DEBUG
@@ -457,15 +423,21 @@ class GCMarker : public JSTracer {
   /* Whether more work has been added to the delayed marking list. */
   MainThreadData<bool> delayedMarkingWorkAdded;
 
+  /*
+   * If the weakKeys table OOMs, disable the linear algorithm and fall back
+   * to iterating until the next GC.
+   */
+  MainThreadData<bool> linearWeakMarkingDisabled_;
+
   /* The count of marked objects during GC. */
   size_t markCount;
-
-  /* Track the state of marking. */
-  MainThreadData<MarkingState> state;
 
 #ifdef DEBUG
   /* Count of arenas that are currently in the stack. */
   MainThreadData<size_t> markLaterArenas;
+
+  /* Assert that start and stop are called with correct ordering. */
+  MainThreadData<bool> started;
 
   /* The test marking queue might want to be marking a particular color. */
   mozilla::Maybe<js::gc::MarkColor> queueMarkColor;
@@ -511,11 +483,6 @@ class MOZ_RAII AutoSetMarkColor {
   AutoSetMarkColor(GCMarker& marker, MarkColor newColor)
       : marker_(marker), initialColor_(marker.markColor()) {
     marker_.setMarkColor(newColor);
-  }
-
-  AutoSetMarkColor(GCMarker& marker, CellColor newColor)
-      : AutoSetMarkColor(marker, GetMarkColor(newColor)) {
-    MOZ_ASSERT(newColor != CellColor::White);
   }
 
   ~AutoSetMarkColor() { marker_.setMarkColor(initialColor_); }

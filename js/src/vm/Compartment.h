@@ -602,14 +602,16 @@ class JS::Compartment {
                                const js::CrossCompartmentKey& wrapped,
                                const js::Value& wrapper);
 
-  void removeWrapper(js::WrapperMap::Ptr p);
-
   js::WrapperMap::Ptr lookupWrapper(const js::Value& wrapped) const {
     return crossCompartmentWrappers.lookup(js::CrossCompartmentKey(wrapped));
   }
 
   js::WrapperMap::Ptr lookupWrapper(JSObject* obj) const {
     return crossCompartmentWrappers.lookup(js::CrossCompartmentKey(obj));
+  }
+
+  void removeWrapper(js::WrapperMap::Ptr p) {
+    crossCompartmentWrappers.remove(p);
   }
 
   bool hasNurseryAllocatedWrapperEntries(const js::CompartmentFilter& f) {
