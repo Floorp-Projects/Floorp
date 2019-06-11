@@ -121,8 +121,9 @@ MediaStreamPlayback.prototype = {
            "MediaElement is not seekable with MediaStream");
         ok(isNaN(this.mediaElement.startOffsetTime),
            "Start offset time shall not be a number");
-        is(this.mediaElement.loop, false, "Loop shall be false");
-        is(this.mediaElement.preload, "", "Preload should not exist");
+        is(this.mediaElement.defaultPlaybackRate, 1, "DefaultPlaybackRate should be 1");
+        is(this.mediaElement.playbackRate, 1, "PlaybackRate should be 1");
+        is(this.mediaElement.preload, "none", "Preload should be \"none\"");
         is(this.mediaElement.src, "", "No src should be defined");
         is(this.mediaElement.currentSrc, "",
            "Current src should still be an empty string");
