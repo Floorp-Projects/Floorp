@@ -229,13 +229,29 @@ class Preferences final : public nsIPrefService,
   // failure. When `aKind` is `User` they will get the user value if possible,
   // and fall back to the default value otherwise.
   static bool GetBool(const char* aPrefName, bool aFallback = false,
-                      PrefValueKind aKind = PrefValueKind::User);
+                      PrefValueKind aKind = PrefValueKind::User) {
+    bool result = aFallback;
+    GetBool(aPrefName, &result, aKind);
+    return result;
+  }
   static int32_t GetInt(const char* aPrefName, int32_t aFallback = 0,
-                        PrefValueKind aKind = PrefValueKind::User);
+                        PrefValueKind aKind = PrefValueKind::User) {
+    int32_t result = aFallback;
+    GetInt(aPrefName, &result, aKind);
+    return result;
+  }
   static uint32_t GetUint(const char* aPrefName, uint32_t aFallback = 0,
-                          PrefValueKind aKind = PrefValueKind::User);
+                          PrefValueKind aKind = PrefValueKind::User) {
+    uint32_t result = aFallback;
+    GetUint(aPrefName, &result, aKind);
+    return result;
+  }
   static float GetFloat(const char* aPrefName, float aFallback = 0.0f,
-                        PrefValueKind aKind = PrefValueKind::User);
+                        PrefValueKind aKind = PrefValueKind::User) {
+    float result = aFallback;
+    GetFloat(aPrefName, &result, aKind);
+    return result;
+  }
 
   // Value setters. These fail if run outside the parent process.
 
@@ -626,8 +642,7 @@ class Preferences final : public nsIPrefService,
   static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects(
       bool aIsStartup);
 
-  friend struct PreferencesInternalMethods;
-
+  friend struct RegisterCallbacksInternal;
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const nsACString& aPref, void* aClosure,
                                    MatchKind aMatchKind,
