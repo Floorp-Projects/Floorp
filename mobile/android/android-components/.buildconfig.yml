@@ -200,10 +200,6 @@ projects:
     path: components/ui/icons
     description: 'A collection of often used browser icons.'
     publish: true
-  ui-progress:
-    path: components/ui/progress
-    description: 'An animated progress bar following the Photon Design System.'
-    publish: true
   ui-tabcounter:
     path: components/ui/tabcounter
     description: 'A tab counter for browsers.'
