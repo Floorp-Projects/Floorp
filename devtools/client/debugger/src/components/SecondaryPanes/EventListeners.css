@@ -14,6 +14,11 @@
   list-style-type: none;
 }
 
+.event-listeners-content button:hover,
+.event-listeners-content button:focus {
+  background: none;
+}
+
 .event-listener-group {
   user-select: none;
 }
