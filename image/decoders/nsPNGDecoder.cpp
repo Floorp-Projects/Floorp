@@ -116,7 +116,6 @@ nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
       mFrameIsHidden(false),
       mDisablePremultipliedAlpha(false),
       mGotInfoCallback(false),
-      mUsePipeTransform(false),
       mNumFrames(0) {}
 
 nsPNGDecoder::~nsPNGDecoder() {
@@ -213,10 +212,9 @@ nsresult nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo) {
     pipeFlags |= SurfacePipeFlags::PROGRESSIVE_DISPLAY;
   }
 
-  qcms_transform* pipeTransform = mUsePipeTransform ? mTransform : nullptr;
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
       this, Size(), OutputSize(), aFrameInfo.mFrameRect, mFormat, animParams,
-      pipeTransform, pipeFlags);
+      /*aTransform*/ nullptr, pipeFlags);
 
   if (!pipe) {
     mPipe = SurfacePipe();
@@ -415,7 +413,8 @@ static void PNGDoGammaCorrection(png_structp png_ptr, png_infop info_ptr) {
 
 // Adapted from http://www.littlecms.com/pngchrm.c example code
 static qcms_profile* PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
-                                        int color_type, uint32_t* intent) {
+                                        int color_type, qcms_data_type* inType,
+                                        uint32_t* intent) {
   qcms_profile* profile = nullptr;
   *intent = QCMS_INTENT_PERCEPTUAL;  // Our default
 
@@ -490,6 +489,24 @@ static qcms_profile* PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
 
     if (profile) {
       png_set_gray_to_rgb(png_ptr);
+    }
+  }
+
+  if (profile) {
+    uint32_t profileSpace = qcms_profile_get_color_space(profile);
+    if (profileSpace == icSigGrayData) {
+      if (color_type & PNG_COLOR_MASK_ALPHA) {
+        *inType = QCMS_DATA_GRAYA_8;
+      } else {
+        *inType = QCMS_DATA_GRAY_8;
+      }
+    } else {
+      if (color_type & PNG_COLOR_MASK_ALPHA ||
+          png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
+        *inType = QCMS_DATA_RGBA_8;
+      } else {
+        *inType = QCMS_DATA_RGB_8;
+      }
     }
   }
 
@@ -570,41 +587,25 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
     png_set_scale_16(png_ptr);
   }
 
-  // Let libpng expand interlaced images.
-  const bool isInterlaced = interlace_type == PNG_INTERLACE_ADAM7;
-  if (isInterlaced) {
-    png_set_interlace_handling(png_ptr);
-  }
-
+  qcms_data_type inType = QCMS_DATA_RGBA_8;
   uint32_t intent = -1;
   uint32_t pIntent;
   if (decoder->mCMSMode != eCMSMode_Off) {
     intent = gfxPlatform::GetRenderingIntent();
     decoder->mInProfile =
-        PNGGetColorProfile(png_ptr, info_ptr, color_type, &pIntent);
+        PNGGetColorProfile(png_ptr, info_ptr, color_type, &inType, &pIntent);
     // If we're not mandating an intent, use the one from the image.
     if (intent == uint32_t(-1)) {
       intent = pIntent;
     }
   }
   if (decoder->mInProfile && gfxPlatform::GetCMSOutputProfile()) {
-    qcms_data_type inType;
     qcms_data_type outType;
 
-    uint32_t profileSpace = qcms_profile_get_color_space(decoder->mInProfile);
-    decoder->mUsePipeTransform = profileSpace != icSigGrayData;
-    if (decoder->mUsePipeTransform) {
-      // If the transform happens with SurfacePipe, it will always be in BGRA.
-      inType = QCMS_DATA_BGRA_8;
-      outType = QCMS_DATA_BGRA_8;
+    if (color_type & PNG_COLOR_MASK_ALPHA || num_trans) {
+      outType = QCMS_DATA_RGBA_8;
     } else {
-      if (color_type & PNG_COLOR_MASK_ALPHA) {
-        inType = QCMS_DATA_GRAYA_8;
-        outType = QCMS_DATA_RGBA_8;
-      } else {
-        inType = QCMS_DATA_GRAY_8;
-        outType = QCMS_DATA_RGB_8;
-      }
+      outType = QCMS_DATA_RGB_8;
     }
 
     decoder->mTransform = qcms_transform_create(
@@ -619,9 +620,18 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
     }
 
     if (decoder->mCMSMode == eCMSMode_All) {
-      decoder->mTransform = gfxPlatform::GetCMSBGRATransform();
-      decoder->mUsePipeTransform = true;
+      if (color_type & PNG_COLOR_MASK_ALPHA || num_trans) {
+        decoder->mTransform = gfxPlatform::GetCMSRGBATransform();
+      } else {
+        decoder->mTransform = gfxPlatform::GetCMSRGBTransform();
+      }
     }
+  }
+
+  // Let libpng expand interlaced images.
+  const bool isInterlaced = interlace_type == PNG_INTERLACE_ADAM7;
+  if (isInterlaced) {
+    png_set_interlace_handling(png_ptr);
   }
 
   // now all of those things we set above are used to update various struct
@@ -688,8 +698,8 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
   }
 #endif
 
-  if (decoder->mTransform && !decoder->mUsePipeTransform) {
-    uint32_t bpp[] = {0, 3, 4};
+  if (decoder->mTransform && (channels <= 2 || isInterlaced)) {
+    uint32_t bpp[] = {0, 3, 4, 3, 4};
     decoder->mCMSLine =
         static_cast<uint8_t*>(malloc(bpp[channels] * frameRect.Width()));
     if (!decoder->mCMSLine) {
@@ -830,11 +840,21 @@ void nsPNGDecoder::WriteRow(uint8_t* aRow) {
   uint32_t width = uint32_t(mFrameRect.Width());
 
   // Apply color management to the row, if necessary, before writing it out.
-  // This is only needed for grayscale images.
-  if (mTransform && !mUsePipeTransform) {
-    MOZ_ASSERT(mCMSLine);
-    qcms_transform_data(mTransform, rowToWrite, mCMSLine, width);
-    rowToWrite = mCMSLine;
+  if (mTransform) {
+    if (mCMSLine) {
+      qcms_transform_data(mTransform, rowToWrite, mCMSLine, width);
+
+      // Copy alpha over.
+      if (HasAlphaChannel()) {
+        for (uint32_t i = 0; i < width; ++i) {
+          mCMSLine[4 * i + 3] = rowToWrite[mChannels * i + mChannels - 1];
+        }
+      }
+
+      rowToWrite = mCMSLine;
+    } else {
+      qcms_transform_data(mTransform, rowToWrite, rowToWrite, width);
+    }
   }
 
   // Write this row to the SurfacePipe.
