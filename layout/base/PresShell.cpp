@@ -1824,10 +1824,10 @@ nsresult PresShell::Initialize() {
     }
   }
 
-  // If we get here and painting is not suppressed, then we can paint anytime
-  // and we should fire the before-first-paint notification
+  // If we get here and painting is not suppressed, we still want to run the
+  // unsuppression logic, so set mShouldUnsuppressPainting to true.
   if (!mPaintingSuppressed) {
-    ScheduleBeforeFirstPaint();
+    mShouldUnsuppressPainting = true;
   }
 
   return NS_OK;  // XXX this needs to be real. MMP
