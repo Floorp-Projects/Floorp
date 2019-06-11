@@ -12,14 +12,11 @@ import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.PermissionRequest
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_APPLICATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_AUDIOCAPTURE
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_BROWSER
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_CAMERA
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_MICROPHONE
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_OTHER
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_SCREEN
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource.SOURCE_WINDOW
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
 
@@ -136,10 +133,7 @@ sealed class GeckoPermissionRequest constructor(
             @Suppress("ComplexMethod", "SwitchIntDef")
             private fun mapVideoPermission(mediaSource: MediaSource) = when (mediaSource.source) {
                 SOURCE_CAMERA -> Permission.ContentVideoCamera(mediaSource.id, mediaSource.name)
-                SOURCE_APPLICATION -> Permission.ContentVideoApplication(mediaSource.id, mediaSource.name)
-                SOURCE_BROWSER -> Permission.ContentVideoBrowser(mediaSource.id, mediaSource.name)
                 SOURCE_SCREEN -> Permission.ContentVideoScreen(mediaSource.id, mediaSource.name)
-                SOURCE_WINDOW -> Permission.ContentVideoWindow(mediaSource.id, mediaSource.name)
                 SOURCE_OTHER -> Permission.ContentVideoOther(mediaSource.id, mediaSource.name)
                 else -> Permission.Generic(mediaSource.id, mediaSource.name)
             }

@@ -65,12 +65,9 @@ sealed class Permission(open val id: String? = "", open val desc: String? = "") 
     data class ContentGeoLocation(override val id: String? = "", override val desc: String? = "") : Permission(id)
     data class ContentNotification(override val id: String? = "", override val desc: String? = "") : Permission(id)
     data class ContentProtectedMediaId(override val id: String? = "", override val desc: String? = "") : Permission(id)
-    data class ContentVideoApplication(override val id: String? = "", override val desc: String? = "") : Permission(id)
-    data class ContentVideoBrowser(override val id: String? = "", override val desc: String? = "") : Permission(id)
     data class ContentVideoCamera(override val id: String? = "", override val desc: String? = "") : Permission(id)
     data class ContentVideoCapture(override val id: String? = "", override val desc: String? = "") : Permission(id)
     data class ContentVideoScreen(override val id: String? = "", override val desc: String? = "") : Permission(id)
-    data class ContentVideoWindow(override val id: String? = "", override val desc: String? = "") : Permission(id)
     data class ContentVideoOther(override val id: String? = "", override val desc: String? = "") : Permission(id)
 
     data class AppCamera(override val id: String? = "", override val desc: String? = "") : Permission(id)
@@ -79,4 +76,9 @@ sealed class Permission(open val id: String? = "", open val desc: String? = "") 
     data class AppLocationFine(override val id: String? = "", override val desc: String? = "") : Permission(id)
 
     data class Generic(override val id: String?, override val desc: String? = "") : Permission(id)
+
+    // Removed in GeckoView 68.0:
+    data class ContentVideoApplication(override val id: String? = "", override val desc: String? = "") : Permission(id)
+    data class ContentVideoBrowser(override val id: String? = "", override val desc: String? = "") : Permission(id)
+    data class ContentVideoWindow(override val id: String? = "", override val desc: String? = "") : Permission(id)
 }
