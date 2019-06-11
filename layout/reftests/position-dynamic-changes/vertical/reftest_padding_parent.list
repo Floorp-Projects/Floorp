@@ -4,14 +4,14 @@
 == topN-heightA-bottomN.html?padding_parent topN-heightA-bottomN-ref.html?padding_parent
 == topA-heightN-bottomA.html?padding_parent topA-heightN-bottomA-ref.html?padding_parent
 == topN-heightN-bottomA.html?padding_parent topN-heightN-bottomA-ref.html?padding_parent
-== topA-heightN-bottomN.html?padding_parent topA-heightN-bottomN-ref.html?padding_parent
-== topA-heightA-bottomN.html?padding_parent topA-heightA-bottomN-ref.html?padding_parent
-== toauto-topN-heightA-bottomA.html?padding_parent toauto-topN-heightA-bottomA-ref.html?padding_parent
+fuzzy-if(geckoview,0-1,0-120) == topA-heightN-bottomN.html?padding_parent topA-heightN-bottomN-ref.html?padding_parent
+fuzzy-if(geckoview,0-1,0-120) == topA-heightA-bottomN.html?padding_parent topA-heightA-bottomN-ref.html?padding_parent
+fuzzy-if(geckoview,0-1,0-219) == toauto-topN-heightA-bottomA.html?padding_parent toauto-topN-heightA-bottomA-ref.html?padding_parent
 == toauto-topN-heightA-bottomN.html?padding_parent toauto-topN-heightA-bottomN-ref.html?padding_parent
 == toauto-topA-heightN-bottomA.html?padding_parent toauto-topA-heightN-bottomA-ref.html?padding_parent
 == toauto-topN-heightN-bottomA.html?padding_parent toauto-topN-heightN-bottomA-ref.html?padding_parent
 == toauto-topA-heightN-bottomN.html?padding_parent toauto-topA-heightN-bottomN-ref.html?padding_parent
-== toauto-topA-heightA-bottomN.html?padding_parent toauto-topA-heightA-bottomN-ref.html?padding_parent
+fuzzy-if(geckoview,0-1,0-219) == toauto-topA-heightA-bottomN.html?padding_parent toauto-topA-heightA-bottomN-ref.html?padding_parent
 == fromauto-topN-heightA-bottomA.html?padding_parent topN-heightA-bottomA-ref.html?padding_parent
 == fromauto-topN-heightA-bottomN.html?padding_parent topN-heightA-bottomN-ref.html?padding_parent
 == fromauto-topA-heightN-bottomA.html?padding_parent topA-heightN-bottomA-ref.html?padding_parent

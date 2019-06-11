@@ -77,8 +77,8 @@ fuzzy-if(webrender&&winWidget,132-138,183-206) == simple-rtl.svg simple-rtl-ref.
 
 == multiple-x-white-space.svg multiple-x-white-space-ref.svg
 
-== multiple-chunks-bidi.svg multiple-chunks-bidi-ref.svg
-== multiple-chunks-different-anchor-bidi.svg multiple-chunks-different-anchor-bidi-ref.svg
+fails-if(geckoview) == multiple-chunks-bidi.svg multiple-chunks-bidi-ref.svg # Bug 1558513 for GV
+fails-if(geckoview) == multiple-chunks-different-anchor-bidi.svg multiple-chunks-different-anchor-bidi-ref.svg # Bug 1558513 for GV
 == multiple-chunks-different-anchor-rtl.svg multiple-chunks-different-anchor-rtl-ref.svg
 == multiple-chunks-different-anchor.svg multiple-chunks-different-anchor-ref.svg
 fuzzy-if(Android,0-242,0-81) == multiple-chunks-directions-and-anchor.svg multiple-chunks-directions-and-anchor-ref.svg
@@ -91,8 +91,8 @@ fuzzy-if(Android,0-242,0-81) == multiple-chunks-directions-and-anchor-multiple-d
 == multiple-chunks-dx-rtl.svg multiple-chunks-dx-rtl-ref.svg
 == multiple-chunks-dx.svg multiple-chunks-dx-ref.svg
 == multiple-chunks-fill-color.svg multiple-chunks-fill-color-ref.svg
-== multiple-chunks-multiple-dx-bidi.svg multiple-chunks-multiple-dx-bidi-ref.svg
-== multiple-chunks-multiple-dx-different-anchor-bidi.svg multiple-chunks-multiple-dx-different-anchor-bidi-ref.svg
+fails-if(geckoview) == multiple-chunks-multiple-dx-bidi.svg multiple-chunks-multiple-dx-bidi-ref.svg # Bug 1558513 for GV
+fails-if(geckoview) == multiple-chunks-multiple-dx-different-anchor-bidi.svg multiple-chunks-multiple-dx-different-anchor-bidi-ref.svg # Bug 1558513 for GV
 == multiple-chunks-multiple-dx-different-anchor-rtl.svg multiple-chunks-multiple-dx-different-anchor-rtl-ref.svg
 == multiple-chunks-multiple-dx-different-anchor.svg multiple-chunks-multiple-dx-different-anchor-ref.svg
 == multiple-chunks-multiple-dx-rtl.svg multiple-chunks-multiple-dx-rtl-ref.svg

@@ -77,8 +77,8 @@ fails-if(gtkWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfen
 != stretchy-mfenced-2b.html stretchy-mfenced-2-ref.html
 != stretchy-mfenced-3a.html stretchy-mfenced-3-ref.html
 != stretchy-mfenced-3b.html stretchy-mfenced-3-ref.html
-== stretchy-mfenced-4a.html stretchy-mfenced-4-ref.html
-== stretchy-mfenced-4b.html stretchy-mfenced-4-ref.html
+fails-if(geckoview) == stretchy-mfenced-4a.html stretchy-mfenced-4-ref.html # Bug 1558513 for GV
+fails-if(geckoview) == stretchy-mfenced-4b.html stretchy-mfenced-4-ref.html # Bug 1558513 for GV
 == stretchy-mover-1a.html stretchy-mover-1-ref.html
 == stretchy-mover-1b.html stretchy-mover-1-ref.html
 fails == stretchy-mover-2a.html stretchy-mover-2-ref.html

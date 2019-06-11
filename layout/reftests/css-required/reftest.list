@@ -7,7 +7,7 @@
 == css-required-password.html css-required-password-ref.html
 == css-required-tel.html css-required-tel-ref.html
 == css-required-search.html css-required-search-ref.html
-== css-required-select.html css-required-select-ref.html
+fuzzy-if(geckoview,0-4,0-1) == css-required-select.html css-required-select-ref.html
 
 # Checking dynamic behavior with <input type='text'>
 == css-required-dyn-1.html css-required-text-ref.html

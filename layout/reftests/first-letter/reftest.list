@@ -37,7 +37,7 @@ random-if(d2d) == dynamic-2.html dynamic-2-ref.html
 != 229764-1.html 229764-ref.html
 == 229764-2.html 229764-ref.html
 == 329069-1.html 329069-1-ref.html
-fails-if(Android) == 329069-2.html 329069-2-ref.html # Bug 999139
+fails-if(Android&&!geckoview) == 329069-2.html 329069-2-ref.html # Bug 999139
 == 329069-3.html 329069-3-ref.html
 == 329069-4.html 329069-4-ref.html
 == 329069-5.html 329069-5-ref.html
@@ -61,7 +61,7 @@ fails-if(Android) == 329069-2.html 329069-2-ref.html # Bug 999139
 == 469227-1.html 469227-1-ref.html
 == 484400-1.html 484400-1-ref.html
 == 594303-1.html 594303-1-ref.html
-fails-if(winWidget||cocoaWidget) == 617869-1.html 617869-1-ref.html
+fails-if(winWidget||cocoaWidget) fails-if(geckoview) == 617869-1.html 617869-1-ref.html # Bug 1558513 for GV
 == 723509-1.html 723509-1-ref.html
 == 922550-1.html 922550-1-ref.html
 == 958249.html 958249-ref.html

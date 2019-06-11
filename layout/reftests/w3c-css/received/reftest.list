@@ -75,9 +75,9 @@ fuzzy(0-135,0-530) == css-multicol/multicol-containing-001.xht css-multicol/mult
 fuzzy(0-215,0-241) == css-multicol/multicol-containing-002.xht css-multicol/multicol-containing-002-ref.xht
 fuzzy(0-87,0-180) == css-multicol/multicol-count-001.xht css-multicol/multicol-columns-001-ref.xht
 fails-if(!OSX) random-if(OSX) == css-multicol/multicol-count-002.xht css-multicol/multicol-count-002-ref.xht
-== css-multicol/multicol-count-computed-003.xht css-multicol/multicol-count-computed-003-ref.xht
-fuzzy-if(winWidget||OSX||gtkWidget,0-112,0-861) == css-multicol/multicol-count-computed-004.xht css-multicol/multicol-count-computed-004-ref.xht
-== css-multicol/multicol-count-computed-005.xht css-multicol/multicol-count-computed-003-ref.xht
+fails-if(geckoview) == css-multicol/multicol-count-computed-003.xht css-multicol/multicol-count-computed-003-ref.xht # Bug 1558509 for GV
+fuzzy-if(winWidget||OSX||gtkWidget,0-112,0-861) fails-if(geckoview) == css-multicol/multicol-count-computed-004.xht css-multicol/multicol-count-computed-004-ref.xht # Bug 1558509 for GV
+fails-if(geckoview) == css-multicol/multicol-count-computed-005.xht css-multicol/multicol-count-computed-003-ref.xht # Bug 1558509 for GV
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) == css-multicol/multicol-count-negative-001.xht css-multicol/multicol-columns-invalid-001-ref.xht
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) == css-multicol/multicol-count-negative-002.xht css-multicol/multicol-columns-invalid-001-ref.xht
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) == css-multicol/multicol-count-non-integer-001.xht css-multicol/multicol-columns-invalid-001-ref.xht
@@ -98,7 +98,7 @@ fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) == css-multicol/multicol-ga
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) == css-multicol/multicol-gap-003.xht css-multicol/multicol-gap-002-ref.xht
 fuzzy(0-107,0-1823) == css-multicol/multicol-gap-fraction-001.xht css-multicol/multicol-gap-fraction-001-ref.xht
 skip == css-multicol/multicol-gap-fraction-002.html reference/nothing.html
-fuzzy-if(winWidget||OSX||gtkWidget,0-204,0-1048) fuzzy-if(skiaContent,0-208,0-1048) == css-multicol/multicol-gap-large-001.xht css-multicol/multicol-gap-large-001-ref.xht
+fuzzy-if(winWidget||OSX||gtkWidget,0-204,0-1048) fuzzy-if(skiaContent,0-208,0-1048) fails-if(geckoview) == css-multicol/multicol-gap-large-001.xht css-multicol/multicol-gap-large-001-ref.xht # Bug 1558509 for GV
 fuzzy(0-225,0-920) == css-multicol/multicol-gap-large-002.xht css-multicol/multicol-gap-large-002-ref.xht
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) == css-multicol/multicol-gap-negative-001.xht css-multicol/multicol-gap-002-ref.xht
 == css-multicol/multicol-height-001.xht css-multicol/multicol-height-001-ref.xht
@@ -155,10 +155,10 @@ pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-001.
 pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-002.xht css-multicol/multicol-span-all-002-ref.xht
 pref(layout.css.column-span.enabled,true) fails-if(!OSX) random-if(OSX) == css-multicol/multicol-span-all-003.xht css-multicol/multicol-count-002-ref.xht
 pref(layout.css.column-span.enabled,true) fuzzy-if(winWidget,40-47,8-8) fuzzy-if(OSX,0-27,0-11) == css-multicol/multicol-span-all-block-sibling-003.xht css-multicol/multicol-span-all-block-sibling-3-ref.xht
-pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-margin-001.xht css-multicol/multicol-span-all-margin-001-ref.xht
-pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-margin-002.xht css-multicol/multicol-span-all-margin-002-ref.xht
+pref(layout.css.column-span.enabled,true) fails-if(geckoview) == css-multicol/multicol-span-all-margin-001.xht css-multicol/multicol-span-all-margin-001-ref.xht # Bug 1558509 for GV
+pref(layout.css.column-span.enabled,true) fails-if(geckoview) == css-multicol/multicol-span-all-margin-002.xht css-multicol/multicol-span-all-margin-002-ref.xht # Bug 1558509 for GV
 pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-all-margin-bottom-001.xht css-multicol/multicol-span-all-margin-bottom-001-ref.xht
-pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-margin-nested-001.xht css-multicol/multicol-span-all-margin-nested-001-ref.xht
+pref(layout.css.column-span.enabled,true) fails-if(geckoview) == css-multicol/multicol-span-all-margin-nested-001.xht css-multicol/multicol-span-all-margin-nested-001-ref.xht # Bug 1558509 for GV
 pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-all-margin-nested-002.xht css-multicol/multicol-span-all-margin-nested-001-ref.xht
 pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-margin-nested-firstchild-001.xht css-multicol/multicol-span-all-margin-nested-firstchild-ref.xht
 pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-float-001.xht css-multicol/multicol-span-float-001-ref.xht
