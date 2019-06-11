@@ -601,8 +601,8 @@ class SearchOneOffs {
       // Make the top-level menu button.
       let button = document.createXULElement("toolbarbutton");
       list.appendChild(button);
-      button.classList.add("addengine-menu-button", "addengine-item",
-                           "badged-button");
+      button.classList.add("addengine-menu-button", "addengine-item");
+      button.setAttribute("badged", "true");
       button.setAttribute("type", "menu");
       button.setAttribute("label",
         this.bundle.GetStringFromName("cmd_addFoundEngineMenu"));
@@ -648,7 +648,7 @@ class SearchOneOffs {
       let button = document.createXULElement(eltType);
       button.classList.add("addengine-item");
       if (!tooManyEngines) {
-        button.classList.add("badged-button");
+        button.setAttribute("badged", "true");
       }
       button.id = this.telemetryOrigin + "-add-engine-" +
         this._fixUpEngineNameForID(engine.title);
