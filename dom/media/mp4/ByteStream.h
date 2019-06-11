@@ -24,14 +24,6 @@ class ByteStream : public DecoderDoctorLifeLogger<ByteStream> {
 
   virtual void DiscardBefore(int64_t offset) {}
 
-  // If this ByteStream's underlying storage of media is in-memory, this
-  // function returns a pointer to the in-memory storage of data at offset.
-  // Note that even if a ByteStream stores data in memory, it may not be
-  // stored contiguously, in which case this returns nullptr.
-  virtual const uint8_t* GetContiguousAccess(int64_t aOffset, size_t aSize) {
-    return nullptr;
-  }
-
  protected:
   virtual ~ByteStream() {}
 };

@@ -24,8 +24,7 @@ extern mozilla::LogModule* GetSourceBufferResourceLog();
 
 namespace mozilla {
 
-ResourceItem::ResourceItem(MediaByteBuffer* aData, uint64_t aOffset)
-    : mData(aData), mOffset(aOffset) {}
+ResourceItem::ResourceItem(MediaByteBuffer* aData) : mData(aData) {}
 
 size_t ResourceItem::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   // size including this
@@ -50,26 +49,13 @@ uint64_t ResourceQueue::GetOffset() { return mOffset; }
 
 uint64_t ResourceQueue::GetLength() { return mLogicalLength; }
 
-const uint8_t* ResourceQueue::GetContiguousAccess(int64_t aOffset,
-                                                  size_t aSize) {
-  uint32_t offset = 0;
-  uint32_t start = GetAtOffset(aOffset, &offset);
-  if (start >= GetSize()) {
-    return nullptr;
-  }
-  ResourceItem* item = ResourceAt(start);
-  if (offset + aSize > item->mData->Length()) {
-    return nullptr;
-  }
-  return item->mData->Elements() + offset;
-}
-
 void ResourceQueue::CopyData(uint64_t aOffset, uint32_t aCount, char* aDest) {
   uint32_t offset = 0;
   uint32_t start = GetAtOffset(aOffset, &offset);
-  size_t i = start;
-  while (i < uint32_t(GetSize()) && aCount > 0) {
-    ResourceItem* item = ResourceAt(i++);
+  uint32_t end =
+      std::min(GetAtOffset(aOffset + aCount, nullptr) + 1, uint32_t(GetSize()));
+  for (uint32_t i = start; i < end; ++i) {
+    ResourceItem* item = ResourceAt(i);
     uint32_t bytes = std::min(aCount, uint32_t(item->mData->Length() - offset));
     if (bytes != 0) {
       memcpy(aDest, &(*item->mData)[offset], bytes);
@@ -81,9 +67,8 @@ void ResourceQueue::CopyData(uint64_t aOffset, uint32_t aCount, char* aDest) {
 }
 
 void ResourceQueue::AppendItem(MediaByteBuffer* aData) {
-  uint64_t offset = mLogicalLength;
   mLogicalLength += aData->Length();
-  Push(new ResourceItem(aData, offset));
+  Push(new ResourceItem(aData));
 }
 
 uint32_t ResourceQueue::Evict(uint64_t aOffset, uint32_t aSizeToEvict,
@@ -112,7 +97,7 @@ uint32_t ResourceQueue::EvictBefore(uint64_t aOffset, ErrorResult& aRv) {
         aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
         return 0;
       }
-      item->mOffset += offset;
+
       item->mData = data;
       break;
     }
@@ -171,29 +156,22 @@ ResourceItem* ResourceQueue::ResourceAt(uint32_t aIndex) const {
 }
 
 uint32_t ResourceQueue::GetAtOffset(uint64_t aOffset,
-                                    uint32_t* aResourceOffset) const {
+                                    uint32_t* aResourceOffset) {
   MOZ_RELEASE_ASSERT(aOffset >= mOffset);
-
-  size_t hi = GetSize();
-  size_t lo = 0;
-  while (lo < hi) {
-    size_t mid = lo + (hi - lo) / 2;
-    const ResourceItem* resource = ResourceAt(mid);
-    if (resource->mOffset <= aOffset &&
-        aOffset < resource->mOffset + resource->mData->Length()) {
+  uint64_t offset = mOffset;
+  for (uint32_t i = 0; i < uint32_t(GetSize()); ++i) {
+    ResourceItem* item = ResourceAt(i);
+    // If the item contains the start of the offset we want to
+    // break out of the loop.
+    if (item->mData->Length() + offset > aOffset) {
       if (aResourceOffset) {
-        *aResourceOffset = aOffset - resource->mOffset;
+        *aResourceOffset = aOffset - offset;
       }
-      return uint32_t(mid);
+      return i;
     }
-    if (resource->mOffset + resource->mData->Length() <= aOffset) {
-      lo = mid + 1;
-    } else {
-      hi = mid;
-    }
+    offset += item->mData->Length();
   }
-
-  return uint32_t(GetSize());
+  return GetSize();
 }
 
 ResourceItem* ResourceQueue::PopFront() {
