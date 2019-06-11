@@ -106,7 +106,9 @@ enum class ZealMode {
   _(ShapeCache)                            \
   _(ModuleBindingMap)                      \
   _(BaselineScript)                        \
-  _(IonScript)
+  _(IonScript)                             \
+  _(ArgumentsData)                         \
+  _(RareArgumentsData)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \

@@ -42,6 +42,8 @@ RareArgumentsData* RareArgumentsData::create(JSContext* cx,
 
   mozilla::PodZero(data, bytes);
 
+  AddCellMemory(obj, bytes, MemoryUse::RareArgumentsData);
+
   return new (data) RareArgumentsData();
 }
 
@@ -315,7 +317,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
       data->args[i].init(UndefinedValue());
     }
 
-    obj->initFixedSlot(DATA_SLOT, PrivateValue(data));
+    InitReservedSlot(obj, DATA_SLOT, data, numBytes, MemoryUse::ArgumentsData);
     obj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
   }
   MOZ_ASSERT(data != nullptr);
@@ -407,6 +409,7 @@ ArgumentsObject* ArgumentsObject::finishForIonPure(JSContext* cx,
   obj->initFixedSlot(INITIAL_LENGTH_SLOT,
                      Int32Value(numActuals << PACKED_BITS_COUNT));
   obj->initFixedSlot(DATA_SLOT, PrivateValue(data));
+  AddCellMemory(obj, numBytes, MemoryUse::ArgumentsData);
   obj->initFixedSlot(MAYBE_CALL_SLOT, UndefinedValue());
   obj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
 
@@ -900,9 +903,14 @@ bool UnmappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj) {
 
 void ArgumentsObject::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(!IsInsideNursery(obj));
-  if (obj->as<ArgumentsObject>().data()) {
-    fop->free_(obj->as<ArgumentsObject>().maybeRareData());
-    fop->free_(obj->as<ArgumentsObject>().data());
+  ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
+  if (argsobj.data()) {
+    fop->free_(&argsobj, argsobj.maybeRareData(),
+               RareArgumentsData::bytesRequired(argsobj.initialLength()),
+               MemoryUse::RareArgumentsData);
+    fop->free_(&argsobj, argsobj.data(),
+               ArgumentsData::bytesRequired(argsobj.data()->numArgs),
+               MemoryUse::ArgumentsData);
   }
 }
 
@@ -927,28 +935,31 @@ size_t ArgumentsObject::objectMoved(JSObject* dst, JSObject* src) {
   Nursery& nursery = dst->runtimeFromMainThread()->gc.nursery();
 
   size_t nbytesTotal = 0;
+  uint32_t nDataBytes = ArgumentsData::bytesRequired(nsrc->data()->numArgs);
   if (!nursery.isInside(nsrc->data())) {
     nursery.removeMallocedBuffer(nsrc->data());
   } else {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    uint32_t nbytes = ArgumentsData::bytesRequired(nsrc->data()->numArgs);
-    uint8_t* data = nsrc->zone()->pod_malloc<uint8_t>(nbytes);
+    uint8_t* data = nsrc->zone()->pod_malloc<uint8_t>(nDataBytes);
     if (!data) {
       oomUnsafe.crash(
           "Failed to allocate ArgumentsObject data while tenuring.");
     }
     ndst->initFixedSlot(DATA_SLOT, PrivateValue(data));
 
-    mozilla::PodCopy(data, reinterpret_cast<uint8_t*>(nsrc->data()), nbytes);
-    nbytesTotal += nbytes;
+    mozilla::PodCopy(data, reinterpret_cast<uint8_t*>(nsrc->data()),
+                     nDataBytes);
+    nbytesTotal += nDataBytes;
   }
 
+  AddCellMemory(ndst, nDataBytes, MemoryUse::ArgumentsData);
+
   if (RareArgumentsData* srcRareData = nsrc->maybeRareData()) {
+    uint32_t nbytes = RareArgumentsData::bytesRequired(nsrc->initialLength());
     if (!nursery.isInside(srcRareData)) {
       nursery.removeMallocedBuffer(srcRareData);
     } else {
       AutoEnterOOMUnsafeRegion oomUnsafe;
-      uint32_t nbytes = RareArgumentsData::bytesRequired(nsrc->initialLength());
       uint8_t* dstRareData = nsrc->zone()->pod_malloc<uint8_t>(nbytes);
       if (!dstRareData) {
         oomUnsafe.crash(
@@ -960,6 +971,8 @@ size_t ArgumentsObject::objectMoved(JSObject* dst, JSObject* src) {
                        nbytes);
       nbytesTotal += nbytes;
     }
+
+    AddCellMemory(ndst, nbytes, MemoryUse::RareArgumentsData);
   }
 
   return nbytesTotal;
