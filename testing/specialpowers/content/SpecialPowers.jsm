@@ -7,8 +7,6 @@
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-Services.scriptloader.loadSubScript("resource://specialpowers/MozillaLogger.js", this);
-
 var EXPORTED_SYMBOLS = ["SpecialPowers", "attachSpecialPowersToWindow"];
 
 const {bindDOMWindowUtils, SpecialPowersAPI} = ChromeUtils.import("resource://specialpowers/SpecialPowersAPI.jsm");

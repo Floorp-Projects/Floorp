@@ -7,13 +7,9 @@
 
 "use strict";
 
-/* import-globals-from MozillaLogger.js */
-
 var EXPORTED_SYMBOLS = ["SpecialPowersAPI", "bindDOMWindowUtils"];
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-Services.scriptloader.loadSubScript("resource://specialpowers/MozillaLogger.js", this);
 
 ChromeUtils.defineModuleGetter(this, "MockFilePicker",
                                "resource://specialpowers/MockFilePicker.jsm");
@@ -1328,18 +1324,6 @@ class SpecialPowersAPI {
       res[prop] = function() { return serv[prop].apply(serv, arguments); };
     }
     return res;
-  }
-
-  setLogFile(path) {
-    this._mfl = new MozillaFileLogger(path);
-  }
-
-  log(data) {
-    this._mfl.log(data);
-  }
-
-  closeLogFile() {
-    this._mfl.close();
   }
 
   addCategoryEntry(category, entry, value, persists, replace) {
