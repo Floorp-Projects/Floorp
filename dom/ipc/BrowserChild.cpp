@@ -2741,7 +2741,7 @@ bool BrowserChild::IsVisible() {
 }
 
 void BrowserChild::UpdateVisibility(bool aForceRepaint) {
-  bool shouldBeVisible = mIsTopLevel ? mRenderLayers : mEffectsInfo.mVisible;
+  bool shouldBeVisible = mIsTopLevel ? mRenderLayers : mEffectsInfo.IsVisible();
   bool isVisible = IsVisible();
 
   if (shouldBeVisible != isVisible) {
