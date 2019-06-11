@@ -3,19 +3,18 @@
 
 package mozilla.components.support.utils;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
 
 import java.util.Arrays;
-
-import mozilla.components.support.utils.WebURLFinder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-@RunWith(RobolectricTestRunner.class)
+@RunWith(AndroidJUnit4.class)
 public class WebURLFinderTest {
+
     public String find(String string) {
         return new WebURLFinder(string).bestWebURL();
     }

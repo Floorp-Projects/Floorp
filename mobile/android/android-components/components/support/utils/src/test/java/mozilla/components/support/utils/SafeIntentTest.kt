@@ -6,6 +6,8 @@ package mozilla.components.support.utils
 
 import android.content.Intent
 import android.os.Parcelable
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -18,19 +20,16 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
-import org.mockito.Mockito.mock
-import org.robolectric.RobolectricTestRunner
 import java.util.HashSet
-import kotlin.collections.ArrayList
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SafeIntentTest {
 
     private lateinit var intent: Intent
 
     @Before
     fun setup() {
-        intent = mock(Intent::class.java)
+        intent = mock()
     }
 
     @Test

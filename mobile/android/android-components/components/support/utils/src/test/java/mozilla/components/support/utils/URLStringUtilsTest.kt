@@ -4,19 +4,18 @@
 
 package mozilla.components.support.utils
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertFalse
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.utils.URLStringUtils.isSearchTerm
 import mozilla.components.support.utils.URLStringUtils.isURLLike
 import mozilla.components.support.utils.URLStringUtils.toNormalizedURL
-import mozilla.components.support.utils.URLStringUtils.isSearchTerm
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class URLStringUtilsTest {
 
     @Test

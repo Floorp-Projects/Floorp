@@ -5,16 +5,15 @@
 package mozilla.components.support.utils
 
 import android.webkit.MimeTypeMap
-
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 
 private val CONTENT_DISPOSITION_TYPES = listOf("attachment", "inline")
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class DownloadUtilsTest {
 
     private fun assertContentDisposition(expected: String, contentDisposition: String) {
