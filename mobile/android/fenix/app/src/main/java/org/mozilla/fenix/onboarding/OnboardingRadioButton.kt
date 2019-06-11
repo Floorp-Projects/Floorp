@@ -6,16 +6,16 @@ package org.mozilla.fenix.onboarding
 
 import android.content.Context
 import android.util.AttributeSet
-import android.widget.RadioButton
+import androidx.appcompat.widget.AppCompatRadioButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.Settings
 
-class OnboardingRadioButton : RadioButton {
+class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRadioButton(context, attrs) {
     private val radioGroups = mutableListOf<OnboardingRadioButton>()
     private var clickListener: (() -> Unit)? = null
     var key: Int = 0
 
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
+    init {
         attrs.let {
             context.theme.obtainStyledAttributes(
                 it,
