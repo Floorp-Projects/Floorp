@@ -183,14 +183,17 @@ gfxFont* gfxUserFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle) {
 
 class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
  public:
-  explicit gfxOTSContext(gfxUserFontEntry* aUserFontEntry)
-      : mUserFontEntry(aUserFontEntry) {
+  gfxOTSContext() {
     // Whether to apply OTS validation to OpenType Layout tables
     mCheckOTLTables = StaticPrefs::ValidateOTLTables();
     // Whether to preserve Variation tables in downloaded fonts
     mCheckVariationTables = StaticPrefs::ValidateVariationTables();
     // Whether to preserve color bitmap glyphs
     mKeepColorBitmaps = StaticPrefs::KeepColorBitmaps();
+  }
+
+  virtual ~gfxOTSContext() {
+    MOZ_ASSERT(mMessages.IsEmpty(), "should have called TakeMessages");
   }
 
   virtual ots::TableAction GetTableAction(uint32_t aTag) override {
@@ -238,12 +241,21 @@ class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
       mWarningsIssued.PutEntry(msg);
     }
 
-    mUserFontEntry->mFontSet->LogMessage(mUserFontEntry, msg.get());
+    mMessages.AppendElement(msg);
   }
 
+  bool Process(ots::OTSStream* aOutput, const uint8_t* aInput, size_t aLength,
+               nsTArray<nsCString>& aMessages) {
+    bool ok = ots::OTSContext::Process(aOutput, aInput, aLength);
+    aMessages = TakeMessages();
+    return ok;
+  }
+
+  nsTArray<nsCString>&& TakeMessages() { return std::move(mMessages); }
+
  private:
-  gfxUserFontEntry* mUserFontEntry;
   nsTHashtable<nsCStringHashKey> mWarningsIssued;
+  nsTArray<nsCString> mMessages;
   bool mCheckOTLTables;
   bool mCheckVariationTables;
   bool mKeepColorBitmaps;
@@ -253,7 +265,7 @@ class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
 // Returns a newly-allocated block, or nullptr in case of fatal errors.
 const uint8_t* gfxUserFontEntry::SanitizeOpenTypeData(
     const uint8_t* aData, uint32_t aLength, uint32_t& aSaneLength,
-    gfxUserFontType& aFontType) {
+    gfxUserFontType& aFontType, nsTArray<nsCString>& aMessages) {
   aFontType = gfxFontUtils::DetermineFontDataType(aData, aLength);
   Telemetry::Accumulate(Telemetry::WEBFONT_FONTTYPE, uint32_t(aFontType));
 
@@ -272,8 +284,8 @@ const uint8_t* gfxUserFontEntry::SanitizeOpenTypeData(
   // limit output/expansion to 256MB
   ExpandingMemoryStream output(lengthHint, 1024 * 1024 * 256);
 
-  gfxOTSContext otsContext(this);
-  if (!otsContext.Process(&output, aData, aLength)) {
+  gfxOTSContext otsContext;
+  if (!otsContext.Process(&output, aData, aLength, aMessages)) {
     // Failed to decode/sanitize the font, so discard it.
     aSaneLength = 0;
     return nullptr;
@@ -682,10 +694,12 @@ bool gfxUserFontEntry::LoadPlatformFontSync(const uint8_t* aFontData,
   // if necessary. The original data in aFontData is left unchanged.
   uint32_t saneLen;
   gfxUserFontType fontType;
+  nsTArray<nsCString> messages;
   const uint8_t* saneData =
-      SanitizeOpenTypeData(aFontData, aLength, saneLen, fontType);
+      SanitizeOpenTypeData(aFontData, aLength, saneLen, fontType, messages);
 
-  return LoadPlatformFont(aFontData, aLength, fontType, saneData, saneLen);
+  return LoadPlatformFont(aFontData, aLength, fontType, saneData, saneLen,
+                          std::move(messages));
 }
 
 void gfxUserFontEntry::StartPlatformFontLoadOnWorkerThread(
@@ -696,16 +710,17 @@ void gfxUserFontEntry::StartPlatformFontLoadOnWorkerThread(
 
   uint32_t saneLen;
   gfxUserFontType fontType;
+  nsTArray<nsCString> messages;
   const uint8_t* saneData =
-      SanitizeOpenTypeData(aFontData, aLength, saneLen, fontType);
+      SanitizeOpenTypeData(aFontData, aLength, saneLen, fontType, messages);
 
   nsCOMPtr<nsIRunnable> event =
       NewRunnableMethod<const uint8_t*, uint32_t, gfxUserFontType,
-                        const uint8_t*, uint32_t,
+                        const uint8_t*, uint32_t, nsTArray<nsCString>&&,
                         nsMainThreadPtrHandle<nsIFontLoadCompleteCallback>>(
           "gfxUserFontEntry::ContinuePlatformFontLoadOnMainThread", this,
           &gfxUserFontEntry::ContinuePlatformFontLoadOnMainThread, aFontData,
-          aLength, fontType, saneData, saneLen, aCallback);
+          aLength, fontType, saneData, saneLen, std::move(messages), aCallback);
   NS_DispatchToMainThread(event.forget());
 }
 
@@ -713,8 +728,13 @@ bool gfxUserFontEntry::LoadPlatformFont(const uint8_t* aOriginalFontData,
                                         uint32_t aOriginalLength,
                                         gfxUserFontType aFontType,
                                         const uint8_t* aSanitizedFontData,
-                                        uint32_t aSanitizedLength) {
+                                        uint32_t aSanitizedLength,
+                                        nsTArray<nsCString>&& aMessages) {
   MOZ_ASSERT(NS_IsMainThread());
+
+  for (const auto& msg : aMessages) {
+    mFontSet->LogMessage(this, msg.get());
+  }
 
   if (!aSanitizedFontData) {
     mFontSet->LogMessage(this, "rejected by sanitizer");
@@ -919,12 +939,13 @@ void gfxUserFontEntry::LoadPlatformFontAsync(
 void gfxUserFontEntry::ContinuePlatformFontLoadOnMainThread(
     const uint8_t* aOriginalFontData, uint32_t aOriginalLength,
     gfxUserFontType aFontType, const uint8_t* aSanitizedFontData,
-    uint32_t aSanitizedLength,
+    uint32_t aSanitizedLength, nsTArray<nsCString>&& aMessages,
     nsMainThreadPtrHandle<nsIFontLoadCompleteCallback> aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
 
   bool loaded = LoadPlatformFont(aOriginalFontData, aOriginalLength, aFontType,
-                                 aSanitizedFontData, aSanitizedLength);
+                                 aSanitizedFontData, aSanitizedLength,
+                                 std::move(aMessages));
   aOriginalFontData = nullptr;
   aSanitizedFontData = nullptr;
 
