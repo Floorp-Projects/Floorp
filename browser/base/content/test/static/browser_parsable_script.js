@@ -17,6 +17,7 @@ const kESModuleList = new Set([
   /browser\/res\/payments\/paymentRequest\.js$/,
   /browser\/res\/payments\/PaymentsStore\.js$/,
   /browser\/aboutlogins\/components\/.*\.js$/,
+  /browser\/aboutlogins\/.*\.js$/,
 ]);
 
 // Normally we would use reflect.jsm to get Reflect.parse. However, if

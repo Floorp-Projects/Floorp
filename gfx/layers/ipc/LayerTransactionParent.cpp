@@ -393,8 +393,8 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvUpdate(
         if (!imageBridge) {
           return IPC_FAIL_NO_REASON(this);
         }
-        RefPtr<CompositableHost> host =
-            imageBridge->FindCompositable(op.compositable());
+        RefPtr<CompositableHost> host = imageBridge->FindCompositable(
+            op.compositable(), /* aAllowDisablingWebRender */ true);
         if (!host) {
           // This normally should not happen, but can after a GPU process crash.
           // Media may not have had time to update the ImageContainer associated

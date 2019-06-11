@@ -84,8 +84,6 @@ class InactivePropertyHelper {
           "grid-auto-rows",
           "grid-template",
           "grid-gap",
-          "row-gap",
-          "column-gap",
           "justify-items",
         ],
         when: () => !this.gridContainer,
@@ -126,11 +124,23 @@ class InactivePropertyHelper {
           "align-content",
           "align-items",
           "justify-content",
+          "row-gap",
         ],
         when: () => !this.gridContainer && !this.flexContainer,
         fixId: "inactive-css-not-grid-or-flex-container-fix",
         msgId: "inactive-css-not-grid-or-flex-container",
         numFixProps: 2,
+      },
+      // column-gap and shorthand used on non-grid or non-flex or non-multi-col container.
+      {
+        invalidProperties: [
+          "column-gap",
+          "gap",
+        ],
+        when: () => !this.gridContainer && !this.flexContainer && !this.multiColContainer,
+        fixId: "inactive-css-not-grid-or-flex-container-or-multicol-container-fix",
+        msgId: "inactive-css-not-grid-or-flex-container-or-multicol-container",
+        numFixProps: 3,
       },
       // Inline properties used on non-inline-level elements.
       {
@@ -384,6 +394,17 @@ class InactivePropertyHelper {
    */
   get gridItem() {
     return this.isGridItem(this.node);
+  }
+
+  /**
+   * Check if the current node is a multi-column container, i.e. a node element whose
+   * `column-width` or `column-count` property is not `auto`.
+   */
+  get multiColContainer() {
+    const autoColumnWidth = this.checkStyle("column-width", ["auto"]);
+    const autoColumnCount = this.checkStyle("column-count", ["auto"]);
+
+    return !autoColumnWidth || !autoColumnCount;
   }
 
   /**

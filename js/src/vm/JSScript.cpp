@@ -4776,6 +4776,40 @@ DebugScript* JSScript::getOrCreateDebugScript(JSContext* cx) {
   return borrowed;
 }
 
+bool JSScript::incrementGeneratorObserverCount(JSContext* cx) {
+  cx->check(this);
+  MOZ_ASSERT(cx->realm()->isDebuggee());
+
+  AutoRealm ar(cx, this);
+
+  DebugScript* debug = getOrCreateDebugScript(cx);
+  if (!debug) {
+    return false;
+  }
+
+  debug->generatorObserverCount++;
+
+  // It is our caller's responsibility, before bumping the generator observer
+  // count, to make sure that the baseline code includes the necessary
+  // JS_AFTERYIELD instrumentation by calling
+  // {ensure,update}ExecutionObservabilityOfScript.
+  MOZ_ASSERT_IF(hasBaselineScript(), baseline->hasDebugInstrumentation());
+
+  return true;
+}
+
+void JSScript::decrementGeneratorObserverCount(js::FreeOp* fop) {
+  DebugScript* debug = debugScript();
+  MOZ_ASSERT(debug);
+  MOZ_ASSERT(debug->generatorObserverCount > 0);
+
+  debug->generatorObserverCount--;
+
+  if (!debug->needed()) {
+    fop->free_(releaseDebugScript());
+  }
+}
+
 bool JSScript::incrementStepperCount(JSContext* cx) {
   cx->check(this);
   MOZ_ASSERT(cx->realm()->isDebuggee());

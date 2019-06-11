@@ -12,6 +12,7 @@ import org.mozilla.geckoview.test.util.Callbacks
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -20,6 +21,7 @@ import org.junit.runner.RunWith
 @ReuseSession(false)
 @WithDevToolsAPI
 class PromptDelegateTest : BaseSessionTest() {
+    @Ignore("disable test for frequently failing Bug 1535423")
     @Test fun popupTest() {
         // Ensure popup blocking is enabled for this test.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to true))

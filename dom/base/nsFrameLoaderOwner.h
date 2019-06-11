@@ -52,6 +52,11 @@ class nsFrameLoaderOwner : public nsISupports {
   void ChangeRemoteness(const mozilla::dom::RemotenessOptions& aOptions,
                         mozilla::ErrorResult& rv);
 
+ private:
+  bool UseRemoteSubframes();
+  bool ShouldPreserveBrowsingContext(
+      const mozilla::dom::RemotenessOptions& aOptions);
+
  protected:
   virtual ~nsFrameLoaderOwner() = default;
   RefPtr<nsFrameLoader> mFrameLoader;
