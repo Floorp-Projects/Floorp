@@ -1405,6 +1405,8 @@ class nsINode : public mozilla::dom::EventTarget {
     ElementMayHaveStyle,
     // Set if the element has a name attribute set.
     ElementHasName,
+    // Set if the element has a part attribute set.
+    ElementHasPart,
     // Set if the element might have a contenteditable attribute set.
     ElementMayHaveContentEditableAttr,
     // Set if the node is the common ancestor of the start/end nodes of a Range
@@ -1498,6 +1500,7 @@ class nsINode : public mozilla::dom::EventTarget {
   void SetMayHaveClass() { SetBoolFlag(ElementMayHaveClass); }
   bool MayHaveStyle() const { return GetBoolFlag(ElementMayHaveStyle); }
   bool HasName() const { return GetBoolFlag(ElementHasName); }
+  bool HasPartAttribute() const { return GetBoolFlag(ElementHasPart); }
   bool MayHaveContentEditableAttr() const {
     return GetBoolFlag(ElementMayHaveContentEditableAttr);
   }
@@ -1605,6 +1608,7 @@ class nsINode : public mozilla::dom::EventTarget {
   void SetMayHaveStyle() { SetBoolFlag(ElementMayHaveStyle); }
   void SetHasName() { SetBoolFlag(ElementHasName); }
   void ClearHasName() { ClearBoolFlag(ElementHasName); }
+  void SetHasPartAttribute(bool aPart) { SetBoolFlag(ElementHasPart, aPart); }
   void SetMayHaveContentEditableAttr() {
     SetBoolFlag(ElementMayHaveContentEditableAttr);
   }
