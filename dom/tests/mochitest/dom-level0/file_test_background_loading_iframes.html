@@ -1,0 +1,19 @@
+<html>
+  <body>
+  <script>
+    var onloadFiredAt;
+
+    let start = performance.now();
+    while (performance.now() - start < 5000);
+
+    window.onload = function() {
+      onloadFiredAt = performance.now();
+    }
+
+    window.addEventListener('message', function(event) {
+      window.parent.postMessage(onloadFiredAt, "*");
+    })
+
+  </script>
+  </body>
+</html>

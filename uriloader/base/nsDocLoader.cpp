@@ -39,11 +39,13 @@
 #include "nsISocketTransport.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocGroup.h"
 #include "nsPresContext.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsILoadURIDelegate.h"
 #include "nsIBrowserDOMWindow.h"
-
+#include "nsGlobalWindow.h"
+#include "mozilla/ThrottledEventQueue.h"
 using namespace mozilla;
 using mozilla::DebugOnly;
 using mozilla::eLoad;
@@ -117,6 +119,9 @@ nsDocLoader::nsDocLoader()
       mIsRestoringDocument(false),
       mDontFlushLayout(false),
       mIsFlushingLayout(false),
+      mTreatAsBackgroundLoad(false),
+      mHasFakeOnLoadDispatched(false),
+      mIsReadyToHandlePostMessage(false),
       mDocumentOpenedButNotLoaded(false) {
   ClearInternalProgress();
 
@@ -255,6 +260,14 @@ nsDocLoader::Stop(void) {
   return rv;
 }
 
+bool nsDocLoader::TreatAsBackgroundLoad() {
+   return mTreatAsBackgroundLoad;
+}
+
+void nsDocLoader::SetBackgroundLoadIframe() {
+   mTreatAsBackgroundLoad = true;
+}
+
 bool nsDocLoader::IsBusy() {
   nsresult rv;
 
@@ -291,6 +304,11 @@ bool nsDocLoader::IsBusy() {
   for (uint32_t i = 0; i < count; i++) {
     nsIDocumentLoader* loader = ChildAt(i);
 
+    // If 'dom.cross_origin_iframes_loaded_in_background' is set, the parent
+    // document treats cross domain iframes as background loading frame
+    if (loader && static_cast<nsDocLoader *>(loader)->TreatAsBackgroundLoad()) {
+      continue;
+    }
     // This is a safe cast, because we only put nsDocLoader objects into the
     // array
     if (loader && static_cast<nsDocLoader*>(loader)->IsBusy()) return true;
@@ -739,34 +757,38 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout) {
 
             nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow();
             if (window && !doc->SkipLoadEventAfterClose()) {
-              MOZ_LOG(gDocLoaderLog, LogLevel::Debug,
-                      ("DocLoader:%p: Firing load event for document.open\n",
-                       this));
+              if (!mozilla::dom::DocGroup::TryToLoadIframesInBackground() ||
+                  (mozilla::dom::DocGroup::TryToLoadIframesInBackground() &&
+                   !HasFakeOnLoadDispatched())) {
+                MOZ_LOG(gDocLoaderLog, LogLevel::Debug,
+                    ("DocLoader:%p: Firing load event for document.open\n",
+                     this));
 
-              // This is a very cut-down version of
-              // nsDocumentViewer::LoadComplete that doesn't do various things
-              // that are not relevant here because this wasn't an actual
-              // navigation.
-              WidgetEvent event(true, eLoad);
-              event.mFlags.mBubbles = false;
-              event.mFlags.mCancelable = false;
-              // Dispatching to |window|, but using |document| as the target,
-              // per spec.
-              event.mTarget = doc;
-              nsEventStatus unused = nsEventStatus_eIgnore;
-              doc->SetLoadEventFiring(true);
-              EventDispatcher::Dispatch(window, nullptr, &event, nullptr,
-                                        &unused);
-              doc->SetLoadEventFiring(false);
+                // This is a very cut-down version of
+                // nsDocumentViewer::LoadComplete that doesn't do various things
+                // that are not relevant here because this wasn't an actual
+                // navigation.
+                WidgetEvent event(true, eLoad);
+                event.mFlags.mBubbles = false;
+                event.mFlags.mCancelable = false;
+                // Dispatching to |window|, but using |document| as the target,
+                // per spec.
+                event.mTarget = doc;
+                nsEventStatus unused = nsEventStatus_eIgnore;
+                doc->SetLoadEventFiring(true);
+                EventDispatcher::Dispatch(window, nullptr, &event, nullptr,
+                    &unused);
+                doc->SetLoadEventFiring(false);
 
-              // Now unsuppress painting on the presshell, if we
-              // haven't done that yet.
-              RefPtr<PresShell> presShell = doc->GetPresShell();
-              if (presShell && !presShell->IsDestroying()) {
-                presShell->UnsuppressPainting();
+                // Now unsuppress painting on the presshell, if we
+                // haven't done that yet.
+                RefPtr<PresShell> presShell = doc->GetPresShell();
+                if (presShell && !presShell->IsDestroying()) {
+                  presShell->UnsuppressPainting();
 
-                if (!presShell->IsDestroying()) {
-                  presShell->LoadComplete();
+                  if (!presShell->IsDestroying()) {
+                    presShell->LoadComplete();
+                  }
                 }
               }
             }
