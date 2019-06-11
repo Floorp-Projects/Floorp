@@ -9,5 +9,4 @@ DevToolsModules(
     'network-observer.js',
     'network-response-listener.js',
     'stack-trace-collector.js',
-    'websocket-actor.js',
 )

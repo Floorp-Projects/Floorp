@@ -45,11 +45,6 @@ class FirefoxDataProvider {
     // Event handlers
     this.onNetworkEvent = this.onNetworkEvent.bind(this);
     this.onNetworkEventUpdate = this.onNetworkEventUpdate.bind(this);
-
-    this.onWebSocketOpened = this.onWebSocketOpened.bind(this);
-    this.onWebSocketClosed = this.onWebSocketClosed.bind(this);
-    this.onFrameSent = this.onFrameSent.bind(this);
-    this.onFrameReceived = this.onFrameReceived.bind(this);
   }
 
   /**
@@ -415,64 +410,6 @@ class FirefoxDataProvider {
     this.onPayloadDataReceived(actor);
 
     this.emit(EVENTS.NETWORK_EVENT_UPDATED, actor);
-  }
-
-  /**
-   * The "webSocketOpened" message type handler.
-   *
-   * @param {number} httpChannelId the channel ID
-   * @param {string} effectiveURI the effective URI of the page
-   * @param {string} protocols webSocket protocols
-   * @param {string} extensions
-   */
-  async onWebSocketOpened(httpChannelId, effectiveURI, protocols, extensions) {
-    console.log("FirefoxDataProvider onWebSocketOpened: " +
-      " httpChannelId: " + httpChannelId +
-      " effectiveURI: " + effectiveURI +
-      " protocols: " + protocols +
-      " extensions: " + extensions);
-  }
-
-  /**
-   * The "webSocketClosed" message type handler.
-   *
-   * @param {boolean} wasClean
-   * @param {number} code
-   * @param {string} reason
-   */
-  async onWebSocketClosed(wasClean, code, reason) {
-    console.log("FirefoxDataProvider onWebSocketClosed: " +
-      " wasClean: " + wasClean +
-      " code: " + code +
-      " reason: " + reason);
-  }
-
-  /**
-   * The "frameSent" message type handler.
-   *
-   * @param {number} httpChannelId the channel ID
-   * @param {object} data websocket frame information
-   */
-  async onFrameSent(httpChannelId, data) {
-    await this.getLongString(data.payload).then(payload => {
-      console.log("FirefoxDataProvider onFrameSent: " +
-      " httpChannelId: " + httpChannelId +
-      " onFrameSent: " + payload);
-    });
-  }
-
-  /**
-   * The "frameReceived" message type handler.
-   *
-   * @param {number} httpChannelId the channel ID
-   * @param {object} data websocket frame information
-   */
-  async onFrameReceived(httpChannelId, data) {
-    await this.getLongString(data.payload).then(payload => {
-      console.log("FirefoxDataProvider onFrameReceived: " +
-      " httpChannelId: " + httpChannelId +
-      " onFrameSent: " + payload);
-    });
   }
 
   /**
