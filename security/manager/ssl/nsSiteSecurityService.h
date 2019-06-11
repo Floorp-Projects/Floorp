@@ -76,7 +76,7 @@ class SiteHPKPState : public nsISiteHPKPState {
   SiteHPKPState(const nsCString& aHost,
                 const OriginAttributes& aOriginAttributes, PRTime aExpireTime,
                 SecurityPropertyState aState, bool aIncludeSubdomains,
-                nsTArray<nsCString>& SHA256keys);
+                const nsTArray<nsCString>& SHA256keys);
 
   nsCString mHostname;
   OriginAttributes mOriginAttributes;

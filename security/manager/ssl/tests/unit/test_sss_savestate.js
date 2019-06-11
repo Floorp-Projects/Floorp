@@ -100,7 +100,7 @@ function run_test() {
                     .getService(Ci.nsISiteSecurityService);
   // Put an HPKP entry
   SSService.setKeyPins("dynamic-pin.example.com", true,
-                       new Date().getTime() + 1000000, 1,
+                       new Date().getTime() + 1000000,
                        [NON_ISSUED_KEY_HASH]);
 
   let uris = [ Services.io.newURI("http://includesubdomains.preloaded.test"),

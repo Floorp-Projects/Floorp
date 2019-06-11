@@ -372,7 +372,7 @@ SiteHPKPState::SiteHPKPState(const nsCString& aHost,
                              const OriginAttributes& aOriginAttributes,
                              PRTime aExpireTime, SecurityPropertyState aState,
                              bool aIncludeSubdomains,
-                             nsTArray<nsCString>& aSHA256keys)
+                             const nsTArray<nsCString>& aSHA256keys)
     : mHostname(aHost),
       mOriginAttributes(aOriginAttributes),
       mExpireTime(aExpireTime),
@@ -1618,7 +1618,7 @@ nsSiteSecurityService::GetKeyPinsForHostname(
 NS_IMETHODIMP
 nsSiteSecurityService::SetKeyPins(const nsACString& aHost,
                                   bool aIncludeSubdomains, int64_t aExpires,
-                                  uint32_t aPinCount, const char** aSha256Pins,
+                                  const nsTArray<nsCString>& aSha256Pins,
                                   bool aIsPreload,
                                   JS::HandleValue aOriginAttributes,
                                   JSContext* aCx, uint8_t aArgc,
@@ -1631,7 +1631,6 @@ nsSiteSecurityService::SetKeyPins(const nsACString& aHost,
   }
 
   NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_ARG_POINTER(aSha256Pins);
   OriginAttributes originAttributes;
   if (aArgc > 1) {
     // OriginAttributes were passed in.
@@ -1646,14 +1645,11 @@ nsSiteSecurityService::SetKeyPins(const nsACString& aHost,
 
   SSSLOG(("Top of SetKeyPins"));
 
-  nsTArray<nsCString> sha256keys;
-  for (unsigned int i = 0; i < aPinCount; i++) {
-    nsAutoCString pin(aSha256Pins[i]);
+  for (auto& pin : aSha256Pins) {
     SSSLOG(("SetPins pin=%s\n", pin.get()));
     if (!stringIsBase64EncodingOf256bitValue(pin)) {
       return NS_ERROR_INVALID_ARG;
     }
-    sha256keys.AppendElement(pin);
   }
   // we always store data in permanent storage (ie no flags)
   const nsCString& flatHost = PromiseFlatCString(aHost);
@@ -1661,7 +1657,7 @@ nsSiteSecurityService::SetKeyPins(const nsACString& aHost,
       PublicKeyPinningService::CanonicalizeHostname(flatHost.get()));
   RefPtr<SiteHPKPState> dynamicEntry =
       new SiteHPKPState(host, originAttributes, aExpires, SecurityPropertySet,
-                        aIncludeSubdomains, sha256keys);
+                        aIncludeSubdomains, aSha256Pins);
   return SetHPKPState(host.get(), *dynamicEntry, 0, aIsPreload,
                       originAttributes);
 }
