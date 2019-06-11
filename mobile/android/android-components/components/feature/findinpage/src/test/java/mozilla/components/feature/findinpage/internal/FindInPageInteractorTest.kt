@@ -4,9 +4,8 @@
 
 package mozilla.components.feature.findinpage.internal
 
-import android.content.Context
 import android.view.View
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
@@ -16,18 +15,16 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class FindInPageInteractorTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `Start will register interactor as listener and emit a fact`() {
@@ -55,7 +52,7 @@ class FindInPageInteractorTest {
     @Test
     fun `FindInPageView-Listener implementation can get invoked without binding to session`() {
         val view: FindInPageView = mock()
-        `when`(view.asView()).thenReturn(View(context))
+        `when`(view.asView()).thenReturn(View(testContext))
 
         val interactor = FindInPageInteractor(mock(), mock(), view, mock())
 
@@ -70,7 +67,7 @@ class FindInPageInteractorTest {
     @Test
     fun `OnPreviousResult updates engine session`() {
         val view: FindInPageView = mock()
-        `when`(view.asView()).thenReturn(View(context))
+        `when`(view.asView()).thenReturn(View(testContext))
 
         val engineSession: EngineSession = mock()
 
@@ -88,7 +85,7 @@ class FindInPageInteractorTest {
     @Test
     fun `onNextResult updates engine session`() {
         val view: FindInPageView = mock()
-        `when`(view.asView()).thenReturn(View(context))
+        `when`(view.asView()).thenReturn(View(testContext))
 
         val engineSession: EngineSession = mock()
 
@@ -106,7 +103,7 @@ class FindInPageInteractorTest {
     @Test
     fun `onNextResult blurs focused engine view`() {
         val view: FindInPageView = mock()
-        `when`(view.asView()).thenReturn(View(context))
+        `when`(view.asView()).thenReturn(View(testContext))
 
         val actualEngineView: View = mock()
         val engineView: EngineView = mock()
@@ -178,7 +175,7 @@ class FindInPageInteractorTest {
     fun `interactor emits the facts`() {
         CollectionProcessor.withFactCollection { facts ->
             val view: FindInPageView = mock()
-            `when`(view.asView()).thenReturn(View(context))
+            `when`(view.asView()).thenReturn(View(testContext))
 
             val actualEngineView: View = mock()
             val engineView: EngineView = mock()

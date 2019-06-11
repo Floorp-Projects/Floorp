@@ -15,6 +15,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 class FindInPagePresenterTest {
+
     @Test
     fun `bind registers on session with view scope`() {
         val actualView: View = mock()

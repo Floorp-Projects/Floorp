@@ -16,6 +16,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 class FindInPageFeatureTest {
+
     @Test
     fun `start is forwarded to presenter and interactor`() {
         val presenter: FindInPagePresenter = mock()
