@@ -4,6 +4,7 @@
 
 package mozilla.components.ui.tabcounter
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.tabcounter.TabCounter.Companion.DEFAULT_TABS_COUNTER_TEXT
 import mozilla.components.ui.tabcounter.TabCounter.Companion.ONE_DIGIT_SIZE_RATIO
@@ -12,9 +13,8 @@ import mozilla.components.ui.tabcounter.TabCounter.Companion.TWO_DIGITS_SIZE_RAT
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class TabCounterTest {
 
     @Test
