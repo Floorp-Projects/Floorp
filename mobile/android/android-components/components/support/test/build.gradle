@@ -28,12 +28,14 @@ android {
 
         lintConfig file("lint.xml")
     }
+
+    testOptions.unitTests.includeAndroidResources = true
 }
 
 dependencies {
     implementation Dependencies.kotlin_stdlib
 
-    implementation Dependencies.testing_junit
+    implementation Dependencies.androidx_test_junit
     implementation Dependencies.testing_mockito
     implementation (Dependencies.testing_robolectric) {
         exclude group: 'org.apache.maven'
@@ -43,6 +45,7 @@ dependencies {
     implementation Dependencies.androidx_test_core
 
     testImplementation Dependencies.androidx_core
+    testImplementation Dependencies.androidx_test_junit
     testImplementation project(':support-ktx')
 }
 
