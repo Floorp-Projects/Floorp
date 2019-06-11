@@ -5,6 +5,7 @@
 package mozilla.components.service.pocket.helpers
 
 import mozilla.components.concept.fetch.Response
+import mozilla.components.support.test.mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 
@@ -12,6 +13,7 @@ import org.mockito.Mockito.mock
  * A collection of helper functions to generate mock [Response]s.
  */
 object MockResponses {
+
     fun getError(): Response = getMockResponse(404)
 
     fun getSuccess(): Response = getMockResponse(200).also {
@@ -22,7 +24,7 @@ object MockResponses {
         `when`(it.body).thenReturn(body)
     }
 
-    fun getMockResponse(status: Int): Response = mock(Response::class.java).also {
+    fun getMockResponse(status: Int): Response = mock<Response>().also {
         `when`(it.status).thenReturn(status)
     }
 }

@@ -5,15 +5,15 @@
 package mozilla.components.service.pocket
 
 import android.net.Uri
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
 private const val TEST_KEY = "pocketAPIKey"
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class PocketURLsTest {
 
     private lateinit var urls: PocketURLs

@@ -9,12 +9,12 @@ import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -38,7 +38,7 @@ class ConceptFetchKtTest {
         failureResponse = spy(Response(TEST_URL, 404, MutableHeaders(), failureResponseBody))
         testRequest = Request(TEST_URL)
 
-        client = mock(Client::class.java).also {
+        client = mock<Client>().also {
             `when`(it.fetch(any())).thenReturn(defaultResponse)
         }
     }

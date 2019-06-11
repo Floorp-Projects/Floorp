@@ -4,6 +4,7 @@
 
 package mozilla.components.service.pocket
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
 import mozilla.components.concept.fetch.Headers.Names.USER_AGENT
@@ -17,6 +18,7 @@ import mozilla.components.service.pocket.helpers.assertResponseIsClosed
 import mozilla.components.service.pocket.helpers.assertSuccessfulRequestReturnsResponseBody
 import mozilla.components.support.ktx.kotlin.toUri
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -24,8 +26,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
-import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 import java.net.URLEncoder
 
@@ -34,7 +34,7 @@ private const val EXPECTED_ACCESS_TOKEN = "12345" // Amazing, that's the same co
 
 private val TEST_URL = "https://mozilla.org".toUri()
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class PocketListenEndpointRawTest {
 
     private lateinit var subject: PocketListenEndpointRaw
@@ -49,8 +49,8 @@ class PocketListenEndpointRawTest {
         errorResponse = MockResponses.getError()
         successResponse = MockResponses.getSuccess()
 
-        client = mock(Client::class.java)
-        urls = mock(PocketListenURLs::class.java).also {
+        client = mock()
+        urls = mock<PocketListenURLs>().also {
             `when`(it.articleService).thenReturn(TEST_URL)
         }
 

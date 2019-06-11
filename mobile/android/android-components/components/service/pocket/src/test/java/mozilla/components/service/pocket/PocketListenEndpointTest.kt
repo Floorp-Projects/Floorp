@@ -4,6 +4,7 @@
 
 package mozilla.components.service.pocket
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.pocket.data.PocketListenArticleMetadata
@@ -11,6 +12,7 @@ import mozilla.components.service.pocket.helpers.PocketTestResource
 import mozilla.components.service.pocket.helpers.assertResponseIsFailure
 import mozilla.components.service.pocket.net.PocketResponse
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
@@ -20,15 +22,13 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
 private const val VALID_ACCESS_TOKEN = "accessToken"
 private const val VALID_USER_AGENT = "userAgent"
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class PocketListenEndpointTest {
 
     private lateinit var subject: PocketListenEndpoint
@@ -39,12 +39,12 @@ class PocketListenEndpointTest {
 
     @Before
     fun setUp() {
-        raw = mock(PocketListenEndpointRaw::class.java)
-        jsonParser = mock(PocketListenJSONParser::class.java)
+        raw = mock()
+        jsonParser = mock()
 
         subject = PocketListenEndpoint(raw, jsonParser)
 
-        client = mock(Client::class.java)
+        client = mock()
     }
 
     @Test

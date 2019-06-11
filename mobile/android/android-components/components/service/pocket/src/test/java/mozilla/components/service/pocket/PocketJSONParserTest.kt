@@ -4,6 +4,7 @@
 
 package mozilla.components.service.pocket
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.service.pocket.PocketJSONParser.Companion.KEY_VIDEO_RECOMMENDATIONS_INNER
 import mozilla.components.service.pocket.data.PocketGlobalVideoRecommendation
 import mozilla.components.service.pocket.helpers.PocketTestResource
@@ -14,7 +15,6 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
 private const val TEST_DATA_SIZE = 20
 
@@ -26,7 +26,7 @@ private val TEST_AUTHOR = PocketGlobalVideoRecommendation.Author(
     url = "https://www.nytimes.com/"
 )
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class PocketJSONParserTest {
 
     private lateinit var parser: PocketJSONParser

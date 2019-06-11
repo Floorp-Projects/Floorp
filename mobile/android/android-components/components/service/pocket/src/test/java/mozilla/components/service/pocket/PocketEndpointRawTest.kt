@@ -4,23 +4,23 @@
 
 package mozilla.components.service.pocket
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Names.USER_AGENT
 import mozilla.components.concept.fetch.Response
 import mozilla.components.service.pocket.helpers.MockResponses
 import mozilla.components.service.pocket.helpers.assertRequestParams
-import mozilla.components.service.pocket.helpers.assertSuccessfulRequestReturnsResponseBody
 import mozilla.components.service.pocket.helpers.assertResponseIsClosed
+import mozilla.components.service.pocket.helpers.assertSuccessfulRequestReturnsResponseBody
 import mozilla.components.support.ktx.kotlin.toUri
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
-import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 
 private const val VALID_API_KEY = "apiKey"
@@ -31,7 +31,7 @@ private val TEST_URL = "https://mozilla.org".toUri()
 // From Firefox for Fire TV
 private const val TEST_USER_AGENT = "Mozilla/5.0 (Linux; Android 7.1.2) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/3.0 Chrome/59.0.3017.125 Safari/537.36"
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class PocketEndpointRawTest {
 
     private lateinit var endpoint: PocketEndpointRaw
@@ -48,11 +48,11 @@ class PocketEndpointRawTest {
         successResponse = MockResponses.getSuccess()
         defaultResponse = errorResponse
 
-        client = mock(Client::class.java).also {
+        client = mock<Client>().also {
             `when`(it.fetch(any())).thenReturn(defaultResponse)
         }
 
-        urls = mock(PocketURLs::class.java).also {
+        urls = mock<PocketURLs>().also {
             `when`(it.globalVideoRecs).thenReturn(TEST_URL)
         }
         endpoint = PocketEndpointRaw(client, urls, TEST_USER_AGENT)

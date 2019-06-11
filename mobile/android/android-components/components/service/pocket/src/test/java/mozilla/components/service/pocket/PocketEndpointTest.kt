@@ -4,27 +4,27 @@
 
 package mozilla.components.service.pocket
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.pocket.helpers.PocketTestResource
 import mozilla.components.service.pocket.helpers.assertResponseIsFailure
 import mozilla.components.service.pocket.net.PocketResponse
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
 private const val VALID_API_KEY = "apiKey"
 private const val VALID_USER_AGENT = "userAgent"
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class PocketEndpointTest {
 
     private lateinit var endpoint: PocketEndpoint
@@ -35,11 +35,11 @@ class PocketEndpointTest {
 
     @Before
     fun setUp() {
-        raw = mock(PocketEndpointRaw::class.java)
-        jsonParser = mock(PocketJSONParser::class.java)
+        raw = mock()
+        jsonParser = mock()
         endpoint = PocketEndpoint(raw, jsonParser)
 
-        client = mock(Client::class.java)
+        client = mock()
     }
 
     @Test
