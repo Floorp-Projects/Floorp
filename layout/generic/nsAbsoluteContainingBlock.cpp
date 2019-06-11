@@ -236,20 +236,8 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
                                                         bool aCBHeightChanged) {
   const nsStylePosition* pos = f->StylePosition();
   // See if f's position might have changed because it depends on a
-  // placeholder's position
-  // This can happen in the following cases:
-  // 1) Vertical positioning.  "top" must be auto and "bottom" must be auto
-  //    (otherwise the vertical position is completely determined by
-  //    whichever of them is not auto and the height).
-  // 2) Horizontal positioning.  "left" must be auto and "right" must be auto
-  //    (otherwise the horizontal position is completely determined by
-  //    whichever of them is not auto and the width).
-  // See ReflowInput::InitAbsoluteConstraints -- these are the
-  // only cases when we call CalculateHypotheticalBox().
-  if ((pos->mOffset.Get(eSideTop).IsAuto() &&
-       pos->mOffset.Get(eSideBottom).IsAuto()) ||
-      (pos->mOffset.Get(eSideLeft).IsAuto() &&
-       pos->mOffset.Get(eSideRight).IsAuto())) {
+  // placeholder's position.
+  if (pos->NeedsHypotheticalPositionIfAbsPos()) {
     return true;
   }
   if (!aCBWidthChanged && !aCBHeightChanged) {

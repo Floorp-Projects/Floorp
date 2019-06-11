@@ -1079,6 +1079,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
       const nsStylePosition& aNewData,
       const nsStyleVisibility& aOldStyleVisibility) const;
 
+  // Returns whether we need to compute an hypothetical position if we were
+  // absolutely positioned.
+  bool NeedsHypotheticalPositionIfAbsPos() const {
+    return (mOffset.Get(mozilla::eSideRight).IsAuto() &&
+            mOffset.Get(mozilla::eSideLeft).IsAuto()) ||
+           (mOffset.Get(mozilla::eSideTop).IsAuto() &&
+            mOffset.Get(mozilla::eSideBottom).IsAuto());
+  }
+
   /**
    * Return the used value for 'align-self' given our parent ComputedStyle
    * aParent (or null for the root).
@@ -1550,7 +1559,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   void TriggerImageLoads(mozilla::dom::Document&, const nsStyleDisplay*);
   const static bool kHasTriggerImageLoads = true;
 
-  nsChangeHint CalcDifference(const nsStyleDisplay& aNewData) const;
+  nsChangeHint CalcDifference(const nsStyleDisplay& aNewData,
+                              const nsStylePosition& aOldPosition) const;
 
   mozilla::StyleUrlOrNone mBinding;
   nsStyleAutoArray<mozilla::StyleTransition> mTransitions;

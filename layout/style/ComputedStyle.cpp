@@ -107,7 +107,7 @@ nsChangeHint ComputedStyle::CalcStyleDifference(const ComputedStyle& aNewStyle,
   // FIXME: The order of these DO_STRUCT_DIFFERENCE calls is no longer
   // significant.  With a small amount of effort, we could replace them with a
   // #include "nsStyleStructList.h".
-  DO_STRUCT_DIFFERENCE(Display);
+  DO_STRUCT_DIFFERENCE_WITH_ARGS(Display, (, *StylePosition()));
   DO_STRUCT_DIFFERENCE(XUL);
   DO_STRUCT_DIFFERENCE(Column);
   DO_STRUCT_DIFFERENCE(Content);
