@@ -2755,9 +2755,9 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
       return nullptr;
     }
 
-    // This loop ignored any non-element nodes before first element node.
-    // Its purpose must be that this method allow to this case as selecting
-    // an element:
+    // This loop ignors any non-element nodes before first element node.
+    // Its purpose must be that this method treats this case as selecting
+    // the <b> element:
     // - <p>abc <b>d[ef</b>}</p>
     // because children of an element node is listed up before the element.
     // However, this case must not be expected by the initial developer:
@@ -2778,6 +2778,16 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
     lastElementInRange = Element::FromNodeOrNull(lastNodeInRange);
     if (!lastElementInRange) {
       continue;
+    }
+
+    // And also, if it's followed by a <br> element, we shouldn't treat the
+    // the element is selected like this case:
+    // - <p><b>[def</b>}<br></p>
+    // Note that we don't need special handling for <a href> because double
+    // clicking it selects the element and we use the first path to handle it.
+    if (lastElementInRange->GetNextSibling() &&
+        lastElementInRange->GetNextSibling()->IsHTMLElement(nsGkAtoms::br)) {
+      return nullptr;
     }
 
     if (!aTagName) {
