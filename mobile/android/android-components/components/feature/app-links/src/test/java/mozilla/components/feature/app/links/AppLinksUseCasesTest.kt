@@ -67,9 +67,9 @@ class AppLinksUseCasesTest {
         val context = createContext(appUrl to appPackage)
         val subject = AppLinksUseCases(context, emptySet())
 
-        // We will redirect to it when we click on it.
+        // We will not redirect to it when we click on it.
         val redirect = subject.interceptedAppLinkRedirect.invoke(appUrl)
-        assertTrue(redirect.isRedirect())
+        assertFalse(redirect.isRedirect())
 
         // But we do from a context menu.
         val menuRedirect = subject.appLinkRedirect.invoke(appUrl)

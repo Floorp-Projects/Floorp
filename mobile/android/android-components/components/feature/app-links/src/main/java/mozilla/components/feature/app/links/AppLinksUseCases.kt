@@ -64,9 +64,17 @@ class AppLinksUseCases(
      * If that app is not available, then a market place intent is also provided.
      *
      * It will also provide a fallback.
+     *
+     * @param includeHttpAppLinks If {true} then test URLs that start with {http} and {https}.
+     * @param ignoreDefaultBrowser If {true} then do not offer an app link if the user has
+     * selected this browser as default previously. This is only applicable if {includeHttpAppLinks}
+     * is true.
+     * @param includeInstallAppFallback If {true} then offer an app-link to the installed market app
+     * if no web fallback is available.
      */
     inner class GetAppLinkRedirect internal constructor(
         private val includeHttpAppLinks: Boolean = false,
+        private val ignoreDefaultBrowser: Boolean = false,
         private val includeInstallAppFallback: Boolean = false
     ) {
         fun invoke(url: String): AppLinkRedirect {
@@ -75,7 +83,8 @@ class AppLinksUseCases(
                 intents.firstOrNull { getNonBrowserActivities(it).isNotEmpty() }
                     ?.let {
                         // The user may have decided to keep opening this type of link in this browser.
-                        if (findDefaultActivity(it)?.activityInfo?.packageName == context.packageName) {
+                        if (ignoreDefaultBrowser &&
+                            findDefaultActivity(it)?.activityInfo?.packageName == context.packageName) {
                             // in which case, this isn't an app intent anymore.
                             null
                         } else {
@@ -153,13 +162,14 @@ class AppLinksUseCases(
     val openAppLink: OpenAppLinkRedirect by lazy { OpenAppLinkRedirect(context) }
     val interceptedAppLinkRedirect: GetAppLinkRedirect by lazy {
         GetAppLinkRedirect(
-            includeHttpAppLinks = true,
+            includeHttpAppLinks = false,
             includeInstallAppFallback = false
         )
     }
     val appLinkRedirect: GetAppLinkRedirect by lazy {
         GetAppLinkRedirect(
             includeHttpAppLinks = true,
+            ignoreDefaultBrowser = false,
             includeInstallAppFallback = false
         )
     }
