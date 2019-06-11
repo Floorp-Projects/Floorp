@@ -2343,9 +2343,9 @@ void nsHttpConnectionMgr::OnMsgShutdownConfirm(int32_t priority,
 
 void nsHttpConnectionMgr::OnMsgNewTransaction(int32_t priority,
                                               ARefBase* param) {
-  LOG(("nsHttpConnectionMgr::OnMsgNewTransaction [trans=%p]\n", param));
-
   nsHttpTransaction* trans = static_cast<nsHttpTransaction*>(param);
+
+  LOG(("nsHttpConnectionMgr::OnMsgNewTransaction [trans=%p]\n", trans));
   trans->SetPriority(priority);
   nsresult rv = ProcessNewTransaction(trans);
   if (NS_FAILED(rv)) trans->Close(rv);  // for whatever its worth
