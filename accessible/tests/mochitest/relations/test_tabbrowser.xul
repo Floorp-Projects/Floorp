@@ -46,7 +46,7 @@
         ////////////////////////////////////////////////////////////////////////
         // 'labelled by'/'label for' relations for xul:tab and xul:tabpanel
 
-        var tabs = Array.from(tabBrowser().tabContainer.children);
+        var tabs = Array.from(tabBrowser().tabContainer.allTabs);
         // For preloaded tabs, there might be items in this array where this relation
         // doesn't hold, so just deal with that:
         var panels = tabs.map(t => t.linkedBrowser.closest("tabpanels > *"));

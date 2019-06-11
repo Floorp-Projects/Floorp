@@ -487,8 +487,8 @@ _ContextualIdentityService.prototype = {
       }
 
       let tabbrowser = win.gBrowser;
-      for (let i = tabbrowser.tabContainer.children.length - 1; i >= 0; --i) {
-        let tab = tabbrowser.tabContainer.children[i];
+      for (let i = tabbrowser.tabs.length - 1; i >= 0; --i) {
+        let tab = tabbrowser.tabs[i];
         if (tab.hasAttribute("usercontextid") &&
                   (!userContextId ||
                    parseInt(tab.getAttribute("usercontextid"), 10) == userContextId)) {
