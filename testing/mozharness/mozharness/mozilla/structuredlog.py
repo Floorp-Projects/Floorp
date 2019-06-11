@@ -143,10 +143,12 @@ class StructuredOutputParser(OutputParser):
         RunSummary = namedtuple("RunSummary",
                                 ("unexpected_statuses",
                                  "expected_statuses",
+                                 "known_intermittent_statuses",
                                  "log_level_counts",
                                  "action_counts"))
         if previous_summary == {}:
             previous_summary = RunSummary(defaultdict(int),
+                                          defaultdict(int),
                                           defaultdict(int),
                                           defaultdict(int),
                                           defaultdict(int))
@@ -165,6 +167,9 @@ class StructuredOutputParser(OutputParser):
                                                        summary.unexpected_statuses),
                                  self._subtract_tuples(previous_summary.expected_statuses,
                                                        summary.expected_statuses),
+                                 self._subtract_tuples(
+                                    previous_summary.known_intermittent_statuses,
+                                    summary.known_intermittent_statuses),
                                  self._subtract_tuples(previous_summary.log_level_counts,
                                                        summary.log_level_counts),
                                  summary.action_counts)
