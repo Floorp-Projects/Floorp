@@ -8,7 +8,7 @@
 #include "base/thread.h"
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/StaticPrefs.h"
-#include "VideoDecoderChild.h"
+#include "RemoteVideoDecoder.h"
 #include "RemoteDecoderManagerChild.h"
 
 #include "RemoteMediaDataDecoder.h"
@@ -50,7 +50,7 @@ already_AddRefed<MediaDataDecoder> GpuDecoderModule::CreateVideoDecoder(
     return mWrapped->CreateVideoDecoder(aParams);
   }
 
-  RefPtr<VideoDecoderChild> child = new VideoDecoderChild();
+  RefPtr<GpuRemoteVideoDecoderChild> child = new GpuRemoteVideoDecoderChild();
   SynchronousTask task("InitIPDL");
   MediaResult result(NS_OK);
   RemoteDecoderManagerChild::GetManagerThread()->Dispatch(

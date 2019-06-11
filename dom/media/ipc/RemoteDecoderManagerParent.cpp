@@ -11,7 +11,6 @@
 
 #include "RemoteAudioDecoder.h"
 #include "RemoteVideoDecoder.h"
-#include "VideoDecoderParent.h"
 #include "VideoUtils.h"  // for MediaThreadType
 
 #include "ImageContainer.h"
@@ -190,11 +189,18 @@ void RemoteDecoderManagerParent::ActorDestroy(
 
 PRemoteDecoderParent* RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
     const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
-    const CreateDecoderParams::OptionSet& aOptions, bool* aSuccess,
+    const CreateDecoderParams::OptionSet& aOptions,
+    const layers::TextureFactoryIdentifier& aIdentifier, bool* aSuccess,
+    nsCString* aBlacklistedD3D11Driver, nsCString* aBlacklistedD3D9Driver,
     nsCString* aErrorDescription) {
   RefPtr<TaskQueue> decodeTaskQueue =
       new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
                     "RemoteVideoDecoderParent::mDecodeTaskQueue");
+
+#ifdef XP_WIN
+  *aBlacklistedD3D11Driver = GetFoundD3D11BlacklistedDLL();
+  *aBlacklistedD3D9Driver = GetFoundD3D9BlacklistedDLL();
+#endif  // XP_WIN
 
   if (aRemoteDecoderInfo.type() ==
       RemoteDecoderInfoIPDL::TVideoDecoderInfoIPDL) {
@@ -202,7 +208,7 @@ PRemoteDecoderParent* RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
         aRemoteDecoderInfo.get_VideoDecoderInfoIPDL();
     return new RemoteVideoDecoderParent(
         this, decoderInfo.videoInfo(), decoderInfo.framerate(), aOptions,
-        sRemoteDecoderManagerTaskQueue, decodeTaskQueue, aSuccess,
+        aIdentifier, sRemoteDecoderManagerTaskQueue, decodeTaskQueue, aSuccess,
         aErrorDescription);
   } else if (aRemoteDecoderInfo.type() == RemoteDecoderInfoIPDL::TAudioInfo) {
     return new RemoteAudioDecoderParent(
@@ -218,36 +224,6 @@ PRemoteDecoderParent* RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
 bool RemoteDecoderManagerParent::DeallocPRemoteDecoderParent(
     PRemoteDecoderParent* actor) {
   RemoteDecoderParent* parent = static_cast<RemoteDecoderParent*>(actor);
-  parent->Destroy();
-  return true;
-}
-
-PVideoDecoderParent* RemoteDecoderManagerParent::AllocPVideoDecoderParent(
-    const VideoInfo& aVideoInfo, const float& aFramerate,
-    const CreateDecoderParams::OptionSet& aOptions,
-    const layers::TextureFactoryIdentifier& aIdentifier, bool* aSuccess,
-    nsCString* aBlacklistedD3D11Driver, nsCString* aBlacklistedD3D9Driver,
-    nsCString* aErrorDescription) {
-  RefPtr<TaskQueue> decodeTaskQueue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                    "VideoDecoderParent::mDecodeTaskQueue");
-
-  auto* parent =
-      new VideoDecoderParent(this, aVideoInfo, aFramerate, aOptions,
-                             aIdentifier, sRemoteDecoderManagerTaskQueue,
-                             decodeTaskQueue, aSuccess, aErrorDescription);
-
-#ifdef XP_WIN
-  *aBlacklistedD3D11Driver = GetFoundD3D11BlacklistedDLL();
-  *aBlacklistedD3D9Driver = GetFoundD3D9BlacklistedDLL();
-#endif  // XP_WIN
-
-  return parent;
-}
-
-bool RemoteDecoderManagerParent::DeallocPVideoDecoderParent(
-    PVideoDecoderParent* actor) {
-  VideoDecoderParent* parent = static_cast<VideoDecoderParent*>(actor);
   parent->Destroy();
   return true;
 }
