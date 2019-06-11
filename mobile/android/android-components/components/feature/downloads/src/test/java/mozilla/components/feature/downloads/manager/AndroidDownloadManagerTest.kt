@@ -9,6 +9,7 @@ import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
 import android.app.DownloadManager.Request
 import android.content.Intent
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Download
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
@@ -21,9 +22,8 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class AndroidDownloadManagerTest {
 
     private lateinit var download: Download

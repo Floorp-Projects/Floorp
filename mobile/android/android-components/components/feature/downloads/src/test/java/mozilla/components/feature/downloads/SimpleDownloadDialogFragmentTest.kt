@@ -8,17 +8,17 @@ import android.app.Application
 import android.content.DialogInterface.BUTTON_POSITIVE
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.FragmentManager
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Download
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
 class SimpleDownloadDialogFragmentTest {
 
@@ -28,7 +28,7 @@ class SimpleDownloadDialogFragmentTest {
 
     @Before
     fun setup() {
-        mockFragmentManager = mock(FragmentManager::class.java)
+        mockFragmentManager = mock()
         download = Download(
             "http://ipv4.download.thinkbroadband.com/5MB.zip",
             "5MB.zip", "application/zip", 5242880,
