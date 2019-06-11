@@ -23,7 +23,7 @@
 // unlinking them they will self-destruct (since a garbage cycle is
 // only keeping itself alive with internal links, by definition).
 //
-// Snow-white is an addition to the original algorithm. Snow-white object
+// Snow-white is an addition to the original algorithm. A snow-white node
 // has reference count zero and is just waiting for deletion.
 //
 // Grey nodes are being scanned. Nodes that turn grey will turn
@@ -521,9 +521,9 @@ enum NodeColor { black, white, grey };
 // This structure should be kept as small as possible; we may expect
 // hundreds of thousands of them to be allocated and touched
 // repeatedly during each cycle collection.
-
 class PtrInfo final {
  public:
+  // mParticipant knows a more concrete type.
   void* mPointer;
   nsCycleCollectionParticipant* mParticipant;
   uint32_t mColor : 2;
@@ -1010,7 +1010,7 @@ struct nsPurpleBuffer {
   // (1) if !aAsyncSnowWhiteFreeing and nsPurpleBufferEntry::mRefCnt is 0 or
   // (2) if nsXPCOMCycleCollectionParticipant::CanSkip() for the obj or
   // (3) if nsPurpleBufferEntry::mRefCnt->IsPurple() is false.
-  // (4) If removeChildlessNodes is true, then any nodes in the purple buffer
+  // (4) If aRemoveChildlessNodes is true, then any nodes in the purple buffer
   //     that will have no children in the cycle collector graph will also be
   //     removed. CanSkip() may be run on these children.
   void RemoveSkippable(nsCycleCollector* aCollector, js::SliceBudget& aBudget,
