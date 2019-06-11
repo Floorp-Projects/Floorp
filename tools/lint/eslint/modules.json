@@ -18,8 +18,6 @@
   "async.js": ["Async"],
   "AsyncSpellCheckTestHelper.jsm": ["onSpellCheck"],
   "base-loader.js": ["Loader", "resolveURI", "Module", "Require", "unload"],
-  "blocklist-clients.js": ["BlocklistClients"],
-  "blocklist-updater.js": ["checkVersions", "addTestBlocklistClient"],
   "bogus_element_type.jsm": [],
   "bookmarks.js": ["BookmarksEngine", "PlacesItem", "Bookmark", "BookmarkFolder", "BookmarkQuery", "Livemark", "BookmarkSeparator", "BufferedBookmarksEngine"],
   "bookmarks.jsm": ["PlacesItem", "Bookmark", "Separator", "Livemark", "BookmarkFolder", "DumpBookmarks"],
