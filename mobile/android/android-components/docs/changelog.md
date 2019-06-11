@@ -16,6 +16,19 @@ permalink: /changelog/
   * Added `endOfMenuAlwaysVisible` property/parameter to `BrowserMenuBuilder` constructor and to `BrowserMenu.show` function.
     When is set to true makes sure the bottom of the menu is always visible, this allows use cases like [#3211](https://github.com/mozilla-mobile/android-components/issues/3211).
 
+# 0.56.1
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.56.0...v0.56.1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.56.1/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.56.1/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.56.1/buildSrc/src/main/java/Config.kt)
+
+* **service-firefox-accounts**
+  * `FxaAccountManager` will is now able to complete re-authentication flow after encountering an auth problem (e.g. password change)
+  * `FxaAccountManager` will now attempt to automatically recover from a certain class of temporary auth problems.
+  * `FirefoxAccount` grew a new method: `checkAuthorizationStatusAsync`, used to facilitate above flows.
+  * It is no longer necessary to pass in the "profile" scope to `FxaAccountManager`, as it will always obtain it regardless. Specifying that scope has no effect.
+  * ⚠️ **This is a breaking change**: `FirefoxAccount` methods that used to take `Array<String>` of scopes now take `Set<String>` of scopes.
+
 # 0.56.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.55.0...v0.56.0)
