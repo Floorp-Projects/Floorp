@@ -206,6 +206,7 @@ bool IsValidVideoRegion(const gfx::IntSize& aFrame,
 
 already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType) {
   const char* name;
+  uint32_t threads = 4;
   switch (aType) {
     case MediaThreadType::PLATFORM_DECODER:
       name = "MediaPDecoder";
@@ -216,6 +217,10 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType) {
     case MediaThreadType::WEBRTC_DECODER:
       name = "WebRTCPD";
       break;
+    case MediaThreadType::MDSM:
+      name = "MediaDecoderStateMachine";
+      threads = 1;
+      break;
     default:
       MOZ_FALLTHROUGH_ASSERT("Unexpected MediaThreadType");
     case MediaThreadType::PLAYBACK:
@@ -223,9 +228,8 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType) {
       break;
   }
 
-  static const uint32_t kMediaThreadPoolDefaultCount = 4;
-  RefPtr<SharedThreadPool> pool = SharedThreadPool::Get(
-      nsDependentCString(name), kMediaThreadPoolDefaultCount);
+  RefPtr<SharedThreadPool> pool =
+      SharedThreadPool::Get(nsDependentCString(name), threads);
 
   // Ensure a larger stack for platform decoder threads
   if (aType == MediaThreadType::PLATFORM_DECODER) {
