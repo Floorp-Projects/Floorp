@@ -7,13 +7,12 @@
 package mozilla.components.feature.customtabs
 
 import android.app.PendingIntent
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageButton
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
@@ -42,13 +41,9 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class CustomTabsToolbarFeatureTest {
-
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `start without sessionId invokes nothing`() {
@@ -183,7 +178,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.initialize(session)
 
-        val button = extractActionView(toolbar, context.getString(R.string.mozac_feature_customtabs_exit_button))
+        val button = extractActionView(toolbar, testContext.getString(R.string.mozac_feature_customtabs_exit_button))
         button?.performClick()
 
         assertTrue(closeClicked)
