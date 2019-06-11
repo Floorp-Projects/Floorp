@@ -1141,7 +1141,7 @@ BrowserPageActions.addSearchEngine = {
     }
     for (let engine of this.engines) {
       let button = document.createXULElement("toolbarbutton");
-      button.classList.add("subviewbutton", "subviewbutton-iconic", "badged-button");
+      button.classList.add("subviewbutton", "subviewbutton-iconic");
       button.setAttribute("label", engine.title);
       button.setAttribute("image", engine.icon);
       button.setAttribute("uri", engine.uri);

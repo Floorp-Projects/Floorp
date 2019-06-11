@@ -456,8 +456,8 @@ var PageActions = {
  *        URLs, like { 16: url16, 32: url32 }.  The best size for the user's
  *        screen will be used.
  * @param isBadged (bool, optional)
- *        If true, the toolbarbutton for this action will get the
- *        "badged-button" class.
+ *        If true, the toolbarbutton for this action will get a
+ *        "badged" attribute.
  * @param onBeforePlacedInWindow (function, optional)
  *        Called before the action is placed in the window:
  *        onBeforePlacedInWindow(window)
