@@ -20,6 +20,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    testOptions.unitTests.includeAndroidResources = true
 }
 
 
@@ -34,10 +36,10 @@ dependencies {
 
     testImplementation project(':browser-search')
     testImplementation project(':support-test')
-    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.androidx_browser
+    testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
-    testImplementation Dependencies.androidx_browser
     testImplementation Dependencies.kotlin_coroutines
 }
 
