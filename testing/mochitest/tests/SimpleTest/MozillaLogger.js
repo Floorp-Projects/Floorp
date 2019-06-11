@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* import-globals-from SpecialPowers.jsm */
-
 function formatLogMessage(msg) {
   return msg.info.join(" ") + "\n";
 }
@@ -22,38 +20,6 @@ class MozillaLogger {
   }
 
   close() {}
-}
-
-
-/**
- * SpecialPowersLogger, inherits from MozillaLogger and utilizes SpecialPowers.
- * intented to be used in content scripts to write to a file
- */
-class SpecialPowersLogger extends MozillaLogger {
-  constructor(aPath) {
-    super();
-
-    SpecialPowers.setLogFile(aPath);
-  }
-
-  get logCallback() {
-    return (msg) => {
-      var data = formatLogMessage(msg);
-      this.log(data);
-
-      if (data.includes("SimpleTest FINISH")) {
-        this.close();
-      }
-    };
-  }
-
-  log(msg) {
-    SpecialPowers.log(msg);
-  }
-
-  close() {
-    SpecialPowers.closeLogFile();
-  }
 }
 
 
@@ -110,5 +76,4 @@ class MozillaFileLogger extends MozillaLogger {
 }
 
 this.MozillaLogger = MozillaLogger;
-this.SpecialPowersLogger = SpecialPowersLogger;
 this.MozillaFileLogger = MozillaFileLogger;

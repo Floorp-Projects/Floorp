@@ -65,7 +65,6 @@ const whitelist = {
   ]),
   frameScripts: new Set([
     // Test related
-    "resource://specialpowers/MozillaLogger.js",
     "resource://specialpowers/specialpowersFrameScript.js",
     "chrome://mochikit/content/shutdown-leaks-collector.js",
     "chrome://mochikit/content/tests/SimpleTest/AsyncUtilsContent.js",
