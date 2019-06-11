@@ -2832,7 +2832,6 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mAppearance(StyleAppearance::None),
       mPosition(NS_STYLE_POSITION_STATIC),
       mFloat(StyleFloat::None),
-      mOriginalFloat(StyleFloat::None),
       mBreakType(StyleClear::None),
       mBreakInside(StyleBreakWithin::Auto),
       mBreakBefore(StyleBreakBetween::Auto),
@@ -2896,7 +2895,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mAppearance(aSource.mAppearance),
       mPosition(aSource.mPosition),
       mFloat(aSource.mFloat),
-      mOriginalFloat(aSource.mOriginalFloat),
       mBreakType(aSource.mBreakType),
       mBreakInside(aSource.mBreakInside),
       mBreakBefore(aSource.mBreakBefore),
@@ -3196,7 +3194,6 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   // properties, since some data did change in the style struct.
 
   if (!hint && (mOriginalDisplay != aNewData.mOriginalDisplay ||
-                mOriginalFloat != aNewData.mOriginalFloat ||
                 mTransitions != aNewData.mTransitions ||
                 mTransitionTimingFunctionCount !=
                     aNewData.mTransitionTimingFunctionCount ||
