@@ -1260,20 +1260,49 @@ enum class BinASTVariant: uint16_t {
                 .keys()
                 .sorted()
                 .into_iter()
-                .map(|name| format!("    F({enum_name}, \"{spec_name}\")",
+                .map(|name| format!("    F({enum_name}, \"{spec_name}\", {macro_name})",
                     enum_name = name.to_cpp_enum_case(),
-                    spec_name = name.to_str()))
+                    spec_name = name.to_str(),
+                    macro_name = name.to_cpp_macro_case()))
                 .format(" \\\n")));
 
         buffer.push_str("
 enum class BinASTStringEnum: uint16_t {
-#define EMIT_ENUM(name, _) name,
+#define EMIT_ENUM(NAME, _HUMAN_NAME, _MACRO_NAME) NAME,
     FOR_EACH_BIN_STRING_ENUM(EMIT_ENUM)
 #undef EMIT_ENUM
 };
 ");
         buffer.push_str(&format!("\n// The number of distinct values of BinASTStringEnum.\nconst size_t BINASTSTRINGENUM_LIMIT = {};\n\n\n",
             self.syntax.string_enums_by_name().len()));
+
+        for (name, enum_) in self.syntax.string_enums_by_name()
+            .iter()
+            .sorted_by_key(|kv| kv.0)
+            .into_iter()
+        {
+            let enum_name = name.to_str().to_class_cases();
+            let enum_macro_name = name.to_cpp_macro_case();
+            buffer.push_str(&format!("\n#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_{enum_macro_name}_BY_STRING_ORDER(F) \\\n {variants}\n",
+                enum_macro_name = enum_macro_name,
+                variants = enum_.strings()
+                    .iter()
+                    .sorted()
+                    .into_iter()
+                    .map(|variant_string| {
+                        format!("   F({enum_name}, {variant_name}, \"{variant_string}\")",
+                            enum_name = enum_name,
+                            variant_name = self.variants_by_symbol.get(variant_string).unwrap(),
+                            variant_string = variant_string
+                        )
+                    })
+                    .format("\\\n")
+            ));
+            buffer.push_str(&format!("\nconst size_t BIN_AST_STRING_ENUM_{enum_macro_name}_LIMIT = {len};\n\n\n",
+                enum_macro_name = enum_macro_name,
+                len = enum_.strings().len(),
+            ));
+        }
 
 
        buffer.push_str(&format!("
