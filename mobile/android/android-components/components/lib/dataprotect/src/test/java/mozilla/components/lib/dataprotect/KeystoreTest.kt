@@ -4,16 +4,16 @@
 
 package mozilla.components.lib.dataprotect
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import java.nio.charset.StandardCharsets
+import java.security.GeneralSecurityException
 import java.security.Key
 import java.security.KeyStore
-import java.security.GeneralSecurityException
 import java.security.SecureRandom
 import java.security.Security
 import javax.crypto.Cipher
@@ -42,8 +42,9 @@ internal class MockStoreWrapper : KeyStoreWrapper() {
     }
 }
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class KeystoreTest {
+
     private var wrapper = MockStoreWrapper()
     private var rng = SecureRandom()
 
