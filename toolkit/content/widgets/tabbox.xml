@@ -46,6 +46,12 @@
       ]]>
       </constructor>
 
+      <property name="allTabs">
+        <getter>
+          return this.children;
+        </getter>
+      </property>
+
       <!-- nsIDOMXULRelatedElement -->
       <method name="getRelatedElement">
         <parameter name="aTabElm"/>
@@ -269,6 +275,69 @@
         </body>
       </method>
 
+      <method name="findNextTab">
+        <parameter name="startTab"/>
+        <parameter name="opts"/>
+        <body>
+        <![CDATA[
+          /**
+           * Find an adjacent tab.
+           *
+           * startTab         A <tab> element to start searching from.
+           * opts.direction   1 to search forward, -1 to search backward.
+           * opts.wrap        If true, wrap around if the search reaches
+           *                  the end (or beginning) of the tab strip.
+           * opts.startWithAdjacent   If true (which is the default), start
+           *                          searching from the  next tab after
+           *                          (or before) startTab.  If false,
+           *                          startTab may be returned if it passes
+           *                          the filter.
+           * opts.filter      A function to select which tabs to return.
+           *
+           * returns the next <tab> element or, if none exists, null.
+           */
+          let {
+            direction = 1,
+            wrap = false,
+            startWithAdjacent = true,
+            filter = tab => true,
+          } = opts || {};
+
+          let tab = startTab;
+          if (!startWithAdjacent && filter(tab)) {
+            return tab;
+          }
+
+          let tabs = this.allTabs;
+          let i = tabs.indexOf(tab);
+          if (i < 0) {
+            return null;
+          }
+
+          while (true) {
+            i += direction;
+            if (wrap) {
+              if (i < 0) {
+                i = tabs.length - 1;
+              } else if (i >= tabs.length) {
+                i = 0;
+              }
+            } else if (i < 0 || i >= tabs.length) {
+              return null;
+            }
+
+            tab = tabs[i];
+            if (tab == startTab) {
+              return null;
+            }
+            if (filter(tab)) {
+              return tab;
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
       <method name="_selectNewTab">
         <parameter name="aNewTab"/>
         <parameter name="aFallbackDir"/>
@@ -277,15 +346,12 @@
         <![CDATA[
           this.ariaFocusedItem = null;
 
-          var requestedTab = aNewTab;
-          while (aNewTab.hidden || aNewTab.disabled || !this._canAdvanceToTab(aNewTab)) {
-            aNewTab = aFallbackDir == -1 ? aNewTab.previousElementSibling : aNewTab.nextElementSibling;
-            if (!aNewTab && aWrap)
-              aNewTab = aFallbackDir == -1 ? this.children[this.children.length - 1] :
-                                             this.children[0];
-            if (!aNewTab || aNewTab == requestedTab)
-              return;
-          }
+          aNewTab = this.findNextTab(aNewTab, {
+            direction: aFallbackDir,
+            wrap: aWrap,
+            startWithAdjacent: false,
+            filter: tab => !tab.hidden && !tab.disabled && this._canAdvanceToTab(tab),
+          });
 
           var isTabFocused = false;
           try {
@@ -332,14 +398,11 @@
         <body>
         <![CDATA[
           var startTab = this.ariaFocusedItem || this.selectedItem;
-          var next = startTab[(aDir == -1 ? "previous" : "next") + "ElementSibling"];
-          if (!next && aWrap) {
-            next = aDir == -1 ? this.children[this.children.length - 1] :
-                                this.children[0];
-          }
-          if (next && next != startTab) {
-            this._selectNewTab(next, aDir, aWrap);
-          }
+          let newTab = this.findNextTab(startTab, {
+            direction: aDir,
+            wrap: aWrap,
+          });
+          this._selectNewTab(newTab, aDir, aWrap);
         ]]>
         </body>
       </method>

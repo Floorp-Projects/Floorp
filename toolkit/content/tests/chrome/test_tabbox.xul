@@ -82,34 +82,34 @@ function test_tabbox()
   var tabs = document.getElementById("tabs");
   var tabpanels = document.getElementById("tabpanels");
 
-  test_tabbox_State(tabbox, "tabbox initial", 0, tabs.firstChild, tabpanels.firstChild);
+  test_tabbox_State(tabbox, "tabbox initial", 0, tabs.allTabs[0], tabpanels.firstChild);
 
   // check the selectedIndex property
   tabbox.selectedIndex = 1;
-  test_tabbox_State(tabbox, "tabbox selectedIndex 1", 1, tabs.lastChild, tabpanels.lastChild);
+  test_tabbox_State(tabbox, "tabbox selectedIndex 1", 1, tabs.allTabs[tabs.allTabs.length - 1], tabpanels.lastChild);
 
   tabbox.selectedIndex = 2;
-  test_tabbox_State(tabbox, "tabbox selectedIndex 2", 1, tabs.lastChild, tabpanels.lastChild);
+  test_tabbox_State(tabbox, "tabbox selectedIndex 2", 1, tabs.allTabs[tabs.allTabs.length - 1], tabpanels.lastChild);
 
   // tabbox must have a selection, so setting to -1 should do nothing
   tabbox.selectedIndex = -1;
-  test_tabbox_State(tabbox, "tabbox selectedIndex -1", 1, tabs.lastChild, tabpanels.lastChild);
+  test_tabbox_State(tabbox, "tabbox selectedIndex -1", 1, tabs.allTabs[tabs.allTabs.length - 1], tabpanels.lastChild);
 
   // check the selectedTab property
-  tabbox.selectedTab = tabs.firstChild;
-  test_tabbox_State(tabbox, "tabbox selected", 0, tabs.firstChild, tabpanels.firstChild);
+  tabbox.selectedTab = tabs.allTabs[0];
+  test_tabbox_State(tabbox, "tabbox selected", 0, tabs.allTabs[0], tabpanels.firstChild);
 
   // setting selectedTab to null should not do anything
   tabbox.selectedTab = null;
-  test_tabbox_State(tabbox, "tabbox selectedTab null", 0, tabs.firstChild, tabpanels.firstChild);
+  test_tabbox_State(tabbox, "tabbox selectedTab null", 0, tabs.allTabs[0], tabpanels.firstChild);
 
   // check the selectedPanel property
   tabbox.selectedPanel = tabpanels.lastChild;
-  test_tabbox_State(tabbox, "tabbox selectedPanel", 0, tabs.firstChild, tabpanels.lastChild);
+  test_tabbox_State(tabbox, "tabbox selectedPanel", 0, tabs.allTabs[0], tabpanels.lastChild);
 
   // setting selectedPanel to null should not do anything
   tabbox.selectedPanel = null;
-  test_tabbox_State(tabbox, "tabbox selectedPanel null", 0, tabs.firstChild, tabpanels.lastChild);
+  test_tabbox_State(tabbox, "tabbox selectedPanel null", 0, tabs.allTabs[0], tabpanels.lastChild);
 
   tabbox.selectedIndex = 0;
   test_tabpanels(tabpanels, tabbox);

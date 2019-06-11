@@ -233,7 +233,7 @@ class MozTabpanels extends MozXULElement {
     if (tabpanelIdx == -1)
       return null;
 
-    let tabElms = tabsElm.children;
+    let tabElms = tabsElm.allTabs;
     let tabElmFromIndex = tabElms[tabpanelIdx];
 
     let tabpanelId = aTabPanelElm.id;
@@ -324,7 +324,7 @@ MozElements.MozTab = class MozTab extends MozElements.BaseText {
 
     // Call this before setting the 'ignorefocus' attribute because this
     // will pass on focus if the formerly selected tab was focused as well.
-    this.parentNode._selectNewTab(this);
+    this.closest("tabs")._selectNewTab(this);
 
     var isTabFocused = false;
     try {
@@ -352,7 +352,7 @@ MozElements.MozTab = class MozTab extends MozElements.BaseText {
     switch (event.keyCode) {
       case KeyEvent.DOM_VK_LEFT: {
         let direction = window.getComputedStyle(this.parentNode).direction;
-        this.parentNode.advanceSelectedTab(direction == "ltr" ? -1 : 1,
+        this.container.advanceSelectedTab(direction == "ltr" ? -1 : 1,
                                            this.arrowKeysShouldWrap);
         event.preventDefault();
         break;
@@ -360,30 +360,30 @@ MozElements.MozTab = class MozTab extends MozElements.BaseText {
 
       case KeyEvent.DOM_VK_RIGHT: {
         let direction = window.getComputedStyle(this.parentNode).direction;
-        this.parentNode.advanceSelectedTab(direction == "ltr" ? 1 : -1,
+        this.container.advanceSelectedTab(direction == "ltr" ? 1 : -1,
                                            this.arrowKeysShouldWrap);
         event.preventDefault();
         break;
       }
 
       case KeyEvent.DOM_VK_UP:
-        this.parentNode.advanceSelectedTab(-1, this.arrowKeysShouldWrap);
+        this.container.advanceSelectedTab(-1, this.arrowKeysShouldWrap);
         event.preventDefault();
         break;
 
       case KeyEvent.DOM_VK_DOWN:
-        this.parentNode.advanceSelectedTab(1, this.arrowKeysShouldWrap);
+        this.container.advanceSelectedTab(1, this.arrowKeysShouldWrap);
         event.preventDefault();
         break;
 
       case KeyEvent.DOM_VK_HOME:
-        this.parentNode._selectNewTab(this.parentNode.children[0]);
+        this.container._selectNewTab(this.container.allTabs[0]);
         event.preventDefault();
         break;
 
       case KeyEvent.DOM_VK_END: {
-        let tabs = this.parentNode.children;
-        this.parentNode._selectNewTab(tabs[tabs.length - 1], -1);
+        let {allTabs} = this.container;
+        this.container._selectNewTab(allTabs[allTabs.length - 1], -1);
         event.preventDefault();
         break;
       }
