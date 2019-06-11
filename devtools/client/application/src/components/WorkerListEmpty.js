@@ -44,7 +44,7 @@ class WorkerListEmpty extends Component {
 
   render() {
     return article(
-      { className: "worker-list-empty" },
+      { className: "worker-list-empty js-worker-list-empty" },
       Localized({
         id: "serviceworker-empty-intro",
         a: a({ className: "external-link", onClick: () => this.openDocumentation() }),
