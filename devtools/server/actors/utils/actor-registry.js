@@ -234,11 +234,6 @@ const ActorRegistry = {
       constructor: "ChangesActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/network-monitor/websocket-actor", {
-      prefix: "webSocket",
-      constructor: "WebSocketActor",
-      type: { target: true },
-    });
   },
 
   /**
