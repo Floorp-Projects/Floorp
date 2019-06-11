@@ -15,15 +15,15 @@
     <!-- Accessible description for increasing the font size -->
     <string name="mozac_feature_readerview_font_size_increase_desc">放大字号</string>
     <!-- Color option for the background -->
-    <string name="mozac_feature_readerview_dark">暗色</string>
+    <string name="mozac_feature_readerview_dark">深邃</string>
     <!-- Accessible description for the color option -->
-    <string name="mozac_feature_readerview_dark_color_scheme_desc">暗色模式</string>
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">深邃模式</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_sephia">怀旧</string>
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_sepia_color_scheme_desc">怀旧模式</string>
     <!-- Color option for the background -->
-    <string name="mozac_feature_readerview_light">亮色</string>
+    <string name="mozac_feature_readerview_light">明亮</string>
     <!-- Accessible description for the color option -->
-    <string name="mozac_feature_readerview_light_color_scheme_desc">亮色模式</string>
+    <string name="mozac_feature_readerview_light_color_scheme_desc">明亮模式</string>
 </resources>
