@@ -7,21 +7,21 @@ package mozilla.components.ui.progress
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.mock
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ShiftDrawableTest {
 
     @Test
     fun draw() {
-        val canvas = mock(Canvas::class.java)
-        val wrappedDrawable = mock(Drawable::class.java)
+        val canvas = mock<Canvas>()
+        val wrappedDrawable = mock<Drawable>()
         val drawable = ShiftDrawable(wrappedDrawable)
 
         drawable.bounds = Rect(1, 2, 3, 4)
