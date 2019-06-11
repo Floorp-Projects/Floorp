@@ -475,11 +475,21 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   bool Paused() const { return mPaused; }
 
-  double DefaultPlaybackRate() const { return mDefaultPlaybackRate; }
+  double DefaultPlaybackRate() const {
+    if (mSrcAttrStream) {
+      return 1.0;
+    }
+    return mDefaultPlaybackRate;
+  }
 
   void SetDefaultPlaybackRate(double aDefaultPlaybackRate, ErrorResult& aRv);
 
-  double PlaybackRate() const { return mPlaybackRate; }
+  double PlaybackRate() const {
+    if (mSrcAttrStream) {
+      return 1.0;
+    }
+    return mPlaybackRate;
+  }
 
   void SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv);
 
