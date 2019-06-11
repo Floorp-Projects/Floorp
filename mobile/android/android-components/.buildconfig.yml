@@ -72,10 +72,6 @@ projects:
     path: components/feature/session
     description: 'Feature implementation connecting an engine implementation with the session module.'
     publish: true
-  feature-session-bundling:
-    path: components/feature/session-bundling
-    description: 'A session storage implementation that saves the state of sessions in grouped bundles (e.g. by time) in a database'
-    publish: true
   feature-sync:
     path: components/feature/sync
     description: 'Feature implementation that enables syncing of syncable components.'
