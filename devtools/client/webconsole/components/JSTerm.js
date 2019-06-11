@@ -923,7 +923,6 @@ class JSTerm extends Component {
           event.preventDefault();
         }
         this.clearCompletion();
-        event.preventDefault();
       }
 
       return;
