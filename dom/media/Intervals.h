@@ -609,7 +609,7 @@ class IntervalSet {
     for (auto& interval : mIntervals) {
       interval.SetFuzz(aFuzz);
     }
-    Normalize();
+    MergeOverlappingIntervals();
   }
 
   static const IndexType NoIndex = IndexType(-1);
@@ -653,27 +653,32 @@ class IntervalSet {
 
  private:
   void Normalize() {
-    if (mIntervals.Length() >= 2) {
-      ContainerType normalized;
-
-      mIntervals.Sort(CompareIntervals());
-
-      // This merges the intervals.
-      ElemType current(mIntervals[0]);
-      for (IndexType i = 1; i < mIntervals.Length(); i++) {
-        ElemType& interval = mIntervals[i];
-        if (current.Touches(interval)) {
-          current = current.Span(interval);
-        } else {
-          normalized.AppendElement(std::move(current));
-          current = std::move(interval);
-        }
-      }
-      normalized.AppendElement(std::move(current));
-
-      mIntervals.Clear();
-      mIntervals.AppendElements(std::move(normalized));
+    if (mIntervals.Length() < 2) {
+      return;
     }
+    mIntervals.Sort(CompareIntervals());
+    MergeOverlappingIntervals();
+  }
+
+  void MergeOverlappingIntervals() {
+    if (mIntervals.Length() < 2) {
+      return;
+    }
+
+    // This merges the intervals in place.
+    IndexType read = 0;
+    IndexType write = 0;
+    while (read < mIntervals.Length()) {
+      ElemType current(mIntervals[read]);
+      read++;
+      while (read < mIntervals.Length() && current.Touches(mIntervals[read])) {
+        current = current.Span(mIntervals[read]);
+        read++;
+      }
+      mIntervals[write] = current;
+      write++;
+    }
+    mIntervals.SetLength(write);
   }
 
   struct CompareIntervals {
