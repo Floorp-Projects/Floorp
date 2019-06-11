@@ -294,6 +294,11 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   BinASTSourceMetadata* takeMetadata();
   MOZ_MUST_USE JS::Result<Ok> initFromScriptSource(ScriptSource* scriptSource);
 
+ protected:
+  friend class HuffmanPreludeReader;
+
+  JSContext* cx_;
+
  public:
   // The following classes are used whenever we encounter a tuple/tagged
   // tuple/list to make sure that:
@@ -377,6 +382,149 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
     // Not implemented in this tokenizer.
     return Ok();
   }
+};
+
+// The format treats several distinct models as the same.
+//
+// We use `NormalizedInterfaceAndField` as a proxy for `BinASTInterfaceAndField`
+// to ensure that we always normalize into the canonical model.
+struct NormalizedInterfaceAndField {
+  const BinASTInterfaceAndField identity;
+  explicit NormalizedInterfaceAndField(BinASTInterfaceAndField identity)
+      : identity(identity == BinASTInterfaceAndField::
+                                 StaticMemberAssignmentTarget__Property
+                     ? BinASTInterfaceAndField::StaticMemberExpression__Property
+                     : identity) {}
+};
+
+// An entry in a Huffman table.
+template <typename T>
+struct HuffmanEntry {
+  HuffmanEntry(uint32_t bits, uint8_t bits_length, T&& value)
+      : bits(bits), bits_length(bits_length), value(value) {
+    MOZ_ASSERT(bits >> bits_len == 0);
+  }
+
+  // Together, `bits` and `bits_length` represent the prefix for this entry
+  // in the Huffman table.
+  //
+  // This entry matches a candidate `c` iff `c.bits_length == bits_length`
+  // and `c.bits << (32 - c.bits_len) == bits << (32 - bits_len)`.
+  //
+  // Invariant: the first `32 - bits_len` bits are always 0.
+  const uint32_t bits;
+  const uint8_t bits_length;
+  const T value;
+};
+
+const size_t HUFFMAN_TABLE_DEFAULT_INLINE_BUFFER_LENGTH = 8;
+
+template <typename T, int N = HUFFMAN_TABLE_DEFAULT_INLINE_BUFFER_LENGTH>
+class HuffmanTableImpl {
+ public:
+  explicit HuffmanTableImpl(JSContext* cx) : values(cx) {}
+  HuffmanTableImpl(HuffmanTableImpl&& other) noexcept
+      : values(std::move(other.values)) {}
+
+  JS::Result<Ok> initWithSingleValue(JSContext* cx, T&& value);
+
+  JS::Result<Ok> initBegin(JSContext* cx, size_t numberOfSymbols);
+  JS::Result<Ok> initSymbol(size_t index, T&& value);
+  JS::Result<Ok> initBitLength(size_t index, uint8_t bitLength);
+  JS::Result<Ok> initDone();
+
+  HuffmanTableImpl() = delete;
+  HuffmanTableImpl(HuffmanTableImpl&) = delete;
+
+ private:
+  // The entries in this Huffman table.
+  // Entries are always ranked by increasing bit_length, and within
+  // a bitlength by increasing value of `bits`. This lets us implement
+  // `HuffmanTableImpl::next()` in `O(number_of_bits)` worst case time.
+  Vector<HuffmanEntry<T>, N> values;
+  friend class HuffmanPreludeReader;
+};
+
+// An empty Huffman table. Attempting to get a value from this table is an
+// error. This is the default value for `HuffmanTable` and represents all states
+// that may not be reached.
+//
+// Part of variant `HuffmanTable`.
+struct HuffmanTableUnreachable {};
+
+// --- Explicit instantiations of `HuffmanTableImpl`.
+// These classes are all parts of variant `HuffmanTable`.
+
+struct HuffmanTableExplicitSymbolsF64 {
+  HuffmanTableImpl<double> impl;
+};
+
+struct HuffmanTableExplicitSymbolsU32 {
+  HuffmanTableImpl<uint32_t> impl;
+};
+
+struct HuffmanTableIndexedSymbolsTag {
+  HuffmanTableImpl<BinASTKind> impl;
+};
+
+struct HuffmanTableIndexedSymbolsBool {
+  HuffmanTableImpl<bool, 2> impl;
+  HuffmanTableIndexedSymbolsBool(JSContext* cx) : impl(cx) {}
+};
+
+struct HuffmanTableIndexedSymbolsStringEnum {
+  HuffmanTableImpl<uint8_t> impl;
+};
+
+struct HuffmanTableIndexedSymbolsLiteralString {
+  HuffmanTableImpl<uint16_t> impl;
+};
+
+struct HuffmanTableIndexedSymbolsOptionalLiteralString {
+  HuffmanTableImpl<uint16_t> impl;
+};
+
+// A single Huffman table.
+using HuffmanTable = mozilla::Variant<
+    HuffmanTableUnreachable,  // Default value.
+    HuffmanTableExplicitSymbolsF64, HuffmanTableExplicitSymbolsU32,
+    HuffmanTableIndexedSymbolsTag, HuffmanTableIndexedSymbolsBool,
+    HuffmanTableIndexedSymbolsStringEnum,
+    HuffmanTableIndexedSymbolsLiteralString,
+    HuffmanTableIndexedSymbolsOptionalLiteralString>;
+
+// A single Huffman table, specialized for list lengths.
+using HuffmanTable =
+    mozilla::Variant<HuffmanTableUnreachable,  // Default value.
+                     HuffmanTableExplicitSymbolsU32>;
+
+// A Huffman dictionary for the current file.
+//
+// A Huffman dictionary consists in a (contiguous) set of Huffman tables
+// to predict field values and a second (contiguous) set of Huffman tables
+// to predict list lengths.
+class HuffmanDictionary {
+ private:
+  // Huffman tables for `(Interface, Field)` pairs, used to decode the value of
+  // `Interface::Field`. Some tables may be `HuffmanTableUnreacheable`
+  // if they represent fields of interfaces that actually do not show up
+  // in the file.
+  //
+  // The mapping from `(Interface, Field) -> index` is extracted statically from
+  // the webidl specs.
+  Vector<HuffmanTable, BINAST_INTERFACE_AND_FIELD_LIMIT> fields;
+
+  // Huffman tables for list lengths. Some tables may be
+  // `HuffmanTableUnreacheable` if they represent lists that actually do not
+  // show up in the file.
+  //
+  // The mapping from `List -> index` is extracted statically from the webidl
+  // specs.
+  Vector<HuffmanTableListLength, BINAST_NUMBER_OF_LIST_TYPES> listLengths;
+
+ public:
+  HuffmanTable& tableForField(NormalizedInterfaceAndField index);
+  HuffmanTableListLength& tableForListLength(BinASTList list);
 };
 
 }  // namespace frontend
