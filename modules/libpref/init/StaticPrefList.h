@@ -2720,7 +2720,7 @@ VARCACHE_PREF(
   Live,
   "gfx.downloadable_fonts.sanitize_omt",
   gfx_downloadable_fonts_sanitize_omt,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
