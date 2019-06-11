@@ -10,6 +10,7 @@ import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.util.Size
 import androidx.fragment.app.FragmentActivity
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
@@ -19,6 +20,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -26,22 +28,18 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
-import org.mockito.ArgumentMatchers.anyString
-import java.lang.IllegalStateException
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class QrFragmentTest {
 
     @Test
     fun `initialize QR fragment`() {
-        val scanCompleteListener = mock(QrFragment.OnScanCompleteListener::class.java)
+        val scanCompleteListener = mock<QrFragment.OnScanCompleteListener>()
         val qrFragment = spy(QrFragment.newInstance(scanCompleteListener))
 
         qrFragment.scanCompleteListener?.onScanComplete("result")
@@ -50,7 +48,7 @@ class QrFragmentTest {
 
     @Test
     fun `onPause closes camera and stops background thread`() {
-        val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
+        val qrFragment = spy(QrFragment.newInstance(mock()))
         qrFragment.onPause()
 
         verify(qrFragment).stopBackgroundThread()
@@ -59,14 +57,14 @@ class QrFragmentTest {
 
     @Test
     fun `onResume opens camera and starts background thread`() {
-        val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
-        `when`(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+        whenever(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
 
         qrFragment.textureView = mock()
         qrFragment.onResume()
         verify(qrFragment, never()).openCamera(anyInt(), anyInt())
 
-        `when`(qrFragment.textureView.isAvailable).thenReturn(true)
+        whenever(qrFragment.textureView.isAvailable).thenReturn(true)
         qrFragment.cameraId = "mockCamera"
         qrFragment.onResume()
         verify(qrFragment, times(2)).startBackgroundThread()
@@ -75,9 +73,9 @@ class QrFragmentTest {
 
     @Test
     fun `onViewCreated sets initial state`() {
-        val qrFragment = QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java))
+        val qrFragment = QrFragment.newInstance(mock())
         val view: AutoFitTextureView = mock()
-        `when`(view.findViewById<AutoFitTextureView>(anyInt())).thenReturn(mock())
+        whenever(view.findViewById<AutoFitTextureView>(anyInt())).thenReturn(mock())
 
         qrFragment.onViewCreated(view, mock())
         assertEquals(QrFragment.STATE_FIND_QRCODE, QrFragment.qrState)
@@ -85,13 +83,13 @@ class QrFragmentTest {
 
     @Test
     fun `async scanning task invokes listener on successful qr scan`() {
-        val listener = mock(QrFragment.OnScanCompleteListener::class.java)
-        val reader = mock(MultiFormatReader::class.java)
+        val listener = mock<QrFragment.OnScanCompleteListener>()
+        val reader = mock<MultiFormatReader>()
         val task = QrFragment.AsyncScanningTask(listener, reader)
 
-        val bitmap = mock(BinaryBitmap::class.java)
+        val bitmap = mock<BinaryBitmap>()
         val result = com.google.zxing.Result("qrcode-result", ByteArray(0), emptyArray(), BarcodeFormat.ITF)
-        `when`(reader.decodeWithState(any())).thenReturn(result)
+        whenever(reader.decodeWithState(any())).thenReturn(result)
 
         QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
         task.processImage(bitmap)
@@ -102,12 +100,12 @@ class QrFragmentTest {
 
     @Test
     fun `async scanning task resets state on error`() {
-        val listener = mock(QrFragment.OnScanCompleteListener::class.java)
-        val reader = mock(MultiFormatReader::class.java)
+        val listener = mock<QrFragment.OnScanCompleteListener>()
+        val reader = mock<MultiFormatReader>()
         val task = QrFragment.AsyncScanningTask(listener, reader)
 
-        val bitmap = mock(BinaryBitmap::class.java)
-        `when`(reader.decodeWithState(any())).thenThrow(NotFoundException::class.java)
+        val bitmap = mock<BinaryBitmap>()
+        whenever(reader.decodeWithState(any())).thenThrow(NotFoundException::class.java)
 
         QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
         task.processImage(bitmap)
@@ -117,12 +115,12 @@ class QrFragmentTest {
 
     @Test
     fun `async scanning task does nothing if decoding not in progress`() {
-        val listener = mock(QrFragment.OnScanCompleteListener::class.java)
-        val reader = mock(MultiFormatReader::class.java)
+        val listener = mock<QrFragment.OnScanCompleteListener>()
+        val reader = mock<MultiFormatReader>()
         val task = QrFragment.AsyncScanningTask(listener, reader)
 
-        val bitmap = mock(BinaryBitmap::class.java)
-        `when`(reader.decodeWithState(any())).thenThrow(NotFoundException::class.java)
+        val bitmap = mock<BinaryBitmap>()
+        whenever(reader.decodeWithState(any())).thenThrow(NotFoundException::class.java)
 
         QrFragment.qrState = QrFragment.STATE_FIND_QRCODE
         assertNull(task.processImage(bitmap))
@@ -131,12 +129,12 @@ class QrFragmentTest {
 
     @Test
     fun `async scanning decodes original unmodified image`() {
-        val listener = mock(QrFragment.OnScanCompleteListener::class.java)
-        val reader = mock(MultiFormatReader::class.java)
+        val listener = mock<QrFragment.OnScanCompleteListener>()
+        val reader = mock<MultiFormatReader>()
         val task = QrFragment.AsyncScanningTask(listener, reader)
         val imageCaptor = argumentCaptor<BinaryBitmap>()
 
-        val bitmap = mock(BinaryBitmap::class.java)
+        val bitmap = mock<BinaryBitmap>()
 
         QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
         task.processImage(bitmap)
@@ -146,7 +144,7 @@ class QrFragmentTest {
 
     @Test
     fun `camera is closed on disconnect and error`() {
-        val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
+        val qrFragment = spy(QrFragment.newInstance(mock()))
 
         var camera: CameraDevice = mock()
         qrFragment.stateCallback.onDisconnected(camera)
@@ -159,14 +157,14 @@ class QrFragmentTest {
 
     @Test
     fun `catches and handles CameraAccessException when creating preview session`() {
-        val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
+        val qrFragment = spy(QrFragment.newInstance(mock()))
 
-        var camera: CameraDevice = mock()
-        `when`(camera.createCaptureRequest(anyInt())).thenThrow(CameraAccessException(123))
+        val camera: CameraDevice = mock()
+        whenever(camera.createCaptureRequest(anyInt())).thenThrow(CameraAccessException(123))
         qrFragment.cameraDevice = camera
 
         val textureView: AutoFitTextureView = mock()
-        `when`(textureView.surfaceTexture).thenReturn(mock())
+        whenever(textureView.surfaceTexture).thenReturn(mock())
         qrFragment.textureView = textureView
 
         qrFragment.previewSize = mock()
@@ -180,14 +178,14 @@ class QrFragmentTest {
 
     @Test
     fun `catches and handles IllegalStateException when creating preview session`() {
-        val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
+        val qrFragment = spy(QrFragment.newInstance(mock()))
 
-        var camera: CameraDevice = mock()
-        `when`(camera.createCaptureRequest(anyInt())).thenThrow(IllegalStateException("CameraDevice was already closed"))
+        val camera: CameraDevice = mock()
+        whenever(camera.createCaptureRequest(anyInt())).thenThrow(IllegalStateException("CameraDevice was already closed"))
         qrFragment.cameraDevice = camera
 
         val textureView: AutoFitTextureView = mock()
-        `when`(textureView.surfaceTexture).thenReturn(mock())
+        whenever(textureView.surfaceTexture).thenReturn(mock())
         qrFragment.textureView = textureView
 
         qrFragment.previewSize = mock()
@@ -201,16 +199,16 @@ class QrFragmentTest {
 
     @Test
     fun `catches and handles CameraAccessException when opening camera`() {
-        val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
-        `when`(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+        whenever(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
 
         val cameraManager: CameraManager = mock()
-        `when`(cameraManager.openCamera(anyString(), any<CameraDevice.StateCallback>(), any()))
+        whenever(cameraManager.openCamera(anyString(), any<CameraDevice.StateCallback>(), any()))
                 .thenThrow(CameraAccessException(123))
 
         val activity: FragmentActivity = mock()
-        `when`(activity.getSystemService(Context.CAMERA_SERVICE)).thenReturn(cameraManager)
-        `when`(qrFragment.activity).thenReturn(activity)
+        whenever(activity.getSystemService(Context.CAMERA_SERVICE)).thenReturn(cameraManager)
+        whenever(qrFragment.activity).thenReturn(activity)
         qrFragment.cameraId = "mockCamera"
 
         try {
@@ -222,13 +220,13 @@ class QrFragmentTest {
 
     @Test
     fun `throws exception on device without camera`() {
-        val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
-        `when`(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+        whenever(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
 
         val cameraManager: CameraManager = mock()
         val activity: FragmentActivity = mock()
-        `when`(activity.getSystemService(Context.CAMERA_SERVICE)).thenReturn(cameraManager)
-        `when`(qrFragment.activity).thenReturn(activity)
+        whenever(activity.getSystemService(Context.CAMERA_SERVICE)).thenReturn(cameraManager)
+        whenever(qrFragment.activity).thenReturn(activity)
 
         qrFragment.cameraId = null
         try {

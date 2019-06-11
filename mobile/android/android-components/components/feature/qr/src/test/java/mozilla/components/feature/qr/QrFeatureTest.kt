@@ -5,34 +5,30 @@
 package mozilla.components.feature.qr
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.qr.QrFeature.Companion.QR_FRAGMENT_TAG
 import mozilla.components.support.test.any
-import org.junit.Assert.assertTrue
-import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.grantPermission
+import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class QrFeatureTest {
-
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `feature requests permission if required`() {
@@ -40,7 +36,7 @@ class QrFeatureTest {
 
         var permissionRequested = false
 
-        val feature = QrFeature(context,
+        val feature = QrFeature(testContext,
             fragmentManager = fragmentManager,
             onNeedToRequestPermissions = { permissionRequested = true }
         )
@@ -54,7 +50,7 @@ class QrFeatureTest {
         val fragmentManager = mockFragmentManager()
         grantPermission(Manifest.permission.CAMERA)
 
-        val feature = QrFeature(context,
+        val feature = QrFeature(testContext,
             fragmentManager = fragmentManager,
             onNeedToRequestPermissions = { },
             onScanResult = { }
@@ -68,7 +64,7 @@ class QrFeatureTest {
     fun `onPermissionsResult displays scanner only if permission granted`() {
         val fragmentManager = mockFragmentManager()
 
-        val feature = QrFeature(context, fragmentManager = fragmentManager)
+        val feature = QrFeature(testContext, fragmentManager = fragmentManager)
 
         assertFalse(feature.scan())
 
@@ -84,7 +80,7 @@ class QrFeatureTest {
     fun `scan result is forwarded to caller`() {
         var scanResultReceived = ""
 
-        val feature = QrFeature(context,
+        val feature = QrFeature(testContext,
             fragmentManager = mockFragmentManager(),
             onScanResult = { result -> scanResultReceived = result }
         )
@@ -99,11 +95,11 @@ class QrFeatureTest {
     fun `qr fragment is removed on back pressed`() {
         val fragmentManager = mockFragmentManager()
         val fragment: QrFragment = mock()
-        `when`(fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG)).thenReturn(fragment)
+        whenever(fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG)).thenReturn(fragment)
 
         val feature = spy(
             QrFeature(
-                context,
+                testContext,
                 fragmentManager = fragmentManager,
                 onScanResult = { }
             )
@@ -117,11 +113,11 @@ class QrFeatureTest {
     fun `start attaches scan complete listener`() {
         val fragmentManager = mockFragmentManager()
 
-        val feature = QrFeature(context, fragmentManager = fragmentManager, onScanResult = { })
+        val feature = QrFeature(testContext, fragmentManager = fragmentManager, onScanResult = { })
         feature.start()
 
         val fragment: QrFragment = mock()
-        `when`(fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG)).thenReturn(fragment)
+        whenever(fragmentManager.findFragmentByTag(QR_FRAGMENT_TAG)).thenReturn(fragment)
         feature.start()
 
         verify(fragment).scanCompleteListener = feature.scanCompleteListener
