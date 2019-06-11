@@ -412,8 +412,7 @@ android-x86_64-tests:
     - marionette
     - mochitest
     - mochitest-gpu
-    # various reftest (plain) failures; bug 1501582
-    # - reftest
+    - reftest
     - test-verify
     - web-platform-tests
     - web-platform-tests-reftests
