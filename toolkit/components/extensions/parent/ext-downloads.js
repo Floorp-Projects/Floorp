@@ -589,13 +589,13 @@ this.downloads = class extends ExtensionAPI {
               download = dl;
               return DownloadMap.getDownloadList();
             }).then(list => {
+              const item = DownloadMap.newFromDownload(download, extension);
               list.add(download);
 
               // This is necessary to make pause/resume work.
               download.tryToKeepPartialData = true;
               download.start();
 
-              const item = DownloadMap.newFromDownload(download, extension);
               return item.id;
             });
         },
