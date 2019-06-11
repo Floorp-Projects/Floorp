@@ -192,7 +192,7 @@ appUpdater.prototype =
           let day = buildID.slice(6, 8);
           updateVersion += ` (${year}-${month}-${day})`;
         }
-        button.label = this.bundle.formatStringFromName("update.downloadAndInstallButton.label", [updateVersion], 1);
+        button.label = this.bundle.formatStringFromName("update.downloadAndInstallButton.label", [updateVersion]);
         button.accessKey = this.bundle.GetStringFromName("update.downloadAndInstallButton.accesskey");
       }
       this.updateDeck.selectedPanel = panel;

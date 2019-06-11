@@ -278,7 +278,7 @@ bool ToastNotificationHandler::ShowAlert() {
   }
 
   if (!mHostPort.IsEmpty()) {
-    const char16_t* formatStrings[] = {mHostPort.get()};
+    AutoTArray<nsString, 1> formatStrings = {mHostPort};
 
     ComPtr<IXmlNode> urlTextNodeRoot;
     hr = toastTextElements->Item(2, &urlTextNodeRoot);
@@ -287,8 +287,7 @@ bool ToastNotificationHandler::ShowAlert() {
     }
 
     nsAutoString urlReference;
-    bundle->FormatStringFromName("source.label", formatStrings,
-                                 ArrayLength(formatStrings), urlReference);
+    bundle->FormatStringFromName("source.label", formatStrings, urlReference);
 
     if (NS_WARN_IF(!SetNodeValueString(urlReference, urlTextNodeRoot.Get(),
                                        toastXml.Get()))) {
@@ -307,8 +306,7 @@ bool ToastNotificationHandler::ShowAlert() {
 
     nsAutoString disableButtonTitle;
     bundle->FormatStringFromName("webActions.disableForOrigin.label",
-                                 formatStrings, ArrayLength(formatStrings),
-                                 disableButtonTitle);
+                                 formatStrings, disableButtonTitle);
 
     AddActionNode(toastXml.Get(), actionsNode.Get(), disableButtonTitle,
                   NS_LITERAL_STRING("snooze"));

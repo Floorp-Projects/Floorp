@@ -1961,7 +1961,8 @@ void Gecko_ReportUnexpectedCSSError(
   if (prefix) {
     if (prefixParam) {
       nsDependentCSubstring paramValue(prefixParam, prefixParamLen);
-      nsAutoString wideParam = NS_ConvertUTF8toUTF16(paramValue);
+      AutoTArray<nsString, 1> wideParam;
+      CopyUTF8toUTF16(paramValue, *wideParam.AppendElement());
       reporter.ReportUnexpectedUnescaped(prefix, wideParam);
     } else {
       reporter.ReportUnexpected(prefix);
@@ -1970,7 +1971,8 @@ void Gecko_ReportUnexpectedCSSError(
 
   if (param) {
     nsDependentCSubstring paramValue(param, paramLen);
-    nsAutoString wideParam = NS_ConvertUTF8toUTF16(paramValue);
+    AutoTArray<nsString, 1> wideParam;
+    CopyUTF8toUTF16(paramValue, *wideParam.AppendElement());
     reporter.ReportUnexpectedUnescaped(message, wideParam);
   } else {
     reporter.ReportUnexpected(message);

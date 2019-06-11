@@ -23,7 +23,7 @@ this.OpenInTabsUtils = {
   },
 
   getFormattedString(key, params) {
-    return bundle.formatStringFromName(key, params, params.length);
+    return bundle.formatStringFromName(key, params);
   },
 
   /**

@@ -22,7 +22,7 @@ var {
 
 const _ = (key, ...args) => {
   if (args.length) {
-    return strBundle.formatStringFromName(key, args, args.length);
+    return strBundle.formatStringFromName(key, args);
   }
   return strBundle.GetStringFromName(key);
 };

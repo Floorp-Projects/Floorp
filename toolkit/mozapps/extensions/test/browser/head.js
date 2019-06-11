@@ -478,7 +478,7 @@ function get_string(aName, ...aArgs) {
   var bundle = Services.strings.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
   if (aArgs.length == 0)
     return bundle.GetStringFromName(aName);
-  return bundle.formatStringFromName(aName, aArgs, aArgs.length);
+  return bundle.formatStringFromName(aName, aArgs);
 }
 
 function formatDate(aDate) {

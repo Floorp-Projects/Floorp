@@ -108,8 +108,7 @@ class nsCSPParser {
   void resetCurChar(const nsAString& aToken);
 
   void logWarningErrorToConsole(uint32_t aSeverityFlag, const char* aProperty,
-                                const char16_t* aParams[],
-                                uint32_t aParamsLength);
+                                const nsTArray<nsString>& aParams);
 
   /**
    * When parsing the policy, the parser internally uses the following helper

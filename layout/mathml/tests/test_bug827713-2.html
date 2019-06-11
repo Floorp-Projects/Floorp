@@ -35,8 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
       function getErrorMessage(name,idx)
       {
         if (name != "MMultiscriptsErrors") {
-          return g_bundl.formatStringFromName(name,g_errorInfo[name].args[idx], 
-                                            g_errorInfo[name].args[idx].length);
+          return g_bundl.formatStringFromName(name,g_errorInfo[name].args[idx]);
         }
         else {
           return g_bundl.GetStringFromName(g_errorInfo[name].args[idx]);

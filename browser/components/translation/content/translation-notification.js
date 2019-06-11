@@ -300,7 +300,7 @@ class MozTranslationNotification extends MozElements.Notification {
     let item = this._getAnonElt("neverForLanguage");
     const kStrId = "translation.options.neverForLanguage";
     item.setAttribute("label",
-      bundle.formatStringFromName(kStrId + ".label", [langName], 1));
+      bundle.formatStringFromName(kStrId + ".label", [langName]));
     item.setAttribute("accesskey",
       bundle.GetStringFromName(kStrId + ".accesskey"));
     item.langCode = lang;

@@ -938,7 +938,7 @@ void txMozillaXSLTProcessor::reportError(nsresult aResult,
     nsCOMPtr<nsIStringBundleService> sbs =
         mozilla::services::GetStringBundleService();
     if (sbs) {
-      nsAutoString errorText;
+      nsString errorText;
       sbs->FormatStatusMessage(aResult, EmptyString().get(), errorText);
 
       nsAutoString errorMessage;
@@ -946,12 +946,11 @@ void txMozillaXSLTProcessor::reportError(nsresult aResult,
       sbs->CreateBundle(XSLT_MSGS_URL, getter_AddRefs(bundle));
 
       if (bundle) {
-        const char16_t* error[] = {errorText.get()};
+        AutoTArray<nsString, 1> error = {errorText};
         if (mStylesheet) {
-          bundle->FormatStringFromName("TransformError", error, 1,
-                                       errorMessage);
+          bundle->FormatStringFromName("TransformError", error, errorMessage);
         } else {
-          bundle->FormatStringFromName("LoadingError", error, 1, errorMessage);
+          bundle->FormatStringFromName("LoadingError", error, errorMessage);
         }
       }
       mErrorText.Assign(errorMessage);

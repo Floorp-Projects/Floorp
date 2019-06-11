@@ -727,7 +727,7 @@ GeolocationPermissionPrompt.prototype = {
     }
 
     return gBrowserBundle.formatStringFromName("geolocation.shareWithSite3",
-                                               ["<>"], 1);
+                                               ["<>"]);
   },
 
   get promptActions() {
@@ -797,7 +797,7 @@ DesktopNotificationPermissionPrompt.prototype = {
 
   get message() {
     return gBrowserBundle.formatStringFromName("webNotifications.receiveFromSite2",
-                                                    ["<>"], 1);
+                                                    ["<>"]);
   },
 
   get promptActions() {
@@ -887,7 +887,7 @@ PersistentStoragePermissionPrompt.prototype = {
 
   get message() {
     return gBrowserBundle.formatStringFromName("persistentStorage.allowWithSite",
-                                                    ["<>"], 1);
+                                                    ["<>"]);
   },
 
   get promptActions() {
@@ -985,10 +985,10 @@ MIDIPermissionPrompt.prototype = {
       }
     } else if (this.isSysexPerm) {
       message = gBrowserBundle.formatStringFromName("midi.shareSysexWithSite.message",
-                                                    ["<>"], 1);
+                                                    ["<>"]);
     } else {
       message = gBrowserBundle.formatStringFromName("midi.shareWithSite.message",
-                                                    ["<>"], 1);
+                                                    ["<>"]);
     }
     return message;
   },
@@ -1056,7 +1056,7 @@ StorageAccessPermissionPrompt.prototype = {
     let document = this.browser.ownerDocument;
     let label =
       gBrowserBundle.formatStringFromName("storageAccess.description.label",
-                                          [this.prettifyHostPort(this.request.principal.URI), "<>"], 2);
+                                          [this.prettifyHostPort(this.request.principal.URI), "<>"]);
     let parts = label.split("<>");
     if (parts.length == 1) {
       parts.push("");
@@ -1086,7 +1086,7 @@ StorageAccessPermissionPrompt.prototype = {
   },
 
   get message() {
-    return gBrowserBundle.formatStringFromName("storageAccess.message", ["<>", "<>"], 2);
+    return gBrowserBundle.formatStringFromName("storageAccess.message", ["<>", "<>"]);
   },
 
   get promptActions() {

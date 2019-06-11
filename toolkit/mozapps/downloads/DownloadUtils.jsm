@@ -120,12 +120,10 @@ var DownloadUtils = {
     if (rate === "Infinity") {
       // Infinity download speed doesn't make sense. Show a localized phrase instead.
       let params = [transfer, gBundle.GetStringFromName(gStr.infiniteRate), timeLeft];
-      status = gBundle.formatStringFromName(gStr.statusFormatInfiniteRate, params,
-                                            params.length);
+      status = gBundle.formatStringFromName(gStr.statusFormatInfiniteRate, params);
     } else {
       let params = [transfer, rate, unit, timeLeft];
-      status = gBundle.formatStringFromName(gStr.statusFormat, params,
-                                            params.length);
+      status = gBundle.formatStringFromName(gStr.statusFormat, params);
     }
     return [status, newLast];
   },
@@ -153,8 +151,7 @@ var DownloadUtils = {
       = this._deriveTransferRate(aCurrBytes, aMaxBytes, aSpeed, aLastSec);
 
     let params = [transfer, timeLeft];
-    let status = gBundle.formatStringFromName(gStr.statusFormatNoRate, params,
-                                              params.length);
+    let status = gBundle.formatStringFromName(gStr.statusFormatNoRate, params);
     return [status, newLast];
   },
 
@@ -234,7 +231,7 @@ var DownloadUtils = {
       ];
     }
 
-    return gBundle.formatStringFromName(name, values, values.length);
+    return gBundle.formatStringFromName(name, values);
   },
 
   /**
@@ -293,19 +290,19 @@ var DownloadUtils = {
         DownloadUtils.convertTimeUnits(aSeconds);
 
       let pair1 =
-        gBundle.formatStringFromName(gStr.timePair, [nf.format(time1), unit1], 2);
+        gBundle.formatStringFromName(gStr.timePair, [nf.format(time1), unit1]);
       let pair2 =
-        gBundle.formatStringFromName(gStr.timePair, [nf.format(time2), unit2], 2);
+        gBundle.formatStringFromName(gStr.timePair, [nf.format(time2), unit2]);
 
       // Only show minutes for under 1 hour unless there's a few minutes left;
       // or the second pair is 0.
       if ((aSeconds < 3600 && time1 >= 4) || time2 == 0) {
         timeLeft = gBundle.formatStringFromName(gStr.timeLeftSingle,
-                                                [pair1], 1);
+                                                [pair1]);
       } else {
         // We've got 2 pairs of times to display
         timeLeft = gBundle.formatStringFromName(gStr.timeLeftDouble,
-                                                [pair1, pair2], 2);
+                                                [pair1, pair2]);
       }
     }
 
@@ -418,7 +415,7 @@ var DownloadUtils = {
     } else if (displayHost.length == 0) {
       // Got nothing; show the scheme (data: about: moz-icon:)
       displayHost =
-        gBundle.formatStringFromName(gStr.doneScheme, [uri.scheme], 1);
+        gBundle.formatStringFromName(gStr.doneScheme, [uri.scheme]);
       fullHost = displayHost;
     } else if (uri.port != -1) {
       // Tack on the port if it's not the default port

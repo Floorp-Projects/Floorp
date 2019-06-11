@@ -507,7 +507,7 @@ var ContentSearch = {
     let engine = Services.search.defaultEngine;
     let favicon = engine.getIconURLBySize(16, 16);
     let placeholder = this._stringBundle.formatStringFromName(
-      "searchWithEngine", [engine.name], 1);
+      "searchWithEngine", [engine.name]);
     let obj = {
       name: engine.name,
       placeholder,

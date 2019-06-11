@@ -233,7 +233,7 @@ var WebrtcUI = {
 
         if (device.name.trim() == "") {
           defaultCount++;
-          return Strings.browser.formatStringFromName("getUserMedia." + aType + ".default", [defaultCount], 1);
+          return Strings.browser.formatStringFromName("getUserMedia." + aType + ".default", [defaultCount]);
         }
         return device.name;
       }, this);
@@ -319,7 +319,7 @@ var WebrtcUI = {
     let host = principal.URI.host;
     let requestor = (chromeWin.BrowserApp && chromeWin.BrowserApp.manifest) ?
           "'" + chromeWin.BrowserApp.manifest.name + "'" : host;
-    let message = Strings.browser.formatStringFromName("getUserMedia.share" + requestType + ".message", [ requestor ], 1);
+    let message = Strings.browser.formatStringFromName("getUserMedia.share" + requestType + ".message", [ requestor ]);
 
     let options = { inputs: [] };
     if (videoDevices.length > 1 || audioDevices.length > 0) {

@@ -1850,9 +1850,8 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv,
             "chrome://global/locale/nsWebBrowserPersist.properties",
             getter_AddRefs(bundle)))) {
       nsAutoString msgText;
-      const char16_t* strings[] = {path.get()};
-      if (NS_SUCCEEDED(
-              bundle->FormatStringFromName(msgId, strings, 1, msgText))) {
+      AutoTArray<nsString, 1> strings = {path};
+      if (NS_SUCCEEDED(bundle->FormatStringFromName(msgId, strings, msgText))) {
         if (mDialogProgressListener) {
           // We have a listener, let it handle the error.
           mDialogProgressListener->OnStatusChange(
@@ -1868,7 +1867,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv,
           nsCOMPtr<nsIPrompt> prompter(
               do_GetInterface(GetDialogParent(), &qiRv));
           nsAutoString title;
-          bundle->FormatStringFromName("title", strings, 1, title);
+          bundle->FormatStringFromName("title", strings, title);
 
           MOZ_LOG(
               nsExternalHelperAppService::mLog, LogLevel::Debug,

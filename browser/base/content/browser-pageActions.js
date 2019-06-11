@@ -1190,7 +1190,7 @@ BrowserPageActions.addSearchEngine = {
         let brandName = brandBundle.getString("brandShortName");
         let title = searchBundle.GetStringFromName("error_invalid_engine_title");
         let text = searchBundle.formatStringFromName("error_duplicate_engine_msg",
-                                                     [brandName, uri], 2);
+                                                     [brandName, uri]);
         Services.prompt.QueryInterface(Ci.nsIPromptFactory);
         let prompt = Services.prompt.getPrompt(gBrowser.contentWindow, Ci.nsIPrompt);
         prompt.QueryInterface(Ci.nsIWritablePropertyBag2);

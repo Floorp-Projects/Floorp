@@ -184,7 +184,7 @@ SavePage.prototype.onClick = function() {
         node.style.removeProperty("display");
       }
 
-      this._message = formatString("save_page_msg", [FilePicker.file.path], 1);
+      this._message = formatString("save_page_msg", [FilePicker.file.path]);
       this.update();
     }
   });
@@ -209,7 +209,7 @@ DebugMode.prototype.onState = function() {
   this._label = getString("debug_mode_on_state_label");
   try {
     let file = Services.prefs.getCharPref("media.webrtc.debug.log_file");
-    this._message = formatString("debug_mode_on_state_msg", [file], 1);
+    this._message = formatString("debug_mode_on_state_msg", [file]);
   } catch (e) {
     this._message = null;
   }
@@ -219,7 +219,7 @@ DebugMode.prototype.offState = function() {
   this._label = getString("debug_mode_off_state_label");
   try {
     let file = Services.prefs.getCharPref("media.webrtc.debug.log_file");
-    this._message = formatString("debug_mode_off_state_msg", [file], 1);
+    this._message = formatString("debug_mode_off_state_msg", [file]);
   } catch (e) {
     this._message = null;
   }
@@ -256,7 +256,7 @@ AecLogging.prototype.offState = function() {
   this._label = getString("aec_logging_off_state_label");
   try {
     let file = WebrtcGlobalInformation.aecDebugLogDir;
-    this._message = formatString("aec_logging_off_state_msg", [file], 1);
+    this._message = formatString("aec_logging_off_state_msg", [file]);
   } catch (e) {
     this._message = null;
   }

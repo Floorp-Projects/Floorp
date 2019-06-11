@@ -321,7 +321,7 @@ LoginManagerPrompter.prototype = {
   _getLocalizedString: function(key, formatArgs) {
     if (formatArgs)
       return this._strBundle.pwmgr.formatStringFromName(
-        key, formatArgs, formatArgs.length);
+        key, formatArgs);
     return this._strBundle.pwmgr.GetStringFromName(key);
   },
 

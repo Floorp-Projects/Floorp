@@ -15,7 +15,7 @@ var tabs = [];
 
 add_task(async function setup() {
   originalEngine = await Services.search.getDefault();
-  expectedString = gBrowserBundle.formatStringFromName("urlbar.placeholder", [originalEngine.name], 1);
+  expectedString = gBrowserBundle.formatStringFromName("urlbar.placeholder", [originalEngine.name]);
 
   let rootDir = getRootDirectory(gTestPath);
   extraEngine = await SearchTestUtils.promiseNewSearchEngine(rootDir + TEST_ENGINE_BASENAME);

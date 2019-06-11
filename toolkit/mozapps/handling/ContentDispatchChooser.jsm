@@ -36,10 +36,10 @@ nsContentDispatchChooser.prototype =
                bundle.GetStringFromName("protocol.description"),
                bundle.GetStringFromName("protocol.choices.label"),
                bundle.formatStringFromName("protocol.checkbox.label",
-                                           [aURI.scheme], 1),
+                                           [aURI.scheme]),
                bundle.GetStringFromName("protocol.checkbox.accesskey"),
                bundle.formatStringFromName("protocol.checkbox.extra",
-                                           [Services.appinfo.name], 1)];
+                                           [Services.appinfo.name])];
 
     var params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
     let SupportsString = Components.Constructor(

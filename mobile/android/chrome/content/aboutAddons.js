@@ -392,7 +392,7 @@ var Addons = {
     detailItem.querySelector(".version").textContent = addon.version;
     detailItem.querySelector(".description-full").textContent = addon.description;
     detailItem.querySelector(".status-uninstalled").textContent =
-      gStringBundle.formatStringFromName("addonStatus.uninstalled", [addon.name], 1);
+      gStringBundle.formatStringFromName("addonStatus.uninstalled", [addon.name]);
 
     let updateBtn = document.getElementById("update-btn");
     if (this._addonHasUpdate(addon)) {

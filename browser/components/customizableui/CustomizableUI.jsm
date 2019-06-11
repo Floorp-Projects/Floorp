@@ -1621,8 +1621,7 @@ var CustomizableUIInternal = {
     }
     try {
       if (Array.isArray(aFormatArgs) && aFormatArgs.length) {
-        return gWidgetsBundle.formatStringFromName(name, aFormatArgs,
-          aFormatArgs.length) || def;
+        return gWidgetsBundle.formatStringFromName(name, aFormatArgs) || def;
       }
       return gWidgetsBundle.GetStringFromName(name) || def;
     } catch (ex) {

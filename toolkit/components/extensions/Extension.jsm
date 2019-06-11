@@ -1192,7 +1192,7 @@ class ExtensionData {
       // says "...plus N others"
       let format = (list, itemKey, moreKey) => {
         function formatItems(items) {
-          result.msgs.push(...items.map(item => bundle.formatStringFromName(itemKey, [item], 1)));
+          result.msgs.push(...items.map(item => bundle.formatStringFromName(itemKey, [item])));
         }
         if (list.length < 5) {
           formatItems(list);
@@ -1216,7 +1216,7 @@ class ExtensionData {
     // Next, show the native messaging permission if it is present.
     const NATIVE_MSG_PERM = "nativeMessaging";
     if (perms.permissions.includes(NATIVE_MSG_PERM)) {
-      result.msgs.push(bundle.formatStringFromName(permissionKey(NATIVE_MSG_PERM), [info.appName], 1));
+      result.msgs.push(bundle.formatStringFromName(permissionKey(NATIVE_MSG_PERM), [info.appName]));
     }
 
     // Finally, show remaining permissions, in the same order as AMO.
@@ -1238,7 +1238,7 @@ class ExtensionData {
 
     const haveAccessKeys = (AppConstants.platform !== "android");
 
-    result.header = bundle.formatStringFromName("webextPerms.header", ["<>"], 1);
+    result.header = bundle.formatStringFromName("webextPerms.header", ["<>"]);
     result.text = info.unsigned ?
                   bundle.GetStringFromName("webextPerms.unsignedWarning") : "";
     result.listIntro = bundle.GetStringFromName("webextPerms.listIntro");
@@ -1251,7 +1251,7 @@ class ExtensionData {
     }
 
     if (info.type == "sideload") {
-      result.header = bundle.formatStringFromName("webextPerms.sideloadHeader", ["<>"], 1);
+      result.header = bundle.formatStringFromName("webextPerms.sideloadHeader", ["<>"]);
       let key = result.msgs.length == 0 ?
                 "webextPerms.sideloadTextNoPerms" : "webextPerms.sideloadText2";
       result.text = bundle.GetStringFromName(key);
@@ -1262,14 +1262,14 @@ class ExtensionData {
         result.cancelKey = bundle.GetStringFromName("webextPerms.sideloadCancel.accessKey");
       }
     } else if (info.type == "update") {
-      result.header = bundle.formatStringFromName("webextPerms.updateText", ["<>"], 1);
+      result.header = bundle.formatStringFromName("webextPerms.updateText", ["<>"]);
       result.text = "";
       result.acceptText = bundle.GetStringFromName("webextPerms.updateAccept.label");
       if (haveAccessKeys) {
         result.acceptKey = bundle.GetStringFromName("webextPerms.updateAccept.accessKey");
       }
     } else if (info.type == "optional") {
-      result.header = bundle.formatStringFromName("webextPerms.optionalPermsHeader", ["<>"], 1);
+      result.header = bundle.formatStringFromName("webextPerms.optionalPermsHeader", ["<>"]);
       result.text = "";
       result.listIntro = bundle.GetStringFromName("webextPerms.optionalPermsListIntro");
       result.acceptText = bundle.GetStringFromName("webextPerms.optionalPermsAllow.label");

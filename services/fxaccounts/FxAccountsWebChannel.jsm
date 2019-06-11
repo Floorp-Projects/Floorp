@@ -552,7 +552,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
     let continueLabel = sb.GetStringFromName("continue.label");
     let title = sb.GetStringFromName("relinkVerify.title");
     let description = sb.formatStringFromName("relinkVerify.description",
-                                              [acctName], 1);
+                                              [acctName]);
     let body = sb.GetStringFromName("relinkVerify.heading") +
                "\n\n" + description;
     let ps = Services.prompt;

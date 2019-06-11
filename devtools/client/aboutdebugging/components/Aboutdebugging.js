@@ -109,7 +109,7 @@ class AboutDebuggingApp extends Component {
             Strings.GetStringFromName("pageNotFound")
           ),
           dom.h4({ className: "error-page-details" },
-            Strings.formatStringFromName("doesNotExist", [selectedPanelId], 1))
+            Strings.formatStringFromName("doesNotExist", [selectedPanelId]))
         )
       );
     }

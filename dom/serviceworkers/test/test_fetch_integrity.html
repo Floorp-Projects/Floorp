@@ -59,7 +59,7 @@ function waitForMessages() {
   for (let i = 0; i < arguments.length; i += 3) {
     let msgId = arguments[i];
     let args = arguments[i + 1];
-    messages.push(security_localizer.formatStringFromName(msgId, args, args.length));
+    messages.push(security_localizer.formatStringFromName(msgId, args));
   }
 
   return new Promise(resolve => {
@@ -89,7 +89,7 @@ function expect_security_console_message(/* msgId, args, ... */) {
     let args = arguments[i + 1];
     let filename = arguments[i + 2];
     expectations.push({
-      errorMessage: security_localizer.formatStringFromName(msgId, args, args.length),
+      errorMessage: security_localizer.formatStringFromName(msgId, args),
       sourceName: filename,
     });
   }

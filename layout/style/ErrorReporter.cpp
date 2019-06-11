@@ -302,15 +302,12 @@ void ErrorReporter::ReportUnexpected(const char* aMessage) {
   AddToError(str);
 }
 
-void ErrorReporter::ReportUnexpectedUnescaped(const char* aMessage,
-                                              const nsAutoString& aParam) {
+void ErrorReporter::ReportUnexpectedUnescaped(
+    const char* aMessage, const nsTArray<nsString>& aParam) {
   MOZ_ASSERT(ShouldReportErrors(mSheet, mLoader));
 
-  const char16_t* params[1] = {aParam.get()};
-
   nsAutoString str;
-  sStringBundle->FormatStringFromName(aMessage, params, ArrayLength(params),
-                                      str);
+  sStringBundle->FormatStringFromName(aMessage, aParam, str);
   AddToError(str);
 }
 

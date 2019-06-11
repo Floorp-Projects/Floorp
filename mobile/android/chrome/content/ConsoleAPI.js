@@ -22,7 +22,7 @@ var ConsoleAPI = {
       let functionName = args[0].functionName || bundle.GetStringFromName("stacktrace.anonymousFunction");
       let lineNumber = args[0].lineNumber;
 
-      let body = bundle.formatStringFromName("stacktrace.outputMessage", [filename, functionName, lineNumber], 3);
+      let body = bundle.formatStringFromName("stacktrace.outputMessage", [filename, functionName, lineNumber]);
       body += "\n";
       args.forEach(function(aFrame) {
         let functionName = aFrame.functionName || bundle.GetStringFromName("stacktrace.anonymousFunction");
@@ -32,11 +32,11 @@ var ConsoleAPI = {
       Services.console.logStringMessage(body);
     } else if (aMessage.level == "time" && aMessage.arguments) {
       let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-      let body = bundle.formatStringFromName("timer.start", [aMessage.arguments.name], 1);
+      let body = bundle.formatStringFromName("timer.start", [aMessage.arguments.name]);
       Services.console.logStringMessage(body);
     } else if (aMessage.level == "timeEnd" && aMessage.arguments) {
       let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-      let body = bundle.formatStringFromName("timer.end", [aMessage.arguments.name, aMessage.arguments.duration], 2);
+      let body = bundle.formatStringFromName("timer.end", [aMessage.arguments.name, aMessage.arguments.duration]);
       Services.console.logStringMessage(body);
     } else if (["group", "groupCollapsed", "groupEnd"].includes(aMessage.level)) {
       // Do nothing yet

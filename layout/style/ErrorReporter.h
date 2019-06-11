@@ -55,7 +55,7 @@ class MOZ_STACK_CLASS ErrorReporter final {
   void ReportUnexpected(const char* aMessage);
   // one parameter which has already been escaped appropriately
   void ReportUnexpectedUnescaped(const char* aMessage,
-                                 const nsAutoString& aParam);
+                                 const nsTArray<nsString>& aParam);
 
  private:
   void OutputError();

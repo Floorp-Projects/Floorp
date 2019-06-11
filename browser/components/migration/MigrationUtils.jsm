@@ -528,8 +528,7 @@ var MigrationUtils = Object.freeze({
 
     if (aReplacements === undefined)
       return getMigrationBundle().GetStringFromName(aKey);
-    return getMigrationBundle().formatStringFromName(
-      aKey, aReplacements, aReplacements.length);
+    return getMigrationBundle().formatStringFromName(aKey, aReplacements);
   },
 
   _getLocalePropertyForBrowser(browserId) {

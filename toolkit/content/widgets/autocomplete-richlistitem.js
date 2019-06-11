@@ -575,7 +575,7 @@ MozElements.MozAutocompleteRichlistitem = class MozAutocompleteRichlistitem exte
             }
 
             let engineStr =
-              this._stringBundle.formatStringFromName("searchWithEngine", [engineName], 1);
+              this._stringBundle.formatStringFromName("searchWithEngine", [engineName]);
             this._setUpDescription(this._actionText, engineStr, true);
 
             // Make the title by generating an array of pairs and its

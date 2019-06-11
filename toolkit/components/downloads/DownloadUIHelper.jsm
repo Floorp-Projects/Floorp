@@ -69,8 +69,7 @@ XPCOMUtils.defineLazyGetter(DownloadUIHelper, "strings", function() {
       strings[stringName] = function() {
         // Convert "arguments" to a real array before calling into XPCOM.
         return sb.formatStringFromName(stringName,
-                                       Array.from(arguments),
-                                       arguments.length);
+                                       Array.from(arguments));
       };
     } else {
       strings[stringName] = string.value;

@@ -461,7 +461,7 @@ var pktUI = (function() {
             var bundle = Services.strings.createBundle("chrome://browser/locale/pocket.properties");
             for (let str of bundle.getSimpleEnumeration()) {
                 if (str.key in data) {
-                    strings[str.key] = bundle.formatStringFromName(str.key, data[str.key], data[str.key].length);
+                    strings[str.key] = bundle.formatStringFromName(str.key, data[str.key]);
                 } else {
                     strings[str.key] = str.value;
                 }

@@ -278,8 +278,9 @@ class CSPValidator final : public nsCSPSrcVisitor {
 
   template <typename... T>
   inline void FormatError(const char* aName, const T... aParams) {
-    const char16_t* params[] = {mDirective.get(), aParams.get()...};
-    FormatErrorParams(aName, params, MOZ_ARRAY_LENGTH(params));
+    AutoTArray<nsString, sizeof...(aParams) + 1> params = {mDirective,
+                                                           aParams...};
+    FormatErrorParams(aName, params);
   };
 
  private:
@@ -334,14 +335,13 @@ class CSPValidator final : public nsCSPSrcVisitor {
     return stringBundle.forget();
   };
 
-  void FormatErrorParams(const char* aName, const char16_t** aParams,
-                         int32_t aLength) {
+  void FormatErrorParams(const char* aName, const nsTArray<nsString>& aParams) {
     nsresult rv = NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIStringBundle> stringBundle = GetStringBundle();
 
     if (stringBundle) {
-      rv = stringBundle->FormatStringFromName(aName, aParams, aLength, mError);
+      rv = stringBundle->FormatStringFromName(aName, aParams, mError);
     }
 
     if (NS_WARN_IF(NS_FAILED(rv))) {

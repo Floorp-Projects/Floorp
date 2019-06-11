@@ -70,11 +70,11 @@ nsresult GetPIPNSSBundleString(const char* stringName, nsACString& result) {
 }
 
 nsresult PIPBundleFormatStringFromName(const char* stringName,
-                                       const char16_t** params,
-                                       uint32_t numParams, nsAString& result) {
+                                       const nsTArray<nsString>& params,
+                                       nsAString& result) {
   MOZ_ASSERT(stringName);
-  MOZ_ASSERT(params);
-  if (!stringName || !params) {
+  MOZ_ASSERT(!params.IsEmpty());
+  if (!stringName || params.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
   nsCOMPtr<nsIStringBundle> pipnssBundle;
@@ -83,8 +83,7 @@ nsresult PIPBundleFormatStringFromName(const char* stringName,
     return rv;
   }
   result.Truncate();
-  return pipnssBundle->FormatStringFromName(stringName, params, numParams,
-                                            result);
+  return pipnssBundle->FormatStringFromName(stringName, params, result);
 }
 
 static nsresult ProcessVersion(SECItem* versionItem,
@@ -112,11 +111,9 @@ static nsresult ProcessVersion(SECItem* versionItem,
   }
 
   // A value of n actually corresponds to version n + 1
-  nsAutoString versionString;
-  versionString.AppendInt(version + 1);
-  const char16_t* params[1] = {versionString.get()};
-  rv = PIPBundleFormatStringFromName("CertDumpVersionValue", params,
-                                     MOZ_ARRAY_LENGTH(params), text);
+  AutoTArray<nsString, 1> params;
+  params.AppendElement()->AppendInt(version + 1);
+  rv = PIPBundleFormatStringFromName("CertDumpVersionValue", params, text);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -550,12 +547,11 @@ static nsresult GetOIDText(SECItem* oid, nsAString& text) {
   if (bundlekey) {
     rv = GetPIPNSSBundleString(bundlekey, text);
   } else {
-    nsAutoString text2;
-    rv = GetDefaultOIDFormat(oid, text2, ' ');
+    AutoTArray<nsString, 1> params;
+    rv = GetDefaultOIDFormat(oid, *params.AppendElement(), ' ');
     if (NS_FAILED(rv)) return rv;
 
-    const char16_t* params[1] = {text2.get()};
-    rv = PIPBundleFormatStringFromName("CertDumpDefOID", params, 1, text);
+    rv = PIPBundleFormatStringFromName("CertDumpDefOID", params, text);
   }
   return rv;
 }
@@ -580,13 +576,12 @@ static nsresult ProcessRawBytes(SECItem* data, nsAString& text,
   // Else produce a hex dump.
 
   if (wantHeader) {
-    nsAutoString bytelen, bitlen;
-    bytelen.AppendInt(data->len);
-    bitlen.AppendInt(data->len * 8);
+    AutoTArray<nsString, 2> params;
+    params.AppendElement()->AppendInt(data->len);      // bytelen
+    params.AppendElement()->AppendInt(data->len * 8);  // bitlen
 
-    const char16_t* params[2] = {bytelen.get(), bitlen.get()};
-    nsresult rv = PIPBundleFormatStringFromName("CertDumpRawBytesHeader",
-                                                params, 2, text);
+    nsresult rv =
+        PIPBundleFormatStringFromName("CertDumpRawBytesHeader", params, text);
     if (NS_FAILED(rv)) return rv;
 
     text.AppendLiteral(SEPARATOR);
@@ -692,8 +687,8 @@ static nsresult ProcessBasicConstraints(SECItem* extData, nsAString& text) {
       GetPIPNSSBundleString("CertDumpPathLenUnlimited", depth);
     else
       depth.AppendInt(value.pathLenConstraint);
-    const char16_t* params[1] = {depth.get()};
-    rv2 = PIPBundleFormatStringFromName("CertDumpPathLen", params, 1, local);
+    AutoTArray<nsString, 1> params = {depth};
+    rv2 = PIPBundleFormatStringFromName("CertDumpPathLen", params, local);
     if (NS_FAILED(rv2)) return rv2;
     text.AppendLiteral(SEPARATOR);
     text.Append(local.get());
@@ -784,11 +779,9 @@ static nsresult ProcessRDN(CERTRDN* rdn, nsAString& finalString) {
     nsAutoString avaValue;
     LossyUTF8ToUTF16(escapedValue.get(), strlen(escapedValue.get()), avaValue);
 
-    const char16_t* params[2];
-    params[0] = type.get();
-    params[1] = avaValue.get();
+    AutoTArray<nsString, 2> params = {type, avaValue};
     nsAutoString temp;
-    PIPBundleFormatStringFromName("AVATemplate", params, 2, temp);
+    PIPBundleFormatStringFromName("AVATemplate", params, temp);
     finalString += temp + NS_LITERAL_STRING("\n");
   }
   return NS_OK;
@@ -1516,9 +1509,8 @@ static nsresult ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo* spki,
         length2.AppendInt(key->u.rsa.publicExponent.len * 8);
         ProcessRawBytes(&key->u.rsa.modulus, data1, false);
         ProcessRawBytes(&key->u.rsa.publicExponent, data2, false);
-        const char16_t* params[4] = {length1.get(), data1.get(), length2.get(),
-                                     data2.get()};
-        PIPBundleFormatStringFromName("CertDumpRSATemplate", params, 4, text);
+        AutoTArray<nsString, 4> params = {length1, data1, length2, data2};
+        PIPBundleFormatStringFromName("CertDumpRSATemplate", params, text);
         break;
       }
       case ecKey: {
@@ -1538,8 +1530,8 @@ static nsresult ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo* spki,
           int i_pv = DER_GetInteger(&ecpk.publicValue);
           s_pv.AppendInt(i_pv);
         }
-        const char16_t* params[] = {s_fsl.get(), s_bpol.get(), s_pv.get()};
-        PIPBundleFormatStringFromName("CertDumpECTemplate", params, 3, text);
+        AutoTArray<nsString, 3> params = {s_fsl, s_bpol, s_pv};
+        PIPBundleFormatStringFromName("CertDumpECTemplate", params, text);
         break;
       }
       default:

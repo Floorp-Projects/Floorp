@@ -34,8 +34,7 @@ ValueExtractor.prototype = {
     if (type !== expectedType) {
       if (type !== "undefined") {
         this.console.warn(this.domBundle.formatStringFromName("ManifestInvalidType",
-                                                              [objectName, property, expectedType],
-                                                              3));
+                                                              [objectName, property, expectedType]));
       }
       return undefined;
     }
@@ -56,8 +55,7 @@ ValueExtractor.prototype = {
         rgba.b).toString(16);
     } else if (value) {
       this.console.warn(this.domBundle.formatStringFromName("ManifestInvalidCSSColor",
-                                                            [spec.property, value],
-                                                            2));
+                                                            [spec.property, value]));
     }
     return color;
   },
@@ -69,8 +67,7 @@ ValueExtractor.prototype = {
         langTag = Intl.getCanonicalLocales(value)[0];
       } catch (err) {
         console.warn(this.domBundle.formatStringFromName("ManifestLangIsInvalid",
-                                                        [spec.property, value],
-                                                        2));
+                                                        [spec.property, value]));
       }
     }
     return langTag;

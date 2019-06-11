@@ -178,7 +178,7 @@ this.LoginManagerContextMenu = {
    */
   _getLocalizedString(key, formatArgs) {
     if (formatArgs) {
-      return this._stringBundle.formatStringFromName(key, formatArgs, formatArgs.length);
+      return this._stringBundle.formatStringFromName(key, formatArgs);
     }
     return this._stringBundle.GetStringFromName(key);
   },

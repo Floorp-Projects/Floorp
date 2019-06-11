@@ -657,7 +657,7 @@ var Utils = {
       Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
 
     let syncStrings = Services.strings.createBundle("chrome://weave/locale/sync.properties");
-    return syncStrings.formatStringFromName("client.name2", [user, brandName, system], 3);
+    return syncStrings.formatStringFromName("client.name2", [user, brandName, system]);
   },
 
   getDeviceName() {

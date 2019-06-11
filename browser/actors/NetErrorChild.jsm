@@ -189,7 +189,7 @@ class NetErrorChild extends ActorChild {
       // without replicating the complex logic from certverifier code.
       case MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
         let description = gPipNSSBundle.formatStringFromName(
-          "certErrorSymantecDistrustDescription1", [doc.location.hostname], 1);
+          "certErrorSymantecDistrustDescription1", [doc.location.hostname]);
         let descriptionContainer = doc.getElementById("errorShortDescText2");
         descriptionContainer.textContent = description;
 
@@ -459,11 +459,11 @@ class NetErrorChild extends ActorChild {
       msg2 = nss_error_id_str;
     }
     let msg = gPipNSSBundle.formatStringFromName("SSLConnectionErrorPrefix2",
-                                                 [hostString, msg2], 2);
+                                                 [hostString, msg2]);
 
     if (nss_error_id_str && msg2 != nss_error_id_str) {
       msg += gPipNSSBundle.formatStringFromName("certErrorCodePrefix3",
-                                                [nss_error_id_str], 1) + "\n";
+                                                [nss_error_id_str]) + "\n";
     }
     return msg;
   }

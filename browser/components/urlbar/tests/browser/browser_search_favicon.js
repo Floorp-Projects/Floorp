@@ -51,7 +51,7 @@ add_task(async function() {
 
   let bundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
   Assert.equal(result.displayed.action,
-    bundle.formatStringFromName("searchWithEngine", ["SearchEngine"], 1),
+    bundle.formatStringFromName("searchWithEngine", ["SearchEngine"]),
     "Should have the correct action text");
 
   gBrowser.removeCurrentTab();

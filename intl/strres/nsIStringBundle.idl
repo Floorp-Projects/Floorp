@@ -48,23 +48,17 @@ interface nsIStringBundle : nsISupports
   // the id or name should refer to a string in the bundle that
   // uses %S.. do NOT try to use any other types.
   // this uses nsTextFormatter::ssprintf to do the dirty work.
-  AString formatStringFromID(in long aID,
-                             [array, size_is(length)] in wstring params,
-                             in unsigned long length);
+  AString formatStringFromID(in long aID, in Array<AString> params);
 
   // This method is mostly used from JS, where AUTF8String is appropriate.
   [binaryname(FormatStringFromAUTF8Name)]
-  AString formatStringFromName(in AUTF8String aName,
-                               [array, size_is(length)] in wstring params,
-                               in unsigned long length);
+  AString formatStringFromName(in AUTF8String aName, in Array<AString> params);
 
   // This method is mostly used from C++, where |string| is appropriate because
   // the names are most often 8-bit string literals (normally ASCII, though
   // u8"foo" literals will also work).
   [noscript, binaryname(FormatStringFromName)]
-  AString formatStringFromNameCpp(in string aName,
-                                  [array, size_is(length)] in wstring params,
-                                  in unsigned long length);
+  AString formatStringFromNameCpp(in string aName, in Array<AString> params);
 
   /*
   Implements nsISimpleEnumerator, replaces nsIEnumerator

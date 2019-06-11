@@ -88,7 +88,7 @@ var DownloadNotifications = {
     if (download.succeeded) {
       let file = new FileUtils.File(download.target.path);
 
-      Snackbars.show(strings.formatStringFromName("alertDownloadSucceeded", [file.leafName], 1), Snackbars.LENGTH_LONG, {
+      Snackbars.show(strings.formatStringFromName("alertDownloadSucceeded", [file.leafName]), Snackbars.LENGTH_LONG, {
         action: {
           label: strings.GetStringFromName("helperapps.open"),
           callback: () => {

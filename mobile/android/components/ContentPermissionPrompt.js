@@ -133,7 +133,7 @@ ContentPermissionPrompt.prototype = {
     let chromeWin = this.getChromeForRequest(request);
     let requestor = (chromeWin.BrowserApp && chromeWin.BrowserApp.manifest) ?
         "'" + chromeWin.BrowserApp.manifest.name + "'" : request.principal.URI.host;
-    let message = browserBundle.formatStringFromName(entityName + ".ask", [requestor], 1);
+    let message = browserBundle.formatStringFromName(entityName + ".ask", [requestor]);
     // desktopNotification doesn't have a checkbox
     let options;
     if (entityName == "desktopNotification2") {
