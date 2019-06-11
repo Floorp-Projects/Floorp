@@ -88,6 +88,10 @@
 #include "plstr.h"
 #include "prlink.h"
 
+#ifdef DEBUG
+#  include <map>
+#endif
+
 #ifdef MOZ_MEMORY
 #  include "mozmemory.h"
 #endif
@@ -1179,6 +1183,20 @@ using PrefsHashTable = mozilla::HashSet<mozilla::UniquePtr<Pref>, PrefHasher>;
 
 static PrefsHashTable* gHashTable;
 
+#ifdef DEBUG
+// This defines the datatype used to store our `Once` StaticPrefs checker.
+// We can't use HashMap for now due to alignment restrictions when dealing with
+// std::function<void()> (see bug 1557617).
+typedef std::function<void()> AntiFootgunCallback;
+struct CompareStr {
+  bool operator()(char const* a, char const* b) const {
+    return std::strcmp(a, b) < 0;
+  }
+};
+typedef std::map<const char*, AntiFootgunCallback, CompareStr> AntiFootgunMap;
+static AntiFootgunMap* gOnceStaticPrefsAntiFootgun;
+#endif
+
 // The callback list contains all the priority callbacks followed by the
 // non-priority callbacks. gLastPriorityNode records where the first part ends.
 static CallbackNode* gFirstCallback = nullptr;
@@ -1671,6 +1689,20 @@ static void NotifyCallbacks(const char* aPrefName, const PrefWrapper* aPref) {
     }
     gShouldCleanupDeadNodes = false;
   }
+
+#ifdef DEBUG
+  if (XRE_IsParentProcess() && StaticPrefs::preferences_check_once_policy()) {
+    // Check that we aren't modifying a `Once` pref using that prefName.
+    // We have about 100 `Once` StaticPrefs defined. std::map performs a search
+    // in O(log n), so this is fast enough for our case.
+    MOZ_ASSERT(gOnceStaticPrefsAntiFootgun);
+    auto search = gOnceStaticPrefsAntiFootgun->find(aPrefName);
+    if (search != gOnceStaticPrefsAntiFootgun->end()) {
+      // Run the callback.
+      (search->second)();
+    }
+  }
+#endif
 }
 
 //===========================================================================
@@ -3460,6 +3492,10 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
   gTelemetryLoadData =
       new nsDataHashtable<nsCStringHashKey, TelemetryLoadData>();
 
+#ifdef DEBUG
+  gOnceStaticPrefsAntiFootgun = new AntiFootgunMap();
+#endif
+
 #ifdef ACCESS_COUNTS
   MOZ_ASSERT(!gAccessCounts);
   gAccessCounts = new AccessCountsHashTable();
@@ -3594,6 +3630,11 @@ Preferences::~Preferences() {
 
   delete gTelemetryLoadData;
   gTelemetryLoadData = nullptr;
+
+#ifdef DEBUG
+  delete gOnceStaticPrefsAntiFootgun;
+  gOnceStaticPrefsAntiFootgun = nullptr;
+#endif
 
 #ifdef ACCESS_COUNTS
   delete gAccessCounts;
@@ -5486,11 +5527,41 @@ void StaticPrefs::InitOncePrefs() {
   //
   // This is done to get the potentially updated Preference value as we didn't
   // register a callback method for the `Once` policy.
+  //
+  // On debug build, we also install a mechanism that allows to check if the
+  // original Preference is being modified once `Once` StaticPrefs have been
+  // initialized as this would indicate a likely misuse of `Once` StaticPrefs
+  // and that maybe instead they should have been made `Live`.
 #define PREF(name, cpp_type, value)
-#define VARCACHE_PREF(policy, name, id, cpp_type, value)                       \
-  if (UpdatePolicy::policy == UpdatePolicy::Once) {                            \
-    StaticPrefs::sVarCache_##id = GetPref(name, StripAtomic<cpp_type>(value)); \
-  }
+#ifdef DEBUG
+#  define VARCACHE_PREF(policy, name, id, cpp_type, value)                    \
+    if (UpdatePolicy::policy == UpdatePolicy::Once) {                         \
+      StaticPrefs::sVarCache_##id =                                           \
+          GetPref(name, StripAtomic<cpp_type>(value));                        \
+      auto checkPref = [&]() {                                                \
+        if (!sOncePrefRead) {                                                 \
+          return;                                                             \
+        }                                                                     \
+        StripAtomic<cpp_type> staticPrefValue = StaticPrefs::id();            \
+        StripAtomic<cpp_type> preferenceValue =                               \
+            GetPref(Get##id##PrefName(), StripAtomic<cpp_type>(value));       \
+        MOZ_ASSERT(                                                           \
+            staticPrefValue == preferenceValue,                               \
+            "Preference '" name "' got modified since StaticPrefs::" #id      \
+            " got initialized. Consider using a `Live` StaticPrefs instead"); \
+      };                                                                      \
+      gOnceStaticPrefsAntiFootgun->insert(                                    \
+          std::pair<const char*, AntiFootgunCallback>(Get##id##PrefName(),    \
+                                                      std::move(checkPref))); \
+    }
+#else
+#  define VARCACHE_PREF(policy, name, id, cpp_type, value) \
+    if (UpdatePolicy::policy == UpdatePolicy::Once) {      \
+      StaticPrefs::sVarCache_##id =                        \
+          GetPref(name, StripAtomic<cpp_type>(value));     \
+    }
+#endif
+
 #include "mozilla/StaticPrefList.h"
 #undef PREF
 #undef VARCACHE_PREF

@@ -6029,6 +6029,18 @@ VARCACHE_PREF(
 
 PREF("preferences.allow.omt-write", bool, true)
 
+#ifdef DEBUG
+// If set to true, setting a Preference matched to a `Once` StaticPref will
+// assert that the value matches. Such assertion being broken is a clear flag
+// that the Once policy shouldn't be used.
+VARCACHE_PREF(
+  Live,
+  "preferences.check.once.policy",
+  preferences_check_once_policy,
+  bool, false
+)
+#endif
+
 //---------------------------------------------------------------------------
 // Prefs starting with "print."
 //---------------------------------------------------------------------------
