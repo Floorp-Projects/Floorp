@@ -1256,10 +1256,9 @@ JS_PUBLIC_API void AddPersistentRoot(JSRuntime* rt, RootKind kind,
  *
  * These roots can be used in heap-allocated data structures, so they are not
  * associated with any particular JSContext or stack. They are registered with
- * the JSRuntime itself, without locking, so they require a full JSContext to be
- * initialized, not one of its more restricted superclasses. Initialization may
- * take place on construction, or in two phases if the no-argument constructor
- * is called followed by init().
+ * the JSRuntime itself, without locking. Initialization may take place on
+ * construction, or in two phases if the no-argument constructor is called
+ * followed by init().
  *
  * Note that you must not use an PersistentRooted in an object owned by a JS
  * object:
@@ -1355,8 +1354,14 @@ class PersistentRooted
 
   bool initialized() { return ListBase::isInList(); }
 
-  void init(JSContext* cx) { init(cx, SafelyInitialized<T>()); }
+  void init(RootingContext* cx) { init(cx, SafelyInitialized<T>()); }
+  void init(JSContext* cx) { init(RootingContext::get(cx)); }
 
+  template <typename U>
+  void init(RootingContext* cx, U&& initial) {
+    ptr = std::forward<U>(initial);
+    registerWithRootLists(cx);
+  }
   template <typename U>
   void init(JSContext* cx, U&& initial) {
     ptr = std::forward<U>(initial);
