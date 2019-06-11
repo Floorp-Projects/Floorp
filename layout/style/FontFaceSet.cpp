@@ -1201,6 +1201,10 @@ RawServoFontFaceRule* FontFaceSet::FindRuleForUserFontEntry(
 nsresult FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
                                  const char* aMessage, uint32_t aFlags,
                                  nsresult aStatus) {
+  MOZ_ASSERT(NS_IsMainThread(),
+             "LogMessage only works on the main thread, due to the Servo_XXX "
+             "CSSOM calls it makes");
+
   nsCOMPtr<nsIConsoleService> console(
       do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (!console) {
