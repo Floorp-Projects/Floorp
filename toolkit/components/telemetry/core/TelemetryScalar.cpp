@@ -826,6 +826,8 @@ class KeyedScalar {
  public:
   typedef mozilla::Pair<nsCString, nsCOMPtr<nsIVariant>> KeyValuePair;
 
+  // We store the name instead of a reference to the BaseScalarInfo because
+  // the BaseScalarInfo can move if it's from a dynamic scalar.
   explicit KeyedScalar(const BaseScalarInfo& info)
       : mScalarName(info.name()), mMaximumNumberOfKeys(kMaximumNumberOfKeys){};
   ~KeyedScalar() = default;
