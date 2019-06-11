@@ -206,7 +206,7 @@
         let warningTextTmplKey = hasExtraCategories ? "phishingWarningMessage" : "phishingWarningMessage2";
         let categoriesText = showCategories.map(category => this._stringBundle.GetStringFromName(category.l10nId)).join(separator);
 
-        this._warningTextBox.textContent = this._stringBundle.formatStringFromName(warningTextTmplKey, [categoriesText], 1);
+        this._warningTextBox.textContent = this._stringBundle.formatStringFromName(warningTextTmplKey, [categoriesText]);
         this.parentNode.parentNode.adjustHeight();
       };
 

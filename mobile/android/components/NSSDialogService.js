@@ -48,8 +48,7 @@ NSSDialogs.prototype = {
         Services.strings.createBundle("chrome://browser/locale/pippki.properties");
     }
     let escapedArgList = Array.from(argList, x => this.escapeHTML(x));
-    return this.bundle.formatStringFromName(aName, escapedArgList,
-                                            escapedArgList.length);
+    return this.bundle.formatStringFromName(aName, escapedArgList);
   },
 
   getPrompt: function(aTitle, aText, aButtons, aCtx) {

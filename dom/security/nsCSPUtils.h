@@ -27,15 +27,15 @@ struct CSP;
 
 /* =============== Logging =================== */
 
-void CSP_LogLocalizedStr(const char* aName, const char16_t** aParams,
-                         uint32_t aLength, const nsAString& aSourceName,
+void CSP_LogLocalizedStr(const char* aName, const nsTArray<nsString>& aParams,
+                         const nsAString& aSourceName,
                          const nsAString& aSourceLine, uint32_t aLineNumber,
                          uint32_t aColumnNumber, uint32_t aFlags,
                          const nsACString& aCategory, uint64_t aInnerWindowID,
                          bool aFromPrivateWindow);
 
-void CSP_GetLocalizedStr(const char* aName, const char16_t** aParams,
-                         uint32_t aLength, nsAString& outResult);
+void CSP_GetLocalizedStr(const char* aName, const nsTArray<nsString>& aParams,
+                         nsAString& outResult);
 
 void CSP_LogStrMessage(const nsAString& aMsg);
 

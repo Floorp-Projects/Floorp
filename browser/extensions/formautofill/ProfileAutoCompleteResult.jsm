@@ -358,7 +358,7 @@ class CreditCardResult extends ProfileAutoCompleteResult {
       }
       let brandName = FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
 
-      return [FormAutofillUtils.stringBundle.formatStringFromName("insecureFieldWarningDescription", [brandName], 1)];
+      return [FormAutofillUtils.stringBundle.formatStringFromName("insecureFieldWarningDescription", [brandName])];
     }
 
     if (this._isInputAutofilled) {

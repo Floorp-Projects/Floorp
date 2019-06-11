@@ -575,7 +575,7 @@ class UrlbarView {
         break;
       case UrlbarUtils.RESULT_TYPE.SEARCH:
         action = bundle.formatStringFromName("searchWithEngine",
-                                             [result.payload.engine], 1);
+                                             [result.payload.engine]);
         break;
       case UrlbarUtils.RESULT_TYPE.KEYWORD:
         isVisitAction = result.payload.input.trim() == result.payload.keyword;
@@ -788,7 +788,7 @@ class UrlbarView {
       let action = item.querySelector(".urlbarView-action");
       action.textContent =
         bundle.formatStringFromName("searchWithEngine",
-          [(engine && engine.name) || result.payload.engine], 1);
+          [(engine && engine.name) || result.payload.engine]);
       // If we just changed the engine from the original engine and it had an
       // icon, then make sure the result now uses the new engine's icon or
       // failing that the default icon.  If we changed it back to the original

@@ -78,7 +78,7 @@ function findDuplicates(loginList) {
 
 function getLocalizedString(key, formatArgs = null) {
   if (formatArgs) {
-    return passwordMgrBundle.formatStringFromName(key, formatArgs, formatArgs.length);
+    return passwordMgrBundle.formatStringFromName(key, formatArgs);
   }
   return passwordMgrBundle.GetStringFromName(key);
 }

@@ -1495,10 +1495,10 @@ bool nsHttpChannelAuthProvider::ConfirmAuth(const char* bundleKey,
     }
   }
 
-  const char16_t* strs[2] = {ucsHost.get(), ucsUser.get()};
+  AutoTArray<nsString, 2> strs = {ucsHost, ucsUser};
 
   nsAutoString msg;
-  rv = bundle->FormatStringFromName(bundleKey, strs, 2, msg);
+  rv = bundle->FormatStringFromName(bundleKey, strs, msg);
   if (NS_FAILED(rv)) return true;
 
   nsCOMPtr<nsIInterfaceRequestor> callbacks;

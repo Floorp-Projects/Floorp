@@ -45,7 +45,7 @@ var OfflineApps = {
     }];
 
     let requestor = BrowserApp.manifest ? "'" + BrowserApp.manifest.name + "'" : host;
-    let message = strings.formatStringFromName("offlineApps.ask", [requestor], 1);
+    let message = strings.formatStringFromName("offlineApps.ask", [requestor]);
     let options = { checkbox: Strings.browser.GetStringFromName("offlineApps.dontAskAgain") };
     NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id, options);
   },

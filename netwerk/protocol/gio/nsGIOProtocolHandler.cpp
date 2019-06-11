@@ -775,18 +775,17 @@ static void mount_operation_ask_password(
   if (flags & G_ASK_PASSWORD_NEED_PASSWORD) {
     if (flags & G_ASK_PASSWORD_NEED_USERNAME) {
       if (!realm.IsEmpty()) {
-        const char16_t* strings[] = {realm.get(), dispHost.get()};
-        bundle->FormatStringFromName("EnterLoginForRealm3", strings, 2,
-                                     nsmessage);
+        AutoTArray<nsString, 2> strings = {realm, dispHost};
+        bundle->FormatStringFromName("EnterLoginForRealm3", strings, nsmessage);
       } else {
-        const char16_t* strings[] = {dispHost.get()};
-        bundle->FormatStringFromName("EnterUserPasswordFor2", strings, 1,
+        AutoTArray<nsString, 1> strings = {dispHost};
+        bundle->FormatStringFromName("EnterUserPasswordFor2", strings,
                                      nsmessage);
       }
     } else {
       NS_ConvertUTF8toUTF16 userName(default_user);
-      const char16_t* strings[] = {userName.get(), dispHost.get()};
-      bundle->FormatStringFromName("EnterPasswordFor", strings, 2, nsmessage);
+      AutoTArray<nsString, 2> strings = {userName, dispHost};
+      bundle->FormatStringFromName("EnterPasswordFor", strings, nsmessage);
     }
   } else {
     g_warning("Unknown mount operation request (flags: %x)", flags);

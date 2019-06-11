@@ -34,7 +34,7 @@ if (AppConstants.platform == "macosx") {
 const CONTENT = {
   firstTimeUse: {
     notificationId: "autofill-address",
-    message: formatStringFromName("saveAddressesMessage", [brandShortName], 1),
+    message: formatStringFromName("saveAddressesMessage", [brandShortName]),
     anchor: {
       id: "autofill-address-notification-icon",
       URL: "chrome://formautofill/content/formfill-anchor.svg",
@@ -97,7 +97,7 @@ const CONTENT = {
   },
   addCreditCard: {
     notificationId: "autofill-credit-card",
-    message: formatStringFromName("saveCreditCardMessage", [brandShortName], 1),
+    message: formatStringFromName("saveCreditCardMessage", [brandShortName]),
     descriptionLabel: GetStringFromName("saveCreditCardDescriptionLabel"),
     descriptionIcon: true,
     linkMessage: GetStringFromName(autofillSecurityOptionsKey),

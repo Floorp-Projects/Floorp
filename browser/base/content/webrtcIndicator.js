@@ -15,7 +15,7 @@ function init(event) {
   let brandShortName = brand.GetStringFromName("brandShortName");
   document.title =
     gStringBundle.formatStringFromName("webrtcIndicator.windowtitle",
-                                       [brandShortName], 1);
+                                       [brandShortName]);
 
   for (let id of ["audioVideoButton", "screenSharePopup"]) {
     let popup = document.getElementById(id);

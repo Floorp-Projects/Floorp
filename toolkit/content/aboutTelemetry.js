@@ -910,7 +910,7 @@ var StackRenderer = {
     titleElement.className = "stack-title";
 
     let titleText = bundle.formatStringFromName(
-      aPrefix + "-title", aFormatArgs, aFormatArgs.length);
+      aPrefix + "-title", aFormatArgs);
     titleElement.appendChild(document.createTextNode(titleText));
 
     div.appendChild(titleElement);

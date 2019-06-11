@@ -134,7 +134,7 @@ var RemoteDebugger = {
       let msg = Strings.browser.formatStringFromName("remoteIncomingPromptTCP", [
         session.client.host,
         session.client.port,
-      ], 2);
+      ]);
       let scan = Strings.browser.GetStringFromName("remoteIncomingPromptScan");
       let scanAndRemember = Strings.browser.GetStringFromName("remoteIncomingPromptScanAndRemember");
       let deny = Strings.browser.GetStringFromName("remoteIncomingPromptDeny");

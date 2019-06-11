@@ -1691,16 +1691,16 @@ static nsresult ProfileMissingDialog(nsINativeAppSupport* aNative) {
     NS_ENSURE_TRUE_LOG(sbs, NS_ERROR_FAILURE);
 
     NS_ConvertUTF8toUTF16 appName(gAppData->name);
-    const char16_t* params[] = {appName.get(), appName.get()};
+    AutoTArray<nsString, 2> params = {appName, appName};
 
     // profileMissing
     nsAutoString missingMessage;
-    rv = sb->FormatStringFromName("profileMissing", params, 2, missingMessage);
+    rv = sb->FormatStringFromName("profileMissing", params, missingMessage);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
 
     nsAutoString missingTitle;
-    rv = sb->FormatStringFromName("profileMissingTitle", params, 1,
-                                  missingTitle);
+    params.SetLength(1);
+    rv = sb->FormatStringFromName("profileMissingTitle", params, missingTitle);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
 
     nsCOMPtr<nsIPromptService> ps(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
@@ -1745,22 +1745,23 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
     NS_ENSURE_TRUE_LOG(sbs, NS_ERROR_FAILURE);
 
     NS_ConvertUTF8toUTF16 appName(gAppData->name);
-    const char16_t* params[] = {appName.get(), appName.get()};
+    AutoTArray<nsString, 2> params = {appName, appName};
 
     nsAutoString killMessage;
 #ifndef XP_MACOSX
     rv = sb->FormatStringFromName(
         aUnlocker ? "restartMessageUnlocker" : "restartMessageNoUnlocker",
-        params, 2, killMessage);
+        params, killMessage);
 #else
     rv = sb->FormatStringFromName(
         aUnlocker ? "restartMessageUnlockerMac" : "restartMessageNoUnlockerMac",
-        params, 2, killMessage);
+        params, killMessage);
 #endif
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
+    params.SetLength(1);
     nsAutoString killTitle;
-    rv = sb->FormatStringFromName("restartTitle", params, 1, killTitle);
+    rv = sb->FormatStringFromName("restartTitle", params, killTitle);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     if (gfxPlatform::IsHeadless()) {

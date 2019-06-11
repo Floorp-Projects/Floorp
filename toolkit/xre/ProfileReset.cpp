@@ -56,12 +56,12 @@ nsresult ProfileResetCleanup(nsToolkitProfileService* aService,
   if (!sb) return NS_ERROR_FAILURE;
 
   NS_ConvertUTF8toUTF16 appName(gAppData->name);
-  const char16_t* params[] = {appName.get(), appName.get()};
+  AutoTArray<nsString, 2> params = {appName, appName};
 
   nsAutoString resetBackupDirectoryName;
 
   static const char* kResetBackupDirectory = "resetBackupDirectory";
-  rv = sb->FormatStringFromName(kResetBackupDirectory, params, 2,
+  rv = sb->FormatStringFromName(kResetBackupDirectory, params,
                                 resetBackupDirectoryName);
   if (NS_FAILED(rv)) return rv;
 

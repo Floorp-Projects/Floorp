@@ -62,7 +62,7 @@ class nsStringBundleBase : public nsIStringBundle, public nsIMemoryReporter {
 
  public:
   static nsresult FormatString(const char16_t* formatStr,
-                               const char16_t** aParams, uint32_t aLength,
+                               const nsTArray<nsString>& aParams,
                                nsAString& aResult);
 };
 

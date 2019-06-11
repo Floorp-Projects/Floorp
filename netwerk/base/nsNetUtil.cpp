@@ -2788,10 +2788,10 @@ nsresult NS_ShouldSecureUpgrade(
         NS_ConvertUTF8toUTF16 reportScheme(scheme);
 
         if (aLoadInfo->GetUpgradeInsecureRequests()) {
-          const char16_t* params[] = {reportSpec.get(), reportScheme.get()};
+          AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
           uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
           CSP_LogLocalizedStr(
-              "upgradeInsecureRequest", params, ArrayLength(params),
+              "upgradeInsecureRequest", params,
               EmptyString(),  // aSourceFile
               EmptyString(),  // aScriptSample
               0,              // aLineNumber

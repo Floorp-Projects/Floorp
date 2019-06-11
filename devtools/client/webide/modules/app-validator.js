@@ -71,7 +71,7 @@ AppValidator.checkManifest = function(manifestURL) {
       req.open("GET", manifestURL, true);
       req.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING;
     } catch (e) {
-      error = strings.formatStringFromName("validator.invalidManifestURL", [manifestURL], 1);
+      error = strings.formatStringFromName("validator.invalidManifestURL", [manifestURL]);
       return reject(error);
     }
 
@@ -80,7 +80,7 @@ AppValidator.checkManifest = function(manifestURL) {
       try {
         manifest = JSON.parse(req.responseText);
       } catch (e) {
-        error = strings.formatStringFromName("validator.invalidManifestJSON", [e, manifestURL], 2);
+        error = strings.formatStringFromName("validator.invalidManifestJSON", [e, manifestURL]);
         reject(error);
       }
 
@@ -88,14 +88,14 @@ AppValidator.checkManifest = function(manifestURL) {
     };
 
     req.onerror = function() {
-      error = strings.formatStringFromName("validator.noAccessManifestURL", [req.statusText, manifestURL], 2);
+      error = strings.formatStringFromName("validator.noAccessManifestURL", [req.statusText, manifestURL]);
       reject(error);
     };
 
     try {
       req.send(null);
     } catch (e) {
-      error = strings.formatStringFromName("validator.noAccessManifestURL", [e, manifestURL], 2);
+      error = strings.formatStringFromName("validator.noAccessManifestURL", [e, manifestURL]);
       reject(error);
     }
   });
@@ -162,11 +162,11 @@ AppValidator.prototype._getManifest = function() {
     try {
       Services.io.newURI(manifestURL);
     } catch (e) {
-      this.error(strings.formatStringFromName("validator.invalidHostedManifestURL", [manifestURL, e.message], 2));
+      this.error(strings.formatStringFromName("validator.invalidHostedManifestURL", [manifestURL, e.message]));
       return Promise.resolve(null);
     }
   } else {
-    this.error(strings.formatStringFromName("validator.invalidProjectType", [this.type], 1));
+    this.error(strings.formatStringFromName("validator.invalidProjectType", [this.type]));
     return Promise.resolve(null);
   }
   return this._fetchManifest(manifestURL);
@@ -197,7 +197,7 @@ AppValidator.prototype.validateLaunchPath = function(manifest) {
   return new Promise(resolve => {
     // The launch_path field has to start with a `/`
     if (manifest.launch_path && manifest.launch_path[0] !== "/") {
-      this.error(strings.formatStringFromName("validator.nonAbsoluteLaunchPath", [manifest.launch_path], 1));
+      this.error(strings.formatStringFromName("validator.nonAbsoluteLaunchPath", [manifest.launch_path]));
       resolve();
     }
     const origin = this._getOriginURL();
@@ -211,7 +211,7 @@ AppValidator.prototype.validateLaunchPath = function(manifest) {
     try {
       indexURL = Services.io.newURI(path, null, Services.io.newURI(origin)).spec;
     } catch (e) {
-      this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [origin + path], 1));
+      this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [origin + path]));
       return resolve();
     }
 
@@ -221,24 +221,24 @@ AppValidator.prototype.validateLaunchPath = function(manifest) {
       req.open("HEAD", indexURL, true);
       req.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING;
     } catch (e) {
-      this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [indexURL], 1));
+      this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [indexURL]));
       return resolve();
     }
     req.onload = () => {
       if (req.status >= 400) {
-        this.error(strings.formatStringFromName("validator.accessFailedLaunchPathBadHttpCode", [indexURL, req.status], 2));
+        this.error(strings.formatStringFromName("validator.accessFailedLaunchPathBadHttpCode", [indexURL, req.status]));
       }
       resolve();
     };
     req.onerror = () => {
-      this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [indexURL], 1));
+      this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [indexURL]));
       resolve();
     };
 
     try {
       req.send(null);
     } catch (e) {
-      this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [indexURL], 1));
+      this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [indexURL]));
       resolve();
     }
   });
@@ -247,10 +247,10 @@ AppValidator.prototype.validateLaunchPath = function(manifest) {
 AppValidator.prototype.validateType = function(manifest) {
   const appType = manifest.type || "web";
   if (!["web", "privileged", "certified"].includes(appType)) {
-    this.error(strings.formatStringFromName("validator.invalidAppType", [appType], 1));
+    this.error(strings.formatStringFromName("validator.invalidAppType", [appType]));
   } else if (this.type == "hosted" &&
              ["certified", "privileged"].includes(appType)) {
-    this.error(strings.formatStringFromName("validator.invalidHostedPriviledges", [appType], 1));
+    this.error(strings.formatStringFromName("validator.invalidHostedPriviledges", [appType]));
   }
 
   // certified app are not fully supported on the simulator

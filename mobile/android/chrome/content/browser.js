@@ -1300,7 +1300,7 @@ var BrowserApp = {
         if (isPrivate) {
           message = Strings.browser.GetStringFromName("privateClosedMessage.message");
         } else if (title) {
-          message = Strings.browser.formatStringFromName("undoCloseToast.message", [title], 1);
+          message = Strings.browser.formatStringFromName("undoCloseToast.message", [title]);
         } else {
           message = Strings.browser.GetStringFromName("undoCloseToast.messageDefault");
         }
@@ -3268,7 +3268,7 @@ ChromeUtils.defineModuleGetter(this, "PageActions",
   let [name, script, exprt] = item;
 
   XPCOMUtils.defineLazyGetter(NativeWindow, name, () => {
-    var err = Strings.browser.formatStringFromName("nativeWindow.deprecated", ["NativeWindow." + name, script], 2);
+    var err = Strings.browser.formatStringFromName("nativeWindow.deprecated", ["NativeWindow." + name, script]);
     Cu.reportError(err);
 
     let sandbox = {};
@@ -5091,7 +5091,7 @@ var XPInstallObserver = {
           buttons = [strings.GetStringFromName("unsignedAddonsDisabled.dismiss")];
           (data) => {};
         } else {
-          message = strings.formatStringFromName("xpinstallDisabledMessage2", [brandShortName, host], 2);
+          message = strings.formatStringFromName("xpinstallDisabledMessage2", [brandShortName, host]);
           buttons = [
               strings.GetStringFromName("xpinstallDisabledButton"),
               strings.GetStringFromName("unsignedAddonsDisabled.dismiss"),
@@ -5118,7 +5118,7 @@ var XPInstallObserver = {
         let message;
         if (host) {
           // We have a host which asked for the install.
-          message = strings.formatStringFromName("xpinstallPromptWarning2", [brandShortName, host], 2);
+          message = strings.formatStringFromName("xpinstallPromptWarning2", [brandShortName, host]);
         } else {
           // Without a host we address the add-on as the initiator of the install.
           let addon = null;
@@ -5127,10 +5127,10 @@ var XPInstallObserver = {
           }
           if (addon) {
             // We have an addon name, show the regular message.
-            message = strings.formatStringFromName("xpinstallPromptWarningLocal", [brandShortName, addon], 2);
+            message = strings.formatStringFromName("xpinstallPromptWarningLocal", [brandShortName, addon]);
           } else {
             // We don't have an addon name, show an alternative message.
-            message = strings.formatStringFromName("xpinstallPromptWarningDirect", [brandShortName], 1);
+            message = strings.formatStringFromName("xpinstallPromptWarningDirect", [brandShortName]);
           }
         }
 
@@ -5158,7 +5158,7 @@ var XPInstallObserver = {
         new Prompt({
           window: window,
           title: Strings.browser.GetStringFromName("addonError.titleBlocked"),
-          message: strings.formatStringFromName("xpinstallPromptWarningDirect", [brandShortName], 1),
+          message: strings.formatStringFromName("xpinstallPromptWarningDirect", [brandShortName]),
           buttons: [strings.GetStringFromName("unsignedAddonsDisabled.dismiss")],
         }).show((data) => {});
         break;
@@ -5455,7 +5455,7 @@ var IndexedDB = {
 
     let message, responseTopic;
     if (topic == this._permissionsPrompt) {
-      message = strings.formatStringFromName("offlineApps.ask", [host], 1);
+      message = strings.formatStringFromName("offlineApps.ask", [host]);
       responseTopic = this._permissionsResponse;
     }
 
@@ -5793,7 +5793,7 @@ var IdentityHandler = {
     result.secure = true;
 
     let iData = this.getIdentityData();
-    result.verifier = Strings.browser.formatStringFromName("identity.identified.verifier", [iData.caOrg], 1);
+    result.verifier = Strings.browser.formatStringFromName("identity.identified.verifier", [iData.caOrg]);
 
     // If the cert is identified, then we can populate the results with credentials
     if (aState & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL) {
@@ -5805,7 +5805,7 @@ var IdentityHandler = {
         supplemental += iData.city + "\n";
       }
       if (iData.state && iData.country) {
-        supplemental += Strings.browser.formatStringFromName("identity.identified.state_and_country", [iData.state, iData.country], 2);
+        supplemental += Strings.browser.formatStringFromName("identity.identified.state_and_country", [iData.state, iData.country]);
         result.country = iData.country;
       } else if (iData.state) { // State only
         supplemental += iData.state;
@@ -6025,7 +6025,7 @@ var SearchEngines = {
     try {
       await Services.search.addEngine(engine.url, engine.iconURL, false);
       // Display a toast confirming addition of new search engine.
-      Snackbars.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [engine.title], 1), Snackbars.LENGTH_LONG);
+      Snackbars.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [engine.title]), Snackbars.LENGTH_LONG);
     } catch (ex) {
       let code = ex.result;
       let errorMessage;
@@ -6037,7 +6037,7 @@ var SearchEngines = {
         errorMessage = "alertSearchEngineErrorToast";
       }
 
-      Snackbars.show(Strings.browser.formatStringFromName(errorMessage, [engine.title], 1), Snackbars.LENGTH_LONG);
+      Snackbars.show(Strings.browser.formatStringFromName(errorMessage, [engine.title]), Snackbars.LENGTH_LONG);
     }
   },
 
@@ -6170,7 +6170,7 @@ var SearchEngines = {
         }
 
         await Services.search.addEngineWithDetails(name, data, null, null, method, formURL);
-        Snackbars.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [name], 1), Snackbars.LENGTH_LONG);
+        Snackbars.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [name]), Snackbars.LENGTH_LONG);
 
         let engine = Services.search.getEngineByName(name);
         engine.wrappedJSObject._queryCharset = charset;
@@ -6304,7 +6304,7 @@ var ExternalApps = {
       if (uri)
         apps = HelperApps.getAppsForUri(uri);
 
-      return apps.length == 1 ? Strings.browser.formatStringFromName("helperapps.openWithApp2", [apps[0].name], 1) :
+      return apps.length == 1 ? Strings.browser.formatStringFromName("helperapps.openWithApp2", [apps[0].name]) :
                                 Strings.browser.GetStringFromName("helperapps.openWithList2");
     }, this.filter, this.openExternal);
   },

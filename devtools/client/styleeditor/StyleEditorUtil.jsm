@@ -44,7 +44,7 @@ function getString(name) {
       return gStringBundle.GetStringFromName(name);
     }
     const rest = Array.prototype.slice.call(arguments, 1);
-    return gStringBundle.formatStringFromName(name, rest, rest.length);
+    return gStringBundle.formatStringFromName(name, rest);
   } catch (ex) {
     console.error(ex);
     throw new Error("L10N error. '" + name + "' is missing from " +

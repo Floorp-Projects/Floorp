@@ -43,7 +43,7 @@ MainProcessSingleton.prototype = {
       var brandName = brandBundle.GetStringFromName("brandShortName");
       var title = searchBundle.GetStringFromName("error_invalid_format_title");
       var msg = searchBundle.formatStringFromName("error_invalid_engine_msg2",
-                                                  [brandName, engineURL.spec], 2);
+                                                  [brandName, engineURL.spec]);
       Services.ww.getNewPrompter(browser.ownerGlobal).alert(title, msg);
       return;
     }

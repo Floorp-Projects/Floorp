@@ -3288,11 +3288,10 @@ void nsNavHistory::GetAgeInDaysString(int32_t aInt, const char* aName,
                                       nsACString& aResult) {
   nsIStringBundle* bundle = GetBundle();
   if (bundle) {
-    nsAutoString intString;
-    intString.AppendInt(aInt);
-    const char16_t* strings[1] = {intString.get()};
+    AutoTArray<nsString, 1> strings;
+    strings.AppendElement()->AppendInt(aInt);
     nsAutoString value;
-    nsresult rv = bundle->FormatStringFromName(aName, strings, 1, value);
+    nsresult rv = bundle->FormatStringFromName(aName, strings, value);
     if (NS_SUCCEEDED(rv)) {
       CopyUTF16toUTF8(value, aResult);
       return;

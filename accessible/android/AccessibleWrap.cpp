@@ -324,11 +324,11 @@ void AccessibleWrap::GetRoleDescription(role aRole,
 
   if (aRole == roles::HEADING && aAttributes) {
     // The heading level is an attribute, so we need that.
-    nsString level;
-    rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("level"), level);
+    AutoTArray<nsString, 1> formatString;
+    rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("level"),
+                                        *formatString.AppendElement());
     if (NS_SUCCEEDED(rv)) {
-      const char16_t* formatString[] = {level.get()};
-      rv = bundle->FormatStringFromName("headingLevel", formatString, 1,
+      rv = bundle->FormatStringFromName("headingLevel", formatString,
                                         aRoleDescription);
       if (NS_SUCCEEDED(rv)) {
         return;

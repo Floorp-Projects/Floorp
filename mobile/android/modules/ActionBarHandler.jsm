@@ -553,7 +553,7 @@ var ActionBarHandler = {
     SEARCH: {
       id: "search_action",
       label: () => Strings.browser.formatStringFromName("contextmenu.search",
-        [Services.search.defaultEngine.name], 1),
+        [Services.search.defaultEngine.name]),
       icon: "drawable://ab_search",
       order: 1,
       floatingOrder: 6,

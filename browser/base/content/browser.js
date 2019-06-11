@@ -502,7 +502,7 @@ var gNavigatorBundle = {
     return gBrowserBundle.GetStringFromName(key);
   },
   getFormattedString(key, array) {
-    return gBrowserBundle.formatStringFromName(key, array, array.length);
+    return gBrowserBundle.formatStringFromName(key, array);
   },
 };
 
@@ -4131,7 +4131,7 @@ const BrowserSearch = {
     let placeholder;
     if (name) {
       placeholder = gBrowserBundle.formatStringFromName("urlbar.placeholder",
-        [name], 1);
+        [name]);
     } else {
       placeholder = gURLBar.getAttribute("defaultPlaceholder");
     }
@@ -7737,7 +7737,7 @@ function ReportFalseDeceptiveSite() {
         Services.prompt.alert(window,
                               bundle.GetStringFromName("errorReportFalseDeceptiveTitle"),
                               bundle.formatStringFromName("errorReportFalseDeceptiveMessage",
-                                                          [message.data.blockedInfo.provider], 1));
+                                                          [message.data.blockedInfo.provider]));
         }
     };
     mm.addMessageListener("DeceptiveBlockedDetails:Result", onMessage);
@@ -8488,7 +8488,7 @@ TabModalPromptBox.prototype = {
       let spacer = document.createXULElement("spacer");
       allowFocusRow.appendChild(spacer);
       let label = gTabBrowserBundle.formatStringFromName("tabs.allowTabFocusByPromptForSite",
-                                                      [hostForAllowFocusCheckbox], 1);
+                                                      [hostForAllowFocusCheckbox]);
       allowFocusCheckbox.setAttribute("label", label);
       allowFocusRow.appendChild(allowFocusCheckbox);
       newPrompt.ui.rows.append(allowFocusRow);

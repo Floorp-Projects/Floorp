@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=847081
 var stringBundleService = SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"]
                           .getService(SpecialPowers.Ci.nsIStringBundleService);
 var localizer = stringBundleService.createBundle("chrome://global/locale/security/csp.properties");
-var warningMsg = localizer.formatStringFromName("reportURInotInReportOnlyHeader", [window.location.origin], 1);
+var warningMsg = localizer.formatStringFromName("reportURInotInReportOnlyHeader", [window.location.origin]);
 function cleanup() {
   SpecialPowers.postConsoleSentinel();
   SimpleTest.finish();

@@ -64,18 +64,15 @@ function prefillAlertInfo() {
         let label = document.getElementById("alertSourceLabel");
         label.setAttribute("value",
           ALERT_BUNDLE.formatStringFromName("source.label",
-                                            [hostPort],
-                                            1));
+                                            [hostPort]));
         let doNotDisturbMenuItem = document.getElementById("doNotDisturbMenuItem");
         doNotDisturbMenuItem.setAttribute("label",
           ALERT_BUNDLE.formatStringFromName("pauseNotifications.label",
-                                            [BRAND_NAME],
-                                            1));
+                                            [BRAND_NAME]));
         let disableForOrigin = document.getElementById("disableForOriginMenuItem");
         disableForOrigin.setAttribute("label",
           ALERT_BUNDLE.formatStringFromName("webActions.disableForOrigin.label",
-                                            [hostPort],
-                                            1));
+                                            [hostPort]));
         let openSettings = document.getElementById("openSettingsMenuItem");
         openSettings.setAttribute("label",
           ALERT_BUNDLE.GetStringFromName("webActions.settings.label"));

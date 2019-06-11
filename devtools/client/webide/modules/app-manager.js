@@ -130,7 +130,7 @@ var AppManager = exports.AppManager = {
     } else {
       let text;
       if (l10nArgs.length > 0) {
-        text = Strings.formatStringFromName(l10nProperty, l10nArgs, l10nArgs.length);
+        text = Strings.formatStringFromName(l10nProperty, l10nArgs);
       } else {
         text = Strings.GetStringFromName(l10nProperty);
       }

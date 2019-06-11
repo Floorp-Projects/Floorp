@@ -4067,9 +4067,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
   // The key used to select the appropriate error message from the properties
   // file.
   const char* errorDescriptionID = nullptr;
-  const uint32_t kMaxFormatStrArgs = 3;
-  nsAutoString formatStrs[kMaxFormatStrArgs];
-  uint32_t formatStrCount = 0;
+  AutoTArray<nsString, 3> formatStrs;
   bool addHostPort = false;
   nsresult rv = NS_OK;
   nsAutoString messageStr;
@@ -4085,7 +4083,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     // Extract the schemes into a comma delimited list.
     nsAutoCString scheme;
     aURI->GetScheme(scheme);
-    CopyASCIItoUTF16(scheme, formatStrs[0]);
+    CopyASCIItoUTF16(scheme, *formatStrs.AppendElement());
     nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(aURI);
     while (nestedURI) {
       nsCOMPtr<nsIURI> tempURI;
@@ -4098,7 +4096,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       }
       nestedURI = do_QueryInterface(tempURI);
     }
-    formatStrCount = 1;
     error = "unknownProtocolFound";
   } else if (NS_ERROR_FILE_NOT_FOUND == aError) {
     NS_ENSURE_ARG_POINTER(aURI);
@@ -4112,8 +4109,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     nsAutoCString host;
     nsCOMPtr<nsIURI> innermostURI = NS_GetInnermostURI(aURI);
     innermostURI->GetHost(host);
-    CopyUTF8toUTF16(host, formatStrs[0]);
-    formatStrCount = 1;
+    CopyUTF8toUTF16(host, *formatStrs.AppendElement());
     errorDescriptionID = "dnsNotFound2";
     error = "dnsNotFound";
   } else if (NS_ERROR_CONNECTION_REFUSED == aError ||
@@ -4131,8 +4127,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     // Get the host
     nsAutoCString host;
     aURI->GetHost(host);
-    CopyUTF8toUTF16(host, formatStrs[0]);
-    formatStrCount = 1;
+    CopyUTF8toUTF16(host, *formatStrs.AppendElement());
     error = "netTimeout";
   } else if (NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION == aError ||
              NS_ERROR_CSP_FORM_ACTION_VIOLATION == aError) {
@@ -4236,8 +4231,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
              NS_ERROR_HARMFUL_URI == aError) {
     nsAutoCString host;
     aURI->GetHost(host);
-    CopyUTF8toUTF16(host, formatStrs[0]);
-    formatStrCount = 1;
+    CopyUTF8toUTF16(host, *formatStrs.AppendElement());
 
     // Malware and phishing detectors may want to use an alternate error
     // page, but if the pref's not set, we'll fall back on the standard page
@@ -4434,11 +4428,12 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       } else {
         hostport.Assign('?');
       }
-      CopyUTF8toUTF16(hostport, formatStrs[formatStrCount++]);
+      CopyUTF8toUTF16(hostport, *formatStrs.AppendElement());
     }
 
     nsAutoCString spec;
     rv = NS_ERROR_NOT_AVAILABLE;
+    auto& nextFormatStr = *formatStrs.AppendElement();
     if (aURI) {
       // displaying "file://" is aesthetically unpleasing and could even be
       // confusing to the user
@@ -4452,26 +4447,21 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
           do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv));
       if (NS_SUCCEEDED(rv)) {
         rv = textToSubURI->UnEscapeURIForUI(NS_LITERAL_CSTRING("UTF-8"), spec,
-                                            formatStrs[formatStrCount]);
+                                            nextFormatStr);
       }
     } else {
       spec.Assign('?');
     }
     if (NS_FAILED(rv)) {
-      CopyUTF8toUTF16(spec, formatStrs[formatStrCount]);
+      CopyUTF8toUTF16(spec, nextFormatStr);
     }
     rv = NS_OK;
-    ++formatStrCount;
 
-    const char16_t* strs[kMaxFormatStrArgs];
-    for (uint32_t i = 0; i < formatStrCount; i++) {
-      strs[i] = formatStrs[i].get();
-    }
     nsAutoString str;
-    rv = stringBundle->FormatStringFromName(errorDescriptionID, strs,
-                                            formatStrCount, str);
+    rv =
+        stringBundle->FormatStringFromName(errorDescriptionID, formatStrs, str);
     NS_ENSURE_SUCCESS(rv, rv);
-    messageStr.Assign(str.get());
+    messageStr.Assign(str);
   }
 
   // Display the error as a page or an alert prompt
@@ -12060,8 +12050,9 @@ nsresult nsDocShell::ConfirmRepost(bool* aRepost) {
   NS_ASSERTION(prompter && brandBundle && appBundle,
                "Unable to set up repost prompter.");
 
-  nsAutoString brandName;
-  rv = brandBundle->GetStringFromName("brandShortName", brandName);
+  AutoTArray<nsString, 1> formatStrings;
+  rv = brandBundle->GetStringFromName("brandShortName",
+                                      *formatStrings.AppendElement());
 
   nsAutoString msgString, button0Title;
   if (NS_FAILED(rv)) {  // No brand, use the generic version.
@@ -12070,9 +12061,8 @@ nsresult nsDocShell::ConfirmRepost(bool* aRepost) {
     // Brand available - if the app has an override file with formatting, the
     // app name will be included. Without an override, the prompt will look
     // like the generic version.
-    const char16_t* formatStrings[] = {brandName.get()};
     rv = appBundle->FormatStringFromName("confirmRepostPrompt", formatStrings,
-                                         ArrayLength(formatStrings), msgString);
+                                         msgString);
   }
   if (NS_FAILED(rv)) {
     return rv;

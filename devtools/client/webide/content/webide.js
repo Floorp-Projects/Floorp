@@ -211,7 +211,7 @@ var UI = {
   updateTitle: function() {
     const project = AppManager.selectedProject;
     if (project) {
-      window.document.title = Strings.formatStringFromName("title_app", [project.name], 1);
+      window.document.title = Strings.formatStringFromName("title_app", [project.name]);
     } else {
       window.document.title = Strings.GetStringFromName("title_noApp");
     }
@@ -297,7 +297,7 @@ var UI = {
     let text;
 
     if (l10nArgs.length > 0) {
-      text = Strings.formatStringFromName(l10nProperty, l10nArgs, l10nArgs.length);
+      text = Strings.formatStringFromName(l10nProperty, l10nArgs);
     } else {
       text = Strings.GetStringFromName(l10nProperty);
     }

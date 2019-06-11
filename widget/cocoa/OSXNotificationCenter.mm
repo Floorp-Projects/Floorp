@@ -266,10 +266,9 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
   sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
 
   if (!hostPort.IsEmpty() && bundle) {
-    const char16_t* formatStrings[] = {hostPort.get()};
+    AutoTArray<nsString, 1> formatStrings = {hostPort};
     nsAutoString notificationSource;
-    bundle->FormatStringFromName("source.label", formatStrings, ArrayLength(formatStrings),
-                                 notificationSource);
+    bundle->FormatStringFromName("source.label", formatStrings, notificationSource);
     notification.subtitle = nsCocoaUtils::ToNSString(notificationSource);
   }
 
@@ -289,9 +288,9 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
     bundle->GetStringFromName("closeButton.title", closeButtonTitle);
     bundle->GetStringFromName("actionButton.label", actionButtonTitle);
     if (!hostPort.IsEmpty()) {
-      const char16_t* formatStrings[] = {hostPort.get()};
+      AutoTArray<nsString, 1> formatStrings = {hostPort};
       bundle->FormatStringFromName("webActions.disableForOrigin.label", formatStrings,
-                                   ArrayLength(formatStrings), disableButtonTitle);
+                                   disableButtonTitle);
     }
     bundle->GetStringFromName("webActions.settings.label", settingsButtonTitle);
 

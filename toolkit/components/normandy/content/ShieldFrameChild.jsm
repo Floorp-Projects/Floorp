@@ -79,7 +79,7 @@ class ShieldFrameChild extends ActorChild {
           strings[str.key] = str.value;
         }
         const brandName = gBrandBundle.GetStringFromName("brandShortName");
-        strings.enabledList = gStringBundle.formatStringFromName("enabledList", [brandName], 1);
+        strings.enabledList = gStringBundle.formatStringFromName("enabledList", [brandName]);
 
         this.triggerPageCallback(
           "ReceiveRemoteValue:ShieldTranslations",

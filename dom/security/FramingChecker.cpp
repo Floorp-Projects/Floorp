@@ -178,9 +178,9 @@ static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   uint64_t innerWindowID = loadInfo->GetInnerWindowID();
   bool privateWindow = !!loadInfo->GetOriginAttributes().mPrivateBrowsingId;
-  const char16_t* params[] = {u"x-frame-options", u"frame-ancestors"};
+  AutoTArray<nsString, 2> params = {NS_LITERAL_STRING("x-frame-options"),
+                                    NS_LITERAL_STRING("frame-ancestors")};
   CSP_LogLocalizedStr("IgnoringSrcBecauseOfDirective", params,
-                      ArrayLength(params),
                       EmptyString(),  // no sourcefile
                       EmptyString(),  // no scriptsample
                       0,              // no linenumber

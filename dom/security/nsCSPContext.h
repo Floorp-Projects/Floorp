@@ -70,10 +70,10 @@ class nsCSPContext : public nsIContentSecurityPolicy {
    */
   void flushConsoleMessages();
 
-  void logToConsole(const char* aName, const char16_t** aParams,
-                    uint32_t aParamsLength, const nsAString& aSourceName,
-                    const nsAString& aSourceLine, uint32_t aLineNumber,
-                    uint32_t aColumnNumber, uint32_t aSeverityFlag);
+  void logToConsole(const char* aName, const nsTArray<nsString>& aParams,
+                    const nsAString& aSourceName, const nsAString& aSourceLine,
+                    uint32_t aLineNumber, uint32_t aColumnNumber,
+                    uint32_t aSeverityFlag);
 
   /**
    * Construct SecurityPolicyViolationEventInit structure.

@@ -78,7 +78,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         if (name != "MMultiscriptsErrors") {
           var formatParams = g_errorInfo[name].args[idx];
           if (formatParams.length > 0) {
-            return g_bundl.formatStringFromName(name,formatParams,formatParams.length);
+            return g_bundl.formatStringFromName(name,formatParams);
           } else {
             return g_bundl.GetStringFromName(name);
           }

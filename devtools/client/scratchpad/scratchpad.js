@@ -994,7 +994,7 @@ var Scratchpad = {
       } catch (e) {
         this.notificationBox.appendNotification(
             this.strings.formatStringFromName("importFromFile.convert.failed",
-                                              [ charset ], 1),
+                                              [ charset ]),
             "file-import-convert-failed",
             null,
             this.notificationBox.PRIORITY_WARNING_HIGH,
@@ -1043,8 +1043,7 @@ var Scratchpad = {
           if (!content) {
             const message = this.strings.formatStringFromName(
               "importFromFile.convert.failed",
-              [charsets.join(", ")],
-              1);
+              [charsets.join(", ")]);
             this.notificationBox.appendNotification(
               message,
               "file-import-convert-failed",
@@ -1518,7 +1517,7 @@ var Scratchpad = {
     var statusBarField = document.getElementById("statusbar-line-col");
     const { line, ch } = this.editor.getCursor();
     statusBarField.textContent = this.strings.formatStringFromName(
-      "scratchpad.statusBarLineCol", [ line + 1, ch + 1], 2);
+      "scratchpad.statusBarLineCol", [ line + 1, ch + 1]);
   },
 
   /**
@@ -1550,8 +1549,7 @@ var Scratchpad = {
       "scratchpadIntro1",
       [ShortcutUtils.prettifyShortcut(document.getElementById("sp-key-run"), true),
        ShortcutUtils.prettifyShortcut(document.getElementById("sp-key-inspect"), true),
-       ShortcutUtils.prettifyShortcut(document.getElementById("sp-key-display"), true)],
-      3);
+       ShortcutUtils.prettifyShortcut(document.getElementById("sp-key-display"), true)]);
 
     let args = window.arguments;
     let state = null;
@@ -1594,7 +1592,7 @@ var Scratchpad = {
       this.updateStatusBar = Scratchpad.updateStatusBar.bind(this);
       this.editor.on("cursorActivity", this.updateStatusBar);
       const okstring = this.strings.GetStringFromName("selfxss.okstring");
-      const msg = this.strings.formatStringFromName("selfxss.msg", [okstring], 1);
+      const msg = this.strings.formatStringFromName("selfxss.msg", [okstring]);
       this._onPaste = pasteHandlerGen(this.editor.container.contentDocument.body,
         this.notificationBox, msg, okstring);
 

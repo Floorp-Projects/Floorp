@@ -1002,7 +1002,7 @@ function getGlobalIndicator() {
         let menuitem = this.ownerDocument.createXULElement("menuitem");
         let labelId = "webrtcIndicator.sharing" + type + "With.menuitem";
         let label = stream.browser.contentTitle || stream.uri;
-        menuitem.setAttribute("label", bundle.formatStringFromName(labelId, [label], 1));
+        menuitem.setAttribute("label", bundle.formatStringFromName(labelId, [label]));
         menuitem.setAttribute("disabled", "true");
         this.appendChild(menuitem);
 
@@ -1029,7 +1029,7 @@ function getGlobalIndicator() {
         let item = this.ownerDocument.createXULElement("menuitem");
         labelId = "webrtcIndicator.controlSharingOn.menuitem";
         label = stream.browser.contentTitle || stream.uri;
-        item.setAttribute("label", bundle.formatStringFromName(labelId, [label], 1));
+        item.setAttribute("label", bundle.formatStringFromName(labelId, [label]));
         item.stream = stream;
         item.addEventListener("command", indicator._command);
         this.appendChild(item);
