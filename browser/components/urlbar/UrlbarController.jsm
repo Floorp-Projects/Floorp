@@ -291,7 +291,7 @@ class UrlbarController {
         event.preventDefault();
         break;
       case KeyEvent.DOM_VK_TAB:
-        if (this.view.isOpen) {
+        if (this.view.isOpen && !event.ctrlKey && !event.altKey) {
           if (executeAction) {
             this.userSelectionBehavior = "tab";
             this.view.selectBy(1, { reverse: event.shiftKey });
