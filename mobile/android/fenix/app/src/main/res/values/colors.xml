@@ -20,6 +20,11 @@
     <color name="disabled_light_theme">#6620123A</color>
     <color name="scrimStart_light_theme">#F515141A</color>
     <color name="scrimEnd_light_theme">#F542414D</color>
+    <color name="collection_icon_color_violet_light_theme">#7542E5</color>
+    <color name="collection_icon_color_blue_light_theme">#0250BB</color>
+    <color name="collection_icon_color_pink_light_theme">#E31587</color>
+    <color name="collection_icon_color_green_light_theme">#2AC3A2</color>
+    <color name="collection_icon_color_yellow_light_theme">#E27F2E</color>
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">#FBFBFE</color>
@@ -38,6 +43,11 @@
     <color name="disabled_dark_theme">#66FBFBFE</color>
     <color name="scrimStart_dark_theme">#F520123A</color>
     <color name="scrimEnd_dark_theme">#F515141A</color>
+    <color name="collection_icon_color_violet_dark_theme">#AB71FF</color>
+    <color name="collection_icon_color_blue_dark_theme">#00B3F4</color>
+    <color name="collection_icon_color_pink_dark_theme">#FF6BBA</color>
+    <color name="collection_icon_color_green_dark_theme">#88FFD1</color>
+    <color name="collection_icon_color_yellow_dark_theme">#FFDE67</color>
 
     <!-- Private theme color palette -->
     <color name="primary_text_private_theme">#FBFBFE</color>
@@ -79,11 +89,11 @@
     <color name="bookmark_favicon_background">#DFDFE3</color>
 
     <!-- Collection icons-->
-    <color name="collection_icon_color_violet">#7542E5</color>
-    <color name="collection_icon_color_blue">#0250BB</color>
-    <color name="collection_icon_color_pink">#E31587</color>
-    <color name="collection_icon_color_green">#2AC3A2</color>
-    <color name="collection_icon_color_yellow">#E27F2E</color>
+    <color name="collection_icon_color_violet">@color/collection_icon_color_violet_light_theme</color>
+    <color name="collection_icon_color_blue">@color/collection_icon_color_blue_light_theme</color>
+    <color name="collection_icon_color_pink">@color/collection_icon_color_pink_light_theme</color>
+    <color name="collection_icon_color_green">@color/collection_icon_color_green_light_theme</color>
+    <color name="collection_icon_color_yellow">@color/collection_icon_color_yellow_light_theme</color>
 
     <!-- Library buttons -->
     <color name="library_sessions_icon_background">#B9F0FD</color>
