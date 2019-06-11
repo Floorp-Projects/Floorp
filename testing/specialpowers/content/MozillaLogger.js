@@ -6,66 +6,55 @@
 
 /* import-globals-from SpecialPowers.jsm */
 
-function MozillaLogger(aPath) {
-}
-
 function formatLogMessage(msg) {
-    return msg.info.join(" ") + "\n";
+  return msg.info.join(" ") + "\n";
 }
 
-MozillaLogger.prototype = {
-  init(path) {},
-
-  getLogCallback() {
-    return function(msg) {
-      var data = formatLogMessage(msg);
-      dump(data);
+class MozillaLogger {
+  get logCallback() {
+    return (msg) => {
+      this.log(formatLogMessage(msg));
     };
-  },
+  }
 
   log(msg) {
     dump(msg);
-  },
+  }
 
-  close() {},
-};
+  close() {}
+}
 
 
 /**
  * SpecialPowersLogger, inherits from MozillaLogger and utilizes SpecialPowers.
  * intented to be used in content scripts to write to a file
  */
-function SpecialPowersLogger(aPath) {
-  // Call the base constructor
-  MozillaLogger.call(this);
-  this.prototype = new MozillaLogger(aPath);
-  this.init(aPath);
-}
+class SpecialPowersLogger extends MozillaLogger {
+  constructor(aPath) {
+    super();
 
-SpecialPowersLogger.prototype = {
-  init(path) {
-    SpecialPowers.setLogFile(path);
-  },
+    SpecialPowers.setLogFile(aPath);
+  }
 
-  getLogCallback() {
-    return function(msg) {
+  get logCallback() {
+    return (msg) => {
       var data = formatLogMessage(msg);
-      SpecialPowers.log(data);
+      this.log(data);
 
       if (data.includes("SimpleTest FINISH")) {
-        SpecialPowers.closeLogFile();
+        this.close();
       }
     };
-  },
+  }
 
   log(msg) {
     SpecialPowers.log(msg);
-  },
+  }
 
   close() {
     SpecialPowers.closeLogFile();
-  },
-};
+  }
+}
 
 
 /**
@@ -75,60 +64,50 @@ SpecialPowersLogger.prototype = {
 
 /** Init the file logger with the absolute path to the file.
     It will create and append if the file already exists **/
-function MozillaFileLogger(aPath) {
-  // Call the base constructor
-  MozillaLogger.call(this);
-  this.prototype = new MozillaLogger(aPath);
-  this.init(aPath);
-}
+class MozillaFileLogger extends MozillaLogger {
+  constructor(aPath) {
+    super();
 
-MozillaFileLogger.prototype = {
+    const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
-  init(path) {
-    var PR_WRITE_ONLY   = 0x02; // Open for writing only.
-    var PR_CREATE_FILE  = 0x08;
-    var PR_APPEND       = 0x10;
-    this._file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    this._file.initWithPath(path);
-    this._foStream = Cc["@mozilla.org/network/file-output-stream;1"]
-                       .createInstance(Ci.nsIFileOutputStream);
-    this._foStream.init(this._file, PR_WRITE_ONLY | PR_CREATE_FILE | PR_APPEND,
-                                     436 /* 0664 */, 0);
+    this._file = FileUtils.File(aPath);
+    this._foStream = FileUtils.openFileOutputStream(
+        this._file, (FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
+                     FileUtils.MODE_APPEND));
 
     this._converter = Cc["@mozilla.org/intl/converter-output-stream;1"]
                         .createInstance(Ci.nsIConverterOutputStream);
     this._converter.init(this._foStream, "UTF-8");
-  },
+  }
 
-  getLogCallback() {
-    return function(msg) {
-      var data = formatLogMessage(msg);
-      if (MozillaFileLogger._converter) {
-        this._converter.writeString(data);
-      }
+  get logCallback() {
+    return (msg) => {
+      if (this._converter) {
+        var data = formatLogMessage(msg);
+        this.log(data);
 
-      if (data.includes("SimpleTest FINISH")) {
-        MozillaFileLogger.close();
+        if (data.includes("SimpleTest FINISH")) {
+          this.close();
+        }
       }
     };
-  },
+  }
 
   log(msg) {
     if (this._converter) {
       this._converter.writeString(msg);
     }
-  },
+  }
+
   close() {
-    if (this._converter) {
-      this._converter.flush();
-      this._converter.close();
-    }
+    this._converter.flush();
+    this._converter.close();
 
     this._foStream = null;
     this._converter = null;
     this._file = null;
-  },
-};
+  }
+}
 
 this.MozillaLogger = MozillaLogger;
 this.SpecialPowersLogger = SpecialPowersLogger;
