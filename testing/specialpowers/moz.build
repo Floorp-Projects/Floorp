@@ -19,7 +19,6 @@ FINAL_TARGET_FILES.content += [
     'content/MockColorPicker.jsm',
     'content/MockFilePicker.jsm',
     'content/MockPermissionPrompt.jsm',
-    'content/MozillaLogger.js',
     'content/SpecialPowers.jsm',
     'content/SpecialPowersAPI.jsm',
     'content/specialpowersFrameScript.js',
