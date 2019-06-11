@@ -127,4 +127,19 @@ nsEventStatus MouseUp(const RefPtr<InputReceiver>& aTarget,
   return aTarget->ReceiveInputEvent(input, nullptr, aOutInputBlockId);
 }
 
+template <class InputReceiver>
+nsEventStatus PanGesture(PanGestureInput::PanGestureType aType,
+                         const RefPtr<InputReceiver>& aTarget,
+                         const ScreenIntPoint& aPoint,
+                         const ScreenPoint& aDelta, TimeStamp aTime,
+                         uint64_t* aOutInputBlockId = nullptr) {
+  PanGestureInput input(aType, MillisecondsSinceStartup(aTime), aTime, aPoint,
+                        aDelta, 0 /* Modifiers */);
+  if (aType == PanGestureInput::PANGESTURE_END) {
+    input.mFollowedByMomentum = true;
+  }
+
+  return aTarget->ReceiveInputEvent(input, nullptr, aOutInputBlockId);
+}
+
 #endif  // mozilla_layers_InputUtils_h
