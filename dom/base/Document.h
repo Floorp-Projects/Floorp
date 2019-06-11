@@ -9,6 +9,7 @@
 #include "mozilla/EventStates.h"  // for EventStates
 #include "mozilla/FlushType.h"    // for enum
 #include "mozilla/Pair.h"         // for Pair
+#include "mozilla/Saturate.h"     // for SaturateUint32
 #include "nsAutoPtr.h"            // for member
 #include "nsCOMArray.h"           // for member
 #include "nsCompatibility.h"      // for member
@@ -3699,15 +3700,13 @@ class Document : public nsINode,
 
   void PropagateUseCounters(Document* aParentDocument);
 
-  void AddToVisibleContentHeuristic(size_t aNumber) {
-    if (MOZ_UNLIKELY(SIZE_MAX - mVisibleContentHeuristic < aNumber)) {
-      mVisibleContentHeuristic = SIZE_MAX;
-    } else {
-      mVisibleContentHeuristic += aNumber;
-    }
+  void AddToVisibleContentHeuristic(uint32_t aNumber) {
+    mVisibleContentHeuristic += aNumber;
   }
 
-  size_t GetVisibleContentHeuristic() const { return mVisibleContentHeuristic; }
+  uint32_t GetVisibleContentHeuristic() const {
+    return mVisibleContentHeuristic.value();
+  }
 
   // Called to track whether this document has had any interaction.
   // This is used to track whether we should permit "beforeunload".
@@ -4913,7 +4912,7 @@ class Document : public nsINode,
   // <style>.
   //
   // Note that this is only measured during load.
-  size_t mVisibleContentHeuristic = 0;
+  SaturateUint32 mVisibleContentHeuristic{0};
 
   // Whether the user has interacted with the document or not:
   bool mUserHasInteracted;
