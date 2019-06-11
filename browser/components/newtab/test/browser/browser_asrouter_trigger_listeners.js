@@ -8,7 +8,7 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
 async function openURLInWindow(window, url) {
   const {selectedBrowser} = window.gBrowser;
   await BrowserTestUtils.loadURI(selectedBrowser, url);
-  await BrowserTestUtils.browserLoaded(selectedBrowser);
+  await BrowserTestUtils.browserLoaded(selectedBrowser, false, url);
 }
 
 add_task(async function check_openURL_listener() {
@@ -16,15 +16,20 @@ add_task(async function check_openURL_listener() {
 
   let urlVisitCount = 0;
   const triggerHandler = () => urlVisitCount++;
+  const openURLListener = ASRouterTriggerListeners.get("openURL");
+
+  // Previously initialized by the Router
+  openURLListener.uninit();
 
   const normalWindow = await BrowserTestUtils.openNewBrowserWindow();
   const privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
 
   // Initialise listener
-  const openURLListener = ASRouterTriggerListeners.get("openURL");
-  openURLListener.init(triggerHandler, ["example.com"]);
+  await openURLListener.init(triggerHandler, ["example.com"]);
 
   await openURLInWindow(normalWindow, TEST_URL);
+  await BrowserTestUtils.waitForCondition(() => urlVisitCount !== 0,
+    "Wait for the location change listener to run");
   is(urlVisitCount, 1, "should receive page visits from existing windows");
 
   await openURLInWindow(normalWindow, "http://www.example.com/abc");
@@ -35,6 +40,8 @@ add_task(async function check_openURL_listener() {
 
   const secondNormalWindow = await BrowserTestUtils.openNewBrowserWindow();
   await openURLInWindow(secondNormalWindow, TEST_URL);
+  await BrowserTestUtils.waitForCondition(() => urlVisitCount === 2,
+    "Wait for the location change listener to run");
   is(urlVisitCount, 2, "should receive page visits from newly opened windows");
 
   const secondPrivateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
