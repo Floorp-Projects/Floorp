@@ -26,20 +26,39 @@ def get_failures(task_id):
     directories containing test failures and a separate list of
     individual test failures from the errorsummary.log artifact for
     the task.
+
+    Calls the helper function munge_test_path to attempt to find an
+    appropriate test path to pass to the task in
+    MOZHARNESS_TEST_PATHS.  If no appropriate test path can be
+    determined, nothing is returned.
     """
+    re_test = re.compile(r'"test": "([^"]+)"')
+    re_reftest = re.compile(r'^(?:https?|file)://.*reftest/tests/([^ ]+) .*')
+    re_httptest = re.compile(r'^(?:https?)://[^:]+:/tests/([^ ]+) .*')
+    re_xpcshell_ini = re.compile(r'^xpcshell-.*\.ini:')
+    re_slashes = re.compile(r'\\')
+    re_bad_test = re.compile(r'(Last test finished|'
+                             r'Main app process exited normally|'
+                             r'[(]SimpleTest/TestRunner.js[)]|'
+                             'remoteautomation.py|'
+                             'unknown test url|'
+                             'https?://localhost:\d+/\d+/\d+/.*[.]html)')
+
     def munge_test_path(test_path):
+        test_path = re_slashes.sub('/', test_path)
+        if re_bad_test.search(test_path):
+            return None
         m = re_reftest.match(test_path)
         if m:
             test_path = m.group(1)
-        if re_bad_test.match(test_path):
-            return None
+        else:
+            m = re_httptest.match(test_path)
+            if m:
+                test_path = m.group(1)
+            else:
+                test_path = re_xpcshell_ini.sub('', test_path)
         return test_path
 
-    re_test = re.compile(r'"test": "([^"]+)"')
-    re_reftest = re.compile(r'^(?:https?|file)://.*reftest/tests/([^ ]+) .*')
-    re_bad_test = re.compile(r'(Last test finished|'
-                             r'Main app process exited normally|'
-                             r'[(]SimpleTest/TestRunner.js[)])')
     dirs = set()
     tests = set()
     artifacts = list_artifacts(task_id)
