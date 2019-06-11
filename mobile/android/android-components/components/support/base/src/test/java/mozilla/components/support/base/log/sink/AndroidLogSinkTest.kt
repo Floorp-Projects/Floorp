@@ -4,19 +4,20 @@
 
 package mozilla.components.support.base.log.sink
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.base.log.Log
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLog
 import java.io.PrintWriter
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class AndroidLogSinkTest {
+
     @Before
     fun setUp() {
         ShadowLog.clear()

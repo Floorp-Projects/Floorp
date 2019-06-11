@@ -10,6 +10,7 @@ import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -19,15 +20,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ObserverRegistryTest {
 
     @Test
@@ -293,7 +292,7 @@ class ObserverRegistryTest {
 
     @Test
     fun `observer will not get added if view is detached`() {
-        val view = mock(View::class.java)
+        val view = mock<View>()
 
         val registry = ObserverRegistry<TestObserver>()
         val observer = TestObserver()

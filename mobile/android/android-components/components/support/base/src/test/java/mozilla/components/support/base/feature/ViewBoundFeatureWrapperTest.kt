@@ -5,11 +5,12 @@
 package mozilla.components.support.base.feature
 
 import android.app.Activity
+import android.view.View
+import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import android.view.View
-import android.view.WindowManager
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -23,10 +24,10 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ViewBoundFeatureWrapperTest {
+
     @Test
     fun `Calling onBackPressed on an empty wrapper returns false`() {
         val wrapper = ViewBoundFeatureWrapper<MockFeature>()
