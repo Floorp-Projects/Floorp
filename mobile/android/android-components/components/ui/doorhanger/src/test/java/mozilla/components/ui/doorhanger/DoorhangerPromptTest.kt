@@ -6,7 +6,6 @@
 
 package mozilla.components.ui.doorhanger
 
-import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -16,19 +15,17 @@ import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class DoorhangerPromptTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `Create complex prompt doorhanger`() {
@@ -39,14 +36,14 @@ class DoorhangerPromptTest {
             title = "Allow wikipedia.org to use your camera and microphone?",
             controlGroups = listOf(
                 DoorhangerPrompt.ControlGroup(
-                    icon = AppCompatResources.getDrawable(context, android.R.drawable.ic_menu_camera),
+                    icon = AppCompatResources.getDrawable(testContext, android.R.drawable.ic_menu_camera),
                     controls = listOf(
                         DoorhangerPrompt.Control.RadioButton("Front-facing camera"),
                         DoorhangerPrompt.Control.RadioButton("Selfie camera")
                     )
                 ),
                 DoorhangerPrompt.ControlGroup(
-                    icon = AppCompatResources.getDrawable(context, android.R.drawable.ic_btn_speak_now),
+                    icon = AppCompatResources.getDrawable(testContext, android.R.drawable.ic_btn_speak_now),
                     controls = listOf(
                         DoorhangerPrompt.Control.RadioButton("Speakerphone"),
                         DoorhangerPrompt.Control.RadioButton("Headset microphone"),
@@ -68,10 +65,10 @@ class DoorhangerPromptTest {
             onDismiss = {}
         )
 
-        val doorhanger = prompt.createDoorhanger(context)
+        val doorhanger = prompt.createDoorhanger(testContext)
         assertNotNull(doorhanger)
 
-        val popupWindow = doorhanger.show(View(context))
+        val popupWindow = doorhanger.show(View(testContext))
         assertNotNull(popupWindow)
 
         val contentView = popupWindow.contentView
@@ -157,10 +154,10 @@ class DoorhangerPromptTest {
         val button3 = DoorhangerPrompt.Control.RadioButton("Selfie camera")
 
         val controlGroup = DoorhangerPrompt.ControlGroup(
-            icon = AppCompatResources.getDrawable(context, android.R.drawable.ic_menu_camera),
+            icon = AppCompatResources.getDrawable(testContext, android.R.drawable.ic_menu_camera),
             controls = listOf(button1, button2, button3))
 
-        val view = controlGroup.createView(context, LinearLayout(context))
+        val view = controlGroup.createView(testContext, LinearLayout(testContext))
         val group = view.findViewById<RadioGroup>(R.id.group)
 
         val radioButton1 = group.getChildAt(0) as RadioButton
@@ -195,7 +192,7 @@ class DoorhangerPromptTest {
         val controlGroup = DoorhangerPrompt.ControlGroup(
             controls = listOf(checkbox1, checkbox2))
 
-        val view = controlGroup.createView(context, LinearLayout(context))
+        val view = controlGroup.createView(testContext, LinearLayout(testContext))
         val group = view.findViewById<RadioGroup>(R.id.group)
 
         val checkBoxView1 = group.getChildAt(0) as CheckBox
@@ -226,10 +223,10 @@ class DoorhangerPromptTest {
         assertFalse(button3.checked)
 
         val controlGroup = DoorhangerPrompt.ControlGroup(
-            icon = AppCompatResources.getDrawable(context, android.R.drawable.ic_menu_camera),
+            icon = AppCompatResources.getDrawable(testContext, android.R.drawable.ic_menu_camera),
             controls = listOf(button1, button2, button3))
 
-        controlGroup.createView(context, LinearLayout(context))
+        controlGroup.createView(testContext, LinearLayout(testContext))
 
         assertTrue(button1.checked)
         assertFalse(button2.checked)
@@ -240,7 +237,7 @@ class DoorhangerPromptTest {
     fun `Button has label assigned`() {
         val button = DoorhangerPrompt.Button("Hello World", positive = true, onClick = {})
 
-        val view = button.createView(context, LinearLayout(context), onClick = {})
+        val view = button.createView(testContext, LinearLayout(testContext), onClick = {})
 
         assertTrue(view is Button)
         val buttonView = view as Button
@@ -254,7 +251,7 @@ class DoorhangerPromptTest {
 
         var buttonClicked = false
 
-        val view = button.createView(context, LinearLayout(context), onClick = {
+        val view = button.createView(testContext, LinearLayout(testContext), onClick = {
             buttonClicked = true
         })
 

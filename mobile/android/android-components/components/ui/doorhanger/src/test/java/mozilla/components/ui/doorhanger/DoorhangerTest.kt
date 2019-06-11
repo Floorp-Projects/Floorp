@@ -6,11 +6,11 @@
 
 package mozilla.components.ui.doorhanger
 
-import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -18,17 +18,14 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class DoorhangerTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `show returns non-null popup window`() {
-        val doorhanger = Doorhanger(TextView(context))
-        val popupWindow = doorhanger.show(View(context))
+        val doorhanger = Doorhanger(TextView(testContext))
+        val popupWindow = doorhanger.show(View(testContext))
 
         assertNotNull(popupWindow)
         assertTrue(popupWindow.isShowing)
@@ -36,13 +33,13 @@ class DoorhangerTest {
 
     @Test
     fun `popup window contains passed in view`() {
-        val view = TextView(context).apply {
+        val view = TextView(testContext).apply {
             id = 42
             text = "Mozilla!"
         }
 
         val doorhanger = Doorhanger(view)
-        val popupWindow = doorhanger.show(View(context))
+        val popupWindow = doorhanger.show(View(testContext))
 
         assertEquals(
             "Mozilla!",
@@ -52,9 +49,9 @@ class DoorhangerTest {
 
     @Test
     fun `popup window passed in view is wrapped`() {
-        val view = TextView(context)
+        val view = TextView(testContext)
         val doorhanger = Doorhanger(view)
-        val popupWindow = doorhanger.show(View(context))
+        val popupWindow = doorhanger.show(View(testContext))
 
         assertNotEquals(view, popupWindow.contentView)
         assertTrue(popupWindow.contentView is ViewGroup)
@@ -64,11 +61,11 @@ class DoorhangerTest {
     fun `dismissing popup window invokes callback`() {
         var dismissCallbackInvoked = false
 
-        val doorhanger = Doorhanger(TextView(context), onDismiss = {
+        val doorhanger = Doorhanger(TextView(testContext), onDismiss = {
             dismissCallbackInvoked = true
         })
 
-        val popupWindow = doorhanger.show(View(context))
+        val popupWindow = doorhanger.show(View(testContext))
 
         assertFalse(dismissCallbackInvoked)
 
@@ -79,8 +76,8 @@ class DoorhangerTest {
 
     @Test
     fun `dismiss on doorhanger is forwarded to popup window`() {
-        val doorhanger = Doorhanger(TextView(context))
-        val popupWindow = doorhanger.show(View(context))
+        val doorhanger = Doorhanger(TextView(testContext))
+        val popupWindow = doorhanger.show(View(testContext))
 
         assertTrue(popupWindow.isShowing)
 
@@ -91,7 +88,7 @@ class DoorhangerTest {
 
     @Test
     fun `calling dismiss on a not-showing doorhanger is a no-op`() {
-        val doorhanger = Doorhanger(TextView(context))
+        val doorhanger = Doorhanger(TextView(testContext))
         doorhanger.dismiss()
     }
 }
