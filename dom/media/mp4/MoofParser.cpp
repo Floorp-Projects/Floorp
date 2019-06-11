@@ -36,6 +36,11 @@ namespace mozilla {
 
 const uint32_t kKeyIdSize = 16;
 
+// We ensure there are no gaps in samples' CTS between the last sample in a
+// Moof, and the first sample in the next Moof, if they're within these many
+// Microseconds of each other.
+const Microseconds CROSS_MOOF_CTS_MERGE_THRESHOLD = 1;
+
 bool MoofParser::RebuildFragmentedIndex(const MediaByteRangeSet& aByteRanges) {
   BoxContext context(mSource, aByteRanges);
   return RebuildFragmentedIndex(context);
@@ -71,7 +76,7 @@ bool MoofParser::RebuildFragmentedIndex(BoxContext& aContext) {
       ParseMoov(box);
     } else if (box.IsType("moof")) {
       Moof moof(box, mTrackParseMode, mTrex, mMvhd, mMdhd, mEdts, mSinf,
-                &mLastDecodeTime, mIsAudio);
+                &mLastDecodeTime, mIsAudio, mTracksEndCts);
 
       if (!moof.IsValid() && !box.Next().IsAvailable()) {
         // Moof isn't valid abort search for now.
@@ -422,7 +427,8 @@ class CtsComparator {
 
 Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
            Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf,
-           uint64_t* aDecodeTime, bool aIsAudio)
+           uint64_t* aDecodeTime, bool aIsAudio,
+           nsTArray<TrackEndCts>& aTracksEndCts)
     : mRange(aBox.Range()), mTfhd(aTrex), mMaxRoundingError(35000) {
   LOG_DEBUG(
       Moof,
@@ -470,6 +476,35 @@ Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
       for (size_t i = 1; i < ctsOrder.Length(); i++) {
         ctsOrder[i - 1]->mCompositionRange.end =
             ctsOrder[i]->mCompositionRange.start;
+      }
+
+      // Ensure that there are no gaps between the first sample in this
+      // Moof and the preceeding Moof.
+      if (!ctsOrder.IsEmpty()) {
+        bool found = false;
+        // Track ID of the track we're parsing.
+        const uint32_t trackId = aTrex.mTrackId;
+        // Find the previous CTS end time of Moof preceeding the Moofs we just
+        // parsed, for the track we're parsing.
+        for (auto& prevCts : aTracksEndCts) {
+          if (prevCts.mTrackId == trackId) {
+            // We have previously parsed a Moof for this track. Smooth the gap
+            // between samples for this track across the Moof bounary.
+            if (ctsOrder[0]->mCompositionRange.start - prevCts.mCtsEndTime <=
+                CROSS_MOOF_CTS_MERGE_THRESHOLD) {
+              ctsOrder[0]->mCompositionRange.start = prevCts.mCtsEndTime;
+            }
+            prevCts.mCtsEndTime = ctsOrder.LastElement()->mCompositionRange.end;
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          // We've not parsed a Moof for this track yet. Save its CTS end
+          // time for the next Moof we parse.
+          aTracksEndCts.AppendElement(TrackEndCts(
+              trackId, ctsOrder.LastElement()->mCompositionRange.end));
+        }
       }
 
       // In MP4, the duration of a sample is defined as the delta between two
