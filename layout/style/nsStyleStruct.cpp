@@ -1488,13 +1488,9 @@ nsChangeHint nsStylePosition::CalcDifference(
                        mMinHeight != aNewData.mMinHeight ||
                        mMaxHeight != aNewData.mMaxHeight;
 
-  // Note that we pass an nsStyleVisibility here because we don't want
-  // to cause a new struct to be computed during
-  // ComputedStyle::CalcStyleDifference, which can lead to incorrect
-  // style data.
-  // It doesn't matter whether we're looking at the old or new
-  // visibility struct, since a change between vertical and horizontal
-  // writing-mode will cause a reframe, and it's easier to pass the old.
+  // It doesn't matter whether we're looking at the old or new visibility
+  // struct, since a change between vertical and horizontal writing-mode will
+  // cause a reframe.
   bool isVertical = WritingMode(&aOldStyleVisibility).IsVertical();
   if (isVertical ? widthChanged : heightChanged) {
     hint |= nsChangeHint_ReflowHintsForBSizeChange;
@@ -2989,7 +2985,7 @@ static inline nsChangeHint CompareMotionValues(
 }
 
 nsChangeHint nsStyleDisplay::CalcDifference(
-    const nsStyleDisplay& aNewData) const {
+    const nsStyleDisplay& aNewData, const nsStylePosition& aOldPosition) const {
   nsChangeHint hint = nsChangeHint(0);
 
   if (mBinding != aNewData.mBinding || mPosition != aNewData.mPosition ||
@@ -3176,6 +3172,20 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     hint |= nsChangeHint_SchedulePaint;
   }
 
+  if (mOriginalDisplay != aNewData.mOriginalDisplay) {
+    // Our hypothetical box position may have changed.
+    //
+    // Note that it doesn't matter if we look at the old or the new struct,
+    // since a change on whether we need a hypothetical position would trigger
+    // reflow anyway.
+    if (IsAbsolutelyPositionedStyle() &&
+        aOldPosition.NeedsHypotheticalPositionIfAbsPos()) {
+      hint |= nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
+    } else {
+      hint |= nsChangeHint_NeutralChange;
+    }
+  }
+
   // Note:  Our current behavior for handling changes to the
   // transition-duration, transition-delay, and transition-timing-function
   // properties is to do nothing.  In other words, the transition
@@ -3193,8 +3203,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   // But we still need to return nsChangeHint_NeutralChange for these
   // properties, since some data did change in the style struct.
 
-  if (!hint && (mOriginalDisplay != aNewData.mOriginalDisplay ||
-                mTransitions != aNewData.mTransitions ||
+  if (!hint && (mTransitions != aNewData.mTransitions ||
                 mTransitionTimingFunctionCount !=
                     aNewData.mTransitionTimingFunctionCount ||
                 mTransitionDurationCount != aNewData.mTransitionDurationCount ||
