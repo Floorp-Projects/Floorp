@@ -26,9 +26,10 @@ class ErrorResult;
 // timepoint.
 
 struct ResourceItem {
-  explicit ResourceItem(MediaByteBuffer* aData);
+  ResourceItem(MediaByteBuffer* aData, uint64_t aOffset);
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
   RefPtr<MediaByteBuffer> mData;
+  uint64_t mOffset;
 };
 
 class ResourceQueue : private nsDeque {
@@ -69,7 +70,7 @@ class ResourceQueue : private nsDeque {
   // the resource at the given index returned if it is not null.  If
   // no such resource exists, returns GetSize() and aOffset is
   // untouched.
-  uint32_t GetAtOffset(uint64_t aOffset, uint32_t* aResourceOffset);
+  uint32_t GetAtOffset(uint64_t aOffset, uint32_t* aResourceOffset) const;
 
   ResourceItem* PopFront();
 
