@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
                 'type': 'integer',
                 'default': 5,
                 'minimum': 1,
-                'maximum': 10,
+                'maximum': 25,
                 'title': 'Depth',
                 'description': ('The number of previous pushes before the current '
                                 'push to attempt to trigger this task on.')
