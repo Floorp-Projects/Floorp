@@ -87,6 +87,7 @@ class nsWindowSizes;
 namespace mozilla {
 class AbstractThread;
 class DOMEventTargetHelper;
+class ThrottledEventQueue;
 namespace dom {
 class BarProp;
 class BrowsingContext;
@@ -540,6 +541,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   nsresult GetPrompter(nsIPrompt** aPrompt) override;
 
+  RefPtr<mozilla::ThrottledEventQueue> mPostMessageEventQueue;
  protected:
   nsPIDOMWindowOuter* GetOpenerWindowOuter();
   // Initializes the mWasOffline member variable

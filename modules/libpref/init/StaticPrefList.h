@@ -673,6 +673,15 @@ VARCACHE_PREF(
   bool, true
 )
 
+// When this pref is set, parent documents may consider child iframes've loaded
+// while they are still loading
+VARCACHE_PREF(
+  Live,
+  "dom.cross_origin_iframes_loaded_in_background",
+   dom_cross_origin_iframes_loaded_in_background,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Prefs starting with "browser."
 //---------------------------------------------------------------------------

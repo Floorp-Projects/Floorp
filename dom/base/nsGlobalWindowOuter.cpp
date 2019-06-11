@@ -2429,6 +2429,15 @@ void nsGlobalWindowOuter::DetachFromDocShell() {
   // later. Meanwhile, keep our weak reference to the script object
   // so that it can be retrieved later (until it is finalized by the JS GC).
 
+  if (mDoc && DocGroup::TryToLoadIframesInBackground()) {
+    DocGroup* docGroup = GetDocGroup();
+    RefPtr<nsIDocShell> docShell = GetDocShell();
+    RefPtr<nsDocShell> dShell = nsDocShell::Cast(docShell);
+    if (dShell){
+      docGroup->TryFlushIframePostMessages(dShell->GetOuterWindowID());
+    }
+  }
+
   // Call FreeInnerObjects on all inner windows, not just the current
   // one, since some could be held by WindowStateHolder objects that
   // are GC-owned.
@@ -6064,14 +6073,40 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
     return;
   }
 
-  if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
-    if (mDoc) {
-      Document* doc = mDoc->GetTopLevelContentDocument();
-      if (doc && doc->GetReadyStateEnum() < Document::READYSTATE_COMPLETE) {
-        // As long as the top level is loading, we can dispatch events to the
-        // queue because the queue will be flushed eventually
-        mozilla::dom::TabGroup* tabGroup = TabGroup();
-        aError = tabGroup->QueuePostMessageEvent(event.forget());
+
+  if (mDoc &&
+      StaticPrefs::dom_separate_event_queue_for_post_message_enabled() &&
+      !DocGroup::TryToLoadIframesInBackground()) {
+    Document* doc = mDoc->GetTopLevelContentDocument();
+    if (doc && doc->GetReadyStateEnum() < Document::READYSTATE_COMPLETE) {
+      // As long as the top level is loading, we can dispatch events to the
+      // queue because the queue will be flushed eventually
+      mozilla::dom::TabGroup* tabGroup = TabGroup();
+      aError = tabGroup->QueuePostMessageEvent(event.forget());
+      return;
+    }
+  }
+
+  if (mDoc && DocGroup::TryToLoadIframesInBackground()) {
+
+    RefPtr<nsIDocShell> docShell = GetDocShell();
+    RefPtr<nsDocShell> dShell = nsDocShell::Cast(docShell);
+
+    // PostMessage that are added to the tabGroup are the ones that
+    // can be flushed when the top level document is loaded
+    if (dShell) {
+      if (!dShell->TreatAsBackgroundLoad()) {
+        Document* doc = mDoc->GetTopLevelContentDocument();
+        if (doc && doc->GetReadyStateEnum() < Document::READYSTATE_COMPLETE) {
+          // As long as the top level is loading, we can dispatch events to the
+          // queue because the queue will be flushed eventually
+          mozilla::dom::TabGroup* tabGroup = TabGroup();
+          aError = tabGroup->QueuePostMessageEvent(event.forget());
+          return;
+        }
+      } else if (mDoc->GetReadyStateEnum() < Document::READYSTATE_COMPLETE) {
+        mozilla::dom::DocGroup* docGroup = GetDocGroup();
+        aError = docGroup->QueueIframePostMessages(event.forget(), dShell->GetOuterWindowID());
         return;
       }
     }
