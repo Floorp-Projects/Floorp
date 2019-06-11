@@ -1,11 +1,11 @@
 # Please see the comment at the beginning of reftest.list
 
 == topN-heightA-bottomA.html?border_abspos topN-heightA-bottomA-ref.html?border_abspos
-== topN-heightA-bottomN.html?border_abspos topN-heightA-bottomN-ref.html?border_abspos
+fuzzy-if(geckoview,0-1,0-110) == topN-heightA-bottomN.html?border_abspos topN-heightA-bottomN-ref.html?border_abspos
 == topA-heightN-bottomA.html?border_abspos topA-heightN-bottomA-ref.html?border_abspos
 == topN-heightN-bottomA.html?border_abspos topN-heightN-bottomA-ref.html?border_abspos
-== topA-heightN-bottomN.html?border_abspos topA-heightN-bottomN-ref.html?border_abspos
-== topA-heightA-bottomN.html?border_abspos topA-heightA-bottomN-ref.html?border_abspos
+fuzzy-if(geckoview,0-2,0-537) == topA-heightN-bottomN.html?border_abspos topA-heightN-bottomN-ref.html?border_abspos
+fuzzy-if(geckoview,0-1,0-110) == topA-heightA-bottomN.html?border_abspos topA-heightA-bottomN-ref.html?border_abspos
 == toauto-topN-heightA-bottomA.html?border_abspos toauto-topN-heightA-bottomA-ref.html?border_abspos
 == toauto-topN-heightA-bottomN.html?border_abspos toauto-topN-heightA-bottomN-ref.html?border_abspos
 == toauto-topA-heightN-bottomA.html?border_abspos toauto-topA-heightN-bottomA-ref.html?border_abspos
@@ -13,7 +13,7 @@
 == toauto-topA-heightN-bottomN.html?border_abspos toauto-topA-heightN-bottomN-ref.html?border_abspos
 == toauto-topA-heightA-bottomN.html?border_abspos toauto-topA-heightA-bottomN-ref.html?border_abspos
 == fromauto-topN-heightA-bottomA.html?border_abspos topN-heightA-bottomA-ref.html?border_abspos
-== fromauto-topN-heightA-bottomN.html?border_abspos topN-heightA-bottomN-ref.html?border_abspos
+fuzzy-if(geckoview,0-1,0-110) == fromauto-topN-heightA-bottomN.html?border_abspos topN-heightA-bottomN-ref.html?border_abspos
 == fromauto-topA-heightN-bottomA.html?border_abspos topA-heightN-bottomA-ref.html?border_abspos
 == fromauto-topN-heightN-bottomA.html?border_abspos topN-heightN-bottomA-ref.html?border_abspos
 == fromauto-topA-heightN-bottomN.html?border_abspos topA-heightN-bottomN-ref.html?border_abspos

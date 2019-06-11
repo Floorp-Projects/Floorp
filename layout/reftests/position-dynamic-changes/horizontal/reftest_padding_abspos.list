@@ -2,12 +2,12 @@
 
 == leftN-widthA-rightA.html?padding_abspos leftN-widthA-rightA-ref.html?padding_abspos
 == leftN-widthA-rightA-2.html?padding_abspos leftN-widthA-rightA-2-ref.html?padding_abspos
-== leftN-widthA-rightN.html?padding_abspos leftN-widthA-rightN-ref.html?padding_abspos
+fuzzy-if(geckoview,0-1,0-10) == leftN-widthA-rightN.html?padding_abspos leftN-widthA-rightN-ref.html?padding_abspos
 == leftN-widthA-rightN-2.html?padding_abspos leftN-widthA-rightN-2-ref.html?padding_abspos
 == leftA-widthN-rightA.html?padding_abspos leftA-widthN-rightA-ref.html?padding_abspos
 == leftN-widthN-rightA.html?padding_abspos leftN-widthN-rightA-ref.html?padding_abspos
-== leftA-widthN-rightN.html?padding_abspos leftA-widthN-rightN-ref.html?padding_abspos
-== leftA-widthA-rightN.html?padding_abspos leftA-widthA-rightN-ref.html?padding_abspos
+fuzzy-if(geckoview,0-1,0-54) == leftA-widthN-rightN.html?padding_abspos leftA-widthN-rightN-ref.html?padding_abspos
+fuzzy-if(geckoview,0-1,0-54) == leftA-widthA-rightN.html?padding_abspos leftA-widthA-rightN-ref.html?padding_abspos
 == toauto-leftN-widthA-rightA.html?padding_abspos toauto-leftN-widthA-rightA-ref.html?padding_abspos
 == toauto-leftN-widthA-rightA-2.html?padding_abspos toauto-leftN-widthA-rightA-2-ref.html?padding_abspos
 == toauto-leftN-widthA-rightN.html?padding_abspos toauto-leftN-widthA-rightN-ref.html?padding_abspos

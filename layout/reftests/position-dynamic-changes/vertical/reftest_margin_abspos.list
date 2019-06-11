@@ -1,20 +1,20 @@
 # Please see the comment at the beginning of reftest.list
 
 == topN-heightA-bottomA.html?margin_abspos topN-heightA-bottomA-ref.html?margin_abspos
-== topN-heightA-bottomN.html?margin_abspos topN-heightA-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-1,0-10) == topN-heightA-bottomN.html?margin_abspos topN-heightA-bottomN-ref.html?margin_abspos
 == topA-heightN-bottomA.html?margin_abspos topA-heightN-bottomA-ref.html?margin_abspos
-== topN-heightN-bottomA.html?margin_abspos topN-heightN-bottomA-ref.html?margin_abspos
-== topA-heightN-bottomN.html?margin_abspos topA-heightN-bottomN-ref.html?margin_abspos
-== topA-heightA-bottomN.html?margin_abspos topA-heightA-bottomN-ref.html?margin_abspos
-== toauto-topN-heightA-bottomA.html?margin_abspos toauto-topN-heightA-bottomA-ref.html?margin_abspos
-== toauto-topN-heightA-bottomN.html?margin_abspos toauto-topN-heightA-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-1,0-92) == topN-heightN-bottomA.html?margin_abspos topN-heightN-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-1,0-216) == topA-heightN-bottomN.html?margin_abspos topA-heightN-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-1,0-123) == topA-heightA-bottomN.html?margin_abspos topA-heightA-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-1,0-219) == toauto-topN-heightA-bottomA.html?margin_abspos toauto-topN-heightA-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-1,0-105) == toauto-topN-heightA-bottomN.html?margin_abspos toauto-topN-heightA-bottomN-ref.html?margin_abspos
 == toauto-topA-heightN-bottomA.html?margin_abspos toauto-topA-heightN-bottomA-ref.html?margin_abspos
-== toauto-topN-heightN-bottomA.html?margin_abspos toauto-topN-heightN-bottomA-ref.html?margin_abspos
-== toauto-topA-heightN-bottomN.html?margin_abspos toauto-topA-heightN-bottomN-ref.html?margin_abspos
-== toauto-topA-heightA-bottomN.html?margin_abspos toauto-topA-heightA-bottomN-ref.html?margin_abspos
-== fromauto-topN-heightA-bottomA.html?margin_abspos topN-heightA-bottomA-ref.html?margin_abspos
-== fromauto-topN-heightA-bottomN.html?margin_abspos topN-heightA-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-1,0-92) == toauto-topN-heightN-bottomA.html?margin_abspos toauto-topN-heightN-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-1,0-92) == toauto-topA-heightN-bottomN.html?margin_abspos toauto-topA-heightN-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-1,0-219) == toauto-topA-heightA-bottomN.html?margin_abspos toauto-topA-heightA-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-441) == fromauto-topN-heightA-bottomA.html?margin_abspos topN-heightA-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-441) == fromauto-topN-heightA-bottomN.html?margin_abspos topN-heightA-bottomN-ref.html?margin_abspos
 == fromauto-topA-heightN-bottomA.html?margin_abspos topA-heightN-bottomA-ref.html?margin_abspos
-== fromauto-topN-heightN-bottomA.html?margin_abspos topN-heightN-bottomA-ref.html?margin_abspos
-== fromauto-topA-heightN-bottomN.html?margin_abspos topA-heightN-bottomN-ref.html?margin_abspos
+fuzzy-if(geckoview,0-2,0-490) == fromauto-topN-heightN-bottomA.html?margin_abspos topN-heightN-bottomA-ref.html?margin_abspos
+fuzzy-if(geckoview,0-1,0-92) == fromauto-topA-heightN-bottomN.html?margin_abspos topA-heightN-bottomN-ref.html?margin_abspos
 == fromauto-topA-heightA-bottomN.html?margin_abspos topA-heightA-bottomN-ref.html?margin_abspos
