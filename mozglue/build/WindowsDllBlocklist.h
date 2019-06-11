@@ -10,9 +10,6 @@
     (defined(_M_IX86) || defined(_M_X64) || defined(_M_ARM64))
 
 #  include <windows.h>
-#  ifdef ENABLE_TESTS
-#    include <winternl.h>
-#  endif  // ENABLE_TESTS
 #  include "mozilla/Attributes.h"
 #  include "mozilla/Types.h"
 
@@ -35,15 +32,6 @@ MFBT_API bool DllBlocklist_CheckStatus();
 #  ifdef DEBUG
 MFBT_API void DllBlocklist_Shutdown();
 #  endif  // DEBUG
-
-#  ifdef ENABLE_TESTS
-typedef void (*DllLoadHookType)(bool aDllLoaded, NTSTATUS aNtStatus,
-                                HANDLE aDllBase, PUNICODE_STRING aDllName);
-MFBT_API void DllBlocklist_SetDllLoadHook(DllLoadHookType aHook);
-typedef void (*CreateThreadHookType)(bool aWasAllowed, void* aStartAddress);
-MFBT_API void DllBlocklist_SetCreateThreadHook(CreateThreadHookType aHook);
-MFBT_API const char* DllBlocklist_TestBlocklistIntegrity();
-#  endif  // ENABLE_TESTS
 
 // Forward declaration
 namespace mozilla {
