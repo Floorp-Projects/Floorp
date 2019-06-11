@@ -1703,10 +1703,13 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   // Now recurse into our kids
   nsresult rv;
-  for (nsIContent* child = GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    rv = child->BindToTree(aContext, *this);
-    NS_ENSURE_SUCCESS(rv, rv);
+  {
+    BindContext::NestingLevel level(aContext, *this);
+    for (nsIContent* child = GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      rv = child->BindToTree(aContext, *this);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   nsNodeUtils::ParentChainChanged(this);
