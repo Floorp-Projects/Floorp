@@ -25,7 +25,7 @@ function run_test() {
   AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "58", "");
   // This will initialize the remote settings clients for blocklists,
   // with their specific options etc.
-  BlocklistGlobal.PluginBlocklistRS._ensureInitialized();
+  BlocklistGlobal.PluginBlocklistRS.ensureInitialized();
   // Obtain one of the instantiated client for our tests.
   client = RemoteSettings("plugins", { bucketName: "blocklists" });
 
