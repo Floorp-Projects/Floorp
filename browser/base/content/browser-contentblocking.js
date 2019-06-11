@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ChromeUtils.defineModuleGetter(this, "ContentBlockingAllowList",
+                               "resource://gre/modules/ContentBlockingAllowList.jsm");
+
 var Fingerprinting = {
   PREF_ENABLED: "privacy.trackingprotection.fingerprinting.enabled",
   reportBreakageLabel: "fingerprinting",
@@ -1087,19 +1090,15 @@ var ContentBlocking = {
   onLocationChange() {
     // Reset blocking and exception status so that we can send telemetry
     this.hadShieldState = false;
-    let baseURI = this._baseURIForChannelClassifier;
 
     // Don't deal with about:, file: etc.
-    if (!baseURI) {
+    if (!ContentBlockingAllowList.canHandle(gBrowser.selectedBrowser)) {
       return;
     }
 
-    let isBrowserPrivate = PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser);
-
     // Check whether the user has added an exception for this site.
-    let type = isBrowserPrivate ? "trackingprotection-pb" : "trackingprotection";
-    let hasException = Services.perms.testExactPermission(baseURI, type) ==
-      Services.perms.ALLOW_ACTION;
+    let hasException =
+      ContentBlockingAllowList.includes(gBrowser.selectedBrowser);
 
     this.content.toggleAttribute("hasException", hasException);
     this.protectionsPopup.toggleAttribute("hasException", hasException);
@@ -1113,10 +1112,9 @@ var ContentBlocking = {
 
   onContentBlockingEvent(event, webProgress, isSimulated) {
     let previousState = gBrowser.securityUI.contentBlockingEvent;
-    let baseURI = this._baseURIForChannelClassifier;
 
     // Don't deal with about:, file: etc.
-    if (!baseURI) {
+    if (!ContentBlockingAllowList.canHandle(gBrowser.selectedBrowser)) {
       this.iconBox.removeAttribute("animate");
       this.iconBox.removeAttribute("active");
       this.iconBox.removeAttribute("hasException");
@@ -1139,12 +1137,9 @@ var ContentBlocking = {
       anyBlocking = anyBlocking || blocker.activated;
     }
 
-    let isBrowserPrivate = PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser);
-
     // Check whether the user has added an exception for this site.
-    let type = isBrowserPrivate ? "trackingprotection-pb" : "trackingprotection";
-    let hasException = Services.perms.testExactPermission(baseURI, type) ==
-      Services.perms.ALLOW_ACTION;
+    let hasException =
+      ContentBlockingAllowList.includes(gBrowser.selectedBrowser);
 
     // Reset the animation in case the user is switching tabs or if no blockers were detected
     // (this is most likely happening because the user navigated on to a different site). This
@@ -1156,6 +1151,7 @@ var ContentBlocking = {
     } else if (anyBlocking && !this.iconBox.hasAttribute("active")) {
       this.iconBox.setAttribute("animate", "true");
 
+      let isBrowserPrivate = PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser);
       if (!isBrowserPrivate) {
         let introCount = Services.prefs.getIntPref(this.prefIntroCount);
         let installStamp = Services.prefs.getIntPref(
@@ -1230,32 +1226,13 @@ var ContentBlocking = {
   },
 
   disableForCurrentPage() {
-    let baseURI = this._baseURIForChannelClassifier;
-
-    // Add the current host in the 'trackingprotection' consumer of
-    // the permission manager using a normalized URI. This effectively
-    // places this host on the tracking protection allowlist.
-    if (PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser)) {
-      PrivateBrowsingUtils.addToTrackingAllowlist(baseURI);
-    } else {
-      Services.perms.add(baseURI,
-        "trackingprotection", Services.perms.ALLOW_ACTION);
-    }
+    ContentBlockingAllowList.add(gBrowser.selectedBrowser);
 
     this.hideIdentityPopupAndReload();
   },
 
   enableForCurrentPage() {
-    // Remove the current host from the 'trackingprotection' consumer
-    // of the permission manager. This effectively removes this host
-    // from the tracking protection allowlist.
-    let baseURI = this._baseURIForChannelClassifier;
-
-    if (PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser)) {
-      PrivateBrowsingUtils.removeFromTrackingAllowlist(baseURI);
-    } else {
-      Services.perms.remove(baseURI, "trackingprotection");
-    }
+    ContentBlockingAllowList.remove(gBrowser.selectedBrowser);
 
     this.hideIdentityPopupAndReload();
   },
