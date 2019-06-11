@@ -40,4 +40,5 @@ DevToolsModules(
     'styles.js',
     'stylesheets.js',
     'webconsole.js',
+    'websocket.js',
 )
