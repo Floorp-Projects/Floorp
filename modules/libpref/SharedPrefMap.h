@@ -310,6 +310,10 @@ class SharedPrefMap {
     // True if the preference's default value has changed since it was first
     // set.
     uint8_t mDefaultChanged : 1;
+    // True if the preference should be skipped while iterating over the
+    // SharedPrefMap. This is used to internally store Once StaticPrefs.
+    // This property is not visible to users the way sticky and locked are.
+    uint8_t mIsSkippedByIteration : 1;
   };
 
  public:
@@ -340,6 +344,7 @@ class SharedPrefMap {
     bool HasUserValue() const { return mEntry->mHasUserValue; }
     bool IsLocked() const { return mEntry->mIsLocked; }
     bool IsSticky() const { return mEntry->mIsSticky; }
+    bool IsSkippedByIteration() const { return mEntry->mIsSkippedByIteration; }
 
     bool GetBoolValue(PrefValueKind aKind = PrefValueKind::User) const {
       MOZ_ASSERT(Type() == PrefType::Bool);
@@ -392,10 +397,12 @@ class SharedPrefMap {
     // to work here.
     Pref& operator*() { return *this; }
 
-    // Updates this wrapper to point to the next entry in the map. This should
-    // not be attempted unless Index() is less than the map's Count().
+    // Updates this wrapper to point to the next visible entry in the map. This
+    // should not be attempted unless Index() is less than the map's Count().
     Pref& operator++() {
-      mEntry++;
+      do {
+        mEntry++;
+      } while (mEntry->mIsSkippedByIteration && Index() < mMap->Count());
       return *this;
     }
 
@@ -559,6 +566,7 @@ class MOZ_RAII SharedPrefMapBuilder {
     uint8_t mIsSticky : 1;
     uint8_t mIsLocked : 1;
     uint8_t mDefaultChanged : 1;
+    uint8_t mIsSkippedByIteration : 1;
   };
 
   void Add(const char* aKey, const Flags& aFlags, bool aDefaultValue,
@@ -798,6 +806,7 @@ class MOZ_RAII SharedPrefMapBuilder {
     uint8_t mIsSticky : 1;
     uint8_t mIsLocked : 1;
     uint8_t mDefaultChanged : 1;
+    uint8_t mIsSkippedByIteration : 1;
   };
 
   // Converts a builder Value struct to a SharedPrefMap::Value struct for

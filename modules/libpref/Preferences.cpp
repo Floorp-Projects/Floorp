@@ -432,6 +432,7 @@ class Pref {
         mDefaultChanged(false),
         mHasDefaultValue(false),
         mHasUserValue(false),
+        mIsSkippedByIteration(false),
         mDefaultValue(),
         mUserValue() {}
 
@@ -461,6 +462,8 @@ class Pref {
 
   bool IsLocked() const { return mIsLocked; }
   void SetIsLocked(bool aValue) { mIsLocked = aValue; }
+  bool IsSkippedByIteration() const { return mIsSkippedByIteration; }
+  void SetIsSkippedByIteration(bool aValue) { mIsSkippedByIteration = aValue; }
 
   bool DefaultChanged() const { return mDefaultChanged; }
 
@@ -473,7 +476,7 @@ class Pref {
   void AddToMap(SharedPrefMapBuilder& aMap) {
     aMap.Add(Name(),
              {HasDefaultValue(), HasUserValue(), IsSticky(), IsLocked(),
-              DefaultChanged()},
+              DefaultChanged(), IsSkippedByIteration()},
              HasDefaultValue() ? mDefaultValue.Get<T>() : T(),
              HasUserValue() ? mUserValue.Get<T>() : T());
   }
@@ -874,6 +877,7 @@ class Pref {
   uint32_t mDefaultChanged : 1;
   uint32_t mHasDefaultValue : 1;
   uint32_t mHasUserValue : 1;
+  uint32_t mIsSkippedByIteration : 1;
 
   PrefValue mDefaultValue;
   PrefValue mUserValue;
