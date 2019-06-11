@@ -155,7 +155,7 @@ async function async_check_pins() {
 
   // add includeSubdomains to a.pinning2.example.com
   gSSService.setKeyPins("a.pinning2.example.com", true,
-                        new Date().getTime() + 1000000, 2,
+                        new Date().getTime() + 1000000,
                         [NON_ISSUED_KEY_HASH, PINNING_ROOT_KEY_HASH]);
   await checkFail(certFromFile("a.pinning2.example.com-badca"),
                   "a.pinning2.example.com");
@@ -187,7 +187,7 @@ async function async_check_pins() {
 
   // Now setpins without subdomains
   gSSService.setKeyPins("a.pinning2.example.com", false,
-                        new Date().getTime() + 1000000, 2,
+                        new Date().getTime() + 1000000,
                         [NON_ISSUED_KEY_HASH, PINNING_ROOT_KEY_HASH]);
   await checkFail(certFromFile("a.pinning2.example.com-badca"),
                   "a.pinning2.example.com");
@@ -212,7 +212,7 @@ async function async_check_pins() {
   // failure to insert new pin entry leaves previous pin behavior
   throws(() => {
     gSSService.setKeyPins("a.pinning2.example.com", true,
-                          new Date().getTime() + 1000000, 1, ["not a hash"]);
+                          new Date().getTime() + 1000000, ["not a hash"]);
   }, /NS_ERROR_ILLEGAL_VALUE/, "Attempting to set an invalid pin should fail");
   await checkFail(certFromFile("a.pinning2.example.com-badca"),
                   "a.pinning2.example.com");
@@ -234,13 +234,6 @@ async function async_check_pins() {
 
   checkDefaultSiteHPKPStatus();
 
-  // Incorrect size results in failure
-  throws(() => {
-    gSSService.setKeyPins("a.pinning2.example.com", true,
-                          new Date().getTime() + 1000000, 2, ["not a hash"]);
-  }, /NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY/,
-     "Attempting to set a pin with an incorrect size should fail");
-
   // Ensure built-in pins work as expected
   ok(!gSSService.isSecureURI(
        Ci.nsISiteSecurityService.HEADER_HPKP,
@@ -252,7 +245,7 @@ async function async_check_pins() {
      "Built-in include-subdomains.pinning.example.com should have HPKP status");
 
   gSSService.setKeyPins("a.pinning2.example.com", false, new Date().getTime(),
-                        1, [NON_ISSUED_KEY_HASH]);
+                        [NON_ISSUED_KEY_HASH]);
 
   // Check that a preload pin loaded from file works as expected
   await checkFail(certFromFile("a.preload.example.com-badca"), "a.preload.example.com");
@@ -264,7 +257,7 @@ async function async_check_pins() {
   // then we add a pin, and we should get a failure (ensuring the expiry is
   // after the test timeout)
   gSSService.setKeyPins("b.preload.example.com", false,
-                        new Date().getTime() + 1000000, 2,
+                        new Date().getTime() + 1000000,
                         [NON_ISSUED_KEY_HASH, PINNING_ROOT_KEY_HASH], true);
   await checkFail(certFromFile("b.preload.example.com-badca"), "b.preload.example.com");
 }
