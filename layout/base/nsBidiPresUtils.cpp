@@ -459,6 +459,7 @@ void MOZ_EXPORT DumpBidiLine(BidiLineData* aData, bool aVisualOrder) {
 
 // Should this frame be split between text runs?
 static bool IsBidiSplittable(nsIFrame* aFrame) {
+  MOZ_ASSERT(aFrame);
   // Bidi inline containers should be split, unless they're line frames.
   LayoutFrameType frameType = aFrame->Type();
   return (aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer) &&
@@ -555,7 +556,7 @@ static void MakeContinuationsNonFluidUpParentChain(nsIFrame* aFrame,
 // If it isn't the last child, make sure that its continuation is fluid.
 static void JoinInlineAncestors(nsIFrame* aFrame) {
   nsIFrame* frame = aFrame;
-  do {
+  while (frame && IsBidiSplittable(frame)) {
     nsIFrame* next = frame->GetNextContinuation();
     if (next) {
       MakeContinuationFluid(frame, next);
@@ -563,7 +564,7 @@ static void JoinInlineAncestors(nsIFrame* aFrame) {
     // Join the parent only as long as we're its last child.
     if (frame->GetNextSibling()) break;
     frame = frame->GetParent();
-  } while (frame && IsBidiSplittable(frame));
+  }
 }
 
 static nsresult CreateContinuation(nsIFrame* aFrame, nsIFrame** aNewFrame,
@@ -1788,7 +1789,7 @@ void nsBidiPresUtils::RemoveBidiContinuation(BidiParagraphData* aBpd,
       // so they can be reused or deleted by normal reflow code
       frame->SetProperty(nsIFrame::BidiDataProperty(), bidiData);
       frame->AddStateBits(NS_FRAME_IS_BIDI);
-      while (frame) {
+      while (frame && IsBidiSplittable(frame)) {
         nsIFrame* prev = frame->GetPrevContinuation();
         if (prev) {
           MakeContinuationFluid(prev, frame);
