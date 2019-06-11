@@ -6,6 +6,7 @@
 
 package mozilla.components.feature.toolbar
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.session.SessionUseCases
@@ -14,9 +15,8 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ToolbarInteractorTest {
 
     class TestToolbar : Toolbar {
@@ -74,6 +74,7 @@ class ToolbarInteractorTest {
             fail()
         }
     }
+
     @Test
     fun `provide custom use case for loading url`() {
         var useCaseInvokedWithUrl = ""

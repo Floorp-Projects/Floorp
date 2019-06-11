@@ -15,10 +15,10 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.internal.URLRenderer
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
@@ -60,7 +60,7 @@ class ToolbarPresenterTest {
         val session = Session("https://mozilla.org")
         val toolbarPresenter = spy(ToolbarPresenter(toolbar, sessionManager, "123"))
 
-        `when`(sessionManager.findSessionById("123")).thenReturn(session)
+        whenever(sessionManager.findSessionById("123")).thenReturn(session)
 
         toolbarPresenter.start()
 
