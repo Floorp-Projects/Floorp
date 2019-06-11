@@ -13,14 +13,17 @@
 #include "mozilla/WindowsDllBlocklist.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
+// clang-format off
 #define MOZ_LITERAL_UNICODE_STRING(s)                                        \
   {                                                                          \
     /* Length of the string in bytes, less the null terminator */            \
-    sizeof(s) - sizeof(wchar_t), /* Length of the string in bytes, including \
-                                    the null terminator */                   \
-        sizeof(s),               /* Pointer to the buffer */                 \
-        const_cast<wchar_t*>(s)                                              \
+    sizeof(s) - sizeof(wchar_t),                                             \
+    /* Length of the string in bytes, including the null terminator */       \
+    sizeof(s),                                                               \
+    /* Pointer to the buffer */                                              \
+    const_cast<wchar_t*>(s)                                                  \
   }
+// clang-format on
 
 #define DLL_BLOCKLIST_ENTRY(name, ...) \
   {MOZ_LITERAL_UNICODE_STRING(L##name), __VA_ARGS__},
@@ -167,7 +170,7 @@ static bool CheckBlockInfo(const DllBlockInfo* aInfo, void* aBaseAddress,
 
   if (aInfo->flags &
       (DllBlockInfo::BLOCK_WIN8PLUS_ONLY | DllBlockInfo::BLOCK_WIN8_ONLY)) {
-    RTL_OSVERSIONINFOW osv;
+    RTL_OSVERSIONINFOW osv = {sizeof(osv)};
     NTSTATUS ntStatus = ::RtlGetVersion(&osv);
     if (!NT_SUCCESS(ntStatus)) {
       // huh?
