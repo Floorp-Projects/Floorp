@@ -278,6 +278,11 @@ const Types = exports.__TypesForTests = [
     spec: "devtools/shared/specs/worker/service-worker-registration",
     front: "devtools/shared/fronts/worker/service-worker-registration",
   },
+  {
+    types: ["webSocket"],
+    spec: "devtools/shared/specs/websocket",
+    front: "devtools/shared/fronts/websocket",
+  },
 ];
 
 const lazySpecs = new Map();
