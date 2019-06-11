@@ -118,6 +118,7 @@ class WebProgressChild {
       json.mayEnableCharacterEncodingMenu = this.mm.docShell.mayEnableCharacterEncodingMenu;
       json.charsetAutodetected = this.mm.docShell.charsetAutodetected;
       json.principal = this.mm.content.document.nodePrincipal;
+      json.storagePrincipal = this.mm.content.document.effectiveStoragePrincipal;
       let csp = this.mm.content.document.csp;
       json.csp = E10SUtils.serializeCSP(csp);
       json.synthetic = this.mm.content.document.mozSyntheticDocument;
