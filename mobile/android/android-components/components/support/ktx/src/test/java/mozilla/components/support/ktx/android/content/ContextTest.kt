@@ -13,8 +13,9 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.hardware.camera2.CameraManager
 import androidx.core.content.getSystemService
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -24,16 +25,13 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowApplication
 import org.robolectric.shadows.ShadowCameraCharacteristics
 import org.robolectric.shadows.ShadowProcess
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ContextTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Before
     fun setup() {
@@ -42,9 +40,9 @@ class ContextTest {
 
     @Test
     fun `isOSOnLowMemory() should return the same as getMemoryInfo() lowMemory`() {
-        val extensionFunctionResult = context.isOSOnLowMemory()
+        val extensionFunctionResult = testContext.isOSOnLowMemory()
 
-        val activityManager: ActivityManager? = context.getSystemService()
+        val activityManager: ActivityManager? = testContext.getSystemService()
 
         val normalMethodResult = ActivityManager.MemoryInfo().also { memoryInfo ->
             activityManager?.getMemoryInfo(memoryInfo)
@@ -58,19 +56,19 @@ class ContextTest {
         val application = ShadowApplication()
 
         assertEquals(
-                context.isPermissionGranted(WRITE_EXTERNAL_STORAGE),
-                context.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED)
+            testContext.isPermissionGranted(WRITE_EXTERNAL_STORAGE),
+            testContext.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED)
 
         application.grantPermissions(WRITE_EXTERNAL_STORAGE)
 
         assertEquals(
-                context.isPermissionGranted(WRITE_EXTERNAL_STORAGE),
-                context.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED)
+            testContext.isPermissionGranted(WRITE_EXTERNAL_STORAGE),
+            testContext.checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED)
     }
 
     @Test
     fun `share invokes startActivity`() {
-        val context = spy(context)
+        val context = spy(testContext)
         val argCaptor = argumentCaptor<Intent>()
 
         val result = context.share("https://mozilla.org")
@@ -85,12 +83,12 @@ class ContextTest {
     fun `isMainProcess must only return true if we are in the main process`() {
         val myPid = Int.MAX_VALUE
 
-        assertTrue(context.isMainProcess())
+        assertTrue(testContext.isMainProcess())
 
         ShadowProcess.setPid(myPid)
         isMainProcess = null
 
-        assertFalse(context.isMainProcess())
+        assertFalse(testContext.isMainProcess())
     }
 
     @Test
@@ -98,7 +96,7 @@ class ContextTest {
         val myPid = Int.MAX_VALUE
         var wasExecuted = false
 
-        context.runOnlyInMainProcess {
+        testContext.runOnlyInMainProcess {
             wasExecuted = true
         }
 
@@ -108,7 +106,7 @@ class ContextTest {
         ShadowProcess.setPid(myPid)
         isMainProcess = false
 
-        context.runOnlyInMainProcess {
+        testContext.runOnlyInMainProcess {
             wasExecuted = true
         }
 

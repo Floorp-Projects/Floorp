@@ -1,21 +1,18 @@
 package mozilla.components.support.ktx.android.content.res
 
-import android.content.Context
 import android.util.DisplayMetrics
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ResourcesTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `dp returns same value as manual conversion`() {
-        val resources = context.resources
+        val resources = testContext.resources
         val metrics = resources.displayMetrics
 
         for (i in 1..500) {

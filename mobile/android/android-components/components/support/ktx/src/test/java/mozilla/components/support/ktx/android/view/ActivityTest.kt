@@ -10,6 +10,7 @@ import android.app.Activity
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
+import mozilla.components.support.test.mock
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
@@ -20,9 +21,9 @@ class ActivityTest {
 
     @Test
     fun `check enterImmersibleMode sets the correct flags`() {
-        val activity = mock(Activity::class.java)
-        val mockWindow = mock(Window::class.java)
-        val mockDecorView = mock(View::class.java)
+        val activity = mock<Activity>()
+        val mockWindow = mock<Window>()
+        val mockDecorView = mock<View>()
         val expectedFlags = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
             or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
             or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -40,9 +41,9 @@ class ActivityTest {
 
     @Test
     fun `check exitImmersiveModeIfNeeded sets the correct flags`() {
-        val activity = mock(Activity::class.java)
-        val window = mock(Window::class.java)
-        val decorView = mock(View::class.java)
+        val activity = mock<Activity>()
+        val window = mock<Window>()
+        val decorView = mock<View>()
         val attributes = mock(WindowManager.LayoutParams::class.java)
         val expectedFlags = View.SYSTEM_UI_FLAG_VISIBLE
 

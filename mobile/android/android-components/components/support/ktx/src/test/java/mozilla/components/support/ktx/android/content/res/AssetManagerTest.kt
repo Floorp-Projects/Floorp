@@ -6,6 +6,8 @@ package mozilla.components.support.ktx.android.content.res
 
 import android.content.Context
 import android.content.res.AssetManager
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -13,11 +15,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
-import org.robolectric.RobolectricTestRunner
 import java.io.ByteArrayInputStream
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class AssetManagerTest {
+
     /**
      * Verify that AssetManager.readJSONObject() closes its stream.
      */
@@ -27,10 +29,10 @@ class AssetManagerTest {
 
         val stream = Mockito.spy(ByteArrayInputStream("{}".toByteArray()))
 
-        val assetManager = Mockito.mock(AssetManager::class.java)
+        val assetManager = mock<AssetManager>()
         Mockito.`when`(assetManager.open(ArgumentMatchers.anyString())).thenReturn(stream)
 
-        val context = Mockito.mock(Context::class.java)
+        val context = mock<Context>()
         Mockito.`when`(context.assets).thenReturn(assetManager)
 
         // Now use our mock classes to call readJSONObject()
@@ -52,10 +54,10 @@ class AssetManagerTest {
 
         val stream = Mockito.spy(ByteArrayInputStream("{'firstName': 'John', 'lastName': 'Smith'}".toByteArray()))
 
-        val assetManager = Mockito.mock(AssetManager::class.java)
+        val assetManager = mock<AssetManager>()
         Mockito.`when`(assetManager.open(ArgumentMatchers.anyString())).thenReturn(stream)
 
-        val context = Mockito.mock(Context::class.java)
+        val context = mock<Context>()
         Mockito.`when`(context.assets).thenReturn(assetManager)
 
         // Now read the stream into an JSONObject

@@ -4,32 +4,29 @@
 
 package mozilla.components.support.ktx.android.view
 
-import android.content.Context
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.test.any
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
-import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.`when`
-import org.robolectric.RobolectricTestRunner
+import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.spy
 import org.robolectric.shadows.ShadowLooper
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ViewTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `showKeyboard should request focus`() {
-        val view = EditText(context)
+        val view = EditText(testContext)
         assertFalse(view.hasFocus())
 
         view.showKeyboard()
@@ -40,7 +37,7 @@ class ViewTest {
 
     @Test
     fun `visibility helper methods`() {
-        val view = TextView(context)
+        val view = TextView(testContext)
 
         view.visibility = View.GONE
 
@@ -63,7 +60,7 @@ class ViewTest {
 
     @Test
     fun `setPadding should set padding`() {
-        val view = TextView(context)
+        val view = TextView(testContext)
 
         assertEquals(view.paddingLeft, 0)
         assertEquals(view.paddingTop, 0)
@@ -80,7 +77,7 @@ class ViewTest {
 
     @Test
     fun `getRectWithViewLocation should transform getLocationInWindow method values`() {
-        val view = spy(View(context))
+        val view = spy(View(testContext))
         doAnswer { invocation ->
             val locationInWindow = (invocation.getArgument(0) as IntArray)
             locationInWindow[0] = 100

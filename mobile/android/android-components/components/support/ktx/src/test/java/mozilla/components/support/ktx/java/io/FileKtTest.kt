@@ -4,16 +4,17 @@
 
 package mozilla.components.support.ktx.java.io
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.util.UUID
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class FileKtTest {
+
     @Test
     fun truncateDirectory() {
         val root = File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())

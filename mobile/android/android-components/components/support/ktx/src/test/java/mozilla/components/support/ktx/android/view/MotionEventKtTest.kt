@@ -6,6 +6,7 @@ package mozilla.components.support.ktx.android.view
 
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -13,9 +14,8 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class MotionEventKtTest {
 
     private lateinit var subject: MotionEvent

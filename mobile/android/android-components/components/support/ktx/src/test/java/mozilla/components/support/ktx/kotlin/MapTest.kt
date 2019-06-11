@@ -9,43 +9,43 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.util.Size
 import android.util.SizeF
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
-import org.robolectric.RobolectricTestRunner
 import java.io.Serializable
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class MapTest {
 
     @Test
     fun toBundle() {
-        val binder = mock(Binder::class.java)
+        val binder = mock<Binder>()
         val boolean = true
-        val booleanArray = BooleanArray(2, { true })
-        val bundle = mock(Bundle::class.java)
+        val booleanArray = BooleanArray(2) { true }
+        val bundle = mock<Bundle>()
         val byte = Byte.MAX_VALUE
-        val byteArray = ByteArray(2, { Byte.MAX_VALUE })
+        val byteArray = ByteArray(2) { Byte.MAX_VALUE }
         val char = Char.MAX_HIGH_SURROGATE
-        val charArray = CharArray(2, { 'c' })
+        val charArray = CharArray(2) { 'c' }
         val charSequence = "abc"
         val double = Double.MAX_VALUE
-        val doubleArray = DoubleArray(2, { Double.MAX_VALUE })
+        val doubleArray = DoubleArray(2) { Double.MAX_VALUE }
         val float = Float.MAX_VALUE
-        val floatArray = FloatArray(2, { Float.MAX_VALUE })
+        val floatArray = FloatArray(2) { Float.MAX_VALUE }
         val int = Int.MAX_VALUE
-        val intArray = IntArray(2, { Int.MAX_VALUE })
+        val intArray = IntArray(2) { Int.MAX_VALUE }
         val long = Long.MAX_VALUE
-        val longArray = LongArray(2, { Long.MAX_VALUE })
+        val longArray = LongArray(2) { Long.MAX_VALUE }
         val short = Short.MAX_VALUE
-        val shortArray = ShortArray(2, { Short.MAX_VALUE })
-        val size = mock(Size::class.java)
-        val sizeF = mock(SizeF::class.java)
-        val parcelable = mock(Parcelable::class.java)
-        val serializable = mock(Serializable::class.java)
+        val shortArray = ShortArray(2) { Short.MAX_VALUE }
+        val size = mock<Size>()
+        val sizeF = mock<SizeF>()
+        val parcelable = mock<Parcelable>()
+        val serializable = mock<Serializable>()
 
-        val map = mapOf<String, Any>(
+        val map = mapOf(
                 "binder" to binder,
                 "boolean" to boolean,
                 "booleanArray" to booleanArray,

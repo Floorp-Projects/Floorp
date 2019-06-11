@@ -6,13 +6,14 @@
 
 package mozilla.components.support.ktx.android.util
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class Base64Test {
+
     @Test
     fun `encodeToUriString contains required data URI format`() {
         val s = Base64.encodeToUriString("foo")

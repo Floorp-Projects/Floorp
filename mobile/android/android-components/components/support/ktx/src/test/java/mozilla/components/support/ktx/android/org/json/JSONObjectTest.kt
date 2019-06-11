@@ -1,15 +1,16 @@
 package mozilla.components.support.ktx.android.org.json
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class JSONObjectTest {
+
     @Test
     fun sortKeys() {
         val jsonObject = JSONObject()
