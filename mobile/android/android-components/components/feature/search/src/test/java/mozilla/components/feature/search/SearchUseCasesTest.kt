@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.search
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
@@ -14,18 +15,16 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SearchUseCasesTest {
 
     private lateinit var searchEngine: SearchEngine
@@ -35,9 +34,9 @@ class SearchUseCasesTest {
 
     @Before
     fun setup() {
-        searchEngine = mock(SearchEngine::class.java)
-        searchEngineManager = mock(SearchEngineManager::class.java)
-        sessionManager = mock(SessionManager::class.java)
+        searchEngine = mock()
+        searchEngineManager = mock()
+        sessionManager = mock()
         useCases = SearchUseCases(testContext, searchEngineManager, sessionManager)
     }
 
@@ -47,11 +46,11 @@ class SearchUseCasesTest {
         val searchUrl = "http://search-url.com?$searchTerms"
 
         val session = Session("mozilla.org")
-        val engineSession = mock(EngineSession::class.java)
+        val engineSession = mock<EngineSession>()
 
-        `when`(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
-        `when`(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
+        whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
+        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
         useCases.defaultSearch.invoke(searchTerms, session)
 
@@ -64,10 +63,10 @@ class SearchUseCasesTest {
         val searchTerms = "mozilla android"
         val searchUrl = "http://search-url.com?$searchTerms"
 
-        val engineSession = mock(EngineSession::class.java)
-        `when`(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
-        `when`(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
+        val engineSession = mock<EngineSession>()
+        whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
+        whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
+        whenever(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
 
         useCases.newTabSearch.invoke(searchTerms, Session.Source.NEW_TAB)
         verify(engineSession).loadUrl(searchUrl)
@@ -77,9 +76,9 @@ class SearchUseCasesTest {
     fun `DefaultSearchUseCase invokes onNoSession if no session is selected`() {
         var createdSession: Session? = null
 
-        `when`(searchEngine.buildSearchUrl("test")).thenReturn("https://search.example.com")
-        `when`(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(mock())
+        whenever(searchEngine.buildSearchUrl("test")).thenReturn("https://search.example.com")
+        whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
+        whenever(sessionManager.getOrCreateEngineSession(any())).thenReturn(mock())
 
         var sessionCreatedForUrl: String? = null
 
@@ -100,10 +99,10 @@ class SearchUseCasesTest {
         val searchTerms = "mozilla android"
         val searchUrl = "http://search-url.com?$searchTerms"
 
-        val engineSession = mock(EngineSession::class.java)
-        `when`(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
-        `when`(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
-        `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
+        val engineSession = mock<EngineSession>()
+        whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
+        whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
+        whenever(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
 
         useCases.newPrivateTabSearch.invoke(searchTerms)
 
