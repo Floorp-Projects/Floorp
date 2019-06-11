@@ -6,6 +6,8 @@ user_pref("browser.chrome.guess_favicon", false);
 user_pref("browser.dom.window.dump.enabled", true);
 user_pref("devtools.console.stdout.chrome", true);
 // Use a python-eval-able empty JSON array even though asrouter expects plain object
+user_pref("browser.newtabpage.activity-stream.asrouter.providers.cfr", "[]");
+user_pref("browser.newtabpage.activity-stream.asrouter.providers.cfr-fxa", "[]");
 user_pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "[]");
 user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
 user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
