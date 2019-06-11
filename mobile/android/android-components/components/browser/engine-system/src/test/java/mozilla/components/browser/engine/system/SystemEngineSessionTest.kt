@@ -12,16 +12,17 @@ import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.WebViewDatabase
-import androidx.test.core.app.ApplicationProvider.getApplicationContext
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -35,24 +36,21 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 import java.lang.reflect.Modifier
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SystemEngineSessionTest {
 
     @Test
     fun webChromeClientNotifiesObservers() {
-        val engineSession = SystemEngineSession(getApplicationContext())
-        val engineView = SystemEngineView(getApplicationContext())
+        val engineSession = SystemEngineSession(testContext)
+        val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
 
         var observedProgress = 0
@@ -69,8 +67,8 @@ class SystemEngineSessionTest {
         var loadedUrl: String? = null
         var loadHeaders: Map<String, String>? = null
 
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = spy(object : WebView(getApplicationContext()) {
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = spy(object : WebView(testContext) {
             override fun loadUrl(url: String?, additionalHttpHeaders: MutableMap<String, String>?) {
                 loadedUrl = url
                 loadHeaders = additionalHttpHeaders
@@ -94,8 +92,8 @@ class SystemEngineSessionTest {
 
     @Test
     fun loadData() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
 
         engineSession.loadData("<html><body>Hello!</body></html>")
         verify(webView, never()).loadData(anyString(), eq("text/html"), eq("UTF-8"))
@@ -114,8 +112,8 @@ class SystemEngineSessionTest {
 
     @Test
     fun stopLoading() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
 
         engineSession.stopLoading()
         verify(webView, never()).stopLoading()
@@ -128,8 +126,8 @@ class SystemEngineSessionTest {
 
     @Test
     fun reload() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
 
         engineSession.reload()
         verify(webView, never()).reload()
@@ -142,8 +140,8 @@ class SystemEngineSessionTest {
 
     @Test
     fun goBack() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
 
         engineSession.goBack()
         verify(webView, never()).goBack()
@@ -156,8 +154,8 @@ class SystemEngineSessionTest {
 
     @Test
     fun goForward() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
 
         engineSession.goForward()
         verify(webView, never()).goForward()
@@ -170,8 +168,8 @@ class SystemEngineSessionTest {
 
     @Test
     fun saveState() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
 
         engineSession.saveState()
         verify(webView, never()).saveState(any(Bundle::class.java))
@@ -184,10 +182,10 @@ class SystemEngineSessionTest {
 
     @Test
     fun saveStateRunsOnMainThread() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
+        val engineSession = spy(SystemEngineSession(testContext))
         var calledOnMainThread = false
         var saveStateCalled = false
-        val webView = object : WebView(getApplicationContext()) {
+        val webView = object : WebView(testContext) {
             override fun saveState(outState: Bundle?): WebBackForwardList? {
                 saveStateCalled = true
                 calledOnMainThread = Looper.getMainLooper().isCurrentThread
@@ -203,11 +201,11 @@ class SystemEngineSessionTest {
 
     @Test
     fun restoreState() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
 
         try {
-            engineSession.restoreState(mock(EngineSessionState::class.java))
+            engineSession.restoreState(mock())
             fail("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {}
         engineSession.restoreState(SystemEngineSessionState(Bundle()))
@@ -223,9 +221,9 @@ class SystemEngineSessionTest {
     fun enableTrackingProtection() {
         SystemEngineView.URL_MATCHER = UrlMatcher(arrayOf(""))
 
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
-        `when`(webView.context).thenReturn(getApplicationContext())
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
+        whenever(webView.context).thenReturn(testContext)
         engineSession.webView = webView
 
         var enabledObserved: Boolean? = null
@@ -244,7 +242,7 @@ class SystemEngineSessionTest {
 
     @Test
     fun disableTrackingProtection() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
+        val engineSession = spy(SystemEngineSession(testContext))
         var enabledObserved: Boolean? = null
         engineSession.register(object : EngineSession.Observer {
             override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
@@ -263,21 +261,21 @@ class SystemEngineSessionTest {
     @Test
     @Suppress("Deprecation")
     fun initSettings() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
+        val engineSession = spy(SystemEngineSession(testContext))
         assertNotNull(engineSession.internalSettings)
 
-        val webViewSettings = mock(WebSettings::class.java)
-        `when`(webViewSettings.displayZoomControls).thenReturn(true)
-        `when`(webViewSettings.allowContentAccess).thenReturn(true)
-        `when`(webViewSettings.allowFileAccess).thenReturn(true)
-        `when`(webViewSettings.mediaPlaybackRequiresUserGesture).thenReturn(true)
-        `when`(webViewSettings.supportMultipleWindows()).thenReturn(false)
+        val webViewSettings = mock<WebSettings>()
+        whenever(webViewSettings.displayZoomControls).thenReturn(true)
+        whenever(webViewSettings.allowContentAccess).thenReturn(true)
+        whenever(webViewSettings.allowFileAccess).thenReturn(true)
+        whenever(webViewSettings.mediaPlaybackRequiresUserGesture).thenReturn(true)
+        whenever(webViewSettings.supportMultipleWindows()).thenReturn(false)
 
-        val webView = mock(WebView::class.java)
-        `when`(webView.context).thenReturn(getApplicationContext())
-        `when`(webView.settings).thenReturn(webViewSettings)
-        `when`(webView.isVerticalScrollBarEnabled).thenReturn(true)
-        `when`(webView.isHorizontalScrollBarEnabled).thenReturn(true)
+        val webView = mock<WebView>()
+        whenever(webView.context).thenReturn(testContext)
+        whenever(webView.settings).thenReturn(webViewSettings)
+        whenever(webView.isVerticalScrollBarEnabled).thenReturn(true)
+        whenever(webView.isHorizontalScrollBarEnabled).thenReturn(true)
         engineSession.webView = webView
 
         assertFalse(engineSession.settings.javascriptEnabled)
@@ -371,13 +369,13 @@ class SystemEngineSessionTest {
                 displayZoomControls = true,
                 loadWithOverviewMode = true,
                 supportMultipleWindows = true)
-        val engineSession = spy(SystemEngineSession(getApplicationContext(), defaultSettings))
+        val engineSession = spy(SystemEngineSession(testContext, defaultSettings))
 
-        val webView = mock(WebView::class.java)
-        `when`(webView.context).thenReturn(getApplicationContext())
+        val webView = mock<WebView>()
+        whenever(webView.context).thenReturn(testContext)
 
-        val webViewSettings = mock(WebSettings::class.java)
-        `when`(webView.settings).thenReturn(webViewSettings)
+        val webViewSettings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(webViewSettings)
 
         engineSession.webView = webView
 
@@ -425,9 +423,9 @@ class SystemEngineSessionTest {
 
         val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
 
-        val engineSession = SystemEngineSession(getApplicationContext(), defaultSettings)
+        val engineSession = SystemEngineSession(testContext, defaultSettings)
         engineSession.webView = spy(engineSession.webView)
-        val engineView = SystemEngineView(getApplicationContext())
+        val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
 
         val request: WebResourceRequest = mock()
@@ -454,9 +452,9 @@ class SystemEngineSessionTest {
         doReturn(true).`when`(request).hasGesture()
         doReturn(Uri.parse(url)).`when`(request).url
 
-        val engineSession = SystemEngineSession(getApplicationContext())
+        val engineSession = SystemEngineSession(testContext)
         engineSession.webView = spy(engineSession.webView)
-        val engineView = SystemEngineView(getApplicationContext())
+        val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
 
         val observer: EngineSession.Observer = mock()
@@ -491,9 +489,9 @@ class SystemEngineSessionTest {
 
         val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
 
-        val engineSession = SystemEngineSession(getApplicationContext(), defaultSettings)
+        val engineSession = SystemEngineSession(testContext, defaultSettings)
         engineSession.webView = spy(engineSession.webView)
-        val engineView = SystemEngineView(getApplicationContext())
+        val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
 
         val observer: EngineSession.Observer = mock()
@@ -519,9 +517,9 @@ class SystemEngineSessionTest {
 
         val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
 
-        val engineSession = SystemEngineSession(getApplicationContext(), defaultSettings)
+        val engineSession = SystemEngineSession(testContext, defaultSettings)
         engineSession.webView = spy(engineSession.webView)
-        val engineView = SystemEngineView(getApplicationContext())
+        val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
 
         val request: WebResourceRequest = mock()
@@ -540,9 +538,9 @@ class SystemEngineSessionTest {
     fun onLoadRequestWithoutInterceptor() {
         val defaultSettings = DefaultSettings()
 
-        val engineSession = SystemEngineSession(getApplicationContext(), defaultSettings)
+        val engineSession = SystemEngineSession(testContext, defaultSettings)
         engineSession.webView = spy(engineSession.webView)
-        val engineView = SystemEngineView(getApplicationContext())
+        val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
 
         val request: WebResourceRequest = mock()
@@ -568,9 +566,9 @@ class SystemEngineSessionTest {
 
         val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
 
-        val engineSession = SystemEngineSession(getApplicationContext(), defaultSettings)
+        val engineSession = SystemEngineSession(testContext, defaultSettings)
         engineSession.webView = spy(engineSession.webView)
-        val engineView = SystemEngineView(getApplicationContext())
+        val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
 
         val request: WebResourceRequest = mock()
@@ -635,9 +633,9 @@ class SystemEngineSessionTest {
     @Test
     fun desktopMode() {
         val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
-        val webViewSettings = mock(WebSettings::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
+        val webViewSettings = mock<WebSettings>()
         var desktopMode = false
         engineSession.register(object : EngineSession.Observer {
             override fun onDesktopModeChange(enabled: Boolean) {
@@ -646,8 +644,8 @@ class SystemEngineSessionTest {
         })
 
         engineSession.webView = webView
-        `when`(webView.settings).thenReturn(webViewSettings)
-        `when`(webViewSettings.userAgentString).thenReturn(userAgentMobile)
+        whenever(webView.settings).thenReturn(webViewSettings)
+        whenever(webViewSettings.userAgentString).thenReturn(userAgentMobile)
 
         engineSession.toggleDesktopMode(true)
         verify(webViewSettings).useWideViewPort = true
@@ -665,7 +663,7 @@ class SystemEngineSessionTest {
     fun desktopModeUA() {
         val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
         val userAgentDesktop = "Mozilla/5.0 (Linux; diordnA 9) AppleWebKit/537.36 eliboM Safari/537.36"
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
+        val engineSession = spy(SystemEngineSession(testContext))
 
         assertEquals(engineSession.toggleDesktopUA(userAgentMobile, false), userAgentMobile)
         assertEquals(engineSession.toggleDesktopUA(userAgentMobile, true), userAgentDesktop)
@@ -673,8 +671,8 @@ class SystemEngineSessionTest {
 
     @Test
     fun findAll() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
         engineSession.findAll("mozilla")
         verify(webView, never()).findAllAsync(anyString())
 
@@ -692,8 +690,8 @@ class SystemEngineSessionTest {
 
     @Test
     fun findNext() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
         engineSession.findNext(true)
         verify(webView, never()).findNext(any(Boolean::class.java))
 
@@ -704,8 +702,8 @@ class SystemEngineSessionTest {
 
     @Test
     fun clearFindMatches() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
         engineSession.clearFindMatches()
         verify(webView, never()).clearMatches()
 
@@ -716,15 +714,15 @@ class SystemEngineSessionTest {
 
     @Test
     fun clearDataMakingExpectedCalls() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
         val webStorage: WebStorage = mock()
         val webViewDatabase: WebViewDatabase = mock()
-        val context: Context = getApplicationContext()
+        val context: Context = testContext
 
         doReturn(webStorage).`when`(engineSession).webStorage()
         doReturn(webViewDatabase).`when`(engineSession).webViewDatabase(context)
-        `when`(webView.context).thenReturn(context)
+        whenever(webView.context).thenReturn(context)
         engineSession.webView = webView
 
         // clear all data by default
@@ -800,16 +798,16 @@ class SystemEngineSessionTest {
 
     @Test
     fun clearDataInvokesSuccessCallback() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
         val webStorage: WebStorage = mock()
         val webViewDatabase: WebViewDatabase = mock()
-        val context: Context = getApplicationContext()
+        val context: Context = testContext
         var onSuccessCalled = false
 
         doReturn(webStorage).`when`(engineSession).webStorage()
         doReturn(webViewDatabase).`when`(engineSession).webViewDatabase(context)
-        `when`(webView.context).thenReturn(context)
+        whenever(webView.context).thenReturn(context)
         engineSession.webView = webView
 
         engineSession.clearData(onSuccess = { onSuccessCalled = true })
@@ -818,16 +816,16 @@ class SystemEngineSessionTest {
 
     @Test
     fun clearDataInvokesErrorCallback() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
         val webViewDatabase: WebViewDatabase = mock()
-        val context: Context = getApplicationContext()
+        val context: Context = testContext
         var onErrorCalled = false
 
         val exception = RuntimeException()
         doThrow(exception).`when`(engineSession).webStorage()
         doReturn(webViewDatabase).`when`(engineSession).webViewDatabase(context)
-        `when`(webView.context).thenReturn(context)
+        whenever(webView.context).thenReturn(context)
         engineSession.webView = webView
 
         engineSession.clearData(onError = {
@@ -839,9 +837,9 @@ class SystemEngineSessionTest {
 
     @Test
     fun testExitFullscreenModeWithWebViewAndCallBack() {
-        val engineSession = SystemEngineSession(getApplicationContext())
-        val engineView = SystemEngineView(getApplicationContext())
-        val customViewCallback = mock(WebChromeClient.CustomViewCallback::class.java)
+        val engineSession = SystemEngineSession(testContext)
+        val engineView = SystemEngineView(testContext)
+        val customViewCallback = mock<WebChromeClient.CustomViewCallback>()
 
         engineView.render(engineSession)
         engineSession.exitFullScreenMode()
@@ -854,8 +852,8 @@ class SystemEngineSessionTest {
 
     @Test
     fun closeDestroysWebView() {
-        val engineSession = SystemEngineSession(getApplicationContext())
-        val webView = mock(WebView::class.java)
+        val engineSession = SystemEngineSession(testContext)
+        val webView = mock<WebView>()
         engineSession.webView = webView
 
         engineSession.close()
@@ -864,8 +862,8 @@ class SystemEngineSessionTest {
 
     @Test
     fun `recoverFromCrash does not restore state`() {
-        val engineSession = SystemEngineSession(getApplicationContext())
-        val webView = mock(WebView::class.java)
+        val engineSession = SystemEngineSession(testContext)
+        val webView = mock<WebView>()
         engineSession.webView = webView
 
         assertFalse(engineSession.recoverFromCrash())

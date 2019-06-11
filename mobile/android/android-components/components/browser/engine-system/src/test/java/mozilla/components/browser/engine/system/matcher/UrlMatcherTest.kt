@@ -5,23 +5,22 @@
 package mozilla.components.browser.engine.system.matcher
 
 import android.net.Uri
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 import java.io.StringReader
 import java.util.HashMap
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class UrlMatcherTest {
 
     @Test
@@ -252,7 +251,7 @@ class UrlMatcherTest {
 
     @Test
     fun isWebFont() {
-        assertFalse(UrlMatcher.isWebFont(mock(Uri::class.java)))
+        assertFalse(UrlMatcher.isWebFont(mock()))
         assertFalse(UrlMatcher.isWebFont(Uri.parse("mozilla.org")))
         assertTrue(UrlMatcher.isWebFont(Uri.parse("/fonts/test.woff2")))
         assertTrue(UrlMatcher.isWebFont(Uri.parse("/fonts/test.woff")))

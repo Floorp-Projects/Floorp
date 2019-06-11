@@ -4,10 +4,10 @@
 
 package mozilla.components.browser.engine.system
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -15,12 +15,9 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SystemEngineTest {
-
-    private val context: Context = ApplicationProvider.getApplicationContext()
 
     @Before
     fun setup() {
@@ -31,13 +28,13 @@ class SystemEngineTest {
 
     @Test
     fun createView() {
-        val engine = SystemEngine(context)
-        assertTrue(engine.createView(context) is SystemEngineView)
+        val engine = SystemEngine(testContext)
+        assertTrue(engine.createView(testContext) is SystemEngineView)
     }
 
     @Test
     fun createSession() {
-        val engine = SystemEngine(context)
+        val engine = SystemEngine(testContext)
         assertTrue(engine.createSession() is SystemEngineSession)
 
         try {
@@ -49,13 +46,13 @@ class SystemEngineTest {
 
     @Test
     fun name() {
-        val engine = SystemEngine(context)
+        val engine = SystemEngine(testContext)
         assertEquals("System", engine.name())
     }
 
     @Test
     fun settings() {
-        var engine = SystemEngine(context, DefaultSettings(
+        val engine = SystemEngine(testContext, DefaultSettings(
                 remoteDebuggingEnabled = true,
                 trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
         ))
@@ -75,6 +72,6 @@ class SystemEngineTest {
         assertEquals("test-ua-string-test", engine.settings.userAgentString)
 
         // It should be possible to specify a custom ua-string default
-        assertEquals("foo", SystemEngine(context, DefaultSettings(userAgentString = "foo")).settings.userAgentString)
+        assertEquals("foo", SystemEngine(testContext, DefaultSettings(userAgentString = "foo")).settings.userAgentString)
     }
 }
