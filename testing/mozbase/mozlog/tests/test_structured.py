@@ -80,6 +80,11 @@ class TestStatusHandler(BaseStructuredTest):
         self.logger.test_start("test1")
         self.logger.test_status("test1", "sub1", status='PASS')
         self.logger.test_status("test1", "sub2", status='TIMEOUT')
+        self.logger.test_status("test1",
+                                "sub3",
+                                status='FAIL',
+                                expected='PASS',
+                                known_intermittent=['FAIL'])
         self.logger.test_end("test1", status='OK')
         self.logger.suite_end()
         summary = self.handler.summarize()
@@ -89,7 +94,11 @@ class TestStatusHandler(BaseStructuredTest):
         self.assertEqual(1, summary.expected_statuses['PASS'])
         self.assertIn('OK', summary.expected_statuses)
         self.assertEqual(1, summary.expected_statuses['OK'])
-        self.assertEqual(2, summary.action_counts['test_status'])
+        self.assertIn('FAIL', summary.expected_statuses)
+        self.assertEqual(1, summary.expected_statuses['FAIL'])
+        self.assertIn('FAIL', summary.known_intermittent_statuses)
+        self.assertEqual(1, summary.known_intermittent_statuses['FAIL'])
+        self.assertEqual(3, summary.action_counts['test_status'])
         self.assertEqual(1, summary.action_counts['test_end'])
 
     def test_error_run(self):
