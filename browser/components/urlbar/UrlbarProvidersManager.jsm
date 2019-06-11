@@ -210,16 +210,13 @@ class ProvidersManager {
 
     // Update behavior for extension providers.
     for (let [name, listener] of this._extensionListeners.get("queryready")) {
-      let behavior = "inactive";
       // Handle bogus case where the extension may not be responding or may
       // throw.
-      let timeoutPromise = new Promise((resolve, reject) => new SkippableTimer(() => {
+      let timer = new SkippableTimer(() => {
         Cu.reportError("An extension didn't handle the queryready callback");
-        reject();
-      }, 50));
-      try {
-        behavior = await Promise.race([timeoutPromise, listener(queryContext)]);
-      } catch (ex) {}
+      }, 50);
+      let behavior = await Promise.race([timer.promise, listener(queryContext)]) || "inactive";
+      timer.cancel();
       // Look up the provider and set its properties accordingly.
       let provider =
         UrlbarProvidersManager.providers.find(p => p.name == name);
