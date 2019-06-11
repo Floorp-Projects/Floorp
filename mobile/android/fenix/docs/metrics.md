@@ -524,7 +524,7 @@ tracking_protection</td>
 </table>
 </pre>
 
-## qr_scanner
+## library
 
 <pre>
 <table style="width: 100%">
@@ -560,6 +560,33 @@ tracking_protection</td>
         <td>
             <table>
                 <tr><td>item</td><td>The library item the user selected</td></tr>
+            </table>
+        </td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
+
+## error_page
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>visited_error</td>
+        <td>event</td>
+        <td>A user encountered an error page</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/2491#issuecomment-492414486">link</a></td>
+        <td>
+            <table>
+                <tr><td>error_type</td><td>The error type of the error page encountered</td></tr>
             </table>
         </td>
         <td>2020-03-01</td>
