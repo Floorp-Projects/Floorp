@@ -35,8 +35,8 @@ function run_test() {
   Services.prefs.setBoolPref("security.remote_settings.intermediates.enabled", false);
 
   // This will initialize the remote settings clients for blocklists.
-  BlocklistGlobal.ExtensionBlocklistRS._ensureInitialized();
-  BlocklistGlobal.PluginBlocklistRS._ensureInitialized();
+  BlocklistGlobal.ExtensionBlocklistRS.ensureInitialized();
+  BlocklistGlobal.PluginBlocklistRS.ensureInitialized();
   BlocklistGlobal.GfxBlocklistRS._ensureInitialized();
 
   gBlocklistClients = [
