@@ -222,6 +222,8 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
             self.setup_emulator()
 
         self.verify_device()
+        self.info('Logging device properties...')
+        self.info(self.shell_output('getprop'))
         self.info('Installing APK...')
         self.install_apk(self.query_abs_dirs()['abs_apk_path'], replace=True)
         self.info('Setting up SD card...')
