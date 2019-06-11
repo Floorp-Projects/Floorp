@@ -488,8 +488,6 @@ class JS::Realm : public JS::shadow::Realm {
   // can easily lead to races. Use this method very carefully.
   JSRuntime* runtimeFromAnyThread() const { return runtime_; }
 
-  void removeWrapper(js::WrapperMap::Ptr p);
-
   const JS::RealmCreationOptions& creationOptions() const {
     return creationOptions_;
   }
