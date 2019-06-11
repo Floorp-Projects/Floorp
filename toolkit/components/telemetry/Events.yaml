@@ -107,10 +107,16 @@ addonsManager:
       addon_id: A string which identify the extension (when available)
       download_time: The number of ms needed to complete the download
       error: The AddonManager error related to an install or update failure.
-      source: The source that originally triggered the add-on installation
+      source: >
+        The source that originally triggered the add-on installation, one of "about:addons",
+        "about:debugging", "about:preferences", "amo", "app:profile", "disco", "distribution",
+        "extension", "enterprise-policy", "file-url", "gmp-plugin", "internal", "plugin",
+        "rtamo", "sync", "system-addon", "temporary-addon", "unknown".
       method: >
         The method used by the source to install the add-on (included when the source can use more than one,
-        e.g. install events with source "about:addons" may have "install-from-file" or "url" as method).
+        e.g. install events with source "about:addons" may have "install-from-file" or "url" as method),
+        one of "amWebAPI", "drag-and-drop", "installTrigger", "install-from-file", "link",
+        "management-webext-api", "sideload", "url".
       num_strings: The number of permission description strings in the extension permission doorhanger
       updated_from: Determine if an update has been requested by the user or the application ("app" / "user")
       step: >
@@ -121,7 +127,7 @@ addonsManager:
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
     record_in_processes: ["main"]
-    bug_numbers: [1433335, 1515697, 1523641]
+    bug_numbers: [1433335, 1515697, 1523641, 1549770]
     release_channel_collection: opt-out
   manage:
     description: >
@@ -131,7 +137,9 @@ addonsManager:
     objects: ["extension", "theme", "locale", "dictionary", "other"]
     methods: ["disable", "enable", "sideload_prompt", "uninstall"]
     extra_keys:
-      source: The source from which the addon has been installed
+      source: >
+        The source from which the addon has been installed (See extra_keys.source description from
+        addonsManager.install telemetry event definition).
       method: >
         The method used by the source to install the add-on (included when the source can use more than one,
         e.g. install events with source "about:addons" may have "install-from-file" or "url" as method).
@@ -139,7 +147,7 @@ addonsManager:
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
     record_in_processes: ["main"]
-    bug_numbers: [1433335, 1515697, 1523641]
+    bug_numbers: [1433335, 1515697, 1523641, 1549770]
     release_channel_collection: opt-out
   link:
     description: >
