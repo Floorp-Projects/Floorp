@@ -110,16 +110,11 @@
   user-select: none;
 }
 
-.theme-dark .outline-footer button {
+.outline-footer button {
   color: var(--theme-body-color);
 }
 
 .outline-footer button.active {
-  background: var(--theme-highlight-blue);
-  color: #ffffff;
-}
-
-.theme-dark .outline-footer button.active {
   background: var(--theme-selection-background);
-  color: #ffffff;
+  color: var(--theme-selection-color);
 }
