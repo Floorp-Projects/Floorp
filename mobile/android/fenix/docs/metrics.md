@@ -477,4 +477,51 @@ tracking_protection</td>
 </table>
 </pre>
 
+## qr_scanner
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>opened</td>
+        <td>event</td>
+        <td>A user opened the QR scanner</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>prompt_displayed</td>
+        <td>event</td>
+        <td>A user scanned a QR code, causing a confirmation prompt to display asking if they want to navigate to the page</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>navigation_allowed</td>
+        <td>event</td>
+        <td>A user tapped "allow" on the prompt, directing the user to the website scanned</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>navigation_denied</td>
+        <td>event</td>
+        <td>A user tapped "deny" on the prompt, putting the user back to the scanning view</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
+
 ## Metrics
