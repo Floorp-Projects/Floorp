@@ -59,9 +59,11 @@ add_task(async function test() {
   EventUtils.synthesizeMouseAtCenter(newTabButton, metaKeyEvent);
   openEvent = await promiseTabOpened;
   newTab = openEvent.target;
-  is(newTab.previousElementSibling, tab3,
-    "New tab should be opened after tab3 when tab1 and tab3 are selected");
-  is(newTab.nextElementSibling, null,
+  let previous = gBrowser.tabContainer.findNextTab(newTab, {direction: -1});
+  is(previous, tab3,
+     "New tab should be opened after tab3 when tab1 and tab3 are selected");
+  let next = gBrowser.tabContainer.findNextTab(newTab, {direction: 1});
+  is(next, null,
     "New tab should be opened at the end of the tabstrip when tab1 and tab3 are selected");
   BrowserTestUtils.removeTab(newTab);
 
@@ -74,9 +76,11 @@ add_task(async function test() {
   EventUtils.synthesizeMouseAtCenter(newTabButton, {});
   openEvent = await promiseTabOpened;
   newTab = openEvent.target;
-  is(newTab.previousElementSibling, tab3,
+  previous = gBrowser.tabContainer.findNextTab(newTab, {direction: -1});
+  is(previous, tab3,
     "New tab should be opened after tab3 when ctrlKey is not used without multiselection");
-  is(newTab.nextElementSibling, null,
+  next = gBrowser.tabContainer.findNextTab(newTab, {direction: 1});
+  is(next, null,
     "New tab should be opened at the end of the tabstrip when ctrlKey is not used without multiselection");
   BrowserTestUtils.removeTab(newTab);
 
@@ -90,9 +94,11 @@ add_task(async function test() {
   EventUtils.synthesizeMouseAtCenter(newTabButton, {});
   openEvent = await promiseTabOpened;
   newTab = openEvent.target;
-  is(newTab.previousElementSibling, tab3,
+  previous = gBrowser.tabContainer.findNextTab(newTab, {direction: -1});
+  is(previous, tab3,
     "New tab should be opened after tab3 when ctrlKey is not used with multiselection");
-  is(newTab.nextElementSibling, null,
+  next = gBrowser.tabContainer.findNextTab(newTab, {direction: 1});
+  is(next, null,
     "New tab should be opened at the end of the tabstrip when ctrlKey is not used with multiselection");
   BrowserTestUtils.removeTab(newTab);
 
