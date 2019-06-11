@@ -8,7 +8,7 @@ random == bug-364968.html bug-364968-ref.html
 fails-if(azureSkia&&!(webrender&&winWidget)) fails-if(cocoaWidget) == canvas-outside-document-invalidate-02.html about:blank # See bug 666800
 #fails with Skia due to Skia bug http://code.google.com/p/skia/issues/detail?id=568
 fuzzy-if(webrender&&winWidget,117-129,47-54) == element-paint-simple.html element-paint-simple-ref.html
-== element-paint-repeated.html element-paint-repeated-ref.html
+fuzzy-if(geckoview,1-1,50-50) == element-paint-repeated.html element-paint-repeated-ref.html
 == element-paint-recursion.html element-paint-recursion-ref.html
 == element-paint-continuation.html element-paint-continuation-ref.html
 == element-paint-transform-01.html element-paint-transform-01-ref.html
