@@ -4,14 +4,15 @@
 
 package mozilla.components.concept.engine.manifest
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SizeTest {
+
     @Test
     fun `parse standard sizes`() {
         assertEquals(Size(512, 512), Size.parse("512x512"))

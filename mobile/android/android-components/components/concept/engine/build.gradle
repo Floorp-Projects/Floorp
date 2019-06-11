@@ -23,6 +23,8 @@ android {
     androidExtensions {
         experimental = true
     }
+
+    testOptions.unitTests.includeAndroidResources = true
 }
 
 dependencies {
@@ -39,7 +41,7 @@ dependencies {
     api project(':concept-storage')
 
     testImplementation Dependencies.androidx_test_core
-    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
 

@@ -7,23 +7,20 @@ package mozilla.components.concept.engine
 import android.content.Context
 import android.graphics.Bitmap
 import android.widget.FrameLayout
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
-import java.lang.ClassCastException
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class EngineViewTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `asView method returns underlying Android view`() {
-        val engineView = createDummyEngineView(context)
+        val engineView = createDummyEngineView(testContext)
 
         val view = engineView.asView()
 
@@ -38,7 +35,7 @@ class EngineViewTest {
 
     @Test
     fun lifecycleObserver() {
-        val engineView = spy(createDummyEngineView(context))
+        val engineView = spy(createDummyEngineView(testContext))
         val observer = LifecycleObserver(engineView)
 
         observer.onCreate()

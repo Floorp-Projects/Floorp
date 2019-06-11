@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine.manifest
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -11,10 +12,10 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class WebAppManifestParserTest {
+
     @Test
     fun `Parsing example manifest from MDN`() {
         val json = loadManifest("example_mdn.json")
