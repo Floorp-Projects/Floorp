@@ -251,7 +251,7 @@ class SearchBar extends Component<Props, State> {
 
     function SearchModBtn({ modVal, className, svgName, tooltip }) {
       const preppedClass = classnames(className, {
-        active: modifiers && modifiers.get(modVal),
+        active: modifiers && modifiers[modVal],
       });
       return (
         <button

@@ -9,6 +9,7 @@ import {
   getPaneCollapse,
   getQuickOpenEnabled,
   getSource,
+  getSourceContent,
   startsWithThreadActor,
   getFileSearchQuery,
   getProjectDirectoryRoot,
@@ -17,8 +18,10 @@ import { selectSource } from "../actions/sources/select";
 import type { ThunkArgs, panelPositionType } from "./types";
 import { getEditor, getLocationsInViewport } from "../utils/editor";
 import { searchContents } from "./file-search";
+import { copyToTheClipboard } from "../utils/clipboard";
+import { isFulfilled } from "../utils/async-value";
 
-import type { SourceLocation, Context } from "../types";
+import type { SourceLocation, Context, Source } from "../types";
 import type {
   ActiveSearchType,
   OrientationType,
@@ -218,4 +221,13 @@ export function updateViewport() {
 
 export function setOrientation(orientation: OrientationType) {
   return { type: "SET_ORIENTATION", orientation };
+}
+
+export function copyToClipboard(source: Source) {
+  return ({ dispatch, getState }: ThunkArgs) => {
+    const content = getSourceContent(getState(), source.id);
+    if (content && isFulfilled(content) && content.value.type === "text") {
+      copyToTheClipboard(content.value.value);
+    }
+  };
 }

@@ -9,10 +9,8 @@
  * @module reducers/quick-open
  */
 
-import makeRecord from "../utils/makeRecord";
 import { parseQuickOpenQuery } from "../utils/quick-open";
 import type { Action } from "../actions/types";
-import type { Record } from "../utils/makeRecord";
 
 export type QuickOpenType = "sources" | "functions" | "goto" | "gotoSource";
 
@@ -22,50 +20,52 @@ export type QuickOpenState = {
   searchType: QuickOpenType,
 };
 
-export const createQuickOpenState: () => Record<QuickOpenState> = makeRecord({
+export const createQuickOpenState = (): QuickOpenState => ({
   enabled: false,
   query: "",
   searchType: "sources",
 });
 
 export default function update(
-  state: Record<QuickOpenState> = createQuickOpenState(),
+  state: QuickOpenState = createQuickOpenState(),
   action: Action
-): Record<QuickOpenState> {
+): QuickOpenState {
   switch (action.type) {
     case "OPEN_QUICK_OPEN":
       if (action.query != null) {
-        return state.merge({
+        return {
+          ...state,
           enabled: true,
           query: action.query,
           searchType: parseQuickOpenQuery(action.query),
-        });
+        };
       }
-      return state.set("enabled", true);
+      return { ...state, enabled: true };
     case "CLOSE_QUICK_OPEN":
       return createQuickOpenState();
     case "SET_QUICK_OPEN_QUERY":
-      return state.merge({
+      return {
+        ...state,
         query: action.query,
         searchType: parseQuickOpenQuery(action.query),
-      });
+      };
     default:
       return state;
   }
 }
 
 type OuterState = {
-  quickOpen: Record<QuickOpenState>,
+  quickOpen: QuickOpenState,
 };
 
 export function getQuickOpenEnabled(state: OuterState): boolean {
-  return state.quickOpen.get("enabled");
+  return state.quickOpen.enabled;
 }
 
 export function getQuickOpenQuery(state: OuterState) {
-  return state.quickOpen.get("query");
+  return state.quickOpen.query;
 }
 
 export function getQuickOpenType(state: OuterState): QuickOpenType {
-  return state.quickOpen.get("searchType");
+  return state.quickOpen.searchType;
 }

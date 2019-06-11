@@ -10,6 +10,7 @@ import Expressions from "../Expressions";
 
 function generateDefaults(overrides) {
   return {
+    evaluateExpressions: async () => {},
     expressions: [
       {
         input: "expression1",

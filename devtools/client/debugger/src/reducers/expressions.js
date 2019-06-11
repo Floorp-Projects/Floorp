@@ -9,8 +9,6 @@
  * @module reducers/expressions
  */
 
-import makeRecord from "../utils/makeRecord";
-import { List, Map } from "immutable";
 import { omit, zip } from "lodash";
 
 import { createSelector } from "reselect";
@@ -19,30 +17,30 @@ import { prefs } from "../utils/prefs";
 import type { Expression } from "../types";
 import type { Selector, State } from "../reducers/types";
 import type { Action } from "../actions/types";
-import type { Record } from "../utils/makeRecord";
 
+type AutocompleteMatches = { [string]: string[] };
 export type ExpressionState = {
-  expressions: List<Expression>,
+  expressions: Expression[],
   expressionError: boolean,
-  autocompleteMatches: Map<string, List<string>>,
+  autocompleteMatches: AutocompleteMatches,
   currentAutocompleteInput: string | null,
 };
 
-export const createExpressionState: () => Record<ExpressionState> = makeRecord({
-  expressions: List(restoreExpressions()),
+export const createExpressionState = () => ({
+  expressions: restoreExpressions(),
   expressionError: false,
-  autocompleteMatches: Map({}),
+  autocompleteMatches: {},
   currentAutocompleteInput: null,
 });
 
 function update(
-  state: Record<ExpressionState> = createExpressionState(),
+  state: ExpressionState = createExpressionState(),
   action: Action
-): Record<ExpressionState> {
+): ExpressionState {
   switch (action.type) {
     case "ADD_EXPRESSION":
       if (action.expressionError) {
-        return state.set("expressionError", !!action.expressionError);
+        return { ...state, expressionError: !!action.expressionError };
       }
       return appendExpressionToList(state, {
         input: action.input,
@@ -52,11 +50,13 @@ function update(
 
     case "UPDATE_EXPRESSION":
       const key = action.expression.input;
-      return updateExpressionInList(state, key, {
+      const newState = updateExpressionInList(state, key, {
         input: action.input,
         value: null,
         updating: true,
-      }).set("expressionError", !!action.expressionError);
+      });
+
+      return { ...newState, expressionError: !!action.expressionError };
 
     case "EVALUATE_EXPRESSION":
       return updateExpressionInList(state, action.input, {
@@ -69,8 +69,8 @@ function update(
       const { inputs, results } = action;
 
       return zip(inputs, results).reduce(
-        (newState, [input, result]) =>
-          updateExpressionInList(newState, input, {
+        (_state, [input, result]) =>
+          updateExpressionInList(_state, input, {
             input: input,
             value: result,
             updating: false,
@@ -82,19 +82,26 @@ function update(
       return deleteExpression(state, action.input);
 
     case "CLEAR_EXPRESSION_ERROR":
-      return state.set("expressionError", false);
+      return { ...state, expressionError: false };
 
     case "AUTOCOMPLETE":
       const { matchProp, matches } = action.result;
 
-      return state
-        .updateIn(["autocompleteMatches", matchProp], list => matches)
-        .set("currentAutocompleteInput", matchProp);
+      return {
+        ...state,
+        currentAutocompleteInput: matchProp,
+        autocompleteMatches: {
+          ...state.autocompleteMatches,
+          [matchProp]: matches,
+        },
+      };
 
     case "CLEAR_AUTOCOMPLETE":
-      return state
-        .updateIn(["autocompleteMatches", ""], list => [])
-        .set("currentAutocompleteInput", "");
+      return {
+        ...state,
+        autocompleteMatches: {},
+        currentAutocompleteInput: "",
+      };
   }
 
   return state;
@@ -103,58 +110,54 @@ function update(
 function restoreExpressions() {
   const exprs = prefs.expressions;
   if (exprs.length == 0) {
-    return;
+    return [];
   }
+
   return exprs;
 }
 
 function storeExpressions({ expressions }) {
-  prefs.expressions = expressions
-    .map(expression => omit(expression, "value"))
-    .toJS();
+  prefs.expressions = expressions.map(expression => omit(expression, "value"));
 }
 
-function appendExpressionToList(state: Record<ExpressionState>, value: any) {
-  const newState = state.update("expressions", () => {
-    return state.expressions.push(value);
-  });
+function appendExpressionToList(state: ExpressionState, value: any) {
+  const newState = { ...state, expressions: [...state.expressions, value] };
 
   storeExpressions(newState);
   return newState;
 }
 
 function updateExpressionInList(
-  state: Record<ExpressionState>,
+  state: ExpressionState,
   key: string,
   value: any
 ) {
-  const newState = state.update("expressions", () => {
-    const list = state.expressions;
-    const index = list.findIndex(e => e.input == key);
-    return list.update(index, () => value);
-  });
+  const list = [...state.expressions];
+  const index = list.findIndex(e => e.input == key);
+  list[index] = value;
 
+  const newState = { ...state, expressions: list };
   storeExpressions(newState);
   return newState;
 }
 
-function deleteExpression(state: Record<ExpressionState>, input: string) {
-  const index = state.expressions.findIndex(e => e.input == input);
-  const newState = state.deleteIn(["expressions", index]);
+function deleteExpression(state: ExpressionState, input: string) {
+  const list = [...state.expressions];
+  const index = list.findIndex(e => e.input == input);
+  list.splice(index, 1);
+  const newState = { ...state, expressions: list };
   storeExpressions(newState);
   return newState;
 }
 
 const getExpressionsWrapper = state => state.expressions;
 
-export const getExpressions: Selector<List<Expression>> = createSelector(
+export const getExpressions: Selector<Array<Expression>> = createSelector(
   getExpressionsWrapper,
   expressions => expressions.expressions
 );
 
-export const getAutocompleteMatches: Selector<
-  Map<string, List<string>>
-> = createSelector(
+export const getAutocompleteMatches: Selector<AutocompleteMatches> = createSelector(
   getExpressionsWrapper,
   expressions => expressions.autocompleteMatches
 );
@@ -164,8 +167,10 @@ export function getExpression(state: State, input: string) {
 }
 
 export function getAutocompleteMatchset(state: State) {
-  const input = state.expressions.get("currentAutocompleteInput");
-  return getAutocompleteMatches(state).get(input);
+  const input = state.expressions.currentAutocompleteInput;
+  if (input) {
+    return getAutocompleteMatches(state)[input];
+  }
 }
 
 export const getExpressionError: Selector<boolean> = createSelector(

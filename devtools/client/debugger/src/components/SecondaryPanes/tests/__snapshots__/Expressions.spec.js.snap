@@ -88,33 +88,6 @@ exports[`Expressions should always have unique keys 1`] = `
       </div>
     </div>
   </li>
-  <li
-    className="expression-input-container"
-  >
-    <form
-      className="expression-input-form"
-      onSubmit={[Function]}
-    >
-      <input
-        className="input-expression"
-        onBlur={[Function]}
-        onChange={[Function]}
-        onFocus={[Function]}
-        onKeyDown={[Function]}
-        placeholder="Add watch expression"
-        type="text"
-        value=""
-      />
-      <input
-        style={
-          Object {
-            "display": "none",
-          }
-        }
-        type="submit"
-      />
-    </form>
-  </li>
 </ul>
 `;
 
@@ -205,33 +178,6 @@ exports[`Expressions should render 1`] = `
         />
       </div>
     </div>
-  </li>
-  <li
-    className="expression-input-container"
-  >
-    <form
-      className="expression-input-form"
-      onSubmit={[Function]}
-    >
-      <input
-        className="input-expression"
-        onBlur={[Function]}
-        onChange={[Function]}
-        onFocus={[Function]}
-        onKeyDown={[Function]}
-        placeholder="Add watch expression"
-        type="text"
-        value=""
-      />
-      <input
-        style={
-          Object {
-            "display": "none",
-          }
-        }
-        type="submit"
-      />
-    </form>
   </li>
 </ul>
 `;

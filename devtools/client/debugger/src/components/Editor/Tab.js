@@ -11,8 +11,8 @@ import { showMenu, buildMenu } from "devtools-contextmenu";
 
 import SourceIcon from "../shared/SourceIcon";
 import { CloseButton } from "../shared/Button";
+import { copyToTheClipboard } from "../../utils/clipboard";
 
-import type { List } from "immutable";
 import type { Source, Context } from "../../types";
 
 import actions from "../../actions";
@@ -26,7 +26,6 @@ import {
   isPretty,
   shouldBlackbox,
 } from "../../utils/source";
-import { copyToTheClipboard } from "../../utils/clipboard";
 import { getTabMenuItems } from "../../utils/tabs";
 
 import {
@@ -40,11 +39,9 @@ import type { ActiveSearchType } from "../../selectors";
 
 import classnames from "classnames";
 
-type SourcesList = List<Source>;
-
 type Props = {
   cx: Context,
-  tabSources: SourcesList,
+  tabSources: Source[],
   selectedSource: Source,
   source: Source,
   activeSearch: ActiveSearchType,
@@ -52,6 +49,7 @@ type Props = {
   selectSource: typeof actions.selectSource,
   closeTab: typeof actions.closeTab,
   closeTabs: typeof actions.closeTabs,
+  copyToClipboard: typeof actions.copyToClipboard,
   togglePrettyPrint: typeof actions.togglePrettyPrint,
   showSource: typeof actions.showSource,
   toggleBlackBox: typeof actions.toggleBlackBox,
@@ -68,6 +66,7 @@ class Tab extends PureComponent<Props> {
       cx,
       closeTab,
       closeTabs,
+      copyToClipboard,
       tabSources,
       showSource,
       toggleBlackBox,
@@ -124,7 +123,7 @@ class Tab extends PureComponent<Props> {
         item: {
           ...tabMenuItems.copyToClipboard,
           disabled: selectedSource.id !== tab,
-          click: () => copyToTheClipboard(sourceTab.text),
+          click: () => copyToClipboard(sourceTab),
         },
       },
       {
@@ -250,6 +249,7 @@ export default connect(
   mapStateToProps,
   {
     selectSource: actions.selectSource,
+    copyToClipboard: actions.copyToClipboard,
     closeTab: actions.closeTab,
     closeTabs: actions.closeTabs,
     togglePrettyPrint: actions.togglePrettyPrint,
