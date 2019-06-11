@@ -7,23 +7,37 @@ package org.mozilla.fenix.settings
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.NavHostFragment
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 
-class AccountProblemFragment : PreferenceFragmentCompat() {
+class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
 
     override fun onResume() {
         super.onResume()
         (activity as AppCompatActivity).title = getString(R.string.sync_reconnect)
         (activity as AppCompatActivity).supportActionBar?.show()
+
+        // We may have fixed our auth problem, in which case close this fragment.
+        if (requireComponents.backgroundServices.accountManager.authenticatedAccount() != null &&
+            !requireComponents.backgroundServices.accountManager.accountNeedsReauth()
+        ) {
+            NavHostFragment.findNavController(this).popBackStack()
+            return
+        }
+
+        requireComponents.backgroundServices.accountManager.register(this, owner = this)
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -61,4 +75,24 @@ class AccountProblemFragment : PreferenceFragmentCompat() {
             true
         }
     }
+
+    // We're told our auth problems have been fixed; close this fragment.
+    override fun onAuthenticated(account: OAuthAccount) {
+        CoroutineScope(Dispatchers.Main).launch {
+            NavHostFragment.findNavController(this@AccountProblemFragment).popBackStack()
+        }
+    }
+
+    override fun onAuthenticationProblems() {}
+
+    override fun onError(error: Exception) {}
+
+    // We're told there are no more auth problems since there is no more account; close this fragment.
+    override fun onLoggedOut() {
+        CoroutineScope(Dispatchers.Main).launch {
+            NavHostFragment.findNavController(this@AccountProblemFragment).popBackStack()
+        }
+    }
+
+    override fun onProfileUpdated(profile: Profile) {}
 }
