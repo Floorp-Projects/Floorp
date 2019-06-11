@@ -489,7 +489,7 @@ class InactivePropertyHelper {
    * @returns {String}
    */
   get nodeName() {
-    return this.node.nodeName;
+    return this.node.nodeName ? this.node.nodeName.toLowerCase() : null;
   }
 
   /**
