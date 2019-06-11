@@ -175,4 +175,35 @@ tracking_protection</td>
 </table>
 </pre>
 
+## context_menu
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>item_tapped</td>
+        <td>event</td>
+        <td>A user tapped an item in the browsers context menu</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010">link</a></td>
+        <td>
+            <table>
+                <tr><td>named</td><td> The name of the item that was tapped. Available items are
+          ```
+          open_in_new_tab, open_in_private_tab, open_image_in_new_tab,
+          save_image, share_link, copy_link, copy_image_location
+          ```</td></tr>
+            </table>
+        </td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
+
 ## Metrics
