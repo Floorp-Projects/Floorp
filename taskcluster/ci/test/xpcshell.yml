@@ -45,12 +45,12 @@ xpcshell:
             default: built-projects
     chunks:
         by-test-platform:
+            .*-ccov/debug: 6
             android-em-4.*: 8
             android-em-4.3-arm7-api-16/debug: 12
             android-em-7.*: 3
-            macosx10(10|14)-64/.*: 2
+            macosx.*(?!-ccov)...../.*: 2
             linux64(-qr)?/debug: 6
-            .*-ccov/debug: 6
             windows(7-32|10-64)(-shippable|-devedition|-asan|.*-qr)?/.*: 2
             windows10-aarch64/opt: 3
             default: 5
