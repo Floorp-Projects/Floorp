@@ -4,13 +4,22 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.56.0-SNAPSHOT  (In Development)
+# 1.0.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.55.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/59?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.56.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/60?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+
+# 0.56.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.55.0...v0.56.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/59?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.56.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.56.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.56.0/buildSrc/src/main/java/Config.kt)
 
 * **samples-firefox-accounts**
   * Switch FxA sample to production servers, fix pairing.
