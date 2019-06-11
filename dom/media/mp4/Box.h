@@ -36,7 +36,7 @@ class BoxContext {
 };
 
 struct ByteSlice {
-  uint8_t* mBytes;
+  const uint8_t* mBytes;
   size_t mSize;
 };
 
