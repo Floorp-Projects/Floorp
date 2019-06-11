@@ -401,6 +401,492 @@ JS::Result<Ok> BinASTTokenReaderContext::AutoTaggedTuple::done() {
   return reader_.raiseError("Not Yet Implemented");
 }
 
+// Read Huffman tables from the prelude.
+class HuffmanPreludeReader {
+ public:
+  // Construct a prelude reader.
+  //
+  // `dictionary` is the dictionary we're currently constructing.
+  // It MUST be empty.
+  HuffmanPreludeReader(JSContext* cx, BinASTTokenReaderContext& reader,
+                       HuffmanDictionary& dictionary)
+      : cx_(cx), reader(reader), dictionary(dictionary), stack(cx_) {}
+
+  // Start reading the prelude.
+  MOZ_MUST_USE JS::Result<Ok> run(size_t initialCapacity) {
+    BINJS_TRY(stack.reserve(initialCapacity));
+
+    // For the moment, the root node is hardcoded to be a BinASTKind::Script.
+    // In future versions of the codec, we'll extend the format to handle
+    // other possible roots (e.g. BinASTKind::Module).
+    MOZ_TRY(pushFields(BinASTKind::Script));
+    while (stack.length() > 0) {
+      const Entry entry = stack.popCopy();
+      MOZ_TRY(entry.match(EntryMatcher(*this)));
+    }
+    return Ok();
+  }
+
+ private:
+  JSContext* cx_;
+  BinASTTokenReaderContext& reader;
+
+  // The dictionary we're currently constructing.
+  HuffmanDictionary& dictionary;
+
+  // Tables may have different representations in the stream.
+  //
+  // The value of each variant maps to the value inside the stream.
+  enum TableHeader : uint8_t {
+    // Table is optimized to represent a single value.
+    SingleValue = 0x00,
+
+    // General table, with any number of values.
+    MultipleValues = 0x01,
+
+    // A special table that contains no value because it is never used.
+    Unreachable = 0x02,
+  };
+
+  // --- Representation of the grammar.
+  //
+  // We need to walk the grammar to read the Huffman tables. In this
+  // implementation, we represent the grammar as a variant type `Entry`,
+  // composed of subclasses of `EntryBase`.
+  //
+  // Note that, while some grammar constructions are theoretically possible
+  // (e.g. `bool?`), we only implement constructions that actually appear in the
+  // webidl. Future constructions may be implemented later.
+
+  // Base class for grammar entries.
+  struct EntryBase {
+    // The field we are currently reading.
+    const NormalizedInterfaceAndField identity;
+
+    explicit EntryBase(const NormalizedInterfaceAndField identity)
+        : identity(identity) {}
+  };
+
+  // A string.
+  // May be a literal string, identifier name or property key. May not be null.
+  struct String : EntryBase {
+    String(const NormalizedInterfaceAndField identity) : EntryBase(identity) {}
+  };
+  using IdentifierName = String;
+  using PropertyKey = String;
+
+  // An optional string.
+  // May be a literal string, identifier name or property key.
+  struct MaybeString : EntryBase {
+    MaybeString(const NormalizedInterfaceAndField identity)
+        : EntryBase(identity) {}
+  };
+  using MaybeIdentifierName = MaybeString;
+  using MaybePropertyKey = MaybeString;
+
+  // A JavaScript number. May not be null.
+  struct Number : EntryBase {
+    Number(const NormalizedInterfaceAndField identity) : EntryBase(identity) {}
+  };
+
+  // A 32-bit integer. May not be null.
+  struct UnsignedLong : EntryBase {
+    UnsignedLong(const NormalizedInterfaceAndField identity)
+        : EntryBase(identity) {}
+  };
+
+  // A boolean. May not be null.
+  struct Boolean : EntryBase {
+    Boolean(const NormalizedInterfaceAndField identity) : EntryBase(identity) {}
+  };
+
+  // A field encoding a lazy offset.
+  struct Lazy : EntryBase {
+    Lazy(const NormalizedInterfaceAndField identity) : EntryBase(identity) {}
+  };
+
+  // A value of a given interface. May not be null.
+  struct Interface : EntryBase {
+    // The kind of the interface.
+    const BinASTKind kind;
+    Interface(const NormalizedInterfaceAndField identity, BinASTKind kind)
+        : EntryBase(identity), kind(kind) {}
+
+    // Utility struct, used in macros to call the constructor as
+    // `Interface::Maker(kind)(identity)`.
+    struct Maker {
+      const BinASTKind kind;
+      Maker(BinASTKind kind) : kind(kind) {}
+      Interface operator()(const NormalizedInterfaceAndField identity) {
+        return Interface(identity, kind);
+      }
+    };
+  };
+
+  // An optional value of a given interface.
+  struct MaybeInterface : EntryBase {
+    // The kind of the interface.
+    const BinASTKind kind;
+    MaybeInterface(const NormalizedInterfaceAndField identity, BinASTKind kind)
+        : EntryBase(identity), kind(kind) {}
+
+    // Utility struct, used in macros to call the constructor as
+    // `MaybeInterface::Maker(kind)(identity)`.
+    struct Maker {
+      const BinASTKind kind;
+      Maker(BinASTKind kind) : kind(kind) {}
+      MaybeInterface operator()(const NormalizedInterfaceAndField identity) {
+        return MaybeInterface(identity, kind);
+      }
+    };
+  };
+
+  // A FrozenArray. May not be null.
+  struct List : EntryBase {
+    // The type of the list, e.g. list of numbers.
+    // All lists with the same type share a model/
+    const BinASTList contents;
+    List(const NormalizedInterfaceAndField identity, const BinASTList contents)
+        : EntryBase(identity), contents(contents) {}
+
+    // Utility struct, used in macros to call the constructor as
+    // `List::Maker(kind)(identity)`.
+    struct Maker {
+      const BinASTList contents;
+      Maker(BinASTList contents) : contents(contents) {}
+      List operator()(const NormalizedInterfaceAndField identity) {
+        return List(identity, contents);
+      }
+    };
+  };
+
+  // A choice between several interfaces. May not be null.
+  struct Sum : EntryBase {
+    // The type of values in the sum.
+    const BinASTSum contents;
+    Sum(const NormalizedInterfaceAndField identity, const BinASTSum contents)
+        : EntryBase(identity), contents(contents) {}
+
+    // Utility struct, used in macros to call the constructor as
+    // `Sum::Maker(kind)(identity)`.
+    struct Maker {
+      const BinASTSum contents;
+      Maker(BinASTSum contents) : contents(contents) {}
+      Sum operator()(const NormalizedInterfaceAndField identity) {
+        return Sum(identity, contents);
+      }
+    };
+  };
+
+  // An optional choice between several interfaces.
+  struct MaybeSum : EntryBase {
+    // The type of values in the sum.
+    const BinASTSum contents;
+    MaybeSum(const NormalizedInterfaceAndField identity,
+             const BinASTSum contents)
+        : EntryBase(identity), contents(contents) {}
+
+    // Utility struct, used in macros to call the constructor as
+    // `MaybeSum::Maker(kind)(identity)`.
+    struct Maker {
+      const BinASTSum contents;
+      Maker(BinASTSum contents) : contents(contents) {}
+      MaybeSum operator()(const NormalizedInterfaceAndField identity) {
+        return MaybeSum(identity, contents);
+      }
+    };
+  };
+
+  // A choice between several strings. May not be null.
+  struct StringEnum : EntryBase {
+    // The values in the enum.
+    const BinASTStringEnum contents;
+    StringEnum(const NormalizedInterfaceAndField identity,
+               const BinASTStringEnum contents)
+        : EntryBase(identity), contents(contents) {}
+
+    // Utility struct, used in macros to call the constructor as
+    // `StringEnum::Maker(kind)(identity)`.
+    struct Maker {
+      const BinASTStringEnum contents;
+      Maker(BinASTStringEnum contents) : contents(contents) {}
+      StringEnum operator()(const NormalizedInterfaceAndField identity) {
+        return StringEnum(identity, contents);
+      }
+    };
+  };
+
+  // The entries in the grammar.
+  using Entry = mozilla::Variant<
+      // Primitives
+      Boolean, String, MaybeString, Number, UnsignedLong, Lazy,
+      // Combinators
+      Interface, MaybeInterface, List, Sum, MaybeSum, StringEnum>;
+
+  // A stack of entries to process. We always process the latest entry added.
+  Vector<Entry> stack;
+
+  // Enqueue an entry to the stack.
+  MOZ_MUST_USE JS::Result<Ok> pushValue(NormalizedInterfaceAndField identity,
+                                        const Entry& entry) {
+    if (!dictionary.tableForField(identity).is<HuffmanTableUnreachable>()) {
+      // Entry already initialized.
+      return Ok();
+    }
+    BINJS_TRY(stack.append(entry));
+    return Ok();
+  }
+
+  // Enqueue all the fields of an interface to the stack.
+  JS::Result<Ok> pushFields(BinASTKind tag) {
+    /*
+    Generate a static implementation of pushing fields.
+
+    switch (tag) {
+      case BinASTKind::$TagName: {
+        MOZ_TRY(pushValue(NormalizedInterfaceAndField(BinASTIterfaceAndField::$Name),
+    Entry(FIELD_TYPE(NormalizedInterfaceAndField(BinASTInterfaceAndField::$Name)))));
+        // ...
+        break;
+      }
+      // ...
+    }
+    */
+
+    switch (tag) {
+#define EMIT_FIELD(TAG_NAME, FIELD_NAME, FIELD_INDEX, FIELD_TYPE, _)    \
+  MOZ_TRY(                                                              \
+      pushValue(NormalizedInterfaceAndField(                            \
+                    BinASTInterfaceAndField::TAG_NAME##__##FIELD_NAME), \
+                Entry(FIELD_TYPE(NormalizedInterfaceAndField(           \
+                    BinASTInterfaceAndField::TAG_NAME##__##FIELD_NAME)))));
+#define WRAP_INTERFACE(TYPE) Interface::Maker(BinASTKind::TYPE)
+#define WRAP_MAYBE_INTERFACE(TYPE) MaybeInterface::Maker(BinASTKind::TYPE)
+#define WRAP_PRIMITIVE(TYPE) TYPE
+#define WRAP_LIST(TYPE, _) List::Maker(BinASTList::TYPE)
+#define WRAP_SUM(TYPE) Sum::Maker(BinASTSum::TYPE)
+#define WRAP_MAYBE_SUM(TYPE) MaybeSum::Maker(BinASTSum::TYPE)
+#define WRAP_STRING_ENUM(TYPE) StringEnum::Maker(BinASTStringEnum::TYPE)
+#define WRAP_MAYBE_STRING_ENUM(TYPE) \
+  MaybeStringEnum::Maker(BinASTStringEnum::TYPE)
+#define EMIT_CASE(TAG_ENUM_NAME, _2, TAG_MACRO_NAME)                      \
+  case BinASTKind::TAG_ENUM_NAME: {                                       \
+    FOR_EACH_BIN_FIELD_IN_INTERFACE_##TAG_MACRO_NAME(                     \
+        EMIT_FIELD, WRAP_PRIMITIVE, WRAP_INTERFACE, WRAP_MAYBE_INTERFACE, \
+        WRAP_LIST, WRAP_SUM, WRAP_MAYBE_SUM, WRAP_STRING_ENUM,            \
+        WRAP_MAYBE_STRING_ENUM);                                          \
+    break;                                                                \
+  }
+
+      FOR_EACH_BIN_KIND(EMIT_CASE)
+#undef EMIT_CASE
+#undef WRAP_LIST
+#undef WRAP_SUM
+#undef WRAP_STRING_ENUM
+#undef WRAP_PRIMITIVE
+#undef WRAP_INTERFACE
+#undef EMIT_FIELD
+    }
+
+    return Ok();
+  }
+
+  // Read a table in the optimized "only one value" format.
+  template <typename Table, typename Entry>
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable(Table& table, Entry entry);
+
+  // Read a table in the non-optimized format.
+  template <typename Table, typename Entry>
+  MOZ_MUST_USE JS::Result<Ok> readMultipleValuesTable(Table& table, Entry entry,
+                                                      size_t numberOfSymbols);
+
+  // -- Reading tables of booleans
+  // 0 -> False
+  // anything else -> True
+
+  template <>
+  MOZ_MUST_USE JS::Result<Ok>
+  readSingleValueTable<HuffmanTableIndexedSymbolsBool, Boolean>(
+      HuffmanTableIndexedSymbolsBool& table, Boolean entry) {
+    uint8_t indexByte;
+    MOZ_TRY_VAR(indexByte, reader.readByte());
+    if (indexByte >= 2) {
+      // Sadly, to this day, there are only two known booleans.
+      return raiseInvalidTableData(entry.identity);
+    }
+
+    MOZ_TRY(table.impl.initWithSingleValue(cx_, indexByte != 0));
+    return Ok();
+  }
+  template <>
+  MOZ_MUST_USE JS::Result<Ok>
+  readMultipleValuesTable<HuffmanTableIndexedSymbolsBool, Boolean>(
+      HuffmanTableIndexedSymbolsBool& table, Boolean entry,
+      size_t numberOfSymbols) {
+    if (numberOfSymbols > 2) {
+      // Sadly, to this day, there are only two known booleans.
+      return raiseInvalidTableData(entry.identity);
+    }
+
+    MOZ_TRY(table.impl.initBegin(cx_, numberOfSymbols));
+    for (size_t i = 0; i < numberOfSymbols; ++i) {
+      BINJS_MOZ_TRY_DECL(bitLength, reader.readByte());
+      MOZ_TRY(table.impl.initBitLength(i, bitLength));
+    }
+
+    for (size_t i = 0; i < numberOfSymbols; ++i) {
+      BINJS_MOZ_TRY_DECL(symbol, reader.readByte());
+      MOZ_TRY(table.impl.initSymbol(i, symbol != 0));
+    }
+    MOZ_TRY(table.impl.initDone());
+    return Ok();
+  }
+
+  template <typename Table, typename Entry>
+  MOZ_MUST_USE JS::Result<Ok> readTable(Entry entry) {
+    HuffmanTable& table = dictionary.tableForField(entry.identity);
+    if (!table.is<HuffmanTableUnreachable>()) {
+      // We're attempting to re-read a table that has already been read.
+      return raiseDuplicateTableError(entry.identity);
+    }
+
+    uint8_t headerByte;
+    MOZ_TRY_VAR(headerByte, reader.readByte());
+    switch (headerByte) {
+      case TableHeader::SingleValue: {
+        // The table contains a single value.
+        table = {mozilla::VariantType<Table>{}, cx_};
+        return readSingleValueTable<Table, Entry>(table.as<Table>(), entry);
+      }
+      case TableHeader::MultipleValues: {
+        // Table contains multiple values.
+        // Read and validate length.
+        BINJS_MOZ_TRY_DECL(numberOfSymbols, reader.readVarU32());
+        return readMultipleValuesTable<Table, Entry>(table.as<Table>(), entry,
+                                                     numberOfSymbols);
+      }
+      case TableHeader::Unreachable:
+        // Table is unreachable, nothing to do.
+        return Ok();
+      default:
+        return raiseInvalidTableData(entry.identity);
+    }
+  }
+
+  // Implementation of pattern-matching cases for `entry.match`.
+  struct EntryMatcher {
+    // The owning HuffmanPreludeReader.
+    HuffmanPreludeReader& owner;
+
+    EntryMatcher(HuffmanPreludeReader& owner) : owner(owner) {}
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const Lazy& entry) {
+      // Nothing to do.
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const Boolean& entry) {
+      return owner.readTable<HuffmanTableIndexedSymbolsBool, Boolean>(entry);
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const Interface& entry) {
+      // No table here, just push fields.
+      owner.pushFields(entry.kind);
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const MaybeInterface& entry) {
+      // FIXME: Enqueue fields.
+      // FIXME: Read table.
+      // FIXME: Initialize table.
+      MOZ_CRASH("Unimplemented");
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const String& entry) {
+      // FIXME: Read table.
+      // FIXME: Initialize table.
+      MOZ_CRASH("Unimplemented");
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const MaybeString& entry) {
+      // FIXME: Read table.
+      // FIXME: Initialize table.
+      MOZ_CRASH("Unimplemented");
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const Number& entry) {
+      // FIXME: Read table.
+      // FIXME: Initialize table.
+      MOZ_CRASH("Unimplemented");
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const UnsignedLong& entry) {
+      // FIXME: Read table.
+      // FIXME: Initialize table.
+      MOZ_CRASH("Unimplemented");
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const List& entry) {
+      // FIXME: Enqueue list length.
+      // FIXME: Read table.
+      // FIXME: Initialize table.
+      MOZ_CRASH("Unimplemented");
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const Sum& entry) {
+      // FIXME: Enqueue symbols.
+      // FIXME: Read table.
+      // FIXME: Initialize table.
+      MOZ_CRASH("Unimplemented");
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const MaybeSum& entry) {
+      // FIXME: Enqueue symbols.
+      // FIXME: Read table.
+      // FIXME: Initialize table.
+      MOZ_CRASH("Unimplemented");
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const StringEnum& entry) {
+      // FIXME: Enqueue symbols.
+      // FIXME: Read table.
+      // FIXME: Initialize table.
+      MOZ_CRASH("Unimplemented");
+      return Ok();
+    }
+  };
+
+  MOZ_MUST_USE JS::Result<Ok> raiseDuplicateTableError(
+      const NormalizedInterfaceAndField identity) {
+    MOZ_CRASH("FIXME: Implement");
+    return reader.raiseError("Duplicate table.");
+  }
+
+  MOZ_MUST_USE JS::Result<Ok> raiseInvalidTableData(
+      const NormalizedInterfaceAndField identity) {
+    MOZ_CRASH("FIXME: Implement");
+    return reader.raiseError("Invalid data while reading table.");
+  }
+};
+
+template <typename T, int N>
+JS::Result<Ok> HuffmanTableImpl<T, N>::initWithSingleValue(JSContext* cx,
+                                                           T&& value) {
+  MOZ_ASSERT(values.length() == 0);  // Make sure that we're initializing.
+  if (!values.append(HuffmanEntry<T>(0, 0, std::move(value)))) {
+    return cx->alreadyReportedError();
+  }
+  return Ok();
+}
+
 }  // namespace frontend
 
 }  // namespace js
