@@ -262,4 +262,67 @@ tracking_protection</td>
 </table>
 </pre>
 
+## quick_action_sheet
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>opened</td>
+        <td>event</td>
+        <td>A user opened the quick action sheet UI</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>closed</td>
+        <td>event</td>
+        <td>A user closed the quick action sheet UI</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>share_tapped</td>
+        <td>event</td>
+        <td>A user tapped the share button</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>bookmark_tapped</td>
+        <td>event</td>
+        <td>A user tapped the bookmark button</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>download_tapped</td>
+        <td>event</td>
+        <td>A user tapped the download button</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>read_tapped</td>
+        <td>event</td>
+        <td>A user tapped the read button</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
+
 ## Metrics
