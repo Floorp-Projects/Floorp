@@ -51,4 +51,5 @@ DevToolsModules(
     'thread.js',
     'timeline.js',
     'webconsole.js',
+    'websocket.js',
 )
