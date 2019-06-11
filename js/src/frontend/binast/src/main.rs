@@ -1036,6 +1036,45 @@ enum class BinASTInterfaceAndField: uint16_t {
 };
 ");
 
+        for (sum_name, sum) in self.syntax.resolved_sums_of_interfaces_by_name()
+            .iter()
+            .sorted_by_key(|a| a.0)
+        {
+            let sum_enum_name = sum_name.to_cpp_enum_case();
+            let sum_macro_name = sum_name.to_cpp_macro_case();
+            buffer.push_str(&format!("
+// Iteration through the interfaces of sum {sum_enum_name}
+#define FOR_EACH_BIN_INTERFACE_IN_SUM_{sum_macro_name}(F) \\
+{nodes}
+
+const size_t BINAST_SUM_{sum_macro_name}_LIMIT = {limit};
+
+            ",
+                sum_enum_name = sum_enum_name.clone(),
+                sum_macro_name = sum_macro_name,
+                limit = sum.len(),
+                nodes = sum.iter()
+                    .sorted()
+                    .into_iter()
+                    .enumerate()
+                    .map(move |(i, interface_name)| {
+                        let interface_macro_name = interface_name.to_cpp_macro_case();
+                        let interface_enum_name = interface_name.to_cpp_enum_case();
+                        format!("    F({sum_enum_name}, {index}, {interface_enum_name}, {interface_macro_name}, \"{sum_spec_name}::{interface_spec_name}\")",
+                            sum_enum_name = sum_enum_name,
+                            index = i,
+                            interface_enum_name = interface_enum_name,
+                            interface_macro_name = interface_macro_name,
+                            sum_spec_name = sum_name,
+                            interface_spec_name = interface_name,
+                        )
+                    })
+                    .format(" \\\n")));
+
+
+        }
+
+
         buffer.push_str("
 // Strongly typed iterations through the fields of interfaces.
 //
@@ -1241,19 +1280,22 @@ enum class BinASTList: uint16_t {
         buffer.push_str(&format!("\n#define FOR_EACH_BIN_SUM(F) \\\n{nodes}\n",
             nodes = self.syntax.resolved_sums_of_interfaces_by_name()
                 .iter()
-                .sorted_by(|a, b| a.0.cmp(&b.0))
+                .sorted_by_key(|a| a.0)
                 .into_iter()
-                .map(|(name, _)| format!("    F({name}, \"{spec_name}\")",
+                .map(|(name, _)| format!("    F({name}, \"{spec_name}\", {macro_name})",
                     name = name.to_cpp_enum_case(),
-                    spec_name = name.to_str()))
+                    spec_name = name.to_str(),
+                    macro_name = name.to_cpp_macro_case()))
                 .format(" \\\n")));
         buffer.push_str("
 enum class BinASTSum: uint16_t {
-#define EMIT_ENUM(name, _user) name,
+#define EMIT_ENUM(name, _user, _macro) name,
     FOR_EACH_BIN_SUM(EMIT_ENUM)
 #undef EMIT_ENUM
 };
 ");
+        buffer.push_str(&format!("\n// The number of distinct sum types in the grammar. Used typically to maintain a probability table per sum type.\nconst size_t BINAST_NUMBER_OF_SUM_TYPES = {};\n\n\n",
+            self.syntax.resolved_sums_of_interfaces_by_name().len()));
 
         buffer.push_str(&self.rules.hpp_tokens_footer.reindent(""));
         buffer.push_str("\n");
