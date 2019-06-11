@@ -67,7 +67,7 @@ var WindowWatcher = {
 MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1", WindowWatcher);
 
 var InstallConfirm = {
-  confirm(aWindow, aUrl, aInstalls, aInstallCount) {
+  confirm(aWindow, aUrl, aInstalls) {
     aInstalls.forEach(function(aInstall) {
       aInstall.install();
     });
