@@ -778,11 +778,14 @@ bool js::Nursery::shouldCollect() const {
   return belowBytesThreshold && belowFractionThreshold;
 }
 
-static inline bool IsFullStoreBufferReason(JS::GCReason reason) {
-  return reason == JS::GCReason::FULL_WHOLE_CELL_BUFFER ||
+// typeReason is the gcReason for specified type, for example,
+// FULL_CELL_PTR_OBJ_BUFFER is the gcReason for JSObject.
+static inline bool IsFullStoreBufferReason(JS::GCReason reason,
+                                           JS::GCReason typeReason) {
+  return reason == typeReason ||
+         reason == JS::GCReason::FULL_WHOLE_CELL_BUFFER ||
          reason == JS::GCReason::FULL_GENERIC_BUFFER ||
          reason == JS::GCReason::FULL_VALUE_BUFFER ||
-         reason == JS::GCReason::FULL_CELL_PTR_BUFFER ||
          reason == JS::GCReason::FULL_SLOT_BUFFER ||
          reason == JS::GCReason::FULL_SHAPE_BUFFER;
 }
@@ -840,68 +843,7 @@ void js::Nursery::collect(JS::GCReason reason) {
   // Resize the nursery.
   maybeResizeNursery(reason);
 
-  // If we are promoting the nursery, or exhausted the store buffer with
-  // pointers to nursery things, which will force a collection well before
-  // the nursery is full, look for object groups that are getting promoted
-  // excessively and try to pretenure them.
-  startProfile(ProfileKey::Pretenure);
-  bool validPromotionRate;
-  const float promotionRate = calcPromotionRate(&validPromotionRate);
-  uint32_t pretenureCount = 0;
-  bool shouldPretenure =
-      tunables().attemptPretenuring() &&
-      ((validPromotionRate && promotionRate > tunables().pretenureThreshold() &&
-        previousGC.nurseryUsedBytes >= 4 * 1024 * 1024) ||
-       IsFullStoreBufferReason(reason));
-
-  if (shouldPretenure) {
-    JSContext* cx = rt->mainContextFromOwnThread();
-    for (auto& entry : tenureCounts.entries) {
-      if (entry.count >= tunables().pretenureGroupThreshold()) {
-        ObjectGroup* group = entry.group;
-        AutoMaybeLeaveAtomsZone leaveAtomsZone(cx);
-        AutoRealm ar(cx, group);
-        AutoSweepObjectGroup sweep(group);
-        if (group->canPreTenure(sweep)) {
-          group->setShouldPreTenure(sweep, cx);
-          pretenureCount++;
-        }
-      }
-    }
-  }
-  stats().setStat(gcstats::STAT_OBJECT_GROUPS_PRETENURED, pretenureCount);
-
-  mozilla::Maybe<AutoGCSession> session;
-  uint32_t numStringsTenured = 0;
-  uint32_t numNurseryStringRealmsDisabled = 0;
-  for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-    if (shouldPretenure && zone->allocNurseryStrings &&
-        zone->tenuredStrings >= 30 * 1000) {
-      if (!session.isSome()) {
-        session.emplace(rt, JS::HeapState::MinorCollecting);
-      }
-      CancelOffThreadIonCompile(zone);
-      bool preserving = zone->isPreservingCode();
-      zone->setPreservingCode(false);
-      zone->discardJitCode(rt->defaultFreeOp());
-      zone->setPreservingCode(preserving);
-      for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
-        if (jit::JitRealm* jitRealm = r->jitRealm()) {
-          jitRealm->discardStubs();
-          jitRealm->setStringsCanBeInNursery(false);
-          numNurseryStringRealmsDisabled++;
-        }
-      }
-      zone->allocNurseryStrings = false;
-    }
-    numStringsTenured += zone->tenuredStrings;
-    zone->tenuredStrings = 0;
-  }
-  session.reset();  // End the minor GC session, if running one.
-  stats().setStat(gcstats::STAT_NURSERY_STRING_REALMS_DISABLED,
-                  numNurseryStringRealmsDisabled);
-  stats().setStat(gcstats::STAT_STRINGS_TENURED, numStringsTenured);
-  endProfile(ProfileKey::Pretenure);
+  const float promotionRate = doPretenuring(rt, reason, tenureCounts);
 
   // We ignore gcMaxBytes when allocating for minor collection. However, if we
   // overflowed, we disable the nursery. The next time we allocate, we'll fail
@@ -920,8 +862,6 @@ void js::Nursery::collect(JS::GCReason reason) {
     rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, uint32_t(reason));
   }
   rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, committed());
-  rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
-  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE, promotionRate * 100);
 
   stats().endNurseryCollection(reason);
   gcTracer.traceMinorGCEnd();
@@ -1061,6 +1001,93 @@ void js::Nursery::doCollection(JS::GCReason reason,
   previousGC.nurseryUsedBytes = initialNurseryUsedBytes;
   previousGC.tenuredBytes = mover.tenuredSize;
   previousGC.tenuredCells = mover.tenuredCells;
+}
+
+float js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
+                                 TenureCountCache& tenureCounts) {
+  // If we are promoting the nursery, or exhausted the store buffer with
+  // pointers to nursery things, which will force a collection well before
+  // the nursery is full, look for object groups that are getting promoted
+  // excessively and try to pretenure them.
+  startProfile(ProfileKey::Pretenure);
+  bool validPromotionRate;
+  const float promotionRate = calcPromotionRate(&validPromotionRate);
+  uint32_t pretenureCount = 0;
+  bool attempt = tunables().attemptPretenuring();
+
+  bool pretenureObj, pretenureStr;
+  if (attempt) {
+    // Should we do pretenuring regardless of gcreason?
+    bool shouldPretenure = validPromotionRate &&
+                           promotionRate > tunables().pretenureThreshold() &&
+                           previousGC.nurseryUsedBytes >= 4 * 1024 * 1024;
+    pretenureObj =
+        shouldPretenure ||
+        IsFullStoreBufferReason(reason, JS::GCReason::FULL_CELL_PTR_OBJ_BUFFER);
+    pretenureStr =
+        shouldPretenure ||
+        IsFullStoreBufferReason(reason, JS::GCReason::FULL_CELL_PTR_STR_BUFFER);
+  } else {
+    pretenureObj = false;
+    pretenureStr = false;
+  }
+
+  if (pretenureObj) {
+    JSContext* cx = rt->mainContextFromOwnThread();
+    uint32_t threshold = tunables().pretenureGroupThreshold();
+    for (auto& entry : tenureCounts.entries) {
+      if (entry.count < threshold) {
+        continue;
+      }
+
+      ObjectGroup* group = entry.group;
+      AutoMaybeLeaveAtomsZone leaveAtomsZone(cx);
+      AutoRealm ar(cx, group);
+      AutoSweepObjectGroup sweep(group);
+      if (group->canPreTenure(sweep)) {
+        group->setShouldPreTenure(sweep, cx);
+        pretenureCount++;
+      }
+    }
+  }
+  stats().setStat(gcstats::STAT_OBJECT_GROUPS_PRETENURED, pretenureCount);
+
+  mozilla::Maybe<AutoGCSession> session;
+  uint32_t numStringsTenured = 0;
+  uint32_t numNurseryStringRealmsDisabled = 0;
+  for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
+    if (pretenureStr && zone->allocNurseryStrings &&
+        zone->tenuredStrings >= 30 * 1000) {
+      if (!session.isSome()) {
+        session.emplace(rt, JS::HeapState::MinorCollecting);
+      }
+      CancelOffThreadIonCompile(zone);
+      bool preserving = zone->isPreservingCode();
+      zone->setPreservingCode(false);
+      zone->discardJitCode(rt->defaultFreeOp());
+      zone->setPreservingCode(preserving);
+      for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
+        if (jit::JitRealm* jitRealm = r->jitRealm()) {
+          jitRealm->discardStubs();
+          jitRealm->setStringsCanBeInNursery(false);
+          numNurseryStringRealmsDisabled++;
+        }
+      }
+      zone->allocNurseryStrings = false;
+    }
+    numStringsTenured += zone->tenuredStrings;
+    zone->tenuredStrings = 0;
+  }
+  session.reset();  // End the minor GC session, if running one.
+  stats().setStat(gcstats::STAT_NURSERY_STRING_REALMS_DISABLED,
+                  numNurseryStringRealmsDisabled);
+  stats().setStat(gcstats::STAT_STRINGS_TENURED, numStringsTenured);
+  endProfile(ProfileKey::Pretenure);
+
+  rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
+  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE, promotionRate * 100);
+
+  return promotionRate;
 }
 
 bool js::Nursery::registerMallocedBuffer(void* buffer) {

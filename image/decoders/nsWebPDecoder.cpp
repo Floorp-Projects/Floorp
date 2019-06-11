@@ -228,8 +228,8 @@ nsresult nsWebPDecoder::CreateFrame(const nsIntRect& aFrameRect) {
   }
 
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
-      this, Size(), OutputSize(), aFrameRect, mFormat, animParams, mTransform,
-      pipeFlags);
+      this, Size(), OutputSize(), aFrameRect, mFormat, animParams,
+      /*aTransform*/ nullptr, pipeFlags);
   if (!pipe) {
     MOZ_LOG(sWebPLog, LogLevel::Error,
             ("[this=%p] nsWebPDecoder::CreateFrame -- no pipe\n", this));
@@ -281,7 +281,7 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
             ("[this=%p] nsWebPDecoder::ApplyColorProfile -- not tagged, use "
              "sRGB transform\n",
              this));
-    mTransform = gfxPlatform::GetCMSBGRATransform();
+    mTransform = gfxPlatform::GetCMSRGBATransform();
     return;
   }
 
@@ -311,9 +311,9 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
   }
 
   // Create the color management transform.
-  mTransform = qcms_transform_create(mInProfile, QCMS_DATA_BGRA_8,
+  mTransform = qcms_transform_create(mInProfile, QCMS_DATA_RGBA_8,
                                      gfxPlatform::GetCMSOutputProfile(),
-                                     QCMS_DATA_BGRA_8, (qcms_intent)intent);
+                                     QCMS_DATA_RGBA_8, (qcms_intent)intent);
   MOZ_LOG(sWebPLog, LogLevel::Debug,
           ("[this=%p] nsWebPDecoder::ApplyColorProfile -- use tagged "
            "transform\n",
@@ -463,6 +463,9 @@ LexerResult nsWebPDecoder::ReadSingle(const uint8_t* aData, size_t aLength,
 
     for (int row = mLastRow; row < lastRow; row++) {
       uint8_t* src = rowStart + row * stride;
+      if (mTransform) {
+        qcms_transform_data(mTransform, src, src, width);
+      }
 
       WriteState result;
       if (mFormat == SurfaceFormat::B8G8R8A8) {
