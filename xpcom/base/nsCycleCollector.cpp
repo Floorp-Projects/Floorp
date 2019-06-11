@@ -2417,6 +2417,7 @@ class SnowWhiteKiller : public TraceCallbacks {
     }
   }
 
+ private:
   void MaybeKillObject(SnowWhiteObject& aObject) {
     if (!aObject.mRefCnt->get() && !aObject.mRefCnt->IsInPurpleBuffer()) {
       mCollector->RemoveObjectFromGraph(aObject.mPointer);
@@ -2429,6 +2430,7 @@ class SnowWhiteKiller : public TraceCallbacks {
     }
   }
 
+ public:
   bool Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry) {
     // The cycle collector does not collect anything when recording/replaying.
     if (recordreplay::IsRecordingOrReplaying()) {
