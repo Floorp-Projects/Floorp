@@ -24,7 +24,7 @@ class nsBaseWidget;
 
 namespace mozilla {
 class MemoryReportingProcess;
-class PVideoDecoderManagerChild;
+class PRemoteDecoderManagerChild;
 namespace layers {
 class IAPZCTreeManager;
 class CompositorOptions;
@@ -101,7 +101,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
       mozilla::ipc::Endpoint<PCompositorManagerChild>* aOutCompositor,
       mozilla::ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
       mozilla::ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
-      mozilla::ipc::Endpoint<PVideoDecoderManagerChild>* aOutVideoManager,
+      mozilla::ipc::Endpoint<PRemoteDecoderManagerChild>* aOutVideoManager,
       nsTArray<uint32_t>* aNamespaces);
 
   // Maps the layer tree and process together so that aOwningPID is allowed
@@ -193,9 +193,9 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   bool CreateContentVRManager(
       base::ProcessId aOtherProcess,
       mozilla::ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
-  void CreateContentVideoDecoderManager(
+  void CreateContentRemoteDecoderManager(
       base::ProcessId aOtherProcess,
-      mozilla::ipc::Endpoint<PVideoDecoderManagerChild>* aOutEndPoint);
+      mozilla::ipc::Endpoint<PRemoteDecoderManagerChild>* aOutEndPoint);
 
   // Called from RemoteCompositorSession. We track remote sessions so we can
   // notify their owning widgets that the session must be restarted.

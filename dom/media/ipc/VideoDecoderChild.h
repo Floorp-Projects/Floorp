@@ -15,7 +15,7 @@ namespace mozilla {
 
 class RemoteVideoDecoder;
 class RemoteDecoderModule;
-class VideoDecoderManagerChild;
+class RemoteDecoderManagerChild;
 using mozilla::ipc::IPCResult;
 
 class VideoDecoderChild final : public PVideoDecoderChild,
@@ -60,7 +60,7 @@ class VideoDecoderChild final : public PVideoDecoderChild,
   // Called from IPDL when our actor has been destroyed
   void IPDLActorDestroyed();
 
-  VideoDecoderManagerChild* GetManager();
+  RemoteDecoderManagerChild* GetManager();
 
  private:
   ~VideoDecoderChild();
