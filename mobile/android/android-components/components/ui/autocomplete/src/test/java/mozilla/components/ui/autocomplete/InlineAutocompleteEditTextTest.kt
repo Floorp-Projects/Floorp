@@ -5,12 +5,12 @@
 package mozilla.components.ui.autocomplete
 
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.ViewParent
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.Companion.AUTOCOMPLETE_SPAN
@@ -24,12 +24,12 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
+import org.robolectric.Robolectric.buildAttributeSet
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class InlineAutocompleteEditTextTest {
 
-    private val attributes = mock(AttributeSet::class.java)
+    private val attributes = buildAttributeSet().build()
 
     @Test
     fun autoCompleteResult() {
