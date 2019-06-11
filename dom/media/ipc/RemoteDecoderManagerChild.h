@@ -9,23 +9,56 @@
 
 namespace mozilla {
 
-class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild {
+class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild,
+                                        public mozilla::ipc::IShmemAllocator {
   friend class PRemoteDecoderManagerChild;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderManagerChild)
 
   // Can only be called from the manager thread
-  static RemoteDecoderManagerChild* GetSingleton();
+  static RemoteDecoderManagerChild* GetRDDProcessSingleton();
+  static RemoteDecoderManagerChild* GetGPUProcessSingleton();
 
   // Can be called from any thread.
   static nsIThread* GetManagerThread();
   static AbstractThread* GetManagerAbstractThread();
 
+  // Can be called from any thread, dispatches the request to the IPDL thread
+  // internally and will be ignored if the IPDL actor has been destroyed.
+  already_AddRefed<gfx::SourceSurface> Readback(
+      const SurfaceDescriptorGPUVideo& aSD);
+  void DeallocateSurfaceDescriptorGPUVideo(
+      const SurfaceDescriptorGPUVideo& aSD);
+
+  bool AllocShmem(size_t aSize,
+                  mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
+                  mozilla::ipc::Shmem* aShmem) override {
+    return PRemoteDecoderManagerChild::AllocShmem(aSize, aShmType, aShmem);
+  }
+  bool AllocUnsafeShmem(size_t aSize,
+                        mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
+                        mozilla::ipc::Shmem* aShmem) override {
+    return PRemoteDecoderManagerChild::AllocUnsafeShmem(aSize, aShmType,
+                                                        aShmem);
+  }
+
+  // Can be called from any thread, dispatches the request to the IPDL thread
+  // internally and will be ignored if the IPDL actor has been destroyed.
+  bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
+
   // Main thread only
-  static void InitForContent(
+  static void InitForRDDProcess(
+      Endpoint<PRemoteDecoderManagerChild>&& aVideoManager);
+  static void InitForGPUProcess(
       Endpoint<PRemoteDecoderManagerChild>&& aVideoManager);
   static void Shutdown();
+
+  // Run aTask (on the manager thread) when we next attempt to create a new
+  // manager (even if creation fails). Intended to be called from ActorDestroy
+  // when we get notified that the old manager is being destroyed. Can only be
+  // called from the manager thread.
+  void RunWhenGPUProcessRecreated(already_AddRefed<Runnable> aTask);
 
   bool CanSend();
 
@@ -35,9 +68,13 @@ class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild {
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ActorDealloc() override;
 
+  void HandleFatalError(const char* aMsg) const override;
+
   PRemoteDecoderChild* AllocPRemoteDecoderChild(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
-      const CreateDecoderParams::OptionSet& aOptions, bool* aSuccess,
+      const CreateDecoderParams::OptionSet& aOptions,
+      const layers::TextureFactoryIdentifier& aIdentifier, bool* aSuccess,
+      nsCString* aBlacklistedD3D11Driver, nsCString* aBlacklistedD3D9Driver,
       nsCString* aErrorDescription);
   bool DeallocPRemoteDecoderChild(PRemoteDecoderChild* actor);
 
@@ -48,7 +85,10 @@ class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild {
   RemoteDecoderManagerChild() = default;
   ~RemoteDecoderManagerChild() = default;
 
-  static void Open(Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
+  static void OpenForRDDProcess(
+      Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
+  static void OpenForGPUProcess(
+      Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
 
   RefPtr<RemoteDecoderManagerChild> mIPDLSelfRef;
 

@@ -6,10 +6,13 @@
 include "mozilla/dom/MediaIPCUtils.h";
 
 include protocol PRemoteDecoderManager;
-include PMediaDecoderParams;
-include LayersSurfaces;
+
 using mozilla::MediaDataDecoder::ConversionRequired from "PlatformDecoderModule.h";
 using mozilla::TrackInfo::TrackType from "MediaInfo.h";
+using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
+
+include PMediaDecoderParams;
+include LayersSurfaces;
 
 namespace mozilla {
 
@@ -18,7 +21,7 @@ struct RemoteVideoDataIPDL
   MediaDataIPDL base;
   IntSize display;
   IntSize frameSize;
-  SurfaceDescriptorBuffer sdBuffer;
+  SurfaceDescriptor sd;
   int32_t frameID;
 };
 
@@ -39,9 +42,10 @@ union DecodedOutputIPDL
 
 // This protocol provides a way to use MediaDataDecoder across processes.
 // The parent side currently is only implemented to work with
-// RemoteDecoderModule.
+// RemoteDecoderModule or WindowsMediaFoundation.
 // The child side runs in the content process, and the parent side runs
-// in the RDD process. We run a separate IPDL thread for both sides.
+// in the RDD process or the GPU process. We run a separate IPDL thread
+// for both sides.
 async protocol PRemoteDecoder
 {
   manager PRemoteDecoderManager;
@@ -59,14 +63,18 @@ parent:
   async __delete__();
 
 child:
-  async InitComplete(TrackType trackType,
-                     nsCString decoderDescription,
+  async InitComplete(TrackType trackType, nsCString decoderDescription,
+                     bool hardware, nsCString hardwareReason,
                      ConversionRequired conversion);
   async InitFailed(nsresult reason);
 
   async FlushComplete();
   async ShutdownComplete();
 
+  // Each output may include a SurfaceDescriptorGPUVideo that represents the decoded
+  // frame. This SurfaceDescriptor can be used on the Layers IPDL protocol, but
+  // must be released explicitly using DeallocateSurfaceDescriptorGPUVideo
+  // on the manager protocol.
   async Output(DecodedOutputIPDL data);
   async InputExhausted();
   async DrainComplete();

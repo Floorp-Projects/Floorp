@@ -110,12 +110,8 @@ PhaseKindGraphRoots = [
                 UnmarkGrayPhaseKind,
             ]),
             PhaseKind("SWEEP_MARK_INCOMING_GRAY", "Mark Incoming Gray Pointers", 14),
-            PhaseKind("SWEEP_MARK_GRAY", "Mark Gray", 15, [
-                UnmarkGrayPhaseKind,
-            ]),
-            PhaseKind("SWEEP_MARK_GRAY_WEAK", "Mark Gray and Weak", 16, [
-                UnmarkGrayPhaseKind,
-            ]),
+            PhaseKind("SWEEP_MARK_GRAY", "Mark Gray", 15),
+            PhaseKind("SWEEP_MARK_GRAY_WEAK", "Mark Gray and Weak", 16)
         ]),
         PhaseKind("FINALIZE_START", "Finalize Start Callbacks", 17, [
             PhaseKind("WEAK_ZONES_CALLBACK", "Per-Slice Weak Callback", 57),

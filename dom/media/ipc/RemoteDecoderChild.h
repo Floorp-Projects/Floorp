@@ -19,7 +19,7 @@ class RemoteDecoderChild : public PRemoteDecoderChild,
   friend class PRemoteDecoderChild;
 
  public:
-  explicit RemoteDecoderChild();
+  explicit RemoteDecoderChild(bool aRecreatedOnCrash = false);
 
   // PRemoteDecoderChild
   virtual IPCResult RecvOutput(const DecodedOutputIPDL& aDecodedData) = 0;
@@ -28,6 +28,8 @@ class RemoteDecoderChild : public PRemoteDecoderChild,
   IPCResult RecvError(const nsresult& aError);
   IPCResult RecvInitComplete(const TrackInfo::TrackType& trackType,
                              const nsCString& aDecoderDescription,
+                             const bool& aHardware,
+                             const nsCString& aHardwareReason,
                              const ConversionRequired& aConversion);
   IPCResult RecvInitFailed(const nsresult& aReason);
   IPCResult RecvFlushComplete();
@@ -57,6 +59,8 @@ class RemoteDecoderChild : public PRemoteDecoderChild,
   virtual ~RemoteDecoderChild();
   void AssertOnManagerThread() const;
 
+  virtual void RecordShutdownTelemetry(bool aForAbnormalShutdown) {}
+
   RefPtr<RemoteDecoderChild> mIPDLSelfRef;
   bool mCanSend = false;
   MediaDataDecoder::DecodedData mDecodedData;
@@ -70,10 +74,16 @@ class RemoteDecoderChild : public PRemoteDecoderChild,
   MozPromiseHolder<MediaDataDecoder::FlushPromise> mFlushPromise;
   MozPromiseHolder<ShutdownPromise> mShutdownPromise;
 
+  TimeStamp mRemoteProcessCrashTime;
+
   nsCString mHardwareAcceleratedReason;
   nsCString mDescription;
   bool mInitialized = false;
   bool mIsHardwareAccelerated = false;
+  // Set to true if the actor got destroyed and we haven't yet notified the
+  // caller.
+  bool mNeedNewDecoder = false;
+  const bool mRecreatedOnCrash;
   MediaDataDecoder::ConversionRequired mConversion =
       MediaDataDecoder::ConversionRequired::kNeedNone;
   // Keep this instance alive during SendShutdown RecvShutdownComplete

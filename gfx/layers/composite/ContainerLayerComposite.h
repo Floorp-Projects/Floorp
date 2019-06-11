@@ -97,7 +97,7 @@ class ContainerLayerComposite : public ContainerLayer, public LayerComposite {
   // container layers don't use a compositable
   CompositableHost* GetCompositableHost() override { return nullptr; }
 
-  // If the layer is marked as scale-to-resolution, add a post-scale
+  // If the layer has a pres shell resolution, add a post-scale
   // to the layer's transform equal to the pres shell resolution we're
   // scaling to. This cancels out the post scale of '1 / resolution'
   // added by Layout. TODO: It would be nice to get rid of both of these

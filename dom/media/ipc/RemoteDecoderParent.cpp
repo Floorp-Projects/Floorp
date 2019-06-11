@@ -47,9 +47,12 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInit() {
         MOZ_ASSERT(aTrack == TrackInfo::kAudioTrack ||
                    aTrack == TrackInfo::kVideoTrack);
         if (self->mDecoder) {
-          Unused << self->SendInitComplete(aTrack,
-                                           self->mDecoder->GetDescriptionName(),
-                                           self->mDecoder->NeedsConversion());
+          nsCString hardwareReason;
+          bool hardwareAccelerated =
+              self->mDecoder->IsHardwareAccelerated(hardwareReason);
+          Unused << self->SendInitComplete(
+              aTrack, self->mDecoder->GetDescriptionName(), hardwareAccelerated,
+              hardwareReason, self->mDecoder->NeedsConversion());
         }
       },
       [self](MediaResult aReason) {
