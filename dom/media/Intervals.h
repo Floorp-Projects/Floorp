@@ -225,6 +225,12 @@ class Interval {
            (aOther.mStart - aOther.mFuzz <= mEnd + mFuzz);
   }
 
+  // Returns true if the two intervals intersect with this being on the right
+  // of aOther, ignoring fuzz.
+  bool TouchesOnRightStrict(const SelfType& aOther) const {
+    return aOther.mStart <= mStart && mStart <= aOther.mEnd;
+  }
+
   T mStart;
   T mEnd;
   T mFuzz;
@@ -383,12 +389,26 @@ class IntervalSet {
   }
 
   // Excludes an interval from an IntervalSet.
-  // This is done by inverting aInterval within the bounds of mIntervals
-  // and then doing the intersection.
   SelfType& operator-=(const ElemType& aInterval) {
     if (aInterval.IsEmpty() || mIntervals.IsEmpty()) {
       return *this;
     }
+    if (mIntervals.Length() == 1 &&
+        mIntervals[0].TouchesOnRightStrict(aInterval)) {
+      // Fast path when we're removing from the front of a set with a
+      // single interval. This is common for the buffered time ranges
+      // we see on Twitch.
+      if (aInterval.mEnd >= mIntervals[0].mEnd) {
+        mIntervals.RemoveElementAt(0);
+      } else {
+        mIntervals[0].mStart = aInterval.mEnd;
+        mIntervals[0].mFuzz = std::max(mIntervals[0].mFuzz, aInterval.mFuzz);
+      }
+      return *this;
+    }
+
+    // General case performed by inverting aInterval within the bounds of
+    // mIntervals and then doing the intersection.
     T firstEnd = std::max(mIntervals[0].mStart, aInterval.mStart);
     T secondStart = std::min(mIntervals.LastElement().mEnd, aInterval.mEnd);
     ElemType startInterval(mIntervals[0].mStart, firstEnd);
