@@ -591,6 +591,10 @@ class VirtualenvManager(object):
             b'PIPENV_IGNORE_VIRTUALENVS': b'1',
             b'WORKON_HOME': str(os.path.normpath(os.path.join(self.topobjdir, '_virtualenvs'))),
         })
+        # On mac, running pipenv with LC_CTYPE set to "UTF-8" (which happens
+        # when wrapping with run-task on automation) fails.
+        # Unsetting it doesn't really matter for what pipenv does.
+        env.pop('LC_CTYPE', None)
 
         if python is not None:
             env[b'PIPENV_DEFAULT_PYTHON_VERSION'] = str(python)
