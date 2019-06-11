@@ -12,11 +12,11 @@
 
 namespace soundtouch
 {
-EXPORT
+SOUNDTOUCH_API
 soundtouch::SoundTouch*
 createSoundTouchObj();
 
-EXPORT
+SOUNDTOUCH_API
 void
 destroySoundTouchObj(soundtouch::SoundTouch* aObj);
 }
