@@ -240,7 +240,6 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   Result HandleOCSPFailure(const Result cachedResponseResult,
                            const Result stapledOCSPResponseResult,
                            const Result error);
-  bool ShouldSkipSelfSignedNonTrustAnchor(mozilla::pkix::Input certDER);
 
   const SECTrustType mCertDBTrustType;
   const OCSPFetching mOCSPFetching;
@@ -272,6 +271,9 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   // Certificate Transparency data extracted during certificate verification
   UniqueSECItem mSCTListFromCertificate;
   UniqueSECItem mSCTListFromOCSPStapling;
+
+  // The built-in roots module, if available.
+  UniqueSECMODModule mBuiltInRootsModule;
 };
 
 }  // namespace psm
