@@ -947,7 +947,6 @@ class JSTerm extends Component {
           event.preventDefault();
         }
         this.clearCompletion();
-        event.preventDefault();
       }
 
       // control-enter should execute the current input if codeMirror
