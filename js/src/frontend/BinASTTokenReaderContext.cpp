@@ -40,6 +40,10 @@ const uint8_t MAX_CODE_BIT_LENGTH = 20;
 // Hardcoded limit to avoid allocating too eagerly.
 const uint32_t MAX_NUMBER_OF_SYMBOLS = 32768;
 
+// The number of elements in each sum.
+const size_t SUM_LIMITS[];
+const BinASTKind* SUM_RESOLUTIONS[];
+
 using AutoList = BinASTTokenReaderContext::AutoList;
 using AutoTaggedTuple = BinASTTokenReaderContext::AutoTaggedTuple;
 using CharSlice = BinaryASTSupport::CharSlice;
@@ -591,10 +595,24 @@ class HuffmanPreludeReader {
 
   // A choice between several interfaces. May not be null.
   struct Sum : EntryIndexed {
+    using SymbolType = BinASTKind;
+    // The type of table used for this entry.
+    using Table = HuffmanTableIndexedSymbolsSum;
+
     // The type of values in the sum.
     const BinASTSum contents;
+
     Sum(const NormalizedInterfaceAndField identity, const BinASTSum contents)
         : EntryIndexed(identity), contents(contents) {}
+
+    size_t maxNumberOfSymbols() const {
+      return SUM_LIMITS[static_cast<size_t>(contents)];
+    }
+
+    BinASTKind interfaceAt(size_t index) const {
+      MOZ_ASSERT(index < maxNumberOfSymbols());
+      return SUM_RESOLUTIONS[static_cast<size_t>(contents)][index];
+    }
 
     // Utility struct, used in macros to call the constructor as
     // `Sum::Maker(kind)(identity)`.
@@ -724,19 +742,19 @@ class HuffmanPreludeReader {
   // For an indexed type, the symbol is fetched from the grammar using `index`.
   // We have a guarantee that `index` is always in [0, numberOfSymbols).
   template <typename Entry>
-  MOZ_MUST_USE JS::Result<typename Entry::SymbolType> readSymbol(Entry type,
-                                                                 size_t index);
+  MOZ_MUST_USE JS::Result<typename Entry::SymbolType> readSymbol(
+      const Entry& type, size_t index);
 
   // Read the number of symbols in an entry.
   // For an indexed type, theis number is fetched from the grammar.
   // We have a guarantee that `index` is always in [0, numberOfSymbols)
   template <typename Entry>
-  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(Entry type);
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(const Entry&);
 
   // Read a table in the optimized "only one value" format.
   template <typename Entry>
-  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable(typename Entry::Table& table,
-                                                   Entry entry);
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable(typename Entry::Table&,
+                                                   const Entry&);
 
   // Read a table in the non-optimized format.
   //
@@ -841,14 +859,14 @@ class HuffmanPreludeReader {
 
   // Extract the number of symbols from the grammar.
   template <>
-  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(Boolean) {
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(const Boolean&) {
     // Sadly, there are only two booleans known to this date.
     return 2;
   }
 
   // Extract symbol from the grammar.
   template <>
-  MOZ_MUST_USE JS::Result<bool> readSymbol(Boolean, size_t index) {
+  MOZ_MUST_USE JS::Result<bool> readSymbol(const Boolean&, size_t index) {
     MOZ_ASSERT(index < 2);
     return index != 0;
   }
@@ -856,7 +874,7 @@ class HuffmanPreludeReader {
   // Reading a single-value table of booleans
   template <>
   MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<Boolean>(
-      Boolean::Table& table, Boolean entry) {
+      Boolean::Table& table, const Boolean& entry) {
     uint8_t indexByte;
     MOZ_TRY_VAR(indexByte, reader.readByte());
     if (indexByte >= 2) {
@@ -873,14 +891,15 @@ class HuffmanPreludeReader {
 
   // Extract the number of symbols from the grammar.
   template <>
-  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(MaybeInterface) {
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(const MaybeInterface&) {
     // Null, NonNull
     return 2;
   }
 
   // Extract symbol from the grammar.
   template <>
-  MOZ_MUST_USE JS::Result<Nullable> readSymbol(MaybeInterface, size_t index) {
+  MOZ_MUST_USE JS::Result<Nullable> readSymbol(const MaybeInterface&,
+                                               size_t index) {
     MOZ_ASSERT(index < 2);
     return index == 0 ? Nullable::Null : Nullable::NonNull;
   }
@@ -888,7 +907,7 @@ class HuffmanPreludeReader {
   // Reading a single-value table of optional interfaces
   template <>
   MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<MaybeInterface>(
-      MaybeInterface::Table& table, MaybeInterface entry) {
+      MaybeInterface::Table& table, const MaybeInterface& entry) {
     uint8_t indexByte;
     MOZ_TRY_VAR(indexByte, reader.readByte());
     if (indexByte >= 2) {
@@ -897,6 +916,36 @@ class HuffmanPreludeReader {
 
     MOZ_TRY(table.impl.initWithSingleValue(
         cx_, indexByte == 0 ? Nullable::Null : Nullable::NonNull));
+    return Ok();
+  }
+
+  // ------ Sums of interfaces
+  // varnum i -> index of `i` in the order defined by
+  // `FOR_EACH_BIN_INTERFACE_IN_*`
+
+  // Extract the number of symbols from the grammar.
+  template <>
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(const Sum& sum) {
+    return sum.maxNumberOfSymbols();
+  }
+
+  // Extract symbol from the grammar.
+  template <>
+  MOZ_MUST_USE JS::Result<BinASTKind> readSymbol(const Sum& sum, size_t index) {
+    MOZ_ASSERT(index < sum.numberOfSymbols());
+    return sum.interfaceAt(index);
+  }
+
+  // Reading a single=value table of sums of interfaces.
+  template <>
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<Sum>(
+      HuffmanTableIndexedSymbolsSum& table, const Sum& sum) {
+    BINJS_MOZ_TRY_DECL(index, reader.readVarU32());
+    if (index >= sum.maxNumberOfSymbols()) {
+      return raiseInvalidTableData(sum.identity);
+    }
+
+    MOZ_TRY(table.impl.initWithSingleValue(cx_, sum.interfaceAt(index)));
     return Ok();
   }
 
@@ -956,6 +1005,30 @@ class HuffmanPreludeReader {
       return Ok();
     }
 
+    // Sum of interfaces, non-nullable.
+    // Values: interfaces by lexicographical order of their name.
+    MOZ_MUST_USE JS::Result<Ok> operator()(const Sum& entry) {
+      // First, we need a table to determine which values are present.
+      MOZ_TRY((owner.readTable<Sum>(entry)));
+
+      // Now, walk the table to enqueue each value if necessary.
+      // FIXME: readTable could return a reference to the table, eliminating an
+      // array lookup.
+
+      const auto& table = owner.dictionary.tableForField(entry.identity);
+      if (table.is<HuffmanTableUnreachable>()) {
+        return Ok();
+      }
+      const auto& tableRef = table.as<HuffmanTableIndexedSymbolsSum>();
+
+      for (const auto& kind : tableRef.impl) {
+        MOZ_TRY(owner.pushValue(
+            entry.identity,
+            {mozilla::VariantType<Interface>(), entry.identity, kind.value}));
+      }
+      return Ok();
+    }
+
     MOZ_MUST_USE JS::Result<Ok> operator()(const String& entry) {
       // FIXME: Read table.
       // FIXME: Initialize table.
@@ -992,14 +1065,6 @@ class HuffmanPreludeReader {
       return Ok();
     }
 
-    MOZ_MUST_USE JS::Result<Ok> operator()(const Sum& entry) {
-      // FIXME: Enqueue symbols.
-      // FIXME: Read table.
-      // FIXME: Initialize table.
-      MOZ_CRASH("Unimplemented");
-      return Ok();
-    }
-
     MOZ_MUST_USE JS::Result<Ok> operator()(const MaybeSum& entry) {
       // FIXME: Enqueue symbols.
       // FIXME: Read table.
@@ -1017,13 +1082,16 @@ class HuffmanPreludeReader {
     }
   };
 
-  MOZ_MUST_USE JS::Result<Ok> raiseDuplicateTableError(
+  template <typename T>
+  using ErrorResult = BinASTTokenReaderBase::ErrorResult<T>;
+
+  MOZ_MUST_USE ErrorResult<JS::Error&> raiseDuplicateTableError(
       const NormalizedInterfaceAndField identity) {
     MOZ_CRASH("FIXME: Implement");
     return reader.raiseError("Duplicate table.");
   }
 
-  MOZ_MUST_USE JS::Result<Ok> raiseInvalidTableData(
+  MOZ_MUST_USE ErrorResult<JS::Error&> raiseInvalidTableData(
       const NormalizedInterfaceAndField identity) {
     MOZ_CRASH("FIXME: Implement");
     return reader.raiseError("Invalid data while reading table.");
@@ -1065,6 +1133,45 @@ JS::Result<Ok> HuffmanTableImpl<T, N>::addSymbol(uint32_t bits,
 
   return Ok();
 }
+
+// The number of possible interfaces in each sum, indexed by
+// `static_cast<size_t>(BinASTSum)`.
+const size_t SUM_LIMITS[] = {
+#define WITH_SUM(_ENUM_NAME, _HUMAN_NAME, MACRO_NAME) \
+  BINAST_SUM_##MACRO_NAME##_LIMIT,
+    FOR_EACH_BIN_SUM(WITH_SUM)
+#undef WITH_SUM
+};
+
+// For each sum S, an array from [0, SUM_LIMITS[S]( to the BinASTKind of the ith
+// interface of the sum, ranked by the same sum order as the rest of the .
+//
+// For instance, as we have
+// ArrowExpression ::= EagerArrowExpressionWithExpression
+//                 |   EagerArrowExpressionWithFunctionBody
+//                 |   ...
+//
+// SUM_RESOLUTION_ARROW_EXPRESSION[0] ==
+// BinASTKind::EagerArrowExpressionWithExpression
+// SUM_RESOLUTION_ARROW_EXPRESSION[1] ==
+// BinASTKind::EagerArrowExpressionWithFunctionBody
+// ...
+#define WITH_SUM_CONTENTS(_SUM_NAME, _INDEX, INTERFACE_NAME, _MACRO_NAME, \
+                          _SPEC_NAME)                                     \
+  BinASTKind::INTERFACE_NAME,
+#define WITH_SUM(_ENUM_NAME, _HUMAN_NAME, MACRO_NAME) \
+  const BinASTKind SUM_RESOLUTION_##MACRO_NAME[]{     \
+      FOR_EACH_BIN_INTERFACE_IN_SUM_##ARROW_EXPRESSION(WITH_SUM_CONTENTS)};
+FOR_EACH_BIN_SUM(WITH_SUM)
+#undef WITH_SUM
+#undef WITH_SUM_CONTENTS
+
+const BinASTKind* SUM_RESOLUTIONS[]{
+#define WITH_SUM(_ENUM_NAME, _HUMAN_NAME, MACRO_NAME) \
+  SUM_RESOLUTION_##MACRO_NAME,
+    FOR_EACH_BIN_SUM(WITH_SUM)
+#undef WITH_SUM
+};
 
 }  // namespace frontend
 
