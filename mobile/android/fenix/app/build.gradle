@@ -257,7 +257,7 @@ android.applicationVariants.all { variant ->
 // -------------------------------------------------------------------------------------------------
 // Feature build flags
 // -------------------------------------------------------------------------------------------------
-    buildConfigField 'Boolean', 'SEND_TAB_ENABLED', (buildType == "nightly" || isDebug).toString()
+    buildConfigField 'Boolean', 'SEND_TAB_ENABLED', (true).toString()
     buildConfigField 'Boolean', 'PULL_TO_REFRESH_ENABLED', (false).toString()
 }
 
