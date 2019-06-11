@@ -329,7 +329,6 @@ class MP4Stream : public ByteStream, public DecoderDoctorLifeLogger<MP4Stream> {
   bool CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
                     size_t* aBytesRead) override;
   bool Length(int64_t* aSize) override;
-  const uint8_t* GetContiguousAccess(int64_t aOffset, size_t aSize) override;
 
  private:
   RefPtr<SourceBufferResource> mResource;
@@ -358,10 +357,6 @@ bool MP4Stream::CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
   }
   *aBytesRead = aCount;
   return true;
-}
-
-const uint8_t* MP4Stream::GetContiguousAccess(int64_t aOffset, size_t aSize) {
-  return mResource->GetContiguousAccess(aOffset, aSize);
 }
 
 bool MP4Stream::Length(int64_t* aSize) {

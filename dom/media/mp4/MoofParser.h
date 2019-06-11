@@ -23,16 +23,6 @@ class BoxContext;
 class BoxReader;
 class Moof;
 
-// Used to track the CTS end time of the last sample of a track
-// in the preceeding Moof, so that we can smooth tracks' timestamps
-// across Moofs.
-struct TrackEndCts {
-  TrackEndCts(uint32_t aTrackId, Microseconds aCtsEndTime)
-      : mTrackId(aTrackId), mCtsEndTime(aCtsEndTime) {}
-  uint32_t mTrackId;
-  Microseconds mCtsEndTime;
-};
-
 class Mvhd : public Atom {
  public:
   Mvhd()
@@ -244,8 +234,7 @@ class Moof final : public Atom {
  public:
   Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
        Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf,
-       uint64_t* aDecodeTime, bool aIsAudio,
-       nsTArray<TrackEndCts>& aTracksEndCts);
+       uint64_t* aDecodeTime, bool aIsAudio);
   bool GetAuxInfo(AtomType aType, FallibleTArray<MediaByteRange>* aByteRanges);
   void FixRounding(const Moof& aMoof);
 
@@ -348,7 +337,6 @@ class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
   void ScanForMetadata(mozilla::MediaByteRange& aMoov);
   nsTArray<Moof> mMoofs;
   nsTArray<MediaByteRange> mMediaRanges;
-  nsTArray<TrackEndCts> mTracksEndCts;
   bool mIsAudio;
   uint64_t mLastDecodeTime;
   // Either a ParseAllTracks if in multitrack mode, or an integer representing
