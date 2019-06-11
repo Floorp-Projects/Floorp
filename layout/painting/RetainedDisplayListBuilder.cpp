@@ -1304,8 +1304,12 @@ bool RetainedDisplayListBuilder::ComputeRebuildRegion(
     }
   }
 
+  // Since we set modified to true on the extraFrames, add them to
+  // aModifiedFrames so that it will get reverted.
+  aModifiedFrames.AppendElements(extraFrames);
+
   for (nsIFrame* f : extraFrames) {
-    mBuilder.MarkFrameModifiedDuringBuilding(f);
+    f->SetFrameIsModified(true);
 
     if (!ProcessFrame(f, &mBuilder, mBuilder.RootReferenceFrame(),
                       aOutFramesWithProps, true, aOutDirty, aOutModifiedAGR)) {
@@ -1361,21 +1365,18 @@ bool RetainedDisplayListBuilder::ShouldBuildPartial(
   return true;
 }
 
-void RetainedDisplayListBuilder::InvalidateCaretFramesIfNeeded(
-    nsTArray<nsIFrame*>& aModifiedFrames) {
+void RetainedDisplayListBuilder::InvalidateCaretFramesIfNeeded() {
   if (mPreviousCaret == mBuilder.GetCaretFrame()) {
     // The current caret frame is the same as the previous one.
     return;
   }
 
-  if (mPreviousCaret &&
-      mBuilder.MarkFrameModifiedDuringBuilding(mPreviousCaret)) {
-    aModifiedFrames.AppendElement(mPreviousCaret);
+  if (mPreviousCaret) {
+    mPreviousCaret->MarkNeedsDisplayItemRebuild();
   }
 
-  if (mBuilder.GetCaretFrame() &&
-      mBuilder.MarkFrameModifiedDuringBuilding(mBuilder.GetCaretFrame())) {
-    aModifiedFrames.AppendElement(mBuilder.GetCaretFrame());
+  if (mBuilder.GetCaretFrame()) {
+    mBuilder.GetCaretFrame()->MarkNeedsDisplayItemRebuild();
   }
 
   mPreviousCaret = mBuilder.GetCaretFrame();
@@ -1423,6 +1424,8 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
     MarkFramesWithItemsAndImagesModified(&mList);
   }
 
+  InvalidateCaretFramesIfNeeded();
+
   mBuilder.EnterPresShell(mBuilder.RootReferenceFrame());
 
   // We set the override dirty regions during ComputeRebuildRegion or in
@@ -1435,10 +1438,6 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
 
   // Do not allow partial builds if the |ShouldBuildPartial()| heuristic fails.
   bool shouldBuildPartial = ShouldBuildPartial(modifiedFrames.Frames());
-
-  if (shouldBuildPartial) {
-    InvalidateCaretFramesIfNeeded(modifiedFrames.Frames());
-  }
 
   nsRect modifiedDirty;
   AnimatedGeometryRoot* modifiedAGR = nullptr;
