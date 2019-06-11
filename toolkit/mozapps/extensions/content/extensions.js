@@ -2121,7 +2121,11 @@ var gDiscoverView = {
         return;
       }
 
-      this._browser.addProgressListener(this);
+      this._browser.addProgressListener(
+        this,
+        Ci.nsIWebProgress.NOTIFY_STATE_ALL |
+        Ci.nsIWebProgress.NOTIFY_SECURITY |
+        Ci.nsIWebProgress.NOTIFY_LOCATION);
 
       if (this.loaded) {
         this._loadURL(this.homepageURL.spec, false, notifyInitialized,
@@ -2290,8 +2294,6 @@ var gDiscoverView = {
     aRequest.cancel(Cr.NS_BINDING_ABORTED);
   },
 
-  onContentBlockingEvent(aWebProgress, aRequest, aEvent) {},
-
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     let transferStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
                         Ci.nsIWebProgressListener.STATE_IS_REQUEST |
@@ -2335,9 +2337,6 @@ var gDiscoverView = {
     for (let listener of listeners)
       listener();
   },
-
-  onProgressChange() { },
-  onStatusChange() { },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
                                           Ci.nsISupportsWeakReference]),
