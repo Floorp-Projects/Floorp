@@ -1833,6 +1833,7 @@ static bool SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc,
   }
 
   if (targetThread == js::THREAD_TYPE_NONE ||
+      targetThread == js::THREAD_TYPE_WORKER ||
       targetThread >= js::THREAD_TYPE_MAX) {
     JS_ReportErrorASCII(cx, "Invalid thread type specified");
     return false;
