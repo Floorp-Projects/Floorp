@@ -12,6 +12,8 @@ var altsvcpref2;
 var h1Foo; // server http://foo.example.com:(h1Foo.identity.primaryPort)
 var h1Bar; // server http://bar.example.com:(h1bar.identity.primaryPort)
 
+var otherServer; // server socket listening for other connection.
+
 var h2FooRoute; // foo.example.com:H2PORT
 var h2BarRoute; // bar.example.com:H2PORT
 var h2Route;    // :H2PORT
@@ -113,6 +115,7 @@ function resetPrefs() {
   prefs.setBoolPref("network.http.altsvc.enabled", altsvcpref1);
   prefs.setBoolPref("network.http.altsvc.oe", altsvcpref2);
   prefs.clearUserPref("network.dns.localDomains");
+  prefs.clearUserPref("network.security.ports.banned");
 }
 
 function makeChan(origin) {
@@ -186,6 +189,8 @@ function testsDone()
 {
   dump("testDone\n");
   resetPrefs();
+  do_test_pending();
+  otherServer.close();
   do_test_pending();
   h1Foo.stop(do_test_finished);
   do_test_pending();
@@ -418,10 +423,35 @@ function doTest15()
     firstPartyDomain: "a.com",
   };
   loadWithoutClearingMappings = true;
-  nextTest = testsDone;
+  nextTest = doTest16;
   do_test_pending();
   doTest();
   // This ensures a cache hit.
   xaltsvc = h2FooRoute;
 }
 
+// Check we don't connect to blocked ports
+function doTest16()
+{
+  dump("doTest16()\n");
+  origin = httpFooOrigin;
+  nextTest = testsDone;
+  otherServer = Cc["@mozilla.org/network/server-socket;1"].createInstance(Ci.nsIServerSocket);
+  otherServer.init(-1, true, -1);
+  xaltsvc = "localhost:" + otherServer.port;
+  Services.prefs.setCharPref("network.security.ports.banned", "" + otherServer.port);
+  dump("Blocked port: " + otherServer.port);
+  waitFor = 500;
+  otherServer.asyncListen({
+    onSocketAccepted() {
+      Assert.ok(false, "Got connection to socket when we didn't expect it!");
+    },
+    onStopListening() {
+      // We get closed when the entire file is done, which guarantees we get the socket accept
+      // if we do connect to the alt-svc header
+      do_test_finished();
+    },
+  });
+  do_test_pending();
+  doTest();
+}
