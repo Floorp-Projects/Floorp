@@ -6148,8 +6148,6 @@ static bool WrapWithProto(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
-  JSPrincipals* principals = nullptr;
-
   JS::RealmOptions options;
   JS::RealmCreationOptions& creationOptions = options.creationOptions();
   JS::RealmBehaviors& behaviors = options.behaviors();
@@ -6164,6 +6162,8 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
   } else {
     creationOptions.setNewCompartmentAndZone();
   }
+
+  JS::AutoHoldPrincipals principals(cx);
 
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 1 && args[0].isObject()) {
@@ -6232,8 +6232,7 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     if (v.isBoolean()) {
-      principals = &ShellPrincipals::fullyTrusted;
-      JS_HoldPrincipals(principals);
+      principals.reset(&ShellPrincipals::fullyTrusted);
     }
 
     if (!JS_GetProperty(cx, opts, "principal", &v)) {
@@ -6244,22 +6243,19 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       if (!ToUint32(cx, v, &bits)) {
         return false;
       }
-      principals = cx->new_<ShellPrincipals>(bits);
-      if (!principals) {
+      JSPrincipals* newPrincipals = cx->new_<ShellPrincipals>(bits);
+      if (!newPrincipals) {
         return false;
       }
-      JS_HoldPrincipals(principals);
+      principals.reset(newPrincipals);
     }
   }
 
-  if (!CheckRealmOptions(cx, options, principals)) {
+  if (!CheckRealmOptions(cx, options, principals.get())) {
     return false;
   }
 
-  RootedObject global(cx, NewGlobalObject(cx, options, principals, kind));
-  if (principals) {
-    JS_DropPrincipals(cx, principals);
-  }
+  RootedObject global(cx, NewGlobalObject(cx, options, principals.get(), kind));
   if (!global) {
     return false;
   }
