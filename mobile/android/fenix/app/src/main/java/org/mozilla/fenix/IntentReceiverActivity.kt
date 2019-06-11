@@ -38,6 +38,7 @@ class IntentReceiverActivity : Activity() {
             }
             intent.action == Intent.ACTION_VIEW -> {
                 intent.setClassName(applicationContext, HomeActivity::class.java.name)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 true
             }
             else -> {
