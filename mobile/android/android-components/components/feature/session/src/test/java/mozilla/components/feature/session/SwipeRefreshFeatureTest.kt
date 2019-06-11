@@ -9,37 +9,38 @@ import android.graphics.Bitmap
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SwipeRefreshFeatureTest {
+
     private lateinit var refreshFeature: SwipeRefreshFeature
     private lateinit var mockSessionManager: SessionManager
-    private val mockLayout = mock(SwipeRefreshLayout::class.java)
-    private val mockSession = mock(Session::class.java)
-    private val useCase = mock(SessionUseCases.ReloadUrlUseCase::class.java)
+    private val mockLayout = mock<SwipeRefreshLayout>()
+    private val mockSession = mock<Session>()
+    private val useCase = mock<SessionUseCases.ReloadUrlUseCase>()
 
     @Before
     fun setup() {
-        mockSessionManager = mock(SessionManager::class.java)
+        mockSessionManager = mock()
         refreshFeature = SwipeRefreshFeature(mockSessionManager, useCase, mockLayout)
 
-        `when`(mockSessionManager.selectedSession).thenReturn(mockSession)
+        whenever(mockSessionManager.selectedSession).thenReturn(mockSession)
     }
 
     @Test
@@ -81,7 +82,7 @@ class SwipeRefreshFeatureTest {
     @Test
     fun `start with a sessionId`() {
         refreshFeature = spy(SwipeRefreshFeature(mockSessionManager, useCase, mockLayout, "abc"))
-        `when`(mockSessionManager.findSessionById(anyString())).thenReturn(mockSession)
+        whenever(mockSessionManager.findSessionById(anyString())).thenReturn(mockSession)
 
         refreshFeature.start()
 

@@ -5,23 +5,23 @@
 package mozilla.components.feature.session
 
 import android.view.View
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.appbar.AppBarLayout
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.session.CoordinateScrollingFeature.Companion.DEFAULT_SCROLL_FLAGS
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.any
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class CoordinateScrollingFeatureTest {
 
     private lateinit var scrollFeature: CoordinateScrollingFeature
@@ -31,13 +31,13 @@ class CoordinateScrollingFeatureTest {
 
     @Before
     fun setup() {
-        val engine = mock(Engine::class.java)
+        val engine = mock<Engine>()
         mockSessionManager = spy(SessionManager(engine))
-        mockEngineView = mock(EngineView::class.java)
-        mockView = mock(View::class.java)
+        mockEngineView = mock()
+        mockView = mock()
         scrollFeature = CoordinateScrollingFeature(mockSessionManager, mockEngineView, mockView)
 
-        `when`(mockView.layoutParams).thenReturn(mock(AppBarLayout.LayoutParams::class.java))
+        whenever(mockView.layoutParams).thenReturn(mock<AppBarLayout.LayoutParams>())
     }
 
     @Test
@@ -58,7 +58,7 @@ class CoordinateScrollingFeatureTest {
     fun `when session loading StateChanged and engine canScrollVertically is true must add DEFAULT_SCROLL_FLAGS `() {
 
         val session = getSelectedSession()
-        `when`(mockEngineView.canScrollVerticallyDown()).thenReturn(true)
+        whenever(mockEngineView.canScrollVerticallyDown()).thenReturn(true)
 
         scrollFeature.start()
 
@@ -74,7 +74,7 @@ class CoordinateScrollingFeatureTest {
     fun `when session loading StateChanged and engine canScrollVertically is true must add custom scrollFlags`() {
 
         val session = getSelectedSession()
-        `when`(mockEngineView.canScrollVerticallyDown()).thenReturn(true)
+        whenever(mockEngineView.canScrollVerticallyDown()).thenReturn(true)
         scrollFeature = CoordinateScrollingFeature(mockSessionManager, mockEngineView, mockView, 12)
         scrollFeature.start()
 

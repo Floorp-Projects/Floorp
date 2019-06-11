@@ -4,25 +4,23 @@
 
 package mozilla.components.feature.session
 
-import android.content.Context
-import android.graphics.Bitmap
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ThumbnailsFeatureTest {
 
     private lateinit var mockSessionManager: SessionManager
@@ -31,11 +29,10 @@ class ThumbnailsFeatureTest {
 
     @Before
     fun setup() {
-        val engine = mock(Engine::class.java)
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        val engine = mock<Engine>()
         mockSessionManager = spy(SessionManager(engine))
-        mockEngineView = mock(EngineView::class.java)
-        feature = ThumbnailsFeature(context, mockEngineView, mockSessionManager)
+        mockEngineView = mock()
+        feature = ThumbnailsFeature(testContext, mockEngineView, mockSessionManager)
     }
 
     @Test
@@ -70,7 +67,7 @@ class ThumbnailsFeatureTest {
         feature.start()
 
         val session = getSelectedSession()
-        session.thumbnail = mock(Bitmap::class.java)
+        session.thumbnail = mock()
 
         feature.testLowMemory = true
 

@@ -8,13 +8,13 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers.eq
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
-import mozilla.components.support.test.any
 
 class WindowFeatureTest {
 
@@ -23,8 +23,8 @@ class WindowFeatureTest {
 
     @Before
     fun setup() {
-        engine = mock(Engine::class.java)
-        sessionManager = mock(SessionManager::class.java)
+        engine = mock()
+        sessionManager = mock()
     }
 
     @Test
@@ -37,8 +37,8 @@ class WindowFeatureTest {
     @Test
     fun `observer handles open window request`() {
         val session = Session("https://www.mozilla.org")
-        val request = mock(WindowRequest::class.java)
-        `when`(request.url).thenReturn("about:blank")
+        val request = mock<WindowRequest>()
+        whenever(request.url).thenReturn("about:blank")
 
         val feature = WindowFeature(engine, sessionManager)
         feature.windowObserver.onOpenWindowRequested(session, request)
@@ -53,7 +53,7 @@ class WindowFeatureTest {
         val session = Session("https://www.mozilla.org")
 
         val feature = WindowFeature(engine, sessionManager)
-        feature.windowObserver.onCloseWindowRequested(session, mock(WindowRequest::class.java))
+        feature.windowObserver.onCloseWindowRequested(session, mock())
         verify(sessionManager).remove(session)
     }
 

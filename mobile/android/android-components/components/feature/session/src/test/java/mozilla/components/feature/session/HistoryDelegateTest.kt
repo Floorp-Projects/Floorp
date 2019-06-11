@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.session
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
@@ -20,9 +21,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class HistoryDelegateTest {
 
     @Test

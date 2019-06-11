@@ -8,18 +8,18 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 class SessionFeatureTest {
 
-    private val sessionManager = mock(SessionManager::class.java)
-    private val engineView = mock(EngineView::class.java)
+    private val sessionManager = mock<SessionManager>()
+    private val engineView = mock<EngineView>()
     private val sessionUseCases = SessionUseCases(sessionManager)
 
     @Test
@@ -32,11 +32,11 @@ class SessionFeatureTest {
     @Test
     fun `handleBackPressed uses selectedSession`() {
         val session = Session("https://www.mozilla.org")
-        `when`(sessionManager.selectedSession).thenReturn(session)
-        `when`(sessionManager.selectedSessionOrThrow).thenReturn(session)
+        whenever(sessionManager.selectedSession).thenReturn(session)
+        whenever(sessionManager.selectedSessionOrThrow).thenReturn(session)
 
-        val engineSession = mock(EngineSession::class.java)
-        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        val engineSession = mock<EngineSession>()
+        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
         val feature = SessionFeature(sessionManager, sessionUseCases, engineView)
 
@@ -52,13 +52,13 @@ class SessionFeatureTest {
     fun `handleBackPressed uses sessionId`() {
         val session = Session("https://www.mozilla.org")
         val sessionAlt = Session("https://firefox.com")
-        val engineSession = mock(EngineSession::class.java)
+        val engineSession = mock<EngineSession>()
         val sessionId = "123"
 
-        `when`(sessionManager.selectedSession).thenReturn(sessionAlt)
-        `when`(sessionManager.selectedSessionOrThrow).thenReturn(sessionAlt)
-        `when`(sessionManager.findSessionById(sessionId)).thenReturn(session)
-        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.selectedSession).thenReturn(sessionAlt)
+        whenever(sessionManager.selectedSessionOrThrow).thenReturn(sessionAlt)
+        whenever(sessionManager.findSessionById(sessionId)).thenReturn(session)
+        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
         session.canGoBack = true
 
         val feature = SessionFeature(sessionManager, sessionUseCases, engineView, sessionId)
@@ -71,7 +71,7 @@ class SessionFeatureTest {
 
     @Test
     fun `handleBackPressed does nothing when sessionId provided but no session found`() {
-        val engineSession = mock(EngineSession::class.java)
+        val engineSession = mock<EngineSession>()
         val sessionId = "123"
 
         val feature = SessionFeature(sessionManager, sessionUseCases, engineView, sessionId)
@@ -84,7 +84,7 @@ class SessionFeatureTest {
 
     @Test
     fun `handleBackPressed does nothing when no session found`() {
-        val engineSession = mock(EngineSession::class.java)
+        val engineSession = mock<EngineSession>()
 
         val feature = SessionFeature(sessionManager, sessionUseCases, engineView)
         val result = feature.onBackPressed()

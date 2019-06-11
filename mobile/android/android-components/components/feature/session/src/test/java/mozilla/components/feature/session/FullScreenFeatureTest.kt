@@ -10,11 +10,11 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -39,7 +39,7 @@ class FullScreenFeatureTest {
     @Test
     fun `start with a sessionId`() {
         val fullscreenFeature = spy(FullScreenFeature(sessionManager, useCases, "abc") {})
-        `when`(sessionManager.findSessionById(anyString())).thenReturn(selectedSession)
+        whenever(sessionManager.findSessionById(anyString())).thenReturn(selectedSession)
 
         fullscreenFeature.start()
 
@@ -70,8 +70,8 @@ class FullScreenFeatureTest {
         val fullscreenFeature = spy(FullScreenFeatureTest(sessionManager, useCases) {})
         val activeSession: Session = mock()
 
-        `when`(fullscreenFeature.activeSession).thenReturn(activeSession)
-        `when`(activeSession.fullScreenMode).thenReturn(false)
+        whenever(fullscreenFeature.activeSession).thenReturn(activeSession)
+        whenever(activeSession.fullScreenMode).thenReturn(false)
 
         assertFalse(fullscreenFeature.onBackPressed())
     }
@@ -82,10 +82,10 @@ class FullScreenFeatureTest {
         val engineSession: EngineSession = mock()
         val fullscreenFeature = spy(FullScreenFeatureTest(sessionManager, useCases) {})
 
-        `when`(sessionManager.getOrCreateEngineSession(activeSession)).thenReturn(engineSession)
-        `when`(fullscreenFeature.activeSession).thenReturn(activeSession)
-        `when`(activeSession.fullScreenMode).thenReturn(true)
-        `when`(useCases.exitFullscreen).thenReturn(mock())
+        whenever(sessionManager.getOrCreateEngineSession(activeSession)).thenReturn(engineSession)
+        whenever(fullscreenFeature.activeSession).thenReturn(activeSession)
+        whenever(activeSession.fullScreenMode).thenReturn(true)
+        whenever(useCases.exitFullscreen).thenReturn(mock())
 
         assertTrue(fullscreenFeature.onBackPressed())
         verify(useCases.exitFullscreen).invoke(activeSession)
