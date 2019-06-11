@@ -2,9 +2,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<vector android:height="6dp" android:viewportHeight="6"
-    android:viewportWidth="10" android:width="10dp" xmlns:android="http://schemas.android.com/apk/res/android">
-    <path android:fillColor="?primaryText" android:fillType="nonZero"
-        android:pathData="M5,5.6667C4.8232,5.6666 4.6537,5.5964 4.5287,5.4713L0.5287,1.4713C0.276,1.2097 0.2796,0.7939 0.5368,0.5368C0.7939,0.2796 1.2097,0.276 1.4713,0.5287L5,4.0573L8.5287,0.5287C8.7903,0.276 9.2061,0.2796 9.4632,0.5368C9.7204,0.7939 9.724,1.2097 9.4713,1.4713L5.4713,5.4713C5.3463,5.5964 5.1768,5.6666 5,5.6667Z"
-        android:strokeColor="#00000000" android:strokeWidth="1"/>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="10dp"
+        android:height="6dp"
+        android:viewportWidth="10"
+        android:viewportHeight="6">
+    <path android:fillColor="?primaryText"
+        android:pathData="M5,5.6667C4.8232,5.6666 4.6537,5.5964 4.5287,5.4713L0.5287,1.4713C0.276,1.2097 0.2796,0.7939 0.5368,0.5368C0.7939,0.2796 1.2097,0.276 1.4713,0.5287L5,4.0573L8.5287,0.5287C8.7903,0.276 9.2061,0.2796 9.4632,0.5368C9.7204,0.7939 9.724,1.2097 9.4713,1.4713L5.4713,5.4713C5.3463,5.5964 5.1768,5.6666 5,5.6667Z"/>
 </vector>

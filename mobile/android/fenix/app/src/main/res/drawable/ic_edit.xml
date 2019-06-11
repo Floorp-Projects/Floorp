@@ -2,8 +2,13 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<vector android:autoMirrored="true" android:height="24dp"
-    android:viewportHeight="24" android:viewportWidth="24"
-    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">
-    <path android:fillColor="#FF000000" android:pathData="M3.88,20.12l3.774,-1.62a0.768,0.768 0,0 0,0.235 -0.159l-2.233,-2.23a0.744,0.744 0,0 0,-0.158 0.234zM19.12,8.891L8.772,19.228a2.009,2.009 0,0 1,-0.626 0.424l-5.5,2.356a0.5,0.5 0,0 1,-0.657 -0.657l2.357,-5.5a2.018,2.018 0,0 1,0.422 -0.624L15.1,4.869a0.5,0.5 0,0 1,0.707 0l3.313,3.315a0.5,0.5 0,0 1,0 0.707zM16.861,3.1l0.5,-0.506a2,2 0,0 1,2.828 0l1.2,1.2a2,2 0,0 1,0 2.828l-0.509,0.507a0.5,0.5 0,0 1,-0.706 0l-3.32,-3.319a0.5,0.5 0,0 1,0.007 -0.71z"/>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:autoMirrored="true"
+        android:width="24dp"
+        android:height="24dp"
+        android:viewportWidth="24"
+        android:viewportHeight="24">
+    <path
+            android:fillColor="?primaryText"
+            android:pathData="M3.88,20.12l3.774,-1.62a0.768,0.768 0,0 0,0.235 -0.159l-2.233,-2.23a0.744,0.744 0,0 0,-0.158 0.234zM19.12,8.891L8.772,19.228a2.009,2.009 0,0 1,-0.626 0.424l-5.5,2.356a0.5,0.5 0,0 1,-0.657 -0.657l2.357,-5.5a2.018,2.018 0,0 1,0.422 -0.624L15.1,4.869a0.5,0.5 0,0 1,0.707 0l3.313,3.315a0.5,0.5 0,0 1,0 0.707zM16.861,3.1l0.5,-0.506a2,2 0,0 1,2.828 0l1.2,1.2a2,2 0,0 1,0 2.828l-0.509,0.507a0.5,0.5 0,0 1,-0.706 0l-3.32,-3.319a0.5,0.5 0,0 1,0.007 -0.71z"/>
 </vector>
