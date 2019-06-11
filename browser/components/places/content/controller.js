@@ -1182,10 +1182,19 @@ PlacesController.prototype = {
     // Once tags and bookmarked are divorced, the tag-query check should be
     // removed.
     let parentNode = node.parent;
-    return parentNode != null &&
-           PlacesUtils.nodeIsFolder(parentNode) &&
-           !PlacesUIUtils.isFolderReadOnly(parentNode) &&
-           !PlacesUtils.nodeIsTagQuery(parentNode);
+    if (!parentNode) {
+      return false;
+    }
+
+    // Once tags and bookmarked are divorced, the tag-query check should be
+    // removed.
+    if (PlacesUtils.nodeIsTagQuery(parentNode)) {
+      return false;
+    }
+
+    return (PlacesUtils.nodeIsFolder(parentNode) &&
+          !PlacesUIUtils.isFolderReadOnly(parentNode)) ||
+          PlacesUtils.nodeIsQuery(parentNode);
   },
 };
 
