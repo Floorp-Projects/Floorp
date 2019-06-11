@@ -71,8 +71,9 @@ void RemoteDecoderModule::LaunchRDDProcessIfNeeded() {
   if (mManagerThread) {
     RefPtr<Runnable> task = NS_NewRunnableFunction(
         "RemoteDecoderModule::LaunchRDDProcessIfNeeded-CheckSend", [&]() {
-          if (RemoteDecoderManagerChild::GetSingleton()) {
-            needsLaunch = !RemoteDecoderManagerChild::GetSingleton()->CanSend();
+          if (RemoteDecoderManagerChild::GetRDDProcessSingleton()) {
+            needsLaunch =
+                !RemoteDecoderManagerChild::GetRDDProcessSingleton()->CanSend();
           }
         });
     SyncRunnable::DispatchToThread(mManagerThread, task);

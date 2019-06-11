@@ -9,8 +9,9 @@
 
 namespace mozilla {
 
-RemoteDecoderChild::RemoteDecoderChild()
-    : mThread(RemoteDecoderManagerChild::GetManagerThread()) {}
+RemoteDecoderChild::RemoteDecoderChild(bool aRecreatedOnCrash)
+    : mThread(RemoteDecoderManagerChild::GetManagerThread()),
+      mRecreatedOnCrash(aRecreatedOnCrash) {}
 
 RemoteDecoderChild::~RemoteDecoderChild() {
   AssertOnManagerThread();
@@ -44,12 +45,15 @@ mozilla::ipc::IPCResult RemoteDecoderChild::RecvError(const nsresult& aError) {
 }
 
 mozilla::ipc::IPCResult RemoteDecoderChild::RecvInitComplete(
-    const TrackInfo::TrackType& trackType, const nsCString& aDecoderDescription,
-    const ConversionRequired& aConversion) {
+    const TrackInfo::TrackType& aTrackType,
+    const nsCString& aDecoderDescription, const bool& aHardware,
+    const nsCString& aHardwareReason, const ConversionRequired& aConversion) {
   AssertOnManagerThread();
-  mInitPromise.ResolveIfExists(trackType, __func__);
+  mInitPromise.ResolveIfExists(aTrackType, __func__);
   mInitialized = true;
   mDescription = aDecoderDescription;
+  mIsHardwareAccelerated = aHardware;
+  mHardwareAcceleratedReason = aHardwareReason;
   mConversion = aConversion;
   return IPC_OK();
 }
@@ -80,15 +84,45 @@ void RemoteDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
   MOZ_ASSERT(mCanSend);
   // If the IPC channel is gone pending promises need to be resolved/rejected.
   if (aWhy == AbnormalShutdown) {
-    MediaResult error(NS_ERROR_DOM_MEDIA_DECODE_ERR);
-    mDecodePromise.RejectIfExists(error, __func__);
-    mDrainPromise.RejectIfExists(error, __func__);
-    mFlushPromise.RejectIfExists(error, __func__);
-    mShutdownPromise.ResolveIfExists(true, __func__);
-    RefPtr<RemoteDecoderChild> kungFuDeathGrip = mShutdownSelfRef.forget();
-    Unused << kungFuDeathGrip;
+    // GPU process crashed, record the time and send back to MFR for telemetry.
+    mRemoteProcessCrashTime = TimeStamp::Now();
+
+    if (mRecreatedOnCrash) {
+      // Defer reporting an error until we've recreated the manager so that
+      // it'll be safe for MediaFormatReader to recreate decoders
+      RefPtr<RemoteDecoderChild> ref = this;
+      // Make sure shutdown self reference is null. Since ref is captured by the
+      // lambda it is not necessary to keep it any longer.
+      mShutdownSelfRef = nullptr;
+      GetManager()->RunWhenGPUProcessRecreated(
+          NS_NewRunnableFunction("VideoDecoderChild::ActorDestroy", [=]() {
+            MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
+            error.SetGPUCrashTimeStamp(ref->mRemoteProcessCrashTime);
+            if (ref->mInitialized) {
+              mDecodedData = MediaDataDecoder::DecodedData();
+              mDecodePromise.RejectIfExists(error, __func__);
+              mDrainPromise.RejectIfExists(error, __func__);
+              mFlushPromise.RejectIfExists(error, __func__);
+              mShutdownPromise.ResolveIfExists(true, __func__);
+              // Make sure the next request will be rejected accordingly if ever
+              // called.
+              mNeedNewDecoder = true;
+            } else {
+              ref->mInitPromise.RejectIfExists(error, __func__);
+            }
+          }));
+    } else {
+      MediaResult error(NS_ERROR_DOM_MEDIA_DECODE_ERR);
+      mDecodePromise.RejectIfExists(error, __func__);
+      mDrainPromise.RejectIfExists(error, __func__);
+      mFlushPromise.RejectIfExists(error, __func__);
+      mShutdownPromise.ResolveIfExists(true, __func__);
+      RefPtr<RemoteDecoderChild> kungFuDeathGrip = mShutdownSelfRef.forget();
+      Unused << kungFuDeathGrip;
+    }
   }
   mCanSend = false;
+  RecordShutdownTelemetry(aWhy == AbnormalShutdown);
 }
 
 void RemoteDecoderChild::DestroyIPDL() {
@@ -105,12 +139,20 @@ void RemoteDecoderChild::IPDLActorDestroyed() { mIPDLSelfRef = nullptr; }
 RefPtr<MediaDataDecoder::InitPromise> RemoteDecoderChild::Init() {
   AssertOnManagerThread();
 
-  if (!mIPDLSelfRef || !mCanSend) {
+  if (!mIPDLSelfRef) {
     return MediaDataDecoder::InitPromise::CreateAndReject(
         NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
   }
 
-  SendInit();
+  if (mCanSend) {
+    SendInit();
+  } else if (!mRecreatedOnCrash) {
+    return MediaDataDecoder::InitPromise::CreateAndReject(
+        NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
+  }
+
+  // If we failed to send this, then we'll still resolve the Init promise
+  // as ActorDestroy handles it.
 
   return mInitPromise.Ensure(__func__);
 }
@@ -119,9 +161,22 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
     MediaRawData* aSample) {
   AssertOnManagerThread();
 
+  if (mNeedNewDecoder) {
+    MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
+    error.SetGPUCrashTimeStamp(mRemoteProcessCrashTime);
+    return MediaDataDecoder::DecodePromise::CreateAndReject(error, __func__);
+  }
+
   if (!mCanSend) {
-    return MediaDataDecoder::DecodePromise::CreateAndReject(
-        NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
+    if (mRecreatedOnCrash) {
+      // We're here if the IPC channel has died but we're still waiting for the
+      // RunWhenRecreated task to complete. The decode promise will be rejected
+      // when that task is run.
+      return mDecodePromise.Ensure(__func__);
+    } else {
+      return MediaDataDecoder::DecodePromise::CreateAndReject(
+          NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
+    }
   }
 
   // TODO: It would be nice to add an allocator method to
@@ -148,21 +203,35 @@ RefPtr<MediaDataDecoder::FlushPromise> RemoteDecoderChild::Flush() {
   AssertOnManagerThread();
   mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  if (!mCanSend) {
+  if (mNeedNewDecoder) {
+    MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
+    error.SetGPUCrashTimeStamp(mRemoteProcessCrashTime);
+    return MediaDataDecoder::FlushPromise::CreateAndReject(error, __func__);
+  }
+
+  if (mCanSend) {
+    SendFlush();
+  } else if (!mRecreatedOnCrash) {
     return MediaDataDecoder::FlushPromise::CreateAndReject(
         NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
   }
-  SendFlush();
   return mFlushPromise.Ensure(__func__);
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Drain() {
   AssertOnManagerThread();
-  if (!mCanSend) {
+  if (mNeedNewDecoder) {
+    MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
+    error.SetGPUCrashTimeStamp(mRemoteProcessCrashTime);
+    return MediaDataDecoder::DecodePromise::CreateAndReject(error, __func__);
+  }
+
+  if (mCanSend) {
+    SendDrain();
+  } else if (!mRecreatedOnCrash) {
     return MediaDataDecoder::DecodePromise::CreateAndReject(
         NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
   }
-  SendDrain();
   return mDrainPromise.Ensure(__func__);
 }
 
@@ -170,6 +239,11 @@ RefPtr<ShutdownPromise> RemoteDecoderChild::Shutdown() {
   AssertOnManagerThread();
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mInitialized = false;
+  if (mNeedNewDecoder) {
+    MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
+    error.SetGPUCrashTimeStamp(mRemoteProcessCrashTime);
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  }
   if (!mCanSend) {
     return ShutdownPromise::CreateAndResolve(true, __func__);
   }

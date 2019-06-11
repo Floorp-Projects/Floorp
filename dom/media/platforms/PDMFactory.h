@@ -72,7 +72,7 @@ class PDMFactory final {
   bool mFFmpegFailedToLoad = false;
   bool mGMPPDMFailedToStartup = false;
 
-  friend class VideoDecoderParent;
+  friend class RemoteVideoDecoderParent;
   static void EnsureInit();
   template <class T>
   friend class StaticAutoPtr;

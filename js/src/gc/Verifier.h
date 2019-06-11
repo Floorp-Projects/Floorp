@@ -16,11 +16,31 @@
 namespace js {
 namespace gc {
 
+// Like gc::MarkColor but allows the possibility of the cell being
+// unmarked.
+enum class CellColor : uint8_t {
+  White = 0,
+  Gray = uint8_t(MarkColor::Gray),
+  Black = uint8_t(MarkColor::Black)
+};
+
 static constexpr CellColor AllCellColors[] = {CellColor::White, CellColor::Gray,
                                               CellColor::Black};
 
 static constexpr CellColor MarkedCellColors[] = {CellColor::Gray,
                                                  CellColor::Black};
+
+inline CellColor GetCellColor(Cell* cell) {
+  if (cell->isMarkedBlack()) {
+    return CellColor::Black;
+  }
+
+  if (cell->isMarkedGray()) {
+    return CellColor::Gray;
+  }
+
+  return CellColor::White;
+}
 
 inline CellColor ExpectedWeakMapValueColor(CellColor keyColor,
                                            CellColor mapColor) {

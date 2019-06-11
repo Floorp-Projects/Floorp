@@ -13,8 +13,8 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StaticPrefs.h"
-#include "mozilla/VideoDecoderManagerChild.h"
-#include "mozilla/VideoDecoderManagerParent.h"
+#include "mozilla/RemoteDecoderManagerChild.h"
+#include "mozilla/RemoteDecoderManagerParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
@@ -799,7 +799,7 @@ bool GPUProcessManager::CreateContentBridges(
     ipc::Endpoint<PCompositorManagerChild>* aOutCompositor,
     ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
     ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
-    ipc::Endpoint<PVideoDecoderManagerChild>* aOutVideoManager,
+    ipc::Endpoint<PRemoteDecoderManagerChild>* aOutVideoManager,
     nsTArray<uint32_t>* aNamespaces) {
   if (!CreateContentCompositorManager(aOtherProcess, aOutCompositor) ||
       !CreateContentImageBridge(aOtherProcess, aOutImageBridge) ||
@@ -808,7 +808,7 @@ bool GPUProcessManager::CreateContentBridges(
   }
   // VideoDeocderManager is only supported in the GPU process, so we allow this
   // to be fallible.
-  CreateContentVideoDecoderManager(aOtherProcess, aOutVideoManager);
+  CreateContentRemoteDecoderManager(aOtherProcess, aOutVideoManager);
   // Allocates 3 namespaces(for CompositorManagerChild, CompositorBridgeChild
   // and ImageBridgeChild)
   aNamespaces->AppendElement(AllocateNamespace());
@@ -910,18 +910,18 @@ bool GPUProcessManager::CreateContentVRManager(
   return true;
 }
 
-void GPUProcessManager::CreateContentVideoDecoderManager(
+void GPUProcessManager::CreateContentRemoteDecoderManager(
     base::ProcessId aOtherProcess,
-    ipc::Endpoint<PVideoDecoderManagerChild>* aOutEndpoint) {
+    ipc::Endpoint<PRemoteDecoderManagerChild>* aOutEndpoint) {
   if (!EnsureGPUReady() || !StaticPrefs::MediaGpuProcessDecoder() ||
       !mDecodeVideoOnGpuProcess) {
     return;
   }
 
-  ipc::Endpoint<PVideoDecoderManagerParent> parentPipe;
-  ipc::Endpoint<PVideoDecoderManagerChild> childPipe;
+  ipc::Endpoint<PRemoteDecoderManagerParent> parentPipe;
+  ipc::Endpoint<PRemoteDecoderManagerChild> childPipe;
 
-  nsresult rv = PVideoDecoderManager::CreateEndpoints(
+  nsresult rv = PRemoteDecoderManager::CreateEndpoints(
       mGPUChild->OtherPid(), aOtherProcess, &parentPipe, &childPipe);
   if (NS_FAILED(rv)) {
     gfxCriticalNote << "Could not create content video decoder: "
@@ -929,7 +929,7 @@ void GPUProcessManager::CreateContentVideoDecoderManager(
     return;
   }
 
-  mGPUChild->SendNewContentVideoDecoderManager(std::move(parentPipe));
+  mGPUChild->SendNewContentRemoteDecoderManager(std::move(parentPipe));
 
   *aOutEndpoint = std::move(childPipe);
 }

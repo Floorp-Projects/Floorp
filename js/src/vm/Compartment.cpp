@@ -27,7 +27,6 @@
 
 #include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
-#include "gc/WeakMap-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
@@ -75,18 +74,6 @@ bool Compartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
   }
 
   return true;
-}
-
-void Compartment::removeWrapper(js::WrapperMap::Ptr p) {
-  if (p->key().is<JSObject*>()) {
-    JSObject* key = p->key().as<JSObject*>();
-    JS::Value value = p->value().unbarrieredGet();
-    if (js::WeakMapBase::getDelegate(&value.toObject()) == key) {
-      key->zone()->delegatePreWriteBarrier(&value.toObject(), key);
-    }
-  }
-
-  crossCompartmentWrappers.remove(p);
 }
 
 static JSString* CopyStringPure(JSContext* cx, JSString* str) {

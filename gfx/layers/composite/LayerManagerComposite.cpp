@@ -913,10 +913,8 @@ void LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   // Set LayerScope begin/end frame
   LayerScopeAutoFrame frame(PR_Now());
 
-  // Dump to console
-  if (StaticPrefs::LayersDump()) {
-    this->Dump(/* aSorted= */ true);
-  }
+  // If you're looking for the code to dump the layer tree, it was moved
+  // to CompositorBridgeParent::CompositeToTarget().
 
   // Dump to LayerScope Viewer
   if (LayerScope::CheckSendable()) {

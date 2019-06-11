@@ -30,6 +30,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'gtest',
     ]
     OS_LIBS += [
-        'mincore',
         'ntdll',
+        'version',
     ]
