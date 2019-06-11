@@ -83,7 +83,7 @@ class StaticPrefs {
   //   private:
   //     static int32_t sVarCache_my_varcache;
   //   public:
-  //     static int32_t my_varcache() { return sVarCache_my_varcache; }
+  //     static int32_t my_varcache();
   //     static void Setmy_varcache(int32_t aValue);
   //     static const char* Getmy_varcachePrefName() { return "my.varcache"; }
   //     static int32_t Getmy_varcachePrefDefault() { return 99; }
@@ -98,20 +98,14 @@ class StaticPrefs {
   };
 
 #define PREF(str, cpp_type, default_value)
-#define VARCACHE_PREF(policy, str, id, cpp_type, default_value)               \
- private:                                                                     \
-  static cpp_type sVarCache_##id;                                             \
-                                                                              \
- public:                                                                      \
-  static StripAtomic<cpp_type> id() {                                         \
-    MOZ_DIAGNOSTIC_ASSERT(UpdatePolicy::policy != UpdatePolicy::Live ||       \
-                              IsAtomic<cpp_type>::value || NS_IsMainThread(), \
-                          "Non-atomic static pref '" str                      \
-                          "' being accessed on background thread by getter"); \
-    return sVarCache_##id;                                                    \
-  }                                                                           \
-  static void Set##id(StripAtomic<cpp_type> aValue);                          \
-  static const char* Get##id##PrefName() { return str; }                      \
+#define VARCACHE_PREF(policy, str, id, cpp_type, default_value) \
+ private:                                                       \
+  static cpp_type sVarCache_##id;                               \
+                                                                \
+ public:                                                        \
+  static StripAtomic<cpp_type> id();                            \
+  static void Set##id(StripAtomic<cpp_type> aValue);            \
+  static const char* Get##id##PrefName() { return str; }        \
   static StripAtomic<cpp_type> Get##id##PrefDefault() { return default_value; }
 
 #include "mozilla/StaticPrefList.h"
@@ -123,6 +117,7 @@ class StaticPrefs {
   static void InitAll(bool aIsStartup);
   static void InitOncePrefs();
   static void InitOncePrefsFromShared();
+  static void MaybeInitOncePrefs();
   static void RegisterOncePrefs(SharedPrefMapBuilder& aBuilder);
 };
 
