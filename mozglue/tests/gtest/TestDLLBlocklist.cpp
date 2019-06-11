@@ -5,130 +5,132 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <windows.h>
-#include <shlwapi.h>
 #include <winternl.h>
+
+#include <process.h>
+
 #include "gtest/gtest.h"
-#include "mozilla/ScopeExit.h"
-#include "mozilla/WindowsDllBlocklist.h"
+
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/Char16.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsLiteralString.h"
-#include "nsUnicharUtils.h"
-#include "mozilla/Char16.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nsWindowsHelpers.h"
 
-static bool sDllWasBlocked = false;
-static bool sDllWasLoaded = false;
-static const char16_t* sDllName;
-
-static nsDependentSubstring MakeString(PUNICODE_STRING aOther) {
-  size_t numChars = aOther->Length / sizeof(WCHAR);
-  return nsDependentSubstring((const char16_t*)aOther->Buffer, numChars);
-}
-
-static void DllLoadHook(bool aDllLoaded, NTSTATUS aStatus, HANDLE aDllBase,
-                        PUNICODE_STRING aDllName) {
-  nsDependentSubstring str = MakeString(aDllName);
-  if (StringEndsWith(str, nsDependentString(sDllName),
-                     nsCaseInsensitiveStringComparator())) {
-    if (aDllLoaded) {
-      sDllWasLoaded = true;
-    } else {
-      sDllWasBlocked = true;
-    }
-  }
-}
-
-static nsString GetFullPath(const char16_t* leaf) {
+static nsString GetFullPath(const nsAString& aLeaf) {
   nsCOMPtr<nsIFile> f;
+
   EXPECT_TRUE(NS_SUCCEEDED(
       NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(f))));
-  EXPECT_TRUE(NS_SUCCEEDED(f->Append(nsDependentString(leaf))));
+
+  EXPECT_TRUE(NS_SUCCEEDED(f->Append(aLeaf)));
 
   bool exists;
-  EXPECT_TRUE(NS_SUCCEEDED(f->Exists(&exists)));
-  EXPECT_TRUE(exists);
+  EXPECT_TRUE(NS_SUCCEEDED(f->Exists(&exists)) && exists);
 
   nsString ret;
   EXPECT_TRUE(NS_SUCCEEDED(f->GetPath(ret)));
   return ret;
 }
 
-TEST(TestDllBlocklist, BlockDllByName)
-{
-  sDllWasBlocked = false;
-  sDllWasLoaded = false;
-  DllBlocklist_SetDllLoadHook(DllLoadHook);
-  auto undoHooks =
-      mozilla::MakeScopeExit([&]() { DllBlocklist_SetDllLoadHook(nullptr); });
-
+TEST(TestDllBlocklist, BlockDllByName) {
   // The DLL name has capital letters, so this also tests that the comparison
   // is case-insensitive.
-  sDllName = u"TestDllBlocklist_MatchByName.dll";
-  nsString dllPath = GetFullPath(sDllName);
+  NS_NAMED_LITERAL_STRING(kLeafName, "TestDllBlocklist_MatchByName.dll");
+  nsString dllPath = GetFullPath(kLeafName);
 
-  auto hDll = ::LoadLibraryW((char16ptr_t)dllPath.get());
-  if (hDll) {
-    EXPECT_TRUE(!"DLL was loaded but should have been blocked.");
-  }
+  nsModuleHandle hDll(::LoadLibraryW(dllPath.get()));
 
-  EXPECT_FALSE(sDllWasLoaded);
-  EXPECT_TRUE(sDllWasBlocked);
+  EXPECT_TRUE(!hDll);
+  EXPECT_TRUE(!::GetModuleHandleW(kLeafName.get()));
+}
 
-  if (hDll) {
-    FreeLibrary(hDll);
+TEST(TestDllBlocklist, BlockDllByVersion) {
+  NS_NAMED_LITERAL_STRING(kLeafName, "TestDllBlocklist_MatchByVersion.dll");
+  nsString dllPath = GetFullPath(kLeafName);
+
+  nsModuleHandle hDll(::LoadLibraryW(dllPath.get()));
+
+  EXPECT_TRUE(!hDll);
+  EXPECT_TRUE(!::GetModuleHandleW(kLeafName.get()));
+}
+
+TEST(TestDllBlocklist, AllowDllByVersion) {
+  NS_NAMED_LITERAL_STRING(kLeafName, "TestDllBlocklist_AllowByVersion.dll");
+  nsString dllPath = GetFullPath(kLeafName);
+
+  nsModuleHandle hDll(::LoadLibraryW(dllPath.get()));
+
+  EXPECT_TRUE(!!hDll);
+  EXPECT_TRUE(!!::GetModuleHandleW(kLeafName.get()));
+}
+
+#define DLL_BLOCKLIST_ENTRY(name, ...) {name, __VA_ARGS__},
+#define DLL_BLOCKLIST_STRING_TYPE const char*
+#include "mozilla/WindowsDllBlocklistDefs.h"
+
+TEST(TestDllBlocklist, BlocklistIntegrity) {
+  nsTArray<DLL_BLOCKLIST_STRING_TYPE> dupes;
+  DECLARE_POINTER_TO_FIRST_DLL_BLOCKLIST_ENTRY(pFirst);
+  DECLARE_POINTER_TO_LAST_DLL_BLOCKLIST_ENTRY(pLast);
+
+  EXPECT_FALSE(pLast->name || pLast->maxVersion || pLast->flags);
+
+  for (size_t i = 0; i < mozilla::ArrayLength(gWindowsDllBlocklist) - 1; ++i) {
+    auto pEntry = pFirst + i;
+
+    // Validate name
+    EXPECT_TRUE(!!pEntry->name);
+    EXPECT_GT(strlen(pEntry->name), 3);
+
+    // Check the filename for valid characters.
+    for (auto pch = pEntry->name; *pch != 0; ++pch) {
+      EXPECT_FALSE(*pch >= 'A' && *pch <= 'Z');
+    }
+
+    // Check for duplicate entries
+    for (auto&& dupe : dupes) {
+      EXPECT_NE(stricmp(dupe, pEntry->name), 0);
+    }
+
+    dupes.AppendElement(pEntry->name);
   }
 }
 
-TEST(TestDllBlocklist, BlockDllByVersion)
-{
-  sDllWasBlocked = false;
-  sDllWasLoaded = false;
-  DllBlocklist_SetDllLoadHook(DllLoadHook);
-  auto undoHooks =
-      mozilla::MakeScopeExit([&]() { DllBlocklist_SetDllLoadHook(nullptr); });
+TEST(TestDllBlocklist, BlockThreadWithLoadLibraryEntryPoint) {
+  // Only supported on Nightly
+#if defined(NIGHTLY_BUILD)
+  using ThreadProc = unsigned(__stdcall*)(void*);
 
-  sDllName = u"TestDllBlocklist_MatchByVersion.dll";
-  nsString dllPath = GetFullPath(sDllName);
+  NS_NAMED_LITERAL_STRING(kLeafNameW, "TestDllBlocklist_MatchByVersion.dll");
 
-  auto hDll = ::LoadLibraryW((char16ptr_t)dllPath.get());
-  if (hDll) {
-    EXPECT_TRUE(!"DLL was loaded but should have been blocked.");
-  }
+  nsString fullPathW = GetFullPath(kLeafNameW);
+  EXPECT_FALSE(fullPathW.IsEmpty());
 
-  EXPECT_FALSE(sDllWasLoaded);
-  EXPECT_TRUE(sDllWasBlocked);
+  nsAutoHandle threadW(reinterpret_cast<HANDLE>(
+      _beginthreadex(nullptr, 0, reinterpret_cast<ThreadProc>(&::LoadLibraryW),
+                     (void*)fullPathW.get(), 0, nullptr)));
 
-  if (hDll) {
-    FreeLibrary(hDll);
-  }
+  EXPECT_TRUE(!!threadW);
+  EXPECT_EQ(::WaitForSingleObject(threadW, INFINITE), WAIT_OBJECT_0);
+
+  DWORD exitCode;
+  EXPECT_TRUE(::GetExitCodeThread(threadW, &exitCode) && !exitCode);
+  EXPECT_TRUE(!::GetModuleHandleW(kLeafNameW.get()));
+
+  const NS_LossyConvertUTF16toASCII fullPathA(fullPathW);
+  EXPECT_FALSE(fullPathA.IsEmpty());
+
+  nsAutoHandle threadA(reinterpret_cast<HANDLE>(
+      _beginthreadex(nullptr, 0, reinterpret_cast<ThreadProc>(&::LoadLibraryA),
+                     (void*)fullPathA.get(), 0, nullptr)));
+
+  EXPECT_TRUE(!!threadA);
+  EXPECT_EQ(::WaitForSingleObject(threadA, INFINITE), WAIT_OBJECT_0);
+  EXPECT_TRUE(::GetExitCodeThread(threadA, &exitCode) && !exitCode);
+  EXPECT_TRUE(!::GetModuleHandleW(kLeafNameW.get()));
+#endif  // defined(NIGHTLY_BUILD)
 }
 
-TEST(TestDllBlocklist, AllowDllByVersion)
-{
-  sDllWasBlocked = false;
-  sDllWasLoaded = false;
-  DllBlocklist_SetDllLoadHook(DllLoadHook);
-  auto undoHooks =
-      mozilla::MakeScopeExit([&]() { DllBlocklist_SetDllLoadHook(nullptr); });
-
-  sDllName = u"TestDllBlocklist_AllowByVersion.dll";
-  nsString dllPath = GetFullPath(sDllName);
-
-  auto hDll = ::LoadLibraryW((char16ptr_t)dllPath.get());
-  if (!hDll) {
-    EXPECT_TRUE(!"DLL was blocked but should have been loaded.");
-  }
-
-  EXPECT_TRUE(sDllWasLoaded);
-  EXPECT_FALSE(sDllWasBlocked);
-
-  if (hDll) {
-    FreeLibrary(hDll);
-  }
-}
-
-TEST(TestDllBlocklist, BlocklistIntegrity)
-{
-  auto msg = DllBlocklist_TestBlocklistIntegrity();
-  EXPECT_FALSE(msg) << msg;
-}
