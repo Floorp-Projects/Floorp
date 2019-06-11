@@ -56,9 +56,6 @@ pub enum RustSdpProtocolValue {
     DtlsSctp,
     UdpDtlsSctp,
     TcpDtlsSctp,
-    RtpAvp,
-    RtpAvpf,
-    RtpSavp,
 }
 
 impl<'a> From<&'a SdpProtocolValue> for RustSdpProtocolValue {
@@ -73,9 +70,6 @@ impl<'a> From<&'a SdpProtocolValue> for RustSdpProtocolValue {
             SdpProtocolValue::DtlsSctp => RustSdpProtocolValue::DtlsSctp,
             SdpProtocolValue::UdpDtlsSctp => RustSdpProtocolValue::UdpDtlsSctp,
             SdpProtocolValue::TcpDtlsSctp => RustSdpProtocolValue::TcpDtlsSctp,
-            SdpProtocolValue::RtpAvp => RustSdpProtocolValue::RtpAvp,
-            SdpProtocolValue::RtpAvpf => RustSdpProtocolValue::RtpAvpf,
-            SdpProtocolValue::RtpSavp => RustSdpProtocolValue::RtpSavp,
         }
     }
 }
