@@ -33,6 +33,10 @@ UNIFIED_SOURCES += [
     'StoragePrincipalHelper.cpp',
 ]
 
+EXTRA_JS_MODULES += [
+    'ContentBlockingAllowList.jsm',
+]
+
 LOCAL_INCLUDES += [
     '/extensions/permissions',
 ]
