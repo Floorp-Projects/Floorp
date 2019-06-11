@@ -392,6 +392,13 @@ static inline double CanonicalizeNaN(double d) {
   return d;
 }
 
+#if defined(__sparc__)
+// Some architectures (not to name names) generate NaNs with bit
+// patterns that don't conform to JS::Value's bit pattern
+// restrictions.
+#define JS_NONCANONICAL_HARDWARE_NAN
+#endif
+
 /**
  * [SMDOC] JS::Value type
  *
@@ -480,13 +487,18 @@ union alignas(8) Value {
 
  private:
   explicit constexpr Value(uint64_t asBits) : asBits_(asBits) {}
-#if defined(JS_NUNBOX32)
-  explicit Value(double d) : asBits_(mozilla::BitwiseCast<uint64_t>(d)) {}
-#elif defined(JS_PUNBOX64)
-  explicit Value(double d)
-      : asBits_(mozilla::BitwiseCast<uint64_t>(d) + detail::ValueDoubleAdjust) {
-  }
+
+  static uint64_t bitsFromDouble(double d) {
+#if defined(JS_NONCANONICAL_HARDWARE_NAN)
+    d = CanonicalizeNaN(d);
 #endif
+
+#if defined(JS_NUNBOX32)
+    return mozilla::BitwiseCast<uint64_t>(d);
+#elif defined(JS_PUNBOX64)
+    return mozilla::BitwiseCast<uint64_t>(d) + detail::ValueDoubleAdjust;
+#endif
+  }
 
   static_assert(sizeof(JSValueType) == 1,
                 "type bits must fit in a single byte");
@@ -524,7 +536,7 @@ union alignas(8) Value {
     return fromTagAndPayload(JSVAL_TAG_INT32, uint32_t(i));
   }
 
-  static Value fromDouble(double d) { return Value(d); }
+  static Value fromDouble(double d) { return fromRawBits(bitsFromDouble(d)); }
 
  public:
   /**
@@ -554,7 +566,7 @@ union alignas(8) Value {
   }
 
   void setDouble(double d) {
-    *this = Value(d);
+    asBits_ = bitsFromDouble(d);
     MOZ_ASSERT(isDouble());
   }
 
