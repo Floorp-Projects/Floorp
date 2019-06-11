@@ -55,7 +55,7 @@ describe("expressions", () => {
     const { dispatch, getState, cx } = createStore(mockThreadClient);
 
     await dispatch(actions.addExpression(cx, "foo"));
-    expect(selectors.getExpressions(getState()).size).toBe(1);
+    expect(selectors.getExpressions(getState())).toHaveLength(1);
   });
 
   it("should not add empty expressions", () => {
@@ -63,14 +63,14 @@ describe("expressions", () => {
 
     dispatch(actions.addExpression(cx, (undefined: any)));
     dispatch(actions.addExpression(cx, ""));
-    expect(selectors.getExpressions(getState()).size).toBe(0);
+    expect(selectors.getExpressions(getState())).toHaveLength(0);
   });
 
   it("should not add invalid expressions", async () => {
     const { dispatch, getState, cx } = createStore(mockThreadClient);
     await dispatch(actions.addExpression(cx, "foo#"));
     const state = getState();
-    expect(selectors.getExpressions(state).size).toBe(0);
+    expect(selectors.getExpressions(state)).toHaveLength(0);
     expect(selectors.getExpressionError(state)).toBe(true);
   });
 
@@ -79,9 +79,14 @@ describe("expressions", () => {
 
     await dispatch(actions.addExpression(cx, "foo"));
     const expression = selectors.getExpression(getState(), "foo");
-    await dispatch(actions.updateExpression(cx, "bar", expression));
+    if (!expression) {
+      throw new Error("expression must exist");
+    }
 
-    expect(selectors.getExpression(getState(), "bar").input).toBe("bar");
+    await dispatch(actions.updateExpression(cx, "bar", expression));
+    const bar = selectors.getExpression(getState(), "bar");
+
+    expect(bar && bar.input).toBe("bar");
   });
 
   it("should not update an expression w/ invalid code", async () => {
@@ -89,6 +94,9 @@ describe("expressions", () => {
 
     await dispatch(actions.addExpression(cx, "foo"));
     const expression = selectors.getExpression(getState(), "foo");
+    if (!expression) {
+      throw new Error("expression must exist");
+    }
     await dispatch(actions.updateExpression(cx, "#bar", expression));
     expect(selectors.getExpression(getState(), "bar")).toBeUndefined();
   });
@@ -98,24 +106,35 @@ describe("expressions", () => {
 
     await dispatch(actions.addExpression(cx, "foo"));
     await dispatch(actions.addExpression(cx, "bar"));
-    expect(selectors.getExpressions(getState()).size).toBe(2);
+    expect(selectors.getExpressions(getState())).toHaveLength(2);
 
     const expression = selectors.getExpression(getState(), "foo");
+
+    if (!expression) {
+      throw new Error("expression must exist");
+    }
+
+    const bar = selectors.getExpression(getState(), "bar");
     dispatch(actions.deleteExpression(expression));
-    expect(selectors.getExpressions(getState()).size).toBe(1);
-    expect(selectors.getExpression(getState(), "bar").input).toBe("bar");
+    expect(selectors.getExpressions(getState())).toHaveLength(1);
+    expect(bar && bar.input).toBe("bar");
   });
 
   it("should evaluate expressions global scope", async () => {
     const { dispatch, getState, cx } = createStore(mockThreadClient);
     await dispatch(actions.addExpression(cx, "foo"));
     await dispatch(actions.addExpression(cx, "bar"));
-    expect(selectors.getExpression(getState(), "foo").value).toBe("bla");
-    expect(selectors.getExpression(getState(), "bar").value).toBe("bla");
+
+    let foo = selectors.getExpression(getState(), "foo");
+    let bar = selectors.getExpression(getState(), "bar");
+    expect(foo && foo.value).toBe("bla");
+    expect(bar && bar.value).toBe("bla");
 
     await dispatch(actions.evaluateExpressions(cx));
-    expect(selectors.getExpression(getState(), "foo").value).toBe("bla");
-    expect(selectors.getExpression(getState(), "bar").value).toBe("bla");
+    foo = selectors.getExpression(getState(), "foo");
+    bar = selectors.getExpression(getState(), "bar");
+    expect(foo && foo.value).toBe("bla");
+    expect(bar && bar.value).toBe("bla");
   });
 
   it("should evaluate expressions in specific scope", async () => {
@@ -127,13 +146,16 @@ describe("expressions", () => {
     await dispatch(actions.addExpression(cx, "foo"));
     await dispatch(actions.addExpression(cx, "bar"));
 
-    expect(selectors.getExpression(getState(), "foo").value).toBe("boo");
-    expect(selectors.getExpression(getState(), "bar").value).toBe("boo");
+    let foo = selectors.getExpression(getState(), "foo");
+    let bar = selectors.getExpression(getState(), "bar");
+    expect(foo && foo.value).toBe("boo");
+    expect(bar && bar.value).toBe("boo");
 
     await dispatch(actions.evaluateExpressions(cx));
-
-    expect(selectors.getExpression(getState(), "foo").value).toBe("boo");
-    expect(selectors.getExpression(getState(), "bar").value).toBe("boo");
+    foo = selectors.getExpression(getState(), "foo");
+    bar = selectors.getExpression(getState(), "bar");
+    expect(foo && foo.value).toBe("boo");
+    expect(bar && bar.value).toBe("boo");
   });
 
   it("should get the autocomplete matches for the input", async () => {

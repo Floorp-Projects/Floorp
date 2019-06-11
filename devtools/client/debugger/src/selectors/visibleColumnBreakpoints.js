@@ -147,7 +147,7 @@ function convertToList(
 export function getColumnBreakpoints(
   positions: ?BreakpointPositions,
   breakpoints: ?(Breakpoint[]),
-  viewport: Range,
+  viewport: ?Range,
   selectedSourceWithContent: ?SourceWithContent
 ) {
   if (!positions || !selectedSourceWithContent) {

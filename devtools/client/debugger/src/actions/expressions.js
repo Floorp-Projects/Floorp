@@ -121,7 +121,7 @@ export function deleteExpression(expression: Expression) {
  */
 export function evaluateExpressions(cx: ThreadContext) {
   return async function({ dispatch, getState, client }: ThunkArgs) {
-    const expressions = getExpressions(getState()).toJS();
+    const expressions = getExpressions(getState());
     const inputs = expressions.map(({ input }) => input);
     const frameId = getSelectedFrameId(getState(), cx.thread);
     const results = await client.evaluateExpressions(inputs, {

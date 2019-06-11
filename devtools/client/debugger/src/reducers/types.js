@@ -32,7 +32,7 @@ export type State = {
   expressions: Record<ExpressionState>,
   eventListenerBreakpoints: EventListenersState,
   debuggee: DebuggeeState,
-  fileSearch: Record<FileSearchState>,
+  fileSearch: FileSearchState,
   pause: PauseState,
   preview: PreviewState,
   pendingBreakpoints: PendingBreakpointsState,
@@ -40,8 +40,8 @@ export type State = {
   sources: SourcesState,
   sourceActors: SourceActorsState,
   tabs: TabList,
-  ui: Record<UIState>,
-  quickOpen: Record<QuickOpenState>,
+  ui: UIState,
+  quickOpen: QuickOpenState,
 };
 
 export type Selector<T> = State => T;

@@ -403,7 +403,7 @@ describe("pause", () => {
 
       await dispatch(actions.resumed(resumedPacket()));
       const expression = selectors.getExpression(getState(), "foo");
-      expect(expression.value).toEqual("YAY");
+      expect(expression && expression.value).toEqual("YAY");
     });
   });
 });

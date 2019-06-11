@@ -45,10 +45,10 @@ describe("file text search", () => {
   it("should toggle a file search modifier", () => {
     const { dispatch, getState, cx } = createStore();
     let fileSearchModState = getFileSearchModifiers(getState());
-    expect(fileSearchModState.get("caseSensitive")).toBe(false);
+    expect(fileSearchModState.caseSensitive).toBe(false);
     dispatch(actions.toggleFileSearchModifier(cx, "caseSensitive"));
     fileSearchModState = getFileSearchModifiers(getState());
-    expect(fileSearchModState.get("caseSensitive")).toBe(true);
+    expect(fileSearchModState.caseSensitive).toBe(true);
   });
 
   it("should toggle a file search query cleaning", () => {
