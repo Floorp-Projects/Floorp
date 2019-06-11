@@ -8,10 +8,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -25,18 +27,17 @@ import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 import java.io.File
 import kotlin.reflect.full.functions
 import kotlin.reflect.jvm.isAccessible
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class FretboardTest {
 
     @Test
     fun loadExperiments() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         val fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.loadExperiments()
         verify(experimentStorage).retrieve()
@@ -44,8 +45,8 @@ class FretboardTest {
 
     @Test
     fun updateExperimentsStorageNotLoaded() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         val fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.updateExperiments()
         verify(experimentStorage, times(1)).retrieve()
@@ -55,10 +56,10 @@ class FretboardTest {
 
     @Test
     fun updateExperimentsEmptyStorage() {
-        val experimentSource = mock(ExperimentSource::class.java)
+        val experimentSource = mock<ExperimentSource>()
         val result = ExperimentsSnapshot(listOf(), null)
         `when`(experimentSource.getExperiments(result)).thenReturn(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentStorage = mock<ExperimentStorage>()
         `when`(experimentStorage.retrieve()).thenReturn(result)
         val fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.updateExperiments()
@@ -68,9 +69,9 @@ class FretboardTest {
 
     @Test
     fun updateExperimentsFromStorage() {
-        val experimentSource = mock(ExperimentSource::class.java)
+        val experimentSource = mock<ExperimentSource>()
         `when`(experimentSource.getExperiments(ExperimentsSnapshot(listOf(Experiment("id0", "name0")), null))).thenReturn(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentStorage = mock<ExperimentStorage>()
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(listOf(Experiment("id0", "name0")), null))
         val fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.updateExperiments()
@@ -80,8 +81,8 @@ class FretboardTest {
 
     @Test
     fun experiments() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         val experiments = listOf(
             Experiment("first-id", "first-name"),
             Experiment("second-id", "second-name")
@@ -99,8 +100,8 @@ class FretboardTest {
 
     @Test
     fun experimentsNoExperiments() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         val experiments = listOf<Experiment>()
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
         val fretboard = Fretboard(experimentSource, experimentStorage)
@@ -110,8 +111,8 @@ class FretboardTest {
 
     @Test
     fun getActiveExperiments() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         val experiments = listOf(
             Experiment("first-id",
                 name = "first-name",
@@ -138,18 +139,18 @@ class FretboardTest {
         val fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.loadExperiments()
 
-        val context = mock(Context::class.java)
+        val context = mock<Context>()
         `when`(context.packageName).thenReturn("test.appId")
-        val sharedPrefs = mock(SharedPreferences::class.java)
+        val sharedPrefs = mock<SharedPreferences>()
         val prefsEditor = mock(SharedPreferences.Editor::class.java)
         `when`(prefsEditor.putString(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).thenReturn(prefsEditor)
         `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
         `when`(sharedPrefs.getBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
         `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
 
-        val packageInfo = mock(PackageInfo::class.java)
+        val packageInfo = mock<PackageInfo>()
         packageInfo.versionName = "version.name"
-        val packageManager = mock(PackageManager::class.java)
+        val packageManager = mock<PackageManager>()
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
@@ -161,8 +162,8 @@ class FretboardTest {
 
     @Test
     fun getExperimentsMap() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         val experiments = listOf(
                 Experiment("first-id",
                         name = "first-name",
@@ -189,18 +190,18 @@ class FretboardTest {
         val fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.loadExperiments()
 
-        val context = mock(Context::class.java)
+        val context = mock<Context>()
         `when`(context.packageName).thenReturn("test.appId")
-        val sharedPrefs = mock(SharedPreferences::class.java)
+        val sharedPrefs = mock<SharedPreferences>()
         val prefsEditor = mock(SharedPreferences.Editor::class.java)
         `when`(prefsEditor.putString(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).thenReturn(prefsEditor)
         `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
         `when`(sharedPrefs.getBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
         `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
 
-        val packageInfo = mock(PackageInfo::class.java)
+        val packageInfo = mock<PackageInfo>()
         packageInfo.versionName = "version.name"
-        val packageManager = mock(PackageManager::class.java)
+        val packageManager = mock<PackageManager>()
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
@@ -214,8 +215,8 @@ class FretboardTest {
 
     @Test
     fun isInExperiment() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         var experiments = listOf(
             Experiment("first-id",
                 name = "first-name",
@@ -228,18 +229,18 @@ class FretboardTest {
         var fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.loadExperiments()
 
-        val context = mock(Context::class.java)
+        val context = mock<Context>()
         `when`(context.packageName).thenReturn("test.appId")
-        val sharedPrefs = mock(SharedPreferences::class.java)
+        val sharedPrefs = mock<SharedPreferences>()
         val prefsEditor = mock(SharedPreferences.Editor::class.java)
         `when`(prefsEditor.putString(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).thenReturn(prefsEditor)
         `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
         `when`(sharedPrefs.getBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
         `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
 
-        val packageInfo = mock(PackageInfo::class.java)
+        val packageInfo = mock<PackageInfo>()
         packageInfo.versionName = "version.name"
-        val packageManager = mock(PackageManager::class.java)
+        val packageManager = mock<PackageManager>()
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
@@ -262,8 +263,8 @@ class FretboardTest {
 
     @Test
     fun withExperiment() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         var experiments = listOf(
             Experiment("first-id",
                 name = "first-name",
@@ -276,18 +277,18 @@ class FretboardTest {
         var fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.loadExperiments()
 
-        val context = mock(Context::class.java)
+        val context = mock<Context>()
         `when`(context.packageName).thenReturn("test.appId")
-        val sharedPrefs = mock(SharedPreferences::class.java)
+        val sharedPrefs = mock<SharedPreferences>()
         val prefsEditor = mock(SharedPreferences.Editor::class.java)
         `when`(prefsEditor.putString(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).thenReturn(prefsEditor)
         `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
         `when`(sharedPrefs.getBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
         `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
 
-        val packageInfo = mock(PackageInfo::class.java)
+        val packageInfo = mock<PackageInfo>()
         packageInfo.versionName = "version.name"
-        val packageManager = mock(PackageManager::class.java)
+        val packageManager = mock<PackageManager>()
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
@@ -324,8 +325,8 @@ class FretboardTest {
 
     @Test
     fun getExperiment() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         val experiments = listOf(
             Experiment("first-id",
                 name = "first-name",
@@ -344,8 +345,8 @@ class FretboardTest {
 
     @Test
     fun setOverride() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         val experiments = listOf(
             Experiment("first-id",
                 name = "first-name",
@@ -358,9 +359,9 @@ class FretboardTest {
         val fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.loadExperiments()
 
-        val context = mock(Context::class.java)
+        val context = mock<Context>()
         `when`(context.packageName).thenReturn("test.appId")
-        val sharedPrefs = mock(SharedPreferences::class.java)
+        val sharedPrefs = mock<SharedPreferences>()
         val prefsEditor = mock(SharedPreferences.Editor::class.java)
         `when`(prefsEditor.putBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenReturn(prefsEditor)
         `when`(prefsEditor.putString(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).thenReturn(prefsEditor)
@@ -368,9 +369,9 @@ class FretboardTest {
         `when`(sharedPrefs.getBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
         `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
 
-        val packageInfo = mock(PackageInfo::class.java)
+        val packageInfo = mock<PackageInfo>()
         packageInfo.versionName = "version.name"
-        val packageManager = mock(PackageManager::class.java)
+        val packageManager = mock<PackageManager>()
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
@@ -391,8 +392,8 @@ class FretboardTest {
 
     @Test
     fun clearOverride() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         val experiments = listOf(
             Experiment("first-id",
                 name = "first-name",
@@ -405,9 +406,9 @@ class FretboardTest {
         val fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.loadExperiments()
 
-        val context = mock(Context::class.java)
+        val context = mock<Context>()
         `when`(context.packageName).thenReturn("test.appId")
-        val sharedPrefs = mock(SharedPreferences::class.java)
+        val sharedPrefs = mock<SharedPreferences>()
         val prefsEditor = mock(SharedPreferences.Editor::class.java)
         `when`(prefsEditor.remove(ArgumentMatchers.anyString())).thenReturn(prefsEditor)
         `when`(prefsEditor.putBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenReturn(prefsEditor)
@@ -416,9 +417,9 @@ class FretboardTest {
         `when`(sharedPrefs.getBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
         `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
 
-        val packageInfo = mock(PackageInfo::class.java)
+        val packageInfo = mock<PackageInfo>()
         packageInfo.versionName = "version.name"
-        val packageManager = mock(PackageManager::class.java)
+        val packageManager = mock<PackageManager>()
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
@@ -436,8 +437,8 @@ class FretboardTest {
 
     @Test
     fun clearAllOverrides() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         val experiments = listOf(
             Experiment("first-id",
                 name = "first-name",
@@ -450,9 +451,9 @@ class FretboardTest {
         val fretboard = Fretboard(experimentSource, experimentStorage)
         fretboard.loadExperiments()
 
-        val context = mock(Context::class.java)
+        val context = mock<Context>()
         `when`(context.packageName).thenReturn("test.appId")
-        val sharedPrefs = mock(SharedPreferences::class.java)
+        val sharedPrefs = mock<SharedPreferences>()
         val prefsEditor = mock(SharedPreferences.Editor::class.java)
         `when`(prefsEditor.clear()).thenReturn(prefsEditor)
         `when`(prefsEditor.putBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenReturn(prefsEditor)
@@ -461,9 +462,9 @@ class FretboardTest {
         `when`(sharedPrefs.getBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
         `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
 
-        val packageInfo = mock(PackageInfo::class.java)
+        val packageInfo = mock<PackageInfo>()
         packageInfo.versionName = "version.name"
-        val packageManager = mock(PackageManager::class.java)
+        val packageManager = mock<PackageManager>()
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
@@ -481,11 +482,11 @@ class FretboardTest {
 
     @Test
     fun updateExperimentsException() {
-        val source = mock(ExperimentSource::class.java)
+        val source = mock<ExperimentSource>()
         doAnswer {
             throw ExperimentDownloadException("test")
         }.`when`(source).getExperiments(any())
-        val storage = mock(ExperimentStorage::class.java)
+        val storage = mock<ExperimentStorage>()
         `when`(storage.retrieve()).thenReturn(ExperimentsSnapshot(listOf(), null))
         val fretboard = Fretboard(source, storage)
         fretboard.updateExperiments()
@@ -493,11 +494,11 @@ class FretboardTest {
 
     @Test
     fun getUserBucket() {
-        val context = mock(Context::class.java)
-        val sharedPrefs = mock(SharedPreferences::class.java)
+        val context = mock<Context>()
+        val sharedPrefs = mock<SharedPreferences>()
         val prefsEditor = mock(SharedPreferences.Editor::class.java)
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
         `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
         `when`(prefsEditor.putBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenReturn(prefsEditor)
         `when`(prefsEditor.putString(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).thenReturn(prefsEditor)
@@ -510,8 +511,8 @@ class FretboardTest {
 
     @Test
     fun getUserBucketWithOverridenClientId() {
-        val experimentSource = mock(ExperimentSource::class.java)
-        val experimentStorage = mock(ExperimentStorage::class.java)
+        val experimentSource = mock<ExperimentSource>()
+        val experimentStorage = mock<ExperimentStorage>()
 
         val fretboard1 = Fretboard(experimentSource, experimentStorage, object : ValuesProvider() {
             override fun getClientId(context: Context): String = "c641eacf-c30c-4171-b403-f077724e848a"
@@ -528,8 +529,8 @@ class FretboardTest {
 
     @Test
     fun evenDistribution() {
-        val context = mock(Context::class.java)
-        val sharedPrefs = mock(SharedPreferences::class.java)
+        val context = mock<Context>()
+        val sharedPrefs = mock<SharedPreferences>()
         val prefsEditor = mock(SharedPreferences.Editor::class.java)
         `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
         `when`(prefsEditor.putBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenReturn(prefsEditor)
@@ -567,7 +568,7 @@ class FretboardTest {
 
     @Test
     fun loadingCorruptJSON() {
-        val experimentSource = mock(ExperimentSource::class.java)
+        val experimentSource = mock<ExperimentSource>()
 
         val file = File(testContext.filesDir, "corrupt-experiments.json")
         file.writer().use {

@@ -4,14 +4,15 @@
 
 package mozilla.components.service.fretboard
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class JSONExperimentParserTest {
+
     @Test
     fun toJson() {
         val experiment = Experiment("sample-id",

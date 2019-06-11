@@ -4,15 +4,16 @@
 
 package mozilla.components.service.fretboard
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ExperimentTest {
+
     @Test
     fun testEquals() {
         val experiment = Experiment(

@@ -4,29 +4,30 @@
 
 package mozilla.components.service.fretboard.source.kinto
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Response
 import mozilla.components.service.fretboard.Experiment
 import mozilla.components.service.fretboard.ExperimentsSnapshot
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class KintoExperimentSourceTest {
+
     private val baseUrl = "http://mydomain.test"
     private val bucketName = "fretboard"
     private val collectionName = "experiments"
 
     @Test
     fun noExperiments() {
-        val httpClient = mock(Client::class.java)
+        val httpClient = mock<Client>()
 
         val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records"
         `when`(httpClient.fetch(any()))
@@ -39,7 +40,7 @@ class KintoExperimentSourceTest {
 
     @Test
     fun getExperimentsNoDiff() {
-        val httpClient = mock(Client::class.java)
+        val httpClient = mock<Client>()
 
         val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records"
         `when`(httpClient.fetch(any())).thenReturn(
@@ -65,7 +66,7 @@ class KintoExperimentSourceTest {
 
     @Test
     fun getExperimentsDiffAdd() {
-        val httpClient = mock(Client::class.java)
+        val httpClient = mock<Client>()
         val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549890000"
         `when`(httpClient.fetch(any())).thenReturn(
             Response(url,
@@ -99,7 +100,7 @@ class KintoExperimentSourceTest {
 
     @Test
     fun getExperimentsDiffDelete() {
-        val httpClient = mock(Client::class.java)
+        val httpClient = mock<Client>()
 
         val storageExperiment = Experiment("id",
             "name",
@@ -140,7 +141,7 @@ class KintoExperimentSourceTest {
 
     @Test
     fun getExperimentsDiffUpdate() {
-        val httpClient = mock(Client::class.java)
+        val httpClient = mock<Client>()
         val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549800000"
         `when`(httpClient.fetch(any())).thenReturn(
             Response(url,
@@ -173,7 +174,7 @@ class KintoExperimentSourceTest {
 
     @Test
     fun getExperimentsEmptyDiff() {
-        val httpClient = mock(Client::class.java)
+        val httpClient = mock<Client>()
         val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549895713"
         `when`(httpClient.fetch(any())).thenReturn(
             Response(url,

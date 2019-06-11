@@ -4,6 +4,7 @@
 
 package mozilla.components.service.fretboard.storage.flatfile
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.service.fretboard.Experiment
 import mozilla.components.service.fretboard.ExperimentsSnapshot
 import org.json.JSONException
@@ -12,9 +13,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-val experimentsJson = """
+const val experimentsJson = """
                               {
                                   "experiments": [
                                       {
@@ -56,8 +56,9 @@ val experimentsJson = """
                               }
                               """
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ExperimentsSerializerTest {
+
     @Test
     fun fromJsonValid() {
         val experimentsResult = ExperimentsSerializer().fromJson(experimentsJson)

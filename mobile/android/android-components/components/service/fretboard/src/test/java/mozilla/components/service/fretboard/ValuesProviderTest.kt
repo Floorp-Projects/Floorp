@@ -4,23 +4,23 @@
 
 package mozilla.components.service.fretboard
 
-import android.content.Context
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
-import org.robolectric.RobolectricTestRunner
 import java.util.Locale
 import java.util.MissingResourceException
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ValuesProviderTest {
+
     @Test
     fun `get language has three letter code`() {
         Locale.setDefault(Locale("en", "US"))
-        assertEquals("eng", ValuesProvider().getLanguage(mock(Context::class.java)))
+        assertEquals("eng", ValuesProvider().getLanguage(mock()))
     }
 
     @Test
@@ -29,18 +29,18 @@ class ValuesProviderTest {
         `when`(locale.isO3Language).thenThrow(MissingResourceException("", "", ""))
         `when`(locale.language).thenReturn("language")
         Locale.setDefault(locale)
-        assertEquals("language", ValuesProvider().getLanguage(mock(Context::class.java)))
+        assertEquals("language", ValuesProvider().getLanguage(mock()))
     }
 
     @Test
     fun `get country has three letter code`() {
         Locale.setDefault(Locale("en", "US"))
-        assertEquals("USA", ValuesProvider().getCountry(mock(Context::class.java)))
+        assertEquals("USA", ValuesProvider().getCountry(mock()))
     }
 
     @Test
     fun `get country doesn't have three letter code`() {
         Locale.setDefault(Locale("cnr", "CS"))
-        assertEquals("CS", ValuesProvider().getCountry(mock(Context::class.java)))
+        assertEquals("CS", ValuesProvider().getCountry(mock()))
     }
 }
