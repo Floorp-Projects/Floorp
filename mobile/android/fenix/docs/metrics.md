@@ -698,3 +698,57 @@ tracking_protection</td>
 
 
 ## Metrics
+
+Items that are added to the metrics ping
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>default_browser</td>
+        <td>boolean</td>
+        <td>Is Fenix the default browser?</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>search_count</td>
+        <td>labeled_counter</td>
+        <td> The labels for this counter are `[search-engine-name].[source]`.
+
+      If the search engine is bundled with Fenix `search-engine-name` will be the name of the search engine. If it's a
+      custom search engine (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the value will be `custom`.
+
+      `source` will either be `action` or `suggestion`</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1677">link</a></td>
+        <td></td>
+        <td>2019-09-01</td>
+    </tr>
+    <tr>
+        <td>mozilla_products</td>
+        <td>string_list</td>
+        <td>A list of all the Mozilla products installed on device. We currently scan for: Firefox, Firefox Beta,
+       Firefox Aurora, Firefox Nightly, Firefox Fdroid, Firefox Lite, Reference Browser, Reference Browser Debug,
+       Fenix, Focus, and Lockwise.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1953/">link</a></td>
+        <td></td>
+        <td>2019-09-01</td>
+    </tr>
+    <tr>
+        <td>default_moz_browser</td>
+        <td>string</td>
+        <td>The name of the default browser on device if and only if it's a Mozilla owned product, otherwise empty string</td>
+        <td><a href=https://github.com/mozilla-mobile/fenix/pull/1953/">link</a></td>
+        <td></td>
+        <td>2019-09-01</td>
+    </tr>
+</table>
+</pre>
