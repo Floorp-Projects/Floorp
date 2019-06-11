@@ -167,7 +167,7 @@ tasks:
               && git checkout ${event.release.tag_name}
               && python tools/taskcluster/release.py \
                 --tag ${event.release.tag_name} \
-                --track alpha \
+                --channel alpha \
                 --commit \
                 --output /opt/focus-android/app/build/outputs/apk \
                 --apk focusArm/release/app-focus-arm-release-unsigned.apk \
@@ -247,7 +247,7 @@ tasks:
               git fetch origin
               && git reset --hard origin/master
               && python tools/taskcluster/release.py \
-                --track nightly \
+                --channel nightly \
                 --commit \
                 --output /opt/focus-android/app/build/outputs/apk \
                 --apk focusArm/nightly/app-focus-arm-nightly-unsigned.apk \

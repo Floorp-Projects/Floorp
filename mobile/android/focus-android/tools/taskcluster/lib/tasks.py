@@ -104,7 +104,7 @@ class TaskBuilder(object):
             }
         }
 
-    def build_push_task(self, signing_task_id, name, description, apks=[], scopes=[], track='internal', commit=False):
+    def build_push_task(self, signing_task_id, name, description, apks=[], scopes=[], channel='internal', commit=False):
         created = datetime.datetime.now()
         expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
@@ -125,7 +125,7 @@ class TaskBuilder(object):
             "requires": "all-completed",
             "payload": {
                 "commit": commit,
-                "google_play_track": track,
+                "channel": channel,
                 "upstreamArtifacts": [
                     {
                         "paths": apks,
