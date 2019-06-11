@@ -436,9 +436,16 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void NotifyAudioPlaybackChanged(AudibleChangedReasons aReason);
 
   void GetPreload(nsAString& aValue) {
+    if (mSrcAttrStream) {
+      nsGkAtoms::none->ToString(aValue);
+      return;
+    }
     GetEnumAttr(nsGkAtoms::preload, nullptr, aValue);
   }
   void SetPreload(const nsAString& aValue, ErrorResult& aRv) {
+    if (mSrcAttrStream) {
+      return;
+    }
     SetHTMLAttr(nsGkAtoms::preload, aValue, aRv);
   }
 
