@@ -4728,6 +4728,19 @@ VARCACHE_PREF(
 #endif
 VARCACHE_PREF(
   Live,
+  "layout.css.shadow-parts.enabled",
+   layout_css_shadow_parts_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  Live,
   "layout.css.resizeobserver.enabled",
   layout_css_resizeobserver_enabled,
   bool, PREF_VALUE
