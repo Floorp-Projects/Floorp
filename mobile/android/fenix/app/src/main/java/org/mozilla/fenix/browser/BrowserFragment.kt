@@ -37,7 +37,6 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.app.links.AppLinksFeature
-import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.intent.IntentProcessor
@@ -206,7 +205,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             feature = ContextMenuFeature(
                 requireFragmentManager(),
                 sessionManager,
-                ContextMenuCandidate.defaultCandidates(
+                FenixContextMenuCandidate.defaultCandidates(
                     requireContext(),
                     requireComponents.useCases.tabsUseCases,
                     view,
