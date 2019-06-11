@@ -56,7 +56,7 @@ diff -u /src/cpu_detect_x86.cpp /src/cpu_detect_x86.cpp
 diff -u /src/STTypes.h /src/STTypes.h
 --- /src/STTypes.h
 +++ /src/STTypes.h
-@@ -54,12 +54,13 @@
+@@ -54,12 +54,17 @@
  #define SOUNDTOUCH_ALIGN_POINTER_16(x)      ( ( (ulongptr)(x) + 15 ) & ~(ulongptr)15 )
  
  
@@ -68,9 +68,13 @@ diff -u /src/STTypes.h /src/STTypes.h
 +#include "soundtouch_config.h"
  
 +#if defined(WIN32)
-+#define EXPORT __declspec(dllexport)
++#if defined(BUILDING_SOUNDTOUCH)
++#define SOUNDTOUCH_API __declspec(dllexport)
 +#else
-+#define EXPORT
++#define SOUNDTOUCH_API __declspec(dllimport)
++#endif
++#else
++#define SOUNDTOUCH_API
 +#endif
  
  namespace soundtouch
@@ -83,7 +87,7 @@ diff -u /src/SoundTouch.h /src/SoundTouch.h
  #define SETTING_NOMINAL_OUTPUT_SEQUENCE		7
  
 -class SoundTouch : public FIFOProcessor
-+class EXPORT SoundTouch : public FIFOProcessor
++class SOUNDTOUCH_API SoundTouch : public FIFOProcessor
  {
  private:
      /// Rate transposer class instance
