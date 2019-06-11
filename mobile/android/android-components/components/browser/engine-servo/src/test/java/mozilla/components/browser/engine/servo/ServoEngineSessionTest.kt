@@ -7,6 +7,7 @@
 package mozilla.components.browser.engine.servo
 
 import android.net.Uri
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -15,9 +16,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.mozilla.servoview.ServoView
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ServoEngineSessionTest {
 
     @Test
