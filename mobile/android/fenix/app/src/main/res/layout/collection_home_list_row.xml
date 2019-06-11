@@ -18,14 +18,14 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
+        android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/collection_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
             android:importantForAccessibility="no"
             android:src="@drawable/ic_tab_collection"
             android:tint="@null"
@@ -37,6 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
             android:ellipsize="end"
             android:gravity="start"
@@ -55,7 +56,7 @@
             android:id="@+id/chevron"
             android:layout_width="10dp"
             android:layout_height="6dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="24dp"
             android:layout_marginEnd="16dp"
             android:background="@drawable/ic_chevron_down"
             android:contentDescription="@string/tab_menu"
@@ -95,11 +96,23 @@
             android:id="@+id/collection_overflow_button"
             android:layout_width="24dp"
             android:layout_height="24dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="4.5dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/tab_menu"
             android:src="@drawable/ic_menu"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/selected_border"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:alpha="0"
+            android:background="@drawable/session_border"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </LinearLayout>

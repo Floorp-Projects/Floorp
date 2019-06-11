@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home
 
+import android.animation.Animator
 import android.content.Context
 import android.content.DialogInterface
 import android.content.res.Resources
@@ -28,6 +29,7 @@ import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.menu.BrowserMenu
@@ -68,6 +70,7 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlViewModel
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabAction
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
+import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -458,6 +461,10 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 action.collection.tabs.forEach {
                     requireComponents.useCases.tabsUseCases.addTab.invoke(it.url)
                 }
+                launch {
+                    delay(ANIM_SCROLL_DELAY)
+                    sessionControlComponent.view.smoothScrollToPosition(0)
+                }
             }
             is CollectionAction.ShareTabs -> {
                 val shareTabs = action.collection.tabs.map { ShareTab(it.url, it.title) }
@@ -709,10 +716,48 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         emitAccountChanges()
     }
 
+    private fun scrollToCollections(addedTabsSize: Int) {
+        launch {
+            delay(ANIM_SCROLL_DELAY)
+            val tabsSize = requireComponents.core.sessionManager.sessions.filter {
+                (activity as HomeActivity).browsingModeManager.isPrivate == it.private
+            }.size
+            sessionControlComponent.view.smoothScrollToPosition(tabsSize + NON_TAB_ITEM_NUM)
+            delay(ANIM_SNACKBAR_DELAY)
+            showSavedSnackbar(addedTabsSize)
+        }
+    }
+
+    private fun animateTopCollection() {
+        launch {
+            delay(ANIM_SCROLL_DELAY)
+            val tabsSize = requireComponents.core.sessionManager.sessions.filter {
+                (activity as HomeActivity).browsingModeManager.isPrivate == it.private
+            }.size
+            val topCollectionPosition = tabsSize + NON_TAB_ITEM_NUM
+            sessionControlComponent.view.smoothScrollToPosition(topCollectionPosition)
+            val viewHolder = sessionControlComponent.view.findViewHolderForAdapterPosition(topCollectionPosition)
+            val border = (viewHolder as? CollectionViewHolder)?.view?.findViewById<View>(R.id.selected_border)
+            val listener = object : Animator.AnimatorListener {
+                override fun onAnimationCancel(animation: Animator?) {}
+                override fun onAnimationStart(animation: Animator?) {}
+                override fun onAnimationRepeat(animation: Animator?) {}
+                override fun onAnimationEnd(animation: Animator?) {
+                    border?.animate()?.alpha(0.0F)?.setDuration(FADE_ANIM_DURATION)
+                        ?.setStartDelay(ANIM_ON_SCREEN_DELAY)
+                        ?.start()
+                }
+            }
+            delay(ANIM_ON_SCREEN_DELAY)
+            border?.animate()?.alpha(1.0F)?.setDuration(FADE_ANIM_DURATION)?.setListener(listener)?.start()
+        }
+    }
+
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         override fun onCollectionCreated(title: String, sessions: List<Session>) {
             super.onCollectionCreated(title, sessions)
-            showSavedSnackbar(sessions.size)
+            scrollToCollections(sessions.size)
+            animateTopCollection()
         }
 
         override fun onTabsAdded(
@@ -720,7 +765,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             sessions: List<Session>
         ) {
             super.onTabsAdded(tabCollection, sessions)
-            showSavedSnackbar(sessions.size)
+            scrollToCollections(sessions.size)
         }
 
         override fun onCollectionRenamed(
@@ -755,6 +800,11 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     companion object {
+        private const val NON_TAB_ITEM_NUM = 3
+        private const val ANIM_SCROLL_DELAY = 100L
+        private const val ANIM_ON_SCREEN_DELAY = 200L
+        private const val FADE_ANIM_DURATION = 150L
+        private const val ANIM_SNACKBAR_DELAY = 500L
         private const val SHARED_TRANSITION_MS = 200L
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         private const val toolbarPaddingDp = 12f
