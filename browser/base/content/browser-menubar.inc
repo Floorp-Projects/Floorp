@@ -315,9 +315,7 @@
                           hidden="true"
                           label="&bidiSwitchPageDirectionItem.label;"
                           accesskey="&bidiSwitchPageDirectionItem.accesskey;"
-                          oncommand="gBrowser.selectedBrowser
-                                             .messageManager
-                                             .sendAsyncMessage('SwitchDocumentDirection');"/>
+                          oncommand="gBrowser.selectedBrowser.sendMessageToActor('SwitchDocumentDirection', {}, 'SwitchDocumentDirection', true);"/>
               </menupopup>
             </menu>
 

@@ -1458,7 +1458,7 @@ nsContextMenu.prototype = {
   },
 
   switchPageDirection: function CM_switchPageDirection() {
-    this.browser.messageManager.sendAsyncMessage("SwitchDocumentDirection");
+    gBrowser.selectedBrowser.sendMessageToActor("SwitchDocumentDirection", {}, "SwitchDocumentDirection", true);
   },
 
   mediaCommand: function CM_mediaCommand(command, data) {
