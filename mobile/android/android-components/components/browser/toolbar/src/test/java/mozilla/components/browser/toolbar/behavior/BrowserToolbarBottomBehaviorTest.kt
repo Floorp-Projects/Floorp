@@ -5,14 +5,14 @@
 package mozilla.components.browser.toolbar.behavior
 
 import android.animation.ValueAnimator
-import android.content.Context
+import android.view.Gravity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
-import android.view.Gravity
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.snackbar.Snackbar
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -22,16 +22,13 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class BrowserToolbarBottomBehaviorTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `Starting a nested scroll should cancel an ongoing snap animation`() {
-        val behavior = BrowserToolbarBottomBehavior(context, attrs = null)
+        val behavior = BrowserToolbarBottomBehavior(testContext, attrs = null)
 
         val animator: ValueAnimator = mock()
         behavior.snapAnimator = animator
@@ -51,7 +48,7 @@ class BrowserToolbarBottomBehaviorTest {
 
     @Test
     fun `Behavior should not accept nested scrolls on the horizontal axis`() {
-        val behavior = BrowserToolbarBottomBehavior(context, attrs = null)
+        val behavior = BrowserToolbarBottomBehavior(testContext, attrs = null)
 
         val acceptsNestedScroll = behavior.onStartNestedScroll(
             coordinatorLayout = mock(),
@@ -66,7 +63,7 @@ class BrowserToolbarBottomBehaviorTest {
 
     @Test
     fun `Behavior will snap toolbar up if toolbar is more than 50% visible`() {
-        val behavior = spy(BrowserToolbarBottomBehavior(context, attrs = null))
+        val behavior = spy(BrowserToolbarBottomBehavior(testContext, attrs = null))
 
         val animator: ValueAnimator = mock()
         behavior.snapAnimator = animator
@@ -100,7 +97,7 @@ class BrowserToolbarBottomBehaviorTest {
 
     @Test
     fun `Behavior will snap toolbar down if toolbar is less than 50% visible`() {
-        val behavior = spy(BrowserToolbarBottomBehavior(context, attrs = null))
+        val behavior = spy(BrowserToolbarBottomBehavior(testContext, attrs = null))
 
         val animator: ValueAnimator = mock()
         behavior.snapAnimator = animator
@@ -134,7 +131,7 @@ class BrowserToolbarBottomBehaviorTest {
 
     @Test
     fun `Behavior will apply translation to toolbar for nested scroll`() {
-        val behavior = spy(BrowserToolbarBottomBehavior(context, attrs = null))
+        val behavior = spy(BrowserToolbarBottomBehavior(testContext, attrs = null))
 
         val child = mock<BrowserToolbar>()
         doReturn(100).`when`(child).height
@@ -154,14 +151,14 @@ class BrowserToolbarBottomBehaviorTest {
 
     @Test
     fun `Behavior will position snackbar above toolbar`() {
-        val behavior = BrowserToolbarBottomBehavior(context, attrs = null)
+        val behavior = BrowserToolbarBottomBehavior(testContext, attrs = null)
 
         val toolbar: BrowserToolbar = mock()
         doReturn(4223).`when`(toolbar).id
 
         val layoutParams: CoordinatorLayout.LayoutParams = CoordinatorLayout.LayoutParams(0, 0)
 
-        val snackbarLayout = Snackbar.SnackbarLayout(context)
+        val snackbarLayout = Snackbar.SnackbarLayout(testContext)
         snackbarLayout.layoutParams = layoutParams
 
         behavior.layoutDependsOn(

@@ -4,13 +4,12 @@
 
 package mozilla.components.browser.toolbar.edit
 
-import android.content.Context
 import android.graphics.Rect
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
@@ -20,6 +19,7 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.junit.Assert
 import org.junit.Assert.assertEquals
@@ -30,17 +30,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
-import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.CountDownLatch
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class EditToolbarTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `entered text is forwarded to async autocomplete filter`() {
-        val toolbar = BrowserToolbar(context)
+        val toolbar = BrowserToolbar(testContext)
         toolbar.editToolbar.urlView.onAttachedToWindow()
 
         val latch = CountDownLatch(1)
@@ -67,7 +64,7 @@ class EditToolbarTest {
         var listenerInvoked = false
         var value = false
 
-        val toolbar = BrowserToolbar(context)
+        val toolbar = BrowserToolbar(testContext)
         toolbar.setOnEditFocusChangeListener { hasFocus ->
             listenerInvoked = true
             value = hasFocus
@@ -91,7 +88,7 @@ class EditToolbarTest {
     @Test
     fun `entering text emits commit fact`() {
         CollectionProcessor.withFactCollection { facts ->
-            val toolbar = BrowserToolbar(context)
+            val toolbar = BrowserToolbar(testContext)
             toolbar.editToolbar.urlView.onAttachedToWindow()
 
             assertEquals(0, facts.size)
@@ -124,7 +121,7 @@ class EditToolbarTest {
     @Test
     fun `entering text emits commit fact with autocomplete metadata`() {
         CollectionProcessor.withFactCollection { facts ->
-            val toolbar = BrowserToolbar(context)
+            val toolbar = BrowserToolbar(testContext)
             toolbar.editToolbar.urlView.onAttachedToWindow()
 
             assertEquals(0, facts.size)
@@ -168,7 +165,7 @@ class EditToolbarTest {
     @Test
     fun `clearView gone on init`() {
         val toolbar = mock(BrowserToolbar::class.java)
-        val editToolbar = EditToolbar(context, toolbar)
+        val editToolbar = EditToolbar(testContext, toolbar)
         val clearView = extractClearView(editToolbar)
         assertTrue(clearView.visibility == View.GONE)
     }
@@ -176,7 +173,7 @@ class EditToolbarTest {
     @Test
     fun `clearView clears text in urlView`() {
         val toolbar = mock(BrowserToolbar::class.java)
-        val editToolbar = EditToolbar(context, toolbar)
+        val editToolbar = EditToolbar(testContext, toolbar)
         val clearView = extractClearView(editToolbar)
 
         editToolbar.urlView.setText("https://www.mozilla.org")
@@ -190,7 +187,7 @@ class EditToolbarTest {
     @Test
     fun `fun updateClearViewVisibility updates clearView`() {
         val toolbar = mock(BrowserToolbar::class.java)
-        val editToolbar = EditToolbar(context, toolbar)
+        val editToolbar = EditToolbar(testContext, toolbar)
         val clearView = extractClearView(editToolbar)
 
         editToolbar.updateClearViewVisibility("")
@@ -202,7 +199,7 @@ class EditToolbarTest {
 
     @Test
     fun `clearView changes image color filter on update`() {
-        val toolbar = BrowserToolbar(context)
+        val toolbar = BrowserToolbar(testContext)
         val editToolbar = toolbar.editToolbar
         editToolbar.clearViewColor = R.color.photonBlue40
 
@@ -212,7 +209,7 @@ class EditToolbarTest {
     @Test
     fun `WHEN edit actions are added THEN views are measured correctly`() {
         val toolbar: BrowserToolbar = mock()
-        val editToolbar = EditToolbar(context, toolbar)
+        val editToolbar = EditToolbar(testContext, toolbar)
 
         editToolbar.addEditAction(BrowserToolbar.Button(mock(), "Microphone") {})
         editToolbar.addEditAction(BrowserToolbar.Button(mock(), "QR code scanner") {})
@@ -249,7 +246,7 @@ class EditToolbarTest {
     @Test
     fun `WHEN edit actions are added THEN views are layout correctly`() {
         val toolbar: BrowserToolbar = mock()
-        val editToolbar = EditToolbar(context, toolbar)
+        val editToolbar = EditToolbar(testContext, toolbar)
 
         editToolbar.addEditAction(BrowserToolbar.Button(mock(), "Microphone") {})
         editToolbar.addEditAction(BrowserToolbar.Button(mock(), "QR code scanner") {})
