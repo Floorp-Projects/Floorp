@@ -206,4 +206,60 @@ tracking_protection</td>
 </table>
 </pre>
 
+## find_in_page
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>opened</td>
+        <td>event</td>
+        <td>A user opened the find in page UI</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010">link</a></td>
+        <td>
+        </td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>closed</td>
+        <td>event</td>
+        <td>A user closed the find in page UI</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>next_result</td>
+        <td>event</td>
+        <td>A user clicked the "next result" button</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>previous_result</td>
+        <td>event</td>
+        <td>A user clicked the "previous result" button</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>searched_page</td>
+        <td>event</td>
+        <td>A user searched the page</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
+
 ## Metrics
