@@ -479,6 +479,13 @@ class HuffmanPreludeReader {
         : identity(identity) {}
   };
 
+  // Grammar entries for values that are represented by indexed in a set
+  // specified by the grammar, e.g booleans, string enums, sums etc
+  struct EntryIndexed : EntryBase {
+    explicit EntryIndexed(const NormalizedInterfaceAndField identity)
+        : EntryBase(identity) {}
+  };
+
   // A string.
   // May be a literal string, identifier name or property key. May not be null.
   struct String : EntryBase {
@@ -508,17 +515,12 @@ class HuffmanPreludeReader {
   };
 
   // A boolean. May not be null.
-  struct Boolean : EntryBase {
-    // The C++ type of values for this grammar type.
-    using Type = bool;
+  struct Boolean : EntryIndexed {
+    using SymbolType = bool;
+    using Table = HuffmanTableIndexedSymbolsBool;
 
-    Boolean(const NormalizedInterfaceAndField identity) : EntryBase(identity) {}
-
-    // The max number of symbols in a table for this type.
-    size_t maxMumberOfSymbols() const {
-      // Sadly, to this day, there are only two known booleans.
-      return 2;
-    }
+    Boolean(const NormalizedInterfaceAndField identity)
+        : EntryIndexed(identity) {}
   };
 
   // A field encoding a lazy offset.
@@ -545,15 +547,14 @@ class HuffmanPreludeReader {
   };
 
   // An optional value of a given interface.
-  struct MaybeInterface : EntryBase {
-    // The C++ type of values for this grammar type.
-    using Type = Nullable;
-
+  struct MaybeInterface : EntryIndexed {
+    using SymbolType = Nullable;
+    using Table = HuffmanTableIndexedSymbolsMaybeInterface;
     // The kind of the interface.
     const BinASTKind kind;
 
     MaybeInterface(const NormalizedInterfaceAndField identity, BinASTKind kind)
-        : EntryBase(identity), kind(kind) {}
+        : EntryIndexed(identity), kind(kind) {}
 
     // The max number of symbols in a table for this type.
     size_t maxMumberOfSymbols() const { return 2; }
@@ -589,11 +590,11 @@ class HuffmanPreludeReader {
   };
 
   // A choice between several interfaces. May not be null.
-  struct Sum : EntryBase {
+  struct Sum : EntryIndexed {
     // The type of values in the sum.
     const BinASTSum contents;
     Sum(const NormalizedInterfaceAndField identity, const BinASTSum contents)
-        : EntryBase(identity), contents(contents) {}
+        : EntryIndexed(identity), contents(contents) {}
 
     // Utility struct, used in macros to call the constructor as
     // `Sum::Maker(kind)(identity)`.
@@ -720,51 +721,45 @@ class HuffmanPreludeReader {
   }
 
   // Read a single symbol.
+  // For an indexed type, the symbol is fetched from the grammar using `index`.
+  // We have a guarantee that `index` is always in [0, numberOfSymbols).
   template <typename Entry>
-  MOZ_MUST_USE JS::Result<typename Entry::Type> readSymbol();
+  MOZ_MUST_USE JS::Result<typename Entry::SymbolType> readSymbol(Entry type,
+                                                                 size_t index);
+
+  // Read the number of symbols in an entry.
+  // For an indexed type, theis number is fetched from the grammar.
+  // We have a guarantee that `index` is always in [0, numberOfSymbols)
+  template <typename Entry>
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(Entry type);
 
   // Read a table in the optimized "only one value" format.
-  template <typename Table, typename Entry>
-  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable(Table& table, Entry entry);
+  template <typename Entry>
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable(typename Entry::Table& table,
+                                                   Entry entry);
 
   // Read a table in the non-optimized format.
   //
   // Entries in the table are represented in an order that is specific to each
   // type. See the documentation of each `EntryMatcher::operator()` for a
   // discussion on each order.
-  template <typename Table, typename Entry>
-  MOZ_MUST_USE JS::Result<Ok> readMultipleValuesTable(Table& table, Entry entry,
-                                                      size_t numberOfSymbols);
+  template <typename Entry>
+  MOZ_MUST_USE JS::Result<Ok> readMultipleValuesTable(
+      typename Entry::Table& table, Entry entry) {
+    // Get the number of symbols.
+    // If `Entry` is an indexed type, this is fetched from the grammar.
+    BINJS_MOZ_TRY_DECL(numberOfSymbols, readNumberOfSymbols<Entry>(entry));
 
-  // -- Reading tables of booleans
-  // 0 -> False
-  // anything else -> True
+    MOZ_ASSERT(numberOfSymbols <= MAX_NUMBER_OF_SYMBOLS);
 
-  template <>
-  MOZ_MUST_USE JS::Result<Ok>
-  readSingleValueTable<HuffmanTableIndexedSymbolsBool, Boolean>(
-      HuffmanTableIndexedSymbolsBool& table, Boolean entry) {
-    uint8_t indexByte;
-    MOZ_TRY_VAR(indexByte, reader.readByte());
-    if (indexByte >= 2) {
-      // Sadly, to this day, there are only two known booleans.
-      return raiseInvalidTableData(entry.identity);
-    }
+    // Data is presented in an order that doesn't match our memory
+    // representation, so we need to copy `numberOfSymbols` entries.
+    // We use an auxiliary vector to avoid allocating each time.
+    MOZ_ASSERT(
+        auxStorageBitLengths.empty());  // We must have cleaned it up properly.
+    BINJS_TRY(auxStorageBitLengths.reserve(numberOfSymbols + 1));
 
-    MOZ_TRY(table.impl.initWithSingleValue(cx_, indexByte != 0));
-    return Ok();
-  }
-  template <>
-  MOZ_MUST_USE JS::Result<Ok>
-  readMultipleValuesTable<HuffmanTableIndexedSymbolsBool, Boolean>(
-      HuffmanTableIndexedSymbolsBool& table, Boolean entry,
-      size_t numberOfSymbols) {
-    if (numberOfSymbols > 2) {
-      // Sadly, to this day, there are only two known booleans.
-      return raiseInvalidTableData(entry.identity);
-    }
-
-    MOZ_TRY(table.impl.initBegin(cx_, numberOfSymbols));
+    // First read the bit lengths for all symbols.
     for (size_t i = 0; i < numberOfSymbols; ++i) {
       BINJS_MOZ_TRY_DECL(bitLength, reader.readByte());
       if (bitLength == 0) {
@@ -790,7 +785,9 @@ class HuffmanPreludeReader {
         return raiseInvalidTableData(entry.identity);
       }
 
-      BINJS_MOZ_TRY_DECL(symbol, readSymbol<Entry>());
+      // Read the symbol.
+      // If `Entry` is an indexed type, it is fetched directly from the grammar.
+      BINJS_MOZ_TRY_DECL(symbol, readSymbol<Entry>(entry, i));
 
       MOZ_TRY(table.impl.addSymbol(code, bitLength, std::move(symbol)));
 
@@ -801,7 +798,7 @@ class HuffmanPreludeReader {
     return Ok();
   }
 
-  template <typename Table, typename Entry>
+  template <typename Entry>
   MOZ_MUST_USE JS::Result<Ok> readTable(Entry entry) {
     HuffmanTable& table = dictionary.tableForField(entry.identity);
     if (!table.is<HuffmanTableUnreachable>()) {
@@ -814,25 +811,20 @@ class HuffmanPreludeReader {
     switch (headerByte) {
       case TableHeader::SingleValue: {
         // Construct in-place.
-        table = {mozilla::VariantType<Table>{}, cx_};
-        auto& tableRef = table.as<Table>();
+        table = {mozilla::VariantType<typename Entry::Table>{}, cx_};
+        auto& tableRef = table.as<typename Entry::Table>();
 
         // The table contains a single value.
-        MOZ_TRY((readSingleValueTable<Table, Entry>(tableRef, entry)));
+        MOZ_TRY((readSingleValueTable<Entry>(tableRef, entry)));
         return Ok();
       }
       case TableHeader::MultipleValues: {
         // Table contains multiple values.
-        // Read and validate length.
-        BINJS_MOZ_TRY_DECL(numberOfSymbols, reader.readVarU32());
-        if (numberOfSymbols > entry.maxMumberOfSymbols()) {
-          return raiseInvalidTableData(entry.identity);
-        }
         // Construct in-place.
-        table = {mozilla::VariantType<Table>{}, cx_};
-        auto& tableRef = table.as<Table>();
-        MOZ_TRY((readMultipleValuesTable<Table, Entry>(tableRef, entry,
-                                                       numberOfSymbols)));
+        table = {mozilla::VariantType<typename Entry::Table>{}, cx_};
+        auto& tableRef = table.as<typename Entry::Table>();
+
+        MOZ_TRY((readMultipleValuesTable<Entry>(tableRef, entry)));
         return Ok();
       }
       case TableHeader::Unreachable:
@@ -843,22 +835,28 @@ class HuffmanPreludeReader {
     }
   }
 
-  // Reading a single boolean.
+  // ------ Reading booleans.
   // 0 -> False
-  // _ -> True
+  // 1 -> True
+
+  // Extract the number of symbols from the grammar.
   template <>
-  MOZ_MUST_USE JS::Result<bool> readSymbol<Boolean>() {
-    BINJS_MOZ_TRY_DECL(symbol, reader.readByte());
-    return symbol != 0;
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(Boolean) {
+    // Sadly, there are only two booleans known to this date.
+    return 2;
   }
 
-  // Reading tables of booleans
-  // 0 -> False
-  // _ -> True
+  // Extract symbol from the grammar.
   template <>
-  MOZ_MUST_USE JS::Result<Ok>
-  readSingleValueTable<HuffmanTableIndexedSymbolsBool, Boolean>(
-      HuffmanTableIndexedSymbolsBool& table, Boolean entry) {
+  MOZ_MUST_USE JS::Result<bool> readSymbol(Boolean, size_t index) {
+    MOZ_ASSERT(index < 2);
+    return index != 0;
+  }
+
+  // Reading a single-value table of booleans
+  template <>
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<Boolean>(
+      Boolean::Table& table, Boolean entry) {
     uint8_t indexByte;
     MOZ_TRY_VAR(indexByte, reader.readByte());
     if (indexByte >= 2) {
@@ -869,22 +867,28 @@ class HuffmanPreludeReader {
     return Ok();
   }
 
-  // Reading a single `Foo?` where `Foo` is an interface.
-  // 0 -> null
-  // 1 -> Foo
+  // ------ Optional interfaces.
+  // 0 -> Null
+  // 1 -> NonNull
+
+  // Extract the number of symbols from the grammar.
   template <>
-  MOZ_MUST_USE JS::Result<Nullable> readSymbol<MaybeInterface>() {
-    BINJS_MOZ_TRY_DECL(symbol, reader.readByte());
-    return symbol == 0 ? Nullable::Null : Nullable::NonNull;
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(MaybeInterface) {
+    // Null, NonNull
+    return 2;
   }
 
-  // Reading a table for `Foo?` where `Foo` is an interface.
-  // 0 -> null
-  // 1 -> Foo
+  // Extract symbol from the grammar.
   template <>
-  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<
-      HuffmanTableIndexedSymbolsMaybeInterface, MaybeInterface>(
-      HuffmanTableIndexedSymbolsMaybeInterface& table, MaybeInterface entry) {
+  MOZ_MUST_USE JS::Result<Nullable> readSymbol(MaybeInterface, size_t index) {
+    MOZ_ASSERT(index < 2);
+    return index == 0 ? Nullable::Null : Nullable::NonNull;
+  }
+
+  // Reading a single-value table of optional interfaces
+  template <>
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<MaybeInterface>(
+      MaybeInterface::Table& table, MaybeInterface entry) {
     uint8_t indexByte;
     MOZ_TRY_VAR(indexByte, reader.readByte());
     if (indexByte >= 2) {
@@ -919,7 +923,7 @@ class HuffmanPreludeReader {
     // Boolean.
     // Values: [false, true], in this order.
     MOZ_MUST_USE JS::Result<Ok> operator()(const Boolean& entry) {
-      return owner.readTable<HuffmanTableIndexedSymbolsBool, Boolean>(entry);
+      return owner.readTable<Boolean>(entry);
     }
 
     // Interface.
@@ -934,8 +938,7 @@ class HuffmanPreludeReader {
     // Values: [null, non-null].
     MOZ_MUST_USE JS::Result<Ok> operator()(const MaybeInterface& entry) {
       // First, we need a table to determine whether the value is `null`.
-      MOZ_TRY((owner.readTable<HuffmanTableIndexedSymbolsMaybeInterface,
-                               MaybeInterface>(entry)));
+      MOZ_TRY((owner.readTable<MaybeInterface>(entry)));
 
       // Then, if the table contains `true`, we need the fields of the
       // interface.
