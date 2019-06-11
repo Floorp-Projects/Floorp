@@ -164,11 +164,28 @@ inline void JSScript::setBaselineScript(
     JSRuntime* rt, js::jit::BaselineScript* baselineScript) {
   if (hasBaselineScript()) {
     js::jit::BaselineScript::writeBarrierPre(zone(), baseline);
+    clearBaselineScript();
   }
   MOZ_ASSERT(!ion || ion == ION_DISABLED_SCRIPT);
+
   baseline = baselineScript;
+  if (hasBaselineScript()) {
+    AddCellMemory(this, baseline->allocBytes(), js::MemoryUse::BaselineScript);
+  }
   resetWarmUpResetCounter();
   updateJitCodeRaw(rt);
+}
+
+inline void JSScript::clearBaselineScript() {
+  MOZ_ASSERT(hasBaselineScript());
+  RemoveCellMemory(this, baseline->allocBytes(), js::MemoryUse::BaselineScript);
+  baseline = nullptr;
+}
+
+inline void JSScript::clearIonScript() {
+  MOZ_ASSERT(hasIonScript());
+  RemoveCellMemory(this, ion->allocBytes(), js::MemoryUse::IonScript);
+  ion = nullptr;
 }
 
 inline bool JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx) {
