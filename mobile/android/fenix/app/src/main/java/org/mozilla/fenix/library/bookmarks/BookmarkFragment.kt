@@ -133,9 +133,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
     private fun loadInitialBookmarkFolder(currentGuid: String): Job {
         return launch(IO) {
-            currentRoot = withOptionalDesktopFolders(
-                bookmarkStorage()?.getTree(currentGuid)
-            ) as BookmarkNode
+            currentRoot = bookmarkStorage()?.getTree(currentGuid).withOptionalDesktopFolders() as BookmarkNode
 
             launch(Main) {
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot!!))
@@ -365,6 +363,9 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
     override fun onAuthenticated(account: OAuthAccount) {
         getManagedEmitter<SignInChange>().onNext(SignInChange.SignedIn)
+        launch {
+            refreshBookmarks()
+        }
     }
 
     override fun onError(error: Exception) {
@@ -389,7 +390,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     }
 
     private suspend fun refreshBookmarks() {
-        withOptionalDesktopFolders(bookmarkStorage()?.getTree(currentRoot!!.guid, false))
+        bookmarkStorage()?.getTree(currentRoot!!.guid, false).withOptionalDesktopFolders()
             ?.let { node ->
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(node))
             }
@@ -402,60 +403,61 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     }
 
     @SuppressWarnings("ReturnCount")
-    private suspend fun withOptionalDesktopFolders(node: BookmarkNode?): BookmarkNode? {
+    private suspend fun BookmarkNode?.withOptionalDesktopFolders(): BookmarkNode? {
         // No-op if node is missing.
-        if (node == null) {
+        if (this == null) {
             return null
         }
 
-        // If we're in the mobile root, add-in a synthetic "Desktop Bookmarks" folder.
-        if (node.guid == BookmarkRoot.Mobile.id) {
+        // If we're in the mobile root and logged in, add-in a synthetic "Desktop Bookmarks" folder.
+        if (this.guid == BookmarkRoot.Mobile.id &&
+            activity?.components?.backgroundServices?.accountManager?.authenticatedAccount() != null) {
             // We're going to make a copy of the mobile node, and add-in a synthetic child folder to the top of the
             // children's list that contains all of the desktop roots.
             val childrenWithVirtualFolder: MutableList<BookmarkNode> = mutableListOf()
             virtualDesktopFolder()?.let { childrenWithVirtualFolder.add(it) }
 
-            node.children?.let { children ->
+            this.children?.let { children ->
                 childrenWithVirtualFolder.addAll(children)
             }
 
             return BookmarkNode(
-                type = node.type,
-                guid = node.guid,
-                parentGuid = node.parentGuid,
-                position = node.position,
-                title = node.title,
-                url = node.url,
+                type = this.type,
+                guid = this.guid,
+                parentGuid = this.parentGuid,
+                position = this.position,
+                title = this.title,
+                url = this.url,
                 children = childrenWithVirtualFolder
             )
 
             // If we're looking at the root, that means we're in the "Desktop Bookmarks" folder.
             // Rename its child roots and remove the mobile root.
-        } else if (node.guid == BookmarkRoot.Root.id) {
+        } else if (this.guid == BookmarkRoot.Root.id) {
             return BookmarkNode(
-                type = node.type,
-                guid = node.guid,
-                parentGuid = node.parentGuid,
-                position = node.position,
-                title = rootTitles[node.title],
-                url = node.url,
-                children = processDesktopRoots(node.children)
+                type = this.type,
+                guid = this.guid,
+                parentGuid = this.parentGuid,
+                position = this.position,
+                title = rootTitles[this.title],
+                url = this.url,
+                children = processDesktopRoots(this.children)
             )
             // If we're looking at one of the desktop roots, change their titles to friendly names.
-        } else if (node.guid in listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id)) {
+        } else if (this.guid in listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id)) {
             return BookmarkNode(
-                type = node.type,
-                guid = node.guid,
-                parentGuid = node.parentGuid,
-                position = node.position,
-                title = rootTitles[node.title],
-                url = node.url,
-                children = node.children
+                type = this.type,
+                guid = this.guid,
+                parentGuid = this.parentGuid,
+                position = this.position,
+                title = rootTitles[this.title],
+                url = this.url,
+                children = this.children
             )
         }
 
         // Otherwise, just return the node as-is.
-        return node
+        return this
     }
 
     private suspend fun virtualDesktopFolder(): BookmarkNode? {
