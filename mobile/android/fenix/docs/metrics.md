@@ -140,6 +140,39 @@ tracking_protection</td>
 </table>
 </pre>
 
-#### app_opened
+## crash_reporter
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>opened</td>
+        <td>event</td>
+        <td>The crash reporter was displayed</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>closed</td>
+        <td>event</td>
+        <td>The crash reporter was closed</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673">link</a></td>
+        <td>
+            <table>
+                <tr><td>crash_submitted</td><td>A boolean that tells us whether or not the user submitted a crash report</td></tr>
+            </table>
+        </td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
 
 ## Metrics
