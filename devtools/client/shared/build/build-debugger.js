@@ -71,6 +71,7 @@ const VENDORS = [
 const moduleMapping = {
   Telemetry: "devtools/client/shared/telemetry",
   asyncStorage: "devtools/shared/async-storage",
+  PluralForm: "devtools/shared/plural-form",
 };
 
 /*
