@@ -495,9 +495,14 @@ def target_tasks_nightly_geckoview(full_task_graph, parameters, graph_config):
     maven.mozilla.org."""
 
     def filter(task):
-        # XXX Starting 69, we don't ship Fennec Nightly anymore. We just want geckoview to be
-        # uploaded
-        return task.kind == 'beetmover-geckoview' and task.attributes.get('release-type') == 'beta'
+        # XXX Starting 69, we don't ship Fennec Nightly anymore. We just want geckoview and
+        # its symbols to be uploaded
+        return (
+            task.attributes.get('release-type') == 'beta' and
+            # XXX The shippable geckoview beta are flagged as "nightly"
+            task.attributes.get('nightly') is True and
+            task.kind in ('beetmover-geckoview', 'upload-symbols')
+        )
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
