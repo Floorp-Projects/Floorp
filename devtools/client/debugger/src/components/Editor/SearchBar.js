@@ -33,6 +33,7 @@ import type { Modifiers, SearchResults } from "../../reducers/file-search";
 import SearchInput from "../shared/SearchInput";
 import { debounce } from "lodash";
 import "./SearchBar.css";
+import { PluralForm } from "devtools-modules";
 
 import type SourceEditor from "../../utils/editor/source-editor";
 
@@ -239,10 +240,14 @@ class SearchBar extends Component<Props, State> {
     }
 
     if (index == -1) {
-      return L10N.getFormatStr("sourceSearch.resultsSummary1", count);
+      const resultsSummaryString = L10N.getStr("sourceSearch.resultsSummary1");
+      return PluralForm.get(count, resultsSummaryString).replace("#1", count);
     }
 
-    return L10N.getFormatStr("editor.searchResults", matchIndex + 1, count);
+    const searchResultsString = L10N.getStr("editor.searchResults1");
+    return PluralForm.get(count, searchResultsString)
+      .replace("#1", count)
+      .replace("%d", matchIndex + 1);
   }
 
   renderSearchModifiers = () => {
