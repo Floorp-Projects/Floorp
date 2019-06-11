@@ -3583,15 +3583,16 @@ VARCACHE_PREF(
 #ifdef MOZ_DUMP_PAINTING
 VARCACHE_PREF(
   Live,
-  "layers.dump-client-layers",
-  DumpClientLayers,
+  "layers.dump-decision",
+  LayersDumpDecision,
   RelaxedAtomicBool, false
 )
+#endif
 
 VARCACHE_PREF(
   Live,
-  "layers.dump-decision",
-  LayersDumpDecision,
+  "layers.dump-client-layers",
+  DumpClientLayers,
   RelaxedAtomicBool, false
 )
 
@@ -3601,7 +3602,6 @@ VARCACHE_PREF(
   DumpHostLayers,
   RelaxedAtomicBool, false
 )
-#endif
 
 // 0 is "no change" for contrast, positive values increase it, negative values
 // decrease it until we hit mid gray at -1 contrast, after that it gets weird.

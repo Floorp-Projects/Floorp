@@ -10,8 +10,6 @@ IPDL_SOURCES += [
     'PRDD.ipdl',
     'PRemoteDecoder.ipdl',
     'PRemoteDecoderManager.ipdl',
-    'PVideoDecoder.ipdl',
-    'PVideoDecoderManager.ipdl',
 ]
 
 EXPORTS.mozilla += [
@@ -28,10 +26,6 @@ EXPORTS.mozilla += [
     'RemoteDecoderModule.h',
     'RemoteDecoderParent.h',
     'RemoteMediaDataDecoder.h',
-    'VideoDecoderChild.h',
-    'VideoDecoderManagerChild.h',
-    'VideoDecoderManagerParent.h',
-    'VideoDecoderParent.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -53,10 +47,6 @@ SOURCES += [
     'RemoteDecoderParent.cpp',
     'RemoteMediaDataDecoder.cpp',
     'RemoteVideoDecoder.cpp',
-    'VideoDecoderChild.cpp',
-    'VideoDecoderManagerChild.cpp',
-    'VideoDecoderManagerParent.cpp',
-    'VideoDecoderParent.cpp',
 ]
 
 # so we can include nsMacUtilsImpl.h in RDDParent.cpp for sandboxing

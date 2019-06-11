@@ -404,12 +404,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     weakCaches().insertBack(cachep);
   }
 
-  void delegatePreWriteBarrier(JSObject* obj, JSObject* delegate) {
-    if (needsIncrementalBarrier()) {
-      delegatePreWriteBarrierInternal(obj, delegate);
-    }
-  }
-
  private:
   /*
    * Mapping from not yet marked keys to a vector of all values that the key
@@ -420,13 +414,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::ZoneOrGCTaskData<js::gc::WeakKeyTable> gcNurseryWeakKeys_;
 
  public:
-  void delegatePreWriteBarrierInternal(JSObject* obj, JSObject* delegate);
   js::gc::WeakKeyTable& gcWeakKeys() { return gcWeakKeys_.ref(); }
   js::gc::WeakKeyTable& gcNurseryWeakKeys() { return gcNurseryWeakKeys_.ref(); }
-
-  js::gc::WeakKeyTable& gcWeakKeys(const js::gc::Cell* cell) {
-    return cell->isTenured() ? gcWeakKeys() : gcNurseryWeakKeys();
-  }
 
   // A set of edges from this zone to other zones used during GC to calculate
   // sweep groups.

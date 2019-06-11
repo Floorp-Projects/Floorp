@@ -17,8 +17,8 @@
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/VideoDecoderManagerChild.h"
-#include "mozilla/VideoDecoderManagerParent.h"
+#include "mozilla/RemoteDecoderManagerChild.h"
+#include "mozilla/RemoteDecoderManagerParent.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -413,9 +413,9 @@ mozilla::ipc::IPCResult GPUParent::RecvNewContentVRManager(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult GPUParent::RecvNewContentVideoDecoderManager(
-    Endpoint<PVideoDecoderManagerParent>&& aEndpoint) {
-  if (!VideoDecoderManagerParent::CreateForContent(std::move(aEndpoint))) {
+mozilla::ipc::IPCResult GPUParent::RecvNewContentRemoteDecoderManager(
+    Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) {
+  if (!RemoteDecoderManagerParent::CreateForContent(std::move(aEndpoint))) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -510,7 +510,7 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
     mVsyncBridge->Shutdown();
     mVsyncBridge = nullptr;
   }
-  VideoDecoderManagerParent::ShutdownVideoBridge();
+  RemoteDecoderManagerParent::ShutdownVideoBridge();
   CompositorThreadHolder::Shutdown();
   // There is a case that RenderThread exists when gfxVars::UseWebRender() is
   // false. This could happen when WebRender was fallbacked to compositor.

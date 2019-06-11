@@ -624,15 +624,12 @@ class GCRuntime {
                                                gcstats::PhaseKind phase);
   void drainMarkStack();
   template <class ZoneIterT>
-  IncrementalProgress markWeakReferences(gcstats::PhaseKind phase,
-                                         SliceBudget& budget);
-  IncrementalProgress markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase,
-                                                       SliceBudget& budget);
+  void markWeakReferences(gcstats::PhaseKind phase);
+  void markWeakReferencesInCurrentGroup(gcstats::PhaseKind phase);
   template <class ZoneIterT>
   void markGrayRoots(gcstats::PhaseKind phase);
   void markBufferedGrayRoots(JS::Zone* zone);
-  IncrementalProgress markAllWeakReferences(gcstats::PhaseKind phase,
-                                            SliceBudget& budget);
+  void markAllWeakReferences(gcstats::PhaseKind phase);
   void markAllGrayReferences(gcstats::PhaseKind phase);
 
   void beginSweepPhase(JS::GCReason reason, AutoGCSession& session);

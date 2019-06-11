@@ -15,8 +15,12 @@ fuzzy-if(Android,0-45,0-27) skip-if(!Android) pref(apz.allow_zooming,true) == as
 
 # Test scrollbars working properly with pinch-zooming, i.e. different document resolutions.
 # As above, the end of the scrollthumb won't match perfectly, but the bulk of the scrollbar should be present and identical.
-fuzzy-if(Android,0-54,0-14) skip-if(!Android) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-1.html scrollbar-zoom-resolution-1-ref.html
-fuzzy-if(Android,0-51,0-22) skip-if(!Android) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-2.html scrollbar-zoom-resolution-2-ref.html
+# On desktop, even more fuzz is needed because thumb scaling is not exactly proportional: making the page twice as long 
+# won't make the thumb exactly twice as short, which is what the test expects. That's fine, as the purpose of the test is
+# to catch more fundamental scrollbar rendering bugs such as the entire track being mispositioned or the thumb being
+# clipped away.
+fuzzy-if(Android,0-54,0-14) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-1.html scrollbar-zoom-resolution-1-ref.html
+fuzzy-if(Android,0-51,0-22) fails-if(!Android) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-2.html scrollbar-zoom-resolution-2-ref.html
 
 # Meta-viewport tag support
 skip-if(!Android) pref(apz.allow_zooming,true) == initial-scale-1.html initial-scale-1-ref.html
@@ -25,9 +29,5 @@ skip-if(!asyncPan) == frame-reconstruction-scroll-clamping.html frame-reconstruc
 
 # Test that position:fixed and position:sticky elements are attached to the
 # layout viewport.
-#
-# We skip these tests on Desktop platforms since they require container
-# scrolling, which is enabled by default on Android, but behind a "Once" pref
-# and cannot be enabled for individual reftests.
-skip-if(!Android) pref(apz.allow_zooming,true) == pinch-zoom-position-fixed.html pinch-zoom-position-fixed-ref.html
-skip-if(!Android) pref(apz.allow_zooming,true) == pinch-zoom-position-sticky.html pinch-zoom-position-sticky-ref.html
+pref(apz.allow_zooming,true) == pinch-zoom-position-fixed.html pinch-zoom-position-fixed-ref.html
+pref(apz.allow_zooming,true) == pinch-zoom-position-sticky.html pinch-zoom-position-sticky-ref.html

@@ -15,7 +15,7 @@
 
 namespace mozilla {
 namespace dom {
-class VideoDecoderManagerChild;
+class RemoteDecoderManagerChild;
 }
 namespace gl {
 class GLBlitHelper;
@@ -28,7 +28,7 @@ class GPUVideoImage final : public Image {
   friend class gl::GLBlitHelper;
 
  public:
-  GPUVideoImage(VideoDecoderManagerChild* aManager,
+  GPUVideoImage(RemoteDecoderManagerChild* aManager,
                 const SurfaceDescriptorGPUVideo& aSD, const gfx::IntSize& aSize)
       : Image(nullptr, ImageFormat::GPU_VIDEO), mSize(aSize) {
     // Create the TextureClient immediately since the GPUVideoTextureData
