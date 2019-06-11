@@ -108,7 +108,8 @@ enum class ZealMode {
   _(BaselineScript)                        \
   _(IonScript)                             \
   _(ArgumentsData)                         \
-  _(RareArgumentsData)
+  _(RareArgumentsData)                     \
+  _(RegExpStatics)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
