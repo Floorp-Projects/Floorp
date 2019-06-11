@@ -9,17 +9,15 @@
  * @module reducers/fileSearch
  */
 
-import makeRecord from "../utils/makeRecord";
 import { prefs } from "../utils/prefs";
 
 import type { Action } from "../actions/types";
-import type { Record } from "../utils/makeRecord";
 
-export type Modifiers = Record<{
+export type Modifiers = {
   caseSensitive: boolean,
   wholeWord: boolean,
   regexMatch: boolean,
-}>;
+};
 
 export type MatchedLocations = {
   line: number,
@@ -46,27 +44,27 @@ const emptySearchResults = Object.freeze({
   count: 0,
 });
 
-export const createFileSearchState: () => Record<FileSearchState> = makeRecord({
+export const createFileSearchState = () => ({
   query: "",
   searchResults: emptySearchResults,
-  modifiers: makeRecord({
+  modifiers: {
     caseSensitive: prefs.fileSearchCaseSensitive,
     wholeWord: prefs.fileSearchWholeWord,
     regexMatch: prefs.fileSearchRegexMatch,
-  })(),
+  },
 });
 
 function update(
-  state: Record<FileSearchState> = createFileSearchState(),
+  state: FileSearchState = createFileSearchState(),
   action: Action
-): Record<FileSearchState> {
+): FileSearchState {
   switch (action.type) {
     case "UPDATE_FILE_SEARCH_QUERY": {
-      return state.set("query", action.query);
+      return { ...state, query: action.query };
     }
 
     case "UPDATE_SEARCH_RESULTS": {
-      return state.set("searchResults", action.results);
+      return { ...state, searchResults: action.results };
     }
 
     case "TOGGLE_FILE_SEARCH_MODIFIER": {
@@ -84,11 +82,14 @@ function update(
         prefs.fileSearchRegexMatch = actionVal;
       }
 
-      return state.setIn(["modifiers", action.modifier], actionVal);
+      return {
+        ...state,
+        modifiers: { ...state.modifiers, [action.modifier]: actionVal },
+      };
     }
 
     case "NAVIGATE": {
-      return state.set("query", "").set("searchResults", emptySearchResults);
+      return { ...state, query: "", searchResults: emptySearchResults };
     }
 
     default: {
@@ -99,7 +100,7 @@ function update(
 
 // NOTE: we'd like to have the app state fully typed
 // https://github.com/firefox-devtools/debugger/blob/master/src/reducers/sources.js#L179-L185
-type OuterState = { fileSearch: Record<FileSearchState> };
+type OuterState = { fileSearch: FileSearchState };
 
 export function getFileSearchQuery(state: OuterState): string {
   return state.fileSearch.query;

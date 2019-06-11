@@ -79,7 +79,7 @@ class Expressions extends Component<Props, State> {
   componentDidMount() {
     const { cx, expressions, evaluateExpressions, showInput } = this.props;
 
-    if (expressions.size > 0) {
+    if (expressions.length > 0) {
       evaluateExpressions(cx);
     }
 
@@ -377,7 +377,7 @@ class Expressions extends Component<Props, State> {
     return (
       <ul className="pane expressions-list">
         {expressions.map(this.renderExpression)}
-        {(showInput || !expressions.size) && this.renderNewExpressionInput()}
+        {(showInput || !expressions.length) && this.renderNewExpressionInput()}
       </ul>
     );
   }
