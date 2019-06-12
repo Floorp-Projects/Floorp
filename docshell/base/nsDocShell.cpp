@@ -1406,6 +1406,13 @@ nsDocShell::GetHasMixedDisplayContentBlocked(
 }
 
 NS_IMETHODIMP
+nsDocShell::GetHasTrackingContentBlocked(bool* aHasTrackingContentBlocked) {
+  RefPtr<Document> doc(GetDocument());
+  *aHasTrackingContentBlocked = doc && doc->GetHasTrackingContentBlocked();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetAllowPlugins(bool* aAllowPlugins) {
   NS_ENSURE_ARG_POINTER(aAllowPlugins);
 
