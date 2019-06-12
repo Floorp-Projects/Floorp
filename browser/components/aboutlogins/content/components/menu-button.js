@@ -67,7 +67,7 @@ export default class MenuButton extends ReflectedFluentElement {
   }
 
   toggleMenu() {
-    let wasHidden = this.shadowRoot.querySelector(".menu").getAttribute("aria-hidden") == "true";
+    let wasHidden = this.shadowRoot.querySelector(".menu").hidden;
     if (wasHidden) {
       this.showMenu();
     } else {
@@ -76,12 +76,12 @@ export default class MenuButton extends ReflectedFluentElement {
   }
 
   hideMenu() {
-    this.shadowRoot.querySelector(".menu").setAttribute("aria-hidden", "true");
+    this.shadowRoot.querySelector(".menu").hidden = true;
     document.documentElement.removeEventListener("click", this, true);
   }
 
   showMenu() {
-    this.shadowRoot.querySelector(".menu").setAttribute("aria-hidden", "false");
+    this.shadowRoot.querySelector(".menu").hidden = false;
 
     // Add a catch-all event listener to close the menu.
     document.documentElement.addEventListener("click", this, true);
