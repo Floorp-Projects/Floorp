@@ -491,16 +491,6 @@ class BufferGrayRootsTracer final : public JS::CallbackTracer {
 #endif
 };
 
-#ifdef DEBUG
-// Return true if this trace is happening on behalf of gray buffering during
-// the marking phase of incremental GC.
-bool js::IsBufferGrayRootsTracer(JSTracer* trc) {
-  return trc->isCallbackTracer() &&
-         trc->asCallbackTracer()->getTracerKind() ==
-             JS::CallbackTracer::TracerKind::GrayBuffering;
-}
-#endif
-
 void js::gc::GCRuntime::bufferGrayRoots() {
   // Precondition: the state has been reset to "unused" after the last GC
   //               and the zone's buffers have been cleared.
