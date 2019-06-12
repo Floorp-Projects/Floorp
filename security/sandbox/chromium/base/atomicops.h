@@ -39,7 +39,7 @@
 #include "base/base_export.h"
 #include "build/build_config.h"
 
-#if defined(OS_WIN) && defined(ARCH_CPU_64_BITS)
+#if defined(OS_WIN) && (defined(ARCH_CPU_64_BITS) || defined(__MINGW32__))
 // windows.h #defines this (only on x64). This causes problems because the
 // public API also uses MemoryBarrier at the public name for this fence. So, on
 // X64, undef it, and call its documented
@@ -145,8 +145,8 @@ Atomic64 Release_Load(volatile const Atomic64* ptr);
 }  // namespace base
 
 #if defined(OS_WIN) && defined(ARCH_CPU_X86_FAMILY)
-// TODO(jfb): The MSVC header includes windows.h, which other files end up
-//            relying on. Fix this as part of crbug.com/559247.
+// TODO(jfb): Try to use base/atomicops_internals_portable.h everywhere.
+// https://crbug.com/559247.
 #  include "base/atomicops_internals_x86_msvc.h"
 #else
 #  include "base/atomicops_internals_portable.h"

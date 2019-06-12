@@ -12,72 +12,6 @@
 // This file contains definitions required for things dynamically loaded
 // while building or targetting lower platform versions or lower SDKs.
 
-#if (_WIN32_WINNT < 0x0600)
-typedef struct _STARTUPINFOEXA {
-    STARTUPINFOA StartupInfo;
-    LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList;
-} STARTUPINFOEXA, *LPSTARTUPINFOEXA;
-typedef struct _STARTUPINFOEXW {
-    STARTUPINFOW StartupInfo;
-    LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList;
-} STARTUPINFOEXW, *LPSTARTUPINFOEXW;
-#ifdef UNICODE
-typedef STARTUPINFOEXW STARTUPINFOEX;
-typedef LPSTARTUPINFOEXW LPSTARTUPINFOEX;
-#else
-typedef STARTUPINFOEXA STARTUPINFOEX;
-typedef LPSTARTUPINFOEXA LPSTARTUPINFOEX;
-#endif // UNICODE
-
-#define PROC_THREAD_ATTRIBUTE_NUMBER    0x0000FFFF
-#define PROC_THREAD_ATTRIBUTE_THREAD    0x00010000  // Attribute may be used with thread creation
-#define PROC_THREAD_ATTRIBUTE_INPUT     0x00020000  // Attribute is input only
-#define PROC_THREAD_ATTRIBUTE_ADDITIVE  0x00040000  // Attribute may be "accumulated," e.g. bitmasks, counters, etc.
-
-#define ProcThreadAttributeValue(Number, Thread, Input, Additive) \
-    (((Number) & PROC_THREAD_ATTRIBUTE_NUMBER) | \
-     ((Thread != FALSE) ? PROC_THREAD_ATTRIBUTE_THREAD : 0) | \
-     ((Input != FALSE) ? PROC_THREAD_ATTRIBUTE_INPUT : 0) | \
-     ((Additive != FALSE) ? PROC_THREAD_ATTRIBUTE_ADDITIVE : 0))
-
-#define ProcThreadAttributeHandleList 2
-
-#define PROC_THREAD_ATTRIBUTE_HANDLE_LIST \
-    ProcThreadAttributeValue (ProcThreadAttributeHandleList, FALSE, TRUE, FALSE)
-
-#define PROCESS_DEP_ENABLE                          0x00000001
-#define PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION     0x00000002
-
-// They dynamically load these, but they still use the functions to describe the
-// function pointers!
-WINBASEAPI
-int
-WINAPI
-GetUserDefaultLocaleName(
-    _Out_writes_(cchLocaleName) LPWSTR lpLocaleName,
-    _In_ int cchLocaleName
-);
-
-WINBASEAPI
-BOOL
-WINAPI
-QueryThreadCycleTime(
-    _In_ HANDLE ThreadHandle,
-    _Out_ PULONG64 CycleTime
-    );
-
-#endif // (_WIN32_WINNT >= 0x0600)
-
-#if (_WIN32_WINNT < 0x0601)
-#define ProcThreadAttributeMitigationPolicy 7
-#define PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY \
-    ProcThreadAttributeValue (ProcThreadAttributeMitigationPolicy, FALSE, TRUE, FALSE)
-
-#define PROCESS_CREATION_MITIGATION_POLICY_DEP_ENABLE            0x01
-#define PROCESS_CREATION_MITIGATION_POLICY_DEP_ATL_THUNK_ENABLE  0x02
-#define PROCESS_CREATION_MITIGATION_POLICY_SEHOP_ENABLE          0x04
-#endif // (_WIN32_WINNT >= 0x0601)
-
 #if (_WIN32_WINNT < 0x0602)
 #define ProcThreadAttributeSecurityCapabilities 9
 #define PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES \
@@ -118,6 +52,20 @@ QueryThreadCycleTime(
 #define PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_ON              (0x00000001uLL << 32)
 #define PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_OFF             (0x00000002uLL << 32)
 #define PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_RESERVED               (0x00000003uLL << 32)
+
+typedef struct _MEMORY_PRIORITY_INFORMATION {
+    ULONG MemoryPriority;
+} MEMORY_PRIORITY_INFORMATION, *PMEMORY_PRIORITY_INFORMATION;
+
+WINBASEAPI
+BOOL
+WINAPI
+GetThreadInformation(
+    _In_ HANDLE hThread,
+    _In_ THREAD_INFORMATION_CLASS ThreadInformationClass,
+    _Out_writes_bytes_(ThreadInformationSize) LPVOID ThreadInformation,
+    _In_ DWORD ThreadInformationSize
+    );
 
 WINBASEAPI
 BOOL
@@ -197,6 +145,70 @@ typedef struct _PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY {
 } PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY, *PPROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY;
 
 #endif // NTDDI_WIN8
+
+WINBASEAPI
+BOOL
+WINAPI
+GetProcessMitigationPolicy(
+    _In_ HANDLE hProcess,
+    _In_ PROCESS_MITIGATION_POLICY MitigationPolicy,
+    _Out_writes_bytes_(dwLength) PVOID lpBuffer,
+    _In_ SIZE_T dwLength
+    );
+
+WINBASEAPI
+BOOL
+WINAPI
+SetProcessMitigationPolicy(
+    _In_ PROCESS_MITIGATION_POLICY MitigationPolicy,
+    _In_reads_bytes_(dwLength) PVOID lpBuffer,
+    _In_ SIZE_T dwLength
+    );
+
+#if !defined(_USERENV_)
+#define USERENVAPI DECLSPEC_IMPORT
+#else
+#define USERENVAPI
+#endif
+
+USERENVAPI
+HRESULT
+WINAPI
+CreateAppContainerProfile(_In_ PCWSTR pszAppContainerName,
+                          _In_ PCWSTR pszDisplayName,
+                          _In_ PCWSTR pszDescription,
+                          _In_reads_opt_(dwCapabilityCount)
+                              PSID_AND_ATTRIBUTES pCapabilities,
+                          _In_ DWORD dwCapabilityCount,
+                          _Outptr_ PSID* ppSidAppContainerSid);
+
+USERENVAPI
+HRESULT
+WINAPI
+DeleteAppContainerProfile(
+    _In_ PCWSTR pszAppContainerName);
+
+USERENVAPI
+HRESULT
+WINAPI
+GetAppContainerRegistryLocation(
+    _In_ REGSAM desiredAccess,
+    _Outptr_ PHKEY phAppContainerKey);
+
+USERENVAPI
+HRESULT
+WINAPI
+GetAppContainerFolderPath(
+    _In_ PCWSTR pszAppContainerSid,
+    _Outptr_ PWSTR *ppszPath);
+
+USERENVAPI
+HRESULT
+WINAPI
+DeriveAppContainerSidFromAppContainerName(
+    _In_ PCWSTR pszAppContainerName,
+    _Outptr_ PSID *ppsidAppContainerSid);
+
 #endif // (_WIN32_WINNT < 0x0602)
 
 #if (_WIN32_WINNT < 0x0603)
@@ -278,6 +290,17 @@ typedef struct _PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY {
 #define PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON           (0x00000001uLL << 60)
 #define PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_OFF          (0x00000002uLL << 60)
 #define PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_RESERVED            (0x00000003uLL << 60)
+
+//
+// Define the restricted indirect branch prediction mitigation policy options.
+//
+
+#define PROCESS_CREATION_MITIGATION_POLICY2_RESTRICT_INDIRECT_BRANCH_PREDICTION_MASK        (0x00000003ui64 << 16)
+#define PROCESS_CREATION_MITIGATION_POLICY2_RESTRICT_INDIRECT_BRANCH_PREDICTION_DEFER       (0x00000000ui64 << 16)
+#define PROCESS_CREATION_MITIGATION_POLICY2_RESTRICT_INDIRECT_BRANCH_PREDICTION_ALWAYS_ON   (0x00000001ui64 << 16)
+#define PROCESS_CREATION_MITIGATION_POLICY2_RESTRICT_INDIRECT_BRANCH_PREDICTION_ALWAYS_OFF  (0x00000002ui64 << 16)
+#define PROCESS_CREATION_MITIGATION_POLICY2_RESTRICT_INDIRECT_BRANCH_PREDICTION_RESERVED    (0x00000003ui64 << 16)
+
 //
 // Define Attribute to disable creation of child process
 //
@@ -296,5 +319,34 @@ typedef struct _PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY {
 #define PROC_THREAD_ATTRIBUTE_CHILD_PROCESS_POLICY \
     ProcThreadAttributeValue (ProcThreadAttributeChildProcessPolicy, FALSE, TRUE, FALSE)
 
+//
+// Define Attribute to opt out of matching All Application Packages
+//
+
+#define PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT                                 0x01
+
+#define ProcThreadAttributeAllApplicationPackagesPolicy 15
+
+#define PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY \
+    ProcThreadAttributeValue (ProcThreadAttributeAllApplicationPackagesPolicy, FALSE, TRUE, FALSE)
+
 #endif // (_WIN32_WINNT >= 0x0A00)
+
+#if defined(__MINGW32__)
+// Required defines from winnt.h that are currently missing from MinGW.
+// Bug 1552706 tracks adding these to MinGW, so these can be removed.
+#define MEMORY_PRIORITY_VERY_LOW         1
+#define MEMORY_PRIORITY_NORMAL           5
+
+#define PROCESSOR_ARCHITECTURE_NEUTRAL          11
+#define PROCESSOR_ARCHITECTURE_ARM64            12
+#define PROCESSOR_ARCHITECTURE_ARM32_ON_WIN64   13
+#define PROCESSOR_ARCHITECTURE_IA32_ON_ARM64    14
+
+#define SECURITY_CAPABILITY_APPOINTMENTS                        (0x0000000BL)
+#define SECURITY_CAPABILITY_CONTACTS                            (0x0000000CL)
+
+#define SECURITY_BUILTIN_PACKAGE_ANY_RESTRICTED_PACKAGE (0x00000002L)
+#endif
+
 #endif // _SECURITY_SANDBOX_BASE_SHIM_SDKDECLS_H_

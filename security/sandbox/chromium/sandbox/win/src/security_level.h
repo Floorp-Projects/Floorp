@@ -9,9 +9,21 @@
 
 namespace sandbox {
 
-// List of all the integrity levels supported in the sandbox. This is used
-// only on Windows Vista and newer. You can't set the integrity level of the
-// process in the sandbox to a level higher than yours.
+// List of all the integrity levels supported in the sandbox.
+// The integrity level of the sandboxed process can't be set to a level higher
+// than the broker process.
+//
+// Note: These levels map to SIDs under the hood.
+// INTEGRITY_LEVEL_SYSTEM:      "S-1-16-16384" System Mandatory Level
+// INTEGRITY_LEVEL_HIGH:        "S-1-16-12288" High Mandatory Level
+// INTEGRITY_LEVEL_MEDIUM:      "S-1-16-8192"  Medium Mandatory Level
+// INTEGRITY_LEVEL_MEDIUM_LOW:  "S-1-16-6144"
+// INTEGRITY_LEVEL_LOW:         "S-1-16-4096"  Low Mandatory Level
+// INTEGRITY_LEVEL_BELOW_LOW:   "S-1-16-2048"
+// INTEGRITY_LEVEL_UNTRUSTED:   "S-1-16-0"     Untrusted Mandatory Level
+//
+// Not defined:                 "S-1-16-20480" Protected Process Mandatory Level
+// Not defined:                 "S-1-16-28672" Secure Process Mandatory Level
 enum IntegrityLevel {
   INTEGRITY_LEVEL_SYSTEM,
   INTEGRITY_LEVEL_HIGH,
@@ -70,14 +82,14 @@ enum IntegrityLevel {
 //  broker is process might be started by a user that belongs to the Admins
 //  or power users groups.
 enum TokenLevel {
-   USER_LOCKDOWN = 0,
-   USER_RESTRICTED,
-   USER_LIMITED,
-   USER_INTERACTIVE,
-   USER_NON_ADMIN,
-   USER_RESTRICTED_SAME_ACCESS,
-   USER_UNPROTECTED,
-   USER_LAST
+  USER_LOCKDOWN = 0,
+  USER_RESTRICTED,
+  USER_LIMITED,
+  USER_INTERACTIVE,
+  USER_NON_ADMIN,
+  USER_RESTRICTED_SAME_ACCESS,
+  USER_UNPROTECTED,
+  USER_LAST
 };
 
 // The Job level specifies a set of decreasing security profiles for the
@@ -185,10 +197,15 @@ const MitigationFlags MITIGATION_HIGH_ENTROPY_ASLR = 0x00000080;
 // PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_ALWAYS_ON.
 const MitigationFlags MITIGATION_STRICT_HANDLE_CHECKS = 0x00000100;
 
-// Sets the DLL search order to LOAD_LIBRARY_SEARCH_DEFAULT_DIRS. Additional
-// directories can be added via the Windows AddDllDirectory() function.
-// http://msdn.microsoft.com/en-us/library/windows/desktop/hh310515
-// Must be enabled after startup.
+// Strengthens the DLL search order. See
+// http://msdn.microsoft.com/en-us/library/windows/desktop/hh310515. In a
+// component build - sets this to LOAD_LIBRARY_SEARCH_DEFAULT_DIRS allowing
+// additional directories to be added via Windows AddDllDirectory() function,
+// but preserving current load order. In a non-component build, all DLLs should
+// be loaded manually, so strenthen to LOAD_LIBRARY_SEARCH_SYSTEM32 |
+// LOAD_LIBRARY_SEARCH_USER_DIRS, removing LOAD_LIBRARY_SEARCH_APPLICATION_DIR,
+// preventing DLLs being implicitly loaded from the application path. Must be
+// enabled after startup.
 const MitigationFlags MITIGATION_DLL_SEARCH_ORDER = 0x00000200;
 
 // Changes the mandatory integrity level policy on the current process' token
@@ -254,6 +271,12 @@ const MitigationFlags MITIGATION_IMAGE_LOAD_NO_LOW_LABEL = 0x00080000;
 //   executable search path.
 // PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON.
 const MitigationFlags MITIGATION_IMAGE_LOAD_PREFER_SYS32 = 0x00100000;
+
+// Prevents hyperthreads from interfering with indirect branch predictions.
+// (SPECTRE Variant 2 mitigation.)  Corresponds to
+// PROCESS_CREATION_MITIGATION_POLICY2_RESTRICT_INDIRECT_BRANCH_PREDICTION_ALWAYS_ON.
+const MitigationFlags MITIGATION_RESTRICT_INDIRECT_BRANCH_PREDICTION =
+    0x00200000;
 
 // Begin Mozilla-added flags.
 // Working down from the high bit to avoid conflict with new upstream flags.

@@ -8,14 +8,19 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "base/allocator/partition_allocator/page_allocator.h"
 #include "base/logging.h"
 #include "base/memory/shared_memory_tracker.h"
+#include "base/metrics/histogram_functions.h"
 #include "base/metrics/histogram_macros.h"
 #include "base/rand_util.h"
+#include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/unguessable_token.h"
+#include "base/win/windows_version.h"
 
+namespace base {
 namespace {
 
 // Errors that can occur during Shared Memory construction.
@@ -41,7 +46,7 @@ void LogError(CreateError error, DWORD winerror) {
                             CREATE_ERROR_LAST + 1);
   static_assert(ERROR_SUCCESS == 0, "Windows error code changed!");
   if (winerror != ERROR_SUCCESS)
-    UMA_HISTOGRAM_SPARSE_SLOWLY("SharedMemory.CreateWinError", winerror);
+    UmaHistogramSparse("SharedMemory.CreateWinError", winerror);
 }
 
 typedef enum _SECTION_INFORMATION_CLASS {
@@ -135,8 +140,6 @@ HANDLE CreateFileMappingWithReducedPermissions(SECURITY_ATTRIBUTES* sa,
 
 }  // namespace.
 
-namespace base {
-
 SharedMemory::SharedMemory() {}
 
 SharedMemory::SharedMemory(const string16& name) : name_(name) {}
@@ -177,8 +180,8 @@ bool SharedMemory::CreateAndMapAnonymous(size_t size) {
 }
 
 bool SharedMemory::Create(const SharedMemoryCreateOptions& options) {
-  // TODO(bsy,sehr): crbug.com/210609 NaCl forces us to round up 64k here,
-  // wasting 32k per mapping on average.
+  // TODO(crbug.com/210609): NaCl forces us to round up 64k here, wasting 32k
+  // per mapping on average.
   static const size_t kSectionMask = 65536 - 1;
   DCHECK(!options.executable);
   DCHECK(!shm_.IsValid());
@@ -195,9 +198,9 @@ bool SharedMemory::Create(const SharedMemoryCreateOptions& options) {
   }
 
   size_t rounded_size = (options.size + kSectionMask) & ~kSectionMask;
-  name_ = options.name_deprecated ?
-      ASCIIToUTF16(*options.name_deprecated) : L"";
-  SECURITY_ATTRIBUTES sa = { sizeof(sa), NULL, FALSE };
+  name_ = options.name_deprecated ? ASCIIToUTF16(*options.name_deprecated)
+                                  : string16();
+  SECURITY_ATTRIBUTES sa = {sizeof(sa), nullptr, FALSE};
   SECURITY_DESCRIPTOR sd;
   ACL dacl;
 
@@ -217,17 +220,22 @@ bool SharedMemory::Create(const SharedMemoryCreateOptions& options) {
       return false;
     }
 
-    // Windows ignores DACLs on certain unnamed objects (like shared sections).
-    // So, we generate a random name when we need to enforce read-only.
-    uint64_t rand_values[4];
-    RandBytes(&rand_values, sizeof(rand_values));
-    name_ = StringPrintf(L"CrSharedMem_%016llx%016llx%016llx%016llx",
-                         rand_values[0], rand_values[1],
-                         rand_values[2], rand_values[3]);
+    if (win::GetVersion() < win::VERSION_WIN8_1) {
+      // Windows < 8.1 ignores DACLs on certain unnamed objects (like shared
+      // sections). So, we generate a random name when we need to enforce
+      // read-only.
+      uint64_t rand_values[4];
+      RandBytes(&rand_values, sizeof(rand_values));
+      name_ = ASCIIToUTF16(StringPrintf(
+          "CrSharedMem_%016llx%016llx%016llx%016llx", rand_values[0],
+          rand_values[1], rand_values[2], rand_values[3]));
+      DCHECK(!name_.empty());
+    }
   }
-  DCHECK(!name_.empty());
+
   shm_ = SharedMemoryHandle(
-      CreateFileMappingWithReducedPermissions(&sa, rounded_size, name_.c_str()),
+      CreateFileMappingWithReducedPermissions(
+          &sa, rounded_size, name_.empty() ? nullptr : as_wcstr(name_)),
       rounded_size, UnguessableToken::Create());
   if (!shm_.IsValid()) {
     // The error is logged within CreateFileMappingWithReducedPermissions().
@@ -278,7 +286,7 @@ bool SharedMemory::Open(const std::string& name, bool read_only) {
   // We pass the size |0|, which is a dummy size and wrong, but otherwise
   // harmless.
   shm_ = SharedMemoryHandle(
-      OpenFileMapping(access, false, name_.empty() ? nullptr : name_.c_str()),
+      OpenFileMapping(access, false, name_.empty() ? nullptr : as_wcstr(name_)),
       0u, UnguessableToken::Create());
   if (!shm_.IsValid())
     return false;
@@ -290,45 +298,62 @@ bool SharedMemory::Open(const std::string& name, bool read_only) {
 }
 
 bool SharedMemory::MapAt(off_t offset, size_t bytes) {
-  if (!shm_.IsValid())
+  if (!shm_.IsValid()) {
+    DLOG(ERROR) << "Invalid SharedMemoryHandle.";
     return false;
-
-  if (bytes > static_cast<size_t>(std::numeric_limits<int>::max()))
-    return false;
-
-  if (memory_)
-    return false;
-
-  if (external_section_ && !IsSectionSafeToMap(shm_.GetHandle()))
-    return false;
-
-  memory_ = MapViewOfFile(
-      shm_.GetHandle(),
-      read_only_ ? FILE_MAP_READ : FILE_MAP_READ | FILE_MAP_WRITE,
-      static_cast<uint64_t>(offset) >> 32, static_cast<DWORD>(offset), bytes);
-  if (memory_ != NULL) {
-    DCHECK_EQ(0U, reinterpret_cast<uintptr_t>(memory_) &
-        (SharedMemory::MAP_MINIMUM_ALIGNMENT - 1));
-    mapped_size_ = GetMemorySectionSize(memory_);
-    mapped_id_ = shm_.GetGUID();
-    SharedMemoryTracker::GetInstance()->IncrementMemoryUsage(*this);
-    return true;
   }
-  return false;
+
+  if (bytes > static_cast<size_t>(std::numeric_limits<int>::max())) {
+    DLOG(ERROR) << "Bytes required exceeds the 2G limitation.";
+    return false;
+  }
+
+  if (memory_) {
+    DLOG(ERROR) << "The SharedMemory has been mapped already.";
+    return false;
+  }
+
+  if (external_section_ && !IsSectionSafeToMap(shm_.GetHandle())) {
+    DLOG(ERROR) << "SharedMemoryHandle is not safe to be mapped.";
+    return false;
+  }
+
+  // Try to map the shared memory. On the first failure, release any reserved
+  // address space for a single retry.
+  for (int i = 0; i < 2; ++i) {
+    memory_ = MapViewOfFile(
+        shm_.GetHandle(),
+        read_only_ ? FILE_MAP_READ : FILE_MAP_READ | FILE_MAP_WRITE,
+        static_cast<uint64_t>(offset) >> 32, static_cast<DWORD>(offset), bytes);
+    if (memory_)
+      break;
+    ReleaseReservation();
+  }
+  if (!memory_) {
+    DPLOG(ERROR) << "Failed executing MapViewOfFile";
+    return false;
+  }
+
+  DCHECK_EQ(0U, reinterpret_cast<uintptr_t>(memory_) &
+                    (SharedMemory::MAP_MINIMUM_ALIGNMENT - 1));
+  mapped_size_ = GetMemorySectionSize(memory_);
+  mapped_id_ = shm_.GetGUID();
+  SharedMemoryTracker::GetInstance()->IncrementMemoryUsage(*this);
+  return true;
 }
 
 bool SharedMemory::Unmap() {
-  if (memory_ == NULL)
+  if (!memory_)
     return false;
 
   SharedMemoryTracker::GetInstance()->DecrementMemoryUsage(*this);
   UnmapViewOfFile(memory_);
-  memory_ = NULL;
+  memory_ = nullptr;
   mapped_id_ = UnguessableToken();
   return true;
 }
 
-SharedMemoryHandle SharedMemory::GetReadOnlyHandle() {
+SharedMemoryHandle SharedMemory::GetReadOnlyHandle() const {
   HANDLE result;
   ProcessHandle process = GetCurrentProcess();
   if (!::DuplicateHandle(process, shm_.GetHandle(), process, &result,
@@ -355,9 +380,8 @@ SharedMemoryHandle SharedMemory::handle() const {
 SharedMemoryHandle SharedMemory::TakeHandle() {
   SharedMemoryHandle handle(shm_);
   handle.SetOwnershipPassesToIPC(true);
+  Unmap();
   shm_ = SharedMemoryHandle();
-  memory_ = nullptr;
-  mapped_size_ = 0;
   return handle;
 }
 

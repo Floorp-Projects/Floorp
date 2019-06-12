@@ -384,14 +384,16 @@ void PrintLongString(char* buf, size_t sz) {
   size_t out_sz = sz;
   size_t len;
   for (std::unique_ptr<char[]> perfect_buf;;) {
-    size_t needed = SafeSNPrintf(out, out_sz,
+    size_t needed =
+        SafeSNPrintf(out, out_sz,
 #if defined(NDEBUG)
-                            "A%2cong %s: %d %010X %d %p%7s", 'l', "string", "",
+                     "A%2cong %s: %d %010X %d %p%7s", 'l', "string", "",
 #else
-                            "A%2cong %s: %%d %010X %d %p%7s", 'l', "string",
+                     "A%2cong %s: %%d %010X %d %p%7s", 'l', "string",
 #endif
-                            0xDEADBEEF, std::numeric_limits<intptr_t>::min(),
-                            PrintLongString, static_cast<char*>(NULL)) + 1;
+                     0xDEADBEEF, std::numeric_limits<intptr_t>::min(),
+                     PrintLongString, static_cast<char*>(nullptr)) +
+        1;
 
     // Various sanity checks:
     // The numbered of characters needed to print the full string should always

@@ -6,6 +6,7 @@
 #define SANDBOX_WIN_SRC_SANDBOX_POLICY_BASE_H_
 
 #include <windows.h>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -15,9 +16,11 @@
 
 #include "base/compiler_specific.h"
 #include "base/macros.h"
+#include "base/memory/scoped_refptr.h"
 #include "base/process/launch.h"
 #include "base/strings/string16.h"
 #include "base/win/scoped_handle.h"
+#include "sandbox/win/src/app_container_profile_base.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/handle_closer.h"
 #include "sandbox/win/src/ipc_tags.h"
@@ -42,7 +45,7 @@ class PolicyBase final : public TargetPolicy {
   ResultCode SetTokenLevel(TokenLevel initial, TokenLevel lockdown) override;
   TokenLevel GetInitialTokenLevel() const override;
   TokenLevel GetLockdownTokenLevel() const override;
-  void SetDoNotUseRestrictingSIDs() final override;
+  void SetDoNotUseRestrictingSIDs() final;
   ResultCode SetJobLevel(JobLevel job_level, uint32_t ui_exceptions) override;
   JobLevel GetJobLevel() const override;
   ResultCode SetJobMemoryLimit(size_t memory_limit) override;
@@ -53,7 +56,6 @@ class PolicyBase final : public TargetPolicy {
   ResultCode SetIntegrityLevel(IntegrityLevel integrity_level) override;
   IntegrityLevel GetIntegrityLevel() const override;
   ResultCode SetDelayedIntegrityLevel(IntegrityLevel integrity_level) override;
-  ResultCode SetCapability(const wchar_t* sid) override;
   ResultCode SetLowBox(const wchar_t* sid) override;
   ResultCode SetProcessMitigations(MitigationFlags flags) override;
   MitigationFlags GetProcessMitigations() override;
@@ -73,6 +75,13 @@ class PolicyBase final : public TargetPolicy {
   void SetLockdownDefaultDacl() override;
   void SetEnableOPMRedirection() override;
   bool GetEnableOPMRedirection() override;
+  ResultCode AddAppContainerProfile(const wchar_t* package_name,
+                                    bool create_profile) override;
+  scoped_refptr<AppContainerProfile> GetAppContainerProfile() override;
+  void SetEffectiveToken(HANDLE token) override;
+
+  // Get the AppContainer profile as its internal type.
+  scoped_refptr<AppContainerProfileBase> GetAppContainerProfileBase();
 
   // Creates a Job object with the level specified in a previous call to
   // SetJobLevel().
@@ -154,7 +163,6 @@ class PolicyBase final : public TargetPolicy {
   // target process. A null set means we need to close all handles of the
   // given type.
   HandleCloser handle_closer_;
-  std::vector<base::string16> capabilities_;
   PSID lowbox_sid_;
   base::win::ScopedHandle lowbox_directory_;
   std::unique_ptr<Dispatcher> dispatcher_;
@@ -172,6 +180,10 @@ class PolicyBase final : public TargetPolicy {
   // shared with the target at times.
   base::HandlesToInheritVector handles_to_share_;
   bool enable_opm_redirection_;
+
+  scoped_refptr<AppContainerProfileBase> app_container_profile_;
+
+  HANDLE effective_token_;
 
   DISALLOW_COPY_AND_ASSIGN(PolicyBase);
 };

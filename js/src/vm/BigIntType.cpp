@@ -96,13 +96,13 @@
 
 #include "builtin/BigInt.h"
 #include "gc/Allocator.h"
-#include "gc/FreeOp.h"
 #include "js/Initialization.h"
 #include "js/StableStringChars.h"
 #include "js/Utility.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 
+#include "gc/FreeOp-inl.h"
 #include "vm/JSContext-inl.h"
 
 using namespace js;
@@ -156,6 +156,7 @@ BigInt* BigInt::createUninitialized(JSContext* cx, size_t length,
 
   if (heapDigits) {
     x->heapDigits_ = heapDigits.release();
+    AddCellMemory(x, length * sizeof(Digit), js::MemoryUse::BigIntDigits);
   }
 
   return x;
@@ -168,7 +169,8 @@ void BigInt::initializeDigitsToZero() {
 
 void BigInt::finalize(js::FreeOp* fop) {
   if (hasHeapDigits()) {
-    fop->free_(heapDigits_);
+    size_t size = digitLength() * sizeof(Digit);
+    fop->free_(this, heapDigits_, size, js::MemoryUse::BigIntDigits);
   }
 }
 

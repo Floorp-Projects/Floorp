@@ -13,12 +13,12 @@
 
 #include "builtin/ModuleObject.h"
 #include "gc/Allocator.h"
-#include "gc/FreeOp.h"
 #include "util/StringBuffer.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSScript.h"
 #include "wasm/WasmInstance.h"
 
+#include "gc/FreeOp-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "vm/Shape-inl.h"
 
@@ -141,6 +141,11 @@ static Shape* CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
   return shape;
 }
 
+template <class Data>
+inline size_t SizeOfAllocatedData(Data* data) {
+  return SizeOfData<Data>(data->length);
+}
+
 template <typename ConcreteScope>
 static UniquePtr<typename ConcreteScope::Data> CopyScopeData(
     JSContext* cx, typename ConcreteScope::Data* data) {
@@ -154,7 +159,7 @@ static UniquePtr<typename ConcreteScope::Data> CopyScopeData(
     }
   }
 
-  size_t size = SizeOfData<typename ConcreteScope::Data>(data->length);
+  size_t size = SizeOfAllocatedData(data);
   void* bytes = cx->pod_malloc<char>(size);
   if (!bytes) {
     return nullptr;
@@ -334,6 +339,10 @@ template <typename ConcreteScope>
 inline void Scope::initData(
     MutableHandle<UniquePtr<typename ConcreteScope::Data>> data) {
   MOZ_ASSERT(!data_);
+
+  AddCellMemory(this, SizeOfAllocatedData(data.get().get()),
+                MemoryUse::ScopeData);
+
   data_ = data.get().release();
 }
 
@@ -453,7 +462,9 @@ Scope* Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing) {
 
 void Scope::finalize(FreeOp* fop) {
   MOZ_ASSERT(CurrentThreadIsGCSweeping());
-  applyScopeDataTyped([fop](auto data) { fop->delete_(data); });
+  applyScopeDataTyped([this, fop](auto data) {
+    fop->delete_(this, data, SizeOfAllocatedData(data), MemoryUse::ScopeData);
+  });
   data_ = nullptr;
 }
 

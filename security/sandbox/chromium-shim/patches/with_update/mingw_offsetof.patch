@@ -11,7 +11,7 @@ MozReview-Commit-ID: D7REZiAIMpN
 diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_params.h b/security/sandbox/chromium/sandbox/win/src/crosscall_params.h
 --- a/security/sandbox/chromium/sandbox/win/src/crosscall_params.h
 +++ b/security/sandbox/chromium/sandbox/win/src/crosscall_params.h
-@@ -55,16 +55,17 @@ union MultiType {
+@@ -61,16 +61,17 @@ union MultiType {
    ULONG_PTR ulong_ptr;
  };
  
@@ -35,8 +35,8 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_params.h b/secu
  
   private:
    ParamInfo param_info_[NUMBER_PARAMS + 1];
-   char parameters_[BLOCK_SIZE - sizeof(CrossCallParams)
-                    - sizeof(ParamInfo) * (NUMBER_PARAMS + 1)];
+   char parameters_[BLOCK_SIZE - sizeof(CrossCallParams) -
+                    sizeof(ParamInfo) * (NUMBER_PARAMS + 1)];
    DISALLOW_COPY_AND_ASSIGN(ActualCallParams);
 +
 +  friend uint32_t GetMinDeclaredActualCallParamsSize(uint32_t param_count);
@@ -51,12 +51,12 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_params.h b/secu
 diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc b/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc
 --- a/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc
-@@ -22,30 +22,31 @@ namespace {
+@@ -28,30 +28,31 @@ namespace {
  
  // The buffer for a message must match the max channel size.
  const size_t kMaxBufferSize = sandbox::kIPCChannelSize;
  
- }
+ }  // namespace
  
  namespace sandbox {
  
@@ -94,7 +94,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc b/sec
        return reinterpret_cast<ActualCP1*>(buffer_base)->GetSize();
      case 2:
        return reinterpret_cast<ActualCP2*>(buffer_base)->GetSize();
-@@ -63,16 +64,45 @@ uint32_t GetActualBufferSize(uint32_t pa
+@@ -69,16 +70,45 @@ uint32_t GetActualBufferSize(uint32_t pa
        return reinterpret_cast<ActualCP8*>(buffer_base)->GetSize();
      case 9:
        return reinterpret_cast<ActualCP9*>(buffer_base)->GetSize();
@@ -140,7 +140,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc b/sec
        (sizeof(CrossCallParamsEx) > min_declared_size)) {
      // Minimal computed size bigger than existing buffer or param_count
      // integer overflow.
-@@ -132,18 +162,17 @@ CrossCallParamsEx* CrossCallParamsEx::Cr
+@@ -133,18 +163,17 @@ CrossCallParamsEx* CrossCallParamsEx::Cr
    // will catch memory access violations so we don't crash.
    __try {
      CrossCallParams* call_params =
@@ -149,34 +149,34 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc b/sec
      // Check against the minimum size given the number of stated params
      // if too small we bail out.
      param_count = call_params->GetParamsCount();
--    min_declared_size = sizeof(CrossCallParams) +
--                        ((param_count + 1) * sizeof(ParamInfo));
+-    min_declared_size =
+-        sizeof(CrossCallParams) + ((param_count + 1) * sizeof(ParamInfo));
 +    min_declared_size = GetMinDeclaredActualCallParamsSize(param_count);
+ 
+     // Initial check for the buffer being big enough to determine the actual
+     // buffer size.
+     if (buffer_size < min_declared_size)
+       return nullptr;
  
      // Retrieve the declared size which if it fails returns 0.
      declared_size = GetActualBufferSize(param_count, buffer_base);
- 
-     if (!IsSizeWithinRange(buffer_size, min_declared_size, declared_size))
-       return NULL;
- 
-     // Now we copy the actual amount of the message.
-@@ -152,18 +181,17 @@ CrossCallParamsEx* CrossCallParamsEx::Cr
+@@ -158,18 +187,17 @@ CrossCallParamsEx* CrossCallParamsEx::Cr
      copied_params = reinterpret_cast<CrossCallParamsEx*>(backing_mem);
      memcpy(backing_mem, call_params, declared_size);
  
      // Avoid compiler optimizations across this point. Any value stored in
      // memory should be stored for real, and values previously read from memory
      // should be actually read.
-     _ReadWriteBarrier();
+     base::subtle::MemoryBarrier();
  
--    min_declared_size = sizeof(CrossCallParams) +
--                        ((param_count + 1) * sizeof(ParamInfo));
+-    min_declared_size =
+-        sizeof(CrossCallParams) + ((param_count + 1) * sizeof(ParamInfo));
 +    min_declared_size = GetMinDeclaredActualCallParamsSize(param_count);
  
      // Check that the copied buffer is still valid.
      if (copied_params->GetParamsCount() != param_count ||
          GetActualBufferSize(param_count, backing_mem) != declared_size ||
          !IsSizeWithinRange(buffer_size, min_declared_size, declared_size)) {
-       delete [] backing_mem;
-       return NULL;
+       delete[] backing_mem;
+       return nullptr;
      }

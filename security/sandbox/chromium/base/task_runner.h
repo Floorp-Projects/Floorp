@@ -61,12 +61,12 @@ class BASE_EXPORT TaskRunner
   // will not be run.
   //
   // Equivalent to PostDelayedTask(from_here, task, 0).
-  bool PostTask(const tracked_objects::Location& from_here, OnceClosure task);
+  bool PostTask(const Location& from_here, OnceClosure task);
 
   // Like PostTask, but tries to run the posted task only after |delay_ms|
   // has passed. Implementations should use a tick clock, rather than wall-
   // clock time, to implement |delay|.
-  virtual bool PostDelayedTask(const tracked_objects::Location& from_here,
+  virtual bool PostDelayedTask(const Location& from_here,
                                OnceClosure task,
                                base::TimeDelta delay) = 0;
 
@@ -129,16 +129,12 @@ class BASE_EXPORT TaskRunner
   //   * The DataLoader object can be deleted while |task| is still running,
   //     and the reply will cancel itself safely because it is bound to a
   //     WeakPtr<>.
-  bool PostTaskAndReply(const tracked_objects::Location& from_here,
+  bool PostTaskAndReply(const Location& from_here,
                         OnceClosure task,
                         OnceClosure reply);
 
  protected:
   friend struct TaskRunnerTraits;
-
-  // Only the Windows debug build seems to need this: see
-  // http://crbug.com/112250.
-  friend class RefCountedThreadSafe<TaskRunner, TaskRunnerTraits>;
 
   TaskRunner();
   virtual ~TaskRunner();

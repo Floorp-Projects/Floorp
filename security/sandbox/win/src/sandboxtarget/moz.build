@@ -17,4 +17,6 @@ LOCAL_INCLUDES += [
     '/security/sandbox/chromium-shim',
 ]
 
+DEFINES['UNICODE'] = True
+
 FINAL_LIBRARY = 'xul'

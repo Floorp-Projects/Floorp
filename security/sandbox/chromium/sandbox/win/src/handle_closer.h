@@ -21,19 +21,19 @@ namespace sandbox {
 // This is a map of handle-types to names that we need to close in the
 // target process. A null set means we need to close all handles of the
 // given type.
-typedef std::map<const base::string16, std::set<base::string16> > HandleMap;
+typedef std::map<const base::string16, std::set<base::string16>> HandleMap;
 
 // Type and set of corresponding handle names to close.
 struct HandleListEntry {
-  size_t record_bytes;       // Rounded to sizeof(size_t) bytes.
-  size_t offset_to_names;    // Nul terminated strings of name_count names.
+  size_t record_bytes;     // Rounded to sizeof(size_t) bytes.
+  size_t offset_to_names;  // Nul terminated strings of name_count names.
   size_t name_count;
   base::char16 handle_type[1];
 };
 
 // Global parameters and a pointer to the list of entries.
 struct HandleCloserInfo {
-  size_t record_bytes;       // Rounded to sizeof(size_t) bytes.
+  size_t record_bytes;  // Rounded to sizeof(size_t) bytes.
   size_t num_handle_types;
   struct HandleListEntry handle_entries[1];
 };
@@ -47,8 +47,8 @@ class HandleCloser {
   ~HandleCloser();
 
   // Adds a handle that will be closed in the target process after lockdown.
-  // A NULL value for handle_name indicates all handles of the specified type.
-  // An empty string for handle_name indicates the handle is unnamed.
+  // A nullptr value for handle_name indicates all handles of the specified
+  // type. An empty string for handle_name indicates the handle is unnamed.
   ResultCode AddHandle(const base::char16* handle_type,
                        const base::char16* handle_name);
 

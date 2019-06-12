@@ -5,6 +5,7 @@
 #include "sandbox/win/src/process_thread_interception.h"
 
 #include <stdint.h>
+
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/ipc_tags.h"
@@ -23,11 +24,12 @@ SANDBOX_INTERCEPT NtExports g_nt;
 // Hooks NtOpenThread and proxy the call to the broker if it's trying to
 // open a thread in the same process.
 NTSTATUS WINAPI TargetNtOpenThread(NtOpenThreadFunction orig_OpenThread,
-                                   PHANDLE thread, ACCESS_MASK desired_access,
+                                   PHANDLE thread,
+                                   ACCESS_MASK desired_access,
                                    POBJECT_ATTRIBUTES object_attributes,
                                    PCLIENT_ID client_id) {
-  NTSTATUS status = orig_OpenThread(thread, desired_access, object_attributes,
-                                    client_id);
+  NTSTATUS status =
+      orig_OpenThread(thread, desired_access, object_attributes, client_id);
   if (NT_SUCCESS(status))
     return status;
 
@@ -42,23 +44,22 @@ NTSTATUS WINAPI TargetNtOpenThread(NtOpenThreadFunction orig_OpenThread,
     bool should_break = false;
     __try {
       // We support only the calls for the current process
-      if (NULL != client_id->UniqueProcess)
+      if (client_id->UniqueProcess)
         should_break = true;
 
-      // Object attributes should be NULL or empty.
-      if (!should_break && NULL != object_attributes) {
-        if (0 != object_attributes->Attributes ||
-            NULL != object_attributes->ObjectName ||
-            NULL != object_attributes->RootDirectory ||
-            NULL != object_attributes->SecurityDescriptor ||
-            NULL != object_attributes->SecurityQualityOfService) {
+      // Object attributes should be nullptr or empty.
+      if (!should_break && object_attributes) {
+        if (object_attributes->Attributes || object_attributes->ObjectName ||
+            object_attributes->RootDirectory ||
+            object_attributes->SecurityDescriptor ||
+            object_attributes->SecurityQualityOfService) {
           should_break = true;
         }
       }
 
       thread_id = static_cast<uint32_t>(
           reinterpret_cast<ULONG_PTR>(client_id->UniqueThread));
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
 
@@ -69,7 +70,7 @@ NTSTATUS WINAPI TargetNtOpenThread(NtOpenThreadFunction orig_OpenThread,
       break;
 
     void* memory = GetGlobalIPCMemory();
-    if (NULL == memory)
+    if (!memory)
       break;
 
     SharedMemIPCClient ipc(memory);
@@ -93,7 +94,7 @@ NTSTATUS WINAPI TargetNtOpenThread(NtOpenThreadFunction orig_OpenThread,
     __try {
       // Write the output parameters.
       *thread = answer.handle;
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
 
@@ -107,11 +108,12 @@ NTSTATUS WINAPI TargetNtOpenThread(NtOpenThreadFunction orig_OpenThread,
 // Hooks NtOpenProcess and proxy the call to the broker if it's trying to
 // open the current process.
 NTSTATUS WINAPI TargetNtOpenProcess(NtOpenProcessFunction orig_OpenProcess,
-                                   PHANDLE process, ACCESS_MASK desired_access,
-                                   POBJECT_ATTRIBUTES object_attributes,
-                                   PCLIENT_ID client_id) {
-  NTSTATUS status = orig_OpenProcess(process, desired_access, object_attributes,
-                                     client_id);
+                                    PHANDLE process,
+                                    ACCESS_MASK desired_access,
+                                    POBJECT_ATTRIBUTES object_attributes,
+                                    PCLIENT_ID client_id) {
+  NTSTATUS status =
+      orig_OpenProcess(process, desired_access, object_attributes, client_id);
   if (NT_SUCCESS(status))
     return status;
 
@@ -124,20 +126,19 @@ NTSTATUS WINAPI TargetNtOpenProcess(NtOpenProcessFunction orig_OpenProcess,
     uint32_t process_id = 0;
     bool should_break = false;
     __try {
-      // Object attributes should be NULL or empty.
-      if (!should_break && NULL != object_attributes) {
-        if (0 != object_attributes->Attributes ||
-            NULL != object_attributes->ObjectName ||
-            NULL != object_attributes->RootDirectory ||
-            NULL != object_attributes->SecurityDescriptor ||
-            NULL != object_attributes->SecurityQualityOfService) {
+      // Object attributes should be nullptr or empty.
+      if (!should_break && object_attributes) {
+        if (object_attributes->Attributes || object_attributes->ObjectName ||
+            object_attributes->RootDirectory ||
+            object_attributes->SecurityDescriptor ||
+            object_attributes->SecurityQualityOfService) {
           should_break = true;
         }
       }
 
       process_id = static_cast<uint32_t>(
           reinterpret_cast<ULONG_PTR>(client_id->UniqueProcess));
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
 
@@ -148,7 +149,7 @@ NTSTATUS WINAPI TargetNtOpenProcess(NtOpenProcessFunction orig_OpenProcess,
       break;
 
     void* memory = GetGlobalIPCMemory();
-    if (NULL == memory)
+    if (!memory)
       break;
 
     SharedMemIPCClient ipc(memory);
@@ -164,7 +165,7 @@ NTSTATUS WINAPI TargetNtOpenProcess(NtOpenProcessFunction orig_OpenProcess,
     __try {
       // Write the output parameters.
       *process = answer.handle;
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
 
@@ -174,10 +175,11 @@ NTSTATUS WINAPI TargetNtOpenProcess(NtOpenProcessFunction orig_OpenProcess,
   return status;
 }
 
-
-NTSTATUS WINAPI TargetNtOpenProcessToken(
-    NtOpenProcessTokenFunction orig_OpenProcessToken, HANDLE process,
-    ACCESS_MASK desired_access, PHANDLE token) {
+NTSTATUS WINAPI
+TargetNtOpenProcessToken(NtOpenProcessTokenFunction orig_OpenProcessToken,
+                         HANDLE process,
+                         ACCESS_MASK desired_access,
+                         PHANDLE token) {
   NTSTATUS status = orig_OpenProcessToken(process, desired_access, token);
   if (NT_SUCCESS(status))
     return status;
@@ -194,7 +196,7 @@ NTSTATUS WINAPI TargetNtOpenProcessToken(
       break;
 
     void* memory = GetGlobalIPCMemory();
-    if (NULL == memory)
+    if (!memory)
       break;
 
     SharedMemIPCClient ipc(memory);
@@ -210,7 +212,7 @@ NTSTATUS WINAPI TargetNtOpenProcessToken(
     __try {
       // Write the output parameters.
       *token = answer.handle;
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
 
@@ -221,9 +223,12 @@ NTSTATUS WINAPI TargetNtOpenProcessToken(
   return status;
 }
 
-NTSTATUS WINAPI TargetNtOpenProcessTokenEx(
-    NtOpenProcessTokenExFunction orig_OpenProcessTokenEx, HANDLE process,
-    ACCESS_MASK desired_access, ULONG handle_attributes, PHANDLE token) {
+NTSTATUS WINAPI
+TargetNtOpenProcessTokenEx(NtOpenProcessTokenExFunction orig_OpenProcessTokenEx,
+                           HANDLE process,
+                           ACCESS_MASK desired_access,
+                           ULONG handle_attributes,
+                           PHANDLE token) {
   NTSTATUS status = orig_OpenProcessTokenEx(process, desired_access,
                                             handle_attributes, token);
   if (NT_SUCCESS(status))
@@ -241,7 +246,7 @@ NTSTATUS WINAPI TargetNtOpenProcessTokenEx(
       break;
 
     void* memory = GetGlobalIPCMemory();
-    if (NULL == memory)
+    if (!memory)
       break;
 
     SharedMemIPCClient ipc(memory);
@@ -257,7 +262,7 @@ NTSTATUS WINAPI TargetNtOpenProcessTokenEx(
     __try {
       // Write the output parameters.
       *token = answer.handle;
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
 
@@ -269,11 +274,14 @@ NTSTATUS WINAPI TargetNtOpenProcessTokenEx(
 }
 
 BOOL WINAPI TargetCreateProcessW(CreateProcessWFunction orig_CreateProcessW,
-                                 LPCWSTR application_name, LPWSTR command_line,
+                                 LPCWSTR application_name,
+                                 LPWSTR command_line,
                                  LPSECURITY_ATTRIBUTES process_attributes,
                                  LPSECURITY_ATTRIBUTES thread_attributes,
-                                 BOOL inherit_handles, DWORD flags,
-                                 LPVOID environment, LPCWSTR current_directory,
+                                 BOOL inherit_handles,
+                                 DWORD flags,
+                                 LPVOID environment,
+                                 LPCWSTR current_directory,
                                  LPSTARTUPINFOW startup_info,
                                  LPPROCESS_INFORMATION process_information) {
   if (SandboxFactory::GetTargetServices()->GetState()->IsCsrssConnected() &&
@@ -281,14 +289,14 @@ BOOL WINAPI TargetCreateProcessW(CreateProcessWFunction orig_CreateProcessW,
                           thread_attributes, inherit_handles, flags,
                           environment, current_directory, startup_info,
                           process_information)) {
-    return TRUE;
+    return true;
   }
 
   mozilla::sandboxing::LogBlocked("CreateProcessW", application_name);
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
-    return FALSE;
+    return false;
 
   // Don't call GetLastError before InitCalled() succeeds because kernel32 may
   // not be mapped yet.
@@ -300,10 +308,10 @@ BOOL WINAPI TargetCreateProcessW(CreateProcessWFunction orig_CreateProcessW,
       break;
 
     void* memory = GetGlobalIPCMemory();
-    if (NULL == memory)
+    if (!memory)
       break;
 
-    const wchar_t* cur_dir = NULL;
+    const wchar_t* cur_dir = nullptr;
 
     wchar_t this_current_directory[MAX_PATH];
     DWORD result = ::GetCurrentDirectory(MAX_PATH, this_current_directory);
@@ -316,30 +324,33 @@ BOOL WINAPI TargetCreateProcessW(CreateProcessWFunction orig_CreateProcessW,
     InOutCountedBuffer proc_info(process_information,
                                  sizeof(PROCESS_INFORMATION));
 
-    ResultCode code = CrossCall(ipc, IPC_CREATEPROCESSW_TAG, application_name,
-                                command_line, cur_dir, current_directory,
-                                proc_info, &answer);
+    ResultCode code =
+        CrossCall(ipc, IPC_CREATEPROCESSW_TAG, application_name, command_line,
+                  cur_dir, current_directory, proc_info, &answer);
     if (SBOX_ALL_OK != code)
       break;
 
     ::SetLastError(answer.win32_result);
     if (ERROR_SUCCESS != answer.win32_result)
-      return FALSE;
+      return false;
 
     mozilla::sandboxing::LogAllowed("CreateProcessW", application_name);
-    return TRUE;
+    return true;
   } while (false);
 
   ::SetLastError(original_error);
-  return FALSE;
+  return false;
 }
 
 BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
-                                 LPCSTR application_name, LPSTR command_line,
+                                 LPCSTR application_name,
+                                 LPSTR command_line,
                                  LPSECURITY_ATTRIBUTES process_attributes,
                                  LPSECURITY_ATTRIBUTES thread_attributes,
-                                 BOOL inherit_handles, DWORD flags,
-                                 LPVOID environment, LPCSTR current_directory,
+                                 BOOL inherit_handles,
+                                 DWORD flags,
+                                 LPVOID environment,
+                                 LPCSTR current_directory,
                                  LPSTARTUPINFOA startup_info,
                                  LPPROCESS_INFORMATION process_information) {
   if (SandboxFactory::GetTargetServices()->GetState()->IsCsrssConnected() &&
@@ -347,14 +358,14 @@ BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
                           thread_attributes, inherit_handles, flags,
                           environment, current_directory, startup_info,
                           process_information)) {
-    return TRUE;
+    return true;
   }
 
   mozilla::sandboxing::LogBlocked("CreateProcessA", application_name);
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
-    return FALSE;
+    return false;
 
   // Don't call GetLastError before InitCalled() succeeds because kernel32 may
   // not be mapped yet.
@@ -366,13 +377,13 @@ BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
       break;
 
     void* memory = GetGlobalIPCMemory();
-    if (NULL == memory)
+    if (!memory)
       break;
 
     // Convert the input params to unicode.
-    UNICODE_STRING *cmd_unicode = NULL;
-    UNICODE_STRING *app_unicode = NULL;
-    UNICODE_STRING *cwd_unicode = NULL;
+    UNICODE_STRING* cmd_unicode = nullptr;
+    UNICODE_STRING* app_unicode = nullptr;
+    UNICODE_STRING* cwd_unicode = nullptr;
     if (command_line) {
       cmd_unicode = AnsiToUnicode(command_line);
       if (!cmd_unicode)
@@ -396,10 +407,10 @@ BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
       }
     }
 
-    const wchar_t* cmd_line = cmd_unicode ? cmd_unicode->Buffer : NULL;
-    const wchar_t* app_name = app_unicode ? app_unicode->Buffer : NULL;
-    const wchar_t* cwd = cwd_unicode ? cwd_unicode->Buffer : NULL;
-    const wchar_t* cur_dir = NULL;
+    const wchar_t* cmd_line = cmd_unicode ? cmd_unicode->Buffer : nullptr;
+    const wchar_t* app_name = app_unicode ? app_unicode->Buffer : nullptr;
+    const wchar_t* cwd = cwd_unicode ? cwd_unicode->Buffer : nullptr;
+    const wchar_t* cur_dir = nullptr;
 
     wchar_t target_current_directory[MAX_PATH];
     DWORD result = ::GetCurrentDirectory(MAX_PATH, target_current_directory);
@@ -412,8 +423,8 @@ BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
     InOutCountedBuffer proc_info(process_information,
                                  sizeof(PROCESS_INFORMATION));
 
-    ResultCode code = CrossCall(ipc, IPC_CREATEPROCESSW_TAG, app_name,
-                                cmd_line, cur_dir, cwd, proc_info, &answer);
+    ResultCode code = CrossCall(ipc, IPC_CREATEPROCESSW_TAG, app_name, cmd_line,
+                                cur_dir, cwd, proc_info, &answer);
 
     operator delete(cmd_unicode, NT_ALLOC);
     operator delete(app_unicode, NT_ALLOC);
@@ -424,14 +435,14 @@ BOOL WINAPI TargetCreateProcessA(CreateProcessAFunction orig_CreateProcessA,
 
     ::SetLastError(answer.win32_result);
     if (ERROR_SUCCESS != answer.win32_result)
-      return FALSE;
+      return false;
 
     mozilla::sandboxing::LogAllowed("CreateProcessA", application_name);
-    return TRUE;
+    return true;
   } while (false);
 
   ::SetLastError(original_error);
-  return FALSE;
+  return false;
 }
 
 HANDLE WINAPI TargetCreateThread(CreateThreadFunction orig_CreateThread,
@@ -441,21 +452,19 @@ HANDLE WINAPI TargetCreateThread(CreateThreadFunction orig_CreateThread,
                                  LPVOID parameter,
                                  DWORD creation_flags,
                                  LPDWORD thread_id) {
-  HANDLE hThread = NULL;
+  HANDLE hThread = nullptr;
 
   TargetServices* target_services = SandboxFactory::GetTargetServices();
-  if (NULL == target_services ||
-      target_services->GetState()->IsCsrssConnected()) {
+  if (!target_services || target_services->GetState()->IsCsrssConnected()) {
     hThread = orig_CreateThread(thread_attributes, stack_size, start_address,
                                 parameter, creation_flags, thread_id);
-    if (hThread) {
+    if (hThread)
       return hThread;
-    }
   }
 
   DWORD original_error = ::GetLastError();
   do {
-    if (NULL == target_services)
+    if (!target_services)
       break;
 
     // We don't trust that the IPC can work this early.
@@ -463,21 +472,20 @@ HANDLE WINAPI TargetCreateThread(CreateThreadFunction orig_CreateThread,
       break;
 
     __try {
-      if (NULL != thread_id &&
-          !ValidParameter(thread_id, sizeof(*thread_id), WRITE))
+      if (thread_id && !ValidParameter(thread_id, sizeof(*thread_id), WRITE))
         break;
 
-      if (nullptr == start_address)
+      if (!start_address)
         break;
       // We don't support thread_attributes not being null.
-      if (nullptr != thread_attributes)
+      if (thread_attributes)
         break;
     } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
 
     void* memory = GetGlobalIPCMemory();
-    if (nullptr == memory)
+    if (!memory)
       break;
 
     SharedMemIPCClient ipc(memory);
@@ -493,14 +501,12 @@ HANDLE WINAPI TargetCreateThread(CreateThreadFunction orig_CreateThread,
       break;
 
     ::SetLastError(answer.win32_result);
-    if (ERROR_SUCCESS != answer.win32_result) {
-      return NULL;
-    }
+    if (ERROR_SUCCESS != answer.win32_result)
+      return nullptr;
 
     __try {
-      if (thread_id != NULL) {
+      if (thread_id)
         *thread_id = ::GetThreadId(answer.handle);
-      }
       return answer.handle;
     } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
@@ -508,7 +514,7 @@ HANDLE WINAPI TargetCreateThread(CreateThreadFunction orig_CreateThread,
   } while (false);
 
   ::SetLastError(original_error);
-  return NULL;
+  return nullptr;
 }
 
 }  // namespace sandbox

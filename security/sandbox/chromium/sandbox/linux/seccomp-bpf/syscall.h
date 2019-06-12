@@ -28,7 +28,7 @@ class SANDBOX_EXPORT Syscall {
   // System calls can take up to six parameters (up to eight on some
   // architectures). Traditionally, glibc
   // implements this property by using variadic argument lists. This works, but
-  // confuses modern tools such as valgrind, because we are nominally passing
+  // confuses tools that behave like Valgrind, because we are nominally passing
   // uninitialized data whenever we call through this function and pass less
   // than the full six arguments.
   // So, instead, we use C++'s template system to achieve a very similar
