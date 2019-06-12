@@ -38,6 +38,22 @@ $excerpt-line-height: 20;
     }
   }
 
+  &:not(.placeholder):hover .ds-card-link {
+    @include ds-fade-in($grey-30);
+
+    @include dark-theme-only {
+      @include ds-fade-in($grey-60);
+    }
+
+    header {
+      @include dark-theme-only {
+        color: $blue-40;
+      }
+
+      color: $blue-60;
+    }
+  }
+
   .ds-card-link {
     height: 100%;
 
@@ -47,18 +63,7 @@ $excerpt-line-height: 20;
       @include dark-theme-only {
         @include ds-fade-in($blue-40-40);
       }
-    }
 
-    &:hover {
-      @include ds-fade-in($grey-30);
-
-      @include dark-theme-only {
-        @include ds-fade-in($grey-60);
-      }
-    }
-
-    &:focus,
-    &:hover {
       header {
         @include dark-theme-only {
           color: $blue-40;

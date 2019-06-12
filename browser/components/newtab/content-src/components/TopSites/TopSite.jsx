@@ -281,7 +281,7 @@ export class TopSite extends React.PureComponent {
     const title = link.label || link.hostname;
     return (<TopSiteLink {...props} onClick={this.onLinkClick} onDragEvent={this.props.onDragEvent} className={`${props.className || ""}${isContextMenuOpen ? " active" : ""}`} title={title}>
         <div>
-          <button className="context-menu-button icon" title={this.props.intl.formatMessage({id: "context_menu_title"})} onClick={this.onMenuButtonClick}>
+          <button aria-haspopup="true" className="context-menu-button icon" title={this.props.intl.formatMessage({id: "context_menu_title"})} onClick={this.onMenuButtonClick}>
             <span className="sr-only">
               <FormattedMessage id="context_menu_button_sr" values={{title}} />
             </span>
@@ -318,7 +318,7 @@ export class TopSitePlaceholder extends React.PureComponent {
 
   render() {
     return (<TopSiteLink {...this.props} className={`placeholder ${this.props.className || ""}`} isDraggable={false}>
-      <button className="context-menu-button edit-button icon"
+      <button aria-haspopup="true" className="context-menu-button edit-button icon"
        title={this.props.intl.formatMessage({id: "edit_topsites_edit_button"})}
        onClick={this.onEditButtonClick} />
     </TopSiteLink>);

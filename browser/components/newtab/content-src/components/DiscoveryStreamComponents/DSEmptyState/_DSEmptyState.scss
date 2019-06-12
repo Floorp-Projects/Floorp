@@ -2,7 +2,7 @@
   border: $border-secondary;
   border-radius: 4px;
   display: flex;
-  height: $grid-unit;
+  height: $card-height-compact;
   width: 100%;
 
   .empty-state-message {
@@ -14,8 +14,65 @@
     max-width: 936px;
   }
 
+  .try-again-button {
+    margin-top: 12px;
+    padding: 6px 32px;
+    border-radius: 2px;
+    border: 0;
+    background: var(--newtab-feed-button-background);
+    color: var(--newtab-feed-button-text);
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s ease, color 0.2s ease;
+
+    &:not(.waiting) {
+      &:focus {
+        @include ds-fade-in;
+
+        @include dark-theme-only {
+          @include ds-fade-in($blue-40-40);
+        }
+      }
+
+      &:hover {
+        @include ds-fade-in($grey-30);
+
+        @include dark-theme-only {
+          @include ds-fade-in($grey-60);
+        }
+      }
+    }
+
+    &::after {
+      content: '';
+      height: 20px;
+      width: 20px;
+      animation: spinner 1s linear infinite;
+      opacity: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin: -10px 0 0 -10px;
+      mask-image: url('../data/content/assets/spinner.svg');
+      mask-size: 20px;
+      background: var(--newtab-feed-button-spinner);
+    }
+
+    &.waiting {
+      cursor: initial;
+      background: var(--newtab-feed-button-background-faded);
+      color: var(--newtab-feed-button-text-faded);
+      transition: background 0.2s ease;
+
+      &::after {
+        transition: opacity 0.2s ease;
+        opacity: 1;
+      }
+    }
+  }
+
   h2 {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     margin: 0;
   }
@@ -23,4 +80,8 @@
   p {
     margin: 0;
   }
+}
+
+@keyframes spinner {
+  to { transform: rotate(360deg); }
 }
