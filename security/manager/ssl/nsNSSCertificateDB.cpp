@@ -831,10 +831,9 @@ nsNSSCertificateDB::ImportPKCS12File(nsIFile* aFile, const nsAString& aPassword,
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::ExportPKCS12File(nsIFile* aFile, uint32_t aCount,
-                                     nsIX509Cert** aCerts,
-                                     const nsAString& aPassword,
-                                     uint32_t* aError) {
+nsNSSCertificateDB::ExportPKCS12File(
+    nsIFile* aFile, const nsTArray<RefPtr<nsIX509Cert>>& aCerts,
+    const nsAString& aPassword, uint32_t* aError) {
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
@@ -844,11 +843,11 @@ nsNSSCertificateDB::ExportPKCS12File(nsIFile* aFile, uint32_t aCount,
   }
 
   NS_ENSURE_ARG(aFile);
-  if (aCount == 0) {
+  if (aCerts.IsEmpty()) {
     return NS_OK;
   }
   nsPKCS12Blob blob;
-  return blob.ExportToFile(aFile, aCerts, aCount, aPassword, *aError);
+  return blob.ExportToFile(aFile, aCerts, aPassword, *aError);
 }
 
 NS_IMETHODIMP

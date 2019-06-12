@@ -19,6 +19,7 @@
 #include "nsNSSHelper.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
+#include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "p12plcy.h"
 #include "mozpkix/pkixtypes.h"
@@ -107,8 +108,9 @@ static bool isExtractable(UniqueSECKEYPrivateKey& privKey) {
 
 // Having already loaded the certs, form them into a blob (loading the keys
 // also), encode the blob, and stuff it into the file.
-nsresult nsPKCS12Blob::ExportToFile(nsIFile* aFile, nsIX509Cert** aCerts,
-                                    int aNumCerts, const nsAString& aPassword,
+nsresult nsPKCS12Blob::ExportToFile(nsIFile* aFile,
+                                    const nsTArray<RefPtr<nsIX509Cert>>& aCerts,
+                                    const nsAString& aPassword,
                                     uint32_t& aError) {
   // get file password (unicode)
   uint32_t passwordBufferLength;
@@ -132,8 +134,8 @@ nsresult nsPKCS12Blob::ExportToFile(nsIFile* aFile, nsIX509Cert** aCerts,
     aError = nsIX509CertDB::ERROR_PKCS12_BACKUP_FAILED;
     return NS_OK;
   }
-  for (int i = 0; i < aNumCerts; i++) {
-    UniqueCERTCertificate nssCert(aCerts[i]->GetCert());
+  for (auto& cert : aCerts) {
+    UniqueCERTCertificate nssCert(cert->GetCert());
     if (!nssCert) {
       aError = nsIX509CertDB::ERROR_PKCS12_BACKUP_FAILED;
       return NS_OK;

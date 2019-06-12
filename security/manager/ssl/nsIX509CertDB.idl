@@ -203,8 +203,7 @@ interface nsIX509CertDB : nsISupports {
    */
   [must_use]
   uint32_t exportPKCS12File(in nsIFile aFile,
-                            in unsigned long count,
-                            [array, size_is(count)] in nsIX509Cert aCerts,
+                            in Array<nsIX509Cert> aCerts,
                             in AString aPassword);
 
   /*
