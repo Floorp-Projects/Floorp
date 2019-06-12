@@ -759,6 +759,29 @@ const size_t
     BINAST_SUM_ASSIGNMENT_TARGET_OR_ASSIGNMENT_TARGET_WITH_INITIALIZER_LIMIT =
         6;
 
+// Iteration through the interfaces of sum AssignmentTargetOrForInOfBinding
+#define FOR_EACH_BIN_INTERFACE_IN_SUM_ASSIGNMENT_TARGET_OR_FOR_IN_OF_BINDING( \
+    F)                                                                        \
+  F(AssignmentTargetOrForInOfBinding, 0, ArrayAssignmentTarget,               \
+    ARRAY_ASSIGNMENT_TARGET,                                                  \
+    "AssignmentTargetOrForInOfBinding::ArrayAssignmentTarget")                \
+  F(AssignmentTargetOrForInOfBinding, 1, AssignmentTargetIdentifier,          \
+    ASSIGNMENT_TARGET_IDENTIFIER,                                             \
+    "AssignmentTargetOrForInOfBinding::AssignmentTargetIdentifier")           \
+  F(AssignmentTargetOrForInOfBinding, 2, ComputedMemberAssignmentTarget,      \
+    COMPUTED_MEMBER_ASSIGNMENT_TARGET,                                        \
+    "AssignmentTargetOrForInOfBinding::ComputedMemberAssignmentTarget")       \
+  F(AssignmentTargetOrForInOfBinding, 3, ForInOfBinding, FOR_IN_OF_BINDING,   \
+    "AssignmentTargetOrForInOfBinding::ForInOfBinding")                       \
+  F(AssignmentTargetOrForInOfBinding, 4, ObjectAssignmentTarget,              \
+    OBJECT_ASSIGNMENT_TARGET,                                                 \
+    "AssignmentTargetOrForInOfBinding::ObjectAssignmentTarget")               \
+  F(AssignmentTargetOrForInOfBinding, 5, StaticMemberAssignmentTarget,        \
+    STATIC_MEMBER_ASSIGNMENT_TARGET,                                          \
+    "AssignmentTargetOrForInOfBinding::StaticMemberAssignmentTarget")
+
+const size_t BINAST_SUM_ASSIGNMENT_TARGET_OR_FOR_IN_OF_BINDING_LIMIT = 6;
+
 // Iteration through the interfaces of sum AssignmentTargetPattern
 #define FOR_EACH_BIN_INTERFACE_IN_SUM_ASSIGNMENT_TARGET_PATTERN(F)             \
   F(AssignmentTargetPattern, 0, ArrayAssignmentTarget,                         \
@@ -821,6 +844,166 @@ const size_t BINAST_SUM_BINDING_PATTERN_LIMIT = 2;
 
 const size_t BINAST_SUM_BINDING_PROPERTY_LIMIT = 2;
 
+// Iteration through the interfaces of sum
+// ClassDeclarationOrExpressionOrFunctionDeclaration
+#define FOR_EACH_BIN_INTERFACE_IN_SUM_CLASS_DECLARATION_OR_EXPRESSION_OR_FUNCTION_DECLARATION( \
+    F)                                                                                         \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 0, ArrayExpression,                     \
+    ARRAY_EXPRESSION,                                                                          \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::ArrayExpression")                      \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 1,                                      \
+    AssignmentExpression, ASSIGNMENT_EXPRESSION,                                               \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::AssignmentExpression")                 \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 2, AwaitExpression,                     \
+    AWAIT_EXPRESSION,                                                                          \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::AwaitExpression")                      \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 3, BinaryExpression,                    \
+    BINARY_EXPRESSION,                                                                         \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::BinaryExpression")                     \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 4, CallExpression,                      \
+    CALL_EXPRESSION,                                                                           \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::CallExpression")                       \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 5, ClassDeclaration,                    \
+    CLASS_DECLARATION,                                                                         \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::ClassDeclaration")                     \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 6, ClassExpression,                     \
+    CLASS_EXPRESSION,                                                                          \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::ClassExpression")                      \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 7,                                      \
+    CompoundAssignmentExpression, COMPOUND_ASSIGNMENT_EXPRESSION,                              \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "CompoundAssignmentExpression")                                                            \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 8,                                      \
+    ComputedMemberExpression, COMPUTED_MEMBER_EXPRESSION,                                      \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "ComputedMemberExpression")                                                                \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 9,                                      \
+    ConditionalExpression, CONDITIONAL_EXPRESSION,                                             \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "ConditionalExpression")                                                                   \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 10,                                     \
+    EagerArrowExpressionWithExpression,                                                        \
+    EAGER_ARROW_EXPRESSION_WITH_EXPRESSION,                                                    \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "EagerArrowExpressionWithExpression")                                                      \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 11,                                     \
+    EagerArrowExpressionWithFunctionBody,                                                      \
+    EAGER_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                                 \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "EagerArrowExpressionWithFunctionBody")                                                    \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 12,                                     \
+    EagerFunctionDeclaration, EAGER_FUNCTION_DECLARATION,                                      \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "EagerFunctionDeclaration")                                                                \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 13,                                     \
+    EagerFunctionExpression, EAGER_FUNCTION_EXPRESSION,                                        \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "EagerFunctionExpression")                                                                 \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 14,                                     \
+    IdentifierExpression, IDENTIFIER_EXPRESSION,                                               \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::IdentifierExpression")                 \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 15,                                     \
+    LazyArrowExpressionWithExpression, LAZY_ARROW_EXPRESSION_WITH_EXPRESSION,                  \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "LazyArrowExpressionWithExpression")                                                       \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 16,                                     \
+    LazyArrowExpressionWithFunctionBody,                                                       \
+    LAZY_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                                  \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "LazyArrowExpressionWithFunctionBody")                                                     \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 17,                                     \
+    LazyFunctionDeclaration, LAZY_FUNCTION_DECLARATION,                                        \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "LazyFunctionDeclaration")                                                                 \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 18,                                     \
+    LazyFunctionExpression, LAZY_FUNCTION_EXPRESSION,                                          \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "LazyFunctionExpression")                                                                  \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 19,                                     \
+    LiteralBooleanExpression, LITERAL_BOOLEAN_EXPRESSION,                                      \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "LiteralBooleanExpression")                                                                \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 20,                                     \
+    LiteralInfinityExpression, LITERAL_INFINITY_EXPRESSION,                                    \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "LiteralInfinityExpression")                                                               \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 21,                                     \
+    LiteralNullExpression, LITERAL_NULL_EXPRESSION,                                            \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "LiteralNullExpression")                                                                   \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 22,                                     \
+    LiteralNumericExpression, LITERAL_NUMERIC_EXPRESSION,                                      \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "LiteralNumericExpression")                                                                \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 23,                                     \
+    LiteralRegExpExpression, LITERAL_REG_EXP_EXPRESSION,                                       \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "LiteralRegExpExpression")                                                                 \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 24,                                     \
+    LiteralStringExpression, LITERAL_STRING_EXPRESSION,                                        \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "LiteralStringExpression")                                                                 \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 25, NewExpression,                      \
+    NEW_EXPRESSION,                                                                            \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::NewExpression")                        \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 26,                                     \
+    NewTargetExpression, NEW_TARGET_EXPRESSION,                                                \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::NewTargetExpression")                  \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 27, ObjectExpression,                   \
+    OBJECT_EXPRESSION,                                                                         \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::ObjectExpression")                     \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 28,                                     \
+    StaticMemberExpression, STATIC_MEMBER_EXPRESSION,                                          \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::"                                      \
+    "StaticMemberExpression")                                                                  \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 29, TemplateExpression,                 \
+    TEMPLATE_EXPRESSION,                                                                       \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::TemplateExpression")                   \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 30, ThisExpression,                     \
+    THIS_EXPRESSION,                                                                           \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::ThisExpression")                       \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 31, UnaryExpression,                    \
+    UNARY_EXPRESSION,                                                                          \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::UnaryExpression")                      \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 32, UpdateExpression,                   \
+    UPDATE_EXPRESSION,                                                                         \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::UpdateExpression")                     \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 33, YieldExpression,                    \
+    YIELD_EXPRESSION,                                                                          \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::YieldExpression")                      \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration, 34,                                     \
+    YieldStarExpression, YIELD_STAR_EXPRESSION,                                                \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration::YieldStarExpression")
+
+const size_t
+    BINAST_SUM_CLASS_DECLARATION_OR_EXPRESSION_OR_FUNCTION_DECLARATION_LIMIT =
+        35;
+
+// Iteration through the interfaces of sum
+// ClassDeclarationOrFunctionDeclarationOrVariableDeclaration
+#define FOR_EACH_BIN_INTERFACE_IN_SUM_CLASS_DECLARATION_OR_FUNCTION_DECLARATION_OR_VARIABLE_DECLARATION( \
+    F)                                                                                                   \
+  F(ClassDeclarationOrFunctionDeclarationOrVariableDeclaration, 0,                                       \
+    ClassDeclaration, CLASS_DECLARATION,                                                                 \
+    "ClassDeclarationOrFunctionDeclarationOrVariableDeclaration::"                                       \
+    "ClassDeclaration")                                                                                  \
+  F(ClassDeclarationOrFunctionDeclarationOrVariableDeclaration, 1,                                       \
+    EagerFunctionDeclaration, EAGER_FUNCTION_DECLARATION,                                                \
+    "ClassDeclarationOrFunctionDeclarationOrVariableDeclaration::"                                       \
+    "EagerFunctionDeclaration")                                                                          \
+  F(ClassDeclarationOrFunctionDeclarationOrVariableDeclaration, 2,                                       \
+    LazyFunctionDeclaration, LAZY_FUNCTION_DECLARATION,                                                  \
+    "ClassDeclarationOrFunctionDeclarationOrVariableDeclaration::"                                       \
+    "LazyFunctionDeclaration")                                                                           \
+  F(ClassDeclarationOrFunctionDeclarationOrVariableDeclaration, 3,                                       \
+    VariableDeclaration, VARIABLE_DECLARATION,                                                           \
+    "ClassDeclarationOrFunctionDeclarationOrVariableDeclaration::"                                       \
+    "VariableDeclaration")
+
+const size_t
+    BINAST_SUM_CLASS_DECLARATION_OR_FUNCTION_DECLARATION_OR_VARIABLE_DECLARATION_LIMIT =
+        4;
+
 // Iteration through the interfaces of sum ExportDeclaration
 #define FOR_EACH_BIN_INTERFACE_IN_SUM_EXPORT_DECLARATION(F)            \
   F(ExportDeclaration, 0, Export, EXPORT, "ExportDeclaration::Export") \
@@ -834,6 +1017,107 @@ const size_t BINAST_SUM_BINDING_PROPERTY_LIMIT = 2;
     "ExportDeclaration::ExportLocals")
 
 const size_t BINAST_SUM_EXPORT_DECLARATION_LIMIT = 5;
+
+// Iteration through the interfaces of sum
+// ExportDeclarationOrImportDeclarationOrStatement
+#define FOR_EACH_BIN_INTERFACE_IN_SUM_EXPORT_DECLARATION_OR_IMPORT_DECLARATION_OR_STATEMENT( \
+    F)                                                                                       \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 0, Block, BLOCK,                        \
+    "ExportDeclarationOrImportDeclarationOrStatement::Block")                                \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 1, BreakStatement,                      \
+    BREAK_STATEMENT,                                                                         \
+    "ExportDeclarationOrImportDeclarationOrStatement::BreakStatement")                       \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 2, ClassDeclaration,                    \
+    CLASS_DECLARATION,                                                                       \
+    "ExportDeclarationOrImportDeclarationOrStatement::ClassDeclaration")                     \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 3, ContinueStatement,                   \
+    CONTINUE_STATEMENT,                                                                      \
+    "ExportDeclarationOrImportDeclarationOrStatement::ContinueStatement")                    \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 4, DebuggerStatement,                   \
+    DEBUGGER_STATEMENT,                                                                      \
+    "ExportDeclarationOrImportDeclarationOrStatement::DebuggerStatement")                    \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 5, DoWhileStatement,                    \
+    DO_WHILE_STATEMENT,                                                                      \
+    "ExportDeclarationOrImportDeclarationOrStatement::DoWhileStatement")                     \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 6,                                      \
+    EagerFunctionDeclaration, EAGER_FUNCTION_DECLARATION,                                    \
+    "ExportDeclarationOrImportDeclarationOrStatement::"                                      \
+    "EagerFunctionDeclaration")                                                              \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 7, EmptyStatement,                      \
+    EMPTY_STATEMENT,                                                                         \
+    "ExportDeclarationOrImportDeclarationOrStatement::EmptyStatement")                       \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 8, Export, EXPORT,                      \
+    "ExportDeclarationOrImportDeclarationOrStatement::Export")                               \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 9, ExportAllFrom,                       \
+    EXPORT_ALL_FROM,                                                                         \
+    "ExportDeclarationOrImportDeclarationOrStatement::ExportAllFrom")                        \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 10, ExportDefault,                      \
+    EXPORT_DEFAULT,                                                                          \
+    "ExportDeclarationOrImportDeclarationOrStatement::ExportDefault")                        \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 11, ExportFrom,                         \
+    EXPORT_FROM,                                                                             \
+    "ExportDeclarationOrImportDeclarationOrStatement::ExportFrom")                           \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 12, ExportLocals,                       \
+    EXPORT_LOCALS,                                                                           \
+    "ExportDeclarationOrImportDeclarationOrStatement::ExportLocals")                         \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 13, ExpressionStatement,                \
+    EXPRESSION_STATEMENT,                                                                    \
+    "ExportDeclarationOrImportDeclarationOrStatement::ExpressionStatement")                  \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 14, ForInStatement,                     \
+    FOR_IN_STATEMENT,                                                                        \
+    "ExportDeclarationOrImportDeclarationOrStatement::ForInStatement")                       \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 15, ForOfStatement,                     \
+    FOR_OF_STATEMENT,                                                                        \
+    "ExportDeclarationOrImportDeclarationOrStatement::ForOfStatement")                       \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 16, ForStatement,                       \
+    FOR_STATEMENT,                                                                           \
+    "ExportDeclarationOrImportDeclarationOrStatement::ForStatement")                         \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 17, IfStatement,                        \
+    IF_STATEMENT,                                                                            \
+    "ExportDeclarationOrImportDeclarationOrStatement::IfStatement")                          \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 18, Import, IMPORT,                     \
+    "ExportDeclarationOrImportDeclarationOrStatement::Import")                               \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 19, ImportNamespace,                    \
+    IMPORT_NAMESPACE,                                                                        \
+    "ExportDeclarationOrImportDeclarationOrStatement::ImportNamespace")                      \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 20, LabelledStatement,                  \
+    LABELLED_STATEMENT,                                                                      \
+    "ExportDeclarationOrImportDeclarationOrStatement::LabelledStatement")                    \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 21,                                     \
+    LazyFunctionDeclaration, LAZY_FUNCTION_DECLARATION,                                      \
+    "ExportDeclarationOrImportDeclarationOrStatement::"                                      \
+    "LazyFunctionDeclaration")                                                               \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 22, ReturnStatement,                    \
+    RETURN_STATEMENT,                                                                        \
+    "ExportDeclarationOrImportDeclarationOrStatement::ReturnStatement")                      \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 23, SwitchStatement,                    \
+    SWITCH_STATEMENT,                                                                        \
+    "ExportDeclarationOrImportDeclarationOrStatement::SwitchStatement")                      \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 24,                                     \
+    SwitchStatementWithDefault, SWITCH_STATEMENT_WITH_DEFAULT,                               \
+    "ExportDeclarationOrImportDeclarationOrStatement::"                                      \
+    "SwitchStatementWithDefault")                                                            \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 25, ThrowStatement,                     \
+    THROW_STATEMENT,                                                                         \
+    "ExportDeclarationOrImportDeclarationOrStatement::ThrowStatement")                       \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 26, TryCatchStatement,                  \
+    TRY_CATCH_STATEMENT,                                                                     \
+    "ExportDeclarationOrImportDeclarationOrStatement::TryCatchStatement")                    \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 27, TryFinallyStatement,                \
+    TRY_FINALLY_STATEMENT,                                                                   \
+    "ExportDeclarationOrImportDeclarationOrStatement::TryFinallyStatement")                  \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 28, VariableDeclaration,                \
+    VARIABLE_DECLARATION,                                                                    \
+    "ExportDeclarationOrImportDeclarationOrStatement::VariableDeclaration")                  \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 29, WhileStatement,                     \
+    WHILE_STATEMENT,                                                                         \
+    "ExportDeclarationOrImportDeclarationOrStatement::WhileStatement")                       \
+  F(ExportDeclarationOrImportDeclarationOrStatement, 30, WithStatement,                      \
+    WITH_STATEMENT,                                                                          \
+    "ExportDeclarationOrImportDeclarationOrStatement::WithStatement")
+
+const size_t
+    BINAST_SUM_EXPORT_DECLARATION_OR_IMPORT_DECLARATION_OR_STATEMENT_LIMIT = 31;
 
 // Iteration through the interfaces of sum Expression
 #define FOR_EACH_BIN_INTERFACE_IN_SUM_EXPRESSION(F)                         \
@@ -908,6 +1192,93 @@ const size_t BINAST_SUM_EXPORT_DECLARATION_LIMIT = 5;
     "Expression::YieldStarExpression")
 
 const size_t BINAST_SUM_EXPRESSION_LIMIT = 32;
+
+// Iteration through the interfaces of sum ExpressionOrSpreadElement
+#define FOR_EACH_BIN_INTERFACE_IN_SUM_EXPRESSION_OR_SPREAD_ELEMENT(F)          \
+  F(ExpressionOrSpreadElement, 0, ArrayExpression, ARRAY_EXPRESSION,           \
+    "ExpressionOrSpreadElement::ArrayExpression")                              \
+  F(ExpressionOrSpreadElement, 1, AssignmentExpression, ASSIGNMENT_EXPRESSION, \
+    "ExpressionOrSpreadElement::AssignmentExpression")                         \
+  F(ExpressionOrSpreadElement, 2, AwaitExpression, AWAIT_EXPRESSION,           \
+    "ExpressionOrSpreadElement::AwaitExpression")                              \
+  F(ExpressionOrSpreadElement, 3, BinaryExpression, BINARY_EXPRESSION,         \
+    "ExpressionOrSpreadElement::BinaryExpression")                             \
+  F(ExpressionOrSpreadElement, 4, CallExpression, CALL_EXPRESSION,             \
+    "ExpressionOrSpreadElement::CallExpression")                               \
+  F(ExpressionOrSpreadElement, 5, ClassExpression, CLASS_EXPRESSION,           \
+    "ExpressionOrSpreadElement::ClassExpression")                              \
+  F(ExpressionOrSpreadElement, 6, CompoundAssignmentExpression,                \
+    COMPOUND_ASSIGNMENT_EXPRESSION,                                            \
+    "ExpressionOrSpreadElement::CompoundAssignmentExpression")                 \
+  F(ExpressionOrSpreadElement, 7, ComputedMemberExpression,                    \
+    COMPUTED_MEMBER_EXPRESSION,                                                \
+    "ExpressionOrSpreadElement::ComputedMemberExpression")                     \
+  F(ExpressionOrSpreadElement, 8, ConditionalExpression,                       \
+    CONDITIONAL_EXPRESSION,                                                    \
+    "ExpressionOrSpreadElement::ConditionalExpression")                        \
+  F(ExpressionOrSpreadElement, 9, EagerArrowExpressionWithExpression,          \
+    EAGER_ARROW_EXPRESSION_WITH_EXPRESSION,                                    \
+    "ExpressionOrSpreadElement::EagerArrowExpressionWithExpression")           \
+  F(ExpressionOrSpreadElement, 10, EagerArrowExpressionWithFunctionBody,       \
+    EAGER_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                 \
+    "ExpressionOrSpreadElement::EagerArrowExpressionWithFunctionBody")         \
+  F(ExpressionOrSpreadElement, 11, EagerFunctionExpression,                    \
+    EAGER_FUNCTION_EXPRESSION,                                                 \
+    "ExpressionOrSpreadElement::EagerFunctionExpression")                      \
+  F(ExpressionOrSpreadElement, 12, IdentifierExpression,                       \
+    IDENTIFIER_EXPRESSION, "ExpressionOrSpreadElement::IdentifierExpression")  \
+  F(ExpressionOrSpreadElement, 13, LazyArrowExpressionWithExpression,          \
+    LAZY_ARROW_EXPRESSION_WITH_EXPRESSION,                                     \
+    "ExpressionOrSpreadElement::LazyArrowExpressionWithExpression")            \
+  F(ExpressionOrSpreadElement, 14, LazyArrowExpressionWithFunctionBody,        \
+    LAZY_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                  \
+    "ExpressionOrSpreadElement::LazyArrowExpressionWithFunctionBody")          \
+  F(ExpressionOrSpreadElement, 15, LazyFunctionExpression,                     \
+    LAZY_FUNCTION_EXPRESSION,                                                  \
+    "ExpressionOrSpreadElement::LazyFunctionExpression")                       \
+  F(ExpressionOrSpreadElement, 16, LiteralBooleanExpression,                   \
+    LITERAL_BOOLEAN_EXPRESSION,                                                \
+    "ExpressionOrSpreadElement::LiteralBooleanExpression")                     \
+  F(ExpressionOrSpreadElement, 17, LiteralInfinityExpression,                  \
+    LITERAL_INFINITY_EXPRESSION,                                               \
+    "ExpressionOrSpreadElement::LiteralInfinityExpression")                    \
+  F(ExpressionOrSpreadElement, 18, LiteralNullExpression,                      \
+    LITERAL_NULL_EXPRESSION,                                                   \
+    "ExpressionOrSpreadElement::LiteralNullExpression")                        \
+  F(ExpressionOrSpreadElement, 19, LiteralNumericExpression,                   \
+    LITERAL_NUMERIC_EXPRESSION,                                                \
+    "ExpressionOrSpreadElement::LiteralNumericExpression")                     \
+  F(ExpressionOrSpreadElement, 20, LiteralRegExpExpression,                    \
+    LITERAL_REG_EXP_EXPRESSION,                                                \
+    "ExpressionOrSpreadElement::LiteralRegExpExpression")                      \
+  F(ExpressionOrSpreadElement, 21, LiteralStringExpression,                    \
+    LITERAL_STRING_EXPRESSION,                                                 \
+    "ExpressionOrSpreadElement::LiteralStringExpression")                      \
+  F(ExpressionOrSpreadElement, 22, NewExpression, NEW_EXPRESSION,              \
+    "ExpressionOrSpreadElement::NewExpression")                                \
+  F(ExpressionOrSpreadElement, 23, NewTargetExpression, NEW_TARGET_EXPRESSION, \
+    "ExpressionOrSpreadElement::NewTargetExpression")                          \
+  F(ExpressionOrSpreadElement, 24, ObjectExpression, OBJECT_EXPRESSION,        \
+    "ExpressionOrSpreadElement::ObjectExpression")                             \
+  F(ExpressionOrSpreadElement, 25, SpreadElement, SPREAD_ELEMENT,              \
+    "ExpressionOrSpreadElement::SpreadElement")                                \
+  F(ExpressionOrSpreadElement, 26, StaticMemberExpression,                     \
+    STATIC_MEMBER_EXPRESSION,                                                  \
+    "ExpressionOrSpreadElement::StaticMemberExpression")                       \
+  F(ExpressionOrSpreadElement, 27, TemplateExpression, TEMPLATE_EXPRESSION,    \
+    "ExpressionOrSpreadElement::TemplateExpression")                           \
+  F(ExpressionOrSpreadElement, 28, ThisExpression, THIS_EXPRESSION,            \
+    "ExpressionOrSpreadElement::ThisExpression")                               \
+  F(ExpressionOrSpreadElement, 29, UnaryExpression, UNARY_EXPRESSION,          \
+    "ExpressionOrSpreadElement::UnaryExpression")                              \
+  F(ExpressionOrSpreadElement, 30, UpdateExpression, UPDATE_EXPRESSION,        \
+    "ExpressionOrSpreadElement::UpdateExpression")                             \
+  F(ExpressionOrSpreadElement, 31, YieldExpression, YIELD_EXPRESSION,          \
+    "ExpressionOrSpreadElement::YieldExpression")                              \
+  F(ExpressionOrSpreadElement, 32, YieldStarExpression, YIELD_STAR_EXPRESSION, \
+    "ExpressionOrSpreadElement::YieldStarExpression")
+
+const size_t BINAST_SUM_EXPRESSION_OR_SPREAD_ELEMENT_LIMIT = 33;
 
 // Iteration through the interfaces of sum ExpressionOrSuper
 #define FOR_EACH_BIN_INTERFACE_IN_SUM_EXPRESSION_OR_SUPER(F)                   \
@@ -1074,28 +1445,98 @@ const size_t BINAST_SUM_EXPRESSION_OR_SUPER_LIMIT = 33;
 
 const size_t BINAST_SUM_EXPRESSION_OR_TEMPLATE_ELEMENT_LIMIT = 33;
 
-// Iteration through the interfaces of sum ForInOfBindingOrAssignmentTarget
-#define FOR_EACH_BIN_INTERFACE_IN_SUM_FOR_IN_OF_BINDING_OR_ASSIGNMENT_TARGET( \
-    F)                                                                        \
-  F(ForInOfBindingOrAssignmentTarget, 0, ArrayAssignmentTarget,               \
-    ARRAY_ASSIGNMENT_TARGET,                                                  \
-    "ForInOfBindingOrAssignmentTarget::ArrayAssignmentTarget")                \
-  F(ForInOfBindingOrAssignmentTarget, 1, AssignmentTargetIdentifier,          \
-    ASSIGNMENT_TARGET_IDENTIFIER,                                             \
-    "ForInOfBindingOrAssignmentTarget::AssignmentTargetIdentifier")           \
-  F(ForInOfBindingOrAssignmentTarget, 2, ComputedMemberAssignmentTarget,      \
-    COMPUTED_MEMBER_ASSIGNMENT_TARGET,                                        \
-    "ForInOfBindingOrAssignmentTarget::ComputedMemberAssignmentTarget")       \
-  F(ForInOfBindingOrAssignmentTarget, 3, ForInOfBinding, FOR_IN_OF_BINDING,   \
-    "ForInOfBindingOrAssignmentTarget::ForInOfBinding")                       \
-  F(ForInOfBindingOrAssignmentTarget, 4, ObjectAssignmentTarget,              \
-    OBJECT_ASSIGNMENT_TARGET,                                                 \
-    "ForInOfBindingOrAssignmentTarget::ObjectAssignmentTarget")               \
-  F(ForInOfBindingOrAssignmentTarget, 5, StaticMemberAssignmentTarget,        \
-    STATIC_MEMBER_ASSIGNMENT_TARGET,                                          \
-    "ForInOfBindingOrAssignmentTarget::StaticMemberAssignmentTarget")
+// Iteration through the interfaces of sum ExpressionOrVariableDeclaration
+#define FOR_EACH_BIN_INTERFACE_IN_SUM_EXPRESSION_OR_VARIABLE_DECLARATION(F)    \
+  F(ExpressionOrVariableDeclaration, 0, ArrayExpression, ARRAY_EXPRESSION,     \
+    "ExpressionOrVariableDeclaration::ArrayExpression")                        \
+  F(ExpressionOrVariableDeclaration, 1, AssignmentExpression,                  \
+    ASSIGNMENT_EXPRESSION,                                                     \
+    "ExpressionOrVariableDeclaration::AssignmentExpression")                   \
+  F(ExpressionOrVariableDeclaration, 2, AwaitExpression, AWAIT_EXPRESSION,     \
+    "ExpressionOrVariableDeclaration::AwaitExpression")                        \
+  F(ExpressionOrVariableDeclaration, 3, BinaryExpression, BINARY_EXPRESSION,   \
+    "ExpressionOrVariableDeclaration::BinaryExpression")                       \
+  F(ExpressionOrVariableDeclaration, 4, CallExpression, CALL_EXPRESSION,       \
+    "ExpressionOrVariableDeclaration::CallExpression")                         \
+  F(ExpressionOrVariableDeclaration, 5, ClassExpression, CLASS_EXPRESSION,     \
+    "ExpressionOrVariableDeclaration::ClassExpression")                        \
+  F(ExpressionOrVariableDeclaration, 6, CompoundAssignmentExpression,          \
+    COMPOUND_ASSIGNMENT_EXPRESSION,                                            \
+    "ExpressionOrVariableDeclaration::CompoundAssignmentExpression")           \
+  F(ExpressionOrVariableDeclaration, 7, ComputedMemberExpression,              \
+    COMPUTED_MEMBER_EXPRESSION,                                                \
+    "ExpressionOrVariableDeclaration::ComputedMemberExpression")               \
+  F(ExpressionOrVariableDeclaration, 8, ConditionalExpression,                 \
+    CONDITIONAL_EXPRESSION,                                                    \
+    "ExpressionOrVariableDeclaration::ConditionalExpression")                  \
+  F(ExpressionOrVariableDeclaration, 9, EagerArrowExpressionWithExpression,    \
+    EAGER_ARROW_EXPRESSION_WITH_EXPRESSION,                                    \
+    "ExpressionOrVariableDeclaration::EagerArrowExpressionWithExpression")     \
+  F(ExpressionOrVariableDeclaration, 10, EagerArrowExpressionWithFunctionBody, \
+    EAGER_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                 \
+    "ExpressionOrVariableDeclaration::EagerArrowExpressionWithFunctionBody")   \
+  F(ExpressionOrVariableDeclaration, 11, EagerFunctionExpression,              \
+    EAGER_FUNCTION_EXPRESSION,                                                 \
+    "ExpressionOrVariableDeclaration::EagerFunctionExpression")                \
+  F(ExpressionOrVariableDeclaration, 12, IdentifierExpression,                 \
+    IDENTIFIER_EXPRESSION,                                                     \
+    "ExpressionOrVariableDeclaration::IdentifierExpression")                   \
+  F(ExpressionOrVariableDeclaration, 13, LazyArrowExpressionWithExpression,    \
+    LAZY_ARROW_EXPRESSION_WITH_EXPRESSION,                                     \
+    "ExpressionOrVariableDeclaration::LazyArrowExpressionWithExpression")      \
+  F(ExpressionOrVariableDeclaration, 14, LazyArrowExpressionWithFunctionBody,  \
+    LAZY_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                  \
+    "ExpressionOrVariableDeclaration::LazyArrowExpressionWithFunctionBody")    \
+  F(ExpressionOrVariableDeclaration, 15, LazyFunctionExpression,               \
+    LAZY_FUNCTION_EXPRESSION,                                                  \
+    "ExpressionOrVariableDeclaration::LazyFunctionExpression")                 \
+  F(ExpressionOrVariableDeclaration, 16, LiteralBooleanExpression,             \
+    LITERAL_BOOLEAN_EXPRESSION,                                                \
+    "ExpressionOrVariableDeclaration::LiteralBooleanExpression")               \
+  F(ExpressionOrVariableDeclaration, 17, LiteralInfinityExpression,            \
+    LITERAL_INFINITY_EXPRESSION,                                               \
+    "ExpressionOrVariableDeclaration::LiteralInfinityExpression")              \
+  F(ExpressionOrVariableDeclaration, 18, LiteralNullExpression,                \
+    LITERAL_NULL_EXPRESSION,                                                   \
+    "ExpressionOrVariableDeclaration::LiteralNullExpression")                  \
+  F(ExpressionOrVariableDeclaration, 19, LiteralNumericExpression,             \
+    LITERAL_NUMERIC_EXPRESSION,                                                \
+    "ExpressionOrVariableDeclaration::LiteralNumericExpression")               \
+  F(ExpressionOrVariableDeclaration, 20, LiteralRegExpExpression,              \
+    LITERAL_REG_EXP_EXPRESSION,                                                \
+    "ExpressionOrVariableDeclaration::LiteralRegExpExpression")                \
+  F(ExpressionOrVariableDeclaration, 21, LiteralStringExpression,              \
+    LITERAL_STRING_EXPRESSION,                                                 \
+    "ExpressionOrVariableDeclaration::LiteralStringExpression")                \
+  F(ExpressionOrVariableDeclaration, 22, NewExpression, NEW_EXPRESSION,        \
+    "ExpressionOrVariableDeclaration::NewExpression")                          \
+  F(ExpressionOrVariableDeclaration, 23, NewTargetExpression,                  \
+    NEW_TARGET_EXPRESSION,                                                     \
+    "ExpressionOrVariableDeclaration::NewTargetExpression")                    \
+  F(ExpressionOrVariableDeclaration, 24, ObjectExpression, OBJECT_EXPRESSION,  \
+    "ExpressionOrVariableDeclaration::ObjectExpression")                       \
+  F(ExpressionOrVariableDeclaration, 25, StaticMemberExpression,               \
+    STATIC_MEMBER_EXPRESSION,                                                  \
+    "ExpressionOrVariableDeclaration::StaticMemberExpression")                 \
+  F(ExpressionOrVariableDeclaration, 26, TemplateExpression,                   \
+    TEMPLATE_EXPRESSION,                                                       \
+    "ExpressionOrVariableDeclaration::TemplateExpression")                     \
+  F(ExpressionOrVariableDeclaration, 27, ThisExpression, THIS_EXPRESSION,      \
+    "ExpressionOrVariableDeclaration::ThisExpression")                         \
+  F(ExpressionOrVariableDeclaration, 28, UnaryExpression, UNARY_EXPRESSION,    \
+    "ExpressionOrVariableDeclaration::UnaryExpression")                        \
+  F(ExpressionOrVariableDeclaration, 29, UpdateExpression, UPDATE_EXPRESSION,  \
+    "ExpressionOrVariableDeclaration::UpdateExpression")                       \
+  F(ExpressionOrVariableDeclaration, 30, VariableDeclaration,                  \
+    VARIABLE_DECLARATION,                                                      \
+    "ExpressionOrVariableDeclaration::VariableDeclaration")                    \
+  F(ExpressionOrVariableDeclaration, 31, YieldExpression, YIELD_EXPRESSION,    \
+    "ExpressionOrVariableDeclaration::YieldExpression")                        \
+  F(ExpressionOrVariableDeclaration, 32, YieldStarExpression,                  \
+    YIELD_STAR_EXPRESSION,                                                     \
+    "ExpressionOrVariableDeclaration::YieldStarExpression")
 
-const size_t BINAST_SUM_FOR_IN_OF_BINDING_OR_ASSIGNMENT_TARGET_LIMIT = 6;
+const size_t BINAST_SUM_EXPRESSION_OR_VARIABLE_DECLARATION_LIMIT = 33;
 
 // Iteration through the interfaces of sum FunctionDeclaration
 #define FOR_EACH_BIN_INTERFACE_IN_SUM_FUNCTION_DECLARATION(F) \
@@ -1106,166 +1547,6 @@ const size_t BINAST_SUM_FOR_IN_OF_BINDING_OR_ASSIGNMENT_TARGET_LIMIT = 6;
     LAZY_FUNCTION_DECLARATION, "FunctionDeclaration::LazyFunctionDeclaration")
 
 const size_t BINAST_SUM_FUNCTION_DECLARATION_LIMIT = 2;
-
-// Iteration through the interfaces of sum
-// FunctionDeclarationOrClassDeclarationOrExpression
-#define FOR_EACH_BIN_INTERFACE_IN_SUM_FUNCTION_DECLARATION_OR_CLASS_DECLARATION_OR_EXPRESSION( \
-    F)                                                                                         \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 0, ArrayExpression,                     \
-    ARRAY_EXPRESSION,                                                                          \
-    "FunctionDeclarationOrClassDeclarationOrExpression::ArrayExpression")                      \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 1,                                      \
-    AssignmentExpression, ASSIGNMENT_EXPRESSION,                                               \
-    "FunctionDeclarationOrClassDeclarationOrExpression::AssignmentExpression")                 \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 2, AwaitExpression,                     \
-    AWAIT_EXPRESSION,                                                                          \
-    "FunctionDeclarationOrClassDeclarationOrExpression::AwaitExpression")                      \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 3, BinaryExpression,                    \
-    BINARY_EXPRESSION,                                                                         \
-    "FunctionDeclarationOrClassDeclarationOrExpression::BinaryExpression")                     \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 4, CallExpression,                      \
-    CALL_EXPRESSION,                                                                           \
-    "FunctionDeclarationOrClassDeclarationOrExpression::CallExpression")                       \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 5, ClassDeclaration,                    \
-    CLASS_DECLARATION,                                                                         \
-    "FunctionDeclarationOrClassDeclarationOrExpression::ClassDeclaration")                     \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 6, ClassExpression,                     \
-    CLASS_EXPRESSION,                                                                          \
-    "FunctionDeclarationOrClassDeclarationOrExpression::ClassExpression")                      \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 7,                                      \
-    CompoundAssignmentExpression, COMPOUND_ASSIGNMENT_EXPRESSION,                              \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "CompoundAssignmentExpression")                                                            \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 8,                                      \
-    ComputedMemberExpression, COMPUTED_MEMBER_EXPRESSION,                                      \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "ComputedMemberExpression")                                                                \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 9,                                      \
-    ConditionalExpression, CONDITIONAL_EXPRESSION,                                             \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "ConditionalExpression")                                                                   \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 10,                                     \
-    EagerArrowExpressionWithExpression,                                                        \
-    EAGER_ARROW_EXPRESSION_WITH_EXPRESSION,                                                    \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "EagerArrowExpressionWithExpression")                                                      \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 11,                                     \
-    EagerArrowExpressionWithFunctionBody,                                                      \
-    EAGER_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                                 \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "EagerArrowExpressionWithFunctionBody")                                                    \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 12,                                     \
-    EagerFunctionDeclaration, EAGER_FUNCTION_DECLARATION,                                      \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "EagerFunctionDeclaration")                                                                \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 13,                                     \
-    EagerFunctionExpression, EAGER_FUNCTION_EXPRESSION,                                        \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "EagerFunctionExpression")                                                                 \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 14,                                     \
-    IdentifierExpression, IDENTIFIER_EXPRESSION,                                               \
-    "FunctionDeclarationOrClassDeclarationOrExpression::IdentifierExpression")                 \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 15,                                     \
-    LazyArrowExpressionWithExpression, LAZY_ARROW_EXPRESSION_WITH_EXPRESSION,                  \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "LazyArrowExpressionWithExpression")                                                       \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 16,                                     \
-    LazyArrowExpressionWithFunctionBody,                                                       \
-    LAZY_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                                  \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "LazyArrowExpressionWithFunctionBody")                                                     \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 17,                                     \
-    LazyFunctionDeclaration, LAZY_FUNCTION_DECLARATION,                                        \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "LazyFunctionDeclaration")                                                                 \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 18,                                     \
-    LazyFunctionExpression, LAZY_FUNCTION_EXPRESSION,                                          \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "LazyFunctionExpression")                                                                  \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 19,                                     \
-    LiteralBooleanExpression, LITERAL_BOOLEAN_EXPRESSION,                                      \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "LiteralBooleanExpression")                                                                \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 20,                                     \
-    LiteralInfinityExpression, LITERAL_INFINITY_EXPRESSION,                                    \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "LiteralInfinityExpression")                                                               \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 21,                                     \
-    LiteralNullExpression, LITERAL_NULL_EXPRESSION,                                            \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "LiteralNullExpression")                                                                   \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 22,                                     \
-    LiteralNumericExpression, LITERAL_NUMERIC_EXPRESSION,                                      \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "LiteralNumericExpression")                                                                \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 23,                                     \
-    LiteralRegExpExpression, LITERAL_REG_EXP_EXPRESSION,                                       \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "LiteralRegExpExpression")                                                                 \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 24,                                     \
-    LiteralStringExpression, LITERAL_STRING_EXPRESSION,                                        \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "LiteralStringExpression")                                                                 \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 25, NewExpression,                      \
-    NEW_EXPRESSION,                                                                            \
-    "FunctionDeclarationOrClassDeclarationOrExpression::NewExpression")                        \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 26,                                     \
-    NewTargetExpression, NEW_TARGET_EXPRESSION,                                                \
-    "FunctionDeclarationOrClassDeclarationOrExpression::NewTargetExpression")                  \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 27, ObjectExpression,                   \
-    OBJECT_EXPRESSION,                                                                         \
-    "FunctionDeclarationOrClassDeclarationOrExpression::ObjectExpression")                     \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 28,                                     \
-    StaticMemberExpression, STATIC_MEMBER_EXPRESSION,                                          \
-    "FunctionDeclarationOrClassDeclarationOrExpression::"                                      \
-    "StaticMemberExpression")                                                                  \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 29, TemplateExpression,                 \
-    TEMPLATE_EXPRESSION,                                                                       \
-    "FunctionDeclarationOrClassDeclarationOrExpression::TemplateExpression")                   \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 30, ThisExpression,                     \
-    THIS_EXPRESSION,                                                                           \
-    "FunctionDeclarationOrClassDeclarationOrExpression::ThisExpression")                       \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 31, UnaryExpression,                    \
-    UNARY_EXPRESSION,                                                                          \
-    "FunctionDeclarationOrClassDeclarationOrExpression::UnaryExpression")                      \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 32, UpdateExpression,                   \
-    UPDATE_EXPRESSION,                                                                         \
-    "FunctionDeclarationOrClassDeclarationOrExpression::UpdateExpression")                     \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 33, YieldExpression,                    \
-    YIELD_EXPRESSION,                                                                          \
-    "FunctionDeclarationOrClassDeclarationOrExpression::YieldExpression")                      \
-  F(FunctionDeclarationOrClassDeclarationOrExpression, 34,                                     \
-    YieldStarExpression, YIELD_STAR_EXPRESSION,                                                \
-    "FunctionDeclarationOrClassDeclarationOrExpression::YieldStarExpression")
-
-const size_t
-    BINAST_SUM_FUNCTION_DECLARATION_OR_CLASS_DECLARATION_OR_EXPRESSION_LIMIT =
-        35;
-
-// Iteration through the interfaces of sum
-// FunctionDeclarationOrClassDeclarationOrVariableDeclaration
-#define FOR_EACH_BIN_INTERFACE_IN_SUM_FUNCTION_DECLARATION_OR_CLASS_DECLARATION_OR_VARIABLE_DECLARATION( \
-    F)                                                                                                   \
-  F(FunctionDeclarationOrClassDeclarationOrVariableDeclaration, 0,                                       \
-    ClassDeclaration, CLASS_DECLARATION,                                                                 \
-    "FunctionDeclarationOrClassDeclarationOrVariableDeclaration::"                                       \
-    "ClassDeclaration")                                                                                  \
-  F(FunctionDeclarationOrClassDeclarationOrVariableDeclaration, 1,                                       \
-    EagerFunctionDeclaration, EAGER_FUNCTION_DECLARATION,                                                \
-    "FunctionDeclarationOrClassDeclarationOrVariableDeclaration::"                                       \
-    "EagerFunctionDeclaration")                                                                          \
-  F(FunctionDeclarationOrClassDeclarationOrVariableDeclaration, 2,                                       \
-    LazyFunctionDeclaration, LAZY_FUNCTION_DECLARATION,                                                  \
-    "FunctionDeclarationOrClassDeclarationOrVariableDeclaration::"                                       \
-    "LazyFunctionDeclaration")                                                                           \
-  F(FunctionDeclarationOrClassDeclarationOrVariableDeclaration, 3,                                       \
-    VariableDeclaration, VARIABLE_DECLARATION,                                                           \
-    "FunctionDeclarationOrClassDeclarationOrVariableDeclaration::"                                       \
-    "VariableDeclaration")
-
-const size_t
-    BINAST_SUM_FUNCTION_DECLARATION_OR_CLASS_DECLARATION_OR_VARIABLE_DECLARATION_LIMIT =
-        4;
 
 // Iteration through the interfaces of sum FunctionExpression
 #define FOR_EACH_BIN_INTERFACE_IN_SUM_FUNCTION_EXPRESSION(F)                   \
@@ -1290,107 +1571,6 @@ const size_t BINAST_SUM_GETTER_LIMIT = 2;
     "ImportDeclaration::ImportNamespace")
 
 const size_t BINAST_SUM_IMPORT_DECLARATION_LIMIT = 2;
-
-// Iteration through the interfaces of sum
-// ImportDeclarationOrExportDeclarationOrStatement
-#define FOR_EACH_BIN_INTERFACE_IN_SUM_IMPORT_DECLARATION_OR_EXPORT_DECLARATION_OR_STATEMENT( \
-    F)                                                                                       \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 0, Block, BLOCK,                        \
-    "ImportDeclarationOrExportDeclarationOrStatement::Block")                                \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 1, BreakStatement,                      \
-    BREAK_STATEMENT,                                                                         \
-    "ImportDeclarationOrExportDeclarationOrStatement::BreakStatement")                       \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 2, ClassDeclaration,                    \
-    CLASS_DECLARATION,                                                                       \
-    "ImportDeclarationOrExportDeclarationOrStatement::ClassDeclaration")                     \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 3, ContinueStatement,                   \
-    CONTINUE_STATEMENT,                                                                      \
-    "ImportDeclarationOrExportDeclarationOrStatement::ContinueStatement")                    \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 4, DebuggerStatement,                   \
-    DEBUGGER_STATEMENT,                                                                      \
-    "ImportDeclarationOrExportDeclarationOrStatement::DebuggerStatement")                    \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 5, DoWhileStatement,                    \
-    DO_WHILE_STATEMENT,                                                                      \
-    "ImportDeclarationOrExportDeclarationOrStatement::DoWhileStatement")                     \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 6,                                      \
-    EagerFunctionDeclaration, EAGER_FUNCTION_DECLARATION,                                    \
-    "ImportDeclarationOrExportDeclarationOrStatement::"                                      \
-    "EagerFunctionDeclaration")                                                              \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 7, EmptyStatement,                      \
-    EMPTY_STATEMENT,                                                                         \
-    "ImportDeclarationOrExportDeclarationOrStatement::EmptyStatement")                       \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 8, Export, EXPORT,                      \
-    "ImportDeclarationOrExportDeclarationOrStatement::Export")                               \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 9, ExportAllFrom,                       \
-    EXPORT_ALL_FROM,                                                                         \
-    "ImportDeclarationOrExportDeclarationOrStatement::ExportAllFrom")                        \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 10, ExportDefault,                      \
-    EXPORT_DEFAULT,                                                                          \
-    "ImportDeclarationOrExportDeclarationOrStatement::ExportDefault")                        \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 11, ExportFrom,                         \
-    EXPORT_FROM,                                                                             \
-    "ImportDeclarationOrExportDeclarationOrStatement::ExportFrom")                           \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 12, ExportLocals,                       \
-    EXPORT_LOCALS,                                                                           \
-    "ImportDeclarationOrExportDeclarationOrStatement::ExportLocals")                         \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 13, ExpressionStatement,                \
-    EXPRESSION_STATEMENT,                                                                    \
-    "ImportDeclarationOrExportDeclarationOrStatement::ExpressionStatement")                  \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 14, ForInStatement,                     \
-    FOR_IN_STATEMENT,                                                                        \
-    "ImportDeclarationOrExportDeclarationOrStatement::ForInStatement")                       \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 15, ForOfStatement,                     \
-    FOR_OF_STATEMENT,                                                                        \
-    "ImportDeclarationOrExportDeclarationOrStatement::ForOfStatement")                       \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 16, ForStatement,                       \
-    FOR_STATEMENT,                                                                           \
-    "ImportDeclarationOrExportDeclarationOrStatement::ForStatement")                         \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 17, IfStatement,                        \
-    IF_STATEMENT,                                                                            \
-    "ImportDeclarationOrExportDeclarationOrStatement::IfStatement")                          \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 18, Import, IMPORT,                     \
-    "ImportDeclarationOrExportDeclarationOrStatement::Import")                               \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 19, ImportNamespace,                    \
-    IMPORT_NAMESPACE,                                                                        \
-    "ImportDeclarationOrExportDeclarationOrStatement::ImportNamespace")                      \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 20, LabelledStatement,                  \
-    LABELLED_STATEMENT,                                                                      \
-    "ImportDeclarationOrExportDeclarationOrStatement::LabelledStatement")                    \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 21,                                     \
-    LazyFunctionDeclaration, LAZY_FUNCTION_DECLARATION,                                      \
-    "ImportDeclarationOrExportDeclarationOrStatement::"                                      \
-    "LazyFunctionDeclaration")                                                               \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 22, ReturnStatement,                    \
-    RETURN_STATEMENT,                                                                        \
-    "ImportDeclarationOrExportDeclarationOrStatement::ReturnStatement")                      \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 23, SwitchStatement,                    \
-    SWITCH_STATEMENT,                                                                        \
-    "ImportDeclarationOrExportDeclarationOrStatement::SwitchStatement")                      \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 24,                                     \
-    SwitchStatementWithDefault, SWITCH_STATEMENT_WITH_DEFAULT,                               \
-    "ImportDeclarationOrExportDeclarationOrStatement::"                                      \
-    "SwitchStatementWithDefault")                                                            \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 25, ThrowStatement,                     \
-    THROW_STATEMENT,                                                                         \
-    "ImportDeclarationOrExportDeclarationOrStatement::ThrowStatement")                       \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 26, TryCatchStatement,                  \
-    TRY_CATCH_STATEMENT,                                                                     \
-    "ImportDeclarationOrExportDeclarationOrStatement::TryCatchStatement")                    \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 27, TryFinallyStatement,                \
-    TRY_FINALLY_STATEMENT,                                                                   \
-    "ImportDeclarationOrExportDeclarationOrStatement::TryFinallyStatement")                  \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 28, VariableDeclaration,                \
-    VARIABLE_DECLARATION,                                                                    \
-    "ImportDeclarationOrExportDeclarationOrStatement::VariableDeclaration")                  \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 29, WhileStatement,                     \
-    WHILE_STATEMENT,                                                                         \
-    "ImportDeclarationOrExportDeclarationOrStatement::WhileStatement")                       \
-  F(ImportDeclarationOrExportDeclarationOrStatement, 30, WithStatement,                      \
-    WITH_STATEMENT,                                                                          \
-    "ImportDeclarationOrExportDeclarationOrStatement::WithStatement")
-
-const size_t
-    BINAST_SUM_IMPORT_DECLARATION_OR_EXPORT_DECLARATION_OR_STATEMENT_LIMIT = 31;
 
 // Iteration through the interfaces of sum IterationStatement
 #define FOR_EACH_BIN_INTERFACE_IN_SUM_ITERATION_STATEMENT(F)     \
@@ -1512,93 +1692,6 @@ const size_t BINAST_SUM_SETTER_LIMIT = 2;
 
 const size_t BINAST_SUM_SIMPLE_ASSIGNMENT_TARGET_LIMIT = 3;
 
-// Iteration through the interfaces of sum SpreadElementOrExpression
-#define FOR_EACH_BIN_INTERFACE_IN_SUM_SPREAD_ELEMENT_OR_EXPRESSION(F)          \
-  F(SpreadElementOrExpression, 0, ArrayExpression, ARRAY_EXPRESSION,           \
-    "SpreadElementOrExpression::ArrayExpression")                              \
-  F(SpreadElementOrExpression, 1, AssignmentExpression, ASSIGNMENT_EXPRESSION, \
-    "SpreadElementOrExpression::AssignmentExpression")                         \
-  F(SpreadElementOrExpression, 2, AwaitExpression, AWAIT_EXPRESSION,           \
-    "SpreadElementOrExpression::AwaitExpression")                              \
-  F(SpreadElementOrExpression, 3, BinaryExpression, BINARY_EXPRESSION,         \
-    "SpreadElementOrExpression::BinaryExpression")                             \
-  F(SpreadElementOrExpression, 4, CallExpression, CALL_EXPRESSION,             \
-    "SpreadElementOrExpression::CallExpression")                               \
-  F(SpreadElementOrExpression, 5, ClassExpression, CLASS_EXPRESSION,           \
-    "SpreadElementOrExpression::ClassExpression")                              \
-  F(SpreadElementOrExpression, 6, CompoundAssignmentExpression,                \
-    COMPOUND_ASSIGNMENT_EXPRESSION,                                            \
-    "SpreadElementOrExpression::CompoundAssignmentExpression")                 \
-  F(SpreadElementOrExpression, 7, ComputedMemberExpression,                    \
-    COMPUTED_MEMBER_EXPRESSION,                                                \
-    "SpreadElementOrExpression::ComputedMemberExpression")                     \
-  F(SpreadElementOrExpression, 8, ConditionalExpression,                       \
-    CONDITIONAL_EXPRESSION,                                                    \
-    "SpreadElementOrExpression::ConditionalExpression")                        \
-  F(SpreadElementOrExpression, 9, EagerArrowExpressionWithExpression,          \
-    EAGER_ARROW_EXPRESSION_WITH_EXPRESSION,                                    \
-    "SpreadElementOrExpression::EagerArrowExpressionWithExpression")           \
-  F(SpreadElementOrExpression, 10, EagerArrowExpressionWithFunctionBody,       \
-    EAGER_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                 \
-    "SpreadElementOrExpression::EagerArrowExpressionWithFunctionBody")         \
-  F(SpreadElementOrExpression, 11, EagerFunctionExpression,                    \
-    EAGER_FUNCTION_EXPRESSION,                                                 \
-    "SpreadElementOrExpression::EagerFunctionExpression")                      \
-  F(SpreadElementOrExpression, 12, IdentifierExpression,                       \
-    IDENTIFIER_EXPRESSION, "SpreadElementOrExpression::IdentifierExpression")  \
-  F(SpreadElementOrExpression, 13, LazyArrowExpressionWithExpression,          \
-    LAZY_ARROW_EXPRESSION_WITH_EXPRESSION,                                     \
-    "SpreadElementOrExpression::LazyArrowExpressionWithExpression")            \
-  F(SpreadElementOrExpression, 14, LazyArrowExpressionWithFunctionBody,        \
-    LAZY_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                  \
-    "SpreadElementOrExpression::LazyArrowExpressionWithFunctionBody")          \
-  F(SpreadElementOrExpression, 15, LazyFunctionExpression,                     \
-    LAZY_FUNCTION_EXPRESSION,                                                  \
-    "SpreadElementOrExpression::LazyFunctionExpression")                       \
-  F(SpreadElementOrExpression, 16, LiteralBooleanExpression,                   \
-    LITERAL_BOOLEAN_EXPRESSION,                                                \
-    "SpreadElementOrExpression::LiteralBooleanExpression")                     \
-  F(SpreadElementOrExpression, 17, LiteralInfinityExpression,                  \
-    LITERAL_INFINITY_EXPRESSION,                                               \
-    "SpreadElementOrExpression::LiteralInfinityExpression")                    \
-  F(SpreadElementOrExpression, 18, LiteralNullExpression,                      \
-    LITERAL_NULL_EXPRESSION,                                                   \
-    "SpreadElementOrExpression::LiteralNullExpression")                        \
-  F(SpreadElementOrExpression, 19, LiteralNumericExpression,                   \
-    LITERAL_NUMERIC_EXPRESSION,                                                \
-    "SpreadElementOrExpression::LiteralNumericExpression")                     \
-  F(SpreadElementOrExpression, 20, LiteralRegExpExpression,                    \
-    LITERAL_REG_EXP_EXPRESSION,                                                \
-    "SpreadElementOrExpression::LiteralRegExpExpression")                      \
-  F(SpreadElementOrExpression, 21, LiteralStringExpression,                    \
-    LITERAL_STRING_EXPRESSION,                                                 \
-    "SpreadElementOrExpression::LiteralStringExpression")                      \
-  F(SpreadElementOrExpression, 22, NewExpression, NEW_EXPRESSION,              \
-    "SpreadElementOrExpression::NewExpression")                                \
-  F(SpreadElementOrExpression, 23, NewTargetExpression, NEW_TARGET_EXPRESSION, \
-    "SpreadElementOrExpression::NewTargetExpression")                          \
-  F(SpreadElementOrExpression, 24, ObjectExpression, OBJECT_EXPRESSION,        \
-    "SpreadElementOrExpression::ObjectExpression")                             \
-  F(SpreadElementOrExpression, 25, SpreadElement, SPREAD_ELEMENT,              \
-    "SpreadElementOrExpression::SpreadElement")                                \
-  F(SpreadElementOrExpression, 26, StaticMemberExpression,                     \
-    STATIC_MEMBER_EXPRESSION,                                                  \
-    "SpreadElementOrExpression::StaticMemberExpression")                       \
-  F(SpreadElementOrExpression, 27, TemplateExpression, TEMPLATE_EXPRESSION,    \
-    "SpreadElementOrExpression::TemplateExpression")                           \
-  F(SpreadElementOrExpression, 28, ThisExpression, THIS_EXPRESSION,            \
-    "SpreadElementOrExpression::ThisExpression")                               \
-  F(SpreadElementOrExpression, 29, UnaryExpression, UNARY_EXPRESSION,          \
-    "SpreadElementOrExpression::UnaryExpression")                              \
-  F(SpreadElementOrExpression, 30, UpdateExpression, UPDATE_EXPRESSION,        \
-    "SpreadElementOrExpression::UpdateExpression")                             \
-  F(SpreadElementOrExpression, 31, YieldExpression, YIELD_EXPRESSION,          \
-    "SpreadElementOrExpression::YieldExpression")                              \
-  F(SpreadElementOrExpression, 32, YieldStarExpression, YIELD_STAR_EXPRESSION, \
-    "SpreadElementOrExpression::YieldStarExpression")
-
-const size_t BINAST_SUM_SPREAD_ELEMENT_OR_EXPRESSION_LIMIT = 33;
-
 // Iteration through the interfaces of sum Statement
 #define FOR_EACH_BIN_INTERFACE_IN_SUM_STATEMENT(F)                            \
   F(Statement, 0, Block, BLOCK, "Statement::Block")                           \
@@ -1648,99 +1741,6 @@ const size_t BINAST_SUM_SPREAD_ELEMENT_OR_EXPRESSION_LIMIT = 33;
 
 const size_t BINAST_SUM_STATEMENT_LIMIT = 24;
 
-// Iteration through the interfaces of sum VariableDeclarationOrExpression
-#define FOR_EACH_BIN_INTERFACE_IN_SUM_VARIABLE_DECLARATION_OR_EXPRESSION(F)    \
-  F(VariableDeclarationOrExpression, 0, ArrayExpression, ARRAY_EXPRESSION,     \
-    "VariableDeclarationOrExpression::ArrayExpression")                        \
-  F(VariableDeclarationOrExpression, 1, AssignmentExpression,                  \
-    ASSIGNMENT_EXPRESSION,                                                     \
-    "VariableDeclarationOrExpression::AssignmentExpression")                   \
-  F(VariableDeclarationOrExpression, 2, AwaitExpression, AWAIT_EXPRESSION,     \
-    "VariableDeclarationOrExpression::AwaitExpression")                        \
-  F(VariableDeclarationOrExpression, 3, BinaryExpression, BINARY_EXPRESSION,   \
-    "VariableDeclarationOrExpression::BinaryExpression")                       \
-  F(VariableDeclarationOrExpression, 4, CallExpression, CALL_EXPRESSION,       \
-    "VariableDeclarationOrExpression::CallExpression")                         \
-  F(VariableDeclarationOrExpression, 5, ClassExpression, CLASS_EXPRESSION,     \
-    "VariableDeclarationOrExpression::ClassExpression")                        \
-  F(VariableDeclarationOrExpression, 6, CompoundAssignmentExpression,          \
-    COMPOUND_ASSIGNMENT_EXPRESSION,                                            \
-    "VariableDeclarationOrExpression::CompoundAssignmentExpression")           \
-  F(VariableDeclarationOrExpression, 7, ComputedMemberExpression,              \
-    COMPUTED_MEMBER_EXPRESSION,                                                \
-    "VariableDeclarationOrExpression::ComputedMemberExpression")               \
-  F(VariableDeclarationOrExpression, 8, ConditionalExpression,                 \
-    CONDITIONAL_EXPRESSION,                                                    \
-    "VariableDeclarationOrExpression::ConditionalExpression")                  \
-  F(VariableDeclarationOrExpression, 9, EagerArrowExpressionWithExpression,    \
-    EAGER_ARROW_EXPRESSION_WITH_EXPRESSION,                                    \
-    "VariableDeclarationOrExpression::EagerArrowExpressionWithExpression")     \
-  F(VariableDeclarationOrExpression, 10, EagerArrowExpressionWithFunctionBody, \
-    EAGER_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                 \
-    "VariableDeclarationOrExpression::EagerArrowExpressionWithFunctionBody")   \
-  F(VariableDeclarationOrExpression, 11, EagerFunctionExpression,              \
-    EAGER_FUNCTION_EXPRESSION,                                                 \
-    "VariableDeclarationOrExpression::EagerFunctionExpression")                \
-  F(VariableDeclarationOrExpression, 12, IdentifierExpression,                 \
-    IDENTIFIER_EXPRESSION,                                                     \
-    "VariableDeclarationOrExpression::IdentifierExpression")                   \
-  F(VariableDeclarationOrExpression, 13, LazyArrowExpressionWithExpression,    \
-    LAZY_ARROW_EXPRESSION_WITH_EXPRESSION,                                     \
-    "VariableDeclarationOrExpression::LazyArrowExpressionWithExpression")      \
-  F(VariableDeclarationOrExpression, 14, LazyArrowExpressionWithFunctionBody,  \
-    LAZY_ARROW_EXPRESSION_WITH_FUNCTION_BODY,                                  \
-    "VariableDeclarationOrExpression::LazyArrowExpressionWithFunctionBody")    \
-  F(VariableDeclarationOrExpression, 15, LazyFunctionExpression,               \
-    LAZY_FUNCTION_EXPRESSION,                                                  \
-    "VariableDeclarationOrExpression::LazyFunctionExpression")                 \
-  F(VariableDeclarationOrExpression, 16, LiteralBooleanExpression,             \
-    LITERAL_BOOLEAN_EXPRESSION,                                                \
-    "VariableDeclarationOrExpression::LiteralBooleanExpression")               \
-  F(VariableDeclarationOrExpression, 17, LiteralInfinityExpression,            \
-    LITERAL_INFINITY_EXPRESSION,                                               \
-    "VariableDeclarationOrExpression::LiteralInfinityExpression")              \
-  F(VariableDeclarationOrExpression, 18, LiteralNullExpression,                \
-    LITERAL_NULL_EXPRESSION,                                                   \
-    "VariableDeclarationOrExpression::LiteralNullExpression")                  \
-  F(VariableDeclarationOrExpression, 19, LiteralNumericExpression,             \
-    LITERAL_NUMERIC_EXPRESSION,                                                \
-    "VariableDeclarationOrExpression::LiteralNumericExpression")               \
-  F(VariableDeclarationOrExpression, 20, LiteralRegExpExpression,              \
-    LITERAL_REG_EXP_EXPRESSION,                                                \
-    "VariableDeclarationOrExpression::LiteralRegExpExpression")                \
-  F(VariableDeclarationOrExpression, 21, LiteralStringExpression,              \
-    LITERAL_STRING_EXPRESSION,                                                 \
-    "VariableDeclarationOrExpression::LiteralStringExpression")                \
-  F(VariableDeclarationOrExpression, 22, NewExpression, NEW_EXPRESSION,        \
-    "VariableDeclarationOrExpression::NewExpression")                          \
-  F(VariableDeclarationOrExpression, 23, NewTargetExpression,                  \
-    NEW_TARGET_EXPRESSION,                                                     \
-    "VariableDeclarationOrExpression::NewTargetExpression")                    \
-  F(VariableDeclarationOrExpression, 24, ObjectExpression, OBJECT_EXPRESSION,  \
-    "VariableDeclarationOrExpression::ObjectExpression")                       \
-  F(VariableDeclarationOrExpression, 25, StaticMemberExpression,               \
-    STATIC_MEMBER_EXPRESSION,                                                  \
-    "VariableDeclarationOrExpression::StaticMemberExpression")                 \
-  F(VariableDeclarationOrExpression, 26, TemplateExpression,                   \
-    TEMPLATE_EXPRESSION,                                                       \
-    "VariableDeclarationOrExpression::TemplateExpression")                     \
-  F(VariableDeclarationOrExpression, 27, ThisExpression, THIS_EXPRESSION,      \
-    "VariableDeclarationOrExpression::ThisExpression")                         \
-  F(VariableDeclarationOrExpression, 28, UnaryExpression, UNARY_EXPRESSION,    \
-    "VariableDeclarationOrExpression::UnaryExpression")                        \
-  F(VariableDeclarationOrExpression, 29, UpdateExpression, UPDATE_EXPRESSION,  \
-    "VariableDeclarationOrExpression::UpdateExpression")                       \
-  F(VariableDeclarationOrExpression, 30, VariableDeclaration,                  \
-    VARIABLE_DECLARATION,                                                      \
-    "VariableDeclarationOrExpression::VariableDeclaration")                    \
-  F(VariableDeclarationOrExpression, 31, YieldExpression, YIELD_EXPRESSION,    \
-    "VariableDeclarationOrExpression::YieldExpression")                        \
-  F(VariableDeclarationOrExpression, 32, YieldStarExpression,                  \
-    YIELD_STAR_EXPRESSION,                                                     \
-    "VariableDeclarationOrExpression::YieldStarExpression")
-
-const size_t BINAST_SUM_VARIABLE_DECLARATION_OR_EXPRESSION_LIMIT = 33;
-
 // Strongly typed iterations through the fields of interfaces.
 //
 // Each of these macros accepts the following arguments:
@@ -1779,7 +1779,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_NULL = 0;
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(ArrayAssignmentTarget, Elements, 0,                                   \
     LIST(ListOfAssignmentTargetOrAssignmentTargetWithInitializer,         \
-         AssignmentTargetOrAssignmentTargetWithInitializer),              \
+         SUM(AssignmentTargetOrAssignmentTargetWithInitializer)),         \
     "ArrayAssignmentTarget::elements")                                    \
   F(ArrayAssignmentTarget, Rest, 1, OPTIONAL_SUM(AssignmentTarget),       \
     "ArrayAssignmentTarget::rest")
@@ -1793,7 +1793,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_ARRAY_ASSIGNMENT_TARGET = 2;
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(ArrayBinding, Elements, 0,                                            \
     LIST(ListOfOptionalBindingOrBindingWithInitializer,                   \
-         OptionalBindingOrBindingWithInitializer),                        \
+         OPTIONAL_SUM(BindingOrBindingWithInitializer)),                  \
     "ArrayBinding::elements")                                             \
   F(ArrayBinding, Rest, 1, OPTIONAL_SUM(Binding), "ArrayBinding::rest")
 
@@ -1806,7 +1806,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_ARRAY_BINDING = 2;
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(ArrayExpression, Elements, 0,                                         \
     LIST(ListOfOptionalExpressionOrSpreadElement,                         \
-         OptionalExpressionOrSpreadElement),                              \
+         OPTIONAL_SUM(ExpressionOrSpreadElement)),                        \
     "ArrayExpression::elements")
 
 // The number of fields of interface ArrayExpression.
@@ -1862,7 +1862,7 @@ const size_t
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(AssertedBlockScope, DeclaredNames, 0,                                 \
-    LIST(ListOfAssertedDeclaredName, AssertedDeclaredName),               \
+    LIST(ListOfAssertedDeclaredName, INTERFACE(AssertedDeclaredName)),    \
     "AssertedBlockScope::declaredNames")                                  \
   F(AssertedBlockScope, HasDirectEval, 1, PRIMITIVE(Boolean),             \
     "AssertedBlockScope::hasDirectEval")
@@ -1888,7 +1888,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_ASSERTED_BOUND_NAME = 2;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(AssertedBoundNamesScope, BoundNames, 0,                               \
-    LIST(ListOfAssertedBoundName, AssertedBoundName),                     \
+    LIST(ListOfAssertedBoundName, INTERFACE(AssertedBoundName)),          \
     "AssertedBoundNamesScope::boundNames")                                \
   F(AssertedBoundNamesScope, HasDirectEval, 1, PRIMITIVE(Boolean),        \
     "AssertedBoundNamesScope::hasDirectEval")
@@ -1932,7 +1932,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_ASSERTED_PARAMETER_NAME = 2;
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(AssertedParameterScope, ParamNames, 0,                                \
     LIST(ListOfAssertedMaybePositionalParameterName,                      \
-         AssertedMaybePositionalParameterName),                           \
+         SUM(AssertedMaybePositionalParameterName)),                      \
     "AssertedParameterScope::paramNames")                                 \
   F(AssertedParameterScope, HasDirectEval, 1, PRIMITIVE(Boolean),         \
     "AssertedParameterScope::hasDirectEval")                              \
@@ -1978,7 +1978,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_ASSERTED_REST_PARAMETER_NAME =
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(AssertedScriptGlobalScope, DeclaredNames, 0,                          \
-    LIST(ListOfAssertedDeclaredName, AssertedDeclaredName),               \
+    LIST(ListOfAssertedDeclaredName, INTERFACE(AssertedDeclaredName)),    \
     "AssertedScriptGlobalScope::declaredNames")                           \
   F(AssertedScriptGlobalScope, HasDirectEval, 1, PRIMITIVE(Boolean),      \
     "AssertedScriptGlobalScope::hasDirectEval")
@@ -1992,7 +1992,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_ASSERTED_SCRIPT_GLOBAL_SCOPE =
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(AssertedVarScope, DeclaredNames, 0,                                   \
-    LIST(ListOfAssertedDeclaredName, AssertedDeclaredName),               \
+    LIST(ListOfAssertedDeclaredName, INTERFACE(AssertedDeclaredName)),    \
     "AssertedVarScope::declaredNames")                                    \
   F(AssertedVarScope, HasDirectEval, 1, PRIMITIVE(Boolean),               \
     "AssertedVarScope::hasDirectEval")
@@ -2148,7 +2148,8 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_BINDING_WITH_INITIALIZER = 2;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(Block, Scope, 0, INTERFACE(AssertedBlockScope), "Block::scope")       \
-  F(Block, Statements, 1, LIST(ListOfStatement, Statement), "Block::statements")
+  F(Block, Statements, 1, LIST(ListOfStatement, SUM(Statement)),          \
+    "Block::statements")
 
 // The number of fields of interface Block.
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_BLOCK = 2;
@@ -2187,14 +2188,15 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_CALL_EXPRESSION = 2;
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_CATCH_CLAUSE = 3;
 
 // Strongly typed iteration through the fields of interface ClassDeclaration.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_CLASS_DECLARATION(                 \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,  \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                     \
-  F(ClassDeclaration, Name, 0, INTERFACE(BindingIdentifier),               \
-    "ClassDeclaration::name")                                              \
-  F(ClassDeclaration, Super, 1, OPTIONAL_SUM(Expression),                  \
-    "ClassDeclaration::super")                                             \
-  F(ClassDeclaration, Elements, 2, LIST(ListOfClassElement, ClassElement), \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_CLASS_DECLARATION(                \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
+  F(ClassDeclaration, Name, 0, INTERFACE(BindingIdentifier),              \
+    "ClassDeclaration::name")                                             \
+  F(ClassDeclaration, Super, 1, OPTIONAL_SUM(Expression),                 \
+    "ClassDeclaration::super")                                            \
+  F(ClassDeclaration, Elements, 2,                                        \
+    LIST(ListOfClassElement, INTERFACE(ClassElement)),                    \
     "ClassDeclaration::elements")
 
 // The number of fields of interface ClassDeclaration.
@@ -2218,7 +2220,8 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_CLASS_ELEMENT = 2;
     "ClassExpression::name")                                              \
   F(ClassExpression, Super, 1, OPTIONAL_SUM(Expression),                  \
     "ClassExpression::super")                                             \
-  F(ClassExpression, Elements, 2, LIST(ListOfClassElement, ClassElement), \
+  F(ClassExpression, Elements, 2,                                         \
+    LIST(ListOfClassElement, INTERFACE(ClassElement)),                    \
     "ClassExpression::elements")
 
 // The number of fields of interface ClassExpression.
@@ -2370,7 +2373,7 @@ const size_t
   F(EagerArrowExpressionWithFunctionBody, Length, 1, PRIMITIVE(UnsignedLong),      \
     "EagerArrowExpressionWithFunctionBody::length")                                \
   F(EagerArrowExpressionWithFunctionBody, Directives, 2,                           \
-    LIST(ListOfDirective, Directive),                                              \
+    LIST(ListOfDirective, INTERFACE(Directive)),                                   \
     "EagerArrowExpressionWithFunctionBody::directives")                            \
   F(EagerArrowExpressionWithFunctionBody, Contents, 3,                             \
     INTERFACE(ArrowExpressionContentsWithFunctionBody),                            \
@@ -2383,20 +2386,21 @@ const size_t
 
 // Strongly typed iteration through the fields of interface
 // EagerFunctionDeclaration.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_EAGER_FUNCTION_DECLARATION(            \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,      \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                         \
-  F(EagerFunctionDeclaration, IsAsync, 0, PRIMITIVE(Boolean),                  \
-    "EagerFunctionDeclaration::isAsync")                                       \
-  F(EagerFunctionDeclaration, IsGenerator, 1, PRIMITIVE(Boolean),              \
-    "EagerFunctionDeclaration::isGenerator")                                   \
-  F(EagerFunctionDeclaration, Name, 2, INTERFACE(BindingIdentifier),           \
-    "EagerFunctionDeclaration::name")                                          \
-  F(EagerFunctionDeclaration, Length, 3, PRIMITIVE(UnsignedLong),              \
-    "EagerFunctionDeclaration::length")                                        \
-  F(EagerFunctionDeclaration, Directives, 4, LIST(ListOfDirective, Directive), \
-    "EagerFunctionDeclaration::directives")                                    \
-  F(EagerFunctionDeclaration, Contents, 5,                                     \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_EAGER_FUNCTION_DECLARATION(       \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
+  F(EagerFunctionDeclaration, IsAsync, 0, PRIMITIVE(Boolean),             \
+    "EagerFunctionDeclaration::isAsync")                                  \
+  F(EagerFunctionDeclaration, IsGenerator, 1, PRIMITIVE(Boolean),         \
+    "EagerFunctionDeclaration::isGenerator")                              \
+  F(EagerFunctionDeclaration, Name, 2, INTERFACE(BindingIdentifier),      \
+    "EagerFunctionDeclaration::name")                                     \
+  F(EagerFunctionDeclaration, Length, 3, PRIMITIVE(UnsignedLong),         \
+    "EagerFunctionDeclaration::length")                                   \
+  F(EagerFunctionDeclaration, Directives, 4,                              \
+    LIST(ListOfDirective, INTERFACE(Directive)),                          \
+    "EagerFunctionDeclaration::directives")                               \
+  F(EagerFunctionDeclaration, Contents, 5,                                \
     INTERFACE(FunctionOrMethodContents), "EagerFunctionDeclaration::contents")
 
 // The number of fields of interface EagerFunctionDeclaration.
@@ -2405,65 +2409,66 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_EAGER_FUNCTION_DECLARATION =
 
 // Strongly typed iteration through the fields of interface
 // EagerFunctionExpression.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_EAGER_FUNCTION_EXPRESSION(            \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,     \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                        \
-  F(EagerFunctionExpression, IsAsync, 0, PRIMITIVE(Boolean),                  \
-    "EagerFunctionExpression::isAsync")                                       \
-  F(EagerFunctionExpression, IsGenerator, 1, PRIMITIVE(Boolean),              \
-    "EagerFunctionExpression::isGenerator")                                   \
-  F(EagerFunctionExpression, Name, 2, OPTIONAL_INTERFACE(BindingIdentifier),  \
-    "EagerFunctionExpression::name")                                          \
-  F(EagerFunctionExpression, Length, 3, PRIMITIVE(UnsignedLong),              \
-    "EagerFunctionExpression::length")                                        \
-  F(EagerFunctionExpression, Directives, 4, LIST(ListOfDirective, Directive), \
-    "EagerFunctionExpression::directives")                                    \
-  F(EagerFunctionExpression, Contents, 5,                                     \
-    INTERFACE(FunctionExpressionContents),                                    \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_EAGER_FUNCTION_EXPRESSION(           \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,    \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                       \
+  F(EagerFunctionExpression, IsAsync, 0, PRIMITIVE(Boolean),                 \
+    "EagerFunctionExpression::isAsync")                                      \
+  F(EagerFunctionExpression, IsGenerator, 1, PRIMITIVE(Boolean),             \
+    "EagerFunctionExpression::isGenerator")                                  \
+  F(EagerFunctionExpression, Name, 2, OPTIONAL_INTERFACE(BindingIdentifier), \
+    "EagerFunctionExpression::name")                                         \
+  F(EagerFunctionExpression, Length, 3, PRIMITIVE(UnsignedLong),             \
+    "EagerFunctionExpression::length")                                       \
+  F(EagerFunctionExpression, Directives, 4,                                  \
+    LIST(ListOfDirective, INTERFACE(Directive)),                             \
+    "EagerFunctionExpression::directives")                                   \
+  F(EagerFunctionExpression, Contents, 5,                                    \
+    INTERFACE(FunctionExpressionContents),                                   \
     "EagerFunctionExpression::contents")
 
 // The number of fields of interface EagerFunctionExpression.
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_EAGER_FUNCTION_EXPRESSION = 6;
 
 // Strongly typed iteration through the fields of interface EagerGetter.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_EAGER_GETTER(                     \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
-  F(EagerGetter, Name, 0, SUM(PropertyName), "EagerGetter::name")         \
-  F(EagerGetter, Directives, 1, LIST(ListOfDirective, Directive),         \
-    "EagerGetter::directives")                                            \
-  F(EagerGetter, Contents, 2, INTERFACE(GetterContents),                  \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_EAGER_GETTER(                        \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,    \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                       \
+  F(EagerGetter, Name, 0, SUM(PropertyName), "EagerGetter::name")            \
+  F(EagerGetter, Directives, 1, LIST(ListOfDirective, INTERFACE(Directive)), \
+    "EagerGetter::directives")                                               \
+  F(EagerGetter, Contents, 2, INTERFACE(GetterContents),                     \
     "EagerGetter::contents")
 
 // The number of fields of interface EagerGetter.
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_EAGER_GETTER = 3;
 
 // Strongly typed iteration through the fields of interface EagerMethod.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_EAGER_METHOD(                       \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,   \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                      \
-  F(EagerMethod, IsAsync, 0, PRIMITIVE(Boolean), "EagerMethod::isAsync")    \
-  F(EagerMethod, IsGenerator, 1, PRIMITIVE(Boolean),                        \
-    "EagerMethod::isGenerator")                                             \
-  F(EagerMethod, Name, 2, SUM(PropertyName), "EagerMethod::name")           \
-  F(EagerMethod, Length, 3, PRIMITIVE(UnsignedLong), "EagerMethod::length") \
-  F(EagerMethod, Directives, 4, LIST(ListOfDirective, Directive),           \
-    "EagerMethod::directives")                                              \
-  F(EagerMethod, Contents, 5, INTERFACE(FunctionOrMethodContents),          \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_EAGER_METHOD(                        \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,    \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                       \
+  F(EagerMethod, IsAsync, 0, PRIMITIVE(Boolean), "EagerMethod::isAsync")     \
+  F(EagerMethod, IsGenerator, 1, PRIMITIVE(Boolean),                         \
+    "EagerMethod::isGenerator")                                              \
+  F(EagerMethod, Name, 2, SUM(PropertyName), "EagerMethod::name")            \
+  F(EagerMethod, Length, 3, PRIMITIVE(UnsignedLong), "EagerMethod::length")  \
+  F(EagerMethod, Directives, 4, LIST(ListOfDirective, INTERFACE(Directive)), \
+    "EagerMethod::directives")                                               \
+  F(EagerMethod, Contents, 5, INTERFACE(FunctionOrMethodContents),           \
     "EagerMethod::contents")
 
 // The number of fields of interface EagerMethod.
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_EAGER_METHOD = 6;
 
 // Strongly typed iteration through the fields of interface EagerSetter.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_EAGER_SETTER(                       \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,   \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                      \
-  F(EagerSetter, Name, 0, SUM(PropertyName), "EagerSetter::name")           \
-  F(EagerSetter, Length, 1, PRIMITIVE(UnsignedLong), "EagerSetter::length") \
-  F(EagerSetter, Directives, 2, LIST(ListOfDirective, Directive),           \
-    "EagerSetter::directives")                                              \
-  F(EagerSetter, Contents, 3, INTERFACE(SetterContents),                    \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_EAGER_SETTER(                        \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,    \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                       \
+  F(EagerSetter, Name, 0, SUM(PropertyName), "EagerSetter::name")            \
+  F(EagerSetter, Length, 1, PRIMITIVE(UnsignedLong), "EagerSetter::length")  \
+  F(EagerSetter, Directives, 2, LIST(ListOfDirective, INTERFACE(Directive)), \
+    "EagerSetter::directives")                                               \
+  F(EagerSetter, Contents, 3, INTERFACE(SetterContents),                     \
     "EagerSetter::contents")
 
 // The number of fields of interface EagerSetter.
@@ -2514,7 +2519,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_EXPORT_DEFAULT = 1;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(ExportFrom, NamedExports, 0,                                          \
-    LIST(ListOfExportFromSpecifier, ExportFromSpecifier),                 \
+    LIST(ListOfExportFromSpecifier, INTERFACE(ExportFromSpecifier)),      \
     "ExportFrom::namedExports")                                           \
   F(ExportFrom, ModuleSpecifier, 1, PRIMITIVE(String),                    \
     "ExportFrom::moduleSpecifier")
@@ -2552,7 +2557,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_EXPORT_LOCAL_SPECIFIER = 2;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(ExportLocals, NamedExports, 0,                                        \
-    LIST(ListOfExportLocalSpecifier, ExportLocalSpecifier),               \
+    LIST(ListOfExportLocalSpecifier, INTERFACE(ExportLocalSpecifier)),    \
     "ExportLocals::namedExports")
 
 // The number of fields of interface ExportLocals.
@@ -2620,7 +2625,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_FOR_STATEMENT = 4;
 #define FOR_EACH_BIN_FIELD_IN_INTERFACE_FORMAL_PARAMETERS(                \
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
-  F(FormalParameters, Items, 0, LIST(ListOfParameter, Parameter),         \
+  F(FormalParameters, Items, 0, LIST(ListOfParameter, SUM(Parameter)),    \
     "FormalParameters::items")                                            \
   F(FormalParameters, Rest, 1, OPTIONAL_SUM(Binding), "FormalParameters::rest")
 
@@ -2715,7 +2720,8 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_IF_STATEMENT = 3;
   F(Import, ModuleSpecifier, 0, PRIMITIVE(String), "Import::moduleSpecifier") \
   F(Import, DefaultBinding, 1, OPTIONAL_INTERFACE(BindingIdentifier),         \
     "Import::defaultBinding")                                                 \
-  F(Import, NamedImports, 2, LIST(ListOfImportSpecifier, ImportSpecifier),    \
+  F(Import, NamedImports, 2,                                                  \
+    LIST(ListOfImportSpecifier, INTERFACE(ImportSpecifier)),                  \
     "Import::namedImports")
 
 // The number of fields of interface Import.
@@ -2788,7 +2794,7 @@ const size_t
   F(LazyArrowExpressionWithFunctionBody, Length, 1, PRIMITIVE(UnsignedLong),      \
     "LazyArrowExpressionWithFunctionBody::length")                                \
   F(LazyArrowExpressionWithFunctionBody, Directives, 2,                           \
-    LIST(ListOfDirective, Directive),                                             \
+    LIST(ListOfDirective, INTERFACE(Directive)),                                  \
     "LazyArrowExpressionWithFunctionBody::directives")                            \
   F(LazyArrowExpressionWithFunctionBody, ContentsSkip, 3, PRIMITIVE(Lazy),        \
     "LazyArrowExpressionWithFunctionBody::contents_skip")                         \
@@ -2814,7 +2820,8 @@ const size_t
     "LazyFunctionDeclaration::name")                                           \
   F(LazyFunctionDeclaration, Length, 3, PRIMITIVE(UnsignedLong),               \
     "LazyFunctionDeclaration::length")                                         \
-  F(LazyFunctionDeclaration, Directives, 4, LIST(ListOfDirective, Directive),  \
+  F(LazyFunctionDeclaration, Directives, 4,                                    \
+    LIST(ListOfDirective, INTERFACE(Directive)),                               \
     "LazyFunctionDeclaration::directives")                                     \
   F(LazyFunctionDeclaration, ContentsSkip, 5, PRIMITIVE(Lazy),                 \
     "LazyFunctionDeclaration::contents_skip")                                  \
@@ -2826,22 +2833,23 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_LAZY_FUNCTION_DECLARATION = 7;
 
 // Strongly typed iteration through the fields of interface
 // LazyFunctionExpression.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_LAZY_FUNCTION_EXPRESSION(            \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,    \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                       \
-  F(LazyFunctionExpression, IsAsync, 0, PRIMITIVE(Boolean),                  \
-    "LazyFunctionExpression::isAsync")                                       \
-  F(LazyFunctionExpression, IsGenerator, 1, PRIMITIVE(Boolean),              \
-    "LazyFunctionExpression::isGenerator")                                   \
-  F(LazyFunctionExpression, Name, 2, OPTIONAL_INTERFACE(BindingIdentifier),  \
-    "LazyFunctionExpression::name")                                          \
-  F(LazyFunctionExpression, Length, 3, PRIMITIVE(UnsignedLong),              \
-    "LazyFunctionExpression::length")                                        \
-  F(LazyFunctionExpression, Directives, 4, LIST(ListOfDirective, Directive), \
-    "LazyFunctionExpression::directives")                                    \
-  F(LazyFunctionExpression, ContentsSkip, 5, PRIMITIVE(Lazy),                \
-    "LazyFunctionExpression::contents_skip")                                 \
-  F(LazyFunctionExpression, Contents, 6,                                     \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_LAZY_FUNCTION_EXPRESSION(           \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,   \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                      \
+  F(LazyFunctionExpression, IsAsync, 0, PRIMITIVE(Boolean),                 \
+    "LazyFunctionExpression::isAsync")                                      \
+  F(LazyFunctionExpression, IsGenerator, 1, PRIMITIVE(Boolean),             \
+    "LazyFunctionExpression::isGenerator")                                  \
+  F(LazyFunctionExpression, Name, 2, OPTIONAL_INTERFACE(BindingIdentifier), \
+    "LazyFunctionExpression::name")                                         \
+  F(LazyFunctionExpression, Length, 3, PRIMITIVE(UnsignedLong),             \
+    "LazyFunctionExpression::length")                                       \
+  F(LazyFunctionExpression, Directives, 4,                                  \
+    LIST(ListOfDirective, INTERFACE(Directive)),                            \
+    "LazyFunctionExpression::directives")                                   \
+  F(LazyFunctionExpression, ContentsSkip, 5, PRIMITIVE(Lazy),               \
+    "LazyFunctionExpression::contents_skip")                                \
+  F(LazyFunctionExpression, Contents, 6,                                    \
     INTERFACE(FunctionExpressionContents), "LazyFunctionExpression::contents")
 
 // The number of fields of interface LazyFunctionExpression.
@@ -2852,7 +2860,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_LAZY_FUNCTION_EXPRESSION = 7;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,      \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                         \
   F(LazyGetter, Name, 0, SUM(PropertyName), "LazyGetter::name")                \
-  F(LazyGetter, Directives, 1, LIST(ListOfDirective, Directive),               \
+  F(LazyGetter, Directives, 1, LIST(ListOfDirective, INTERFACE(Directive)),    \
     "LazyGetter::directives")                                                  \
   F(LazyGetter, ContentsSkip, 2, PRIMITIVE(Lazy), "LazyGetter::contents_skip") \
   F(LazyGetter, Contents, 3, INTERFACE(GetterContents), "LazyGetter::contents")
@@ -2868,7 +2876,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_LAZY_GETTER = 4;
   F(LazyMethod, IsGenerator, 1, PRIMITIVE(Boolean), "LazyMethod::isGenerator") \
   F(LazyMethod, Name, 2, SUM(PropertyName), "LazyMethod::name")                \
   F(LazyMethod, Length, 3, PRIMITIVE(UnsignedLong), "LazyMethod::length")      \
-  F(LazyMethod, Directives, 4, LIST(ListOfDirective, Directive),               \
+  F(LazyMethod, Directives, 4, LIST(ListOfDirective, INTERFACE(Directive)),    \
     "LazyMethod::directives")                                                  \
   F(LazyMethod, ContentsSkip, 5, PRIMITIVE(Lazy), "LazyMethod::contents_skip") \
   F(LazyMethod, Contents, 6, INTERFACE(FunctionOrMethodContents),              \
@@ -2883,7 +2891,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_LAZY_METHOD = 7;
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                         \
   F(LazySetter, Name, 0, SUM(PropertyName), "LazySetter::name")                \
   F(LazySetter, Length, 1, PRIMITIVE(UnsignedLong), "LazySetter::length")      \
-  F(LazySetter, Directives, 2, LIST(ListOfDirective, Directive),               \
+  F(LazySetter, Directives, 2, LIST(ListOfDirective, INTERFACE(Directive)),    \
     "LazySetter::directives")                                                  \
   F(LazySetter, ContentsSkip, 3, PRIMITIVE(Lazy), "LazySetter::contents_skip") \
   F(LazySetter, Contents, 4, INTERFACE(SetterContents), "LazySetter::contents")
@@ -2974,11 +2982,11 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_LITERAL_STRING_EXPRESSION = 1;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(Module, Scope, 0, INTERFACE(AssertedVarScope), "Module::scope")       \
-  F(Module, Directives, 1, LIST(ListOfDirective, Directive),              \
+  F(Module, Directives, 1, LIST(ListOfDirective, INTERFACE(Directive)),   \
     "Module::directives")                                                 \
   F(Module, Items, 2,                                                     \
     LIST(ListOfExportDeclarationOrImportDeclarationOrStatement,           \
-         ExportDeclarationOrImportDeclarationOrStatement),                \
+         SUM(ExportDeclarationOrImportDeclarationOrStatement)),           \
     "Module::items")
 
 // The number of fields of interface Module.
@@ -3009,7 +3017,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_NEW_TARGET_EXPRESSION = 0;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(ObjectAssignmentTarget, Properties, 0,                                \
-    LIST(ListOfAssignmentTargetProperty, AssignmentTargetProperty),       \
+    LIST(ListOfAssignmentTargetProperty, SUM(AssignmentTargetProperty)),  \
     "ObjectAssignmentTarget::properties")
 
 // The number of fields of interface ObjectAssignmentTarget.
@@ -3020,7 +3028,8 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_OBJECT_ASSIGNMENT_TARGET = 1;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(ObjectBinding, Properties, 0,                                         \
-    LIST(ListOfBindingProperty, BindingProperty), "ObjectBinding::properties")
+    LIST(ListOfBindingProperty, SUM(BindingProperty)),                    \
+    "ObjectBinding::properties")
 
 // The number of fields of interface ObjectBinding.
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_OBJECT_BINDING = 1;
@@ -3030,7 +3039,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_OBJECT_BINDING = 1;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(ObjectExpression, Properties, 0,                                      \
-    LIST(ListOfObjectProperty, ObjectProperty),                           \
+    LIST(ListOfObjectProperty, SUM(ObjectProperty)),                      \
     "ObjectExpression::properties")
 
 // The number of fields of interface ObjectExpression.
@@ -3051,9 +3060,9 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_RETURN_STATEMENT = 1;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,    \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                       \
   F(Script, Scope, 0, INTERFACE(AssertedScriptGlobalScope), "Script::scope") \
-  F(Script, Directives, 1, LIST(ListOfDirective, Directive),                 \
+  F(Script, Directives, 1, LIST(ListOfDirective, INTERFACE(Directive)),      \
     "Script::directives")                                                    \
-  F(Script, Statements, 2, LIST(ListOfStatement, Statement),                 \
+  F(Script, Statements, 2, LIST(ListOfStatement, SUM(Statement)),            \
     "Script::statements")
 
 // The number of fields of interface Script.
@@ -3135,7 +3144,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_SUPER = 0;
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
   F(SwitchCase, Test, 0, SUM(Expression), "SwitchCase::test")             \
-  F(SwitchCase, Consequent, 1, LIST(ListOfStatement, Statement),          \
+  F(SwitchCase, Consequent, 1, LIST(ListOfStatement, SUM(Statement)),     \
     "SwitchCase::consequent")
 
 // The number of fields of interface SwitchCase.
@@ -3145,19 +3154,19 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_SWITCH_CASE = 2;
 #define FOR_EACH_BIN_FIELD_IN_INTERFACE_SWITCH_DEFAULT(                   \
     F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
     STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
-  F(SwitchDefault, Consequent, 0, LIST(ListOfStatement, Statement),       \
+  F(SwitchDefault, Consequent, 0, LIST(ListOfStatement, SUM(Statement)),  \
     "SwitchDefault::consequent")
 
 // The number of fields of interface SwitchDefault.
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_SWITCH_DEFAULT = 1;
 
 // Strongly typed iteration through the fields of interface SwitchStatement.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_SWITCH_STATEMENT(                 \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
-  F(SwitchStatement, Discriminant, 0, SUM(Expression),                    \
-    "SwitchStatement::discriminant")                                      \
-  F(SwitchStatement, Cases, 1, LIST(ListOfSwitchCase, SwitchCase),        \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_SWITCH_STATEMENT(                     \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,     \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                        \
+  F(SwitchStatement, Discriminant, 0, SUM(Expression),                        \
+    "SwitchStatement::discriminant")                                          \
+  F(SwitchStatement, Cases, 1, LIST(ListOfSwitchCase, INTERFACE(SwitchCase)), \
     "SwitchStatement::cases")
 
 // The number of fields of interface SwitchStatement.
@@ -3171,12 +3180,12 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_SWITCH_STATEMENT = 2;
   F(SwitchStatementWithDefault, Discriminant, 0, SUM(Expression),         \
     "SwitchStatementWithDefault::discriminant")                           \
   F(SwitchStatementWithDefault, PreDefaultCases, 1,                       \
-    LIST(ListOfSwitchCase, SwitchCase),                                   \
+    LIST(ListOfSwitchCase, INTERFACE(SwitchCase)),                        \
     "SwitchStatementWithDefault::preDefaultCases")                        \
   F(SwitchStatementWithDefault, DefaultCase, 2, INTERFACE(SwitchDefault), \
     "SwitchStatementWithDefault::defaultCase")                            \
   F(SwitchStatementWithDefault, PostDefaultCases, 3,                      \
-    LIST(ListOfSwitchCase, SwitchCase),                                   \
+    LIST(ListOfSwitchCase, INTERFACE(SwitchCase)),                        \
     "SwitchStatementWithDefault::postDefaultCases")
 
 // The number of fields of interface SwitchStatementWithDefault.
@@ -3194,13 +3203,13 @@ const size_t
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_TEMPLATE_ELEMENT = 1;
 
 // Strongly typed iteration through the fields of interface TemplateExpression.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_TEMPLATE_EXPRESSION(              \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
-  F(TemplateExpression, Tag, 0, OPTIONAL_SUM(Expression),                 \
-    "TemplateExpression::tag")                                            \
-  F(TemplateExpression, Elements, 1,                                      \
-    LIST(ListOfExpressionOrTemplateElement, ExpressionOrTemplateElement), \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_TEMPLATE_EXPRESSION(                   \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,      \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                         \
+  F(TemplateExpression, Tag, 0, OPTIONAL_SUM(Expression),                      \
+    "TemplateExpression::tag")                                                 \
+  F(TemplateExpression, Elements, 1,                                           \
+    LIST(ListOfExpressionOrTemplateElement, SUM(ExpressionOrTemplateElement)), \
     "TemplateExpression::elements")
 
 // The number of fields of interface TemplateExpression.
@@ -3281,7 +3290,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_UPDATE_EXPRESSION = 3;
   F(VariableDeclaration, Kind, 0, STRING_ENUM(VariableDeclarationKind),   \
     "VariableDeclaration::kind")                                          \
   F(VariableDeclaration, Declarators, 1,                                  \
-    LIST(ListOfVariableDeclarator, VariableDeclarator),                   \
+    LIST(ListOfVariableDeclarator, INTERFACE(VariableDeclarator)),        \
     "VariableDeclaration::declarators")
 
 // The number of fields of interface VariableDeclaration.
@@ -3437,103 +3446,284 @@ enum class BinASTStringEnum : uint16_t {
 // The number of distinct values of BinASTStringEnum.
 const size_t BINASTSTRINGENUM_LIMIT = 6;
 
-#define FOR_EACH_BIN_LIST(F)                                               \
-  F(Arguments, ExpressionOrSpreadElement, "Arguments")                     \
-  F(FunctionBody, Statement, "FunctionBody")                               \
-  F(ListOfAssertedBoundName, AssertedBoundName, "ListOfAssertedBoundName") \
-  F(ListOfAssertedDeclaredName, AssertedDeclaredName,                      \
-    "ListOfAssertedDeclaredName")                                          \
-  F(ListOfAssertedMaybePositionalParameterName,                            \
-    AssertedMaybePositionalParameterName,                                  \
-    "ListOfAssertedMaybePositionalParameterName")                          \
-  F(ListOfAssignmentTargetOrAssignmentTargetWithInitializer,               \
-    AssignmentTargetOrAssignmentTargetWithInitializer,                     \
-    "ListOfAssignmentTargetOrAssignmentTargetWithInitializer")             \
-  F(ListOfAssignmentTargetProperty, AssignmentTargetProperty,              \
-    "ListOfAssignmentTargetProperty")                                      \
-  F(ListOfBindingProperty, BindingProperty, "ListOfBindingProperty")       \
-  F(ListOfClassElement, ClassElement, "ListOfClassElement")                \
-  F(ListOfDirective, Directive, "ListOfDirective")                         \
-  F(ListOfExportDeclarationOrImportDeclarationOrStatement,                 \
-    ExportDeclarationOrImportDeclarationOrStatement,                       \
-    "ListOfExportDeclarationOrImportDeclarationOrStatement")               \
-  F(ListOfExportFromSpecifier, ExportFromSpecifier,                        \
-    "ListOfExportFromSpecifier")                                           \
-  F(ListOfExportLocalSpecifier, ExportLocalSpecifier,                      \
-    "ListOfExportLocalSpecifier")                                          \
-  F(ListOfExpressionOrTemplateElement, ExpressionOrTemplateElement,        \
-    "ListOfExpressionOrTemplateElement")                                   \
-  F(ListOfImportSpecifier, ImportSpecifier, "ListOfImportSpecifier")       \
-  F(ListOfObjectProperty, ObjectProperty, "ListOfObjectProperty")          \
-  F(ListOfOptionalBindingOrBindingWithInitializer,                         \
-    OptionalBindingOrBindingWithInitializer,                               \
-    "ListOfOptionalBindingOrBindingWithInitializer")                       \
-  F(ListOfOptionalExpressionOrSpreadElement,                               \
-    OptionalExpressionOrSpreadElement,                                     \
-    "ListOfOptionalExpressionOrSpreadElement")                             \
-  F(ListOfParameter, Parameter, "ListOfParameter")                         \
-  F(ListOfStatement, Statement, "ListOfStatement")                         \
-  F(ListOfSwitchCase, SwitchCase, "ListOfSwitchCase")                      \
-  F(ListOfVariableDeclarator, VariableDeclarator, "ListOfVariableDeclarator")
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_ASSERTED_DECLARED_KIND_BY_STRING_ORDER( \
+    F)                                                                              \
+  F(AssertedDeclaredKind, AssertedDeclaredKindConstLexical, "const lexical")        \
+  F(AssertedDeclaredKind, AssertedDeclaredKindNonConstLexical,                      \
+    "non-const lexical")                                                            \
+  F(AssertedDeclaredKind, AssertedDeclaredKindOrVariableDeclarationKindVar,         \
+    "var")
+
+const size_t BIN_AST_STRING_ENUM_ASSERTED_DECLARED_KIND_LIMIT = 3;
+
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_BINARY_OPERATOR_BY_STRING_ORDER(F) \
+  F(BinaryOperator, BinaryOperatorNeq, "!=")                                   \
+  F(BinaryOperator, BinaryOperatorStrictNeq, "!==")                            \
+  F(BinaryOperator, BinaryOperatorMod, "%")                                    \
+  F(BinaryOperator, BinaryOperatorBitAnd, "&")                                 \
+  F(BinaryOperator, BinaryOperatorLogicalAnd, "&&")                            \
+  F(BinaryOperator, BinaryOperatorMul, "*")                                    \
+  F(BinaryOperator, BinaryOperatorPow, "**")                                   \
+  F(BinaryOperator, BinaryOperatorOrUnaryOperatorPlus, "+")                    \
+  F(BinaryOperator, BinaryOperatorComma, ",")                                  \
+  F(BinaryOperator, BinaryOperatorOrUnaryOperatorMinus, "-")                   \
+  F(BinaryOperator, BinaryOperatorDiv, "/")                                    \
+  F(BinaryOperator, BinaryOperatorLessThan, "<")                               \
+  F(BinaryOperator, BinaryOperatorLsh, "<<")                                   \
+  F(BinaryOperator, BinaryOperatorLeqThan, "<=")                               \
+  F(BinaryOperator, BinaryOperatorEq, "==")                                    \
+  F(BinaryOperator, BinaryOperatorStrictEq, "===")                             \
+  F(BinaryOperator, BinaryOperatorGreaterThan, ">")                            \
+  F(BinaryOperator, BinaryOperatorGeqThan, ">=")                               \
+  F(BinaryOperator, BinaryOperatorRsh, ">>")                                   \
+  F(BinaryOperator, BinaryOperatorUrsh, ">>>")                                 \
+  F(BinaryOperator, BinaryOperatorBitXor, "^")                                 \
+  F(BinaryOperator, BinaryOperatorIn, "in")                                    \
+  F(BinaryOperator, BinaryOperatorInstanceof, "instanceof")                    \
+  F(BinaryOperator, BinaryOperatorBitOr, "|")                                  \
+  F(BinaryOperator, BinaryOperatorLogicalOr, "||")
+
+const size_t BIN_AST_STRING_ENUM_BINARY_OPERATOR_LIMIT = 25;
+
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_COMPOUND_ASSIGNMENT_OPERATOR_BY_STRING_ORDER( \
+    F)                                                                                    \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorModAssign, "%=")                \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorBitAndAssign, "&=")             \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorPowAssign, "**=")               \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorMulAssign, "*=")                \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorPlusAssign, "+=")               \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorMinusAssign, "-=")              \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorDivAssign, "/=")                \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorLshAssign, "<<=")               \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorRshAssign, ">>=")               \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorUrshAssign, ">>>=")             \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorBitXorAssign, "^=")             \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorBitOrAssign, "|=")
+
+const size_t BIN_AST_STRING_ENUM_COMPOUND_ASSIGNMENT_OPERATOR_LIMIT = 12;
+
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_UNARY_OPERATOR_BY_STRING_ORDER(F) \
+  F(UnaryOperator, UnaryOperatorNot, "!")                                     \
+  F(UnaryOperator, BinaryOperatorOrUnaryOperatorPlus, "+")                    \
+  F(UnaryOperator, BinaryOperatorOrUnaryOperatorMinus, "-")                   \
+  F(UnaryOperator, UnaryOperatorDelete, "delete")                             \
+  F(UnaryOperator, UnaryOperatorTypeof, "typeof")                             \
+  F(UnaryOperator, UnaryOperatorVoid, "void")                                 \
+  F(UnaryOperator, UnaryOperatorBitNot, "~")
+
+const size_t BIN_AST_STRING_ENUM_UNARY_OPERATOR_LIMIT = 7;
+
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_UPDATE_OPERATOR_BY_STRING_ORDER(F) \
+  F(UpdateOperator, UpdateOperatorIncr, "++")                                  \
+  F(UpdateOperator, UpdateOperatorDecr, "--")
+
+const size_t BIN_AST_STRING_ENUM_UPDATE_OPERATOR_LIMIT = 2;
+
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_VARIABLE_DECLARATION_KIND_BY_STRING_ORDER( \
+    F)                                                                                 \
+  F(VariableDeclarationKind, VariableDeclarationKindConst, "const")                    \
+  F(VariableDeclarationKind, VariableDeclarationKindLet, "let")                        \
+  F(VariableDeclarationKind, AssertedDeclaredKindOrVariableDeclarationKindVar,         \
+    "var")
+
+const size_t BIN_AST_STRING_ENUM_VARIABLE_DECLARATION_KIND_LIMIT = 3;
+
+// This macro accepts the following arguments:
+// - F: callback
+// - PRIMITIVE: wrapper for primitive type names - called as
+// `PRIMITIVE(typename)`
+// - INTERFACE: wrapper for non-optional interface type names - called as
+// `INTERFACE(typename)`
+// - OPTIONAL_INTERFACE: wrapper for optional interface type names - called as
+// `OPTIONAL_INTERFACE(typename)` where
+//      `typename` is the name of the interface (e.g. no `Maybe` prefix)
+// - LIST: wrapper for list types - called as `LIST(list_typename,
+// element_typename)`
+// - SUM: wrapper for non-optional type names - called as `SUM(typename)`
+// - OPTIONAL_SUM: wrapper for optional sum type names - called as
+// `OPTIONAL_SUM(typename)` where
+//      `typename` is the name of the sum (e.g. no `Maybe` prefix)
+// - STRING_ENUM: wrapper for non-optional string enum types - called as
+// `STRING_ENUNM(typename)`
+// - OPTIONAL_STRING_ENUM: wrapper for optional string enum type names - called
+// as `OPTIONAL_STRING_ENUM(typename)` where
+//      `typename` is the name of the string enum (e.g. no `Maybe` prefix)
+#define FOR_EACH_BIN_LIST(F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST,   \
+                          SUM, OPTIONAL_SUM, STRING_ENUM,                      \
+                          OPTIONAL_STRING_ENUM)                                \
+  F(Arguments, ExpressionOrSpreadElement, "Arguments",                         \
+    LIST(Arguments, SUM(ExpressionOrSpreadElement)))                           \
+  F(FunctionBody, Statement, "FunctionBody",                                   \
+    LIST(FunctionBody, SUM(Statement)))                                        \
+  F(ListOfAssertedBoundName, AssertedBoundName, "ListOfAssertedBoundName",     \
+    LIST(ListOfAssertedBoundName, INTERFACE(AssertedBoundName)))               \
+  F(ListOfAssertedDeclaredName, AssertedDeclaredName,                          \
+    "ListOfAssertedDeclaredName",                                              \
+    LIST(ListOfAssertedDeclaredName, INTERFACE(AssertedDeclaredName)))         \
+  F(ListOfAssertedMaybePositionalParameterName,                                \
+    AssertedMaybePositionalParameterName,                                      \
+    "ListOfAssertedMaybePositionalParameterName",                              \
+    LIST(ListOfAssertedMaybePositionalParameterName,                           \
+         SUM(AssertedMaybePositionalParameterName)))                           \
+  F(ListOfAssignmentTargetOrAssignmentTargetWithInitializer,                   \
+    AssignmentTargetOrAssignmentTargetWithInitializer,                         \
+    "ListOfAssignmentTargetOrAssignmentTargetWithInitializer",                 \
+    LIST(ListOfAssignmentTargetOrAssignmentTargetWithInitializer,              \
+         SUM(AssignmentTargetOrAssignmentTargetWithInitializer)))              \
+  F(ListOfAssignmentTargetProperty, AssignmentTargetProperty,                  \
+    "ListOfAssignmentTargetProperty",                                          \
+    LIST(ListOfAssignmentTargetProperty, SUM(AssignmentTargetProperty)))       \
+  F(ListOfBindingProperty, BindingProperty, "ListOfBindingProperty",           \
+    LIST(ListOfBindingProperty, SUM(BindingProperty)))                         \
+  F(ListOfClassElement, ClassElement, "ListOfClassElement",                    \
+    LIST(ListOfClassElement, INTERFACE(ClassElement)))                         \
+  F(ListOfDirective, Directive, "ListOfDirective",                             \
+    LIST(ListOfDirective, INTERFACE(Directive)))                               \
+  F(ListOfExportDeclarationOrImportDeclarationOrStatement,                     \
+    ExportDeclarationOrImportDeclarationOrStatement,                           \
+    "ListOfExportDeclarationOrImportDeclarationOrStatement",                   \
+    LIST(ListOfExportDeclarationOrImportDeclarationOrStatement,                \
+         SUM(ExportDeclarationOrImportDeclarationOrStatement)))                \
+  F(ListOfExportFromSpecifier, ExportFromSpecifier,                            \
+    "ListOfExportFromSpecifier",                                               \
+    LIST(ListOfExportFromSpecifier, INTERFACE(ExportFromSpecifier)))           \
+  F(ListOfExportLocalSpecifier, ExportLocalSpecifier,                          \
+    "ListOfExportLocalSpecifier",                                              \
+    LIST(ListOfExportLocalSpecifier, INTERFACE(ExportLocalSpecifier)))         \
+  F(ListOfExpressionOrTemplateElement, ExpressionOrTemplateElement,            \
+    "ListOfExpressionOrTemplateElement",                                       \
+    LIST(ListOfExpressionOrTemplateElement, SUM(ExpressionOrTemplateElement))) \
+  F(ListOfImportSpecifier, ImportSpecifier, "ListOfImportSpecifier",           \
+    LIST(ListOfImportSpecifier, INTERFACE(ImportSpecifier)))                   \
+  F(ListOfObjectProperty, ObjectProperty, "ListOfObjectProperty",              \
+    LIST(ListOfObjectProperty, SUM(ObjectProperty)))                           \
+  F(ListOfOptionalBindingOrBindingWithInitializer,                             \
+    OptionalBindingOrBindingWithInitializer,                                   \
+    "ListOfOptionalBindingOrBindingWithInitializer",                           \
+    LIST(ListOfOptionalBindingOrBindingWithInitializer,                        \
+         OPTIONAL_SUM(BindingOrBindingWithInitializer)))                       \
+  F(ListOfOptionalExpressionOrSpreadElement,                                   \
+    OptionalExpressionOrSpreadElement,                                         \
+    "ListOfOptionalExpressionOrSpreadElement",                                 \
+    LIST(ListOfOptionalExpressionOrSpreadElement,                              \
+         OPTIONAL_SUM(ExpressionOrSpreadElement)))                             \
+  F(ListOfParameter, Parameter, "ListOfParameter",                             \
+    LIST(ListOfParameter, SUM(Parameter)))                                     \
+  F(ListOfStatement, Statement, "ListOfStatement",                             \
+    LIST(ListOfStatement, SUM(Statement)))                                     \
+  F(ListOfSwitchCase, SwitchCase, "ListOfSwitchCase",                          \
+    LIST(ListOfSwitchCase, INTERFACE(SwitchCase)))                             \
+  F(ListOfVariableDeclarator, VariableDeclarator, "ListOfVariableDeclarator",  \
+    LIST(ListOfVariableDeclarator, INTERFACE(VariableDeclarator)))
 
 enum class BinASTList : uint16_t {
-#define EMIT_ENUM(name, _content, _user) name,
-  FOR_EACH_BIN_LIST(EMIT_ENUM)
+#define NOTHING(_)
+#define EMIT_ENUM(name, _content, _user, _type_name) name,
+  FOR_EACH_BIN_LIST(EMIT_ENUM, NOTHING, NOTHING, NOTHING, NOTHING, NOTHING,
+                    NOTHING, NOTHING, NOTHING)
 #undef EMIT_ENUM
+#undef NOTHING
 };
 
 // The number of distinct list types in the grammar. Used typically to maintain
 // a probability table per list type.
 const size_t BINAST_NUMBER_OF_LIST_TYPES = 22;
 
-#define FOR_EACH_BIN_SUM(F)                                               \
-  F(ArrowExpression, "ArrowExpression", ARROW_EXPRESSION)                 \
-  F(AssertedMaybePositionalParameterName,                                 \
-    "AssertedMaybePositionalParameterName",                               \
-    ASSERTED_MAYBE_POSITIONAL_PARAMETER_NAME)                             \
-  F(AssignmentTarget, "AssignmentTarget", ASSIGNMENT_TARGET)              \
-  F(AssignmentTargetOrAssignmentTargetWithInitializer,                    \
-    "AssignmentTargetOrAssignmentTargetWithInitializer")                  \
-  F(AssignmentTargetOrForInOfBinding, "AssignmentTargetOrForInOfBinding") \
-  F(AssignmentTargetPattern, "AssignmentTargetPattern")                   \
-  F(AssignmentTargetProperty, "AssignmentTargetProperty")                 \
-  F(Binding, "Binding")                                                   \
-  F(BindingOrBindingWithInitializer, "BindingOrBindingWithInitializer")   \
-  F(BindingPattern, "BindingPattern")                                     \
-  F(BindingProperty, "BindingProperty")                                   \
-  F(ClassDeclarationOrExpressionOrFunctionDeclaration,                    \
-    "ClassDeclarationOrExpressionOrFunctionDeclaration")                  \
-  F(ClassDeclarationOrFunctionDeclarationOrVariableDeclaration,           \
-    "ClassDeclarationOrFunctionDeclarationOrVariableDeclaration")         \
-  F(ExportDeclaration, "ExportDeclaration")                               \
-  F(ExportDeclarationOrImportDeclarationOrStatement,                      \
-    "ExportDeclarationOrImportDeclarationOrStatement")                    \
-  F(Expression, "Expression")                                             \
-  F(ExpressionOrSpreadElement, "ExpressionOrSpreadElement")               \
-  F(ExpressionOrSuper, "ExpressionOrSuper")                               \
-  F(ExpressionOrTemplateElement, "ExpressionOrTemplateElement")           \
-  F(ExpressionOrVariableDeclaration, "ExpressionOrVariableDeclaration")   \
-  F(FunctionDeclaration, "FunctionDeclaration")                           \
-  F(FunctionExpression, "FunctionExpression")                             \
-  F(Getter, "Getter")                                                     \
-  F(ImportDeclaration, "ImportDeclaration")                               \
-  F(IterationStatement, "IterationStatement")                             \
-  F(Literal, "Literal")                                                   \
-  F(Method, "Method")                                                     \
-  F(MethodDefinition, "MethodDefinition")                                 \
-  F(ObjectProperty, "ObjectProperty")                                     \
-  F(Parameter, "Parameter")                                               \
-  F(Program, "Program")                                                   \
-  F(PropertyName, "PropertyName")                                         \
-  F(Setter, "Setter")                                                     \
-  F(SimpleAssignmentTarget, "SimpleAssignmentTarget")                     \
-  F(Statement, "Statement")
+#define FOR_EACH_BIN_SUM(F)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+  F(ArrowExpression, "ArrowExpression", ARROW_EXPRESSION,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+    SUM(EagerArrowExpressionWithExpressionOrEagerArrowExpressionWithFunctionBodyOrLazyArrowExpressionWithExpressionOrLazyArrowExpressionWithFunctionBody))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+  F(AssertedMaybePositionalParameterName,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+    "AssertedMaybePositionalParameterName",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+    ASSERTED_MAYBE_POSITIONAL_PARAMETER_NAME,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+    SUM(AssertedParameterNameOrAssertedPositionalParameterNameOrAssertedRestParameterName))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+  F(AssignmentTarget, "AssignmentTarget", ASSIGNMENT_TARGET,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+    SUM(ArrayAssignmentTargetOrAssignmentTargetIdentifierOrComputedMemberAssignmentTargetOrObjectAssignmentTargetOrStaticMemberAssignmentTarget))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+  F(AssignmentTargetOrAssignmentTargetWithInitializer,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+    "AssignmentTargetOrAssignmentTargetWithInitializer",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+    ASSIGNMENT_TARGET_OR_ASSIGNMENT_TARGET_WITH_INITIALIZER,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+    SUM(ArrayAssignmentTargetOrAssignmentTargetIdentifierOrAssignmentTargetWithInitializerOrComputedMemberAssignmentTargetOrObjectAssignmentTargetOrStaticMemberAssignmentTarget))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+  F(AssignmentTargetOrForInOfBinding, "AssignmentTargetOrForInOfBinding",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+    ASSIGNMENT_TARGET_OR_FOR_IN_OF_BINDING,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+    SUM(ArrayAssignmentTargetOrAssignmentTargetIdentifierOrComputedMemberAssignmentTargetOrForInOfBindingOrObjectAssignmentTargetOrStaticMemberAssignmentTarget))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+  F(AssignmentTargetPattern, "AssignmentTargetPattern",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+    ASSIGNMENT_TARGET_PATTERN,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
+    SUM(ArrayAssignmentTargetOrObjectAssignmentTarget))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+  F(AssignmentTargetProperty, "AssignmentTargetProperty",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+    ASSIGNMENT_TARGET_PROPERTY,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+    SUM(AssignmentTargetPropertyIdentifierOrAssignmentTargetPropertyProperty))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
+  F(Binding, "Binding", BINDING,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+    SUM(ArrayBindingOrBindingIdentifierOrObjectBinding))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+  F(BindingOrBindingWithInitializer, "BindingOrBindingWithInitializer",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+    BINDING_OR_BINDING_WITH_INITIALIZER,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+    SUM(ArrayBindingOrBindingIdentifierOrBindingWithInitializerOrObjectBinding))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+  F(BindingPattern, "BindingPattern", BINDING_PATTERN,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+    SUM(ArrayBindingOrObjectBinding))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+  F(BindingProperty, "BindingProperty", BINDING_PROPERTY,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+    SUM(BindingPropertyIdentifierOrBindingPropertyProperty))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+  F(ClassDeclarationOrExpressionOrFunctionDeclaration,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+    "ClassDeclarationOrExpressionOrFunctionDeclaration",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+    CLASS_DECLARATION_OR_EXPRESSION_OR_FUNCTION_DECLARATION,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+    SUM(ArrayExpressionOrAssignmentExpressionOrAwaitExpressionOrBinaryExpressionOrCallExpressionOrClassDeclarationOrClassExpressionOrCompoundAssignmentExpressionOrComputedMemberExpressionOrConditionalExpressionOrEagerArrowExpressionWithExpressionOrEagerArrowExpressionWithFunctionBodyOrEagerFunctionDeclarationOrEagerFunctionExpressionOrIdentifierExpressionOrLazyArrowExpressionWithExpressionOrLazyArrowExpressionWithFunctionBodyOrLazyFunctionDeclarationOrLazyFunctionExpressionOrLiteralBooleanExpressionOrLiteralInfinityExpressionOrLiteralNullExpressionOrLiteralNumericExpressionOrLiteralRegExpExpressionOrLiteralStringExpressionOrNewExpressionOrNewTargetExpressionOrObjectExpressionOrStaticMemberExpressionOrTemplateExpressionOrThisExpressionOrUnaryExpressionOrUpdateExpressionOrYieldExpressionOrYieldStarExpression)) \
+  F(ClassDeclarationOrFunctionDeclarationOrVariableDeclaration,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+    "ClassDeclarationOrFunctionDeclarationOrVariableDeclaration",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+    CLASS_DECLARATION_OR_FUNCTION_DECLARATION_OR_VARIABLE_DECLARATION,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+    SUM(ClassDeclarationOrEagerFunctionDeclarationOrLazyFunctionDeclarationOrVariableDeclaration))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+  F(ExportDeclaration, "ExportDeclaration", EXPORT_DECLARATION,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+    SUM(ExportOrExportAllFromOrExportDefaultOrExportFromOrExportLocals))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+  F(ExportDeclarationOrImportDeclarationOrStatement,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+    "ExportDeclarationOrImportDeclarationOrStatement",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+    EXPORT_DECLARATION_OR_IMPORT_DECLARATION_OR_STATEMENT,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+    SUM(BlockOrBreakStatementOrClassDeclarationOrContinueStatementOrDebuggerStatementOrDoWhileStatementOrEagerFunctionDeclarationOrEmptyStatementOrExportOrExportAllFromOrExportDefaultOrExportFromOrExportLocalsOrExpressionStatementOrForInStatementOrForOfStatementOrForStatementOrIfStatementOrImportOrImportNamespaceOrLabelledStatementOrLazyFunctionDeclarationOrReturnStatementOrSwitchStatementOrSwitchStatementWithDefaultOrThrowStatementOrTryCatchStatementOrTryFinallyStatementOrVariableDeclarationOrWhileStatementOrWithStatement))                                                                                                                                                                                                                                                                                                  \
+  F(Expression, "Expression", EXPRESSION,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+    SUM(ArrayExpressionOrAssignmentExpressionOrAwaitExpressionOrBinaryExpressionOrCallExpressionOrClassExpressionOrCompoundAssignmentExpressionOrComputedMemberExpressionOrConditionalExpressionOrEagerArrowExpressionWithExpressionOrEagerArrowExpressionWithFunctionBodyOrEagerFunctionExpressionOrIdentifierExpressionOrLazyArrowExpressionWithExpressionOrLazyArrowExpressionWithFunctionBodyOrLazyFunctionExpressionOrLiteralBooleanExpressionOrLiteralInfinityExpressionOrLiteralNullExpressionOrLiteralNumericExpressionOrLiteralRegExpExpressionOrLiteralStringExpressionOrNewExpressionOrNewTargetExpressionOrObjectExpressionOrStaticMemberExpressionOrTemplateExpressionOrThisExpressionOrUnaryExpressionOrUpdateExpressionOrYieldExpressionOrYieldStarExpression))                                                                      \
+  F(ExpressionOrSpreadElement, "ExpressionOrSpreadElement",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+    EXPRESSION_OR_SPREAD_ELEMENT,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+    SUM(ArrayExpressionOrAssignmentExpressionOrAwaitExpressionOrBinaryExpressionOrCallExpressionOrClassExpressionOrCompoundAssignmentExpressionOrComputedMemberExpressionOrConditionalExpressionOrEagerArrowExpressionWithExpressionOrEagerArrowExpressionWithFunctionBodyOrEagerFunctionExpressionOrIdentifierExpressionOrLazyArrowExpressionWithExpressionOrLazyArrowExpressionWithFunctionBodyOrLazyFunctionExpressionOrLiteralBooleanExpressionOrLiteralInfinityExpressionOrLiteralNullExpressionOrLiteralNumericExpressionOrLiteralRegExpExpressionOrLiteralStringExpressionOrNewExpressionOrNewTargetExpressionOrObjectExpressionOrSpreadElementOrStaticMemberExpressionOrTemplateExpressionOrThisExpressionOrUnaryExpressionOrUpdateExpressionOrYieldExpressionOrYieldStarExpression))                                                       \
+  F(ExpressionOrSuper, "ExpressionOrSuper", EXPRESSION_OR_SUPER,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+    SUM(ArrayExpressionOrAssignmentExpressionOrAwaitExpressionOrBinaryExpressionOrCallExpressionOrClassExpressionOrCompoundAssignmentExpressionOrComputedMemberExpressionOrConditionalExpressionOrEagerArrowExpressionWithExpressionOrEagerArrowExpressionWithFunctionBodyOrEagerFunctionExpressionOrIdentifierExpressionOrLazyArrowExpressionWithExpressionOrLazyArrowExpressionWithFunctionBodyOrLazyFunctionExpressionOrLiteralBooleanExpressionOrLiteralInfinityExpressionOrLiteralNullExpressionOrLiteralNumericExpressionOrLiteralRegExpExpressionOrLiteralStringExpressionOrNewExpressionOrNewTargetExpressionOrObjectExpressionOrStaticMemberExpressionOrSuperOrTemplateExpressionOrThisExpressionOrUnaryExpressionOrUpdateExpressionOrYieldExpressionOrYieldStarExpression))                                                               \
+  F(ExpressionOrTemplateElement, "ExpressionOrTemplateElement",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+    EXPRESSION_OR_TEMPLATE_ELEMENT,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+    SUM(ArrayExpressionOrAssignmentExpressionOrAwaitExpressionOrBinaryExpressionOrCallExpressionOrClassExpressionOrCompoundAssignmentExpressionOrComputedMemberExpressionOrConditionalExpressionOrEagerArrowExpressionWithExpressionOrEagerArrowExpressionWithFunctionBodyOrEagerFunctionExpressionOrIdentifierExpressionOrLazyArrowExpressionWithExpressionOrLazyArrowExpressionWithFunctionBodyOrLazyFunctionExpressionOrLiteralBooleanExpressionOrLiteralInfinityExpressionOrLiteralNullExpressionOrLiteralNumericExpressionOrLiteralRegExpExpressionOrLiteralStringExpressionOrNewExpressionOrNewTargetExpressionOrObjectExpressionOrStaticMemberExpressionOrTemplateElementOrTemplateExpressionOrThisExpressionOrUnaryExpressionOrUpdateExpressionOrYieldExpressionOrYieldStarExpression))                                                     \
+  F(ExpressionOrVariableDeclaration, "ExpressionOrVariableDeclaration",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+    EXPRESSION_OR_VARIABLE_DECLARATION,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+    SUM(ArrayExpressionOrAssignmentExpressionOrAwaitExpressionOrBinaryExpressionOrCallExpressionOrClassExpressionOrCompoundAssignmentExpressionOrComputedMemberExpressionOrConditionalExpressionOrEagerArrowExpressionWithExpressionOrEagerArrowExpressionWithFunctionBodyOrEagerFunctionExpressionOrIdentifierExpressionOrLazyArrowExpressionWithExpressionOrLazyArrowExpressionWithFunctionBodyOrLazyFunctionExpressionOrLiteralBooleanExpressionOrLiteralInfinityExpressionOrLiteralNullExpressionOrLiteralNumericExpressionOrLiteralRegExpExpressionOrLiteralStringExpressionOrNewExpressionOrNewTargetExpressionOrObjectExpressionOrStaticMemberExpressionOrTemplateExpressionOrThisExpressionOrUnaryExpressionOrUpdateExpressionOrVariableDeclarationOrYieldExpressionOrYieldStarExpression))                                                 \
+  F(FunctionDeclaration, "FunctionDeclaration", FUNCTION_DECLARATION,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+    SUM(EagerFunctionDeclarationOrLazyFunctionDeclaration))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+  F(FunctionExpression, "FunctionExpression", FUNCTION_EXPRESSION,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+    SUM(EagerFunctionExpressionOrLazyFunctionExpression))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+  F(Getter, "Getter", GETTER, SUM(EagerGetterOrLazyGetter))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+  F(ImportDeclaration, "ImportDeclaration", IMPORT_DECLARATION,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+    SUM(ImportOrImportNamespace))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+  F(IterationStatement, "IterationStatement", ITERATION_STATEMENT,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+    SUM(DoWhileStatementOrForInStatementOrForOfStatementOrForStatementOrWhileStatement))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+  F(Literal, "Literal", LITERAL,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+    SUM(LiteralBooleanExpressionOrLiteralInfinityExpressionOrLiteralNullExpressionOrLiteralNumericExpressionOrLiteralStringExpression))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+  F(Method, "Method", METHOD, SUM(EagerMethodOrLazyMethod))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+  F(MethodDefinition, "MethodDefinition", METHOD_DEFINITION,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+    SUM(EagerGetterOrEagerMethodOrEagerSetterOrLazyGetterOrLazyMethodOrLazySetter))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+  F(ObjectProperty, "ObjectProperty", OBJECT_PROPERTY,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+    SUM(DataPropertyOrEagerGetterOrEagerMethodOrEagerSetterOrLazyGetterOrLazyMethodOrLazySetterOrShorthandProperty))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+  F(Parameter, "Parameter", PARAMETER,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+    SUM(ArrayBindingOrBindingIdentifierOrBindingWithInitializerOrObjectBinding))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+  F(Program, "Program", PROGRAM, SUM(ModuleOrScript))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+  F(PropertyName, "PropertyName", PROPERTY_NAME,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+    SUM(ComputedPropertyNameOrLiteralPropertyName))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+  F(Setter, "Setter", SETTER, SUM(EagerSetterOrLazySetter))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+  F(SimpleAssignmentTarget, "SimpleAssignmentTarget",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+    SIMPLE_ASSIGNMENT_TARGET,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+    SUM(AssignmentTargetIdentifierOrComputedMemberAssignmentTargetOrStaticMemberAssignmentTarget))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+  F(Statement, "Statement", STATEMENT,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+    SUM(BlockOrBreakStatementOrClassDeclarationOrContinueStatementOrDebuggerStatementOrDoWhileStatementOrEagerFunctionDeclarationOrEmptyStatementOrExpressionStatementOrForInStatementOrForOfStatementOrForStatementOrIfStatementOrLabelledStatementOrLazyFunctionDeclarationOrReturnStatementOrSwitchStatementOrSwitchStatementWithDefaultOrThrowStatementOrTryCatchStatementOrTryFinallyStatementOrVariableDeclarationOrWhileStatementOrWithStatement))
 
 enum class BinASTSum : uint16_t {
-#define EMIT_ENUM(name, _user, _macro) name,
+#define EMIT_ENUM(name, _user, _macro, _type) name,
   FOR_EACH_BIN_SUM(EMIT_ENUM)
 #undef EMIT_ENUM
 };
+
+// The number of distinct sum types in the grammar. Used typically to maintain a
+// probability table per sum type.
+const size_t BINAST_NUMBER_OF_SUM_TYPES = 35;
 
 /**
  * Return a string describing a `BinASTKind`.
