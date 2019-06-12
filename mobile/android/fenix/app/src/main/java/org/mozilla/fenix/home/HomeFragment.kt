@@ -22,6 +22,9 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.NavHostFragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
@@ -692,48 +695,71 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         emitAccountChanges()
     }
 
-    private fun scrollToCollections(addedTabsSize: Int) {
+    private fun scrollAndAnimateCollection(addedTabsSize: Int, changedCollection: TabCollection? = null) {
         launch {
+            val recyclerView = sessionControlComponent.view
             delay(ANIM_SCROLL_DELAY)
             val tabsSize = requireComponents.core.sessionManager.sessions.filter {
                 (activity as HomeActivity).browsingModeManager.isPrivate == it.private
             }.size
-            sessionControlComponent.view.smoothScrollToPosition(tabsSize + NON_TAB_ITEM_NUM)
-            delay(ANIM_SNACKBAR_DELAY)
-            showSavedSnackbar(addedTabsSize)
+            var indexOfCollection = tabsSize + NON_TAB_ITEM_NUM
+            changedCollection?.let { changedCollection ->
+                requireComponents.core.tabCollectionStorage.cachedTabCollections.filterIndexed { index, tabCollection ->
+                    if (tabCollection.id == changedCollection.id) {
+                        indexOfCollection = tabsSize + NON_TAB_ITEM_NUM + index
+                        return@filterIndexed true
+                    }
+                    false
+                }
+            }
+            val lastVisiblePosition =
+                (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition() ?: 0
+            if (lastVisiblePosition < indexOfCollection) {
+                val onScrollListener = object : RecyclerView.OnScrollListener() {
+                    override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                        super.onScrollStateChanged(recyclerView, newState)
+                        if (newState == SCROLL_STATE_IDLE) {
+                            animateCollection(addedTabsSize = addedTabsSize, indexOfCollection = indexOfCollection)
+                            recyclerView.removeOnScrollListener(this)
+                        }
+                    }
+                }
+                recyclerView.addOnScrollListener(onScrollListener)
+                recyclerView.smoothScrollToPosition(indexOfCollection)
+            } else {
+                animateCollection(addedTabsSize = addedTabsSize, indexOfCollection = indexOfCollection)
+            }
         }
     }
 
-    private fun animateTopCollection() {
+    private fun animateCollection(addedTabsSize: Int, indexOfCollection: Int) {
         launch {
-            delay(ANIM_SCROLL_DELAY)
-            val tabsSize = requireComponents.core.sessionManager.sessions.filter {
-                (activity as HomeActivity).browsingModeManager.isPrivate == it.private
-            }.size
-            val topCollectionPosition = tabsSize + NON_TAB_ITEM_NUM
-            sessionControlComponent.view.smoothScrollToPosition(topCollectionPosition)
-            val viewHolder = sessionControlComponent.view.findViewHolderForAdapterPosition(topCollectionPosition)
+            val viewHolder = sessionControlComponent.view.findViewHolderForAdapterPosition(indexOfCollection)
             val border = (viewHolder as? CollectionViewHolder)?.view?.findViewById<View>(R.id.selected_border)
             val listener = object : Animator.AnimatorListener {
-                override fun onAnimationCancel(animation: Animator?) {}
+                override fun onAnimationCancel(animation: Animator?) {
+                    border?.visibility = View.GONE
+                }
+
                 override fun onAnimationStart(animation: Animator?) {}
                 override fun onAnimationRepeat(animation: Animator?) {}
                 override fun onAnimationEnd(animation: Animator?) {
-                    border?.animate()?.alpha(0.0F)?.setDuration(FADE_ANIM_DURATION)
-                        ?.setStartDelay(ANIM_ON_SCREEN_DELAY)
+                    border?.animate()?.alpha(0.0F)?.setStartDelay(ANIM_ON_SCREEN_DELAY)
+                        ?.setDuration(FADE_ANIM_DURATION)
                         ?.start()
                 }
             }
-            delay(ANIM_ON_SCREEN_DELAY)
-            border?.animate()?.alpha(1.0F)?.setDuration(FADE_ANIM_DURATION)?.setListener(listener)?.start()
+            border?.animate()?.alpha(1.0F)?.setStartDelay(ANIM_ON_SCREEN_DELAY)?.setDuration(FADE_ANIM_DURATION)
+                ?.setListener(listener)?.start()
+        }.invokeOnCompletion {
+            showSavedSnackbar(addedTabsSize)
         }
     }
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         override fun onCollectionCreated(title: String, sessions: List<Session>) {
             super.onCollectionCreated(title, sessions)
-            scrollToCollections(sessions.size)
-            animateTopCollection()
+            scrollAndAnimateCollection(sessions.size)
         }
 
         override fun onTabsAdded(
@@ -741,7 +767,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             sessions: List<Session>
         ) {
             super.onTabsAdded(tabCollection, sessions)
-            scrollToCollections(sessions.size)
+            scrollAndAnimateCollection(sessions.size, tabCollection)
         }
 
         override fun onCollectionRenamed(
@@ -754,13 +780,16 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     private fun showSavedSnackbar(tabSize: Int) {
-        context?.let { context: Context ->
-            view?.let { view: View ->
-                val string =
-                    if (tabSize > 1) context.getString(R.string.create_collection_tabs_saved) else
-                        context.getString(R.string.create_collection_tab_saved)
-                val snackbar = FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
-                snackbar.show()
+        launch {
+            delay(ANIM_SNACKBAR_DELAY)
+            context?.let { context: Context ->
+                view?.let { view: View ->
+                    val string =
+                        if (tabSize > 1) context.getString(R.string.create_collection_tabs_saved) else
+                            context.getString(R.string.create_collection_tab_saved)
+                    val snackbar = FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
+                    snackbar.show()
+                }
             }
         }
     }
@@ -780,7 +809,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         private const val ANIM_SCROLL_DELAY = 100L
         private const val ANIM_ON_SCREEN_DELAY = 200L
         private const val FADE_ANIM_DURATION = 150L
-        private const val ANIM_SNACKBAR_DELAY = 500L
+        private const val ANIM_SNACKBAR_DELAY = 100L
         private const val SHARED_TRANSITION_MS = 200L
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         private const val toolbarPaddingDp = 12f
