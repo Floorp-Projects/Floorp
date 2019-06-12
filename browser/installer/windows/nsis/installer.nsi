@@ -166,6 +166,7 @@ ShowInstDetails nevershow
  */
 ; Welcome Page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE preWelcome
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE leaveWelcome
 !insertmacro MUI_PAGE_WELCOME
 
 ; Custom Options Page
@@ -1143,8 +1144,18 @@ Function preWelcome
     CopyFiles /SILENT "$EXEDIR\core\distribution\modern-wizard.bmp" "$PLUGINSDIR\modern-wizard.bmp"
   ${EndIf}
 
+  ; We don't want the header bitmap showing on the welcome page.
+  GetDlgItem $0 $HWNDPARENT 1046
+  ShowWindow $0 ${SW_HIDE}
+
   System::Call "kernel32::GetTickCount()l .s"
   Pop $IntroPhaseStart
+FunctionEnd
+
+Function leaveWelcome
+  ; Bring back the header bitmap for the next pages.
+  GetDlgItem $0 $HWNDPARENT 1046
+  ShowWindow $0 ${SW_SHOW}
 FunctionEnd
 
 Function preOptions
@@ -1505,6 +1516,10 @@ Function preFinish
   StrCpy $PageName ""
   ${EndInstallLog} "${BrandFullName}"
   !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
+
+  ; We don't want the header bitmap showing on the finish page.
+  GetDlgItem $0 $HWNDPARENT 1046
+  ShowWindow $0 ${SW_HIDE}
 FunctionEnd
 
 Function postFinish
