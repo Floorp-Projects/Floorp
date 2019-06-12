@@ -52,6 +52,10 @@ add_task(async function test_menu_open_close() {
 
   let preferencesItem = gMenuButton.shadowRoot.querySelector(".menuitem-preferences");
   ok(!preferencesItem.matches(":focus"), ".menuitem-preferences should not be focused before tabbing to it");
+  // The Windows-only Import menuitem is only visible when the platform is set on gMenuButton,
+  // but the platform is set by aboutLogins.js and isn't run by this test, so the Import
+  // menuitem is always hidden when running this test. Thus, there only needs to be one Tab
+  // to move focus to the preferencesItem.
   sendKey("TAB");
   await SimpleTest.promiseWaitForCondition(() => preferencesItem.matches(":focus"),
     "waiting for preferencesItem to get focus");
