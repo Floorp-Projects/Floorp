@@ -4,6 +4,8 @@
 
 "use strict";
 
+var EXPORTED_SYMBOLS = ["SpecialPowersObserverAPI", "SpecialPowersError"];
+
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 var {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -15,17 +17,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
 });
 
-this.SpecialPowersError = function(aMsg) {
-  Error.call(this);
-  // let {stack} = new Error();
-  this.message = aMsg;
-  this.name = "SpecialPowersError";
-};
-SpecialPowersError.prototype = Object.create(Error.prototype);
-
-SpecialPowersError.prototype.toString = function() {
-  return `${this.name}: ${this.message}`;
-};
+class SpecialPowersError extends Error {
+  get name() {
+    return "SpecialPowersError";
+  }
+}
 
 function parseKeyValuePairs(text) {
   var lines = text.split("\n");

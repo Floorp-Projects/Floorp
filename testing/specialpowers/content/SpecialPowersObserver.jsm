@@ -9,8 +9,6 @@
 // https://developer.mozilla.org/en/XPCOM/XPCOM_changes_in_Gecko_1.9.3
 // https://developer.mozilla.org/en/how_to_build_an_xpcom_component_in_javascript
 
-/* import-globals-from SpecialPowersObserverAPI.js */
-
 var EXPORTED_SYMBOLS = ["SpecialPowersObserver"];
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -48,8 +46,7 @@ const FRAME_SCRIPTS = [
 ];
 
 
-// Glue to add in the observer API to this object.  This allows us to share code with chrome tests
-Services.scriptloader.loadSubScript("resource://specialpowers/SpecialPowersObserverAPI.js");
+const {SpecialPowersObserverAPI} = ChromeUtils.import("resource://specialpowers/SpecialPowersObserverAPI.jsm");
 
 class SpecialPowersObserver extends SpecialPowersObserverAPI {
   constructor() {
