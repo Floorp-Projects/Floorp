@@ -18,10 +18,6 @@
   margin-inline-end: 0;
 }
 
-.menu[aria-hidden="true"] {
-  display: none;
-}
-
 .menu {
   position: absolute;
   top: 30px;

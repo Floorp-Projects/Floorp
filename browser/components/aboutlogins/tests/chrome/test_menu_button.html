@@ -45,10 +45,10 @@ add_task(async function test_menu_open_close() {
   is(document.activeElement, gMenuButton, "menu-button should be focused to start the test");
 
   let menu = gMenuButton.shadowRoot.querySelector(".menu");
-  is("true", menu.getAttribute("aria-hidden"), "menu should be hidden before pressing 'space'");
+  is(true, menu.hidden, "menu should be hidden before pressing 'space'");
   sendKey("SPACE");
   await new Promise(resolve => requestAnimationFrame(resolve));
-  is("false", menu.getAttribute("aria-hidden"), "menu should be visible after pressing 'space'");
+  is(false, menu.hidden, "menu should be visible after pressing 'space'");
 
   let preferencesItem = gMenuButton.shadowRoot.querySelector(".menuitem-preferences");
   ok(!preferencesItem.matches(":focus"), ".menuitem-preferences should not be focused before tabbing to it");
@@ -62,11 +62,11 @@ add_task(async function test_menu_open_close() {
   ok(preferencesItem.matches(":focus"), ".menuitem-preferences should be focused after tabbing to it");
 
   let openPreferencesEvent = null;
-  is("false", menu.getAttribute("aria-hidden"), "menu should be visible before pressing 'space' on .menuitem-preferences");
+  is(false, menu.hidden, "menu should be visible before pressing 'space' on .menuitem-preferences");
   window.addEventListener("AboutLoginsOpenPreferences", event => openPreferencesEvent = event);
   sendKey("SPACE");
   ok(openPreferencesEvent, "AboutLoginsOpenPreferences event should be dispatched after pressing 'space' on .menuitem-preferences");
-  is("true", menu.getAttribute("aria-hidden"), "menu should be hidden after pressing 'space' on .menuitem-preferences");
+  is(true, menu.hidden, "menu should be hidden after pressing 'space' on .menuitem-preferences");
 });
 </script>
 
