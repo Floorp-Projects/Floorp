@@ -213,13 +213,14 @@ var TEST_TREE = {
  * Frame
  */
 function checkFrameString({
-  el, file, line, column, source, functionName, shouldLink, tooltip,
+  el, file, line, column, source, functionName, shouldLink, tooltip, locationPrefix,
 }) {
   const $ = selector => el.querySelector(selector);
 
   const $func = $(".frame-link-function-display-name");
   const $source = $(".frame-link-source");
   const $sourceInner = $(".frame-link-source-inner");
+  const $locationPrefix = $(".frame-link-prefix");
   const $filename = $(".frame-link-filename");
   const $line = $(".frame-link-line");
 
@@ -248,6 +249,12 @@ function checkFrameString({
     is($func.textContent, functionName, "Correct function name");
   } else {
     ok(!$func, "Should not have an element for `functionName`");
+  }
+
+  if (locationPrefix != null) {
+    is($locationPrefix.textContent, locationPrefix, "Correct prefix");
+  } else {
+    ok(!$locationPrefix, "Should not have an element for `locationPrefix`");
   }
 }
 

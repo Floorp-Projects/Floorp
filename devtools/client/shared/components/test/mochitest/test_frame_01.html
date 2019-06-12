@@ -314,6 +314,24 @@ window.onload = async function () {
       source: "https://bugzilla.mozilla.org/original.js",
     });
 
+    // Check when a message comes from a logPoint,
+    // a prefix should render before source
+    await checkFrameComponent({
+      frame: {
+        origin: "logPoint",
+        source: "http://myfile.com/mahscripts.js",
+        line: 55,
+        column: 10,
+      }
+    }, {
+      locationPrefix: "Logpoint @ ",
+      file: "mahscripts.js",
+      line: 55,
+      column: 10,
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55:10",
+    });
+
     function checkFrameComponent(input, expected) {
       let props = Object.assign({ onClick: () => {} }, input);
       let frame = ReactDOM.render(Frame(props), window.document.body);
