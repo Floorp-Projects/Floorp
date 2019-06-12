@@ -325,17 +325,17 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   }
   Condition testNumber(Condition cond, Register tag) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmp32(tag, ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET));
+    cmp32(tag, ImmTag(JS::detail::ValueUpperInclNumberTag));
     return cond == Equal ? BelowOrEqual : Above;
   }
   Condition testGCThing(Condition cond, Register tag) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmp32(tag, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+    cmp32(tag, ImmTag(JS::detail::ValueLowerInclGCThingTag));
     return cond == Equal ? AboveOrEqual : Below;
   }
   Condition testGCThing(Condition cond, const Address& address) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmp32(tagOf(address), ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+    cmp32(tagOf(address), ImmTag(JS::detail::ValueLowerInclGCThingTag));
     return cond == Equal ? AboveOrEqual : Below;
   }
   Condition testMagic(Condition cond, const Address& address) {
@@ -355,7 +355,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   }
   Condition testPrimitive(Condition cond, Register tag) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmp32(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET));
+    cmp32(tag, ImmTag(JS::detail::ValueUpperExclPrimitiveTag));
     return cond == Equal ? Below : AboveOrEqual;
   }
   Condition testError(Condition cond, Register tag) {
@@ -513,7 +513,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   }
   Condition testGCThing(Condition cond, const BaseIndex& address) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmp32(tagOf(address), ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+    cmp32(tagOf(address), ImmTag(JS::detail::ValueLowerInclGCThingTag));
     return cond == Equal ? AboveOrEqual : Below;
   }
 

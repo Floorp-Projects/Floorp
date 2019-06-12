@@ -2511,7 +2511,7 @@ Assembler::Condition MacroAssemblerARMCompat::testMagic(
 Assembler::Condition MacroAssemblerARMCompat::testPrimitive(
     Assembler::Condition cond, Register tag) {
   MOZ_ASSERT(cond == Equal || cond == NotEqual);
-  ma_cmp(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET));
+  ma_cmp(tag, ImmTag(JS::detail::ValueUpperExclPrimitiveTag));
   return cond == Equal ? Below : AboveOrEqual;
 }
 
@@ -2520,7 +2520,7 @@ Assembler::Condition MacroAssemblerARMCompat::testGCThing(
   MOZ_ASSERT(cond == Equal || cond == NotEqual);
   ScratchRegisterScope scratch(asMasm());
   Register tag = extractTag(address, scratch);
-  ma_cmp(tag, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+  ma_cmp(tag, ImmTag(JS::detail::ValueLowerInclGCThingTag));
   return cond == Equal ? AboveOrEqual : Below;
 }
 
@@ -2625,7 +2625,7 @@ Assembler::Condition MacroAssemblerARMCompat::testDouble(Condition cond,
 Assembler::Condition MacroAssemblerARMCompat::testNumber(Condition cond,
                                                          Register tag) {
   MOZ_ASSERT(cond == Equal || cond == NotEqual);
-  ma_cmp(tag, ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET));
+  ma_cmp(tag, ImmTag(JS::detail::ValueUpperInclNumberTag));
   return cond == Equal ? BelowOrEqual : Above;
 }
 
@@ -2725,7 +2725,7 @@ Assembler::Condition MacroAssemblerARMCompat::testGCThing(
   MOZ_ASSERT(cond == Equal || cond == NotEqual);
   ScratchRegisterScope scratch(asMasm());
   Register tag = extractTag(address, scratch);
-  ma_cmp(tag, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+  ma_cmp(tag, ImmTag(JS::detail::ValueLowerInclGCThingTag));
   return cond == Equal ? AboveOrEqual : Below;
 }
 

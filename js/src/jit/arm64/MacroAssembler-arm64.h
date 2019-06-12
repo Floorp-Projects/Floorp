@@ -1314,7 +1314,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 
   void BoxDouble(ARMRegister dest, ARMRegister src) {
     // Allowed for `src` and `dest.valueReg()` to overlap here.
-    Add(dest, src, Operand(int64_t(JSVAL_PUN64_DOUBLE_ADJUST)));
+    Add(dest, src, Operand(int64_t(JS::detail::ValueDoubleAdjust)));
   }
   void BoxDouble(ARMRegister dest, ARMFPRegister src) {
     // Allowed for `src` and `dest.valueReg()` to overlap here.
@@ -1358,7 +1358,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     vixl::UseScratchRegisterScope temps(this);
     const ARMRegister scratch64 = temps.AcquireX();
     loadPtr(src, scratch64.asUnsized());
-    Sub(scratch64, scratch64, Operand(int64_t(JSVAL_PUN64_DOUBLE_ADJUST)));
+    Sub(scratch64, scratch64, Operand(int64_t(JS::detail::ValueDoubleAdjust)));
     Fmov(ARMFPRegister(dest, 64), scratch64);
   }
   void unboxDouble(const ValueOperand& src, FloatRegister dest) {
@@ -1366,9 +1366,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   }
   void unboxDouble(const ValueOperand& src, ARMFPRegister dest) {
     ARMRegister srcReg = ARMRegister(src.valueReg(), 64);
-    Sub(srcReg, srcReg, Operand(int64_t(JSVAL_PUN64_DOUBLE_ADJUST)));
+    Sub(srcReg, srcReg, Operand(int64_t(JS::detail::ValueDoubleAdjust)));
     Fmov(dest, srcReg);
-    Add(srcReg, srcReg, Operand(int64_t(JSVAL_PUN64_DOUBLE_ADJUST)));
+    Add(srcReg, srcReg, Operand(int64_t(JS::detail::ValueDoubleAdjust)));
   }
 
   void unboxArgObjMagic(const ValueOperand& src, Register dest) {
@@ -1453,7 +1453,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void unboxGCThingForPreBarrierTrampoline(const Address& src, Register dest) {
     loadPtr(src, dest);
     And(ARMRegister(dest, 64), ARMRegister(dest, 64),
-        Operand(JSVAL_PAYLOAD_MASK_GCTHING));
+        Operand(JS::detail::ValueGCThingPayloadMask));
   }
 
   inline void unboxValue(const ValueOperand& src, AnyRegister dest,
@@ -2122,7 +2122,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     // Bfxil cannot be used with the zero register as a source.
     if (src == rzr) {
       And(ARMRegister(dest, 64), ARMRegister(dest, 64),
-          Operand(JSVAL_TAG_MASK));
+          Operand(JS::detail::ValueTagMask));
     } else {
       Bfxil(ARMRegister(dest, 64), ARMRegister(src, 64), 0, JSVAL_TAG_SHIFT);
     }
