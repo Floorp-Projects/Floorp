@@ -20,8 +20,7 @@ struct ImmShiftedTag : public ImmWord {
   explicit ImmShiftedTag(JSValueShiftedTag shtag) : ImmWord((uintptr_t)shtag) {}
 
   explicit ImmShiftedTag(JSValueType type)
-      : ImmWord(uintptr_t(JSValueShiftedTag(JSVAL_TYPE_TO_SHIFTED_TAG(type)))) {
-  }
+      : ImmWord(uintptr_t(JSVAL_TYPE_TO_SHIFTED_TAG(type))) {}
 };
 
 struct ImmTag : public Imm32 {
@@ -305,7 +304,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
 
   Condition testUndefined(Condition cond, const ValueOperand& src) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_UNDEFINED));
+    cmpPtr(src.valueReg(), ImmWord(JS::detail::ValueBoxedUndefined));
     return cond;
   }
   Condition testInt32(Condition cond, const ValueOperand& src) {
@@ -320,12 +319,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
   Condition testDouble(Condition cond, const ValueOperand& src) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_MIN_DOUBLE));
+    cmpPtr(src.valueReg(), ImmWord(JS::detail::ValueBoxedMinDouble));
     return cond == Equal ? AboveOrEqual : Below;
   }
   Condition testNumber(Condition cond, const ValueOperand& src) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_MIN_INT32));
+    cmpPtr(src.valueReg(), ImmWord(JS::detail::ValueBoxedMinInt32));
     return cond == Equal ? AboveOrEqual : Below;
   }
   Condition testNull(Condition cond, const ValueOperand& src) {
@@ -350,17 +349,17 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
   Condition testObject(Condition cond, const ValueOperand& src) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_MAX_OBJ_PTR));
+    cmpPtr(src.valueReg(), ImmWord(JS::detail::ValueBoxedMaxObjPtr));
     return cond == Equal ? BelowOrEqual : Above;
   }
   Condition testGCThing(Condition cond, const ValueOperand& src) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_UNDEFINED));
+    cmpPtr(src.valueReg(), ImmWord(JS::detail::ValueBoxedUndefined));
     return cond == Equal ? Below : AboveOrEqual;
   }
   Condition testPrimitive(Condition cond, const ValueOperand& src) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_MAX_OBJ_PTR));
+    cmpPtr(src.valueReg(), ImmWord(JS::detail::ValueBoxedMaxObjPtr));
     return cond == Equal ? Above : BelowOrEqual;
   }
 
@@ -379,12 +378,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
   Condition testDouble(Condition cond, const Address& src) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src, ImmWord(JSVAL_PUN64_BOXED_MIN_DOUBLE));
+    cmpPtr(src, ImmWord(JS::detail::ValueBoxedMinDouble));
     return cond == Equal ? AboveOrEqual : Below;
   }
   Condition testNumber(Condition cond, const Address& src) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src, ImmWord(JSVAL_PUN64_BOXED_MIN_INT32));
+    cmpPtr(src, ImmWord(JS::detail::ValueBoxedMinInt32));
     return cond == Equal ? AboveOrEqual : Below;
   }
   Condition testNull(Condition cond, const Address& src) {
@@ -413,12 +412,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
   Condition testPrimitive(Condition cond, const Address& src) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src, ImmWord(JSVAL_PUN64_BOXED_MAX_OBJ_PTR));
+    cmpPtr(src, ImmWord(JS::detail::ValueBoxedMaxObjPtr));
     return cond == Equal ? Above : BelowOrEqual;
   }
   Condition testGCThing(Condition cond, const Address& src) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src, ImmWord(JSVAL_PUN64_BOXED_UNDEFINED));
+    cmpPtr(src, ImmWord(JS::detail::ValueBoxedUndefined));
     return cond == Equal ? Below : AboveOrEqual;
   }
   Condition testMagic(Condition cond, const Address& src) {
@@ -716,7 +715,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void boxDouble(FloatRegister src, const Operand& dest, Register scratch) {
     vmovq(src, scratch);
     movq(scratch, Operand(dest));
-    movq(ImmWord(JSVAL_PUN64_DOUBLE_ADJUST), scratch);
+    movq(ImmWord(JS::detail::ValueDoubleAdjust), scratch);
     addq(scratch, Operand(dest));
   }
   void boxDouble(FloatRegister src, const Address& dest, Register scratch) {
@@ -730,7 +729,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister) {
     ScratchRegisterScope scratch(asMasm());
     vmovq(src, dest.valueReg());
-    movq(ImmWord(JSVAL_PUN64_DOUBLE_ADJUST), scratch);
+    movq(ImmWord(JS::detail::ValueDoubleAdjust), scratch);
     addq(scratch, dest.valueReg());
   }
   void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest) {
@@ -752,7 +751,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     // The value we want to produce is: to_float(src - ADJUST)
     // we note that (src - ADJUST) == -ADJUST + src
     ScratchRegisterScope scratch(asMasm());
-    movq(ImmWord(-JSVAL_PUN64_DOUBLE_ADJUST), scratch);
+    movq(ImmWord(-JS::detail::ValueDoubleAdjust), scratch);
     addq(Operand(src), scratch);
     vmovq(scratch, dest);
   }
@@ -783,7 +782,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     // The value we want to produce is: to_float(src - ADJUST)
     // we note that (src - ADJUST) == -ADJUST + src
     ScratchRegisterScope scratch(asMasm());
-    movq(ImmWord(-JSVAL_PUN64_DOUBLE_ADJUST), scratch);
+    movq(ImmWord(-JS::detail::ValueDoubleAdjust), scratch);
     addq(src.valueReg(), scratch);
     vmovq(scratch, dest);
   }
@@ -905,7 +904,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   // the actual Value type. In almost all other cases, this would be
   // Spectre-unsafe - use unboxNonDouble and friends instead.
   void unboxGCThingForPreBarrierTrampoline(const Address& src, Register dest) {
-    movq(ImmWord(JSVAL_PAYLOAD_MASK_GCTHING), dest);
+    movq(ImmWord(JS::detail::ValueGCThingPayloadMask), dest);
     andq(Operand(src), dest);
   }
 
