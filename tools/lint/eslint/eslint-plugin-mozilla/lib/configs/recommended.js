@@ -82,7 +82,6 @@ module.exports = {
   // When adding items to this file please check for effects on sub-directories.
   "plugins": [
     "fetch-options",
-    "mozilla",
     "no-unsanitized",
     "prettier",
   ],
