@@ -304,8 +304,8 @@ async function backupCerts() {
     if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
       let password = {};
       if (certdialogs.setPKCS12FilePassword(window, password)) {
-        let errorCode = certdb.exportPKCS12File(fp.file, selected_certs.length,
-                                                selected_certs, password.value);
+        let errorCode = certdb.exportPKCS12File(fp.file, selected_certs,
+                                                password.value);
         promptError(errorCode);
       }
     }
