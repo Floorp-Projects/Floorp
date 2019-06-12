@@ -181,9 +181,7 @@ interface nsIApplicationCache : nsISupports
      * Returns any entries in the application cache whose type matches
      * one or more of the bits in typeBits.
      */
-    void gatherEntries(in uint32_t typeBits,
-                       out unsigned long count,
-                       [array, size_is(count)] out string keys);
+    Array<ACString> gatherEntries(in uint32_t typeBits);
 
     /**
      * Add a set of namespace entries to the application cache.

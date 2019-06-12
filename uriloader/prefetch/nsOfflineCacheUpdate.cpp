@@ -72,17 +72,6 @@ extern LazyLogModule gOfflineCacheUpdateLog;
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(gOfflineCacheUpdateLog, mozilla::LogLevel::Debug)
 
-class AutoFreeArray {
- public:
-  AutoFreeArray(uint32_t count, char** values)
-      : mCount(count), mValues(values){};
-  ~AutoFreeArray() { NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mCount, mValues); }
-
- private:
-  uint32_t mCount;
-  char** mValues;
-};
-
 namespace {
 
 nsresult DropReferenceFromURL(nsCOMPtr<nsIURI>& aURI) {
@@ -1719,26 +1708,22 @@ nsresult nsOfflineCacheUpdate::AddExistingItems(
     return NS_OK;
   }
 
-  uint32_t count = 0;
-  char** keys = nullptr;
-  nsresult rv = mPreviousApplicationCache->GatherEntries(aType, &count, &keys);
+  nsTArray<nsCString> keys;
+  nsresult rv = mPreviousApplicationCache->GatherEntries(aType, keys);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  AutoFreeArray autoFree(count, keys);
-
-  for (uint32_t i = 0; i < count; i++) {
+  for (auto& key : keys) {
     if (namespaceFilter) {
       bool found = false;
       for (uint32_t j = 0; j < namespaceFilter->Length() && !found; j++) {
-        found = StringBeginsWith(nsDependentCString(keys[i]),
-                                 namespaceFilter->ElementAt(j));
+        found = StringBeginsWith(key, namespaceFilter->ElementAt(j));
       }
 
       if (!found) continue;
     }
 
     nsCOMPtr<nsIURI> uri;
-    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), keys[i]))) {
+    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), key))) {
       rv = AddURI(uri, aType);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -2039,19 +2024,16 @@ void nsOfflineCacheUpdate::AsyncFinishWithError() {
 }
 
 static nsresult EvictOneOfCacheGroups(nsIApplicationCacheService* cacheService,
-                                      uint32_t count,
-                                      const char* const* groups) {
+                                      const nsTArray<nsCString>& groups) {
   nsresult rv;
-  unsigned int i;
 
-  for (i = 0; i < count; i++) {
+  for (auto& group : groups) {
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), groups[i]);
+    rv = NS_NewURI(getter_AddRefs(uri), group);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsDependentCString group_name(groups[i]);
     nsCOMPtr<nsIApplicationCache> cache;
-    rv = cacheService->GetActiveCache(group_name, getter_AddRefs(cache));
+    rv = cacheService->GetActiveCache(group, getter_AddRefs(cache));
     // Maybe someone in another thread or process have deleted it.
     if (NS_FAILED(rv) || !cache) continue;
 
@@ -2076,15 +2058,11 @@ nsresult nsOfflineCacheUpdate::EvictOneNonPinned() {
       do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint32_t count;
-  char** groups;
-  rv = cacheService->GetGroupsTimeOrdered(&count, &groups);
+  nsTArray<nsCString> groups;
+  rv = cacheService->GetGroupsTimeOrdered(groups);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = EvictOneOfCacheGroups(cacheService, count, groups);
-
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, groups);
-  return rv;
+  return EvictOneOfCacheGroups(cacheService, groups);
 }
 
 //-----------------------------------------------------------------------------

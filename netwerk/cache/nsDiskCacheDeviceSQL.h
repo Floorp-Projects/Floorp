@@ -154,9 +154,9 @@ class nsOfflineCacheDevice final : public nsCacheDevice, public nsISupports {
   nsresult Evict(nsILoadContextInfo* aInfo);
   nsresult Evict(mozilla::OriginAttributesPattern const& aPattern);
 
-  nsresult GetGroups(uint32_t* count, char*** keys);
+  nsresult GetGroups(nsTArray<nsCString>& keys);
 
-  nsresult GetGroupsTimeOrdered(uint32_t* count, char*** keys);
+  nsresult GetGroupsTimeOrdered(nsTArray<nsCString>& keys);
 
   bool IsLocked(const nsACString& key);
   void Lock(const nsACString& key);
@@ -211,14 +211,14 @@ class nsOfflineCacheDevice final : public nsCacheDevice, public nsISupports {
                                 const nsACString& key,
                                 nsIApplicationCacheNamespace** out);
   nsresult GatherEntries(const nsCString& clientID, uint32_t typeBits,
-                         uint32_t* count, char*** values);
+                         nsTArray<nsCString>& keys);
   nsresult AddNamespace(const nsCString& clientID,
                         nsIApplicationCacheNamespace* ns);
 
   nsresult GetUsage(const nsACString& clientID, uint32_t* usage);
 
   nsresult RunSimpleQuery(mozIStorageStatement* statment, uint32_t resultIndex,
-                          uint32_t* count, char*** values);
+                          nsTArray<nsCString>& values);
 
   nsCOMPtr<mozIStorageConnection> mDB;
   RefPtr<nsOfflineCacheEvictionFunction> mEvictionFunction;
