@@ -808,8 +808,8 @@ class HuffmanPreludeReader {
   // For an indexed type, the symbol is fetched from the grammar using `index`.
   // We have a guarantee that `index` is always in [0, numberOfSymbols).
   template <typename Entry>
-  MOZ_MUST_USE JS::Result<typename Entry::SymbolType> readSymbol(
-      const Entry& type, size_t index);
+  MOZ_MUST_USE JS::Result<typename Entry::SymbolType> readSymbol(const Entry&,
+                                                                 size_t index);
 
   // Read the number of symbols in an entry.
   // For an indexed type, theis number is fetched from the grammar.
@@ -1012,9 +1012,10 @@ class HuffmanPreludeReader {
 
   // Extract symbol from the grammar.
   template <>
-  MOZ_MUST_USE JS::Result<BinASTKind> readSymbol(const Sum& sum, size_t index) {
-    MOZ_ASSERT(index < sum.numberOfSymbols());
-    return sum.interfaceAt(index);
+  MOZ_MUST_USE JS::Result<BinASTKind> readSymbol(const Sum& entry,
+                                                 size_t index) {
+    MOZ_ASSERT(index < entry.numberOfSymbols());
+    return entry.interfaceAt(index);
   }
 
   // Reading a single-value table of sums of interfaces.
@@ -1102,8 +1103,9 @@ class HuffmanPreludeReader {
     BINJS_MOZ_TRY_DECL(value, readSymbol(number, 0 /* ignored */));
     // Note: The `std::move` is useless for performance, but necessary to keep
     // a consistent API.
-    // NOLINTNEXTLINE(performance-move-const-arg)
-    MOZ_TRY(table.impl.initWithSingleValue(cx_, std::move(value)));
+    MOZ_TRY(table.impl.initWithSingleValue(
+        cx_,
+        /* NOLINT(performance-move-const-arg) */ std::move(value)));
     return Ok();
   }
 
@@ -1173,9 +1175,10 @@ class HuffmanPreludeReader {
     }
     // Note: The `std::move` is useless for performance, but necessary to keep
     // a consistent API.
-    // NOLINTNEXTLINE(performance-move-const-arg)
+    JSAtom* value = reader.metadata_->getAtom(index);
     MOZ_TRY(table.impl.initWithSingleValue(
-        cx_, std::move(reader.metadata_->getAtom(index))));
+        cx_,
+        /* NOLINT(performance-move-const-arg) */ std::move(value)));
     return Ok();
   }
 
@@ -1218,8 +1221,9 @@ class HuffmanPreludeReader {
         index == 0 ? nullptr : reader.metadata_->getAtom(index - 1);
     // Note: The `std::move` is useless for performance, but necessary to keep
     // a consistent API.
-    // NOLINTNEXTLINE(performance-move-const-arg)
-    MOZ_TRY(table.impl.initWithSingleValue(cx_, std::move(symbol)));
+    MOZ_TRY(table.impl.initWithSingleValue(
+        cx_,
+        /* NOLINT(performance-move-const-arg) */ std::move(symbol)));
     return Ok();
   }
 
@@ -1253,8 +1257,9 @@ class HuffmanPreludeReader {
     BinASTVariant symbol = entry.variantAt(index);
     // Note: The `std::move` is useless for performance, but necessary to keep
     // a consistent API.
-    // NOLINTNEXTLINE(performance-move-const-arg)
-    MOZ_TRY(table.impl.initWithSingleValue(cx_, std::move(symbol)));
+    MOZ_TRY(table.impl.initWithSingleValue(
+        cx_,
+        /* NOLINT(performance-move-const-arg) */ std::move(symbol)));
     return Ok();
   }
 
