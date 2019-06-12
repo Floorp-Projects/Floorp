@@ -13,6 +13,11 @@ add_task(async function() {
 
   // List of about: URLs that may cause problem, so we skip them in this test.
   let skipURLs = [
+    // about:addons triggers an assertion in NS_CompareLoadInfoAndLoadContext:
+    // "The value of mUserContextId in the loadContext and in the loadInfo are not the same"
+    // This is due to a fetch request that has the default user context. Since
+    // the fetch request omits credentials, the user context doesn't matter.
+    "addons",
     // about:credits will initiate network request.
     "credits",
     // about:telemetry will fetch Telemetry asynchronously and takes longer,
