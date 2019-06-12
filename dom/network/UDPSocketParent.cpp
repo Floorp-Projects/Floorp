@@ -373,14 +373,12 @@ void UDPSocketParent::Send(const InfallibleTArray<uint8_t>& aData,
   switch (aAddr.type()) {
     case UDPSocketAddr::TUDPAddressInfo: {
       const UDPAddressInfo& addrInfo(aAddr.get_UDPAddressInfo());
-      rv = mSocket->Send(addrInfo.addr(), addrInfo.port(), aData.Elements(),
-                         aData.Length(), &count);
+      rv = mSocket->Send(addrInfo.addr(), addrInfo.port(), aData, &count);
       break;
     }
     case UDPSocketAddr::TNetAddr: {
       const NetAddr& addr(aAddr.get_NetAddr());
-      rv = mSocket->SendWithAddress(&addr, aData.Elements(), aData.Length(),
-                                    &count);
+      rv = mSocket->SendWithAddress(&addr, aData, &count);
       break;
     }
     default:

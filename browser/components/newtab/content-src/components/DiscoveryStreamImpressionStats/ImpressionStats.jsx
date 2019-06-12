@@ -54,7 +54,11 @@ export class ImpressionStats extends React.PureComponent {
     if (this._needsImpressionStats(cards)) {
       props.dispatch(ac.DiscoveryStreamImpressionStats({
         source: props.source.toUpperCase(),
-        tiles: cards.map(link => ({id: link.id, pos: link.pos})),
+        tiles: cards.map(link => ({
+          id: link.id,
+          pos: link.pos,
+          ...(link.shim ? {shim: link.shim} : {}),
+        })),
       }));
       this.impressionCardGuids = cards.map(link => link.id);
     }

@@ -25,6 +25,7 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 namespace dom {
@@ -122,8 +123,7 @@ class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
   uint16_t mStatus;
 
   // The set of dynamic keys for this application cache object.
-  char** mCachedKeys;
-  uint32_t mCachedKeysCount;
+  mozilla::Maybe<nsTArray<nsCString>> mCachedKeys;
 
   nsCOMArray<mozilla::dom::Event> mPendingEvents;
 };

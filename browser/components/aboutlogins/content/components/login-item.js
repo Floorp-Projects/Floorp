@@ -12,7 +12,7 @@ export default class LoginItem extends ReflectedFluentElement {
   }
 
   connectedCallback() {
-    if (this.children.length) {
+    if (this.shadowRoot) {
       this.render();
       return;
     }

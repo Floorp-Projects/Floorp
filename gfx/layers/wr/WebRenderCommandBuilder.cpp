@@ -1068,8 +1068,20 @@ void WebRenderScrollDataCollection::AppendRoot(
       layerScrollData.back().InitializeRoot(layerScrollData.size() - 1);
 
       if (aRootMetadata) {
-        layerScrollData.back().AppendScrollMetadata(aScrollDatas[renderRoot],
-                                                    aRootMetadata.ref());
+        // Put the fallback root metadata on the rootmost layer that is
+        // a matching async zoom container, or the root layer that we just
+        // created above.
+        size_t rootMetadataTarget = layerScrollData.size() - 1;
+        for (size_t i = rootMetadataTarget; i > 0; i--) {
+          if (auto zoomContainerId = layerScrollData[i - 1].GetAsyncZoomContainerId()) {
+            if (*zoomContainerId == aRootMetadata->GetMetrics().GetScrollId()) {
+              rootMetadataTarget = i - 1;
+              break;
+            }
+          }
+        }
+        layerScrollData[rootMetadataTarget].AppendScrollMetadata(
+            aScrollDatas[renderRoot], aRootMetadata.ref());
       }
     }
   }

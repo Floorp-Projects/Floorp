@@ -750,12 +750,12 @@ nsApplicationCache::GetTypes(const nsACString& key, uint32_t* typeBits) {
 }
 
 NS_IMETHODIMP
-nsApplicationCache::GatherEntries(uint32_t typeBits, uint32_t* count,
-                                  char*** keys) {
+nsApplicationCache::GatherEntries(uint32_t typeBits,
+                                  nsTArray<nsCString>& keys) {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
-  return mDevice->GatherEntries(mClientID, typeBits, count, keys);
+  return mDevice->GatherEntries(mClientID, typeBits, keys);
 }
 
 NS_IMETHODIMP
@@ -1989,8 +1989,8 @@ nsresult nsOfflineCacheDevice::GetTypes(const nsCString& clientID,
 }
 
 nsresult nsOfflineCacheDevice::GatherEntries(const nsCString& clientID,
-                                             uint32_t typeBits, uint32_t* count,
-                                             char*** keys) {
+                                             uint32_t typeBits,
+                                             nsTArray<nsCString>& keys) {
   NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
 
   LOG(("nsOfflineCacheDevice::GatherEntries [cid=%s, typeBits=%X]\n",
@@ -2003,7 +2003,7 @@ nsresult nsOfflineCacheDevice::GatherEntries(const nsCString& clientID,
   rv = statement->BindInt32ByIndex(1, typeBits);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return RunSimpleQuery(mStatement_GatherEntries, 0, count, keys);
+  return RunSimpleQuery(mStatement_GatherEntries, 0, keys);
 }
 
 nsresult nsOfflineCacheDevice::AddNamespace(const nsCString& clientID,
@@ -2070,21 +2070,20 @@ nsresult nsOfflineCacheDevice::GetUsage(const nsACString& clientID,
   return NS_OK;
 }
 
-nsresult nsOfflineCacheDevice::GetGroups(uint32_t* count, char*** keys) {
+nsresult nsOfflineCacheDevice::GetGroups(nsTArray<nsCString>& keys) {
   NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
 
   LOG(("nsOfflineCacheDevice::GetGroups"));
 
-  return RunSimpleQuery(mStatement_EnumerateGroups, 0, count, keys);
+  return RunSimpleQuery(mStatement_EnumerateGroups, 0, keys);
 }
 
-nsresult nsOfflineCacheDevice::GetGroupsTimeOrdered(uint32_t* count,
-                                                    char*** keys) {
+nsresult nsOfflineCacheDevice::GetGroupsTimeOrdered(nsTArray<nsCString>& keys) {
   NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
 
   LOG(("nsOfflineCacheDevice::GetGroupsTimeOrder"));
 
-  return RunSimpleQuery(mStatement_EnumerateGroupsTimeOrder, 0, count, keys);
+  return RunSimpleQuery(mStatement_EnumerateGroupsTimeOrder, 0, keys);
 }
 
 bool nsOfflineCacheDevice::IsLocked(const nsACString& key) {
@@ -2104,7 +2103,7 @@ void nsOfflineCacheDevice::Unlock(const nsACString& key) {
 
 nsresult nsOfflineCacheDevice::RunSimpleQuery(mozIStorageStatement* statement,
                                               uint32_t resultIndex,
-                                              uint32_t* count, char*** values) {
+                                              nsTArray<nsCString>& values) {
   bool hasRows;
   nsresult rv = statement->ExecuteStep(&hasRows);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2119,15 +2118,7 @@ nsresult nsOfflineCacheDevice::RunSimpleQuery(mozIStorageStatement* statement,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  *count = valArray.Length();
-  char** ret = static_cast<char**>(moz_xmalloc(*count * sizeof(char*)));
-
-  for (uint32_t i = 0; i < *count; i++) {
-    ret[i] = NS_xstrdup(valArray[i].get());
-  }
-
-  *values = ret;
-
+  values.SwapElements(valArray);
   return NS_OK;
 }
 

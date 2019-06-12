@@ -899,6 +899,17 @@ VARCACHE_PREF(
   bool, false
 )
 
+// When this pref is enabled, the browser will check no-cors responses that
+// have the Cross-Origin-Resource-Policy header and will fail the request if
+// the origin of the resource's loading document doesn't match the origin
+// (or base domain) of the loaded resource.
+VARCACHE_PREF(
+  Live,
+  "browser.tabs.remote.useCORP",
+  browser_tabs_remote_useCORP,
+  bool, false
+)
+
 VARCACHE_PREF(
   Live,
   "browser.ui.scroll-toolbar-threshold",

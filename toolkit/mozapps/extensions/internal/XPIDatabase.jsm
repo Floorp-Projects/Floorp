@@ -1391,7 +1391,7 @@ this.XPIDatabase = {
         throw error;
       }
 
-      if (inputAddons.schemaVersion == 27) {
+      if (inputAddons.schemaVersion <= 27) {
         // Types were translated in bug 857456.
         for (let addon of inputAddons.addons) {
           migrateAddonLoader(addon);

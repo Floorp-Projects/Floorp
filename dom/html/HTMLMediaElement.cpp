@@ -2684,7 +2684,7 @@ already_AddRefed<Promise> HTMLMediaElement::Seek(double aTime,
 
   StopSuspendingAfterFirstFrame();
 
-  if (mSrcStream) {
+  if (mSrcAttrStream) {
     // do nothing since media streams have an empty Seekable range.
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -2797,6 +2797,9 @@ already_AddRefed<Promise> HTMLMediaElement::Seek(double aTime,
 
 double HTMLMediaElement::Duration() const {
   if (mSrcStream) {
+    if (mSrcStreamPlaybackEnded) {
+      return CurrentTime();
+    }
     return std::numeric_limits<double>::infinity();
   }
 
@@ -3792,12 +3795,10 @@ void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
         break;
       case HAVE_METADATA:
       case HAVE_CURRENT_DATA:
-        FireTimeUpdate(false);
         DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
         break;
       case HAVE_FUTURE_DATA:
       case HAVE_ENOUGH_DATA:
-        FireTimeUpdate(false);
         NotifyAboutPlaying();
         break;
     }
@@ -5105,11 +5106,14 @@ void HTMLMediaElement::PlaybackEnded() {
         ("%p, got duration by reaching the end of the resource", this));
     mSrcStreamPlaybackEnded = true;
     DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
-  }
-
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::loop)) {
-    SetCurrentTime(0);
-    return;
+  } else {
+    // mediacapture-main:
+    // Setting the loop attribute has no effect since a MediaStream has no
+    // defined end and therefore cannot be looped.
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::loop)) {
+      SetCurrentTime(0);
+      return;
+    }
   }
 
   FireTimeUpdate(false);
@@ -6270,6 +6274,10 @@ double HTMLMediaElement::MozFragmentEnd() {
 
 void HTMLMediaElement::SetDefaultPlaybackRate(double aDefaultPlaybackRate,
                                               ErrorResult& aRv) {
+  if (mSrcAttrStream) {
+    return;
+  }
+
   if (aDefaultPlaybackRate < 0) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return;
@@ -6286,6 +6294,10 @@ void HTMLMediaElement::SetDefaultPlaybackRate(double aDefaultPlaybackRate,
 }
 
 void HTMLMediaElement::SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv) {
+  if (mSrcAttrStream) {
+    return;
+  }
+
   // Changing the playback rate of a media that has more than two channels is
   // not supported.
   if (aPlaybackRate < 0) {
