@@ -121,7 +121,14 @@ class WebRenderLayerScrollData final {
 
   void SetZoomAnimationId(const uint64_t& aId) { mZoomAnimationId = Some(aId); }
   Maybe<uint64_t> GetZoomAnimationId() const { return mZoomAnimationId; }
-  bool IsAsyncZoomContainer() const { return mZoomAnimationId.isSome(); }
+
+  void SetAsyncZoomContainerId(const ScrollableLayerGuid::ViewID aId) {
+    mAsyncZoomContainerId = Some(aId);
+  }
+  Maybe<ScrollableLayerGuid::ViewID> GetAsyncZoomContainerId() const {
+    return mAsyncZoomContainerId;
+  }
+  bool IsAsyncZoomContainer() const { return mAsyncZoomContainerId.isSome(); }
 
   void Dump(const WebRenderScrollData& aOwner) const;
 
@@ -156,6 +163,7 @@ class WebRenderLayerScrollData final {
   ScrollableLayerGuid::ViewID mFixedPosScrollContainerId;
   wr::RenderRoot mRenderRoot;
   Maybe<uint64_t> mZoomAnimationId;
+  Maybe<ScrollableLayerGuid::ViewID> mAsyncZoomContainerId;
 };
 
 // Data needed by APZ, for the whole layer tree. One instance of this class
@@ -272,6 +280,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
     WriteParam(aMsg, aParam.mFixedPosScrollContainerId);
     WriteParam(aMsg, aParam.mRenderRoot);
     WriteParam(aMsg, aParam.mZoomAnimationId);
+    WriteParam(aMsg, aParam.mAsyncZoomContainerId);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -290,7 +299,8 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
            ReadParam(aMsg, aIter, &aResult->mScrollbarAnimationId) &&
            ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId) &&
            ReadParam(aMsg, aIter, &aResult->mRenderRoot) &&
-           ReadParam(aMsg, aIter, &aResult->mZoomAnimationId);
+           ReadParam(aMsg, aIter, &aResult->mZoomAnimationId) &&
+           ReadParam(aMsg, aIter, &aResult->mAsyncZoomContainerId);
   }
 };
 
