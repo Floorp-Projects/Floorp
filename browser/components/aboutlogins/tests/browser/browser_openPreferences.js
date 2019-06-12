@@ -16,9 +16,9 @@ add_task(async function test_open_preferences() {
   await ContentTask.spawn(browser, null, async () => {
     return ContentTaskUtils.waitForCondition(() => {
       let menuButton = Cu.waiveXrays(content.document.querySelector("menu-button"));
-      return menuButton.shadowRoot
-                       .querySelector(".menu")
-                       .getAttribute("aria-hidden") == "false";
+      return !menuButton.shadowRoot
+                        .querySelector(".menu")
+                        .hidden;
     }, "waiting for menu to open");
   });
 
