@@ -120,7 +120,7 @@ LoginManagerCrypto_SDR.prototype = {
 
     this._uiBusy = true;
     try {
-      cipherTexts = await this._decoderRing.asyncEncryptStrings(plaintexts.length, plaintexts);
+      cipherTexts = await this._decoderRing.asyncEncryptStrings(plaintexts);
     } catch (e) {
       this.log("Failed to encrypt strings. (" + e.name + ")");
       // If the user clicks Cancel, we get NS_ERROR_FAILURE.
