@@ -12,7 +12,11 @@
 #endif  // defined(_M_ARM64)
 #include "mozilla/interceptor/PatcherBase.h"
 #include "mozilla/interceptor/Trampoline.h"
+#include "mozilla/interceptor/VMSharingPolicies.h"
 
+#include "mozilla/Maybe.h"
+#include "mozilla/Move.h"
+#include "mozilla/NativeNt.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/Types.h"
@@ -30,8 +34,8 @@ namespace interceptor {
 enum class DetourFlags : uint32_t {
   eDefault = 0,
   eEnable10BytePatch = 1,  // Allow 10-byte patches when conditions allow
-  eTestOnlyForce10BytePatch =
-      3,  // Force 10-byte patches at all times (testing only)
+  eTestOnlyForceShortPatch =
+      2,  // Force short patches at all times (x86-64 and arm64 testing only)
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DetourFlags)
@@ -39,13 +43,18 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DetourFlags)
 template <typename VMPolicy>
 class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
   typedef typename VMPolicy::MMPolicyT MMPolicyT;
-  DetourFlags mFlags;
+  typedef typename VMPolicy::PoolType TrampPoolT;
+  Maybe<DetourFlags> mFlags;
+
+#if defined(_M_ARM64)
+  // LDR x16, .+8
+  static const uint32_t kLdrX16Plus8 = 0x58000050U;
+#endif  // defined(_M_ARM64)
 
  public:
   template <typename... Args>
   explicit WindowsDllDetourPatcher(Args... aArgs)
-      : WindowsDllPatcherBase<VMPolicy>(std::forward<Args>(aArgs)...),
-        mFlags(DetourFlags::eDefault) {}
+      : WindowsDllPatcherBase<VMPolicy>(std::forward<Args>(aArgs)...) {}
 
   ~WindowsDllDetourPatcher() { Clear(); }
 
@@ -64,7 +73,7 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
 #elif defined(_M_X64)
     size_t nBytes = 2 + sizeof(intptr_t);
 #elif defined(_M_ARM64)
-    size_t nBytes = 4;
+    size_t nBytes = 2 * sizeof(uint32_t) + sizeof(uintptr_t);
 #else
 #  error "Unknown processor type"
 #endif
@@ -148,31 +157,24 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
 
 #elif defined(_M_ARM64)
 
-      // Ensure that we see the instructions that we expect
+      // Ensure that we see the instruction that we expect
       Maybe<uint32_t> inst1 = origBytes.ReadLong();
       if (!inst1) {
         continue;
       }
 
-      if (inst1.value() != 0x58000050) {
+      if (inst1.value() == kLdrX16Plus8) {
+        if (!Clear16BytePatch(origBytes, tramp.GetCurrentRemoteAddress())) {
+          continue;
+        }
+      } else if (arm64::IsUnconditionalBranchImm(inst1.value())) {
+        if (!Clear4BytePatch(inst1.value(), origBytes)) {
+          continue;
+        }
+      } else {
         MOZ_ASSERT_UNREACHABLE("Unrecognized patch!");
         continue;
       }
-
-      Maybe<uint32_t> inst2 = origBytes.ReadLong();
-      if (!inst2) {
-        continue;
-      }
-
-      if (inst2.value() != arm64::BuildUnconditionalBranchToRegister(16)) {
-        MOZ_ASSERT_UNREACHABLE("Unrecognized patch!");
-        continue;
-      }
-
-      // Clobber the pointer to our hook function with a pointer to the
-      // start of the trampoline.
-      origBytes.WritePointer(tramp.GetCurrentRemoteAddress());
-      origBytes.Commit();
 
 #else
 #  error "Unknown processor type"
@@ -272,37 +274,109 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
   }
 #endif  // defined(_M_X64)
 
-  void Init(DetourFlags aFlags = DetourFlags::eDefault, int aNumHooks = 0) {
+#if defined(_M_ARM64)
+  bool Clear4BytePatch(const uint32_t aBranchImm,
+                       WritableTargetFunction<MMPolicyT>& aOrigBytes) {
+    MOZ_ASSERT(arm64::IsUnconditionalBranchImm(aBranchImm));
+
+    arm64::LoadOrBranch decoded = arm64::BUncondImmDecode(
+        aOrigBytes.GetCurrentAddress() - sizeof(uint32_t), aBranchImm);
+
+    uintptr_t trampPtr = decoded.mAbsAddress;
+
+    // trampPtr points to an intermediate trampoline that contains a veneer.
+    // We back up by sizeof(uintptr_t) so that we can access the pointer to the
+    // stub trampoline.
+
+    // We want trampLen to be the size of the veneer, plus one pointer (since
+    // we are backing up trampPtr by one pointer)
+    size_t trampLen = 16 + sizeof(uintptr_t);
+
+    WritableTargetFunction<MMPolicyT> writableIntermediate(
+        this->mVMPolicy, trampPtr - sizeof(uintptr_t), trampLen);
+    if (!writableIntermediate) {
+      return false;
+    }
+
+    Maybe<uintptr_t> stubTramp = writableIntermediate.ReadEncodedPtr();
+    if (!stubTramp || !stubTramp.value()) {
+      return false;
+    }
+
+    Maybe<uint32_t> inst1 = writableIntermediate.ReadLong();
+    if (!inst1 || inst1.value() != kLdrX16Plus8) {
+      return false;
+    }
+
+    return Clear16BytePatch(writableIntermediate, stubTramp.value());
+  }
+
+  bool Clear16BytePatch(WritableTargetFunction<MMPolicyT>& aOrigBytes,
+                        const uintptr_t aResetToAddress) {
+    Maybe<uint32_t> inst2 = aOrigBytes.ReadLong();
+    if (!inst2) {
+      return false;
+    }
+
+    if (inst2.value() != arm64::BuildUnconditionalBranchToRegister(16)) {
+      MOZ_ASSERT_UNREACHABLE("Unrecognized patch!");
+      return false;
+    }
+
+    // Clobber the pointer to our hook function with a pointer to the
+    // start of the trampoline.
+    aOrigBytes.WritePointer(aResetToAddress);
+    aOrigBytes.Commit();
+
+    return true;
+  }
+#endif  // defined(_M_ARM64)
+
+  void Init(DetourFlags aFlags = DetourFlags::eDefault) {
     if (Initialized()) {
       return;
     }
 
-    mFlags = aFlags;
-
-    if (aNumHooks == 0) {
-      // Win32 allocates VM addresses at a 64KiB granularity, so by default we
-      // might as well utilize that entire 64KiB reservation instead of
-      // artifically constraining ourselves to the page size.
-      aNumHooks = this->mVMPolicy.GetAllocGranularity() / kHookSize;
-    }
-
-    ReservationFlags resFlags = ReservationFlags::eDefault;
 #if defined(_M_X64)
-    if (aFlags & DetourFlags::eEnable10BytePatch) {
-      resFlags |= ReservationFlags::eForceFirst2GB;
+    if (aFlags & DetourFlags::eTestOnlyForceShortPatch) {
+      aFlags |= DetourFlags::eEnable10BytePatch;
     }
 #endif  // defined(_M_X64)
 
-    this->mVMPolicy.Reserve(aNumHooks, resFlags);
+    mFlags = Some(aFlags);
   }
 
-  bool Initialized() const { return !!this->mVMPolicy; }
+  bool Initialized() const { return mFlags.isSome(); }
 
   bool AddHook(FARPROC aTargetFn, intptr_t aHookDest, void** aOrigFunc) {
     ReadOnlyTargetFunction<MMPolicyT> target(
         this->ResolveRedirectedAddress(aTargetFn));
 
-    CreateTrampoline(target, aHookDest, aOrigFunc);
+    TrampPoolT* trampPool = nullptr;
+
+#if defined(_M_ARM64)
+    // ARM64 uses two passes to build its trampoline. The first pass uses a
+    // null tramp to determine how many bytes are needed. Once that is known,
+    // CreateTrampoline calls itself recursively with a "real" tramp.
+    Trampoline<MMPolicyT> tramp(nullptr);
+#else
+    Maybe<TrampPoolT> maybeTrampPool = DoReserve();
+    MOZ_ASSERT(maybeTrampPool);
+    if (!maybeTrampPool) {
+      return false;
+    }
+
+    trampPool = maybeTrampPool.ptr();
+
+    Maybe<Trampoline<MMPolicyT>> maybeTramp(trampPool->GetNextTrampoline());
+    if (!maybeTramp) {
+      return false;
+    }
+
+    Trampoline<MMPolicyT> tramp(std::move(maybeTramp.ref()));
+#endif
+
+    CreateTrampoline(target, trampPool, tramp, aHookDest, aOrigFunc);
     if (!*aOrigFunc) {
       return false;
     }
@@ -310,9 +384,75 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
     return true;
   }
 
- protected:
-  const static int kHookSize = 128;
+ private:
+  /**
+   * This function returns a maximum distance that can be reached by a single
+   * unconditional jump instruction. This is dependent on the processor ISA.
+   * Note that this distance is *exclusive* when added to the pivot, so the
+   * distance returned by this function is actually
+   * (maximum_absolute_offset + 1).
+   */
+  static uint32_t GetDefaultPivotDistance() {
+#if defined(_M_ARM64)
+    // Immediate unconditional branch allows for +/- 128MB
+    return 0x08000000U;
+#elif defined(_M_IX86) || defined(_M_X64)
+    // For these ISAs, our distance will assume the use of an unconditional jmp
+    // with a 32-bit signed displacement.
+    return 0x80000000U;
+#else
+#  error "Not defined for this processor arch"
+#endif
+  }
 
+  /**
+   * If we're reserving trampoline space for a specific module, we base the
+   * pivot off of the median address of the module's .text section. While this
+   * may not be precise, it should be accurate enough for our purposes: To
+   * ensure that the trampoline space is reachable by any executable code in the
+   * module.
+   */
+  Maybe<TrampPoolT> ReserveForModule(HMODULE aModule) {
+    nt::PEHeaders moduleHeaders(aModule);
+    if (!moduleHeaders) {
+      return Nothing();
+    }
+
+    Maybe<Span<const uint8_t>> textSectionInfo =
+        moduleHeaders.GetTextSectionInfo();
+    if (!textSectionInfo) {
+      return Nothing();
+    }
+
+    const uint8_t* median = textSectionInfo.value().data() +
+                            (textSectionInfo.value().LengthBytes() / 2);
+
+    return this->mVMPolicy.Reserve(reinterpret_cast<uintptr_t>(median),
+                                   GetDefaultPivotDistance());
+  }
+
+  Maybe<TrampPoolT> DoReserve(HMODULE aModule = nullptr) {
+    if (aModule) {
+      return ReserveForModule(aModule);
+    }
+
+    uintptr_t pivot = 0;
+    uint32_t distance = 0;
+
+#if defined(_M_X64)
+    if (mFlags.value() & DetourFlags::eEnable10BytePatch) {
+      // We must stay below the 2GB mark because a 10-byte patch uses movsxd
+      // (ie, sign extension) to expand the pointer to 64-bits, so bit 31 of any
+      // pointers into the reserved region must be 0.
+      pivot = 0x40000000U;
+      distance = 0x40000000U;
+    }
+#endif  // defined(_M_X64)
+
+    return this->mVMPolicy.Reserve(pivot, distance);
+  }
+
+ protected:
 #if !defined(_M_ARM64)
 
   const static int kPageSize = 4096;
@@ -563,13 +703,11 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
   }
 
   void CreateTrampoline(ReadOnlyTargetFunction<MMPolicyT>& origBytes,
+                        TrampPoolT* aTrampPool, Trampoline<MMPolicyT>& aTramp,
                         intptr_t aDest, void** aOutTramp) {
     *aOutTramp = nullptr;
 
-    Trampoline<MMPolicyT> tramp(this->mVMPolicy.GetNextTrampoline());
-    if (!tramp) {
-      return;
-    }
+    Trampoline<MMPolicyT>& tramp = aTramp;
 
     // The beginning of the trampoline contains two pointer-width slots:
     // [0]: |this|, so that we know whether the trampoline belongs to us;
@@ -713,8 +851,9 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
     // not set to true unless we detect that a 10-byte patch is necessary.
     // OTOH, for testing purposes, if we want to force a 10-byte patch, we
     // always initialize |use10BytePatch| to |true|.
-    bool use10BytePatch = (mFlags & DetourFlags::eTestOnlyForce10BytePatch) ==
-                          DetourFlags::eTestOnlyForce10BytePatch;
+    bool use10BytePatch =
+        (mFlags.value() & DetourFlags::eTestOnlyForceShortPatch) ==
+        DetourFlags::eTestOnlyForceShortPatch;
     const uint32_t bytesRequired = use10BytePatch ? 10 : 13;
 
     while (origBytes.GetOffset() < bytesRequired) {
@@ -734,7 +873,7 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
 
         // If our trampoline space is located in the lowest 2GB, we can do a ten
         // byte patch instead of a thirteen byte patch.
-        if (this->mVMPolicy.IsTrampolineSpaceInLowest2GB() &&
+        if (aTrampPool && aTrampPool->IsInLowest2GB() &&
             origBytes.GetOffset() >= 10) {
           use10BytePatch = true;
           break;
@@ -1153,17 +1292,22 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
     }
 #elif defined(_M_ARM64)
 
-    // We could probably decrease this value under certain scenarios, depending
-    // on the proximity of the hook function to the target function, but this
-    // would add additional complexity that we don't have time to deal with at
-    // the moment.
+    // The number of bytes required to facilitate a detour depends on the
+    // proximity of the hook function to the target function. In the best case,
+    // we can branch within +/- 128MB of the current location, requiring only
+    // 4 bytes. In the worst case, we need 16 bytes to load an absolute address
+    // into a register and then branch to it.
     const uint32_t kWorstCaseBytesRequired = 16;
+    const uint32_t bytesRequiredFromDecode =
+        (mFlags.value() & DetourFlags::eTestOnlyForceShortPatch)
+            ? 4
+            : kWorstCaseBytesRequired;
 
-    while (origBytes.GetOffset() < kWorstCaseBytesRequired) {
+    while (origBytes.GetOffset() < bytesRequiredFromDecode) {
       uintptr_t curPC = origBytes.GetCurrentAbsolute();
       uint32_t curInst = origBytes.ReadNextInstruction();
 
-      Result<arm64::LoadInfo, arm64::PCRelCheckError> pcRelInfo =
+      Result<arm64::LoadOrBranch, arm64::PCRelCheckError> pcRelInfo =
           arm64::CheckForPCRel(curPC, curInst);
       if (pcRelInfo.isErr()) {
         if (pcRelInfo.unwrapErr() ==
@@ -1173,8 +1317,16 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
           continue;
         }
 
-        // No decoder available for PC-relative instruction; fail.
-        return;
+        // At this point we have determined that there is no decoder available
+        // for the current, PC-relative, instruction.
+
+        // origBytes is now pointing one instruction past the one that we
+        // need the trampoline to jump back to.
+        if (!origBytes.BackUpOneInstruction()) {
+          return;
+        }
+
+        break;
       }
 
       // We need to load an absolute address into a particular register
@@ -1202,7 +1354,7 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
       tramp.WriteDisp32(origBytes.GetAddress());
     }
 #elif defined(_M_X64)
-    // If the we found a Jmp, we don't need to add another instruction. However,
+    // If we found a Jmp, we don't need to add another instruction. However,
     // if we found a _conditional_ jump or a CALL (or no control operations
     // at all) then we still need to run the rest of aOriginalFunction.
     if (!foundJmp) {
@@ -1211,11 +1363,50 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
       }
     }
 #elif defined(_M_ARM64)
+    // Let's find out how many bytes we have available to us for patching
+    uint32_t numBytesForPatching = tramp.GetCurrentExecutableCodeLen();
+
+    if (!numBytesForPatching) {
+      // There's nothing we can do
+      return;
+    }
+
+    if (tramp.IsNull()) {
+      // Recursive case
+      HMODULE targetModule = nullptr;
+
+      if (numBytesForPatching < kWorstCaseBytesRequired) {
+        if (!::GetModuleHandleExW(
+                GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                    GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                reinterpret_cast<LPCWSTR>(origBytes.GetBaseAddress()),
+                &targetModule)) {
+          return;
+        }
+      }
+
+      Maybe<TrampPoolT> maybeTrampPool = DoReserve(targetModule);
+      MOZ_ASSERT(maybeTrampPool);
+      if (!maybeTrampPool) {
+        return;
+      }
+
+      Maybe<Trampoline<MMPolicyT>> maybeRealTramp(
+          maybeTrampPool.ref().GetNextTrampoline());
+      if (!maybeRealTramp) {
+        return;
+      }
+
+      origBytes.Rewind();
+      CreateTrampoline(origBytes, maybeTrampPool.ptr(), maybeRealTramp.ref(),
+                       aDest, aOutTramp);
+      return;
+    }
+
     // Write the branch from the trampoline back to the original code
 
     tramp.WriteLoadLiteral(origBytes.GetAddress(), 16);
     tramp.WriteInstruction(arm64::BuildUnconditionalBranchToRegister(16));
-
 #else
 #  error "Unsupported processor architecture"
 #endif
@@ -1241,10 +1432,13 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
       // Note: Even if the target function is also below 2GB, we still use an
       // intermediary trampoline so that we consistently have a 64-bit pointer
       // that we can use to reset the trampoline upon interceptor shutdown.
-      Trampoline<MMPolicyT> callTramp(this->mVMPolicy.GetNextTrampoline());
-      if (!callTramp) {
+      Maybe<Trampoline<MMPolicyT>> maybeCallTramp(
+          aTrampPool->GetNextTrampoline());
+      if (!maybeCallTramp) {
         return;
       }
+
+      Trampoline<MMPolicyT> callTramp(std::move(maybeCallTramp.ref()));
 
       // Write a null instance so that Clear() does not consider this tramp to
       // be a normal tramp to be torn down.
@@ -1296,11 +1490,35 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
 #elif defined(_M_ARM64)
 
     // Now patch the original function
-    // LDR x16, .+8
-    target.WriteLong(0x58000050);
-    // BR x16
-    target.WriteLong(arm64::BuildUnconditionalBranchToRegister(16));
-    target.WritePointer(aDest);
+
+    if (numBytesForPatching < kWorstCaseBytesRequired) {
+      // Let's try a 4 byte patch
+
+      MOZ_ASSERT(aTrampPool);
+      if (!aTrampPool) {
+        return;
+      }
+
+      uintptr_t hookDest = arm64::MakeVeneer(*aTrampPool, trampPtr, aDest);
+      if (!hookDest) {
+        return;
+      }
+
+      Maybe<uint32_t> branchImm = arm64::BuildUnconditionalBranchImm(
+          target.GetCurrentAddress(), hookDest);
+      if (!branchImm) {
+        return;
+      }
+
+      target.WriteLong(branchImm.value());
+    } else {
+      // The default patch requires 16 bytes
+      // LDR x16, .+8
+      target.WriteLong(kLdrX16Plus8);
+      // BR x16
+      target.WriteLong(arm64::BuildUnconditionalBranchToRegister(16));
+      target.WritePointer(aDest);
+    }
 
 #else
 #  error "Unsupported processor architecture"
