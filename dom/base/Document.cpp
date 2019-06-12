@@ -4328,17 +4328,19 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
   //     <textarea> when it's in an editing host and has focus.  So, our
   //     traditional behavior is different and does not make sense.
   RefPtr<TextEditor> maybeHTMLEditor;
-  if (commandData.IsCutOrCopyCommand()) {
-    // Note that we used to use DocShell to handle `cut` and `copy` command
-    // for dispatching corresponding events for making possible web apps to
-    // implement their own editor without editable elements but supports
-    // standard shortcut keys, etc.  In this case, we prefer to use active
-    // element's editor to keep same behavior.
-    maybeHTMLEditor = nsContentUtils::GetActiveEditor(GetPresContext());
-  } else {
-    maybeHTMLEditor = nsContentUtils::GetHTMLEditor(GetPresContext());
-    if (!maybeHTMLEditor) {
-      maybeHTMLEditor = nsContentUtils::GetActiveEditor(GetPresContext());
+  if (nsPresContext* presContext = GetPresContext()) {
+    if (commandData.IsCutOrCopyCommand()) {
+      // Note that we used to use DocShell to handle `cut` and `copy` command
+      // for dispatching corresponding events for making possible web apps to
+      // implement their own editor without editable elements but supports
+      // standard shortcut keys, etc.  In this case, we prefer to use active
+      // element's editor to keep same behavior.
+      maybeHTMLEditor = nsContentUtils::GetActiveEditor(presContext);
+    } else {
+      maybeHTMLEditor = nsContentUtils::GetHTMLEditor(presContext);
+      if (!maybeHTMLEditor) {
+        maybeHTMLEditor = nsContentUtils::GetActiveEditor(presContext);
+      }
     }
   }
 
