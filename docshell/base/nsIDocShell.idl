@@ -613,9 +613,11 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Create a new about:blank document and content viewer.
    * @param aPrincipal the principal to use for the new document.
+   * @param aStoragePrincipal the storage principal to use for the new document.
    * @param aCsp the CSP to use for the new document.
    */
   void createAboutBlankContentViewer(in nsIPrincipal aPrincipal,
+                                     in nsIPrincipal aStoragePrincipal,
                                      [optional] in nsIContentSecurityPolicy aCSP);
 
   /**
