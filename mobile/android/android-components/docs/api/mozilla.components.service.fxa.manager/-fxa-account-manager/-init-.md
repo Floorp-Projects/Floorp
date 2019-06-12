@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`FxaAccountManager(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, config: `[`Config`](../../mozilla.components.service.fxa/-config.md)`, scopes: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>, deviceTuple: `[`DeviceTuple`](../-device-tuple/index.md)`, syncManager: `[`SyncManager`](../../mozilla.components.concept.sync/-sync-manager/index.md)`? = null, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Executors
+`FxaAccountManager(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, config: `[`Config`](../../mozilla.components.service.fxa/-config.md)`, applicationScopes: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>, deviceTuple: `[`DeviceTuple`](../-device-tuple/index.md)`, syncManager: `[`SyncManager`](../../mozilla.components.concept.sync/-sync-manager/index.md)`? = null, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Executors
             .newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob())`
 
 An account manager which encapsulates various internal details of an account lifecycle and provides
@@ -18,6 +18,6 @@ Class is 'open' to facilitate testing.
 
 `config` - A [Config](../../mozilla.components.service.fxa/-config.md) used for account initialization.
 
-`scopes` - A list of scopes which will be requested during account authentication.
+`applicationScopes` - A list of scopes which will be requested during account authentication.
 
 `deviceTuple` - A description of the current device (name, type, capabilities).

@@ -22,4 +22,5 @@
 
 | Name | Summary |
 |---|---|
+| [PROFILE_SCOPE](-p-r-o-f-i-l-e_-s-c-o-p-e.md) | `const val PROFILE_SCOPE: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [authErrorRegistry](auth-error-registry.md) | `val authErrorRegistry: `[`ObserverRegistry`](../mozilla.components.support.base.observer/-observer-registry/index.md)`<`[`AuthErrorObserver`](-auth-error-observer/index.md)`>`<br>A global registry for propagating [AuthException](../mozilla.components.concept.sync/-auth-exception/index.md) errors. Components such as [SyncManager](../mozilla.components.concept.sync/-sync-manager/index.md) and [FxaDeviceRefreshManager](#) may encounter authentication problems during their normal operation, and this registry is how they inform [FxaAccountManager](-fxa-account-manager/index.md) that these errors happened. |

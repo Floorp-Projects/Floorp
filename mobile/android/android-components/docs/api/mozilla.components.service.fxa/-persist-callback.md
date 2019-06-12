@@ -2,4 +2,4 @@
 
 # PersistCallback
 
-`typealias PersistCallback = PersistCallback` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L22)
+`typealias PersistCallback = PersistCallback` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L23)

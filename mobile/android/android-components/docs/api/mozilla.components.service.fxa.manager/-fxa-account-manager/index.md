@@ -2,7 +2,7 @@
 
 # FxaAccountManager
 
-`open class FxaAccountManager : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`AccountObserver`](../../mozilla.components.concept.sync/-account-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L100)
+`open class FxaAccountManager : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`AccountObserver`](../../mozilla.components.concept.sync/-account-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L102)
 
 An account manager which encapsulates various internal details of an account lifecycle and provides
 an observer interface along with a public API for interacting with an account.
@@ -17,7 +17,7 @@ Class is 'open' to facilitate testing.
 
 `config` - A [Config](../../mozilla.components.service.fxa/-config.md) used for account initialization.
 
-`scopes` - A list of scopes which will be requested during account authentication.
+`applicationScopes` - A list of scopes which will be requested during account authentication.
 
 `deviceTuple` - A description of the current device (name, type, capabilities).
 
@@ -25,7 +25,7 @@ Class is 'open' to facilitate testing.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `FxaAccountManager(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, config: `[`Config`](../../mozilla.components.service.fxa/-config.md)`, scopes: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>, deviceTuple: `[`DeviceTuple`](../-device-tuple/index.md)`, syncManager: `[`SyncManager`](../../mozilla.components.concept.sync/-sync-manager/index.md)`? = null, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Executors
+| [&lt;init&gt;](-init-.md) | `FxaAccountManager(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, config: `[`Config`](../../mozilla.components.service.fxa/-config.md)`, applicationScopes: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>, deviceTuple: `[`DeviceTuple`](../-device-tuple/index.md)`, syncManager: `[`SyncManager`](../../mozilla.components.concept.sync/-sync-manager/index.md)`? = null, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Executors
             .newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob())`<br>An account manager which encapsulates various internal details of an account lifecycle and provides an observer interface along with a public API for interacting with an account. The internal state machine abstracts over state space as exposed by the fxaclient library, not the internal states experienced by lower-level representation of a Firefox Account; those are opaque to us. |
 
 ### Functions

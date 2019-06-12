@@ -2,7 +2,7 @@
 
 # DeviceTuple
 
-`data class DeviceTuple` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L84)
+`data class DeviceTuple` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L86)
 
 Helper data class that wraps common device initialization parameters.
 
