@@ -11,7 +11,6 @@ add_task(async function() {
   registerCleanupFunction(async function() {
     clearAllPluginPermissions();
     updateAllTestPlugins(Ci.nsIPluginTag.STATE_ENABLED);
-    Services.prefs.clearUserPref("plugins.click_to_play");
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
     await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins", gTestBrowser);
     resetBlocklist();
@@ -28,7 +27,6 @@ add_task(async function() {
   updateAllTestPlugins(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
 
   // Prime the content process
   await promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html,<html>hi</html>");
