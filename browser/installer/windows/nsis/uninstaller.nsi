@@ -540,6 +540,10 @@ Function un.preWelcome
 !ifdef MOZ_BITS_DOWNLOAD
   BitsUtils::StartBitsServiceBackground
 !endif
+
+  ; We don't want the header bitmap showing on the welcome page.
+  GetDlgItem $0 $HWNDPARENT 1046
+  ShowWindow $0 ${SW_HIDE}
 FunctionEnd
 
 Function un.leaveWelcome
@@ -569,6 +573,10 @@ Function un.leaveWelcome
       StrCpy $TmpVal "true"
     ${EndIf}
   ${EndIf}
+
+  ; Bring back the header bitmap for the next pages.
+  GetDlgItem $0 $HWNDPARENT 1046
+  ShowWindow $0 ${SW_SHOW}
 FunctionEnd
 
 Function un.preConfirm
@@ -640,6 +648,10 @@ Function un.preFinish
   ${IfNot} ${RebootFlag}
     WriteINIStr "$PLUGINSDIR\ioSpecial.ini" "Field 4" Bottom "120"
   ${EndIf}
+
+  ; We don't want the header bitmap showing on the finish page.
+  GetDlgItem $0 $HWNDPARENT 1046
+  ShowWindow $0 ${SW_HIDE}
 FunctionEnd
 
 ################################################################################
