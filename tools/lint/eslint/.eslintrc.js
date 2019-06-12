@@ -6,7 +6,7 @@ module.exports = {
   },
 
   "rules": {
-    "camelcase": "error",
+    "camelcase": ["error", { "properties": "never" }],
     "handle-callback-err": ["error", "er"],
     "no-shadow": "error",
     "no-undef-init": "error",

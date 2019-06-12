@@ -93,7 +93,7 @@
     // since only let and const are used, see "no-var").
     "block-scoped-var": 2,
     // Require camel case names
-    "camelcase": 2,
+    "camelcase": ["error", { "properties": "never" }],
     // Warn about cyclomatic complexity in functions.
     "complexity": ["error", { "max": 22 }],
     // Don't warn for inconsistent naming when capturing this (not so important

@@ -7,7 +7,7 @@ module.exports = {
     "mozilla/var-only-at-top-level": "error",
 
     "block-scoped-var": "error",
-    "camelcase": "error",
+    "camelcase": ["error", { "properties": "never" }],
     "complexity": ["error", 20],
 
     "handle-callback-err": ["error", "er"],
