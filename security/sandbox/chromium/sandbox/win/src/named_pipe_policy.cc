@@ -15,22 +15,24 @@ namespace {
 
 // Creates a named pipe and duplicates the handle to 'target_process'. The
 // remaining parameters are the same as CreateNamedPipeW().
-HANDLE CreateNamedPipeHelper(HANDLE target_process, LPCWSTR pipe_name,
-                              DWORD open_mode, DWORD pipe_mode,
-                              DWORD max_instances, DWORD out_buffer_size,
-                              DWORD in_buffer_size, DWORD default_timeout,
-                              LPSECURITY_ATTRIBUTES security_attributes) {
-  HANDLE pipe = ::CreateNamedPipeW(pipe_name, open_mode, pipe_mode,
-                                   max_instances, out_buffer_size,
-                                   in_buffer_size, default_timeout,
-                                   security_attributes);
+HANDLE CreateNamedPipeHelper(HANDLE target_process,
+                             LPCWSTR pipe_name,
+                             DWORD open_mode,
+                             DWORD pipe_mode,
+                             DWORD max_instances,
+                             DWORD out_buffer_size,
+                             DWORD in_buffer_size,
+                             DWORD default_timeout,
+                             LPSECURITY_ATTRIBUTES security_attributes) {
+  HANDLE pipe = ::CreateNamedPipeW(
+      pipe_name, open_mode, pipe_mode, max_instances, out_buffer_size,
+      in_buffer_size, default_timeout, security_attributes);
   if (INVALID_HANDLE_VALUE == pipe)
     return pipe;
 
   HANDLE new_pipe;
-  if (!::DuplicateHandle(::GetCurrentProcess(), pipe,
-                         target_process, &new_pipe,
-                         0, FALSE,
+  if (!::DuplicateHandle(::GetCurrentProcess(), pipe, target_process, &new_pipe,
+                         0, false,
                          DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)) {
     return INVALID_HANDLE_VALUE;
   }
@@ -60,8 +62,9 @@ bool NamedPipePolicy::GenerateRules(const wchar_t* name,
 
 DWORD NamedPipePolicy::CreateNamedPipeAction(EvalResult eval_result,
                                              const ClientInfo& client_info,
-                                             const base::string16 &name,
-                                             DWORD open_mode, DWORD pipe_mode,
+                                             const base::string16& name,
+                                             DWORD open_mode,
+                                             DWORD pipe_mode,
                                              DWORD max_instances,
                                              DWORD out_buffer_size,
                                              DWORD in_buffer_size,
@@ -73,10 +76,9 @@ DWORD NamedPipePolicy::CreateNamedPipeAction(EvalResult eval_result,
     return ERROR_ACCESS_DENIED;
   }
 
-  *pipe = CreateNamedPipeHelper(client_info.process, name.c_str(),
-                                open_mode, pipe_mode, max_instances,
-                                out_buffer_size, in_buffer_size,
-                                default_timeout, NULL);
+  *pipe = CreateNamedPipeHelper(client_info.process, name.c_str(), open_mode,
+                                pipe_mode, max_instances, out_buffer_size,
+                                in_buffer_size, default_timeout, nullptr);
 
   if (INVALID_HANDLE_VALUE == *pipe)
     return ERROR_ACCESS_DENIED;

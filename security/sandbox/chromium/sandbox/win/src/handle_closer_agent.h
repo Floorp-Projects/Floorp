@@ -12,7 +12,6 @@
 #include "sandbox/win/src/sandbox_types.h"
 #include "sandbox/win/src/target_services.h"
 
-
 namespace sandbox {
 
 // Target process code to close the handle list copied over from the broker.

@@ -10,69 +10,25 @@ error: invalid conversion from 'FARPROC {aka int (__attribute__((__stdcall__)) *
 
 According to http://stackoverflow.com/questions/13958081/, msvc does the fixup
 
-diff --git a/security/sandbox/chromium/sandbox/win/src/resolver.cc b/security/sandbox/chromium/sandbox/win/src/resolver.cc
---- a/security/sandbox/chromium/sandbox/win/src/resolver.cc
-+++ b/security/sandbox/chromium/sandbox/win/src/resolver.cc
-@@ -48,17 +48,17 @@ NTSTATUS ResolverThunk::ResolveIntercept
-   DCHECK_NT(address);
-   if (!interceptor_module)
-     return STATUS_INVALID_PARAMETER;
- 
-   base::win::PEImage pe(interceptor_module);
-   if (!pe.VerifyMagic())
-     return STATUS_INVALID_IMAGE_FORMAT;
- 
--  *address = pe.GetProcAddress(interceptor_name);
-+  *address = reinterpret_cast<void*>(pe.GetProcAddress(interceptor_name));
- 
-   if (!(*address))
-     return STATUS_PROCEDURE_NOT_FOUND;
- 
-   return STATUS_SUCCESS;
- }
- 
- }  // namespace sandbox
-diff --git a/security/sandbox/chromium/sandbox/win/src/service_resolver.cc b/security/sandbox/chromium/sandbox/win/src/service_resolver.cc
---- a/security/sandbox/chromium/sandbox/win/src/service_resolver.cc
-+++ b/security/sandbox/chromium/sandbox/win/src/service_resolver.cc
-@@ -24,17 +24,17 @@ NTSTATUS ServiceResolverThunk::ResolveIn
- // just a simple GetProcAddress.
- NTSTATUS ServiceResolverThunk::ResolveTarget(const void* module,
-                                              const char* function_name,
-                                              void** address) {
-   if (NULL == module)
-     return STATUS_UNSUCCESSFUL;
- 
-   base::win::PEImage module_image(module);
--  *address = module_image.GetProcAddress(function_name);
-+  *address = (void*)module_image.GetProcAddress(function_name);
- 
-   if (NULL == *address) {
-     NOTREACHED_NT();
-     return STATUS_UNSUCCESSFUL;
-   }
- 
-   return STATUS_SUCCESS;
- }
 diff --git a/security/sandbox/chromium/sandbox/win/src/target_process.cc b/security/sandbox/chromium/sandbox/win/src/target_process.cc
 --- a/security/sandbox/chromium/sandbox/win/src/target_process.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/target_process.cc
-@@ -179,17 +179,17 @@ ResultCode TargetProcess::TransferVariab
+@@ -231,17 +231,17 @@ ResultCode TargetProcess::TransferVariab
  
    void* child_var = address;
  
  #if SANDBOX_EXPORTS
    HMODULE module = ::LoadLibrary(exe_name_.get());
-   if (NULL == module)
+   if (!module)
      return SBOX_ERROR_GENERIC;
  
 -  child_var = ::GetProcAddress(module, name);
-+  child_var = (void*)::GetProcAddress(module, name);
++  child_var = reinterpret_cast<void*>(::GetProcAddress(module, name));
    ::FreeLibrary(module);
  
-   if (NULL == child_var)
+   if (!child_var)
      return SBOX_ERROR_GENERIC;
  
-   size_t offset = reinterpret_cast<char*>(child_var) -
-                   reinterpret_cast<char*>(module);
+   size_t offset =
+       reinterpret_cast<char*>(child_var) - reinterpret_cast<char*>(module);
    child_var = reinterpret_cast<char*>(MainModule()) + offset;

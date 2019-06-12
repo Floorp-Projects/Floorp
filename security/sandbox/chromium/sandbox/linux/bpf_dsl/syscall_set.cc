@@ -8,15 +8,19 @@
 
 #include "base/logging.h"
 #include "base/macros.h"
+#include "build/build_config.h"
 #include "sandbox/linux/bpf_dsl/linux_syscall_ranges.h"
 
 namespace sandbox {
 
 namespace {
 
-#if defined(__mips__) && (_MIPS_SIM == _MIPS_SIM_ABI32)
+#if defined(ARCH_CPU_MIPS_FAMILY) && defined(ARCH_CPU_32_BITS)
 // This is true for Mips O32 ABI.
 static_assert(MIN_SYSCALL == __NR_Linux, "min syscall number should be 4000");
+#elif defined(ARCH_CPU_MIPS_FAMILY) && defined(ARCH_CPU_64_BITS)
+// This is true for MIPS N64 ABI.
+static_assert(MIN_SYSCALL == __NR_Linux, "min syscall number should be 5000");
 #else
 // This true for supported architectures (Intel and ARM EABI).
 static_assert(MIN_SYSCALL == 0u,

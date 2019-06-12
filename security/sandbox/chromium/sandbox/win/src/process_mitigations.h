@@ -6,6 +6,7 @@
 #define SANDBOX_SRC_WIN_PROCESS_MITIGATIONS_H_
 
 #include <windows.h>
+
 #include <stddef.h>
 
 #include "sandbox/win/src/security_level.h"
@@ -25,9 +26,10 @@ bool ApplyMitigationsToCurrentThread(MitigationFlags flags);
 MitigationFlags FilterPostStartupProcessMitigations(MitigationFlags flags);
 
 // Converts sandbox flags to the PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES
-// policy flags used by UpdateProcThreadAttribute(). The size field varies
-// between a 32-bit and a 64-bit type based on the exact build and version of
-// Windows, so the returned size must be passed to UpdateProcThreadAttribute().
+// policy flags used by UpdateProcThreadAttribute().
+// - |policy_flags| must be a two-element DWORD64 array.
+// - |size| is a size_t so that it can be passed directly into
+//   UpdateProcThreadAttribute().
 void ConvertProcessMitigationsToPolicy(MitigationFlags flags,
                                        DWORD64* policy_flags,
                                        size_t* size);
@@ -36,6 +38,9 @@ void ConvertProcessMitigationsToPolicy(MitigationFlags flags,
 // before execution begins.
 bool ApplyProcessMitigationsToSuspendedProcess(HANDLE process,
                                                MitigationFlags flags);
+
+// Returns the list of process mitigations which can be enabled post startup.
+MitigationFlags GetAllowedPostStartupProcessMitigations();
 
 // Returns true if all the supplied flags can be set after a process starts.
 bool CanSetProcessMitigationsPostStartup(MitigationFlags flags);
@@ -49,4 +54,3 @@ bool CanSetMitigationsPerThread(MitigationFlags flags);
 }  // namespace sandbox
 
 #endif  // SANDBOX_SRC_WIN_PROCESS_MITIGATIONS_H_
-

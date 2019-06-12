@@ -16,7 +16,7 @@ namespace sandbox {
 // This is the concrete resolver used to perform exports table interceptions.
 class EatResolverThunk : public ResolverThunk {
  public:
-  EatResolverThunk() : eat_entry_(NULL) {}
+  EatResolverThunk() : eat_entry_(nullptr) {}
   ~EatResolverThunk() override {}
 
   // Implementation of Resolver::Setup.
@@ -45,6 +45,5 @@ class EatResolverThunk : public ResolverThunk {
 };
 
 }  // namespace sandbox
-
 
 #endif  // SANDBOX_SRC_EAT_RESOLVER_H__

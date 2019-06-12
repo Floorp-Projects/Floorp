@@ -1,0 +1,29 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1560260462 -3600
+#      Tue Jun 11 14:41:02 2019 +0100
+# Node ID cb6cbf2c60077e833f472c82c1f437a794ac5266
+# Parent  71ac3df6aadbce233034b169646b66160c5944dc
+Bug 1552160: Add return after NOTREACHED() in QueryCancellationTraitsForNonCancellables to prevent build error. r=jld
+
+diff --git a/security/sandbox/chromium/base/callback_internal.cc b/security/sandbox/chromium/base/callback_internal.cc
+--- a/security/sandbox/chromium/base/callback_internal.cc
++++ b/security/sandbox/chromium/base/callback_internal.cc
+@@ -16,16 +16,17 @@ bool QueryCancellationTraitsForNonCancel
+     BindStateBase::CancellationQueryMode mode) {
+   switch (mode) {
+     case BindStateBase::IS_CANCELLED:
+       return false;
+     case BindStateBase::MAYBE_VALID:
+       return true;
+   }
+   NOTREACHED();
++  return false;
+ }
+ 
+ }  // namespace
+ 
+ void BindStateBaseRefCountTraits::Destruct(const BindStateBase* bind_state) {
+   bind_state->destructor_(bind_state);
+ }
+ 

@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "base/logging.h"
 #include "base/macros.h"
 #include "base/numerics/safe_conversions.h"
 #include "sandbox/win/src/policy_engine_params.h"
@@ -17,7 +18,7 @@
 // comparison against one single input parameter. For example, an opcode can
 // encode just one of the following comparison:
 //
-// - Is input parameter 3 not equal to NULL?
+// - Is input parameter 3 not equal to nullptr?
 // - Does input parameter 2 start with L"c:\\"?
 // - Is input parameter 5, bit 3 is equal 1?
 //
@@ -59,29 +60,29 @@ enum EvalResult {
   EVAL_FALSE,  // Opcode condition evaluated false.
   EVAL_ERROR,  // Opcode condition generated an error while evaluating.
   // Action opcode values:
-  ASK_BROKER,  // The target must generate an IPC to the broker. On the broker
-               // side, this means grant access to the resource.
-  DENY_ACCESS,   // No access granted to the resource.
-  GIVE_READONLY,  // Give readonly access to the resource.
+  ASK_BROKER,   // The target must generate an IPC to the broker. On the broker
+                // side, this means grant access to the resource.
+  DENY_ACCESS,  // No access granted to the resource.
+  GIVE_READONLY,   // Give readonly access to the resource.
   GIVE_ALLACCESS,  // Give full access to the resource.
-  GIVE_CACHED,  // IPC is not required. Target can return a cached handle.
-  GIVE_FIRST,  // TODO(cpu)
-  SIGNAL_ALARM,  // Unusual activity. Generate an alarm.
-  FAKE_SUCCESS,  // Do not call original function. Just return 'success'.
+  GIVE_CACHED,     // IPC is not required. Target can return a cached handle.
+  GIVE_FIRST,      // TODO(cpu)
+  SIGNAL_ALARM,    // Unusual activity. Generate an alarm.
+  FAKE_SUCCESS,    // Do not call original function. Just return 'success'.
   FAKE_ACCESS_DENIED,  // Do not call original function. Just return 'denied'
                        // and do not do IPC.
-  TERMINATE_PROCESS,  // Destroy target process. Do IPC as well.
+  TERMINATE_PROCESS,   // Destroy target process. Do IPC as well.
 };
 
 // The following are the implemented opcodes.
 enum OpcodeID {
-  OP_ALWAYS_FALSE,  // Evaluates to false (EVAL_FALSE).
-  OP_ALWAYS_TRUE,  // Evaluates to true (EVAL_TRUE).
-  OP_NUMBER_MATCH,  // Match a 32-bit integer as n == a.
+  OP_ALWAYS_FALSE,        // Evaluates to false (EVAL_FALSE).
+  OP_ALWAYS_TRUE,         // Evaluates to true (EVAL_TRUE).
+  OP_NUMBER_MATCH,        // Match a 32-bit integer as n == a.
   OP_NUMBER_MATCH_RANGE,  // Match a 32-bit integer as a <= n <= b.
-  OP_NUMBER_AND_MATCH,  // Match using bitwise AND; as in: n & a != 0.
-  OP_WSTRING_MATCH,  // Match a string for equality.
-  OP_ACTION  // Evaluates to an action opcode.
+  OP_NUMBER_AND_MATCH,    // Match using bitwise AND; as in: n & a != 0.
+  OP_WSTRING_MATCH,       // Match a string for equality.
+  OP_ACTION               // Evaluates to an action opcode.
 };
 
 // Options that apply to every opcode. They are specified when creating
@@ -113,9 +114,7 @@ struct MatchContext {
   size_t position;
   uint32_t options;
 
-  MatchContext() {
-    Clear();
-  }
+  MatchContext() { Clear(); }
 
   void Clear() {
     position = 0;
@@ -140,6 +139,7 @@ struct MatchContext {
 // when possible.
 class PolicyOpcode {
   friend class OpcodeFactory;
+
  public:
   // Evaluates the opcode. For a typical comparison opcode the return value
   // is EVAL_TRUE or EVAL_FALSE. If there was an error in the evaluation the
@@ -150,7 +150,8 @@ class PolicyOpcode {
   // count: The number of parameters passed as first argument.
   // match: The match context that is persisted across the opcode evaluation
   // sequence.
-  EvalResult Evaluate(const ParameterSet* parameters, size_t count,
+  EvalResult Evaluate(const ParameterSet* parameters,
+                      size_t count,
                       MatchContext* match);
 
   // Retrieves a stored argument by index. Valid index values are
@@ -169,7 +170,7 @@ class PolicyOpcode {
     *reinterpret_cast<T*>(&arguments_[index].mem) = argument;
   }
 
-  // Retrieves the actual address of an string argument. When using
+  // Retrieves the actual address of a string argument. When using
   // GetArgument() to retrieve an index that contains a string, the returned
   // value is just an offset to the actual string.
   // index: the stored string index. Valid values are from 0
@@ -183,14 +184,10 @@ class PolicyOpcode {
 
   // Returns true if this opcode is an action opcode without actually
   // evaluating it. Used to do a quick scan forward to the next opcode group.
-  bool IsAction() const {
-    return (OP_ACTION == opcode_id_);
-  };
+  bool IsAction() const { return (OP_ACTION == opcode_id_); }
 
   // Returns the opcode type.
-  OpcodeID GetID() const {
-    return opcode_id_;
-  }
+  OpcodeID GetID() const { return opcode_id_; }
 
   // Returns the stored options such as kPolNegateEval and others.
   uint32_t GetOptions() const { return options_; }
@@ -201,7 +198,6 @@ class PolicyOpcode {
   }
 
  private:
-
   static const size_t kArgumentCount = 4;  // The number of supported argument.
 
   struct OpcodeArgument {
@@ -210,14 +206,12 @@ class PolicyOpcode {
 
   // Better define placement new in the class instead of relying on the
   // global definition which seems to be fubared.
-  void* operator new(size_t, void* location) {
-    return location;
-  }
+  void* operator new(size_t, void* location) { return location; }
 
   // Helper function to evaluate the opcode. The parameters have the same
   // meaning that in Evaluate().
   EvalResult EvaluateHelper(const ParameterSet* parameters,
-                           MatchContext* match);
+                            MatchContext* match);
   OpcodeID opcode_id_;
   int16_t parameter_;
   // TODO(cpu): Making |options_| a uint32_t would avoid casting, but causes
@@ -228,9 +222,9 @@ class PolicyOpcode {
 };
 
 enum StringMatchOptions {
-  CASE_SENSITIVE = 0,      // Pay or Not attention to the case as defined by
-  CASE_INSENSITIVE = 1,    // RtlCompareUnicodeString windows API.
-  EXACT_LENGHT = 2         // Don't do substring match. Do full string match.
+  CASE_SENSITIVE = 0,    // Pay or Not attention to the case as defined by
+  CASE_INSENSITIVE = 1,  // RtlCompareUnicodeString windows API.
+  EXACT_LENGTH = 2       // Don't do substring match. Do full string match.
 };
 
 // Opcodes that do string comparisons take a parameter that is the starting
@@ -239,10 +233,9 @@ enum StringMatchOptions {
 //
 // Start from the current position and compare strings advancing forward until
 // a match is found if any. Similar to CRT strstr().
-const int  kSeekForward = -1;
+const int kSeekForward = -1;
 // Perform a match with the end of the string. It only does a single comparison.
-const int  kSeekToEnd = 0xfffff;
-
+const int kSeekToEnd = 0xfffff;
 
 // A PolicyBuffer is a variable size structure that contains all the opcodes
 // that are to be created or evaluated in sequence.
@@ -274,14 +267,13 @@ struct PolicyBuffer {
 // Note that this class does not keep track of the number of opcodes made and
 // it is designed to be a building block for low-level policy.
 //
-// Note that any of the MakeOpXXXXX member functions below can return NULL on
+// Note that any of the MakeOpXXXXX member functions below can return nullptr on
 // failure. When that happens opcode sequence creation must be aborted.
 class OpcodeFactory {
  public:
   // memory: base pointer to a chunk of memory where the opcodes are created.
   // memory_size: the size in bytes of the memory chunk.
-  OpcodeFactory(char* memory, size_t memory_size)
-      : memory_top_(memory) {
+  OpcodeFactory(char* memory, size_t memory_size) : memory_top_(memory) {
     memory_bottom_ = &memory_top_[memory_size];
   }
 
@@ -294,6 +286,7 @@ class OpcodeFactory {
 
   // Returns the available memory to make opcodes.
   size_t memory_size() const {
+    DCHECK_GE(memory_bottom_, memory_top_);
     return memory_bottom_ - memory_top_;
   }
 
@@ -369,7 +362,7 @@ class OpcodeFactory {
 
   // Allocates (and copies) a string (of size length) inside the buffer and
   // returns the displacement with respect to start.
-  ptrdiff_t AllocRelative(void* start, const wchar_t* str, size_t lenght);
+  ptrdiff_t AllocRelative(void* start, const wchar_t* str, size_t length);
 
   // Points to the lowest currently available address of the memory
   // used to make the opcodes. This pointer increments as opcodes are made.

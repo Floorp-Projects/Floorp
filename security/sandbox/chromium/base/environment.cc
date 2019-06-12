@@ -14,10 +14,10 @@
 #include "base/strings/utf_string_conversions.h"
 #include "build/build_config.h"
 
-#if defined(OS_POSIX)
-#include <stdlib.h>
-#elif defined(OS_WIN)
+#if defined(OS_WIN)
 #include <windows.h>
+#elif defined(OS_POSIX) || defined(OS_FUCHSIA)
+#include <stdlib.h>
 #endif
 
 namespace base {
@@ -56,15 +56,7 @@ class EnvironmentImpl : public Environment {
 
  private:
   bool GetVarImpl(StringPiece variable_name, std::string* result) {
-#if defined(OS_POSIX)
-    const char* env_value = getenv(variable_name.data());
-    if (!env_value)
-      return false;
-    // Note that the variable may be defined but empty.
-    if (result)
-      *result = env_value;
-    return true;
-#elif defined(OS_WIN)
+#if defined(OS_WIN)
     DWORD value_length =
         ::GetEnvironmentVariable(UTF8ToWide(variable_name).c_str(), nullptr, 0);
     if (value_length == 0)
@@ -76,29 +68,35 @@ class EnvironmentImpl : public Environment {
       *result = WideToUTF8(value.get());
     }
     return true;
-#else
-#error need to port
+#elif defined(OS_POSIX) || defined(OS_FUCHSIA)
+    const char* env_value = getenv(variable_name.data());
+    if (!env_value)
+      return false;
+    // Note that the variable may be defined but empty.
+    if (result)
+      *result = env_value;
+    return true;
 #endif
   }
 
   bool SetVarImpl(StringPiece variable_name, const std::string& new_value) {
-#if defined(OS_POSIX)
-    // On success, zero is returned.
-    return !setenv(variable_name.data(), new_value.c_str(), 1);
-#elif defined(OS_WIN)
+#if defined(OS_WIN)
     // On success, a nonzero value is returned.
     return !!SetEnvironmentVariable(UTF8ToWide(variable_name).c_str(),
                                     UTF8ToWide(new_value).c_str());
+#elif defined(OS_POSIX) || defined(OS_FUCHSIA)
+    // On success, zero is returned.
+    return !setenv(variable_name.data(), new_value.c_str(), 1);
 #endif
   }
 
   bool UnSetVarImpl(StringPiece variable_name) {
-#if defined(OS_POSIX)
-    // On success, zero is returned.
-    return !unsetenv(variable_name.data());
-#elif defined(OS_WIN)
+#if defined(OS_WIN)
     // On success, a nonzero value is returned.
     return !!SetEnvironmentVariable(UTF8ToWide(variable_name).c_str(), nullptr);
+#elif defined(OS_POSIX) || defined(OS_FUCHSIA)
+    // On success, zero is returned.
+    return !unsetenv(variable_name.data());
 #endif
   }
 };
@@ -124,7 +122,7 @@ size_t ParseEnvLine(const NativeEnvironmentString::value_type* input,
 
 namespace env_vars {
 
-#if defined(OS_POSIX)
+#if defined(OS_POSIX) || defined(OS_FUCHSIA)
 // On Posix systems, this variable contains the location of the user's home
 // directory. (e.g, /home/username/).
 const char kHome[] = "HOME";
@@ -132,7 +130,7 @@ const char kHome[] = "HOME";
 
 }  // namespace env_vars
 
-Environment::~Environment() {}
+Environment::~Environment() = default;
 
 // static
 std::unique_ptr<Environment> Environment::Create() {
@@ -183,7 +181,7 @@ string16 AlterEnvironment(const wchar_t* env,
   return result;
 }
 
-#elif defined(OS_POSIX)
+#elif defined(OS_POSIX) || defined(OS_FUCHSIA)
 
 std::unique_ptr<char* []> AlterEnvironment(const char* const* const env,
                                            const EnvironmentMap& changes) {
@@ -197,7 +195,7 @@ std::unique_ptr<char* []> AlterEnvironment(const char* const* const env,
     size_t line_length = ParseEnvLine(env[i], &key);
 
     // Keep only values not specified in the change vector.
-    EnvironmentMap::const_iterator found_change = changes.find(key);
+    auto found_change = changes.find(key);
     if (found_change == changes.end()) {
       result_indices.push_back(value_storage.size());
       value_storage.append(env[i], line_length);
@@ -205,13 +203,12 @@ std::unique_ptr<char* []> AlterEnvironment(const char* const* const env,
   }
 
   // Now append all modified and new values.
-  for (EnvironmentMap::const_iterator i = changes.begin();
-       i != changes.end(); ++i) {
-    if (!i->second.empty()) {
+  for (const auto& i : changes) {
+    if (!i.second.empty()) {
       result_indices.push_back(value_storage.size());
-      value_storage.append(i->first);
+      value_storage.append(i.first);
       value_storage.push_back('=');
-      value_storage.append(i->second);
+      value_storage.append(i.second);
       value_storage.push_back(0);
     }
   }
@@ -235,6 +232,6 @@ std::unique_ptr<char* []> AlterEnvironment(const char* const* const env,
   return result;
 }
 
-#endif  // OS_POSIX
+#endif  // OS_POSIX || OS_FUCHSIA
 
 }  // namespace base

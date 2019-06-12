@@ -20,12 +20,11 @@ namespace base {
 // version of the constructor, and if we are building a dynamic library we may
 // end up with multiple AtExitManagers on the same process.  We don't protect
 // this for thread-safe access, since it will only be modified in testing.
-static AtExitManager* g_top_manager = NULL;
+static AtExitManager* g_top_manager = nullptr;
 
 static bool g_disable_managers = false;
 
-AtExitManager::AtExitManager()
-    : processing_callbacks_(false), next_manager_(g_top_manager) {
+AtExitManager::AtExitManager() : next_manager_(g_top_manager) {
 // If multiple modules instantiate AtExitManagers they'll end up living in this
 // module... they have to coexist.
 #if !defined(COMPONENT_BUILD)
@@ -60,7 +59,9 @@ void AtExitManager::RegisterTask(base::Closure task) {
   }
 
   AutoLock lock(g_top_manager->lock_);
+#if DCHECK_IS_ON()
   DCHECK(!g_top_manager->processing_callbacks_);
+#endif
   g_top_manager->stack_.push(std::move(task));
 }
 
@@ -74,11 +75,13 @@ void AtExitManager::ProcessCallbacksNow() {
   // Callbacks may try to add new callbacks, so run them without holding
   // |lock_|. This is an error and caught by the DCHECK in RegisterTask(), but
   // handle it gracefully in release builds so we don't deadlock.
-  std::stack<base::Closure> tasks;
+  base::stack<base::Closure> tasks;
   {
     AutoLock lock(g_top_manager->lock_);
     tasks.swap(g_top_manager->stack_);
+#if DCHECK_IS_ON()
     g_top_manager->processing_callbacks_ = true;
+#endif
   }
 
   // Relax the cross-thread access restriction to non-thread-safe RefCount.
@@ -91,8 +94,12 @@ void AtExitManager::ProcessCallbacksNow() {
     tasks.pop();
   }
 
+#if DCHECK_IS_ON()
+  AutoLock lock(g_top_manager->lock_);
   // Expect that all callbacks have been run.
   DCHECK(g_top_manager->stack_.empty());
+  g_top_manager->processing_callbacks_ = false;
+#endif
 }
 
 void AtExitManager::DisableAllAtExitManagers() {
@@ -100,8 +107,7 @@ void AtExitManager::DisableAllAtExitManagers() {
   g_disable_managers = true;
 }
 
-AtExitManager::AtExitManager(bool shadow)
-    : processing_callbacks_(false), next_manager_(g_top_manager) {
+AtExitManager::AtExitManager(bool shadow) : next_manager_(g_top_manager) {
   DCHECK(shadow || !g_top_manager);
   g_top_manager = this;
 }

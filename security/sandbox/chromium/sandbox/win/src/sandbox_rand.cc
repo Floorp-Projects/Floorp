@@ -16,7 +16,7 @@
 namespace sandbox {
 
 bool GetRandom(unsigned int* random_value) {
-  return RtlGenRandom(random_value, sizeof(unsigned int)) != FALSE;
+  return RtlGenRandom(random_value, sizeof(unsigned int)) != false;
 }
 
 }  // namespace sandbox

@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#ifndef SANDBOX_WIN_SRC_RESOLVER_H_
+#define SANDBOX_WIN_SRC_RESOLVER_H_
+
 // Defines ResolverThunk, the interface for classes that perform interceptions.
 // For more details see
 // http://dev.chromium.org/developers/design-documents/sandbox .
@@ -10,9 +13,6 @@
 
 #include "base/macros.h"
 #include "sandbox/win/src/nt_internals.h"
-
-#ifndef SANDBOX_SRC_RESOLVER_H__
-#define SANDBOX_SRC_RESOLVER_H__
 
 namespace sandbox {
 
@@ -36,10 +36,10 @@ class ResolverThunk {
   // Example: (without error checking)
   //
   // size_t size = resolver.GetThunkSize();
-  // char* buffer = ::VirtualAllocEx(child_process, NULL, size,
+  // char* buffer = ::VirtualAllocEx(child_process, nullptr, size,
   //                                 MEM_COMMIT, PAGE_READWRITE);
-  // resolver.Setup(ntdll_module, NULL, L"NtCreateFile", NULL,
-  //                &MyReplacementFunction, buffer, size, NULL);
+  // resolver.Setup(ntdll_module, nullptr, L"NtCreateFile", nullptr,
+  //                &MyReplacementFunction, buffer, size, nullptr);
   //
   // In general, the idea is to allocate a single big buffer for all
   // interceptions on the same dll, and call Setup n times.
@@ -104,4 +104,4 @@ class ResolverThunk {
 
 }  // namespace sandbox
 
-#endif  // SANDBOX_SRC_RESOLVER_H__
+#endif  // SANDBOX_WIN_SRC_RESOLVER_H_

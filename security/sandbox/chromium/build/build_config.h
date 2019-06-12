@@ -63,15 +63,13 @@
 #define OS_QNX 1
 #elif defined(_AIX)
 #define OS_AIX 1
+#elif defined(__asmjs__)
+#define OS_ASMJS
 #else
 #error Please add support for your platform in build/build_config.h
 #endif
 // NOTE: Adding a new port? Please follow
 // https://chromium.googlesource.com/chromium/src/+/master/docs/new_port_policy.md
-
-#if defined(USE_OPENSSL_CERTS) && defined(USE_NSS_CERTS)
-#error Cannot use both OpenSSL and NSS for certificates
-#endif
 
 // For access to standard BSD features, use OS_BSD instead of a
 // more specific macro.
@@ -81,8 +79,8 @@
 
 // For access to standard POSIXish features, use OS_POSIX instead of a
 // more specific macro.
-#if defined(OS_AIX) || defined(OS_ANDROID) || defined(OS_FREEBSD) ||  \
-    defined(OS_FUCHSIA) || defined(OS_LINUX) || defined(OS_MACOSX) || \
+#if defined(OS_AIX) || defined(OS_ANDROID) || defined(OS_ASMJS) ||    \
+    defined(OS_FREEBSD) || defined(OS_LINUX) || defined(OS_MACOSX) || \
     defined(OS_NACL) || defined(OS_NETBSD) || defined(OS_OPENBSD) ||  \
     defined(OS_QNX) || defined(OS_SOLARIS)
 #define OS_POSIX 1
@@ -147,7 +145,7 @@
 #define ARCH_CPU_ARM64 1
 #define ARCH_CPU_64_BITS 1
 #define ARCH_CPU_LITTLE_ENDIAN 1
-#elif defined(__pnacl__)
+#elif defined(__pnacl__) || defined(__asmjs__)
 #define ARCH_CPU_32_BITS 1
 #define ARCH_CPU_LITTLE_ENDIAN 1
 #elif defined(__MIPSEL__)
@@ -181,6 +179,8 @@
 // Type detection for wchar_t.
 #if defined(OS_WIN)
 #define WCHAR_T_IS_UTF16
+#elif defined(OS_FUCHSIA)
+#define WCHAR_T_IS_UTF32
 #elif defined(OS_POSIX) && defined(COMPILER_GCC) && defined(__WCHAR_MAX__) && \
     (__WCHAR_MAX__ == 0x7fffffff || __WCHAR_MAX__ == 0xffffffff)
 #define WCHAR_T_IS_UTF32

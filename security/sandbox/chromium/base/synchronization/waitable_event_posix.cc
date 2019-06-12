@@ -10,9 +10,11 @@
 
 #include "base/debug/activity_tracker.h"
 #include "base/logging.h"
+#include "base/optional.h"
 #include "base/synchronization/condition_variable.h"
 #include "base/synchronization/lock.h"
 #include "base/synchronization/waitable_event.h"
+#include "base/threading/scoped_blocking_call.h"
 #include "base/threading/thread_restrictions.h"
 
 // -----------------------------------------------------------------------------
@@ -88,11 +90,7 @@ bool WaitableEvent::IsSignaled() {
 class SyncWaiter : public WaitableEvent::Waiter {
  public:
   SyncWaiter()
-      : fired_(false),
-        signaling_event_(NULL),
-        lock_(),
-        cv_(&lock_) {
-  }
+      : fired_(false), signaling_event_(nullptr), lock_(), cv_(&lock_) {}
 
   bool Fire(WaitableEvent* signaling_event) override {
     base::AutoLock locked(lock_);
@@ -165,9 +163,16 @@ bool WaitableEvent::TimedWait(const TimeDelta& wait_delta) {
 }
 
 bool WaitableEvent::TimedWaitUntil(const TimeTicks& end_time) {
-  base::ThreadRestrictions::AssertWaitAllowed();
-  // Record the event that this thread is blocking upon (for hang diagnosis).
-  base::debug::ScopedEventWaitActivity event_activity(this);
+  // Record the event that this thread is blocking upon (for hang diagnosis) and
+  // consider it blocked for scheduling purposes. Ignore this for non-blocking
+  // WaitableEvents.
+  Optional<debug::ScopedEventWaitActivity> event_activity;
+  Optional<internal::ScopedBlockingCallWithBaseSyncPrimitives>
+      scoped_blocking_call;
+  if (waiting_is_blocking_) {
+    event_activity.emplace(this);
+    scoped_blocking_call.emplace(BlockingType::MAY_BLOCK);
+  }
 
   const bool finite_time = !end_time.is_max();
 
@@ -184,6 +189,8 @@ bool WaitableEvent::TimedWaitUntil(const TimeTicks& end_time) {
   }
 
   SyncWaiter sw;
+  if (!waiting_is_blocking_)
+    sw.cv()->declare_only_used_while_idle();
   sw.lock()->Acquire();
 
   Enqueue(&sw);
@@ -193,9 +200,12 @@ bool WaitableEvent::TimedWaitUntil(const TimeTicks& end_time) {
   // again before unlocking it.
 
   for (;;) {
-    const TimeTicks current_time(TimeTicks::Now());
+    // Only sample Now() if waiting for a |finite_time|.
+    Optional<TimeTicks> current_time;
+    if (finite_time)
+      current_time = TimeTicks::Now();
 
-    if (sw.fired() || (finite_time && current_time >= end_time)) {
+    if (sw.fired() || (finite_time && *current_time >= end_time)) {
       const bool return_value = sw.fired();
 
       // We can't acquire @lock_ before releasing the SyncWaiter lock (because
@@ -219,7 +229,7 @@ bool WaitableEvent::TimedWaitUntil(const TimeTicks& end_time) {
     }
 
     if (finite_time) {
-      const TimeDelta max_wait(end_time - current_time);
+      const TimeDelta max_wait(end_time - *current_time);
       sw.cv()->TimedWait(max_wait);
     } else {
       sw.cv()->Wait();
@@ -239,11 +249,11 @@ cmp_fst_addr(const std::pair<WaitableEvent*, unsigned> &a,
 // static
 size_t WaitableEvent::WaitMany(WaitableEvent** raw_waitables,
                                size_t count) {
-  base::ThreadRestrictions::AssertWaitAllowed();
   DCHECK(count) << "Cannot wait on no events";
-
+  internal::ScopedBlockingCallWithBaseSyncPrimitives scoped_blocking_call(
+      BlockingType::MAY_BLOCK);
   // Record an event (the first) that this thread is blocking upon.
-  base::debug::ScopedEventWaitActivity event_activity(raw_waitables[0]);
+  debug::ScopedEventWaitActivity event_activity(raw_waitables[0]);
 
   // We need to acquire the locks in a globally consistent order. Thus we sort
   // the array of waitables by address. We actually sort a pairs so that we can
@@ -384,9 +394,8 @@ WaitableEvent::WaitableEventKernel::~WaitableEventKernel() = default;
 bool WaitableEvent::SignalAll() {
   bool signaled_at_least_one = false;
 
-  for (std::list<Waiter*>::iterator
-       i = kernel_->waiters_.begin(); i != kernel_->waiters_.end(); ++i) {
-    if ((*i)->Fire(this))
+  for (auto* i : kernel_->waiters_) {
+    if (i->Fire(this))
       signaled_at_least_one = true;
   }
 
@@ -422,8 +431,7 @@ void WaitableEvent::Enqueue(Waiter* waiter) {
 // actually removed. Called with lock held.
 // -----------------------------------------------------------------------------
 bool WaitableEvent::WaitableEventKernel::Dequeue(Waiter* waiter, void* tag) {
-  for (std::list<Waiter*>::iterator
-       i = waiters_.begin(); i != waiters_.end(); ++i) {
+  for (auto i = waiters_.begin(); i != waiters_.end(); ++i) {
     if (*i == waiter && (*i)->Compare(tag)) {
       waiters_.erase(i);
       return true;

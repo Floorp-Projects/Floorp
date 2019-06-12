@@ -9,6 +9,7 @@
 #include <string>
 
 #include "base/base_export.h"
+#include "base/callback.h"
 #include "base/macros.h"
 #include "base/synchronization/lock.h"
 #include "base/threading/platform_thread.h"
@@ -27,11 +28,20 @@ class BASE_EXPORT ThreadIdNameManager {
   // Register the mapping between a thread |id| and |handle|.
   void RegisterThread(PlatformThreadHandle::Handle handle, PlatformThreadId id);
 
-  // Set the name for the given id.
-  void SetName(PlatformThreadId id, const std::string& name);
+  // The callback is called on the thread, immediately after the name is set.
+  // |name| is a pointer to a C string that is guaranteed to remain valid for
+  // the duration of the process.
+  using SetNameCallback = base::RepeatingCallback<void(const char* name)>;
+  void InstallSetNameCallback(SetNameCallback callback);
+
+  // Set the name for the current thread.
+  void SetName(const std::string& name);
 
   // Get the name for the given id.
   const char* GetName(PlatformThreadId id);
+
+  // Unlike |GetName|, this method using TLS and avoids touching |lock_|.
+  const char* GetNameForCurrentThread();
 
   // Remove the name for the given id.
   void RemoveName(PlatformThreadHandle::Handle handle, PlatformThreadId id);
@@ -59,6 +69,8 @@ class BASE_EXPORT ThreadIdNameManager {
   // Treat the main process specially as there is no PlatformThreadHandle.
   std::string* main_process_name_;
   PlatformThreadId main_process_id_;
+
+  SetNameCallback set_name_callback_;
 
   DISALLOW_COPY_AND_ASSIGN(ThreadIdNameManager);
 };

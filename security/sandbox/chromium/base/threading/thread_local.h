@@ -23,8 +23,7 @@
 //
 // Thread Safety: An instance of ThreadLocalStorage is completely thread safe
 // once it has been created. If you want to dynamically create an instance, you
-// must of course properly deal with safety and race conditions. This means a
-// function-level static initializer is generally inappropiate.
+// must of course properly deal with safety and race conditions.
 //
 // In Android, the system TLS is limited.
 //
@@ -50,43 +49,81 @@
 #ifndef BASE_THREADING_THREAD_LOCAL_H_
 #define BASE_THREADING_THREAD_LOCAL_H_
 
+#include <memory>
+
+#include "base/logging.h"
 #include "base/macros.h"
+#include "base/threading/thread_local_internal.h"
 #include "base/threading/thread_local_storage.h"
 
 namespace base {
 
-template <typename Type>
+template <typename T>
 class ThreadLocalPointer {
  public:
   ThreadLocalPointer() = default;
   ~ThreadLocalPointer() = default;
 
-  Type* Get() {
-    return static_cast<Type*>(slot_.Get());
-  }
+  T* Get() const { return static_cast<T*>(slot_.Get()); }
 
-  void Set(Type* ptr) {
+  void Set(T* ptr) {
     slot_.Set(const_cast<void*>(static_cast<const void*>(ptr)));
   }
 
  private:
   ThreadLocalStorage::Slot slot_;
 
-  DISALLOW_COPY_AND_ASSIGN(ThreadLocalPointer<Type>);
+  DISALLOW_COPY_AND_ASSIGN(ThreadLocalPointer<T>);
 };
+
+// A ThreadLocalOwnedPointer<T> is like a ThreadLocalPointer<T> except that
+// pointers handed to it are owned and automatically deleted during their
+// associated thread's exit phase (or when replaced if Set() is invoked multiple
+// times on the same thread).
+// The ThreadLocalOwnedPointer instance itself can only be destroyed when no
+// threads, other than the one it is destroyed on, have remaining state set in
+// it. Typically this means that ThreadLocalOwnedPointer instances are held in
+// static storage or at the very least only recycled in the single-threaded
+// phase between tests in the same process.
+#if DCHECK_IS_ON()
+template <typename T>
+using ThreadLocalOwnedPointer = internal::CheckedThreadLocalOwnedPointer<T>;
+#else   // DCHECK_IS_ON()
+template <typename T>
+class ThreadLocalOwnedPointer {
+ public:
+  ThreadLocalOwnedPointer() = default;
+
+  ~ThreadLocalOwnedPointer() {
+    // Assume that this thread is the only one with potential state left. This
+    // is verified in ~CheckedThreadLocalOwnedPointer().
+    Set(nullptr);
+  }
+
+  T* Get() const { return static_cast<T*>(slot_.Get()); }
+
+  void Set(std::unique_ptr<T> ptr) {
+    delete Get();
+    slot_.Set(const_cast<void*>(static_cast<const void*>(ptr.release())));
+  }
+
+ private:
+  static void DeleteTlsPtr(void* ptr) { delete static_cast<T*>(ptr); }
+
+  ThreadLocalStorage::Slot slot_{&DeleteTlsPtr};
+
+  DISALLOW_COPY_AND_ASSIGN(ThreadLocalOwnedPointer<T>);
+};
+#endif  // DCHECK_IS_ON()
 
 class ThreadLocalBoolean {
  public:
   ThreadLocalBoolean() = default;
   ~ThreadLocalBoolean() = default;
 
-  bool Get() {
-    return tlp_.Get() != nullptr;
-  }
+  bool Get() const { return tlp_.Get() != nullptr; }
 
-  void Set(bool val) {
-    tlp_.Set(val ? this : nullptr);
-  }
+  void Set(bool val) { tlp_.Set(val ? this : nullptr); }
 
  private:
   ThreadLocalPointer<void> tlp_;

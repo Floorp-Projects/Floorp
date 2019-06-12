@@ -8,16 +8,9 @@
 namespace base {
 namespace debug {
 
-#if defined(COMPILER_MSVC)
-#pragma optimize("", off)
-#endif
-
-void Alias(const void* var) {
-}
-
-#if defined(COMPILER_MSVC)
-#pragma optimize("", on)
-#endif
+// This file/function should be excluded from LTO/LTCG to ensure that the
+// compiler can't see this function's implementation when compiling calls to it.
+NOINLINE void Alias(const void* var) {}
 
 }  // namespace debug
 }  // namespace base

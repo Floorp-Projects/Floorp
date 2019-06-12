@@ -113,6 +113,12 @@ enum ResultCode : int {
   SBOX_ERROR_CANNOT_WRITE_INTERCEPTION_THUNK = 42,
   // Cannot find the base address of the new process.
   SBOX_ERROR_CANNOT_FIND_BASE_ADDRESS = 43,
+  // Cannot create the AppContainer profile.
+  SBOX_ERROR_CREATE_APPCONTAINER_PROFILE = 44,
+  // Cannot create the AppContainer as the main executable can't be accessed.
+  SBOX_ERROR_CREATE_APPCONTAINER_PROFILE_ACCESS_CHECK = 45,
+  // Cannot create the AppContainer as adding a capability failed.
+  SBOX_ERROR_CREATE_APPCONTAINER_PROFILE_CAPABILITY = 46,
   // Placeholder for last item of the enum.
   SBOX_ERROR_LAST
 };
@@ -131,9 +137,11 @@ enum TerminationCodes {
   SBOX_FATAL_LAST
 };
 
+#if !defined(SANDBOX_FUZZ_TARGET)
 static_assert(SBOX_FATAL_MEMORY_EXCEEDED ==
                   base::win::kSandboxFatalMemoryExceeded,
               "Value for SBOX_FATAL_MEMORY_EXCEEDED must match base.");
+#endif  // !defined(SANDBOX_FUZZ_TARGET)
 
 class BrokerServices;
 class TargetServices;
@@ -152,7 +160,7 @@ struct SandboxInterfaceInfo {
 
 enum InterceptionType {
   INTERCEPTION_INVALID = 0,
-  INTERCEPTION_SERVICE_CALL,    // Trampoline of an NT native call
+  INTERCEPTION_SERVICE_CALL,  // Trampoline of an NT native call
   INTERCEPTION_EAT,
   INTERCEPTION_SIDESTEP,        // Preamble patch
   INTERCEPTION_SMART_SIDESTEP,  // Preamble patch but bypass internal calls

@@ -15,7 +15,6 @@
 #include "base/logging.h"
 #include "base/macros.h"
 #include "base/posix/eintr_wrapper.h"
-#include "base/third_party/valgrind/valgrind.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl.h"
 #include "sandbox/linux/bpf_dsl/codegen.h"
 #include "sandbox/linux/bpf_dsl/policy.h"
@@ -35,8 +34,6 @@
 namespace sandbox {
 
 namespace {
-
-bool IsRunningOnValgrind() { return RUNNING_ON_VALGRIND; }
 
 // Check if the kernel supports seccomp-filter (a.k.a. seccomp mode 2) via
 // prctl().
@@ -90,12 +87,11 @@ bool KernelSupportsSeccompTsync() {
 
   if (rv == -1 && errno == EFAULT) {
     return true;
-  } else {
-    // TODO(jln): turn these into DCHECK after 417888 is considered fixed.
-    CHECK_EQ(-1, rv);
-    CHECK(ENOSYS == errno || EINVAL == errno);
-    return false;
   }
+
+  DCHECK_EQ(-1, rv);
+  DCHECK(ENOSYS == errno || EINVAL == errno);
+  return false;
 }
 
 uint64_t EscapePC() {
@@ -116,21 +112,14 @@ bpf_dsl::ResultExpr SandboxPanic(const char* error) {
 
 }  // namespace
 
-SandboxBPF::SandboxBPF(bpf_dsl::Policy* policy)
-    : proc_fd_(), sandbox_has_started_(false), policy_(policy) {
-}
+SandboxBPF::SandboxBPF(std::unique_ptr<bpf_dsl::Policy> policy)
+    : proc_fd_(), sandbox_has_started_(false), policy_(std::move(policy)) {}
 
 SandboxBPF::~SandboxBPF() {
 }
 
 // static
 bool SandboxBPF::SupportsSeccompSandbox(SeccompLevel level) {
-  // Never pretend to support seccomp with Valgrind, as it
-  // throws the tool off.
-  if (IsRunningOnValgrind()) {
-    return false;
-  }
-
   switch (level) {
     case SeccompLevel::SINGLE_THREADED:
       return KernelSupportsSeccompBPF();

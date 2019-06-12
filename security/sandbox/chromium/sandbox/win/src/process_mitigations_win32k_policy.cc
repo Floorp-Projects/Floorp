@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "sandbox/win/src/process_mitigations_win32k_policy.h"
+
 #include <stddef.h>
 
 #include "sandbox/win/src/process_mitigations_win32k_interception.h"
-#include "sandbox/win/src/process_mitigations_win32k_policy.h"
 
 namespace sandbox {
 
@@ -61,9 +62,9 @@ BOOL CALLBACK DisplayMonitorEnumProc(HMONITOR monitor,
                                      LPARAM data) {
   MonitorListState* state = reinterpret_cast<MonitorListState*>(data);
   if (state->monitor_list_pos >= state->monitor_list_size)
-    return FALSE;
+    return false;
   state->monitor_list[state->monitor_list_pos++] = monitor;
-  return TRUE;
+  return true;
 }
 
 template <typename T>
@@ -117,8 +118,8 @@ BOOL CALLBACK ValidateMonitorEnumProc(HMONITOR monitor,
   }
   valid_params->result = result;
   if (!result)
-    return TRUE;
-  return FALSE;
+    return true;
+  return false;
 }
 
 bool IsValidMonitorOrDeviceName(HMONITOR monitor, const wchar_t* device_name) {
@@ -188,16 +189,16 @@ uint32_t ProcessMitigationsWin32KLockdownPolicy::EnumDisplayMonitorsAction(
   return state.monitor_list_pos;
 }
 
-BOOL ProcessMitigationsWin32KLockdownPolicy::GetMonitorInfoAction(
+bool ProcessMitigationsWin32KLockdownPolicy::GetMonitorInfoAction(
     const ClientInfo& client_info,
     HMONITOR monitor,
     MONITORINFO* monitor_info_ptr) {
   if (!IsValidMonitorOrDeviceName(monitor, nullptr))
-    return FALSE;
+    return false;
   MONITORINFOEXW monitor_info = {};
   monitor_info.cbSize = sizeof(MONITORINFOEXW);
 
-  BOOL success = USERFUNC(GetMonitorInfoW)(
+  bool success = USERFUNC(GetMonitorInfoW)(
       monitor, reinterpret_cast<MONITORINFO*>(&monitor_info));
   if (success)
     memcpy(monitor_info_ptr, &monitor_info, sizeof(monitor_info));
@@ -407,4 +408,3 @@ ProcessMitigationsWin32KLockdownPolicy::GetOverrideForTestCallback() {
 }
 
 }  // namespace sandbox
-

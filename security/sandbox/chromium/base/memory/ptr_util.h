@@ -18,13 +18,6 @@ std::unique_ptr<T> WrapUnique(T* ptr) {
   return std::unique_ptr<T>(ptr);
 }
 
-// TODO(crbug.com/755727): Inline all uses.
-template <typename T, typename... Args>
-auto MakeUnique(Args&&... args)
-    -> decltype(std::make_unique<T>(std::forward<Args>(args)...)) {
-  return std::make_unique<T>(std::forward<Args>(args)...);
-}
-
 }  // namespace base
 
 #endif  // BASE_MEMORY_PTR_UTIL_H_

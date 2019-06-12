@@ -24,10 +24,8 @@
 #include "base/os_compat_nacl.h"
 #endif
 
-// Ensure the Mac build does not include this module. Instead, non-POSIX
-// implementation is used to support Time::Exploded.
 #if defined(OS_MACOSX)
-#error "This implementation is for POSIX platforms other than Mac."
+static_assert(sizeof(time_t) >= 8, "Y2038 problem!");
 #endif
 
 namespace {
@@ -108,10 +106,7 @@ typedef time_t SysTime;
 
 SysTime SysTimeFromTimeStruct(struct tm* timestruct, bool is_local) {
   base::AutoLock locked(*GetSysTimeToTimeStructLock());
-  if (is_local)
-    return mktime(timestruct);
-  else
-    return timegm(timestruct);
+  return is_local ? mktime(timestruct) : timegm(timestruct);
 }
 
 void SysTimeToTimeStruct(SysTime t, struct tm* timestruct, bool is_local) {
@@ -189,7 +184,7 @@ bool Time::FromExploded(bool is_local, const Exploded& exploded, Time* time) {
   timestruct.tm_isdst = -1;                   // attempt to figure it out
 #if !defined(OS_NACL) && !defined(OS_SOLARIS) && !defined(OS_AIX)
   timestruct.tm_gmtoff = 0;   // not a POSIX field, so mktime/timegm ignore
-  timestruct.tm_zone = NULL;  // not a POSIX field, so mktime/timegm ignore
+  timestruct.tm_zone = nullptr;  // not a POSIX field, so mktime/timegm ignore
 #endif
 
   SysTime seconds;

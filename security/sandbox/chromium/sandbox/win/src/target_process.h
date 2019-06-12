@@ -6,10 +6,12 @@
 #define SANDBOX_WIN_SRC_TARGET_PROCESS_H_
 
 #include <windows.h>
+
 #include <stddef.h>
 #include <stdint.h>
 
 #include <memory>
+#include <vector>
 
 #include "base/macros.h"
 #include "base/environment.h"
@@ -24,24 +26,25 @@ namespace win {
 
 class StartupInformation;
 
-};  // namespace win
-};  // namespace base
+}  // namespace win
+}  // namespace base
 
 namespace sandbox {
 
 class SharedMemIPCServer;
+class Sid;
 class ThreadProvider;
 
 // TargetProcess models a target instance (child process). Objects of this
 // class are owned by the Policy used to create them.
 class TargetProcess {
  public:
-  // The constructor takes ownership of |initial_token|, |lockdown_token|
-  // and |lowbox_token|.
+  // The constructor takes ownership of |initial_token| and |lockdown_token|
   TargetProcess(base::win::ScopedHandle initial_token,
                 base::win::ScopedHandle lockdown_token,
                 HANDLE job,
-                ThreadProvider* thread_pool);
+                ThreadProvider* thread_pool,
+                const std::vector<Sid>& impersonation_capabilities);
   ~TargetProcess();
 
   // TODO(cpu): Currently there does not seem to be a reason to implement
@@ -77,14 +80,10 @@ class TargetProcess {
                   DWORD* win_error);
 
   // Returns the handle to the target process.
-  HANDLE Process() const {
-    return sandbox_process_info_.process_handle();
-  }
+  HANDLE Process() const { return sandbox_process_info_.process_handle(); }
 
   // Returns the handle to the job object that the target process belongs to.
-  HANDLE Job() const {
-    return job_;
-  }
+  HANDLE Job() const { return job_; }
 
   // Returns the address of the target main exe. This is used by the
   // interceptions framework.
@@ -93,19 +92,13 @@ class TargetProcess {
   }
 
   // Returns the name of the executable.
-  const wchar_t* Name() const {
-    return exe_name_.get();
-  }
+  const wchar_t* Name() const { return exe_name_.get(); }
 
   // Returns the process id.
-  DWORD ProcessId() const {
-    return sandbox_process_info_.process_id();
-  }
+  DWORD ProcessId() const { return sandbox_process_info_.process_id(); }
 
   // Returns the handle to the main thread.
-  HANDLE MainThread() const {
-    return sandbox_process_info_.thread_handle();
-  }
+  HANDLE MainThread() const { return sandbox_process_info_.thread_handle(); }
 
   // Transfers a 32-bit variable between the broker and the target.
   ResultCode TransferVariable(const char* name, void* address, size_t size);
@@ -131,6 +124,8 @@ class TargetProcess {
   void* base_address_;
   // Full name of the target executable.
   std::unique_ptr<wchar_t, base::FreeDeleter> exe_name_;
+  /// List of capability sids for use when impersonating in an AC process.
+  std::vector<Sid> impersonation_capabilities_;
 
   // Function used for testing.
   friend TargetProcess* MakeTestTargetProcess(HANDLE process,
@@ -142,7 +137,6 @@ class TargetProcess {
 // Creates a mock TargetProcess used for testing interceptions.
 // TODO(cpu): It seems that this method is not going to be used anymore.
 TargetProcess* MakeTestTargetProcess(HANDLE process, HMODULE base_address);
-
 
 }  // namespace sandbox
 

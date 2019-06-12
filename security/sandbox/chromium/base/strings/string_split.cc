@@ -209,11 +209,20 @@ bool SplitStringIntoKeyValuePairs(StringPiece input,
                                   char key_value_delimiter,
                                   char key_value_pair_delimiter,
                                   StringPairs* key_value_pairs) {
+  return SplitStringIntoKeyValuePairsUsingSubstr(
+      input, key_value_delimiter, StringPiece(&key_value_pair_delimiter, 1),
+      key_value_pairs);
+}
+
+bool SplitStringIntoKeyValuePairsUsingSubstr(
+    StringPiece input,
+    char key_value_delimiter,
+    StringPiece key_value_pair_delimiter,
+    StringPairs* key_value_pairs) {
   key_value_pairs->clear();
 
-  std::vector<StringPiece> pairs = SplitStringPiece(
-      input, std::string(1, key_value_pair_delimiter),
-      TRIM_WHITESPACE, SPLIT_WANT_NONEMPTY);
+  std::vector<StringPiece> pairs = SplitStringPieceUsingSubstr(
+      input, key_value_pair_delimiter, TRIM_WHITESPACE, SPLIT_WANT_NONEMPTY);
   key_value_pairs->reserve(pairs.size());
 
   bool success = true;
