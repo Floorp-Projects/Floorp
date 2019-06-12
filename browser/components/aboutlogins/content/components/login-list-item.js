@@ -11,7 +11,7 @@ export default class LoginListItem extends HTMLElement {
   }
 
   connectedCallback() {
-    if (this.children.length) {
+    if (this.shadowRoot) {
       this.render();
       return;
     }
