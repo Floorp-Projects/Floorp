@@ -96,9 +96,9 @@ function runTests() {
   WORKER_TASKS.tasks.push(new TaskWithCrop("testException", 0, 0, "createImageBitmap should throw with null source", null, 0, 0, 0, 0));
 
   // task: throw exception: ImageData: an ImageData object whose data attribute is backed by a detached buffer
-  var neuturedImageData = function getNeuturedImageData(imageData) {
-  	worker.postMessage(imageData.data.buffer, [imageData.data.buffer]);
-  	return imageData;
+  var neuturedImageData = function getNeuturedImageData(iData) {
+    worker.postMessage(iData.data.buffer, [iData.data.buffer]);
+    return iData;
   }(ctx.getImageData(0, 0, 50, 50));
   WORKER_TASKS.tasks.push(new TaskWithCrop("testException", neuturedImageData.width, neuturedImageData.height,
                                            "createImageBitmap should throw with neutured ImageData",

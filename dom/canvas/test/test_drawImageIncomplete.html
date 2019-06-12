@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=517056
   <canvas id="c" width="1" height="1"></canvas>
 </p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -42,12 +42,12 @@ is(data[3], 255, "Alpha channel of black should be opaque and image should have 
 SimpleTest.waitForExplicitFinish();
 img.onload = function() {
   ctx.drawImage(img, 0, 0);
-  var data = ctx.getImageData(0, 0, 1, 1).data;
-  is(data[0], 0, "Red channel of green should be 0");
-  is(data[1], 255, "Green channel of green should be 255");
-  is(data[2], 0, "Blue channel of green should be 0")
-  is(data[3], 255, "Alpha channel of green should be opaque");
-  
+  var loadData = ctx.getImageData(0, 0, 1, 1).data;
+  is(loadData[0], 0, "Red channel of green should be 0");
+  is(loadData[1], 255, "Green channel of green should be 255");
+  is(loadData[2], 0, "Blue channel of green should be 0")
+  is(loadData[3], 255, "Alpha channel of green should be opaque");
+
   SimpleTest.finish();
 }
 

@@ -81,20 +81,20 @@ function checkGarbageValues()
     }
     type = type[0];
 
-    var element = document.createElement('input');
-    element.type = type;
+    var inputElement = document.createElement('input');
+    inputElement.type = type;
 
-    element.value = "test";
-    element.valueAsDate = null;
-    is(element.value, "", "valueAsDate should set the value to the empty string");
+    inputElement.value = "test";
+    inputElement.valueAsDate = null;
+    is(inputElement.value, "", "valueAsDate should set the value to the empty string");
 
-    element.value = "test";
-    element.valueAsDate = undefined;
-    is(element.value, "", "valueAsDate should set the value to the empty string");
+    inputElement.value = "test";
+    inputElement.valueAsDate = undefined;
+    is(inputElement.value, "", "valueAsDate should set the value to the empty string");
 
-    element.value = "test";
-    element.valueAsDate = new Date(NaN);
-    is(element.value, "", "valueAsDate should set the value to the empty string");
+    inputElement.value = "test";
+    inputElement.valueAsDate = new Date(NaN);
+    is(inputElement.value, "", "valueAsDate should set the value to the empty string");
 
     var illegalValues = [
       "foobar", 42, {}, function() { return 42; }, function() { return Date(); }
@@ -103,7 +103,7 @@ function checkGarbageValues()
     for (let value of illegalValues) {
       try {
         var caught = false;
-        element.valueAsDate = value;
+        inputElement.valueAsDate = value;
       } catch(e) {
         is(e.name, "TypeError", "Exception should be 'TypeError'.");
         caught = true;
@@ -244,15 +244,15 @@ function checkTimeGet()
     { value: "23:31:12.23", result: { time: 84672230, hours: 23, minutes: 31, seconds: 12, ms: 230 } },
   ];
 
-  var element = document.createElement('input');
-  element.type = 'time';
+  var inputElement = document.createElement('input');
+  inputElement.type = 'time';
 
   for (let test of tests) {
-    element.value = test.value;
+    inputElement.value = test.value;
     if (test.result === null) {
-      is(element.valueAsDate, null, "element.valueAsDate should return null");
+      is(inputElement.valueAsDate, null, "element.valueAsDate should return null");
     } else {
-      var date = element.valueAsDate;
+      var date = inputElement.valueAsDate;
       isnot(date, null, "element.valueAsDate should not be null");
 
       is(date.getTime(), test.result.time);
@@ -287,12 +287,12 @@ function checkTimeSet()
     { value: 0.9, result: "00:00" },
   ];
 
-  var element = document.createElement('input');
-  element.type = 'time';
+  var inputElement = document.createElement('input');
+  inputElement.type = 'time';
 
   for (let test of tests) {
-    element.valueAsDate = new Date(test.value);
-    is(element.value, test.result,
+    inputElement.valueAsDate = new Date(test.value);
+    is(inputElement.value, test.result,
        "element.value should have been changed by setting valueAsDate");
   }
 }
@@ -306,8 +306,8 @@ function checkWithBustedPrototype()
 
     type = type[0];
 
-    var element = document.createElement('input');
-    element.type = type;
+    var inputElement = document.createElement('input');
+    inputElement.type = type;
 
     var backupPrototype = {};
     backupPrototype.getUTCFullYear = Date.prototype.getUTCFullYear;
@@ -322,28 +322,28 @@ function checkWithBustedPrototype()
     Date.prototype.getTime = function() { return {}; };
     Date.prototype.setUTCFullYear = function(y,m,d) { };
 
-    element.valueAsDate = new Date();
+    inputElement.valueAsDate = new Date();
 
-    isnot(element.valueAsDate, null, ".valueAsDate should not return null");
+    isnot(inputElement.valueAsDate, null, ".valueAsDate should not return null");
     // The object returned by element.valueAsDate should return a Date object
     // with the same prototype:
-    is(element.valueAsDate.getUTCFullYear, Date.prototype.getUTCFullYear,
+    is(inputElement.valueAsDate.getUTCFullYear, Date.prototype.getUTCFullYear,
        "prototype is the same");
-    is(element.valueAsDate.getUTCMonth, Date.prototype.getUTCMonth,
+    is(inputElement.valueAsDate.getUTCMonth, Date.prototype.getUTCMonth,
        "prototype is the same");
-    is(element.valueAsDate.getUTCDate, Date.prototype.getUTCDate,
+    is(inputElement.valueAsDate.getUTCDate, Date.prototype.getUTCDate,
        "prototype is the same");
-    is(element.valueAsDate.getTime, Date.prototype.getTime,
+    is(inputElement.valueAsDate.getTime, Date.prototype.getTime,
        "prototype is the same");
-    is(element.valueAsDate.setUTCFullYear, Date.prototype.setUTCFullYear,
+    is(inputElement.valueAsDate.setUTCFullYear, Date.prototype.setUTCFullYear,
        "prototype is the same");
 
     // However the Date should have the correct information.
     // Skip type=month for now, since .valueAsNumber returns number of months
     // and not milliseconds.
     if (type != "month") {
-      var witnessDate = new Date(element.valueAsNumber);
-      is(element.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
+      var witnessDate = new Date(inputElement.valueAsNumber);
+      is(inputElement.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
     }
 
     // Same test as above but using NaN instead of {}.
@@ -354,28 +354,28 @@ function checkWithBustedPrototype()
     Date.prototype.getTime = function() { return NaN; };
     Date.prototype.setUTCFullYear = function(y,m,d) { };
 
-    element.valueAsDate = new Date();
+    inputElement.valueAsDate = new Date();
 
-    isnot(element.valueAsDate, null, ".valueAsDate should not return null");
+    isnot(inputElement.valueAsDate, null, ".valueAsDate should not return null");
     // The object returned by element.valueAsDate should return a Date object
     // with the same prototype:
-    is(element.valueAsDate.getUTCFullYear, Date.prototype.getUTCFullYear,
+    is(inputElement.valueAsDate.getUTCFullYear, Date.prototype.getUTCFullYear,
        "prototype is the same");
-    is(element.valueAsDate.getUTCMonth, Date.prototype.getUTCMonth,
+    is(inputElement.valueAsDate.getUTCMonth, Date.prototype.getUTCMonth,
        "prototype is the same");
-    is(element.valueAsDate.getUTCDate, Date.prototype.getUTCDate,
+    is(inputElement.valueAsDate.getUTCDate, Date.prototype.getUTCDate,
        "prototype is the same");
-    is(element.valueAsDate.getTime, Date.prototype.getTime,
+    is(inputElement.valueAsDate.getTime, Date.prototype.getTime,
        "prototype is the same");
-    is(element.valueAsDate.setUTCFullYear, Date.prototype.setUTCFullYear,
+    is(inputElement.valueAsDate.setUTCFullYear, Date.prototype.setUTCFullYear,
        "prototype is the same");
 
     // However the Date should have the correct information.
     // Skip type=month for now, since .valueAsNumber returns number of months
     // and not milliseconds.
     if (type != "month") {
-      var witnessDate = new Date(element.valueAsNumber);
-      is(element.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
+      var witnessDate = new Date(inputElement.valueAsNumber);
+      is(inputElement.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
     }
 
     Date.prototype.getUTCFullYear = backupPrototype.getUTCFullYear;

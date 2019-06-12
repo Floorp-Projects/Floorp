@@ -52,7 +52,7 @@ const THREE_QUARTERS_OF_RANGE = "75";
 function flush() {
   // Flush style, specifically to flush the 'direction' property so that the
   // browser uses the new value for thumb positioning.
-  var flush = document.body.clientWidth;
+  document.body.clientWidth;
 }
 
 function test(synthesizeFunc, clickOrTap, startName, moveName, endName) {

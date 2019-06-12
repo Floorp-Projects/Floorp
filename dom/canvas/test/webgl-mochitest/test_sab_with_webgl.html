@@ -10,8 +10,6 @@
 
 <script>
 
-var gl;
-
 function RGBAToString(arr) {
   return '[' + arr[0].toPrecision(4) + ', ' +
                arr[1].toPrecision(4) + ', ' +
@@ -55,7 +53,7 @@ function TestScreenColor(gl, r, g, b, a) {
     antialias: false,
     depth: false,
   };
-  gl = canvas.getContext('experimental-webgl', attribs);
+  let gl = canvas.getContext('experimental-webgl', attribs);
   if (!gl) {
     todo(false, 'WebGL is unavailable.');
     return;
@@ -138,7 +136,7 @@ function TestScreenColor(gl, r, g, b, a) {
     antialias: false,
     depth: false,
   };
-  gl = canvas.getContext('webgl2', attribs);
+  let gl = canvas.getContext('webgl2', attribs);
   if (!gl) {
     todo(false, 'WebGL 2 is unavailable.');
     return;
