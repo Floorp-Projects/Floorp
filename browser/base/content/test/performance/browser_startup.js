@@ -35,6 +35,8 @@ const startupPhases = {
       "resource://gre/modules/MainProcessSingleton.jsm",
       "resource://gre/modules/XPCOMUtils.jsm",
       "resource://gre/modules/Services.jsm",
+      "resource://gre/modules/L10nRegistry.jsm",
+      "resource://gre/modules/Fluent.jsm",
       // Bugs to fix: The following components shouldn't be initialized that early.
       "resource://gre/modules/PushComponents.jsm", // bug 1369436
     ]),

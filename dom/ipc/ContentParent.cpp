@@ -592,9 +592,6 @@ static bool sCanLaunchSubprocesses;
 // set.
 static bool sDisableUnsafeCPOWWarnings = false;
 
-// Set to true when the first content process gets created.
-static bool sCreatedFirstContentProcess = false;
-
 // The first content child has ID 1, so the chrome process can have ID 0.
 static uint64_t gContentChildID = 1;
 
@@ -2147,14 +2144,6 @@ void ContentParent::LaunchSubprocessInternal(
                       std::move(prefSerializer)](base::ProcessHandle handle) {
     AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess::resolve", OTHER);
     const auto launchResumeTS = TimeStamp::Now();
-
-    if (!sCreatedFirstContentProcess) {
-      nsCOMPtr<nsIObserverService> obs =
-          mozilla::services::GetObserverService();
-      obs->NotifyObservers(nullptr, "ipc:first-content-process-created",
-                           nullptr);
-      sCreatedFirstContentProcess = true;
-    }
 
     base::ProcessId procId = base::GetProcId(handle);
     Open(mSubprocess->GetChannel(), procId);
