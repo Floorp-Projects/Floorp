@@ -4,6 +4,7 @@
 
 package mozilla.components.service.experiments
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.ktx.android.org.json.toList
 import mozilla.components.support.test.robolectric.testContext
 import org.json.JSONObject
@@ -13,12 +14,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class FlatFileExperimentStorageTest {
     private var currentTime = System.currentTimeMillis() / 1000
     private var pastTime = currentTime - 1000

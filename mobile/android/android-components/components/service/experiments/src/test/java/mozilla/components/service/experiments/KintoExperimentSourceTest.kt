@@ -4,6 +4,7 @@
 
 package mozilla.components.service.experiments
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Response
@@ -14,9 +15,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class KintoExperimentSourceTest {
     private val baseUrl = "http://mydomain.test"
     private val bucketName = "fretboard"

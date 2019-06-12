@@ -6,6 +6,7 @@ package mozilla.components.service.experiments
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,9 +18,8 @@ import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class DeviceUuidFactoryTest {
     @Test
     fun uuidNoPreference() {

@@ -6,19 +6,19 @@ package mozilla.components.service.experiments
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ActiveExperimentTest {
     private lateinit var context: Context
     private lateinit var sharedPrefs: SharedPreferences

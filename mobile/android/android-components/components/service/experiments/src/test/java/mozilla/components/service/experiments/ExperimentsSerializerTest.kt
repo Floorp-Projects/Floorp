@@ -4,6 +4,7 @@
 
 package mozilla.components.service.experiments
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.ktx.android.org.json.toList
 import org.json.JSONException
 import org.json.JSONObject
@@ -11,9 +12,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ExperimentsSerializerTest {
     private var currentTime = System.currentTimeMillis() / 1000
     private var pastTime = currentTime - 1000

@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.runBlocking
 import mozilla.components.service.experiments.Configuration
@@ -18,10 +19,10 @@ import mozilla.components.service.experiments.ExperimentsSnapshot
 import mozilla.components.service.experiments.ExperimentsUpdater
 import mozilla.components.service.glean.Glean
 import org.junit.Assert
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,13 +30,12 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ExperimentsDebugActivityTest {
 
-    private val testPackageName = "mozilla.components.service.experiments"
+    private val testPackageName = "mozilla.components.service.experiments.test"
     private val context: Context = ApplicationProvider.getApplicationContext()
 
     @Before

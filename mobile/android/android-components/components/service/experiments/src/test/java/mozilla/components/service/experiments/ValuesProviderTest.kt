@@ -5,17 +5,17 @@
 package mozilla.components.service.experiments
 
 import android.content.Context
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
-import org.robolectric.RobolectricTestRunner
 import java.util.Locale
 import java.util.MissingResourceException
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ValuesProviderTest {
     @Test
     fun `get language has three letter code`() {

@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
@@ -22,11 +23,10 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 import kotlin.reflect.full.functions
 import kotlin.reflect.jvm.isAccessible
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ExperimentEvaluatorTest {
     private lateinit var context: Context
     private lateinit var sharedPrefsOverrideEnabled: SharedPreferences
