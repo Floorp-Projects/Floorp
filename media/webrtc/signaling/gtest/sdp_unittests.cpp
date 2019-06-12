@@ -4015,12 +4015,22 @@ TEST(NewSdpTestNoFixture, CheckParsingResultComparer)
   auto check_comparison = [](const std::string sdp_string) {
     SipccSdpParser sipccParser;
     RsdparsaSdpParser rustParser;
+    auto print_errors = [](const SdpErrorHolder& holder, const char* name) {
+      for (const auto& e : holder.GetParseErrors()) {
+        std::cerr << name << " Line " << e.first << ": " << e.second;
+      }
+    };
 
     auto sipccSdp = sipccParser.Parse(sdp_string);
+    print_errors(sipccParser, "sipcc");
+
     auto rustSdp = rustParser.Parse(sdp_string);
+    print_errors(rustParser, "webrtc-sdp");
 
     ParsingResultComparer comparer;
-    return comparer.Compare(*rustSdp, *sipccSdp, sdp_string);
+    return sipccSdp && rustSdp
+               ? comparer.Compare(*rustSdp, *sipccSdp, sdp_string)
+               : false;
   };
 
   ASSERT_TRUE(check_comparison(kBasicAudioVideoOffer));
