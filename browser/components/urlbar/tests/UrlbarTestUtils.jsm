@@ -319,8 +319,11 @@ class UrlbarAbstraction {
    * Dispatches an input event to the input field.
    */
   fireInputEvent() {
-    let event = this.window.document.createEvent("Events");
-    event.initEvent("input", true, true);
+    // Set event.data to the last character in the input, for a couple of
+    // reasons: It simulates the user typing, and it's necessary for autofill.
+    let event = new InputEvent("input", {
+      data: this.urlbar.value[this.urlbar.value.length - 1] || null,
+    });
     this.urlbar.inputField.dispatchEvent(event);
   }
 

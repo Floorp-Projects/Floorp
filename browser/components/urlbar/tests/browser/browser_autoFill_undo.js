@@ -44,7 +44,7 @@ add_task(async function test() {
   // autofilled and selected).
   await UrlbarTestUtils.promiseSearchComplete(window);
   details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-  Assert.ok(details.autofill);
+  Assert.equal(details.autofill, !UrlbarPrefs.get("quantumbar"));
   Assert.equal(gURLBar.value, "example.com/");
   Assert.equal(gURLBar.selectionStart, "ex".length);
   Assert.equal(gURLBar.selectionEnd, "example.com/".length);
