@@ -91,7 +91,4 @@ class BASE_EXPORT PathService {
 
 }  // namespace base
 
-// TODO(brettw) Convert all callers to using the base namespace and remove this.
-using base::PathService;
-
 #endif  // BASE_PATH_SERVICE_H_

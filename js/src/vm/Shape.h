@@ -488,10 +488,9 @@ class ShapeCachePtr {
   }
 
   // Use ShapeTable implementation.
-  // This will clobber an existing IC implementation.
+  // The caller must have purged any existing IC implementation.
   void initializeTable(ShapeTable* table) {
-    MOZ_ASSERT(!isTable());
-    maybePurgeCache();
+    MOZ_ASSERT(!isTable() && !isIC());
 
     uintptr_t tableptr = uintptr_t(table);
 
@@ -516,27 +515,9 @@ class ShapeCachePtr {
     p = icptr;
   }
 
-  void destroy(FreeOp* fop) {
-    if (isTable()) {
-      fop->delete_<ShapeTable>(getTablePointer());
-    } else if (isIC()) {
-      fop->delete_<ShapeIC>(getICPointer());
-    }
-    p = 0;
-  }
+  void destroy(FreeOp* fop, BaseShape* base);
 
-  void maybePurgeCache() {
-    if (isTable()) {
-      ShapeTable* table = getTablePointer();
-      if (table->freeList() == SHAPE_INVALID_SLOT) {
-        js_delete<ShapeTable>(getTablePointer());
-        p = 0;
-      }
-    } else if (isIC()) {
-      js_delete<ShapeIC>(getICPointer());
-      p = 0;
-    }
-  }
+  void maybePurgeCache(FreeOp* fop, BaseShape* base);
 
   void trace(JSTracer* trc);
 
@@ -759,7 +740,7 @@ class BaseShape : public gc::TenuredCell {
     return (cache_.isIC()) ? cache_.getICPointer() : nullptr;
   }
 
-  void maybePurgeCache() { cache_.maybePurgeCache(); }
+  void maybePurgeCache(FreeOp* fop) { cache_.maybePurgeCache(fop, this); }
 
   uint32_t slotSpan() const {
     MOZ_ASSERT(isOwned());

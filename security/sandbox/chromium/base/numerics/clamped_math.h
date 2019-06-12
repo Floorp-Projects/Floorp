@@ -57,25 +57,25 @@ class ClampedNumeric {
 
   // Prototypes for the supported arithmetic operator overloads.
   template <typename Src>
-  ClampedNumeric& operator+=(const Src rhs);
+  constexpr ClampedNumeric& operator+=(const Src rhs);
   template <typename Src>
-  ClampedNumeric& operator-=(const Src rhs);
+  constexpr ClampedNumeric& operator-=(const Src rhs);
   template <typename Src>
-  ClampedNumeric& operator*=(const Src rhs);
+  constexpr ClampedNumeric& operator*=(const Src rhs);
   template <typename Src>
-  ClampedNumeric& operator/=(const Src rhs);
+  constexpr ClampedNumeric& operator/=(const Src rhs);
   template <typename Src>
-  ClampedNumeric& operator%=(const Src rhs);
+  constexpr ClampedNumeric& operator%=(const Src rhs);
   template <typename Src>
-  ClampedNumeric& operator<<=(const Src rhs);
+  constexpr ClampedNumeric& operator<<=(const Src rhs);
   template <typename Src>
-  ClampedNumeric& operator>>=(const Src rhs);
+  constexpr ClampedNumeric& operator>>=(const Src rhs);
   template <typename Src>
-  ClampedNumeric& operator&=(const Src rhs);
+  constexpr ClampedNumeric& operator&=(const Src rhs);
   template <typename Src>
-  ClampedNumeric& operator|=(const Src rhs);
+  constexpr ClampedNumeric& operator|=(const Src rhs);
   template <typename Src>
-  ClampedNumeric& operator^=(const Src rhs);
+  constexpr ClampedNumeric& operator^=(const Src rhs);
 
   constexpr ClampedNumeric operator-() const {
     // The negation of two's complement int min is int min, so that's the
@@ -118,23 +118,23 @@ class ClampedNumeric {
         SafeUnsignedAbs(value_));
   }
 
-  ClampedNumeric& operator++() {
+  constexpr ClampedNumeric& operator++() {
     *this += 1;
     return *this;
   }
 
-  ClampedNumeric operator++(int) {
+  constexpr ClampedNumeric operator++(int) {
     ClampedNumeric value = *this;
     *this += 1;
     return value;
   }
 
-  ClampedNumeric& operator--() {
+  constexpr ClampedNumeric& operator--() {
     *this -= 1;
     return *this;
   }
 
-  ClampedNumeric operator--(int) {
+  constexpr ClampedNumeric operator--(int) {
     ClampedNumeric value = *this;
     *this -= 1;
     return value;
@@ -145,7 +145,7 @@ class ClampedNumeric {
   template <template <typename, typename, typename> class M,
             typename L,
             typename R>
-  static ClampedNumeric MathOp(const L lhs, const R rhs) {
+  static constexpr ClampedNumeric MathOp(const L lhs, const R rhs) {
     using Math = typename MathWrapper<M, L, R>::math;
     return ClampedNumeric<T>(
         Math::template Do<T>(Wrapper<L>::value(lhs), Wrapper<R>::value(rhs)));
@@ -153,7 +153,7 @@ class ClampedNumeric {
 
   // Assignment arithmetic operations.
   template <template <typename, typename, typename> class M, typename R>
-  ClampedNumeric& MathOp(const R rhs) {
+  constexpr ClampedNumeric& MathOp(const R rhs) {
     using Math = typename MathWrapper<M, T, R>::math;
     *this =
         ClampedNumeric<T>(Math::template Do<T>(value_, Wrapper<R>::value(rhs)));
@@ -203,8 +203,9 @@ std::ostream& operator<<(std::ostream& os, const ClampedNumeric<T>& value) {
 template <template <typename, typename, typename> class M,
           typename L,
           typename R>
-ClampedNumeric<typename MathWrapper<M, L, R>::type> ClampMathOp(const L lhs,
-                                                                const R rhs) {
+constexpr ClampedNumeric<typename MathWrapper<M, L, R>::type> ClampMathOp(
+    const L lhs,
+    const R rhs) {
   using Math = typename MathWrapper<M, L, R>::math;
   return ClampedNumeric<typename Math::result_type>::template MathOp<M>(lhs,
                                                                         rhs);
@@ -215,7 +216,7 @@ template <template <typename, typename, typename> class M,
           typename L,
           typename R,
           typename... Args>
-ClampedNumeric<typename ResultType<M, L, R, Args...>::type>
+constexpr ClampedNumeric<typename ResultType<M, L, R, Args...>::type>
 ClampMathOp(const L lhs, const R rhs, const Args... args) {
   return ClampMathOp<M>(ClampMathOp<M>(lhs, rhs), args...);
 }
@@ -232,12 +233,12 @@ BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, Or, |, |=)
 BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, Xor, ^, ^=)
 BASE_NUMERIC_ARITHMETIC_VARIADIC(Clamped, Clamp, Max)
 BASE_NUMERIC_ARITHMETIC_VARIADIC(Clamped, Clamp, Min)
-BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsLess, <);
-BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsLessOrEqual, <=);
-BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsGreater, >);
-BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsGreaterOrEqual, >=);
-BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsEqual, ==);
-BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsNotEqual, !=);
+BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsLess, <)
+BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsLessOrEqual, <=)
+BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsGreater, >)
+BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsGreaterOrEqual, >=)
+BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsEqual, ==)
+BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsNotEqual, !=)
 
 }  // namespace internal
 

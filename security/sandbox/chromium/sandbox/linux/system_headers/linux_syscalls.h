@@ -9,6 +9,8 @@
 #ifndef SANDBOX_LINUX_SYSTEM_HEADERS_LINUX_SYSCALLS_H_
 #define SANDBOX_LINUX_SYSTEM_HEADERS_LINUX_SYSCALLS_H_
 
+#include "build/build_config.h"
+
 #if defined(__x86_64__)
 #include "sandbox/linux/system_headers/x86_64_linux_syscalls.h"
 #endif
@@ -21,11 +23,11 @@
 #include "sandbox/linux/system_headers/arm_linux_syscalls.h"
 #endif
 
-#if defined(__mips__) && (_MIPS_SIM == _ABIO32)
+#if (defined(ARCH_CPU_MIPS_FAMILY) && defined(ARCH_CPU_32_BITS))
 #include "sandbox/linux/system_headers/mips_linux_syscalls.h"
 #endif
 
-#if defined(__mips__) && (_MIPS_SIM == _ABI64)
+#if defined(ARCH_CPU_MIPS_FAMILY) && defined(ARCH_CPU_64_BITS)
 #include "sandbox/linux/system_headers/mips64_linux_syscalls.h"
 #endif
 

@@ -17,6 +17,8 @@
 
 namespace sandbox {
 
+enum IsBroker { BROKER_FALSE, BROKER_TRUE };
+
 // This class centralizes most of the knowledge related to file system policy
 class FileSystemPolicy {
  public:

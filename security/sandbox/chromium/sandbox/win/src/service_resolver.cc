@@ -25,13 +25,14 @@ NTSTATUS ServiceResolverThunk::ResolveInterceptor(
 NTSTATUS ServiceResolverThunk::ResolveTarget(const void* module,
                                              const char* function_name,
                                              void** address) {
-  if (NULL == module)
+  if (!module)
     return STATUS_UNSUCCESSFUL;
 
   base::win::PEImage module_image(module);
-  *address = reinterpret_cast<void*>(module_image.GetProcAddress(function_name));
+  *address =
+      reinterpret_cast<void*>(module_image.GetProcAddress(function_name));
 
-  if (NULL == *address) {
+  if (!*address) {
     NOTREACHED_NT();
     return STATUS_UNSUCCESSFUL;
   }
