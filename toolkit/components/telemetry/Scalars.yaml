@@ -452,11 +452,12 @@ security:
   webauthn_used:
     bug_numbers:
       - 1265472
+      - 1558870
     description: >
       Counts of how often Web Authentication was used in this session, keyed
       by authenticator protocol, method and result. Currently: U2FRegisterFinish,
       U2FRegisterAbort, U2FSignFinish, U2FSignAbort.
-    expires: "70"
+    expires: "78"
     kind: uint
     keyed: true
     notification_emails:
