@@ -60,6 +60,10 @@ void SendResetMiddlemanCalls();
 // unhandled recording divergence per preferences.
 bool CurrentRepaintCannotFail();
 
+// Paint according to the current process state, then convert it to an image
+// and serialize it in aData.
+bool Repaint(nsAString& aData);
+
 }  // namespace child
 }  // namespace recordreplay
 }  // namespace mozilla
