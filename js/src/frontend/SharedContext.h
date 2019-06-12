@@ -394,6 +394,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isSetter_ : 1;
   bool isMethod_ : 1;
 
+  size_t nargs_;
+
   JSFunction::FunctionKind kind_;
   JSAtom* explicitName_;
 
@@ -523,6 +525,9 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isGetter() const { return isGetter_; }
   bool isSetter() const { return isSetter_; }
   bool isMethod() const { return isMethod_; }
+
+  size_t nargs() const { return nargs_; }
+  void setArgCount(size_t args) { nargs_ = args; }
 
   JSFunction::FunctionKind kind() { return kind_; }
 
