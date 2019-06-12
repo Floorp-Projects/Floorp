@@ -4925,6 +4925,19 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Whether we expose the functionality proposed in
+// https://github.com/WICG/encrypted-media-encryption-scheme/blob/master/explainer.md
+// I.e. if true, apps calling navigator.requestMediaKeySystemAccess() can pass
+// an optional encryption scheme as part of MediaKeySystemMediaCapability
+// objects. If a scheme is present when we check for support, we must ensure we
+// support that scheme in order to provide key system access.
+VARCACHE_PREF(
+  Live,
+  "media.eme.encrypted-media-encryption-scheme.enabled",
+  media_eme_encrypted_media_encryption_scheme_enabled,
+  bool, false
+)
+
 VARCACHE_PREF(
   Live,
   "media.clearkey.persistent-license.enabled",
