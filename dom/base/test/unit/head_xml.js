@@ -12,8 +12,6 @@ const nsIProperties        = I.nsIProperties;
 const nsIFileInputStream   = I.nsIFileInputStream;
 const nsIInputStream       = I.nsIInputStream;
 
-Cu.importGlobalProperties(["DOMParser", "Element", "Node", "XMLSerializer"]);
-
 function getParser() {
   var parser = new DOMParser();
   parser.forceEnableXULXBL();
