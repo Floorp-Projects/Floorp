@@ -782,8 +782,12 @@ this.TelemetryFeed = class TelemetryFeed {
 
     const impressionSets = session.impressionSets || {};
     const impressions = impressionSets[data.source] || [];
-    // The payload might contain other properties, we need `id` and `pos` here.
-    data.tiles.forEach(tile => impressions.push({id: tile.id, pos: tile.pos}));
+    // The payload might contain other properties, we need `id`, `pos` and potentially `shim` here.
+    data.tiles.forEach(tile => impressions.push({
+      id: tile.id,
+      pos: tile.pos,
+      ...(tile.shim ? {shim: tile.shim} : {}),
+    }));
     impressionSets[data.source] = impressions;
     session.impressionSets = impressionSets;
   }

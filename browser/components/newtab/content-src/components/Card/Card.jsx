@@ -237,17 +237,17 @@ export class _Card extends React.PureComponent {
               <p className="card-description" dir="auto">{link.description}</p>
             </div>
             <div className="card-context">
-              {icon && !link.context && <span className={`card-context-icon icon icon-${icon}`} />}
-              {link.icon && link.context && <span className="card-context-icon icon" style={{backgroundImage: `url('${link.icon}')`}} />}
+              {icon && !link.context && <span aria-haspopup="true" className={`card-context-icon icon icon-${icon}`} />}
+              {link.icon && link.context && <span aria-haspopup="true" className="card-context-icon icon" style={{backgroundImage: `url('${link.icon}')`}} />}
               {intlID && !link.context && <div className="card-context-label"><FormattedMessage id={intlID} defaultMessage="Visited" /></div>}
               {link.context && <div className="card-context-label">{link.context}</div>}
             </div>
           </div>
         </div>
       </a>
-      {!props.placeholder && <button className="context-menu-button icon" title={this.props.intl.formatMessage({id: "context_menu_title"})}
+      {!props.placeholder && <button aria-haspopup="true" className="context-menu-button icon" title={this.props.intl.formatMessage({id: "context_menu_title"})}
         onClick={this.onMenuButtonClick}>
-        <span className="sr-only">{`Open context menu for ${link.title}`}</span>
+        <span aria-haspopup="true" className="sr-only">{`Open context menu for ${link.title}`}</span>
       </button>}
       {isContextMenuOpen &&
         <LinkMenu

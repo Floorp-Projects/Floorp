@@ -68,6 +68,9 @@ class _BookmarkPanelHub {
       return true;
     }
 
+    // If we didn't match on a previously cached request then make sure
+    // the container is empty
+    this._removeContainer(target);
     const response = await this._handleMessageRequest(this._trigger);
 
     return this.onResponse(response, target, win);
@@ -103,7 +106,7 @@ class _BookmarkPanelHub {
   }
 
   showMessage(message, target, win) {
-    if (this._response.collapsed) {
+    if (this._response && this._response.collapsed) {
       this.toggleRecommendation(false);
       return;
     }
@@ -129,7 +132,6 @@ class _BookmarkPanelHub {
       close.setAttribute("id", "cfrClose");
       close.setAttribute("aria-label", "close");
       close.style.color = message.color;
-      this._l10n.setAttributes(close, message.close_button.tooltiptext);
       close.addEventListener("click", e => {
         this.sendUserEventTelemetry("DISMISS", win);
         this.collapseMessage();
@@ -137,13 +139,24 @@ class _BookmarkPanelHub {
       });
       const title = createElement("h1");
       title.setAttribute("id", "editBookmarkPanelRecommendationTitle");
-      this._l10n.setAttributes(title, message.title);
       const content = createElement("p");
       content.setAttribute("id", "editBookmarkPanelRecommendationContent");
-      this._l10n.setAttributes(content, message.text);
       const cta = createElement("button");
       cta.setAttribute("id", "editBookmarkPanelRecommendationCta");
-      this._l10n.setAttributes(cta, message.cta);
+
+      // If `string_id` is present it means we are relying on fluent for translations
+      if (message.text.string_id) {
+        this._l10n.setAttributes(close, message.close_button.tooltiptext.string_id);
+        this._l10n.setAttributes(title, message.title.string_id);
+        this._l10n.setAttributes(content, message.text.string_id);
+        this._l10n.setAttributes(cta, message.cta.string_id);
+      } else {
+        close.setAttribute("title", message.close_button.tooltiptext);
+        title.textContent = message.title;
+        content.textContent = message.text;
+        cta.textContent = message.cta;
+      }
+
       recommendation.appendChild(close);
       recommendation.appendChild(title);
       recommendation.appendChild(content);
@@ -155,6 +168,10 @@ class _BookmarkPanelHub {
   }
 
   toggleRecommendation(visible) {
+    if (!this._response) {
+      return;
+    }
+
     const {target} = this._response;
     if (visible === undefined) {
       // When called from the info button of the bookmark panel
@@ -165,9 +182,9 @@ class _BookmarkPanelHub {
     if (target.infoButton.checked) {
       // If it was ever collapsed we need to cancel the state
       this._response.collapsed = false;
-      target.recommendationContainer.removeAttribute("disabled");
+      target.container.removeAttribute("disabled");
     } else {
-      target.recommendationContainer.setAttribute("disabled", "disabled");
+      target.container.setAttribute("disabled", "disabled");
     }
   }
 
@@ -176,18 +193,41 @@ class _BookmarkPanelHub {
     this.toggleRecommendation(false);
   }
 
-  hideMessage(target) {
-    const container = target.container.querySelector("#cfrMessageContainer");
-    if (container) {
-      container.remove();
+  _removeContainer(target) {
+    if (target || (this._response && this._response.target)) {
+      const container = (target || this._response.target).container.querySelector("#cfrMessageContainer");
+      if (container) {
+        container.remove();
+      }
     }
+  }
+
+  hideMessage(target) {
+    this._removeContainer(target);
     this.toggleRecommendation(false);
     this._response = null;
   }
 
-  _forceShowMessage(message) {
-    this.toggleRecommendation(true);
-    this.showMessage(message.content, this._response.target, this._response.win);
+  _forceShowMessage(target, message) {
+    const doc = target.browser.ownerGlobal.gBrowser.ownerDocument;
+    const win = target.browser.ownerGlobal.window;
+    const panelTarget = {
+      container: doc.getElementById("editBookmarkPanelRecommendation"),
+      infoButton: doc.getElementById("editBookmarkPanelInfoButton"),
+      document: doc,
+      close: e => {
+        e.stopPropagation();
+        this.toggleRecommendation(false);
+      },
+    };
+    // Remove any existing message
+    this.hideMessage(panelTarget);
+    // Reset the reference to the panel elements
+    this._response = {target: panelTarget};
+    // Required if we want to preview messages that include fluent strings
+    win.MozXULElement.insertFTLIfNeeded("browser/newtab/asrouter.ftl");
+    win.MozXULElement.insertFTLIfNeeded("browser/branding/sync-brand.ftl");
+    this.showMessage(message.content, panelTarget, win);
   }
 
   sendImpression() {
