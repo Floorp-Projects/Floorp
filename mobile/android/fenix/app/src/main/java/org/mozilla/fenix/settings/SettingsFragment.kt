@@ -86,6 +86,12 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         updateAccountUIState(context!!, requireComponents.backgroundServices.accountManager.accountProfile())
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
+
+        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            findPreference<DefaultBrowserPreference>(getString(R.string.pref_key_make_default_browser))?.apply {
+                isVisible = false
+            }
+        }
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
