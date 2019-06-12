@@ -16,10 +16,6 @@
 #include "gfxTypes.h"
 #include "gfxUtils.h"
 #include "LookAndFeel.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/PatternHelpers.h"
-#include "mozilla/Likely.h"
-#include "mozilla/PresShell.h"
 #include "nsAlgorithm.h"
 #include "nsBidiPresUtils.h"
 #include "nsBlockFrame.h"
@@ -30,14 +26,10 @@
 #include "SVGObserverUtils.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPaintServerFrame.h"
-#include "mozilla/dom/Selection.h"
-#include "mozilla/dom/SVGRect.h"
-#include "mozilla/dom/SVGTextContentElementBinding.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 #include "nsTArray.h"
 #include "nsTextFrame.h"
-#include "nsTextNode.h"
 #include "SVGAnimatedNumberList.h"
 #include "SVGContentUtils.h"
 #include "SVGContextPaint.h"
@@ -48,6 +40,14 @@
 #include "nsLayoutUtils.h"
 #include "nsFrameSelection.h"
 #include "nsStyleStructInlines.h"
+#include "mozilla/Likely.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/Selection.h"
+#include "mozilla/dom/SVGRect.h"
+#include "mozilla/dom/SVGTextContentElementBinding.h"
+#include "mozilla/dom/Text.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PatternHelpers.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -234,16 +234,16 @@ static bool IsNonEmptyTextFrame(nsIFrame* aFrame) {
 
 /**
  * Takes an nsIFrame and if it is a text frame that has some text content,
- * returns it as an nsTextFrame and its corresponding nsTextNode.
+ * returns it as an nsTextFrame and its corresponding Text.
  *
  * @param aFrame The frame to look at.
  * @param aTextFrame aFrame as an nsTextFrame (output).
- * @param aTextNode The nsTextNode content of aFrame (output).
+ * @param aTextNode The Text content of aFrame (output).
  * @return true if aFrame is a non-empty text frame, false otherwise.
  */
 static bool GetNonEmptyTextFrameAndNode(nsIFrame* aFrame,
                                         nsTextFrame*& aTextFrame,
-                                        nsTextNode*& aTextNode) {
+                                        Text*& aTextNode) {
   nsTextFrame* text = do_QueryFrame(aFrame);
   bool isNonEmptyTextFrame = text && text->GetContentLength() != 0;
 
@@ -252,7 +252,7 @@ static bool GetNonEmptyTextFrameAndNode(nsIFrame* aFrame,
     NS_ASSERTION(content && content->IsText(),
                  "unexpected content type for nsTextFrame");
 
-    nsTextNode* node = static_cast<nsTextNode*>(content);
+    Text* node = content->AsText();
     MOZ_ASSERT(node->TextLength() != 0,
                "frame's GetContentLength() should be 0 if the text node "
                "has no content");
@@ -724,7 +724,7 @@ struct TextRenderedRun {
   nscoord mBaseline;
 
   /**
-   * The offset and length in mFrame's content nsTextNode that corresponds to
+   * The offset and length in mFrame's content Text that corresponds to
    * this text rendered run.  These are original char indexes.
    */
   uint32_t mTextFrameContentOffset;
@@ -1092,7 +1092,7 @@ int32_t TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
 enum SubtreePosition { eBeforeSubtree, eWithinSubtree, eAfterSubtree };
 
 /**
- * An iterator class for nsTextNodes that are descendants of a given node, the
+ * An iterator class for Text that are descendants of a given node, the
  * root.  Nodes are iterated in document order.  An optional subtree can be
  * specified, in which case the iterator will track whether the current state of
  * the traversal over the tree is within that subtree or is past that subtree.
@@ -1115,15 +1115,15 @@ class TextNodeIterator {
   }
 
   /**
-   * Returns the current nsTextNode, or null if the iterator has finished.
+   * Returns the current Text, or null if the iterator has finished.
    */
-  nsTextNode* Current() const { return static_cast<nsTextNode*>(mCurrent); }
+  Text* Current() const { return mCurrent ? mCurrent->AsText() : nullptr; }
 
   /**
-   * Advances to the next nsTextNode and returns it, or null if the end of
+   * Advances to the next Text and returns it, or null if the end of
    * iteration has been reached.
    */
-  nsTextNode* Next();
+  Text* Next();
 
   /**
    * Returns whether the iterator is currently within the subtree rooted
@@ -1140,7 +1140,7 @@ class TextNodeIterator {
 
  private:
   /**
-   * The root under which all nsTextNodes will be iterated over.
+   * The root under which all Text will be iterated over.
    */
   nsIContent* mRoot;
 
@@ -1160,9 +1160,9 @@ class TextNodeIterator {
   SubtreePosition mSubtreePosition;
 };
 
-nsTextNode* TextNodeIterator::Next() {
+Text* TextNodeIterator::Next() {
   // Starting from mCurrent, we do a non-recursive traversal to the next
-  // nsTextNode beneath mRoot, updating mSubtreePosition appropriately if we
+  // Text beneath mRoot, updating mSubtreePosition appropriately if we
   // encounter mSubtree.
   if (mCurrent) {
     do {
@@ -1199,7 +1199,7 @@ nsTextNode* TextNodeIterator::Next() {
     } while (mCurrent && !mCurrent->IsText());
   }
 
-  return static_cast<nsTextNode*>(mCurrent);
+  return mCurrent ? mCurrent->AsText() : nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -1248,7 +1248,7 @@ static uint32_t GetUndisplayedCharactersBeforeFrame(nsTextFrame* aFrame) {
  * Traverses the nsTextFrames for an SVGTextFrame and records a
  * TextNodeCorrespondenceProperty on each for the number of undisplayed DOM
  * characters between each frame.  This is done by iterating simultaneously
- * over the nsTextNodes and nsTextFrames and noting when nsTextNodes (or
+ * over the Text and nsTextFrames and noting when Text (or
  * parts of them) are skipped when finding the next nsTextFrame.
  */
 class TextNodeCorrespondenceRecorder {
@@ -1268,23 +1268,23 @@ class TextNodeCorrespondenceRecorder {
   void TraverseAndRecord(nsIFrame* aFrame);
 
   /**
-   * Returns the next non-empty nsTextNode.
+   * Returns the next non-empty Text.
    */
-  nsTextNode* NextNode();
+  Text* NextNode();
 
   /**
-   * The iterator over the nsTextNodes that we use as we simultaneously
+   * The iterator over the Text that we use as we simultaneously
    * iterate over the nsTextFrames.
    */
   TextNodeIterator mNodeIterator;
 
   /**
-   * The previous nsTextNode we iterated over.
+   * The previous Text we iterated over.
    */
-  nsTextNode* mPreviousNode;
+  Text* mPreviousNode;
 
   /**
-   * The index into the current nsTextNode's character content.
+   * The index into the current Text's character content.
    */
   uint32_t mNodeCharIndex;
 };
@@ -1302,7 +1302,7 @@ void TextNodeCorrespondenceRecorder::RecordCorrespondence(SVGTextFrame* aRoot) {
 
 void TextNodeCorrespondenceRecorder::Record(SVGTextFrame* aRoot) {
   if (!mNodeIterator.Current()) {
-    // If there are no nsTextNodes then there is nothing to do.
+    // If there are no Text nodes then there is nothing to do.
     return;
   }
 
@@ -1314,15 +1314,15 @@ void TextNodeCorrespondenceRecorder::Record(SVGTextFrame* aRoot) {
   uint32_t undisplayed = 0;
   if (mNodeIterator.Current()) {
     if (mPreviousNode && mPreviousNode->TextLength() != mNodeCharIndex) {
-      // The last nsTextFrame ended part way through an nsTextNode.  The
+      // The last nsTextFrame ended part way through a Text node.  The
       // remaining characters count as undisplayed.
       NS_ASSERTION(mNodeCharIndex < mPreviousNode->TextLength(),
                    "incorrect tracking of undisplayed characters in "
                    "text nodes");
       undisplayed += mPreviousNode->TextLength() - mNodeCharIndex;
     }
-    // All the remaining nsTextNodes that we iterate must also be undisplayed.
-    for (nsTextNode* textNode = mNodeIterator.Current(); textNode;
+    // All the remaining Text that we iterate must also be undisplayed.
+    for (Text* textNode = mNodeIterator.Current(); textNode;
          textNode = NextNode()) {
       undisplayed += textNode->TextLength();
     }
@@ -1333,9 +1333,9 @@ void TextNodeCorrespondenceRecorder::Record(SVGTextFrame* aRoot) {
   aRoot->mTrailingUndisplayedCharacters = undisplayed;
 }
 
-nsTextNode* TextNodeCorrespondenceRecorder::NextNode() {
+Text* TextNodeCorrespondenceRecorder::NextNode() {
   mPreviousNode = mNodeIterator.Current();
-  nsTextNode* next;
+  Text* next;
   do {
     next = mNodeIterator.Next();
   } while (next && next->TextLength() == 0);
@@ -1353,7 +1353,7 @@ void TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame) {
   }
 
   nsTextFrame* frame;  // The current text frame.
-  nsTextNode* node;    // The text node for the current text frame.
+  Text* node;          // The text node for the current text frame.
   if (!GetNonEmptyTextFrameAndNode(aFrame, frame, node)) {
     // If this isn't an nsTextFrame, or is empty, nothing to do.
     return;
@@ -1373,7 +1373,7 @@ void TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame) {
           "incorrect tracking of correspondence between "
           "text frames and text nodes");
     } else {
-      // Each whole nsTextNode we find before we get to the text node for the
+      // Each whole Text we find before we get to the text node for the
       // first text frame must be undisplayed.
       while (mNodeIterator.Current() != node) {
         undisplayed += mNodeIterator.Current()->TextLength();
@@ -1401,11 +1401,11 @@ void TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame) {
       NS_ASSERTION(mNodeCharIndex < mPreviousNode->TextLength(),
                    "incorrect tracking of undisplayed characters in "
                    "text nodes");
-      // Any trailing characters at the end of the previous nsTextNode are
+      // Any trailing characters at the end of the previous Text are
       // undisplayed.
       undisplayed = mPreviousNode->TextLength() - mNodeCharIndex;
     }
-    // Each whole nsTextNode we find before we get to the text node for
+    // Each whole Text we find before we get to the text node for
     // the current text frame must be undisplayed.
     while (mNodeIterator.Current() && mNodeIterator.Current() != node) {
       undisplayed += mNodeIterator.Current()->TextLength();
@@ -1421,7 +1421,7 @@ void TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame) {
   frame->SetProperty(TextNodeCorrespondenceProperty(),
                      new TextNodeCorrespondence(undisplayed));
 
-  // Remember how far into the current nsTextNode we are.
+  // Remember how far into the current Text we are.
   mNodeCharIndex = frame->GetContentEnd();
 }
 
@@ -1859,7 +1859,7 @@ TextRenderedRun TextRenderedRunIterator::Next() {
     }
 
     // Convert the global run start/end indexes into an offset/length into the
-    // current frame's nsTextNode.
+    // current frame's Text.
     offset =
         frame->GetContentOffset() + runStart - mFrameStartTextElementCharIndex;
     length = runEnd - runStart;
@@ -2112,7 +2112,7 @@ class CharIterator {
   }
 
   /**
-   * Gets the original character offsets within the nsTextNode for the
+   * Gets the original character offsets within the Text for the
    * cluster/ligature group the current character is a part of.
    *
    * @param aOriginalOffset The offset of the start of the cluster/ligature
@@ -3582,14 +3582,14 @@ SVGBBox SVGTextFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
 // SVGTextFrame SVG DOM methods
 
 /**
- * Returns whether the specified node has any non-empty nsTextNodes
+ * Returns whether the specified node has any non-empty Text
  * beneath it.
  */
 static bool HasTextContent(nsIContent* aContent) {
   NS_ASSERTION(aContent, "expected non-null aContent");
 
   TextNodeIterator it(aContent);
-  for (nsTextNode* text = it.Current(); text; text = it.Next()) {
+  for (Text* text = it.Current(); text; text = it.Next()) {
     if (text->TextLength() != 0) {
       return true;
     }
@@ -3605,7 +3605,7 @@ static uint32_t GetTextContentLength(nsIContent* aContent) {
 
   uint32_t length = 0;
   TextNodeIterator it(aContent);
-  for (nsTextNode* text = it.Current(); text; text = it.Next()) {
+  for (Text* text = it.Current(); text; text = it.Next()) {
     length += text->TextLength();
   }
   return length;
@@ -3795,7 +3795,7 @@ nsresult SVGTextFrame::GetSubStringLength(nsIContent* aContent,
     frameStartTextElementCharIndex += frit.UndisplayedCharacters();
     textElementCharIndex = frameStartTextElementCharIndex;
 
-    // Offset into frame's nsTextNode:
+    // Offset into frame's Text:
     const uint32_t untrimmedOffset = frame->GetContentOffset();
     const uint32_t untrimmedLength = frame->GetContentEnd() - untrimmedOffset;
 
@@ -4169,7 +4169,7 @@ bool SVGTextFrame::ResolvePositionsForNode(nsIContent* aContent,
                                            nsTArray<gfxPoint>& aDeltas) {
   if (aContent->IsText()) {
     // We found a text node.
-    uint32_t length = static_cast<nsTextNode*>(aContent)->TextLength();
+    uint32_t length = aContent->AsText()->TextLength();
     if (length) {
       uint32_t end = aIndex + length;
       if (MOZ_UNLIKELY(end > mPositions.Length())) {

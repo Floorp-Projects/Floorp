@@ -59,6 +59,25 @@ AutoInitializeImageLib::AutoInitializeImageLib() {
   SpinPendingEvents();
 }
 
+void ImageBenchmarkBase::SetUp() {
+  nsCOMPtr<nsIInputStream> inputStream = LoadFile(mTestCase.mPath);
+  ASSERT_TRUE(inputStream != nullptr);
+
+  // Figure out how much data we have.
+  uint64_t length;
+  nsresult rv = inputStream->Available(&length);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Write the data into a SourceBuffer.
+  mSourceBuffer = new SourceBuffer();
+  mSourceBuffer->ExpectLength(length);
+  rv = mSourceBuffer->AppendFromInputStream(inputStream, length);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  mSourceBuffer->Complete(NS_OK);
+}
+
+void ImageBenchmarkBase::TearDown() {}
+
 ///////////////////////////////////////////////////////////////////////////////
 // General Helpers
 ///////////////////////////////////////////////////////////////////////////////
@@ -730,6 +749,60 @@ ImageTestCase LargeICOWithPNGTestCase() {
 ImageTestCase GreenMultipleSizesICOTestCase() {
   return ImageTestCase("green-multiple-sizes.ico", "image/x-icon",
                        IntSize(256, 256));
+}
+
+ImageTestCase PerfGrayJPGTestCase() {
+  return ImageTestCase("perf_gray.jpg", "image/jpeg", IntSize(1000, 1000));
+}
+
+ImageTestCase PerfCmykJPGTestCase() {
+  return ImageTestCase("perf_cmyk.jpg", "image/jpeg", IntSize(1000, 1000));
+}
+
+ImageTestCase PerfYCbCrJPGTestCase() {
+  return ImageTestCase("perf_ycbcr.jpg", "image/jpeg", IntSize(1000, 1000));
+}
+
+ImageTestCase PerfRgbPNGTestCase() {
+  return ImageTestCase("perf_srgb.png", "image/png", IntSize(1000, 1000));
+}
+
+ImageTestCase PerfRgbAlphaPNGTestCase() {
+  return ImageTestCase("perf_srgb_alpha.png", "image/png", IntSize(1000, 1000),
+                       TEST_CASE_IS_TRANSPARENT);
+}
+
+ImageTestCase PerfGrayPNGTestCase() {
+  return ImageTestCase("perf_gray.png", "image/png", IntSize(1000, 1000));
+}
+
+ImageTestCase PerfGrayAlphaPNGTestCase() {
+  return ImageTestCase("perf_gray_alpha.png", "image/png", IntSize(1000, 1000),
+                       TEST_CASE_IS_TRANSPARENT);
+}
+
+ImageTestCase PerfRgbLosslessWebPTestCase() {
+  return ImageTestCase("perf_srgb_lossless.webp", "image/webp",
+                       IntSize(1000, 1000));
+}
+
+ImageTestCase PerfRgbAlphaLosslessWebPTestCase() {
+  return ImageTestCase("perf_srgb_alpha_lossless.webp", "image/webp",
+                       IntSize(1000, 1000), TEST_CASE_IS_TRANSPARENT);
+}
+
+ImageTestCase PerfRgbLossyWebPTestCase() {
+  return ImageTestCase("perf_srgb_lossy.webp", "image/webp",
+                       IntSize(1000, 1000));
+}
+
+ImageTestCase PerfRgbAlphaLossyWebPTestCase() {
+  return ImageTestCase("perf_srgb_alpha_lossy.webp", "image/webp",
+                       IntSize(1000, 1000), TEST_CASE_IS_TRANSPARENT);
+}
+
+ImageTestCase PerfRgbGIFTestCase() {
+  return ImageTestCase("perf_srgb.gif", "image/gif", IntSize(1000, 1000));
 }
 
 }  // namespace image
