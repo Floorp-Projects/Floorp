@@ -76,7 +76,8 @@ namespace JS {
   _(CDataBufferPtr)                      \
   _(CDataBuffer)                         \
   _(CClosureInfo)                        \
-  _(CTypesInt64)
+  _(CTypesInt64)                         \
+  _(PerfMeasurement)
 
 enum class MemoryUse : uint8_t {
 #define DEFINE_MEMORY_USE(Name) Name,
