@@ -236,13 +236,13 @@ class AppWaiter(object):
         return top
 
     def wait_for_start(self, package):
-        if self.update_log():
-            # if log content is available, assume the app started; otherwise,
-            # a short run (few tests) might complete without ever being detected
-            # in the foreground
-            return package
         top = None
         while top != package and not self.start_timed_out():
+            if self.update_log():
+                # if log content is available, assume the app started; otherwise,
+                # a short run (few tests) might complete without ever being detected
+                # in the foreground
+                return package
             time.sleep(1)
             top = self.get_top()
         return top
