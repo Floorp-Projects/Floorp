@@ -197,7 +197,7 @@ module.exports = {
     // since only let and const are used, see "no-var").
     "block-scoped-var": "error",
     // Require camel case names
-    "camelcase": "error",
+    "camelcase": ["error", { "properties": "never" }],
     // Warn about cyclomatic complexity in functions.
     // 20 is ESLint's default, and we want to keep it this way to prevent new highly
     // complex functions from being introduced. However, because Mozilla's eslintrc has
