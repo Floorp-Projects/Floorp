@@ -63,6 +63,11 @@ add_task(async function test_opened_page() {
     let preview = doc.getElementById("screenshot-preview");
     is(urlParam, args.TEST_PAGE, "Reported page is correctly added to the url param");
 
+    let docShell = content.docShell;
+    is(typeof docShell.hasMixedActiveContentBlocked, "boolean", "docShell.hasMixedActiveContentBlocked is available");
+    is(typeof docShell.hasMixedDisplayContentBlocked, "boolean", "docShell.hasMixedDisplayContentBlocked is available");
+    is(typeof docShell.hasTrackingContentBlocked, "boolean", "docShell.hasTrackingContentBlocked is available");
+
     let detailsParam = doc.getElementById("details").innerText;
     const details = JSON.parse(detailsParam);
     ok(typeof details == "object", "Details param is a stringified JSON object.");
