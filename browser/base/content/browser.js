@@ -1844,9 +1844,9 @@ var gBrowserInit = {
             replace: true,
             // See below for the semantics of window.arguments. Only the minimum is supported.
             userContextId: window.arguments[5],
-            triggeringPrincipal: window.arguments[7] || Services.scriptSecurityManager.getSystemPrincipal(),
-            allowInheritPrincipal: window.arguments[8],
-            csp: window.arguments[9],
+            triggeringPrincipal: window.arguments[8] || Services.scriptSecurityManager.getSystemPrincipal(),
+            allowInheritPrincipal: window.arguments[9],
+            csp: window.arguments[10],
             fromExternal: true,
           });
         } catch (e) {}
@@ -1857,19 +1857,21 @@ var gBrowserInit = {
         //                 [4]: allowThirdPartyFixup (bool)
         //                 [5]: userContextId (int)
         //                 [6]: originPrincipal (nsIPrincipal)
-        //                 [7]: triggeringPrincipal (nsIPrincipal)
-        //                 [8]: allowInheritPrincipal (bool)
-        //                 [9]: csp (nsIContentSecurityPolicy)
+        //                 [7]: originStoragePrincipal (nsIPrincipal)
+        //                 [8]: triggeringPrincipal (nsIPrincipal)
+        //                 [9]: allowInheritPrincipal (bool)
+        //                 [10]: csp (nsIContentSecurityPolicy)
         let userContextId = (window.arguments[5] != undefined ?
             window.arguments[5] : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID);
         loadURI(uriToLoad, window.arguments[2] || null, window.arguments[3] || null,
                 window.arguments[4] || false, userContextId,
                 // pass the origin principal (if any) and force its use to create
                 // an initial about:blank viewer if present:
-                window.arguments[6], !!window.arguments[6], window.arguments[7],
+                window.arguments[6], window.arguments[7], !!window.arguments[6],
+                window.arguments[8],
                 // TODO fix allowInheritPrincipal to default to false.
                 // Default to true unless explicitly set to false because of bug 1475201.
-                window.arguments[8] !== false, window.arguments[9]);
+                window.arguments[9] !== false, window.arguments[10]);
         window.focus();
       } else {
         // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
@@ -2577,8 +2579,9 @@ function BrowserTryToCloseWindow() {
 }
 
 function loadURI(uri, referrerInfo, postData, allowThirdPartyFixup,
-                 userContextId, originPrincipal, forceAboutBlankViewerInCurrent,
-                 triggeringPrincipal, allowInheritPrincipal = false, csp = null) {
+                 userContextId, originPrincipal, originStoragePrincipal,
+                 forceAboutBlankViewerInCurrent, triggeringPrincipal,
+                 allowInheritPrincipal = false, csp = null) {
   if (!triggeringPrincipal) {
     throw new Error("Must load with a triggering Principal");
   }
@@ -2590,6 +2593,7 @@ function loadURI(uri, referrerInfo, postData, allowThirdPartyFixup,
                  allowThirdPartyFixup,
                  userContextId,
                  originPrincipal,
+                 originStoragePrincipal,
                  triggeringPrincipal,
                  csp,
                  forceAboutBlankViewerInCurrent,
@@ -5815,7 +5819,7 @@ nsBrowserAccess.prototype = {
         try {
           newWindow = openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", features,
                       // window.arguments
-                      url, null, null, null, null, null, null, aTriggeringPrincipal,
+                      url, null, null, null, null, null, null, null, aTriggeringPrincipal,
                       null, aCsp);
         } catch (ex) {
           Cu.reportError(ex);
@@ -6453,6 +6457,7 @@ function handleLinkClick(event, href, linkNode) {
     allowMixedContent: persistAllowMixedContentInChildTab,
     referrerInfo,
     originPrincipal: doc.nodePrincipal,
+    originStoragePrincipal: doc.effectiveStoragePrincipal,
     triggeringPrincipal: doc.nodePrincipal,
     csp: doc.csp,
     frameOuterWindowID,
