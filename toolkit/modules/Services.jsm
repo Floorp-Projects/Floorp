@@ -42,6 +42,12 @@ XPCOMUtils.defineLazyGetter(Services, "dirsvc", function() {
            .QueryInterface(Ci.nsIProperties);
 });
 
+XPCOMUtils.defineLazyGetter(Services, "sysinfo", function() {
+  return Cc["@mozilla.org/system-info;1"]
+           .getService(Ci.nsIPropertyBag2)
+           .QueryInterface(Ci.nsISystemInfo);
+});
+
 if (AppConstants.MOZ_CRASHREPORTER) {
   XPCOMUtils.defineLazyGetter(Services, "crashmanager", () => {
     let ns = {};
@@ -91,7 +97,6 @@ var initTable = {
   wm: ["@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator"],
   ww: ["@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher"],
   startup: ["@mozilla.org/toolkit/app-startup;1", "nsIAppStartup"],
-  sysinfo: ["@mozilla.org/system-info;1", "nsIPropertyBag2"],
   clipboard: ["@mozilla.org/widget/clipboard;1", "nsIClipboard"],
   DOMRequest: ["@mozilla.org/dom/dom-request-service;1", "nsIDOMRequestService"],
   focus: ["@mozilla.org/focus-manager;1", "nsIFocusManager"],
