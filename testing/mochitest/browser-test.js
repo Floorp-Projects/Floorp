@@ -927,7 +927,7 @@ Tester.prototype = {
             let sidebar = document.getElementById("sidebar");
             if (sidebar) {
               sidebar.setAttribute("src", "data:text/html;charset=utf-8,");
-              sidebar.docShell.createAboutBlankContentViewer(null);
+              sidebar.docShell.createAboutBlankContentViewer(null, null);
               sidebar.setAttribute("src", "about:blank");
             }
           }

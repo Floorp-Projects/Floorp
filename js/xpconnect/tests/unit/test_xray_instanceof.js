@@ -117,7 +117,7 @@ add_task(function instanceof_xrays() {
 add_task(function instanceof_dom_xrays_hasInstance() {
   const principal = Services.scriptSecurityManager.createNullPrincipal({});
   const webnav = Services.appShell.createWindowlessBrowser(false);
-  webnav.docShell.createAboutBlankContentViewer(principal);
+  webnav.docShell.createAboutBlankContentViewer(principal, principal);
   let window = webnav.document.defaultView;
 
   let sandbox = Cu.Sandbox(principal);

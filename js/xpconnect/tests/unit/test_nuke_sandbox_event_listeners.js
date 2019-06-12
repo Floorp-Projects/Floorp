@@ -20,7 +20,7 @@ add_task(async function() {
 
   let docShell = webnav.docShell;
 
-  docShell.createAboutBlankContentViewer(principal);
+  docShell.createAboutBlankContentViewer(principal, principal);
 
   let window = webnav.document.defaultView;
   let sandbox = Cu.Sandbox(window, {sandboxPrototype: window});

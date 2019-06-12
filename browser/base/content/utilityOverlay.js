@@ -529,7 +529,7 @@ function openLinkIn(url, where, params) {
          (doGetProtocolFlags(uriObj) & URI_INHERITS_SECURITY_CONTEXT))) {
       // Unless we know for sure we're not inheriting principals,
       // force the about:blank viewer to have the right principal:
-      targetBrowser.createAboutBlankContentViewer(aPrincipal);
+      targetBrowser.createAboutBlankContentViewer(aPrincipal, aStoragePrincipal);
     }
 
     // When navigating a recording tab, use a new content process in order to
