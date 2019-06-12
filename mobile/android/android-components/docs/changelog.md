@@ -25,6 +25,20 @@ permalink: /changelog/
   * ui-progress
   * ui-doorhanger
 
+# 0.56.2
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.56.1...v0.56.2)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.56.2/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.56.2/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.56.2/buildSrc/src/main/java/Config.kt)
+
+* **browser-menu**
+  * Added `endOfMenuAlwaysVisible` property/parameter to `BrowserMenuBuilder` constructor and to `BrowserMenu.show` function.
+    When is set to true makes sure the bottom of the menu is always visible, this allows use cases like [#3211](https://github.com/mozilla-mobile/android-components/issues/3211).
+
+* **browser-search**
+  * Added `getProvidedDefaultSearchEngine` to `SearchEngineManager` to return the provided default search engine or the first
+    search engine if the default is not set. This allows use cases like [#3344](https://github.com/mozilla-mobile/android-components/issues/3344).
+
 # 0.56.1
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.56.0...v0.56.1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.56.1/buildSrc/src/main/java/Dependencies.kt)
