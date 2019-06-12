@@ -154,7 +154,8 @@ Schema definitions/validations that can be used for tests can be found in `syste
   "user_prefs": 7,
 
   // "pos" is the 0-based index to record the tile's position in the Pocket section.
-  "tiles": [{"id": 10000, "pos": 0}],
+  // "shim" is a base64 encoded shim attached to spocs, unique to the impression from the Ad server.
+  "tiles": [{"id": 10000, "pos": 0, "shim": "enuYa1j73z3RzxgTexHNxYPC/b,9JT6w5KB0CRKYEU+"}],
 
   // A 0-based index to record which tile in the "tiles" list that the user just interacted with.
   "click|block|pocket": 0
@@ -249,7 +250,7 @@ and losing focus. | :one:
 | `topsites_pinned` | [Optional] Number of topsites that are pinned. | :one:
 | `topsites_search_shortcuts` | [Optional] Number of search shortcut topsites. | :one:
 | `visibility_event_rcvd_ts` | [Optional][Server Counter][Server Alert for too many omissions] DOMHighResTimeStamp of when the page itself receives an event that document.visibilityState == visible. | :one:
-| `tiles` | [Required] A list of tile objects for the Pocket articles. Each tile object mush have a ID, and optionally a "pos" property to indicate the tile position | :one:
+| `tiles` | [Required] A list of tile objects for the Pocket articles. Each tile object mush have a ID, optionally a "pos" property to indicate the tile position, and optionally a "shim" property unique to the impression from the Ad server | :one:
 | `click` | [Optional] An integer to record the 0-based index when user clicks on a Pocket tile. | :one:
 | `block` | [Optional] An integer to record the 0-based index when user blocks a Pocket tile. | :one:
 | `pocket` | [Optional] An integer to record the 0-based index when user saves a Pocket tile to Pocket. | :one:

@@ -63,6 +63,7 @@ function test_simple_breakpoint() {
                    1);
   /* eslint-enable */
 
+  Assert.equal(lastMessage.level, "logPoint");
   Assert.equal(lastMessage.arguments[0], "three");
   finishClient(gClient);
 }

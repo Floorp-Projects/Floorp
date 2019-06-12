@@ -11,8 +11,10 @@
 
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/ServoBindingTypes.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/ServoStyleConsts.h"  // Servo_AnimationValue_Dump
+#include "mozilla/DbgMacro.h"
 #include "nsStringFwd.h"
 #include "nsStringBuffer.h"
 #include "nsCoord.h"
@@ -118,6 +120,14 @@ struct AnimationValue {
 
   RefPtr<RawServoAnimationValue> mServo;
 };
+
+inline std::ostream& operator<<(std::ostream& aOut,
+                                const AnimationValue& aValue) {
+  MOZ_ASSERT(aValue.mServo);
+  nsString s;
+  Servo_AnimationValue_Dump(aValue.mServo, &s);
+  return aOut << s;
+}
 
 struct PropertyStyleAnimationValuePair {
   nsCSSPropertyID mProperty;

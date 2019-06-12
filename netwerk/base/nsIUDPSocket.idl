@@ -147,12 +147,10 @@ interface nsIUDPSocket : nsISupports
      * @param host The remote host name.
      * @param port The remote port.
      * @param data The buffer containing the data to be written.
-     * @param dataLength The maximum number of bytes to be written.
-     * @return number of bytes written. (0 or dataLength)
+     * @return number of bytes written. (0 or length of data)
      */
     unsigned long send(in AUTF8String host, in unsigned short port,
-                       [const, array, size_is(dataLength)]in uint8_t data,
-                       in unsigned long dataLength);
+                       in Array<uint8_t> data);
 
     /**
      * sendWithAddr
@@ -161,12 +159,10 @@ interface nsIUDPSocket : nsISupports
      *
      * @param addr The remote host address.
      * @param data The buffer containing the data to be written.
-     * @param dataLength The maximum number of bytes to be written.
-     * @return number of bytes written. (0 or dataLength)
+     * @return number of bytes written. (0 or length of data)
      */
     unsigned long sendWithAddr(in nsINetAddr addr,
-                               [const, array, size_is(dataLength)]in uint8_t data,
-                               in unsigned long dataLength);
+                               in Array<uint8_t> data);
 
     /**
      * sendWithAddress
@@ -175,12 +171,10 @@ interface nsIUDPSocket : nsISupports
      *
      * @param addr The remote host address.
      * @param data The buffer containing the data to be written.
-     * @param dataLength The maximum number of bytes to be written.
-     * @return number of bytes written. (0 or dataLength)
+     * @return number of bytes written. (0 or length of data)
      */
     [noscript] unsigned long sendWithAddress([const] in NetAddrPtr addr,
-                                             [const, array, size_is(dataLength)]in uint8_t data,
-                                             in unsigned long dataLength);
+                                             in Array<uint8_t> data);
 
     /**
      * sendBinaryStream

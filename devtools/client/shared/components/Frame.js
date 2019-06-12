@@ -180,6 +180,22 @@ class Frame extends Component {
       }
     }
 
+    // If the message comes from a logPoint or conditional breakpoint,
+    // prefix the source location accordingly
+    if (frame.origin) {
+      let locationPrefix;
+      if (frame.origin === "logPoint") {
+        locationPrefix = "Logpoint @ ";
+      }
+
+      if (locationPrefix) {
+        sourceElements.push(dom.span({
+          key: "locationPrefix",
+          className: "frame-link-prefix",
+        }, locationPrefix));
+      }
+    }
+
     let displaySource = showFullSourceUrl ? unicodeLong : unicodeShort;
     if (isSourceMapped) {
       displaySource = getSourceMappedFile(displaySource);

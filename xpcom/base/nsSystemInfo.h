@@ -8,25 +8,32 @@
 #define _NSSYSTEMINFO_H_
 
 #include "nsHashPropertyBag.h"
-#if defined(XP_WIN)
-#  include "nsIObserver.h"
-#endif  // defined(XP_WIN)
+#include "nsISystemInfo.h"
+#include "mozilla/MozPromise.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/dom/PContent.h"
 #endif  // MOZ_WIDGET_ANDROID
 
-class nsSystemInfo final : public nsHashPropertyBag
-#if defined(XP_WIN)
-    ,
-                           public nsIObserver
-#endif  // defined(XP_WIN)
-{
+struct FolderDiskInfo {
+  nsCString model;
+  nsCString revision;
+  bool isSSD;
+};
+
+struct DiskInfo {
+  FolderDiskInfo binary;
+  FolderDiskInfo profile;
+  FolderDiskInfo system;
+};
+
+typedef mozilla::MozPromise<DiskInfo, nsresult, /* IsExclusive */ false>
+    DiskInfoPromise;
+
+class nsSystemInfo final : public nsISystemInfo, public nsHashPropertyBag {
  public:
-#if defined(XP_WIN)
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIOBSERVER
-#endif  // defined(XP_WIN)
+  NS_DECL_NSISYSTEMINFO
 
   nsSystemInfo();
 
@@ -51,9 +58,7 @@ class nsSystemInfo final : public nsHashPropertyBag
  private:
   ~nsSystemInfo();
 
-#if defined(XP_WIN)
-  nsresult GetProfileHDDInfo();
-#endif  // defined(XP_WIN)
+  RefPtr<DiskInfoPromise> mDiskInfoPromise;
 };
 
 #define NS_SYSTEMINFO_CONTRACTID "@mozilla.org/system-info;1"

@@ -126,7 +126,7 @@ TEST(Jemalloc, PtrInfo)
     ASSERT_TRUE(small.append(p));
     for (size_t j = 0; j < usable; j++) {
       jemalloc_ptr_info(&p[j], &info);
-      ASSERT_TRUE(InfoEq(info, TagLiveSmall, p, usable, arenaId));
+      ASSERT_TRUE(InfoEq(info, TagLiveAlloc, p, usable, arenaId));
     }
   }
 
@@ -137,7 +137,7 @@ TEST(Jemalloc, PtrInfo)
     ASSERT_TRUE(large.append(p));
     for (size_t j = 0; j < usable; j += 347) {
       jemalloc_ptr_info(&p[j], &info);
-      ASSERT_TRUE(InfoEq(info, TagLiveLarge, p, usable, arenaId));
+      ASSERT_TRUE(InfoEq(info, TagLiveAlloc, p, usable, arenaId));
     }
   }
 
@@ -148,7 +148,7 @@ TEST(Jemalloc, PtrInfo)
     ASSERT_TRUE(huge.append(p));
     for (size_t j = 0; j < usable; j += 567) {
       jemalloc_ptr_info(&p[j], &info);
-      ASSERT_TRUE(InfoEq(info, TagLiveHuge, p, usable, arenaId));
+      ASSERT_TRUE(InfoEq(info, TagLiveAlloc, p, usable, arenaId));
     }
   }
 
@@ -158,7 +158,7 @@ TEST(Jemalloc, PtrInfo)
   size_t len;
 
   // Free the small allocations and recheck them.
-  int isFreedSmall = 0, isFreedPage = 0;
+  int isFreedAlloc = 0, isFreedPage = 0;
   len = small.length();
   for (size_t i = 0, j = 0; i < len; i++, j = (j + 19) % len) {
     char* p = small[j];
@@ -167,8 +167,8 @@ TEST(Jemalloc, PtrInfo)
     for (size_t k = 0; k < usable; k++) {
       jemalloc_ptr_info(&p[k], &info);
       // There are two valid outcomes here.
-      if (InfoEq(info, TagFreedSmall, p, usable, arenaId)) {
-        isFreedSmall++;
+      if (InfoEq(info, TagFreedAlloc, p, usable, arenaId)) {
+        isFreedAlloc++;
       } else if (InfoEqFreedPage(info, &p[k], stats.page_size, arenaId)) {
         isFreedPage++;
       } else {
@@ -176,11 +176,11 @@ TEST(Jemalloc, PtrInfo)
       }
     }
   }
-  // There should be both FreedSmall and FreedPage results, but a lot more of
+  // There should be both FreedAlloc and FreedPage results, but a lot more of
   // the former.
-  ASSERT_TRUE(isFreedSmall != 0);
+  ASSERT_TRUE(isFreedAlloc != 0);
   ASSERT_TRUE(isFreedPage != 0);
-  ASSERT_TRUE(isFreedSmall / isFreedPage > 10);
+  ASSERT_TRUE(isFreedAlloc / isFreedPage > 10);
 
   // Free the large allocations and recheck them.
   len = large.length();
@@ -660,7 +660,7 @@ TEST(Jemalloc, GuardRegion)
   jemalloc_ptr_info_t info;
   jemalloc_ptr_info(guard_page, &info);
   ASSERT_TRUE(jemalloc_ptr_is_freed_page(&info));
-  ASSERT_TRUE(info.tag == TagFreedPageDecommitted);
+  ASSERT_TRUE(info.tag == TagFreedPage);
 
   ASSERT_DEATH_WRAP(*(char*)guard_page = 0, "");
 

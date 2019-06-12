@@ -17,7 +17,7 @@ export default class CopyToClipboardButton extends ReflectedFluentElement {
   }
 
   connectedCallback() {
-    if (this.children.length) {
+    if (this.shadowRoot) {
       return;
     }
 
