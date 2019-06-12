@@ -146,6 +146,9 @@ async function getTestPluginAddon() {
 }
 
 async function test_CTP_plugins(aboutAddonsType) {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["plugins.click_to_play", true],
+  ]});
   let pluginTag = getTestPluginTag();
   pluginTag.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   let managerWindow = await open_manager("addons://list/plugin");

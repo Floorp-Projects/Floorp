@@ -17,6 +17,7 @@ ChromeUtils.defineModuleGetter(this, "Blocklist",
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const LIST_UPDATED_TOPIC     = "plugins-list-updated";
+const FLASH_MIME_TYPE        = "application/x-shockwave-flash";
 
 const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.plugins";
@@ -232,9 +233,17 @@ var PluginProvider = {
   },
 };
 
+function isFlashPlugin(aPlugin) {
+  for (let type of aPlugin.pluginMimeTypes) {
+    if (type.type == FLASH_MIME_TYPE) {
+      return true;
+    }
+  }
+  return false;
+}
 // Protected mode is win32-only, not win64
 function canDisableFlashProtectedMode(aPlugin) {
-  return aPlugin.isFlashPlugin && Services.appinfo.XPCOMABI == "x86-msvc";
+  return isFlashPlugin(aPlugin) && Services.appinfo.XPCOMABI == "x86-msvc";
 }
 
 const wrapperMap = new WeakMap();
@@ -296,21 +305,16 @@ PluginWrapper.prototype = {
     if (tag.disabled)
       return true;
 
-    if (tag.clicktoplay ||
+    if ((Services.prefs.getBoolPref("plugins.click_to_play") && tag.clicktoplay) ||
         this.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE ||
-        this.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE) {
+        this.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE)
       return AddonManager.STATE_ASK_TO_ACTIVATE;
-    }
 
     return false;
   },
 
   set userDisabled(val) {
     let previousVal = this.userDisabled;
-    if (val === false && this.isFlashPlugin) {
-      val = AddonManager.STATE_ASK_TO_ACTIVATE;
-    }
-
     if (val === previousVal)
       return val;
 
@@ -453,15 +457,18 @@ PluginWrapper.prototype = {
       if (this.userDisabled !== true)
         permissions |= AddonManager.PERM_CAN_DISABLE;
 
-      if (this.userDisabled !== AddonManager.STATE_ASK_TO_ACTIVATE) {
-        permissions |= AddonManager.PERM_CAN_ASK_TO_ACTIVATE;
-      }
-
       let blocklistState = this.blocklistState;
       let isCTPBlocklisted =
         (blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE ||
          blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
-      if (this.userDisabled !== false && !isCTPBlocklisted && !this.isFlashPlugin) {
+
+      if (this.userDisabled !== AddonManager.STATE_ASK_TO_ACTIVATE &&
+          (Services.prefs.getBoolPref("plugins.click_to_play") ||
+           isCTPBlocklisted)) {
+        permissions |= AddonManager.PERM_CAN_ASK_TO_ACTIVATE;
+      }
+
+      if (this.userDisabled !== false && !isCTPBlocklisted) {
         permissions |= AddonManager.PERM_CAN_ENABLE;
       }
     }
@@ -511,10 +518,6 @@ PluginWrapper.prototype = {
       aListener.onNoUpdateAvailable(this);
     if ("onUpdateFinished" in aListener)
       aListener.onUpdateFinished(this);
-  },
-
-  get isFlashPlugin() {
-    return pluginFor(this).tags.some(t => t.isFlashPlugin);
   },
 };
 

@@ -693,9 +693,7 @@ class PluginOptions extends AddonOptions {
     if (action in userDisabledStates) {
       let userDisabled = userDisabledStates[action];
       el.checked = addon.userDisabled === userDisabled;
-      let resultProp = (action == "always-activate" && addon.isFlashPlugin) ?
-        "hidden" : "disabled";
-      el[resultProp] = !(el.checked || hasPermission(addon, action));
+      el.disabled = !(el.checked || hasPermission(addon, action));
     } else {
       super.setElementState(el, card, addon);
     }
