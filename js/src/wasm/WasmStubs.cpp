@@ -798,10 +798,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         // fallthrough:
 
         masm.bind(&storeBack);
-        {
-          ScratchTagScopeRelease _(&tag);
-          masm.boxDouble(scratchF, jitArgAddr);
-        }
+        masm.boxDouble(scratchF, jitArgAddr);
         break;
       }
       default: {
@@ -1278,7 +1275,7 @@ static void FillArgumentArray(MacroAssembler& masm, unsigned funcImportIndex,
             masm.moveDouble(srcReg, fpscratch);
             masm.canonicalizeDouble(fpscratch);
             GenPrintF64(DebugChannel::Import, masm, fpscratch);
-            masm.boxDouble(fpscratch, dst);
+            masm.storeDouble(fpscratch, dst);
           } else {
             GenPrintF64(DebugChannel::Import, masm, srcReg);
             masm.storeDouble(srcReg, dst);
@@ -1291,7 +1288,7 @@ static void FillArgumentArray(MacroAssembler& masm, unsigned funcImportIndex,
             masm.convertFloat32ToDouble(srcReg, fpscratch);
             masm.canonicalizeDouble(fpscratch);
             GenPrintF64(DebugChannel::Import, masm, fpscratch);
-            masm.boxDouble(fpscratch, dst);
+            masm.storeDouble(fpscratch, dst);
           } else {
             // Preserve the NaN pattern in the input.
             GenPrintF32(DebugChannel::Import, masm, srcReg);
@@ -1324,7 +1321,7 @@ static void FillArgumentArray(MacroAssembler& masm, unsigned funcImportIndex,
             }
             masm.canonicalizeDouble(dscratch);
             GenPrintF64(DebugChannel::Import, masm, dscratch);
-            masm.boxDouble(dscratch, dst);
+            masm.storeDouble(dscratch, dst);
           } else {
             MOZ_CRASH("FillArgumentArray, ABIArg::Stack: unexpected type");
           }
@@ -1849,8 +1846,8 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
       case ExprType::F32:
         masm.call(SymbolicAddress::CoerceInPlace_ToNumber);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
-        masm.unboxDouble(Address(masm.getStackPointer(), offsetToCoerceArgv),
-                         ReturnDoubleReg);
+        masm.loadDouble(Address(masm.getStackPointer(), offsetToCoerceArgv),
+                        ReturnDoubleReg);
         if (fi.funcType().ret() == ExprType::F32) {
           masm.convertDoubleToFloat32(ReturnDoubleReg, ReturnFloat32Reg);
         }

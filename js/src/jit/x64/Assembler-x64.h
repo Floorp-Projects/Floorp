@@ -723,10 +723,6 @@ class Assembler : public AssemblerX86Shared {
       case Operand::MEM_ADDRESS32:
         masm.addq_mr(src.address(), dest.encoding());
         break;
-      case Operand::MEM_SCALE:
-        masm.addq_mr(src.disp(), src.base(), src.index(), src.scale(),
-                     dest.encoding());
-        break;
       default:
         MOZ_CRASH("unexpected operand kind");
     }
