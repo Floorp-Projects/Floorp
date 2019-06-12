@@ -2,17 +2,23 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<vector android:height="24dp" android:viewportHeight="64"
-    android:viewportWidth="64" android:width="24dp"
-    xmlns:aapt="http://schemas.android.com/aapt" xmlns:android="http://schemas.android.com/apk/res/android">
-    <path android:fillType="evenOdd"
-        android:pathData="M59,11.6997C58.9881,8.1013 56.3932,5.0447 52.8778,4.4881L32,1L11.129,4.4846C7.6125,5.0438 5.0164,8.1 5,11.6997C5,17.4403 5.0405,25.0341 5.3746,28.6212C6.3871,39.5427 8.4864,45.5324 13.64,52.3379C18.081,58.0678 24.5178,61.8669 31.6355,62.959L32,63L32.3611,62.959C39.4788,61.8669 45.9156,58.0678 50.3566,52.3379C55.5136,45.5324 57.596,39.5461 58.622,28.6212L58.622,28.6212C58.9764,24.8191 59,16.3891 59,11.6997ZM51.9125,27.9727C51.0013,37.6792 49.388,42.4027 45.0106,48.1911C41.7528,52.3239 37.1358,55.1362 32,56.116C26.8673,55.1354 22.2537,52.323 18.9995,48.1911C14.612,42.3891 13.0055,37.6792 12.0976,27.9761C11.8546,25.3925 11.75,19.6177 11.75,11.7235C11.762,11.4601 11.963,11.2452 12.2225,11.2184L32,7.9181L51.7809,11.2218C52.0393,11.2441 52.2407,11.458 52.25,11.7201C52.2669,19.4846 52.142,25.4096 51.9125,27.9727ZM18.5,17.0887C18.5506,23.802 18.7227,26.4369 18.8071,27.3276C19.6711,36.5427 21.1494,39.8055 24.3489,44.0512C26.3036,46.5166 28.9832,48.2892 32,49.1126L32,14.8396L18.5,17.0887Z"
-        android:strokeColor="#00000000" android:strokeWidth="1">
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:aapt="http://schemas.android.com/aapt"
+        android:width="24dp"
+        android:height="24dp"
+        android:viewportWidth="24"
+        android:viewportHeight="24">
+    <path
+        android:pathData="M20 6c0-1-0.8-1.9-1.8-2L12 3 5.8 4C4.8 4 4 5 4 6l0.1 5c0.3 3.2 1 5 2.5 7a8.4 8.4 0 0 0 5.3 3h0.2c2.1-0.3 4-1.4 5.3-3 1.6-2 2.2-3.8 2.5-7l0.1-5zm-2.1 4.8a10 10 0 0 1-2 6c-1 1.1-2.4 2-3.9 2.3a6.5 6.5 0 0 1-3.9-2.4 9.9 9.9 0 0 1-2-5.9 67.3 67.3 0 0 1 0-4.9L12 5l5.9 1 0.1 0.2-0.1 4.7zM8 7.6v3c0.3 2.7 0.8 3.7 1.7 5 0.6 0.6 1.4 1.2 2.3 1.4V7l-4 0.6z">
         <aapt:attr name="android:fillColor">
-            <gradient android:endX="21.592728" android:endY="43.40673"
-                android:startX="53.66253" android:startY="4.9456143" android:type="linear">
-                <item android:color="#FF6A11CB" android:offset="0"/>
-                <item android:color="#FF2575FC" android:offset="1"/>
+            <gradient
+                    android:endX="21.592728"
+                    android:endY="43.40673"
+                    android:startX="53.66253"
+                    android:startY="4.9456143"
+                    android:type="linear">
+                <item android:color="#6A11CB" android:offset="0"/>
+                <item android:color="#2575FC" android:offset="1"/>
             </gradient>
         </aapt:attr>
     </path>
