@@ -59,6 +59,8 @@ function run_test() {
   server.registerPathHandler("/v1/buckets/main/collections/password-fields/records", handleResponse);
   server.registerPathHandler("/v1/buckets/main/collections/language-dictionaries", handleResponse);
   server.registerPathHandler("/v1/buckets/main/collections/language-dictionaries/records", handleResponse);
+  server.registerPathHandler("/v1/buckets/main/collections/with-local-fields", handleResponse);
+  server.registerPathHandler("/v1/buckets/main/collections/with-local-fields/records", handleResponse);
   server.registerPathHandler("/fake-x5u", handleResponse);
 
   run_next_test();
@@ -101,13 +103,14 @@ add_task(async function test_records_from_dump_are_listed_as_created_in_event() 
 add_task(clear_state);
 
 add_task(async function test_records_can_have_local_fields() {
-  const c = RemoteSettings("password-fields", { localFields: ["accepted"] });
+  const c = RemoteSettings("with-local-fields", { localFields: [ "accepted" ]});
+  c.verifySignature = false;
+
   await c.maybeSync(2000);
 
   const col = await c.openCollection();
-  await col.update({ id: "9d500963-d80e-3a91-6e74-66f3811b99cc", accepted: true });
-
-  await c.maybeSync(2000); // Does not fail.
+  await col.update({ id: "c74279ce-fb0a-42a6-ae11-386b567a6119", accepted: true });
+  await c.maybeSync(3000); // Does not fail.
 });
 add_task(clear_state);
 
@@ -874,6 +877,58 @@ wNuvFqc=
           "id": "xx",
           "last_modified": 5000000000000,
           "dictionaries": ["xx-XX@dictionaries.addons.mozilla.org"],
+        }],
+      },
+    },
+    "GET:/v1/buckets/main/collections/with-local-fields": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"1234\"",
+      ],
+      "status": { status: 200, statusText: "OK" },
+      "responseBody": JSON.stringify({
+        "data": {
+          "id": "with-local-fields",
+          "last_modified": 1234,
+          "signature": {
+            "signature": "xyz",
+            "x5u": `http://localhost:${port}/fake-x5u`,
+          },
+        },
+      }),
+    },
+    "GET:/v1/buckets/main/collections/with-local-fields/records?_expected=2000&_sort=-last_modified": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"2000\"",
+      ],
+      "status": { status: 200, statusText: "OK" },
+      "responseBody": {
+        "data": [{
+          "id": "c74279ce-fb0a-42a6-ae11-386b567a6119",
+          "last_modified": 2000,
+        }],
+      },
+    },
+    "GET:/v1/buckets/main/collections/with-local-fields/records?_expected=3000&_sort=-last_modified&_since=2000": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"3000\"",
+      ],
+      "status": { status: 200, statusText: "OK" },
+      "responseBody": {
+        "data": [{
+          "id": "1f5c98b9-6d93-4c13-aa26-978b38695096",
+          "last_modified": 3000,
         }],
       },
     },
