@@ -42,15 +42,6 @@ union Value;
 // Use enums so that printing a JS::Value in the debugger shows nice
 // symbolic type tags.
 
-// Work around a GCC bug. See comment above #undef JS_ENUM_HEADER.
-#if MOZ_IS_GCC
-#  define JS_ENUM_HEADER(id, type) enum id
-#  define JS_ENUM_FOOTER(id) __attribute__((packed))
-#else
-#  define JS_ENUM_HEADER(id, type) enum id : type
-#  define JS_ENUM_FOOTER(id)
-#endif
-
 enum JSValueType : uint8_t {
   JSVAL_TYPE_DOUBLE = 0x00,
   JSVAL_TYPE_INT32 = 0x01,
@@ -89,46 +80,148 @@ static_assert(sizeof(JSValueType) == 1,
 
 #if defined(JS_NUNBOX32)
 
-JS_ENUM_HEADER(JSValueTag, uint32_t){
-    JSVAL_TAG_CLEAR = 0xFFFFFF80,
-    JSVAL_TAG_INT32 = JSVAL_TAG_CLEAR | JSVAL_TYPE_INT32,
-    JSVAL_TAG_UNDEFINED = JSVAL_TAG_CLEAR | JSVAL_TYPE_UNDEFINED,
-    JSVAL_TAG_NULL = JSVAL_TAG_CLEAR | JSVAL_TYPE_NULL,
-    JSVAL_TAG_BOOLEAN = JSVAL_TAG_CLEAR | JSVAL_TYPE_BOOLEAN,
-    JSVAL_TAG_MAGIC = JSVAL_TAG_CLEAR | JSVAL_TYPE_MAGIC,
-    JSVAL_TAG_STRING = JSVAL_TAG_CLEAR | JSVAL_TYPE_STRING,
-    JSVAL_TAG_SYMBOL = JSVAL_TAG_CLEAR | JSVAL_TYPE_SYMBOL,
-    JSVAL_TAG_PRIVATE_GCTHING = JSVAL_TAG_CLEAR | JSVAL_TYPE_PRIVATE_GCTHING,
-    JSVAL_TAG_BIGINT = JSVAL_TAG_CLEAR | JSVAL_TYPE_BIGINT,
-    JSVAL_TAG_OBJECT = JSVAL_TAG_CLEAR |
-                       JSVAL_TYPE_OBJECT} JS_ENUM_FOOTER(JSValueTag);
+enum JSValueTag : uint32_t {
+  JSVAL_TAG_CLEAR = 0xFFFFFF80,
+  JSVAL_TAG_INT32 = JSVAL_TAG_CLEAR | JSVAL_TYPE_INT32,
+  JSVAL_TAG_UNDEFINED = JSVAL_TAG_CLEAR | JSVAL_TYPE_UNDEFINED,
+  JSVAL_TAG_NULL = JSVAL_TAG_CLEAR | JSVAL_TYPE_NULL,
+  JSVAL_TAG_BOOLEAN = JSVAL_TAG_CLEAR | JSVAL_TYPE_BOOLEAN,
+  JSVAL_TAG_MAGIC = JSVAL_TAG_CLEAR | JSVAL_TYPE_MAGIC,
+  JSVAL_TAG_STRING = JSVAL_TAG_CLEAR | JSVAL_TYPE_STRING,
+  JSVAL_TAG_SYMBOL = JSVAL_TAG_CLEAR | JSVAL_TYPE_SYMBOL,
+  JSVAL_TAG_PRIVATE_GCTHING = JSVAL_TAG_CLEAR | JSVAL_TYPE_PRIVATE_GCTHING,
+  JSVAL_TAG_BIGINT = JSVAL_TAG_CLEAR | JSVAL_TYPE_BIGINT,
+  JSVAL_TAG_OBJECT = JSVAL_TAG_CLEAR | JSVAL_TYPE_OBJECT
+};
 
 static_assert(sizeof(JSValueTag) == sizeof(uint32_t),
               "compiler typed enum support is apparently buggy");
 
 #elif defined(JS_PUNBOX64)
 
-JS_ENUM_HEADER(JSValueTag, uint32_t){
-    JSVAL_TAG_MAX_DOUBLE = 0x1FFF0,
-    JSVAL_TAG_INT32 = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32,
-    JSVAL_TAG_UNDEFINED = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_UNDEFINED,
-    JSVAL_TAG_NULL = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL,
-    JSVAL_TAG_BOOLEAN = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN,
-    JSVAL_TAG_MAGIC = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_MAGIC,
-    JSVAL_TAG_STRING = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_STRING,
-    JSVAL_TAG_SYMBOL = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_SYMBOL,
-    JSVAL_TAG_PRIVATE_GCTHING = JSVAL_TAG_MAX_DOUBLE |
-                                JSVAL_TYPE_PRIVATE_GCTHING,
-    JSVAL_TAG_BIGINT = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BIGINT,
-    JSVAL_TAG_OBJECT = JSVAL_TAG_MAX_DOUBLE |
-                       JSVAL_TYPE_OBJECT} JS_ENUM_FOOTER(JSValueTag);
+/**
+ * On 64-bit, we want the encoding of a JSObject* and its Value to be
+ * identical so interconversion is free. x86-64 pointers presently
+ * must have their high 17 bits all set or all unset -- with current
+ * OSes, these bits in user-mode pointers must be unset -- so the
+ * encoding of an object must have the high 17 bits all zero.
+ *
+ * To make room, we adjust double values by the bit value 0x0007_ffff_ffff_ffff.
+ *
+ * Consider the values Zero, NaN, -Nan, +Inf, and -Inf with this adjustment:
+ *      Zero: 0x0000_0000_0000_0000   =>  0x0007_ffff_ffff_ffff
+ *      +Inf: 0x7ff0_0000_0000_0000   =>  0x7ff7_ffff_ffff_ffff
+ *      NaN:  0x7ff8_0000_0000_0000   =>  0x7fff_ffff_ffff_ffff
+ *      -Inf: 0xfff0_0000_0000_0000   =>  0xfff7_ffff_ffff_ffff
+ *      -NaN: 0xfff8_0000_0000_0000   =>  0xffff_ffff_ffff_ffff
+ *
+ * We assume that pointers have 47 significant low bits, and use bits 47-50
+ * as type signifiers.  The value tag, then, is stored in the high 17
+ * bits of a value.
+ *
+ * Thus, boxing for doubles becomes:
+ *      ADJ = 0x0007_ffff_ffff_ffff
+ *      box(double d) = uint64_t(d) + ADJ
+ *      unbox(uint64_t b) = as_double(b - ADJ)
+ *
+ * Boxing for object pointers is:
+ *      box(object_ptr p) = uint64_t(p)
+ *      unbox(u64 w) = object_ptr(w)
+ *
+ * Boxing for other values is:
+ *      box_value<Type>(u64 val) = val ^ SHIFTED_TAG<Type>
+ *      unbox_value<Type>(u64 w) = val ^ SHIFTED_TAG<Type>
+ *
+ * (The 'Spectre Mitigations' comment for Value explains why we use
+ * XOR here.)
+ *
+ * Note some subtleties of the tag ordering that let us
+ * efficiently test membership in certain classes:
+ *  1. As described above, Object is zero-tagged. Therefore,
+ *      anything with a non-zero tag is primitive.
+ *  3. All GC tags are <= BigInt.
+ *  4. All numbers are >= Int32.
+ * See JSVAL_TEST_IS_PRIMITIVE and friends.
+ */
+
+enum JSValueTag : uint32_t {
+  JSVAL_TAG_OBJECT = 0x0,
+  JSVAL_TAG_PRIVATE_GCTHING = 0x1,
+  JSVAL_TAG_STRING = 0x2,
+  JSVAL_TAG_SYMBOL = 0x3,
+  JSVAL_TAG_BIGINT = 0x4,
+  JSVAL_TAG_UNDEFINED = 0x5,
+  JSVAL_TAG_NULL = 0x6,
+  JSVAL_TAG_BOOLEAN = 0x7,
+  JSVAL_TAG_MAGIC = 0x8,
+  JSVAL_TAG_INT32 = 0x9,
+  JSVAL_TAG_MAX_NON_DOUBLE = 0xE,
+
+  JSVAL_TAG_UNKNOWN = 0xF
+};
+
+constexpr JSValueTag JSValueTypeToTag(JSValueType type) {
+  switch (type) {
+    case JSVAL_TYPE_OBJECT:
+      return JSVAL_TAG_OBJECT;
+    case JSVAL_TYPE_PRIVATE_GCTHING:
+      return JSVAL_TAG_PRIVATE_GCTHING;
+    case JSVAL_TYPE_STRING:
+      return JSVAL_TAG_STRING;
+    case JSVAL_TYPE_SYMBOL:
+      return JSVAL_TAG_SYMBOL;
+    case JSVAL_TYPE_BIGINT:
+      return JSVAL_TAG_BIGINT;
+    case JSVAL_TYPE_UNDEFINED:
+      return JSVAL_TAG_UNDEFINED;
+    case JSVAL_TYPE_NULL:
+      return JSVAL_TAG_NULL;
+    case JSVAL_TYPE_BOOLEAN:
+      return JSVAL_TAG_BOOLEAN;
+    case JSVAL_TYPE_MAGIC:
+      return JSVAL_TAG_MAGIC;
+    case JSVAL_TYPE_INT32:
+      return JSVAL_TAG_INT32;
+
+    default:
+      MOZ_ASSERT_UNREACHABLE("Type does not have corresponding tag");
+      return JSVAL_TAG_UNKNOWN;
+  }
+}
+
+constexpr JSValueType JSValueTagToType(JSValueTag tag) {
+  switch (tag) {
+    case JSVAL_TAG_OBJECT:
+      return JSVAL_TYPE_OBJECT;
+    case JSVAL_TAG_PRIVATE_GCTHING:
+      return JSVAL_TYPE_PRIVATE_GCTHING;
+    case JSVAL_TAG_STRING:
+      return JSVAL_TYPE_STRING;
+    case JSVAL_TAG_SYMBOL:
+      return JSVAL_TYPE_SYMBOL;
+    case JSVAL_TAG_BIGINT:
+      return JSVAL_TYPE_BIGINT;
+    case JSVAL_TAG_UNDEFINED:
+      return JSVAL_TYPE_UNDEFINED;
+    case JSVAL_TAG_NULL:
+      return JSVAL_TYPE_NULL;
+    case JSVAL_TAG_BOOLEAN:
+      return JSVAL_TYPE_BOOLEAN;
+    case JSVAL_TAG_MAGIC:
+      return JSVAL_TYPE_MAGIC;
+    case JSVAL_TAG_INT32:
+      return JSVAL_TYPE_INT32;
+
+    default:
+      MOZ_ASSERT_UNREACHABLE("Tag does not have corresponding type");
+      return JSVAL_TYPE_UNKNOWN;
+  }
+}
 
 static_assert(sizeof(JSValueTag) == sizeof(uint32_t),
               "compiler typed enum support is apparently buggy");
 
 enum JSValueShiftedTag : uint64_t {
-  JSVAL_SHIFTED_TAG_MAX_DOUBLE =
-      ((((uint64_t)JSVAL_TAG_MAX_DOUBLE) << JSVAL_TAG_SHIFT) | 0xFFFFFFFF),
   JSVAL_SHIFTED_TAG_INT32 = (((uint64_t)JSVAL_TAG_INT32) << JSVAL_TAG_SHIFT),
   JSVAL_SHIFTED_TAG_UNDEFINED =
       (((uint64_t)JSVAL_TAG_UNDEFINED) << JSVAL_TAG_SHIFT),
@@ -147,17 +240,10 @@ enum JSValueShiftedTag : uint64_t {
 static_assert(sizeof(JSValueShiftedTag) == sizeof(uint64_t),
               "compiler typed enum support is apparently buggy");
 
-#endif
+static_assert(static_cast<uint64_t>(JSVAL_SHIFTED_TAG_OBJECT) == 0,
+              "The object tag must be zero.");
 
-/*
- * All our supported compilers implement C++11 |enum Foo : T| syntax, so don't
- * expose these macros. (This macro exists *only* because gcc bug 51242
- * <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=51242> makes bit-fields of
- * typed enums trigger a warning that can't be turned off. Don't expose it
- * beyond this file!)
- */
-#undef JS_ENUM_HEADER
-#undef JS_ENUM_FOOTER
+#endif
 
 #if defined(JS_NUNBOX32)
 
@@ -173,25 +259,24 @@ static_assert(sizeof(JSValueShiftedTag) == sizeof(uint64_t),
 #  define JSVAL_PAYLOAD_MASK_GCTHING 0x00007FFFFFFFFFFFLL
 
 #  define JSVAL_TAG_MASK 0xFFFF800000000000LL
-#  define JSVAL_TYPE_TO_TAG(type) ((JSValueTag)(JSVAL_TAG_MAX_DOUBLE | (type)))
+#  define JSVAL_TYPE_TO_TAG(type) (JSValueTypeToTag(type))
 #  define JSVAL_TYPE_TO_SHIFTED_TAG(type) \
     (((uint64_t)JSVAL_TYPE_TO_TAG(type)) << JSVAL_TAG_SHIFT)
 
-#  define JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET JSVAL_TAG_OBJECT
-#  define JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET JSVAL_TAG_INT32
-#  define JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET JSVAL_TAG_STRING
+#  define JSVAL_PUN64_DOUBLE_ADJUST 0x0007FFFFFFFFFFFFLL
 
-#  define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET JSVAL_SHIFTED_TAG_OBJECT
-#  define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET JSVAL_SHIFTED_TAG_BOOLEAN
-#  define JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET JSVAL_SHIFTED_TAG_STRING
+#  define JSVAL_PUN64_BOXED_MAX_OBJ_PTR 0x00007FFFFFFFFFFFLL
+#  define JSVAL_PUN64_BOXED_UNDEFINED ((uint64_t)JSVAL_SHIFTED_TAG_UNDEFINED)
+#  define JSVAL_PUN64_BOXED_MIN_INT32 ((uint64_t)JSVAL_SHIFTED_TAG_INT32)
+#  define JSVAL_PUN64_BOXED_MIN_DOUBLE JSVAL_PUN64_DOUBLE_ADJUST
 
-// JSVAL_TYPE_OBJECT and JSVAL_TYPE_NULL differ by one bit. We can use this to
-// implement toObjectOrNull more efficiently.
-#  define JSVAL_OBJECT_OR_NULL_BIT (uint64_t(0x8) << JSVAL_TAG_SHIFT)
-static_assert(
-    (JSVAL_SHIFTED_TAG_NULL ^ JSVAL_SHIFTED_TAG_OBJECT) ==
-        JSVAL_OBJECT_OR_NULL_BIT,
-    "JSVAL_OBJECT_OR_NULL_BIT must be consistent with object and null tags");
+#  define JSVAL_PRIVATE_DOUBLE_BIT 0x8000000000000000ULL
+
+#  define JSVAL_TEST_IS_OBJECT(val) ((val) <= JSVAL_PUN64_BOXED_MAX_OBJ_PTR)
+#  define JSVAL_TEST_IS_PRIMITIVE(val) ((val) > JSVAL_PUN64_BOXED_MAX_OBJ_PTR)
+#  define JSVAL_TEST_IS_NUMBER(val) ((val) >= JSVAL_PUN64_BOXED_MIN_INT32)
+#  define JSVAL_TEST_IS_DOUBLE(val) ((val) >= JSVAL_PUN64_BOXED_MIN_DOUBLE)
+#  define JSVAL_TEST_IS_GCTHING(val) ((val) < JSVAL_PUN64_BOXED_UNDEFINED)
 
 #endif /* JS_PUNBOX64 */
 
@@ -328,20 +413,6 @@ static inline double CanonicalizeNaN(double d) {
 union alignas(8) Value {
  private:
   uint64_t asBits_;
-  double asDouble_;
-
-#if defined(JS_PUNBOX64) && !defined(_WIN64)
-  // MSVC doesn't pack these correctly :-(
-  struct {
-#  if MOZ_LITTLE_ENDIAN
-    uint64_t payload47_ : 47;
-    JSValueTag tag_ : 17;
-#  else
-    JSValueTag tag_ : 17;
-    uint64_t payload47_ : 47;
-#  endif  // MOZ_LITTLE_ENDIAN
-  } debugView_;
-#endif  // defined(JS_PUNBOX64) && !defined(_WIN64)
 
   struct {
 #if defined(JS_PUNBOX64)
@@ -381,7 +452,13 @@ union alignas(8) Value {
 
  private:
   explicit constexpr Value(uint64_t asBits) : asBits_(asBits) {}
-  explicit constexpr Value(double d) : asDouble_(d) {}
+#if defined(JS_NUNBOX32)
+  explicit Value(double d) : asBits_(mozilla::BitwiseCast<uint64_t>(d)) {}
+#elif defined(JS_PUNBOX64)
+  explicit Value(double d)
+      : asBits_(mozilla::BitwiseCast<uint64_t>(d) + JSVAL_PUN64_DOUBLE_ADJUST) {
+  }
+#endif
 
   static_assert(sizeof(JSValueType) == 1,
                 "type bits must fit in a single byte");
@@ -419,7 +496,7 @@ union alignas(8) Value {
     return fromTagAndPayload(JSVAL_TAG_INT32, uint32_t(i));
   }
 
-  static constexpr Value fromDouble(double d) { return Value(d); }
+  static Value fromDouble(double d) { return Value(d); }
 
  public:
   /**
@@ -433,19 +510,22 @@ union alignas(8) Value {
 
   /*** Mutators ***/
 
-  void setNull() { asBits_ = bitsFromTagAndPayload(JSVAL_TAG_NULL, 0); }
+  void setNull() {
+    asBits_ = bitsFromTagAndPayload(JSVAL_TAG_NULL, 0);
+    MOZ_ASSERT(isNull());
+  }
 
   void setUndefined() {
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_UNDEFINED, 0);
+    MOZ_ASSERT(isUndefined());
   }
 
   void setInt32(int32_t i) {
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_INT32, uint32_t(i));
+    MOZ_ASSERT(toInt32() == i);
   }
 
   void setDouble(double d) {
-    // Don't assign to asDouble_ to fix a miscompilation with GCC 5.2.1 and
-    // 5.3.1. See bug 1312488.
     *this = Value(d);
     MOZ_ASSERT(isDouble());
   }
@@ -455,34 +535,37 @@ union alignas(8) Value {
   void setString(JSString* str) {
     MOZ_ASSERT(js::gc::IsCellPointerValid(str));
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_STRING, PayloadType(str));
+    MOZ_ASSERT(toString() == str);
   }
 
   void setSymbol(JS::Symbol* sym) {
     MOZ_ASSERT(js::gc::IsCellPointerValid(sym));
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_SYMBOL, PayloadType(sym));
+    MOZ_ASSERT(toSymbol() == sym);
   }
 
   void setBigInt(JS::BigInt* bi) {
     MOZ_ASSERT(js::gc::IsCellPointerValid(bi));
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_BIGINT, PayloadType(bi));
+    MOZ_ASSERT(toBigInt() == bi);
   }
 
   void setObject(JSObject& obj) {
     MOZ_ASSERT(js::gc::IsCellPointerValid(&obj));
-
-#if defined(JS_PUNBOX64)
-    // VisualStudio cannot contain parenthesized C++ style cast and shift
-    // inside decltype in template parameter:
-    //   AssertionConditionType<decltype((uintptr_t(x) >> 1))>
-    // It throws syntax error.
-    MOZ_ASSERT((((uintptr_t)&obj) >> JSVAL_TAG_SHIFT) == 0);
-#endif
     setObjectNoCheck(&obj);
+    MOZ_ASSERT(&toObject() == &obj);
   }
 
  private:
   void setObjectNoCheck(JSObject* obj) {
+#if defined(JS_NUNBOX32)
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_OBJECT, PayloadType(obj));
+#elif defined(JS_PUNBOX64)
+    static_assert(JSVAL_SHIFTED_TAG_OBJECT == 0,
+                  "Object pointer tag should be 0.");
+    asBits_ = reinterpret_cast<uint64_t>(obj);
+    MOZ_ASSERT((asBits_ >> JSVAL_TAG_SHIFT) == 0);
+#endif
   }
 
   friend inline Value js::PoisonedObjectValue(uintptr_t poison);
@@ -490,14 +573,17 @@ union alignas(8) Value {
  public:
   void setBoolean(bool b) {
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_BOOLEAN, uint32_t(b));
+    MOZ_ASSERT(toBoolean() == b);
   }
 
   void setMagic(JSWhyMagic why) {
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_MAGIC, uint32_t(why));
+    MOZ_ASSERT(whyMagic() == why);
   }
 
   void setMagicUint32(uint32_t payload) {
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_MAGIC, payload);
+    MOZ_ASSERT(magicUint32() == payload);
   }
 
   bool setNumber(uint32_t ui) {
@@ -595,8 +681,7 @@ union alignas(8) Value {
 #if defined(JS_NUNBOX32)
     return uint32_t(toTag()) <= uint32_t(JSVAL_TAG_CLEAR);
 #elif defined(JS_PUNBOX64)
-    return (asBits_ | mozilla::FloatingPoint<double>::kSignBit) <=
-           JSVAL_SHIFTED_TAG_MAX_DOUBLE;
+    return JSVAL_TEST_IS_DOUBLE(asBits_);
 #endif
   }
 
@@ -605,7 +690,7 @@ union alignas(8) Value {
     MOZ_ASSERT(toTag() != JSVAL_TAG_CLEAR);
     return uint32_t(toTag()) <= uint32_t(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET);
 #elif defined(JS_PUNBOX64)
-    return asBits_ < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET;
+    return JSVAL_TEST_IS_NUMBER(asBits_);
 #endif
   }
 
@@ -619,8 +704,7 @@ union alignas(8) Value {
 #if defined(JS_NUNBOX32)
     return toTag() == JSVAL_TAG_OBJECT;
 #elif defined(JS_PUNBOX64)
-    MOZ_ASSERT((asBits_ >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT);
-    return asBits_ >= JSVAL_SHIFTED_TAG_OBJECT;
+    return JSVAL_TEST_IS_OBJECT(asBits_);
 #endif
   }
 
@@ -628,7 +712,7 @@ union alignas(8) Value {
 #if defined(JS_NUNBOX32)
     return uint32_t(toTag()) < uint32_t(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET);
 #elif defined(JS_PUNBOX64)
-    return asBits_ < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET;
+    return JSVAL_TEST_IS_PRIMITIVE(asBits_);
 #endif
   }
 
@@ -639,7 +723,7 @@ union alignas(8) Value {
     /* gcc sometimes generates signed < without explicit casts. */
     return uint32_t(toTag()) >= uint32_t(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET);
 #elif defined(JS_PUNBOX64)
-    return asBits_ >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET;
+    return JSVAL_TEST_IS_GCTHING(asBits_);
 #endif
   }
 
@@ -711,7 +795,11 @@ union alignas(8) Value {
 
   double toDouble() const {
     MOZ_ASSERT(isDouble());
-    return asDouble_;
+#if defined(JS_NUNBOX32)
+    return mozilla::BitwiseCast<double>(asBits_);
+#elif defined(JS_PUNBOX64)
+    return mozilla::BitwiseCast<double>(asBits_ - JSVAL_PUN64_DOUBLE_ADJUST);
+#endif
   }
 
   double toNumber() const {
@@ -724,6 +812,8 @@ union alignas(8) Value {
 #if defined(JS_NUNBOX32)
     return s_.payload_.str_;
 #elif defined(JS_PUNBOX64)
+    // Note: the 'Spectre mitigations' comment at the top of this class
+    // explains why we use XOR here and in other to* methods.
     return reinterpret_cast<JSString*>(asBits_ ^ JSVAL_SHIFTED_TAG_STRING);
 #endif
   }
@@ -751,10 +841,9 @@ union alignas(8) Value {
 #if defined(JS_NUNBOX32)
     return *s_.payload_.obj_;
 #elif defined(JS_PUNBOX64)
-    uint64_t ptrBits = asBits_ ^ JSVAL_SHIFTED_TAG_OBJECT;
-    MOZ_ASSERT(ptrBits);
-    MOZ_ASSERT((ptrBits & 0x7) == 0);
-    return *reinterpret_cast<JSObject*>(ptrBits);
+    static_assert(JSVAL_SHIFTED_TAG_OBJECT == 0, "Object tag should be zero");
+    MOZ_ASSERT((asBits_ & 0x7) == 0);
+    return *reinterpret_cast<JSObject*>(asBits_);
 #endif
   }
 
@@ -763,10 +852,12 @@ union alignas(8) Value {
 #if defined(JS_NUNBOX32)
     return s_.payload_.obj_;
 #elif defined(JS_PUNBOX64)
-    // Note: the 'Spectre mitigations' comment at the top of this class
-    // explains why we use XOR here and in other to* methods.
-    uint64_t ptrBits =
-        (asBits_ ^ JSVAL_SHIFTED_TAG_OBJECT) & ~JSVAL_OBJECT_OR_NULL_BIT;
+    static_assert(JSVAL_SHIFTED_TAG_OBJECT == 0, "Object tag should be zero");
+    // Since the object tag is zero, we simply need to zero out
+    // the set bits in the `null` tag to get this.  This is not
+    // a SPECTRE issue as only the set bits in the NULL tag are
+    // cleared, and any other tag bits are left.
+    uint64_t ptrBits = asBits_ & ~JSVAL_SHIFTED_TAG_NULL;
     MOZ_ASSERT((ptrBits & 0x7) == 0);
     return reinterpret_cast<JSObject*>(ptrBits);
 #endif
@@ -790,7 +881,7 @@ union alignas(8) Value {
 #if defined(JS_NUNBOX32)
     return bool(s_.payload_.boo_);
 #elif defined(JS_PUNBOX64)
-    return bool(int32_t(asBits_));
+    return bool(asBits_ & 0x1);
 #endif
   }
 
@@ -802,7 +893,11 @@ union alignas(8) Value {
   uint64_t asRawBits() const { return asBits_; }
 
   JSValueType extractNonDoubleType() const {
+#if defined(JS_NUNBOX32)
     uint32_t type = toTag() & 0xF;
+#elif defined(JS_PUNBOX64)
+    uint32_t type = JSValueTagToType(toTag());
+#endif
     MOZ_ASSERT(type > JSVAL_TYPE_DOUBLE);
     return JSValueType(type);
   }
@@ -823,7 +918,8 @@ union alignas(8) Value {
    * Private setters/getters allow the caller to read/write arbitrary types
    * that fit in the 64-bit payload. It is the caller's responsibility, after
    * storing to a value with setPrivateX to read only using getPrivateX.
-   * Privates values are given a type which ensures they are not marked.
+   * Private values are munged to look like double values to ensure they are
+   * not marked by the GC.
    */
 
   void setPrivate(void* ptr) {
@@ -832,7 +928,8 @@ union alignas(8) Value {
     s_.tag_ = JSValueTag(0);
     s_.payload_.ptr_ = ptr;
 #elif defined(JS_PUNBOX64)
-    asBits_ = uintptr_t(ptr) >> 1;
+    // Set high bit so this will always masquerade as a DoubleValue.
+    asBits_ = (uintptr_t(ptr) >> 1) | JSVAL_PRIVATE_DOUBLE_BIT;
 #endif
     MOZ_ASSERT(isDouble());
   }
@@ -842,7 +939,7 @@ union alignas(8) Value {
 #if defined(JS_NUNBOX32)
     return s_.payload_.ptr_;
 #elif defined(JS_PUNBOX64)
-    MOZ_ASSERT((asBits_ & 0x8000000000000000ULL) == 0);
+    MOZ_ASSERT((asBits_ & JSVAL_PRIVATE_DOUBLE_BIT) != 0);
     return reinterpret_cast<void*>(asBits_ << 1);
 #endif
   }
@@ -923,11 +1020,9 @@ static inline MOZ_MAY_CALL_AFTER_MUST_RETURN Value NullValue() {
   return v;
 }
 
-static inline constexpr Value UndefinedValue() { return Value(); }
+static constexpr Value UndefinedValue() { return Value(); }
 
-static inline constexpr Value Int32Value(int32_t i32) {
-  return Value::fromInt32(i32);
-}
+static constexpr Value Int32Value(int32_t i32) { return Value::fromInt32(i32); }
 
 static inline Value DoubleValue(double dbl) {
   Value v;
@@ -935,10 +1030,19 @@ static inline Value DoubleValue(double dbl) {
   return v;
 }
 
+static constexpr Value CanonicalNaNValue() {
+  uint64_t rawBits = detail::CanonicalizedNaNBits;
+#if defined(JS_PUNBOX64)
+  rawBits += JSVAL_PUN64_DOUBLE_ADJUST;
+#endif
+  return Value::fromRawBits(rawBits);
+}
+
 static inline Value CanonicalizedDoubleValue(double d) {
-  return MOZ_UNLIKELY(mozilla::IsNaN(d))
-             ? Value::fromRawBits(detail::CanonicalizedNaNBits)
-             : Value::fromDouble(d);
+  if (MOZ_UNLIKELY(mozilla::IsNaN(d))) {
+    return CanonicalNaNValue();
+  }
+  return Value::fromDouble(d);
 }
 
 static inline bool IsCanonicalized(double d) {
@@ -1040,7 +1144,7 @@ static inline Value NumberValue(uint16_t i) { return Int32Value(i); }
 
 static inline Value NumberValue(int32_t i) { return Int32Value(i); }
 
-static inline constexpr Value NumberValue(uint32_t i) {
+static constexpr Value NumberValue(uint32_t i) {
   return i <= JSVAL_INT_MAX ? Int32Value(int32_t(i))
                             : Value::fromDouble(double(i));
 }
