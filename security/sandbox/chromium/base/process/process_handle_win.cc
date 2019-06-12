@@ -38,6 +38,8 @@ ProcessId GetParentProcessId(ProcessHandle process) {
     } while (Process32Next(snapshot.Get(), &process_entry));
   }
 
+  // TODO(zijiehe): To match other platforms, -1 (UINT32_MAX) should be returned
+  // if |child_id| cannot be found in the |snapshot|.
   return 0u;
 }
 

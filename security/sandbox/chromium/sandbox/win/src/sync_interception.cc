@@ -47,8 +47,8 @@ ResultCode ProxyOpenEvent(LPCWSTR name,
     return SBOX_ERROR_GENERIC;
 
   SharedMemIPCClient ipc(ipc_memory);
-  ResultCode code = CrossCall(ipc, IPC_OPENEVENT_TAG, name, desired_access,
-                              answer);
+  ResultCode code =
+      CrossCall(ipc, IPC_OPENEVENT_TAG, name, desired_access, answer);
 
   return code;
 }
@@ -59,9 +59,9 @@ NTSTATUS WINAPI TargetNtCreateEvent(NtCreateEventFunction orig_CreateEvent,
                                     POBJECT_ATTRIBUTES object_attributes,
                                     EVENT_TYPE event_type,
                                     BOOLEAN initial_state) {
-  NTSTATUS status = orig_CreateEvent(event_handle, desired_access,
-                                     object_attributes, event_type,
-                                     initial_state);
+  NTSTATUS status =
+      orig_CreateEvent(event_handle, desired_access, object_attributes,
+                       event_type, initial_state);
   if (status != STATUS_ACCESS_DENIED || !object_attributes)
     return status;
 
@@ -78,25 +78,24 @@ NTSTATUS WINAPI TargetNtCreateEvent(NtCreateEventFunction orig_CreateEvent,
       break;
 
     void* memory = GetGlobalIPCMemory();
-    if (memory == NULL)
+    if (!memory)
       break;
 
     OBJECT_ATTRIBUTES object_attribs_copy = *object_attributes;
     // The RootDirectory points to BaseNamedObjects. We can ignore it.
-    object_attribs_copy.RootDirectory = NULL;
+    object_attribs_copy.RootDirectory = nullptr;
 
-    wchar_t* name = NULL;
+    std::unique_ptr<wchar_t, NtAllocDeleter> name;
     uint32_t attributes = 0;
-    NTSTATUS ret = AllocAndCopyName(&object_attribs_copy, &name, &attributes,
-                                    NULL);
-    if (!NT_SUCCESS(ret) || name == NULL)
+    NTSTATUS ret =
+        AllocAndCopyName(&object_attribs_copy, &name, &attributes, nullptr);
+    if (!NT_SUCCESS(ret) || !name)
       break;
 
     CrossCallReturn answer = {0};
     answer.nt_status = status;
-    ResultCode code = ProxyCreateEvent(name, initial_state, event_type, memory,
-                                       &answer);
-    operator delete(name, NT_ALLOC);
+    ResultCode code = ProxyCreateEvent(name.get(), initial_state, event_type,
+                                       memory, &answer);
 
     if (code != SBOX_ALL_OK) {
       status = answer.nt_status;
@@ -105,7 +104,7 @@ NTSTATUS WINAPI TargetNtCreateEvent(NtCreateEventFunction orig_CreateEvent,
     __try {
       *event_handle = answer.handle;
       status = STATUS_SUCCESS;
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
     mozilla::sandboxing::LogAllowed("NtCreateEvent",
@@ -120,15 +119,15 @@ NTSTATUS WINAPI TargetNtOpenEvent(NtOpenEventFunction orig_OpenEvent,
                                   PHANDLE event_handle,
                                   ACCESS_MASK desired_access,
                                   POBJECT_ATTRIBUTES object_attributes) {
-  NTSTATUS status = orig_OpenEvent(event_handle, desired_access,
-                                   object_attributes);
+  NTSTATUS status =
+      orig_OpenEvent(event_handle, desired_access, object_attributes);
   if (status != STATUS_ACCESS_DENIED || !object_attributes)
     return status;
 
   mozilla::sandboxing::LogBlocked("NtOpenEvent",
                                   object_attributes->ObjectName->Buffer,
                                   object_attributes->ObjectName->Length);
-  //
+
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
     return status;
@@ -138,24 +137,24 @@ NTSTATUS WINAPI TargetNtOpenEvent(NtOpenEventFunction orig_OpenEvent,
       break;
 
     void* memory = GetGlobalIPCMemory();
-    if (memory == NULL)
+    if (!memory)
       break;
 
     OBJECT_ATTRIBUTES object_attribs_copy = *object_attributes;
     // The RootDirectory points to BaseNamedObjects. We can ignore it.
-    object_attribs_copy.RootDirectory = NULL;
+    object_attribs_copy.RootDirectory = nullptr;
 
-    wchar_t* name = NULL;
+    std::unique_ptr<wchar_t, NtAllocDeleter> name;
     uint32_t attributes = 0;
-    NTSTATUS ret = AllocAndCopyName(&object_attribs_copy, &name, &attributes,
-                                    NULL);
-    if (!NT_SUCCESS(ret) || name == NULL)
+    NTSTATUS ret =
+        AllocAndCopyName(&object_attribs_copy, &name, &attributes, nullptr);
+    if (!NT_SUCCESS(ret) || !name)
       break;
 
     CrossCallReturn answer = {0};
     answer.nt_status = status;
-    ResultCode code = ProxyOpenEvent(name, desired_access, memory, &answer);
-    operator delete(name, NT_ALLOC);
+    ResultCode code =
+        ProxyOpenEvent(name.get(), desired_access, memory, &answer);
 
     if (code != SBOX_ALL_OK) {
       status = answer.nt_status;
@@ -164,7 +163,7 @@ NTSTATUS WINAPI TargetNtOpenEvent(NtOpenEventFunction orig_OpenEvent,
     __try {
       *event_handle = answer.handle;
       status = STATUS_SUCCESS;
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
     mozilla::sandboxing::LogAllowed("NtOpenEvent",

@@ -5,7 +5,6 @@
 #ifndef SANDBOX_SRC_SANDBOX_RAND_H_
 #define SANDBOX_SRC_SANDBOX_RAND_H_
 
-
 namespace sandbox {
 
 // Generate a random value in |random_value|. Returns true on success.

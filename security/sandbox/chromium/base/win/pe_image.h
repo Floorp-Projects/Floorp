@@ -11,6 +11,8 @@
 #ifndef BASE_WIN_PE_IMAGE_H_
 #define BASE_WIN_PE_IMAGE_H_
 
+#include <stdint.h>
+
 #include <windows.h>
 
 #if defined(_WIN32_WINNT_WIN8)
@@ -60,7 +62,7 @@ class PEImage {
                                       DWORD ordinal, LPCSTR name, DWORD hint,
                                       PIMAGE_THUNK_DATA iat, PVOID cookie);
 
-  // Callback to enumerate dalayed import blocks.
+  // Callback to enumerate delayed import blocks.
   // module is the dll that exports this block of symbols. cookie is the value
   // passed to the enumerate method.
   // Returns true to continue the enumeration.
@@ -109,10 +111,12 @@ class PEImage {
   // returns NULL if there is no such section.
   PIMAGE_SECTION_HEADER GetSectionHeader(UINT section) const;
 
-  // Returns the size of a given directory entry.
+  // Returns the size of a given directory entry or 0 if |directory| is out of
+  // bounds.
   DWORD GetImageDirectoryEntrySize(UINT directory) const;
 
-  // Returns the address of a given directory entry.
+  // Returns the address of a given directory entry or NULL if |directory| is
+  // out of bounds.
   PVOID GetImageDirectoryEntryAddr(UINT directory) const;
 
   // Returns the section header for a given address.
@@ -130,8 +134,23 @@ class PEImage {
   // Returns the exports directory.
   PIMAGE_EXPORT_DIRECTORY GetExportDirectory() const;
 
-  // Returns the debug id (guid+age).
-  bool GetDebugId(LPGUID guid, LPDWORD age) const;
+  // Retrieves the contents of the image's CodeView debug entry, returning true
+  // if such an entry is found and is within a section mapped into the current
+  // process's memory. |guid|, |age|, and |pdb_filename| are each optional and
+  // may be NULL. |pdb_filename_length| is mandatory if |pdb_filename| is not
+  // NULL, as the latter is populated with a direct reference to a string in the
+  // image that is is not guaranteed to be terminated (note: informal
+  // documentation indicates that it should be terminated, but the data is
+  // untrusted). Furthermore, owing to its nature of being a string in the
+  // image, it is only valid while the image is mapped into the process, and the
+  // caller is not responsible for freeing it. |pdb_filename_length| is
+  // populated with the string length of |pdb_filename| (not including a
+  // terminator) and must be used rather than relying on |pdb_filename| being
+  // properly terminated.
+  bool GetDebugId(LPGUID guid,
+                  LPDWORD age,
+                  LPCSTR* pdb_filename,
+                  size_t* pdb_filename_length) const;
 
   // Returns a given export entry.
   // Use: e = image.GetExportEntry(f);
@@ -214,17 +233,21 @@ class PEImage {
   bool VerifyMagic() const;
 
   // Converts an rva value to the appropriate address.
-  virtual PVOID RVAToAddr(DWORD rva) const;
+  virtual PVOID RVAToAddr(uintptr_t rva) const;
 
   // Converts an rva value to an offset on disk.
   // Returns true on success.
-  bool ImageRVAToOnDiskOffset(DWORD rva, DWORD *on_disk_offset) const;
+  bool ImageRVAToOnDiskOffset(uintptr_t rva, DWORD* on_disk_offset) const;
 
   // Converts an address to an offset on disk.
   // Returns true on success.
   bool ImageAddrToOnDiskOffset(LPVOID address, DWORD *on_disk_offset) const;
 
  private:
+  // Returns a pointer to a data directory, or NULL if |directory| is out of
+  // range.
+  const IMAGE_DATA_DIRECTORY* GetDataDirectory(UINT directory) const;
+
   HMODULE module_;
 };
 
@@ -234,7 +257,7 @@ class PEImageAsData : public PEImage {
  public:
   explicit PEImageAsData(HMODULE hModule) : PEImage(hModule) {}
 
-  PVOID RVAToAddr(DWORD rva) const override;
+  PVOID RVAToAddr(uintptr_t rva) const override;
 };
 
 inline bool PEImage::IsOrdinal(LPCSTR name) {

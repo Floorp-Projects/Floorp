@@ -22,8 +22,8 @@ class FilePath;
 
 class FileVersionInfoWin {
  public:
-  static FileVersionInfoWin*
-    CreateFileVersionInfo(const base::FilePath& file_path) { MOZ_CRASH(); }
+  static std::unique_ptr<FileVersionInfoWin> CreateFileVersionInfoWin(
+      const base::FilePath& file_path) { MOZ_CRASH(); }
 
   VS_FIXEDFILEINFO* fixed_file_info() { MOZ_CRASH(); }
 };

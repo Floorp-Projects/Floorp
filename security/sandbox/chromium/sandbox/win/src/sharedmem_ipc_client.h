@@ -69,8 +69,8 @@ enum ChannelState {
 };
 
 // The next two constants control the time outs for the IPC.
-const DWORD kIPCWaitTimeOut1 = 1000;   // Milliseconds.
-const DWORD kIPCWaitTimeOut2 =   50;   // Milliseconds.
+const DWORD kIPCWaitTimeOut1 = 1000;  // Milliseconds.
+const DWORD kIPCWaitTimeOut2 = 50;    // Milliseconds.
 
 // the channel control structure
 struct ChannelControl {

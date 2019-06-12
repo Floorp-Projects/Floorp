@@ -88,6 +88,14 @@ BASE_EXPORT bool SplitStringIntoKeyValuePairs(StringPiece input,
                                               char key_value_pair_delimiter,
                                               StringPairs* key_value_pairs);
 
+// Similar to SplitStringIntoKeyValuePairs, but use a substring
+// |key_value_pair_delimiter| instead of a single char.
+BASE_EXPORT bool SplitStringIntoKeyValuePairsUsingSubstr(
+    StringPiece input,
+    char key_value_delimiter,
+    StringPiece key_value_pair_delimiter,
+    StringPairs* key_value_pairs);
+
 // Similar to SplitString, but use a substring delimiter instead of a list of
 // characters that are all possible delimiters.
 BASE_EXPORT std::vector<string16> SplitStringUsingSubstr(

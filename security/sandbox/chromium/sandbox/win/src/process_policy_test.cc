@@ -11,6 +11,7 @@
 #include "base/win/scoped_handle.h"
 #include "base/win/scoped_process_information.h"
 #include "base/win/windows_version.h"
+#include "build/build_config.h"
 #include "sandbox/win/src/process_thread_interception.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/sandbox_factory.h"
@@ -26,7 +27,7 @@ sandbox::SboxTestResult CreateProcessHelper(const base::string16& exe,
                                             const base::string16& command) {
   base::win::ScopedProcessInformation pi;
   STARTUPINFOW si = {sizeof(si)};
-  const wchar_t* exe_name = NULL;
+  const wchar_t* exe_name = nullptr;
   if (!exe.empty())
     exe_name = exe.c_str();
 
@@ -36,16 +37,9 @@ sandbox::SboxTestResult CreateProcessHelper(const base::string16& exe,
   // Create the process with the unicode version of the API.
   sandbox::SboxTestResult ret1 = sandbox::SBOX_TEST_FAILED;
   PROCESS_INFORMATION temp_process_info = {};
-  if (::CreateProcessW(exe_name,
-                       command.empty() ? NULL : writable_command.get(),
-                       NULL,
-                       NULL,
-                       FALSE,
-                       0,
-                       NULL,
-                       NULL,
-                       &si,
-                       &temp_process_info)) {
+  if (::CreateProcessW(
+          exe_name, command.empty() ? nullptr : writable_command.get(), nullptr,
+          nullptr, false, 0, nullptr, nullptr, &si, &temp_process_info)) {
     pi.Set(temp_process_info);
     ret1 = sandbox::SBOX_TEST_SUCCEEDED;
   } else {
@@ -68,9 +62,10 @@ sandbox::SboxTestResult CreateProcessHelper(const base::string16& exe,
   std::string narrow_cmd_line =
       base::SysWideToMultiByte(command.c_str(), CP_UTF8);
   if (::CreateProcessA(
-        exe_name ? base::SysWideToMultiByte(exe_name, CP_UTF8).c_str() : NULL,
-        command.empty() ? NULL : &narrow_cmd_line[0],
-        NULL, NULL, FALSE, 0, NULL, NULL, &sia, &temp_process_info)) {
+          exe_name ? base::SysWideToMultiByte(exe_name, CP_UTF8).c_str()
+                   : nullptr,
+          command.empty() ? nullptr : &narrow_cmd_line[0], nullptr, nullptr,
+          false, 0, nullptr, nullptr, &sia, &temp_process_info)) {
     pi.Set(temp_process_info);
     ret2 = sandbox::SBOX_TEST_SUCCEEDED;
   } else {
@@ -94,26 +89,22 @@ sandbox::SboxTestResult CreateProcessHelper(const base::string16& exe,
 
 namespace sandbox {
 
-SBOX_TESTS_COMMAND int Process_RunApp1(int argc, wchar_t **argv) {
-  if (argc != 1) {
+SBOX_TESTS_COMMAND int Process_RunApp1(int argc, wchar_t** argv) {
+  if (argc != 1)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
-  if ((NULL == argv) || (NULL == argv[0])) {
+  if (!argv || !argv[0])
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
   base::string16 path = MakePathToSys(argv[0], false);
 
   // TEST 1: Try with the path in the app_name.
   return CreateProcessHelper(path, base::string16());
 }
 
-SBOX_TESTS_COMMAND int Process_RunApp2(int argc, wchar_t **argv) {
-  if (argc != 1) {
+SBOX_TESTS_COMMAND int Process_RunApp2(int argc, wchar_t** argv) {
+  if (argc != 1)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
-  if ((NULL == argv) || (NULL == argv[0])) {
+  if (!argv || !argv[0])
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
   base::string16 path = MakePathToSys(argv[0], false);
 
   // TEST 2: Try with the path in the cmd_line.
@@ -123,24 +114,20 @@ SBOX_TESTS_COMMAND int Process_RunApp2(int argc, wchar_t **argv) {
   return CreateProcessHelper(base::string16(), cmd_line);
 }
 
-SBOX_TESTS_COMMAND int Process_RunApp3(int argc, wchar_t **argv) {
-  if (argc != 1) {
+SBOX_TESTS_COMMAND int Process_RunApp3(int argc, wchar_t** argv) {
+  if (argc != 1)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
-  if ((NULL == argv) || (NULL == argv[0])) {
+  if (!argv || !argv[0])
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
   // TEST 3: Try file name in the cmd_line.
   return CreateProcessHelper(base::string16(), argv[0]);
 }
 
-SBOX_TESTS_COMMAND int Process_RunApp4(int argc, wchar_t **argv) {
-  if (argc != 1) {
+SBOX_TESTS_COMMAND int Process_RunApp4(int argc, wchar_t** argv) {
+  if (argc != 1)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
-  if ((NULL == argv) || (NULL == argv[0])) {
+  if (!argv || !argv[0])
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
 
   // TEST 4: Try file name in the app_name and current directory sets correctly.
   base::string16 system32 = MakePathToSys(L"", false);
@@ -152,22 +139,19 @@ SBOX_TESTS_COMMAND int Process_RunApp4(int argc, wchar_t **argv) {
     return SBOX_TEST_FAILED;
 
   current_directory[ret] = L'\\';
-  current_directory[ret+1] = L'\0';
-  if (!::SetCurrentDirectory(system32.c_str())) {
+  current_directory[ret + 1] = L'\0';
+  if (!::SetCurrentDirectory(system32.c_str()))
     return SBOX_TEST_SECOND_ERROR;
-  }
 
   const int result4 = CreateProcessHelper(argv[0], base::string16());
   return ::SetCurrentDirectory(current_directory) ? result4 : SBOX_TEST_FAILED;
 }
 
-SBOX_TESTS_COMMAND int Process_RunApp5(int argc, wchar_t **argv) {
-  if (argc != 1) {
+SBOX_TESTS_COMMAND int Process_RunApp5(int argc, wchar_t** argv) {
+  if (argc != 1)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
-  if ((NULL == argv) || (NULL == argv[0])) {
+  if (!argv || !argv[0])
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
   base::string16 path = MakePathToSys(argv[0], false);
 
   // TEST 5: Try with the path in the cmd_line and arguments.
@@ -177,13 +161,11 @@ SBOX_TESTS_COMMAND int Process_RunApp5(int argc, wchar_t **argv) {
   return CreateProcessHelper(base::string16(), cmd_line);
 }
 
-SBOX_TESTS_COMMAND int Process_RunApp6(int argc, wchar_t **argv) {
-  if (argc != 1) {
+SBOX_TESTS_COMMAND int Process_RunApp6(int argc, wchar_t** argv) {
+  if (argc != 1)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
-  if ((NULL == argv) || (NULL == argv[0])) {
+  if (!argv || !argv[0])
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
 
   // TEST 6: Try with the file_name in the cmd_line and arguments.
   base::string16 cmd_line = argv[0];
@@ -192,11 +174,11 @@ SBOX_TESTS_COMMAND int Process_RunApp6(int argc, wchar_t **argv) {
 }
 
 // Creates a process and checks if it's possible to get a handle to it's token.
-SBOX_TESTS_COMMAND int Process_GetChildProcessToken(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int Process_GetChildProcessToken(int argc, wchar_t** argv) {
   if (argc != 1)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
-  if ((NULL == argv) || (NULL == argv[0]))
+  if (!argv || !argv[0])
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
   base::string16 path = MakePathToSys(argv[0], false);
@@ -204,14 +186,15 @@ SBOX_TESTS_COMMAND int Process_GetChildProcessToken(int argc, wchar_t **argv) {
   STARTUPINFOW si = {sizeof(si)};
 
   PROCESS_INFORMATION temp_process_info = {};
-  if (!::CreateProcessW(path.c_str(), NULL, NULL, NULL, FALSE, CREATE_SUSPENDED,
-                        NULL, NULL, &si, &temp_process_info)) {
-      return SBOX_TEST_FAILED;
+  if (!::CreateProcessW(path.c_str(), nullptr, nullptr, nullptr, false,
+                        CREATE_SUSPENDED, nullptr, nullptr, &si,
+                        &temp_process_info)) {
+    return SBOX_TEST_FAILED;
   }
   base::win::ScopedProcessInformation pi(temp_process_info);
 
-  HANDLE token = NULL;
-  BOOL result =
+  HANDLE token = nullptr;
+  bool result =
       ::OpenProcessToken(pi.process_handle(), TOKEN_IMPERSONATE, &token);
   DWORD error = ::GetLastError();
 
@@ -234,7 +217,7 @@ SBOX_TESTS_COMMAND int Process_CreateProcessA(int argc, wchar_t** argv) {
   if (argc != 1)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
-  if ((NULL == argv) || (NULL == argv[0]))
+  if (!argv || !argv[0])
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
   STARTUPINFOA si = {sizeof(si)};
@@ -243,9 +226,9 @@ SBOX_TESTS_COMMAND int Process_CreateProcessA(int argc, wchar_t** argv) {
 
   PROCESS_INFORMATION temp_process_info = {};
   // Create suspended to avoid popping calc.
-  if (!::CreateProcessA(base::SysWideToMultiByte(path, CP_UTF8).c_str(), NULL,
-                        NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si,
-                        &temp_process_info)) {
+  if (!::CreateProcessA(base::SysWideToMultiByte(path, CP_UTF8).c_str(),
+                        nullptr, nullptr, nullptr, false, CREATE_SUSPENDED,
+                        nullptr, nullptr, &si, &temp_process_info)) {
     return SBOX_TEST_FAILED;
   }
   base::win::ScopedProcessInformation pi(temp_process_info);
@@ -256,7 +239,7 @@ SBOX_TESTS_COMMAND int Process_CreateProcessA(int argc, wchar_t** argv) {
   return SBOX_TEST_SUCCEEDED;
 }
 
-SBOX_TESTS_COMMAND int Process_OpenToken(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int Process_OpenToken(int argc, wchar_t** argv) {
   HANDLE token;
   if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_ALL_ACCESS, &token)) {
     if (ERROR_ACCESS_DENIED == ::GetLastError()) {
@@ -270,7 +253,7 @@ SBOX_TESTS_COMMAND int Process_OpenToken(int argc, wchar_t **argv) {
   return SBOX_TEST_FAILED;
 }
 
-SBOX_TESTS_COMMAND int Process_Crash(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int Process_Crash(int argc, wchar_t** argv) {
   __debugbreak();
   return SBOX_TEST_FAILED;
 }
@@ -290,68 +273,55 @@ std::wstring GenerateEventName(DWORD pid) {
 DWORD WINAPI TestThreadFunc(LPVOID lpdwThreadParam) {
   std::wstring event_name = GenerateEventName(
       static_cast<DWORD>(reinterpret_cast<uintptr_t>(lpdwThreadParam)));
-  if (!event_name.length()) {
+  if (!event_name.length())
     return 1;
-  }
-  HANDLE event = ::OpenEvent(EVENT_ALL_ACCESS | EVENT_MODIFY_STATE, FALSE,
+  HANDLE event = ::OpenEvent(EVENT_ALL_ACCESS | EVENT_MODIFY_STATE, false,
                              event_name.c_str());
-  if (!event) {
+  if (!event)
     return 1;
-  }
-  if (!SetEvent(event)) {
+  if (!SetEvent(event))
     return 1;
-  }
   return 0;
 }
 
 SBOX_TESTS_COMMAND int Process_CreateThread(int argc, wchar_t** argv) {
   DWORD pid = ::GetCurrentProcessId();
   std::wstring event_name = GenerateEventName(pid);
-  if (!event_name.length()) {
+  if (!event_name.length())
     return SBOX_TEST_FIRST_ERROR;
-  }
-  HANDLE event = ::CreateEvent(NULL, TRUE, FALSE, event_name.c_str());
-  if (!event) {
+  HANDLE event = ::CreateEvent(nullptr, true, false, event_name.c_str());
+  if (!event)
     return SBOX_TEST_SECOND_ERROR;
-  }
 
   DWORD thread_id = 0;
-  HANDLE thread = NULL;
-  thread = ::CreateThread(NULL, 0, &TestThreadFunc,
+  HANDLE thread = nullptr;
+  thread = ::CreateThread(nullptr, 0, &TestThreadFunc,
                           reinterpret_cast<LPVOID>(static_cast<uintptr_t>(pid)),
                           0, &thread_id);
 
-  if (!thread) {
+  if (!thread)
     return SBOX_TEST_THIRD_ERROR;
-  }
-  if (!thread_id) {
+  if (!thread_id)
     return SBOX_TEST_FOURTH_ERROR;
-  }
-  if (WaitForSingleObject(thread, INFINITE) != WAIT_OBJECT_0) {
+  if (WaitForSingleObject(thread, INFINITE) != WAIT_OBJECT_0)
     return SBOX_TEST_FIFTH_ERROR;
-  }
   DWORD exit_code = 0;
-  if (!GetExitCodeThread(thread, &exit_code)) {
+  if (!GetExitCodeThread(thread, &exit_code))
     return SBOX_TEST_SIXTH_ERROR;
-  }
-  if (exit_code) {
+  if (exit_code)
     return SBOX_TEST_SEVENTH_ERROR;
-  }
-  if (WaitForSingleObject(event, INFINITE) != WAIT_OBJECT_0) {
+  if (WaitForSingleObject(event, INFINITE) != WAIT_OBJECT_0)
     return SBOX_TEST_FAILED;
-  }
   return SBOX_TEST_SUCCEEDED;
 }
 
 // Creates a process and checks its exit code. Succeeds on exit code 0.
-SBOX_TESTS_COMMAND int Process_CheckExitCode(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int Process_CheckExitCode(int argc, wchar_t** argv) {
   if (argc != 3)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
-  if ((nullptr == argv) || (nullptr == argv[0]) ||
-      (nullptr == argv[1]) || (nullptr == argv[2])) {
+  if (!argv || !argv[0] || !argv[1] || !argv[2])
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
-  }
 
   base::string16 path = MakePathToSys(argv[0], false);
   base::string16 cmdline = argv[1];
@@ -360,7 +330,7 @@ SBOX_TESTS_COMMAND int Process_CheckExitCode(int argc, wchar_t **argv) {
   STARTUPINFOW si = {sizeof(si)};
 
   PROCESS_INFORMATION temp_process_info = {};
-  if (!::CreateProcessW(path.c_str(), &cmdline[0], nullptr, nullptr, FALSE, 0,
+  if (!::CreateProcessW(path.c_str(), &cmdline[0], nullptr, nullptr, false, 0,
                         nullptr, cwd.c_str(), &si, &temp_process_info)) {
     return SBOX_TEST_FAILED;
   }
@@ -378,7 +348,6 @@ SBOX_TESTS_COMMAND int Process_CheckExitCode(int argc, wchar_t **argv) {
 
   return SBOX_TEST_SUCCEEDED;
 }
-
 
 TEST(ProcessPolicyTest, TestAllAccess) {
   // Check if the "all access" rule fails to be added when the token is too
@@ -426,8 +395,8 @@ TEST(ProcessPolicyTest, CreateProcessAW) {
   ASSERT_TRUE(0 != ret && ret < MAX_PATH);
 
   wcscat_s(current_directory, MAX_PATH, L"\\");
-  EXPECT_TRUE(runner.AddFsRule(TargetPolicy::FILES_ALLOW_DIR_ANY,
-                               current_directory));
+  EXPECT_TRUE(
+      runner.AddFsRule(TargetPolicy::FILES_ALLOW_DIR_ANY, current_directory));
 
   EXPECT_EQ(SBOX_TEST_DENIED, runner.RunTest(L"Process_RunApp1 calc.exe"));
   EXPECT_EQ(SBOX_TEST_DENIED, runner.RunTest(L"Process_RunApp2 calc.exe"));
@@ -451,7 +420,13 @@ TEST(ProcessPolicyTest, CreateProcessAW) {
 }
 
 // Tests that the broker correctly handles a process crashing within the job.
-TEST(ProcessPolicyTest, CreateProcessCrashy) {
+// Fails on Windows ARM64: https://crbug.com/905526
+#if defined(ARCH_CPU_ARM64)
+#define MAYBE_CreateProcessCrashy DISABLED_CreateProcessCrashy
+#else
+#define MAYBE_CreateProcessCrashy CreateProcessCrashy
+#endif
+TEST(ProcessPolicyTest, MAYBE_CreateProcessCrashy) {
   TestRunner runner;
   EXPECT_EQ(static_cast<int>(STATUS_BREAKPOINT),
             runner.RunTest(L"Process_Crash"));
@@ -464,18 +439,16 @@ TEST(ProcessPolicyTest, CreateProcessWithCWD) {
     sys_path.erase(sys_path.length() - 1);
 
   base::string16 exe_path = MakePathToSys(L"cmd.exe", false);
-  base::string16 cmd_line = L"\"/c if \\\"%CD%\\\" NEQ \\\"" +
-                            sys_path + L"\\\" exit 1\"";
+  base::string16 cmd_line =
+      L"\"/c if \\\"%CD%\\\" NEQ \\\"" + sys_path + L"\\\" exit 1\"";
 
   ASSERT_TRUE(!exe_path.empty());
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_PROCESS,
-                             TargetPolicy::PROCESS_MIN_EXEC,
-                             exe_path.c_str()));
+                             TargetPolicy::PROCESS_MIN_EXEC, exe_path.c_str()));
 
-  base::string16 command = L"Process_CheckExitCode cmd.exe " +
-                           cmd_line + L" " + sys_path;
-  EXPECT_EQ(SBOX_TEST_SUCCEEDED,
-            runner.RunTest(command.c_str()));
+  base::string16 command =
+      L"Process_CheckExitCode cmd.exe " + cmd_line + L" " + sys_path;
+  EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(command.c_str()));
 }
 
 TEST(ProcessPolicyTest, OpenToken) {
@@ -488,8 +461,7 @@ TEST(ProcessPolicyTest, TestGetProcessTokenMinAccess) {
   base::string16 exe_path = MakePathToSys(L"findstr.exe", false);
   ASSERT_TRUE(!exe_path.empty());
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_PROCESS,
-                             TargetPolicy::PROCESS_MIN_EXEC,
-                             exe_path.c_str()));
+                             TargetPolicy::PROCESS_MIN_EXEC, exe_path.c_str()));
 
   EXPECT_EQ(SBOX_TEST_DENIED,
             runner.RunTest(L"Process_GetChildProcessToken findstr.exe"));
@@ -500,8 +472,7 @@ TEST(ProcessPolicyTest, TestGetProcessTokenMaxAccess) {
   base::string16 exe_path = MakePathToSys(L"findstr.exe", false);
   ASSERT_TRUE(!exe_path.empty());
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_PROCESS,
-                             TargetPolicy::PROCESS_ALL_EXEC,
-                             exe_path.c_str()));
+                             TargetPolicy::PROCESS_ALL_EXEC, exe_path.c_str()));
 
   EXPECT_EQ(SBOX_TEST_SUCCEEDED,
             runner.RunTest(L"Process_GetChildProcessToken findstr.exe"));
@@ -512,8 +483,7 @@ TEST(ProcessPolicyTest, TestGetProcessTokenMinAccessNoJob) {
   base::string16 exe_path = MakePathToSys(L"findstr.exe", false);
   ASSERT_TRUE(!exe_path.empty());
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_PROCESS,
-                             TargetPolicy::PROCESS_MIN_EXEC,
-                             exe_path.c_str()));
+                             TargetPolicy::PROCESS_MIN_EXEC, exe_path.c_str()));
 
   EXPECT_EQ(SBOX_TEST_DENIED,
             runner.RunTest(L"Process_GetChildProcessToken findstr.exe"));
@@ -524,8 +494,7 @@ TEST(ProcessPolicyTest, TestGetProcessTokenMaxAccessNoJob) {
   base::string16 exe_path = MakePathToSys(L"findstr.exe", false);
   ASSERT_TRUE(!exe_path.empty());
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_PROCESS,
-                             TargetPolicy::PROCESS_ALL_EXEC,
-                             exe_path.c_str()));
+                             TargetPolicy::PROCESS_ALL_EXEC, exe_path.c_str()));
 
   EXPECT_EQ(SBOX_TEST_SUCCEEDED,
             runner.RunTest(L"Process_GetChildProcessToken findstr.exe"));
@@ -563,16 +532,16 @@ TEST(ProcessPolicyTest, TestCreateThreadWithoutCsrss) {
 TEST(ProcessPolicyTest, TestCreateThreadOutsideSandbox) {
   DWORD pid = ::GetCurrentProcessId();
   std::wstring event_name = GenerateEventName(pid);
-  ASSERT_STRNE(NULL, event_name.c_str());
-  HANDLE event = ::CreateEvent(NULL, TRUE, FALSE, event_name.c_str());
-  EXPECT_NE(static_cast<HANDLE>(NULL), event);
+  ASSERT_STRNE(nullptr, event_name.c_str());
+  HANDLE event = ::CreateEvent(nullptr, true, false, event_name.c_str());
+  EXPECT_NE(static_cast<HANDLE>(nullptr), event);
 
   DWORD thread_id = 0;
-  HANDLE thread = NULL;
+  HANDLE thread = nullptr;
   thread = TargetCreateThread(
-      ::CreateThread, NULL, 0, &TestThreadFunc,
+      ::CreateThread, nullptr, 0, &TestThreadFunc,
       reinterpret_cast<LPVOID>(static_cast<uintptr_t>(pid)), 0, &thread_id);
-  EXPECT_NE(static_cast<HANDLE>(NULL), thread);
+  EXPECT_NE(static_cast<HANDLE>(nullptr), thread);
   EXPECT_EQ(WAIT_OBJECT_0, WaitForSingleObject(thread, INFINITE));
   EXPECT_EQ(WAIT_OBJECT_0, WaitForSingleObject(event, INFINITE));
 }

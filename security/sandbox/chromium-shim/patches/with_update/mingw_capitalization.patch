@@ -2,9 +2,9 @@
 # User Tom Ritter <tom@mozilla.com>
 # Date 1516825559 21600
 #      Wed Jan 24 14:25:59 2018 -0600
-# Node ID 3fc024ee4ac9f68acf3ad27cfbfdf1527f20438b
-# Parent  bba456aaff2bebb7dc4b695cfb8cb5d492a7c402
-Bug 1431797 Correct the capitalization of headers inside the chromium code so MinGW can compile r?bobowen
+# Node ID 9ce534c9f572dfb5abd3e409d9cfec069ccee0cd
+# Parent  6413cb580dccd986c61e6dbdc72fc370765b8f10
+Bug 1431797 Correct the capitalization of headers inside the chromium code so MinGW can compile
 
 diff --git a/security/sandbox/chromium/base/rand_util_win.cc b/security/sandbox/chromium/base/rand_util_win.cc
 --- a/security/sandbox/chromium/base/rand_util_win.cc
@@ -31,8 +31,8 @@ diff --git a/security/sandbox/chromium/base/rand_util_win.cc b/security/sandbox/
 diff --git a/security/sandbox/chromium/base/win/pe_image.h b/security/sandbox/chromium/base/win/pe_image.h
 --- a/security/sandbox/chromium/base/win/pe_image.h
 +++ b/security/sandbox/chromium/base/win/pe_image.h
-@@ -12,17 +12,17 @@
- #define BASE_WIN_PE_IMAGE_H_
+@@ -14,17 +14,17 @@
+ #include <stdint.h>
  
  #include <windows.h>
  
@@ -50,47 +50,6 @@ diff --git a/security/sandbox/chromium/base/win/pe_image.h b/security/sandbox/ch
  // Its main purpose is to provide an easy way to work with imports and exports
  // from a file, mapped in memory as image.
  class PEImage {
-diff --git a/security/sandbox/chromium/sandbox/win/src/acl.h b/security/sandbox/chromium/sandbox/win/src/acl.h
---- a/security/sandbox/chromium/sandbox/win/src/acl.h
-+++ b/security/sandbox/chromium/sandbox/win/src/acl.h
-@@ -1,16 +1,16 @@
- // Copyright (c) 2012 The Chromium Authors. All rights reserved.
- // Use of this source code is governed by a BSD-style license that can be
- // found in the LICENSE file.
- 
- #ifndef SANDBOX_SRC_ACL_H_
- #define SANDBOX_SRC_ACL_H_
- 
--#include <AccCtrl.h>
-+#include <accctrl.h>
- #include <windows.h>
- 
- #include <memory>
- 
- #include "base/memory/free_deleter.h"
- #include "sandbox/win/src/sid.h"
- 
- namespace sandbox {
-diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.cc b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
---- a/security/sandbox/chromium/sandbox/win/src/broker_services.cc
-+++ b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
-@@ -1,15 +1,15 @@
- // Copyright (c) 2012 The Chromium Authors. All rights reserved.
- // Use of this source code is governed by a BSD-style license that can be
- // found in the LICENSE file.
- 
- #include "sandbox/win/src/broker_services.h"
- 
--#include <AclAPI.h>
-+#include <aclapi.h>
- #include <stddef.h>
- 
- #include <utility>
- 
- #include "base/logging.h"
- #include "base/macros.h"
- #include "base/memory/ptr_util.h"
- #include "base/threading/platform_thread.h"
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_rand.cc b/security/sandbox/chromium/sandbox/win/src/sandbox_rand.cc
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox_rand.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox_rand.cc
@@ -110,6 +69,6 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_rand.cc b/securit
  namespace sandbox {
  
  bool GetRandom(unsigned int* random_value) {
-   return RtlGenRandom(random_value, sizeof(unsigned int)) != FALSE;
+   return RtlGenRandom(random_value, sizeof(unsigned int)) != false;
  }
  

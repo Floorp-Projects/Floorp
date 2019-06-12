@@ -37,7 +37,7 @@ static MOZ_ALWAYS_INLINE bool WeakCollectionPutEntryInternal(
       return false;
     }
     map = newMap.release();
-    obj->setPrivate(map);
+    InitObjectPrivate(obj, map, MemoryUse::WeakMapObject);
   }
 
   // Preserve wrapped native keys to prevent wrapper optimization.

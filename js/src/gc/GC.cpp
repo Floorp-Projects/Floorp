@@ -4440,7 +4440,7 @@ static void PurgeShapeCachesForShrinkingGC(JSRuntime* rt) {
     }
     for (auto baseShape = zone->cellIterUnsafe<BaseShape>(); !baseShape.done();
          baseShape.next()) {
-      baseShape->maybePurgeCache();
+      baseShape->maybePurgeCache(rt->defaultFreeOp());
     }
   }
 }

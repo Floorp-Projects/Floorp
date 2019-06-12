@@ -10,6 +10,7 @@
 #include <iterator>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "build/build_config.h"
 
@@ -126,6 +127,52 @@ struct is_trivially_copyable {
 template <class T>
 using is_trivially_copyable = std::is_trivially_copyable<T>;
 #endif
+
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ <= 7
+// Workaround for g++7 and earlier family.
+// Due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=80654, without this
+// Optional<std::vector<T>> where T is non-copyable causes a compile error.
+// As we know it is not trivially copy constructible, explicitly declare so.
+template <typename T>
+struct is_trivially_copy_constructible
+    : std::is_trivially_copy_constructible<T> {};
+
+template <typename... T>
+struct is_trivially_copy_constructible<std::vector<T...>> : std::false_type {};
+#else
+// Otherwise use std::is_trivially_copy_constructible as is.
+template <typename T>
+using is_trivially_copy_constructible = std::is_trivially_copy_constructible<T>;
+#endif
+
+// base::in_place_t is an implementation of std::in_place_t from
+// C++17. A tag type used to request in-place construction in template vararg
+// constructors.
+
+// Specification:
+// https://en.cppreference.com/w/cpp/utility/in_place
+struct in_place_t {};
+constexpr in_place_t in_place = {};
+
+// base::in_place_type_t is an implementation of std::in_place_type_t from
+// C++17. A tag type used for in-place construction when the type to construct
+// needs to be specified, such as with base::unique_any, designed to be a
+// drop-in replacement.
+
+// Specification:
+// http://en.cppreference.com/w/cpp/utility/in_place
+template <typename T>
+struct in_place_type_t {};
+
+template <typename T>
+struct is_in_place_type_t {
+  static constexpr bool value = false;
+};
+
+template <typename... Ts>
+struct is_in_place_type_t<in_place_type_t<Ts...>> {
+  static constexpr bool value = true;
+};
 
 }  // namespace base
 

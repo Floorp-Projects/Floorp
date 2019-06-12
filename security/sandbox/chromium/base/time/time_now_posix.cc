@@ -14,6 +14,7 @@
 
 #include "base/logging.h"
 #include "base/numerics/safe_math.h"
+#include "base/time/time_override.h"
 #include "build/build_config.h"
 
 // Ensure the Fuchsia and Mac builds do not include this module. Instead,
@@ -32,12 +33,11 @@ int64_t ConvertTimespecToMicros(const struct timespec& ts) {
     result *= base::Time::kMicrosecondsPerSecond;
     result += (ts.tv_nsec / base::Time::kNanosecondsPerMicrosecond);
     return result;
-  } else {
-    base::CheckedNumeric<int64_t> result(ts.tv_sec);
-    result *= base::Time::kMicrosecondsPerSecond;
-    result += (ts.tv_nsec / base::Time::kNanosecondsPerMicrosecond);
-    return result.ValueOrDie();
   }
+  base::CheckedNumeric<int64_t> result(ts.tv_sec);
+  result *= base::Time::kMicrosecondsPerSecond;
+  result += (ts.tv_nsec / base::Time::kNanosecondsPerMicrosecond);
+  return result.ValueOrDie();
 }
 
 // Helper function to get results from clock_gettime() and convert to a
@@ -62,30 +62,32 @@ namespace base {
 
 // Time -----------------------------------------------------------------------
 
-// static
-Time Time::Now() {
+namespace subtle {
+Time TimeNowIgnoringOverride() {
   struct timeval tv;
   struct timezone tz = {0, 0};  // UTC
   CHECK(gettimeofday(&tv, &tz) == 0);
   // Combine seconds and microseconds in a 64-bit field containing microseconds
   // since the epoch.  That's enough for nearly 600 centuries.  Adjust from
   // Unix (1970) to Windows (1601) epoch.
-  return Time((tv.tv_sec * kMicrosecondsPerSecond + tv.tv_usec) +
-              kTimeTToMicrosecondsOffset);
+  return Time() + TimeDelta::FromMicroseconds(
+                      (tv.tv_sec * Time::kMicrosecondsPerSecond + tv.tv_usec) +
+                      Time::kTimeTToMicrosecondsOffset);
 }
 
-// static
-Time Time::NowFromSystemTime() {
-  // Just use Now() because Now() returns the system time.
-  return Now();
+Time TimeNowFromSystemTimeIgnoringOverride() {
+  // Just use TimeNowIgnoringOverride() because it returns the system time.
+  return TimeNowIgnoringOverride();
 }
+}  // namespace subtle
 
 // TimeTicks ------------------------------------------------------------------
 
-// static
-TimeTicks TimeTicks::Now() {
-  return TimeTicks(ClockNow(CLOCK_MONOTONIC));
+namespace subtle {
+TimeTicks TimeTicksNowIgnoringOverride() {
+  return TimeTicks() + TimeDelta::FromMicroseconds(ClockNow(CLOCK_MONOTONIC));
 }
+}  // namespace subtle
 
 // static
 TimeTicks::Clock TimeTicks::GetClock() {
@@ -102,15 +104,19 @@ bool TimeTicks::IsConsistentAcrossProcesses() {
   return true;
 }
 
-// static
-ThreadTicks ThreadTicks::Now() {
+// ThreadTicks ----------------------------------------------------------------
+
+namespace subtle {
+ThreadTicks ThreadTicksNowIgnoringOverride() {
 #if (defined(_POSIX_THREAD_CPUTIME) && (_POSIX_THREAD_CPUTIME >= 0)) || \
     defined(OS_ANDROID)
-  return ThreadTicks(ClockNow(CLOCK_THREAD_CPUTIME_ID));
+  return ThreadTicks() +
+         TimeDelta::FromMicroseconds(ClockNow(CLOCK_THREAD_CPUTIME_ID));
 #else
   NOTREACHED();
   return ThreadTicks();
 #endif
 }
+}  // namespace subtle
 
 }  // namespace base
