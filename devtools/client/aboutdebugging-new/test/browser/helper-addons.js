@@ -131,9 +131,15 @@ async function installTemporaryExtensionFromXPI(xpiData, document) {
 /* exported installTemporaryExtensionFromXPI */
 
 async function removeTemporaryExtension(name, document) {
+  info(`Wait for removable extension with name: '${name}'`);
+  const buttonName = ".qa-temporary-extension-remove-button";
+  await waitUntil(() => {
+    const extension = findDebugTargetByText(name, document);
+    return extension && extension.querySelector(buttonName);
+  });
   info(`Remove the temporary extension with name: '${name}'`);
   const temporaryExtensionItem = findDebugTargetByText(name, document);
-  temporaryExtensionItem.querySelector(".qa-temporary-extension-remove-button").click();
+  temporaryExtensionItem.querySelector(buttonName).click();
 
   info("Wait until the debug target item disappears");
   await waitUntil(() => !findDebugTargetByText(name, document));
