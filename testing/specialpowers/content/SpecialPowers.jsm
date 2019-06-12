@@ -212,43 +212,6 @@ class SpecialPowers extends SpecialPowersAPI {
     this.mm.sendAsyncMessage("SPPingService", { op: "ping" });
   }
 
-  nestedFrameSetup() {
-    let self = this;
-    Services.obs.addObserver(function onRemoteBrowserShown(subject, topic, data) {
-      let frameLoader = subject;
-      // get a ref to the app <iframe>
-      let frame = frameLoader.ownerElement;
-      let frameId = frame.getAttribute("id");
-      if (frameId === "nested-parent-frame") {
-        Services.obs.removeObserver(onRemoteBrowserShown, "remote-browser-shown");
-
-        let mm = frame.frameLoader.messageManager;
-        self._grandChildFrameMM = mm;
-
-        self.SP_SYNC_MESSAGES.forEach(function(msgname) {
-          mm.addMessageListener(msgname, function(msg) {
-            return self._sendSyncMessage(msgname, msg.data)[0];
-          });
-        });
-        self.SP_ASYNC_MESSAGES.forEach(function(msgname) {
-          mm.addMessageListener(msgname, function(msg) {
-            self._sendAsyncMessage(msgname, msg.data);
-          });
-        });
-        mm.addMessageListener("SPPAddNestedMessageListener", function(msg) {
-          self._addMessageListener(msg.json.name, function(aMsg) {
-            mm.sendAsyncMessage(aMsg.name, aMsg.data);
-            });
-        });
-
-        mm.loadFrameScript("resource://specialpowers/specialpowersFrameScript.js", false);
-
-        let frameScript = "SpecialPowers.prototype.IsInNestedFrame=true;";
-        mm.loadFrameScript("data:," + frameScript, false);
-      }
-    }, "remote-browser-shown");
-  }
-
   registeredServiceWorkers() {
     // For the time being, if parent_intercept is false, we can assume that
     // ServiceWorkers registered by the current test are all known to the SWM in
