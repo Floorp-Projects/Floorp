@@ -559,6 +559,8 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
         if self.config['enable_webrender']:
             env['MOZ_WEBRENDER'] = '1'
             env['MOZ_ACCELERATED'] = '1'
+        else:
+            env['MOZ_WEBRENDER'] = '0'
 
         # TODO: consider getting rid of this as we should be default to stylo now
         env['STYLO_FORCE_ENABLED'] = '1'
