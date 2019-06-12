@@ -554,7 +554,7 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
                                      HandleScope scriptEnclosingScope,
                                      HandleFunction fun) {
   uint32_t nscopes = 0;
-  uint32_t nconsts = 0;
+  uint32_t nbigints = 0;
   uint32_t nobjects = 0;
   uint32_t ntrynotes = 0;
   uint32_t nscopenotes = 0;
@@ -567,8 +567,8 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
     data = script->data_;
 
     nscopes = data->scopes().size();
-    if (data->hasConsts()) {
-      nconsts = data->consts().size();
+    if (data->hasBigInts()) {
+      nbigints = data->bigints().size();
     }
     if (data->hasObjects()) {
       nobjects = data->objects().size();
@@ -585,14 +585,14 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   }
 
   MOZ_TRY(xdr->codeUint32(&nscopes));
-  MOZ_TRY(xdr->codeUint32(&nconsts));
+  MOZ_TRY(xdr->codeUint32(&nbigints));
   MOZ_TRY(xdr->codeUint32(&nobjects));
   MOZ_TRY(xdr->codeUint32(&ntrynotes));
   MOZ_TRY(xdr->codeUint32(&nscopenotes));
   MOZ_TRY(xdr->codeUint32(&nresumeoffsets));
 
   if (mode == XDR_DECODE) {
-    if (!JSScript::createPrivateScriptData(cx, script, nscopes, nconsts,
+    if (!JSScript::createPrivateScriptData(cx, script, nscopes, nbigints,
                                            nobjects, ntrynotes, nscopenotes,
                                            nresumeoffsets)) {
       return xdr->fail(JS::TranscodeResult_Throw);
@@ -601,15 +601,15 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
     data = script->data_;
   }
 
-  if (nconsts) {
-    RootedValue val(cx);
-    for (GCPtrValue& elem : data->consts()) {
+  if (nbigints > 0) {
+    RootedBigInt bi(cx);
+    for (GCPtrBigInt& elem : data->bigints()) {
       if (mode == XDR_ENCODE) {
-        val = elem.get();
+        bi = elem.get();
       }
-      MOZ_TRY(XDRScriptConst(xdr, &val));
+      MOZ_TRY(XDRBigInt(xdr, &bi));
       if (mode == XDR_DECODE) {
-        elem.init(val);
+        elem.init(bi);
       }
     }
   }
@@ -3412,13 +3412,13 @@ void js::FreeScriptData(JSRuntime* rt) {
 }
 
 /* static */
-size_t PrivateScriptData::AllocationSize(uint32_t nscopes, uint32_t nconsts,
+size_t PrivateScriptData::AllocationSize(uint32_t nscopes, uint32_t nbigints,
                                          uint32_t nobjects, uint32_t ntrynotes,
                                          uint32_t nscopenotes,
                                          uint32_t nresumeoffsets) {
   size_t size = sizeof(PrivateScriptData);
 
-  if (nconsts) {
+  if (nbigints) {
     size += sizeof(PackedSpan);
   }
   if (nobjects) {
@@ -3436,11 +3436,8 @@ size_t PrivateScriptData::AllocationSize(uint32_t nscopes, uint32_t nconsts,
 
   size += nscopes * sizeof(GCPtrScope);
 
-  if (nconsts) {
-    // The scope array doesn't maintain Value alignment, so compute the
-    // padding needed to remedy this.
-    size = JS_ROUNDUP(size, alignof(GCPtrValue));
-    size += nconsts * sizeof(GCPtrValue);
+  if (nbigints) {
+    size += nbigints * sizeof(GCPtrBigInt);
   }
   if (nobjects) {
     size += nobjects * sizeof(GCPtrObject);
@@ -3487,7 +3484,7 @@ void PrivateScriptData::initSpan(size_t* cursor, uint32_t scaledSpanOffset,
 }
 
 // Initialize PackedSpans and placement-new the trailing arrays.
-PrivateScriptData::PrivateScriptData(uint32_t nscopes_, uint32_t nconsts,
+PrivateScriptData::PrivateScriptData(uint32_t nscopes_, uint32_t nbigints,
                                      uint32_t nobjects, uint32_t ntrynotes,
                                      uint32_t nscopenotes,
                                      uint32_t nresumeoffsets)
@@ -3515,8 +3512,8 @@ PrivateScriptData::PrivateScriptData(uint32_t nscopes_, uint32_t nconsts,
   // Layout PackedSpan structures and initialize packedOffsets fields.
   static_assert(alignof(PrivateScriptData) >= alignof(PackedSpan),
                 "Incompatible alignment");
-  if (nconsts) {
-    packedOffsets.constsSpanOffset = TakeSpan(&cursor);
+  if (nbigints) {
+    packedOffsets.bigintsSpanOffset = TakeSpan(&cursor);
   }
   if (nobjects) {
     packedOffsets.objectsSpanOffset = TakeSpan(&cursor);
@@ -3531,8 +3528,7 @@ PrivateScriptData::PrivateScriptData(uint32_t nscopes_, uint32_t nconsts,
     packedOffsets.resumeOffsetsSpanOffset = TakeSpan(&cursor);
   }
 
-  // Layout and initialize the scopes array. Manually insert padding so that
-  // the subsequent |consts| array is aligned.
+  // Layout and initialize the scopes array.
   {
     MOZ_ASSERT(nscopes > 0);
 
@@ -3544,17 +3540,13 @@ PrivateScriptData::PrivateScriptData(uint32_t nscopes_, uint32_t nconsts,
     cursor += nscopes * sizeof(GCPtrScope);
   }
 
-  if (nconsts) {
-    // Pad to required alignment if we are emitting constant array.
-    cursor = JS_ROUNDUP(cursor, alignof(GCPtrValue));
-
-    static_assert(alignof(PrivateScriptData) >= alignof(GCPtrValue),
-                  "Incompatible alignment");
-    initSpan<GCPtrValue>(&cursor, packedOffsets.constsSpanOffset, nconsts);
-  }
-
   // Layout arrays, initialize PackedSpans and placement-new the elements.
-  static_assert(alignof(GCPtrValue) >= alignof(GCPtrObject),
+  static_assert(alignof(PrivateScriptData) >= alignof(GCPtrBigInt),
+                "Incompatible alignment");
+  static_assert(alignof(GCPtrScope) >= alignof(GCPtrBigInt),
+                "Incompatible alignment");
+  initSpan<GCPtrBigInt>(&cursor, packedOffsets.bigintsSpanOffset, nbigints);
+  static_assert(alignof(GCPtrBigInt) >= alignof(GCPtrObject),
                 "Incompatible alignment");
   static_assert(alignof(GCPtrScope) >= alignof(GCPtrObject),
                 "Incompatible alignment");
@@ -3571,19 +3563,19 @@ PrivateScriptData::PrivateScriptData(uint32_t nscopes_, uint32_t nconsts,
                      nresumeoffsets);
 
   // Sanity check
-  MOZ_ASSERT(AllocationSize(nscopes_, nconsts, nobjects, ntrynotes, nscopenotes,
-                            nresumeoffsets) == cursor);
+  MOZ_ASSERT(AllocationSize(nscopes_, nbigints, nobjects, ntrynotes,
+                            nscopenotes, nresumeoffsets) == cursor);
 }
 
 /* static */
 PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
-                                           uint32_t nconsts, uint32_t nobjects,
+                                           uint32_t nbigints, uint32_t nobjects,
                                            uint32_t ntrynotes,
                                            uint32_t nscopenotes,
                                            uint32_t nresumeoffsets,
                                            uint32_t* dataSize) {
   // Compute size including trailing arrays
-  size_t size = AllocationSize(nscopes, nconsts, nobjects, ntrynotes,
+  size_t size = AllocationSize(nscopes, nbigints, nobjects, ntrynotes,
                                nscopenotes, nresumeoffsets);
 
   // Allocate contiguous raw buffer
@@ -3599,22 +3591,22 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
 
   // Constuct the PrivateScriptData. Trailing arrays are uninitialized but
   // GCPtrs are put into a safe state.
-  return new (raw) PrivateScriptData(nscopes, nconsts, nobjects, ntrynotes,
+  return new (raw) PrivateScriptData(nscopes, nbigints, nobjects, ntrynotes,
                                      nscopenotes, nresumeoffsets);
 }
 
 /* static */ bool PrivateScriptData::InitFromEmitter(
     JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
   uint32_t nscopes = bce->perScriptData().scopeList().length();
-  uint32_t nconsts = bce->perScriptData().numberList().length();
+  uint32_t nbigints = bce->perScriptData().bigIntList().length();
   uint32_t nobjects = bce->perScriptData().objectList().length;
   uint32_t ntrynotes = bce->bytecodeSection().tryNoteList().length();
   uint32_t nscopenotes = bce->bytecodeSection().scopeNoteList().length();
   uint32_t nresumeoffsets = bce->bytecodeSection().resumeOffsetList().length();
 
   // Create and initialize PrivateScriptData
-  if (!JSScript::createPrivateScriptData(cx, script, nscopes, nconsts, nobjects,
-                                         ntrynotes, nscopenotes,
+  if (!JSScript::createPrivateScriptData(cx, script, nscopes, nbigints,
+                                         nobjects, ntrynotes, nscopenotes,
                                          nresumeoffsets)) {
     return false;
   }
@@ -3623,8 +3615,8 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
   if (nscopes) {
     bce->perScriptData().scopeList().finish(data->scopes());
   }
-  if (nconsts) {
-    bce->perScriptData().numberList().finish(data->consts());
+  if (nbigints) {
+    bce->perScriptData().bigIntList().finish(data->bigints());
   }
   if (nobjects) {
     bce->perScriptData().objectList().finish(data->objects());
@@ -3646,9 +3638,9 @@ void PrivateScriptData::trace(JSTracer* trc) {
   auto scopearray = scopes();
   TraceRange(trc, scopearray.size(), scopearray.data(), "scopes");
 
-  if (hasConsts()) {
-    auto constarray = consts();
-    TraceRange(trc, constarray.size(), constarray.data(), "consts");
+  if (hasBigInts()) {
+    auto bigintarray = bigints();
+    TraceRange(trc, bigintarray.size(), bigintarray.data(), "bigints");
   }
 
   if (hasObjects()) {
@@ -3798,7 +3790,7 @@ bool JSScript::initScriptName(JSContext* cx) {
 
 /* static */
 bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
-                                       uint32_t nscopes, uint32_t nconsts,
+                                       uint32_t nscopes, uint32_t nbigints,
                                        uint32_t nobjects, uint32_t ntrynotes,
                                        uint32_t nscopenotes,
                                        uint32_t nresumeoffsets) {
@@ -3808,7 +3800,7 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
   uint32_t dataSize;
 
   PrivateScriptData* data =
-      PrivateScriptData::new_(cx, nscopes, nconsts, nobjects, ntrynotes,
+      PrivateScriptData::new_(cx, nscopes, nbigints, nobjects, ntrynotes,
                               nscopenotes, nresumeoffsets, &dataSize);
   if (!data) {
     return false;
@@ -3825,12 +3817,12 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 bool JSScript::initFunctionPrototype(JSContext* cx, HandleScript script,
                                      HandleFunction functionProto) {
   uint32_t numScopes = 1;
-  uint32_t numConsts = 0;
+  uint32_t numBigInts = 0;
   uint32_t numObjects = 0;
   uint32_t numTryNotes = 0;
   uint32_t numScopeNotes = 0;
   uint32_t nresumeoffsets = 0;
-  if (!createPrivateScriptData(cx, script, numScopes, numConsts, numObjects,
+  if (!createPrivateScriptData(cx, script, numScopes, numBigInts, numObjects,
                                numTryNotes, numScopeNotes, nresumeoffsets)) {
     return false;
   }
@@ -4412,7 +4404,7 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
                               MutableHandle<GCVector<Scope*>> scopes) {
   PrivateScriptData* srcData = src->data_;
   uint32_t nscopes = srcData->scopes().size();
-  uint32_t nconsts = srcData->hasConsts() ? srcData->consts().size() : 0;
+  uint32_t nbigints = srcData->hasBigInts() ? srcData->bigints().size() : 0;
   uint32_t nobjects = srcData->hasObjects() ? srcData->objects().size() : 0;
   uint32_t ntrynotes = srcData->hasTryNotes() ? srcData->tryNotes().size() : 0;
   uint32_t nscopenotes =
@@ -4442,32 +4434,22 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
     }
   }
 
-  /* Constants */
+  /* BigInts */
 
-  RootedValueVector consts(cx);
-  if (nconsts != 0) {
-    RootedValue val(cx);
-    RootedValue clone(cx);
-    for (const GCPtrValue& elem : srcData->consts()) {
-      val = elem.get();
-      if (val.isDouble()) {
-        clone = val;
-      } else if (val.isBigInt()) {
-        if (cx->zone() == val.toBigInt()->zone()) {
-          clone.setBigInt(val.toBigInt());
-        } else {
-          RootedBigInt b(cx, val.toBigInt());
-          BigInt* copy = BigInt::copy(cx, b);
-          if (!copy) {
-            return false;
-          }
-          clone.setBigInt(copy);
-        }
+  Rooted<BigIntVector> bigints(cx);
+  if (nbigints != 0) {
+    RootedBigInt clone(cx);
+    for (const GCPtrBigInt& elem : srcData->bigints()) {
+      if (cx->zone() == elem->zone()) {
+        clone = elem;
       } else {
-        MOZ_ASSERT_UNREACHABLE("bad script consts() element");
+        RootedBigInt b(cx, elem);
+        clone = BigInt::copy(cx, b);
+        if (!clone) {
+          return false;
+        }
       }
-
-      if (!consts.append(clone)) {
+      if (!bigints.append(clone)) {
         return false;
       }
     }
@@ -4520,7 +4502,7 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
   }
 
   // Create the new PrivateScriptData on |dst| and fill it in.
-  if (!JSScript::createPrivateScriptData(cx, dst, nscopes, nconsts, nobjects,
+  if (!JSScript::createPrivateScriptData(cx, dst, nscopes, nbigints, nobjects,
                                          ntrynotes, nscopenotes,
                                          nresumeoffsets)) {
     return false;
@@ -4533,10 +4515,10 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
       array[i].init(scopes[i]);
     }
   }
-  if (nconsts) {
-    auto array = dstData->consts();
-    for (unsigned i = 0; i < nconsts; ++i) {
-      array[i].init(consts[i]);
+  if (nbigints) {
+    auto array = dstData->bigints();
+    for (unsigned i = 0; i < nbigints; ++i) {
+      array[i].init(bigints[i]);
     }
   }
   if (nobjects) {
