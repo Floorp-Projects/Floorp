@@ -157,7 +157,7 @@ static inline bool IsMarkingTrace(JSTracer* trc) {
   //
   //   1. During TraceRuntime, RuntimeHeapIsBusy() is true, but the
   //      tracer might not be a marking tracer.
-  //   2. When a write barrier executes, IsMarkingTracer is true, but
+  //   2. When a write barrier executes, isMarkingTracer is true, but
   //      RuntimeHeapIsBusy() will be false.
 
   return JS::RuntimeHeapIsCollecting() && trc->isMarkingTracer();
