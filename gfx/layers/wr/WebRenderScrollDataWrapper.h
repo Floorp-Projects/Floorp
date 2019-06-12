@@ -356,9 +356,8 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
   }
 
   bool IsAsyncZoomContainer() const {
-    // Similar to IsBackfaceHidden, this is only used by APZCTM hit testing,
-    // so there is no need to implement it.
-    return false;
+    MOZ_ASSERT(IsValid());
+    return mLayer->IsAsyncZoomContainer();
   }
 
   const void* GetLayer() const {
