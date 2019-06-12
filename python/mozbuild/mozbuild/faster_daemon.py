@@ -74,7 +74,6 @@ class Daemon(object):
         # http://searchfox.org/mozilla-central/rev/ad093e98f42338effe2e2513e26c3a311dd96422/config/faster/rules.mk#92-93
         defines.update({
             'AB_CD': 'en-US',
-            'BUILD_FASTER': '1',
         })
         return defines
 
