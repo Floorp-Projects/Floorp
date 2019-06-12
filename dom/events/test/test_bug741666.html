@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741666
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=741666">Mozilla Bug 741666</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="application/javascript">
@@ -133,15 +133,15 @@ function testPreventDefault(name) {
   });
 
   // test touchstart event fires correctly
-  var checkTouches = checkEvent(event, "touches");
+  var checkTouchesEvent = checkEvent(event, "touches");
   var checkTargetTouches = checkEvent(event, "targetTouches");
 
   /* This is the heart of the test. Verify that the touch event
      looks correct both in and outside of a setTimeout */
   window.addEventListener("touchstart", function(firedEvent) {
-    checkTouches(firedEvent, true);
+    checkTouchesEvent(firedEvent, true);
     setTimeout(function() {
-      checkTouches(firedEvent, true);
+      checkTouchesEvent(firedEvent, true);
       checkTargetTouches(firedEvent, true);
 
       event.touches = [];

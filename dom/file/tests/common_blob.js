@@ -178,14 +178,14 @@ function testSlice(file, size, type, contents, fileType, range) {
   return runNextTest()
   .then(() => {
     // Slice of slice
-    let slice = file.slice(0, 40000);
-    return testBlob(slice.slice(5000, 42000), contents.slice(5000, 40000), "file slice slice");
+    let sliceOfSlice = file.slice(0, 40000);
+    return testBlob(sliceOfSlice.slice(5000, 42000), contents.slice(5000, 40000), "file slice slice");
   })
   .then(() => {
     // ...of slice of slice
-    let slice = file.slice(0, 40000).slice(5000, 42000).slice(400, 700);
+    let sliceOfSlice = file.slice(0, 40000).slice(5000, 42000).slice(400, 700);
     SpecialPowers.gc();
-    return testBlob(slice, contents.slice(5400, 5700), "file slice slice slice");
+    return testBlob(sliceOfSlice, contents.slice(5400, 5700), "file slice slice slice");
   });
 }
 

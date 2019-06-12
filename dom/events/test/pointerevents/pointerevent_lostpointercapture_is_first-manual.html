@@ -89,8 +89,8 @@
                             var eventsRcvd_str = "";
                             if (eventRcvd) {
                                 eventsRcvd_str = "Events received before lostpointercapture: ";
-                                for (var i = 0; i < detected_pointerEvents.length; i++) {
-                                    eventsRcvd_str += detected_pointerEvents[i] + ", ";
+                                for (let j = 0; j < detected_pointerEvents.length; j++) {
+                                    eventsRcvd_str += detected_pointerEvents[j] + ", ";
                                 }
                             }
                             test_pointerEvent.step(function () {

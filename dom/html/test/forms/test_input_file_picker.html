@@ -174,8 +174,8 @@ function launchNextTest() {
           return false;
         };
       } else {
-        document.getElementById(testData[currentTest][0]).onclick = function(e) {
-          e.preventDefault();
+        document.getElementById(testData[currentTest][0]).onclick = function(event) {
+          event.preventDefault();
         };
       }
       document.getElementById(testData[currentTest][0]).click();

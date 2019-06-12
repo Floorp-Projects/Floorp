@@ -308,27 +308,27 @@ function testCreatePattern() {
     [0,   384, [0, 255, 0, 255], 1],
   ];
 
-  var canvas = document.createElement('canvas');
-  canvas.width = "512";
-  canvas.height = "512";
-  var ctx = canvas.getContext('2d');
+  var patternCanvas = document.createElement('canvas');
+  patternCanvas.width = "512";
+  patternCanvas.height = "512";
+  var patternCtx = patternCanvas.getContext('2d');
 
   var image = new Image();
   image.src = 'image_rgrg-256x256.png';
   image.onload = function() {
     var p = createImageBitmap(image);
     p.then(function(bitmap) {
-      ctx.rect(0, 0, 512, 512);
-      ctx.fillStyle = ctx.createPattern(bitmap, "repeat");
-      ctx.fill();
-      document.body.appendChild(canvas);
+      patternCtx.rect(0, 0, 512, 512);
+      patternCtx.fillStyle = patternCtx.createPattern(bitmap, "repeat");
+      patternCtx.fill();
+      document.body.appendChild(patternCanvas);
     });
     resolve(p);
   }
 
   return promise.then(function() {
     TEST_PATTERN.forEach(function(test) {
-      isPixel(ctx, test[0], test[1], test[2], test[3]);
+      isPixel(patternCtx, test[0], test[1], test[2], test[3]);
     });
   });
 }

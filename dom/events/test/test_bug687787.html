@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=687787
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var content = document.getElementById('content');
 var eventStack = [];
 
 function _callback(e){
@@ -63,7 +62,7 @@ function TestEventOrderNormal() {
     content.appendChild(input3);
     content.style.display = 'block'
 
-    expectedEventOrder = [
+    let expectedEventOrder = [
         {'type' : 'blur',
         'target' : input1,
         'relatedTarget' : input2},
@@ -149,7 +148,7 @@ function TestEventOrderNormalFiresAtRightTime() {
     content.appendChild(input2);
     content.style.display = 'block'
 
-    expectedEventOrder = [
+    let expectedEventOrder = [
         {'type' : 'blur',
         'target' : input1,
         'relatedTarget' : input2},
@@ -206,7 +205,7 @@ function TestFocusOutRedirectsFocus() {
     content.appendChild(input3);
     content.style.display = 'block'
 
-    expectedEventOrder = [
+    let expectedEventOrder = [
         {'type' : 'blur',
         'target' : input1,
         'relatedTarget' : input2},
@@ -262,7 +261,7 @@ function TestFocusInRedirectsFocus() {
     content.appendChild(input3);
     content.style.display = 'block'
 
-    expectedEventOrder = [
+    let expectedEventOrder = [
         {'type' : 'blur',
         'target' : input1,
         'relatedTarget' : input2},
@@ -330,7 +329,7 @@ function TestBlurRedirectsFocus() {
     content.appendChild(input3);
     content.style.display = 'block'
 
-    expectedEventOrder = [
+    let expectedEventOrder = [
         {'type' : 'blur',
         'target' : input1,
         'relatedTarget' : input2},
@@ -386,7 +385,7 @@ function TestFocusRedirectsFocus() {
     content.appendChild(input3);
     content.style.display = 'block'
 
-    expectedEventOrder = [
+    let expectedEventOrder = [
         {'type' : 'blur',
         'target' : input1,
         'relatedTarget' : input2},
@@ -452,7 +451,7 @@ function TestEventOrderDifferentDocument() {
     iframe1.contentDocument.addEventListener("focusout", _callback, true);
     iframe1.contentDocument.addEventListener("blur", _callback, true);
 
-    expectedEventOrder = [
+    let expectedEventOrder = [
         {'type' : 'blur',
         'target' : input1,
         'relatedTarget' : null},
@@ -523,7 +522,7 @@ function TestFocusOutMovesTarget() {
     iframe1.contentDocument.addEventListener("focusout", _callback, true);
     iframe1.contentDocument.addEventListener("blur", _callback, true);
 
-    expectedEventOrder = [
+    let expectedEventOrder = [
         {'type' : 'blur',
         'target' : input1,
         'relatedTarget' : input2},
@@ -567,7 +566,7 @@ function TestBlurWindowAndRefocusInputOnlyFiresFocusInOnInput() {
 
     content.appendChild(input1);
 
-    expectedEventOrder = [
+    let expectedEventOrder = [
         {'type' : 'focus',
         'target' : document,
         'relatedTarget' : null},
