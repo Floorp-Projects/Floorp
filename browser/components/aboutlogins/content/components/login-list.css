@@ -5,6 +5,9 @@
 :host {
   border-inline-end: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-box-background);
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
 }
 
 .meta {
@@ -28,4 +31,5 @@ ol {
   margin-top: 0;
   margin-bottom: 0;
   padding-inline-start: 0;
+  overflow: hidden auto;
 }
