@@ -9,6 +9,11 @@
 #include "AccessibleWrap.h"
 
 namespace mozilla {
+
+namespace dom {
+class BrowserBridgeChild;
+}
+
 namespace a11y {
 class DocAccessibleParent;
 
@@ -31,6 +36,16 @@ class OuterDocAccessible final : public AccessibleWrap {
 #if defined(XP_WIN)
   Accessible* RemoteChildDocAccessible() const;
 #endif
+
+  /**
+   * For iframes in a content process which will be rendered in another content
+   * process, tell the parent process about this OuterDocAccessible
+   * so it can link the trees together when the embedded document is added.
+   * Note that an OuterDocAccessible can be created before the
+   * BrowserBridgeChild or vice versa. Therefore, this must be conditionally
+   * called when either of these is created.
+   */
+  void SendEmbedderAccessible(dom::BrowserBridgeChild* aBridge);
 
   // Accessible
   virtual void Shutdown() override;
