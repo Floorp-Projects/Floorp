@@ -103,8 +103,7 @@ class ChromePowers extends SpecialPowersAPI {
 if (window.parent.SpecialPowers && !window.SpecialPowers) {
   window.SpecialPowers = window.parent.SpecialPowers;
 } else {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-  Services.scriptloader.loadSubScript("resource://specialpowers/SpecialPowersObserverAPI.js", this);
+  ChromeUtils.import("resource://specialpowers/SpecialPowersObserverAPI.jsm", this);
 
   window.SpecialPowers = new ChromePowers(window);
 }
