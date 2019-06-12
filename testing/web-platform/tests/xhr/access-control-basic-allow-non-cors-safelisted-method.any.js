@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Tests cross-origin request with non-CORS-safelisted method</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <script src="/common/get-host-info.sub.js"></script>
-  </head>
-  <body>
-    <script type="text/javascript">
+// META: title=Tests cross-origin request with non-CORS-safelisted method
+// META: script=/common/get-host-info.sub.js
+
     test(function() {
       const xhr = new XMLHttpRequest;
 
@@ -19,6 +12,3 @@
 
       assert_equals(xhr.responseText, "PASS: Cross-domain access allowed.\nPASS: PUT data received");
     }, "Allow PUT request");
-    </script>
-  </body>
-</html>

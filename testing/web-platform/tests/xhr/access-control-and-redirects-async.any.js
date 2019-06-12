@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Tests that asynchronous XMLHttpRequests handle redirects according to the CORS standard.</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <script src="/common/get-host-info.sub.js"></script>
-  </head>
-  <body>
-    <script>
+// META: title=Tests that asynchronous XMLHttpRequests handle redirects according to the CORS standard.
+// META: script=/common/get-host-info.sub.js
+
     function runTest(test, destination, parameters, customHeader, local, expectSuccess) {
       const xhr = new XMLHttpRequest();
       const url = (local ? get_host_info().HTTP_ORIGIN : get_host_info().HTTP_REMOTE_ORIGIN) +
@@ -84,6 +77,3 @@
       runTest(t, get_host_info().HTTP_ORIGIN + "/xhr/resources/pass.txt",
           "", withCustomHeader, local, succeeds)
     }, "Request is redirected to a same-origin resource file");
-    </script>
-  </body>
-</html>

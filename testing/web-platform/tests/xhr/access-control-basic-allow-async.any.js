@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Testing a basic asynchronous CORS XHR request</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <script src="/common/get-host-info.sub.js"></script>
-  </head>
-  <body>
-    <script type="text/javascript">
+// META: title=Testing a basic asynchronous CORS XHR request.
+// META: script=/common/get-host-info.sub.js
+
     async_test(function(test) {
       const xhr = new XMLHttpRequest;
 
@@ -24,6 +17,3 @@
           "/xhr/resources/access-control-basic-allow.py", true);
       xhr.send();
     }, "Basic async cross-origin XHR request");
-    </script>
-  </body>
-</html>

@@ -1,12 +1,6 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <script src="/common/get-host-info.sub.js"></script>
-  </head>
-  <body>
-    <script type="text/javascript">
+// META: title=Access control test with origin header
+// META: script=/common/get-host-info.sub.js
+
     async_test(function(test) {
       const xhr = new XMLHttpRequest;
 
@@ -17,6 +11,3 @@
           "HTTP_ORIGIN: " + get_host_info().HTTP_ORIGIN);
       test.done();
     }, "Access control test with origin header");
-    </script>
-  </body>
-</html>

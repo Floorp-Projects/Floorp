@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Preflight cache should be invalidated on timeout</title>
-    <meta name="timeout" content="long">
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <script src="/common/get-host-info.sub.js"></script>
-    <script src="/common/utils.js"></script>
-  </head>
-  <body>
-    <script type="text/javascript">
+// META: title=Preflight cache should be invalidated on timeout
+// META: timeout=long
+// META: script=/common/get-host-info.sub.js
+// META: script=/common/utils.js
+
     const uuid = token();
     let xhr = new XMLHttpRequest;
 
@@ -42,6 +35,3 @@
         xhr.send();
       }
     }, "Preflight cache should be invalidated on timeout");
-    </script>
-  </body>
-</html>
