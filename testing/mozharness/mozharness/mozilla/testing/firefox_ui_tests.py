@@ -272,8 +272,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
         if self.config['enable_webrender']:
             env['MOZ_WEBRENDER'] = '1'
             env['MOZ_ACCELERATED'] = '1'
-        else:
-            env['MOZ_WEBRENDER'] = '0'
 
         return_code = self.run_command(cmd,
                                        cwd=dirs['abs_fxui_dir'],

@@ -178,12 +178,6 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             env.update({'MINIDUMP_STACKWALK': self.minidump_stackwalk_path})
         env['RUST_BACKTRACE'] = '1'
 
-        if self.config['enable_webrender']:
-            env['MOZ_WEBRENDER'] = '1'
-            env['MOZ_ACCELERATED'] = '1'
-        else:
-            env['MOZ_WEBRENDER'] = '0'
-
         # If code coverage is enabled, set GCOV_PREFIX env variable
         if self.config.get('code_coverage'):
             env['GCOV_PREFIX'] = self.gcov_dir
