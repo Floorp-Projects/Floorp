@@ -1,3 +1,4 @@
+
 # Basic unit tests for jsval pretty-printer.
 # flake8: noqa: F821
 
@@ -6,7 +7,7 @@ assert_subprinter_registered('SpiderMonkey', 'JS::Value')
 run_fragment('jsval.simple')
 
 assert_pretty('fortytwo', '$JS::Int32Value(42)')
-assert_pretty('fortytwoD', '$JS::DoubleValue(42)')
+assert_pretty('fortytwoD', '$JS::DoubleValue(42.0)')
 assert_pretty('negone', '$JS::Int32Value(-1)')
 assert_pretty('undefined', '$JS::UndefinedValue()')
 assert_pretty('null', '$JS::NullValue()')
