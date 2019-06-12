@@ -8,6 +8,7 @@
 #include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/PWindowGlobal.h"
+#include "mozilla/dom/Promise.h"
 
 namespace mozilla {
 namespace dom {
@@ -35,10 +36,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(JSWindowActor)
 
 JSWindowActor::JSWindowActor() : mNextQueryId(0) {}
 
-nsIGlobalObject* JSWindowActor::GetParentObject() const {
-  return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
-}
-
 void JSWindowActor::StartDestroy() {
   DestroyCallback(DestroyCallbackFunction::WillDestroy);
 }
@@ -48,7 +45,7 @@ void JSWindowActor::AfterDestroy() {
 }
 
 void JSWindowActor::DestroyCallback(DestroyCallbackFunction callback) {
-  AutoEntryScript aes(xpc::PrivilegedJunkScope(),
+  AutoEntryScript aes(GetParentObject(),
                       "JSWindowActor destroy callback");
   JSContext* cx = aes.cx();
   MozActorDestroyCallbacks callbacksHolder;
@@ -140,7 +137,7 @@ already_AddRefed<Promise> JSWindowActor::SendQuery(
 
 void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
                                       ipc::StructuredCloneData&& aData) {
-  AutoEntryScript aes(xpc::PrivilegedJunkScope(),
+  AutoEntryScript aes(GetParentObject(),
                       "JSWindowActor message handler");
   JSContext* cx = aes.cx();
 
@@ -235,8 +232,15 @@ void JSWindowActor::ReceiveQueryReply(JSContext* aCx,
     return;
   }
 
+  JSAutoRealm ar(aCx, promise->PromiseObj());
+  JS::RootedValue data(aCx, aData);
+  if (NS_WARN_IF(!JS_WrapValue(aCx, &data))) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
   if (aMetadata.kind() == JSWindowActorMessageKind::QueryResolve) {
-    promise->MaybeResolve(aCx, aData);
+    promise->MaybeResolve(aCx, data);
   } else {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
   }
