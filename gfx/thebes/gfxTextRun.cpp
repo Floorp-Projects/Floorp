@@ -864,7 +864,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
     gfxFloat* aTrimWhitespace, bool aWhitespaceCanHang, Metrics* aMetrics,
     gfxFont::BoundingBoxType aBoundingBoxType, DrawTarget* aRefDrawTarget,
     bool* aUsedHyphenation, uint32_t* aLastBreak, bool aCanWordWrap,
-    gfxBreakPriority* aBreakPriority) {
+    bool aCanWhitespaceWrap, gfxBreakPriority* aBreakPriority) {
   aMaxLength = std::min(aMaxLength, GetLength() - aStart);
 
   NS_ASSERTION(aStart + aMaxLength <= GetLength(), "Substring out of range");
@@ -984,7 +984,16 @@ uint32_t gfxTextRun::BreakAndMeasureText(
                           mCharacterGlyphs[i].IsClusterStart() &&
                           *aBreakPriority <= gfxBreakPriority::eWordWrapBreak;
 
-      if (atBreak || wordWrapping) {
+      bool whitespaceWrapping = false;
+      if (i > aStart) {
+        // The spec says the breaking opportunity is *after* whitespace.
+        auto const& g = mCharacterGlyphs[i - 1];
+        whitespaceWrapping =
+            aCanWhitespaceWrap &&
+            (g.CharIsSpace() || g.CharIsTab() || g.CharIsNewline());
+      }
+
+      if (atBreak || wordWrapping || whitespaceWrapping) {
         gfxFloat hyphenatedAdvance = advance;
         if (atHyphenationBreak) {
           hyphenatedAdvance += aProvider->GetHyphenWidth();
@@ -997,8 +1006,9 @@ uint32_t gfxTextRun::BreakAndMeasureText(
           lastBreakTrimmableChars = trimmableChars;
           lastBreakTrimmableAdvance = trimmableAdvance;
           lastBreakUsedHyphenation = atHyphenationBreak;
-          *aBreakPriority = atBreak ? gfxBreakPriority::eNormalBreak
-                                    : gfxBreakPriority::eWordWrapBreak;
+          *aBreakPriority = (atBreak || whitespaceWrapping)
+                                ? gfxBreakPriority::eNormalBreak
+                                : gfxBreakPriority::eWordWrapBreak;
         }
 
         width += advance;

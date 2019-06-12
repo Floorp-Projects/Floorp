@@ -444,7 +444,7 @@ class gfxTextRun : public gfxShapedText {
                                gfxFont::BoundingBoxType aBoundingBoxType,
                                DrawTarget* aDrawTargetForTightBoundingBox,
                                bool* aUsedHyphenation, uint32_t* aLastBreak,
-                               bool aCanWordWrap,
+                               bool aCanWordWrap, bool aCanWhitespaceWrap,
                                gfxBreakPriority* aBreakPriority);
 
   // Utility getters
