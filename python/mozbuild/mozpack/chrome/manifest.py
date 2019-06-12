@@ -364,4 +364,5 @@ def is_manifest(path):
     Return whether the given path is that of a manifest file.
     '''
     return path.endswith('.manifest') and not path.endswith('.CRT.manifest') \
-        and not path.endswith('.exe.manifest')
+        and not path.endswith('.exe.manifest') \
+        and os.path.basename(path) != "cose.manifest"
