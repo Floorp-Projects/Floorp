@@ -16,7 +16,7 @@ interface nsIWifiListener : nsISupports
    *                     access points in view.
    */
 
-  void onChange([array, size_is(aLen)] in nsIWifiAccessPoint accessPoints, in unsigned long aLen);
+  void onChange(in Array<nsIWifiAccessPoint> accessPoints);
 
   /*
    * Called when there is a problem with listening to wifi

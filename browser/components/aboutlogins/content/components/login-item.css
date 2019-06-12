@@ -8,6 +8,8 @@
   padding-right: 40px;
 }
 
+:host([editing]) .edit-button,
+:host([isNewLogin]) .delete-button,
 :host([isNewLogin]) .origin-saved-value,
 :host([isNewLogin]) copy-to-clipboard-button,
 :host([isNewLogin]) .open-site-button,

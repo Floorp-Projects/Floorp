@@ -300,7 +300,8 @@ class SyncedBookmarksMirror {
     this.finalizeAt = finalizeAt;
     this.finalizeBound = () => this.finalize();
     this.finalizeAt.addBlocker("SyncedBookmarksMirror: finalize",
-                               this.finalizeBound, this.progress);
+                               this.finalizeBound,
+                               ({ fetchState: () => this.progress }));
   }
 
   /**

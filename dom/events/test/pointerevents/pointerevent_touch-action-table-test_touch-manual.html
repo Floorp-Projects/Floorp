@@ -116,22 +116,22 @@
                 });
             }
 
-            function updateDescriptionSecondStepTable(target, scrollReturnInterval, element) {
+            function updateDescriptionSecondStepTable(target, returnInterval, element) {
                 window.setTimeout(function() {
                     objectScroller(target, 'up', 0);
                 }
-                , scrollReturnInterval);
+                , returnInterval);
                 document.getElementById('desc').innerHTML = "Test Description: Try to scroll element RIGHT staring your touch over the Row 1";
             }
 
-            function updateDescriptionThirdStepTable(target, scrollReturnInterval, callback = null) {
+            function updateDescriptionThirdStepTable(target, returnInterval, callback = null) {
                 window.setTimeout(function() {
                     objectScroller(target, 'left', 0);
                     if (callback) {
                         callback();
                     }
                 }
-                , scrollReturnInterval);
+                , returnInterval);
                 document.getElementById('desc').innerHTML = "Test Description: Try to scroll element DOWN then RIGHT starting your touch inside of the Cell 3";
             }
 

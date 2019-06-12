@@ -122,9 +122,9 @@ function requestFullscreenMouseBtn(event, button) {
   let clickEl = document.createElement("p");
   clickEl.innerText = "Click Me";
 
-  function eventHandler(event) {
+  function eventHandler(evt) {
     document.body.requestFullscreen();
-    event.target.removeEventListener(event, this);
+    evt.target.removeEventListener(evt, this);
   }
 
   clickEl.addEventListener(event, eventHandler);
@@ -140,13 +140,13 @@ async function testFullscreenMouseBtn(event, button, next) {
   let mouseButtons = [1, 2];
 
   for (let i = 0; i < fsRequestEvents.length; i++) {
-    let event = fsRequestEvents[i];
+    let evt = fsRequestEvents[i];
     for (let j = 0; j < mouseButtons.length; j++) {
       let mouseButton = mouseButtons[j];
       let fsDenied = addFullscreenErrorContinuation();
-      requestFullscreenMouseBtn(event, mouseButton);
+      requestFullscreenMouseBtn(evt, mouseButton);
       await fsDenied;
-      ok(!document.fullscreenElement, `Should not grant request on '${event}' triggered by mouse button ${mouseButton}`);
+      ok(!document.fullscreenElement, `Should not grant request on '${evt}' triggered by mouse button ${mouseButton}`);
     }
   }
   // Restore the pref environment we changed before

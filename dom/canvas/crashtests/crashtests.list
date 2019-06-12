@@ -16,7 +16,7 @@ skip-if(Android) load 780392-1.html
 skip-if(Android) skip-if(gtkWidget&&isDebugBuild) load 789933-1.html # bug 1155252 for linux
 load 794463-1.html
 load 802926-1.html
-skip-if(winWidget&&isDebugBuild&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 844280.html # intermittent OOMs on Win7 debug
+skip-if(winWidget&&isDebugBuild&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(OSX&&webrender) load 844280.html # intermittent OOMs on Win7 debug
 load 896047-1.html
 load 916128-1.html
 load 934939-1.html

@@ -48,7 +48,7 @@ function PixelShouldBe(gl, x, y, ref, prefix) {
   var test = GetPixel(gl, x, y);
 
   var testStr = ColorStr(test);
-  var refStr = ColorStr(ref.map(x => x * 255));
+  var refStr = ColorStr(ref.map(value => value * 255));
   ok(testStr == refStr, prefix + 'Should be ' + refStr + ', was ' + testStr + '.');
 }
 

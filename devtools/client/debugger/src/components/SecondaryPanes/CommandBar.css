@@ -15,10 +15,6 @@ html[dir="rtl"] .command-bar {
   border-right: 1px solid var(--theme-splitter-color);
 }
 
-.theme-dark .command-bar {
-  background-color: var(--theme-toolbar-background);
-}
-
 .command-bar .filler {
   flex-grow: 1;
 }
@@ -41,23 +37,21 @@ html[dir="rtl"] .command-bar {
   background-color: var(--theme-icon-checked-color);
 }
 
-.bottom {
+.command-bar-bottom {
+  flex: none;
+  justify-content: flex-end;
   border-bottom: none;
   background-color: var(--theme-body-background);
   border-top: 1px solid var(--theme-splitter-color);
-  flex: none;
   height: var(--editor-footer-height);
 }
 
-.command-bar.bottom {
-  justify-content: flex-end;
-}
-
-.command-bar.bottom > button {
+.command-bar-bottom > button {
   color: var(--theme-comment);
   width: 26px;
 }
-.command-bar.bottom > button:hover {
+
+.command-bar-bottom > button:hover {
   color: var(--theme-body-color);
 }
 

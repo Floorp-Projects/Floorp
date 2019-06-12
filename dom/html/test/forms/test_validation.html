@@ -35,11 +35,11 @@ var gInvalid = false;
 
 function invalidEventHandler(aEvent)
 {
-  function checkInvalidEvent(aEvent)
+  function checkInvalidEvent(event)
   {
-    is(aEvent.type, "invalid", "Invalid event type should be invalid");
-    ok(!aEvent.bubbles, "Invalid event should not bubble");
-    ok(aEvent.cancelable, "Invalid event should be cancelable");
+    is(event.type, "invalid", "Invalid event type should be invalid");
+    ok(!event.bubbles, "Invalid event should not bubble");
+    ok(event.cancelable, "Invalid event should be cancelable");
   }
 
   checkInvalidEvent(aEvent);

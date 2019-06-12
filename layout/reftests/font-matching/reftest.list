@@ -97,8 +97,8 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == font-shorthand-stretch-1
 
 # bug 724231 - applying synthetic styles to a single @font-face font
 # should apply artificial obliquing, not switch to a true styled face
-!= synthetic-style-1.html synthetic-style-1-notref.html
-!= synthetic-style-2.html synthetic-style-2-notref.html
+fails-if(geckoview) != synthetic-style-1.html synthetic-style-1-notref.html # Bug 1558513 for GV
+fails-if(geckoview) != synthetic-style-2.html synthetic-style-2-notref.html # Bug 1558513 for GV
 
 # Bug 765906 - synthetic bold should be used if necessary together with system fallback.
 # **NOTE** we skip these on Linux because of bug 769659.
@@ -135,9 +135,9 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != italic-oblique-kinnari.h
 
 # GTK and Windows 7 don't have full emoji and symbol font, so emoji-fallback-2
 # don't work well.
-== emoji-fallback-1.html emoji-fallback-1-ref.html
+fails-if(geckoview) == emoji-fallback-1.html emoji-fallback-1-ref.html # Bug 1558513 for GV
 skip-if(gtkWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == emoji-fallback-2.html emoji-fallback-2-ref.html
-== emoji-fallback-3.html emoji-fallback-3-ref.html
+fails-if(geckoview) == emoji-fallback-3.html emoji-fallback-3-ref.html # Bug 1558513 for GV
 
 # system font generic per-language tests, only works under OSX currently
 # Bug 1212731 - initial implementation caused startup regression and

@@ -1937,12 +1937,20 @@ void nsGlobalWindowInner::FireFrameLoadEvent(bool aIsTrusted) {
     event.mFlags.mBubbles = false;
     event.mFlags.mCancelable = false;
 
-    // Most of the time we could get a pres context to pass in here,
-    // but not always (i.e. if this window is not shown there won't
-    // be a pres context available). Since we're not firing a GUI
-    // event we don't need a pres context anyway so we just pass
-    // null as the pres context all the time here.
-    EventDispatcher::Dispatch(element, nullptr, &event, nullptr, &status);
+    if (mozilla::dom::DocGroup::TryToLoadIframesInBackground()) {
+      nsDocShell* ds = nsDocShell::Cast(GetDocShell());
+
+      if (ds && !ds->HasFakeOnLoadDispatched()) {
+        EventDispatcher::Dispatch(element, nullptr, &event, nullptr, &status);
+      }
+    } else {
+      // Most of the time we could get a pres context to pass in here,
+      // but not always (i.e. if this window is not shown there won't
+      // be a pres context available). Since we're not firing a GUI
+      // event we don't need a pres context anyway so we just pass
+      // null as the pres context all the time here.
+      EventDispatcher::Dispatch(element, nullptr, &event, nullptr, &status);
+    }
     return;
   }
 

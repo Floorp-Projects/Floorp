@@ -348,12 +348,12 @@ function test_readAsTextTwice(blob, text) {
     }
 
     let anotherListener = event => {
-      let r = event.target;
-      r.removeEventListener("load", anotherListener);
-      r.onload = event => {
-        loadEventHandler_string(event, resolve, r, text, text.length, "readAsText-reused-twice");
+      let r1 = event.target;
+      r1.removeEventListener("load", anotherListener);
+      r1.onload = evt => {
+        loadEventHandler_string(evt, resolve, r1, text, text.length, "readAsText-reused-twice");
       }
-      r.readAsText(blob);
+      r1.readAsText(blob);
     };
 
     r.addEventListener("load", anotherListener);
@@ -370,12 +370,12 @@ function test_readAsBinaryStringTwice(blob, text) {
     }
 
     let anotherListener = event => {
-      let r = event.target;
-      r.removeEventListener("load", anotherListener);
-      r.onload = event => {
-        loadEventHandler_string(event, resolve, r, text, text.length, "readAsBinaryString-reused-twice");
+      let r1 = event.target;
+      r1.removeEventListener("load", anotherListener);
+      r1.onload = evt => {
+        loadEventHandler_string(evt, resolve, r1, text, text.length, "readAsBinaryString-reused-twice");
       }
-      r.readAsBinaryString(blob);
+      r1.readAsBinaryString(blob);
     };
 
     r.addEventListener("load", anotherListener);
@@ -391,12 +391,12 @@ function test_readAsDataURLTwice(blob, text, length) {
     }
 
     let anotherListener = event => {
-      let r = event.target;
-      r.removeEventListener("load", anotherListener);
-      r.onload = event => {
-        loadEventHandler_string(event, resolve, r, text, length, "readAsDataURL-reused-twice");
+      let r1 = event.target;
+      r1.removeEventListener("load", anotherListener);
+      r1.onload = evt => {
+        loadEventHandler_string(evt, resolve, r1, text, length, "readAsDataURL-reused-twice");
       }
-      r.readAsDataURL(blob);
+      r1.readAsDataURL(blob);
     };
 
     r.addEventListener("load", anotherListener);
@@ -412,12 +412,12 @@ function test_readAsArrayBufferTwice(blob, text) {
     }
 
     let anotherListener = event => {
-      let r = event.target;
-      r.removeEventListener("load", anotherListener);
-      r.onload = event => {
-        loadEventHandler_arrayBuffer(event, resolve, r, text, "readAsArrayBuffer-reused-twice");
+      let r1 = event.target;
+      r1.removeEventListener("load", anotherListener);
+      r1.onload = evt => {
+        loadEventHandler_arrayBuffer(evt, resolve, r1, text, "readAsArrayBuffer-reused-twice");
       }
-      r.readAsArrayBuffer(blob);
+      r1.readAsArrayBuffer(blob);
     };
 
     r.addEventListener("load", anotherListener);
@@ -435,12 +435,12 @@ function test_readAsArrayBufferTwice2(blob, text) {
     }
 
     let anotherListener = event => {
-      let r = event.target;
-      r.removeEventListener("load", anotherListener);
-      r.onload = event => {
-        loadEventHandler_string(event, resolve, r, text, text.length, "readAsArrayBuffer-reused-twice2");
+      let r1 = event.target;
+      r1.removeEventListener("load", anotherListener);
+      r1.onload = evt => {
+        loadEventHandler_string(evt, resolve, r1, text, text.length, "readAsArrayBuffer-reused-twice2");
       }
-      r.readAsBinaryString(blob);
+      r1.readAsBinaryString(blob);
     };
 
     r.addEventListener("load", anotherListener);

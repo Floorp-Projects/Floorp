@@ -359,6 +359,16 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   struct FrameConstructionItem;
   class FrameConstructionItemList;
 
+  // Set the root element frame, and create frames for anonymous content if
+  // there is a canvas frame.
+  //
+  // It's important to do this _before_ constructing the children of the root
+  // element, because XUL popups depend on the anonymous root popupgroup being
+  // constructed already.
+  void SetRootElementFrameAndConstructCanvasAnonContent(
+      nsContainerFrame* aRootElementFrame, nsFrameConstructorState&,
+      nsFrameList&);
+
   nsContainerFrame* ConstructPageFrame(PresShell* aPresShell,
                                        nsContainerFrame* aParentFrame,
                                        nsIFrame* aPrevPageFrame,
@@ -2100,10 +2110,10 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   void QuotesDirty();
   void CountersDirty();
 
-  // Create touch caret frame.
   void ConstructAnonymousContentForCanvas(nsFrameConstructorState& aState,
                                           nsIFrame* aFrame,
-                                          nsIContent* aDocElement);
+                                          nsIContent* aDocElement,
+                                          nsFrameList&);
 
  public:
   friend class nsFrameConstructorState;

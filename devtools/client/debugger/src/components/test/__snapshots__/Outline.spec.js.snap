@@ -54,7 +54,7 @@ exports[`Outline renders a list of functions when properties change 1`] = `
       </li>
     </ul>
     <div
-      className="outline-footer bottom"
+      className="outline-footer"
     >
       <button
         className=""
@@ -181,7 +181,7 @@ exports[`Outline renders outline renders functions by function class 1`] = `
       </li>
     </ul>
     <div
-      className="outline-footer bottom"
+      className="outline-footer"
     >
       <button
         className=""
@@ -308,7 +308,7 @@ exports[`Outline renders outline renders functions by function class, alphabetic
       </li>
     </ul>
     <div
-      className="outline-footer bottom"
+      className="outline-footer"
     >
       <button
         className="active"
@@ -355,7 +355,7 @@ exports[`Outline renders outline renders ignore anonymous functions 1`] = `
       </li>
     </ul>
     <div
-      className="outline-footer bottom"
+      className="outline-footer"
     >
       <button
         className=""
@@ -482,7 +482,7 @@ exports[`Outline renders outline sorts functions alphabetically by function name
       </li>
     </ul>
     <div
-      className="outline-footer bottom"
+      className="outline-footer"
     >
       <button
         className="active"

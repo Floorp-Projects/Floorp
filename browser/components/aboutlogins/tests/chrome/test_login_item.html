@@ -7,6 +7,7 @@ Test the login-item component
   <meta charset="utf-8">
   <title>Test the login-item component</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="module" src="login-item.js"></script>
   <script type="module" src="modal-input.js"></script>
   <script src="aboutlogins_common.js"></script>
@@ -95,9 +96,12 @@ add_task(async function test_edit_login() {
   await asyncElementRendered();
 
   ok(gLoginItem.hasAttribute("editing"), "loginItem should be in 'edit' mode");
+  ok(isHidden(gLoginItem.shadowRoot.querySelector(".edit-button")), "edit button should be hidden in 'edit' mode");
   ok(!gLoginItem.hasAttribute("isNewLogin"), "loginItem should not be in 'isNewLogin' mode");
   let savedOrigin = gLoginItem.shadowRoot.querySelector(".origin-saved-value");
   is(getComputedStyle(savedOrigin).display, "inline", ".origin-saved-value should be visible for editing existing logins");
+  let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
+  ok(!deleteButton.disabled, "Delete button should be enabled when editing a login");
   let originInput = gLoginItem.shadowRoot.querySelector("input[name='origin']");
   is(getComputedStyle(originInput).display, "none", "input[name='origin'] should be hidden for editing existing logins");
   is(savedOrigin.textContent, TEST_LOGIN_1.origin, "origin should be populated");
@@ -157,10 +161,13 @@ add_task(async function test_set_login_empty() {
   await asyncElementRendered();
 
   ok(gLoginItem.hasAttribute("editing"), "loginItem should be in 'edit' mode");
+  ok(isHidden(gLoginItem.shadowRoot.querySelector(".edit-button")), "edit button should be hidden in 'edit' mode");
   ok(gLoginItem.hasAttribute("isNewLogin"), "loginItem should be in 'isNewLogin' mode");
   let savedOrigin = gLoginItem.shadowRoot.querySelector(".origin-saved-value");
   is(getComputedStyle(savedOrigin).display, "none", ".origin-saved-value should be hidden for new logins");
   let originInput = gLoginItem.shadowRoot.querySelector("input[name='origin']");
+  let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
+  ok(deleteButton.disabled, "Delete button should be disabled when creating a login");
   is(getComputedStyle(originInput).display, "inline-block", "input[name='origin'] should be visible for new logins");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value, "", "username should be empty");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value, "", "password should be empty");

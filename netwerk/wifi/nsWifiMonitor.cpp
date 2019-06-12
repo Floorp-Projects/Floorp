@@ -104,7 +104,7 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener* aListener) {
   return NS_OK;
 }
 
-typedef nsTArray<nsMainThreadPtrHandle<nsIWifiListener> > WifiListenerArray;
+typedef nsTArray<nsMainThreadPtrHandle<nsIWifiListener>> WifiListenerArray;
 
 class nsPassErrorToWifiListeners final : public nsIRunnable {
  public:
@@ -172,23 +172,23 @@ class nsCallWifiListeners final : public nsIRunnable {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
-  nsCallWifiListeners(nsAutoPtr<WifiListenerArray> aListeners,
-                      nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > aAccessPoints)
-      : mListeners(aListeners), mAccessPoints(aAccessPoints) {}
+  nsCallWifiListeners(WifiListenerArray&& aListeners,
+                      nsTArray<RefPtr<nsIWifiAccessPoint>>&& aAccessPoints)
+      : mListeners(std::move(aListeners)),
+        mAccessPoints(std::move(aAccessPoints)) {}
 
  private:
   ~nsCallWifiListeners() = default;
-  nsAutoPtr<WifiListenerArray> mListeners;
-  nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > mAccessPoints;
+  const WifiListenerArray mListeners;
+  const nsTArray<RefPtr<nsIWifiAccessPoint>> mAccessPoints;
 };
 
 NS_IMPL_ISUPPORTS(nsCallWifiListeners, nsIRunnable)
 
 NS_IMETHODIMP nsCallWifiListeners::Run() {
   LOG(("About to send data to the wifi listeners\n"));
-  for (size_t i = 0; i < mListeners->Length(); i++) {
-    (*mListeners)[i]->OnChange(mAccessPoints->Elements(),
-                               mAccessPoints->Length());
+  for (auto& listener : mListeners) {
+    listener->OnChange(mAccessPoints);
   }
   return NS_OK;
 }
@@ -196,34 +196,33 @@ NS_IMETHODIMP nsCallWifiListeners::Run() {
 nsresult nsWifiMonitor::CallWifiListeners(
     const nsCOMArray<nsWifiAccessPoint>& aAccessPoints,
     bool aAccessPointsChanged) {
-  nsAutoPtr<WifiListenerArray> currentListeners;
+  WifiListenerArray currentListeners;
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-    currentListeners = new WifiListenerArray(mListeners.Length());
+    currentListeners.SetCapacity(mListeners.Length());
 
-    for (uint32_t i = 0; i < mListeners.Length(); i++) {
-      if (!mListeners[i].mHasSentData || aAccessPointsChanged) {
-        mListeners[i].mHasSentData = true;
-        currentListeners->AppendElement(mListeners[i].mListener);
+    for (auto& listener : mListeners) {
+      if (!listener.mHasSentData || aAccessPointsChanged) {
+        listener.mHasSentData = true;
+        currentListeners.AppendElement(listener.mListener);
       }
     }
   }
 
-  if (currentListeners->Length() > 0) {
+  if (!currentListeners.IsEmpty()) {
     uint32_t resultCount = aAccessPoints.Count();
-    nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > accessPoints(
-        new nsTArray<nsIWifiAccessPoint*>(resultCount));
-    if (!accessPoints) return NS_ERROR_OUT_OF_MEMORY;
+    nsTArray<RefPtr<nsIWifiAccessPoint>> accessPoints(resultCount);
 
-    for (uint32_t i = 0; i < resultCount; i++)
-      accessPoints->AppendElement(aAccessPoints[i]);
+    for (uint32_t i = 0; i < resultCount; i++) {
+      accessPoints.AppendElement(aAccessPoints[i]);
+    }
 
     nsCOMPtr<nsIThread> thread = do_GetMainThread();
     if (!thread) return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIRunnable> runnable(
-        new nsCallWifiListeners(currentListeners, accessPoints));
+    nsCOMPtr<nsIRunnable> runnable(new nsCallWifiListeners(
+        std::move(currentListeners), std::move(accessPoints)));
     if (!runnable) return NS_ERROR_OUT_OF_MEMORY;
 
     thread->Dispatch(runnable, NS_DISPATCH_SYNC);

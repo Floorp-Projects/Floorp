@@ -44,6 +44,10 @@ add_task(async function testAskToActivate() {
   let flash = plugins.find(
     plugin => plugin.description == TEST_PLUGIN_DESCRIPTION);
   let addonId = flash.id;
+
+  // Reset to default value.
+  flash.userDisabled = AddonManager.STATE_ASK_TO_ACTIVATE;
+
   let win = await loadInitialView("plugin");
   let doc = win.document;
 
