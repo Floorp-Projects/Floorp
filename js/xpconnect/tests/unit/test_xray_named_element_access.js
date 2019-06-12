@@ -9,7 +9,7 @@ add_task(async function() {
 
   let docShell = webnav.docShell;
 
-  docShell.createAboutBlankContentViewer(null);
+  docShell.createAboutBlankContentViewer(null, null);
 
   let window = webnav.document.defaultView;
   let unwrapped = Cu.waiveXrays(window);

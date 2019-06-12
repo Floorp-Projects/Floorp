@@ -55,7 +55,7 @@ function createFakeAddonWindow({addonId} = {}) {
         .createCodebasePrincipal(baseURI, {});
   const chromeWebNav = Services.appShell.createWindowlessBrowser(true);
   const { docShell } = chromeWebNav;
-  docShell.createAboutBlankContentViewer(principal);
+  docShell.createAboutBlankContentViewer(principal, principal);
   const addonWindow = docShell.contentViewer.DOMDocument.defaultView;
 
   return {addonWindow, chromeWebNav};
