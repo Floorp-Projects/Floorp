@@ -130,7 +130,7 @@ class BasicBPFTesterDelegate : public BPFTesterDelegate {
 
 // This is the most powerful and complex way to create a BPF test, but it
 // requires a full class definition (BasicBPFTesterDelegate).
-BPF_TEST_D(BPFTest, BPFTestWithDelegateClass, BasicBPFTesterDelegate);
+BPF_TEST_D(BPFTest, BPFTestWithDelegateClass, BasicBPFTesterDelegate)
 
 // This is the simplest form of BPF tests.
 BPF_TEST_C(BPFTest, BPFTestWithInlineTest, EnosysPtracePolicy) {

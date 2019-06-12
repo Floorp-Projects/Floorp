@@ -33,13 +33,12 @@ SyncDispatcher::SyncDispatcher(PolicyBase* policy_base)
   ipc_calls_.push_back(open_params);
 }
 
-bool SyncDispatcher::SetupService(InterceptionManager* manager,
-                                  int service) {
+bool SyncDispatcher::SetupService(InterceptionManager* manager, int service) {
   if (service == IPC_CREATEEVENT_TAG) {
     return INTERCEPT_NT(manager, NtCreateEvent, CREATE_EVENT_ID, 24);
   }
   return (service == IPC_OPENEVENT_TAG) &&
-      INTERCEPT_NT(manager, NtOpenEvent, OPEN_EVENT_ID, 16);
+         INTERCEPT_NT(manager, NtOpenEvent, OPEN_EVENT_ID, 16);
 }
 
 bool SyncDispatcher::CreateEvent(IPCInfo* ipc,
@@ -50,9 +49,9 @@ bool SyncDispatcher::CreateEvent(IPCInfo* ipc,
   CountedParameterSet<NameBased> params;
   params[NameBased::NAME] = ParamPickerMake(event_name);
 
-  EvalResult result = policy_base_->EvalPolicy(IPC_CREATEEVENT_TAG,
-                                               params.GetBase());
-  HANDLE handle = NULL;
+  EvalResult result =
+      policy_base_->EvalPolicy(IPC_CREATEEVENT_TAG, params.GetBase());
+  HANDLE handle = nullptr;
   // Return operation status on the IPC.
   ipc->return_info.nt_status = SyncPolicy::CreateEventAction(
       result, *ipc->client_info, *name, event_type, initial_state, &handle);
@@ -69,9 +68,9 @@ bool SyncDispatcher::OpenEvent(IPCInfo* ipc,
   params[OpenEventParams::NAME] = ParamPickerMake(event_name);
   params[OpenEventParams::ACCESS] = ParamPickerMake(desired_access);
 
-  EvalResult result = policy_base_->EvalPolicy(IPC_OPENEVENT_TAG,
-                                               params.GetBase());
-  HANDLE handle = NULL;
+  EvalResult result =
+      policy_base_->EvalPolicy(IPC_OPENEVENT_TAG, params.GetBase());
+  HANDLE handle = nullptr;
   // Return operation status on the IPC.
   ipc->return_info.nt_status = SyncPolicy::OpenEventAction(
       result, *ipc->client_info, *name, desired_access, &handle);

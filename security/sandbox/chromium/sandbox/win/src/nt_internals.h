@@ -8,6 +8,7 @@
 #define SANDBOX_WIN_SRC_NT_INTERNALS_H__
 
 #include <windows.h>
+
 #include <stddef.h>
 
 typedef LONG NTSTATUS;
@@ -32,24 +33,24 @@ typedef LONG NTSTATUS;
 #define STATUS_NO_TOKEN               ((NTSTATUS)0xC000007CL)
 #define STATUS_NOT_SUPPORTED          ((NTSTATUS)0xC00000BBL)
 
-#define CURRENT_PROCESS ((HANDLE) -1)
-#define CURRENT_THREAD  ((HANDLE) -2)
+#define CURRENT_PROCESS ((HANDLE)-1)
+#define CURRENT_THREAD ((HANDLE)-2)
 #define NtCurrentProcess CURRENT_PROCESS
 
 typedef struct _UNICODE_STRING {
   USHORT Length;
   USHORT MaximumLength;
-  PWSTR  Buffer;
+  PWSTR Buffer;
 } UNICODE_STRING;
-typedef UNICODE_STRING *PUNICODE_STRING;
-typedef const UNICODE_STRING *PCUNICODE_STRING;
+typedef UNICODE_STRING* PUNICODE_STRING;
+typedef const UNICODE_STRING* PCUNICODE_STRING;
 
 typedef struct _STRING {
   USHORT Length;
   USHORT MaximumLength;
   PCHAR Buffer;
 } STRING;
-typedef STRING *PSTRING;
+typedef STRING* PSTRING;
 
 typedef STRING ANSI_STRING;
 typedef PSTRING PANSI_STRING;
@@ -60,7 +61,7 @@ typedef PSTRING POEM_STRING;
 typedef CONST STRING* PCOEM_STRING;
 
 #define OBJ_CASE_INSENSITIVE 0x00000040L
-#define OBJ_OPENIF           0x00000080L
+#define OBJ_OPENIF 0x00000080L
 
 typedef struct _OBJECT_ATTRIBUTES {
   ULONG Length;
@@ -70,16 +71,17 @@ typedef struct _OBJECT_ATTRIBUTES {
   PVOID SecurityDescriptor;
   PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES;
-typedef OBJECT_ATTRIBUTES *POBJECT_ATTRIBUTES;
+typedef OBJECT_ATTRIBUTES* POBJECT_ATTRIBUTES;
 
-#define InitializeObjectAttributes(p, n, a, r, s) { \
-  (p)->Length = sizeof(OBJECT_ATTRIBUTES);\
-  (p)->RootDirectory = r;\
-  (p)->Attributes = a;\
-  (p)->ObjectName = n;\
-  (p)->SecurityDescriptor = s;\
-  (p)->SecurityQualityOfService = NULL;\
-}
+#define InitializeObjectAttributes(p, n, a, r, s) \
+  {                                               \
+    (p)->Length = sizeof(OBJECT_ATTRIBUTES);      \
+    (p)->RootDirectory = r;                       \
+    (p)->Attributes = a;                          \
+    (p)->ObjectName = n;                          \
+    (p)->SecurityDescriptor = s;                  \
+    (p)->SecurityQualityOfService = nullptr;      \
+  }
 
 typedef struct _IO_STATUS_BLOCK {
   union {
@@ -138,33 +140,33 @@ typedef struct _IO_STATUS_BLOCK {
 #define FILE_EXISTS                             0x00000004
 #define FILE_DOES_NOT_EXIST                     0x00000005
 
-typedef NTSTATUS (WINAPI *NtCreateFileFunction)(
-  OUT PHANDLE FileHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PLARGE_INTEGER AllocationSize OPTIONAL,
-  IN ULONG FileAttributes,
-  IN ULONG ShareAccess,
-  IN ULONG CreateDisposition,
-  IN ULONG CreateOptions,
-  IN PVOID EaBuffer OPTIONAL,
-  IN ULONG EaLength);
+typedef NTSTATUS(WINAPI* NtCreateFileFunction)(
+    OUT PHANDLE FileHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
+    IN PLARGE_INTEGER AllocationSize OPTIONAL,
+    IN ULONG FileAttributes,
+    IN ULONG ShareAccess,
+    IN ULONG CreateDisposition,
+    IN ULONG CreateOptions,
+    IN PVOID EaBuffer OPTIONAL,
+    IN ULONG EaLength);
 
-typedef NTSTATUS (WINAPI *NtOpenFileFunction)(
-  OUT PHANDLE FileHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG ShareAccess,
-  IN ULONG OpenOptions);
+typedef NTSTATUS(WINAPI* NtOpenFileFunction)(OUT PHANDLE FileHandle,
+                                             IN ACCESS_MASK DesiredAccess,
+                                             IN POBJECT_ATTRIBUTES
+                                                 ObjectAttributes,
+                                             OUT PIO_STATUS_BLOCK IoStatusBlock,
+                                             IN ULONG ShareAccess,
+                                             IN ULONG OpenOptions);
 
-typedef NTSTATUS (WINAPI *NtCloseFunction)(
-  IN HANDLE Handle);
+typedef NTSTATUS(WINAPI* NtCloseFunction)(IN HANDLE Handle);
 
 typedef enum _FILE_INFORMATION_CLASS {
   FileRenameInformation = 10
-} FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
+} FILE_INFORMATION_CLASS,
+    *PFILE_INFORMATION_CLASS;
 
 typedef struct _FILE_RENAME_INFORMATION {
   BOOLEAN ReplaceIfExists;
@@ -173,12 +175,12 @@ typedef struct _FILE_RENAME_INFORMATION {
   WCHAR FileName[1];
 } FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;
 
-typedef NTSTATUS (WINAPI *NtSetInformationFileFunction)(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PVOID FileInformation,
-  IN ULONG Length,
-  IN FILE_INFORMATION_CLASS FileInformationClass);
+typedef NTSTATUS(WINAPI* NtSetInformationFileFunction)(
+    IN HANDLE FileHandle,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
+    IN PVOID FileInformation,
+    IN ULONG Length,
+    IN FILE_INFORMATION_CLASS FileInformationClass);
 
 typedef struct FILE_BASIC_INFORMATION {
   LARGE_INTEGER CreationTime;
@@ -188,9 +190,9 @@ typedef struct FILE_BASIC_INFORMATION {
   ULONG FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
 
-typedef NTSTATUS (WINAPI *NtQueryAttributesFileFunction)(
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PFILE_BASIC_INFORMATION FileAttributes);
+typedef NTSTATUS(WINAPI* NtQueryAttributesFileFunction)(
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    OUT PFILE_BASIC_INFORMATION FileAttributes);
 
 typedef struct _FILE_NETWORK_OPEN_INFORMATION {
   LARGE_INTEGER CreationTime;
@@ -202,41 +204,40 @@ typedef struct _FILE_NETWORK_OPEN_INFORMATION {
   ULONG FileAttributes;
 } FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
 
-typedef NTSTATUS (WINAPI *NtQueryFullAttributesFileFunction)(
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PFILE_NETWORK_OPEN_INFORMATION FileAttributes);
+typedef NTSTATUS(WINAPI* NtQueryFullAttributesFileFunction)(
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    OUT PFILE_NETWORK_OPEN_INFORMATION FileAttributes);
 
 // -----------------------------------------------------------------------
 // Sections
 
-typedef NTSTATUS (WINAPI *NtCreateSectionFunction)(
-  OUT PHANDLE SectionHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN PLARGE_INTEGER MaximumSize OPTIONAL,
-  IN ULONG SectionPageProtection,
-  IN ULONG AllocationAttributes,
-  IN HANDLE FileHandle OPTIONAL);
+typedef NTSTATUS(WINAPI* NtCreateSectionFunction)(
+    OUT PHANDLE SectionHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+    IN PLARGE_INTEGER MaximumSize OPTIONAL,
+    IN ULONG SectionPageProtection,
+    IN ULONG AllocationAttributes,
+    IN HANDLE FileHandle OPTIONAL);
 
 typedef ULONG SECTION_INHERIT;
 #define ViewShare 1
 #define ViewUnmap 2
 
-typedef NTSTATUS (WINAPI *NtMapViewOfSectionFunction)(
-  IN HANDLE SectionHandle,
-  IN HANDLE ProcessHandle,
-  IN OUT PVOID *BaseAddress,
-  IN ULONG_PTR ZeroBits,
-  IN SIZE_T CommitSize,
-  IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-  IN OUT PSIZE_T ViewSize,
-  IN SECTION_INHERIT InheritDisposition,
-  IN ULONG AllocationType,
-  IN ULONG Win32Protect);
+typedef NTSTATUS(WINAPI* NtMapViewOfSectionFunction)(
+    IN HANDLE SectionHandle,
+    IN HANDLE ProcessHandle,
+    IN OUT PVOID* BaseAddress,
+    IN ULONG_PTR ZeroBits,
+    IN SIZE_T CommitSize,
+    IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
+    IN OUT PSIZE_T ViewSize,
+    IN SECTION_INHERIT InheritDisposition,
+    IN ULONG AllocationType,
+    IN ULONG Win32Protect);
 
-typedef NTSTATUS (WINAPI *NtUnmapViewOfSectionFunction)(
-  IN HANDLE ProcessHandle,
-  IN PVOID BaseAddress);
+typedef NTSTATUS(WINAPI* NtUnmapViewOfSectionFunction)(IN HANDLE ProcessHandle,
+                                                       IN PVOID BaseAddress);
 
 typedef enum _SECTION_INFORMATION_CLASS {
   SectionBasicInformation = 0,
@@ -249,12 +250,12 @@ typedef struct _SECTION_BASIC_INFORMATION {
   LARGE_INTEGER Size;
 } SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
 
-typedef NTSTATUS (WINAPI *NtQuerySectionFunction)(
-  IN HANDLE SectionHandle,
-  IN SECTION_INFORMATION_CLASS SectionInformationClass,
-  OUT PVOID SectionInformation,
-  IN SIZE_T SectionInformationLength,
-  OUT PSIZE_T ReturnLength OPTIONAL);
+typedef NTSTATUS(WINAPI* NtQuerySectionFunction)(
+    IN HANDLE SectionHandle,
+    IN SECTION_INFORMATION_CLASS SectionInformationClass,
+    OUT PVOID SectionInformation,
+    IN SIZE_T SectionInformationLength,
+    OUT PSIZE_T ReturnLength OPTIONAL);
 
 // -----------------------------------------------------------------------
 // Process and Thread
@@ -264,17 +265,17 @@ typedef struct _CLIENT_ID {
   PVOID UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
 
-typedef NTSTATUS (WINAPI *NtOpenThreadFunction) (
-  OUT PHANDLE ThreadHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN PCLIENT_ID ClientId);
+typedef NTSTATUS(WINAPI* NtOpenThreadFunction)(OUT PHANDLE ThreadHandle,
+                                               IN ACCESS_MASK DesiredAccess,
+                                               IN POBJECT_ATTRIBUTES
+                                                   ObjectAttributes,
+                                               IN PCLIENT_ID ClientId);
 
-typedef NTSTATUS (WINAPI *NtOpenProcessFunction) (
-  OUT PHANDLE ProcessHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN PCLIENT_ID ClientId);
+typedef NTSTATUS(WINAPI* NtOpenProcessFunction)(OUT PHANDLE ProcessHandle,
+                                                IN ACCESS_MASK DesiredAccess,
+                                                IN POBJECT_ATTRIBUTES
+                                                    ObjectAttributes,
+                                                IN PCLIENT_ID ClientId);
 
 typedef enum _NT_THREAD_INFORMATION_CLASS {
   ThreadBasicInformation,
@@ -295,13 +296,14 @@ typedef enum _NT_THREAD_INFORMATION_CLASS {
   ThreadSetTlsArrayAddress,
   ThreadIsIoPending,
   ThreadHideFromDebugger
-} NT_THREAD_INFORMATION_CLASS, *PNT_THREAD_INFORMATION_CLASS;
+} NT_THREAD_INFORMATION_CLASS,
+    *PNT_THREAD_INFORMATION_CLASS;
 
-typedef NTSTATUS (WINAPI *NtSetInformationThreadFunction) (
-  IN HANDLE ThreadHandle,
-  IN NT_THREAD_INFORMATION_CLASS ThreadInformationClass,
-  IN PVOID ThreadInformation,
-  IN ULONG ThreadInformationLength);
+typedef NTSTATUS(WINAPI* NtSetInformationThreadFunction)(
+    IN HANDLE ThreadHandle,
+    IN NT_THREAD_INFORMATION_CLASS ThreadInformationClass,
+    IN PVOID ThreadInformation,
+    IN ULONG ThreadInformationLength);
 
 // Partial definition only:
 typedef enum _PROCESSINFOCLASS {
@@ -357,29 +359,29 @@ typedef NTSTATUS(WINAPI* NtSetInformationProcessFunction)(
     IN PVOID ProcessInformation,
     IN ULONG ProcessInformationLength);
 
-typedef NTSTATUS (WINAPI *NtOpenThreadTokenFunction) (
-  IN HANDLE ThreadHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN BOOLEAN OpenAsSelf,
-  OUT PHANDLE TokenHandle);
+typedef NTSTATUS(WINAPI* NtOpenThreadTokenFunction)(IN HANDLE ThreadHandle,
+                                                    IN ACCESS_MASK
+                                                        DesiredAccess,
+                                                    IN BOOLEAN OpenAsSelf,
+                                                    OUT PHANDLE TokenHandle);
 
-typedef NTSTATUS (WINAPI *NtOpenThreadTokenExFunction) (
-  IN HANDLE ThreadHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN BOOLEAN OpenAsSelf,
-  IN ULONG HandleAttributes,
-  OUT PHANDLE TokenHandle);
+typedef NTSTATUS(WINAPI* NtOpenThreadTokenExFunction)(IN HANDLE ThreadHandle,
+                                                      IN ACCESS_MASK
+                                                          DesiredAccess,
+                                                      IN BOOLEAN OpenAsSelf,
+                                                      IN ULONG HandleAttributes,
+                                                      OUT PHANDLE TokenHandle);
 
-typedef NTSTATUS (WINAPI *NtOpenProcessTokenFunction) (
-  IN HANDLE ProcessHandle,
-  IN ACCESS_MASK DesiredAccess,
-  OUT PHANDLE TokenHandle);
+typedef NTSTATUS(WINAPI* NtOpenProcessTokenFunction)(IN HANDLE ProcessHandle,
+                                                     IN ACCESS_MASK
+                                                         DesiredAccess,
+                                                     OUT PHANDLE TokenHandle);
 
-typedef NTSTATUS (WINAPI *NtOpenProcessTokenExFunction) (
-  IN HANDLE ProcessHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN ULONG HandleAttributes,
-  OUT PHANDLE TokenHandle);
+typedef NTSTATUS(WINAPI* NtOpenProcessTokenExFunction)(
+    IN HANDLE ProcessHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN ULONG HandleAttributes,
+    OUT PHANDLE TokenHandle);
 
 typedef NTSTATUS(WINAPI* NtQueryInformationTokenFunction)(
     IN HANDLE TokenHandle,
@@ -411,6 +413,33 @@ typedef VOID(WINAPI* RtlFreeUnicodeStringFunction)(
 // -----------------------------------------------------------------------
 // Registry
 
+typedef enum _KEY_INFORMATION_CLASS {
+  KeyBasicInformation = 0,
+  KeyFullInformation = 2
+} KEY_INFORMATION_CLASS,
+    *PKEY_INFORMATION_CLASS;
+
+typedef struct _KEY_BASIC_INFORMATION {
+  LARGE_INTEGER LastWriteTime;
+  ULONG TitleIndex;
+  ULONG NameLength;
+  WCHAR Name[1];
+} KEY_BASIC_INFORMATION, *PKEY_BASIC_INFORMATION;
+
+typedef struct _KEY_FULL_INFORMATION {
+  LARGE_INTEGER LastWriteTime;
+  ULONG TitleIndex;
+  ULONG ClassOffset;
+  ULONG ClassLength;
+  ULONG SubKeys;
+  ULONG MaxNameLen;
+  ULONG MaxClassLen;
+  ULONG Values;
+  ULONG MaxValueNameLen;
+  ULONG MaxValueDataLen;
+  WCHAR Class[1];
+} KEY_FULL_INFORMATION, *PKEY_FULL_INFORMATION;
+
 typedef enum _KEY_VALUE_INFORMATION_CLASS {
   KeyValueFullInformation = 1
 } KEY_VALUE_INFORMATION_CLASS,
@@ -425,31 +454,45 @@ typedef struct _KEY_VALUE_FULL_INFORMATION {
   WCHAR Name[1];
 } KEY_VALUE_FULL_INFORMATION, *PKEY_VALUE_FULL_INFORMATION;
 
-typedef NTSTATUS (WINAPI *NtCreateKeyFunction)(
-  OUT PHANDLE KeyHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN ULONG TitleIndex,
-  IN PUNICODE_STRING Class OPTIONAL,
-  IN ULONG CreateOptions,
-  OUT PULONG Disposition OPTIONAL);
+typedef NTSTATUS(WINAPI* NtCreateKeyFunction)(OUT PHANDLE KeyHandle,
+                                              IN ACCESS_MASK DesiredAccess,
+                                              IN POBJECT_ATTRIBUTES
+                                                  ObjectAttributes,
+                                              IN ULONG TitleIndex,
+                                              IN PUNICODE_STRING Class OPTIONAL,
+                                              IN ULONG CreateOptions,
+                                              OUT PULONG Disposition OPTIONAL);
 
-typedef NTSTATUS (WINAPI *NtOpenKeyFunction)(
-  OUT PHANDLE KeyHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes);
+typedef NTSTATUS(WINAPI* NtOpenKeyFunction)(OUT PHANDLE KeyHandle,
+                                            IN ACCESS_MASK DesiredAccess,
+                                            IN POBJECT_ATTRIBUTES
+                                                ObjectAttributes);
 
-typedef NTSTATUS (WINAPI *NtOpenKeyExFunction)(
-  OUT PHANDLE KeyHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN DWORD open_options);
+typedef NTSTATUS(WINAPI* NtOpenKeyExFunction)(OUT PHANDLE KeyHandle,
+                                              IN ACCESS_MASK DesiredAccess,
+                                              IN POBJECT_ATTRIBUTES
+                                                  ObjectAttributes,
+                                              IN DWORD open_options);
 
-typedef NTSTATUS (WINAPI *NtDeleteKeyFunction)(
-  IN HANDLE KeyHandle);
+typedef NTSTATUS(WINAPI* NtDeleteKeyFunction)(IN HANDLE KeyHandle);
 
 typedef NTSTATUS(WINAPI* RtlFormatCurrentUserKeyPathFunction)(
     OUT PUNICODE_STRING RegistryPath);
+
+typedef NTSTATUS(WINAPI* NtQueryKeyFunction)(IN HANDLE KeyHandle,
+                                             IN KEY_INFORMATION_CLASS
+                                                 KeyInformationClass,
+                                             OUT PVOID KeyInformation,
+                                             IN ULONG Length,
+                                             OUT PULONG ResultLength);
+
+typedef NTSTATUS(WINAPI* NtEnumerateKeyFunction)(IN HANDLE KeyHandle,
+                                                 IN ULONG Index,
+                                                 IN KEY_INFORMATION_CLASS
+                                                     KeyInformationClass,
+                                                 OUT PVOID KeyInformation,
+                                                 IN ULONG Length,
+                                                 OUT PULONG ResultLength);
 
 typedef NTSTATUS(WINAPI* NtQueryValueKeyFunction)(IN HANDLE KeyHandle,
                                                   IN PUNICODE_STRING ValueName,
@@ -472,40 +515,36 @@ typedef NTSTATUS(WINAPI* NtSetValueKeyFunction)(IN HANDLE KeyHandle,
 // Don't really need this structure right now.
 typedef PVOID PRTL_HEAP_PARAMETERS;
 
-typedef PVOID (WINAPI *RtlCreateHeapFunction)(
-  IN ULONG Flags,
-  IN PVOID HeapBase OPTIONAL,
-  IN SIZE_T ReserveSize OPTIONAL,
-  IN SIZE_T CommitSize OPTIONAL,
-  IN PVOID Lock OPTIONAL,
-  IN PRTL_HEAP_PARAMETERS Parameters OPTIONAL);
+typedef PVOID(WINAPI* RtlCreateHeapFunction)(IN ULONG Flags,
+                                             IN PVOID HeapBase OPTIONAL,
+                                             IN SIZE_T ReserveSize OPTIONAL,
+                                             IN SIZE_T CommitSize OPTIONAL,
+                                             IN PVOID Lock OPTIONAL,
+                                             IN PRTL_HEAP_PARAMETERS Parameters
+                                                 OPTIONAL);
 
-typedef PVOID (WINAPI *RtlDestroyHeapFunction)(
-  IN PVOID HeapHandle);
+typedef PVOID(WINAPI* RtlDestroyHeapFunction)(IN PVOID HeapHandle);
 
-typedef PVOID (WINAPI *RtlAllocateHeapFunction)(
-  IN PVOID HeapHandle,
-  IN ULONG Flags,
-  IN SIZE_T Size);
+typedef PVOID(WINAPI* RtlAllocateHeapFunction)(IN PVOID HeapHandle,
+                                               IN ULONG Flags,
+                                               IN SIZE_T Size);
 
-typedef BOOLEAN (WINAPI *RtlFreeHeapFunction)(
-  IN PVOID HeapHandle,
-  IN ULONG Flags,
-  IN PVOID HeapBase);
+typedef BOOLEAN(WINAPI* RtlFreeHeapFunction)(IN PVOID HeapHandle,
+                                             IN ULONG Flags,
+                                             IN PVOID HeapBase);
 
-typedef NTSTATUS (WINAPI *NtAllocateVirtualMemoryFunction) (
-  IN HANDLE ProcessHandle,
-  IN OUT PVOID *BaseAddress,
-  IN ULONG_PTR ZeroBits,
-  IN OUT PSIZE_T RegionSize,
-  IN ULONG AllocationType,
-  IN ULONG Protect);
+typedef NTSTATUS(WINAPI* NtAllocateVirtualMemoryFunction)(
+    IN HANDLE ProcessHandle,
+    IN OUT PVOID* BaseAddress,
+    IN ULONG_PTR ZeroBits,
+    IN OUT PSIZE_T RegionSize,
+    IN ULONG AllocationType,
+    IN ULONG Protect);
 
-typedef NTSTATUS (WINAPI *NtFreeVirtualMemoryFunction) (
-  IN HANDLE ProcessHandle,
-  IN OUT PVOID *BaseAddress,
-  IN OUT PSIZE_T RegionSize,
-  IN ULONG FreeType);
+typedef NTSTATUS(WINAPI* NtFreeVirtualMemoryFunction)(IN HANDLE ProcessHandle,
+                                                      IN OUT PVOID* BaseAddress,
+                                                      IN OUT PSIZE_T RegionSize,
+                                                      IN ULONG FreeType);
 
 typedef enum _MEMORY_INFORMATION_CLASS {
   MemoryBasicInformation = 0,
@@ -518,20 +557,20 @@ typedef struct _MEMORY_SECTION_NAME {  // Information Class 2
   UNICODE_STRING SectionFileName;
 } MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
 
-typedef NTSTATUS (WINAPI *NtQueryVirtualMemoryFunction)(
-  IN HANDLE ProcessHandle,
-  IN PVOID BaseAddress,
-  IN MEMORY_INFORMATION_CLASS MemoryInformationClass,
-  OUT PVOID MemoryInformation,
-  IN SIZE_T MemoryInformationLength,
-  OUT PSIZE_T ReturnLength OPTIONAL);
+typedef NTSTATUS(WINAPI* NtQueryVirtualMemoryFunction)(
+    IN HANDLE ProcessHandle,
+    IN PVOID BaseAddress,
+    IN MEMORY_INFORMATION_CLASS MemoryInformationClass,
+    OUT PVOID MemoryInformation,
+    IN SIZE_T MemoryInformationLength,
+    OUT PSIZE_T ReturnLength OPTIONAL);
 
-typedef NTSTATUS (WINAPI *NtProtectVirtualMemoryFunction)(
-  IN HANDLE ProcessHandle,
-  IN OUT PVOID* BaseAddress,
-  IN OUT PSIZE_T ProtectSize,
-  IN ULONG NewProtect,
-  OUT PULONG OldProtect);
+typedef NTSTATUS(WINAPI* NtProtectVirtualMemoryFunction)(
+    IN HANDLE ProcessHandle,
+    IN OUT PVOID* BaseAddress,
+    IN OUT PSIZE_T ProtectSize,
+    IN ULONG NewProtect,
+    OUT PULONG OldProtect);
 
 // -----------------------------------------------------------------------
 // Objects
@@ -542,7 +581,8 @@ typedef enum _OBJECT_INFORMATION_CLASS {
   ObjectTypeInformation,
   ObjectAllInformation,
   ObjectDataInformation
-} OBJECT_INFORMATION_CLASS, *POBJECT_INFORMATION_CLASS;
+} OBJECT_INFORMATION_CLASS,
+    *POBJECT_INFORMATION_CLASS;
 
 typedef struct _OBJDIR_INFORMATION {
   UNICODE_STRING ObjectName;
@@ -555,12 +595,12 @@ typedef struct _PUBLIC_OBJECT_BASIC_INFORMATION {
   ACCESS_MASK GrantedAccess;
   ULONG HandleCount;
   ULONG PointerCount;
-  ULONG Reserved[10];    // reserved for internal use
+  ULONG Reserved[10];  // reserved for internal use
 } PUBLIC_OBJECT_BASIC_INFORMATION, *PPUBLIC_OBJECT_BASIC_INFORMATION;
 
 typedef struct __PUBLIC_OBJECT_TYPE_INFORMATION {
   UNICODE_STRING TypeName;
-  ULONG Reserved[22];    // reserved for internal use
+  ULONG Reserved[22];  // reserved for internal use
 } PUBLIC_OBJECT_TYPE_INFORMATION, *PPUBLIC_OBJECT_TYPE_INFORMATION;
 
 typedef enum _POOL_TYPE {
@@ -635,108 +675,105 @@ typedef struct _OBJECT_NAME_INFORMATION {
   UNICODE_STRING ObjectName;
 } OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
 
-typedef NTSTATUS (WINAPI *NtQueryObjectFunction)(
-  IN HANDLE Handle,
-  IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
-  OUT PVOID ObjectInformation OPTIONAL,
-  IN ULONG ObjectInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
+typedef NTSTATUS(WINAPI* NtQueryObjectFunction)(
+    IN HANDLE Handle,
+    IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
+    OUT PVOID ObjectInformation OPTIONAL,
+    IN ULONG ObjectInformationLength,
+    OUT PULONG ReturnLength OPTIONAL);
 
-typedef NTSTATUS (WINAPI *NtDuplicateObjectFunction)(
-  IN HANDLE SourceProcess,
-  IN HANDLE SourceHandle,
-  IN HANDLE TargetProcess,
-  OUT PHANDLE TargetHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN ULONG Attributes,
-  IN ULONG Options);
+typedef NTSTATUS(WINAPI* NtDuplicateObjectFunction)(IN HANDLE SourceProcess,
+                                                    IN HANDLE SourceHandle,
+                                                    IN HANDLE TargetProcess,
+                                                    OUT PHANDLE TargetHandle,
+                                                    IN ACCESS_MASK
+                                                        DesiredAccess,
+                                                    IN ULONG Attributes,
+                                                    IN ULONG Options);
 
-typedef NTSTATUS (WINAPI *NtSignalAndWaitForSingleObjectFunction)(
-  IN HANDLE HandleToSignal,
-  IN HANDLE HandleToWait,
-  IN BOOLEAN Alertable,
-  IN PLARGE_INTEGER Timeout OPTIONAL);
+typedef NTSTATUS(WINAPI* NtSignalAndWaitForSingleObjectFunction)(
+    IN HANDLE HandleToSignal,
+    IN HANDLE HandleToWait,
+    IN BOOLEAN Alertable,
+    IN PLARGE_INTEGER Timeout OPTIONAL);
 
-typedef NTSTATUS (WINAPI *NtQuerySystemInformation)(
-  IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-  OUT PVOID SystemInformation,
-  IN ULONG SystemInformationLength,
-  OUT PULONG ReturnLength);
+typedef NTSTATUS(WINAPI* NtQuerySystemInformation)(
+    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    OUT PVOID SystemInformation,
+    IN ULONG SystemInformationLength,
+    OUT PULONG ReturnLength);
 
-typedef NTSTATUS (WINAPI *NtQueryObject)(
-  IN HANDLE Handle,
-  IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
-  OUT PVOID ObjectInformation,
-  IN ULONG ObjectInformationLength,
-  OUT PULONG ReturnLength);
+typedef NTSTATUS(WINAPI* NtQueryObject)(IN HANDLE Handle,
+                                        IN OBJECT_INFORMATION_CLASS
+                                            ObjectInformationClass,
+                                        OUT PVOID ObjectInformation,
+                                        IN ULONG ObjectInformationLength,
+                                        OUT PULONG ReturnLength);
 
 // -----------------------------------------------------------------------
 // Strings
 
-typedef int (__cdecl *_strnicmpFunction)(
-  IN const char* _Str1,
-  IN const char* _Str2,
-  IN size_t _MaxCount);
+typedef int(__cdecl* _strnicmpFunction)(IN const char* _Str1,
+                                        IN const char* _Str2,
+                                        IN size_t _MaxCount);
 
-typedef size_t  (__cdecl *strlenFunction)(
-  IN const char * _Str);
+typedef size_t(__cdecl* strlenFunction)(IN const char* _Str);
 
-typedef size_t (__cdecl *wcslenFunction)(
-  IN const wchar_t* _Str);
+typedef size_t(__cdecl* wcslenFunction)(IN const wchar_t* _Str);
 
-typedef void* (__cdecl *memcpyFunction)(
-  IN void* dest,
-  IN const void* src,
-  IN size_t count);
+typedef void*(__cdecl* memcpyFunction)(IN void* dest,
+                                       IN const void* src,
+                                       IN size_t count);
 
-typedef NTSTATUS (WINAPI *RtlAnsiStringToUnicodeStringFunction)(
-  IN OUT PUNICODE_STRING  DestinationString,
-  IN PANSI_STRING  SourceString,
-  IN BOOLEAN  AllocateDestinationString);
+typedef NTSTATUS(WINAPI* RtlAnsiStringToUnicodeStringFunction)(
+    IN OUT PUNICODE_STRING DestinationString,
+    IN PANSI_STRING SourceString,
+    IN BOOLEAN AllocateDestinationString);
 
-typedef LONG (WINAPI *RtlCompareUnicodeStringFunction)(
-  IN PCUNICODE_STRING  String1,
-  IN PCUNICODE_STRING  String2,
-  IN BOOLEAN  CaseInSensitive);
+typedef LONG(WINAPI* RtlCompareUnicodeStringFunction)(
+    IN PCUNICODE_STRING String1,
+    IN PCUNICODE_STRING String2,
+    IN BOOLEAN CaseInSensitive);
 
-typedef VOID (WINAPI *RtlInitUnicodeStringFunction) (
-  IN OUT PUNICODE_STRING DestinationString,
-  IN PCWSTR SourceString);
+typedef VOID(WINAPI* RtlInitUnicodeStringFunction)(IN OUT PUNICODE_STRING
+                                                       DestinationString,
+                                                   IN PCWSTR SourceString);
 
-typedef ULONG (WINAPI* RtlNtStatusToDosErrorFunction)(NTSTATUS status);
+typedef ULONG(WINAPI* RtlNtStatusToDosErrorFunction)(NTSTATUS status);
 
 typedef enum _EVENT_TYPE {
   NotificationEvent,
   SynchronizationEvent
-} EVENT_TYPE, *PEVENT_TYPE;
+} EVENT_TYPE,
+    *PEVENT_TYPE;
 
-typedef NTSTATUS (WINAPI* NtCreateDirectoryObjectFunction) (
+typedef NTSTATUS(WINAPI* NtCreateDirectoryObjectFunction)(
     PHANDLE DirectoryHandle,
     ACCESS_MASK DesiredAccess,
     POBJECT_ATTRIBUTES ObjectAttributes);
 
-typedef NTSTATUS (WINAPI* NtOpenDirectoryObjectFunction) (
+typedef NTSTATUS(WINAPI* NtOpenDirectoryObjectFunction)(
     PHANDLE DirectoryHandle,
     ACCESS_MASK DesiredAccess,
     POBJECT_ATTRIBUTES ObjectAttributes);
 
-typedef NTSTATUS (WINAPI* NtQuerySymbolicLinkObjectFunction) (
+typedef NTSTATUS(WINAPI* NtQuerySymbolicLinkObjectFunction)(
     HANDLE LinkHandle,
     PUNICODE_STRING LinkTarget,
     PULONG ReturnedLength);
 
-typedef NTSTATUS (WINAPI* NtOpenSymbolicLinkObjectFunction) (
+typedef NTSTATUS(WINAPI* NtOpenSymbolicLinkObjectFunction)(
     PHANDLE LinkHandle,
     ACCESS_MASK DesiredAccess,
     POBJECT_ATTRIBUTES ObjectAttributes);
 
-#define DIRECTORY_QUERY               0x0001
-#define DIRECTORY_TRAVERSE            0x0002
-#define DIRECTORY_CREATE_OBJECT       0x0004
+#define DIRECTORY_QUERY 0x0001
+#define DIRECTORY_TRAVERSE 0x0002
+#define DIRECTORY_CREATE_OBJECT 0x0004
 #define DIRECTORY_CREATE_SUBDIRECTORY 0x0008
-#define DIRECTORY_ALL_ACCESS          0x000F
+#define DIRECTORY_ALL_ACCESS 0x000F
 
-typedef NTSTATUS (WINAPI* NtCreateLowBoxToken)(
+typedef NTSTATUS(WINAPI* NtCreateLowBoxToken)(
     OUT PHANDLE token,
     IN HANDLE original_handle,
     IN ACCESS_MASK access,
@@ -747,11 +784,10 @@ typedef NTSTATUS (WINAPI* NtCreateLowBoxToken)(
     IN DWORD handle_count,
     IN PHANDLE handles);
 
-typedef NTSTATUS(WINAPI *NtSetInformationProcess)(
-    IN HANDLE process_handle,
-    IN ULONG info_class,
-    IN PVOID process_information,
-    IN ULONG information_length);
+typedef NTSTATUS(WINAPI* NtSetInformationProcess)(IN HANDLE process_handle,
+                                                  IN ULONG info_class,
+                                                  IN PVOID process_information,
+                                                  IN ULONG information_length);
 
 struct PROCESS_ACCESS_TOKEN {
   HANDLE token;
@@ -759,6 +795,11 @@ struct PROCESS_ACCESS_TOKEN {
 };
 
 const unsigned int NtProcessInformationAccessToken = 9;
+
+typedef NTSTATUS(WINAPI* RtlDeriveCapabilitySidsFromNameFunction)(
+    PCUNICODE_STRING SourceString,
+    PSID CapabilityGroupSid,
+    PSID CapabilitySid);
 
 // -----------------------------------------------------------------------
 // GDI OPM API and Supported Calls
@@ -920,4 +961,3 @@ typedef NTSTATUS(WINAPI* SetOPMSigningKeyAndSequenceNumbersFunction)(
     const DXGKMDT_OPM_ENCRYPTED_PARAMETERS* parameters);
 
 #endif  // SANDBOX_WIN_SRC_NT_INTERNALS_H__
-

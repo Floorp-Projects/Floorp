@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "sandbox/win/src/filesystem_policy.h"
+
 #include <stdint.h>
 
 #include <string>
 
-#include "sandbox/win/src/filesystem_policy.h"
-
 #include "base/logging.h"
-#include "base/macros.h"
+#include "base/stl_util.h"
 #include "base/win/scoped_handle.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/ipc_tags.h"
@@ -30,16 +30,16 @@ NTSTATUS NtCreateFileInTarget(HANDLE* target_file_handle,
                               ULONG create_disposition,
                               ULONG create_options,
                               PVOID ea_buffer,
-                              ULONG ea_lenght,
+                              ULONG ea_length,
                               HANDLE target_process) {
-  NtCreateFileFunction NtCreateFile = NULL;
+  NtCreateFileFunction NtCreateFile = nullptr;
   ResolveNTFunctionPtr("NtCreateFile", &NtCreateFile);
 
   HANDLE local_handle = INVALID_HANDLE_VALUE;
-  NTSTATUS status = NtCreateFile(&local_handle, desired_access, obj_attributes,
-                                 io_status_block, NULL, file_attributes,
-                                 share_access, create_disposition,
-                                 create_options, ea_buffer, ea_lenght);
+  NTSTATUS status =
+      NtCreateFile(&local_handle, desired_access, obj_attributes,
+                   io_status_block, nullptr, file_attributes, share_access,
+                   create_disposition, create_options, ea_buffer, ea_length);
   if (!NT_SUCCESS(status)) {
     return status;
   }
@@ -50,8 +50,8 @@ NTSTATUS NtCreateFileInTarget(HANDLE* target_file_handle,
     return STATUS_ACCESS_DENIED;
   }
 
-  if (!::DuplicateHandle(::GetCurrentProcess(), local_handle,
-                         target_process, target_file_handle, 0, FALSE,
+  if (!::DuplicateHandle(::GetCurrentProcess(), local_handle, target_process,
+                         target_file_handle, 0, false,
                          DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)) {
     return STATUS_ACCESS_DENIED;
   }
@@ -65,7 +65,7 @@ SECURITY_QUALITY_OF_SERVICE GetAnonymousQOS() {
   security_qos.ImpersonationLevel = SecurityAnonymous;
   // Set dynamic tracking so that a pipe doesn't capture the broker's token
   security_qos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
-  security_qos.EffectiveOnly = TRUE;
+  security_qos.EffectiveOnly = true;
 
   return security_qos;
 }
@@ -109,9 +109,9 @@ bool FileSystemPolicy::GenerateRules(const wchar_t* name,
   const unsigned kCallNtQueryFullAttributesFile = 0x8;
   const unsigned kCallNtSetInfoRename = 0x10;
 
-  DWORD  rule_to_add = kCallNtOpenFile | kCallNtCreateFile |
-                       kCallNtQueryAttributesFile |
-                       kCallNtQueryFullAttributesFile | kCallNtSetInfoRename;
+  DWORD rule_to_add = kCallNtOpenFile | kCallNtCreateFile |
+                      kCallNtQueryAttributesFile |
+                      kCallNtQueryFullAttributesFile | kCallNtSetInfoRename;
 
   PolicyRule create(result);
   PolicyRule open(result);
@@ -143,8 +143,8 @@ bool FileSystemPolicy::GenerateRules(const wchar_t* name,
     }
     case TargetPolicy::FILES_ALLOW_QUERY: {
       // Here we don't want to add policy for the open or the create.
-      rule_to_add &= ~(kCallNtOpenFile | kCallNtCreateFile |
-                       kCallNtSetInfoRename);
+      rule_to_add &=
+          ~(kCallNtOpenFile | kCallNtCreateFile | kCallNtSetInfoRename);
       break;
     }
     case TargetPolicy::FILES_ALLOW_ANY: {
@@ -175,9 +175,8 @@ bool FileSystemPolicy::GenerateRules(const wchar_t* name,
   }
 
   if ((rule_to_add & kCallNtQueryFullAttributesFile) &&
-      (!query_full.AddStringMatch(IF, FileName::NAME, name, CASE_INSENSITIVE)
-       || !policy->AddRule(IPC_NTQUERYFULLATTRIBUTESFILE_TAG,
-                           &query_full))) {
+      (!query_full.AddStringMatch(IF, FileName::NAME, name, CASE_INSENSITIVE) ||
+       !policy->AddRule(IPC_NTQUERYFULLATTRIBUTESFILE_TAG, &query_full))) {
     return false;
   }
 
@@ -198,17 +197,17 @@ bool FileSystemPolicy::GenerateRules(const wchar_t* name,
 // It is possible to add a rule to go to the broker in any case; it would look
 // something like:
 //    rule = new PolicyRule(ASK_BROKER);
-//    rule->AddNumberMatch(IF_NOT, FileName::BROKER, TRUE, AND);
+//    rule->AddNumberMatch(IF_NOT, FileName::BROKER, true, AND);
 //    policy->AddRule(service, rule);
 bool FileSystemPolicy::SetInitialRules(LowLevelPolicy* policy) {
   PolicyRule format(ASK_BROKER);
   PolicyRule short_name(ASK_BROKER);
 
-  bool rv = format.AddNumberMatch(IF_NOT, FileName::BROKER, TRUE, AND);
+  bool rv = format.AddNumberMatch(IF_NOT, FileName::BROKER, BROKER_TRUE, AND);
   rv &= format.AddStringMatch(IF_NOT, FileName::NAME, L"\\/?/?\\*",
                               CASE_SENSITIVE);
 
-  rv &= short_name.AddNumberMatch(IF_NOT, FileName::BROKER, TRUE, AND);
+  rv &= short_name.AddNumberMatch(IF_NOT, FileName::BROKER, BROKER_TRUE, AND);
   rv &= short_name.AddStringMatch(IF, FileName::NAME, L"*~*", CASE_SENSITIVE);
 
   if (!rv || !policy->AddRule(IPC_NTCREATEFILE_TAG, &format))
@@ -268,12 +267,12 @@ bool FileSystemPolicy::CreateFileAction(EvalResult eval_result,
   OBJECT_ATTRIBUTES obj_attributes = {};
   SECURITY_QUALITY_OF_SERVICE security_qos = GetAnonymousQOS();
 
-  InitObjectAttribs(file, attributes, NULL, &obj_attributes,
-                    &uni_name, IsPipe(file) ? &security_qos : NULL);
-  *nt_status = NtCreateFileInTarget(handle, desired_access, &obj_attributes,
-                                    &io_block, file_attributes, share_access,
-                                    create_disposition, create_options, NULL,
-                                    0, client_info.process);
+  InitObjectAttribs(file, attributes, nullptr, &obj_attributes, &uni_name,
+                    IsPipe(file) ? &security_qos : nullptr);
+  *nt_status =
+      NtCreateFileInTarget(handle, desired_access, &obj_attributes, &io_block,
+                           file_attributes, share_access, create_disposition,
+                           create_options, nullptr, 0, client_info.process);
 
   *io_information = io_block.Information;
   return true;
@@ -303,12 +302,11 @@ bool FileSystemPolicy::OpenFileAction(EvalResult eval_result,
   OBJECT_ATTRIBUTES obj_attributes = {};
   SECURITY_QUALITY_OF_SERVICE security_qos = GetAnonymousQOS();
 
-  InitObjectAttribs(file, attributes, NULL, &obj_attributes,
-                    &uni_name, IsPipe(file) ? &security_qos : NULL);
-  *nt_status = NtCreateFileInTarget(handle, desired_access, &obj_attributes,
-                                    &io_block, 0, share_access, FILE_OPEN,
-                                    open_options, NULL, 0,
-                                    client_info.process);
+  InitObjectAttribs(file, attributes, nullptr, &obj_attributes, &uni_name,
+                    IsPipe(file) ? &security_qos : nullptr);
+  *nt_status = NtCreateFileInTarget(
+      handle, desired_access, &obj_attributes, &io_block, 0, share_access,
+      FILE_OPEN, open_options, nullptr, 0, client_info.process);
 
   *io_information = io_block.Information;
   return true;
@@ -328,15 +326,15 @@ bool FileSystemPolicy::QueryAttributesFileAction(
     return false;
   }
 
-  NtQueryAttributesFileFunction NtQueryAttributesFile = NULL;
+  NtQueryAttributesFileFunction NtQueryAttributesFile = nullptr;
   ResolveNTFunctionPtr("NtQueryAttributesFile", &NtQueryAttributesFile);
 
   UNICODE_STRING uni_name = {0};
   OBJECT_ATTRIBUTES obj_attributes = {0};
   SECURITY_QUALITY_OF_SERVICE security_qos = GetAnonymousQOS();
 
-  InitObjectAttribs(file, attributes, NULL, &obj_attributes,
-                    &uni_name, IsPipe(file) ? &security_qos : NULL);
+  InitObjectAttribs(file, attributes, nullptr, &obj_attributes, &uni_name,
+                    IsPipe(file) ? &security_qos : nullptr);
   *nt_status = NtQueryAttributesFile(&obj_attributes, file_info);
 
   return true;
@@ -356,15 +354,15 @@ bool FileSystemPolicy::QueryFullAttributesFileAction(
     return false;
   }
 
-  NtQueryFullAttributesFileFunction NtQueryFullAttributesFile = NULL;
+  NtQueryFullAttributesFileFunction NtQueryFullAttributesFile = nullptr;
   ResolveNTFunctionPtr("NtQueryFullAttributesFile", &NtQueryFullAttributesFile);
 
   UNICODE_STRING uni_name = {0};
   OBJECT_ATTRIBUTES obj_attributes = {0};
   SECURITY_QUALITY_OF_SERVICE security_qos = GetAnonymousQOS();
 
-  InitObjectAttribs(file, attributes, NULL, &obj_attributes,
-                    &uni_name, IsPipe(file) ? &security_qos : NULL);
+  InitObjectAttribs(file, attributes, nullptr, &obj_attributes, &uni_name,
+                    IsPipe(file) ? &security_qos : nullptr);
   *nt_status = NtQueryFullAttributesFile(&obj_attributes, file_info);
 
   return true;
@@ -385,12 +383,12 @@ bool FileSystemPolicy::SetInformationFileAction(EvalResult eval_result,
     return false;
   }
 
-  NtSetInformationFileFunction NtSetInformationFile = NULL;
+  NtSetInformationFileFunction NtSetInformationFile = nullptr;
   ResolveNTFunctionPtr("NtSetInformationFile", &NtSetInformationFile);
 
-  HANDLE local_handle = NULL;
+  HANDLE local_handle = nullptr;
   if (!::DuplicateHandle(client_info.process, target_file_handle,
-                         ::GetCurrentProcess(), &local_handle, 0, FALSE,
+                         ::GetCurrentProcess(), &local_handle, 0, false,
                          DUPLICATE_SAME_ACCESS)) {
     *nt_status = STATUS_ACCESS_DENIED;
     return false;
@@ -421,7 +419,7 @@ base::string16 FixNTPrefixForMatch(const base::string16& name) {
 
   // NT prefix escaped for rule matcher
   const wchar_t kNTPrefixEscaped[] = L"\\/?/?\\";
-  const int kNTPrefixEscapedLen = arraysize(kNTPrefixEscaped) - 1;
+  const int kNTPrefixEscapedLen = base::size(kNTPrefixEscaped) - 1;
 
   if (0 != mod_name.compare(0, kNTPrefixLen, kNTPrefix)) {
     if (0 != mod_name.compare(0, kNTPrefixEscapedLen, kNTPrefixEscaped)) {

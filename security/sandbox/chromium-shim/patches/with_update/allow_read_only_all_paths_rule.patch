@@ -11,7 +11,7 @@ This also changes the read only related status checks in filesystem_interception
 diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc b/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc
 --- a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/filesystem_interception.cc
-@@ -10,32 +10,37 @@
+@@ -11,16 +11,20 @@
  #include "sandbox/win/src/ipc_tags.h"
  #include "sandbox/win/src/policy_params.h"
  #include "sandbox/win/src/policy_target.h"
@@ -27,18 +27,20 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
  namespace sandbox {
  
  NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
-                                    PHANDLE file, ACCESS_MASK desired_access,
+                                    PHANDLE file,
+                                    ACCESS_MASK desired_access,
                                     POBJECT_ATTRIBUTES object_attributes,
                                     PIO_STATUS_BLOCK io_status,
                                     PLARGE_INTEGER allocation_size,
-                                    ULONG file_attributes, ULONG sharing,
-                                    ULONG disposition, ULONG options,
-                                    PVOID ea_buffer, ULONG ea_length) {
+@@ -29,17 +33,18 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCre
+                                    ULONG disposition,
+                                    ULONG options,
+                                    PVOID ea_buffer,
+                                    ULONG ea_length) {
    // Check if the process can open it first.
-   NTSTATUS status = orig_CreateFile(file, desired_access, object_attributes,
-                                     io_status, allocation_size,
-                                     file_attributes, sharing, disposition,
-                                     options, ea_buffer, ea_length);
+   NTSTATUS status = orig_CreateFile(
+       file, desired_access, object_attributes, io_status, allocation_size,
+       file_attributes, sharing, disposition, options, ea_buffer, ea_length);
 -  if (STATUS_ACCESS_DENIED != status)
 +  if (STATUS_ACCESS_DENIED != status &&
 +      STATUS_NETWORK_OPEN_RESTRICTION != status)
@@ -48,13 +50,13 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
      return status;
  
-   wchar_t* name = NULL;
    do {
-@@ -101,17 +106,18 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCre
- NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
+     if (!ValidParameter(file, sizeof(HANDLE), WRITE))
+@@ -106,17 +111,18 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCre
                                   ACCESS_MASK desired_access,
                                   POBJECT_ATTRIBUTES object_attributes,
-                                  PIO_STATUS_BLOCK io_status, ULONG sharing,
+                                  PIO_STATUS_BLOCK io_status,
+                                  ULONG sharing,
                                   ULONG options) {
    // Check if the process can open it first.
    NTSTATUS status = orig_OpenFile(file, desired_access, object_attributes,
@@ -68,15 +70,15 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
      return status;
  
-   wchar_t* name = NULL;
    do {
-@@ -173,17 +179,18 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenF
+     if (!ValidParameter(file, sizeof(HANDLE), WRITE))
+@@ -176,17 +182,18 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenF
  }
  
- NTSTATUS WINAPI TargetNtQueryAttributesFile(
-     NtQueryAttributesFileFunction orig_QueryAttributes,
-     POBJECT_ATTRIBUTES object_attributes,
-     PFILE_BASIC_INFORMATION file_attributes) {
+ NTSTATUS WINAPI
+ TargetNtQueryAttributesFile(NtQueryAttributesFileFunction orig_QueryAttributes,
+                             POBJECT_ATTRIBUTES object_attributes,
+                             PFILE_BASIC_INFORMATION file_attributes) {
    // Check if the process can query it first.
    NTSTATUS status = orig_QueryAttributes(object_attributes, file_attributes);
 -  if (STATUS_ACCESS_DENIED != status)
@@ -88,17 +90,17 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
      return status;
  
-   wchar_t* name = NULL;
    do {
-@@ -231,17 +238,18 @@ NTSTATUS WINAPI TargetNtQueryAttributesF
+     if (!ValidParameter(file_attributes, sizeof(FILE_BASIC_INFORMATION), WRITE))
+@@ -232,17 +239,18 @@ NTSTATUS WINAPI TargetNtQueryAttributesF
  
  NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
      NtQueryFullAttributesFileFunction orig_QueryFullAttributes,
      POBJECT_ATTRIBUTES object_attributes,
      PFILE_NETWORK_OPEN_INFORMATION file_attributes) {
    // Check if the process can query it first.
-   NTSTATUS status = orig_QueryFullAttributes(object_attributes,
-                                              file_attributes);
+   NTSTATUS status =
+       orig_QueryFullAttributes(object_attributes, file_attributes);
 -  if (STATUS_ACCESS_DENIED != status)
 +  if (STATUS_ACCESS_DENIED != status &&
 +      STATUS_NETWORK_OPEN_RESTRICTION != status)
@@ -108,8 +110,8 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
    if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
      return status;
  
-   wchar_t* name = NULL;
    do {
+     if (!ValidParameter(file_attributes, sizeof(FILE_NETWORK_OPEN_INFORMATION),
 diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc b/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc
 --- a/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc

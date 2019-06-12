@@ -1,8 +1,16 @@
 // Copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
-// PLEASE READ: Do you really need a singleton?
+//
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// PLEASE READ: Do you really need a singleton? If possible, use a
+// function-local static of type base::NoDestructor<T> instead:
+//
+// Factory& Factory::GetInstance() {
+//   static base::NoDestructor<Factory> instance;
+//   return *instance;
+// }
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //
 // Singletons make it hard to determine the lifetime of an object, which can
 // lead to buggy code and spurious crashes.
@@ -22,25 +30,12 @@
 #include "base/at_exit.h"
 #include "base/atomicops.h"
 #include "base/base_export.h"
+#include "base/lazy_instance_helpers.h"
 #include "base/logging.h"
 #include "base/macros.h"
 #include "base/threading/thread_restrictions.h"
 
 namespace base {
-namespace internal {
-
-// Our AtomicWord doubles as a spinlock, where a value of
-// kBeingCreatedMarker means the spinlock is being held for creation.
-static const subtle::AtomicWord kBeingCreatedMarker = 1;
-
-// We pull out some of the functionality into a non-templated function, so that
-// we can implement the more complicated pieces out of line in the .cc file.
-BASE_EXPORT subtle::AtomicWord WaitForInstance(subtle::AtomicWord* instance);
-
-class DeleteTraceLogForTesting;
-
-}  // namespace internal
-
 
 // Default traits for Singleton<Type>. Calls operator new and operator delete on
 // the object. Registers automatic deletion at process exit.
@@ -83,11 +78,10 @@ struct LeakySingletonTraits : public DefaultSingletonTraits<Type> {
 #endif
 };
 
-
 // Alternate traits for use with the Singleton<Type>.  Allocates memory
 // for the singleton instance from a static buffer.  The singleton will
 // be cleaned up at exit, but can't be revived after destruction unless
-// the Resurrect() method is called.
+// the ResurrectForTesting() method is called.
 //
 // This is useful for a certain category of things, notably logging and
 // tracing, where the singleton instance is of a type carefully constructed to
@@ -107,26 +101,27 @@ struct LeakySingletonTraits : public DefaultSingletonTraits<Type> {
 // process once you've unloaded.
 template <typename Type>
 struct StaticMemorySingletonTraits {
-  // WARNING: User has to deal with get() in the singleton class
-  // this is traits for returning NULL.
+  // WARNING: User has to support a New() which returns null.
   static Type* New() {
-    // Only constructs once and returns pointer; otherwise returns NULL.
+    // Only constructs once and returns pointer; otherwise returns null.
     if (subtle::NoBarrier_AtomicExchange(&dead_, 1))
-      return NULL;
+      return nullptr;
 
     return new (buffer_) Type();
   }
 
   static void Delete(Type* p) {
-    if (p != NULL)
+    if (p)
       p->Type::~Type();
   }
 
   static const bool kRegisterAtExit = true;
-  static const bool kAllowedToAccessOnNonjoinableThread = true;
 
-  // Exposed for unittesting.
-  static void Resurrect() { subtle::NoBarrier_Store(&dead_, 0); }
+#if DCHECK_IS_ON()
+  static const bool kAllowedToAccessOnNonjoinableThread = true;
+#endif
+
+  static void ResurrectForTesting() { subtle::NoBarrier_Store(&dead_, 0); }
 
  private:
   alignas(Type) static char buffer_[sizeof(Type)];
@@ -224,54 +219,45 @@ template <typename Type,
           typename DifferentiatingType = Type>
 class Singleton {
  private:
-  // Classes using the Singleton<T> pattern should declare a GetInstance()
-  // method and call Singleton::get() from within that.
-  friend Type* Type::GetInstance();
-
-  // Allow TraceLog tests to test tracing after OnExit.
-  friend class internal::DeleteTraceLogForTesting;
+  // A class T using the Singleton<T> pattern should declare a GetInstance()
+  // method and call Singleton::get() from within that. T may also declare a
+  // GetInstanceIfExists() method to invoke Singleton::GetIfExists().
+  friend Type;
 
   // This class is safe to be constructed and copy-constructed since it has no
   // member.
 
-  // Return a pointer to the one true instance of the class.
+  // Returns a pointer to the one true instance of the class.
   static Type* get() {
 #if DCHECK_IS_ON()
-    // Avoid making TLS lookup on release builds.
     if (!Traits::kAllowedToAccessOnNonjoinableThread)
       ThreadRestrictions::AssertSingletonAllowed();
 #endif
 
-    // The load has acquire memory ordering as the thread which reads the
-    // instance_ pointer must acquire visibility over the singleton data.
-    subtle::AtomicWord value = subtle::Acquire_Load(&instance_);
-    if (value != 0 && value != internal::kBeingCreatedMarker) {
-      return reinterpret_cast<Type*>(value);
-    }
-
-    // Object isn't created yet, maybe we will get to create it, let's try...
-    if (subtle::Acquire_CompareAndSwap(&instance_, 0,
-                                       internal::kBeingCreatedMarker) == 0) {
-      // instance_ was NULL and is now kBeingCreatedMarker.  Only one thread
-      // will ever get here.  Threads might be spinning on us, and they will
-      // stop right after we do this store.
-      Type* newval = Traits::New();
-
-      // Releases the visibility over instance_ to the readers.
-      subtle::Release_Store(&instance_,
-                            reinterpret_cast<subtle::AtomicWord>(newval));
-
-      if (newval != NULL && Traits::kRegisterAtExit)
-        AtExitManager::RegisterCallback(OnExit, NULL);
-
-      return newval;
-    }
-
-    // We hit a race. Wait for the other thread to complete it.
-    value = internal::WaitForInstance(&instance_);
-
-    return reinterpret_cast<Type*>(value);
+    return subtle::GetOrCreateLazyPointer(
+        &instance_, &CreatorFunc, nullptr,
+        Traits::kRegisterAtExit ? OnExit : nullptr, nullptr);
   }
+
+  // Returns the same result as get() if the instance exists but doesn't
+  // construct it (and returns null) if it doesn't.
+  static Type* GetIfExists() {
+#if DCHECK_IS_ON()
+    if (!Traits::kAllowedToAccessOnNonjoinableThread)
+      ThreadRestrictions::AssertSingletonAllowed();
+#endif
+
+    if (!subtle::NoBarrier_Load(&instance_))
+      return nullptr;
+
+    // Need to invoke get() nonetheless as some Traits return null after
+    // destruction (even though |instance_| still holds garbage).
+    return get();
+  }
+
+  // Internal method used as an adaptor for GetOrCreateLazyPointer(). Do not use
+  // outside of that use case.
+  static Type* CreatorFunc(void* /* creator_arg*/) { return Traits::New(); }
 
   // Adapter function for use with AtExit().  This should be called single
   // threaded, so don't use atomic operations.

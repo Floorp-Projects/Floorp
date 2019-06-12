@@ -9,8 +9,8 @@
 
 #include <vector>
 
-#include "base/macros.h"
-#include "base/scoped_clear_errno.h"
+#include "base/scoped_clear_last_error.h"
+#include "base/stl_util.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "build/build_config.h"
@@ -55,20 +55,18 @@ static void StringAppendVT(StringType* dst,
   va_list ap_copy;
   va_copy(ap_copy, ap);
 
-#if !defined(OS_WIN)
-  ScopedClearErrno clear_errno;
-#endif
-  int result = vsnprintfT(stack_buf, arraysize(stack_buf), format, ap_copy);
+  base::internal::ScopedClearLastError last_error;
+  int result = vsnprintfT(stack_buf, base::size(stack_buf), format, ap_copy);
   va_end(ap_copy);
 
-  if (result >= 0 && result < static_cast<int>(arraysize(stack_buf))) {
+  if (result >= 0 && result < static_cast<int>(base::size(stack_buf))) {
     // It fit.
     dst->append(stack_buf, result);
     return;
   }
 
   // Repeatedly increase buffer size until it fits.
-  int mem_length = arraysize(stack_buf);
+  int mem_length = base::size(stack_buf);
   while (true) {
     if (result < 0) {
 #if defined(OS_WIN)

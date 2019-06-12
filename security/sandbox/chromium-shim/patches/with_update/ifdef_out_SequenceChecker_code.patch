@@ -11,10 +11,10 @@ We don't currently make use of it and it brings in many dependencies.
 diff --git a/security/sandbox/chromium/base/memory/ref_counted.cc b/security/sandbox/chromium/base/memory/ref_counted.cc
 --- a/security/sandbox/chromium/base/memory/ref_counted.cc
 +++ b/security/sandbox/chromium/base/memory/ref_counted.cc
-@@ -34,18 +34,22 @@ bool RefCountedThreadSafeBase::Release()
+@@ -53,18 +53,22 @@ bool RefCountedThreadSafeBase::Release()
  }
- void RefCountedThreadSafeBase::AddRef() const {
-   AddRefImpl();
+ void RefCountedThreadSafeBase::AddRefWithCheck() const {
+   AddRefWithCheckImpl();
  }
  #endif
  

@@ -172,8 +172,26 @@ bool Shape::hashify(JSContext* cx, Shape* shape) {
     return false;
   }
 
-  shape->base()->setTable(table.release());
+  BaseShape* base = shape->base();
+  base->maybePurgeCache(cx->defaultFreeOp());
+  base->setTable(table.release());
+  // TODO: The contents of ShapeTable is not currently tracked, only the object
+  // itself.
+  AddCellMemory(base, sizeof(ShapeTable), MemoryUse::ShapeCache);
   return true;
+}
+
+void ShapeCachePtr::maybePurgeCache(FreeOp* fop, BaseShape* base) {
+  if (isTable()) {
+    ShapeTable* table = getTablePointer();
+    if (table->freeList() == SHAPE_INVALID_SLOT) {
+      fop->delete_(base, getTablePointer(), MemoryUse::ShapeCache);
+      p = 0;
+    }
+  } else if (isIC()) {
+    fop->delete_<ShapeIC>(base, getICPointer(), MemoryUse::ShapeCache);
+    p = 0;
+  }
 }
 
 /* static */
@@ -194,6 +212,7 @@ bool Shape::cachify(JSContext* cx, Shape* shape) {
   }
 
   shape->base()->setIC(ic.release());
+  AddCellMemory(shape->base(), sizeof(ShapeIC), MemoryUse::ShapeCache);
   return true;
 }
 
@@ -284,6 +303,15 @@ void ShapeTable::trace(JSTracer* trc) {
       }
     }
   }
+}
+
+inline void ShapeCachePtr::destroy(FreeOp* fop, BaseShape* base) {
+  if (isTable()) {
+    fop->delete_(base, getTablePointer(), MemoryUse::ShapeCache);
+  } else if (isIC()) {
+    fop->delete_(base, getICPointer(), MemoryUse::ShapeCache);
+  }
+  p = 0;
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
@@ -1656,7 +1684,7 @@ void Zone::checkBaseShapeTableAfterMovingGC() {
 
 void BaseShape::finalize(FreeOp* fop) {
   if (cache_.isInitialized()) {
-    cache_.destroy(fop);
+    cache_.destroy(fop, this);
   }
 }
 
@@ -1751,6 +1779,7 @@ bool PropertyTree::insertChild(JSContext* cx, Shape* parent, Shape* child) {
       return false;
     }
     kidp->setHash(hash);
+    AddCellMemory(parent, sizeof(KidsHash), MemoryUse::ShapeKids);
     child->setParent(parent);
     return true;
   }
@@ -1796,6 +1825,7 @@ void Shape::removeChild(Shape* child) {
     MOZ_ASSERT((r.popFront(), r.empty())); /* No more elements! */
     kidp->setShape(otherChild);
     js_delete(hash);
+    RemoveCellMemory(this, sizeof(KidsHash), MemoryUse::ShapeKids);
   }
 }
 
@@ -1875,7 +1905,7 @@ void Shape::sweep() {
 
 void Shape::finalize(FreeOp* fop) {
   if (!inDictionary() && kids.isHash()) {
-    fop->delete_(kids.toHash());
+    fop->delete_(this, kids.toHash(), MemoryUse::ShapeKids);
   }
 }
 

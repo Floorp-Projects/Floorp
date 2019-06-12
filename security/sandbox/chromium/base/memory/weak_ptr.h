@@ -48,13 +48,13 @@
 
 // ------------------------- IMPORTANT: Thread-safety -------------------------
 
-// Weak pointers may be passed safely between threads, but must always be
+// Weak pointers may be passed safely between sequences, but must always be
 // dereferenced and invalidated on the same SequencedTaskRunner otherwise
 // checking the pointer would be racey.
 //
 // To ensure correct use, the first time a WeakPtr issued by a WeakPtrFactory
 // is dereferenced, the factory and its WeakPtrs become bound to the calling
-// thread or current SequencedWorkerPool token, and cannot be dereferenced or
+// sequence or current SequencedWorkerPool token, and cannot be dereferenced or
 // invalidated on any other task runner. Bound WeakPtrs can still be handed
 // off to other task runners, e.g. to use to post tasks back to object on the
 // bound sequence.
@@ -64,8 +64,8 @@
 // destroyed, or new WeakPtr objects may be used, from a different sequence.
 //
 // Thus, at least one WeakPtr object must exist and have been dereferenced on
-// the correct thread to enforce that other WeakPtr objects will enforce they
-// are used on the desired thread.
+// the correct sequence to enforce that other WeakPtr objects will enforce they
+// are used on the desired sequence.
 
 #ifndef BASE_MEMORY_WEAK_PTR_H_
 #define BASE_MEMORY_WEAK_PTR_H_
@@ -78,6 +78,7 @@
 #include "base/macros.h"
 #include "base/memory/ref_counted.h"
 #include "base/sequence_checker.h"
+#include "base/synchronization/atomic_flag.h"
 
 namespace base {
 
@@ -99,17 +100,21 @@ class BASE_EXPORT WeakReference {
     void Invalidate();
     bool IsValid() const;
 
+    bool MaybeValid() const;
+
+    void DetachFromSequence();
+
    private:
     friend class base::RefCountedThreadSafe<Flag>;
 
     ~Flag();
 
-    SequenceChecker sequence_checker_;
-    bool is_valid_;
+    SEQUENCE_CHECKER(sequence_checker_);
+    AtomicFlag invalidated_;
   };
 
   WeakReference();
-  explicit WeakReference(const Flag* flag);
+  explicit WeakReference(const scoped_refptr<Flag>& flag);
   ~WeakReference();
 
   WeakReference(WeakReference&& other);
@@ -117,7 +122,8 @@ class BASE_EXPORT WeakReference {
   WeakReference& operator=(WeakReference&& other) = default;
   WeakReference& operator=(const WeakReference& other) = default;
 
-  bool is_valid() const;
+  bool IsValid() const;
+  bool MaybeValid() const;
 
  private:
   scoped_refptr<const Flag> flag_;
@@ -130,9 +136,7 @@ class BASE_EXPORT WeakReferenceOwner {
 
   WeakReference GetRef() const;
 
-  bool HasRefs() const {
-    return flag_.get() && !flag_->HasOneRef();
-  }
+  bool HasRefs() const { return !flag_->HasOneRef(); }
 
   void Invalidate();
 
@@ -154,6 +158,11 @@ class BASE_EXPORT WeakPtrBase {
   WeakPtrBase& operator=(const WeakPtrBase& other) = default;
   WeakPtrBase& operator=(WeakPtrBase&& other) = default;
 
+  void reset() {
+    ref_ = internal::WeakReference();
+    ptr_ = 0;
+  }
+
  protected:
   WeakPtrBase(const WeakReference& ref, uintptr_t ptr);
 
@@ -173,12 +182,14 @@ class SupportsWeakPtrBase {
   // conversion will only compile if there is exists a Base which inherits
   // from SupportsWeakPtr<Base>. See base::AsWeakPtr() below for a helper
   // function that makes calling this easier.
+  //
+  // Precondition: t != nullptr
   template<typename Derived>
   static WeakPtr<Derived> StaticAsWeakPtr(Derived* t) {
     static_assert(
         std::is_base_of<internal::SupportsWeakPtrBase, Derived>::value,
         "AsWeakPtr argument must inherit from SupportsWeakPtr");
-    return AsWeakPtrImpl<Derived>(t, *t);
+    return AsWeakPtrImpl<Derived>(t);
   }
 
  private:
@@ -186,9 +197,8 @@ class SupportsWeakPtrBase {
   // which is an instance of SupportsWeakPtr<Base>. We can then safely
   // static_cast the Base* to a Derived*.
   template <typename Derived, typename Base>
-  static WeakPtr<Derived> AsWeakPtrImpl(
-      Derived* t, const SupportsWeakPtr<Base>&) {
-    WeakPtr<Base> ptr = t->Base::AsWeakPtr();
+  static WeakPtr<Derived> AsWeakPtrImpl(SupportsWeakPtr<Base>* t) {
+    WeakPtr<Base> ptr = t->AsWeakPtr();
     return WeakPtr<Derived>(
         ptr.ref_, static_cast<Derived*>(reinterpret_cast<Base*>(ptr.ptr_)));
   }
@@ -214,8 +224,7 @@ template <typename T> class WeakPtrFactory;
 template <typename T>
 class WeakPtr : public internal::WeakPtrBase {
  public:
-  WeakPtr() {}
-
+  WeakPtr() = default;
   WeakPtr(std::nullptr_t) {}
 
   // Allow conversion from U to T provided U "is a" T. Note that this
@@ -236,7 +245,7 @@ class WeakPtr : public internal::WeakPtrBase {
   }
 
   T* get() const {
-    return ref_.is_valid() ? reinterpret_cast<T*>(ptr_) : nullptr;
+    return ref_.IsValid() ? reinterpret_cast<T*>(ptr_) : nullptr;
   }
 
   T& operator*() const {
@@ -248,13 +257,22 @@ class WeakPtr : public internal::WeakPtrBase {
     return get();
   }
 
-  void reset() {
-    ref_ = internal::WeakReference();
-    ptr_ = 0;
-  }
-
   // Allow conditionals to test validity, e.g. if (weak_ptr) {...};
   explicit operator bool() const { return get() != nullptr; }
+
+  // Returns false if the WeakPtr is confirmed to be invalid. This call is safe
+  // to make from any thread, e.g. to optimize away unnecessary work, but
+  // operator bool() must always be called, on the correct sequence, before
+  // actually using the pointer.
+  //
+  // Warning: as with any object, this call is only thread-safe if the WeakPtr
+  // instance isn't being re-assigned or reset() racily with this call.
+  bool MaybeValid() const { return ref_.MaybeValid(); }
+
+  // Returns whether the object |this| points to has been invalidated. This can
+  // be used to distinguish a WeakPtr to a destroyed object from one that has
+  // been explicitly set to null.
+  bool WasInvalidated() const { return ptr_ && !ref_.IsValid(); }
 
  private:
   friend class internal::SupportsWeakPtrBase;
@@ -305,10 +323,9 @@ class WeakPtrFactory : public internal::WeakPtrFactoryBase {
   explicit WeakPtrFactory(T* ptr)
       : WeakPtrFactoryBase(reinterpret_cast<uintptr_t>(ptr)) {}
 
-  ~WeakPtrFactory() {}
+  ~WeakPtrFactory() = default;
 
   WeakPtr<T> GetWeakPtr() {
-    DCHECK(ptr_);
     return WeakPtr<T>(weak_reference_owner_.GetRef(),
                       reinterpret_cast<T*>(ptr_));
   }
@@ -337,14 +354,14 @@ class WeakPtrFactory : public internal::WeakPtrFactoryBase {
 template <class T>
 class SupportsWeakPtr : public internal::SupportsWeakPtrBase {
  public:
-  SupportsWeakPtr() {}
+  SupportsWeakPtr() = default;
 
   WeakPtr<T> AsWeakPtr() {
     return WeakPtr<T>(weak_reference_owner_.GetRef(), static_cast<T*>(this));
   }
 
  protected:
-  ~SupportsWeakPtr() {}
+  ~SupportsWeakPtr() = default;
 
  private:
   internal::WeakReferenceOwner weak_reference_owner_;

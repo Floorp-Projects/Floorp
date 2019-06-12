@@ -156,7 +156,7 @@ struct ServiceFullThunk {
 
 #pragma pack(pop)
 
-};  // namespace
+}  // namespace
 
 namespace sandbox {
 
@@ -168,17 +168,17 @@ NTSTATUS ServiceResolverThunk::Setup(const void* target_module,
                                      void* thunk_storage,
                                      size_t storage_bytes,
                                      size_t* storage_used) {
-  NTSTATUS ret = Init(target_module, interceptor_module, target_name,
-                      interceptor_name, interceptor_entry_point,
-                      thunk_storage, storage_bytes);
+  NTSTATUS ret =
+      Init(target_module, interceptor_module, target_name, interceptor_name,
+           interceptor_entry_point, thunk_storage, storage_bytes);
   if (!NT_SUCCESS(ret))
     return ret;
 
   relative_jump_ = 0;
   size_t thunk_bytes = GetThunkSize();
   std::unique_ptr<char[]> thunk_buffer(new char[thunk_bytes]);
-  ServiceFullThunk* thunk = reinterpret_cast<ServiceFullThunk*>(
-                                thunk_buffer.get());
+  ServiceFullThunk* thunk =
+      reinterpret_cast<ServiceFullThunk*>(thunk_buffer.get());
 
   if (!IsFunctionAService(&thunk->original) &&
       (!relaxed_ || !SaveOriginalFunction(&thunk->original, thunk_storage))) {
@@ -187,7 +187,7 @@ NTSTATUS ServiceResolverThunk::Setup(const void* target_module,
 
   ret = PerformPatch(thunk, thunk_storage);
 
-  if (NULL != storage_used)
+  if (storage_used)
     *storage_used = thunk_bytes;
 
   return ret;
@@ -217,7 +217,7 @@ NTSTATUS ServiceResolverThunk::CopyThunk(const void* target_module,
     return STATUS_OBJECT_NAME_COLLISION;
   }
 
-  if (NULL != storage_used)
+  if (storage_used)
     *storage_used = thunk_bytes;
 
   return ret;
@@ -234,8 +234,7 @@ bool ServiceResolverThunk::IsFunctionAService(void* local_thunk) const {
   if (sizeof(function_code) != read)
     return false;
 
-  if (kMovEax != function_code.mov_eax ||
-      kMovEdx != function_code.mov_edx ||
+  if (kMovEax != function_code.mov_eax || kMovEdx != function_code.mov_edx ||
       (kCallPtrEdx != function_code.call_ptr_edx &&
        kCallEdx != function_code.call_ptr_edx) ||
       kRet != function_code.ret) {
@@ -263,7 +262,7 @@ bool ServiceResolverThunk::IsFunctionAService(void* local_thunk) const {
       return false;
     }
 
-    if (NULL != ntdll_base_) {
+    if (ntdll_base_) {
       // This path is only taken when running the unit tests. We want to be
       // able to patch a buffer in memory, so target_ is not inside ntdll.
       module_2 = ntdll_base_;
@@ -289,10 +288,10 @@ NTSTATUS ServiceResolverThunk::PerformPatch(void* local_thunk,
                                             void* remote_thunk) {
   ServiceEntry intercepted_code;
   size_t bytes_to_write = sizeof(intercepted_code);
-  ServiceFullThunk *full_local_thunk = reinterpret_cast<ServiceFullThunk*>(
-      local_thunk);
-  ServiceFullThunk *full_remote_thunk = reinterpret_cast<ServiceFullThunk*>(
-      remote_thunk);
+  ServiceFullThunk* full_local_thunk =
+      reinterpret_cast<ServiceFullThunk*>(local_thunk);
+  ServiceFullThunk* full_remote_thunk =
+      reinterpret_cast<ServiceFullThunk*>(remote_thunk);
 
   // patch the original code
   memcpy(&intercepted_code, &full_local_thunk->original,
@@ -318,8 +317,8 @@ NTSTATUS ServiceResolverThunk::PerformPatch(void* local_thunk,
 
   // copy the local thunk buffer to the child
   SIZE_T written;
-  if (!::WriteProcessMemory(process_, remote_thunk, local_thunk,
-                            thunk_size, &written)) {
+  if (!::WriteProcessMemory(process_, remote_thunk, local_thunk, thunk_size,
+                            &written)) {
     return STATUS_UNSUCCESSFUL;
   }
 
@@ -327,7 +326,7 @@ NTSTATUS ServiceResolverThunk::PerformPatch(void* local_thunk,
     return STATUS_UNSUCCESSFUL;
 
   // and now change the function to intercept, on the child
-  if (NULL != ntdll_base_) {
+  if (ntdll_base_) {
     // running a unit test
     if (!::WriteProcessMemory(process_, target_, &intercepted_code,
                               bytes_to_write, &written))
@@ -363,7 +362,7 @@ bool ServiceResolverThunk::SaveOriginalFunction(void* local_thunk,
     function_code.service_id = relative;
 
     // And now, remember how to re-patch it.
-    ServiceFullThunk *full_thunk =
+    ServiceFullThunk* full_thunk =
         reinterpret_cast<ServiceFullThunk*>(remote_thunk);
 
     const ULONG kJmp32Size = 5;
@@ -397,8 +396,8 @@ bool Wow64ResolverThunk::IsFunctionAService(void* local_thunk) const {
   }
 
   if ((kAddEsp1 == function_code.add_esp1 &&
-       kAddEsp2 == function_code.add_esp2 &&
-       kRet == function_code.ret) || kRet == function_code.add_esp1) {
+       kAddEsp2 == function_code.add_esp2 && kRet == function_code.ret) ||
+      kRet == function_code.add_esp1) {
     // Save the verified code
     memcpy(local_thunk, &function_code, sizeof(function_code));
     return true;
@@ -464,10 +463,8 @@ bool Wow64W10ResolverThunk::IsFunctionAService(void* local_thunk) const {
   if (sizeof(function_code) != read)
     return false;
 
-  if (kMovEax != function_code.mov_eax ||
-      kMovEdx != function_code.mov_edx ||
-      kCallEdx != function_code.call_edx ||
-      kRet != function_code.ret) {
+  if (kMovEax != function_code.mov_eax || kMovEdx != function_code.mov_edx ||
+      kCallEdx != function_code.call_edx || kRet != function_code.ret) {
     return false;
   }
 

@@ -12,7 +12,7 @@ https://hg.mozilla.org/mozilla-central/rev/c70d06fa5302
 diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/sandbox/chromium/sandbox/win/src/win_utils.cc
 --- a/security/sandbox/chromium/sandbox/win/src/win_utils.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/win_utils.cc
-@@ -190,63 +190,68 @@ bool ResolveRegistryName(base::string16 
+@@ -190,62 +190,67 @@ bool ResolveRegistryName(base::string16 
  
    return false;
  }
@@ -37,8 +37,8 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/s
  
 -  bool added_implied_device = false;
    if (!has_drive) {
--      path = base::string16(kNTDotPrefix) + path;
--      added_implied_device = true;
+-    path = base::string16(kNTDotPrefix) + path;
+-    added_implied_device = true;
 +    // Add Win32 device namespace prefix, required for some Windows APIs.
 +    path.insert(0, kNTDotPrefix);
    }
@@ -65,8 +65,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/s
      DWORD attributes = ::GetFileAttributes(path.c_str());
      if (INVALID_FILE_ATTRIBUTES == attributes) {
        DWORD error = ::GetLastError();
-       if (error != ERROR_FILE_NOT_FOUND &&
-           error != ERROR_PATH_NOT_FOUND &&
+       if (error != ERROR_FILE_NOT_FOUND && error != ERROR_PATH_NOT_FOUND &&
 +          error != ERROR_INVALID_FUNCTION &&
            error != ERROR_INVALID_NAME) {
          // Unexpected error.

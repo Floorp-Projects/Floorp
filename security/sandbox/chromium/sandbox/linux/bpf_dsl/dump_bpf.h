@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#ifndef SANDBOX_LINUX_BPF_DSL_DUMP_BPF_H_
+#define SANDBOX_LINUX_BPF_DSL_DUMP_BPF_H_
+
 #include <string>
 
 #include "sandbox/linux/bpf_dsl/codegen.h"
@@ -22,3 +25,5 @@ class SANDBOX_EXPORT DumpBPF {
 
 }  // namespace bpf_dsl
 }  // namespace sandbox
+
+#endif  // SANDBOX_LINUX_BPF_DSL_DUMP_BPF_H_

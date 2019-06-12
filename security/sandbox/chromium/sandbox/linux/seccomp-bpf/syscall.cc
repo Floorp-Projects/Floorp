@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "base/logging.h"
+#include "build/build_config.h"
 #include "sandbox/linux/bpf_dsl/seccomp_macros.h"
 
 namespace sandbox {
@@ -188,7 +189,7 @@ asm(// We need to be able to tell the kernel exactly where we made a
     ".fnend\n"
 #endif
     "9:.size SyscallAsm, 9b-SyscallAsm\n"
-#elif defined(__mips__)
+#elif (defined(ARCH_CPU_MIPS_FAMILY) && defined(ARCH_CPU_32_BITS))
     ".text\n"
     ".option pic2\n"
     ".align 4\n"
@@ -237,6 +238,53 @@ asm(// We need to be able to tell the kernel exactly where we made a
     "2:lw     $ra, 36($sp)\n"
     "jr     $ra\n"
     " addiu  $sp, $sp, 40\n"
+    ".set    pop\n"
+    ".end    SyscallAsm\n"
+    ".size   SyscallAsm,.-SyscallAsm\n"
+#elif defined(ARCH_CPU_MIPS_FAMILY) && defined(ARCH_CPU_64_BITS)
+    ".text\n"
+    ".option pic2\n"
+    ".global SyscallAsm\n"
+    ".type SyscallAsm, @function\n"
+    "SyscallAsm:.ent SyscallAsm\n"
+    ".frame  $sp, 16, $ra\n"
+    ".set   push\n"
+    ".set   noreorder\n"
+    "daddiu  $sp, $sp, -16\n"
+    ".cpsetup $25, 0, SyscallAsm\n"
+    "sd     $ra, 8($sp)\n"
+    // Check if "v0" is negative. If so, do not attempt to make a
+    // system call. Instead, compute the return address that is visible
+    // to the kernel after we execute "syscall". This address can be
+    // used as a marker that BPF code inspects.
+    "bgez   $v0, 1f\n"
+    " nop\n"
+    // This is equivalent to "la $v0, 2f".
+    // LA macro has to be avoided since LLVM-AS has issue with LA in PIC mode
+    // https://llvm.org/bugs/show_bug.cgi?id=27644
+    "ld     $v0, %got(2f)($gp)\n"
+    "daddiu  $v0, $v0, %lo(2f)\n"
+    "b      2f\n"
+    " nop\n"
+    // On MIPS N64 all eight arguments go to registers a0 - a7
+    // We can go ahead and directly copy the entries from the arguments array
+    // into the appropriate CPU registers.
+    "1:ld     $a7, 56($a0)\n"
+    "ld     $a6, 48($a0)\n"
+    "ld     $a5, 40($a0)\n"
+    "ld     $a4, 32($a0)\n"
+    "ld     $a3, 24($a0)\n"
+    "ld     $a2, 16($a0)\n"
+    "ld     $a1, 8($a0)\n"
+    "ld     $a0, 0($a0)\n"
+    // Enter the kernel
+    "syscall\n"
+    // This is our "magic" return address that the BPF filter sees.
+    // Restore the return address from the stack.
+    "2:ld     $ra, 8($sp)\n"
+    ".cpreturn\n"
+    "jr     $ra\n"
+    "daddiu  $sp, $sp, 16\n"
     ".set    pop\n"
     ".end    SyscallAsm\n"
     ".size   SyscallAsm,.-SyscallAsm\n"
@@ -358,7 +406,7 @@ intptr_t Syscall::Call(int nr,
     ret = inout;
   }
 #elif defined(__mips__)
-  int err_status;
+  intptr_t err_status;
   intptr_t ret = Syscall::SandboxSyscallRaw(nr, args, &err_status);
 
   if (err_status) {

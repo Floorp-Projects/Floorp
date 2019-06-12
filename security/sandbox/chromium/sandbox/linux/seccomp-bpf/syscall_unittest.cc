@@ -16,8 +16,9 @@
 
 #include <vector>
 
-#include "base/macros.h"
 #include "base/posix/eintr_wrapper.h"
+#include "base/process/process_metrics.h"
+#include "base/stl_util.h"
 #include "build/build_config.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl.h"
 #include "sandbox/linux/bpf_dsl/policy.h"
@@ -95,8 +96,8 @@ intptr_t CopySyscallArgsToAux(const struct arch_seccomp_data& args, void* aux) {
   // |aux| is our BPF_AUX pointer.
   std::vector<uint64_t>* const seen_syscall_args =
       static_cast<std::vector<uint64_t>*>(aux);
-  BPF_ASSERT(arraysize(args.args) == 6);
-  seen_syscall_args->assign(args.args, args.args + arraysize(args.args));
+  BPF_ASSERT(base::size(args.args) == 6);
+  seen_syscall_args->assign(args.args, args.args + base::size(args.args));
   return -ENOMEM;
 }
 
@@ -133,7 +134,7 @@ BPF_TEST(Syscall,
   // implementation details of kernel BPF filters and we will need to document
   // the expected behavior very clearly.
   int syscall_args[6];
-  for (size_t i = 0; i < arraysize(syscall_args); ++i) {
+  for (size_t i = 0; i < base::size(syscall_args); ++i) {
     syscall_args[i] = kExpectedValue + i;
   }
 
@@ -163,6 +164,8 @@ BPF_TEST(Syscall,
 
 TEST(Syscall, ComplexSyscallSixArgs) {
   int fd;
+  const size_t kPageSize = base::GetPageSize();
+
   ASSERT_LE(0,
             fd = Syscall::Call(__NR_openat, AT_FDCWD, "/dev/null", O_RDWR, 0L));
 
@@ -172,7 +175,7 @@ TEST(Syscall, ComplexSyscallSixArgs) {
       (char*)NULL,
       addr0 = reinterpret_cast<char*>(Syscall::Call(kMMapNr,
                                                     (void*)NULL,
-                                                    4096,
+                                                    kPageSize,
                                                     PROT_READ,
                                                     MAP_PRIVATE | MAP_ANONYMOUS,
                                                     fd,
@@ -184,7 +187,7 @@ TEST(Syscall, ComplexSyscallSixArgs) {
             addr1 = reinterpret_cast<char*>(
                 Syscall::Call(kMMapNr,
                               addr0,
-                              4096L,
+                              kPageSize,
                               PROT_READ | PROT_WRITE,
                               MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
                               fd,
@@ -192,7 +195,7 @@ TEST(Syscall, ComplexSyscallSixArgs) {
   ++*addr1;  // This should not seg fault
 
   // Clean up
-  EXPECT_EQ(0, Syscall::Call(__NR_munmap, addr1, 4096L));
+  EXPECT_EQ(0, Syscall::Call(__NR_munmap, addr1, kPageSize));
   EXPECT_EQ(0, IGNORE_EINTR(Syscall::Call(__NR_close, fd)));
 
   // Check that the offset argument (i.e. the sixth argument) is processed
@@ -202,32 +205,42 @@ TEST(Syscall, ComplexSyscallSixArgs) {
       0);
   char* addr2, *addr3;
   ASSERT_NE((char*)NULL,
-            addr2 = reinterpret_cast<char*>(Syscall::Call(
-                kMMapNr, (void*)NULL, 8192L, PROT_READ, MAP_PRIVATE, fd, 0L)));
+            addr2 = reinterpret_cast<char*>(Syscall::Call(kMMapNr,
+                                                          (void*)NULL,
+                                                          2 * kPageSize,
+                                                          PROT_READ,
+                                                          MAP_PRIVATE,
+                                                          fd,
+                                                          0L
+                                                          )));
   ASSERT_NE((char*)NULL,
             addr3 = reinterpret_cast<char*>(Syscall::Call(kMMapNr,
                                                           (void*)NULL,
-                                                          4096L,
+                                                          kPageSize,
                                                           PROT_READ,
                                                           MAP_PRIVATE,
                                                           fd,
 #if defined(__NR_mmap2)
                                                           1L
 #else
-                                                          4096L
+                                                          kPageSize
 #endif
                                                           )));
-  EXPECT_EQ(0, memcmp(addr2 + 4096, addr3, 4096));
+  EXPECT_EQ(0, memcmp(addr2 + kPageSize, addr3, kPageSize));
 
   // Just to be absolutely on the safe side, also verify that the file
   // contents matches what we are getting from a read() operation.
-  char buf[8192];
-  EXPECT_EQ(8192, Syscall::Call(__NR_read, fd, buf, 8192L));
-  EXPECT_EQ(0, memcmp(addr2, buf, 8192));
+  char buf[2 * kPageSize];
+  EXPECT_EQ(2 * kPageSize, static_cast<size_t>(Syscall::Call(__NR_read,
+                                                             fd,
+                                                             buf,
+                                                             2 * kPageSize
+                                                             )));
+  EXPECT_EQ(0, memcmp(addr2, buf, 2 * kPageSize));
 
   // Clean up
-  EXPECT_EQ(0, Syscall::Call(__NR_munmap, addr2, 8192L));
-  EXPECT_EQ(0, Syscall::Call(__NR_munmap, addr3, 4096L));
+  EXPECT_EQ(0, Syscall::Call(__NR_munmap, addr2, 2 * kPageSize));
+  EXPECT_EQ(0, Syscall::Call(__NR_munmap, addr3, kPageSize));
   EXPECT_EQ(0, IGNORE_EINTR(Syscall::Call(__NR_close, fd)));
 }
 

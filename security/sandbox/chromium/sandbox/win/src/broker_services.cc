@@ -5,6 +5,7 @@
 #include "sandbox/win/src/broker_services.h"
 
 #include <aclapi.h>
+
 #include <stddef.h>
 
 #include <utility>
@@ -17,6 +18,7 @@
 #include "base/win/scoped_process_information.h"
 #include "base/win/startup_information.h"
 #include "base/win/windows_version.h"
+#include "sandbox/win/src/app_container_profile.h"
 #include "sandbox/win/src/process_mitigations.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/sandbox_policy_base.h"
@@ -28,10 +30,12 @@ namespace {
 
 // Utility function to associate a completion port to a job object.
 bool AssociateCompletionPort(HANDLE job, HANDLE port, void* key) {
-  JOBOBJECT_ASSOCIATE_COMPLETION_PORT job_acp = { key, port };
+  JOBOBJECT_ASSOCIATE_COMPLETION_PORT job_acp = {key, port};
   return ::SetInformationJobObject(job,
                                    JobObjectAssociateCompletionPortInformation,
-                                   &job_acp, sizeof(job_acp))? true : false;
+                                   &job_acp, sizeof(job_acp))
+             ? true
+             : false;
 }
 
 // Utility function to do the cleanup necessary when something goes wrong
@@ -57,9 +61,7 @@ struct JobTracker {
   JobTracker(base::win::ScopedHandle job,
              scoped_refptr<sandbox::PolicyBase> policy)
       : job(std::move(job)), policy(policy) {}
-  ~JobTracker() {
-    FreeResources();
-  }
+  ~JobTracker() { FreeResources(); }
 
   // Releases the Job and notifies the associated Policy object to release its
   // resources as well.
@@ -71,7 +73,7 @@ struct JobTracker {
 
 void JobTracker::FreeResources() {
   if (policy) {
-    BOOL res = ::TerminateJobObject(job.Get(), sandbox::SBOX_ALL_OK);
+    bool res = ::TerminateJobObject(job.Get(), sandbox::SBOX_ALL_OK);
     DCHECK(res);
     // Closing the job causes the target process to be destroyed so this needs
     // to happen before calling OnJobEmpty().
@@ -119,14 +121,14 @@ ResultCode BrokerServicesBase::Init() {
 
   ::InitializeCriticalSection(&lock_);
 
-  job_port_.Set(::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0));
+  job_port_.Set(::CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0));
   if (!job_port_.IsValid())
     return SBOX_ERROR_GENERIC;
 
-  no_targets_.Set(::CreateEventW(NULL, TRUE, FALSE, NULL));
+  no_targets_.Set(::CreateEventW(nullptr, true, false, nullptr));
 
-  job_thread_.Set(::CreateThread(NULL, 0,  // Default security and stack.
-                                 TargetEventsThread, this, NULL, NULL));
+  job_thread_.Set(::CreateThread(nullptr, 0,  // Default security and stack.
+                                 TargetEventsThread, this, 0, nullptr));
   if (!job_thread_.IsValid())
     return SBOX_ERROR_GENERIC;
 
@@ -147,7 +149,7 @@ BrokerServicesBase::~BrokerServicesBase() {
   // the worker thread and also causes the thread to exit. This is what we
   // want to do since we are going to close all outstanding Jobs and notifying
   // the policy objects ourselves.
-  ::PostQueuedCompletionStatus(job_port_.Get(), 0, THREAD_CTRL_QUIT, FALSE);
+  ::PostQueuedCompletionStatus(job_port_.Get(), 0, THREAD_CTRL_QUIT, nullptr);
 
   if (job_thread_.IsValid() &&
       WAIT_TIMEOUT == ::WaitForSingleObject(job_thread_.Get(), 1000)) {
@@ -182,7 +184,7 @@ scoped_refptr<TargetPolicy> BrokerServicesBase::CreatePolicy() {
 // process on a job terminates, but in general this is the place to tell
 // the policy about events.
 DWORD WINAPI BrokerServicesBase::TargetEventsThread(PVOID param) {
-  if (NULL == param)
+  if (!param)
     return 1;
 
   base::PlatformThread::SetName("BrokerEvent");
@@ -198,7 +200,7 @@ DWORD WINAPI BrokerServicesBase::TargetEventsThread(PVOID param) {
   while (true) {
     DWORD events = 0;
     ULONG_PTR key = 0;
-    LPOVERLAPPED ovl = NULL;
+    LPOVERLAPPED ovl = nullptr;
 
     if (!::GetQueuedCompletionStatus(port, &events, &key, &ovl, INFINITE)) {
       // this call fails if the port has been closed before we have a
@@ -269,7 +271,7 @@ DWORD WINAPI BrokerServicesBase::TargetEventsThread(PVOID param) {
         }
 
         case JOB_OBJECT_MSG_PROCESS_MEMORY_LIMIT: {
-          BOOL res = ::TerminateJobObject(tracker->job.Get(),
+          bool res = ::TerminateJobObject(tracker->job.Get(),
                                           SBOX_FATAL_MEMORY_EXCEEDED);
           DCHECK(res);
           break;
@@ -361,7 +363,7 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
   // |startup_info| because |UpdateProcThreadAttribute| requires that
   // its |lpValue| parameter persist until |DeleteProcThreadAttributeList| is
   // called; StartupInformation's destructor makes such a call.
-  DWORD64 mitigations;
+  DWORD64 mitigations[2];
   std::vector<HANDLE> inherited_handle_list;
   DWORD child_process_creation = PROCESS_CREATION_CHILD_PROCESS_RESTRICTED;
 
@@ -377,8 +379,8 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
 
   size_t mitigations_size;
   ConvertProcessMitigationsToPolicy(policy_base->GetProcessMitigations(),
-                                    &mitigations, &mitigations_size);
-  if (mitigations)
+                                    &mitigations[0], &mitigations_size);
+  if (mitigations[0] || mitigations[1])
     ++attribute_count;
 
   bool restrict_child_process_creation = false;
@@ -406,29 +408,42 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
   if (inherited_handle_list.size())
     ++attribute_count;
 
+  scoped_refptr<AppContainerProfileBase> profile =
+      policy_base->GetAppContainerProfileBase();
+  if (profile) {
+    if (base::win::GetVersion() < base::win::VERSION_WIN8)
+      return SBOX_ERROR_BAD_PARAMS;
+    ++attribute_count;
+    if (profile->GetEnableLowPrivilegeAppContainer()) {
+      // LPAC first supported in RS1.
+      if (base::win::GetVersion() < base::win::VERSION_WIN10_RS1)
+        return SBOX_ERROR_BAD_PARAMS;
+      ++attribute_count;
+    }
+  }
+
   if (!startup_info.InitializeProcThreadAttributeList(attribute_count))
     return SBOX_ERROR_PROC_THREAD_ATTRIBUTES;
 
-  if (mitigations) {
+  if (mitigations[0] || mitigations[1]) {
     if (!startup_info.UpdateProcThreadAttribute(
-              PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY, &mitigations,
-              mitigations_size)) {
+            PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY, &mitigations[0],
+            mitigations_size)) {
       return SBOX_ERROR_PROC_THREAD_ATTRIBUTES;
     }
   }
 
   if (restrict_child_process_creation) {
     if (!startup_info.UpdateProcThreadAttribute(
-            PROC_THREAD_ATTRIBUTE_CHILD_PROCESS_POLICY,
-            &child_process_creation, sizeof(child_process_creation))) {
+            PROC_THREAD_ATTRIBUTE_CHILD_PROCESS_POLICY, &child_process_creation,
+            sizeof(child_process_creation))) {
       return SBOX_ERROR_PROC_THREAD_ATTRIBUTES;
     }
   }
 
   if (inherited_handle_list.size()) {
     if (!startup_info.UpdateProcThreadAttribute(
-            PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
-            &inherited_handle_list[0],
+            PROC_THREAD_ATTRIBUTE_HANDLE_LIST, &inherited_handle_list[0],
             sizeof(HANDLE) * inherited_handle_list.size())) {
       return SBOX_ERROR_PROC_THREAD_ATTRIBUTES;
     }
@@ -441,17 +456,40 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
     inherit_handles = true;
   }
 
+  // Declared here to ensure they stay in scope until after process creation.
+  std::unique_ptr<SecurityCapabilities> security_capabilities;
+  DWORD all_applications_package_policy =
+      PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT;
+
+  if (profile) {
+    security_capabilities = profile->GetSecurityCapabilities();
+    if (!startup_info.UpdateProcThreadAttribute(
+            PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES,
+            security_capabilities.get(), sizeof(SECURITY_CAPABILITIES))) {
+      return SBOX_ERROR_PROC_THREAD_ATTRIBUTES;
+    }
+    if (profile->GetEnableLowPrivilegeAppContainer()) {
+      if (!startup_info.UpdateProcThreadAttribute(
+              PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY,
+              &all_applications_package_policy,
+              sizeof(all_applications_package_policy))) {
+        return SBOX_ERROR_PROC_THREAD_ATTRIBUTES;
+      }
+    }
+  }
+
   // Construct the thread pool here in case it is expensive.
   // The thread pool is shared by all the targets
   if (!thread_pool_)
-    thread_pool_ = base::MakeUnique<Win2kThreadPool>();
+    thread_pool_ = std::make_unique<Win2kThreadPool>();
 
   // Create the TargetProcess object and spawn the target suspended. Note that
   // Brokerservices does not own the target object. It is owned by the Policy.
   base::win::ScopedProcessInformation process_info;
-  TargetProcess* target =
-      new TargetProcess(std::move(initial_token), std::move(lockdown_token),
-                        job.Get(), thread_pool_.get());
+  TargetProcess* target = new TargetProcess(
+      std::move(initial_token), std::move(lockdown_token), job.Get(),
+      thread_pool_.get(),
+      profile ? profile->GetImpersonationCapabilities() : std::vector<Sid>());
 
   result = target->Create(exe_path, command_line, inherit_handles, startup_info,
                           &process_info, env_map, last_error);
@@ -483,7 +521,7 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
   // the job object generates notifications using the completion port.
   if (job.IsValid()) {
     std::unique_ptr<JobTracker> tracker =
-        base::MakeUnique<JobTracker>(std::move(job), policy_base);
+        std::make_unique<JobTracker>(std::move(job), policy_base);
 
     // There is no obvious recovery after failure here. Previous version with
     // SpawnCleanup() caused deletion of TargetProcess twice. crbug.com/480639
@@ -516,7 +554,6 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
   *target_info = process_info.Take();
   return result;
 }
-
 
 ResultCode BrokerServicesBase::WaitForAllTargets() {
   ::WaitForSingleObject(no_targets_.Get(), INFINITE);
