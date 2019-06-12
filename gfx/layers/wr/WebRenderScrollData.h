@@ -121,6 +121,7 @@ class WebRenderLayerScrollData final {
 
   void SetZoomAnimationId(const uint64_t& aId) { mZoomAnimationId = Some(aId); }
   Maybe<uint64_t> GetZoomAnimationId() const { return mZoomAnimationId; }
+  bool IsAsyncZoomContainer() const { return mZoomAnimationId.isSome(); }
 
   void Dump(const WebRenderScrollData& aOwner) const;
 
