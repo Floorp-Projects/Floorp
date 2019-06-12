@@ -47,9 +47,19 @@ jobs:
         shipping-product: fennec
         locales-file: mobile/locales/l10n-changesets.json
         treeherder:
-            platform: fennec-release/opt
+            platform: fennec-beta/opt
         attributes:
             release-type: beta
+
+    fennec-release:
+        bouncer-platforms: ['android', 'android-x86']
+        bouncer-products: ['apk']
+        shipping-product: fennec
+        locales-file: mobile/locales/l10n-changesets.json
+        treeherder:
+            platform: fennec-release/opt
+        attributes:
+            release-type: release
 
     firefox:
         bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']

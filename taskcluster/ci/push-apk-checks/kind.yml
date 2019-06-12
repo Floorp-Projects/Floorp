@@ -27,7 +27,7 @@ job-defaults:
         platform: Android/opt
         tier: 1
         kind: test
-    run-on-projects: ['try', 'mozilla-beta', 'mozilla-esr68']
+    run-on-projects: ['try', 'mozilla-esr68']
 
 jobs:
     push-apk-checks-nightly/opt:
@@ -45,3 +45,11 @@ jobs:
         package-name: org.mozilla.firefox_beta
         treeherder:
             symbol: pub(gpc-b)
+
+    push-apk-checks-release/opt:
+        description: Verify Release APKs are sane before uploading them onto Google Play Store
+        attributes:
+            release-type: release
+        package-name: org.mozilla.firefox
+        treeherder:
+            symbol: pub(gpc-r)

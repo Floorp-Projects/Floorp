@@ -706,9 +706,11 @@ def set_treeherder_machine_platform(config, tests):
         # years and need to be translated.
         'android-api-16/debug': 'android-em-4-3-armv7-api16/debug',
         'android-api-16-beta/debug': 'android-em-4-3-armv7-api16-beta/debug',
+        'android-api-16-release/debug': 'android-em-4-3-armv7-api16-release/debug',
         'android-api-16-ccov/debug': 'android-em-4-3-armv7-api16-ccov/debug',
         'android-api-16/opt': 'android-em-4-3-armv7-api16/opt',
         'android-api-16-beta-test/opt': 'android-em-4-3-armv7-api16-beta/opt',
+        'android-api-16-release-test/opt': 'android-em-4-3-armv7-api16-release/opt',
         'android-api-16-pgo/opt': 'android-em-4-3-armv7-api16/pgo',
         'android-x86/opt': 'android-em-4-2-x86/opt',
         'android-api-16-gradle/opt': 'android-api-16-gradle/opt',

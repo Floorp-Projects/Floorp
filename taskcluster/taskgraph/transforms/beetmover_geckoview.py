@@ -24,23 +24,20 @@ from voluptuous import Required, Optional
 
 
 _ARTIFACT_ID_PER_PLATFORM = {
-    'android-aarch64': 'geckoview{update_channel}-arm64-v8a',
-    'android-api-16': 'geckoview{update_channel}-armeabi-v7a',
-    'android-x86': 'geckoview{update_channel}-x86',
-    'android-x86_64': 'geckoview{update_channel}-x86_64',
+    'android-aarch64-nightly': 'geckoview-nightly-arm64-v8a',
+    'android-api-16-nightly': 'geckoview-nightly-armeabi-v7a',
+    'android-x86-nightly': 'geckoview-nightly-x86',
+    'android-x86_64-nightly': 'geckoview-nightly-x86_64',
     'android-aarch64-beta': 'geckoview-beta-arm64-v8a',
     'android-api-16-beta': 'geckoview-beta-armeabi-v7a',
     'android-x86-beta': 'geckoview-beta-x86',
     'android-x86_64-beta': 'geckoview-beta-x86_64',
+    'android-aarch64-release': 'geckoview-arm64-v8a',
+    'android-api-16-release': 'geckoview-armeabi-v7a',
+    'android-x86-release': 'geckoview-x86',
+    'android-x86_64-release': 'geckoview-x86_64',
 }
 
-_MOZ_UPDATE_CHANNEL_PER_BRANCH = {
-    'mozilla-release': '',
-    'mozilla-beta': '-beta',
-    'mozilla-central': '-nightly',
-    'try': '-nightly-try',
-    'maple': '-nightly-maple',
-}
 
 beetmover_description_schema = schema.extend({
     Required('depname', default='build'): basestring,
@@ -177,11 +174,8 @@ def make_task_worker(config, jobs):
 def craft_release_properties(config, job):
     props = beetmover_craft_release_properties(config, job)
 
-    platform = props['platform']
-    update_channel = _MOZ_UPDATE_CHANNEL_PER_BRANCH.get(
-        props['branch'], '-UNKNOWN_MOZ_UPDATE_CHANNEL'
-    )
-    artifact_id = _ARTIFACT_ID_PER_PLATFORM[platform].format(update_channel=update_channel)
+    platform = job['attributes']['build_platform']
+    artifact_id = _ARTIFACT_ID_PER_PLATFORM[platform]
     props['artifact-id'] = artifact_id
     props['app-name'] = 'geckoview'     # this beetmover job is not about pushing Fennec
 

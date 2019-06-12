@@ -51,9 +51,18 @@ jobs:
             fennec-beta-latest: apk
         shipping-product: fennec
         treeherder:
-            platform: fennec-release/opt
+            platform: fennec-beta/opt
         attributes:
             release-type: beta
+
+    fennec-release:
+        bouncer-products-per-alias:
+            fennec-latest: apk
+        shipping-product: fennec
+        treeherder:
+            platform: fennec-release/opt
+        attributes:
+            release-type: release
 
     firefox:
         bouncer-products-per-alias:

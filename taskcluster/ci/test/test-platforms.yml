@@ -367,6 +367,11 @@ android-em-4.3-arm7-api-16-beta/debug:
     test-sets:
         - android-common-tests
 
+android-em-4.3-arm7-api-16-release/debug:
+    build-platform: android-api-16-release/debug
+    test-sets:
+        - android-common-tests
+
 # Disable ccov testing on Android due to issues with
 # Java 8 features. Bug 1498721.
 # android-em-4.3-arm7-api-16-ccov/debug:
@@ -382,6 +387,12 @@ android-em-4.3-arm7-api-16/opt:
 
 android-em-4.3-arm7-api-16-beta/opt:
     build-platform: android-api-16-beta-test/opt
+    test-sets:
+        - android-common-tests
+        - android-opt-tests
+
+android-em-4.3-arm7-api-16-release/opt:
+    build-platform: android-api-16-release-test/opt
     test-sets:
         - android-common-tests
         - android-opt-tests
@@ -413,13 +424,28 @@ android-em-7.0-x86-beta/opt:
     test-sets:
         - android-x86-tests
 
+android-em-7.0-x86-release/opt:
+    build-platform: android-x86-release/opt
+    test-sets:
+        - android-x86-tests
+
 android-em-7.0-x86_64-beta/debug:
     build-platform: android-x86_64-beta/debug
     test-sets:
         - android-x86_64-tests
 
+android-em-7.0-x86_64-release/debug:
+    build-platform: android-x86_64-release/debug
+    test-sets:
+        - android-x86_64-tests
+
 android-em-7.0-x86_64-beta/opt:
     build-platform: android-x86_64-beta-test/opt
+    test-sets:
+        - android-x86_64-tests
+
+android-em-7.0-x86_64-release/opt:
+    build-platform: android-x86_64-release-test/opt
     test-sets:
         - android-x86_64-tests
 

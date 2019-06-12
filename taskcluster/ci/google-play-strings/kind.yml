@@ -40,7 +40,7 @@ job-defaults:
         platform: Android/opt
         tier: 2
         kind: other
-    run-on-projects: ['try', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+    run-on-projects: ['try', 'mozilla-esr68']
 
 jobs:
     nightly:
@@ -59,3 +59,11 @@ jobs:
                 PACKAGE_NAME: org.mozilla.firefox_beta
         treeherder:
             symbol: pub(gps-b)
+    release:
+        attributes:
+            release-type: release
+        worker:
+            env:
+                PACKAGE_NAME: org.mozilla.firefox
+        treeherder:
+            symbol: pub(gps-r)

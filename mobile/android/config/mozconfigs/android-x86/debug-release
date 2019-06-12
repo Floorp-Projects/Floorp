@@ -1,0 +1,21 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+# Global options
+ac_add_options --enable-debug
+
+# Android
+# Warning: Before increasing the with-android-min-sdk value, please note several places in and out
+# of tree have to be changed. Otherwise, places like Treeherder or archive.mozilla.org will
+# advertise a bad API level. This may confuse people. As an example, please look at bug 1384482.
+# If you think you can't handle the whole set of changes, please reach out to the Release
+# Engineering team.
+ac_add_options --target=i686-linux-android
+ac_add_options --with-android-min-sdk=16
+
+export MOZILLA_OFFICIAL=1
+export MOZ_ANDROID_POCKET=1
+
+ac_add_options --with-branding=mobile/android/branding/official
+ac_add_options --with-version-file-path=mobile/android/config/version-files/release
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"
