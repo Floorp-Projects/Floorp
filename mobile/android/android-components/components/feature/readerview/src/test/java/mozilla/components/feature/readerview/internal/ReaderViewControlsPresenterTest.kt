@@ -11,22 +11,23 @@ import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 
 class ReaderViewControlsPresenterTest {
+
     @Test
     fun `start applies config to view`() {
         val config: ReaderViewFeature.Config = mock()
-        val view: ReaderViewControlsView = mock()
+        val view = mock<ReaderViewControlsView>()
         val presenter = ReaderViewControlsPresenter(view, config)
 
-        `when`(config.colorScheme).thenReturn(mock())
-        `when`(config.fontSize).thenReturn(5)
-        `when`(config.fontType).thenReturn(mock())
+        whenever(config.colorScheme).thenReturn(mock())
+        whenever(config.fontSize).thenReturn(5)
+        whenever(config.fontType).thenReturn(mock())
 
         presenter.show()
 
@@ -38,21 +39,21 @@ class ReaderViewControlsPresenterTest {
 
     @Test
     fun `are controls visible`() {
-        val controlsView: ReaderViewControlsView = mock()
-        val view: View = mock()
-        `when`(controlsView.asView()).thenReturn(view)
+        val controlsView = mock<ReaderViewControlsView>()
+        val view = mock<View>()
+        whenever(controlsView.asView()).thenReturn(view)
         val presenter = ReaderViewControlsPresenter(controlsView, mock())
 
-        `when`(view.visibility).thenReturn(View.GONE)
+        whenever(view.visibility).thenReturn(View.GONE)
         assertFalse(presenter.areControlsVisible())
 
-        `when`(view.visibility).thenReturn(View.VISIBLE)
+        whenever(view.visibility).thenReturn(View.VISIBLE)
         assertTrue(presenter.areControlsVisible())
     }
 
     @Test
     fun `hide updates the visibility of the controls`() {
-        val view: ReaderViewControlsView = mock()
+        val view = mock<ReaderViewControlsView>()
         val presenter = ReaderViewControlsPresenter(view, mock())
 
         presenter.hide()

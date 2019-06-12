@@ -9,15 +9,16 @@ package mozilla.components.feature.readerview.internal
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
 class ReaderViewControlsInteractorTest {
+
     @Test
     fun `interactor assigns listener to self`() {
-        val view: ReaderViewControlsView = mock()
+        val view = mock<ReaderViewControlsView>()
         val interactor = ReaderViewControlsInteractor(view, mock())
 
         interactor.start()
@@ -28,7 +29,7 @@ class ReaderViewControlsInteractorTest {
 
     @Test
     fun `interactor un-assigns self from listener`() {
-        val view: ReaderViewControlsView = mock()
+        val view = mock<ReaderViewControlsView>()
         val interactor = ReaderViewControlsInteractor(view, mock())
 
         interactor.stop()
@@ -56,16 +57,16 @@ class ReaderViewControlsInteractorTest {
         val config: ReaderViewFeature.Config = mock()
         val interactor = ReaderViewControlsInteractor(mock(), config)
 
-        `when`(config.fontSize).thenReturn(7)
+        whenever(config.fontSize).thenReturn(7)
         interactor.onFontSizeIncreased()
         verify(config).fontSize = 8
 
-        `when`(config.fontSize).thenReturn(8)
+        whenever(config.fontSize).thenReturn(8)
         interactor.onFontSizeIncreased()
         verify(config).fontSize = 9
 
         // Can't increase past MAX_FONT_SIZE
-        `when`(config.fontSize).thenReturn(9)
+        whenever(config.fontSize).thenReturn(9)
         interactor.onFontSizeIncreased()
         verify(config).fontSize = 9
     }
@@ -75,16 +76,16 @@ class ReaderViewControlsInteractorTest {
         val config: ReaderViewFeature.Config = mock()
         val interactor = ReaderViewControlsInteractor(mock(), config)
 
-        `when`(config.fontSize).thenReturn(3)
+        whenever(config.fontSize).thenReturn(3)
         interactor.onFontSizeDecreased()
         verify(config).fontSize = 2
 
-        `when`(config.fontSize).thenReturn(2)
+        whenever(config.fontSize).thenReturn(2)
         interactor.onFontSizeDecreased()
         verify(config).fontSize = 1
 
         // Can't decrease below MIN_FONT_SIZE
-        `when`(config.fontSize).thenReturn(1)
+        whenever(config.fontSize).thenReturn(1)
         interactor.onFontSizeDecreased()
         verify(config).fontSize = 1
     }

@@ -6,14 +6,14 @@
 
 package mozilla.components.feature.readerview.view
 
-import android.content.Context
 import android.view.View
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatRadioButton
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.readerview.R
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.support.test.mock
+import mozilla.ext.appCompatContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -22,17 +22,13 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ReaderViewControlsBarTest {
-
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `flags are set on UI init`() {
-        val bar = spy(ReaderViewControlsBar(context))
+        val bar = spy(ReaderViewControlsBar(appCompatContext))
 
         assertTrue(bar.isFocusableInTouchMode)
         assertTrue(bar.isClickable)
@@ -40,7 +36,7 @@ class ReaderViewControlsBarTest {
 
     @Test
     fun `font options are set`() {
-        val bar = ReaderViewControlsBar(context)
+        val bar = ReaderViewControlsBar(appCompatContext)
         val serifButton = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_font_serif)
         val sansSerifButton = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_font_sans_serif)
 
@@ -59,7 +55,7 @@ class ReaderViewControlsBarTest {
 
     @Test
     fun `font size buttons are enabled or disabled`() {
-        val bar = ReaderViewControlsBar(context)
+        val bar = ReaderViewControlsBar(appCompatContext)
 
         val sizeDecreaseButton = bar.findViewById<AppCompatButton>(R.id.mozac_feature_readerview_font_size_decrease)
         val sizeIncreaseButton = bar.findViewById<AppCompatButton>(R.id.mozac_feature_readerview_font_size_increase)
@@ -92,7 +88,7 @@ class ReaderViewControlsBarTest {
 
     @Test
     fun `color scheme is set`() {
-        val bar = ReaderViewControlsBar(context)
+        val bar = ReaderViewControlsBar(appCompatContext)
         val colorOptionDark = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_color_dark)
         val colorOptionSepia = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_color_sepia)
         val colorOptionLight = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_color_light)
@@ -118,7 +114,7 @@ class ReaderViewControlsBarTest {
 
     @Test
     fun `showControls updates visibility and requests focus`() {
-        val bar = spy(ReaderViewControlsBar(context))
+        val bar = spy(ReaderViewControlsBar(appCompatContext))
 
         bar.showControls()
 
@@ -128,7 +124,7 @@ class ReaderViewControlsBarTest {
 
     @Test
     fun `hideControls updates visibility`() {
-        val bar = spy(ReaderViewControlsBar(context))
+        val bar = spy(ReaderViewControlsBar(appCompatContext))
 
         bar.hideControls()
 
@@ -137,7 +133,7 @@ class ReaderViewControlsBarTest {
 
     @Test
     fun `when focus is lost, hide controls`() {
-        val bar = spy(ReaderViewControlsBar(context))
+        val bar = spy(ReaderViewControlsBar(appCompatContext))
 
         bar.clearFocus()
 
@@ -152,7 +148,7 @@ class ReaderViewControlsBarTest {
 
     @Test
     fun `listener is invoked when clicking a font option`() {
-        val bar = ReaderViewControlsBar(context)
+        val bar = ReaderViewControlsBar(appCompatContext)
         val listener: ReaderViewControlsView.Listener = mock()
 
         assertNull(bar.listener)
@@ -166,7 +162,7 @@ class ReaderViewControlsBarTest {
 
     @Test
     fun `listener is invoked when clicking a font size option`() {
-        val bar = ReaderViewControlsBar(context)
+        val bar = ReaderViewControlsBar(appCompatContext)
         val listener: ReaderViewControlsView.Listener = mock()
 
         assertNull(bar.listener)
@@ -180,7 +176,7 @@ class ReaderViewControlsBarTest {
 
     @Test
     fun `listener is invoked when clicking a color scheme`() {
-        val bar = ReaderViewControlsBar(context)
+        val bar = ReaderViewControlsBar(appCompatContext)
         val listener: ReaderViewControlsView.Listener = mock()
 
         assertNull(bar.listener)
