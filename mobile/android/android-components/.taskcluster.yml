@@ -100,7 +100,7 @@ tasks:
             - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
           payload:
             maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
-            image: mozillamobile/android-components:1.17
+            image: mozillamobile/android-components:1.18
             command:
               - /bin/bash
               - --login
