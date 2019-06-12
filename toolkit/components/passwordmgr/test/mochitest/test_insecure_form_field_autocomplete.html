@@ -393,7 +393,7 @@ add_task(async function test_form1_delete() {
   // Delete the first entry (of 4), "tempuser1"
   synthesizeKey("KEY_ArrowDown");
   var numLogins;
-  numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
+  numLogins = await LoginManager.countLogins("http://mochi.test:8888", "", null);
   is(numLogins, 5, "Correct number of logins before deleting one");
 
   let countChangedPromise = notifyMenuChanged(5);
@@ -404,7 +404,7 @@ add_task(async function test_form1_delete() {
   await deletionPromise;
 
   checkLoginForm(uname, "", pword, "");
-  numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
+  numLogins = await LoginManager.countLogins("http://mochi.test:8888", "", null);
   is(numLogins, 4, "Correct number of logins after deleting one");
   await countChangedPromise;
   synthesizeKey("KEY_Enter");
@@ -440,7 +440,7 @@ add_task(async function test_form1_delete_second() {
   synthesizeKey("KEY_Delete", {shiftKey: true});
   await storageChanged;
   checkLoginForm(uname, "", pword, "");
-  let numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
+  let numLogins = await LoginManager.countLogins("http://mochi.test:8888", "", null);
   is(numLogins, 3, "Correct number of logins after deleting one");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -476,7 +476,7 @@ add_task(async function test_form1_delete_last() {
   synthesizeKey("KEY_Delete", {shiftKey: true});
   await storageChanged;
   checkLoginForm(uname, "", pword, "");
-  let numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
+  let numLogins = await LoginManager.countLogins("http://mochi.test:8888", "", null);
   is(numLogins, 2, "Correct number of logins after deleting one");
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown");
@@ -512,18 +512,18 @@ add_task(async function test_form1_check_only_entry_remaining() {
   let storageChanged = promiseStorageChanged(["removeLogin", "removeLogin"]);
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkLoginForm(uname, "", pword, "");
-  let numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
+  let numLogins = await LoginManager.countLogins("http://mochi.test:8888", "", null);
   is(numLogins, 1, "Correct number of logins after deleting one");
 
   // remove the login that's not shown in the list.
-  setupScript.sendSyncMessage("removeLogin", "login0");
+  setupScript.sendAsyncMessage("removeLogin", "login0");
   await storageChanged;
 });
 
 // Tests for single-user forms for ignoring autocomplete=off
 add_task(async function test_form2() {
   let storageChanged = promiseStorageChanged(["addLogin"]);
-  setupScript.sendSyncMessage("addLogin", "login5");
+  setupScript.sendAsyncMessage("addLogin", "login5");
   await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- other forms test single logins, with autocomplete=off set -->
@@ -656,14 +656,14 @@ add_task(async function test_form6_changeUsername() {
   uname.focus();
 
   let storageChanged = promiseStorageChanged(["removeLogin"]);
-  setupScript.sendSyncMessage("removeLogin", "login5");
+  setupScript.sendAsyncMessage("removeLogin", "login5");
   await storageChanged;
 });
 
 add_task(async function test_form7() {
   let storageChanged = promiseStorageChanged(["addLogin", "addLogin"]);
-  setupScript.sendSyncMessage("addLogin", "login6A");
-  setupScript.sendSyncMessage("addLogin", "login6B");
+  setupScript.sendAsyncMessage("addLogin", "login6A");
+  setupScript.sendAsyncMessage("addLogin", "login6B");
   await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- This form will be manipulated to insert a different username field. -->
@@ -689,7 +689,7 @@ add_task(async function test_form7() {
   // automatically, removing it makes it more likely that we'll catch a
   // future regression with form filling here.
   storageChanged = promiseStorageChanged(["removeLogin"]);
-  setupScript.sendSyncMessage("removeLogin", "login6B");
+  setupScript.sendAsyncMessage("removeLogin", "login6B");
   await storageChanged;
 });
 
@@ -713,13 +713,13 @@ add_task(async function test_form7_2() {
   restoreForm(); // clear field, so reloading test doesn't fail
 
   let storageChanged = promiseStorageChanged(["removeLogin"]);
-  setupScript.sendSyncMessage("removeLogin", "login6A");
+  setupScript.sendAsyncMessage("removeLogin", "login6A");
   await storageChanged;
 });
 
 add_task(async function test_form8() {
   let storageChanged = promiseStorageChanged(["addLogin"]);
-  setupScript.sendSyncMessage("addLogin", "login7");
+  setupScript.sendAsyncMessage("addLogin", "login7");
   await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- This form will be manipulated to insert a different username field. -->
@@ -759,9 +759,9 @@ add_task(async function test_form8_3() {
 
 add_task(async function test_form9_filtering() {
   let storageChanged = promiseStorageChanged(["removeLogin", "addLogin", "addLogin"]);
-  setupScript.sendSyncMessage("removeLogin", "login7");
-  setupScript.sendSyncMessage("addLogin", "login8A");
-  setupScript.sendSyncMessage("addLogin", "login8B");
+  setupScript.sendAsyncMessage("removeLogin", "login7");
+  setupScript.sendAsyncMessage("addLogin", "login8A");
+  setupScript.sendAsyncMessage("addLogin", "login8B");
   await storageChanged;
   await setFormAndWaitForFieldFilled(`
     <!-- test autocomplete dropdown -->
@@ -814,7 +814,7 @@ add_task(async function test_form9_autocomplete_cache() {
   // attempt for the synthesizeKey if we do not successfully cache the
   // autocomplete results.
   let storageChanged = promiseStorageChanged(["addLogin"]);
-  setupScript.sendSyncMessage("addLogin", "login8C");
+  setupScript.sendAsyncMessage("addLogin", "login8C");
   await storageChanged;
   uname.focus();
   let promise2 = notifyMenuChanged(2);
@@ -835,15 +835,15 @@ add_task(async function test_form9_autocomplete_cache() {
                            "mochi.test",
                            "Check popup only has the footer and insecure warning");
   storageChanged = promiseStorageChanged(["removeLogin", "removeLogin", "removeLogin"]);
-  setupScript.sendSyncMessage("removeLogin", "login8A");
-  setupScript.sendSyncMessage("removeLogin", "login8B");
-  setupScript.sendSyncMessage("removeLogin", "login8C");
+  setupScript.sendAsyncMessage("removeLogin", "login8A");
+  setupScript.sendAsyncMessage("removeLogin", "login8B");
+  setupScript.sendAsyncMessage("removeLogin", "login8C");
   await storageChanged;
 });
 
 add_task(async function test_form11_recipes() {
   let storageChanged = promiseStorageChanged(["addLogin"]);
-  setupScript.sendSyncMessage("addLogin", "login10");
+  setupScript.sendAsyncMessage("addLogin", "login10");
   await storageChanged;
   await loadRecipes({
     siteRecipes: [{
