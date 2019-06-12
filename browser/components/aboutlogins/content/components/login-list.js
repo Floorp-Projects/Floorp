@@ -21,7 +21,7 @@ export default class LoginList extends ReflectedFluentElement {
   }
 
   connectedCallback() {
-    if (this.children.length) {
+    if (this.shadowRoot) {
       return;
     }
     let loginListTemplate = document.querySelector("#login-list-template");
