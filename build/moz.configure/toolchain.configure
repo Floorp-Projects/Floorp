@@ -30,8 +30,8 @@ js_option('--disable-optimize',
           help='Disable optimizations via compiler flags')
 
 
-@depends('--enable-optimize')
-def moz_optimize(option):
+@depends('--enable-optimize', '--help')
+def moz_optimize(option, _):
     flags = None
 
     if len(option):
@@ -2481,3 +2481,45 @@ ar = check_prog('AR', ar_config.names, paths=toolchain_search_path)
 add_old_configure_assignment('AR', ar)
 
 set_config('AR_FLAGS', ar_config.flags)
+
+# Frame pointers
+# ==============================================================
+@depends(c_compiler, target)
+def frame_pointer_flags(compiler, target):
+    if compiler.type == 'clang-cl':
+        if target.cpu == 'aarch64':
+            # Some version of clang-cl don't support -Oy-; accomodate them.
+            return namespace(
+                enable=['-Xclang', '-mdisable-fp-elim'],
+                disable=['-Xclang', '-mdisable-fp-elim'],
+            )
+        return namespace(
+            enable=['-Oy-'],
+            disable=['-Oy'],
+        )
+    return namespace(
+        enable=['-fno-omit-frame-pointer', '-funwind-tables'],
+        disable=['-fomit-frame-pointer', '-funwind-tables'],
+    )
+
+
+@depends(moz_optimize.optimize, moz_debug, target,
+         '--enable-memory-sanitizer', '--enable-address-sanitizer',
+         '--enable-undefined-sanitizer')
+def frame_pointer_default(optimize, debug, target, msan, asan, ubsan):
+    return bool(not optimize or debug or msan or asan or ubsan or \
+        (target.os == 'WINNT' and target.cpu in ('x86', 'aarch64')))
+
+
+js_option('--enable-frame-pointers', default=frame_pointer_default,
+          help='{Enable|Disable} frame pointers')
+
+
+@depends('--enable-frame-pointers', frame_pointer_flags)
+def frame_pointer_flags(enable, flags):
+    if enable:
+        return flags.enable
+    return flags.disable
+
+
+set_config('MOZ_FRAMEPTR_FLAGS', frame_pointer_flags)

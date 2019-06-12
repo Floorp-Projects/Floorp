@@ -208,6 +208,10 @@ def profiling(value):
 
 add_old_configure_assignment('MOZ_PROFILING', profiling)
 
+with only_when('--enable-compile-environment'):
+    imply_option('--enable-frame-pointers', True, when=profiling)
+
+
 @depends(profiling, target)
 def imply_vtune(value, target):
     ok_cpu    = target.cpu in ['x86', 'x86_64']
