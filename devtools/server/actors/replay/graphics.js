@@ -45,7 +45,7 @@ function getCanvas(window) {
   return window.middlemanCanvas;
 }
 
-function updateWindowCanvas(window, buffer, width, height, hadFailure) {
+function updateWindowCanvas(window, buffer, width, height) {
   // Make sure the window has a canvas filling the screen.
   const canvas = getCanvas(window);
 
@@ -67,29 +67,39 @@ function updateWindowCanvas(window, buffer, width, height, hadFailure) {
   const imageData = cx.getImageData(0, 0, width, height);
   imageData.data.set(graphicsData);
   cx.putImageData(imageData, 0, 0);
+}
 
-  // Indicate to the user when repainting failed and we are showing old painted
-  // graphics instead of the most up-to-date graphics.
-  if (hadFailure) {
-    cx.fillStyle = "red";
-    cx.font = "48px serif";
-    cx.fillText("PAINT FAILURE", 10, 50);
-  }
+function clearWindowCanvas(window) {
+  const canvas = getCanvas(window);
+
+  const cx = canvas.getContext("2d");
+  cx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 // Entry point for when we have some new graphics data from the child process
 // to draw.
 // eslint-disable-next-line no-unused-vars
-function UpdateCanvas(buffer, width, height, hadFailure) {
+function UpdateCanvas(buffer, width, height) {
   try {
     // Paint to all windows we can find. Hopefully there is only one.
     for (const window of Services.ww.getWindowEnumerator()) {
-      updateWindowCanvas(window, buffer, width, height, hadFailure);
+      updateWindowCanvas(window, buffer, width, height);
     }
   } catch (e) {
-    dump("Middleman Graphics UpdateCanvas Exception: " + e + "\n");
+    dump(`Middleman Graphics UpdateCanvas Exception: ${e}\n`);
   }
 }
 
 // eslint-disable-next-line no-unused-vars
-var EXPORTED_SYMBOLS = ["UpdateCanvas"];
+function ClearCanvas() {
+  try {
+    for (const window of Services.ww.getWindowEnumerator()) {
+      clearWindowCanvas(window);
+    }
+  } catch (e) {
+    dump(`Middleman Graphics ClearCanvas Exception: ${e}\n`);
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
+var EXPORTED_SYMBOLS = ["UpdateCanvas", "ClearCanvas"];
