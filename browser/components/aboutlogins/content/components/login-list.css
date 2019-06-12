@@ -9,7 +9,8 @@
 
 .meta {
   display: flex;
-  padding: 10px;
+  align-items: center;
+  padding: 10px 18px;
   border-bottom: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-box-info-background);
   position: sticky;
@@ -20,6 +21,7 @@
   flex: auto;
   text-align: end;
   font-size: smaller;
+  margin-inline-start: 18px;
 }
 
 ol {
