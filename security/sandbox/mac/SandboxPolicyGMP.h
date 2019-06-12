@@ -6,16 +6,21 @@
 #ifndef mozilla_SandboxPolicyGMP_h
 #define mozilla_SandboxPolicyGMP_h
 
+#define MAX_GMP_TESTING_READ_PATHS 2
+
 namespace mozilla {
 
 static const char SandboxPolicyGMP[] = R"SANDBOX_LITERAL(
   (version 1)
 
   (define should-log (param "SHOULD_LOG"))
-  (define plugin-binary-path (param "PLUGIN_BINARY_PATH"))
   (define app-path (param "APP_PATH"))
-  (define app-binary-path (param "APP_BINARY_PATH"))
+  (define plugin-path (param "PLUGIN_PATH"))
+  (define plugin-binary-path (param "PLUGIN_BINARY_PATH"))
+  (define crashPort (param "CRASH_PORT"))
   (define hasWindowServer (param "HAS_WINDOW_SERVER"))
+  (define testingReadPath1 (param "TESTING_READ_PATH1"))
+  (define testingReadPath2 (param "TESTING_READ_PATH2"))
 
   (define (moz-deny feature)
     (if (string=? should-log "TRUE")
@@ -34,17 +39,34 @@ static const char SandboxPolicyGMP[] = R"SANDBOX_LITERAL(
 
   (if (defined? 'file-map-executable)
     (allow file-map-executable file-read*
-      (subpath "/System/Library/PrivateFrameworks")
-      (regex #"^/usr/lib/libstdc\+\+\.[^/]*dylib$")
-      (literal plugin-binary-path)
-      (literal app-binary-path)
+      (subpath "/System/Library")
+      (subpath "/usr/lib")
+      (subpath plugin-path)
       (subpath app-path))
     (allow file-read*
-      (subpath "/System/Library/PrivateFrameworks")
-      (regex #"^/usr/lib/libstdc\+\+\.[^/]*dylib$")
-      (literal plugin-binary-path)
-      (literal app-binary-path)
+      (subpath "/System/Library")
+      (subpath "/usr/lib")
+      (subpath plugin-path)
       (subpath app-path)))
+
+  (if (defined? 'file-map-executable)
+    (begin
+      (when plugin-binary-path
+        (allow file-read* file-map-executable (subpath plugin-binary-path)))
+      (when testingReadPath1
+        (allow file-read* file-map-executable (subpath testingReadPath1)))
+      (when testingReadPath2
+        (allow file-read* file-map-executable (subpath testingReadPath2))))
+    (begin
+      (when plugin-binary-path
+        (allow file-read* (subpath plugin-binary-path)))
+      (when testingReadPath1
+        (allow file-read* (subpath testingReadPath1)))
+      (when testingReadPath2
+        (allow file-read* (subpath testingReadPath2)))))
+
+  (if (string? crashPort)
+    (allow mach-lookup (global-name crashPort)))
 
   (allow signal (target self))
   (allow sysctl-read)
@@ -53,9 +75,7 @@ static const char SandboxPolicyGMP[] = R"SANDBOX_LITERAL(
       (literal "/etc")
       (literal "/dev/random")
       (literal "/dev/urandom")
-      (literal "/usr/share/icu/icudt51l.dat")
-      (subpath "/System/Library/Displays/Overrides")
-      (subpath "/System/Library/CoreServices/CoreTypes.bundle"))
+      (literal "/usr/share/icu/icudt51l.dat"))
 
   (if (string=? hasWindowServer "TRUE")
     (allow mach-lookup (global-name "com.apple.windowserver.active")))

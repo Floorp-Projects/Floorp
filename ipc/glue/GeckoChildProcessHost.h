@@ -140,7 +140,7 @@ class GeckoChildProcessHost : public ChildProcessHost {
   // To allow filling a MacSandboxInfo from the child
   // process without an instance of RDDProcessHost.
   // Only needed for late-start sandbox enabling.
-  static void StaticFillMacSandboxInfo(MacSandboxInfo& aInfo);
+  static bool StaticFillMacSandboxInfo(MacSandboxInfo& aInfo);
 
   // Start the sandbox from the child process.
   static bool StartMacSandbox(int aArgc, char** aArgv,
@@ -215,12 +215,12 @@ class GeckoChildProcessHost : public ChildProcessHost {
   virtual bool IsMacSandboxLaunchEnabled() { return false; }
 
   // Fill a MacSandboxInfo to configure the sandbox
-  virtual void FillMacSandboxInfo(MacSandboxInfo& aInfo);
+  virtual bool FillMacSandboxInfo(MacSandboxInfo& aInfo);
 
   // Adds the command line arguments needed to enable
   // sandboxing of the child process at startup before
   // the child event loop is up.
-  virtual void AppendMacSandboxParams(StringVector& aArgs);
+  virtual bool AppendMacSandboxParams(StringVector& aArgs);
 #endif
 
  private:
