@@ -20,7 +20,7 @@ fi
 
 if [ -n "$RELENGAPI_PORT" ]; then
     # When the worker has the relengapi proxy setup, use it.
-    TOOLTOOL_DL_FLAGS="${TOOLTOOL_DL_FLAGS=} --tooltool-url=http://relengapi/tooltool/"
+    TOOLTOOL_DL_FLAGS="${TOOLTOOL_DL_FLAGS=} --tooltool-url=http://taskcluster/tooltool.mozilla-releng.net/"
 fi
 
 if [ -n "$UPLOAD_DIR" ]; then
