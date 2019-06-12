@@ -5,10 +5,11 @@
 
 #include "perf/jsperf.h"
 
-#include "gc/FreeOp.h"
 #include "js/PropertySpec.h"
 #include "vm/JSContext.h" /* for error messages */
 #include "vm/JSObject.h"  /* for unwrapping without a context */
+
+#include "gc/FreeOp-inl.h"
 
 using namespace js;
 using JS::PerfMeasurement;
@@ -169,14 +170,14 @@ static bool pm_construct(JSContext* cx, unsigned argc, Value* vp) {
       cx->new_<PerfMeasurement>(PerfMeasurement::EventMask(mask));
   if (!p) return false;
 
-  JS_SetPrivate(obj, p);
+  JS_InitPrivate(obj, p, sizeof(*p), JS::MemoryUse::PerfMeasurement);
   args.rval().setObject(*obj);
   return true;
 }
 
 static void pm_finalize(JSFreeOp* fop, JSObject* obj) {
-  js::FreeOp::get(fop)->delete_(
-      static_cast<PerfMeasurement*>(JS_GetPrivate(obj)));
+  auto pm = static_cast<PerfMeasurement*>(JS_GetPrivate(obj));
+  js::FreeOp::get(fop)->delete_(obj, pm, MemoryUse::PerfMeasurement);
 }
 
 // Helpers (declared above)
