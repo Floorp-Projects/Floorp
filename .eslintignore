@@ -125,6 +125,7 @@ devtools/shared/qrcode/tests/mochitest/test_decode.html
 devtools/shared/tests/mochitest/*.html
 devtools/shared/webconsole/test/test_*.html
 devtools/client/webreplay/mochitest/examples/*.html
+devtools/server/tests/mochitest/test_inspector-inactive-property-helper.html
 
 # Ignore devtools debugger files
 # Keep in sync with devtools/client/debugger/.eslintignore
