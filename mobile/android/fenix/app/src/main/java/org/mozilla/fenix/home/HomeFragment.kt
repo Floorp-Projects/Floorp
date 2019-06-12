@@ -266,24 +266,15 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).supportActionBar?.hide()
 
-        requireComponents.backgroundServices.accountManager.register(this, owner = this)
-    }
-
-    @SuppressWarnings("ComplexMethod")
-    override fun onStart() {
-        super.onStart()
-        if (isAdded) {
-            getAutoDisposeObservable<SessionControlAction>()
-                .subscribe {
-                    when (it) {
-                        is SessionControlAction.Tab -> handleTabAction(it.action)
-                        is SessionControlAction.Collection -> handleCollectionAction(it.action)
-                        is SessionControlAction.Onboarding -> handleOnboardingAction(it.action)
-                    }
+        getAutoDisposeObservable<SessionControlAction>()
+            .subscribe {
+                when (it) {
+                    is SessionControlAction.Tab -> handleTabAction(it.action)
+                    is SessionControlAction.Collection -> handleCollectionAction(it.action)
+                    is SessionControlAction.Onboarding -> handleOnboardingAction(it.action)
                 }
-        }
+            }
 
         getManagedEmitter<SessionControlChange>().onNext(
             SessionControlChange.Change(
@@ -293,6 +284,14 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             )
         )
 
+        (activity as AppCompatActivity).supportActionBar?.hide()
+
+        requireComponents.backgroundServices.accountManager.register(this, owner = this)
+    }
+
+    @SuppressWarnings("ComplexMethod")
+    override fun onStart() {
+        super.onStart()
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
         sessionObserver.onStart()
         tabCollectionObserver = subscribeToTabCollections()

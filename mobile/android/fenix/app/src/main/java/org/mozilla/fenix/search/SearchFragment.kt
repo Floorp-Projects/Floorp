@@ -194,6 +194,9 @@ class SearchFragment : Fragment(), BackHandler {
 
     override fun onResume() {
         super.onResume()
+        subscribeToSearchActions()
+        subscribeToAwesomeBarActions()
+
         if (!permissionDidUpdate) {
             getManagedEmitter<SearchChange>().onNext(SearchChange.ToolbarRequestedFocus)
         }
@@ -204,12 +207,6 @@ class SearchFragment : Fragment(), BackHandler {
     override fun onPause() {
         super.onPause()
         getManagedEmitter<SearchChange>().onNext(SearchChange.ToolbarClearedFocus)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        subscribeToSearchActions()
-        subscribeToAwesomeBarActions()
     }
 
     override fun onBackPressed(): Boolean {

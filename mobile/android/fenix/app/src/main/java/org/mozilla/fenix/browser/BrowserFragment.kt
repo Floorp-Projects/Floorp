@@ -449,7 +449,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         }
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun onResume() {
+        sessionObserver = subscribeToSession()
+        sessionManagerObserver = subscribeToSessions()
+        getSessionById()?.let { updateBookmarkState(it) }
+
         if (getSessionById() == null) findNavController(this).popBackStack(R.id.homeFragment, false)
         super.onResume()
         context?.components?.core?.let {
@@ -461,14 +466,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         }
         getSessionById()?.let { (activity as HomeActivity).updateThemeForSession(it) }
         (activity as AppCompatActivity).supportActionBar?.hide()
-    }
 
-    @Suppress("ComplexMethod")
-    override fun onStart() {
-        super.onStart()
-        sessionObserver = subscribeToSession()
-        sessionManagerObserver = subscribeToSessions()
-        getSessionById()?.let { updateBookmarkState(it) }
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
@@ -551,6 +549,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     }
                 }
             }
+
         assignSitePermissionsRules()
     }
 
