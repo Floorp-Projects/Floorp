@@ -19,6 +19,8 @@ enum MediaKeysRequirement {
 dictionary MediaKeySystemMediaCapability {
    DOMString contentType = "";
    DOMString robustness = "";
+   [Pref="media.eme.encrypted-media-encryption-scheme.enabled"]
+   DOMString? encryptionScheme = null;
 };
 
 dictionary MediaKeySystemConfiguration {
