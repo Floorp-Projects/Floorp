@@ -6,7 +6,13 @@
 
 #include <stdio.h>
 #include <string>
+#include <thread>
 #include <vector>
+#ifdef XP_WIN
+#  include <windows.h>
+#else
+#  include <unistd.h>
+#endif
 
 #include "base64.h"
 #include "mozilla/Move.h"
@@ -464,8 +470,37 @@ SECStatus ConfigSecureServerWithNamedCert(
   return SECSuccess;
 }
 
-int StartServer(const char* nssCertDBDir, SSLSNISocketConfig sniSocketConfig,
+#ifdef XP_WIN
+using PidType = DWORD;
+constexpr bool IsValidPid(long long pid) {
+  // Excluding `(DWORD)-1` because it is not a valid process ID.
+  // See https://devblogs.microsoft.com/oldnewthing/20040223-00/?p=40503
+  return pid > 0 && pid < std::numeric_limits<PidType>::max();
+}
+#else
+using PidType = pid_t;
+constexpr bool IsValidPid(long long pid) {
+  return pid > 0 && pid <= std::numeric_limits<PidType>::max();
+}
+#endif
+
+PidType ConvertPid(const char* pidStr) {
+  long long pid = strtoll(pidStr, nullptr, 10);
+  if (!IsValidPid(pid)) {
+    return 0;
+  }
+  return static_cast<PidType>(pid);
+}
+
+int StartServer(int argc, char* argv[], SSLSNISocketConfig sniSocketConfig,
                 void* sniSocketConfigArg) {
+  if (argc != 3) {
+    fprintf(stderr, "usage: %s <NSS DB directory> <ppid>\n", argv[0]);
+    return 1;
+  }
+  const char* nssCertDBDir = argv[1];
+  PidType ppid = ConvertPid(argv[2]);
+
   const char* debugLevel = PR_GetEnv("MOZ_TLS_SERVER_DEBUG_LEVEL");
   if (debugLevel) {
     int level = atoi(debugLevel);
@@ -559,6 +594,34 @@ int StartServer(const char* nssCertDBDir, SSLSNISocketConfig sniSocketConfig,
       return 1;
     }
   }
+
+  std::thread([ppid] {
+    if (!ppid) {
+      if (gDebugLevel >= DEBUG_ERRORS) {
+        fprintf(stderr, "invalid ppid\n");
+      }
+      return;
+    }
+#ifdef XP_WIN
+    HANDLE parent = OpenProcess(SYNCHRONIZE, false, ppid);
+    if (!parent) {
+      if (gDebugLevel >= DEBUG_ERRORS) {
+        fprintf(stderr, "OpenProcess failed\n");
+      }
+      return;
+    }
+    WaitForSingleObject(parent, INFINITE);
+    CloseHandle(parent);
+#else
+    while (getppid() == ppid) {
+      sleep(1);
+    }
+#endif
+    if (gDebugLevel >= DEBUG_ERRORS) {
+      fprintf(stderr, "Parent process crashed\n");
+    }
+    exit(1);
+  }).detach();
 
   while (true) {
     PRNetAddr clientAddr;
