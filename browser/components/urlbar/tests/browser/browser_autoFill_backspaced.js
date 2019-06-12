@@ -17,11 +17,14 @@ async function test_autocomplete(data) {
     onAutoFill();
 
   info("Synthesizing keys");
-  keys.forEach(key => EventUtils.synthesizeKey(key));
-
-  Assert.equal(gURLBar.textValue, modified, "backspaced value is as expected");
+  for (let key of keys) {
+    let args = Array.isArray(key) ? key : [key];
+    EventUtils.synthesizeKey(...args);
+  }
 
   await promiseSearchComplete();
+
+  Assert.equal(gURLBar.textValue, modified, "backspaced value is as expected");
 
   Assert.greater(UrlbarTestUtils.getResultCount(window), 0,
     "Should get at least 1 result");
@@ -43,11 +46,10 @@ add_task(async function() {
   });
   Services.prefs.setBoolPref("browser.urlbar.autoFill", true);
 
-  // Add a typed visit, so it will be autofilled.
-  await PlacesTestUtils.addVisits({
-    uri: NetUtil.newURI("http://example.com/"),
-    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
-  });
+  await PlacesTestUtils.addVisits([
+    "http://example.com/",
+    "http://example.com/foo",
+  ]);
 
   await test_autocomplete({ desc: "DELETE the autofilled part should search",
                             typed: "exam",
@@ -148,6 +150,73 @@ add_task(async function() {
                               gURLBar.selectionEnd = 12;
                             },
                          });
+
+  await test_autocomplete({
+    desc: "Right arrow key and then backspace should delete the backslash and not re-trigger autofill",
+    typed: "ex",
+    autofilled: "example.com/",
+    modified: "example.com",
+    keys: ["KEY_ArrowRight", "KEY_Backspace"],
+    type: UrlbarUtils.RESULT_TYPE.URL,
+  });
+
+  await test_autocomplete({
+    desc: "Right arrow key, selecting the last few characters using the keyboard, and then backspace should delete the characters and not re-trigger autofill",
+    typed: "ex",
+    autofilled: "example.com/",
+    modified: "example.c",
+    keys: [
+      "KEY_ArrowRight",
+      ["KEY_ArrowLeft", { shiftKey: true }],
+      ["KEY_ArrowLeft", { shiftKey: true }],
+      ["KEY_ArrowLeft", { shiftKey: true }],
+      "KEY_Backspace",
+    ],
+    type: UrlbarUtils.RESULT_TYPE.URL,
+  });
+
+  // The remaining tests fail on awesomebar because it doesn't properly handle
+  // them.
+  if (!UrlbarPrefs.get("quantumbar")) {
+    return;
+  }
+
+  await test_autocomplete({
+    desc: "End and then backspace should delete the backslash and not re-trigger autofill",
+    typed: "ex",
+    autofilled: "example.com/",
+    modified: "example.com",
+    keys: [
+      AppConstants.platform == "macosx" ?
+        ["KEY_ArrowRight", { metaKey: true }] :
+        "KEY_End",
+      "KEY_Backspace",
+    ],
+    type: UrlbarUtils.RESULT_TYPE.URL,
+  });
+
+  await test_autocomplete({
+    desc: "Clicking in the input after the text and then backspace should delete the backslash and not re-trigger autofill",
+    typed: "ex",
+    autofilled: "example.com/",
+    modified: "example.com",
+    keys: ["KEY_Backspace"],
+    type: UrlbarUtils.RESULT_TYPE.URL,
+    onAutoFill: () => {
+      // This assumes that the center of the input is to the right of the end
+      // of the text, so the caret is placed at the end of the text on click.
+      EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+    },
+  });
+
+  await test_autocomplete({
+    desc: "Selecting the next result and then backspace should delete the last character and not re-trigger autofill",
+    typed: "ex",
+    autofilled: "example.com/",
+    modified: "example.com/fo",
+    keys: ["KEY_ArrowDown", "KEY_Backspace"],
+    type: UrlbarUtils.RESULT_TYPE.URL,
+  });
 
   await PlacesUtils.history.clear();
 });

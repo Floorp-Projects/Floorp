@@ -190,7 +190,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // }
 const actionTypes = {};
 
-for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TARGETING_UPDATE", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_FEED_UPDATE", "DISCOVERY_STREAM_IMPRESSION_STATS", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_LINK_BLOCKED", "DISCOVERY_STREAM_LOADED_CONTENT", "DISCOVERY_STREAM_SPOCS_CAPS", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_FILL", "DISCOVERY_STREAM_SPOCS_UPDATE", "DISCOVERY_STREAM_SPOC_IMPRESSION", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LINK_DELETED_OR_ARCHIVED", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "TRAILHEAD_ENROLL_EVENT", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TARGETING_UPDATE", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_FEED_UPDATE", "DISCOVERY_STREAM_IMPRESSION_STATS", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_LINK_BLOCKED", "DISCOVERY_STREAM_LOADED_CONTENT", "DISCOVERY_STREAM_RETRY_FEED", "DISCOVERY_STREAM_SPOCS_CAPS", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_FILL", "DISCOVERY_STREAM_SPOCS_UPDATE", "DISCOVERY_STREAM_SPOC_IMPRESSION", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LINK_DELETED_OR_ARCHIVED", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "TRAILHEAD_ENROLL_EVENT", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 } // These are acceptable actions for AS Router messages to have. They can show up
 // as call-to-action buttons in snippets, onboarding tour, etc.
@@ -4015,6 +4015,22 @@ class ContextMenuItem extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureC
   onClick() {
     this.props.hideContext();
     this.props.option.onClick();
+  } // This selects the correct node based on the key pressed
+
+
+  focusSibling(target, key) {
+    const parent = target.parentNode;
+    const closestSiblingSelector = key === "ArrowUp" ? "previousSibling" : "nextSibling";
+
+    if (!parent[closestSiblingSelector]) {
+      return;
+    }
+
+    if (parent[closestSiblingSelector].firstElementChild) {
+      parent[closestSiblingSelector].firstElementChild.focus();
+    } else {
+      parent[closestSiblingSelector][closestSiblingSelector].firstElementChild.focus();
+    }
   }
 
   onKeyDown(event) {
@@ -4033,6 +4049,12 @@ class ContextMenuItem extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureC
 
         break;
 
+      case "ArrowUp":
+      case "ArrowDown":
+        event.preventDefault();
+        this.focusSibling(event.target, event.key);
+        break;
+
       case "Enter":
         this.props.hideContext();
         option.onClick();
@@ -4049,9 +4071,9 @@ class ContextMenuItem extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureC
       className: "context-menu-item"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: option.disabled ? "disabled" : "",
+      tabIndex: "0",
       onClick: this.onClick,
-      onKeyDown: this.onKeyDown,
-      tabIndex: "0"
+      onKeyDown: this.onKeyDown
     }, option.icon && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
       className: `icon icon-spacer icon-${option.icon}`
     }), option.label));
@@ -4427,7 +4449,10 @@ class ImpressionStats extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureC
         source: props.source.toUpperCase(),
         tiles: cards.map(link => ({
           id: link.id,
-          pos: link.pos
+          pos: link.pos,
+          ...(link.shim ? {
+            shim: link.shim
+          } : {})
         }))
       }));
       this.impressionCardGuids = cards.map(link => link.id);
@@ -4837,6 +4862,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], {
       id: learnMore.link.id
     })))))), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
+      "aria-haspopup": "true",
       className: "context-menu-button icon",
       title: this.props.intl.formatMessage({
         id: "context_menu_title"
@@ -6351,6 +6377,7 @@ class TopSite extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
       className: `${props.className || ""}${isContextMenuOpen ? " active" : ""}`,
       title: title
     }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      "aria-haspopup": "true",
       className: "context-menu-button icon",
       title: this.props.intl.formatMessage({
         id: "context_menu_title"
@@ -6401,6 +6428,7 @@ class TopSitePlaceholder extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       className: `placeholder ${this.props.className || ""}`,
       isDraggable: false
     }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      "aria-haspopup": "true",
       className: "context-menu-button edit-button icon",
       title: this.props.intl.formatMessage({
         id: "edit_topsites_edit_button"
@@ -7665,6 +7693,7 @@ class DSLinkMenu_DSLinkMenu extends external_React_default.a.PureComponent {
     const type = this.props.type || "DISCOVERY_STREAM";
     return external_React_default.a.createElement("div", null, external_React_default.a.createElement("button", {
       ref: this.contextMenuButtonRef,
+      "aria-haspopup": "true",
       className: "context-menu-button icon",
       title: this.props.intl.formatMessage({
         id: "context_menu_title"
@@ -7803,7 +7832,10 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
         click: 0,
         tiles: [{
           id: this.props.id,
-          pos: this.props.pos
+          pos: this.props.pos,
+          ...(this.props.shim ? {
+            shim: this.props.shim
+          } : {})
         }]
       }));
     }
@@ -7839,7 +7871,10 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       campaignId: this.props.campaignId,
       rows: [{
         id: this.props.id,
-        pos: this.props.pos
+        pos: this.props.pos,
+        ...(this.props.shim ? {
+          shim: this.props.shim
+        } : {})
       }],
       dispatch: this.props.dispatch,
       source: this.props.type
@@ -7863,13 +7898,84 @@ const PlaceholderDSCard = props => external_React_default.a.createElement(DSCard
 });
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState.jsx
 
+
 class DSEmptyState_DSEmptyState extends external_React_default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onReset = this.onReset.bind(this);
+    this.state = {};
+  }
+
+  componentWillUnmount() {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+    }
+  }
+
+  onReset() {
+    if (this.props.dispatch && this.props.feed) {
+      const {
+        feed
+      } = this.props;
+      const {
+        url
+      } = feed;
+      this.props.dispatch({
+        type: Actions["actionTypes"].DISCOVERY_STREAM_FEED_UPDATE,
+        data: {
+          feed: { ...feed,
+            data: { ...feed.data,
+              status: "waiting"
+            }
+          },
+          url
+        }
+      });
+      this.setState({
+        waiting: true
+      });
+      this.timeout = setTimeout(() => {
+        this.timeout = null;
+        this.setState({
+          waiting: false
+        });
+      }, 300);
+      this.props.dispatch(Actions["actionCreators"].OnlyToMain({
+        type: Actions["actionTypes"].DISCOVERY_STREAM_RETRY_FEED,
+        data: {
+          feed
+        }
+      }));
+    }
+  }
+
+  renderButton() {
+    if (this.props.status === "waiting" || this.state.waiting) {
+      return external_React_default.a.createElement("button", {
+        className: "try-again-button waiting"
+      }, "Loading...");
+    }
+
+    return external_React_default.a.createElement("button", {
+      className: "try-again-button",
+      onClick: this.onReset
+    }, "Try Again");
+  }
+
+  renderState() {
+    if (this.props.status === "waiting" || this.props.status === "failed") {
+      return external_React_default.a.createElement(external_React_default.a.Fragment, null, external_React_default.a.createElement("h2", null, "Oops! We almost loaded this section, but not quite."), this.renderButton());
+    }
+
+    return external_React_default.a.createElement(external_React_default.a.Fragment, null, external_React_default.a.createElement("h2", null, "You are caught up!"), external_React_default.a.createElement("p", null, "Check back later for more stories."));
+  }
+
   render() {
     return external_React_default.a.createElement("div", {
       className: "section-empty-state"
     }, external_React_default.a.createElement("div", {
       className: "empty-state-message"
-    }, external_React_default.a.createElement("h2", null, "You are caught up!"), external_React_default.a.createElement("p", null, "Check back later for more stories.")));
+    }, this.renderState()));
   }
 
 }
@@ -7896,6 +8002,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
         excerpt: rec.excerpt,
         url: rec.url,
         id: rec.id,
+        shim: rec.shim,
         type: this.props.type,
         context: rec.context,
         dispatch: this.props.dispatch,
@@ -7933,7 +8040,11 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
       className: "ds-header"
     }, this.props.title), isEmpty ? external_React_default.a.createElement("div", {
       className: "ds-card-grid empty"
-    }, external_React_default.a.createElement(DSEmptyState_DSEmptyState, null)) : this.renderCards());
+    }, external_React_default.a.createElement(DSEmptyState_DSEmptyState, {
+      status: data.status,
+      dispatch: this.props.dispatch,
+      feed: this.props.feed
+    })) : this.renderCards());
   }
 
 }
@@ -8004,7 +8115,10 @@ class List_ListItem extends external_React_default.a.PureComponent {
         click: 0,
         tiles: [{
           id: this.props.id,
-          pos: this.props.pos
+          pos: this.props.pos,
+          ...(this.props.shim ? {
+            shim: this.props.shim
+          } : {})
         }]
       }));
     }
@@ -8036,7 +8150,10 @@ class List_ListItem extends external_React_default.a.PureComponent {
       campaignId: this.props.campaignId,
       rows: [{
         id: this.props.id,
-        pos: this.props.pos
+        pos: this.props.pos,
+        ...(this.props.shim ? {
+          shim: this.props.shim
+        } : {})
       }],
       dispatch: this.props.dispatch,
       source: this.props.type
@@ -8078,6 +8195,7 @@ function _List(props) {
         domain: rec.domain,
         excerpt: rec.excerpt,
         id: rec.id,
+        shim: rec.shim,
         image_src: rec.image_src,
         raw_image_src: rec.raw_image_src,
         pos: rec.pos,
@@ -8096,19 +8214,25 @@ function _List(props) {
     }, recMarkup);
   };
 
-  const feed = props.data;
+  const {
+    data
+  } = props;
 
-  if (!feed || !feed.recommendations) {
+  if (!data || !data.recommendations) {
     return null;
   } // Handle the case where a user has dismissed all recommendations
 
 
-  const isEmpty = feed.recommendations.length === 0;
+  const isEmpty = data.recommendations.length === 0;
   return external_React_default.a.createElement("div", null, props.header && props.header.title ? external_React_default.a.createElement("div", {
     className: "ds-header"
   }, props.header.title) : null, isEmpty ? external_React_default.a.createElement("div", {
     className: "ds-list empty"
-  }, external_React_default.a.createElement(DSEmptyState_DSEmptyState, null)) : renderList());
+  }, external_React_default.a.createElement(DSEmptyState_DSEmptyState, {
+    status: data.status,
+    dispatch: props.dispatch,
+    feed: props.feed
+  })) : renderList());
 }
 _List.defaultProps = {
   recStartingPoint: 0,
@@ -8155,7 +8279,10 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         click: 0,
         tiles: [{
           id: this.heroRec.id,
-          pos: this.heroRec.pos
+          pos: this.heroRec.pos,
+          ...(this.heroRec.shim ? {
+            shim: this.heroRec.shim
+          } : {})
         }]
       }));
     }
@@ -8178,6 +8305,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         title: rec.title,
         url: rec.url,
         id: rec.id,
+        shim: rec.shim,
         pos: rec.pos,
         type: this.props.type,
         dispatch: this.props.dispatch,
@@ -8222,7 +8350,10 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         campaignId: heroRec.campaignId,
         rows: [{
           id: heroRec.id,
-          pos: heroRec.pos
+          pos: heroRec.pos,
+          ...(heroRec.shim ? {
+            shim: heroRec.shim
+          } : {})
         }],
         dispatch: this.props.dispatch,
         source: this.props.type
@@ -8243,6 +8374,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
     let list = external_React_default.a.createElement(List, {
       recStartingPoint: 1,
       data: this.props.data,
+      feed: this.props.feed,
       hasImages: true,
       hasBorders: this.props.border === `border`,
       items: this.props.items - 1,
@@ -8270,7 +8402,11 @@ class Hero_Hero extends external_React_default.a.PureComponent {
       className: "ds-header"
     }, this.props.title), isEmpty ? external_React_default.a.createElement("div", {
       className: "ds-hero empty"
-    }, external_React_default.a.createElement(DSEmptyState_DSEmptyState, null)) : this.renderHero());
+    }, external_React_default.a.createElement(DSEmptyState_DSEmptyState, {
+      status: data.status,
+      dispatch: this.props.dispatch,
+      feed: this.props.feed
+    })) : this.renderHero());
   }
 
 }
@@ -8437,7 +8573,7 @@ const selectLayoutRender = (state, prefs, rickRollCache) => {
 
     if (feed && feed.data) {
       data = { ...feed.data,
-        recommendations: [...feed.data.recommendations]
+        recommendations: [...(feed.data.recommendations || [])]
       };
     }
 
@@ -8445,10 +8581,12 @@ const selectLayoutRender = (state, prefs, rickRollCache) => {
       data = { ...data,
         recommendations: data.recommendations.slice(component.properties.offset)
       };
-    } // Do we ever expect to possibly have a spoc.
+    } // Ensure we have recs available for this feed.
 
 
-    if (data && component.spocs && component.spocs.positions && component.spocs.positions.length) {
+    const hasRecs = data && data.recommendations && data.recommendations.length; // Do we ever expect to possibly have a spoc.
+
+    if (hasRecs && component.spocs && component.spocs.positions && component.spocs.positions.length) {
       // We expect a spoc, spocs are loaded, and the server returned spocs.
       if (spocs.loaded && spocs.data.spocs && spocs.data.spocs.length) {
         data = rollForSpocs(data, component.spocs);
@@ -8713,6 +8851,7 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
       case "List":
         return external_React_default.a.createElement(List, {
           data: component.data,
+          feed: component.feed,
           fullWidth: component.properties.full_width,
           hasBorders: component.properties.border === "border",
           hasImages: component.properties.has_images,
@@ -13316,8 +13455,10 @@ class Card_Card extends external_React_default.a.PureComponent {
     }, link.description)), external_React_default.a.createElement("div", {
       className: "card-context"
     }, icon && !link.context && external_React_default.a.createElement("span", {
+      "aria-haspopup": "true",
       className: `card-context-icon icon icon-${icon}`
     }), link.icon && link.context && external_React_default.a.createElement("span", {
+      "aria-haspopup": "true",
       className: "card-context-icon icon",
       style: {
         backgroundImage: `url('${link.icon}')`
@@ -13330,12 +13471,14 @@ class Card_Card extends external_React_default.a.PureComponent {
     })), link.context && external_React_default.a.createElement("div", {
       className: "card-context-label"
     }, link.context))))), !props.placeholder && external_React_default.a.createElement("button", {
+      "aria-haspopup": "true",
       className: "context-menu-button icon",
       title: this.props.intl.formatMessage({
         id: "context_menu_title"
       }),
       onClick: this.onMenuButtonClick
     }, external_React_default.a.createElement("span", {
+      "aria-haspopup": "true",
       className: "sr-only"
     }, `Open context menu for ${link.title}`)), isContextMenuOpen && external_React_default.a.createElement(LinkMenu["LinkMenu"], {
       dispatch: dispatch,

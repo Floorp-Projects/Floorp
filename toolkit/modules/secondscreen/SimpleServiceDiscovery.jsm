@@ -174,7 +174,7 @@ var SimpleServiceDiscovery = {
           let msgData = data.replace("%SEARCH_TARGET%", target);
           try {
             let msgRaw = converter.convertToByteArray(msgData);
-            socket.send(SSDP_ADDRESS, SSDP_PORT, msgRaw, msgRaw.length);
+            socket.send(SSDP_ADDRESS, SSDP_PORT, msgRaw);
           } catch (e) {
             log("failed to convert to byte array: " + e);
           }

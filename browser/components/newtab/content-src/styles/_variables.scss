@@ -22,6 +22,7 @@ $yellow-50: #FFE900;
 $violet-20: #CB9EFF;
 
 // Photon opacity from http://design.firefox.com/photon/visuals/color.html#opacity
+$grey-10-00: rgba($grey-10, 0);
 $grey-10-10: rgba($grey-10, 0.1);
 $grey-10-20: rgba($grey-10, 0.2);
 $grey-10-30: rgba($grey-10, 0.3);
@@ -35,7 +36,10 @@ $grey-20-80: rgba($grey-20, 0.8);
 $grey-30-60: rgba($grey-30, 0.6);
 $grey-60-60: rgba($grey-60, 0.6);
 $grey-60-70: rgba($grey-60, 0.7);
+$grey-70-40: rgba($grey-70, 0.4);
+$grey-70-60: rgba($grey-70, 0.6);
 $grey-80-95: rgba($grey-80, 0.95);
+$grey-90-00: rgba($grey-90, 0);
 $grey-90-10: rgba($grey-90, 0.1);
 $grey-90-20: rgba($grey-90, 0.2);
 $grey-90-30: rgba($grey-90, 0.3);

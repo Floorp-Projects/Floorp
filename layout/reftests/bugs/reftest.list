@@ -380,7 +380,7 @@ fails-if(Android) != 301726-2.html 301726-2-ref.html
 == 315920-4.html 315920-4-ref.html
 fuzzy-if(skiaContent,0-1,0-1468) == 315920-5.html 315920-5-ref.html
 == 315920-6.html 315920-6-ref.html
-fuzzy-if(Android&&isDebugBuild,0-229,0-45) == 315920-7a.html 315920-7-ref.html # bug 1342240
+fuzzy-if(Android&&isDebugBuild,0-229,0-45) fuzzy-if(geckoview,0-1,0-14) == 315920-7a.html 315920-7-ref.html # bug 1342240
 fuzzy-if(Android&&isDebugBuild,0-229,0-45) == 315920-7b.html 315920-7-ref.html # bug 1342240
 fuzzy-if(Android&&isDebugBuild,0-229,0-45) == 315920-7c.html 315920-7-ref.html # bug 1342240
 fuzzy-if(Android&&isDebugBuild,0-229,0-45) == 315920-8a.html 315920-8-ref.html # bug 1342240
@@ -800,7 +800,7 @@ skip-if(!winWidget) == 391045.html 391045-ref.html # windows-specific Uniscribe 
 == 391412-1b.html 391412-1-ref.html
 == 391909-1.html 391909-1-ref.html
 skip-if(Android) == 391979.html 391979-ref.html
-== 391994-1.html 391994-1-ref.html
+fuzzy-if(geckoview,0-4,0-1) == 391994-1.html 391994-1-ref.html
 == 392047.html 392047-ref.html
 == 392435-1.html 392435-1-ref.html
 == 393330-1.html 393330-1-ref.html

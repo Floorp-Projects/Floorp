@@ -661,6 +661,11 @@ with modules["DOM"]:
     errors["NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_SUPPORTED"] = FAILURE(1034)
     errors["NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_VALUE"] = FAILURE(1035)
 
+    # Used to indicate that a resource with the Cross-Origin-Resource-Policy
+    # response header set failed the origin check.
+    # https://fetch.spec.whatwg.org/#cross-origin-resource-policy-header
+    errors["NS_ERROR_DOM_CORP_FAILED"] = FAILURE(1036)
+
     # May be used to indicate when e.g. setting a property value didn't
     # actually change the value, like for obj.foo = "bar"; obj.foo = "bar";
     # the second assignment throws NS_SUCCESS_DOM_NO_OPERATION.

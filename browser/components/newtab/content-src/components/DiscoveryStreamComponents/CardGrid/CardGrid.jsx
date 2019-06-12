@@ -22,6 +22,7 @@ export class CardGrid extends React.PureComponent {
           excerpt={rec.excerpt}
           url={rec.url}
           id={rec.id}
+          shim={rec.shim}
           type={this.props.type}
           context={rec.context}
           dispatch={this.props.dispatch}
@@ -60,7 +61,9 @@ export class CardGrid extends React.PureComponent {
     return (<div>
       <div className="ds-header">{this.props.title}</div>
       {isEmpty ?
-        <div className="ds-card-grid empty"><DSEmptyState /></div> :
+        <div className="ds-card-grid empty">
+          <DSEmptyState status={data.status} dispatch={this.props.dispatch} feed={this.props.feed} />
+        </div> :
         this.renderCards()
       }
     </div>);
