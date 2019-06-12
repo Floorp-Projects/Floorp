@@ -31,6 +31,10 @@ struct precache_output
 #define ALIGN __attribute__(( aligned (16) ))
 #endif
 
+struct _qcms_transform;
+
+typedef void (*transform_fn_t)(const struct _qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length);
+
 struct _qcms_transform {
 	float ALIGN matrix[3][4];
 	float *input_gamma_table_r;
@@ -74,7 +78,7 @@ struct _qcms_transform {
 	struct precache_output *output_table_g;
 	struct precache_output *output_table_b;
 
-	void (*transform_fn)(const struct _qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length);
+	transform_fn_t transform_fn;
 };
 
 struct matrix {
@@ -263,6 +267,32 @@ static inline float uInt16Number_to_float(uInt16Number a)
 void precache_release(struct precache_output *p);
 bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
 bool get_rgb_colorants(struct matrix *colorants, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
+
+void qcms_transform_data_rgb_out_lut(const qcms_transform *transform,
+                                     const unsigned char *src,
+                                     unsigned char *dest,
+                                     size_t length);
+void qcms_transform_data_rgba_out_lut(const qcms_transform *transform,
+                                      const unsigned char *src,
+                                      unsigned char *dest,
+                                      size_t length);
+void qcms_transform_data_bgra_out_lut(const qcms_transform *transform,
+                                      const unsigned char *src,
+                                      unsigned char *dest,
+                                      size_t length);
+
+void qcms_transform_data_rgb_out_lut_precache(const qcms_transform *transform,
+                                              const unsigned char *src,
+                                              unsigned char *dest,
+                                              size_t length);
+void qcms_transform_data_rgba_out_lut_precache(const qcms_transform *transform,
+                                               const unsigned char *src,
+                                               unsigned char *dest,
+                                               size_t length);
+void qcms_transform_data_bgra_out_lut_precache(const qcms_transform *transform,
+                                               const unsigned char *src,
+                                               unsigned char *dest,
+                                               size_t length);
 
 void qcms_transform_data_rgb_out_lut_sse2(const qcms_transform *transform,
                                           const unsigned char *src,
