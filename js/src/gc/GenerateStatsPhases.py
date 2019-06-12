@@ -51,6 +51,12 @@
 #            | E |   | E'|
 #            +---+   +---+
 
+# NOTE: If you add new phases here the current next phase kind number can be
+# found at the end of js/src/gc/StatsPhasesGenerated.inc
+# You must also update
+# toolkit/components/telemetry/other/GCTelemetry.jsm and
+# toolkit/components/telemetry/tests/browser/browser_TelemetryGC.js
+
 import re
 import collections
 
