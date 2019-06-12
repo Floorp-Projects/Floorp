@@ -101,6 +101,7 @@ class ClickHandlerChild extends ActorChild {
         } catch (e) {}
       }
       json.originPrincipal = ownerDoc.nodePrincipal;
+      json.originStoragePrincipal = ownerDoc.effectiveStoragePrincipal;
       json.triggeringPrincipal = ownerDoc.nodePrincipal;
 
       // If a link element is clicked with middle button, user wants to open
