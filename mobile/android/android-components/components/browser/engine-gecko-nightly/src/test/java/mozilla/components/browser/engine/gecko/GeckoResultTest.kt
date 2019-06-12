@@ -4,56 +4,50 @@
 
 package mozilla.components.browser.engine.gecko
 
-import kotlinx.coroutines.runBlocking
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@ExperimentalCoroutinesApi
+@RunWith(AndroidJUnit4::class)
 class GeckoResultTest {
 
     @Test
-    fun awaitWithResult() {
-        val result = runBlocking {
-            GeckoResult.fromValue(42).await()
-        }
+    fun awaitWithResult() = runBlockingTest {
+        val result = GeckoResult.fromValue(42).await()
         assertEquals(42, result)
     }
 
     @Test(expected = IllegalStateException::class)
-    fun awaitWithException() {
-        runBlocking {
-            GeckoResult.fromException<Unit>(IllegalStateException()).await()
-        }
+    fun awaitWithException() = runBlockingTest {
+        GeckoResult.fromException<Unit>(IllegalStateException()).await()
     }
 
     @Test
-    fun fromResult() {
-        runBlocking {
-            val result = launchGeckoResult { 42 }
+    fun fromResult() = runBlockingTest {
+        val result = launchGeckoResult { 42 }
 
-            result.then {
-                assertEquals(42, it)
-                GeckoResult.fromValue(null)
-            }.await()
-        }
+        result.then {
+            assertEquals(42, it)
+            GeckoResult.fromValue(null)
+        }.await()
     }
 
     @Test
-    fun fromException() {
-        runBlocking {
-            val result = launchGeckoResult { throw IllegalStateException() }
+    fun fromException() = runBlockingTest {
+        val result = launchGeckoResult { throw IllegalStateException() }
 
-            result.then({
-                assertTrue("Invalid branch", false)
-                GeckoResult.fromValue(null)
-            }, {
-                assertTrue(it is IllegalStateException)
-                GeckoResult.fromValue(null)
-            }).await()
-        }
+        result.then({
+            assertTrue("Invalid branch", false)
+            GeckoResult.fromValue(null)
+        }, {
+            assertTrue(it is IllegalStateException)
+            GeckoResult.fromValue(null)
+        }).await()
     }
 }

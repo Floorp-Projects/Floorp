@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -13,10 +14,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mozilla.geckoview.GeckoSession
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class GeckoEngineSessionStateTest {
+
     @Test
     fun toJSON() {
         val geckoState: GeckoSession.SessionState = mock()

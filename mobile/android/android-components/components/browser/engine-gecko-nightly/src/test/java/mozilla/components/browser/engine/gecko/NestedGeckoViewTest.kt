@@ -12,6 +12,7 @@ import android.view.MotionEvent.ACTION_MOVE
 import android.view.MotionEvent.ACTION_UP
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat.SCROLL_AXIS_VERTICAL
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.mockMotionEvent
 import org.junit.Assert.assertEquals
@@ -23,13 +24,13 @@ import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
+import org.robolectric.Robolectric.buildActivity
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class NestedGeckoViewTest {
+
     private val context: Context
-        get() = Robolectric.buildActivity(Activity::class.java).get()
+        get() = buildActivity(Activity::class.java).get()
 
     @Test
     fun `NestedGeckoView must delegate NestedScrollingChild implementation to childHelper`() {

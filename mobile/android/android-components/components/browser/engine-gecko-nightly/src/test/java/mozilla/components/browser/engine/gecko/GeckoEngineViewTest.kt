@@ -7,40 +7,39 @@ package mozilla.components.browser.engine.gecko
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
-import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
+import org.robolectric.Robolectric.buildActivity
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class GeckoEngineViewTest {
 
     private val context: Context
-        get() = Robolectric.buildActivity(Activity::class.java).get()
+        get() = buildActivity(Activity::class.java).get()
 
     @Test
     fun render() {
         val engineView = GeckoEngineView(context)
-        val engineSession = mock(GeckoEngineSession::class.java)
-        val geckoSession = mock(GeckoSession::class.java)
-        val geckoView = mock(NestedGeckoView::class.java)
+        val engineSession = mock<GeckoEngineSession>()
+        val geckoSession = mock<GeckoSession>()
+        val geckoView = mock<NestedGeckoView>()
 
-        `when`(engineSession.geckoSession).thenReturn(geckoSession)
+        whenever(engineSession.geckoSession).thenReturn(geckoSession)
         engineView.currentGeckoView = geckoView
 
         engineView.render(engineSession)
         verify(geckoView, times(1)).setSession(geckoSession)
 
-        `when`(geckoView.session).thenReturn(geckoSession)
+        whenever(geckoView.session).thenReturn(geckoSession)
         engineView.render(engineSession)
         verify(geckoView, times(1)).setSession(geckoSession)
     }
@@ -48,11 +47,11 @@ class GeckoEngineViewTest {
     @Test
     fun captureThumbnail() {
         val engineView = GeckoEngineView(context)
-        val mockGeckoView = mock(NestedGeckoView::class.java)
+        val mockGeckoView = mock<NestedGeckoView>()
         var thumbnail: Bitmap? = null
 
         var geckoResult = GeckoResult<Bitmap>()
-        `when`(mockGeckoView.capturePixels()).thenReturn(geckoResult)
+        whenever(mockGeckoView.capturePixels()).thenReturn(geckoResult)
         engineView.currentGeckoView = mockGeckoView
 
         engineView.captureThumbnail {
@@ -63,7 +62,7 @@ class GeckoEngineViewTest {
         assertNotNull(thumbnail)
 
         geckoResult = GeckoResult()
-        `when`(mockGeckoView.capturePixels()).thenReturn(geckoResult)
+        whenever(mockGeckoView.capturePixels()).thenReturn(geckoResult)
 
         engineView.captureThumbnail {
             thumbnail = it

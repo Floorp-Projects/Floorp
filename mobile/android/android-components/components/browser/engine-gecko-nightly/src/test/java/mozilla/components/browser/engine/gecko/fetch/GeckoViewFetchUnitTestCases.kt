@@ -4,13 +4,16 @@
 
 package mozilla.components.browser.engine.gecko.fetch
 
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
+import mozilla.components.tooling.fetch.tests.FetchTestCases
 import okhttp3.Headers
-import okhttp3.HttpUrl
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
@@ -21,16 +24,12 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyLong
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
-import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.WebRequest
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
-import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 import java.nio.charset.Charset
 import java.util.concurrent.TimeoutException
@@ -43,10 +42,11 @@ import java.util.concurrent.TimeoutException
  * functionality of [GeckoViewFetchClient]. That's why end-to-end tests are
  * provided in instrumented tests.
  */
-@RunWith(RobolectricTestRunner::class)
-class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.FetchTestCases() {
+@RunWith(AndroidJUnit4::class)
+class GeckoViewFetchUnitTestCases : FetchTestCases() {
+
     override fun createNewClient(): Client {
-        val client = GeckoViewFetchClient(ApplicationProvider.getApplicationContext(), mock(GeckoRuntime::class.java))
+        val client = GeckoViewFetchClient(testContext, mock())
         geckoWebExecutor?.let { client.executor = it }
         return client
     }
@@ -70,8 +70,8 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
     @Test
     override fun get200WithDefaultHeaders() {
-        val server = mock(MockWebServer::class.java)
-        `when`(server.url(any())).thenReturn(mock(HttpUrl::class.java))
+        val server = mock<MockWebServer>()
+        whenever(server.url(any())).thenReturn(mock())
         val host = server.url("/").host()
         val port = server.url("/").port()
         val headerMap = mapOf(
@@ -149,10 +149,10 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
         mockRequest()
         mockResponse(200)
 
-        val geckoResult = mock(GeckoResult::class.java)
-        `when`(geckoResult.poll(anyLong())).thenThrow(TimeoutException::class.java)
+        val geckoResult = mock<GeckoResult<*>>()
+        whenever(geckoResult.poll(anyLong())).thenThrow(TimeoutException::class.java)
         @Suppress("UNCHECKED_CAST")
-        `when`(geckoWebExecutor!!.fetch(any(), anyInt())).thenReturn(geckoResult as GeckoResult<WebResponse>)
+        whenever(geckoWebExecutor!!.fetch(any(), anyInt())).thenReturn(geckoResult as GeckoResult<WebResponse>)
 
         super.get200WithReadTimeout()
     }
@@ -176,10 +176,10 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
     override fun get302FollowRedirects() {
         mockResponse(200)
 
-        val request = mock(Request::class.java)
-        `when`(request.url).thenReturn("https://mozilla.org")
-        `when`(request.method).thenReturn(Request.Method.GET)
-        `when`(request.redirect).thenReturn(Request.Redirect.FOLLOW)
+        val request = mock<Request>()
+        whenever(request.url).thenReturn("https://mozilla.org")
+        whenever(request.method).thenReturn(Request.Method.GET)
+        whenever(request.redirect).thenReturn(Request.Redirect.FOLLOW)
         createNewClient().fetch(request)
 
         verify(geckoWebExecutor)!!.fetch(any(), eq(GeckoWebExecutor.FETCH_FLAGS_NONE))
@@ -189,10 +189,10 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
     override fun get302FollowRedirectsDisabled() {
         mockResponse(200)
 
-        val request = mock(Request::class.java)
-        `when`(request.url).thenReturn("https://mozilla.org")
-        `when`(request.method).thenReturn(Request.Method.GET)
-        `when`(request.redirect).thenReturn(Request.Redirect.MANUAL)
+        val request = mock<Request>()
+        whenever(request.url).thenReturn("https://mozilla.org")
+        whenever(request.method).thenReturn(Request.Method.GET)
+        whenever(request.redirect).thenReturn(Request.Redirect.MANUAL)
         createNewClient().fetch(request)
 
         verify(geckoWebExecutor)!!.fetch(any(), eq(GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS))
@@ -223,14 +223,14 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
     fun pollReturningNull() {
         mockResponse(200)
 
-        val geckoResult = mock(GeckoResult::class.java)
-        `when`(geckoResult.poll(anyLong())).thenReturn(null)
+        val geckoResult = mock<GeckoResult<*>>()
+        whenever(geckoResult.poll(anyLong())).thenReturn(null)
         @Suppress("UNCHECKED_CAST")
-        `when`(geckoWebExecutor!!.fetch(any(), anyInt())).thenReturn(geckoResult as GeckoResult<WebResponse>)
+        whenever(geckoWebExecutor!!.fetch(any(), anyInt())).thenReturn(geckoResult as GeckoResult<WebResponse>)
 
-        val request = mock(Request::class.java)
-        `when`(request.url).thenReturn("https://mozilla.org")
-        `when`(request.method).thenReturn(Request.Method.GET)
+        val request = mock<Request>()
+        whenever(request.url).thenReturn("https://mozilla.org")
+        whenever(request.method).thenReturn(Request.Method.GET)
         createNewClient().fetch(request)
     }
 
@@ -238,10 +238,10 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
     override fun get200WithCookiePolicy() {
         mockResponse(200)
 
-        val request = mock(Request::class.java)
-        `when`(request.url).thenReturn("https://mozilla.org")
-        `when`(request.method).thenReturn(Request.Method.GET)
-        `when`(request.cookiePolicy).thenReturn(Request.CookiePolicy.OMIT)
+        val request = mock<Request>()
+        whenever(request.url).thenReturn("https://mozilla.org")
+        whenever(request.method).thenReturn(Request.Method.GET)
+        whenever(request.cookiePolicy).thenReturn(Request.CookiePolicy.OMIT)
         createNewClient().fetch(request)
 
         verify(geckoWebExecutor)!!.fetch(any(), eq(GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS))
@@ -249,9 +249,9 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
     @Test
     override fun get200WithContentTypeCharset() {
-        val request = mock(Request::class.java)
-        `when`(request.url).thenReturn("https://mozilla.org")
-        `when`(request.method).thenReturn(Request.Method.GET)
+        val request = mock<Request>()
+        whenever(request.url).thenReturn("https://mozilla.org")
+        whenever(request.method).thenReturn(Request.Method.GET)
 
         mockResponse(200,
                 headerMap = mapOf("Content-Type" to "text/html; charset=ISO-8859-1"),
@@ -266,10 +266,10 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
     override fun get200WithCacheControl() {
         mockResponse(200)
 
-        val request = mock(Request::class.java)
-        `when`(request.url).thenReturn("https://mozilla.org")
-        `when`(request.method).thenReturn(Request.Method.GET)
-        `when`(request.useCaches).thenReturn(false)
+        val request = mock<Request>()
+        whenever(request.url).thenReturn("https://mozilla.org")
+        whenever(request.method).thenReturn(Request.Method.GET)
+        whenever(request.useCaches).thenReturn(false)
         createNewClient().fetch(request)
 
         val captor = ArgumentCaptor.forClass(WebRequest::class.java)
@@ -280,31 +280,31 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
     @Test(expected = IOException::class)
     override fun getThrowsIOExceptionWhenHostNotReachable() {
-        val executor = mock(GeckoWebExecutor::class.java)
-        `when`(executor.fetch(any(), anyInt())).thenAnswer { throw WebRequestError(0, 0) }
+        val executor = mock<GeckoWebExecutor>()
+        whenever(executor.fetch(any(), anyInt())).thenAnswer { throw WebRequestError(0, 0) }
         geckoWebExecutor = executor
 
         createNewClient().fetch(Request(""))
     }
 
     private fun mockRequest(headerMap: Map<String, String>? = null, body: String? = null, method: String = "GET") {
-        val server = mock(MockWebServer::class.java)
-        `when`(server.url(any())).thenReturn(mock(HttpUrl::class.java))
-        val request = mock(RecordedRequest::class.java)
-        `when`(request.method).thenReturn(method)
+        val server = mock<MockWebServer>()
+        whenever(server.url(any())).thenReturn(mock())
+        val request = mock<RecordedRequest>()
+        whenever(request.method).thenReturn(method)
 
         headerMap?.let {
-            `when`(request.headers).thenReturn(Headers.of(headerMap))
-            `when`(request.getHeader(any())).thenAnswer { inv -> it[inv.getArgument(0)] }
+            whenever(request.headers).thenReturn(Headers.of(headerMap))
+            whenever(request.getHeader(any())).thenAnswer { inv -> it[inv.getArgument(0)] }
         }
 
         body?.let {
             val buffer = okio.Buffer()
             buffer.write(body.toByteArray())
-            `when`(request.body).thenReturn(buffer)
+            whenever(request.body).thenReturn(buffer)
         }
 
-        `when`(server.takeRequest()).thenReturn(request)
+        whenever(server.takeRequest()).thenReturn(request)
         mockWebServer = server
     }
 
@@ -314,7 +314,7 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
         body: String? = null,
         charset: Charset = Charsets.UTF_8
     ) {
-        val executor = mock(GeckoWebExecutor::class.java)
+        val executor = mock<GeckoWebExecutor>()
         val builder = WebResponse.Builder("").statusCode(statusCode)
         headerMap?.let {
             headerMap.forEach { (k, v) -> builder.addHeader(k, v) }
@@ -326,7 +326,7 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
         val response = builder.build()
 
-        `when`(executor.fetch(any(), anyInt())).thenReturn(GeckoResult.fromValue(response))
+        whenever(executor.fetch(any(), anyInt())).thenReturn(GeckoResult.fromValue(response))
         geckoWebExecutor = executor
     }
 }

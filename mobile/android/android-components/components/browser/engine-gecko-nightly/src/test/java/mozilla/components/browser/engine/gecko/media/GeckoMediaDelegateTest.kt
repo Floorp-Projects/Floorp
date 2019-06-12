@@ -1,5 +1,6 @@
 package mozilla.components.browser.engine.gecko.media
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.media.Media
@@ -11,19 +12,17 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.mockito.Mockito.verify
-import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.MediaElement
 import org.mozilla.geckoview.MockRecordingDevice
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class GeckoMediaDelegateTest {
+
     @Test
     fun `Added MediaElement is wrapped in GeckoMedia and forwarded to observer`() {
-        val engineSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        val engineSession = GeckoEngineSession(mock())
 
         var observedMedia: Media? = null
 
@@ -44,7 +43,7 @@ class GeckoMediaDelegateTest {
 
     @Test
     fun `WHEN MediaElement is removed THEN previously added GeckoMedia is used to notify observer`() {
-        val engineSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        val engineSession = GeckoEngineSession(mock())
 
         var addedMedia: Media? = null
         var removedMedia: Media? = null
@@ -70,7 +69,7 @@ class GeckoMediaDelegateTest {
 
     @Test
     fun `WHEN unknown media is removed THEN observer is not notified`() {
-        val engineSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        val engineSession = GeckoEngineSession(mock())
 
         var onMediaRemovedExecuted = false
 
