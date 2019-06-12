@@ -837,9 +837,8 @@ nsresult PeerConnectionImpl::ConfigureJsepSessionCodecs() {
 // tests to work (it doesn't have a window available) we ifdef the following
 // two implementations.
 //
-// Note: 'media.peerconnection.sctp.force_ppid_fragmentation' and
-//       'media.peerconnection.sctp.force_maximum_message_size' change behaviour
-//       triggered by these parameters.
+// Note: 'media.peerconnection.sctp.force_maximum_message_size' changes
+// behaviour triggered by these parameters.
 NS_IMETHODIMP
 PeerConnectionImpl::EnsureDataConnection(uint16_t aLocalPort,
                                          uint16_t aNumstreams,

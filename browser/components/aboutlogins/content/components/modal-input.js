@@ -11,7 +11,7 @@ export default class ModalInput extends ReflectedFluentElement {
   }
 
   connectedCallback() {
-    if (this.children.length) {
+    if (this.shadowRoot) {
       return;
     }
 

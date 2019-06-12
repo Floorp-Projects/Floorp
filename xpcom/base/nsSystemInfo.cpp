@@ -11,7 +11,10 @@
 #include "prio.h"
 #include "mozilla/SSE.h"
 #include "mozilla/arm.h"
+#include "mozilla/LazyIdleThread.h"
 #include "mozilla/Sprintf.h"
+#include "jsapi.h"
+#include "mozilla/dom/Promise.h"
 
 #ifdef XP_WIN
 #  include <comutil.h>
@@ -28,7 +31,6 @@
 #  include "nsAppDirectoryServiceDefs.h"
 #  include "nsDirectoryServiceDefs.h"
 #  include "nsDirectoryServiceUtils.h"
-#  include "nsIObserverService.h"
 #  include "nsWindowsHelpers.h"
 
 #endif
@@ -100,11 +102,11 @@ static void SimpleParseKeyValuePairs(
 
 #if defined(XP_WIN)
 namespace {
-nsresult GetHDDInfo(const char* aSpecialDirName, nsAutoCString& aModel,
-                    nsAutoCString& aRevision, nsAutoCString& aType) {
-  aModel.Truncate();
-  aRevision.Truncate();
-  aType.Truncate();
+static nsresult GetFolderDiskInfo(const char* aSpecialDirName,
+                                  FolderDiskInfo& info) {
+  info.model.Truncate();
+  info.revision.Truncate();
+  info.isSSD = false;
 
   nsCOMPtr<nsIFile> profDir;
   nsresult rv =
@@ -185,26 +187,34 @@ nsresult GetHDDInfo(const char* aSpecialDirName, nsAutoCString& aModel,
   // IDs include vendor info and product ID concatenated together, we'll do
   // that here and interpret the result as a unique ID for the HDD model.
   if (deviceOutput->VendorIdOffset) {
-    aModel =
+    info.model =
         reinterpret_cast<char*>(deviceOutput) + deviceOutput->VendorIdOffset;
   }
   if (deviceOutput->ProductIdOffset) {
-    aModel +=
+    info.model +=
         reinterpret_cast<char*>(deviceOutput) + deviceOutput->ProductIdOffset;
   }
-  aModel.CompressWhitespace();
+  info.model.CompressWhitespace();
   if (deviceOutput->ProductRevisionOffset) {
-    aRevision = reinterpret_cast<char*>(deviceOutput) +
-                deviceOutput->ProductRevisionOffset;
-    aRevision.CompressWhitespace();
+    info.revision = reinterpret_cast<char*>(deviceOutput) +
+                    deviceOutput->ProductRevisionOffset;
+    info.revision.CompressWhitespace();
   }
-  if (isSSD) {
-    aType = "SSD";
-  } else {
-    aType = "HDD";
-  }
+  info.isSSD = isSSD;
   free(deviceOutput);
   return NS_OK;
+}
+
+static nsresult CollectDiskInfo(DiskInfo& info) {
+  nsresult rv = GetFolderDiskInfo(NS_GRE_DIR, info.binary);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = GetFolderDiskInfo(NS_WIN_WINDOWS_DIR, info.system);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return GetFolderDiskInfo(NS_APP_USER_PROFILE_50_DIR, info.profile);
 }
 
 nsresult GetInstallYear(uint32_t& aYear) {
@@ -477,7 +487,6 @@ static void GetProcessorInformation(int* physical_cpus, int* cache_size_L2,
 #endif
 
 nsresult nsSystemInfo::Init() {
-  // This uses the observer service on Windows, so for simplicity
   // check that it is called from the main thread on all platforms.
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -806,39 +815,6 @@ nsresult nsSystemInfo::Init() {
       return rv;
     }
   }
-  if (NS_FAILED(GetProfileHDDInfo())) {
-    // We might have been called before profile-do-change. We'll observe that
-    // event so that we can fill this in later.
-    nsCOMPtr<nsIObserverService> obsService =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    rv = obsService->AddObserver(this, "profile-do-change", false);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-  nsAutoCString hddModel, hddRevision, hddType;
-  if (NS_SUCCEEDED(GetHDDInfo(NS_GRE_DIR, hddModel, hddRevision, hddType))) {
-    rv = SetPropertyAsACString(NS_LITERAL_STRING("binHDDModel"), hddModel);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv =
-        SetPropertyAsACString(NS_LITERAL_STRING("binHDDRevision"), hddRevision);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = SetPropertyAsACString(NS_LITERAL_STRING("binHDDType"), hddType);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  if (NS_SUCCEEDED(
-          GetHDDInfo(NS_WIN_WINDOWS_DIR, hddModel, hddRevision, hddType))) {
-    rv = SetPropertyAsACString(NS_LITERAL_STRING("winHDDModel"), hddModel);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv =
-        SetPropertyAsACString(NS_LITERAL_STRING("winHDDRevision"), hddRevision);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = SetPropertyAsACString(NS_LITERAL_STRING("winHDDType"), hddType);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   nsAutoString countryCode;
   if (NS_SUCCEEDED(GetCountryCode(countryCode))) {
@@ -1083,45 +1059,116 @@ void nsSystemInfo::SetUint64Property(const nsAString& aPropertyName,
   }
 }
 
-#if defined(XP_WIN)
-NS_IMETHODIMP
-nsSystemInfo::Observe(nsISupports* aSubject, const char* aTopic,
-                      const char16_t* aData) {
-  if (!strcmp(aTopic, "profile-do-change")) {
-    nsresult rv;
-    nsCOMPtr<nsIObserverService> obsService =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    rv = obsService->RemoveObserver(this, "profile-do-change");
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    return GetProfileHDDInfo();
+#ifdef XP_WIN
+
+static bool GetJSObjForDiskInfo(JSContext* aCx, JS::Handle<JSObject*> aParent,
+                                const FolderDiskInfo& info,
+                                const char* propName) {
+  JS::Rooted<JSObject*> jsInfo(aCx, JS_NewPlainObject(aCx));
+  if (!jsInfo) {
+    return false;
   }
+
+  JSString* strModel =
+      JS_NewStringCopyN(aCx, info.model.get(), info.model.Length());
+  if (!strModel) {
+    return false;
+  }
+  JS::Rooted<JS::Value> valModel(aCx, JS::StringValue(strModel));
+  if (!JS_SetProperty(aCx, jsInfo, "model", valModel)) {
+    return false;
+  }
+
+  JSString* strRevision =
+      JS_NewStringCopyN(aCx, info.revision.get(), info.revision.Length());
+  if (!strRevision) {
+    return false;
+  }
+  JS::Rooted<JS::Value> valRevision(aCx, JS::StringValue(strRevision));
+  if (!JS_SetProperty(aCx, jsInfo, "revision", valRevision)) {
+    return false;
+  }
+
+  JSString* strSSD = JS_NewStringCopyZ(aCx, info.isSSD ? "SSD" : "HDD");
+  if (!strSSD) {
+    return false;
+  }
+  JS::Rooted<JS::Value> valSSD(aCx, JS::StringValue(strSSD));
+  if (!JS_SetProperty(aCx, jsInfo, "type", valSSD)) {
+    return false;
+  }
+
+  JS::Rooted<JS::Value> val(aCx, JS::ObjectValue(*jsInfo));
+  return JS_SetProperty(aCx, aParent, propName, val);
+}
+#endif
+
+NS_IMETHODIMP
+nsSystemInfo::GetDiskInfo(JSContext* aCx, Promise** aResult) {
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nullptr;
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+#ifdef XP_WIN
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!global)) {
+    return NS_ERROR_FAILURE;
+  }
+  ErrorResult erv;
+  RefPtr<Promise> promise = Promise::Create(global, erv);
+  if (NS_WARN_IF(erv.Failed())) {
+    return erv.StealNSResult();
+  }
+
+  if (!mDiskInfoPromise) {
+    RefPtr<LazyIdleThread> lazyIOThread =
+        new LazyIdleThread(3000, NS_LITERAL_CSTRING("SystemInfoIdleThread"));
+    mDiskInfoPromise = InvokeAsync(lazyIOThread, __func__, []() {
+      DiskInfo info;
+      nsresult rv = CollectDiskInfo(info);
+      if (NS_SUCCEEDED(rv)) {
+        return DiskInfoPromise::CreateAndResolve(info, __func__);
+      }
+      return DiskInfoPromise::CreateAndReject(rv, __func__);
+    });
+  }
+
+  // Chain the new promise to the extant mozpromise.
+  RefPtr<Promise> capturedPromise = promise;
+  mDiskInfoPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [capturedPromise](const DiskInfo& info) {
+        RefPtr<nsIGlobalObject> global = capturedPromise->GetGlobalObject();
+        AutoJSAPI jsapi;
+        if (!global || !jsapi.Init(global)) {
+          capturedPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+          return;
+        }
+        JSContext* cx = jsapi.cx();
+        JS::Rooted<JSObject*> jsInfo(cx, JS_NewPlainObject(cx));
+        // Store data in the rv:
+        bool succeededSettingAllObjects =
+            jsInfo && GetJSObjForDiskInfo(cx, jsInfo, info.binary, "binary") &&
+            GetJSObjForDiskInfo(cx, jsInfo, info.profile, "profile") &&
+            GetJSObjForDiskInfo(cx, jsInfo, info.system, "system");
+        // The above can fail due to OOM
+        if (!succeededSettingAllObjects) {
+          JS_ClearPendingException(cx);
+          capturedPromise->MaybeReject(NS_ERROR_FAILURE);
+          return;
+        }
+
+        JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*jsInfo));
+        capturedPromise->MaybeResolve(cx, val);
+      },
+      [capturedPromise](const nsresult rv) {
+        capturedPromise->MaybeReject(rv);
+      });
+
+  promise.forget(aResult);
+#endif
   return NS_OK;
 }
 
-nsresult nsSystemInfo::GetProfileHDDInfo() {
-  nsAutoCString hddModel, hddRevision, hddType;
-  nsresult rv =
-      GetHDDInfo(NS_APP_USER_PROFILE_50_DIR, hddModel, hddRevision, hddType);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = SetPropertyAsACString(NS_LITERAL_STRING("profileHDDModel"), hddModel);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = SetPropertyAsACString(NS_LITERAL_STRING("profileHDDRevision"),
-                             hddRevision);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = SetPropertyAsACString(NS_LITERAL_STRING("profileHDDType"), hddType);
-  return rv;
-}
-
-NS_IMPL_ISUPPORTS_INHERITED(nsSystemInfo, nsHashPropertyBag, nsIObserver)
-#endif  // defined(XP_WIN)
+NS_IMPL_ISUPPORTS_INHERITED(nsSystemInfo, nsHashPropertyBag, nsISystemInfo)

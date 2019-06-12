@@ -79,7 +79,7 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
     if (feed && feed.data) {
       data = {
         ...feed.data,
-        recommendations: [...feed.data.recommendations],
+        recommendations: [...(feed.data.recommendations || [])],
       };
     }
 
@@ -90,8 +90,10 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
       };
     }
 
+    // Ensure we have recs available for this feed.
+    const hasRecs = data && data.recommendations && data.recommendations.length;
     // Do we ever expect to possibly have a spoc.
-    if (data && component.spocs && component.spocs.positions && component.spocs.positions.length) {
+    if (hasRecs && component.spocs && component.spocs.positions && component.spocs.positions.length) {
       // We expect a spoc, spocs are loaded, and the server returned spocs.
       if (spocs.loaded && spocs.data.spocs && spocs.data.spocs.length) {
         data = rollForSpocs(data, component.spocs);

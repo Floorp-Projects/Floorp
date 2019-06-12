@@ -37,7 +37,7 @@ window.gActivityStreamStrings = {
   "search_web_placeholder": "Caută pe web",
   "section_disclaimer_topstories": "Cele mai interesante articole de pe web, alese pe baza lucrurilor pe care le citești. De la Pocket, acum parte din Mozilla.",
   "section_disclaimer_topstories_linktext": "Află cum funcționează.",
-  "section_disclaimer_topstories_buttontext": "Ok, am înțeles",
+  "section_disclaimer_topstories_buttontext": "OK, am înțeles",
   "prefs_home_header": "Conținutul paginii de start Firefox",
   "prefs_home_description": "Alege ce conținut vrei pe ecranul de start Firefox.",
   "prefs_content_discovery_description": "Descoperirea de conținut din pagina de start Firefox îți permite să descoperi articole relevante de calitate înaltă de pe web.",

@@ -56,7 +56,8 @@ class MozSearchbar extends MozXULElement {
 
   connectedCallback() {
     // Don't initialize if this isn't going to be visible
-    if (this.closest("#BrowserToolbarPalette")) {
+    if (this.closest("#BrowserToolbarPalette") ||
+        this.parentNode.parentNode.localName == "toolbarpaletteitem") {
       return;
     }
 
@@ -75,10 +76,6 @@ class MozSearchbar extends MozXULElement {
     this._engines = null;
 
     this.FormHistory = (ChromeUtils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
-
-    if (this.parentNode.parentNode.localName == "toolbarpaletteitem") {
-      return;
-    }
 
     Services.obs.addObserver(this.observer, "browser-search-engine-modified");
     Services.obs.addObserver(this.observer, "browser-search-service");
@@ -148,13 +145,15 @@ class MozSearchbar extends MozXULElement {
   }
 
   destroy() {
-    if (this._initialized) {
-      this._initialized = false;
-      window.removeEventListener("unload", this.destroy);
-
-      Services.obs.removeObserver(this.observer, "browser-search-engine-modified");
-      Services.obs.removeObserver(this.observer, "browser-search-service");
+    if (!this._initialized) {
+      return;
     }
+
+    this._initialized = false;
+    window.removeEventListener("unload", this.destroy);
+
+    Services.obs.removeObserver(this.observer, "browser-search-engine-modified");
+    Services.obs.removeObserver(this.observer, "browser-search-service");
 
     // Make sure to break the cycle from _textbox to us. Otherwise we leak
     // the world. But make sure it's actually pointing to us.
@@ -164,13 +163,6 @@ class MozSearchbar extends MozXULElement {
     if (this._textbox.mController && this._textbox.mController.input == this) {
       this._textbox.mController.input = null;
     }
-
-    // If the context menu has never been opened, there won't be anything
-    // to remove here. Also, XBL and the customize toolbar code sometimes
-    // interact poorly.
-    try {
-      this.controllers.removeController(this.searchbarController);
-    } catch (ex) {}
   }
 
   focus() {

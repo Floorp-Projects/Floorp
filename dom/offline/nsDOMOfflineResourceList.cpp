@@ -78,9 +78,7 @@ nsDOMOfflineResourceList::nsDOMOfflineResourceList(
       mDocumentURI(aDocumentURI),
       mLoadingPrincipal(aLoadingPrincipal),
       mExposeCacheUpdateStatus(true),
-      mStatus(OfflineResourceList_Binding::IDLE),
-      mCachedKeys(nullptr),
-      mCachedKeysCount(0) {}
+      mStatus(OfflineResourceList_Binding::IDLE) {}
 
 nsDOMOfflineResourceList::~nsDOMOfflineResourceList() { ClearCachedKeys(); }
 
@@ -183,19 +181,15 @@ already_AddRefed<DOMStringList> nsDOMOfflineResourceList::GetMozItems(
     return nullptr;
   }
 
-  uint32_t length;
-  char** keys;
-  aRv = appCache->GatherEntries(nsIApplicationCache::ITEM_DYNAMIC, &length,
-                                &keys);
+  nsTArray<nsCString> keys;
+  aRv = appCache->GatherEntries(nsIApplicationCache::ITEM_DYNAMIC, keys);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  for (uint32_t i = 0; i < length; i++) {
-    items->Add(NS_ConvertUTF8toUTF16(keys[i]));
+  for (auto& key : keys) {
+    items->Add(NS_ConvertUTF8toUTF16(key));
   }
-
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(length, keys);
 
   return items.forget();
 }
@@ -261,7 +255,7 @@ uint32_t nsDOMOfflineResourceList::GetMozLength(ErrorResult& aRv) {
     return 0;
   }
 
-  return mCachedKeysCount;
+  return mCachedKeys->Length();
 }
 
 void nsDOMOfflineResourceList::MozItem(uint32_t aIndex, nsAString& aURI,
@@ -293,13 +287,13 @@ void nsDOMOfflineResourceList::IndexedGetter(uint32_t aIndex, bool& aFound,
     return;
   }
 
-  if (aIndex >= mCachedKeysCount) {
+  if (aIndex >= mCachedKeys->Length()) {
     aFound = false;
     return;
   }
 
   aFound = true;
-  CopyUTF8toUTF16(mozilla::MakeStringSpan(mCachedKeys[aIndex]), aURI);
+  CopyUTF8toUTF16(mCachedKeys->ElementAt(aIndex), aURI);
 }
 
 void nsDOMOfflineResourceList::MozAdd(const nsAString& aURI, ErrorResult& aRv) {
@@ -850,14 +844,14 @@ nsresult nsDOMOfflineResourceList::CacheKeys() {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  return appCache->GatherEntries(nsIApplicationCache::ITEM_DYNAMIC,
-                                 &mCachedKeysCount, &mCachedKeys);
+  mCachedKeys.emplace();
+  nsresult rv =
+      appCache->GatherEntries(nsIApplicationCache::ITEM_DYNAMIC, *mCachedKeys);
+  if (NS_FAILED(rv)) {
+    mCachedKeys.reset();
+  }
+
+  return rv;
 }
 
-void nsDOMOfflineResourceList::ClearCachedKeys() {
-  if (mCachedKeys) {
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mCachedKeysCount, mCachedKeys);
-    mCachedKeys = nullptr;
-    mCachedKeysCount = 0;
-  }
-}
+void nsDOMOfflineResourceList::ClearCachedKeys() { mCachedKeys.reset(); }

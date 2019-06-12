@@ -73,6 +73,8 @@ const PLUGIN_UPDATED_TOPIC     = "plugins-list-updated";
 // system add-ons are enabled at startup, so record date when the test starts
 const SYSTEM_ADDON_INSTALL_DATE = Date.now();
 
+const EXPECTED_HDD_FIELDS = [ "profile", "binary", "system" ];
+
 // Valid attribution code to write so that settings.attribution can be tested.
 const ATTRIBUTION_CODE = "source%3Dgoogle.com";
 
@@ -161,7 +163,11 @@ var SysInfo = {
     return this._genuine.get(name);
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIPropertyBag2"]),
+  get diskInfo() {
+    return this._genuine.QueryInterface(Ci.nsISystemInfo).diskInfo;
+  },
+
+  QueryInterface: ChromeUtils.generateQI(["nsIPropertyBag2", "nsISystemInfo"]),
 };
 
 function registerFakeSysInfo() {
@@ -524,7 +530,6 @@ function checkGfxAdapter(data) {
 function checkSystemSection(data) {
   const EXPECTED_FIELDS = [ "memoryMB", "cpu", "os", "hdd", "gfx",
                             "appleModelId" ];
-  const EXPECTED_HDD_FIELDS = [ "profile", "binary", "system" ];
 
   Assert.ok("system" in data, "There must be a system section in Environment.");
 
@@ -601,11 +606,10 @@ function checkSystemSection(data) {
     Assert.ok(checkNullOrString(osData.kernelVersion));
   }
 
-  let check = gIsWindows ? checkString : checkNullOrString;
   for (let disk of EXPECTED_HDD_FIELDS) {
-    Assert.ok(check(data.system.hdd[disk].model));
-    Assert.ok(check(data.system.hdd[disk].revision));
-    Assert.ok(check(data.system.hdd[disk].type));
+    Assert.ok(checkNullOrString(data.system.hdd[disk].model));
+    Assert.ok(checkNullOrString(data.system.hdd[disk].revision));
+    Assert.ok(checkNullOrString(data.system.hdd[disk].type));
   }
 
   let gfxData = data.system.gfx;
@@ -1928,6 +1932,24 @@ add_task(async function test_experimentsAPI_limits() {
   data = TelemetryEnvironment.currentEnvironment;
   Assert.equal(data.experiments.exp.type, longType.substring(0, 20));
 });
+
+
+if (gIsWindows) {
+  add_task(async function test_environmentHDDInfo() {
+    await TelemetryEnvironment.testCleanRestart().onInitialized();
+    let data = TelemetryEnvironment.currentEnvironment;
+    let empty = {model: null, revision: null, type: null};
+    Assert.deepEqual(data.system.hdd, {binary: empty, profile: empty, system: empty},
+                     "Should have no data yet.");
+    await TelemetryEnvironment.delayedInit();
+    data = TelemetryEnvironment.currentEnvironment;
+    for (let k of EXPECTED_HDD_FIELDS) {
+      checkString(data.system.hdd[k].model);
+      checkString(data.system.hdd[k].revision);
+      checkString(data.system.hdd[k].type);
+    }
+  });
+}
 
 add_task(async function test_environmentShutdown() {
   // Define and reset the test preference.

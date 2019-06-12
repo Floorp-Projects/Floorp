@@ -6468,6 +6468,9 @@ class nsDisplayAsyncZoom : public nsDisplayOwnLayer {
       const ContainerLayerParameters& aParameters) override {
     return mozilla::LayerState::LAYER_ACTIVE_FORCE;
   }
+  bool UpdateScrollData(
+      mozilla::layers::WebRenderScrollData* aData,
+      mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
 
  protected:
   mozilla::layers::FrameMetrics::ViewID mViewID;

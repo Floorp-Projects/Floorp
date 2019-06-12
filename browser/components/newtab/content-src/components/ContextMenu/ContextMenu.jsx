@@ -62,6 +62,20 @@ export class ContextMenuItem extends React.PureComponent {
     this.props.option.onClick();
   }
 
+  // This selects the correct node based on the key pressed
+  focusSibling(target, key) {
+    const parent = target.parentNode;
+    const closestSiblingSelector = (key === "ArrowUp") ? "previousSibling" : "nextSibling";
+    if (!parent[closestSiblingSelector]) {
+      return;
+    }
+    if (parent[closestSiblingSelector].firstElementChild) {
+      parent[closestSiblingSelector].firstElementChild.focus();
+    } else {
+      parent[closestSiblingSelector][closestSiblingSelector].firstElementChild.focus();
+    }
+  }
+
   onKeyDown(event) {
     const {option} = this.props;
     switch (event.key) {
@@ -72,6 +86,11 @@ export class ContextMenuItem extends React.PureComponent {
         if ((event.shiftKey && option.first) || (!event.shiftKey && option.last)) {
           this.props.hideContext();
         }
+        break;
+      case "ArrowUp":
+      case "ArrowDown":
+        event.preventDefault();
+        this.focusSibling(event.target, event.key);
         break;
       case "Enter":
         this.props.hideContext();
@@ -84,7 +103,7 @@ export class ContextMenuItem extends React.PureComponent {
     const {option} = this.props;
     return (
       <li role="menuitem" className="context-menu-item" >
-        <button className={option.disabled ? "disabled" : ""} onClick={this.onClick} onKeyDown={this.onKeyDown} tabIndex="0" >
+        <button className={option.disabled ? "disabled" : ""} tabIndex="0" onClick={this.onClick} onKeyDown={this.onKeyDown}>
           {option.icon && <span className={`icon icon-spacer icon-${option.icon}`} />}
           {option.label}
         </button>
