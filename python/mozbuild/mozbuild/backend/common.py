@@ -453,7 +453,6 @@ class CommonBackend(BuildBackend):
         ab_cd = obj.config.substs['MOZ_UI_LOCALE'][0]
         pp.context.update(
             AB_CD=ab_cd,
-            BUILD_FASTER=1,
         )
         pp.out = JarManifestParser()
         try:
