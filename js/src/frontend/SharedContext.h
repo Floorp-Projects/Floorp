@@ -394,6 +394,9 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isSetter_ : 1;
   bool isMethod_ : 1;
 
+  bool isInterpreted_ : 1;
+  bool isInterpretedLazy_ : 1;
+
   size_t nargs_;
 
   JSFunction::FunctionKind kind_;
@@ -440,7 +443,13 @@ class FunctionBox : public ObjectBox, public SharedContext {
   void finish();
 
   JSFunction* function() const { return &object()->as<JSFunction>(); }
-  void clobberFunction(JSFunction* function) { gcThing = function; }
+  
+  void clobberFunction(JSFunction* function) {
+    gcThing = function;
+    // After clobbering, these flags need to be updated
+    setIsInterpreted(function->isInterpreted());
+    setIsInterpretedLazy(function->isInterpretedLazy());
+  }
 
   Scope* compilationEnclosingScope() const override {
     // This method is used to distinguish the outermost SharedContext. If
@@ -525,6 +534,11 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isGetter() const { return isGetter_; }
   bool isSetter() const { return isSetter_; }
   bool isMethod() const { return isMethod_; }
+
+  bool isInterpreted() const { return isInterpreted_; }
+  void setIsInterpreted(bool interpreted) { isInterpreted_ = interpreted; }
+  bool isInterpretedLazy() const { return isInterpretedLazy_; }
+  void setIsInterpretedLazy(bool interpretedLazy) { isInterpretedLazy_ = interpretedLazy; }
 
   size_t nargs() const { return nargs_; }
   void setArgCount(size_t args) { nargs_ = args; }
