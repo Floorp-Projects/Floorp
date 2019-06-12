@@ -1,17 +1,12 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
-*******************************************************************************
+******************************************************************************
 *
-*   Copyright (C) 1999-2004, International Business Machines
+*   Copyright (C) 1999-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
-*******************************************************************************
-*   file name:  utf.h
-*   encoding:   US-ASCII
-*   tab size:   8 (not used)
-*   indentation:4
-*
-*   created on: 1999sep09
-*   created by: Markus W. Scherer
+******************************************************************************
 */
 
 #ifndef BASE_THIRD_PARTY_ICU_ICU_UTF_H_
@@ -21,12 +16,29 @@
 
 namespace base_icu {
 
-typedef int32_t UChar32;
-typedef uint16_t UChar;
+// source/common/unicode/umachine.h
+
+/** The ICU boolean type @stable ICU 2.0 */
 typedef int8_t UBool;
 
-// General ---------------------------------------------------------------------
-// from utf.h
+/**
+ * Define UChar32 as a type for single Unicode code points.
+ * UChar32 is a signed 32-bit integer (same as int32_t).
+ *
+ * The Unicode code point range is 0..0x10ffff.
+ * All other values (negative or >=0x110000) are illegal as Unicode code points.
+ * They may be used as sentinel values to indicate "done", "error"
+ * or similar non-code point conditions.
+ *
+ * Before ICU 2.4 (Jitterbug 2146), UChar32 was defined
+ * to be wchar_t if that is 32 bits wide (wchar_t may be signed or unsigned)
+ * or else to be uint32_t.
+ * That is, the definition of UChar32 was platform-dependent.
+ *
+ * @see U_SENTINEL
+ * @stable ICU 2.4
+ */
+typedef int32_t UChar32;
 
 /**
  * This value is intended for sentinel values for APIs that
@@ -34,7 +46,7 @@ typedef int8_t UBool;
  * It is outside of the Unicode code point range 0..0x10ffff.
  *
  * For example, a "done" or "error" value in a new API
- * could be indicated with CBU_SENTINEL.
+ * could be indicated with U_SENTINEL.
  *
  * ICU APIs designed before ICU 2.4 usually define service-specific "done"
  * values, mostly 0xffff.
@@ -48,15 +60,17 @@ typedef int8_t UBool;
  */
 #define CBU_SENTINEL (-1)
 
+// source/common/unicode/utf.h
+
 /**
  * Is this code point a Unicode noncharacter?
  * @param c 32-bit code point
  * @return TRUE or FALSE
  * @stable ICU 2.4
  */
-#define CBU_IS_UNICODE_NONCHAR(c)                                          \
-  ((c) >= 0xfdd0 && ((uint32_t)(c) <= 0xfdef || ((c)&0xfffe) == 0xfffe) && \
-   (uint32_t)(c) <= 0x10ffff)
+#define CBU_IS_UNICODE_NONCHAR(c) \
+    ((c)>=0xfdd0 && \
+     ((c)<=0xfdef || ((c)&0xfffe)==0xfffe) && (c)<=0x10ffff)
 
 /**
  * Is c a Unicode code point value (0..U+10ffff)
@@ -75,10 +89,9 @@ typedef int8_t UBool;
  * @return TRUE or FALSE
  * @stable ICU 2.4
  */
-#define CBU_IS_UNICODE_CHAR(c)                             \
-  ((uint32_t)(c) < 0xd800 ||                               \
-   ((uint32_t)(c) > 0xdfff && (uint32_t)(c) <= 0x10ffff && \
-    !CBU_IS_UNICODE_NONCHAR(c)))
+#define CBU_IS_UNICODE_CHAR(c) \
+    ((uint32_t)(c)<0xd800 || \
+        (0xdfff<(c) && (c)<=0x10ffff && !CBU_IS_UNICODE_NONCHAR(c)))
 
 /**
  * Is this code point a surrogate (U+d800..U+dfff)?
@@ -97,24 +110,56 @@ typedef int8_t UBool;
  */
 #define CBU_IS_SURROGATE_LEAD(c) (((c)&0x400)==0)
 
-
-// UTF-8 macros ----------------------------------------------------------------
-// from utf8.h
-
-extern const uint8_t utf8_countTrailBytes[256];
+// source/common/unicode/utf8.h
 
 /**
- * Count the trail bytes for a UTF-8 lead byte.
+ * Internal bit vector for 3-byte UTF-8 validity check, for use in U8_IS_VALID_LEAD3_AND_T1.
+ * Each bit indicates whether one lead byte + first trail byte pair starts a valid sequence.
+ * Lead byte E0..EF bits 3..0 are used as byte index,
+ * first trail byte bits 7..5 are used as bit index into that byte.
+ * @see U8_IS_VALID_LEAD3_AND_T1
  * @internal
  */
-#define CBU8_COUNT_TRAIL_BYTES(leadByte) \
-  (base_icu::utf8_countTrailBytes[(uint8_t)leadByte])
+#define CBU8_LEAD3_T1_BITS "\x20\x30\x30\x30\x30\x30\x30\x30\x30\x30\x30\x30\x30\x10\x30\x30"
 
 /**
- * Mask a UTF-8 lead byte, leave only the lower bits that form part of the code point value.
+ * Internal 3-byte UTF-8 validity check.
+ * Non-zero if lead byte E0..EF and first trail byte 00..FF start a valid sequence.
  * @internal
  */
-#define CBU8_MASK_LEAD_BYTE(leadByte, countTrailBytes) ((leadByte)&=(1<<(6-(countTrailBytes)))-1)
+#define CBU8_IS_VALID_LEAD3_AND_T1(lead, t1) (CBU8_LEAD3_T1_BITS[(lead)&0xf]&(1<<((uint8_t)(t1)>>5)))
+
+/**
+ * Internal bit vector for 4-byte UTF-8 validity check, for use in U8_IS_VALID_LEAD4_AND_T1.
+ * Each bit indicates whether one lead byte + first trail byte pair starts a valid sequence.
+ * First trail byte bits 7..4 are used as byte index,
+ * lead byte F0..F4 bits 2..0 are used as bit index into that byte.
+ * @see U8_IS_VALID_LEAD4_AND_T1
+ * @internal
+ */
+#define CBU8_LEAD4_T1_BITS "\x00\x00\x00\x00\x00\x00\x00\x00\x1E\x0F\x0F\x0F\x00\x00\x00\x00"
+
+/**
+ * Internal 4-byte UTF-8 validity check.
+ * Non-zero if lead byte F0..F4 and first trail byte 00..FF start a valid sequence.
+ * @internal
+ */
+#define CBU8_IS_VALID_LEAD4_AND_T1(lead, t1) (CBU8_LEAD4_T1_BITS[(uint8_t)(t1)>>4]&(1<<((lead)&7)))
+
+/**
+ * Function for handling "next code point" with error-checking.
+ *
+ * This is internal since it is not meant to be called directly by external clie
+nts;
+ * however it is U_STABLE (not U_INTERNAL) since it is called by public macros i
+n this
+ * file and thus must remain stable, and should not be hidden when other interna
+l
+ * functions are hidden (otherwise public macros would fail to compile).
+ * @internal
+ */
+UChar32
+utf8_nextCharSafeBody(const uint8_t *s, int32_t *pi, int32_t length, ::base_icu::UChar32 c, ::base_icu::UBool strict);
 
 /**
  * Does this code unit (byte) encode a code point by itself (US-ASCII 0..0x7f)?
@@ -125,20 +170,20 @@ extern const uint8_t utf8_countTrailBytes[256];
 #define CBU8_IS_SINGLE(c) (((c)&0x80)==0)
 
 /**
- * Is this code unit (byte) a UTF-8 lead byte?
+ * Is this code unit (byte) a UTF-8 lead byte? (0xC2..0xF4)
  * @param c 8-bit code unit (byte)
  * @return TRUE or FALSE
  * @stable ICU 2.4
  */
-#define CBU8_IS_LEAD(c) ((uint8_t)((c)-0xc0) < 0x3e)
+#define CBU8_IS_LEAD(c) ((uint8_t)((c)-0xc2)<=0x32)
 
 /**
- * Is this code unit (byte) a UTF-8 trail byte?
+ * Is this code unit (byte) a UTF-8 trail byte? (0x80..0xBF)
  * @param c 8-bit code unit (byte)
  * @return TRUE or FALSE
  * @stable ICU 2.4
  */
-#define CBU8_IS_TRAIL(c) (((c)&0xc0)==0x80)
+#define CBU8_IS_TRAIL(c) ((int8_t)(c)<-0x40)
 
 /**
  * How many code units (bytes) are used for the UTF-8 encoding
@@ -147,16 +192,16 @@ extern const uint8_t utf8_countTrailBytes[256];
  * @return 1..4, or 0 if c is a surrogate or not a Unicode code point
  * @stable ICU 2.4
  */
-#define CBU8_LENGTH(c)                                                      \
-  ((uint32_t)(c) <= 0x7f                                                    \
-       ? 1                                                                  \
-       : ((uint32_t)(c) <= 0x7ff                                            \
-              ? 2                                                           \
-              : ((uint32_t)(c) <= 0xd7ff                                    \
-                     ? 3                                                    \
-                     : ((uint32_t)(c) <= 0xdfff || (uint32_t)(c) > 0x10ffff \
-                            ? 0                                             \
-                            : ((uint32_t)(c) <= 0xffff ? 3 : 4)))))
+#define CBU8_LENGTH(c) \
+    ((uint32_t)(c)<=0x7f ? 1 : \
+        ((uint32_t)(c)<=0x7ff ? 2 : \
+            ((uint32_t)(c)<=0xd7ff ? 3 : \
+                ((uint32_t)(c)<=0xdfff || (uint32_t)(c)>0x10ffff ? 0 : \
+                    ((uint32_t)(c)<=0xffff ? 3 : 4)\
+                ) \
+            ) \
+        ) \
+    )
 
 /**
  * The maximum number of UTF-8 code units (bytes) per Unicode code point (U+0000..U+10ffff).
@@ -166,20 +211,12 @@ extern const uint8_t utf8_countTrailBytes[256];
 #define CBU8_MAX_LENGTH 4
 
 /**
- * Function for handling "next code point" with error-checking.
- * @internal
- */
-UChar32 utf8_nextCharSafeBody(const uint8_t* s,
-                              int32_t* pi,
-                              int32_t length,
-                              UChar32 c,
-                              UBool strict);
-
-/**
  * Get a code point from a string at a code point boundary offset,
  * and advance the offset to the next code point boundary.
  * (Post-incrementing forward iteration.)
  * "Safe" macro, checks for illegal sequences and for string boundaries.
+ *
+ * The length can be negative for a NUL-terminated string.
  *
  * The offset may point to the lead byte of a multi-byte sequence,
  * in which case the macro will read the whole sequence.
@@ -187,61 +224,69 @@ UChar32 utf8_nextCharSafeBody(const uint8_t* s,
  * c is set to a negative value.
  *
  * @param s const uint8_t * string
- * @param i string offset, i<length
- * @param length string length
+ * @param i int32_t string offset, must be i<length
+ * @param length int32_t string length
  * @param c output UChar32 variable, set to <0 in case of an error
- * @see CBU8_NEXT_UNSAFE
+ * @see U8_NEXT_UNSAFE
  * @stable ICU 2.4
  */
-#define CBU8_NEXT(s, i, length, c)                                       \
-  {                                                                      \
-    (c) = (s)[(i)++];                                                    \
-    if (((uint8_t)(c)) >= 0x80) {                                        \
-      if (CBU8_IS_LEAD(c)) {                                             \
-        (c) = base_icu::utf8_nextCharSafeBody((const uint8_t*)s, &(i),   \
-                                              (int32_t)(length), c, -1); \
-      } else {                                                           \
-        (c) = CBU_SENTINEL;                                              \
-      }                                                                  \
-    }                                                                    \
-  }
+#define CBU8_NEXT(s, i, length, c) { \
+    (c)=(uint8_t)(s)[(i)++]; \
+    if(!CBU8_IS_SINGLE(c)) { \
+        uint8_t __t1, __t2; \
+        if( /* handle U+0800..U+FFFF inline */ \
+                (0xe0<=(c) && (c)<0xf0) && \
+                (((i)+1)<(length) || (length)<0) && \
+                CBU8_IS_VALID_LEAD3_AND_T1((c), __t1=(s)[i]) && \
+                (__t2=(s)[(i)+1]-0x80)<=0x3f) { \
+            (c)=(((c)&0xf)<<12)|((__t1&0x3f)<<6)|__t2; \
+            (i)+=2; \
+        } else if( /* handle U+0080..U+07FF inline */ \
+                ((c)<0xe0 && (c)>=0xc2) && \
+                ((i)!=(length)) && \
+                (__t1=(s)[i]-0x80)<=0x3f) { \
+            (c)=(((c)&0x1f)<<6)|__t1; \
+            ++(i); \
+        } else { \
+            /* function call for "complicated" and error cases */ \
+            (c)=::base_icu::utf8_nextCharSafeBody((const uint8_t *)s, &(i), (length), c, -1); \
+        } \
+    } \
+}
 
 /**
  * Append a code point to a string, overwriting 1 to 4 bytes.
  * The offset points to the current end of the string contents
  * and is advanced (post-increment).
- * "Unsafe" macro, assumes a valid code point and sufficient space in the
- * string.
+ * "Unsafe" macro, assumes a valid code point and sufficient space in the string.
  * Otherwise, the result is undefined.
  *
  * @param s const uint8_t * string buffer
  * @param i string offset
  * @param c code point to append
- * @see CBU8_APPEND
+ * @see U8_APPEND
  * @stable ICU 2.4
  */
-#define CBU8_APPEND_UNSAFE(s, i, c)                            \
-  {                                                            \
-    if ((uint32_t)(c) <= 0x7f) {                               \
-      (s)[(i)++] = (uint8_t)(c);                               \
-    } else {                                                   \
-      if ((uint32_t)(c) <= 0x7ff) {                            \
-        (s)[(i)++] = (uint8_t)(((c) >> 6) | 0xc0);             \
-      } else {                                                 \
-        if ((uint32_t)(c) <= 0xffff) {                         \
-          (s)[(i)++] = (uint8_t)(((c) >> 12) | 0xe0);          \
-        } else {                                               \
-          (s)[(i)++] = (uint8_t)(((c) >> 18) | 0xf0);          \
-          (s)[(i)++] = (uint8_t)((((c) >> 12) & 0x3f) | 0x80); \
-        }                                                      \
-        (s)[(i)++] = (uint8_t)((((c) >> 6) & 0x3f) | 0x80);    \
-      }                                                        \
-      (s)[(i)++] = (uint8_t)(((c)&0x3f) | 0x80);               \
-    }                                                          \
-  }
+#define CBU8_APPEND_UNSAFE(s, i, c) { \
+    if((uint32_t)(c)<=0x7f) { \
+        (s)[(i)++]=(uint8_t)(c); \
+    } else { \
+        if((uint32_t)(c)<=0x7ff) { \
+            (s)[(i)++]=(uint8_t)(((c)>>6)|0xc0); \
+        } else { \
+            if((uint32_t)(c)<=0xffff) { \
+                (s)[(i)++]=(uint8_t)(((c)>>12)|0xe0); \
+            } else { \
+                (s)[(i)++]=(uint8_t)(((c)>>18)|0xf0); \
+                (s)[(i)++]=(uint8_t)((((c)>>12)&0x3f)|0x80); \
+            } \
+            (s)[(i)++]=(uint8_t)((((c)>>6)&0x3f)|0x80); \
+        } \
+        (s)[(i)++]=(uint8_t)(((c)&0x3f)|0x80); \
+    } \
+}
 
-// UTF-16 macros ---------------------------------------------------------------
-// from utf16.h
+// source/common/unicode/utf16.h
 
 /**
  * Does this code unit alone encode a code point (BMP, not a surrogate)?
@@ -285,7 +330,7 @@ UChar32 utf8_nextCharSafeBody(const uint8_t* s,
 #define CBU16_IS_SURROGATE_LEAD(c) (((c)&0x400)==0)
 
 /**
- * Helper constant for CBU16_GET_SUPPLEMENTARY.
+ * Helper constant for U16_GET_SUPPLEMENTARY.
  * @internal
  */
 #define CBU16_SURROGATE_OFFSET ((0xd800<<10UL)+0xdc00-0x10000)
@@ -302,8 +347,7 @@ UChar32 utf8_nextCharSafeBody(const uint8_t* s,
  * @stable ICU 2.4
  */
 #define CBU16_GET_SUPPLEMENTARY(lead, trail) \
-    (((base_icu::UChar32)(lead)<<10UL)+(base_icu::UChar32)(trail)-CBU16_SURROGATE_OFFSET)
-
+    (((::base_icu::UChar32)(lead)<<10UL)+(::base_icu::UChar32)(trail)-CBU16_SURROGATE_OFFSET)
 
 /**
  * Get the lead surrogate (0xd800..0xdbff) for a
@@ -312,8 +356,7 @@ UChar32 utf8_nextCharSafeBody(const uint8_t* s,
  * @return lead surrogate (U+d800..U+dbff) for supplementary
  * @stable ICU 2.4
  */
-#define CBU16_LEAD(supplementary) \
-    (base_icu::UChar)(((supplementary)>>10)+0xd7c0)
+#define CBU16_LEAD(supplementary) (::base_icu::UChar)(((supplementary)>>10)+0xd7c0)
 
 /**
  * Get the trail surrogate (0xdc00..0xdfff) for a
@@ -322,8 +365,7 @@ UChar32 utf8_nextCharSafeBody(const uint8_t* s,
  * @return trail surrogate (U+dc00..U+dfff) for supplementary
  * @stable ICU 2.4
  */
-#define CBU16_TRAIL(supplementary) \
-    (base_icu::UChar)(((supplementary)&0x3ff)|0xdc00)
+#define CBU16_TRAIL(supplementary) (::base_icu::UChar)(((supplementary)&0x3ff)|0xdc00)
 
 /**
  * How many 16-bit code units are used to encode this Unicode code point? (1 or 2)
@@ -332,7 +374,7 @@ UChar32 utf8_nextCharSafeBody(const uint8_t* s,
  * @return 1 or 2
  * @stable ICU 2.4
  */
-#define CBU16_LENGTH(c) ((uint32_t)(c) <= 0xffff ? 1 : 2)
+#define CBU16_LENGTH(c) ((uint32_t)(c)<=0xffff ? 1 : 2)
 
 /**
  * The maximum number of 16-bit code units per Unicode code point (U+0000..U+10ffff).
@@ -347,30 +389,31 @@ UChar32 utf8_nextCharSafeBody(const uint8_t* s,
  * (Post-incrementing forward iteration.)
  * "Safe" macro, handles unpaired surrogates and checks for string boundaries.
  *
+ * The length can be negative for a NUL-terminated string.
+ *
  * The offset may point to the lead surrogate unit
  * for a supplementary code point, in which case the macro will read
  * the following trail surrogate as well.
  * If the offset points to a trail surrogate or
- * to a single, unpaired lead surrogate, then that itself
- * will be returned as the code point.
+ * to a single, unpaired lead surrogate, then c is set to that unpaired surrogate.
  *
  * @param s const UChar * string
- * @param i string offset, i<length
+ * @param i string offset, must be i<length
  * @param length string length
  * @param c output UChar32 variable
+ * @see U16_NEXT_UNSAFE
  * @stable ICU 2.4
  */
-#define CBU16_NEXT(s, i, length, c)                            \
-  {                                                            \
-    (c) = (s)[(i)++];                                          \
-    if (CBU16_IS_LEAD(c)) {                                    \
-      uint16_t __c2;                                           \
-      if ((i) < (length) && CBU16_IS_TRAIL(__c2 = (s)[(i)])) { \
-        ++(i);                                                 \
-        (c) = CBU16_GET_SUPPLEMENTARY((c), __c2);              \
-      }                                                        \
-    }                                                          \
-  }
+#define CBU16_NEXT(s, i, length, c) { \
+    (c)=(s)[(i)++]; \
+    if(CBU16_IS_LEAD(c)) { \
+        uint16_t __c2; \
+        if((i)!=(length) && CBU16_IS_TRAIL(__c2=(s)[(i)])) { \
+            ++(i); \
+            (c)=CBU16_GET_SUPPLEMENTARY((c), __c2); \
+        } \
+    } \
+}
 
 /**
  * Append a code point to a string, overwriting 1 or 2 code units.
@@ -382,18 +425,17 @@ UChar32 utf8_nextCharSafeBody(const uint8_t* s,
  * @param s const UChar * string buffer
  * @param i string offset
  * @param c code point to append
- * @see CBU16_APPEND
+ * @see U16_APPEND
  * @stable ICU 2.4
  */
-#define CBU16_APPEND_UNSAFE(s, i, c)                 \
-  {                                                  \
-    if ((uint32_t)(c) <= 0xffff) {                   \
-      (s)[(i)++] = (uint16_t)(c);                    \
-    } else {                                         \
-      (s)[(i)++] = (uint16_t)(((c) >> 10) + 0xd7c0); \
-      (s)[(i)++] = (uint16_t)(((c)&0x3ff) | 0xdc00); \
-    }                                                \
-  }
+#define CBU16_APPEND_UNSAFE(s, i, c) { \
+    if((uint32_t)(c)<=0xffff) { \
+        (s)[(i)++]=(uint16_t)(c); \
+    } else { \
+        (s)[(i)++]=(uint16_t)(((c)>>10)+0xd7c0); \
+        (s)[(i)++]=(uint16_t)(((c)&0x3ff)|0xdc00); \
+    } \
+}
 
 }  // namesapce base_icu
 

@@ -6,6 +6,8 @@
 #define BASE_DEBUG_ALIAS_H_
 
 #include "base/base_export.h"
+#include "base/stl_util.h"
+#include "base/strings/string_util.h"
 
 namespace base {
 namespace debug {
@@ -24,14 +26,19 @@ namespace debug {
 // copy the object or its fields to local variables. Example usage:
 //   int last_error = err_;
 //   base::debug::Alias(&last_error);
-//   char name_copy[16];
-//   strncpy(name_copy, p->name, sizeof(name_copy) - 1);
-//   name_copy[sizeof(name_copy) - 1] = '\0';
-//   base::debug::Alias(name_copy);
+//   DEBUG_ALIAS_FOR_CSTR(name_copy, p->name, 16);
 //   CHECK(false);
 void BASE_EXPORT Alias(const void* var);
 
 }  // namespace debug
 }  // namespace base
+
+// Convenience macro that copies the null-terminated string from |c_str| into a
+// stack-allocated char array named |var_name| that holds up to |char_count|
+// characters and should be preserved in memory dumps.
+#define DEBUG_ALIAS_FOR_CSTR(var_name, c_str, char_count)   \
+  char var_name[char_count];                                \
+  ::base::strlcpy(var_name, (c_str), base::size(var_name)); \
+  ::base::debug::Alias(var_name);
 
 #endif  // BASE_DEBUG_ALIAS_H_

@@ -22,13 +22,6 @@
 
 namespace base {
 
-// NOTE: This function must be cryptographically secure. http://crbug.com/140076
-uint64_t RandUint64() {
-  uint64_t number;
-  RandBytes(&number, sizeof(number));
-  return number;
-}
-
 void RandBytes(void* output, size_t output_length) {
   char* output_ptr = static_cast<char*>(output);
   while (output_length > 0) {

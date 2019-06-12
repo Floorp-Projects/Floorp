@@ -114,7 +114,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.cc b/secu
        NOTREACHED();
      }
    }
-@@ -460,26 +495,71 @@ ResultCode BrokerServicesBase::SpawnTarg
+@@ -460,25 +495,70 @@ ResultCode BrokerServicesBase::SpawnTarg
      // TODO(wfh): Find a way to make this have the correct lifetime.
      policy_base->AddRef();
  
@@ -134,7 +134,6 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.cc b/secu
    *target_info = process_info.Take();
    return result;
  }
- 
  
  ResultCode BrokerServicesBase::WaitForAllTargets() {
    ::WaitForSingleObject(no_targets_.Get(), INFINITE);
@@ -285,11 +284,11 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox.h b/security/sand
 +  //   If the return is ERROR_GENERIC, you can call ::GetLastError() to get
 +  //   more information.
 +  virtual ResultCode AddTargetPeer(HANDLE peer_process) = 0;
+ 
+  protected:
+   ~BrokerServices() {}
  };
  
  // TargetServices models the current process from the perspective
  // of a target process. To obtain a pointer to it use
  // Sandbox::GetTargetServices(). Note that this call returns a non-null
- // pointer only if this process is in fact a target. A process is a target
- // only if the process was spawned by a call to BrokerServices::SpawnTarget().
- //

@@ -558,7 +558,7 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
 
       this.initializeAttributeInheritance();
 
-      this.pageUpOrDownMovesSelection = AppConstants.platform == "macosx";
+      this.pageUpOrDownMovesSelection = AppConstants.platform != "macosx";
 
       this._inputField = null;
 

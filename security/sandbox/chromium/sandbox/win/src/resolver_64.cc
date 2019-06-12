@@ -31,8 +31,8 @@ struct InternalThunk {
     mov_rax = kMovRax;
     jmp_rax = kJmpRax;
     interceptor_function = 0;
-  };
-  USHORT mov_rax;       // = 48 B8
+  }
+  USHORT mov_rax;  // = 48 B8
   ULONG_PTR interceptor_function;
   USHORT jmp_rax;  // = ff e0
 };
@@ -54,7 +54,7 @@ struct InternalThunk {
     ldr_x16_pc4 = kLdrX16Pc4;
     br_x16 = kBrX16;
     interceptor_function = 0;
-  };
+  }
   ULONG ldr_x16_pc4;
   ULONG br_x16;
   ULONG_PTR interceptor_function;
@@ -64,7 +64,7 @@ struct InternalThunk {
 #error "Unsupported Windows 64-bit Arch"
 #endif
 
-} // namespace.
+}  // namespace.
 
 namespace sandbox {
 
@@ -72,13 +72,14 @@ size_t ResolverThunk::GetInternalThunkSize() const {
   return sizeof(InternalThunk);
 }
 
-bool ResolverThunk::SetInternalThunk(void* storage, size_t storage_bytes,
+bool ResolverThunk::SetInternalThunk(void* storage,
+                                     size_t storage_bytes,
                                      const void* original_function,
                                      const void* interceptor) {
   if (storage_bytes < sizeof(InternalThunk))
     return false;
 
-  InternalThunk* thunk = new(storage) InternalThunk;
+  InternalThunk* thunk = new (storage) InternalThunk;
   thunk->interceptor_function = reinterpret_cast<ULONG_PTR>(interceptor);
 
   return true;

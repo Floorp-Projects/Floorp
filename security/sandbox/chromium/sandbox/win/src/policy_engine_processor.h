@@ -59,11 +59,7 @@ namespace sandbox {
 //
 
 // Possible outcomes of policy evaluation.
-enum PolicyResult {
-  NO_POLICY_MATCH,
-  POLICY_MATCH,
-  POLICY_ERROR
-};
+enum PolicyResult { NO_POLICY_MATCH, POLICY_MATCH, POLICY_ERROR };
 
 // Policy evaluation flags
 // TODO(cpu): implement the options kStopOnErrors & kRankedEval.
@@ -114,8 +110,7 @@ class PolicyProcessor {
   // created in the broker process and evaluated in the target process.
 
   // This constructor is just a variant of the previous constructor.
-  explicit PolicyProcessor(PolicyBuffer* policy)
-      : policy_(policy) {
+  explicit PolicyProcessor(PolicyBuffer* policy) : policy_(policy) {
     SetInternalState(0, EVAL_FALSE);
   }
 

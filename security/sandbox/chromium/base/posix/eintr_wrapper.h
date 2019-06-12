@@ -19,7 +19,7 @@
 
 #include "build/build_config.h"
 
-#if defined(OS_POSIX) && !defined(OS_FUCHSIA)
+#if defined(OS_POSIX)
 
 #include <errno.h>
 
@@ -58,11 +58,11 @@
   eintr_wrapper_result; \
 })
 
-#else  // !OS_POSIX || OS_FUCHSIA
+#else  // !OS_POSIX
 
 #define HANDLE_EINTR(x) (x)
 #define IGNORE_EINTR(x) (x)
 
-#endif  // !OS_POSIX || OS_FUCHSIA
+#endif  // !OS_POSIX
 
 #endif  // BASE_POSIX_EINTR_WRAPPER_H_

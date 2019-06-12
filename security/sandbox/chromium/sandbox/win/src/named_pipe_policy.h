@@ -29,15 +29,16 @@ class NamedPipePolicy {
   // Processes a 'CreateNamedPipeW()' request from the target.
   static DWORD CreateNamedPipeAction(EvalResult eval_result,
                                      const ClientInfo& client_info,
-                                     const base::string16 &name,
-                                     DWORD open_mode, DWORD pipe_mode,
+                                     const base::string16& name,
+                                     DWORD open_mode,
+                                     DWORD pipe_mode,
                                      DWORD max_instances,
                                      DWORD out_buffer_size,
                                      DWORD in_buffer_size,
-                                     DWORD default_timeout, HANDLE* pipe);
+                                     DWORD default_timeout,
+                                     HANDLE* pipe);
 };
 
 }  // namespace sandbox
-
 
 #endif  // SANDBOX_SRC_NAMED_PIPE_POLICY_H__

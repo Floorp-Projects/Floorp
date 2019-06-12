@@ -12,25 +12,25 @@ https://hg.mozilla.org/mozilla-central/rev/14374cd9497a
 diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc b/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
 --- a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
-@@ -17,16 +17,17 @@
- #include "sandbox/win/src/sid.h"
+@@ -51,16 +51,17 @@
  
- namespace sandbox {
+ }  // namespace
  
- DWORD CreateRestrictedToken(TokenLevel security_level,
+ DWORD CreateRestrictedToken(HANDLE effective_token,
+                             TokenLevel security_level,
                              IntegrityLevel integrity_level,
                              TokenType token_type,
                              bool lockdown_default_dacl,
 +                            bool use_restricting_sids,
                              base::win::ScopedHandle* token) {
    RestrictedToken restricted_token;
-   restricted_token.Init(NULL);  // Initialized with the current process token
+   restricted_token.Init(effective_token);
    if (lockdown_default_dacl)
      restricted_token.SetLockdownDefaultDacl();
  
    std::vector<base::string16> privilege_exceptions;
    std::vector<Sid> sid_exceptions;
-@@ -39,19 +40,22 @@ DWORD CreateRestrictedToken(TokenLevel s
+@@ -68,19 +69,22 @@ DWORD CreateRestrictedToken(TokenLevel s
        deny_sids = false;
        remove_privileges = false;
        break;
@@ -56,7 +56,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
        sid_exceptions.push_back(WinWorldSid);
        sid_exceptions.push_back(WinInteractiveSid);
        sid_exceptions.push_back(WinAuthenticatedUserSid);
-@@ -59,49 +63,57 @@ DWORD CreateRestrictedToken(TokenLevel s
+@@ -93,49 +97,57 @@ DWORD CreateRestrictedToken(TokenLevel s
        break;
      }
      case USER_INTERACTIVE: {
@@ -124,21 +124,21 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
 +      }
        break;
      }
-     default: {
-       return ERROR_BAD_ARGUMENTS;
-     }
+     default: { return ERROR_BAD_ARGUMENTS; }
    }
  
    DWORD err_code = ERROR_SUCCESS;
+   if (deny_sids) {
+     err_code = restricted_token.AddAllSidsForDenyOnly(&sid_exceptions);
 diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.h b/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.h
 --- a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.h
 +++ b/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.h
-@@ -35,16 +35,17 @@ enum TokenType {
- // running under the token.
+@@ -33,16 +33,17 @@ enum TokenType {
  // If the function succeeds, the return value is ERROR_SUCCESS. If the
  // function fails, the return value is the win32 error code corresponding to
  // the error.
- DWORD CreateRestrictedToken(TokenLevel security_level,
+ DWORD CreateRestrictedToken(HANDLE effective_token,
+                             TokenLevel security_level,
                              IntegrityLevel integrity_level,
                              TokenType token_type,
                              bool lockdown_default_dacl,
@@ -146,11 +146,11 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.h 
                              base::win::ScopedHandle* token);
  
  // Sets the integrity label on a object handle.
- DWORD SetObjectIntegrityLabel(HANDLE handle, SE_OBJECT_TYPE type,
+ DWORD SetObjectIntegrityLabel(HANDLE handle,
+                               SE_OBJECT_TYPE type,
                                const wchar_t* ace_access,
                                const wchar_t* integrity_level_sid);
  
- // Sets the integrity level on a token. This is only valid on Vista. It returns
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h b/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
@@ -179,7 +179,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h b/securi
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
-@@ -184,16 +184,20 @@ ResultCode PolicyBase::SetTokenLevel(Tok
+@@ -149,16 +149,20 @@ ResultCode PolicyBase::SetTokenLevel(Tok
  TokenLevel PolicyBase::GetInitialTokenLevel() const {
    return initial_level_;
  }
@@ -200,7 +200,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/
    ui_exceptions_ = ui_exceptions;
    return SBOX_ALL_OK;
  }
-@@ -438,17 +442,18 @@ ResultCode PolicyBase::MakeJobObject(bas
+@@ -402,17 +406,18 @@ ResultCode PolicyBase::MakeJobObject(bas
  
  ResultCode PolicyBase::MakeTokens(base::win::ScopedHandle* initial,
                                    base::win::ScopedHandle* lockdown,
@@ -208,10 +208,10 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/
    // Create the 'naked' token. This will be the permanent token associated
    // with the process and therefore with any thread that is not impersonating.
    DWORD result =
-       CreateRestrictedToken(lockdown_level_, integrity_level_, PRIMARY,
--                            lockdown_default_dacl_, lockdown);
-+                            lockdown_default_dacl_, use_restricting_sids_,
-+                            lockdown);
+       CreateRestrictedToken(effective_token_, lockdown_level_, integrity_level_,
+-                            PRIMARY, lockdown_default_dacl_, lockdown);
++                            PRIMARY, lockdown_default_dacl_,
++                            use_restricting_sids_, lockdown);
    if (ERROR_SUCCESS != result)
      return SBOX_ERROR_GENERIC;
  
@@ -220,18 +220,18 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/
    // integrity level. So, we lower the label on the desktop process if it's
    // not already low enough for our process.
    if (use_alternate_desktop_ && integrity_level_ != INTEGRITY_LEVEL_LAST) {
-@@ -509,17 +514,18 @@ ResultCode PolicyBase::MakeTokens(base::
-     lowbox->Set(token_lowbox);
+@@ -466,17 +471,18 @@ ResultCode PolicyBase::MakeTokens(base::
+     }
    }
  
    // Create the 'better' token. We use this token as the one that the main
    // thread uses when booting up the process. It should contain most of
    // what we need (before reaching main( ))
    result =
-       CreateRestrictedToken(initial_level_, integrity_level_, IMPERSONATION,
--                            lockdown_default_dacl_, initial);
-+                            lockdown_default_dacl_, use_restricting_sids_,
-+                            initial);
+       CreateRestrictedToken(effective_token_, initial_level_, integrity_level_,
+-                            IMPERSONATION, lockdown_default_dacl_, initial);
++                            IMPERSONATION, lockdown_default_dacl_,
++                            use_restricting_sids_, initial);
    if (ERROR_SUCCESS != result)
      return SBOX_ERROR_GENERIC;
  

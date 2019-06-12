@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "sandbox/win/src/policy_broker.h"
+
 #include <stddef.h>
 
 #include <map>
-
-#include "sandbox/win/src/policy_broker.h"
 
 #include "base/logging.h"
 #include "base/win/pe_image.h"
@@ -28,17 +28,17 @@ namespace sandbox {
 // This is the list of all imported symbols from ntdll.dll.
 SANDBOX_INTERCEPT NtExports g_nt;
 
-#define INIT_GLOBAL_NT(member) \
+#define INIT_GLOBAL_NT(member)                          \
   g_nt.member = reinterpret_cast<Nt##member##Function>( \
-                      ntdll_image.GetProcAddress("Nt" #member)); \
-  if (NULL == g_nt.member) \
-    return false
+      ntdll_image.GetProcAddress("Nt" #member));        \
+  if (!g_nt.member)                                     \
+  return false
 
-#define INIT_GLOBAL_RTL(member) \
-  g_nt.member = reinterpret_cast<member##Function>( \
-                      ntdll_image.GetProcAddress(#member)); \
-  if (NULL == g_nt.member) \
-    return false
+#define INIT_GLOBAL_RTL(member)                                                \
+  g_nt.member =                                                                \
+      reinterpret_cast<member##Function>(ntdll_image.GetProcAddress(#member)); \
+  if (!g_nt.member)                                                            \
+  return false
 
 bool InitGlobalNt() {
   HMODULE ntdll = ::GetModuleHandle(kNtdllName);
@@ -71,14 +71,14 @@ bool InitGlobalNt() {
   return true;
 }
 
-bool SetupNtdllImports(TargetProcess *child) {
+bool SetupNtdllImports(TargetProcess* child) {
   if (!InitGlobalNt()) {
     return false;
   }
 
 #ifndef NDEBUG
   // Verify that the structure is fully initialized.
-  for (size_t i = 0; i < sizeof(g_nt)/sizeof(void*); i++)
+  for (size_t i = 0; i < sizeof(g_nt) / sizeof(void*); i++)
     DCHECK(reinterpret_cast<char**>(&g_nt)[i]);
 #endif
   return (SBOX_ALL_OK == child->TransferVariable("g_nt", &g_nt, sizeof(g_nt)));
@@ -106,8 +106,7 @@ bool SetupBasicInterceptions(InterceptionManager* manager,
                     20))
     return false;
 
-  if (!INTERCEPT_NT(manager, NtOpenThreadTokenEx, OPEN_THREAD_TOKEN_EX_ID,
-                    24))
+  if (!INTERCEPT_NT(manager, NtOpenThreadTokenEx, OPEN_THREAD_TOKEN_EX_ID, 24))
     return false;
 
   if (!is_csrss_connected) {

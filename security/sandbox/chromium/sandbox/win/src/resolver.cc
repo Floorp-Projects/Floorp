@@ -18,15 +18,14 @@ NTSTATUS ResolverThunk::Init(const void* target_module,
                              const void* interceptor_entry_point,
                              void* thunk_storage,
                              size_t storage_bytes) {
-  if (NULL == thunk_storage || 0 == storage_bytes ||
-      NULL == target_module || NULL == target_name)
+  if (!thunk_storage || 0 == storage_bytes || !target_module || !target_name)
     return STATUS_INVALID_PARAMETER;
 
   if (storage_bytes < GetThunkSize())
     return STATUS_BUFFER_TOO_SMALL;
 
   NTSTATUS ret = STATUS_SUCCESS;
-  if (NULL == interceptor_entry_point) {
+  if (!interceptor_entry_point) {
     ret = ResolveInterceptor(interceptor_module, interceptor_name,
                              &interceptor_entry_point);
     if (!NT_SUCCESS(ret))

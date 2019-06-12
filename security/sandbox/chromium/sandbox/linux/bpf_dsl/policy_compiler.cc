@@ -12,7 +12,7 @@
 #include <limits>
 
 #include "base/logging.h"
-#include "base/macros.h"
+#include "base/stl_util.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl_impl.h"
 #include "sandbox/linux/bpf_dsl/codegen.h"
@@ -454,7 +454,7 @@ CodeGen::Node PolicyCompiler::Trap(TrapRegistry::TrapFnc fnc,
 }
 
 bool PolicyCompiler::IsRequiredForUnsafeTrap(int sysno) {
-  for (size_t i = 0; i < arraysize(kSyscallsRequiredForUnsafeTraps); ++i) {
+  for (size_t i = 0; i < base::size(kSyscallsRequiredForUnsafeTraps); ++i) {
     if (sysno == kSyscallsRequiredForUnsafeTraps[i]) {
       return true;
     }

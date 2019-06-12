@@ -27,7 +27,7 @@ base::SharedMemoryHandle GetSharedMemoryHandle(const ClientInfo& client_info,
   intptr_t handle_int = reinterpret_cast<intptr_t>(handle);
   if (handle_int <= 0 ||
       !::DuplicateHandle(client_info.process, handle, ::GetCurrentProcess(),
-                         &result_handle, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
+                         &result_handle, 0, false, DUPLICATE_SAME_ACCESS)) {
     result_handle = nullptr;
   }
   return base::SharedMemoryHandle(result_handle, size,
@@ -124,7 +124,8 @@ ProcessMitigationsWin32KDispatcher::ProcessMitigationsWin32KDispatcher(
 ProcessMitigationsWin32KDispatcher::~ProcessMitigationsWin32KDispatcher() {}
 
 bool ProcessMitigationsWin32KDispatcher::SetupService(
-    InterceptionManager* manager, int service) {
+    InterceptionManager* manager,
+    int service) {
   if (!(policy_base_->GetProcessMitigations() &
         sandbox::MITIGATION_WIN32K_DISABLE)) {
     return false;
@@ -313,7 +314,7 @@ bool ProcessMitigationsWin32KDispatcher::GetMonitorInfo(IPCInfo* ipc,
   // Ensure size is valid and represents what we've been passed.
   monitor_info->cbSize = buffer->Size();
   HMONITOR monitor_handle = static_cast<HMONITOR>(monitor);
-  BOOL success = ProcessMitigationsWin32KLockdownPolicy::GetMonitorInfoAction(
+  bool success = ProcessMitigationsWin32KLockdownPolicy::GetMonitorInfoAction(
       *ipc->client_info, monitor_handle, monitor_info);
   ipc->return_info.win32_result =
       success ? ERROR_SUCCESS : ERROR_INVALID_PARAMETER;
@@ -579,4 +580,3 @@ bool ProcessMitigationsWin32KDispatcher::GetOPMInformation(
 }
 
 }  // namespace sandbox
-
