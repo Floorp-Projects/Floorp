@@ -1434,7 +1434,7 @@ XDRResult XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 // Abstractly a PrivateScriptData consists of all these arrays:
 //
 //   * A non-empty array of GCPtrScope in scopes()
-//   * A possibly-empty array of GCPtrValue in consts()
+//   * A possibly-empty array of GCPtrBigInt in bigints()
 //   * A possibly-empty array of JSObject* in objects()
 //   * A possibly-empty array of JSTryNote in tryNotes()
 //   * A possibly-empty array of ScopeNote in scopeNotes()
@@ -1449,7 +1449,7 @@ XDRResult XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 //
 //   <PrivateScriptData itself>
 //   --
-//   (OPTIONAL) PackedSpan for consts()
+//   (OPTIONAL) PackedSpan for bigints()
 //   (OPTIONAL) PackedSpan for objects()
 //   (OPTIONAL) PackedSpan for tryNotes()
 //   (OPTIONAL) PackedSpan for scopeNotes()
@@ -1457,9 +1457,7 @@ XDRResult XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 //   --
 //   (REQUIRED) All the GCPtrScopes that constitute scopes()
 //   --
-//   (OPTIONAL) If there are consts, padding needed for space so far to be
-//              GCPtrValue-aligned
-//   (OPTIONAL) All the GCPtrValues that constitute consts()
+//   (OPTIONAL) All the GCPtrBigInts that constitute bigints()
 //   --
 //   (OPTIONAL) All the GCPtrObjects that constitute objects()
 //   --
@@ -1484,12 +1482,7 @@ XDRResult XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 // bytes offset from the *start* of PrivateScriptData struct) to the
 // corresponding array, and 2) the number of elements in the array,
 // respectively.
-//
-// PrivateScriptData and PackedSpan are 64-bit-aligned, so manual alignment in
-// trailing fields is only necessary before the first trailing fields with
-// increased alignment -- before GCPtrValues for consts(), on 32-bit, where the
-// preceding GCPtrScopes as pointers are only 32-bit-aligned.
-class alignas(JS::Value) PrivateScriptData final {
+class alignas(uintptr_t) PrivateScriptData final {
   struct PackedOffsets {
     static constexpr size_t SCALE = sizeof(uint32_t);
     static constexpr size_t MAX_OFFSET = 0b1111;
@@ -1498,7 +1491,7 @@ class alignas(JS::Value) PrivateScriptData final {
     uint32_t scopesOffset : 8;
 
     // (Scaled) offset to Spans. These are set to 0 if they don't exist.
-    uint32_t constsSpanOffset : 4;
+    uint32_t bigintsSpanOffset : 4;
     uint32_t objectsSpanOffset : 4;
     uint32_t tryNotesSpanOffset : 4;
     uint32_t scopeNotesSpanOffset : 4;
@@ -1553,12 +1546,12 @@ class alignas(JS::Value) PrivateScriptData final {
   void initElements(size_t offset, size_t length);
 
   // Size to allocate
-  static size_t AllocationSize(uint32_t nscopes, uint32_t nconsts,
+  static size_t AllocationSize(uint32_t nscopes, uint32_t nbigints,
                                uint32_t nobjects, uint32_t ntrynotes,
                                uint32_t nscopenotes, uint32_t nresumeoffsets);
 
   // Initialize header and PackedSpans
-  PrivateScriptData(uint32_t nscopes_, uint32_t nconsts, uint32_t nobjects,
+  PrivateScriptData(uint32_t nscopes_, uint32_t nbigints, uint32_t nobjects,
                     uint32_t ntrynotes, uint32_t nscopenotes,
                     uint32_t nresumeoffsets);
 
@@ -1569,8 +1562,8 @@ class alignas(JS::Value) PrivateScriptData final {
         packedOffsetToPointer<GCPtrScope>(packedOffsets.scopesOffset);
     return mozilla::MakeSpan(base, nscopes);
   }
-  mozilla::Span<GCPtrValue> consts() {
-    return packedOffsetToSpan<GCPtrValue>(packedOffsets.constsSpanOffset);
+  mozilla::Span<GCPtrBigInt> bigints() {
+    return packedOffsetToSpan<GCPtrBigInt>(packedOffsets.bigintsSpanOffset);
   }
   mozilla::Span<GCPtrObject> objects() {
     return packedOffsetToSpan<GCPtrObject>(packedOffsets.objectsSpanOffset);
@@ -1586,7 +1579,7 @@ class alignas(JS::Value) PrivateScriptData final {
   }
 
   // Fast tests for if array exists
-  bool hasConsts() const { return packedOffsets.constsSpanOffset != 0; }
+  bool hasBigInts() const { return packedOffsets.bigintsSpanOffset != 0; }
   bool hasObjects() const { return packedOffsets.objectsSpanOffset != 0; }
   bool hasTryNotes() const { return packedOffsets.tryNotesSpanOffset != 0; }
   bool hasScopeNotes() const { return packedOffsets.scopeNotesSpanOffset != 0; }
@@ -1601,7 +1594,7 @@ class alignas(JS::Value) PrivateScriptData final {
   // Allocate a new PrivateScriptData. Headers and GCPtrs are initialized.
   // The size of allocation is returned as an out parameter.
   static PrivateScriptData* new_(JSContext* cx, uint32_t nscopes,
-                                 uint32_t nconsts, uint32_t nobjects,
+                                 uint32_t nbigints, uint32_t nobjects,
                                  uint32_t ntrynotes, uint32_t nscopenotes,
                                  uint32_t nresumeoffsets, uint32_t* dataSize);
 
@@ -2114,7 +2107,7 @@ class JSScript : public js::gc::TenuredCell {
   // after successfully creating the script.
   static bool createPrivateScriptData(JSContext* cx,
                                       JS::Handle<JSScript*> script,
-                                      uint32_t nscopes, uint32_t nconsts,
+                                      uint32_t nscopes, uint32_t nbigints,
                                       uint32_t nobjects, uint32_t ntrynotes,
                                       uint32_t nscopenotes,
                                       uint32_t nresumeoffsets);
@@ -2815,7 +2808,7 @@ class JSScript : public js::gc::TenuredCell {
 
   size_t dataSize() const { return dataSize_; }
 
-  bool hasConsts() const { return data_->hasConsts(); }
+  bool hasBigInts() const { return data_->hasBigInts(); }
   bool hasObjects() const { return data_->hasObjects(); }
   bool hasTrynotes() const { return data_->hasTryNotes(); }
   bool hasScopeNotes() const { return data_->hasScopeNotes(); }
@@ -2823,9 +2816,9 @@ class JSScript : public js::gc::TenuredCell {
 
   mozilla::Span<const js::GCPtrScope> scopes() const { return data_->scopes(); }
 
-  mozilla::Span<const js::GCPtrValue> consts() const {
-    MOZ_ASSERT(hasConsts());
-    return data_->consts();
+  mozilla::Span<const js::GCPtrBigInt> bigints() const {
+    MOZ_ASSERT(hasBigInts());
+    return data_->bigints();
   }
 
   mozilla::Span<const js::GCPtrObject> objects() const {
@@ -2932,7 +2925,13 @@ class JSScript : public js::gc::TenuredCell {
   inline js::RegExpObject* getRegExp(size_t index);
   inline js::RegExpObject* getRegExp(jsbytecode* pc);
 
-  const js::Value& getConst(size_t index) { return consts()[index]; }
+  js::BigInt* getBigInt(size_t index) { return bigints()[index]; }
+
+  js::BigInt* getBigInt(jsbytecode* pc) {
+    MOZ_ASSERT(containsPC(pc));
+    MOZ_ASSERT(js::JOF_OPTYPE(JSOp(*pc)) == JOF_BIGINT);
+    return getBigInt(GET_UINT32_INDEX(pc));
+  }
 
   // The following 3 functions find the static scope just before the
   // execution of the instruction pointed to by pc.
