@@ -314,7 +314,7 @@ macosx1014-64-tests:
     - firefox-ui-functional-remote
     # - gtest
     - jittest
-    # - jsreftest
+    - jsreftest
     - marionette
     # - mochitest
     - mochitest-a11y
@@ -344,7 +344,6 @@ macosx1014-64-qr-tests:
 
 macosx64-tests:
     - gtest
-    - jsreftest
     - mochitest
     - mochitest-browser-chrome
     - mochitest-chrome
