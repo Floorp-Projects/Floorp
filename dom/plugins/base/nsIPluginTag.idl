@@ -58,8 +58,6 @@ interface nsIPluginTag : nsISupports
 
   readonly attribute PRTime lastModifiedTime;
 
-  readonly attribute boolean isFlashPlugin;
-
   Array<AUTF8String> getMimeTypes();
   Array<AUTF8String> getMimeDescriptions();
   Array<AUTF8String> getExtensions();

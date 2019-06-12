@@ -1038,6 +1038,7 @@ add_task(async function test_click_to_play_blocked_plugin() {
     {
       maybeScreenshotsPresent: true,
       preCheckContextMenuFn() {
+        pushPrefs(["plugins.click_to_play", true]);
         setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
       },
       postCheckContextMenuFn() {
