@@ -2255,22 +2255,15 @@ void XMLHttpRequestMainThread::ChangeStateToDone(bool aWasSync) {
     mChannel->GetLoadFlags(&loadFlags);
     if (loadFlags & nsIRequest::LOAD_BACKGROUND) {
       nsPIDOMWindowInner* owner = GetOwner();
-      Document* doc = owner ? owner->GetExtantDoc() : nullptr;
-      doc = doc ? doc->GetTopLevelContentDocument() : nullptr;
-      if (doc &&
-          (doc->GetReadyStateEnum() > Document::READYSTATE_UNINITIALIZED &&
-           doc->GetReadyStateEnum() < Document::READYSTATE_COMPLETE)) {
-        nsPIDOMWindowInner* topWin = doc->GetInnerWindow();
-        if (topWin) {
-          MOZ_ASSERT(!mDelayedDoneNotifier);
-          RefPtr<XMLHttpRequestDoneNotifier> notifier =
-              new XMLHttpRequestDoneNotifier(this);
-          mDelayedDoneNotifier = notifier;
-          topWin->AddAfterLoadRunner(notifier);
-          NS_DispatchToCurrentThreadQueue(notifier.forget(), 5000,
-                                          EventQueuePriority::Idle);
-          return;
-        }
+      nsPIDOMWindowInner* topWin =
+          owner ? owner->GetWindowForDeprioritizedLoadRunner() : nullptr;
+      if (topWin) {
+        MOZ_ASSERT(!mDelayedDoneNotifier);
+        RefPtr<XMLHttpRequestDoneNotifier> notifier =
+            new XMLHttpRequestDoneNotifier(this);
+        mDelayedDoneNotifier = notifier;
+        topWin->AddDeprioritizedLoadRunner(notifier);
+        return;
       }
     }
   }
