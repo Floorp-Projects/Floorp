@@ -1990,7 +1990,7 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
   if (mozilla::IsDevelopmentBuild()) {
     // Repo dir
     nsCOMPtr<nsIFile> repoDir;
-    rv = mozilla::GetRepoDir(getter_AddRefs(repoDir));
+    rv = nsMacUtilsImpl::GetRepoDir(getter_AddRefs(repoDir));
     if (NS_FAILED(rv)) {
       MOZ_CRASH("Failed to get path to repo dir");
     }
@@ -2000,7 +2000,7 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
 
     // Object dir
     nsCOMPtr<nsIFile> objDir;
-    rv = mozilla::GetObjDir(getter_AddRefs(objDir));
+    rv = nsMacUtilsImpl::GetObjDir(getter_AddRefs(objDir));
     if (NS_FAILED(rv)) {
       MOZ_CRASH("Failed to get path to build object dir");
     }
