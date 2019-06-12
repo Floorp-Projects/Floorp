@@ -260,8 +260,6 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FuncHookCrossProcess final {
   FuncPtrT mOrigFunc;
 };
 
-enum { kDefaultTrampolineSize = 128 };
-
 template <typename MMPolicyT, typename InterceptorT>
 struct TypeResolver;
 
@@ -278,7 +276,7 @@ struct TypeResolver<mozilla::interceptor::MMPolicyOutOfProcess, InterceptorT> {
 };
 
 template <typename VMPolicy = mozilla::interceptor::VMSharingPolicyShared<
-              mozilla::interceptor::MMPolicyInProcess, kDefaultTrampolineSize>>
+              mozilla::interceptor::MMPolicyInProcess, true>>
 class WindowsDllInterceptor final
     : public TypeResolver<typename VMPolicy::MMPolicyT,
                           WindowsDllInterceptor<VMPolicy>> {
@@ -291,7 +289,6 @@ class WindowsDllInterceptor final
 #endif  // defined(_M_IX86)
 
   HMODULE mModule;
-  int mNHooks;
 
  public:
   template <typename... Args>
@@ -302,8 +299,7 @@ class WindowsDllInterceptor final
         mNopSpacePatcher(std::forward<Args>(aArgs)...)
 #endif  // defined(_M_IX86)
         ,
-        mModule(nullptr),
-        mNHooks(0) {
+        mModule(nullptr) {
   }
 
   WindowsDllInterceptor(const WindowsDllInterceptor&) = delete;
@@ -314,7 +310,7 @@ class WindowsDllInterceptor final
   ~WindowsDllInterceptor() { Clear(); }
 
   template <size_t N>
-  void Init(const char (&aModuleName)[N], int aNumHooks = 0) {
+  void Init(const char (&aModuleName)[N]) {
     wchar_t moduleName[N];
 
     for (size_t i = 0; i < N; ++i) {
@@ -323,27 +319,22 @@ class WindowsDllInterceptor final
       moduleName[i] = aModuleName[i];
     }
 
-    Init(moduleName, aNumHooks);
+    Init(moduleName);
   }
 
-  void Init(const wchar_t* aModuleName, int aNumHooks = 0) {
+  void Init(const wchar_t* aModuleName) {
     if (mModule) {
       return;
     }
 
     mModule = ::LoadLibraryW(aModuleName);
-    mNHooks = aNumHooks;
   }
 
   /** Force a specific configuration for testing purposes. NOT to be used in
       production code! **/
-  void TestOnlyDetourInit(const wchar_t* aModuleName, DetourFlags aFlags,
-                          int aNumHooks = 0) {
-    Init(aModuleName, aNumHooks);
-
-    if (!mDetourPatcher.Initialized()) {
-      mDetourPatcher.Init(aFlags, mNHooks);
-    }
+  void TestOnlyDetourInit(const wchar_t* aModuleName, DetourFlags aFlags) {
+    Init(aModuleName);
+    mDetourPatcher.Init(aFlags);
   }
 
   void Clear() {
@@ -429,7 +420,7 @@ class WindowsDllInterceptor final
       }
 #endif  // defined(_M_X64)
 
-      mDetourPatcher.Init(flags, mNHooks);
+      mDetourPatcher.Init(flags);
     }
 
     return mDetourPatcher.AddHook(aProc, aHookDest, aOrigFunc);
@@ -449,8 +440,7 @@ using WindowsDllInterceptor = interceptor::WindowsDllInterceptor<>;
 
 using CrossProcessDllInterceptor = interceptor::WindowsDllInterceptor<
     mozilla::interceptor::VMSharingPolicyUnique<
-        mozilla::interceptor::MMPolicyOutOfProcess,
-        mozilla::interceptor::kDefaultTrampolineSize>>;
+        mozilla::interceptor::MMPolicyOutOfProcess>>;
 
 }  // namespace mozilla
 

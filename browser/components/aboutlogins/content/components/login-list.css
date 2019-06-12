@@ -5,11 +5,15 @@
 :host {
   border-inline-end: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-box-background);
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
 }
 
 .meta {
   display: flex;
-  padding: 10px;
+  align-items: center;
+  padding: 10px 18px;
   border-bottom: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-box-info-background);
   position: sticky;
@@ -20,10 +24,12 @@
   flex: auto;
   text-align: end;
   font-size: smaller;
+  margin-inline-start: 18px;
 }
 
 ol {
   margin-top: 0;
   margin-bottom: 0;
   padding-inline-start: 0;
+  overflow: hidden auto;
 }

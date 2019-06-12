@@ -316,7 +316,7 @@ class MulticastDNS {
           let packet = this._makeServicePacket(svc, [address]);
           let data = packet.serialize();
           try {
-            socket.send(target.address, target.port, data, data.length);
+            socket.send(target.address, target.port, data);
           } catch (err) {
             DEBUG && debug("Failed to send packet to "
                             + target.address + ":" + target.port);
@@ -402,7 +402,7 @@ class MulticastDNS {
 
     this._getQuerySocket().then((querySocket) => {
       DEBUG && debug('sending query on query socket ("' + name + '")');
-      querySocket.send(MDNS_MULTICAST_GROUP, MDNS_PORT, data, data.length);
+      querySocket.send(MDNS_MULTICAST_GROUP, MDNS_PORT, data);
     });
 
     // Automatically announce previously-discovered

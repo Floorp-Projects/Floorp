@@ -98,13 +98,11 @@ interface nsIApplicationCacheService : nsISupports
     /**
      * Get the list of application cache groups.
      */
-    void getGroups([optional] out unsigned long count,
-                   [array, size_is(count), retval] out string groupIDs);
+    Array<ACString> getGroups();
 
     /**
      * Get the list of application cache groups in the order of
      * activating time.
      */
-    void getGroupsTimeOrdered([optional] out unsigned long count,
-                              [array, size_is(count), retval] out string groupIDs);
+    Array<ACString> getGroupsTimeOrdered();
 };

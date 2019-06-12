@@ -7891,6 +7891,17 @@ already_AddRefed<Layer> nsDisplayAsyncZoom::BuildLayer(
   return layer.forget();
 }
 
+bool nsDisplayAsyncZoom::UpdateScrollData(
+    mozilla::layers::WebRenderScrollData* aData,
+    mozilla::layers::WebRenderLayerScrollData* aLayerData) {
+  bool ret = nsDisplayOwnLayer::UpdateScrollData(aData, aLayerData);
+  MOZ_ASSERT(ret);
+  if (aLayerData) {
+    aLayerData->SetAsyncZoomContainerId(mViewID);
+  }
+  return ret;
+}
+
 ///////////////////////////////////////////////////
 // nsDisplayTransform Implementation
 //

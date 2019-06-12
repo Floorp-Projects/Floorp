@@ -36,8 +36,6 @@ NTSTATUS NTAPI LdrLoadDll(PWCHAR filePath, PULONG flags,
                           PUNICODE_STRING moduleFileName, PHANDLE handle);
 NTSTATUS NTAPI LdrUnloadDll(HMODULE);
 
-enum SECTION_INHERIT { ViewShare = 1, ViewUnmap = 2 };
-
 NTSTATUS NTAPI NtMapViewOfSection(
     HANDLE aSection, HANDLE aProcess, PVOID* aBaseAddress, ULONG_PTR aZeroBits,
     SIZE_T aCommitSize, PLARGE_INTEGER aSectionOffset, PSIZE_T aViewSize,
@@ -298,6 +296,31 @@ bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
         "TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to hook %s from "
         "%s\n",
         func, dll);
+
+    // Print out the function's bytes so that we can easily analyze the error.
+    nsModuleHandle mod(::LoadLibrary(dll));
+    FARPROC funcAddr = ::GetProcAddress(mod, func);
+    if (funcAddr) {
+      // For each CPU arch, we output the maximum number of bytes required to
+      // patch the function.
+#if defined(_M_ARM64)
+      const uint32_t kNumBytesToDump = 16;
+#elif defined(_M_IX86)
+      const uint32_t kNumBytesToDump = 5;
+#elif defined(_M_X64)
+      const uint32_t kNumBytesToDump = 13;
+#else
+#  error "Unsupported CPU architecture"
+#endif
+
+      printf("\tFirst %u bytes of function:\n\t", kNumBytesToDump);
+
+      auto code = reinterpret_cast<const uint8_t*>(funcAddr);
+      for (uint32_t i = 0; i < kNumBytesToDump; ++i) {
+        char suffix = (i < (kNumBytesToDump - 1)) ? ' ' : '\n';
+        printf("%02hhX%c", code[i], suffix);
+      }
+    }
     return false;
   }
 }
@@ -450,7 +473,7 @@ struct Predicates<void(__fastcall*)(Args...)> {
 // Note: When |func| returns void, you must supply |Ignore| and |nullptr| as the
 // |pred| and |comp| arguments, respectively.
 #define TEST_HOOK(dll, func, pred, comp) \
-  TestHook<decltype(&func)>(#dll, #func, \
+  TestHook<decltype(&func)>(dll, #func,  \
                             &Predicates<decltype(&func)>::pred<comp>)
 
 // We need to special-case functions that return INVALID_HANDLE_VALUE
@@ -459,7 +482,7 @@ struct Predicates<void(__fastcall*)(Args...)> {
 // clang, because that is not standard-compliant).
 #define TEST_HOOK_FOR_INVALID_HANDLE_VALUE(dll, func)                   \
   TestHook<SubstituteForVoidPtr<decltype(&func)>::Type>(                \
-      #dll, #func,                                                      \
+      dll, #func,                                                       \
       &Predicates<SubstituteForVoidPtr<decltype(&func)>::Type>::Equals< \
           uintptr_t(-1)>)
 
@@ -469,13 +492,13 @@ struct Predicates<void(__fastcall*)(Args...)> {
 // predicate.
 #define TEST_HOOK_PARAMS(dll, func, pred, comp, ...) \
   TestHook<decltype(&func)>(                         \
-      #dll, #func, &Predicates<decltype(&func)>::pred<comp>, __VA_ARGS__)
+      dll, #func, &Predicates<decltype(&func)>::pred<comp>, __VA_ARGS__)
 
 // This is for cases when we want to hook |func|, but it is unsafe to attempt
 // to execute the function in the context of a test.
 #define TEST_HOOK_SKIP_EXEC(dll, func)                                        \
   TestHook<decltype(&func)>(                                                  \
-      #dll, #func,                                                            \
+      dll, #func,                                                             \
       reinterpret_cast<bool (*)(typename ReturnType<decltype(&func)>::Type)>( \
           NULL))
 
@@ -483,16 +506,16 @@ struct Predicates<void(__fastcall*)(Args...)> {
 // however the forcibly use a Detour on 32-bit Windows. On 64-bit Windows,
 // these macros are identical to their TEST_HOOK variants.
 #define TEST_DETOUR(dll, func, pred, comp) \
-  TestDetour<decltype(&func)>(#dll, #func, \
+  TestDetour<decltype(&func)>(dll, #func,  \
                               &Predicates<decltype(&func)>::pred<comp>)
 
 #define TEST_DETOUR_PARAMS(dll, func, pred, comp, ...) \
   TestDetour<decltype(&func)>(                         \
-      #dll, #func, &Predicates<decltype(&func)>::pred<comp>, __VA_ARGS__)
+      dll, #func, &Predicates<decltype(&func)>::pred<comp>, __VA_ARGS__)
 
 #define TEST_DETOUR_SKIP_EXEC(dll, func)                                      \
   TestDetour<decltype(&func)>(                                                \
-      #dll, #func,                                                            \
+      dll, #func,                                                             \
       reinterpret_cast<bool (*)(typename ReturnType<decltype(&func)>::Type)>( \
           NULL))
 
@@ -513,17 +536,16 @@ bool MaybeTestHook(const bool cond, const char (&dll)[N], const char* func,
 
 // Like TEST_HOOK, but the test is only executed when cond is true.
 #define MAYBE_TEST_HOOK(cond, dll, func, pred, comp) \
-  MaybeTestHook<decltype(&func)>(cond, #dll, #func,  \
+  MaybeTestHook<decltype(&func)>(cond, dll, #func,   \
                                  &Predicates<decltype(&func)>::pred<comp>)
 
-#define MAYBE_TEST_HOOK_PARAMS(cond, dll, func, pred, comp, ...)           \
-  MaybeTestHook<decltype(&func)>(cond, #dll, #func,                        \
-                                 &Predicates<decltype(&func)>::pred<comp>, \
-                                 __VA_ARGS__)
+#define MAYBE_TEST_HOOK_PARAMS(cond, dll, func, pred, comp, ...) \
+  MaybeTestHook<decltype(&func)>(                                \
+      cond, dll, #func, &Predicates<decltype(&func)>::pred<comp>, __VA_ARGS__)
 
 #define MAYBE_TEST_HOOK_SKIP_EXEC(cond, dll, func)                            \
   MaybeTestHook<decltype(&func)>(                                             \
-      cond, #dll, #func,                                                      \
+      cond, dll, #func,                                                       \
       reinterpret_cast<bool (*)(typename ReturnType<decltype(&func)>::Type)>( \
           NULL))
 
@@ -577,22 +599,21 @@ bool HasApiSetQueryApiSetPresence() {
 // Set this to true to test function unhooking.
 const bool ShouldTestUnhookFunction = false;
 
-#if defined(_M_X64)
+#if defined(_M_X64) || defined(_M_ARM64)
 
-// Use VMSharingPolicyUnique for the TenByteInterceptor, as it needs to
+// Use VMSharingPolicyUnique for the ShortInterceptor, as it needs to
 // reserve its trampoline memory in a special location.
-using TenByteInterceptor = mozilla::interceptor::WindowsDllInterceptor<
+using ShortInterceptor = mozilla::interceptor::WindowsDllInterceptor<
     mozilla::interceptor::VMSharingPolicyUnique<
-        mozilla::interceptor::MMPolicyInProcess,
-        mozilla::interceptor::kDefaultTrampolineSize>>;
+        mozilla::interceptor::MMPolicyInProcess>>;
 
-static TenByteInterceptor::FuncHookType<decltype(&::NtMapViewOfSection)>
+static ShortInterceptor::FuncHookType<decltype(&::NtMapViewOfSection)>
     orig_NtMapViewOfSection;
 
-#endif  // defined(_M_X64)
+#endif  // defined(_M_X64) || defined(_M_ARM64)
 
-bool TestTenByteDetour() {
-#if defined(_M_X64)
+bool TestShortDetour() {
+#if defined(_M_X64) || defined(_M_ARM64)
   auto pNtMapViewOfSection = reinterpret_cast<decltype(&::NtMapViewOfSection)>(
       ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"), "NtMapViewOfSection"));
   if (!pNtMapViewOfSection) {
@@ -602,15 +623,15 @@ bool TestTenByteDetour() {
     return false;
   }
 
-  {  // Scope for tenByteInterceptor
-    TenByteInterceptor tenByteInterceptor;
-    tenByteInterceptor.TestOnlyDetourInit(
+  {  // Scope for shortInterceptor
+    ShortInterceptor shortInterceptor;
+    shortInterceptor.TestOnlyDetourInit(
         L"ntdll.dll",
-        mozilla::interceptor::DetourFlags::eTestOnlyForce10BytePatch);
+        mozilla::interceptor::DetourFlags::eTestOnlyForceShortPatch);
 
     InterceptorFunction& interceptorFunc = InterceptorFunction::Create();
     if (!orig_NtMapViewOfSection.SetDetour(
-            tenByteInterceptor, "NtMapViewOfSection",
+            shortInterceptor, "NtMapViewOfSection",
             reinterpret_cast<decltype(&::NtMapViewOfSection)>(
                 interceptorFunc.GetFunction()))) {
       printf(
@@ -641,13 +662,13 @@ bool TestTenByteDetour() {
       printf(
           "TEST-FAILED | WindowsDllInterceptor | "
           "Unexpected successful call to ntdll!NtMapViewOfSection after "
-          "removing 10-byte hook\n");
+          "removing short-patched hook\n");
       return false;
     }
 
     printf(
         "TEST-PASS | WindowsDllInterceptor | "
-        "Successfully unhooked ntdll!NtMapViewOfSection via 10-byte patch\n");
+        "Successfully unhooked ntdll!NtMapViewOfSection via short patch\n");
   }
 
   return true;
@@ -738,107 +759,99 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
   CredHandle credHandle;
   memset(&credHandle, 0, sizeof(CredHandle));
 
-  if (TEST_HOOK(user32.dll, GetWindowInfo, Equals, FALSE) &&
+  if (TEST_HOOK("user32.dll", GetWindowInfo, Equals, FALSE) &&
 #if defined(_M_X64)
-      TEST_HOOK(user32.dll, SetWindowLongPtrA, Equals, 0) &&
-      TEST_HOOK(user32.dll, SetWindowLongPtrW, Equals, 0) &&
+      TEST_HOOK("user32.dll", SetWindowLongPtrA, Equals, 0) &&
+      TEST_HOOK("user32.dll", SetWindowLongPtrW, Equals, 0) &&
 #elif defined(_M_IX86)
-      TEST_HOOK(user32.dll, SetWindowLongA, Equals, 0) &&
-      TEST_HOOK(user32.dll, SetWindowLongW, Equals, 0) &&
+      TEST_HOOK("user32.dll", SetWindowLongA, Equals, 0) &&
+      TEST_HOOK("user32.dll", SetWindowLongW, Equals, 0) &&
 #endif
-      TEST_HOOK(user32.dll, TrackPopupMenu, Equals, FALSE) &&
+      TEST_HOOK("user32.dll", TrackPopupMenu, Equals, FALSE) &&
 #ifdef _M_IX86
       // We keep this test to hook complex code on x86. (Bug 850957)
-      TEST_HOOK(ntdll.dll, NtFlushBuffersFile, NotEquals, 0) &&
+      TEST_HOOK("ntdll.dll", NtFlushBuffersFile, NotEquals, 0) &&
 #endif
+      TEST_HOOK("ntdll.dll", NtCreateFile, NotEquals, 0) &&
+      TEST_HOOK("ntdll.dll", NtReadFile, NotEquals, 0) &&
+      TEST_HOOK("ntdll.dll", NtReadFileScatter, NotEquals, 0) &&
+      TEST_HOOK("ntdll.dll", NtWriteFile, NotEquals, 0) &&
+      TEST_HOOK("ntdll.dll", NtWriteFileGather, NotEquals, 0) &&
+      TEST_HOOK("ntdll.dll", NtQueryFullAttributesFile, NotEquals, 0) &&
 #if !defined(_M_ARM64)
-      TEST_HOOK(ntdll.dll, NtCreateFile, NotEquals, 0) &&
-      TEST_HOOK(ntdll.dll, NtReadFile, NotEquals, 0) &&
-      TEST_HOOK(ntdll.dll, NtReadFileScatter, NotEquals, 0) &&
-      TEST_HOOK(ntdll.dll, NtWriteFile, NotEquals, 0) &&
-      TEST_HOOK(ntdll.dll, NtWriteFileGather, NotEquals, 0) &&
-      TEST_HOOK(ntdll.dll, NtQueryFullAttributesFile, NotEquals, 0) &&
 #  ifndef MOZ_ASAN
       // Bug 733892: toolkit/crashreporter/nsExceptionHandler.cpp
       // This fails on ASan because the ASan runtime already hooked this
       // function
-      TEST_HOOK(kernel32.dll, SetUnhandledExceptionFilter, Ignore, nullptr) &&
+      TEST_HOOK("kernel32.dll", SetUnhandledExceptionFilter, Ignore, nullptr) &&
 #  endif
-#endif
+#endif  // !defined(_M_ARM64)
 #ifdef _M_IX86
-      TEST_HOOK_FOR_INVALID_HANDLE_VALUE(kernel32.dll, CreateFileW) &&
+      TEST_HOOK_FOR_INVALID_HANDLE_VALUE("kernel32.dll", CreateFileW) &&
 #endif
 #if !defined(_M_ARM64)
-      TEST_HOOK_FOR_INVALID_HANDLE_VALUE(kernel32.dll, CreateFileA) &&
-#endif
-      TEST_HOOK(kernelbase.dll, QueryDosDeviceW, Equals, 0) &&
-      TEST_DETOUR(user32.dll, CreateWindowExW, Equals, nullptr) &&
-      TEST_HOOK(user32.dll, InSendMessageEx, Equals, ISMEX_NOSEND) &&
+      TEST_HOOK_FOR_INVALID_HANDLE_VALUE("kernel32.dll", CreateFileA) &&
+#endif  // !defined(_M_ARM64)
+      TEST_HOOK("kernelbase.dll", QueryDosDeviceW, Equals, 0) &&
+      TEST_DETOUR("user32.dll", CreateWindowExW, Equals, nullptr) &&
+      TEST_HOOK("user32.dll", InSendMessageEx, Equals, ISMEX_NOSEND) &&
 #if !defined(_M_ARM64)
-      TEST_HOOK(imm32.dll, ImmGetContext, Equals, nullptr) &&
-#endif
-      TEST_HOOK(imm32.dll, ImmGetCompositionStringW, Ignore, 0) &&
-      TEST_HOOK_SKIP_EXEC(imm32.dll, ImmSetCandidateWindow) &&
-      TEST_HOOK(imm32.dll, ImmNotifyIME, Equals, 0) &&
-#if !defined(_M_ARM64)
-      TEST_HOOK(comdlg32.dll, GetSaveFileNameW, Ignore, FALSE) &&
-      TEST_HOOK(comdlg32.dll, GetOpenFileNameW, Ignore, FALSE) &&
-#endif
+      TEST_HOOK("imm32.dll", ImmGetContext, Equals, nullptr) &&
+#endif  // !defined(_M_ARM64)
+      TEST_HOOK("imm32.dll", ImmGetCompositionStringW, Ignore, 0) &&
+      TEST_HOOK_SKIP_EXEC("imm32.dll", ImmSetCandidateWindow) &&
+      TEST_HOOK("imm32.dll", ImmNotifyIME, Equals, 0) &&
+      TEST_HOOK("comdlg32.dll", GetSaveFileNameW, Ignore, FALSE) &&
+      TEST_HOOK("comdlg32.dll", GetOpenFileNameW, Ignore, FALSE) &&
 #if defined(_M_X64) || defined(_M_ARM64)
-      TEST_HOOK(user32.dll, GetKeyState, Ignore, 0) &&  // see Bug 1316415
-      TEST_HOOK(ntdll.dll, LdrUnloadDll, NotEquals, 0) &&
-      MAYBE_TEST_HOOK_SKIP_EXEC(IsWin8OrLater(), ntdll.dll,
+      TEST_HOOK("user32.dll", GetKeyState, Ignore, 0) &&  // see Bug 1316415
+      TEST_HOOK("ntdll.dll", LdrUnloadDll, NotEquals, 0) &&
+      MAYBE_TEST_HOOK_SKIP_EXEC(IsWin8OrLater(), "ntdll.dll",
                                 LdrResolveDelayLoadedAPI) &&
-      MAYBE_TEST_HOOK(!IsWin8OrLater(), kernel32.dll,
+      MAYBE_TEST_HOOK(!IsWin8OrLater(), "kernel32.dll",
                       RtlInstallFunctionTableCallback, Equals, FALSE) &&
 #endif
 #if defined(_M_X64)
-      TEST_HOOK(comdlg32.dll, PrintDlgW, Ignore, 0) &&
+      TEST_HOOK("comdlg32.dll", PrintDlgW, Ignore, 0) &&
 #endif
-      MAYBE_TEST_HOOK(ShouldTestTipTsf(), tiptsf.dll, ProcessCaretEvents,
+      MAYBE_TEST_HOOK(ShouldTestTipTsf(), "tiptsf.dll", ProcessCaretEvents,
                       Ignore, nullptr) &&
+      TEST_HOOK("user32.dll", SendMessageTimeoutW, Equals, 0) &&
+      TEST_HOOK("user32.dll", SetCursorPos, NotEquals, FALSE) &&
 #if !defined(_M_ARM64)
-      TEST_HOOK(user32.dll, SendMessageTimeoutW, Equals, 0) &&
-#endif
-      TEST_HOOK(user32.dll, SetCursorPos, NotEquals, FALSE) &&
-#if !defined(_M_ARM64)
-      TEST_HOOK(kernel32.dll, TlsAlloc, NotEquals, TLS_OUT_OF_INDEXES) &&
-      TEST_HOOK_PARAMS(kernel32.dll, TlsFree, Equals, FALSE,
+      TEST_HOOK("kernel32.dll", TlsAlloc, NotEquals, TLS_OUT_OF_INDEXES) &&
+      TEST_HOOK_PARAMS("kernel32.dll", TlsFree, Equals, FALSE,
                        TLS_OUT_OF_INDEXES) &&
-      TEST_HOOK(kernel32.dll, CloseHandle, Equals, FALSE) &&
-      TEST_HOOK(kernel32.dll, DuplicateHandle, Equals, FALSE) &&
-#endif
-      TEST_HOOK(wininet.dll, InternetOpenA, NotEquals, nullptr) &&
-      TEST_HOOK(wininet.dll, InternetCloseHandle, Equals, FALSE) &&
-      TEST_HOOK(wininet.dll, InternetConnectA, Equals, nullptr) &&
-      TEST_HOOK(wininet.dll, InternetQueryDataAvailable, Equals, FALSE) &&
-      TEST_HOOK(wininet.dll, InternetReadFile, Equals, FALSE) &&
-      TEST_HOOK(wininet.dll, InternetWriteFile, Equals, FALSE) &&
-      TEST_HOOK(wininet.dll, InternetSetOptionA, Equals, FALSE) &&
-      TEST_HOOK(wininet.dll, HttpAddRequestHeadersA, Equals, FALSE) &&
-      TEST_HOOK(wininet.dll, HttpOpenRequestA, Equals, nullptr) &&
-      TEST_HOOK(wininet.dll, HttpQueryInfoA, Equals, FALSE) &&
-      TEST_HOOK(wininet.dll, HttpSendRequestA, Equals, FALSE) &&
-      TEST_HOOK(wininet.dll, HttpSendRequestExA, Equals, FALSE) &&
-      TEST_HOOK(wininet.dll, HttpEndRequestA, Equals, FALSE) &&
-      TEST_HOOK(wininet.dll, InternetQueryOptionA, Equals, FALSE) &&
-
-      TEST_HOOK(sspicli.dll, AcquireCredentialsHandleA, NotEquals, SEC_E_OK) &&
-      TEST_HOOK_PARAMS(sspicli.dll, QueryCredentialsAttributesA, Equals,
+      TEST_HOOK("kernel32.dll", CloseHandle, Equals, FALSE) &&
+      TEST_HOOK("kernel32.dll", DuplicateHandle, Equals, FALSE) &&
+#endif  // !defined(_M_ARM64)
+      TEST_HOOK("wininet.dll", InternetOpenA, NotEquals, nullptr) &&
+      TEST_HOOK("wininet.dll", InternetCloseHandle, Equals, FALSE) &&
+      TEST_HOOK("wininet.dll", InternetConnectA, Equals, nullptr) &&
+      TEST_HOOK("wininet.dll", InternetQueryDataAvailable, Equals, FALSE) &&
+      TEST_HOOK("wininet.dll", InternetReadFile, Equals, FALSE) &&
+      TEST_HOOK("wininet.dll", InternetWriteFile, Equals, FALSE) &&
+      TEST_HOOK("wininet.dll", InternetSetOptionA, Equals, FALSE) &&
+      TEST_HOOK("wininet.dll", HttpAddRequestHeadersA, Equals, FALSE) &&
+      TEST_HOOK("wininet.dll", HttpOpenRequestA, Equals, nullptr) &&
+      TEST_HOOK("wininet.dll", HttpQueryInfoA, Equals, FALSE) &&
+      TEST_HOOK("wininet.dll", HttpSendRequestA, Equals, FALSE) &&
+      TEST_HOOK("wininet.dll", HttpSendRequestExA, Equals, FALSE) &&
+      TEST_HOOK("wininet.dll", HttpEndRequestA, Equals, FALSE) &&
+      TEST_HOOK("wininet.dll", InternetQueryOptionA, Equals, FALSE) &&
+      TEST_HOOK("sspicli.dll", AcquireCredentialsHandleA, NotEquals,
+                SEC_E_OK) &&
+      TEST_HOOK_PARAMS("sspicli.dll", QueryCredentialsAttributesA, Equals,
                        SEC_E_INVALID_HANDLE, &credHandle, 0, nullptr) &&
-#if !defined(_M_ARM64)
-      TEST_HOOK_PARAMS(sspicli.dll, FreeCredentialsHandle, Equals,
+      TEST_HOOK_PARAMS("sspicli.dll", FreeCredentialsHandle, Equals,
                        SEC_E_INVALID_HANDLE, &credHandle) &&
-#endif
-      TEST_DETOUR_SKIP_EXEC(kernel32.dll, BaseThreadInitThunk) &&
-      TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) &&
+      TEST_DETOUR_SKIP_EXEC("kernel32.dll", BaseThreadInitThunk) &&
+      TEST_DETOUR_SKIP_EXEC("ntdll.dll", LdrLoadDll) &&
       MAYBE_TEST_HOOK_PARAMS(HasApiSetQueryApiSetPresence(),
-                             // clang-format off
-                             Api-ms-win-core-apiquery-l1-1-0.dll,
-                             // clang-format on
+                             "Api-ms-win-core-apiquery-l1-1-0.dll",
                              ApiSetQueryApiSetPresence, Equals, FALSE,
                              &gEmptyUnicodeString, &gIsPresent) &&
-      TestTenByteDetour()) {
+      TestShortDetour()) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
 
     LARGE_INTEGER end, freq;

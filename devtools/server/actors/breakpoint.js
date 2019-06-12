@@ -228,13 +228,16 @@ BreakpointActor.prototype = {
       const displayName = formatDisplayName(frame);
       const completion = frame.evalWithBindings(`[${logValue}]`, { displayName });
       let value;
+      let level = "logPoint";
+
       if (!completion) {
         // The evaluation was killed (possibly by the slow script dialog).
         value = ["Log value evaluation incomplete"];
       } else if ("return" in completion) {
         value = completion.return;
       } else {
-        value = [this.getThrownMessage(completion)];
+        value = ["[Logpoint threw]: " + this.getThrownMessage(completion)];
+        level = "logPointError";
       }
 
       if (value && typeof value.unsafeDereference === "function") {
@@ -245,8 +248,8 @@ BreakpointActor.prototype = {
         filename: sourceActor.url,
         lineNumber: line,
         columnNumber: column,
-        level: "logPoint",
         arguments: value,
+        level,
       };
       this.threadActor._parent._consoleActor.onConsoleAPICall(message);
 
