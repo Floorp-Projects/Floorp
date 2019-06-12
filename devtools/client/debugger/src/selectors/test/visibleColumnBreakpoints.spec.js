@@ -52,7 +52,7 @@ describe("visible column breakpoints", () => {
       start: { line: 1, column: 0 },
       end: { line: 10, column: 10 },
     };
-    const pausePoints = [pp(1, 1), pp(1, 5), pp(3, 1)];
+    const pausePoints = { [1]: [pp(1, 1), pp(1, 5)], [3]: [pp(3, 1)] };
     const breakpoints = [bp(1, 1), bp(4, 0), bp(4, 3)];
 
     const columnBps = getColumnBreakpoints(
@@ -69,7 +69,7 @@ describe("visible column breakpoints", () => {
       start: { line: 1, column: 0 },
       end: { line: 10, column: 10 },
     };
-    const pausePoints = [pp(1, 1), pp(1, 3), pp(2, 1)];
+    const pausePoints = { [1]: [pp(1, 1), pp(1, 3)], [2]: [pp(2, 1)] };
     const breakpoints = [bp(1, 1)];
     const columnBps = getColumnBreakpoints(
       pausePoints,
@@ -85,7 +85,7 @@ describe("visible column breakpoints", () => {
       start: { line: 1, column: 0 },
       end: { line: 10, column: 10 },
     };
-    const pausePoints = [pp(1, 1), pp(1, 3), pp(20, 1)];
+    const pausePoints = { [1]: [pp(1, 1), pp(1, 3)], [20]: [pp(20, 1)] };
     const breakpoints = [bp(1, 1)];
 
     const columnBps = getColumnBreakpoints(
@@ -102,7 +102,7 @@ describe("visible column breakpoints", () => {
       start: { line: 1, column: 0 },
       end: { line: 10, column: 10 },
     };
-    const pausePoints = [pp(1, 1), pp(1, 15), pp(20, 1)];
+    const pausePoints = { [1]: [pp(1, 1), pp(1, 15)], [20]: [pp(20, 1)] };
     const breakpoints = [bp(1, 1), bp(1, 15)];
 
     const columnBps = getColumnBreakpoints(
