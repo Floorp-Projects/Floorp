@@ -280,9 +280,12 @@ class SpecialPowersAPI {
                               { id, name, message });
       },
 
-      sendSyncMessage: (name, message) => {
+      sendQuery: async (name, message) => {
+        // Send a sync query and pretend it's async. This will become a
+        // real async `sendQuery` call after the JSWindowActor
+        // migration.
         return this._sendSyncMessage("SPChromeScriptMessage",
-                                     { id, name, message });
+                                     { id, name, message })[0][0];
       },
 
       destroy: () => {

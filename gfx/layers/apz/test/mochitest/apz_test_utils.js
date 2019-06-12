@@ -422,7 +422,7 @@ async function waitUntilApzStable() {
     if (typeof waitUntilApzStable.chromeHelper == "undefined") {
       waitUntilApzStable.chromeHelper = SpecialPowers.loadChromeScript(parentProcessFlush);
       ApzCleanup.register(() => {
-        waitUntilApzStable.chromeHelper.sendSyncMessage("cleanup", null);
+        waitUntilApzStable.chromeHelper.sendAsyncMessage("cleanup", null);
         waitUntilApzStable.chromeHelper.destroy();
         delete waitUntilApzStable.chromeHelper;
       });
@@ -580,7 +580,7 @@ function getSnapshot(rect) {
     ApzCleanup.register(function() { getSnapshot.chromeHelper.destroy(); });
   }
 
-  return getSnapshot.chromeHelper.sendSyncMessage("snapshot", JSON.stringify(rect)).toString();
+  return getSnapshot.chromeHelper.sendQuery("snapshot", JSON.stringify(rect));
 }
 
 // Takes the document's query string and parses it, assuming the query string
