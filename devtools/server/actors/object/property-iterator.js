@@ -262,9 +262,10 @@ function enumMapEntries(objectActor) {
   const raw = objectActor.obj.unsafeDereference();
   const iterator =
     objectActor.obj.makeDebuggeeValue(waiveXrays(Map.prototype.keys.call(raw)));
-  const keys = [...DevToolsUtils.makeDebuggeeIterator(iterator)];
-  const getValue =
-    key => Map.prototype.get.call(raw, ObjectUtils.unwrapDebuggeeValue(key));
+  const keys = [...DevToolsUtils.makeDebuggeeIterator(iterator)].map(
+    k => waiveXrays(ObjectUtils.unwrapDebuggeeValue(k))
+  );
+  const getValue = key => Map.prototype.get.call(raw, key);
 
   return {
     [Symbol.iterator]: function* () {
@@ -392,7 +393,9 @@ function enumSetEntries(objectActor) {
   const raw = objectActor.obj.unsafeDereference();
   const iterator =
     objectActor.obj.makeDebuggeeValue(waiveXrays(Set.prototype.values.call(raw)));
-  const values = [...DevToolsUtils.makeDebuggeeIterator(iterator)];
+  const values = [...DevToolsUtils.makeDebuggeeIterator(iterator)].map(
+    v => waiveXrays(ObjectUtils.unwrapDebuggeeValue(v))
+  );
 
   return {
     [Symbol.iterator]: function* () {
