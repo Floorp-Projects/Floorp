@@ -1,14 +1,7 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Preflight cache should allow second request without preflight OPTIONS request</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <script src="/common/get-host-info.sub.js"></script>
-    <script src="/common/utils.js"></script>
-  </head>
-  <body>
-    <script type="text/javascript">
+// META: title=Preflight cache should allow second request without preflight OPTIONS request
+// META: script=/common/get-host-info.sub.js
+// META: script=/common/utils.js
+
     const uuid = token();
 
     async_test(function(test) {
@@ -40,6 +33,3 @@
         xhr.send();
       }
     }, "Preflight cache should allow second request");
-    </script>
-  </body>
-</html>

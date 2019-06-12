@@ -1,14 +1,7 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Preflight cache should be invalidated by changed method</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <script src="/common/get-host-info.sub.js"></script>
-    <script src="/common/utils.js"></script>
-  </head>
-  <body>
-    <script type="text/javascript">
+// META: title=Preflight cache should be invalidated in presence of custom header
+// META: script=/common/get-host-info.sub.js
+// META: script=/common/utils.js
+
     const uuid = token();
     const xhr = new XMLHttpRequest;
 
@@ -38,11 +31,8 @@
           test.done();
         });
         // Send a header not included in the inital cache.
-        xhr.open("XMETHOD", get_host_info().HTTP_REMOTE_ORIGIN + "/xhr/resources/access-control-basic-preflight-cache-invalidation.py?token=" + uuid, true);
+        xhr.open("PUT", get_host_info().HTTP_REMOTE_ORIGIN + "/xhr/resources/access-control-basic-preflight-cache-invalidation.py?token=" + uuid, true);
+        xhr.setRequestHeader("x-test", "headerValue");
         xhr.send();
       }
-    }, "Preflight cache should be invalidated by changed method");
-
-    </script>
-  </body>
-</html>
+    }, "Preflight cache should be invalidated in presence of custom header");

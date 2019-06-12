@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Tests that redirects between origins are allowed when access control is involved.</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <script src="/common/get-host-info.sub.js"></script>
-  </head>
-  <body>
-    <script>
+// META: title=Tests that redirects between origins are allowed when access control is involved.
+// META: script=/common/get-host-info.sub.js
+
     function runSync(test, url)
     {
       const xhr = new XMLHttpRequest();
@@ -55,6 +48,3 @@
           "/xhr/resources/redirect-cors.py?location=" + get_host_info().HTTP_REMOTE_ORIGIN +
           "/xhr/resources/access-control-basic-allow.py&allow_origin=true")
     }, "Remote async redirect to same remote origin");
-    </script>
-  </body>
-</html>
