@@ -111,7 +111,9 @@ InterpretedRegExpMacroAssembler::InterpretedRegExpMacroAssembler(JSContext* cx, 
     buffer_(nullptr),
     length_(0)
 {
-    // The first int32 word is the number of registers.
+    // The first int32 word is the size of the buffer.
+    Emit32(0);
+    // The second int32 word is the number of registers.
     Emit32(0);
 }
 
@@ -126,8 +128,11 @@ InterpretedRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
     Bind(&backtrack_);
     Emit(BC_POP_BT, 0);
 
-    // Update the number of registers.
-    *(int32_t*)buffer_ = num_registers_;
+    // Update the buffer length and number of registers.
+    MOZ_ASSERT(size_t(length_) > sizeof(RegExpByteCodeHeader));
+    auto header = reinterpret_cast<RegExpByteCodeHeader*>(buffer_);
+    header->length = length_;
+    header->numRegisters = num_registers_;
 
     RegExpCode res;
     res.byteCode = buffer_;
