@@ -627,11 +627,31 @@ class HuffmanPreludeReader {
 
   // An optional choice between several interfaces.
   struct MaybeSum : EntryBase {
+    // The type of symbols for this entry.
+    // We use `BinASTKind::_Null` to represent the null case.
+    using SymbolType = BinASTKind;
+    // The type of table used for this entry.
+    // We use `BinASTKind::_Null` to represent the null case.
+    using Table = HuffmanTableIndexedSymbolsSum;
+
     // The type of values in the sum.
     const BinASTSum contents;
+
     MaybeSum(const NormalizedInterfaceAndField identity,
              const BinASTSum contents)
         : EntryBase(identity), contents(contents) {}
+
+    size_t maxNumberOfSymbols() const {
+      return SUM_LIMITS[static_cast<size_t>(contents)] + 1;
+    }
+
+    BinASTKind interfaceAt(size_t index) const {
+      MOZ_ASSERT(index < maxNumberOfSymbols());
+      if (index == 0) {
+        return BinASTKind::_Null;
+      }
+      return SUM_RESOLUTIONS[static_cast<size_t>(contents)][index - 1];
+    }
 
     // Utility struct, used in macros to call the constructor as
     // `MaybeSum::Maker(kind)(identity)`.
@@ -920,8 +940,8 @@ class HuffmanPreludeReader {
   }
 
   // ------ Sums of interfaces
-  // varnum i -> index of `i` in the order defined by
-  // `FOR_EACH_BIN_INTERFACE_IN_*`
+  // varnum i -> index `i` in the order defined by
+  // `FOR_EACH_BIN_INTERFACE_IN_SUM_*`
 
   // Extract the number of symbols from the grammar.
   template <>
@@ -936,11 +956,43 @@ class HuffmanPreludeReader {
     return sum.interfaceAt(index);
   }
 
-  // Reading a single=value table of sums of interfaces.
+  // Reading a single-value table of sums of interfaces.
   template <>
   MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<Sum>(
       HuffmanTableIndexedSymbolsSum& table, const Sum& sum) {
     BINJS_MOZ_TRY_DECL(index, reader.readVarU32());
+    if (index >= sum.maxNumberOfSymbols()) {
+      return raiseInvalidTableData(sum.identity);
+    }
+
+    MOZ_TRY(table.impl.initWithSingleValue(cx_, sum.interfaceAt(index)));
+    return Ok();
+  }
+
+  // ------ Optional sums of interfaces
+  // varnum 0 -> null
+  // varnum i > 0 -> index `i - 1` in the order defined by
+  // `FOR_EACH_BIN_INTERFACE_IN_SUM_*`
+
+  // Extract the number of symbols from the grammar.
+  template <>
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(const MaybeSum& sum) {
+    return sum.maxNumberOfSymbols();
+  }
+
+  // Extract symbol from the grammar.
+  template <>
+  MOZ_MUST_USE JS::Result<BinASTKind> readSymbol(const MaybeSum& sum,
+                                                 size_t index) {
+    MOZ_ASSERT(index < sum.numberOfSymbols());
+    return sum.interfaceAt(index);
+  }
+
+  // Reading a single-value table of sums of interfaces.
+  template <>
+  BINJS_MOZ_TRY_DECL(index, reader.readVarU32());
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<MaybeSum>(
+      HuffmanTableIndexedSymbolsSum& table, const MaybeSum& sum) {
     if (index >= sum.maxNumberOfSymbols()) {
       return raiseInvalidTableData(sum.identity);
     }
@@ -1006,10 +1058,35 @@ class HuffmanPreludeReader {
     }
 
     // Sum of interfaces, non-nullable.
-    // Values: interfaces by lexicographical order of their name.
+    // Values: interfaces by the order in `FOR_EACH_BIN_INTERFACE_IN_SUM_*`.
     MOZ_MUST_USE JS::Result<Ok> operator()(const Sum& entry) {
       // First, we need a table to determine which values are present.
       MOZ_TRY((owner.readTable<Sum>(entry)));
+
+      // Now, walk the table to enqueue each value if necessary.
+      // FIXME: readTable could return a reference to the table, eliminating an
+      // array lookup.
+
+      const auto& table = owner.dictionary.tableForField(entry.identity);
+      if (table.is<HuffmanTableUnreachable>()) {
+        return Ok();
+      }
+      const auto& tableRef = table.as<HuffmanTableIndexedSymbolsSum>();
+
+      for (const auto& kind : tableRef.impl) {
+        MOZ_TRY(owner.pushValue(
+            entry.identity,
+            {mozilla::VariantType<Interface>(), entry.identity, kind.value}));
+      }
+      return Ok();
+    }
+
+    // Sum of interfaces, nullable.
+    // Values: `null`, followed by interfaces by the order in
+    // `FOR_EACH_BIN_INTERFACE_IN_SUM_*`.
+    MOZ_MUST_USE JS::Result<Ok> operator()(const MaybeSum& entry) {
+      // First, we need a table to determine which values are present.
+      MOZ_TRY((owner.readTable<MaybeSum>(entry)));
 
       // Now, walk the table to enqueue each value if necessary.
       // FIXME: readTable could return a reference to the table, eliminating an
@@ -1059,14 +1136,6 @@ class HuffmanPreludeReader {
 
     MOZ_MUST_USE JS::Result<Ok> operator()(const List& entry) {
       // FIXME: Enqueue list length.
-      // FIXME: Read table.
-      // FIXME: Initialize table.
-      MOZ_CRASH("Unimplemented");
-      return Ok();
-    }
-
-    MOZ_MUST_USE JS::Result<Ok> operator()(const MaybeSum& entry) {
-      // FIXME: Enqueue symbols.
       // FIXME: Read table.
       // FIXME: Initialize table.
       MOZ_CRASH("Unimplemented");
