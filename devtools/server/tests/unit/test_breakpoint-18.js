@@ -52,7 +52,8 @@ function setBreakpoint(packet, threadClient, client) {
     threadClient.once("resumed", resolve);
 
     threadClient.setBreakpoint({ sourceUrl: source.url, line: 3 }, {});
-    threadClient.resume();
+    await client.waitForRequestsToSettle();
+    await threadClient.resume();
   });
 }
 

@@ -8,7 +8,7 @@
  * Check that removing a breakpoint works.
  */
 
-add_task(threadClientTest(({ threadClient, debuggee }) => {
+add_task(threadClientTest(({ threadClient, client, debuggee }) => {
   return new Promise(resolve => {
     let done = false;
     threadClient.once("paused", async function(packet) {
@@ -19,9 +19,9 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
       const location = { sourceUrl: source.url, line: debuggee.line0 + 2 };
 
       threadClient.setBreakpoint(location, {});
-      threadClient.once("paused", function(packet) {
+      await client.waitForRequestsToSettle();
+      threadClient.once("paused", async function(packet) {
         // Check the return value.
-        Assert.equal(packet.type, "paused");
         Assert.equal(packet.frame.where.actor, source.actorID);
         Assert.equal(packet.frame.where.line, location.line);
         Assert.equal(packet.why.type, "breakpoint");
@@ -30,6 +30,7 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
 
         // Remove the breakpoint.
         threadClient.removeBreakpoint(location);
+        await client.waitForRequestsToSettle();
         done = true;
         threadClient.once("paused", function(packet) {
           // The breakpoint should not be hit again.
@@ -37,11 +38,12 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
             Assert.ok(false);
           });
         });
-        threadClient.resume();
+        await threadClient.resume();
+        resolve();
       });
 
       // Continue until the breakpoint is hit.
-      threadClient.resume();
+      await threadClient.resume();
     });
 
     /* eslint-disable */
@@ -59,6 +61,5 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
     if (!done) {
       Assert.ok(false);
     }
-    resolve();
   });
 }));

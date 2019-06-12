@@ -8,7 +8,7 @@
  * Check that setting a breakpoint in a line in a child script works.
  */
 
-add_task(threadClientTest(({ threadClient, debuggee }) => {
+add_task(threadClientTest(({ threadClient, client, debuggee }) => {
   return new Promise(resolve => {
     threadClient.once("paused", async function(packet) {
       const source = await getSourceById(
@@ -18,10 +18,10 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
       const location = { sourceUrl: source.url, line: debuggee.line0 + 3 };
 
       threadClient.setBreakpoint(location, {});
+      await client.waitForRequestsToSettle();
 
-      threadClient.once("paused", function(packet) {
+      threadClient.once("paused", async function(packet) {
         // Check the return value.
-        Assert.equal(packet.type, "paused");
         Assert.equal(packet.frame.where.actor, source.actor);
         Assert.equal(packet.frame.where.line, location.line);
         Assert.equal(packet.why.type, "breakpoint");
@@ -31,11 +31,12 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
 
         // Remove the breakpoint.
         threadClient.removeBreakpoint(location);
+        await client.waitForRequestsToSettle();
         threadClient.resume().then(resolve);
       });
 
       // Continue until the breakpoint is hit.
-      threadClient.resume();
+      await threadClient.resume();
     });
 
     /* eslint-disable */

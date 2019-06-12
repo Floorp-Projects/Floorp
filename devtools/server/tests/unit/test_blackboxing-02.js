@@ -88,7 +88,7 @@ function test_black_box_breakpoint() {
 
 async function test_unblack_box_breakpoint(sourceFront) {
   await unBlackBox(sourceFront);
-  gThreadClient.once("paused", function(packet) {
+  gThreadClient.once("paused", async function(packet) {
     Assert.equal(packet.why.type, "breakpoint",
                  "We should hit the breakpoint again");
 
@@ -101,7 +101,7 @@ async function test_unblack_box_breakpoint(sourceFront) {
         finishClient(gClient);
       }
     );
-    gThreadClient.resume();
+    await gThreadClient.resume();
   });
   gDebuggee.runTest();
 }

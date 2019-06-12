@@ -25,7 +25,9 @@ add_task(async function() {
   await waitFor(() => findMessages(hud, "").length === INITIAL_LOGS_NUMBER);
   ok(true, "Messages showed up initially");
 
+  const onReloaded = hud.ui.once("reloaded");
   await refreshTab();
+  await onReloaded;
   await waitFor(() => findMessages(hud, "").length === 0);
   ok(true, "Messages disappeared");
 
@@ -48,8 +50,10 @@ add_task(async function() {
   ok(true, "Messages showed up initially");
 
   const onNavigatedMessage = waitForMessage(hud, "Navigated to");
+  const onReloaded = hud.ui.once("reloaded");
   refreshTab();
   await onNavigatedMessage;
+  await onReloaded;
 
   ok(true, "Navigation message appeared as expected");
   is(findMessages(hud, "").length, INITIAL_LOGS_NUMBER + 1,
@@ -66,4 +70,5 @@ add_task(async function() {
   ok(resultMessage > commandMessage
     && resultMessage < Date.now(),
     "The result has a timestamp newer than the command and older than current time");
+  await closeToolbox();
 });

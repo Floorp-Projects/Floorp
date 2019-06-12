@@ -17,7 +17,6 @@ add_task(threadClientTest(async ({ threadClient, debuggee, targetFront }) => {
       loadSubScriptWithOptions(SOURCE_URL, {target: debuggee, ignoreCache: true});
     });
   }, threadClient);
-  Assert.equal(packet.type, "paused");
   const why = packet.why;
   Assert.equal(why.type, "breakpoint");
   Assert.equal(why.actors.length, 1);

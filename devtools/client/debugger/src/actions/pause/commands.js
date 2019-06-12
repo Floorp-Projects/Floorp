@@ -39,13 +39,15 @@ export function selectThread(cx: Context, thread: ThreadId) {
     const threadcx = getThreadContext(getState());
     assert(threadcx.thread == thread, "Thread mismatch");
 
-    dispatch(evaluateExpressions(threadcx));
+    const serverRequests = [];
+    serverRequests.push(dispatch(evaluateExpressions(threadcx)));
 
     const frame = getSelectedFrame(getState(), thread);
     if (frame) {
-      dispatch(selectLocation(threadcx, frame.location));
-      dispatch(fetchScopes(threadcx));
+      serverRequests.push(dispatch(selectLocation(threadcx, frame.location)));
+      serverRequests.push(dispatch(fetchScopes(threadcx)));
     }
+    await Promise.all(serverRequests);
   };
 }
 

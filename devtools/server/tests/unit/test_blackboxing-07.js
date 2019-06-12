@@ -41,6 +41,7 @@ const testBlackBox = async function() {
   const regularSource = sources.filter(s => s.url === SOURCE_URL)[0];
   equal(regularSource.isBlackBoxed, false);
 
+  await gThreadClient.resume();
   finishClient(gClient);
 };
 
