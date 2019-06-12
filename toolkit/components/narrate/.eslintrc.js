@@ -6,7 +6,7 @@ module.exports = {
     "mozilla/reject-importGlobalProperties": ["error", "everything"],
     "mozilla/var-only-at-top-level": "error",
     "block-scoped-var": "error",
-    "camelcase": "error",
+    "camelcase": ["error", { "properties": "never" }],
     "complexity": ["error", {"max": 20}],
     "max-nested-callbacks": ["error", 3],
     "new-cap": ["error", {"capIsNew": false}],
