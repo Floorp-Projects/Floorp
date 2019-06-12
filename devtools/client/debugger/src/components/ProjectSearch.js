@@ -31,6 +31,7 @@ import type { List } from "immutable";
 import type { ActiveSearchType } from "../reducers/types";
 import type { StatusType } from "../reducers/project-text-search";
 import type { Context } from "../types";
+import { PluralForm } from "devtools-modules";
 
 import "./ProjectSearch.css";
 
@@ -280,9 +281,12 @@ export class ProjectSearch extends Component<Props, State> {
   };
 
   renderSummary = () => {
-    return this.props.query !== ""
-      ? L10N.getFormatStr("sourceSearch.resultsSummary1", this.getResultCount())
-      : "";
+    if (this.props.query !== "") {
+      const resultsSummaryString = L10N.getStr("sourceSearch.resultsSummary2");
+      const count = this.getResultCount();
+      return PluralForm.get(count, resultsSummaryString).replace("#1", count);
+    }
+    return "";
   };
 
   shouldShowErrorEmoji() {

@@ -85,23 +85,23 @@
          "touchcancel"];
 
         function runEventTest(type) {
-          var e = doc.createEvent("touchevent");
-          e.initTouchEvent(type, true, true, win, 0, true, true, true, true,
-                           l1, l2, l3);
+          var event = doc.createEvent("touchevent");
+          event.initTouchEvent(type, true, true, win, 0, true, true, true, true,
+                               l1, l2, l3);
           var t = doc.createElement("div");
           // Testing target.onFoo;
           var didCall = false;
           t["on" + type] = function (evt) {
-            is(evt, e, "Wrong event");
+            is(evt, event, "Wrong event");
             evt.target.didCall = true;
           }
-          t.dispatchEvent(e);
+          t.dispatchEvent(event);
           ok(t.didCall, "Should have called the listener(1)");
 
           // Testing <element onFoo="">
           t = doc.createElement("div");
           t.setAttribute("on" + type, "this.didCall = true;");
-          t.dispatchEvent(e);
+          t.dispatchEvent(event);
           ok(t.didCall, "Should have called the listener(2)");
         }
 

@@ -254,7 +254,6 @@ async function updatePinningList({ data: { current: records } }) {
           siteSecurityService.setKeyPins(item.hostName,
             item.includeSubdomains,
             item.expires,
-            pins.length,
             pins, true);
         }
         if (pinType == "STSPin") {

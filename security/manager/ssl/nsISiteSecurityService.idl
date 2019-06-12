@@ -264,7 +264,6 @@ interface nsISiteSecurityService : nsISupports
      * @param aHost the hostname (punycode) that pins will apply to
      * @param aIncludeSubdomains whether these pins also apply to subdomains
      * @param aExpires the time this pin should expire (millis since epoch)
-     * @param aPinCount number of keys being pinnned
      * @param aSha256Pins array of hashed key fingerprints (SHA-256, base64)
      * @param aIsPreload are these key pins for a preload entry? (false by
      *        default)
@@ -276,8 +275,7 @@ interface nsISiteSecurityService : nsISupports
      */
     [implicit_jscontext, optional_argc, must_use]
     boolean setKeyPins(in ACString aHost, in boolean aIncludeSubdomains,
-                       in int64_t aExpires, in unsigned long aPinCount,
-                       [array, size_is(aPinCount)] in string aSha256Pins,
+                       in int64_t aExpires, in Array<ACString> aSha256Pins,
                        [optional] in boolean aIsPreload,
                        [optional] in jsval aOriginAttributes);
 

@@ -83,8 +83,6 @@ var validFormats = {
     COMPRESSED_RGBA8_ETC2_EAC                 : 0x9278,
     COMPRESSED_SRGB8_ALPHA8_ETC2_EAC          : 0x9279,
 };
-var name;
-var supportedFormats;
 
 function setupUnitQuad() {
     var vertexObject = gl.createBuffer();
@@ -181,16 +179,16 @@ function formatToString(format) {
 
 function runTestExtension() {
     // check that all format enums exist.
-    for (name in validFormats) {
+    for (let name in validFormats) {
         is(ext[name], validFormats[name], "format is match");
     }
 
-    supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
+    let supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
     // There should be exactly 10 formats
     is(supportedFormats.length, 10, "Should be exactly 10 formats");
 
     // check that all 10 formats exist
-    for (var name in validFormats.length) {
+    for (let name in validFormats.length) {
         formatExists(validFormats[name], supportedFormats);
     }
 
@@ -458,19 +456,19 @@ function testETCTexture(test) {
     var format = test.format;
 
     var uncompressedData = new Uint8Array(test.data.decompressed);
-    var glErrorShouldBe = (gl, glError, msg) => {
+    var glErrorShouldBe = (glInner, glError, msg) => {
         msg = msg || "";
-        var err = gl.getError();
-        var getGLErrorAsString = err => {
-            if (err === gl.NO_ERROR) {
+        var err = glInner.getError();
+        var getGLErrorAsString = error => {
+            if (error === glInner.NO_ERROR) {
                 return "NO_ERROR";
             }
-            for (var name in gl) {
-                if (gl[name] === err) {
+            for (let name in glInner) {
+                if (glInner[name] === error) {
                     return name;
                 }
             }
-            return err.toString();
+            return error.toString();
         }
 
         if (err != glError) {

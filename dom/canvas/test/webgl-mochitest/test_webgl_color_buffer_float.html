@@ -95,8 +95,6 @@ function EnumName(val) {
   }
 }
 
-var gl;
-
 function RGBAToString(arr) {
   return '[' + arr[0].toPrecision(4) + ', ' +
                arr[1].toPrecision(4) + ', ' +
@@ -406,7 +404,7 @@ function TestType(gl, prog, isTex, sizedFormat) {
     antialias: false,
     depth: false,
   };
-  gl = canvas.getContext('experimental-webgl', attribs);
+  let gl = canvas.getContext('experimental-webgl', attribs);
   if (!gl) {
     todo(false, 'WebGL is unavailable.');
     return;

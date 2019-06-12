@@ -464,6 +464,10 @@ function BuildConditionSandbox(aURL) {
 
     sandbox.is64Bit = xr.is64Bit;
 
+    // GeckoView is currently uniquely identified by "android + e10s" but
+    // we might want to make this condition more precise in the future.
+    sandbox.geckoview = (sandbox.Android && g.browserIsRemote);
+
     // Scrollbars that are semi-transparent. See bug 1169666.
     sandbox.transparentScrollbars = xr.widgetToolkit == "gtk3";
 

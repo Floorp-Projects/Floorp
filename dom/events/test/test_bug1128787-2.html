@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1128787
   window.onload = function (aEvent) {
     var blurEventFired = false;
     var input = document.getElementsByTagName("input")[0];
-    input.addEventListener("blur", function (aEvent) {
+    input.addEventListener("blur", function (event) {
       ok(true, "input element gets blur event correctly");
 
       var utils = SpecialPowers.getDOMWindowUtils(window);

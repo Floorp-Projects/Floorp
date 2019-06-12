@@ -336,7 +336,9 @@ nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
                                                 uint32_t aOverrideBits,
                                                 bool aTemporary) {
   NS_ENSURE_ARG_POINTER(aCert);
-  if (aHostName.IsEmpty()) return NS_ERROR_INVALID_ARG;
+  if (aHostName.IsEmpty() || !IsASCII(aHostName)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   if (aPort < -1) return NS_ERROR_INVALID_ARG;
 
   UniqueCERTCertificate nsscert(aCert->GetCert());
@@ -389,7 +391,8 @@ NS_IMETHODIMP
 nsCertOverrideService::RememberTemporaryValidityOverrideUsingFingerprint(
     const nsACString& aHostName, int32_t aPort,
     const nsACString& aCertFingerprint, uint32_t aOverrideBits) {
-  if (aCertFingerprint.IsEmpty() || aHostName.IsEmpty() || (aPort < -1)) {
+  if (aCertFingerprint.IsEmpty() || aHostName.IsEmpty() ||
+      !IsASCII(aCertFingerprint) || !IsASCII(aHostName) || (aPort < -1)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -409,7 +412,9 @@ nsCertOverrideService::HasMatchingOverride(const nsACString& aHostName,
                                            int32_t aPort, nsIX509Cert* aCert,
                                            uint32_t* aOverrideBits,
                                            bool* aIsTemporary, bool* _retval) {
-  if (aHostName.IsEmpty()) return NS_ERROR_INVALID_ARG;
+  if (aHostName.IsEmpty() || !IsASCII(aHostName)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   if (aPort < -1) return NS_ERROR_INVALID_ARG;
 
   NS_ENSURE_ARG_POINTER(aCert);
@@ -481,6 +486,9 @@ nsresult nsCertOverrideService::AddEntryToList(
 NS_IMETHODIMP
 nsCertOverrideService::ClearValidityOverride(const nsACString& aHostName,
                                              int32_t aPort) {
+  if (aHostName.IsEmpty() || !IsASCII(aHostName)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
   }

@@ -52,14 +52,14 @@
             return;
           }
 
-          privilegedIframe.contentWindow.addEventListener("MozAfterPaint", function(e) {
+          privilegedIframe.contentWindow.addEventListener("MozAfterPaint", function() {
             privilegedIframe.contentWindow.addEventListener("focus",
-              function(e) {
+              function() {
                 ok(!iframe.hasAttribute("ignoreuserfocus"), "Shouldn't get a focus event in ignoreuserfocus iframe!");
               },
               true);
             privilegedIframe.contentWindow.addEventListener("blur",
-              function(e) {
+              function() {
                 ok(!iframe.hasAttribute("ignoreuserfocus"), "Shouldn't get a blur event in ignoreuserfocus iframe!");
               },
               true);
@@ -108,7 +108,7 @@
             // Wait for paint to setup frame for area. Currently the area frame
             // map is reset for each paint. If we are in the middle of a paint
             // then the area will not be focusable.
-            privilegedIframe.contentWindow.addEventListener("MozAfterPaint", function(e) {
+            privilegedIframe.contentWindow.addEventListener("MozAfterPaint", function() {
               var innerArea = privilegedIframe.contentDocument.getElementsByTagName("area")[0];
               innerArea.focus();
               isnot(document.activeElement, iframe, "[explicit innerArea.focus()] iframe should not have the focus");

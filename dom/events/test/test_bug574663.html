@@ -104,6 +104,7 @@ function runTest() {
     // browser to 0 using the 'blank' attribute.
     // Until the blank attribute is removed, we can't send scroll events.
     SimpleTest.waitForFocus(function() {
+      /* eslint-disable no-shadow */
       let chromeScript = SpecialPowers.loadChromeScript(_ => {
         const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
         let win = Services.wm.getMostRecentWindow("navigator:browser");
@@ -114,6 +115,7 @@ function runTest() {
           });
         });
       });
+      /* eslint-enable no-shadow */
       chromeScript.promiseOneMessage("blank-attribute-removed").then(() => {
         chromeScript.destroy();
         waitForPaint(win, winUtils, callback);

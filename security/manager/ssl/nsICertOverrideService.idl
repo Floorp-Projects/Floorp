@@ -54,7 +54,7 @@ interface nsICertOverrideService : nsISupports {
    *  @param aOverrideBits The precise set of errors we want to be overriden
    */
   [must_use]
-  void rememberValidityOverride(in ACString aHostName,
+  void rememberValidityOverride(in AUTF8String aHostName,
                                 in int32_t aPort,
                                 in nsIX509Cert aCert,
                                 in uint32_t aOverrideBits,
@@ -75,9 +75,9 @@ interface nsICertOverrideService : nsISupports {
    */
   [must_use]
   void rememberTemporaryValidityOverrideUsingFingerprint(
-      in ACString aHostName,
+      in AUTF8String aHostName,
       in int32_t aPort,
-      in ACString aCertFingerprint,
+      in AUTF8String aCertFingerprint,
       in uint32_t aOverrideBits);
 
   /**
@@ -96,7 +96,7 @@ interface nsICertOverrideService : nsISupports {
    *  @return Whether an override has been stored for this host+port+cert
    */
   [must_use]
-  boolean hasMatchingOverride(in ACString aHostName,
+  boolean hasMatchingOverride(in AUTF8String aHostName,
                               in int32_t aPort,
                               in nsIX509Cert aCert,
                               out uint32_t aOverrideBits,
@@ -111,7 +111,7 @@ interface nsICertOverrideService : nsISupports {
    *               If it is 0 and aHostName is "all:temporary-certificates",
    *               then all temporary certificates should be cleared.
    */
-  void clearValidityOverride(in ACString aHostName,
+  void clearValidityOverride(in AUTF8String aHostName,
                              in int32_t aPort);
 
   /**

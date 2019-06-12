@@ -166,7 +166,7 @@ exports[`showErrorEmoji false if query + results 1`] = `
     showClose={false}
     showErrorEmoji={false}
     size=""
-    summaryMsg="-NaN of 10 results"
+    summaryMsg="NaN of 10 results"
   />
   <div
     className="search-bottom-bar"

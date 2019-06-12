@@ -3387,6 +3387,10 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   } else if (aElement->IsAttributeMapped(aAttribute)) {
     // FIXME(emilio): Does this really need to re-selector-match?
     restyleHint |= StyleRestyleHint_RESTYLE_SELF;
+  } else if (aElement->IsInShadowTree() && aAttribute == nsGkAtoms::part) {
+    // TODO(emilio): Maybe finer-grained invalidation for part attribute
+    // changes?
+    restyleHint |= StyleRestyleHint_RESTYLE_SELF;
   }
 
   if (nsIFrame* primaryFrame = aElement->GetPrimaryFrame()) {

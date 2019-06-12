@@ -2304,8 +2304,8 @@ class ADBDevice(ADBCommand):
             cmd += " -r"
         try:
             self.shell_output("%s %s" % (cmd, path), timeout=timeout, root=root)
-            if self.is_file(path, timeout=timeout, root=root):
-                raise ADBError('rm("%s") failed to remove file.' % path)
+            if self.exists(path, timeout=timeout, root=root):
+                raise ADBError('rm("%s") failed to remove path.' % path)
         except ADBError as e:
             if not force and 'No such file or directory' in e.message:
                 raise

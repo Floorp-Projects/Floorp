@@ -12,11 +12,11 @@ fails-if(!webrender) skip-if(!asyncPan) fuzzy-if(webrender&&gtkWidget,0-1,0-87) 
 skip-if(!asyncPan) == bg-fixed-child-no-culling-1.html bg-fixed-child-no-culling-1-ref.html
 skip-if(!asyncPan) == bg-fixed-child-no-culling-2.html bg-fixed-child-no-culling-2-ref.html
 skip-if(!asyncPan) == bg-fixed-child-no-culling-3.html bg-fixed-child-no-culling-3-ref.html
-fuzzy-if(Android,0-2,0-4000) fuzzy-if(browserIsRemote&&cocoaWidget,0-2,0-179524) fuzzy-if(browserIsRemote&&winWidget,0-1,0-74590) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-1,0-3528) fuzzy-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu))&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI)),0-1,0-75900) skip-if(!asyncPan) == bg-fixed-transformed-image.html bg-fixed-transformed-image-ref.html
+fuzzy-if(Android,0-2,0-4000) fuzzy-if(browserIsRemote&&cocoaWidget,0-2,0-179524) fuzzy-if(browserIsRemote&&winWidget,0-1,0-74590) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-1,0-3528) fuzzy-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu))&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI)),0-1,0-75900) skip-if(!asyncPan) fuzzy-if(geckoview,0-1,0-74590) == bg-fixed-transformed-image.html bg-fixed-transformed-image-ref.html
 test-pref(layout.css.contain.enabled,true) skip-if(!asyncPan) == contain-paint-scrollable-frame-1.html contain-paint-scrollable-frame-1-ref.html
 skip-if(!asyncPan) == element-1.html element-1-ref.html
-pref(layers.force-active,true) skip-if(!asyncPan) == iframe-1.html iframe-1-ref.html
-skip-if(!asyncPan) == nested-1.html nested-1-ref.html
+pref(layers.force-active,true) skip-if(!asyncPan) fuzzy-if(geckoview,1-1,1-1) == iframe-1.html iframe-1-ref.html
+skip-if(!asyncPan) fuzzy-if(geckoview,1-1,43-43) == nested-1.html nested-1-ref.html
 skip-if(!asyncPan) == nested-2.html nested-2-ref.html
 skip-if(!asyncPan) == position-fixed-1.html position-fixed-1-ref.html
 skip-if(!asyncPan) == position-fixed-2.html position-fixed-2-ref.html
@@ -28,12 +28,12 @@ fuzzy-if(Android,0-5,0-4) skip-if(!asyncPan) == position-fixed-transformed-1.htm
 skip-if(!asyncPan) == split-layers-1.html split-layers-1-ref.html
 skip-if(!asyncPan) == split-layers-multi-scrolling-1.html split-layers-multi-scrolling-1-ref.html
 fuzzy-if(skiaContent,0-2,0-240000) fuzzy-if(browserIsRemote&&!skiaContent&&(cocoaWidget||winWidget),0-1,0-240000) skip-if(!asyncPan) == split-opacity-layers-1.html split-opacity-layers-1-ref.html
-skip-if(!asyncPan) == sticky-pos-scrollable-1.html sticky-pos-scrollable-1-ref.html
+skip-if(!asyncPan) fuzzy-if(geckoview,1-1,389-389) == sticky-pos-scrollable-1.html sticky-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-2.html sticky-pos-scrollable-2-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-3.html sticky-pos-scrollable-3-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-4.html sticky-pos-scrollable-4-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-5.html sticky-pos-scrollable-5-ref.html
-skip-if(!asyncPan) == sticky-pos-scrollable-6.html sticky-pos-scrollable-6-ref.html
+skip-if(!asyncPan) fuzzy-if(geckoview,1-1,15-15) == sticky-pos-scrollable-6.html sticky-pos-scrollable-6-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-7.html sticky-pos-scrollable-7-ref.html
 skip-if(!asyncPan) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == culling-1.html culling-1-ref.html
@@ -44,27 +44,27 @@ fuzzy-if(Android,0-1,0-800) skip-if(!asyncPan) == position-fixed-inside-clip-pat
 skip-if(!asyncPan) == position-fixed-inside-sticky-1.html position-fixed-inside-sticky-1-ref.html
 skip-if(!asyncPan) == position-fixed-inside-sticky-2.html position-fixed-inside-sticky-2-ref.html
 skip-if(!asyncPan) == position-fixed-inside-sticky-3.html position-fixed-inside-sticky-3-ref.html
-skip-if(!asyncPan) == sticky-inside-fixed-1.html sticky-inside-fixed-1-ref.html
+skip-if(!asyncPan) fuzzy-if(geckoview,1-1,100-100) == sticky-inside-fixed-1.html sticky-inside-fixed-1-ref.html
 skip-if(!asyncPan) fails-if(!webrender) == sticky-inside-transform-1.html sticky-inside-transform-1-ref.html
-fuzzy(0-1,0-60000) skip-if(!asyncPan) == group-opacity-surface-size-1.html group-opacity-surface-size-1-ref.html
+fuzzy(0-1,0-60000) skip-if(!asyncPan) fuzzy-if(geckoview,2-2,60000-60000) == group-opacity-surface-size-1.html group-opacity-surface-size-1-ref.html
 fuzzy-if(Android,0-1,0-197) skip-if(!asyncPan) == position-sticky-transformed.html position-sticky-transformed-ref.html
 skip-if(!asyncPan) == offscreen-prerendered-active-opacity.html offscreen-prerendered-active-opacity-ref.html
-fuzzy-if(Android,0-6,0-4) fuzzy-if(skiaContent&&!Android,0-1,0-34) skip-if(!asyncPan) == offscreen-clipped-blendmode-1.html offscreen-clipped-blendmode-ref.html
+fuzzy-if(Android,0-6,0-4) fuzzy-if(skiaContent&&!Android,0-1,0-34) skip-if(!asyncPan) fuzzy-if(geckoview,1-1,50-50) == offscreen-clipped-blendmode-1.html offscreen-clipped-blendmode-ref.html
 fuzzy-if(Android,0-6,0-4) skip-if(!asyncPan) == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-ref.html
 fuzzy-if(Android,0-6,0-4) skip == offscreen-clipped-blendmode-3.html offscreen-clipped-blendmode-ref.html # bug 1251588 - wrong AGR on mix-blend-mode item
 fuzzy-if(Android,0-6,0-4) skip-if(!asyncPan) == offscreen-clipped-blendmode-4.html offscreen-clipped-blendmode-ref.html
-fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) == perspective-scrolling-1.html perspective-scrolling-1-ref.html
+fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) fuzzy-if(geckoview,1-1,43-43) == perspective-scrolling-1.html perspective-scrolling-1-ref.html
 fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) == perspective-scrolling-2.html perspective-scrolling-2-ref.html
 fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) == perspective-scrolling-3.html perspective-scrolling-3-ref.html
 fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) == perspective-scrolling-4.html perspective-scrolling-4-ref.html
 skip-if(!asyncPan) == perspective-scrolling-5.html perspective-scrolling-5-ref.html
 pref(apz.disable_for_scroll_linked_effects,true) skip-if(!asyncPan) == disable-apz-for-sle-pages.html disable-apz-for-sle-pages-ref.html
-fuzzy-if(browserIsRemote&&d2d,0-1,0-22) skip-if(!asyncPan) == background-blend-mode-1.html background-blend-mode-1-ref.html
+fuzzy-if(browserIsRemote&&d2d,0-1,0-22) skip-if(!asyncPan) fuzzy-if(geckoview,2-2,242-242) skip-if(geckoview&&debug) == background-blend-mode-1.html background-blend-mode-1-ref.html # bug 1558286 for GV
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-1.html about:blank
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-2.html about:blank
 fuzzy-if(Android,0-6,0-4) skip-if(!asyncPan) == fixed-pos-scrolled-clip-1.html fixed-pos-scrolled-clip-1-ref.html
 fuzzy-if(Android,0-6,0-8) skip-if(!asyncPan) == fixed-pos-scrolled-clip-2.html fixed-pos-scrolled-clip-2-ref.html
-fuzzy-if(Android,0-6,0-8) skip-if(!asyncPan) == fixed-pos-scrolled-clip-3.html fixed-pos-scrolled-clip-3-ref.html
+fuzzy-if(Android,0-6,0-8) skip-if(!asyncPan) fuzzy-if(geckoview,2-2,132-132) == fixed-pos-scrolled-clip-3.html fixed-pos-scrolled-clip-3-ref.html
 fuzzy-if(Android,0-6,0-8) skip-if(!asyncPan) == fixed-pos-scrolled-clip-4.html fixed-pos-scrolled-clip-4-ref.html
 skip-if(!asyncPan) == fixed-pos-scrolled-clip-5.html fixed-pos-scrolled-clip-5-ref.html
 skip-if(!asyncPan) == position-sticky-bug1434250.html position-sticky-bug1434250-ref.html

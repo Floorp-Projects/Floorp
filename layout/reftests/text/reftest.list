@@ -186,7 +186,7 @@ random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.ht
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1320665-cmap-format-13.html 1320665-cmap-format-13-ref.html # see bug 1320665 comments 8-9
 == 1331339-script-extensions-shaping-1.html 1331339-script-extensions-shaping-1-ref.html
 skip-if(!cocoaWidget) != 1349308-1.html 1349308-notref.html # macOS-specific test for -apple-system glyph metrics
-fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||Android) == 1463020-letter-spacing-text-transform-1.html 1463020-letter-spacing-text-transform-1-ref.html # Android, Win10: regional indicators not supported by system emoji font
+fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) fails-if(Android&&!geckoview) == 1463020-letter-spacing-text-transform-1.html 1463020-letter-spacing-text-transform-1-ref.html # Android, Win10: regional indicators not supported by system emoji font
 fails-if(Android) == 1463020-letter-spacing-text-transform-2.html 1463020-letter-spacing-text-transform-2-ref.html # missing font coverage on Android
 == 1507661-spurious-hyphenation-after-explicit.html 1507661-spurious-hyphenation-after-explicit-ref.html
 fuzzy-if(!webrender,12-66,288-1660) == 1522857-1.html 1522857-1-ref.html # antialiasing fuzz in non-webrender cases
@@ -201,8 +201,8 @@ fuzzy-if(!webrender,12-66,288-1660) == 1522857-1.html 1522857-1-ref.html # antia
 # the next two will fail on OS X 10.6 because no color emoji font is present,
 # and also on Android platforms until we have color emoji fonts there.
 # Tests rely on bundled Twemoji Mozilla to pass on Windows <8.1 and Linux.
-fails-if(Android) != emoji-03.html emoji-03-notref.html
-fails-if(Android) == emoji-04.html emoji-04-ref.html
+fails-if(Android&&!geckoview) != emoji-03.html emoji-03-notref.html
+fails-if(Android&&!geckoview) == emoji-04.html emoji-04-ref.html
 != emoji-05.html emoji-05-notref.html
 
 # check that Graphite shaping (bug 631479) is working

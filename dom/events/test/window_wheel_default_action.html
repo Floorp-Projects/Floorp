@@ -2880,7 +2880,7 @@ function doTestZoomedScroll(aCallback)
         hitEventLoop(function () {
           gScrollableElement.scrollTop = 1000;
           gScrollableElement.scrollLeft = 1000;
-          var event = {
+          var evt = {
             deltaMode: WheelEvent.DOM_DELTA_PIXEL,
             deltaX: 16.0,
             deltaY: 16.0,
@@ -2888,7 +2888,7 @@ function doTestZoomedScroll(aCallback)
             lineOrPageDeltaY: 0
           };
           // wait scrolled actually.
-          sendWheelAndWait(10, 10, event, function () {
+          sendWheelAndWait(10, 10, evt, function () {
             ok(Math.abs(gScrollableElement.scrollLeft - (1000 + (scrolledX - 1000) / 2)) <= 1,
                "doTestZoomedScroll: zoomed horizontal scroll amount by pixel wheel event is different from normal, scrollLeft=" +
                  gScrollableElement.scrollLeft + ", scrolledX=" + scrolledX);
@@ -2965,7 +2965,7 @@ function doTestZoomedScroll(aCallback)
         hitEventLoop(function () {
           gScrollableElement.scrollTop = 1000;
           gScrollableElement.scrollLeft = 1000;
-          var event = {
+          var evt = {
             deltaMode: WheelEvent.DOM_DELTA_LINE,
             deltaX: 1.0,
             deltaY: 1.0,
@@ -2973,7 +2973,7 @@ function doTestZoomedScroll(aCallback)
             lineOrPageDeltaY: 1
           };
           // wait scrolled actually.
-          sendWheelAndWait(10, 10, event, function () {
+          sendWheelAndWait(10, 10, evt, function () {
             ok(Math.abs(gScrollableElement.scrollLeft - scrolledX) <= 1,
                "doTestZoomedScroll: zoomed horizontal scroll amount by line wheel event is different from normal, scrollLeft=" +
                  gScrollableElement.scrollLeft + ", scrolledX=" + scrolledX);

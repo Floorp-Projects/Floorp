@@ -189,7 +189,7 @@ function sPointerCapture(e) {
     try {
         target0.setPointerCapture(e.pointerId);
     }
-    catch(e) {
+    catch(ex) {
     }
 }
 
@@ -198,7 +198,7 @@ function rPointerCapture(e) {
         captureButton.value = 'Set Capture';
         target0.releasePointerCapture(e.pointerId);
     }
-    catch(e) {
+    catch(ex) {
     }
 }
 

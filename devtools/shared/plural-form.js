@@ -198,5 +198,6 @@ function log(aMsg)
 }
 
 exports.PluralForm = PluralForm;
+exports.get = PluralForm.get;
 
 /* eslint-ensable */

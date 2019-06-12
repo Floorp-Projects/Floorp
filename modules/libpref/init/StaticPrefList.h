@@ -673,6 +673,15 @@ VARCACHE_PREF(
   bool, true
 )
 
+// When this pref is set, parent documents may consider child iframes've loaded
+// while they are still loading
+VARCACHE_PREF(
+  Live,
+  "dom.cross_origin_iframes_loaded_in_background",
+   dom_cross_origin_iframes_loaded_in_background,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Prefs starting with "browser."
 //---------------------------------------------------------------------------
@@ -4728,6 +4737,19 @@ VARCACHE_PREF(
 #endif
 VARCACHE_PREF(
   Live,
+  "layout.css.shadow-parts.enabled",
+   layout_css_shadow_parts_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  Live,
   "layout.css.resizeobserver.enabled",
   layout_css_resizeobserver_enabled,
   bool, PREF_VALUE
@@ -4902,6 +4924,19 @@ VARCACHE_PREF(
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
+
+// Whether we expose the functionality proposed in
+// https://github.com/WICG/encrypted-media-encryption-scheme/blob/master/explainer.md
+// I.e. if true, apps calling navigator.requestMediaKeySystemAccess() can pass
+// an optional encryption scheme as part of MediaKeySystemMediaCapability
+// objects. If a scheme is present when we check for support, we must ensure we
+// support that scheme in order to provide key system access.
+VARCACHE_PREF(
+  Live,
+  "media.eme.encrypted-media-encryption-scheme.enabled",
+  media_eme_encrypted_media_encryption_scheme_enabled,
+  bool, false
+)
 
 VARCACHE_PREF(
   Live,
