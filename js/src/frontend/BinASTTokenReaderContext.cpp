@@ -511,8 +511,11 @@ class HuffmanPreludeReader {
   struct Boolean : EntryBase {
     // The C++ type of values for this grammar type.
     using Type = bool;
+
     Boolean(const NormalizedInterfaceAndField identity) : EntryBase(identity) {}
-    size_t maxMumberOfSymbols() {
+
+    // The max number of symbols in a table for this type.
+    size_t maxMumberOfSymbols() const {
       // Sadly, to this day, there are only two known booleans.
       return 2;
     }
@@ -543,10 +546,17 @@ class HuffmanPreludeReader {
 
   // An optional value of a given interface.
   struct MaybeInterface : EntryBase {
+    // The C++ type of values for this grammar type.
+    using Type = Nullable;
+
     // The kind of the interface.
     const BinASTKind kind;
+
     MaybeInterface(const NormalizedInterfaceAndField identity, BinASTKind kind)
         : EntryBase(identity), kind(kind) {}
+
+    // The max number of symbols in a table for this type.
+    size_t maxMumberOfSymbols() const { return 2; }
 
     // Utility struct, used in macros to call the constructor as
     // `MaybeInterface::Maker(kind)(identity)`.
@@ -803,9 +813,13 @@ class HuffmanPreludeReader {
     MOZ_TRY_VAR(headerByte, reader.readByte());
     switch (headerByte) {
       case TableHeader::SingleValue: {
-        // The table contains a single value.
+        // Construct in-place.
         table = {mozilla::VariantType<Table>{}, cx_};
-        return readSingleValueTable<Table, Entry>(table.as<Table>(), entry);
+        auto& tableRef = table.as<Table>();
+
+        // The table contains a single value.
+        MOZ_TRY((readSingleValueTable<Table, Entry>(tableRef, entry)));
+        return Ok();
       }
       case TableHeader::MultipleValues: {
         // Table contains multiple values.
@@ -814,8 +828,12 @@ class HuffmanPreludeReader {
         if (numberOfSymbols > entry.maxMumberOfSymbols()) {
           return raiseInvalidTableData(entry.identity);
         }
-        return readMultipleValuesTable<Table, Entry>(table.as<Table>(), entry,
-                                                     numberOfSymbols);
+        // Construct in-place.
+        table = {mozilla::VariantType<Table>{}, cx_};
+        auto& tableRef = table.as<Table>();
+        MOZ_TRY((readMultipleValuesTable<Table, Entry>(tableRef, entry,
+                                                       numberOfSymbols)));
+        return Ok();
       }
       case TableHeader::Unreachable:
         // Table is unreachable, nothing to do.
@@ -823,6 +841,15 @@ class HuffmanPreludeReader {
       default:
         return raiseInvalidTableData(entry.identity);
     }
+  }
+
+  // Reading a single boolean.
+  // 0 -> False
+  // _ -> True
+  template <>
+  MOZ_MUST_USE JS::Result<bool> readSymbol<Boolean>() {
+    BINJS_MOZ_TRY_DECL(symbol, reader.readByte());
+    return symbol != 0;
   }
 
   // Reading tables of booleans
@@ -842,13 +869,31 @@ class HuffmanPreludeReader {
     return Ok();
   }
 
-  // Reading a single boolean.
-  // 0 -> False
-  // _ -> True
+  // Reading a single `Foo?` where `Foo` is an interface.
+  // 0 -> null
+  // 1 -> Foo
   template <>
-  MOZ_MUST_USE JS::Result<bool> readSymbol<Boolean>() {
+  MOZ_MUST_USE JS::Result<Nullable> readSymbol<MaybeInterface>() {
     BINJS_MOZ_TRY_DECL(symbol, reader.readByte());
-    return symbol != 0;
+    return symbol == 0 ? Nullable::Null : Nullable::NonNull;
+  }
+
+  // Reading a table for `Foo?` where `Foo` is an interface.
+  // 0 -> null
+  // 1 -> Foo
+  template <>
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<
+      HuffmanTableIndexedSymbolsMaybeInterface, MaybeInterface>(
+      HuffmanTableIndexedSymbolsMaybeInterface& table, MaybeInterface entry) {
+    uint8_t indexByte;
+    MOZ_TRY_VAR(indexByte, reader.readByte());
+    if (indexByte >= 2) {
+      return raiseInvalidTableData(entry.identity);
+    }
+
+    MOZ_TRY(table.impl.initWithSingleValue(
+        cx_, indexByte == 0 ? Nullable::Null : Nullable::NonNull));
+    return Ok();
   }
 
  private:
@@ -885,11 +930,26 @@ class HuffmanPreludeReader {
       return Ok();
     }
 
+    // Optional Interface.
+    // Values: [null, non-null].
     MOZ_MUST_USE JS::Result<Ok> operator()(const MaybeInterface& entry) {
-      // FIXME: Enqueue fields.
-      // FIXME: Read table.
-      // FIXME: Initialize table.
-      MOZ_CRASH("Unimplemented");
+      // First, we need a table to determine whether the value is `null`.
+      MOZ_TRY((owner.readTable<HuffmanTableIndexedSymbolsMaybeInterface,
+                               MaybeInterface>(entry)));
+
+      // Then, if the table contains `true`, we need the fields of the
+      // interface.
+      // FIXME: readTable could return a reference to the table, eliminating an
+      // array lookup.
+      const auto& table = owner.dictionary.tableForField(entry.identity);
+      if (table.is<HuffmanTableUnreachable>()) {
+        return Ok();
+      }
+      const auto& tableRef =
+          table.as<HuffmanTableIndexedSymbolsMaybeInterface>();
+      if (!tableRef.isAlwaysNull()) {
+        owner.pushFields(entry.kind);
+      }
       return Ok();
     }
 
