@@ -512,6 +512,9 @@ var Policies = {
       setAndLockPref("browser.download.dir", replacePathVariables(param));
       // If a custom download directory is being used, just lock folder list to 2.
       setAndLockPref("browser.download.folderList", 2);
+      // Per Chrome spec, user can't choose to download every time
+      // if this is set.
+      setAndLockPref("browser.download.useDownloadDir", true);
     },
   },
 
