@@ -7146,14 +7146,17 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
       } else {
         principal = NullPrincipal::CreateWithInheritedAttributes(this);
       }
+      storagePrincipal = principal;
     } else {
       principal = aPrincipal;
+      storagePrincipal = aStoragePrincipal;
     }
 
     MaybeCreateInitialClientSource(principal);
 
     // generate (about:blank) document to load
-    blankDoc = nsContentDLF::CreateBlankDocument(mLoadGroup, principal, this);
+    blankDoc = nsContentDLF::CreateBlankDocument(mLoadGroup, principal,
+                                                 storagePrincipal, this);
     if (blankDoc) {
       // Hack: manually set the CSP for the new document
       // Please create an actual copy of the CSP (do not share the same
