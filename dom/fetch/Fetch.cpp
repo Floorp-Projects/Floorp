@@ -540,6 +540,21 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
   return p.forget();
 }
 
+class ResolveFetchPromise : public Runnable {
+ public:
+  ResolveFetchPromise(Promise* aPromise, Response* aResponse)
+      : Runnable("ResolveFetchPromise"),
+        mPromise(aPromise),
+        mResponse(aResponse) {}
+
+  NS_IMETHOD Run() {
+    mPromise->MaybeResolve(mResponse);
+    return NS_OK;
+  }
+  RefPtr<Promise> mPromise;
+  RefPtr<Response> mResponse;
+};
+
 void MainThreadFetchResolver::OnResponseAvailableInternal(
     InternalResponse* aResponse) {
   NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
@@ -552,7 +567,15 @@ void MainThreadFetchResolver::OnResponseAvailableInternal(
 
     nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
     mResponse = new Response(go, aResponse, mSignalImpl);
-    mPromise->MaybeResolve(mResponse);
+    nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(go);
+    nsPIDOMWindowInner* topLevel =
+        inner ? inner->GetWindowForDeprioritizedLoadRunner() : nullptr;
+    if (topLevel) {
+      topLevel->AddDeprioritizedLoadRunner(
+          new ResolveFetchPromise(mPromise, mResponse));
+    } else {
+      mPromise->MaybeResolve(mResponse);
+    }
   } else {
     if (mFetchObserver) {
       mFetchObserver->SetState(FetchState::Errored);
