@@ -1,4 +1,7 @@
-# Introduction
+---
+layout: page
+title: Introduction
+---
 
 web-platform-tests is a W3C-coordinated effort to build a
 cross-browser testsuite for the majority of
@@ -105,10 +108,10 @@ free to add yourself to the META.yml file!
 [IRC]: irc://irc.w3.org:6667/testing
 [web irc]: http://irc.w3.org
 
-[reftests]: writing-tests/reftests
-[testharness.js]: writing-tests/testharness
-[visual]: writing-tests/visual
-[manual]: writing-tests/manual
-[github-intro]: appendix/github-intro
-[running-from-local-system]: running-tests/from-local-system
-[wdspec]: writing-tests/wdspec
+[reftests]: {{ site.baseurl }}{% link _writing-tests/reftests.md %}
+[testharness.js]: {{ site.baseurl }}{% link _writing-tests/testharness.md %}
+[visual]: {{ site.baseurl }}{% link _writing-tests/visual.md %}
+[manual]: {{ site.baseurl }}{% link _writing-tests/manual.md %}
+[github-intro]: {{ site.baseurl }}{% link _appendix/github-intro.md %}
+[running-from-local-system]: {{ site.baseurl}}{% link _running-tests/from-local-system.md %}
+[wdspec]: {{ site.baseurl }}{% link _writing-tests/wdspec.md %}
