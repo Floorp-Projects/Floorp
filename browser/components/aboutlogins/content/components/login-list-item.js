@@ -25,9 +25,19 @@ export default class LoginListItem extends HTMLElement {
   }
 
   render() {
+    let origin = this.shadowRoot.querySelector(".origin");
+    let username = this.shadowRoot.querySelector(".username");
+
+    if (!this._login.guid) {
+      this.removeAttribute("guid");
+      origin.textContent = this.getAttribute("new-login-title");
+      username.textContent = this.getAttribute("new-login-subtitle");
+      return;
+    }
+
     this.setAttribute("guid", this._login.guid);
-    this.shadowRoot.querySelector(".origin").textContent = this._login.origin;
-    this.shadowRoot.querySelector(".username").textContent = this._login.username;
+    origin.textContent = this._login.origin;
+    username.textContent = this._login.username;
   }
 
   handleEvent(event) {
