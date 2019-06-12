@@ -18,7 +18,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  wait = waitForDOM(document, ".headers-overview");
+  const wait = waitForDOM(document, ".headers-overview");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
   await wait;
@@ -42,26 +42,31 @@ add_task(async function() {
   //           1: "c"
   //           2: "b"
   //         c: 15
-  const actualKeys = document.querySelectorAll(".treeTable .treeRow");
   const expectedKeys = [
     "JSON",
-    "watches: [...]",
-    "0: hello",
-    "1: how",
-    "2: are",
-    "3: you",
-    "4: {...}",
-    "a: 10",
-    "b: [...]",
-    "0: a",
-    "1: c",
-    "2: b",
-    "c: 15",
+    "watches\t[…]",
+    "0\thello",
+    "1\thow",
+    "2\tare",
+    "3\tyou",
+    "4\t{…}",
+    "a\t10",
+    "b\t[…]",
+    "0\ta",
+    "1\tc",
+    "2\tb",
+    "c\t15",
+    "Request payload",
   ];
 
+  const waitForTreeRow = waitForDOM(document, ".treeTable .treeRow", expectedKeys.length);
+  await waitForTreeRow;
+  const actualKeys = document.querySelectorAll(".treeTable .treeRow");
+
   for (let i = 0; i < actualKeys.length; i++) {
-    is(actualKeys[i].innerText, expectedKeys[i],
-      "Actual value " + actualKeys[i].innerText + " is equal to the " +
+    const text = actualKeys[i].innerText.trim();
+    is(text, expectedKeys[i],
+      "Actual value " + text + " is equal to the " +
       "expected value " + expectedKeys[i]);
   }
 });
