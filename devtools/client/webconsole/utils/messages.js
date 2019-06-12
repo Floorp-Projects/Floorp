@@ -238,6 +238,10 @@ function transformConsoleAPICallPacket(packet) {
     column: message.columnNumber,
   } : null;
 
+  if (type === "logPointError" || type === "logPoint") {
+    frame.origin = "logPoint";
+  }
+
   return new ConsoleMessage({
     source: MESSAGE_SOURCE.CONSOLE_API,
     type,
@@ -457,6 +461,7 @@ function getLevelFromType(type) {
     error: levels.LEVEL_ERROR,
     exception: levels.LEVEL_ERROR,
     assert: levels.LEVEL_ERROR,
+    logPointError: levels.LEVEL_ERROR,
     warn: levels.LEVEL_WARNING,
     info: levels.LEVEL_INFO,
     log: levels.LEVEL_LOG,

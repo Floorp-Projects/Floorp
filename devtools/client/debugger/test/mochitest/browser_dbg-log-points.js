@@ -31,6 +31,6 @@ add_task(async function() {
   await hasConsoleMessage(dbg, "firstCall");
 
   const { link, value } = await findConsoleMessage(dbg, "a b c");
-  is(link, "script-switching-01.js:8:2", "logs should have the relevant link");
+  is(link, "Logpoint @ script-switching-01.js:8:2", "logs should have the relevant link");
   is(value, "a b c", "logs should have multiple values");
 });
