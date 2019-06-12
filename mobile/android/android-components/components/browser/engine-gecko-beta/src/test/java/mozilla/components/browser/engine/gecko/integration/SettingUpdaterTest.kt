@@ -1,13 +1,13 @@
 package mozilla.components.browser.engine.gecko.integration
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.runner.RunWith
 import org.junit.Test
-import org.robolectric.RobolectricTestRunner
+import org.junit.runner.RunWith
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class SettingUpdaterTest {
 
     @Test
