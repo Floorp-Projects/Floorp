@@ -145,7 +145,7 @@ function convertToList(
 }
 
 export function getColumnBreakpoints(
-  positions: ?BreakpointPositions,
+  positions: BreakpointPosition[],
   breakpoints: ?(Breakpoint[]),
   viewport: ?Range,
   selectedSourceWithContent: ?SourceWithContent
@@ -165,23 +165,29 @@ export function getColumnBreakpoints(
   // - there is atleast one other breakpoint on that line
   // - there is a breakpoint on that line
   const breakpointMap = groupBreakpoints(breakpoints, selectedSource);
-  let newPositions = convertToList(positions);
-  newPositions = filterByLineCount(newPositions, selectedSource);
-  newPositions = filterVisible(newPositions, selectedSource, viewport);
-  newPositions = filterInLine(newPositions, selectedSource, selectedContent);
-  newPositions = filterByBreakpoints(
-    newPositions,
-    selectedSource,
-    breakpointMap
-  );
+  positions = filterByLineCount(positions, selectedSource);
+  positions = filterVisible(positions, selectedSource, viewport);
+  positions = filterInLine(positions, selectedSource, selectedContent);
+  positions = filterByBreakpoints(positions, selectedSource, breakpointMap);
 
-  return formatPositions(newPositions, selectedSource, breakpointMap);
+  return formatPositions(positions, selectedSource, breakpointMap);
 }
 
 const getVisibleBreakpointPositions = createSelector(
   getSelectedSource,
   getBreakpointPositions,
-  (source, positions) => source && positions[source.id]
+  (source, positions) => {
+    if (!source) {
+      return [];
+    }
+
+    const sourcePositions = positions[source.id];
+    if (!sourcePositions) {
+      return [];
+    }
+
+    return convertToList(sourcePositions);
+  }
 );
 
 export const visibleColumnBreakpoints: Selector<ColumnBreakpoints> = createSelector(
