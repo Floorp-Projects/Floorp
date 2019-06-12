@@ -25,6 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
     recordTelemetryEvent({object: "new_login", method: "new"});
   });
 
+  let menuButton = document.querySelector("menu-button");
+  menuButton.classList.add(navigator.platform);
+
   document.dispatchEvent(new CustomEvent("AboutLoginsInit", {bubbles: true}));
 }, {once: true});
 
