@@ -8522,7 +8522,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 8,
-    "description": "User actions taken in the plugin notification: 0: allownow 1: allowalways 2: block 3: blockalways",
+    "description": "User actions taken in the plugin notification: 0: allownow 1: allowalways 2: block 3: blockalways; Note: 1 and 3 are unused from Firefox 69 onwards.",
     "bug_numbers": [902075, 1345894, 1398972],
     "alert_emails": ["flashvideo-2015@mozilla.com"]
   },
