@@ -1392,6 +1392,7 @@ nsresult MediaTransportHandlerSTS::DNSListener::OnLookupComplete(
                     mTransportId.c_str(), mCandidate.c_str(), buf);
 
         // Replace obfuscated address with actual address
+        std::string obfuscatedAddr = mTokenizedCandidate[4];
         mTokenizedCandidate[4] = buf;
         std::ostringstream o;
         for (size_t i = 0; i < mTokenizedCandidate.size(); ++i) {
@@ -1412,7 +1413,8 @@ nsresult MediaTransportHandlerSTS::DNSListener::OnLookupComplete(
           return NS_OK;
         }
 
-        nsresult rv = stream->ParseTrickleCandidate(mCandidate, mUfrag, "");
+        nsresult rv = stream->ParseTrickleCandidate(mungedCandidate, mUfrag,
+                                                    obfuscatedAddr);
         if (NS_FAILED(rv)) {
           CSFLogError(LOGTAG,
                       "Couldn't process ICE candidate with transport id %s: "
