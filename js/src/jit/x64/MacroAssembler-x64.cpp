@@ -426,7 +426,7 @@ void MacroAssembler::moveValue(const TypedOrValueRegister& src,
     convertFloat32ToDouble(freg, scratch);
     freg = scratch;
   }
-  vmovq(freg, dest.valueReg());
+  boxDouble(freg, dest, freg);
 }
 
 void MacroAssembler::moveValue(const ValueOperand& src,
@@ -542,7 +542,7 @@ void MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value,
                                        MIRType valueType, const T& dest,
                                        MIRType slotType) {
   if (valueType == MIRType::Double) {
-    storeDouble(value.reg().typedReg().fpu(), dest);
+    boxDouble(value.reg().typedReg().fpu(), dest);
     return;
   }
 
