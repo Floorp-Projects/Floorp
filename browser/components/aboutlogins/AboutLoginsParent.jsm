@@ -13,6 +13,8 @@ ChromeUtils.defineModuleGetter(this, "Localization",
                                "resource://gre/modules/Localization.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
+ChromeUtils.defineModuleGetter(this, "MigrationUtils",
+                               "resource:///modules/MigrationUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 
@@ -87,6 +89,15 @@ var AboutLoginsParent = {
       case "AboutLogins:DeleteLogin": {
         let login = LoginHelper.vanillaObjectToLogin(message.data.login);
         Services.logins.removeLogin(login);
+        break;
+      }
+      case "AboutLogins:Import": {
+        try {
+          MigrationUtils.showMigrationWizard(message.target.ownerGlobal,
+                                             [MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS]);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
         break;
       }
       case "AboutLogins:OpenPreferences": {

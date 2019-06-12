@@ -20,7 +20,8 @@ class AboutLoginsChild extends ActorChild {
       case "AboutLoginsInit": {
         this.mm.sendAsyncMessage("AboutLogins:Subscribe");
 
-        let documentElement = this.content.document.documentElement;
+        let document = this.content.document;
+        let documentElement = document.documentElement;
         documentElement.classList.toggle("official-branding", AppConstants.MOZILLA_OFFICIAL);
 
         let waivedContent = Cu.waiveXrays(this.content);
@@ -40,6 +41,10 @@ class AboutLoginsChild extends ActorChild {
       }
       case "AboutLoginsDeleteLogin": {
         this.mm.sendAsyncMessage("AboutLogins:DeleteLogin", {login: event.detail});
+        break;
+      }
+      case "AboutLoginsImport": {
+        this.mm.sendAsyncMessage("AboutLogins:Import");
         break;
       }
       case "AboutLoginsOpenPreferences": {

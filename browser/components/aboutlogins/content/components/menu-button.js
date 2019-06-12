@@ -20,7 +20,11 @@ export default class MenuButton extends ReflectedFluentElement {
   }
 
   static get reflectedFluentIDs() {
-    return ["button-title", "menuitem-preferences"];
+    return [
+      "button-title",
+      "menuitem-import",
+      "menuitem-preferences",
+    ];
   }
 
   static get observedAttributes() {
@@ -46,12 +50,15 @@ export default class MenuButton extends ReflectedFluentElement {
             event.originalTarget == this.shadowRoot.querySelector(".menu-button")) {
           return;
         }
-        if (event.originalTarget.classList.contains("menuitem-preferences")) {
-          document.dispatchEvent(new CustomEvent("AboutLoginsOpenPreferences", {
+        let classList = event.originalTarget.classList;
+        if (classList.contains("menuitem-import") ||
+            classList.contains("menuitem-preferences")) {
+          let eventName = event.originalTarget.dataset.eventName;
+          document.dispatchEvent(new CustomEvent(eventName, {
             bubbles: true,
           }));
           this.hideMenu();
-          return;
+          break;
         }
         this.toggleMenu();
         break;
