@@ -77,8 +77,13 @@ SdpMediaSection::Protocol RsdparsaSdpMediaSection::GetProtocol() const {
       return kUdpDtlsSctp;
     case RustSdpProtocolValue::kRustTcpDtlsSctp:
       return kTcpDtlsSctp;
+    case RustSdpProtocolValue::kRustRtpAvp:
+      return kRtpAvp;
+    case RustSdpProtocolValue::kRustRtpAvpf:
+      return kRtpAvpf;
+    case RustSdpProtocolValue::kRustRtpSavp:
+      return kRtpSavp;
   }
-
   MOZ_CRASH("invalid media protocol");
 }
 
