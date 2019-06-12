@@ -401,3 +401,41 @@ add_task(async function test_submission_aborting() {
   // task completed).
   resolvePendingResponses();
 });
+
+add_task(async function test_truncated_string_properties() {
+  const generateString = len => (new Array(len)).fill("a").join("");
+
+  const LONG_STRINGS_ADDON_ID = "addon-with-long-strings-props@mochi.test";
+  const {extension} = await installTestExtension({
+    manifest: {
+      name: generateString(400),
+      description: generateString(400),
+      applications: {gecko: {id: LONG_STRINGS_ADDON_ID}},
+    },
+  });
+
+  // Override the test api server request handler, to be able to
+  // intercept the properties actually submitted.
+  let reportSubmitted;
+  apiRequestHandler = ({data, request, response}) => {
+    reportSubmitted = JSON.parse(data);
+    handleSubmitRequest({request, response});
+  };
+
+  const report = await AbuseReporter.createAbuseReport(
+    LONG_STRINGS_ADDON_ID, REPORT_OPTIONS);
+
+  await report.submit({message: "fake-message", reason: "fake-reason"});
+
+  const expected = {
+    addon_name: generateString(255),
+    addon_summary: generateString(255),
+  };
+
+  Assert.deepEqual({
+    addon_name: reportSubmitted.addon_name,
+    addon_summary: reportSubmitted.addon_summary,
+  }, expected, "Got the long strings truncated as expected");
+
+  await extension.unload();
+});
