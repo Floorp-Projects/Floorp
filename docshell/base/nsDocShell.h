@@ -498,6 +498,7 @@ class nsDocShell final : public nsDocLoader,
   // passed in, the about:blank principal will end up being used.
   // aCSP, if any, will be used for the new about:blank load.
   nsresult CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
+                                         nsIPrincipal* aStoragePrincipal,
                                          nsIContentSecurityPolicy* aCSP,
                                          nsIURI* aBaseURI,
                                          bool aTryToSaveOldPresentation = true,
@@ -649,7 +650,10 @@ class nsDocShell final : public nsDocLoader,
   // If that fails too, we force creation of a content viewer and use the
   // resulting principal. If aConsiderCurrentDocument is false, we just look
   // at the parent.
-  nsIPrincipal* GetInheritedPrincipal(bool aConsiderCurrentDocument);
+  // If aConsiderStoragePrincipal is true, we consider the storage principal
+  // instead of the node principal.
+  nsIPrincipal* GetInheritedPrincipal(bool aConsiderCurrentDocument,
+                                      bool aConsiderStoragePrincipal = false);
 
   /**
    * Helper function that determines if channel is an HTTP POST.

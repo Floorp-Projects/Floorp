@@ -1580,7 +1580,10 @@ void nsGlobalWindowOuter::SetInitialPrincipalToSubject(
 #endif
   }
 
-  GetDocShell()->CreateAboutBlankContentViewer(newWindowPrincipal, aCSP);
+  // Use the subject (or system) principal as the storage principal too until
+  // the new window finishes navigating and gets a real storage principal.
+  GetDocShell()->CreateAboutBlankContentViewer(newWindowPrincipal,
+                                               newWindowPrincipal, aCSP);
 
   if (mDoc) {
     mDoc->SetIsInitialDocument(true);
