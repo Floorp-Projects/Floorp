@@ -7013,7 +7013,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     }
 
     // Set the same information, but on the lazyScript.
-    if (ctorbox->function()->isInterpretedLazy()) {
+    if (ctorbox->isInterpretedLazy()) {
       ctorbox->function()->lazyScript()->setToStringEnd(classEndOffset);
 
       if (numFields > 0) {
