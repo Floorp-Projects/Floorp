@@ -219,7 +219,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "binast"
-version = "0.2.0"
+version = "0.1.1"
 dependencies = [
  "Inflector 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "binjs_meta 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
