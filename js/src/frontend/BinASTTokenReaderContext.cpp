@@ -506,6 +506,8 @@ class HuffmanPreludeReader {
   // A string.
   // May be a literal string, identifier name or property key. May not be null.
   struct String : EntryBase {
+    using SymbolType = JSAtom*;
+    using Table = HuffmanTableIndexedSymbolsLiteralString;
     String(const NormalizedInterfaceAndField identity) : EntryBase(identity) {}
   };
   using IdentifierName = String;
@@ -514,6 +516,8 @@ class HuffmanPreludeReader {
   // An optional string.
   // May be a literal string, identifier name or property key.
   struct MaybeString : EntryBase {
+    using SymbolType = JSAtom*;
+    using Table = HuffmanTableIndexedSymbolsOptionalLiteralString;
     MaybeString(const NormalizedInterfaceAndField identity)
         : EntryBase(identity) {}
   };
@@ -1113,6 +1117,87 @@ class HuffmanPreludeReader {
     return Ok();
   }
 
+  // ------ Strings, non-nullable
+  // varnum (index)
+
+  // Read the number of symbols from the metadata.
+  template <>
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(const String&) {
+    return reader.metadata_->numStrings();
+  }
+
+  // Read a single symbol from the stream.
+  template <>
+  MOZ_MUST_USE JS::Result<JSAtom*> readSymbol(const String& entry, size_t) {
+    BINJS_MOZ_TRY_DECL(
+        index, reader.readVarU32<BinASTTokenReaderContext::Compression::Yes>());
+    if (index > reader.metadata_->numStrings()) {
+      return raiseInvalidTableData(entry.identity);
+    }
+    return reader.metadata_->getAtom(index);
+  }
+
+  // Reading a single-value table of string indices.
+  template <>
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<String>(
+      HuffmanTableIndexedSymbolsLiteralString& table, const String& entry) {
+    BINJS_MOZ_TRY_DECL(
+        index, reader.readVarU32<BinASTTokenReaderContext::Compression::Yes>());
+    if (index > reader.metadata_->numStrings()) {
+      return raiseInvalidTableData(entry.identity);
+    }
+    // Note: The `std::move` is useless for performance, but necessary to keep
+    // a consistent API.
+    // NOLINTNEXTLINE(performance-move-const-arg)
+    MOZ_TRY(table.impl.initWithSingleValue(
+        cx_, std::move(reader.metadata_->getAtom(index))));
+    return Ok();
+  }
+
+  // ------ Optional strings
+  // varnum 0 -> null
+  // varnum i > 0 -> string at index i - 1
+
+  // Read the number of symbols from the metadata.
+  template <>
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(const MaybeString&) {
+    return reader.metadata_->numStrings() + 1;
+  }
+
+  // Read a single symbol from the stream.
+  template <>
+  MOZ_MUST_USE JS::Result<JSAtom*> readSymbol(const MaybeString& entry,
+                                              size_t) {
+    BINJS_MOZ_TRY_DECL(
+        index, reader.readVarU32<BinASTTokenReaderContext::Compression::Yes>());
+    if (index == 0) {
+      return nullptr;
+    };
+    if (index > reader.metadata_->numStrings() + 1) {
+      return raiseInvalidTableData(entry.identity);
+    };
+    return reader.metadata_->getAtom(index - 1);
+  }
+
+  // Reading a single-value table of string indices.
+  template <>
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<MaybeString>(
+      HuffmanTableIndexedSymbolsOptionalLiteralString& table,
+      const MaybeString& entry) {
+    BINJS_MOZ_TRY_DECL(
+        index, reader.readVarU32<BinASTTokenReaderContext::Compression::Yes>());
+    if (index > reader.metadata_->numStrings() + 1) {
+      return raiseInvalidTableData(entry.identity);
+    }
+    JSAtom* symbol =
+        index == 0 ? nullptr : reader.metadata_->getAtom(index - 1);
+    // Note: The `std::move` is useless for performance, but necessary to keep
+    // a consistent API.
+    // NOLINTNEXTLINE(performance-move-const-arg)
+    MOZ_TRY(table.impl.initWithSingleValue(cx_, std::move(symbol)));
+    return Ok();
+  }
+
  private:
   // An auxiliary storage of bit lengths.
   // Used to avoid (re)allocating a vector of bit lengths each time we read a
@@ -1243,17 +1328,11 @@ class HuffmanPreludeReader {
     }
 
     MOZ_MUST_USE JS::Result<Ok> operator()(const String& entry) {
-      // FIXME: Read table.
-      // FIXME: Initialize table.
-      MOZ_CRASH("Unimplemented");
-      return Ok();
+      return owner.readTable<String>(entry);
     }
 
     MOZ_MUST_USE JS::Result<Ok> operator()(const MaybeString& entry) {
-      // FIXME: Read table.
-      // FIXME: Initialize table.
-      MOZ_CRASH("Unimplemented");
-      return Ok();
+      return owner.readTable<MaybeString>(entry);
     }
 
     MOZ_MUST_USE JS::Result<Ok> operator()(const UnsignedLong& entry) {
