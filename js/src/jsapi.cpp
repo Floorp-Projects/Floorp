@@ -3028,6 +3028,11 @@ JS_PUBLIC_API void JS_InitReservedSlot(JSObject* obj, uint32_t index, void* ptr,
                    js::MemoryUse(use));
 }
 
+JS_PUBLIC_API void JS_InitPrivate(JSObject* obj, void* data, size_t nbytes,
+                                  JS::MemoryUse use) {
+  InitObjectPrivate(&obj->as<NativeObject>(), data, nbytes, js::MemoryUse(use));
+}
+
 JS_PUBLIC_API JSObject* JS_NewArrayObject(
     JSContext* cx, const JS::HandleValueArray& contents) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());

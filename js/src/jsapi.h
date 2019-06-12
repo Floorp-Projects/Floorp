@@ -912,6 +912,9 @@ extern JS_PUBLIC_API void* JS_GetPrivate(JSObject* obj);
 
 extern JS_PUBLIC_API void JS_SetPrivate(JSObject* obj, void* data);
 
+extern JS_PUBLIC_API void JS_InitPrivate(JSObject* obj, void* data,
+                                         size_t nbytes, JS::MemoryUse use);
+
 extern JS_PUBLIC_API void* JS_GetInstancePrivate(JSContext* cx,
                                                  JS::Handle<JSObject*> obj,
                                                  const JSClass* clasp,
@@ -1768,6 +1771,9 @@ void JS_InitReservedSlot(JSObject* obj, uint32_t index, T* ptr,
                          JS::MemoryUse use) {
   JS_InitReservedSlot(obj, index, ptr, sizeof(T), use);
 }
+
+extern JS_PUBLIC_API void JS_InitPrivate(JSObject* obj, void* data,
+                                         size_t nbytes, JS::MemoryUse use);
 
 /************************************************************************/
 
