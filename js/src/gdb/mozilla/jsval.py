@@ -2,6 +2,7 @@
 
 import gdb
 import gdb.types
+import struct
 import mozilla.prettyprinters
 from mozilla.prettyprinters import pretty_printer
 
@@ -94,19 +95,22 @@ class Punbox(Box):
     # simply call Value::toInt32, etc. here, but the debugger is likely to see many
     # Values, and doing several inferior calls for each one seems like a bad idea.
 
-    FULL_WIDTH = 64
     TAG_SHIFT = 47
     PAYLOAD_MASK = (1 << TAG_SHIFT) - 1
-    TAG_MASK = (1 << (FULL_WIDTH - TAG_SHIFT)) - 1
-    TAG_MAX_DOUBLE = 0x1fff0
-    TAG_TYPE_MASK = 0x0000f
+    TAG_MAX_NON_DOUBLE = 0xe
+    DOUBLE_ADJUST = 0x0007FFFFFFFFFFFF
 
     def tag(self):
-        tag = self.asBits >> Punbox.TAG_SHIFT
-        if tag <= Punbox.TAG_MAX_DOUBLE:
+        tag = int(self.asBits >> Punbox.TAG_SHIFT)
+        if tag > Punbox.TAG_MAX_NON_DOUBLE:
             return self.jtc.DOUBLE
         else:
-            return tag & Punbox.TAG_TYPE_MASK
+            return self.jtc.tagMap[tag]
+
+    def as_double(self):
+        packed = struct.pack("q", self.asBits - Punbox.DOUBLE_ADJUST)
+        (unpacked,) = struct.unpack("d", packed)
+        return unpacked
 
     def as_uint32(self): return int(self.asBits & ((1 << 32) - 1))
 
@@ -125,6 +129,11 @@ class Nunbox(Box):
             return self.jtc.DOUBLE
         return tag & Nunbox.TAG_TYPE_MASK
 
+    def as_double(self):
+        packed = struct.pack("q", self.asBits)
+        (unpacked,) = struct.unpack("d", packed)
+        return unpacked
+
     def as_uint32(self): return int(self.asBits & Nunbox.PAYLOAD_MASK)
 
     def as_address(self): return gdb.Value(self.asBits & Nunbox.PAYLOAD_MASK)
@@ -139,22 +148,25 @@ class JSValueTypeCache(object):
 
         # The enum keys are prefixed when building with some compilers (clang at
         # a minimum), so use a helper function to handle either key format.
-        def get(key):
-            val = d.get(key)
-            if val is not None:
-                return val
-            return d['JSValueType::' + key]
+        def getter(enum_dict, prefix):
+            def get(key):
+                val = enum_dict.get(key)
+                if val is not None:
+                    return val
+                return enum_dict[prefix + key]
+            return get
 
-        self.DOUBLE = get('JSVAL_TYPE_DOUBLE')
-        self.INT32 = get('JSVAL_TYPE_INT32')
-        self.UNDEFINED = get('JSVAL_TYPE_UNDEFINED')
-        self.BOOLEAN = get('JSVAL_TYPE_BOOLEAN')
-        self.MAGIC = get('JSVAL_TYPE_MAGIC')
-        self.STRING = get('JSVAL_TYPE_STRING')
-        self.SYMBOL = get('JSVAL_TYPE_SYMBOL')
-        self.BIGINT = get('JSVAL_TYPE_BIGINT')
-        self.NULL = get('JSVAL_TYPE_NULL')
-        self.OBJECT = get('JSVAL_TYPE_OBJECT')
+        getType = getter(d, 'JSValueType::')
+        self.DOUBLE = getType('JSVAL_TYPE_DOUBLE')
+        self.INT32 = getType('JSVAL_TYPE_INT32')
+        self.UNDEFINED = getType('JSVAL_TYPE_UNDEFINED')
+        self.BOOLEAN = getType('JSVAL_TYPE_BOOLEAN')
+        self.MAGIC = getType('JSVAL_TYPE_MAGIC')
+        self.STRING = getType('JSVAL_TYPE_STRING')
+        self.SYMBOL = getType('JSVAL_TYPE_SYMBOL')
+        self.BIGINT = getType('JSVAL_TYPE_BIGINT')
+        self.NULL = getType('JSVAL_TYPE_NULL')
+        self.OBJECT = getType('JSVAL_TYPE_OBJECT')
 
         # Let self.magic_names be an array whose i'th element is the name of
         # the i'th magic value.
@@ -164,7 +176,24 @@ class JSValueTypeCache(object):
             self.magic_names[v] = k
 
         # Choose an unboxing scheme for this architecture.
-        self.boxer = Punbox if cache.void_ptr_t.sizeof == 8 else Nunbox
+        if cache.void_ptr_t.sizeof == 4:
+            self.boxer = Nunbox
+        else:
+            self.boxer = Punbox
+
+            # Type and Tag do not line up for Punbox
+            d2 = gdb.types.make_enum_dict(gdb.lookup_type('JSValueTag'))
+            getTag = getter(d2, 'JSValueTag::')
+            self.tagMap = {}
+            self.tagMap[getTag('JSVAL_TAG_INT32')] = self.INT32
+            self.tagMap[getTag('JSVAL_TAG_UNDEFINED')] = self.UNDEFINED
+            self.tagMap[getTag('JSVAL_TAG_BOOLEAN')] = self.BOOLEAN
+            self.tagMap[getTag('JSVAL_TAG_MAGIC')] = self.MAGIC
+            self.tagMap[getTag('JSVAL_TAG_STRING')] = self.STRING
+            self.tagMap[getTag('JSVAL_TAG_SYMBOL')] = self.SYMBOL
+            self.tagMap[getTag('JSVAL_TAG_BIGINT')] = self.BIGINT
+            self.tagMap[getTag('JSVAL_TAG_NULL')] = self.NULL
+            self.tagMap[getTag('JSVAL_TAG_OBJECT')] = self.OBJECT
 
 
 @pretty_printer('JS::Value')
@@ -202,7 +231,7 @@ class JSValue(object):
             return '$JS::Int32Value(%s)' % value
 
         if tag == self.jtc.DOUBLE:
-            return '$JS::DoubleValue(%s)' % self.value['asDouble_']
+            return '$JS::DoubleValue(%s)' % self.box.as_double()
 
         if tag == self.jtc.STRING:
             value = self.box.as_address().cast(self.cache.JSString_ptr_t)
