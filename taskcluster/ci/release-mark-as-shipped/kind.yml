@@ -41,6 +41,12 @@ jobs:
         attributes:
             release-type: beta
 
+    fennec-release:
+        name: release-fennec-release_mark_as_shipped
+        shipping-product: fennec
+        attributes:
+            release-type: release
+
     firefox:
         name: release-firefox_mark_as_shipped
         shipping-product: firefox

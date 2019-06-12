@@ -28,6 +28,10 @@ not-for-build-platforms:
     - android-x86_64-beta/opt
     - android-x86-beta/opt
     - android-aarch64-beta/opt
+    - android-api-16-release/opt
+    - android-x86_64-release/opt
+    - android-x86-release/opt
+    - android-aarch64-release/opt
 
 job-template:
     update-no-wnp:

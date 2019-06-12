@@ -80,6 +80,29 @@ android-api-16-beta/debug:
     toolchains:
         - linux64-sccache
 
+android-api-16-release/debug:
+    description: "Android 4.0 api-16+ Release Debug"
+    index:
+        job-name: android-api-16-release-debug
+    treeherder:
+        platform: android-4-0-armv7-api16-release/debug
+        symbol: B
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+        artifacts:
+            - name: public/build/target.maven.zip
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/target.maven.zip
+              type: file
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: api-16-release-debug
+        update-channel: release
+    toolchains:
+        - linux64-sccache
+
 android-x86/opt:
     description: "Android 4.2 x86 Opt"
     index:
@@ -140,6 +163,29 @@ android-x86-beta/debug:
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86-beta-debug
         update-channel: beta
+
+android-x86-release/debug:
+    description: "Android x86 Release Debug"
+    index:
+        job-name: android-x86-release-debug
+    attributes:
+        enable-full-crashsymbols: false
+    treeherder:
+        platform: android-4-2-x86-release/debug
+        symbol: B
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+        artifacts:
+            - name: public/build/target.maven.zip
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/target.maven.zip
+              type: file
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: x86-release-debug
+        update-channel: release
 
 android-x86-fuzzing/debug:
     description: "Android x86 Fuzzing Debug"
@@ -215,6 +261,36 @@ android-x86-beta/opt:
             - taskcluster_nightly.py
         custom-build-variant-cfg: x86-beta
         update-channel: beta
+
+android-x86-release/opt:
+    description: "Android 4.2 x86 Release"
+    attributes:
+        nightly: true
+        enable-full-crashsymbols: true
+        release-type: release
+    shipping-phase: build
+    shipping-product: fennec
+    index:
+        job-name: android-x86-release-opt
+        type: android-nightly
+    treeherder:
+        platform: android-4-2-x86-release/opt
+        symbol: N
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+        artifacts:
+            - name: public/build/target.maven.zip
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/target.maven.zip
+              type: file
+    run:
+        actions: [get-secrets, build, multi-l10n]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - taskcluster_nightly.py
+        custom-build-variant-cfg: x86-release
+        update-channel: release
 
 android-api-16/opt:
     description: "Android 4.0 api-16+ Opt"
@@ -304,7 +380,7 @@ android-api-16-nightly/opt:
 
 android-api-16-beta/opt:
     description: "Android 4.0 api-16+ Beta"
-    use-pgo: android-api-16-beta/pgo
+    use-pgo: android-api-16/pgo
     attributes:
         nightly: true
         enable-full-crashsymbols: true
@@ -333,9 +409,40 @@ android-api-16-beta/opt:
         custom-build-variant-cfg: api-16-beta
         update-channel: beta
 
+android-api-16-release/opt:
+    description: "Android 4.0 api-16+ Release"
+    use-pgo: android-api-16/pgo
+    attributes:
+        nightly: true
+        enable-full-crashsymbols: true
+        release-type: release
+    shipping-phase: build
+    shipping-product: fennec
+    index:
+        job-name: android-api-16-release-opt
+        type: android-nightly-with-multi-l10n
+    treeherder:
+        platform: android-4-0-armv7-api16-release/opt
+        symbol: N
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+        artifacts:
+            - name: public/build/target.maven.zip
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/target.maven.zip
+              type: file
+    run:
+        actions: [get-secrets, build, multi-l10n]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - taskcluster_nightly.py
+        custom-build-variant-cfg: api-16-release
+        update-channel: release
+
 android-api-16-beta-test/opt:
     description: "Android 4.0 api-16+ Beta"
-    use-pgo: android-api-16-beta/pgo
+    use-pgo: android-api-16/pgo
     attributes:
         enable-full-crashsymbols: true
         release-type: beta
@@ -355,6 +462,29 @@ android-api-16-beta-test/opt:
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16-beta
         update-channel: beta
+
+android-api-16-release-test/opt:
+    description: "Android 4.0 api-16+ Release"
+    use-pgo: android-api-16/pgo
+    attributes:
+        enable-full-crashsymbols: true
+        release-type: release
+    shipping-phase: build
+    shipping-product: fennec
+    index:
+        job-name: android-api-16-release-opt
+    treeherder:
+        platform: android-4-0-armv7-api16-release/opt
+        symbol: B
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: api-16-release
+        update-channel: release
 
 android-aarch64/opt:
     description: "Android 5.0 AArch64 Opt"
@@ -438,6 +568,29 @@ android-aarch64-beta/debug:
     toolchains:
         - linux64-sccache
 
+android-aarch64-release/debug:
+    description: "Android 5.0 AArch64 Release ebug"
+    index:
+        job-name: android-aarch64-release-debug
+    treeherder:
+        platform: android-5-0-aarch64-release/debug
+        symbol: B
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+        artifacts:
+            - name: public/build/target.maven.zip
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/target.maven.zip
+              type: file
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: aarch64-release-debug
+        update-channel: release
+    toolchains:
+        - linux64-sccache
+
 android-aarch64-nightly/opt:
     description: "Android 5.0 AArch64 Nightly"
     use-pgo: android-api-16/pgo
@@ -467,7 +620,7 @@ android-aarch64-nightly/opt:
 
 android-aarch64-beta/opt:
     description: "Android 5.0 AArch64 Beta"
-    use-pgo: android-api-16-beta/pgo
+    use-pgo: android-api-16/pgo
     attributes:
         nightly: true
         enable-full-crashsymbols: true
@@ -495,6 +648,37 @@ android-aarch64-beta/opt:
             - taskcluster_nightly.py
         custom-build-variant-cfg: aarch64-beta
         update-channel: beta
+
+android-aarch64-release/opt:
+    description: "Android 5.0 AArch64 Release"
+    use-pgo: android-api-16/pgo
+    attributes:
+        nightly: true
+        enable-full-crashsymbols: true
+        release-type: release
+    shipping-phase: build
+    shipping-product: fennec
+    index:
+        job-name: android-aarch64-release-opt
+        type: android-nightly
+    treeherder:
+        platform: android-5-0-aarch64-release/opt
+        symbol: N
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+        artifacts:
+            - name: public/build/target.maven.zip
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/target.maven.zip
+              type: file
+    run:
+        actions: [get-secrets, build, multi-l10n]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - taskcluster_nightly.py
+        custom-build-variant-cfg: aarch64-release
+        update-channel: release
 
 android-x86_64/opt:
     description: "Android 5.0 x86-64 Opt"
@@ -572,6 +756,36 @@ android-x86_64-beta/opt:
         custom-build-variant-cfg: x86_64-beta
         update-channel: beta
 
+android-x86_64-release/opt:
+    description: "Android 5.0 x86-64 Release"
+    attributes:
+        nightly: true
+        enable-full-crashsymbols: true
+        release-type: release
+    shipping-phase: build
+    shipping-product: fennec
+    index:
+        job-name: android-x86_64-release-opt
+        type: android-nightly
+    treeherder:
+        platform: android-5-0-x86_64-release/opt
+        symbol: N
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+        artifacts:
+            - name: public/build/target.maven.zip
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/target.maven.zip
+              type: file
+    run:
+        actions: [get-secrets, build, multi-l10n]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - taskcluster_nightly.py
+        custom-build-variant-cfg: x86_64-release
+        update-channel: release
+
 android-x86_64-beta-test/opt:
     description: "Android 5.0 x86-64 Beta"
     attributes:
@@ -593,6 +807,28 @@ android-x86_64-beta-test/opt:
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86_64-beta
         update-channel: beta
+
+android-x86_64-release-test/opt:
+    description: "Android 5.0 x86-64 release"
+    attributes:
+        enable-full-crashsymbols: true
+        release-type: release
+    shipping-phase: build
+    shipping-product: fennec
+    index:
+        job-name: android-x86_64-release-opt
+    treeherder:
+        platform: android-5-0-x86_64-release/opt
+        symbol: B
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: x86_64-release
+        update-channel: release
 
 android-x86_64/debug:
     description: "Android 5.0 x86-64 Debug"
@@ -634,5 +870,28 @@ android-x86_64-beta/debug:
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86_64-beta-debug
         update-channel: beta
+    toolchains:
+        - linux64-sccache
+
+android-x86_64-release/debug:
+    description: "Android 5.0 x86-64 Release Debug"
+    index:
+        job-name: android-x86_64-release-debug
+    treeherder:
+        platform: android-5-0-x86_64-release/debug
+        symbol: B
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+        artifacts:
+            - name: public/build/target.maven.zip
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/target.maven.zip
+              type: file
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: x86_64-release-debug
+        update-channel: release
     toolchains:
         - linux64-sccache

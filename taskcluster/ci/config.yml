@@ -157,6 +157,9 @@ release-promotion:
         promote_fennec_beta:
             product: fennec
             target-tasks-method: promote_fennec_beta
+        promote_fennec_release:
+            product: fennec
+            target-tasks-method: promote_fennec_release
         promote_firefox:
             product: firefox
             target-tasks-method: promote_desktop
@@ -193,11 +196,13 @@ release-promotion:
             product: fennec
             target-tasks-method: ship_fennec_beta
             version-bump: true
-        # TODO Modify this entry once `ship_fennec_release` is created
-        ship_fennec_rc:
+        ship_fennec_release:
+            product: fennec
+            target-tasks-method: ship_fennec_release
+        ship_fennec_release_rc:
             product: fennec
             is-rc: true
-            target-tasks-method: ship_fennec
+            target-tasks-method: ship_fennec_release
         ship_firefox:
             product: firefox
             target-tasks-method: ship_desktop

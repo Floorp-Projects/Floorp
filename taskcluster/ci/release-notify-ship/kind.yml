@@ -46,6 +46,13 @@ jobs:
             message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
         attributes:
             release-type: beta
+    fennec-release:
+        shipping-product: fennec
+        notifications:
+            subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
+            message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
+        attributes:
+            release-type: release
     firefox:
         shipping-product: firefox
         notifications:

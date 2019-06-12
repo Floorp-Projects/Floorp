@@ -1,0 +1,19 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+# Android
+ac_add_options --with-android-min-sdk=21
+ac_add_options --target=aarch64-linux-android
+
+ac_add_options --with-branding=mobile/android/branding/official
+ac_add_options --with-version-file-path=mobile/android/config/version-files/release
+
+export AR="$topsrcdir/clang/bin/llvm-ar"
+export NM="$topsrcdir/clang/bin/llvm-nm"
+export RANLIB="$topsrcdir/clang/bin/llvm-ranlib"
+
+export MOZ_LTO=1
+
+export MOZILLA_OFFICIAL=1
+export MOZ_ANDROID_POCKET=1
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

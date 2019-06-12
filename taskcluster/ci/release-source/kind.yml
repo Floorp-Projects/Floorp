@@ -53,10 +53,18 @@ jobs:
     fennec-beta-source/opt:
         description: "Fennec source builder"
         treeherder:
-            platform: fennec-release/opt
+            platform: fennec-beta/opt
         shipping-product: fennec
         attributes:
             release-type: beta
+
+    fennec-release-source/opt:
+        description: "Fennec source builder"
+        treeherder:
+            platform: fennec-release/opt
+        shipping-product: fennec
+        attributes:
+            release-type: release
 
     devedition-source/opt:
         description: "Devedition source builder"

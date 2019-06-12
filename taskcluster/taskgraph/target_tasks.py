@@ -400,37 +400,24 @@ def target_tasks_ship_desktop(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-@_target_task('promote_fennec_beta')
-def target_tasks_promote_fennec(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required for a candidates build of fennec. The
-    nightly build process involves a pipeline of builds, signing,
-    and, eventually, uploading the tasks to balrog."""
-
-    def filter(task):
+def _get_filter_promote_fennec(fennec_release_type):
+    def filter_(task):
         attr = task.attributes.get
         # Don't ship single locale fennec anymore - Bug 1408083
         if attr("locale") or attr("chunk_locales"):
             return False
 
-        if task.attributes.get('shipping_product') == 'fennec' and \
-                task.attributes.get('shipping_phase') == 'promote' and \
-                task.attributes.get('release-type') != 'nightly':
-            return True
-        return False
+        return attr('shipping_product') == 'fennec' and \
+            attr('shipping_phase') == 'promote' and \
+            attr('release-type') in (None, fennec_release_type)
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(full_task_graph[l])]
+    return filter_
 
 
-@_target_task('ship_fennec_beta')
-def target_tasks_ship_fennec(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required to ship fennec.
-    Previous build deps will be optimized out via action task."""
+def _get_filter_ship_fennec(fennec_release_type, filtered_for_candidates, parameters):
     is_rc = (parameters.get('release_type') == 'release-rc')
-    filtered_for_candidates = target_tasks_promote_fennec(
-        full_task_graph, parameters, graph_config,
-    )
 
-    def filter(task):
+    def filter_(task):
         # XXX Starting 68, Geckoview is shipped in a separate target_tasks
         if task.kind == 'beetmover-geckoview':
             return False
@@ -438,20 +425,64 @@ def target_tasks_ship_fennec(full_task_graph, parameters, graph_config):
         # Include candidates build tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
-        if task.attributes.get('shipping_product') != 'fennec' or \
-                task.attributes.get('shipping_phase') not in ('ship', 'push') or \
-                task.attributes.get('release-type') == 'nightly':
-            return False
 
         # secondary-notify-ship is only for RC
-        if task.kind in (
-            'release-secondary-notify-ship',
-        ):
+        if task.kind == 'release-secondary-notify-ship':
             return is_rc
 
-        # Everything else is only for non-RC
-        return not is_rc
+        attr = task.attributes.get
+        return attr('shipping_product') == 'fennec' and \
+            attr('shipping_phase') in ('ship', 'push') and \
+            attr('release-type') in (None, fennec_release_type)
 
+    return filter_
+
+
+@_target_task('promote_fennec_beta')
+def target_tasks_promote_fennec_beta(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a candidates build of fennec. The
+    beta build process involves a pipeline of builds, signing,
+    and, eventually, uploading the tasks to balrog."""
+
+    filter = _get_filter_promote_fennec(fennec_release_type='beta')
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(full_task_graph[l])]
+
+
+@_target_task('promote_fennec_release')
+def target_tasks_promote_fennec_release(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a candidates build of fennec. The
+    release build process involves a pipeline of builds, signing,
+    and, eventually, uploading the tasks to balrog."""
+
+    filter = _get_filter_promote_fennec(fennec_release_type='release')
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(full_task_graph[l])]
+
+
+@_target_task('ship_fennec_beta')
+def target_tasks_ship_fennec_beta(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to ship fennec.
+    Previous build deps will be optimized out via action task."""
+    filter = _get_filter_ship_fennec(
+        fennec_release_type='beta',
+        filtered_for_candidates=target_tasks_promote_fennec_beta(
+            full_task_graph, parameters, graph_config,
+        ),
+        parameters=parameters,
+    )
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(full_task_graph[l])]
+
+
+@_target_task('ship_fennec_release')
+def target_tasks_ship_fennec_release(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to ship fennec.
+    Previous build deps will be optimized out via action task."""
+    filter = _get_filter_ship_fennec(
+        fennec_release_type='release',
+        filtered_for_candidates=target_tasks_promote_fennec_release(
+            full_task_graph, parameters, graph_config,
+        ),
+        parameters=parameters,
+    )
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(full_task_graph[l])]
 
 
