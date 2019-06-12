@@ -380,7 +380,7 @@ fails-if(Android) != 301726-2.html 301726-2-ref.html
 == 315920-4.html 315920-4-ref.html
 fuzzy-if(skiaContent,0-1,0-1468) == 315920-5.html 315920-5-ref.html
 == 315920-6.html 315920-6-ref.html
-fuzzy-if(Android&&isDebugBuild,0-229,0-45) == 315920-7a.html 315920-7-ref.html # bug 1342240
+fuzzy-if(Android&&isDebugBuild,0-229,0-45) fuzzy-if(geckoview,0-1,0-14) == 315920-7a.html 315920-7-ref.html # bug 1342240
 fuzzy-if(Android&&isDebugBuild,0-229,0-45) == 315920-7b.html 315920-7-ref.html # bug 1342240
 fuzzy-if(Android&&isDebugBuild,0-229,0-45) == 315920-7c.html 315920-7-ref.html # bug 1342240
 fuzzy-if(Android&&isDebugBuild,0-229,0-45) == 315920-8a.html 315920-8-ref.html # bug 1342240
