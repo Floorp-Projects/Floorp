@@ -90,15 +90,19 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     private val singleSessionObserver = object : Session.Observer {
         override fun onTitleChanged(session: Session, title: String) {
             super.onTitleChanged(session, title)
-            emitSessionChanges()
+            if (deleteAllSessionsJob != null) return
+            emitSessionChanges(pendingSessionDeletion?.sessionId)
         }
     }
+
     private lateinit var sessionObserver: BrowserSessionsObserver
 
     private var homeMenu: HomeMenu? = null
 
     var deleteAllSessionsJob: (suspend () -> Unit)? = null
-    var deleteSessionJob: (suspend () -> Unit)? = null
+    private var pendingSessionDeletion: PendingSessionDeletion? = null
+
+    data class PendingSessionDeletion(val deletionJob: (suspend () -> Unit), val sessionId: String)
 
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var sessionControlComponent: SessionControlComponent
@@ -340,12 +344,12 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 nav(R.id.homeFragment, directions, extras)
             }
             is TabAction.Close -> {
-                if (deleteSessionJob == null) removeTabWithUndo(action.sessionId) else {
-                    deleteSessionJob?.let {
+                if (pendingSessionDeletion?.deletionJob == null) removeTabWithUndo(action.sessionId) else {
+                    pendingSessionDeletion?.deletionJob?.let {
                         launch {
                             it.invoke()
                         }.invokeOnCompletion {
-                            deleteSessionJob = null
+                            pendingSessionDeletion = null
                             removeTabWithUndo(action.sessionId)
                         }
                     }
@@ -384,11 +388,11 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     private fun invokePendingDeleteJobs() {
-        deleteSessionJob?.let {
+        pendingSessionDeletion?.deletionJob?.let {
             launch {
                 it.invoke()
             }.invokeOnCompletion {
-                deleteSessionJob = null
+                pendingSessionDeletion = null
             }
         }
 
@@ -555,7 +559,8 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         deleteAllSessionsJob = deleteOperation
 
         allowUndo(
-            view!!, getString(R.string.snackbar_tabs_deleted),
+            view!!,
+            getString(R.string.snackbar_tabs_deleted),
             getString(R.string.snackbar_deleted_undo), {
                 deleteAllSessionsJob = null
                 emitSessionChanges()
@@ -568,52 +573,44 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         val sessionManager = requireComponents.core.sessionManager
 
         // Update the UI with the tab removed, but don't remove it from storage yet
-        getManagedEmitter<SessionControlChange>().onNext(
-
-            SessionControlChange.TabsChange(
-                sessionManager.sessions
-                    .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
-                    .filter { it.id != sessionId }
-                    .map {
-                        val selected = it == sessionManager.selectedSession
-                        it.toTab(context!!, selected)
-                    }
-            )
-        )
+        emitSessionChanges(sessionId)
 
         val deleteOperation: (suspend () -> Unit) = {
             sessionManager.findSessionById(sessionId)
                 ?.let { session ->
+                    pendingSessionDeletion = null
                     sessionManager.remove(session)
                 }
         }
 
-        deleteSessionJob = deleteOperation
+        pendingSessionDeletion = PendingSessionDeletion(deleteOperation, sessionId)
 
         allowUndo(
-            view!!, getString(R.string.snackbar_tab_deleted),
+            view!!,
+            getString(R.string.snackbar_tab_deleted),
             getString(R.string.snackbar_deleted_undo), {
-                deleteSessionJob = null
+                pendingSessionDeletion = null
                 emitSessionChanges()
             },
             operation = deleteOperation
         )
     }
 
-    private fun emitSessionChanges() {
+    private fun emitSessionChanges(pendingDeletionSessionId: String? = null) {
         val sessionManager = context?.components?.core?.sessionManager ?: return
 
         getManagedEmitter<SessionControlChange>().onNext(
             SessionControlChange.TabsChange(
-                getListOfTabs(sessionManager)
+                getListOfTabs(sessionManager, pendingDeletionSessionId)
             )
         )
     }
 
-    private fun getListOfTabs(sessionManager: SessionManager): List<Tab> {
+    private fun getListOfTabs(sessionManager: SessionManager, pendingDeletionSessionId: String? = null): List<Tab> {
         val context = context ?: return listOf()
         return sessionManager.sessions
             .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
+            .filter { pendingDeletionSessionId != it.id }
             .map {
                 val selected = it == sessionManager.selectedSession
                 it.toTab(context, selected)
