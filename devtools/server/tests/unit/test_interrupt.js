@@ -5,7 +5,9 @@
 "use strict";
 
 add_task(threadClientTest(async ({ threadClient, debuggee, client, targetFront }) => {
+  const onPaused = waitForEvent(threadClient, "paused");
   await threadClient.interrupt();
+  await onPaused;
   Assert.equal(threadClient.paused, true);
   await threadClient.resume();
   Assert.equal(threadClient.paused, false);

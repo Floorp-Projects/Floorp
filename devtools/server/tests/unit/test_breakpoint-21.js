@@ -30,7 +30,6 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
 
   await resume(threadClient);
   packet = await waitForPause(threadClient);
-  Assert.equal(packet.type, "paused");
   Assert.equal(packet.why.type, "breakpoint");
   Assert.equal(packet.frame.where.actor, source.actor);
   Assert.equal(packet.frame.where.line, location.line);

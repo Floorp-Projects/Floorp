@@ -17,21 +17,18 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   equal(debuggee.b, undefined);
 
   const step1 = await stepIn(threadClient);
-  equal(step1.type, "paused");
   equal(step1.why.type, "resumeLimit");
   equal(step1.frame.where.line, 3);
   equal(debuggee.a, undefined);
   equal(debuggee.b, undefined);
 
   const step3 = await stepIn(threadClient);
-  equal(step3.type, "paused");
   equal(step3.why.type, "resumeLimit");
   equal(step3.frame.where.line, 4);
   equal(debuggee.a, 1);
   equal(debuggee.b, undefined);
 
   const step4 = await stepIn(threadClient);
-  equal(step4.type, "paused");
   equal(step4.why.type, "resumeLimit");
   equal(step4.frame.where.line, 4);
   equal(debuggee.a, 1);

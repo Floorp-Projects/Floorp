@@ -11,8 +11,6 @@ add_task(threadClientTest(async ({ threadClient, debuggee, targetFront }) => {
   await new Promise(resolve => {
     threadClient.on("paused", function(packet) {
       Assert.equal(false, "error" in packet);
-      Assert.equal(packet.from, threadClient.actor);
-      Assert.equal(packet.type, "paused");
       Assert.ok("actor" in packet);
       Assert.ok("why" in packet);
       Assert.equal(packet.why.type, "debuggerStatement");

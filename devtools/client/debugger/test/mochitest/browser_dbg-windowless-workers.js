@@ -121,7 +121,7 @@ add_task(async function() {
   assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
 
   info("View the second paused thread");
-  dbg.actions.selectThread(getContext(dbg), thread2);
+  await dbg.actions.selectThread(getContext(dbg), thread2);
   threadIsSelected(dbg, 3);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
@@ -129,6 +129,6 @@ add_task(async function() {
   info("StepOver in second worker and not the first");
   await stepOver(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 11);
-  dbg.actions.selectThread(getContext(dbg), thread1);
+  await dbg.actions.selectThread(getContext(dbg), thread1);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
 });

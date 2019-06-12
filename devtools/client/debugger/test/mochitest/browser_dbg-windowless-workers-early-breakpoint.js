@@ -15,6 +15,7 @@ add_task(async function() {
   dbg.client.waitForWorkers(true);
 
   await selectSource(dbg, "simple-worker.js");
+  await waitForSelectedSource(dbg, "simple-worker.js");
   await addBreakpoint(dbg, workerSource, 1);
   invokeInTab("startWorker");
   await waitForPaused(dbg, "simple-worker.js");

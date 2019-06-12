@@ -80,6 +80,7 @@ function test_black_box_exception() {
 
       Assert.equal(source.url, SOURCE_URL,
                    "We shouldn't pause while in the black boxed source.");
+      await gThreadClient.resume();
       finishClient(gClient);
     });
 

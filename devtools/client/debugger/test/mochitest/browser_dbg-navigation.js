@@ -48,6 +48,8 @@ add_task(async function() {
 
   // Test that the current select source persists across reloads
   await selectSource(dbg, "long.js");
+  await waitForRequestsToSettle(dbg);
+
   await reload(dbg, "long.js");
   await waitForSelectedSource(dbg, "long.js");
 

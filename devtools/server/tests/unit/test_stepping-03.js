@@ -13,7 +13,6 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   await executeOnNextTickAndWaitForPause(() => evaluateTestCode(debuggee), threadClient);
 
   const step1 = await stepOut(threadClient);
-  equal(step1.type, "paused");
   equal(step1.frame.where.line, 8);
   equal(step1.why.type, "resumeLimit");
 
