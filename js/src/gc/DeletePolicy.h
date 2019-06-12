@@ -37,14 +37,6 @@ struct ClearEdgesTracer final : public JS::CallbackTracer {
   void onChild(const JS::GCCellPtr& thing) override;
 };
 
-#ifdef DEBUG
-inline bool IsClearEdgesTracer(JSTracer* trc) {
-  return trc->isCallbackTracer() &&
-         trc->asCallbackTracer()->getTracerKind() ==
-             JS::CallbackTracer::TracerKind::ClearEdges;
-}
-#endif
-
 }  // namespace gc
 
 /*
