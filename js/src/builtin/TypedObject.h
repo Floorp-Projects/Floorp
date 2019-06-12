@@ -184,17 +184,18 @@ class TypeDescr : public NativeObject {
   // InlineTypedObject, and (b) the descriptor contains at least one
   // reference. Otherwise its value is undefined.
   //
-  // The list is three consecutive arrays of int32_t offsets, with each array
-  // terminated by -1. The arrays store offsets of string, object/anyref, and
-  // value references in the descriptor, in that order.
+  // The list is three consecutive arrays of uint32_t offsets, preceded by a
+  // header consisting of the length of each array. The arrays store offsets of
+  // string, object/anyref, and value references in the descriptor, in that
+  // order.
   // TODO/AnyRef-boxing: once anyref has a more complicated structure, we must
   // revisit this.
   MOZ_MUST_USE bool hasTraceList() const {
     return !getFixedSlot(JS_DESCR_SLOT_TRACE_LIST).isUndefined();
   }
-  const int32_t* traceList() const {
+  const uint32_t* traceList() const {
     MOZ_ASSERT(hasTraceList());
-    return reinterpret_cast<int32_t*>(
+    return reinterpret_cast<uint32_t*>(
         getFixedSlot(JS_DESCR_SLOT_TRACE_LIST).toPrivate());
   }
 
