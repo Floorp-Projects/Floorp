@@ -1431,9 +1431,6 @@ Function preSummary
     ; Check if Firefox is the http handler for this user.
     SetShellVarContext current ; Set SHCTX to the current user
     ${IsHandlerForInstallDir} "http" $R9
-    ${If} $TmpVal == "HKLM"
-      SetShellVarContext all ; Set SHCTX to all users
-    ${EndIf}
     ; If Firefox isn't the http handler for this user show the option to set
     ; Firefox as the default browser.
     ${If} "$R9" != "true"
