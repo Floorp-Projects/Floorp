@@ -4978,7 +4978,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_placeholder: true,
     initial_values: [ "normal" ],
-    other_values: [ "pre", "nowrap", "pre-wrap", "pre-line", "-moz-pre-space" ],
+    other_values: [ "pre", "nowrap", "pre-wrap", "pre-line", "-moz-pre-space", "break-spaces" ],
     invalid_values: []
   },
   "width": {
