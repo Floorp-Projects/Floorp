@@ -42,12 +42,12 @@ var onSpellCheck =
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async function() {
-  /* global browserElement */
+  /* global actorParent */
   /* eslint-env mozilla/frame-script */
   script = SpecialPowers.loadChromeScript(function() {
-    var chromeWin = browserElement.ownerGlobal.docShell
-                    .rootTreeItem.domWindow
-                    .QueryInterface(Ci.nsIDOMChromeWindow);
+    var chromeWin = actorParent.rootFrameLoader
+                    .ownerElement.ownerGlobal.docShell
+                    .rootTreeItem.domWindow;
     var contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
     contextMenu.addEventListener("popupshown",
                                  () => sendAsyncMessage("popupshown"));
