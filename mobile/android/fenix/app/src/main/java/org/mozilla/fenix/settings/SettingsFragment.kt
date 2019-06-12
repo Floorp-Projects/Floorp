@@ -87,7 +87,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
 
-        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.LOLLIPOP) {
+        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.M) {
             findPreference<DefaultBrowserPreference>(getString(R.string.pref_key_make_default_browser))?.apply {
                 isVisible = false
             }
