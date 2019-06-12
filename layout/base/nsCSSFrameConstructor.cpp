@@ -1932,8 +1932,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
 
   if (!mRootElementFrame) {
     // The frame we're constructing will be the root element frame.
-    // Set mRootElementFrame before processing children.
-    mRootElementFrame = newFrame;
+    SetRootElementFrameAndConstructCanvasAnonContent(newFrame, aState,
+                                                     aFrameList);
   }
 
   nsFrameList childList;
@@ -2185,6 +2185,25 @@ static inline bool NeedFrameFor(const nsFrameConstructorState& aState,
  * END TABLE SECTION
  ***********************************************/
 
+void nsCSSFrameConstructor::SetRootElementFrameAndConstructCanvasAnonContent(
+    nsContainerFrame* aRootElementFrame, nsFrameConstructorState& aState,
+    nsFrameList& aFrameList) {
+  MOZ_DIAGNOSTIC_ASSERT(!mRootElementFrame);
+  mRootElementFrame = aRootElementFrame;
+  if (mDocElementContainingBlock->IsCanvasFrame()) {
+    // NOTE(emilio): This is in the reverse order compared to normal anonymous
+    // children. We usually generate anonymous kids first, then non-anonymous,
+    // but we generate the doc element frame the other way around. This is fine
+    // either way, but generating anonymous children in a different order
+    // requires changing nsCanvasFrame (and a whole lot of other potentially
+    // unknown code) to look at the last child to find the root frame rather
+    // than the first child.
+    ConstructAnonymousContentForCanvas(aState, mDocElementContainingBlock,
+                                       aRootElementFrame->GetContent(),
+                                       aFrameList);
+  }
+}
+
 nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     Element* aDocElement, nsILayoutHistoryState* aFrameState) {
   MOZ_ASSERT(GetRootFrame(),
@@ -2294,14 +2313,18 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   // by the style system, so we can assume that display->mDisplay is
   // either NONE, BLOCK, or TABLE.
 
-  // contentFrame is the primary frame for the root element. newFrame
-  // is the frame that will be the child of the initial containing block.
-  // These are usually the same frame but they can be different, in
-  // particular if the root frame is positioned, in which case
-  // contentFrame is the out-of-flow frame and newFrame is the
+  // contentFrame is the primary frame for the root element. frameList contains
+  // the children of the initial containing block.
+  //
+  // The first of those frames is usually `contentFrame`, but it can be
+  // different, in particular if the root frame is positioned, in which case
+  // contentFrame is the out-of-flow frame and frameList.FirstChild() is the
   // placeholder.
+  //
+  // The rest of the frames in frameList are the anonymous content of the canvas
+  // frame.
   nsContainerFrame* contentFrame;
-  nsIFrame* newFrame;
+  nsFrameList frameList;
   bool processChildren = false;
 
   nsFrameConstructorSaveState absoluteSaveState;
@@ -2312,7 +2335,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     contentFrame = NS_NewDocElementBoxFrame(mPresShell, computedStyle);
     InitAndRestoreFrame(state, aDocElement, mDocElementContainingBlock,
                         contentFrame);
-    newFrame = contentFrame;
+    frameList = {contentFrame, contentFrame};
     processChildren = true;
   } else
 #endif
@@ -2332,38 +2355,26 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     AutoFrameConstructionItem item(this, &rootSVGData, aDocElement, nullptr,
                                    do_AddRef(computedStyle), true);
 
-    nsFrameList frameList;
     contentFrame = static_cast<nsContainerFrame*>(
         ConstructOuterSVG(state, item, mDocElementContainingBlock,
                           computedStyle->StyleDisplay(), frameList));
-    newFrame = frameList.FirstChild();
-    NS_ASSERTION(frameList.OnlyChild(), "multiple root element frames");
   } else if (display->mDisplay == StyleDisplay::Flex ||
              display->mDisplay == StyleDisplay::WebkitBox ||
+             display->mDisplay == StyleDisplay::Grid ||
              (StaticPrefs::layout_css_emulate_moz_box_with_flex() &&
               display->mDisplay == StyleDisplay::MozBox)) {
-    contentFrame = NS_NewFlexContainerFrame(mPresShell, computedStyle);
+    auto func = display->mDisplay == StyleDisplay::Grid
+                    ? NS_NewGridContainerFrame
+                    : NS_NewFlexContainerFrame;
+    contentFrame = func(mPresShell, computedStyle);
     InitAndRestoreFrame(state, aDocElement, mDocElementContainingBlock,
                         contentFrame);
-    newFrame = contentFrame;
+    frameList = {contentFrame, contentFrame};
     processChildren = true;
 
-    newFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-    if (display->IsAbsPosContainingBlock(newFrame)) {
-      state.PushAbsoluteContainingBlock(contentFrame, newFrame,
-                                        absoluteSaveState);
-    }
-
-  } else if (display->mDisplay == StyleDisplay::Grid) {
-    contentFrame = NS_NewGridContainerFrame(mPresShell, computedStyle);
-    InitAndRestoreFrame(state, aDocElement, mDocElementContainingBlock,
-                        contentFrame);
-    newFrame = contentFrame;
-    processChildren = true;
-
-    newFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-    if (display->IsAbsPosContainingBlock(newFrame)) {
-      state.PushAbsoluteContainingBlock(contentFrame, newFrame,
+    contentFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+    if (display->IsAbsPosContainingBlock(contentFrame)) {
+      state.PushAbsoluteContainingBlock(contentFrame, contentFrame,
                                         absoluteSaveState);
     }
   } else if (display->mDisplay == StyleDisplay::Table) {
@@ -2379,19 +2390,15 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     AutoFrameConstructionItem item(this, &rootTableData, aDocElement, nullptr,
                                    do_AddRef(computedStyle), true);
 
-    nsFrameList frameList;
     // if the document is a table then just populate it.
     contentFrame = static_cast<nsContainerFrame*>(
         ConstructTable(state, item, mDocElementContainingBlock,
                        computedStyle->StyleDisplay(), frameList));
-    newFrame = frameList.FirstChild();
-    NS_ASSERTION(frameList.OnlyChild(), "multiple root element frames");
   } else {
     MOZ_ASSERT(display->mDisplay == StyleDisplay::Block ||
                    display->mDisplay == StyleDisplay::FlowRoot,
                "Unhandled display type for root element");
     contentFrame = NS_NewBlockFormattingContext(mPresShell, computedStyle);
-    nsFrameList frameList;
     // Use a null PendingBinding, since our binding is not in fact pending.
     ConstructBlock(
         state, aDocElement,
@@ -2399,17 +2406,19 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
         mDocElementContainingBlock, computedStyle, &contentFrame, frameList,
         display->IsAbsPosContainingBlock(contentFrame) ? contentFrame : nullptr,
         nullptr);
-    newFrame = frameList.FirstChild();
-    NS_ASSERTION(frameList.OnlyChild(), "multiple root element frames");
   }
 
-  MOZ_ASSERT(newFrame);
+  MOZ_ASSERT(frameList.FirstChild());
+  MOZ_ASSERT(frameList.FirstChild()->GetContent() == aDocElement);
   MOZ_ASSERT(contentFrame);
 
-  NS_ASSERTION(
+  MOZ_ASSERT(
       processChildren ? !mRootElementFrame : mRootElementFrame == contentFrame,
       "unexpected mRootElementFrame");
-  mRootElementFrame = contentFrame;
+  if (processChildren) {
+    SetRootElementFrameAndConstructCanvasAnonContent(contentFrame, state,
+                                                     frameList);
+  }
 
   // Figure out which frame has the main style for the document element,
   // assigning it to mRootElementStyleFrame.
@@ -2436,16 +2445,10 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     contentFrame->SetInitialChildList(kPrincipalList, childList);
   }
 
+  nsIFrame* newFrame = frameList.FirstChild();
   // set the primary frame
   aDocElement->SetPrimaryFrame(contentFrame);
-
-  SetInitialSingleChild(mDocElementContainingBlock, newFrame);
-
-  // Create frames for anonymous contents if there is a canvas frame.
-  if (mDocElementContainingBlock->IsCanvasFrame()) {
-    ConstructAnonymousContentForCanvas(state, mDocElementContainingBlock,
-                                       aDocElement);
-  }
+  mDocElementContainingBlock->AppendFrames(kPrincipalList, frameList);
 
   MOZ_ASSERT(!state.mHavePendingPopupgroup,
              "Should have proccessed pending popup group by now");
@@ -2693,9 +2696,10 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
 }
 
 void nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(
-    nsFrameConstructorState& aState, nsIFrame* aFrame,
-    nsIContent* aDocElement) {
+    nsFrameConstructorState& aState, nsIFrame* aFrame, nsIContent* aDocElement,
+    nsFrameList& aFrameList) {
   NS_ASSERTION(aFrame->IsCanvasFrame(), "aFrame should be canvas frame!");
+  MOZ_ASSERT(mRootElementFrame->GetContent() == aDocElement);
 
   AutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> anonymousItems;
   GetAnonymousContent(aDocElement, aFrame, anonymousItems);
@@ -2708,10 +2712,9 @@ void nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(
   AddFCItemsForAnonymousContent(aState, frameAsContainer, anonymousItems,
                                 itemsToConstruct);
 
-  nsFrameList frameList;
   ConstructFramesFromItemList(aState, itemsToConstruct, frameAsContainer,
-                              /* aParentIsWrapperAnonBox = */ false, frameList);
-  frameAsContainer->AppendFrames(kPrincipalList, frameList);
+                              /* aParentIsWrapperAnonBox = */ false,
+                              aFrameList);
 }
 
 nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
@@ -4795,8 +4798,8 @@ nsContainerFrame* nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
 
   if (!mRootElementFrame && aCandidateRootFrame) {
     // The frame we're constructing will be the root element frame.
-    // Set mRootElementFrame before processing children.
-    mRootElementFrame = newFrame;
+    SetRootElementFrameAndConstructCanvasAnonContent(newFrame, aState,
+                                                     aFrameList);
   }
 
   nsFrameList childList;
@@ -10578,8 +10581,8 @@ void nsCSSFrameConstructor::ConstructBlock(
                   aContentParentFrame ? aContentParentFrame : aParentFrame);
   if (!mRootElementFrame) {
     // The frame we're constructing will be the root element frame.
-    // Set mRootElementFrame before processing children.
-    mRootElementFrame = *aNewFrame;
+    SetRootElementFrameAndConstructCanvasAnonContent(*aNewFrame, aState,
+                                                     aFrameList);
   }
 
   // We should make the outer frame be the absolute containing block,
