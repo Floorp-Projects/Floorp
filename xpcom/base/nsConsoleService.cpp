@@ -361,43 +361,23 @@ nsConsoleService::LogStringMessage(const char16_t* aMessage) {
 }
 
 NS_IMETHODIMP
-nsConsoleService::GetMessageArray(uint32_t* aCount,
-                                  nsIConsoleMessage*** aMessages) {
+nsConsoleService::GetMessageArray(
+    nsTArray<RefPtr<nsIConsoleMessage>>& aMessages) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   MutexAutoLock lock(mLock);
 
   if (mMessages.isEmpty()) {
-    /*
-     * Make a 1-length output array so that nobody gets confused,
-     * and return a count of 0.  This should result in a 0-length
-     * array object when called from script.
-     */
-    nsIConsoleMessage** messageArray =
-        (nsIConsoleMessage**)moz_xmalloc(sizeof(nsIConsoleMessage*));
-    *messageArray = nullptr;
-    *aMessages = messageArray;
-    *aCount = 0;
-
     return NS_OK;
   }
 
   MOZ_ASSERT(mCurrentSize <= mMaximumSize);
-  nsIConsoleMessage** messageArray = static_cast<nsIConsoleMessage**>(
-      moz_xmalloc(sizeof(nsIConsoleMessage*) * mCurrentSize));
+  aMessages.SetCapacity(mCurrentSize);
 
-  uint32_t i = 0;
   for (MessageElement* e = mMessages.getFirst(); e != nullptr;
        e = e->getNext()) {
-    nsCOMPtr<nsIConsoleMessage> m = e->Get();
-    m.forget(&messageArray[i]);
-    i++;
+    aMessages.AppendElement(e->Get());
   }
-
-  MOZ_ASSERT(i == mCurrentSize);
-
-  *aCount = i;
-  *aMessages = messageArray;
 
   return NS_OK;
 }

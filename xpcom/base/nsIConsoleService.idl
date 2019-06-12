@@ -19,13 +19,9 @@ interface nsIConsoleService : nsISupports
     void logStringMessage(in wstring message);
 
     /**
-     * Get an array of all the messages logged so far.  If no messages
-     * are logged, this function will return a count of 0, but still
-     * will allocate one word for messages, so as to show up as a
-     * 0-length array when called from script.
+     * Get an array of all the messages logged so far.
      */
-    void getMessageArray([optional] out uint32_t count,
-                         [retval, array, size_is(count)] out nsIConsoleMessage messages);
+    Array<nsIConsoleMessage> getMessageArray();
 
     /**
      * To guard against stack overflows from listeners that could log
