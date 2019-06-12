@@ -99,21 +99,16 @@ enum PtrInfoTag {
 
   // The pointer is within a live allocation.
   // 'addr', 'size', and 'arenaId' describe the allocation.
-  TagLiveSmall,
-  TagLiveLarge,
-  TagLiveHuge,
+  TagLiveAlloc,
 
   // The pointer is within a small freed allocation.
   // 'addr', 'size', and 'arenaId' describe the allocation.
-  TagFreedSmall,
+  TagFreedAlloc,
 
   // The pointer is within a freed page. Details about the original
   // allocation, including its size, are not available.
   // 'addr', 'size', and 'arenaId' describe the page.
-  TagFreedPageDirty,
-  TagFreedPageDecommitted,
-  TagFreedPageMadvised,
-  TagFreedPageZeroed,
+  TagFreedPage,
 };
 
 // The information in jemalloc_ptr_info_t could be represented in a variety of
@@ -147,20 +142,15 @@ typedef struct jemalloc_ptr_info_s {
 } jemalloc_ptr_info_t;
 
 static inline bool jemalloc_ptr_is_live(jemalloc_ptr_info_t* info) {
-  return info->tag == TagLiveSmall || info->tag == TagLiveLarge ||
-         info->tag == TagLiveHuge;
+  return info->tag == TagLiveAlloc;
 }
 
 static inline bool jemalloc_ptr_is_freed(jemalloc_ptr_info_t* info) {
-  return info->tag == TagFreedSmall || info->tag == TagFreedPageDirty ||
-         info->tag == TagFreedPageDecommitted ||
-         info->tag == TagFreedPageMadvised || info->tag == TagFreedPageZeroed;
+  return info->tag == TagFreedAlloc || info->tag == TagFreedPage;
 }
 
 static inline bool jemalloc_ptr_is_freed_page(jemalloc_ptr_info_t* info) {
-  return info->tag == TagFreedPageDirty ||
-         info->tag == TagFreedPageDecommitted ||
-         info->tag == TagFreedPageMadvised || info->tag == TagFreedPageZeroed;
+  return info->tag == TagFreedPage;
 }
 
 #ifdef __cplusplus
