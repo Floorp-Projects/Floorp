@@ -6,6 +6,7 @@
   display: flex;
 }
 
-input {
+input[type="text"] {
   flex: auto;
+  margin: 0;
 }

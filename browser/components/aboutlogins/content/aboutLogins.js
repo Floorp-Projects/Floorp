@@ -18,8 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   gElements.newLoginButton.addEventListener("click", () => {
-    gElements.loginItem.setLogin({});
-    gElements.loginList.clearSelection();
+    window.dispatchEvent(new CustomEvent("AboutLoginsLoginSelected", {
+      detail: {},
+    }));
 
     recordTelemetryEvent({object: "new_login", method: "new"});
   });

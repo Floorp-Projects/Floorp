@@ -2569,6 +2569,13 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     return NS_OK;
   }
 
+  rv = ProcessCrossOriginResourcePolicyHeader();
+  if (NS_FAILED(rv)) {
+    mStatus = NS_ERROR_DOM_CORP_FAILED;
+    HandleAsyncAbort();
+    return NS_OK;
+  }
+
   rv = NS_OK;
   if (!mCanceled) {
     // notify "http-on-may-change-process" observers
@@ -7538,6 +7545,70 @@ nsresult nsHttpChannel::ProcessCrossOriginHeader() {
   if (documentPolicy != nsILoadInfo::CROSS_ORIGIN_POLICY_NULL &&
       resultPolicy == nsILoadInfo::CROSS_ORIGIN_POLICY_NULL) {
     return NS_ERROR_BLOCKED_BY_POLICY;
+  }
+
+  return NS_OK;
+}
+
+// https://fetch.spec.whatwg.org/#cross-origin-resource-policy-header
+nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
+  if (!StaticPrefs::browser_tabs_remote_useCORP()) {
+    return NS_OK;
+  }
+
+  uint32_t corsMode;
+  MOZ_ALWAYS_SUCCEEDS(GetCorsMode(&corsMode));
+  if (corsMode != nsIHttpChannelInternal::CORS_MODE_NO_CORS) {
+    return NS_OK;
+  }
+
+  // We only apply this for resources.
+  if (mLoadInfo->GetExternalContentPolicyType() ==
+          nsIContentPolicy::TYPE_DOCUMENT ||
+      mLoadInfo->GetExternalContentPolicyType() ==
+          nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(mLoadInfo->LoadingPrincipal(),
+             "Resources should always have a LoadingPrincipal");
+  MOZ_ASSERT(mResponseHead);
+
+  nsAutoCString content;
+  Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Resource_Policy,
+                                     content);
+
+  if (content.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPrincipal> channelOrigin;
+  nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+      this, getter_AddRefs(channelOrigin));
+
+  // Cross-Origin-Resource-Policy = %s"same-origin" / %s"same-site"
+  if (content.EqualsLiteral("same-origin")) {
+    if (!channelOrigin->Equals(mLoadInfo->LoadingPrincipal())) {
+      return NS_ERROR_DOM_CORP_FAILED;
+    }
+    return NS_OK;
+  }
+  if (content.EqualsLiteral("same-site")) {
+    nsAutoCString documentBaseDomain;
+    nsAutoCString resourceBaseDomain;
+    mLoadInfo->LoadingPrincipal()->GetBaseDomain(documentBaseDomain);
+    channelOrigin->GetBaseDomain(resourceBaseDomain);
+    if (documentBaseDomain != resourceBaseDomain) {
+      return NS_ERROR_DOM_CORP_FAILED;
+    }
+
+    nsCOMPtr<nsIURI> documentURI = mLoadInfo->LoadingPrincipal()->GetURI();
+    nsCOMPtr<nsIURI> resourceURI = channelOrigin->GetURI();
+    if (!documentURI->SchemeIs("https") && resourceURI->SchemeIs("https")) {
+      return NS_ERROR_DOM_CORP_FAILED;
+    }
+
+    return NS_OK;
   }
 
   return NS_OK;

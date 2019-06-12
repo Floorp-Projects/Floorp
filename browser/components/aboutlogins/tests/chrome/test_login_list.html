@@ -66,18 +66,20 @@ add_task(async function test_empty_list() {
 
 add_task(async function test_populated_list() {
   gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2]);
-  await asyncElementRendered();
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
-  is(loginListItems.length, 2, "Both logins should be displayed");
-  is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
-  is(loginListItems[0].shadowRoot.querySelector(".origin").textContent, TEST_LOGIN_1.origin,
+  is(loginListItems.length, 3, "A blank login and the two stored logins should be displayed");
+  ok(!loginListItems[0].hasAttribute("guid"), "first login-list-item should be the 'new' item");
+  is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
+  is(loginListItems[1].shadowRoot.querySelector(".origin").textContent, TEST_LOGIN_1.origin,
      "login-list-item origin should match");
-  is(loginListItems[0].shadowRoot.querySelector(".username").textContent, TEST_LOGIN_1.username,
+  is(loginListItems[1].shadowRoot.querySelector(".username").textContent, TEST_LOGIN_1.username,
      "login-list-item username should match");
-
-  ok(!loginListItems[0].classList.contains("selected"), "The first item should not be selected by default");
+  ok(loginListItems[0].classList.contains("selected"), "The first item should be selected by default");
   ok(!loginListItems[1].classList.contains("selected"), "The second item should not be selected by default");
-  loginListItems[0].click();
+  ok(!loginListItems[2].classList.contains("selected"), "The third item should not be selected by default");
+  loginListItems[1].click();
+  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  is(loginListItems.length, 2, "After selecting one, only the two stored logins should be displayed");
   ok(loginListItems[0].classList.contains("selected"), "The first item should be selected");
   ok(!loginListItems[1].classList.contains("selected"), "The second item should still not be selected");
 });
@@ -193,25 +195,34 @@ add_task(async function test_login_added_filtered() {
 });
 
 add_task(async function test_sorted_list() {
+  // Clear the selection so the 'new' login will be in the list too.
+  window.dispatchEvent(new CustomEvent("AboutLoginsLoginSelected", {
+    detail: {},
+  }));
+
   // sort by last used
   gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 1;
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
-  let timeUsed = loginListItems[0]._login.timeLastUsed;
-  let timeUsed2 = loginListItems[1]._login.timeLastUsed;
+  is(loginListItems.length, 4, "The list should contain the 'new' login and the three stored logins");
+  ok(!loginListItems[0]._login.guid, "The 'new' login should always be first (last used)");
+  let timeUsed = loginListItems[1]._login.timeLastUsed;
+  let timeUsed2 = loginListItems[2]._login.timeLastUsed;
   is(timeUsed2 > timeUsed, true, "Last used login should be displayed at top of list");
 
   // sort by name
   gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 0;
   loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
-  let title = loginListItems[0]._login.title;
-  let title2 = loginListItems[1]._login.title;
+  ok(!loginListItems[0]._login.guid, "The 'new' login should always be first (name)");
+  let title = loginListItems[1]._login.title;
+  let title2 = loginListItems[2]._login.title;
   is(title.localeCompare(title2), -1, "Logins should be sorted alphabetically by hostname");
 
   // sort by last changed
   gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 2;
   loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
-  let pwChanged = loginListItems[0]._login.timePasswordChanged;
-  let pwChanged2 = loginListItems[1]._login.timePasswordChanged;
+  ok(!loginListItems[0]._login.guid, "The 'new' login should always be first (last changed)");
+  let pwChanged = loginListItems[1]._login.timePasswordChanged;
+  let pwChanged2 = loginListItems[2]._login.timePasswordChanged;
   is(pwChanged2 > pwChanged, true, "Login with most recently changed password should be displayed at top of list");
 });
 </script>

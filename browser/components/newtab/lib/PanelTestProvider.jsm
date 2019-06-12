@@ -5,20 +5,39 @@
 
 const MESSAGES = () => ([
   {
-    "id": "SIMPLE_FXA_BOOKMARK_TEST_1",
+    "id": "SIMPLE_FXA_BOOKMARK_TEST_FLUENT",
     "template": "fxa_bookmark_panel",
     "content": {
-      "title": "cfr-doorhanger-bookmark-fxa-header",
-      "text": "cfr-doorhanger-bookmark-fxa-body",
-      "cta": "cfr-doorhanger-bookmark-fxa-link-text",
+      "title": {"string_id": "cfr-doorhanger-bookmark-fxa-header"},
+      "text": {"string_id": "cfr-doorhanger-bookmark-fxa-body"},
+      "cta": {"string_id": "cfr-doorhanger-bookmark-fxa-link-text"},
       "color": "white",
       "background_color_1": "#7d31ae",
       "background_color_2": "#5033be",
       "info_icon": {
-        "tooltiptext": "cfr-doorhanger-bookmark-fxa-info-icon-tooltip",
+        "tooltiptext": {"string_id": "cfr-doorhanger-bookmark-fxa-info-icon-tooltip"},
       },
       "close_button": {
-        "tooltiptext": "cfr-doorhanger-bookmark-fxa-close-btn-tooltip",
+        "tooltiptext": {"string_id": "cfr-doorhanger-bookmark-fxa-close-btn-tooltip"},
+      },
+    },
+    "trigger": {"id": "bookmark-panel"},
+  },
+  {
+    "id": "SIMPLE_FXA_BOOKMARK_TEST_NON_FLUENT",
+    "template": "fxa_bookmark_panel",
+    "content": {
+      "title": "Bookmark Message Title",
+      "text": "Bookmark Message Body",
+      "cta": "Sync bookmarks now",
+      "color": "white",
+      "background_color_1": "#7d31ae",
+      "background_color_2": "#5033be",
+      "info_icon": {
+        "tooltiptext": "Toggle tooltip",
+      },
+      "close_button": {
+        "tooltiptext": "Close tooltip",
       },
     },
     "trigger": {"id": "bookmark-panel"},
@@ -28,7 +47,7 @@ const MESSAGES = () => ([
 const PanelTestProvider = {
   getMessages() {
     return MESSAGES()
-      .map(message => ({...message, targeting: `true`}));
+      .map(message => ({...message, targeting: `providerCohorts.panel_local_testing == "SHOW_TEST"`}));
   },
 };
 this.PanelTestProvider = PanelTestProvider;

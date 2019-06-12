@@ -722,6 +722,16 @@ pub extern "C" fn Servo_AnimationValue_Serialize(
     debug_assert!(rv.is_ok());
 }
 
+/// Debug: MOZ_DBG for AnimationValue.
+#[no_mangle]
+pub extern "C" fn Servo_AnimationValue_Dump(
+    value: &RawServoAnimationValue,
+    result: *mut nsAString,
+) {
+    let value = AnimationValue::as_arc(&value);
+    write!(unsafe { result.as_mut().unwrap() }, "{:?}", value).unwrap();
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValue_GetColor(
     value: &RawServoAnimationValue,

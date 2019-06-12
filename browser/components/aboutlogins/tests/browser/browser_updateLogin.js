@@ -34,7 +34,7 @@ add_task(async function test_login_item() {
   let browser = gBrowser.selectedBrowser;
   await ContentTask.spawn(browser, LoginHelper.loginToVanillaObject(TEST_LOGIN1), async (login) => {
     let loginList = content.document.querySelector("login-list");
-    let loginListItem = Cu.waiveXrays(loginList.shadowRoot.querySelector("login-list-item"));
+    let loginListItem = Cu.waiveXrays(loginList.shadowRoot.querySelector("login-list-item[guid]"));
     loginListItem.click();
 
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));

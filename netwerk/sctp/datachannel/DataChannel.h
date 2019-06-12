@@ -311,7 +311,6 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 #endif
 
   bool mSendInterleaved = false;
-  bool mPpidFragmentation = false;
   bool mMaxMessageSizeSet = false;
   uint64_t mMaxMessageSize = 0;
   bool mAllocateEven = false;

@@ -6,7 +6,7 @@ import ReflectedFluentElement from "chrome://browser/content/aboutlogins/compone
 
 export default class MenuButton extends ReflectedFluentElement {
   connectedCallback() {
-    if (this.children.length) {
+    if (this.shadowRoot) {
       return;
     }
 

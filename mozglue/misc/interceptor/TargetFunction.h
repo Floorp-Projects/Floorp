@@ -696,6 +696,15 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final {
     return instruction;
   }
 
+  bool BackUpOneInstruction() {
+    if (mOffset < sizeof(uint32_t)) {
+      return false;
+    }
+
+    mOffset -= sizeof(uint32_t);
+    return true;
+  }
+
 #else
 
   uint8_t const& operator*() const {
@@ -730,6 +739,8 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final {
 
 #endif
 
+  void Rewind() { mOffset = 0; }
+
   uint32_t GetOffset() const { return mOffset; }
 
   uintptr_t OffsetToAbsolute(const uint8_t aOffset) const {
@@ -761,7 +772,7 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final {
                                             mTargetBytes->GetBase() + aOffset,
                                             effectiveLength);
 
-    return std::move(result);
+    return result;
   }
 
  private:
