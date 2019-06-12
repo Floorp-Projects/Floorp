@@ -30,7 +30,7 @@ add_test(function test_udp_message_raw_data() {
   for (let i = 0; i < HELLO_WORLD.length; i++) {
     rawData[i] = HELLO_WORLD.charCodeAt(i);
   }
-  let written = socket.send("127.0.0.1", socket.port, rawData, rawData.length);
+  let written = socket.send("127.0.0.1", socket.port, rawData);
   Assert.equal(written, HELLO_WORLD.length);
 });
 
@@ -76,7 +76,7 @@ add_test(function test_udp_message_zero_length() {
   });
 
   let rawData = new Uint8Array(EMPTY_MESSAGE.length);
-  let written = socket.send("127.0.0.1", socket.port, rawData, rawData.length);
+  let written = socket.send("127.0.0.1", socket.port, rawData);
   Assert.equal(written, EMPTY_MESSAGE.length);
 });
 
