@@ -37,12 +37,25 @@ const uint32_t MAGIC_FORMAT_VERSION = 2;
 // Hardcoded in the format.
 const uint8_t MAX_CODE_BIT_LENGTH = 20;
 
-// Hardcoded limit to avoid allocating too eagerly.
+// Hardcoded limits to avoid allocating too eagerly.
 const uint32_t MAX_NUMBER_OF_SYMBOLS = 32768;
+const uint32_t MAX_LIST_LENGTH =
+    min(32768, NativeObject::MAX_DENSE_ELEMENTS_COUNT);
 
 // The number of elements in each sum.
-const size_t SUM_LIMITS[];
-const BinASTKind* SUM_RESOLUTIONS[];
+// Note: `extern` is needed to forward declare.
+extern const size_t SUM_LIMITS[BINAST_NUMBER_OF_SUM_TYPES];
+extern const BinASTKind* SUM_RESOLUTIONS[BINAST_NUMBER_OF_SUM_TYPES];
+
+#define WRAP_INTERFACE(TYPE) Interface::Maker(BinASTKind::TYPE)
+#define WRAP_MAYBE_INTERFACE(TYPE) MaybeInterface::Maker(BinASTKind::TYPE)
+#define WRAP_PRIMITIVE(TYPE) TYPE
+#define WRAP_LIST(TYPE, _) List::Maker(BinASTList::TYPE)
+#define WRAP_SUM(TYPE) Sum::Maker(BinASTSum::TYPE)
+#define WRAP_MAYBE_SUM(TYPE) MaybeSum::Maker(BinASTSum::TYPE)
+#define WRAP_STRING_ENUM(TYPE) StringEnum::Maker(BinASTStringEnum::TYPE)
+#define WRAP_MAYBE_STRING_ENUM(TYPE) \
+  MaybeStringEnum::Maker(BinASTStringEnum::TYPE)
 
 using AutoList = BinASTTokenReaderContext::AutoList;
 using AutoTaggedTuple = BinASTTokenReaderContext::AutoTaggedTuple;
@@ -509,6 +522,8 @@ class HuffmanPreludeReader {
 
   // A JavaScript number. May not be null.
   struct Number : EntryBase {
+    using SymbolType = double;
+    using Table = HuffmanTableExplicitSymbolsF64;
     Number(const NormalizedInterfaceAndField identity) : EntryBase(identity) {}
   };
 
@@ -575,10 +590,21 @@ class HuffmanPreludeReader {
   };
 
   // A FrozenArray. May not be null.
+  //
+  // In practice, this type is used to represent the length of the list.
+  // Once we have read the model for the length of the list, we push a
+  // `ListContents` to read the model for the contents of the list.
   struct List : EntryBase {
+    // The symbol type for the length of the list.
+    using SymbolType = uint32_t;
+
+    // The table for the length of the list.
+    using Table = HuffmanTableExplicitSymbolsListLength;
+
     // The type of the list, e.g. list of numbers.
-    // All lists with the same type share a model/
+    // All lists with the same type share a model for their length.
     const BinASTList contents;
+
     List(const NormalizedInterfaceAndField identity, const BinASTList contents)
         : EntryBase(identity), contents(contents) {}
 
@@ -588,9 +614,15 @@ class HuffmanPreludeReader {
       const BinASTList contents;
       Maker(BinASTList contents) : contents(contents) {}
       List operator()(const NormalizedInterfaceAndField identity) {
-        return List(identity, contents);
+        return {identity, contents};
       }
     };
+  };
+
+  // A FrozenArray. May not be null.
+  struct ListContents : EntryBase {
+    ListContents(const NormalizedInterfaceAndField identity)
+        : EntryBase(identity) {}
   };
 
   // A choice between several interfaces. May not be null.
@@ -727,15 +759,6 @@ class HuffmanPreludeReader {
                     BinASTInterfaceAndField::TAG_NAME##__##FIELD_NAME), \
                 Entry(FIELD_TYPE(NormalizedInterfaceAndField(           \
                     BinASTInterfaceAndField::TAG_NAME##__##FIELD_NAME)))));
-#define WRAP_INTERFACE(TYPE) Interface::Maker(BinASTKind::TYPE)
-#define WRAP_MAYBE_INTERFACE(TYPE) MaybeInterface::Maker(BinASTKind::TYPE)
-#define WRAP_PRIMITIVE(TYPE) TYPE
-#define WRAP_LIST(TYPE, _) List::Maker(BinASTList::TYPE)
-#define WRAP_SUM(TYPE) Sum::Maker(BinASTSum::TYPE)
-#define WRAP_MAYBE_SUM(TYPE) MaybeSum::Maker(BinASTSum::TYPE)
-#define WRAP_STRING_ENUM(TYPE) StringEnum::Maker(BinASTStringEnum::TYPE)
-#define WRAP_MAYBE_STRING_ENUM(TYPE) \
-  MaybeStringEnum::Maker(BinASTStringEnum::TYPE)
 #define EMIT_CASE(TAG_ENUM_NAME, _2, TAG_MACRO_NAME)                      \
   case BinASTKind::TAG_ENUM_NAME: {                                       \
     FOR_EACH_BIN_FIELD_IN_INTERFACE_##TAG_MACRO_NAME(                     \
@@ -744,14 +767,8 @@ class HuffmanPreludeReader {
         WRAP_MAYBE_STRING_ENUM);                                          \
     break;                                                                \
   }
-
       FOR_EACH_BIN_KIND(EMIT_CASE)
 #undef EMIT_CASE
-#undef WRAP_LIST
-#undef WRAP_SUM
-#undef WRAP_STRING_ENUM
-#undef WRAP_PRIMITIVE
-#undef WRAP_INTERFACE
 #undef EMIT_FIELD
     }
 
@@ -838,10 +855,20 @@ class HuffmanPreludeReader {
     return Ok();
   }
 
+  // Single-argument version: lookup the table using `dictionary.tableForField`
+  // then proceed as two-arguments version.
   template <typename Entry>
   MOZ_MUST_USE JS::Result<Ok> readTable(Entry entry) {
-    HuffmanTable& table = dictionary.tableForField(entry.identity);
-    if (!table.is<HuffmanTableUnreachable>()) {
+    auto& table = dictionary.tableForField(entry.identity);
+    return readTable<HuffmanTable, Entry>(table, entry);
+  }
+
+  // Two-arguments version: pass table explicitly. Generally called from single-
+  // argument version, but may be called manually, e.g. for list lengths, as
+  // their tables don't field in `dictionary.tableForField`.
+  template <typename HuffmanTable, typename Entry>
+  MOZ_MUST_USE JS::Result<Ok> readTable(HuffmanTable& table, Entry entry) {
+    if (!table.template is<HuffmanTableUnreachable>()) {
       // We're attempting to re-read a table that has already been read.
       return raiseDuplicateTableError(entry.identity);
     }
@@ -853,7 +880,7 @@ class HuffmanPreludeReader {
       case TableHeader::SingleValue: {
         // Construct in-place.
         table = {mozilla::VariantType<typename Entry::Table>{}, cx_};
-        auto& tableRef = table.as<typename Entry::Table>();
+        auto& tableRef = table.template as<typename Entry::Table>();
 
         // The table contains a single value.
         MOZ_TRY((readSingleValueTable<Entry>(tableRef, entry)));
@@ -863,7 +890,7 @@ class HuffmanPreludeReader {
         // Table contains multiple values.
         // Construct in-place.
         table = {mozilla::VariantType<typename Entry::Table>{}, cx_};
-        auto& tableRef = table.as<typename Entry::Table>();
+        auto& tableRef = table.template as<typename Entry::Table>();
 
         MOZ_TRY((readMultipleValuesTable<Entry>(tableRef, entry)));
         return Ok();
@@ -1008,6 +1035,84 @@ class HuffmanPreludeReader {
     return Ok();
   }
 
+  // ------ Numbers
+  // 64 bits, IEEE 754, big endian
+
+  // Read the number of symbols from the stream.
+  template <>
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(const Number& number) {
+    BINJS_MOZ_TRY_DECL(
+        length,
+        reader.readVarU32<BinASTTokenReaderContext::Compression::Yes>());
+    if (length > MAX_NUMBER_OF_SYMBOLS) {
+      return raiseInvalidTableData(number.identity);
+    }
+    return length;
+  }
+
+  // Read a single symbol from the stream.
+  template <>
+  MOZ_MUST_USE JS::Result<double> readSymbol(const Number& number, size_t) {
+    uint8_t bytes[8];
+    MOZ_ASSERT(sizeof(bytes) == sizeof(double));
+    MOZ_TRY(reader.readBuf<BinASTTokenReaderContext::Compression::Yes>(
+        reinterpret_cast<uint8_t*>(bytes), mozilla::ArrayLength(bytes)));
+
+    // Decode big-endian.
+    const uint64_t asInt = mozilla::BigEndian::readUint64(bytes);
+
+    // Canonicalize NaN, just to make sure another form of signalling NaN
+    // doesn't slip past us.
+    return JS::CanonicalizeNaN(mozilla::BitwiseCast<double>(asInt));
+  }
+
+  // Reading a single-value table of numbers.
+  template <>
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<Number>(
+      HuffmanTableExplicitSymbolsF64& table, const Number& number) {
+    BINJS_MOZ_TRY_DECL(value, readSymbol(number, 0 /* ignored */));
+    // Note: The `std::move` is useless for performance, but necessary to keep
+    // a consistent API.
+    // NOLINTNEXTLINE(performance-move-const-arg)
+    MOZ_TRY(table.impl.initWithSingleValue(cx_, std::move(value)));
+    return Ok();
+  }
+
+  // ------ List lengths
+  // varnum
+
+  // Read the number of symbols from the grammar.
+  template <>
+  MOZ_MUST_USE JS::Result<uint32_t> readNumberOfSymbols(const List&) {
+    return 1;
+  }
+
+  // Read a single symbol from the stream.
+  template <>
+  MOZ_MUST_USE JS::Result<uint32_t> readSymbol(const List& list, size_t) {
+    BINJS_MOZ_TRY_DECL(
+        length,
+        reader.readVarU32<BinASTTokenReaderContext::Compression::Yes>());
+    if (length > MAX_LIST_LENGTH) {
+      return raiseInvalidTableData(list.identity);
+    }
+    return length;
+  }
+
+  // Reading a single-value table of list lengths.
+  template <>
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<List>(
+      HuffmanTableExplicitSymbolsListLength& table, const List& list) {
+    BINJS_MOZ_TRY_DECL(
+        length,
+        reader.readVarU32<BinASTTokenReaderContext::Compression::Yes>());
+    if (length > MAX_LIST_LENGTH) {
+      return raiseInvalidTableData(list.identity);
+    }
+    MOZ_TRY(table.impl.initWithSingleValue(cx_, std::move(length)));
+    return Ok();
+  }
+
  private:
   // An auxiliary storage of bit lengths.
   // Used to avoid (re)allocating a vector of bit lengths each time we read a
@@ -1113,6 +1218,30 @@ class HuffmanPreludeReader {
       return Ok();
     }
 
+    MOZ_MUST_USE JS::Result<Ok> operator()(const Number& entry) {
+      return owner.readTable<Number>(entry);
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const List& entry) {
+      // Read the model for the length of the list.
+      MOZ_TRY((owner.readTable<HuffmanTableListLength, List>(
+          owner.dictionary.tableForListLength(entry.contents), entry)));
+
+      // Now read the model for the contents of the list.
+      switch (entry.contents) {
+#define EMIT_CASE(LIST_NAME, _CONTENT_NAME, _HUMAN_NAME, TYPE) \
+  case BinASTList::LIST_NAME:                                  \
+    return owner.pushValue(entry.identity, Entry(TYPE(entry.identity)));
+
+        FOR_EACH_BIN_LIST(EMIT_CASE, WRAP_PRIMITIVE, WRAP_INTERFACE,
+                          WRAP_MAYBE_INTERFACE, WRAP_LIST, WRAP_SUM,
+                          WRAP_MAYBE_SUM, WRAP_STRING_ENUM,
+                          WRAP_MAYBE_STRING_ENUM)
+#undef EMIT_CASE
+      }
+      return Ok();
+    }
+
     MOZ_MUST_USE JS::Result<Ok> operator()(const String& entry) {
       // FIXME: Read table.
       // FIXME: Initialize table.
@@ -1127,22 +1256,7 @@ class HuffmanPreludeReader {
       return Ok();
     }
 
-    MOZ_MUST_USE JS::Result<Ok> operator()(const Number& entry) {
-      // FIXME: Read table.
-      // FIXME: Initialize table.
-      MOZ_CRASH("Unimplemented");
-      return Ok();
-    }
-
     MOZ_MUST_USE JS::Result<Ok> operator()(const UnsignedLong& entry) {
-      // FIXME: Read table.
-      // FIXME: Initialize table.
-      MOZ_CRASH("Unimplemented");
-      return Ok();
-    }
-
-    MOZ_MUST_USE JS::Result<Ok> operator()(const List& entry) {
-      // FIXME: Enqueue list length.
       // FIXME: Read table.
       // FIXME: Initialize table.
       MOZ_CRASH("Unimplemented");
@@ -1212,8 +1326,8 @@ JS::Result<Ok> HuffmanTableImpl<T, N>::addSymbol(uint32_t bits,
 
 // The number of possible interfaces in each sum, indexed by
 // `static_cast<size_t>(BinASTSum)`.
-const size_t SUM_LIMITS[] = {
-#define WITH_SUM(_ENUM_NAME, _HUMAN_NAME, MACRO_NAME) \
+const size_t SUM_LIMITS[]{
+#define WITH_SUM(_ENUM_NAME, _HUMAN_NAME, MACRO_NAME, _TYPE_NAME) \
   BINAST_SUM_##MACRO_NAME##_LIMIT,
     FOR_EACH_BIN_SUM(WITH_SUM)
 #undef WITH_SUM
@@ -1235,15 +1349,15 @@ const size_t SUM_LIMITS[] = {
 #define WITH_SUM_CONTENTS(_SUM_NAME, _INDEX, INTERFACE_NAME, _MACRO_NAME, \
                           _SPEC_NAME)                                     \
   BinASTKind::INTERFACE_NAME,
-#define WITH_SUM(_ENUM_NAME, _HUMAN_NAME, MACRO_NAME) \
-  const BinASTKind SUM_RESOLUTION_##MACRO_NAME[]{     \
+#define WITH_SUM(_ENUM_NAME, _HUMAN_NAME, MACRO_NAME, _TYPE_NAME) \
+  const BinASTKind SUM_RESOLUTION_##MACRO_NAME[]{                 \
       FOR_EACH_BIN_INTERFACE_IN_SUM_##ARROW_EXPRESSION(WITH_SUM_CONTENTS)};
 FOR_EACH_BIN_SUM(WITH_SUM)
 #undef WITH_SUM
 #undef WITH_SUM_CONTENTS
 
-const BinASTKind* SUM_RESOLUTIONS[]{
-#define WITH_SUM(_ENUM_NAME, _HUMAN_NAME, MACRO_NAME) \
+const BinASTKind* SUM_RESOLUTIONS[BINAST_NUMBER_OF_SUM_TYPES]{
+#define WITH_SUM(_ENUM_NAME, _HUMAN_NAME, MACRO_NAME, _TYPE_NAME) \
   SUM_RESOLUTION_##MACRO_NAME,
     FOR_EACH_BIN_SUM(WITH_SUM)
 #undef WITH_SUM
