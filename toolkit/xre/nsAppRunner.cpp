@@ -4184,7 +4184,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       flagFile, &cachesOK, &isDowngrade, lastVersion);
 
   MOZ_RELEASE_ASSERT(!cachesOK || versionOK,
-                     "Caches cannot be good if the version has changed.");
+               "Caches cannot be good if the version has changed.");
 
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
   // The argument check must come first so the argument is always removed from
@@ -4452,7 +4452,7 @@ nsresult XREMain::XRE_mainRun() {
   // ready in time for early consumers, such as the component loader.
   mDirProvider.InitializeUserPrefs();
 
-  nsAppStartupNotifier::NotifyObservers(APPSTARTUP_CATEGORY);
+  nsAppStartupNotifier::NotifyObservers(APPSTARTUP_TOPIC);
 
   nsCOMPtr<nsIAppStartup> appStartup(components::AppStartup::Service());
   NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
