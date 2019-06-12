@@ -1409,7 +1409,7 @@ void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
 void JS::BigInt::traceChildren(JSTracer* trc) { return; }
 
 template <typename Functor>
-static void VisitTraceList(const Functor& f, const int32_t* traceList,
+static void VisitTraceList(const Functor& f, const uint32_t* traceList,
                            uint8_t* memory);
 
 // Call the trace hook set on the object, if present. If further tracing of
@@ -1449,22 +1449,23 @@ static inline NativeObject* CallTraceHook(Functor&& f, JSTracer* trc,
 }
 
 template <typename Functor>
-static void VisitTraceList(const Functor& f, const int32_t* traceList,
+static void VisitTraceList(const Functor& f, const uint32_t* traceList,
                            uint8_t* memory) {
-  while (*traceList != -1) {
+  size_t stringCount = *traceList++;
+  size_t objectCount = *traceList++;
+  size_t valueCount = *traceList++;
+  for (size_t i = 0; i < stringCount; i++) {
     f(reinterpret_cast<JSString**>(memory + *traceList));
     traceList++;
   }
-  traceList++;
-  while (*traceList != -1) {
+  for (size_t i = 0; i < objectCount; i++) {
     JSObject** objp = reinterpret_cast<JSObject**>(memory + *traceList);
     if (*objp) {
       f(objp);
     }
     traceList++;
   }
-  traceList++;
-  while (*traceList != -1) {
+  for (size_t i = 0; i < valueCount; i++) {
     f(reinterpret_cast<Value*>(memory + *traceList));
     traceList++;
   }
