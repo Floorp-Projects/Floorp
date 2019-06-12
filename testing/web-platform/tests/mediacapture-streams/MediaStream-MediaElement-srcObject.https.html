@@ -175,6 +175,7 @@ promise_test(async t => {
     stream.getTracks().forEach(track => track.stop());
   });
   vid.srcObject = stream;
+  await new Promise(r => vid.oncanplay = r);
   vid.play();
   await new Promise(r => vid.ontimeupdate = r);
   assert_greater_than(vid.currentTime, 0,
