@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SpecialPowersObserverAPI", "SpecialPowersError"];
+var EXPORTED_SYMBOLS = ["SpecialPowersAPIParent", "SpecialPowersError"];
 
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -72,8 +72,9 @@ function getTestPlugin(pluginName) {
   return null;
 }
 
-class SpecialPowersObserverAPI {
+class SpecialPowersAPIParent extends JSWindowActorParent {
   constructor() {
+    super();
     this._crashDumpDir = null;
     this._processCrashObserversRegistered = false;
     this._chromeScriptListeners = [];
@@ -117,7 +118,7 @@ class SpecialPowersObserverAPI {
 
           addDumpIDToMessage("dumpID");
         }
-        this._sendAsyncMessage("SPProcessCrashService", message);
+        this.sendAsyncMessage("SPProcessCrashService", message);
         break;
     }
   }
@@ -204,13 +205,6 @@ class SpecialPowersObserverAPI {
   _getURI(url) {
     return Services.io.newURI(url);
   }
-
-  _sendReply(aMessage, aReplyName, aReplyMsg) {
-    let mm = aMessage.target.frameLoader
-                     .messageManager;
-    mm.sendAsyncMessage(aReplyName, aReplyMsg);
-  }
-
   _notifyCategoryAndObservers(subject, topic, data) {
     const serviceMarker = "service,";
 
@@ -255,7 +249,7 @@ class SpecialPowersObserverAPI {
    * messageManager callback function
    * This will get requests from our API in the window and process them in chrome for it
    **/
-  _receiveMessageAPI(aMessage) { // eslint-disable-line complexity
+  receiveMessage(aMessage) { // eslint-disable-line complexity
     // We explicitly return values in the below code so that this function
     // doesn't trigger a flurry of warnings about "does not always return
     // a value".
@@ -345,11 +339,7 @@ class SpecialPowersObserverAPI {
         let promises = aMessage.json.crashIds.map((crashId) => {
           return Services.crashmanager.ensureCrashIsPresent(crashId);
         });
-
-        Promise.all(promises).then(() => {
-          this._sendReply(aMessage, "SPProcessCrashManagerWait", {});
-        });
-        return undefined; // See comment at the beginning of this function.
+        return Promise.all(promises);
       }
 
       case "SPPermissionManager": {
@@ -394,7 +384,6 @@ class SpecialPowersObserverAPI {
             Services.obs.notifyObservers(null, topic, data);
             break;
           case "add":
-            this._registerObservers._self = this;
             this._registerObservers._add(topic);
             break;
           default:
@@ -424,11 +413,9 @@ class SpecialPowersObserverAPI {
         let sandboxOptions = Object.assign({wantGlobalProperties: ["ChromeUtils"]},
                                            aMessage.json.sandboxOptions);
         let sb = Cu.Sandbox(systemPrincipal, sandboxOptions);
-        let mm = aMessage.target.frameLoader
-                         .messageManager;
         sb.sendAsyncMessage = (name, message) => {
-          mm.sendAsyncMessage("SPChromeScriptMessage",
-                              { id, name, message });
+          this.sendAsyncMessage("SPChromeScriptMessage",
+                                { id, name, message });
         };
         sb.addMessageListener = (name, listener) => {
           this._chromeScriptListeners.push({ id, name, listener });
@@ -441,14 +428,14 @@ class SpecialPowersObserverAPI {
             this._chromeScriptListeners.splice(index, 1);
           }
         };
-        sb.browserElement = aMessage.target;
+        sb.actorParent = this.manager;
 
         // Also expose assertion functions
-        let reporter = function(err, message, stack) {
+        let reporter = (err, message, stack) => {
           // Pipe assertions back to parent process
-          mm.sendAsyncMessage("SPChromeScriptAssert",
-                              { id, name: scriptName, err, message,
-                                stack });
+          this.sendAsyncMessage("SPChromeScriptAssert",
+                                { id, name: scriptName, err, message,
+                                  stack });
         };
         Object.defineProperty(sb, "assert", {
           get() {
@@ -479,9 +466,13 @@ class SpecialPowersObserverAPI {
         let id = aMessage.json.id;
         let name = aMessage.json.name;
         let message = aMessage.json.message;
-        return this._chromeScriptListeners
-                   .filter(o => (o.name == name && o.id == id))
-                   .map(o => o.listener(message));
+        let result;
+        for (let listener of this._chromeScriptListeners) {
+          if (listener.name == name && listener.id == id) {
+            result = listener.listener(message);
+          }
+        }
+        return result;
       }
 
       case "SPImportInMainProcess": {
@@ -506,17 +497,11 @@ class SpecialPowersObserverAPI {
       }
 
       case "SPRequestDumpCoverageCounters": {
-        PerTestCoverageUtils.afterTest().then(() =>
-          this._sendReply(aMessage, "SPRequestDumpCoverageCounters", {})
-        );
-        return undefined; // See comment at the beginning of this function.
+        return PerTestCoverageUtils.afterTest();
       }
 
       case "SPRequestResetCoverageCounters": {
-        PerTestCoverageUtils.beforeTest().then(() =>
-          this._sendReply(aMessage, "SPRequestResetCoverageCounters", {})
-        );
-        return undefined; // See comment at the beginning of this function.
+        return PerTestCoverageUtils.beforeTest();
       }
 
       case "SPCheckServiceWorkers": {
@@ -539,12 +524,12 @@ class SpecialPowersObserverAPI {
         let extension = ExtensionTestCommon.generate(ext);
 
         let resultListener = (...args) => {
-          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "testResult", args});
+          this.sendAsyncMessage("SPExtensionMessage", {id, type: "testResult", args});
         };
 
         let messageListener = (...args) => {
           args.shift();
-          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "testMessage", args});
+          this.sendAsyncMessage("SPExtensionMessage", {id, type: "testMessage", args});
         };
 
         // Register pass/fail handlers.
@@ -572,7 +557,7 @@ class SpecialPowersObserverAPI {
           }
           // ext is always the "real" Extension object, even when "extension"
           // is a MockExtension.
-          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionSetId", args: [ext.id, ext.uuid]});
+          this.sendAsyncMessage("SPExtensionMessage", {id, type: "extensionSetId", args: [ext.id, ext.uuid]});
         });
 
         // Make sure the extension passes the packaging checks when
@@ -601,10 +586,10 @@ class SpecialPowersObserverAPI {
           }
           return extension.startup();
         }).then(() => {
-          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionStarted", args: []});
+          this.sendAsyncMessage("SPExtensionMessage", {id, type: "extensionStarted", args: []});
         }).catch(e => {
           dump(`Extension startup failed: ${e}\n${e.stack}`);
-          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionFailed", args: []});
+          this.sendAsyncMessage("SPExtensionMessage", {id, type: "extensionFailed", args: []});
         });
         return undefined;
       }
@@ -622,24 +607,18 @@ class SpecialPowersObserverAPI {
         this._extensions.delete(id);
         let done = async () => {
           await extension._uninstallPromise;
-          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionUnloaded", args: []});
+          this.sendAsyncMessage("SPExtensionMessage", {id, type: "extensionUnloaded", args: []});
         };
         extension.shutdown().then(done, done);
         return undefined;
       }
 
       case "SPRemoveAllServiceWorkers": {
-        ServiceWorkerCleanUp.removeAll().then(() => {
-          this._sendReply(aMessage, "SPServiceWorkerCleanupComplete", { id: aMessage.data.id });
-        });
-        return undefined;
+        return ServiceWorkerCleanUp.removeAll();
       }
 
       case "SPRemoveServiceWorkerDataForExampleDomain": {
-        ServiceWorkerCleanUp.removeFromHost("example.com").then(() => {
-          this._sendReply(aMessage, "SPServiceWorkerCleanupComplete", { id: aMessage.data.id });
-        });
-        return undefined;
+        return ServiceWorkerCleanUp.removeFromHost("example.com");
       }
 
       default:
