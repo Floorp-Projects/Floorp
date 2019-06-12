@@ -30,6 +30,6 @@ config = {
                     '-fuse-ld=%(abs_work_dir)s/src/cctools/bin/x86_64-darwin11-ld'),
         'PATH': '%(abs_work_dir)s/src/clang/bin/:%(PATH)s',
     },
-    "tooltool_servers": ['http://relengapi/tooltool/'],
-    "tooltool_url": 'http://relengapi/tooltool/',
+    "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/'],
+    "tooltool_url": 'http://taskcluster/tooltool.mozilla-releng.net/',
 }
