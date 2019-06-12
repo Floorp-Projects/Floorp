@@ -701,7 +701,7 @@ void MemoryTracker::checkEmptyOnDestroy() {
 inline bool MemoryTracker::allowMultipleAssociations(MemoryUse use) const {
   // For most uses only one association is possible for each GC thing. Allow a
   // one-to-many relationship only where necessary.
-  return false;
+  return use == MemoryUse::RegExpSharedBytecode;
 }
 
 void MemoryTracker::trackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
