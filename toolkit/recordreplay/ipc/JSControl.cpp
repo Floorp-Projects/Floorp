@@ -222,26 +222,57 @@ static bool Middleman_SendManifest(JSContext* aCx, unsigned aArgc, Value* aVp) {
 static bool Middleman_HadRepaint(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  if (!args.get(0).isNumber() || !args.get(1).isNumber()) {
-    JS_ReportErrorASCII(aCx, "Bad width/height");
+  if (!args.get(0).isString()) {
+    JS_ReportErrorASCII(aCx, "Bad arguments");
     return false;
   }
 
-  size_t width = args.get(0).toNumber();
-  size_t height = args.get(1).toNumber();
+  RootedString data(aCx, args.get(0).toString());
 
-  PaintMessage message(InvalidCheckpointId, width, height);
-  parent::UpdateGraphicsInUIProcess(&message);
+  MOZ_RELEASE_ASSERT(JS_StringHasLatin1Chars(data));
+
+  nsCString dataBinary;
+  bool decodeFailed;
+  {
+    JS::AutoAssertNoGC nogc(aCx);
+    size_t dataLength;
+    const JS::Latin1Char* dataChars =
+        JS_GetLatin1StringCharsAndLength(aCx, nogc, data, &dataLength);
+    if (!dataChars) {
+      return false;
+    }
+
+    nsDependentCString dataCString((const char*) dataChars, dataLength);
+    nsresult rv = Base64Decode(dataCString, dataBinary);
+    decodeFailed = NS_FAILED(rv);
+  }
+
+  if (decodeFailed) {
+    JS_ReportErrorASCII(aCx, "Base64 decode failed");
+    return false;
+  }
+
+  parent::UpdateGraphicsAfterRepaint(dataBinary);
 
   args.rval().setUndefined();
   return true;
 }
 
-static bool Middleman_HadRepaintFailure(JSContext* aCx, unsigned aArgc,
-                                        Value* aVp) {
+static bool Middleman_RestoreMainGraphics(JSContext* aCx, unsigned aArgc,
+                                          Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  parent::UpdateGraphicsInUIProcess(nullptr);
+  parent::RestoreMainGraphics();
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool Middleman_ClearGraphics(JSContext* aCx, unsigned aArgc,
+                                    Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  parent::ClearGraphics();
 
   args.rval().setUndefined();
   return true;
@@ -284,6 +315,28 @@ static bool Middleman_WaitUntilPaused(JSContext* aCx, unsigned aArgc,
   return true;
 }
 
+static bool Middleman_Atomize(JSContext* aCx, unsigned aArgc,
+                                      Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (!args.get(0).isString()) {
+    JS_ReportErrorASCII(aCx, "Bad parameter");
+    return false;
+  }
+
+  RootedString str(aCx, args.get(0).toString());
+
+  // We shouldn't really be pinning the atom as well, but there isn't a JSAPI
+  // method for atomizing a JSString without pinning it.
+  JSString* atom = JS_AtomizeAndPinJSString(aCx, str);
+  if (!atom) {
+    return false;
+  }
+
+  args.rval().setString(atom);
+  return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Devtools Sandbox
 ///////////////////////////////////////////////////////////////////////////////
@@ -323,10 +376,11 @@ MOZ_EXPORT bool RecordReplayInterface_ShouldUpdateProgressCounter(
   // debugger. The devtools timeline is based on progress values and we don't
   // want gaps on the timeline which users can't seek to.
   if (gIncludeSystemScripts) {
-    // Always exclude ReplayScriptURL. Scripts in this file are internal to the
-    // record/replay infrastructure and run non-deterministically between
-    // recording and replaying.
-    return aURL && strcmp(aURL, ReplayScriptURL);
+    // Always exclude ReplayScriptURL, and any other code that it can invoke.
+    // Scripts in this file are internal to the record/replay infrastructure and
+    // run non-deterministically between recording and replaying.
+    return aURL && strcmp(aURL, ReplayScriptURL) &&
+      strcmp(aURL, "resource://devtools/shared/execution-point-utils.js");
   } else {
     return aURL && strncmp(aURL, "resource:", 9) && strncmp(aURL, "chrome:", 7);
   }
@@ -760,184 +814,6 @@ static bool RecordReplay_SaveCheckpoint(JSContext* aCx, unsigned aArgc,
   return true;
 }
 
-// How many hits on a script location we will precisely track for a checkpoint.
-static const size_t MaxHitsPerCheckpoint = 10;
-
-struct ScriptHitInfo {
-  // Information about a location where a script offset has been hit, or an
-  // aggregate set of hits.
-  struct ScriptHit {
-    // The most recent checkpoint prior to the hit.
-    uint32_t mCheckpoint;
-
-    // Index of the frame where the hit occurred, or UINT32_MAX if this
-    // represents an aggregate set of hits after the checkpoint.
-    uint32_t mFrameIndex;
-
-    // Progress counter when the hit occurred, invalid if this represents an
-    // aggregate set of hits.
-    ProgressCounter mProgress;
-
-    explicit ScriptHit(uint32_t aCheckpoint)
-        : mCheckpoint(aCheckpoint), mFrameIndex(UINT32_MAX), mProgress(0) {}
-
-    ScriptHit(uint32_t aCheckpoint, uint32_t aFrameIndex,
-              ProgressCounter aProgress)
-        : mCheckpoint(aCheckpoint),
-          mFrameIndex(aFrameIndex),
-          mProgress(aProgress) {}
-  };
-
-  struct ScriptHitChunk {
-    ScriptHit mHits[7];
-    ScriptHitChunk* mPrevious;
-  };
-
-  struct ScriptHitKey {
-    uint32_t mScript;
-    uint32_t mOffset;
-
-    ScriptHitKey(uint32_t aScript, uint32_t aOffset)
-        : mScript(aScript), mOffset(aOffset) {}
-
-    typedef ScriptHitKey Lookup;
-
-    static HashNumber hash(const ScriptHitKey& aKey) {
-      return HashGeneric(aKey.mScript, aKey.mOffset);
-    }
-
-    static bool match(const ScriptHitKey& aFirst, const ScriptHitKey& aSecond) {
-      return aFirst.mScript == aSecond.mScript &&
-             aFirst.mOffset == aSecond.mOffset;
-    }
-  };
-
-  typedef HashMap<ScriptHitKey, ScriptHitChunk*, ScriptHitKey,
-                  AllocPolicy<MemoryKind::ScriptHits>>
-      ScriptHitMap;
-  ScriptHitMap mTable;
-  ScriptHitChunk* mFreeChunk;
-
-  ScriptHitInfo() : mFreeChunk(nullptr) {}
-
-  ScriptHitChunk* FindHits(uint32_t aScript, uint32_t aOffset) {
-    ScriptHitKey key(aScript, aOffset);
-    ScriptHitMap::Ptr p = mTable.lookup(key);
-    return p ? p->value() : nullptr;
-  }
-
-  void AddHit(uint32_t aScript, uint32_t aOffset, uint32_t aCheckpoint,
-              uint32_t aFrameIndex, ProgressCounter aProgress) {
-    ScriptHitKey key(aScript, aOffset);
-    ScriptHitMap::AddPtr p = mTable.lookupForAdd(key);
-    if (!p && !mTable.add(p, key, NewChunk(nullptr))) {
-      MOZ_CRASH("ScriptHitInfo::AddScriptHit");
-    }
-
-    ScriptHitChunk* chunk = p->value();
-    p->value() = AddHit(chunk, ScriptHit(aCheckpoint, aFrameIndex, aProgress));
-  }
-
-  ScriptHitChunk* AddHit(ScriptHitChunk* aChunk, const ScriptHit& aHit) {
-    for (int i = ArrayLength(aChunk->mHits) - 1; i >= 0; i--) {
-      if (!aChunk->mHits[i].mCheckpoint) {
-        aChunk->mHits[i] = aHit;
-        return aChunk;
-      }
-    }
-    ScriptHitChunk* newChunk = NewChunk(aChunk);
-    newChunk->mHits[ArrayLength(newChunk->mHits) - 1] = aHit;
-    return newChunk;
-  }
-
-  ScriptHitChunk* NewChunk(ScriptHitChunk* aPrevious) {
-    if (!mFreeChunk) {
-      void* mem = AllocateMemory(PageSize, MemoryKind::ScriptHits);
-      ScriptHitChunk* chunks = reinterpret_cast<ScriptHitChunk*>(mem);
-      size_t numChunks = PageSize / sizeof(ScriptHitChunk);
-      for (size_t i = 0; i < numChunks - 1; i++) {
-        chunks[i].mPrevious = &chunks[i + 1];
-      }
-      mFreeChunk = chunks;
-    }
-    ScriptHitChunk* result = mFreeChunk;
-    mFreeChunk = mFreeChunk->mPrevious;
-    result->mPrevious = aPrevious;
-    return result;
-  }
-};
-
-static ScriptHitInfo* gScriptHits;
-
-static void InitializeScriptHits() {
-  void* mem = AllocateMemory(sizeof(ScriptHitInfo), MemoryKind::ScriptHits);
-  gScriptHits = new (mem) ScriptHitInfo();
-}
-
-static bool RecordReplay_AddScriptHit(JSContext* aCx, unsigned aArgc,
-                                      Value* aVp) {
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  if (!args.get(0).isNumber() || !args.get(1).isNumber() ||
-      !args.get(2).isNumber()) {
-    JS_ReportErrorASCII(aCx, "Bad parameters");
-    return false;
-  }
-
-  uint32_t script = args.get(0).toNumber();
-  uint32_t offset = args.get(1).toNumber();
-  uint32_t frameIndex = args.get(2).toNumber();
-
-  gScriptHits->AddHit(script, offset, GetLastCheckpoint(), frameIndex,
-                      gProgressCounter);
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool RecordReplay_FindScriptHits(JSContext* aCx, unsigned aArgc,
-                                        Value* aVp) {
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  if (!args.get(0).isNumber() || !args.get(1).isNumber()) {
-    JS_ReportErrorASCII(aCx, "Bad parameters");
-    return false;
-  }
-
-  uint32_t script = args.get(0).toNumber();
-  uint32_t offset = args.get(1).toNumber();
-
-  RootedValueVector values(aCx);
-
-  ScriptHitInfo::ScriptHitChunk* chunk =
-      gScriptHits ? gScriptHits->FindHits(script, offset) : nullptr;
-  while (chunk) {
-    for (const auto& hit : chunk->mHits) {
-      if (hit.mCheckpoint) {
-        RootedObject hitObject(aCx, JS_NewObject(aCx, nullptr));
-        if (!hitObject ||
-            !JS_DefineProperty(aCx, hitObject, "checkpoint", hit.mCheckpoint,
-                               JSPROP_ENUMERATE) ||
-            !JS_DefineProperty(aCx, hitObject, "progress",
-                               (double)hit.mProgress, JSPROP_ENUMERATE) ||
-            !JS_DefineProperty(aCx, hitObject, "frameIndex", hit.mFrameIndex,
-                               JSPROP_ENUMERATE) ||
-            !values.append(ObjectValue(*hitObject))) {
-          return false;
-        }
-      }
-    }
-    chunk = chunk->mPrevious;
-  }
-
-  JSObject* array = JS_NewArrayObject(aCx, values);
-  if (!array) {
-    return false;
-  }
-
-  args.rval().setObject(*array);
-  return true;
-}
-
 static bool RecordReplay_GetContent(JSContext* aCx, unsigned aArgc,
                                     Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
@@ -963,23 +839,22 @@ static bool RecordReplay_GetContent(JSContext* aCx, unsigned aArgc,
 static bool RecordReplay_Repaint(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  size_t width, height;
-  child::Repaint(&width, &height);
+  nsString data;
+  if (!child::Repaint(data)) {
+    args.rval().setNull();
+    return true;
+  }
 
-  RootedObject obj(aCx, JS_NewObject(aCx, nullptr));
-  if (!obj ||
-      !JS_DefineProperty(aCx, obj, "width", (double)width, JSPROP_ENUMERATE) ||
-      !JS_DefineProperty(aCx, obj, "height", (double)height,
-                         JSPROP_ENUMERATE)) {
+  JSString* str = JS_NewUCStringCopyN(aCx, data.BeginReading(), data.Length());
+  if (!str) {
     return false;
   }
 
-  args.rval().setObject(*obj);
+  args.rval().setString(str);
   return true;
 }
 
-static bool RecordReplay_MemoryUsage(JSContext* aCx, unsigned aArgc,
-                                     Value* aVp) {
+static bool RecordReplay_MemoryUsage(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   if (!args.get(0).isNumber()) {
@@ -1011,10 +886,427 @@ static bool RecordReplay_Dump(JSContext* aCx, unsigned aArgc, Value* aVp) {
     if (!cstr) {
       return false;
     }
-    Print("%s", cstr.get());
+    DirectPrint(cstr.get());
   }
 
   args.rval().setUndefined();
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Recording/Replaying Script Hit Methods
+///////////////////////////////////////////////////////////////////////////////
+
+enum ChangeFrameKind {
+  ChangeFrameEnter,
+  ChangeFrameExit,
+  ChangeFrameResume,
+  NumChangeFrameKinds
+};
+
+struct ScriptHitInfo {
+  typedef AllocPolicy<MemoryKind::ScriptHits> AllocPolicy;
+
+  // Information about a location where a script offset has been hit.
+  struct ScriptHit {
+    uint32_t mFrameIndex : 16;
+    ProgressCounter mProgress : 48;
+
+    ScriptHit(uint32_t aFrameIndex, ProgressCounter aProgress)
+        : mFrameIndex(aFrameIndex), mProgress(aProgress) {
+      MOZ_RELEASE_ASSERT(aFrameIndex < 1 << 16);
+      MOZ_RELEASE_ASSERT(aProgress < uint64_t(1) << 48);
+    }
+  };
+
+  static_assert(sizeof(ScriptHit) == 8, "Unexpected size");
+
+  struct ScriptHitChunk {
+    ScriptHit mHits[7];
+    ScriptHitChunk* mPrevious;
+  };
+
+  ScriptHitChunk* mFreeChunk;
+
+  struct ScriptHitKey {
+    uint32_t mScript;
+    uint32_t mOffset;
+
+    ScriptHitKey(uint32_t aScript, uint32_t aOffset)
+        : mScript(aScript), mOffset(aOffset) {}
+
+    typedef ScriptHitKey Lookup;
+
+    static HashNumber hash(const ScriptHitKey& aKey) {
+      return HashGeneric(aKey.mScript, aKey.mOffset);
+    }
+
+    static bool match(const ScriptHitKey& aFirst, const ScriptHitKey& aSecond) {
+      return aFirst.mScript == aSecond.mScript
+          && aFirst.mOffset == aSecond.mOffset;
+    }
+  };
+
+  typedef HashMap<ScriptHitKey, ScriptHitChunk*, ScriptHitKey, AllocPolicy>
+      ScriptHitMap;
+
+  struct AnyScriptHit {
+    uint32_t mScript;
+    uint32_t mFrameIndex;
+    ProgressCounter mProgress;
+
+    AnyScriptHit(uint32_t aScript, uint32_t aFrameIndex,
+                 ProgressCounter aProgress)
+        : mScript(aScript), mFrameIndex(aFrameIndex), mProgress(aProgress) {}
+  };
+
+  typedef InfallibleVector<AnyScriptHit, 128, AllocPolicy> AnyScriptHitVector;
+
+  struct CheckpointInfo {
+    ScriptHitMap mTable;
+    AnyScriptHitVector mChangeFrames[NumChangeFrameKinds];
+  };
+
+  InfallibleVector<CheckpointInfo*, 1024, AllocPolicy> mInfo;
+
+  ScriptHitInfo() : mFreeChunk(nullptr) {}
+
+  CheckpointInfo* GetInfo(uint32_t aCheckpoint) {
+    while (aCheckpoint >= mInfo.length()) {
+      mInfo.append(nullptr);
+    }
+    if (!mInfo[aCheckpoint]) {
+      void* mem = AllocateMemory(sizeof(CheckpointInfo), MemoryKind::ScriptHits);
+      mInfo[aCheckpoint] = new(mem) CheckpointInfo();
+    }
+    return mInfo[aCheckpoint];
+  }
+
+  ScriptHitChunk* FindHits(uint32_t aCheckpoint, uint32_t aScript, uint32_t aOffset) {
+    CheckpointInfo* info = GetInfo(aCheckpoint);
+
+    ScriptHitKey key(aScript, aOffset);
+    ScriptHitMap::Ptr p = info->mTable.lookup(key);
+    return p ? p->value() : nullptr;
+  }
+
+  void AddHit(uint32_t aCheckpoint, uint32_t aScript, uint32_t aOffset,
+              uint32_t aFrameIndex, ProgressCounter aProgress) {
+    CheckpointInfo* info = GetInfo(aCheckpoint);
+
+    ScriptHitKey key(aScript, aOffset);
+    ScriptHitMap::AddPtr p = info->mTable.lookupForAdd(key);
+    if (!p && !info->mTable.add(p, key, NewChunk(nullptr))) {
+      MOZ_CRASH("ScriptHitInfo::AddHit");
+    }
+
+    ScriptHitChunk* chunk = p->value();
+    p->value() = AddHit(chunk, ScriptHit(aFrameIndex, aProgress));
+  }
+
+  ScriptHitChunk* AddHit(ScriptHitChunk* aChunk, const ScriptHit& aHit) {
+    for (int i = ArrayLength(aChunk->mHits) - 1; i >= 0; i--) {
+      if (!aChunk->mHits[i].mProgress) {
+        aChunk->mHits[i] = aHit;
+        return aChunk;
+      }
+    }
+    ScriptHitChunk* newChunk = NewChunk(aChunk);
+    newChunk->mHits[ArrayLength(newChunk->mHits) - 1] = aHit;
+    return newChunk;
+  }
+
+  ScriptHitChunk* NewChunk(ScriptHitChunk* aPrevious) {
+    if (!mFreeChunk) {
+      void* mem = AllocateMemory(PageSize, MemoryKind::ScriptHits);
+      ScriptHitChunk* chunks = reinterpret_cast<ScriptHitChunk*>(mem);
+      size_t numChunks = PageSize / sizeof(ScriptHitChunk);
+      for (size_t i = 0; i < numChunks - 1; i++) {
+        chunks[i].mPrevious = &chunks[i + 1];
+      }
+      mFreeChunk = chunks;
+    }
+    ScriptHitChunk* result = mFreeChunk;
+    mFreeChunk = mFreeChunk->mPrevious;
+    result->mPrevious = aPrevious;
+    return result;
+  }
+
+  void AddChangeFrame(uint32_t aCheckpoint, uint32_t aWhich,
+                      uint32_t aScript, uint32_t aFrameIndex,
+                      ProgressCounter aProgress) {
+    CheckpointInfo* info = GetInfo(aCheckpoint);
+    MOZ_RELEASE_ASSERT(aWhich < NumChangeFrameKinds);
+    info->mChangeFrames[aWhich].emplaceBack(aScript, aFrameIndex, aProgress);
+  }
+
+  AnyScriptHitVector* FindChangeFrames(uint32_t aCheckpoint, uint32_t aWhich) {
+    CheckpointInfo* info = GetInfo(aCheckpoint);
+    MOZ_RELEASE_ASSERT(aWhich < NumChangeFrameKinds);
+    return &info->mChangeFrames[aWhich];
+  }
+};
+
+static ScriptHitInfo* gScriptHits;
+
+// Interned atoms for the various instrumented operations.
+static JSString* gMainAtom;
+static JSString* gEntryAtom;
+static JSString* gBreakpointAtom;
+static JSString* gExitAtom;
+
+static void InitializeScriptHits() {
+  void* mem = AllocateMemory(sizeof(ScriptHitInfo), MemoryKind::ScriptHits);
+  gScriptHits = new (mem) ScriptHitInfo();
+
+  AutoSafeJSContext cx;
+  JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
+
+  gMainAtom = JS_AtomizeAndPinString(cx, "main");
+  gEntryAtom = JS_AtomizeAndPinString(cx, "entry");
+  gBreakpointAtom = JS_AtomizeAndPinString(cx, "breakpoint");
+  gExitAtom = JS_AtomizeAndPinString(cx, "exit");
+
+  MOZ_RELEASE_ASSERT(gMainAtom && gEntryAtom && gBreakpointAtom && gExitAtom);
+}
+
+static bool gScanningScripts;
+static uint32_t gFrameDepth;
+
+static bool RecordReplay_IsScanningScripts(JSContext* aCx, unsigned aArgc,
+                                           Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  args.rval().setBoolean(gScanningScripts);
+  return true;
+}
+
+static bool RecordReplay_SetScanningScripts(JSContext* aCx, unsigned aArgc,
+                                            Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  MOZ_RELEASE_ASSERT(gFrameDepth == 0);
+  gScanningScripts = ToBoolean(args.get(0));
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool RecordReplay_GetFrameDepth(JSContext* aCx, unsigned aArgc,
+                                       Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  args.rval().setNumber(gFrameDepth);
+  return true;
+}
+
+static bool RecordReplay_SetFrameDepth(JSContext* aCx, unsigned aArgc,
+                                       Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  MOZ_RELEASE_ASSERT(gScanningScripts);
+
+  if (!args.get(0).isNumber()) {
+    JS_ReportErrorASCII(aCx, "Bad parameter");
+    return false;
+  }
+
+  gFrameDepth = args.get(0).toNumber();
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool RecordReplay_OnScriptHit(JSContext* aCx, unsigned aArgc,
+                                     Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  MOZ_RELEASE_ASSERT(gScanningScripts);
+
+  if (!args.get(1).isNumber() || !args.get(2).isNumber()) {
+    JS_ReportErrorASCII(aCx, "Bad parameters");
+    return false;
+  }
+
+  uint32_t script = args.get(1).toNumber();
+  uint32_t offset = args.get(2).toNumber();
+  uint32_t frameIndex = gFrameDepth - 1;
+
+  if (!script) {
+    // This script is not being tracked and doesn't update the frame depth.
+    args.rval().setUndefined();
+    return true;
+  }
+
+  gScriptHits->AddHit(GetLastCheckpoint(), script, offset,
+                      frameIndex, gProgressCounter);
+  args.rval().setUndefined();
+  return true;
+}
+
+template <ChangeFrameKind Kind>
+static bool RecordReplay_OnChangeFrame(JSContext* aCx, unsigned aArgc,
+                                       Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  MOZ_RELEASE_ASSERT(gScanningScripts);
+
+  if (!args.get(1).isNumber()) {
+    JS_ReportErrorASCII(aCx, "Bad parameters");
+    return false;
+  }
+
+  uint32_t script = args.get(1).toNumber();
+  if (!script) {
+    // This script is not being tracked and doesn't update the frame depth.
+    args.rval().setUndefined();
+    return true;
+  }
+
+  if (Kind == ChangeFrameEnter || Kind == ChangeFrameResume) {
+    gFrameDepth++;
+  }
+
+  uint32_t frameIndex = gFrameDepth - 1;
+  gScriptHits->AddChangeFrame(GetLastCheckpoint(), Kind,
+                              script, frameIndex, gProgressCounter);
+
+  if (Kind == ChangeFrameExit) {
+    gFrameDepth--;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool RecordReplay_InstrumentationCallback(JSContext* aCx, unsigned aArgc,
+                                                 Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (!args.get(0).isString()) {
+    JS_ReportErrorASCII(aCx, "Bad parameters");
+    return false;
+  }
+
+  // The kind string should be an atom which we have captured already.
+  JSString* kind = args.get(0).toString();
+
+  if (kind == gBreakpointAtom) {
+    return RecordReplay_OnScriptHit(aCx, aArgc, aVp);
+  }
+
+  if (kind == gMainAtom) {
+    return RecordReplay_OnChangeFrame<ChangeFrameEnter>(aCx, aArgc, aVp);
+  }
+
+  if (kind == gExitAtom) {
+    return RecordReplay_OnChangeFrame<ChangeFrameExit>(aCx, aArgc, aVp);
+  }
+
+  if (kind == gEntryAtom) {
+    if (!args.get(1).isNumber()) {
+      JS_ReportErrorASCII(aCx, "Bad parameters");
+      return false;
+    }
+    uint32_t script = args.get(1).toNumber();
+
+    if (NS_FAILED(gReplay->ScriptResumeFrame(script))) {
+      MOZ_CRASH("RecordReplay_InstrumentationCallback");
+    }
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  JS_ReportErrorASCII(aCx, "Unexpected kind");
+  return false;
+}
+
+static bool RecordReplay_FindScriptHits(JSContext* aCx, unsigned aArgc,
+                                        Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (!args.get(0).isNumber() ||
+      !args.get(1).isNumber() ||
+      !args.get(2).isNumber()) {
+    JS_ReportErrorASCII(aCx, "Bad parameters");
+    return false;
+  }
+
+  uint32_t checkpoint = args.get(0).toNumber();
+  uint32_t script = args.get(1).toNumber();
+  uint32_t offset = args.get(2).toNumber();
+
+  RootedValueVector values(aCx);
+
+  ScriptHitInfo::ScriptHitChunk* chunk =
+      gScriptHits ? gScriptHits->FindHits(checkpoint, script, offset) : nullptr;
+  while (chunk) {
+    for (const auto& hit : chunk->mHits) {
+      if (hit.mProgress) {
+        RootedObject hitObject(aCx, JS_NewObject(aCx, nullptr));
+        if (!hitObject ||
+            !JS_DefineProperty(aCx, hitObject, "progress",
+                               (double) hit.mProgress, JSPROP_ENUMERATE) ||
+            !JS_DefineProperty(aCx, hitObject, "frameIndex",
+                               hit.mFrameIndex, JSPROP_ENUMERATE) ||
+            !values.append(ObjectValue(*hitObject))) {
+          return false;
+        }
+      }
+    }
+    chunk = chunk->mPrevious;
+  }
+
+  JSObject* array = JS_NewArrayObject(aCx, values);
+  if (!array) {
+    return false;
+  }
+
+  args.rval().setObject(*array);
+  return true;
+}
+
+static bool RecordReplay_FindChangeFrames(JSContext* aCx, unsigned aArgc,
+                                         Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (!args.get(0).isNumber() || !args.get(1).isNumber()) {
+    JS_ReportErrorASCII(aCx, "Bad parameters");
+    return false;
+  }
+
+  uint32_t checkpoint = args.get(0).toNumber();
+  uint32_t which = args.get(1).toNumber();
+
+  if (which >= NumChangeFrameKinds) {
+    JS_ReportErrorASCII(aCx, "Bad parameters");
+    return false;
+  }
+
+  RootedValueVector values(aCx);
+
+  ScriptHitInfo::AnyScriptHitVector* hits =
+      gScriptHits ? gScriptHits->FindChangeFrames(checkpoint, which) : nullptr;
+  if (hits) {
+    for (const ScriptHitInfo::AnyScriptHit& hit : *hits) {
+      RootedObject hitObject(aCx, JS_NewObject(aCx, nullptr));
+      if (!hitObject ||
+          !JS_DefineProperty(aCx, hitObject, "script",
+                             hit.mScript, JSPROP_ENUMERATE) ||
+          !JS_DefineProperty(aCx, hitObject, "progress",
+                             (double) hit.mProgress, JSPROP_ENUMERATE) ||
+          !JS_DefineProperty(aCx, hitObject, "frameIndex",
+                             hit.mFrameIndex, JSPROP_ENUMERATE) ||
+          !values.append(ObjectValue(*hitObject))) {
+        return false;
+      }
+    }
+  }
+
+  JSObject* array = JS_NewArrayObject(aCx, values);
+  if (!array) {
+    return false;
+  }
+
+  args.rval().setObject(*array);
   return true;
 }
 
@@ -1027,10 +1319,12 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
     JS_FN("canRewind", Middleman_CanRewind, 0, 0),
     JS_FN("spawnReplayingChild", Middleman_SpawnReplayingChild, 0, 0),
     JS_FN("sendManifest", Middleman_SendManifest, 2, 0),
-    JS_FN("hadRepaint", Middleman_HadRepaint, 2, 0),
-    JS_FN("hadRepaintFailure", Middleman_HadRepaintFailure, 0, 0),
+    JS_FN("hadRepaint", Middleman_HadRepaint, 1, 0),
+    JS_FN("restoreMainGraphics", Middleman_RestoreMainGraphics, 0, 0),
+    JS_FN("clearGraphics", Middleman_ClearGraphics, 0, 0),
     JS_FN("inRepaintStressMode", Middleman_InRepaintStressMode, 0, 0),
     JS_FN("waitUntilPaused", Middleman_WaitUntilPaused, 1, 0),
+    JS_FN("atomize", Middleman_Atomize, 1, 0),
     JS_FS_END};
 
 static const JSFunctionSpec gRecordReplayMethods[] = {
@@ -1049,11 +1343,21 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
     JS_FN("flushRecording", RecordReplay_FlushRecording, 0, 0),
     JS_FN("setMainChild", RecordReplay_SetMainChild, 0, 0),
     JS_FN("saveCheckpoint", RecordReplay_SaveCheckpoint, 1, 0),
-    JS_FN("addScriptHit", RecordReplay_AddScriptHit, 3, 0),
-    JS_FN("findScriptHits", RecordReplay_FindScriptHits, 2, 0),
     JS_FN("getContent", RecordReplay_GetContent, 1, 0),
     JS_FN("repaint", RecordReplay_Repaint, 0, 0),
     JS_FN("memoryUsage", RecordReplay_MemoryUsage, 0, 0),
+    JS_FN("isScanningScripts", RecordReplay_IsScanningScripts, 0, 0),
+    JS_FN("setScanningScripts", RecordReplay_SetScanningScripts, 1, 0),
+    JS_FN("getFrameDepth", RecordReplay_GetFrameDepth, 0, 0),
+    JS_FN("setFrameDepth", RecordReplay_SetFrameDepth, 1, 0),
+    JS_FN("onScriptHit", RecordReplay_OnScriptHit, 3, 0),
+    JS_FN("onEnterFrame", RecordReplay_OnChangeFrame<ChangeFrameEnter>, 2, 0),
+    JS_FN("onExitFrame", RecordReplay_OnChangeFrame<ChangeFrameExit>, 2, 0),
+    JS_FN("onResumeFrame", RecordReplay_OnChangeFrame<ChangeFrameResume>, 2, 0),
+    JS_FN("instrumentationCallback", RecordReplay_InstrumentationCallback, 3,
+          0),
+    JS_FN("findScriptHits", RecordReplay_FindScriptHits, 3, 0),
+    JS_FN("findChangeFrames", RecordReplay_FindChangeFrames, 2, 0),
     JS_FN("dump", RecordReplay_Dump, 1, 0),
     JS_FS_END};
 
