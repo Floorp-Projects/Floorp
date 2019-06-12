@@ -2428,10 +2428,9 @@ static int32_t CompareBuildIDs(nsACString& oldID, nsACString& newID) {
 }
 
 /**
- * Checks whether the compatibility versions from the previous and current
- * application match. Returns true if there has been no change, false otherwise.
- * The aDowngrade parameter is set to true if the old version is "newer" than
- * the new version.
+ * Compares the provided compatibility versions. Returns 0 if they match,
+ * < 0 if the new version is considered an upgrade from the old version and
+ * > 0 if the new version is considered a downgrade from the old version.
  */
 int32_t CompareCompatVersions(const nsACString& aOldCompatVersion,
                               const nsACString& aNewCompatVersion) {
