@@ -572,7 +572,7 @@ function _setupTLSServerTest(serverBinName, certsPath, addDefaultRoot) {
   certDir.append(`${certsPath}`);
   Assert.ok(certDir.exists(), `certificate folder (${certsPath}) should exist`);
   // Using "sql:" causes the SQL DB to be used so we can run tests on Android.
-  process.run(false, [ "sql:" + certDir.path ], 1);
+  process.run(false, [ "sql:" + certDir.path, Services.appinfo.processID ], 2);
 
   registerCleanupFunction(function() {
     process.kill();

@@ -48,7 +48,7 @@ SECStatus ConfigSecureServerWithNamedCert(
 
 SECStatus InitializeNSS(const char* nssCertDBDir);
 
-int StartServer(const char* nssCertDBDir, SSLSNISocketConfig sniSocketConfig,
+int StartServer(int argc, char* argv[], SSLSNISocketConfig sniSocketConfig,
                 void* sniSocketConfigArg);
 
 template <typename Host>
