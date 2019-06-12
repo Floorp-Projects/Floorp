@@ -70,7 +70,7 @@ UniquePtr<nsTArray<AntiTrackingCommon::AntiTrackingSettingsChangedCallback>>
     gSettingsChangedCallbacks;
 
 bool GetParentPrincipalAndTrackingOrigin(
-    nsGlobalWindowInner* a3rdPartyTrackingWindow,
+    nsGlobalWindowInner* a3rdPartyTrackingWindow, uint32_t aBehavior,
     nsIPrincipal** aTopLevelStoragePrincipal, nsACString& aTrackingOrigin,
     nsIURI** aTrackingURI, nsIPrincipal** aTrackingPrincipal) {
   Document* doc = a3rdPartyTrackingWindow->GetDocument();
@@ -82,7 +82,11 @@ bool GetParentPrincipalAndTrackingOrigin(
 
   // Now we need the principal and the origin of the parent window.
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal =
-      a3rdPartyTrackingWindow->GetTopLevelStorageAreaPrincipal();
+      // Use the "top-level storage area principal" behaviour in reject tracker
+      // mode only.
+      (aBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER)
+          ? a3rdPartyTrackingWindow->GetTopLevelStorageAreaPrincipal()
+          : a3rdPartyTrackingWindow->GetTopLevelPrincipal();
   if (!topLevelStoragePrincipal) {
     LOG(("No top-level storage area principal at hand"));
     return false;
@@ -856,7 +860,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     }
 
     if (!GetParentPrincipalAndTrackingOrigin(
-            parentWindow, getter_AddRefs(topLevelStoragePrincipal),
+            parentWindow, behavior, getter_AddRefs(topLevelStoragePrincipal),
             trackingOrigin, getter_AddRefs(trackingURI),
             getter_AddRefs(trackingPrincipal))) {
       LOG(
@@ -1285,8 +1289,9 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   nsCOMPtr<nsIURI> trackingURI;
   nsAutoCString trackingOrigin;
   if (!GetParentPrincipalAndTrackingOrigin(
-          nsGlobalWindowInner::Cast(aWindow), getter_AddRefs(parentPrincipal),
-          trackingOrigin, getter_AddRefs(trackingURI), nullptr)) {
+          nsGlobalWindowInner::Cast(aWindow), behavior,
+          getter_AddRefs(parentPrincipal), trackingOrigin,
+          getter_AddRefs(trackingURI), nullptr)) {
     LOG(("Failed to obtain the parent principal and the tracking origin"));
     *aRejectedReason = blockedReason;
     return false;
@@ -1526,7 +1531,12 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     }
   }
 
-  nsIPrincipal* parentPrincipal = loadInfo->GetTopLevelStorageAreaPrincipal();
+  // Only use the "top-level storage area principal" behaviour for reject
+  // tracker mode only.
+  nsIPrincipal* parentPrincipal =
+      (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER)
+          ? loadInfo->GetTopLevelStorageAreaPrincipal()
+          : loadInfo->GetTopLevelPrincipal();
   if (!parentPrincipal) {
     LOG(("No top-level storage area principal at hand"));
 
