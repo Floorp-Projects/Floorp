@@ -35,6 +35,7 @@ async function testButton(toolbox) {
   ok(button, "Captain, we have the button");
 
   await delayedClicks(toolbox, button, 4);
+  await toolbox.target.client.waitForRequestsToSettle();
   checkResults();
 }
 
