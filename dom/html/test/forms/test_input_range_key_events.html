@@ -67,23 +67,23 @@ function value(element) {
 }
 
 function step(element) {
-  var step = Number(element.step || defaultStep);
-  return step <= 0 ? defaultStep : step;
+  var stepSize = Number(element.step || defaultStep);
+  return stepSize <= 0 ? defaultStep : stepSize;
 }
 
-function clampToRange(value, element) {
+function clampToRange(val, element) {
   var min = minimum(element);
   var max = maximum(element);
   if (max < min) {
     return min;
   }
-  if (value < min) {
+  if (val < min) {
     return min;
   }
-  if (value > max) {
+  if (val > max) {
     return max;
   }
-  return value;
+  return val;
 }
 
 // Functions used to specify expected test results:

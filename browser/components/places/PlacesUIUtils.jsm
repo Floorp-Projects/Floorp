@@ -1066,10 +1066,7 @@ function canMoveUnwrappedNode(unwrappedNode) {
   }
 
   let parentGuid = unwrappedNode.parentGuid;
-  // If there's no parent Guid, this was likely a virtual query that returns
-  // bookmarks, such as a tags query.
-  if (!parentGuid ||
-      parentGuid == PlacesUtils.bookmarks.rootGuid) {
+  if (parentGuid == PlacesUtils.bookmarks.rootGuid) {
     return false;
   }
 

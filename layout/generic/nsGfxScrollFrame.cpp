@@ -4289,7 +4289,17 @@ void ScrollFrameHelper::ScrollByCSSPixels(
     const CSSIntPoint& aDelta, ScrollMode aMode, nsAtom* aOrigin,
     nsIScrollbarMediator::ScrollSnapMode aSnap) {
   nsPoint current = GetScrollPosition();
-  nsPoint pt = current + CSSPoint::ToAppUnits(aDelta);
+  // `current` value above might be a value which was aligned to in
+  // layer-pixels, so starting from such points will make the difference between
+  // the given position in script (e.g. scrollTo) and the aligned position
+  // larger, in the worst case the difference can be observed in CSS pixels.
+  // To avoid it, we use the current position in CSS pixels as the start
+  // position.  Hopefully it exactly matches the position where it was given by
+  // the previous scrolling operation, but there may be some edge cases where
+  // the current position in CSS pixels differs from the given position, the
+  // cases should be fixed in bug 1556685.
+  CSSIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
+  nsPoint pt = CSSPoint::ToAppUnits(currentCSSPixels + aDelta);
 
   if (aSnap == nsIScrollableFrame::DEFAULT) {
     aSnap = DefaultSnapMode();

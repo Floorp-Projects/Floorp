@@ -28,6 +28,7 @@ add_task(async function() {
     // Create a form to post to server that writes posted data into body as JSON.
     let promiseLoad = BrowserTestUtils.browserLoaded(fileBrowser, false,
                                                      TEST_HTTP_POST);
+    /* eslint-disable no-shadow */
     await ContentTask.spawn(fileBrowser, [TEST_HTTP_POST, filePaths],
                                          ([actionUri, filePaths]) => {
       Cu.importGlobalProperties(["File"]);
@@ -69,6 +70,7 @@ add_task(async function() {
         form.submit();
       });
     });
+    /* eslint-enable no-shadow */
 
     let href = await promiseLoad;
     is(href, TEST_HTTP_POST,

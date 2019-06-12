@@ -29,7 +29,7 @@ class UtilsBar extends Component<Props> {
   render() {
     return (
       <div
-        className={classnames("command-bar bottom", {
+        className={classnames("command-bar command-bar-bottom", {
           vertical: !this.props.horizontal,
         })}
       >

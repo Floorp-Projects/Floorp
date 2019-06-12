@@ -181,22 +181,17 @@ async function testContentBlocking(tab) {
   testBenignPage();
 
   info("Load a test page not containing tracking elements which has an exception.");
-  let isPrivateBrowsing = PrivateBrowsingUtils.isWindowPrivate(tab.ownerGlobal);
-  let uri = Services.io.newURI("https://example.org/");
-  if (isPrivateBrowsing) {
-    PrivateBrowsingUtils.addToTrackingAllowlist(uri);
-  } else {
-    Services.perms.add(uri, "trackingprotection", Services.perms.ALLOW_ACTION);
-  }
 
-  await promiseTabLoadEvent(tab, uri.spec);
+  await promiseTabLoadEvent(tab, "https://example.org/?round=1");
+
+  ContentBlockingAllowList.add(tab.linkedBrowser);
+  // Load another page from the same origin to ensure there is an onlocationchange
+  // notification which would trigger an oncontentblocking notification for us.
+  await promiseTabLoadEvent(tab, "https://example.org/?round=2");
+
   testBenignPageWithException();
 
-  if (isPrivateBrowsing) {
-    PrivateBrowsingUtils.removeFromTrackingAllowlist(uri);
-  } else {
-    Services.perms.remove(uri, "trackingprotection");
-  }
+  ContentBlockingAllowList.remove(tab.linkedBrowser);
 
   info("Load a test page containing tracking elements");
   await promiseTabLoadEvent(tab, gTrackingPageURL);
@@ -206,6 +201,7 @@ async function testContentBlocking(tab) {
   let tabReloadPromise = promiseTabLoadEvent(tab);
   clickButton("#tracking-action-unblock");
   await tabReloadPromise;
+  let isPrivateBrowsing = PrivateBrowsingUtils.isWindowPrivate(tab.ownerGlobal);
   let blockedByTP = areTrackersBlocked(isPrivateBrowsing);
   testTrackingPageUnblocked(blockedByTP, tab.ownerGlobal);
 

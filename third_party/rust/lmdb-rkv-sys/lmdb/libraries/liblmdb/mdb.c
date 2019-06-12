@@ -77,8 +77,7 @@
 
 #if defined(__mips) && defined(__linux)
 /* MIPS has cache coherency issues, requires explicit cache control */
-#include <asm/cachectl.h>
-extern int cacheflush(char *addr, int nbytes, int cache);
+#include <sys/cachectl.h>
 #define CACHEFLUSH(addr, bytes, cache)	cacheflush(addr, bytes, cache)
 #else
 #define CACHEFLUSH(addr, bytes, cache)

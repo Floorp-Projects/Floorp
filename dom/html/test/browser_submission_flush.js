@@ -21,6 +21,7 @@ async function runTest(aTestActions) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, kTestPage);
   registerCleanupFunction(() => BrowserTestUtils.removeTab(tab));
 
+  /* eslint-disable no-shadow */
   let frame_url = await ContentTask.spawn(gBrowser.selectedBrowser,
                           {kFormId, kFrameId, kSubmitButtonId, aTestActions},
                           async function({kFormId, kFrameId, kSubmitButtonId,
@@ -57,6 +58,7 @@ async function runTest(aTestActions) {
     });
     return frame.contentWindow.location.href;
   });
+  /* eslint-enable no-shadow */
   is(frame_url, kPostActionPage,
      "Form should have submitted with correct target and action");
 }

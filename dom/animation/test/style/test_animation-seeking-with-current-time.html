@@ -49,7 +49,7 @@ promise_test(function(t) {
   div.style.animation = "anim 100s 100s";
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(function(t) {
+  return animation.ready.then(function() {
     assert_marginLeft_equals(div, -10,
       'Computed style is unaffected in before phase with no backwards fill');
 
@@ -66,7 +66,7 @@ promise_test(function(t) {
   div.style.animation = "anim 100s 100s";
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(function(t) {
+  return animation.ready.then(function() {
     // move to after phase
     animation.currentTime = 250 * MS_PER_SEC;
     assert_marginLeft_equals(div, -10,
@@ -85,7 +85,7 @@ promise_test(function(t) {
   div.style.animation = "anim 100s 100s";
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(function(t) {
+  return animation.ready.then(function() {
     // move to active phase
     animation.currentTime = 150 * MS_PER_SEC;
     assert_marginLeft_equals(div, 50,
@@ -104,7 +104,7 @@ promise_test(function(t) {
   div.style.animation = "anim 100s 100s";
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(function(t) {
+  return animation.ready.then(function() {
     // move to active phase
     animation.currentTime = 150 * MS_PER_SEC;
     assert_marginLeft_equals(div, 50,

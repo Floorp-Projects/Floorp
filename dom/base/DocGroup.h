@@ -105,16 +105,28 @@ class DocGroup final {
   // Returns true if any of its documents are active but not in the bfcache.
   bool IsActive() const;
 
+  nsresult QueueIframePostMessages(
+      already_AddRefed<nsIRunnable>&& aRunnable,
+      uint64_t aWindowId);
+
+  void TryFlushIframePostMessages(uint64_t aWindowId);
+
+  static bool TryToLoadIframesInBackground();
+
  private:
   DocGroup(TabGroup* aTabGroup, const nsACString& aKey);
   ~DocGroup();
 
+  void FlushIframePostMessageQueue();
   nsCString mKey;
   RefPtr<TabGroup> mTabGroup;
   nsTArray<Document*> mDocuments;
   RefPtr<mozilla::dom::CustomElementReactionsStack> mReactionsStack;
   nsTArray<RefPtr<HTMLSlotElement>> mSignalSlotList;
   RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
+
+  RefPtr<mozilla::ThrottledEventQueue> mIframePostMessageQueue;
+  nsTHashtable<nsUint64HashKey> mIframesUsedPostMessageQueue;
 };
 
 }  // namespace dom

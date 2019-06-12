@@ -127,12 +127,17 @@ def fat_aar(distdir, architectures=[],
 
     # Some differences are allowed across the architecture-specific AARs.  We could allow-list
     # the actual content, but it's not necessary right now.
-    allow_list = {
+    allow_pattern_list = {
         'AndroidManifest.xml',  # Min SDK version is different for 32- and 64-bit builds.
         'classes.jar!/org/mozilla/gecko/util/HardwareUtils.class',  # Min SDK as well.
         'classes.jar!/org/mozilla/geckoview/BuildConfig.class',
         # Each input captures its CPU architecture.
         'chrome/toolkit/content/global/buildconfig.html',
+        # Bug 1556162: localized resources are not deterministic across
+        # per-architecture builds triggered from the same push.
+        '**/*.ftl',
+        '**/*.dtd',
+        '**/*.properties',
     }
 
     not_allowed = OrderedDict()
@@ -149,7 +154,7 @@ def fat_aar(distdir, architectures=[],
             # Only one hash across all inputs: roll on.
             continue
 
-        if p in allow_list:
+        if any(mozpath.match(p, pat) for pat in allow_pattern_list):
             print('Allowed: Path "{path}" has architecture-specific versions:\n{ds_repr}'.format(
                 path=p, ds_repr=format_diffs(ds)))
             continue

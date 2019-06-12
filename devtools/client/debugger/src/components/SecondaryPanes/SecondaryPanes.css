@@ -9,6 +9,7 @@
   flex-direction: column;
   flex: 1;
   white-space: nowrap;
+  background-color: var(--theme-sidebar-background);
   --breakpoint-expression-right-clear-space: 36px;
 }
 
@@ -61,4 +62,8 @@
 .secondary-panes input[type="checkbox"] {
   margin: 0;
   margin-inline-end: 4px;
+}
+
+.secondary-panes-wrapper .command-bar.bottom {
+  background-color: var(--theme-body-background);
 }

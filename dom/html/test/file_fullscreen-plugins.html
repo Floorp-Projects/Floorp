@@ -62,8 +62,8 @@ function e(id) {
   return document.getElementById(id);
 }
 
-function removeElement(e) {
-  e.remove();
+function removeElement(element) {
+  element.remove();
 }
 
 const supportsWindowedMode = navigator.appVersion.includes("Windows");
@@ -135,14 +135,14 @@ function createWindowedPlugin() {
 
 function windowlessFullScreenChange1(event) {
   ok(document.fullscreenElement, "Requests for full-screen with focused windowed plugins should be granted on non-Windows");
-  
+
   // Create a new windowed plugin, and add that to the document. Should *not* exit full-screen mode on MacOS/Linux.
   windowedPlugin = createWindowedPlugin();
   document.body.appendChild(windowedPlugin);
-  
+
   // Focus windowed plugin. Should not exit full-screen mode on MacOS/Linux.
   windowedPlugin.focus();
-  
+
   setTimeout(
     function() {
       ok(document.fullscreenElement, "Adding & focusing a windowed plugin to document should not cause full-screen to exit on MacOS/Linux.");

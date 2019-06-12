@@ -61,11 +61,11 @@ void JSWindowActor::DestroyCallback(DestroyCallbackFunction callback) {
   // Destroy callback is optional.
   if (callback == DestroyCallbackFunction::WillDestroy) {
     if (callbacksHolder.mWillDestroy.WasPassed()) {
-      callbacksHolder.mWillDestroy.Value()->Call();
+      callbacksHolder.mWillDestroy.Value()->Call(this);
     }
   } else {
     if (callbacksHolder.mDidDestroy.WasPassed()) {
-      callbacksHolder.mDidDestroy.Value()->Call();
+      callbacksHolder.mDidDestroy.Value()->Call(this);
     }
   }
 }

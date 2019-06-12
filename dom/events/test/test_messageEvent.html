@@ -65,7 +65,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=848294
     try {
       var e = new MessageEvent('foobar', { source: 42 });
       ok(false, "Source has to be a window or a port");
-    } catch(e) {
+    } catch(ex) {
       ok(true, "Source has to be a window or a port");
     }
 

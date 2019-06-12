@@ -124,12 +124,12 @@ function test() {
 }
 
 function runNextSpinTest() {
-  var test = spinTests.shift();
-  if (!test) {
+  var nextTest = spinTests.shift();
+  if (!nextTest) {
     SimpleTest.finish();
     return;
   }
-  test();
+  nextTest();
 }
 
 const SETTIMEOUT_DELAY = 500;

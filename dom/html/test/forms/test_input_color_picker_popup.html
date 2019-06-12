@@ -39,13 +39,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
     { id: 'div-click', result: true },
     { id: 'div-click-on-demand', result: true },
   ];
-  var currentTest = null;
 
   SimpleTest.waitForFocus(function() {
     test.next();
   });
 
   function* runTest() {
+    let currentTest = null;
     MockColorPicker.init(window);
     var element = null;
 
@@ -58,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
     };
 
     while (testData.length != 0) {
-      var currentTest = testData.shift();
+      currentTest = testData.shift();
       element = document.getElementById(currentTest.id);
 
       // To make sure we can actually click on the element.
@@ -78,8 +78,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
           element.onclick = function() {};
           break;
         case 'prevent-default-2':
-          element.onclick = function(e) {
-            e.preventDefault();
+          element.onclick = function(event) {
+            event.preventDefault();
           };
           element.click();
           element.onclick = function() {};

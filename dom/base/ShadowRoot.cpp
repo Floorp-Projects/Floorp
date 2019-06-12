@@ -183,6 +183,18 @@ void ShadowRoot::InvalidateStyleAndLayoutOnSubtree(Element* aElement) {
   presShell->DestroyFramesForAndRestyle(aElement);
 }
 
+void ShadowRoot::PartAdded(const Element& aPart) {
+  MOZ_ASSERT(aPart.HasPartAttribute());
+  MOZ_ASSERT(!mParts.Contains(&aPart));
+  mParts.AppendElement(&aPart);
+}
+
+void ShadowRoot::PartRemoved(const Element& aPart) {
+  MOZ_ASSERT(mParts.Contains(&aPart));
+  mParts.RemoveElement(&aPart);
+  MOZ_ASSERT(!mParts.Contains(&aPart));
+}
+
 void ShadowRoot::AddSlot(HTMLSlotElement* aSlot) {
   MOZ_ASSERT(aSlot);
 
