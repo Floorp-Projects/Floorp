@@ -3,9 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  padding-top: 36px;
-  padding-left: 40px;
-  padding-right: 40px;
+  padding: 18px;
 }
 
 :host([editing]) .edit-button,

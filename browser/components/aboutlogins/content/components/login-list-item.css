@@ -5,8 +5,10 @@
 :host {
   display: block;
   padding: 10px;
-  border-bottom: 1px solid var(--in-content-box-border-color);
+  padding-inline-end: 18px;
+  padding-inline-start: 14px;
   border-inline-start: 4px solid transparent;
+  border-bottom: 1px solid var(--in-content-box-border-color);
 }
 
 /* [hidden] isn't applying to elements in Shadow DOM. */
