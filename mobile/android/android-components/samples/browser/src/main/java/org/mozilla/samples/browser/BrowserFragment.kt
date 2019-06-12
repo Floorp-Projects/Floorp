@@ -32,6 +32,7 @@ import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.samples.browser.ext.components
@@ -86,7 +87,8 @@ class BrowserFragment : Fragment(), BackHandler {
             owner = this,
             view = layout)
 
-        val menuUpdater = object : SelectionAwareSessionObserver(components.sessionManager) {
+        val menuUpdaterFeature = object : SelectionAwareSessionObserver(components.sessionManager),
+                LifecycleAwareFeature {
             override fun onLoadingStateChanged(session: Session, loading: Boolean) {
                 layout.toolbar.invalidateActions()
             }
@@ -94,8 +96,11 @@ class BrowserFragment : Fragment(), BackHandler {
             override fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean) {
                 layout.toolbar.invalidateActions()
             }
+
+            override fun start() {
+                observeIdOrSelected(sessionId)
+            }
         }
-        menuUpdater.observeIdOrSelected(sessionId)
 
         ToolbarAutocompleteFeature(layout.toolbar).apply {
             addHistoryStorageProvider(components.historyStorage)
@@ -197,7 +202,8 @@ class BrowserFragment : Fragment(), BackHandler {
         lifecycle.addObservers(
             scrollFeature,
             contextMenuFeature,
-            windowFeature
+            windowFeature,
+            menuUpdaterFeature
         )
 
         thumbnailsFeature.set(
