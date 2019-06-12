@@ -15,6 +15,7 @@ mod refgraph;
 
 use refgraph::{ ReferenceGraph };
 
+use std::borrow::Cow;
 use std::collections::{ HashMap, HashSet };
 use std::fs::*;
 use std::io::{ Read, Write };
@@ -601,6 +602,10 @@ impl CPPExporter {
                 let content_node_name = syntax.get_node_name(&content_name)
                     .unwrap_or_else(|| panic!("While generating an array parser, could not find node name {}", content_name))
                     .clone();
+                debug!(target: "generate_spidermonkey", "CPPExporter::new adding list typedef {:?} => {:?} => {:?}",
+                    parser_node_name,
+                    content_name,
+                    content_node_name);
                 list_parsers_to_generate.push(ListParserData {
                     name: parser_node_name.clone(),
                     supports_empty: *supports_empty,
@@ -953,6 +958,97 @@ impl CPPExporter {
         }
     }
 
+    /// Auxiliary function: get a name for a field type.
+    fn get_field_type_name(typedef: Option<&str>, spec: &Spec, type_: &Type, make_optional: bool) -> Cow<'static, str> {
+        let optional = make_optional || type_.is_optional();
+        match *type_.spec() {
+            TypeSpec::Boolean if optional => Cow::from("PRIMITIVE(MaybeBoolean)"),
+            TypeSpec::Boolean => Cow::from("PRIMITIVE(Boolean)"),
+            TypeSpec::String if optional => Cow::from("PRIMITIVE(MaybeString)"),
+            TypeSpec::String => Cow::from("PRIMITIVE(String)"),
+            TypeSpec::Number if optional => Cow::from("PRIMITIVE(MaybeNumber)"),
+            TypeSpec::Number => Cow::from("PRIMITIVE(Number)"),
+            TypeSpec::UnsignedLong if optional => Cow::from("PRIMITIVE(MaybeUnsignedLong)"),
+            TypeSpec::UnsignedLong => Cow::from("PRIMITIVE(UnsignedLong)"),
+            TypeSpec::Offset if optional => Cow::from("PRIMITIVE(MaybeLazy)"),
+            TypeSpec::Offset => Cow::from("PRIMITIVE(Lazy)"),
+            TypeSpec::Void if optional => Cow::from("PRIMITIVE(MaybeVoid)"),
+            TypeSpec::Void => Cow::from("PRIMITIVE(Void)"),
+            TypeSpec::IdentifierName if optional => Cow::from("PRIMITIVE(MaybeIdentifierName)"),
+            TypeSpec::IdentifierName => Cow::from("PRIMITIVE(IdentifierName)"),
+            TypeSpec::PropertyKey if optional => Cow::from("PRIMITIVE(MaybePropertyKey)"),
+            TypeSpec::PropertyKey => Cow::from("PRIMITIVE(PropertyKey)"),
+            TypeSpec::Array { ref contents, .. } => Cow::from(
+                format!("LIST({name}, {contents})",
+                    name = if let Some(name) = typedef {
+                        name.to_string()
+                    } else {
+                        TypeName::type_(type_)
+                    },
+                    contents = Self::get_field_type_name(None, spec, contents, false)
+            )),
+            TypeSpec::NamedType(ref name) => {
+                debug!(target: "generate_spidermonkey", "get_field_type_name for named type {name} ({optional})",
+                    name = name,
+                    optional = if optional { "optional" } else { "required" });
+                match spec.get_type_by_name(name).expect("By now, all types MUST exist") {
+                    NamedType::Typedef(alias_type) => {
+                        if alias_type.is_optional() {
+                            return Self::get_field_type_name(Some(name.to_str()), spec, alias_type.as_ref(), true)
+                        }
+                        // Keep the simple name of sums and lists if there is one.
+                        match *alias_type.spec() {
+                            TypeSpec::TypeSum(_) => {
+                                if optional {
+                                    Cow::from(format!("OPTIONAL_SUM({name})", name = name.to_cpp_enum_case()))
+                                } else {
+                                    Cow::from(format!("SUM({name})", name = name.to_cpp_enum_case()))
+                                }
+                            }
+                            TypeSpec::Array { ref contents, .. } => {
+                                debug!(target: "generate_spidermonkey", "It's an array {:?}", contents);
+                                let contents = TypeName::type_(contents);
+                                if optional {
+                                    Cow::from(format!("OPTIONAL_LIST({name}, {contents})",
+                                        name = name.to_cpp_enum_case(),
+                                        contents = contents))
+                                } else {
+                                    Cow::from(format!("LIST({name}, {contents})",
+                                        name = name.to_cpp_enum_case(),
+                                        contents = contents))
+                                }
+                            }
+                            _ => {
+                                Self::get_field_type_name(Some(name.to_str()), spec, alias_type.as_ref(), optional)
+                            }
+                        }
+                    }
+                NamedType::StringEnum(_) if type_.is_optional() => Cow::from(
+                    format!("OPTIONAL_STRING_ENUM({name})",
+                        name = TypeName::type_(type_))),
+                NamedType::StringEnum(_) => Cow::from(
+                    format!("STRING_ENUM({name})",
+                        name = TypeName::type_(type_))),
+                NamedType::Interface(ref interface) if type_.is_optional() => Cow::from(
+                    format!("OPTIONAL_INTERFACE({name})",
+                        name = interface.name().to_class_cases())),
+                NamedType::Interface(ref interface) => Cow::from(
+                    format!("INTERFACE({name})",
+                        name = interface.name().to_class_cases())),
+                }
+            }
+            TypeSpec::TypeSum(ref contents) if type_.is_optional() => {
+                // We need to make sure that we don't count the `optional` part twice.
+                // FIXME: The problem seems to only show up in this branch, but it looks like
+                // it might (should?) appear in other branches, too.
+                let non_optional_type = Type::sum(contents.types()).required();
+                let name = TypeName::type_(&non_optional_type);
+                Cow::from(format!("OPTIONAL_SUM({name})", name = name))
+            }
+            TypeSpec::TypeSum(_) => Cow::from(format!("SUM({name})", name = TypeName::type_(type_))),
+        }
+    }
+
     /// Declaring enums for kinds and fields.
     fn export_declare_kinds_and_fields_enums(&self, buffer: &mut String) {
         buffer.push_str(&self.rules.hpp_tokens_header.reindent(""));
@@ -1093,7 +1189,6 @@ const size_t BINAST_SUM_{sum_macro_name}_LIMIT = {limit};
 //      `typename` is the name of the string enum (e.g. no `Maybe` prefix)
 ");
         for (interface_name, interface) in self.syntax.interfaces_by_name().iter().sorted_by_key(|a| a.0) {
-            use std::borrow::Cow;
             let interface_enum_name = interface_name.to_cpp_enum_case();
             let interface_spec_name = interface_name.clone();
             let interface_macro_name = interface.name().to_cpp_macro_case();
@@ -1106,86 +1201,7 @@ const size_t BINAST_SUM_{sum_macro_name}_LIMIT = {limit};
                     .iter()
                     .enumerate()
                     .map(|(i, field)| {
-                        fn get_field_type_name(spec: &Spec, type_: &Type, make_optional: bool) -> Cow<'static, str> {
-                            let optional = make_optional || type_.is_optional();
-                            match *type_.spec() {
-                                TypeSpec::Boolean if optional => Cow::from("PRIMITIVE(MaybeBoolean)"),
-                                TypeSpec::Boolean => Cow::from("PRIMITIVE(Boolean)"),
-                                TypeSpec::String if optional => Cow::from("PRIMITIVE(MaybeString)"),
-                                TypeSpec::String => Cow::from("PRIMITIVE(String)"),
-                                TypeSpec::Number if optional => Cow::from("PRIMITIVE(MaybeNumber)"),
-                                TypeSpec::Number => Cow::from("PRIMITIVE(Number)"),
-                                TypeSpec::UnsignedLong if optional => Cow::from("PRIMITIVE(MaybeUnsignedLong)"),
-                                TypeSpec::UnsignedLong => Cow::from("PRIMITIVE(UnsignedLong)"),
-                                TypeSpec::Offset if optional => Cow::from("PRIMITIVE(MaybeLazy)"),
-                                TypeSpec::Offset => Cow::from("PRIMITIVE(Lazy)"),
-                                TypeSpec::Void if optional => Cow::from("PRIMITIVE(MaybeVoid)"),
-                                TypeSpec::Void => Cow::from("PRIMITIVE(Void)"),
-                                TypeSpec::IdentifierName if optional => Cow::from("PRIMITIVE(MaybeIdentifierName)"),
-                                TypeSpec::IdentifierName => Cow::from("PRIMITIVE(IdentifierName)"),
-                                TypeSpec::PropertyKey if optional => Cow::from("PRIMITIVE(MaybePropertyKey)"),
-                                TypeSpec::PropertyKey => Cow::from("PRIMITIVE(PropertyKey)"),
-                                TypeSpec::Array { ref contents, .. } => Cow::from(
-                                    format!("LIST({name}, {contents})",
-                                        name = TypeName::type_(type_),
-                                        contents = TypeName::type_(contents),
-                                )),
-                                TypeSpec::NamedType(ref name) => match spec.get_type_by_name(name).expect("By now, all types MUST exist") {
-                                    NamedType::Typedef(alias_type) => {
-                                        if alias_type.is_optional() {
-                                            return get_field_type_name(spec, alias_type.as_ref(), true)
-                                        }
-                                        // Keep the simple name of sums and lists if there is one.
-                                        match *alias_type.spec() {
-                                            TypeSpec::TypeSum(_) => {
-                                                if optional {
-                                                    Cow::from(format!("OPTIONAL_SUM({name})", name = name.to_cpp_enum_case()))
-                                                } else {
-                                                    Cow::from(format!("SUM({name})", name = name.to_cpp_enum_case()))
-                                                }
-                                            }
-                                            TypeSpec::Array { ref contents, .. } => {
-                                                let contents = TypeName::type_(contents);
-                                                if optional {
-                                                    Cow::from(format!("OPTIONAL_LIST({name}, {contents})",
-                                                        name = name.to_cpp_enum_case(),
-                                                        contents = contents))
-                                                } else {
-                                                    Cow::from(format!("LIST({name}, {contents})",
-                                                        name = name.to_cpp_enum_case(),
-                                                        contents = contents))
-                                                }
-                                            }
-                                            _ => {
-                                                get_field_type_name(spec, alias_type.as_ref(), optional)
-                                            }
-                                        }
-                                    }
-                                    NamedType::StringEnum(_) if type_.is_optional() => Cow::from(
-                                        format!("OPTIONAL_STRING_ENUM({name})",
-                                            name = TypeName::type_(type_))),
-                                    NamedType::StringEnum(_) => Cow::from(
-                                        format!("STRING_ENUM({name})",
-                                            name = TypeName::type_(type_))),
-                                    NamedType::Interface(ref interface) if type_.is_optional() => Cow::from(
-                                        format!("OPTIONAL_INTERFACE({name})",
-                                            name = interface.name().to_class_cases())),
-                                    NamedType::Interface(ref interface) => Cow::from(
-                                        format!("INTERFACE({name})",
-                                            name = interface.name().to_class_cases())),
-                                }
-                                TypeSpec::TypeSum(ref contents) if type_.is_optional() => {
-                                    // We need to make sure that we don't count the `optional` part twice.
-                                    // FIXME: The problem seems to only show up in this branch, but it looks like
-                                    // it might (should?) appear in other branches, too.
-                                    let non_optional_type = Type::sum(contents.types()).required();
-                                    let name = TypeName::type_(&non_optional_type);
-                                    Cow::from(format!("OPTIONAL_SUM({name})", name = name))
-                                }
-                                TypeSpec::TypeSum(_) => Cow::from(format!("SUM({name})", name = TypeName::type_(type_))),
-                            }
-                        }
-                        let field_type_name = get_field_type_name(&self.syntax, field.type_(), false);
+                        let field_type_name = Self::get_field_type_name(None, &self.syntax, field.type_(), false);
                         format!("    F({interface_enum_name}, {field_enum_name}, {field_index}, {field_type}, \"{interface_spec_name}::{field_spec_name}\")",
                             interface_enum_name = interface_enum_name,
                             field_enum_name = field.name().to_cpp_enum_case(),
@@ -1259,20 +1275,41 @@ enum class BinASTStringEnum: uint16_t {
         buffer.push_str(&format!("\n// The number of distinct values of BinASTStringEnum.\nconst size_t BINASTSTRINGENUM_LIMIT = {};\n\n\n",
             self.syntax.string_enums_by_name().len()));
 
-       buffer.push_str(&format!("\n#define FOR_EACH_BIN_LIST(F) \\\n{nodes}\n",
+
+       buffer.push_str(&format!("
+// This macro accepts the following arguments:
+// - F: callback
+// - PRIMITIVE: wrapper for primitive type names - called as `PRIMITIVE(typename)`
+// - INTERFACE: wrapper for non-optional interface type names - called as `INTERFACE(typename)`
+// - OPTIONAL_INTERFACE: wrapper for optional interface type names - called as `OPTIONAL_INTERFACE(typename)` where
+//      `typename` is the name of the interface (e.g. no `Maybe` prefix)
+// - LIST: wrapper for list types - called as `LIST(list_typename, element_typename)`
+// - SUM: wrapper for non-optional type names - called as `SUM(typename)`
+// - OPTIONAL_SUM: wrapper for optional sum type names - called as `OPTIONAL_SUM(typename)` where
+//      `typename` is the name of the sum (e.g. no `Maybe` prefix)
+// - STRING_ENUM: wrapper for non-optional string enum types - called as `STRING_ENUNM(typename)`
+// - OPTIONAL_STRING_ENUM: wrapper for optional string enum type names - called as `OPTIONAL_STRING_ENUM(typename)` where
+//      `typename` is the name of the string enum (e.g. no `Maybe` prefix)
+#define FOR_EACH_BIN_LIST(F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, STRING_ENUM, OPTIONAL_STRING_ENUM) \\\n{nodes}\n",
             nodes = self.list_parsers_to_generate.iter()
                 .sorted_by_key(|data| &data.name)
                 .into_iter()
-                .map(|data| format!("    F({list_name}, {content_name}, \"{spec_name}\")",
-                    list_name = data.name.to_cpp_enum_case(),
-                    content_name = data.elements.to_cpp_enum_case(),
-                    spec_name = data.name.to_str()))
+                .map(|data| {
+                    debug!(target: "generate_spidermonkey", "Generating FOR_EACH_BIN_LIST case {list_name}", list_name = data.name);
+                    format!("    F({list_name}, {content_name}, \"{spec_name}\", {type_name})",
+                        list_name = data.name.to_cpp_enum_case(),
+                        content_name = data.elements.to_cpp_enum_case(),
+                        spec_name = data.name.to_str(),
+                        type_name = Self::get_field_type_name(Some(data.name.to_str()), &self.syntax, self.syntax.typedefs_by_name().get(&data.name).unwrap(), false))
+                })
                 .format(" \\\n")));
         buffer.push_str("
 enum class BinASTList: uint16_t {
-#define EMIT_ENUM(name, _content, _user) name,
-    FOR_EACH_BIN_LIST(EMIT_ENUM)
+#define NOTHING(_)
+#define EMIT_ENUM(name, _content, _user, _type_name) name,
+    FOR_EACH_BIN_LIST(EMIT_ENUM, NOTHING, NOTHING, NOTHING, NOTHING, NOTHING, NOTHING, NOTHING, NOTHING)
 #undef EMIT_ENUM
+#undef NOTHING
 };
 ");
         buffer.push_str(&format!("\n// The number of distinct list types in the grammar. Used typically to maintain a probability table per list type.\nconst size_t BINAST_NUMBER_OF_LIST_TYPES = {};\n\n\n", self.list_parsers_to_generate.len()));
@@ -1282,14 +1319,15 @@ enum class BinASTList: uint16_t {
                 .iter()
                 .sorted_by_key(|a| a.0)
                 .into_iter()
-                .map(|(name, _)| format!("    F({name}, \"{spec_name}\", {macro_name})",
+                .map(|(name, _)| format!("    F({name}, \"{spec_name}\", {macro_name}, {type_name})",
                     name = name.to_cpp_enum_case(),
                     spec_name = name.to_str(),
-                    macro_name = name.to_cpp_macro_case()))
+                    macro_name = name.to_cpp_macro_case(),
+                    type_name = Self::get_field_type_name(Some(name.to_str()), &self.syntax, self.syntax.typedefs_by_name().get(name).unwrap(), false)))
                 .format(" \\\n")));
         buffer.push_str("
 enum class BinASTSum: uint16_t {
-#define EMIT_ENUM(name, _user, _macro) name,
+#define EMIT_ENUM(name, _user, _macro, _type) name,
     FOR_EACH_BIN_SUM(EMIT_ENUM)
 #undef EMIT_ENUM
 };
@@ -1299,6 +1337,7 @@ enum class BinASTSum: uint16_t {
 
         buffer.push_str(&self.rules.hpp_tokens_footer.reindent(""));
         buffer.push_str("\n");
+
     }
 
     /// Declare string enums
