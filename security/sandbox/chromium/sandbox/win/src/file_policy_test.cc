@@ -20,9 +20,9 @@
 #include "sandbox/win/tests/common/test_utils.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
-#define BINDNTDLL(name) \
-  name ## Function name = reinterpret_cast<name ## Function>( \
-    ::GetProcAddress(::GetModuleHandle(L"ntdll.dll"), #name))
+#define BINDNTDLL(name)                                   \
+  name##Function name = reinterpret_cast<name##Function>( \
+      ::GetProcAddress(::GetModuleHandle(L"ntdll.dll"), #name))
 
 namespace sandbox {
 
@@ -31,7 +31,7 @@ const ULONG kSharing = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
 // Creates a file using different desired access. Returns if the call succeeded
 // or not.  The first argument in argv is the filename. The second argument
 // determines the type of access and the dispositino of the file.
-SBOX_TESTS_COMMAND int File_Create(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int File_Create(int argc, wchar_t** argv) {
   if (argc != 2)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
@@ -39,9 +39,9 @@ SBOX_TESTS_COMMAND int File_Create(int argc, wchar_t **argv) {
 
   if (operation == L"Read") {
     base::win::ScopedHandle file1(CreateFile(
-        argv[1], GENERIC_READ, kSharing, NULL, OPEN_EXISTING, 0, NULL));
+        argv[1], GENERIC_READ, kSharing, nullptr, OPEN_EXISTING, 0, nullptr));
     base::win::ScopedHandle file2(CreateFile(
-        argv[1], FILE_EXECUTE, kSharing, NULL, OPEN_EXISTING, 0, NULL));
+        argv[1], FILE_EXECUTE, kSharing, nullptr, OPEN_EXISTING, 0, nullptr));
 
     if (file1.IsValid() == file2.IsValid())
       return file1.IsValid() ? SBOX_TEST_SUCCEEDED : SBOX_TEST_DENIED;
@@ -49,20 +49,20 @@ SBOX_TESTS_COMMAND int File_Create(int argc, wchar_t **argv) {
 
   } else if (operation == L"Write") {
     base::win::ScopedHandle file1(CreateFile(
-        argv[1], GENERIC_ALL, kSharing, NULL, OPEN_EXISTING, 0, NULL));
-    base::win::ScopedHandle file2(CreateFile(
-        argv[1], GENERIC_READ | FILE_WRITE_DATA, kSharing, NULL, OPEN_EXISTING,
-        0, NULL));
+        argv[1], GENERIC_ALL, kSharing, nullptr, OPEN_EXISTING, 0, nullptr));
+    base::win::ScopedHandle file2(
+        CreateFile(argv[1], GENERIC_READ | FILE_WRITE_DATA, kSharing, nullptr,
+                   OPEN_EXISTING, 0, nullptr));
 
     if (file1.IsValid() == file2.IsValid())
       return file1.IsValid() ? SBOX_TEST_SUCCEEDED : SBOX_TEST_DENIED;
     return file1.IsValid() ? SBOX_TEST_FIRST_ERROR : SBOX_TEST_SECOND_ERROR;
 
   } else if (operation == L"ReadCreate") {
-    base::win::ScopedHandle file2(CreateFile(
-        argv[1], GENERIC_READ, kSharing, NULL, CREATE_NEW, 0, NULL));
+    base::win::ScopedHandle file2(CreateFile(argv[1], GENERIC_READ, kSharing,
+                                             nullptr, CREATE_NEW, 0, nullptr));
     base::win::ScopedHandle file1(CreateFile(
-        argv[1], GENERIC_READ, kSharing, NULL, CREATE_ALWAYS, 0, NULL));
+        argv[1], GENERIC_READ, kSharing, nullptr, CREATE_ALWAYS, 0, nullptr));
 
     if (file1.IsValid() == file2.IsValid())
       return file1.IsValid() ? SBOX_TEST_SUCCEEDED : SBOX_TEST_DENIED;
@@ -72,7 +72,7 @@ SBOX_TESTS_COMMAND int File_Create(int argc, wchar_t **argv) {
   return SBOX_TEST_INVALID_PARAMETER;
 }
 
-SBOX_TESTS_COMMAND int File_Win32Create(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int File_Win32Create(int argc, wchar_t** argv) {
   if (argc != 1) {
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
   }
@@ -82,8 +82,9 @@ SBOX_TESTS_COMMAND int File_Win32Create(int argc, wchar_t **argv) {
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
   }
 
-  HANDLE file = ::CreateFileW(full_path.c_str(), GENERIC_READ, kSharing,
-                              NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  HANDLE file =
+      ::CreateFileW(full_path.c_str(), GENERIC_READ, kSharing, nullptr,
+                    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 
   if (INVALID_HANDLE_VALUE != file) {
     ::CloseHandle(file);
@@ -100,7 +101,7 @@ SBOX_TESTS_COMMAND int File_Win32Create(int argc, wchar_t **argv) {
 
 // Creates the file in parameter using the NtCreateFile api and returns if the
 // call succeeded or not.
-SBOX_TESTS_COMMAND int File_CreateSys32(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int File_CreateSys32(int argc, wchar_t** argv) {
   BINDNTDLL(NtCreateFile);
   BINDNTDLL(RtlInitUnicodeString);
   if (!NtCreateFile || !RtlInitUnicodeString)
@@ -118,13 +119,13 @@ SBOX_TESTS_COMMAND int File_CreateSys32(int argc, wchar_t **argv) {
 
   OBJECT_ATTRIBUTES obj_attributes = {};
   InitializeObjectAttributes(&obj_attributes, &object_name,
-                             OBJ_CASE_INSENSITIVE, NULL, NULL);
+                             OBJ_CASE_INSENSITIVE, nullptr, nullptr);
 
   HANDLE handle;
   IO_STATUS_BLOCK io_block = {};
-  NTSTATUS status = NtCreateFile(&handle, FILE_READ_DATA, &obj_attributes,
-                                 &io_block, NULL, 0, kSharing, FILE_OPEN,
-                                 0, NULL, 0);
+  NTSTATUS status =
+      NtCreateFile(&handle, FILE_READ_DATA, &obj_attributes, &io_block, nullptr,
+                   0, kSharing, FILE_OPEN, 0, nullptr, 0);
   if (NT_SUCCESS(status)) {
     ::CloseHandle(handle);
     return SBOX_TEST_SUCCEEDED;
@@ -138,7 +139,7 @@ SBOX_TESTS_COMMAND int File_CreateSys32(int argc, wchar_t **argv) {
 
 // Opens the file in parameter using the NtOpenFile api and returns if the
 // call succeeded or not.
-SBOX_TESTS_COMMAND int File_OpenSys32(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int File_OpenSys32(int argc, wchar_t** argv) {
   BINDNTDLL(NtOpenFile);
   BINDNTDLL(RtlInitUnicodeString);
   if (!NtOpenFile || !RtlInitUnicodeString)
@@ -153,7 +154,7 @@ SBOX_TESTS_COMMAND int File_OpenSys32(int argc, wchar_t **argv) {
 
   OBJECT_ATTRIBUTES obj_attributes = {};
   InitializeObjectAttributes(&obj_attributes, &object_name,
-                             OBJ_CASE_INSENSITIVE, NULL, NULL);
+                             OBJ_CASE_INSENSITIVE, nullptr, nullptr);
 
   HANDLE handle;
   IO_STATUS_BLOCK io_block = {};
@@ -170,7 +171,7 @@ SBOX_TESTS_COMMAND int File_OpenSys32(int argc, wchar_t **argv) {
   return SBOX_TEST_FAILED;
 }
 
-SBOX_TESTS_COMMAND int File_GetDiskSpace(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int File_GetDiskSpace(int argc, wchar_t** argv) {
   base::string16 sys_path = MakePathToSys(L"", false);
   if (sys_path.empty()) {
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
@@ -180,7 +181,7 @@ SBOX_TESTS_COMMAND int File_GetDiskSpace(int argc, wchar_t **argv) {
   ULARGE_INTEGER free_total = {};
   if (::GetDiskFreeSpaceExW(sys_path.c_str(), &free_user, &total,
                             &free_total)) {
-    if ((total.QuadPart != 0) && (free_total.QuadPart !=0)) {
+    if ((total.QuadPart != 0) && (free_total.QuadPart != 0)) {
       return SBOX_TEST_SUCCEEDED;
     }
   } else {
@@ -195,7 +196,7 @@ SBOX_TESTS_COMMAND int File_GetDiskSpace(int argc, wchar_t **argv) {
 
 // Move a file using the MoveFileEx api and returns if the call succeeded or
 // not.
-SBOX_TESTS_COMMAND int File_Rename(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int File_Rename(int argc, wchar_t** argv) {
   if (argc != 2)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
@@ -213,7 +214,7 @@ SBOX_TESTS_COMMAND int File_Rename(int argc, wchar_t **argv) {
 // second argument in argv is "d" or "f" telling if we expect the attributes to
 // specify a file or a directory. The expected attribute has to match the real
 // attributes for the call to be successful.
-SBOX_TESTS_COMMAND int File_QueryAttributes(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int File_QueryAttributes(int argc, wchar_t** argv) {
   BINDNTDLL(NtQueryAttributesFile);
   BINDNTDLL(NtQueryFullAttributesFile);
   BINDNTDLL(RtlInitUnicodeString);
@@ -232,7 +233,7 @@ SBOX_TESTS_COMMAND int File_QueryAttributes(int argc, wchar_t **argv) {
 
   OBJECT_ATTRIBUTES obj_attributes = {};
   InitializeObjectAttributes(&obj_attributes, &object_name,
-                             OBJ_CASE_INSENSITIVE, NULL, NULL);
+                             OBJ_CASE_INSENSITIVE, nullptr, nullptr);
 
   FILE_BASIC_INFORMATION info = {};
   FILE_NETWORK_OPEN_INFORMATION full_info = {};
@@ -258,10 +259,25 @@ SBOX_TESTS_COMMAND int File_QueryAttributes(int argc, wchar_t **argv) {
   return SBOX_TEST_FAILED;
 }
 
+// Tries to create a backup of calc.exe in system32 folder. This should fail
+// with ERROR_ACCESS_DENIED if everything is working as expected.
+SBOX_TESTS_COMMAND int File_CopyFile(int argc, wchar_t** argv) {
+  base::string16 calc_path = MakePathToSys(L"calc.exe", false);
+  base::string16 calc_backup_path = MakePathToSys(L"calc.exe.bak", false);
+
+  if (::CopyFile(calc_path.c_str(), calc_backup_path.c_str(), FALSE))
+    return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
+
+  if (::GetLastError() != ERROR_ACCESS_DENIED)
+    return SBOX_TEST_FAILED;
+
+  return SBOX_TEST_SUCCEEDED;
+}
+
 TEST(FilePolicyTest, DenyNtCreateCalc) {
   TestRunner runner;
-  EXPECT_TRUE(runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_DIR_ANY,
-                                  L"calc.exe"));
+  EXPECT_TRUE(
+      runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_DIR_ANY, L"calc.exe"));
 
   EXPECT_EQ(SBOX_TEST_DENIED, runner.RunTest(L"File_CreateSys32 calc.exe"));
 
@@ -280,7 +296,6 @@ TEST(FilePolicyTest, AllowNtCreateCalc) {
 }
 
 TEST(FilePolicyTest, AllowNtCreateWithNativePath) {
-
   base::string16 calc = MakePathToSys(L"calc.exe", false);
   base::string16 nt_path;
   ASSERT_TRUE(GetNtPathFromWin32Path(calc, &nt_path));
@@ -291,7 +306,8 @@ TEST(FilePolicyTest, AllowNtCreateWithNativePath) {
   ::wsprintfW(buff, L"File_CreateSys32 %s", nt_path.c_str());
   EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(buff));
 
-  std::transform(nt_path.begin(), nt_path.end(), nt_path.begin(), std::tolower);
+  for (wchar_t& c : nt_path)
+    c = std::tolower(c);
   ::wsprintfW(buff, L"File_CreateSys32 %s", nt_path.c_str());
   EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(buff));
 }
@@ -305,8 +321,8 @@ TEST(FilePolicyTest, AllowReadOnly) {
   ASSERT_NE(::GetTempPath(MAX_PATH, temp_directory), 0u);
   ASSERT_NE(::GetTempFileName(temp_directory, L"test", 0, temp_file_name), 0u);
 
-  EXPECT_TRUE(runner.AddFsRule(TargetPolicy::FILES_ALLOW_READONLY,
-                               temp_file_name));
+  EXPECT_TRUE(
+      runner.AddFsRule(TargetPolicy::FILES_ALLOW_READONLY, temp_file_name));
 
   wchar_t command_read[MAX_PATH + 20] = {};
   wsprintf(command_read, L"File_Create Read \"%ls\"", temp_file_name);
@@ -334,7 +350,6 @@ TEST(FilePolicyTest, AllowReadOnly) {
 
 // Tests support of "\\\\.\\DeviceName" kind of paths.
 TEST(FilePolicyTest, AllowImplicitDeviceName) {
-
   TestRunner runner;
 
   wchar_t temp_directory[MAX_PATH];
@@ -408,13 +423,13 @@ TEST(FilePolicyTest, CheckNoLeak) {
 
 TEST(FilePolicyTest, TestQueryAttributesFile) {
   TestRunner runner;
-  EXPECT_TRUE(runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_ANY,
-                                  L"appmgmts.dll"));
-  EXPECT_TRUE(runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_ANY,
-                                  L"notfound.exe"));
+  EXPECT_TRUE(
+      runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_ANY, L"appmgmts.dll"));
+  EXPECT_TRUE(
+      runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_ANY, L"notfound.exe"));
   EXPECT_TRUE(runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_ANY, L"drivers"));
-  EXPECT_TRUE(runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_QUERY,
-                                  L"ipconfig.exe"));
+  EXPECT_TRUE(
+      runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_QUERY, L"ipconfig.exe"));
 
   EXPECT_EQ(SBOX_TEST_SUCCEEDED,
             runner.RunTest(L"File_QueryAttributes drivers d"));
@@ -466,19 +481,18 @@ TEST(FilePolicyTest, TestRename) {
   ASSERT_NE(::GetTempFileName(temp_directory, L"test", 0, temp_file_name7), 0u);
   ASSERT_NE(::GetTempFileName(temp_directory, L"test", 0, temp_file_name8), 0u);
 
-
   // Add rules to make file1->file2 succeed.
   ASSERT_TRUE(runner.AddFsRule(TargetPolicy::FILES_ALLOW_ANY, temp_file_name1));
   ASSERT_TRUE(runner.AddFsRule(TargetPolicy::FILES_ALLOW_ANY, temp_file_name2));
 
   // Add rules to make file3->file4 fail.
   ASSERT_TRUE(runner.AddFsRule(TargetPolicy::FILES_ALLOW_ANY, temp_file_name3));
-  ASSERT_TRUE(runner.AddFsRule(TargetPolicy::FILES_ALLOW_READONLY,
-                               temp_file_name4));
+  ASSERT_TRUE(
+      runner.AddFsRule(TargetPolicy::FILES_ALLOW_READONLY, temp_file_name4));
 
   // Add rules to make file5->file6 fail.
-  ASSERT_TRUE(runner.AddFsRule(TargetPolicy::FILES_ALLOW_READONLY,
-                               temp_file_name5));
+  ASSERT_TRUE(
+      runner.AddFsRule(TargetPolicy::FILES_ALLOW_READONLY, temp_file_name5));
   ASSERT_TRUE(runner.AddFsRule(TargetPolicy::FILES_ALLOW_ANY, temp_file_name6));
 
   // Add rules to make file7->no_pol_file fail.
@@ -507,7 +521,6 @@ TEST(FilePolicyTest, TestRename) {
            temp_file_name8);
   EXPECT_EQ(SBOX_TEST_DENIED, runner.RunTest(command));
 
-
   // Delete all the files in case they are still there.
   ::DeleteFile(temp_file_name1);
   ::DeleteFile(temp_file_name2);
@@ -521,8 +534,8 @@ TEST(FilePolicyTest, TestRename) {
 
 TEST(FilePolicyTest, OpenSys32FilesDenyBecauseOfDir) {
   TestRunner runner;
-  EXPECT_TRUE(runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_DIR_ANY,
-                                  L"notepad.exe"));
+  EXPECT_TRUE(
+      runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_DIR_ANY, L"notepad.exe"));
 
   EXPECT_EQ(SBOX_TEST_DENIED, runner.RunTest(L"File_Win32Create notepad.exe"));
 
@@ -533,8 +546,8 @@ TEST(FilePolicyTest, OpenSys32FilesDenyBecauseOfDir) {
 
 TEST(FilePolicyTest, OpenSys32FilesAllowNotepad) {
   TestRunner runner;
-  EXPECT_TRUE(runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_ANY,
-                                  L"notepad.exe"));
+  EXPECT_TRUE(
+      runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_ANY, L"notepad.exe"));
 
   EXPECT_EQ(SBOX_TEST_SUCCEEDED,
             runner.RunTest(L"File_Win32Create notepad.exe"));
@@ -576,7 +589,7 @@ TEST(FilePolicyTest, TestReparsePoint) {
 
   // Delete the file and create a directory instead.
   ASSERT_TRUE(::DeleteFile(temp_file_name));
-  ASSERT_TRUE(::CreateDirectory(temp_file_name, NULL));
+  ASSERT_TRUE(::CreateDirectory(temp_file_name, nullptr));
 
   // Create a temporary file in the subfolder.
   base::string16 subfolder = temp_file_name;
@@ -584,8 +597,8 @@ TEST(FilePolicyTest, TestReparsePoint) {
   base::string16 temp_file = subfolder + L"\\file_" + temp_file_title;
 
   HANDLE file = ::CreateFile(temp_file.c_str(), FILE_ALL_ACCESS,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                             CREATE_ALWAYS, 0, NULL);
+                             FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                             CREATE_ALWAYS, 0, nullptr);
   ASSERT_TRUE(INVALID_HANDLE_VALUE != file);
   ASSERT_TRUE(::CloseHandle(file));
 
@@ -593,9 +606,9 @@ TEST(FilePolicyTest, TestReparsePoint) {
   base::string16 temp_dir = temp_directory;
   base::string16 temp_file_in_temp = temp_dir + L"file_" + temp_file_title;
   file = ::CreateFile(temp_file_in_temp.c_str(), FILE_ALL_ACCESS,
-                      FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                      CREATE_ALWAYS, 0, NULL);
-  ASSERT_TRUE(file != NULL);
+                      FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                      CREATE_ALWAYS, 0, nullptr);
+  ASSERT_TRUE(INVALID_HANDLE_VALUE != file);
   ASSERT_TRUE(::CloseHandle(file));
 
   // Give write access to the temp directory.
@@ -615,8 +628,8 @@ TEST(FilePolicyTest, TestReparsePoint) {
   // Replace the subfolder by a reparse point to %temp%.
   ::DeleteFile(temp_file.c_str());
   HANDLE dir = ::CreateFile(subfolder.c_str(), FILE_ALL_ACCESS,
-                            FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+                            FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
   EXPECT_TRUE(INVALID_HANDLE_VALUE != dir);
 
   base::string16 temp_dir_nt;
@@ -630,9 +643,9 @@ TEST(FilePolicyTest, TestReparsePoint) {
 
   // Remove the reparse point.
   dir = ::CreateFile(subfolder.c_str(), FILE_ALL_ACCESS,
-                     FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                     FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
                      FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-                     NULL);
+                     nullptr);
   EXPECT_TRUE(INVALID_HANDLE_VALUE != dir);
   EXPECT_TRUE(DeleteReparsePoint(dir));
   EXPECT_TRUE(::CloseHandle(dir));
@@ -664,6 +677,29 @@ TEST(FilePolicyTest, CheckMissingNTPrefixEscape) {
   base::string16 result = FixNTPrefixForMatch(name);
 
   EXPECT_STREQ(result.c_str(), L"\\/?/?\\C:\\NAME");
+}
+
+TEST(FilePolicyTest, TestCopyFile) {
+  // Check if the test is running Win8 or newer since
+  // MITIGATION_STRICT_HANDLE_CHECKS is not supported on older systems.
+  if (base::win::GetVersion() < base::win::VERSION_WIN8)
+    return;
+
+  TestRunner runner;
+  runner.SetTimeout(2000);
+
+  // Allow read access to calc.exe, this should be on all Windows versions.
+  ASSERT_TRUE(
+      runner.AddRuleSys32(TargetPolicy::FILES_ALLOW_READONLY, L"calc.exe"));
+
+  sandbox::TargetPolicy* policy = runner.GetPolicy();
+
+  // Set proper mitigation.
+  EXPECT_EQ(
+      policy->SetDelayedProcessMitigations(MITIGATION_STRICT_HANDLE_CHECKS),
+      SBOX_ALL_OK);
+
+  ASSERT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"File_CopyFile"));
 }
 
 }  // namespace sandbox

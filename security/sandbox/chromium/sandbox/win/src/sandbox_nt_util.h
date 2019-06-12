@@ -8,28 +8,34 @@
 #include <intrin.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <memory>
 
 #include "base/macros.h"
 #include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/sandbox_nt_types.h"
 
 // Placement new and delete to be used from ntdll interception code.
-void* __cdecl operator new(size_t size, sandbox::AllocationType type,
-                           void* near_to = NULL);
-void* __cdecl operator new[](size_t size, sandbox::AllocationType type,
-			     void* near_to = NULL);
+void* __cdecl operator new(size_t size,
+                           sandbox::AllocationType type,
+                           void* near_to = nullptr);
+void* __cdecl operator new[](size_t size,
+                             sandbox::AllocationType type,
+                             void* near_to = nullptr);
 void __cdecl operator delete(void* memory, sandbox::AllocationType type);
 // Add operator delete that matches the placement form of the operator new
 // above. This is required by compiler to generate code to call operator delete
 // in case the object's constructor throws an exception.
 // See http://msdn.microsoft.com/en-us/library/cxdxz3x6.aspx
-void __cdecl operator delete(void* memory, sandbox::AllocationType type,
+void __cdecl operator delete(void* memory,
+                             sandbox::AllocationType type,
                              void* near_to);
 
 // Regular placement new and delete
-void* __cdecl operator new(size_t size, void* buffer,
+void* __cdecl operator new(size_t size,
+                           void* buffer,
                            sandbox::AllocationType type);
-void __cdecl operator delete(void* memory, void* buffer,
+void __cdecl operator delete(void* memory,
+                             void* buffer,
                              sandbox::AllocationType type);
 
 // DCHECK_NT is defined to be pretty much an assert at this time because we
@@ -40,7 +46,8 @@ void __cdecl operator delete(void* memory, void* buffer,
 // returning a bool, while VERIFY_SUCCESS expects an action returning
 // NTSTATUS.
 #ifndef NDEBUG
-#define DCHECK_NT(condition) { (condition) ? (void)0 : __debugbreak(); }
+#define DCHECK_NT(condition) \
+  { (condition) ? (void)0 : __debugbreak(); }
 #define VERIFY(action) DCHECK_NT(action)
 #define VERIFY_SUCCESS(action) DCHECK_NT(NT_SUCCESS(action))
 #else
@@ -49,7 +56,8 @@ void __cdecl operator delete(void* memory, void* buffer,
 #define VERIFY_SUCCESS(action) (action)
 #endif
 
-#define CHECK_NT(condition) { (condition) ? (void)0 : __debugbreak(); }
+#define CHECK_NT(condition) \
+  { (condition) ? (void)0 : __debugbreak(); }
 
 #define NOTREACHED_NT() DCHECK_NT(false)
 
@@ -61,15 +69,18 @@ namespace sandbox {
 
 #elif defined(_M_IX86)
 extern "C" long _InterlockedCompareExchange(long volatile* destination,
-                                            long exchange, long comperand);
+                                            long exchange,
+                                            long comperand);
 
 #pragma intrinsic(_InterlockedCompareExchange)
 
 // We want to make sure that we use an intrinsic version of the function, not
 // the one provided by kernel32.
 __forceinline void* _InterlockedCompareExchangePointer(
-    void* volatile* destination, void* exchange, void* comperand) {
-  size_t ret = _InterlockedCompareExchange(
+    void* volatile* destination,
+    void* exchange,
+    void* comperand) {
+  long ret = _InterlockedCompareExchange(
       reinterpret_cast<long volatile*>(destination),
       static_cast<long>(reinterpret_cast<size_t>(exchange)),
       static_cast<long>(reinterpret_cast<size_t>(comperand)));
@@ -82,22 +93,23 @@ __forceinline void* _InterlockedCompareExchangePointer(
 
 #endif
 
+struct NtAllocDeleter {
+  inline void operator()(void* ptr) const {
+    operator delete(ptr, AllocationType::NT_ALLOC);
+  }
+};
+
 // Returns a pointer to the IPC shared memory.
 void* GetGlobalIPCMemory();
 
 // Returns a pointer to the Policy shared memory.
 void* GetGlobalPolicyMemory();
 
-enum RequiredAccess {
-  READ,
-  WRITE
-};
+enum RequiredAccess { READ, WRITE };
 
 // Performs basic user mode buffer validation. In any case, buffers access must
 // be protected by SEH. intent specifies if the buffer should be tested for read
 // or write.
-// Note that write intent implies destruction of the buffer content (we actually
-// write)
 bool ValidParameter(void* buffer, size_t size, RequiredAccess intent);
 
 // Copies data from a user buffer to our buffer. Returns the operation status.
@@ -105,14 +117,15 @@ NTSTATUS CopyData(void* destination, const void* source, size_t bytes);
 
 // Copies the name from an object attributes.
 NTSTATUS AllocAndCopyName(const OBJECT_ATTRIBUTES* in_object,
-                          wchar_t** out_name,
+                          std::unique_ptr<wchar_t, NtAllocDeleter>* out_name,
                           uint32_t* attributes,
                           HANDLE* root);
 
 // Determine full path name from object root and path.
-NTSTATUS AllocAndGetFullPath(HANDLE root,
-                             wchar_t* path,
-                             wchar_t** full_path);
+NTSTATUS AllocAndGetFullPath(
+    HANDLE root,
+    const wchar_t* path,
+    std::unique_ptr<wchar_t, NtAllocDeleter>* full_path);
 
 // Initializes our ntdll level heap
 bool InitHeap();
@@ -121,9 +134,9 @@ bool InitHeap();
 bool IsSameProcess(HANDLE process);
 
 enum MappedModuleFlags {
-  MODULE_IS_PE_IMAGE     = 1,   // Module is an executable.
-  MODULE_HAS_ENTRY_POINT = 2,   // Execution entry point found.
-  MODULE_HAS_CODE =        4    // Non zero size of executable sections.
+  MODULE_IS_PE_IMAGE = 1,      // Module is an executable.
+  MODULE_HAS_ENTRY_POINT = 2,  // Execution entry point found.
+  MODULE_HAS_CODE = 4          // Non zero size of executable sections.
 };
 
 // Returns the name and characteristics for a given PE module. The return
@@ -142,20 +155,28 @@ enum MappedModuleFlags {
 // operator delete(name, NT_ALLOC);
 UNICODE_STRING* GetImageInfoFromModule(HMODULE module, uint32_t* flags);
 
+// Returns the name and characteristics for a given PE module. The return
+// value is the name as defined by the export table.
+//
+// The returned buffer is within the PE module and must not be freed.
+const char* GetAnsiImageInfoFromModule(HMODULE module);
+
 // Returns the full path and filename for a given dll.
-// May return NULL if the provided address is not backed by a named section, or
-// if the current OS version doesn't support the call. The returned buffer must
-// be freed with a placement delete (see GetImageNameFromModule example).
+// May return nullptr if the provided address is not backed by a named section,
+// or if the current OS version doesn't support the call. The returned buffer
+// must be freed with a placement delete (see GetImageNameFromModule example).
 UNICODE_STRING* GetBackingFilePath(PVOID address);
 
 // Returns the last component of a path that contains the module name.
-// It will return NULL if the path ends with the path separator. The returned
+// It will return nullptr if the path ends with the path separator. The returned
 // buffer must be freed with a placement delete (see GetImageNameFromModule
 // example).
 UNICODE_STRING* ExtractModuleName(const UNICODE_STRING* module_path);
 
 // Returns true if the parameters correspond to a dll mapped as code.
-bool IsValidImageSection(HANDLE section, PVOID *base, PLARGE_INTEGER offset,
+bool IsValidImageSection(HANDLE section,
+                         PVOID* base,
+                         PLARGE_INTEGER offset,
                          PSIZE_T view_size);
 
 // Converts an ansi string to an UNICODE_STRING.
@@ -165,11 +186,9 @@ UNICODE_STRING* AnsiToUnicode(const char* string);
 class AutoProtectMemory {
  public:
   AutoProtectMemory()
-      : changed_(false), address_(NULL), bytes_(0), old_protect_(0) {}
+      : changed_(false), address_(nullptr), bytes_(0), old_protect_(0) {}
 
-  ~AutoProtectMemory() {
-    RevertProtection();
-  }
+  ~AutoProtectMemory() { RevertProtection(); }
 
   // Sets the desired protection of a given memory range.
   NTSTATUS ChangeProtection(void* address, size_t bytes, ULONG protect);
@@ -193,6 +212,5 @@ bool IsSupportedRenameCall(FILE_RENAME_INFORMATION* file_info,
                            uint32_t file_info_class);
 
 }  // namespace sandbox
-
 
 #endif  // SANDBOX_SRC_SANDBOX_NT_UTIL_H__

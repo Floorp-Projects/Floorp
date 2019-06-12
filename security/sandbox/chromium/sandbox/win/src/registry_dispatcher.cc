@@ -22,7 +22,8 @@
 namespace {
 
 // Builds a path using the root directory and the name.
-bool GetCompletePath(HANDLE root, const base::string16& name,
+bool GetCompletePath(HANDLE root,
+                     const base::string16& name,
                      base::string16* complete_name) {
   if (root) {
     if (!sandbox::GetPathFromHandle(root, complete_name))
@@ -37,7 +38,7 @@ bool GetCompletePath(HANDLE root, const base::string16& name,
   return true;
 }
 
-}
+}  // namespace
 
 namespace sandbox {
 
@@ -45,11 +46,7 @@ RegistryDispatcher::RegistryDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall create_params = {
       {IPC_NTCREATEKEY_TAG,
-       {WCHAR_TYPE,
-        UINT32_TYPE,
-        VOIDPTR_TYPE,
-        UINT32_TYPE,
-        UINT32_TYPE,
+       {WCHAR_TYPE, UINT32_TYPE, VOIDPTR_TYPE, UINT32_TYPE, UINT32_TYPE,
         UINT32_TYPE}},
       reinterpret_cast<CallbackGeneric>(&RegistryDispatcher::NtCreateKey)};
 
@@ -89,7 +86,7 @@ bool RegistryDispatcher::NtCreateKey(IPCInfo* ipc,
   // it valid in this process.
   if (root) {
     if (!::DuplicateHandle(ipc->client_info->process, root,
-                           ::GetCurrentProcess(), &root, 0, FALSE,
+                           ::GetCurrentProcess(), &root, 0, false,
                            DUPLICATE_SAME_ACCESS))
       return false;
 
@@ -104,16 +101,15 @@ bool RegistryDispatcher::NtCreateKey(IPCInfo* ipc,
   params[OpenKey::NAME] = ParamPickerMake(regname);
   params[OpenKey::ACCESS] = ParamPickerMake(desired_access);
 
-  EvalResult result = policy_base_->EvalPolicy(IPC_NTCREATEKEY_TAG,
-                                               params.GetBase());
+  EvalResult result =
+      policy_base_->EvalPolicy(IPC_NTCREATEKEY_TAG, params.GetBase());
 
   HANDLE handle;
   NTSTATUS nt_status;
   ULONG disposition = 0;
-  if (!RegistryPolicy::CreateKeyAction(result, *ipc->client_info, *name,
-                                       attributes, root, desired_access,
-                                       title_index, create_options, &handle,
-                                       &nt_status, &disposition)) {
+  if (!RegistryPolicy::CreateKeyAction(
+          result, *ipc->client_info, *name, attributes, root, desired_access,
+          title_index, create_options, &handle, &nt_status, &disposition)) {
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
     return true;
   }
@@ -137,10 +133,10 @@ bool RegistryDispatcher::NtOpenKey(IPCInfo* ipc,
   // it valid in this process.
   if (root) {
     if (!::DuplicateHandle(ipc->client_info->process, root,
-                           ::GetCurrentProcess(), &root, 0, FALSE,
+                           ::GetCurrentProcess(), &root, 0, false,
                            DUPLICATE_SAME_ACCESS))
       return false;
-      root_handle.Set(root);
+    root_handle.Set(root);
   }
 
   if (!GetCompletePath(root, *name, &real_path))
@@ -151,8 +147,8 @@ bool RegistryDispatcher::NtOpenKey(IPCInfo* ipc,
   params[OpenKey::NAME] = ParamPickerMake(regname);
   params[OpenKey::ACCESS] = ParamPickerMake(desired_access);
 
-  EvalResult result = policy_base_->EvalPolicy(IPC_NTOPENKEY_TAG,
-                                               params.GetBase());
+  EvalResult result =
+      policy_base_->EvalPolicy(IPC_NTOPENKEY_TAG, params.GetBase());
   HANDLE handle;
   NTSTATUS nt_status;
   if (!RegistryPolicy::OpenKeyAction(result, *ipc->client_info, *name,

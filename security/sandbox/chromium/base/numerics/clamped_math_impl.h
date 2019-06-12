@@ -78,14 +78,16 @@ struct ClampedAddOp<T,
                                             std::is_integral<U>::value>::type> {
   using result_type = typename MaxExponentPromotion<T, U>::type;
   template <typename V = result_type>
-  static V Do(T x, U y) {
-    // TODO(jschuh) Make this "constexpr if" once we're C++17.
+  static constexpr V Do(T x, U y) {
     if (ClampedAddFastOp<T, U>::is_supported)
       return ClampedAddFastOp<T, U>::template Do<V>(x, y);
 
-    V result;
-    // TODO(jschuh) C++14 constexpr allows a compile-time constant optimization.
+    static_assert(std::is_same<V, result_type>::value ||
+                      IsTypeInRangeForNumericType<U, V>::value,
+                  "The saturation result cannot be determined from the "
+                  "provided types.");
     const V saturated = CommonMaxOrMin<V>(IsValueNegative(y));
+    V result = {};
     return BASE_NUMERICS_LIKELY((CheckedAddOp<T, U>::Do(x, y, &result)))
                ? result
                : saturated;
@@ -102,14 +104,17 @@ struct ClampedSubOp<T,
                                             std::is_integral<U>::value>::type> {
   using result_type = typename MaxExponentPromotion<T, U>::type;
   template <typename V = result_type>
-  static V Do(T x, U y) {
+  static constexpr V Do(T x, U y) {
     // TODO(jschuh) Make this "constexpr if" once we're C++17.
     if (ClampedSubFastOp<T, U>::is_supported)
       return ClampedSubFastOp<T, U>::template Do<V>(x, y);
 
-    V result;
-    // TODO(jschuh) C++14 constexpr allows a compile-time constant optimization.
+    static_assert(std::is_same<V, result_type>::value ||
+                      IsTypeInRangeForNumericType<U, V>::value,
+                  "The saturation result cannot be determined from the "
+                  "provided types.");
     const V saturated = CommonMaxOrMin<V>(!IsValueNegative(y));
+    V result = {};
     return BASE_NUMERICS_LIKELY((CheckedSubOp<T, U>::Do(x, y, &result)))
                ? result
                : saturated;
@@ -126,12 +131,12 @@ struct ClampedMulOp<T,
                                             std::is_integral<U>::value>::type> {
   using result_type = typename MaxExponentPromotion<T, U>::type;
   template <typename V = result_type>
-  static V Do(T x, U y) {
+  static constexpr V Do(T x, U y) {
     // TODO(jschuh) Make this "constexpr if" once we're C++17.
     if (ClampedMulFastOp<T, U>::is_supported)
       return ClampedMulFastOp<T, U>::template Do<V>(x, y);
 
-    V result;
+    V result = {};
     const V saturated =
         CommonMaxOrMin<V>(IsValueNegative(x) ^ IsValueNegative(y));
     return BASE_NUMERICS_LIKELY((CheckedMulOp<T, U>::Do(x, y, &result)))
@@ -150,8 +155,8 @@ struct ClampedDivOp<T,
                                             std::is_integral<U>::value>::type> {
   using result_type = typename MaxExponentPromotion<T, U>::type;
   template <typename V = result_type>
-  static V Do(T x, U y) {
-    V result;
+  static constexpr V Do(T x, U y) {
+    V result = {};
     if (BASE_NUMERICS_LIKELY((CheckedDivOp<T, U>::Do(x, y, &result))))
       return result;
     // Saturation goes to max, min, or NaN (if x is zero).
@@ -170,8 +175,8 @@ struct ClampedModOp<T,
                                             std::is_integral<U>::value>::type> {
   using result_type = typename MaxExponentPromotion<T, U>::type;
   template <typename V = result_type>
-  static V Do(T x, U y) {
-    V result;
+  static constexpr V Do(T x, U y) {
+    V result = {};
     return BASE_NUMERICS_LIKELY((CheckedModOp<T, U>::Do(x, y, &result)))
                ? result
                : x;
@@ -190,7 +195,7 @@ struct ClampedLshOp<T,
                                             std::is_integral<U>::value>::type> {
   using result_type = T;
   template <typename V = result_type>
-  static V Do(T x, U shift) {
+  static constexpr V Do(T x, U shift) {
     static_assert(!std::is_signed<U>::value, "Shift value must be unsigned.");
     if (BASE_NUMERICS_LIKELY(shift < std::numeric_limits<T>::digits)) {
       // Shift as unsigned to avoid undefined behavior.
@@ -214,7 +219,7 @@ struct ClampedRshOp<T,
                                             std::is_integral<U>::value>::type> {
   using result_type = T;
   template <typename V = result_type>
-  static V Do(T x, U shift) {
+  static constexpr V Do(T x, U shift) {
     static_assert(!std::is_signed<U>::value, "Shift value must be unsigned.");
     // Signed right shift is odd, because it saturates to -1 or 0.
     const V saturated = as_unsigned(V(0)) - IsValueNegative(x);

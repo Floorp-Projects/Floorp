@@ -14,7 +14,8 @@
 
 #include "base/logging.h"
 #include "base/numerics/safe_math.h"
-#include "base/scoped_clear_errno.h"
+#include "base/scoped_clear_last_error.h"
+#include "base/strings/utf_string_conversions.h"
 #include "base/third_party/dmg_fp/dmg_fp.h"
 
 namespace base {
@@ -283,23 +284,6 @@ typedef BaseHexIteratorRangeToInt64Traits<StringPiece::const_iterator>
 typedef BaseHexIteratorRangeToUInt64Traits<StringPiece::const_iterator>
     HexIteratorRangeToUInt64Traits;
 
-template <typename STR>
-bool HexStringToBytesT(const STR& input, std::vector<uint8_t>* output) {
-  DCHECK_EQ(output->size(), 0u);
-  size_t count = input.size();
-  if (count == 0 || (count % 2) != 0)
-    return false;
-  for (uintptr_t i = 0; i < count / 2; ++i) {
-    uint8_t msb = 0;  // most significant 4 bits
-    uint8_t lsb = 0;  // least significant 4 bits
-    if (!CharToDigit<16>(input[i * 2], &msb) ||
-        !CharToDigit<16>(input[i * 2 + 1], &lsb))
-      return false;
-    output->push_back((msb << 4) | lsb);
-  }
-  return true;
-}
-
 template <typename VALUE, int BASE>
 class StringPieceToNumberTraits
     : public BaseIteratorRangeToNumberTraits<StringPiece::const_iterator,
@@ -308,7 +292,7 @@ class StringPieceToNumberTraits
 };
 
 template <typename VALUE>
-bool StringToIntImpl(const StringPiece& input, VALUE* output) {
+bool StringToIntImpl(StringPiece input, VALUE* output) {
   return IteratorRangeToNumber<StringPieceToNumberTraits<VALUE, 10> >::Invoke(
       input.begin(), input.end(), output);
 }
@@ -321,105 +305,123 @@ class StringPiece16ToNumberTraits
 };
 
 template <typename VALUE>
-bool String16ToIntImpl(const StringPiece16& input, VALUE* output) {
+bool String16ToIntImpl(StringPiece16 input, VALUE* output) {
   return IteratorRangeToNumber<StringPiece16ToNumberTraits<VALUE, 10> >::Invoke(
       input.begin(), input.end(), output);
 }
 
 }  // namespace
 
-std::string IntToString(int value) {
+std::string NumberToString(int value) {
   return IntToStringT<std::string, int>::IntToString(value);
 }
 
-string16 IntToString16(int value) {
+string16 NumberToString16(int value) {
   return IntToStringT<string16, int>::IntToString(value);
 }
 
-std::string UintToString(unsigned int value) {
-  return IntToStringT<std::string, unsigned int>::IntToString(value);
+std::string NumberToString(unsigned value) {
+  return IntToStringT<std::string, unsigned>::IntToString(value);
 }
 
-string16 UintToString16(unsigned int value) {
-  return IntToStringT<string16, unsigned int>::IntToString(value);
+string16 NumberToString16(unsigned value) {
+  return IntToStringT<string16, unsigned>::IntToString(value);
 }
 
-std::string Int64ToString(int64_t value) {
-  return IntToStringT<std::string, int64_t>::IntToString(value);
+std::string NumberToString(long value) {
+  return IntToStringT<std::string, long>::IntToString(value);
 }
 
-string16 Int64ToString16(int64_t value) {
-  return IntToStringT<string16, int64_t>::IntToString(value);
+string16 NumberToString16(long value) {
+  return IntToStringT<string16, long>::IntToString(value);
 }
 
-std::string Uint64ToString(uint64_t value) {
-  return IntToStringT<std::string, uint64_t>::IntToString(value);
+std::string NumberToString(unsigned long value) {
+  return IntToStringT<std::string, unsigned long>::IntToString(value);
 }
 
-string16 Uint64ToString16(uint64_t value) {
-  return IntToStringT<string16, uint64_t>::IntToString(value);
+string16 NumberToString16(unsigned long value) {
+  return IntToStringT<string16, unsigned long>::IntToString(value);
 }
 
-std::string SizeTToString(size_t value) {
-  return IntToStringT<std::string, size_t>::IntToString(value);
+std::string NumberToString(long long value) {
+  return IntToStringT<std::string, long long>::IntToString(value);
 }
 
-string16 SizeTToString16(size_t value) {
-  return IntToStringT<string16, size_t>::IntToString(value);
+string16 NumberToString16(long long value) {
+  return IntToStringT<string16, long long>::IntToString(value);
 }
 
-std::string DoubleToString(double value) {
+std::string NumberToString(unsigned long long value) {
+  return IntToStringT<std::string, unsigned long long>::IntToString(value);
+}
+
+string16 NumberToString16(unsigned long long value) {
+  return IntToStringT<string16, unsigned long long>::IntToString(value);
+}
+
+std::string NumberToString(double value) {
   // According to g_fmt.cc, it is sufficient to declare a buffer of size 32.
   char buffer[32];
   dmg_fp::g_fmt(buffer, value);
   return std::string(buffer);
 }
 
-bool StringToInt(const StringPiece& input, int* output) {
+base::string16 NumberToString16(double value) {
+  // According to g_fmt.cc, it is sufficient to declare a buffer of size 32.
+  char buffer[32];
+  dmg_fp::g_fmt(buffer, value);
+
+  // The number will be ASCII. This creates the string using the "input
+  // iterator" variant which promotes from 8-bit to 16-bit via "=".
+  return base::string16(&buffer[0], &buffer[strlen(buffer)]);
+}
+
+bool StringToInt(StringPiece input, int* output) {
   return StringToIntImpl(input, output);
 }
 
-bool StringToInt(const StringPiece16& input, int* output) {
+bool StringToInt(StringPiece16 input, int* output) {
   return String16ToIntImpl(input, output);
 }
 
-bool StringToUint(const StringPiece& input, unsigned* output) {
+bool StringToUint(StringPiece input, unsigned* output) {
   return StringToIntImpl(input, output);
 }
 
-bool StringToUint(const StringPiece16& input, unsigned* output) {
+bool StringToUint(StringPiece16 input, unsigned* output) {
   return String16ToIntImpl(input, output);
 }
 
-bool StringToInt64(const StringPiece& input, int64_t* output) {
+bool StringToInt64(StringPiece input, int64_t* output) {
   return StringToIntImpl(input, output);
 }
 
-bool StringToInt64(const StringPiece16& input, int64_t* output) {
+bool StringToInt64(StringPiece16 input, int64_t* output) {
   return String16ToIntImpl(input, output);
 }
 
-bool StringToUint64(const StringPiece& input, uint64_t* output) {
+bool StringToUint64(StringPiece input, uint64_t* output) {
   return StringToIntImpl(input, output);
 }
 
-bool StringToUint64(const StringPiece16& input, uint64_t* output) {
+bool StringToUint64(StringPiece16 input, uint64_t* output) {
   return String16ToIntImpl(input, output);
 }
 
-bool StringToSizeT(const StringPiece& input, size_t* output) {
+bool StringToSizeT(StringPiece input, size_t* output) {
   return StringToIntImpl(input, output);
 }
 
-bool StringToSizeT(const StringPiece16& input, size_t* output) {
+bool StringToSizeT(StringPiece16 input, size_t* output) {
   return String16ToIntImpl(input, output);
 }
 
 bool StringToDouble(const std::string& input, double* output) {
   // Thread-safe?  It is on at least Mac, Linux, and Windows.
-  ScopedClearErrno clear_errno;
+  internal::ScopedClearLastError clear_errno;
 
-  char* endptr = NULL;
+  char* endptr = nullptr;
   *output = dmg_fp::strtod(input.c_str(), &endptr);
 
   // Cases to return false:
@@ -459,28 +461,41 @@ std::string HexEncode(const void* bytes, size_t size) {
   return ret;
 }
 
-bool HexStringToInt(const StringPiece& input, int* output) {
+bool HexStringToInt(StringPiece input, int* output) {
   return IteratorRangeToNumber<HexIteratorRangeToIntTraits>::Invoke(
     input.begin(), input.end(), output);
 }
 
-bool HexStringToUInt(const StringPiece& input, uint32_t* output) {
+bool HexStringToUInt(StringPiece input, uint32_t* output) {
   return IteratorRangeToNumber<HexIteratorRangeToUIntTraits>::Invoke(
       input.begin(), input.end(), output);
 }
 
-bool HexStringToInt64(const StringPiece& input, int64_t* output) {
+bool HexStringToInt64(StringPiece input, int64_t* output) {
   return IteratorRangeToNumber<HexIteratorRangeToInt64Traits>::Invoke(
     input.begin(), input.end(), output);
 }
 
-bool HexStringToUInt64(const StringPiece& input, uint64_t* output) {
+bool HexStringToUInt64(StringPiece input, uint64_t* output) {
   return IteratorRangeToNumber<HexIteratorRangeToUInt64Traits>::Invoke(
       input.begin(), input.end(), output);
 }
 
-bool HexStringToBytes(const std::string& input, std::vector<uint8_t>* output) {
-  return HexStringToBytesT(input, output);
+bool HexStringToBytes(StringPiece input, std::vector<uint8_t>* output) {
+  DCHECK_EQ(output->size(), 0u);
+  size_t count = input.size();
+  if (count == 0 || (count % 2) != 0)
+    return false;
+  for (uintptr_t i = 0; i < count / 2; ++i) {
+    uint8_t msb = 0;  // most significant 4 bits
+    uint8_t lsb = 0;  // least significant 4 bits
+    if (!CharToDigit<16>(input[i * 2], &msb) ||
+        !CharToDigit<16>(input[i * 2 + 1], &lsb)) {
+      return false;
+    }
+    output->push_back((msb << 4) | lsb);
+  }
+  return true;
 }
 
 }  // namespace base

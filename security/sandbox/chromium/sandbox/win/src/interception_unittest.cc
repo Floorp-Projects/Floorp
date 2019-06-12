@@ -6,7 +6,10 @@
 // The tests require private information so the whole interception.cc file is
 // included from this file.
 
+#include "sandbox/win/src/interception.h"
+
 #include <windows.h>
+
 #include <stddef.h>
 
 #include <algorithm>
@@ -14,7 +17,6 @@
 #include <set>
 
 #include "base/bits.h"
-#include "sandbox/win/src/interception.h"
 #include "sandbox/win/src/interception_internal.h"
 #include "sandbox/win/src/interceptors.h"
 #include "sandbox/win/src/target_process.h"
@@ -34,16 +36,19 @@ size_t GetGranularAlignedRandomOffset(size_t size);
 // num_dlls (out): count of the dlls on the buffer.
 // num_function (out): count of intercepted functions.
 // num_names (out): count of named interceptor functions.
-void WalkBuffer(void* buffer, size_t size, int* num_dlls, int* num_functions,
+void WalkBuffer(void* buffer,
+                size_t size,
+                int* num_dlls,
+                int* num_functions,
                 int* num_names) {
-  ASSERT_TRUE(NULL != buffer);
-  ASSERT_TRUE(NULL != num_functions);
-  ASSERT_TRUE(NULL != num_names);
+  ASSERT_TRUE(buffer);
+  ASSERT_TRUE(num_functions);
+  ASSERT_TRUE(num_names);
   *num_dlls = *num_functions = *num_names = 0;
-  SharedMemory *memory = reinterpret_cast<SharedMemory*>(buffer);
+  SharedMemory* memory = reinterpret_cast<SharedMemory*>(buffer);
 
   ASSERT_GT(size, sizeof(SharedMemory));
-  DllPatchInfo *dll = &memory->dll_list[0];
+  DllPatchInfo* dll = &memory->dll_list[0];
 
   for (int i = 0; i < memory->num_intercepted_dlls; i++) {
     ASSERT_NE(0u, wcslen(dll->dll_name));
@@ -51,8 +56,8 @@ void WalkBuffer(void* buffer, size_t size, int* num_dlls, int* num_functions,
     ASSERT_EQ(0u, dll->offset_to_functions % sizeof(size_t));
     ASSERT_NE(0, dll->num_functions);
 
-    FunctionInfo *function = reinterpret_cast<FunctionInfo*>(
-      reinterpret_cast<char*>(dll) + dll->offset_to_functions);
+    FunctionInfo* function = reinterpret_cast<FunctionInfo*>(
+        reinterpret_cast<char*>(dll) + dll->offset_to_functions);
 
     for (int j = 0; j < dll->num_functions; j++) {
       ASSERT_EQ(0u, function->record_bytes % sizeof(size_t));
@@ -68,14 +73,14 @@ void WalkBuffer(void* buffer, size_t size, int* num_dlls, int* num_functions,
       // look for a named interceptor
       if (strlen(name)) {
         (*num_names)++;
-        EXPECT_TRUE(NULL == function->interceptor_address);
+        EXPECT_TRUE(!function->interceptor_address);
       } else {
-        EXPECT_TRUE(NULL != function->interceptor_address);
+        EXPECT_TRUE(function->interceptor_address);
       }
 
       (*num_functions)++;
       function = reinterpret_cast<FunctionInfo*>(
-        reinterpret_cast<char*>(function) + function->record_bytes);
+          reinterpret_cast<char*>(function) + function->record_bytes);
     }
 
     (*num_dlls)++;
@@ -125,10 +130,10 @@ TEST(InterceptionManagerTest, GetGranularAlignedRandomOffset) {
 
 TEST(InterceptionManagerTest, BufferLayout1) {
   wchar_t exe_name[MAX_PATH];
-  ASSERT_NE(0u, GetModuleFileName(NULL, exe_name, MAX_PATH - 1));
+  ASSERT_NE(0u, GetModuleFileName(nullptr, exe_name, MAX_PATH - 1));
 
-  TargetProcess *target = MakeTestTargetProcess(::GetCurrentProcess(),
-                                                ::GetModuleHandle(exe_name));
+  TargetProcess* target =
+      MakeTestTargetProcess(::GetCurrentProcess(), ::GetModuleHandle(exe_name));
 
   InterceptionManager interceptions(target, true);
 
@@ -161,23 +166,23 @@ TEST(InterceptionManagerTest, BufferLayout1) {
   interceptions.AddToPatchedFunctions(L"ntdll.dll", "NtOpenFile",
                                       INTERCEPTION_SIDESTEP, function,
                                       OPEN_KEY_ID);
-  interceptions.AddToPatchedFunctions(L"some.dll", "Superfn",
-                                      INTERCEPTION_EAT, function, OPEN_KEY_ID);
+  interceptions.AddToPatchedFunctions(L"some.dll", "Superfn", INTERCEPTION_EAT,
+                                      function, OPEN_KEY_ID);
   interceptions.AddToPatchedFunctions(L"comctl.dll", "SaveAsDlg",
                                       INTERCEPTION_EAT, "a", OPEN_KEY_ID);
   interceptions.AddToPatchedFunctions(L"comctl.dll", "SaveAsDlg",
                                       INTERCEPTION_SIDESTEP, "ab", OPEN_KEY_ID);
   interceptions.AddToPatchedFunctions(L"comctl.dll", "SaveAsDlg",
                                       INTERCEPTION_EAT, "abc", OPEN_KEY_ID);
-  interceptions.AddToPatchedFunctions(L"a.dll", "p",
-                                      INTERCEPTION_EAT, function, OPEN_KEY_ID);
+  interceptions.AddToPatchedFunctions(L"a.dll", "p", INTERCEPTION_EAT, function,
+                                      OPEN_KEY_ID);
   interceptions.AddToPatchedFunctions(L"b.dll",
                                       "TheIncredibleCallToSaveTheWorld",
                                       INTERCEPTION_EAT, function, OPEN_KEY_ID);
-  interceptions.AddToPatchedFunctions(L"a.dll", "BIsLame",
-                                      INTERCEPTION_EAT, function, OPEN_KEY_ID);
-  interceptions.AddToPatchedFunctions(L"a.dll", "ARules",
-                                      INTERCEPTION_EAT, function, OPEN_KEY_ID);
+  interceptions.AddToPatchedFunctions(L"a.dll", "BIsLame", INTERCEPTION_EAT,
+                                      function, OPEN_KEY_ID);
+  interceptions.AddToPatchedFunctions(L"a.dll", "ARules", INTERCEPTION_EAT,
+                                      function, OPEN_KEY_ID);
 
   // Verify that all interceptions were added
   ASSERT_EQ(18u, interceptions.interceptions_.size());
@@ -185,8 +190,7 @@ TEST(InterceptionManagerTest, BufferLayout1) {
   size_t buffer_size = interceptions.GetBufferSize();
   std::unique_ptr<BYTE[]> local_buffer(new BYTE[buffer_size]);
 
-  ASSERT_TRUE(interceptions.SetupConfigBuffer(local_buffer.get(),
-                                              buffer_size));
+  ASSERT_TRUE(interceptions.SetupConfigBuffer(local_buffer.get(), buffer_size));
 
   // At this point, the interceptions should have been separated into two
   // groups: one group with the local ("cold") interceptions, consisting of
@@ -212,10 +216,10 @@ TEST(InterceptionManagerTest, BufferLayout1) {
 
 TEST(InterceptionManagerTest, BufferLayout2) {
   wchar_t exe_name[MAX_PATH];
-  ASSERT_NE(0u, GetModuleFileName(NULL, exe_name, MAX_PATH - 1));
+  ASSERT_NE(0u, GetModuleFileName(nullptr, exe_name, MAX_PATH - 1));
 
-  TargetProcess *target = MakeTestTargetProcess(::GetCurrentProcess(),
-                                                ::GetModuleHandle(exe_name));
+  TargetProcess* target =
+      MakeTestTargetProcess(::GetCurrentProcess(), ::GetModuleHandle(exe_name));
 
   InterceptionManager interceptions(target, true);
 
@@ -238,8 +242,7 @@ TEST(InterceptionManagerTest, BufferLayout2) {
   size_t buffer_size = interceptions.GetBufferSize();
   std::unique_ptr<BYTE[]> local_buffer(new BYTE[buffer_size]);
 
-  ASSERT_TRUE(interceptions.SetupConfigBuffer(local_buffer.get(),
-                                              buffer_size));
+  ASSERT_TRUE(interceptions.SetupConfigBuffer(local_buffer.get(), buffer_size));
 
   // At this point, the interceptions should have been separated into two
   // groups: one group with the local ("cold") interceptions, and another

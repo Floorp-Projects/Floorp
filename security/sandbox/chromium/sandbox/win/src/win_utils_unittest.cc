@@ -2,7 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "sandbox/win/src/win_utils.h"
+
 #include <windows.h>
+
 #include <psapi.h>
 
 #include <vector>
@@ -14,7 +17,6 @@
 #include "base/win/scoped_handle.h"
 #include "base/win/scoped_process_information.h"
 #include "sandbox/win/src/nt_internals.h"
-#include "sandbox/win/src/win_utils.h"
 #include "sandbox/win/tests/common/test_utils.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -66,7 +68,7 @@ TEST(WinUtils, IsReparsePoint) {
 
   // Delete the file and create a directory instead.
   ASSERT_TRUE(::DeleteFile(my_folder));
-  ASSERT_TRUE(::CreateDirectory(my_folder, NULL));
+  ASSERT_TRUE(::CreateDirectory(my_folder, nullptr));
 
   EXPECT_EQ(static_cast<DWORD>(ERROR_NOT_A_REPARSE_POINT),
             IsReparsePoint(my_folder));
@@ -81,8 +83,8 @@ TEST(WinUtils, IsReparsePoint) {
 
   // Replace the directory with a reparse point to %temp%.
   HANDLE dir = ::CreateFile(my_folder, FILE_ALL_ACCESS,
-                            FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+                            FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
   EXPECT_NE(INVALID_HANDLE_VALUE, dir);
 
   base::string16 temp_dir_nt = base::string16(L"\\??\\") + temp_directory;
@@ -106,14 +108,14 @@ TEST(WinUtils, SameObject) {
 
   // Delete the file and create a directory instead.
   ASSERT_TRUE(::DeleteFile(my_folder));
-  ASSERT_TRUE(::CreateDirectory(my_folder, NULL));
+  ASSERT_TRUE(::CreateDirectory(my_folder, nullptr));
 
   base::string16 folder(my_folder);
   base::string16 file_name = folder + L"\\foo.txt";
   const ULONG kSharing = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
-  base::win::ScopedHandle file(CreateFile(
-      file_name.c_str(), GENERIC_WRITE, kSharing, NULL, CREATE_ALWAYS,
-      FILE_FLAG_DELETE_ON_CLOSE, NULL));
+  base::win::ScopedHandle file(CreateFile(file_name.c_str(), GENERIC_WRITE,
+                                          kSharing, nullptr, CREATE_ALWAYS,
+                                          FILE_FLAG_DELETE_ON_CLOSE, nullptr));
 
   EXPECT_TRUE(file.IsValid());
   base::string16 file_name_nt1 = base::string16(L"\\??\\") + file_name;
@@ -144,9 +146,10 @@ TEST(WinUtils, IsPipe) {
   pipe_name = L"\\??\\ABCD\\mypipe";
   EXPECT_FALSE(IsPipe(pipe_name));
 
-
   // Written as two strings to prevent trigraph '?' '?' '/'.
-  pipe_name = L"/?" L"?/pipe/mypipe";
+  pipe_name =
+      L"/?"
+      L"?/pipe/mypipe";
   EXPECT_FALSE(IsPipe(pipe_name));
 
   pipe_name = L"\\XX\\pipe\\mypipe";
@@ -176,7 +179,7 @@ TEST(WinUtils, GetProcessBaseAddress) {
   start_info.cb = sizeof(start_info);
   start_info.dwFlags = STARTF_USESHOWWINDOW;
   start_info.wShowWindow = SW_HIDE;
-  ASSERT_TRUE(::CreateProcessW(nullptr, command_line, nullptr, nullptr, FALSE,
+  ASSERT_TRUE(::CreateProcessW(nullptr, command_line, nullptr, nullptr, false,
                                CREATE_SUSPENDED, nullptr, nullptr, &start_info,
                                &proc_info));
   base::win::ScopedProcessInformation scoped_proc_info(proc_info);

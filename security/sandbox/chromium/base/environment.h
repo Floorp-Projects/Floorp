@@ -18,7 +18,7 @@ namespace base {
 
 namespace env_vars {
 
-#if defined(OS_POSIX)
+#if defined(OS_POSIX) || defined(OS_FUCHSIA)
 BASE_EXPORT extern const char kHome[];
 #endif
 
@@ -66,7 +66,7 @@ typedef std::map<NativeEnvironmentString, NativeEnvironmentString>
 BASE_EXPORT string16 AlterEnvironment(const wchar_t* env,
                                       const EnvironmentMap& changes);
 
-#elif defined(OS_POSIX)
+#elif defined(OS_POSIX) || defined(OS_FUCHSIA)
 
 typedef std::string NativeEnvironmentString;
 typedef std::map<NativeEnvironmentString, NativeEnvironmentString>

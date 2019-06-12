@@ -19,9 +19,9 @@ NTSTATUS EatResolverThunk::Setup(const void* target_module,
                                  void* thunk_storage,
                                  size_t storage_bytes,
                                  size_t* storage_used) {
-  NTSTATUS ret = Init(target_module, interceptor_module, target_name,
-                      interceptor_name, interceptor_entry_point,
-                      thunk_storage, storage_bytes);
+  NTSTATUS ret =
+      Init(target_module, interceptor_module, target_name, interceptor_name,
+           interceptor_entry_point, thunk_storage, storage_bytes);
   if (!NT_SUCCESS(ret))
     return ret;
 
@@ -30,7 +30,7 @@ NTSTATUS EatResolverThunk::Setup(const void* target_module,
 
 #if defined(_WIN64)
   // We have two thunks, in order: the return path and the forward path.
-  if (!SetInternalThunk(thunk_storage, storage_bytes, NULL, target_))
+  if (!SetInternalThunk(thunk_storage, storage_bytes, nullptr, target_))
     return STATUS_BUFFER_TOO_SMALL;
 
   size_t thunk_bytes = GetInternalThunkSize();
@@ -50,7 +50,7 @@ NTSTATUS EatResolverThunk::Setup(const void* target_module,
   *eat_entry_ = static_cast<DWORD>(reinterpret_cast<uintptr_t>(thunk_storage)) -
                 static_cast<DWORD>(reinterpret_cast<uintptr_t>(target_module));
 
-  if (NULL != storage_used)
+  if (storage_used)
     *storage_used = GetThunkSize();
 
   return ret;

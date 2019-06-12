@@ -87,15 +87,6 @@ template std::string* MakeCheckOpString<unsigned int, unsigned long>(
 template std::string* MakeCheckOpString<std::string, std::string>(
     const std::string&, const std::string&, const char* name);
 
-#if defined(OS_WIN)
-LogMessage::SaveLastError::SaveLastError() : last_error_(::GetLastError()) {
-}
-
-LogMessage::SaveLastError::~SaveLastError() {
-  ::SetLastError(last_error_);
-}
-#endif  // defined(OS_WIN)
-
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity)
     : severity_(severity), file_(file), line_(line) {
 }

@@ -6,7 +6,8 @@
 
 #include <string>
 
-#include "base/debug/debugging_flags.h"
+#include "base/allocator/buildflags.h"
+#include "base/debug/debugging_buildflags.h"
 #include "base/process/process_handle.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
@@ -19,7 +20,13 @@
 
 // TODO(peria): Enable profiling on Windows.
 #if BUILDFLAG(ENABLE_PROFILING) && !defined(NO_TCMALLOC) && !defined(OS_WIN)
+
+#if BUILDFLAG(USE_NEW_TCMALLOC)
 #include "third_party/tcmalloc/chromium/src/gperftools/profiler.h"
+#else
+#include "third_party/tcmalloc/gperftools-2.0/chromium/src/gperftools/profiler.h"
+#endif
+
 #endif
 
 namespace base {
@@ -87,57 +94,19 @@ bool IsProfilingSupported() {
 
 #if !defined(OS_WIN)
 
-bool IsBinaryInstrumented() {
-  return false;
-}
-
 ReturnAddressLocationResolver GetProfilerReturnAddrResolutionFunc() {
-  return NULL;
-}
-
-DynamicFunctionEntryHook GetProfilerDynamicFunctionEntryHookFunc() {
-  return NULL;
+  return nullptr;
 }
 
 AddDynamicSymbol GetProfilerAddDynamicSymbolFunc() {
-  return NULL;
+  return nullptr;
 }
 
 MoveDynamicSymbol GetProfilerMoveDynamicSymbolFunc() {
-  return NULL;
+  return nullptr;
 }
 
 #else  // defined(OS_WIN)
-
-bool IsBinaryInstrumented() {
-  enum InstrumentationCheckState {
-    UNINITIALIZED,
-    INSTRUMENTED_IMAGE,
-    NON_INSTRUMENTED_IMAGE,
-  };
-
-  static InstrumentationCheckState state = UNINITIALIZED;
-
-  if (state == UNINITIALIZED) {
-    base::win::PEImage image(CURRENT_MODULE());
-
-    // Check to be sure our image is structured as we'd expect.
-    DCHECK(image.VerifyMagic());
-
-    // Syzygy-instrumented binaries contain a PE image section named ".thunks",
-    // and all Syzygy-modified binaries contain the ".syzygy" image section.
-    // This is a very fast check, as it only looks at the image header.
-    if ((image.GetImageSectionHeaderByName(".thunks") != NULL) &&
-        (image.GetImageSectionHeaderByName(".syzygy") != NULL)) {
-      state = INSTRUMENTED_IMAGE;
-    } else {
-      state = NON_INSTRUMENTED_IMAGE;
-    }
-  }
-  DCHECK(state != UNINITIALIZED);
-
-  return state == INSTRUMENTED_IMAGE;
-}
 
 namespace {
 
@@ -186,9 +155,6 @@ bool FindResolutionFunctionInImports(
 
 template <typename FunctionType>
 FunctionType FindFunctionInImports(const char* function_name) {
-  if (!IsBinaryInstrumented())
-    return NULL;
-
   base::win::PEImage image(CURRENT_MODULE());
 
   FunctionSearchContext ctx = { function_name, NULL };
@@ -202,11 +168,6 @@ FunctionType FindFunctionInImports(const char* function_name) {
 ReturnAddressLocationResolver GetProfilerReturnAddrResolutionFunc() {
   return FindFunctionInImports<ReturnAddressLocationResolver>(
       "ResolveReturnAddressLocation");
-}
-
-DynamicFunctionEntryHook GetProfilerDynamicFunctionEntryHookFunc() {
-  return FindFunctionInImports<DynamicFunctionEntryHook>(
-      "OnDynamicFunctionEntry");
 }
 
 AddDynamicSymbol GetProfilerAddDynamicSymbolFunc() {

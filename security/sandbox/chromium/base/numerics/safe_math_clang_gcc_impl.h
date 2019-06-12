@@ -109,48 +109,28 @@ struct CheckedMulFastOp {
 
 template <typename T, typename U>
 struct ClampedAddFastOp {
-  static const bool is_supported = true;
+  static const bool is_supported = ClampedAddFastAsmOp<T, U>::is_supported;
   template <typename V>
   __attribute__((always_inline)) static V Do(T x, U y) {
-    if (ClampedAddFastAsmOp<T, U>::is_supported)
-      return ClampedAddFastAsmOp<T, U>::template Do<V>(x, y);
-
-    V result;
-    // TODO(jschuh) C++14 constexpr allows a compile-time constant optimization.
-    return !__builtin_add_overflow(x, y, &result)
-               ? result
-               : CommonMaxOrMin<V>(IsValueNegative(y));
+    return ClampedAddFastAsmOp<T, U>::template Do<V>(x, y);
   }
 };
 
 template <typename T, typename U>
 struct ClampedSubFastOp {
-  static const bool is_supported = true;
+  static const bool is_supported = ClampedSubFastAsmOp<T, U>::is_supported;
   template <typename V>
   __attribute__((always_inline)) static V Do(T x, U y) {
-    if (ClampedSubFastAsmOp<T, U>::is_supported)
-      return ClampedSubFastAsmOp<T, U>::template Do<V>(x, y);
-
-    V result;
-    // TODO(jschuh) C++14 constexpr allows a compile-time constant optimization.
-    return !__builtin_sub_overflow(x, y, &result)
-               ? result
-               : CommonMaxOrMin<V>(!IsValueNegative(y));
+    return ClampedSubFastAsmOp<T, U>::template Do<V>(x, y);
   }
 };
 
 template <typename T, typename U>
 struct ClampedMulFastOp {
-  static const bool is_supported = CheckedMulFastOp<T, U>::is_supported;
+  static const bool is_supported = ClampedMulFastAsmOp<T, U>::is_supported;
   template <typename V>
   __attribute__((always_inline)) static V Do(T x, U y) {
-    if (ClampedMulFastAsmOp<T, U>::is_supported)
-      return ClampedMulFastAsmOp<T, U>::template Do<V>(x, y);
-
-    V result;
-    return CheckedMulFastOp<T, U>::Do(x, y, &result)
-               ? result
-               : CommonMaxOrMin<V>(IsValueNegative(x) ^ IsValueNegative(y));
+    return ClampedMulFastAsmOp<T, U>::template Do<V>(x, y);
   }
 };
 

@@ -25,7 +25,7 @@ void InitObjectAttribs(const base::string16& name,
     DCHECK(RtlInitUnicodeString);
   }
   RtlInitUnicodeString(uni_name, name.c_str());
-  InitializeObjectAttributes(obj_attr, uni_name, attributes, root, NULL);
+  InitializeObjectAttributes(obj_attr, uni_name, attributes, root, nullptr);
   obj_attr->SecurityQualityOfService = security_qos;
 }
 

@@ -28,21 +28,26 @@ const ThreadPriorityToNiceValuePair kThreadPriorityToNiceValueMap[4] = {
     {ThreadPriority::REALTIME_AUDIO, -10},
 };
 
+
+Optional<bool> CanIncreaseCurrentThreadPriorityForPlatform(
+    ThreadPriority priority) {
+  MOZ_CRASH();
+}
+
 bool SetCurrentThreadPriorityForPlatform(ThreadPriority priority) {
   MOZ_CRASH();
 }
 
-bool GetCurrentThreadPriorityForPlatform(ThreadPriority* priority) {
+Optional<ThreadPriority> GetCurrentThreadPriorityForPlatform() {
   int maybe_sched_rr = 0;
   struct sched_param maybe_realtime_prio = {0};
   if (pthread_getschedparam(pthread_self(), &maybe_sched_rr,
                             &maybe_realtime_prio) == 0 &&
       maybe_sched_rr == SCHED_RR &&
       maybe_realtime_prio.sched_priority == kRealTimePrio.sched_priority) {
-    *priority = ThreadPriority::REALTIME_AUDIO;
-    return true;
+    return base::make_optional(ThreadPriority::REALTIME_AUDIO);
   }
-  return false;
+  return base::nullopt;
 }
 
 }  // namespace internal

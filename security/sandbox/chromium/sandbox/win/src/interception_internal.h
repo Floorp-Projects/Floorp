@@ -28,21 +28,21 @@ const int kMaxThunkDataBytes = 64;
 // for the InterceptionAgent.
 // A single interception:
 struct FunctionInfo {
-  size_t record_bytes;            // rounded to sizeof(size_t) bytes
+  size_t record_bytes;  // rounded to sizeof(size_t) bytes
   InterceptionType type;
   InterceptorId id;
   const void* interceptor_address;
-  char function[1];               // placeholder for null terminated name
+  char function[1];  // placeholder for null terminated name
   // char interceptor[]           // followed by the interceptor function
 };
 
 // A single dll:
 struct DllPatchInfo {
-  size_t record_bytes;            // rounded to sizeof(size_t) bytes
+  size_t record_bytes;  // rounded to sizeof(size_t) bytes
   size_t offset_to_functions;
   int num_functions;
   bool unload_module;
-  wchar_t dll_name[1];            // placeholder for null terminated name
+  wchar_t dll_name[1];  // placeholder for null terminated name
   // FunctionInfo function_info[] // followed by the functions to intercept
 };
 
@@ -50,7 +50,7 @@ struct DllPatchInfo {
 struct SharedMemory {
   int num_intercepted_dlls;
   void* interceptor_base;
-  DllPatchInfo dll_list[1];       // placeholder for the list of dlls
+  DllPatchInfo dll_list[1];  // placeholder for the list of dlls
 };
 
 // Dummy single thunk:
@@ -65,7 +65,7 @@ struct DllInterceptionData {
   void* base;
   int num_thunks;
 #if defined(_WIN64)
-  int dummy;                      // Improve alignment.
+  int dummy;  // Improve alignment.
 #endif
   ThunkData thunks[1];
 };

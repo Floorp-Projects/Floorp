@@ -12,8 +12,8 @@
 #include <memory>
 #include <vector>
 
-#include "base/macros.h"
 #include "base/numerics/safe_math.h"
+#include "base/stl_util.h"
 #include "base/strings/string16.h"
 #include "base/strings/string_util.h"
 #include "base/win/pe_image.h"
@@ -26,7 +26,7 @@ namespace {
 const size_t kDriveLetterLen = 3;
 
 constexpr wchar_t kNTDotPrefix[] = L"\\\\.\\";
-const size_t kNTDotPrefixLen = arraysize(kNTDotPrefix) - 1;
+const size_t kNTDotPrefixLen = base::size(kNTDotPrefix) - 1;
 
 // Holds the information about a known registry key.
 struct KnownReservedKey {
@@ -36,35 +36,39 @@ struct KnownReservedKey {
 
 // Contains all the known registry key by name and by handle.
 const KnownReservedKey kKnownKey[] = {
-    { L"HKEY_CLASSES_ROOT", HKEY_CLASSES_ROOT },
-    { L"HKEY_CURRENT_USER", HKEY_CURRENT_USER },
-    { L"HKEY_LOCAL_MACHINE", HKEY_LOCAL_MACHINE},
-    { L"HKEY_USERS", HKEY_USERS},
-    { L"HKEY_PERFORMANCE_DATA", HKEY_PERFORMANCE_DATA},
-    { L"HKEY_PERFORMANCE_TEXT", HKEY_PERFORMANCE_TEXT},
-    { L"HKEY_PERFORMANCE_NLSTEXT", HKEY_PERFORMANCE_NLSTEXT},
-    { L"HKEY_CURRENT_CONFIG", HKEY_CURRENT_CONFIG},
-    { L"HKEY_DYN_DATA", HKEY_DYN_DATA}
-};
+    {L"HKEY_CLASSES_ROOT", HKEY_CLASSES_ROOT},
+    {L"HKEY_CURRENT_USER", HKEY_CURRENT_USER},
+    {L"HKEY_LOCAL_MACHINE", HKEY_LOCAL_MACHINE},
+    {L"HKEY_USERS", HKEY_USERS},
+    {L"HKEY_PERFORMANCE_DATA", HKEY_PERFORMANCE_DATA},
+    {L"HKEY_PERFORMANCE_TEXT", HKEY_PERFORMANCE_TEXT},
+    {L"HKEY_PERFORMANCE_NLSTEXT", HKEY_PERFORMANCE_NLSTEXT},
+    {L"HKEY_CURRENT_CONFIG", HKEY_CURRENT_CONFIG},
+    {L"HKEY_DYN_DATA", HKEY_DYN_DATA}};
 
 // These functions perform case independent path comparisons.
 bool EqualPath(const base::string16& first, const base::string16& second) {
   return _wcsicmp(first.c_str(), second.c_str()) == 0;
 }
 
-bool EqualPath(const base::string16& first, size_t first_offset,
-               const base::string16& second, size_t second_offset) {
+bool EqualPath(const base::string16& first,
+               size_t first_offset,
+               const base::string16& second,
+               size_t second_offset) {
   return _wcsicmp(first.c_str() + first_offset,
                   second.c_str() + second_offset) == 0;
 }
 
 bool EqualPath(const base::string16& first,
-               const wchar_t* second, size_t second_len) {
+               const wchar_t* second,
+               size_t second_len) {
   return _wcsnicmp(first.c_str(), second, second_len) == 0;
 }
 
-bool EqualPath(const base::string16& first, size_t first_offset,
-               const wchar_t* second, size_t second_len) {
+bool EqualPath(const base::string16& first,
+               size_t first_offset,
+               const wchar_t* second,
+               size_t second_len) {
   return _wcsnicmp(first.c_str() + first_offset, second, second_len) == 0;
 }
 
@@ -99,7 +103,7 @@ bool IsDevicePath(const base::string16& path, base::string16* trimmed_path) {
 // "\Device\HarddiskVolumeX" in |path|.
 size_t PassHarddiskVolume(const base::string16& path) {
   static constexpr wchar_t pattern[] = L"\\Device\\HarddiskVolume";
-  const size_t patternLen = arraysize(pattern) - 1;
+  const size_t patternLen = base::size(pattern) - 1;
 
   // First, check for |pattern|.
   if ((path.size() < patternLen) || (!EqualPath(path, pattern, patternLen)))
@@ -152,28 +156,28 @@ bool IsPipe(const base::string16& path) {
     start = sandbox::kNTPrefixLen;
 
   const wchar_t kPipe[] = L"pipe\\";
-  if (path.size() < start + arraysize(kPipe) - 1)
+  if (path.size() < start + base::size(kPipe) - 1)
     return false;
 
-  return EqualPath(path, start, kPipe, arraysize(kPipe) - 1);
+  return EqualPath(path, start, kPipe, base::size(kPipe) - 1);
 }
 
 HKEY GetReservedKeyFromName(const base::string16& name) {
-  for (size_t i = 0; i < arraysize(kKnownKey); ++i) {
+  for (size_t i = 0; i < base::size(kKnownKey); ++i) {
     if (name == kKnownKey[i].name)
       return kKnownKey[i].key;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 bool ResolveRegistryName(base::string16 name, base::string16* resolved_name) {
-  for (size_t i = 0; i < arraysize(kKnownKey); ++i) {
+  for (size_t i = 0; i < base::size(kKnownKey); ++i) {
     if (name.find(kKnownKey[i].name) == 0) {
       HKEY key;
       DWORD disposition;
-      if (ERROR_SUCCESS != ::RegCreateKeyEx(kKnownKey[i].key, L"", 0, NULL, 0,
-                                            MAXIMUM_ALLOWED, NULL, &key,
+      if (ERROR_SUCCESS != ::RegCreateKeyEx(kKnownKey[i].key, L"", 0, nullptr,
+                                            0, MAXIMUM_ALLOWED, nullptr, &key,
                                             &disposition))
         return false;
 
@@ -195,7 +199,6 @@ bool ResolveRegistryName(base::string16 name, base::string16* resolved_name) {
 //    \??\c:\some\foo\bar
 //    \Device\HarddiskVolume0\some\foo\bar
 //    \??\HarddiskVolume0\some\foo\bar
-//    \??\UNC\SERVER\Share\some\foo\bar
 DWORD IsReparsePoint(const base::string16& full_path) {
   // Check if it's a pipe. We can't query the attributes of a pipe.
   if (IsPipe(full_path))
@@ -209,34 +212,28 @@ DWORD IsReparsePoint(const base::string16& full_path) {
   if (!has_drive && !is_device_path && !nt_path)
     return ERROR_INVALID_NAME;
 
+  bool added_implied_device = false;
   if (!has_drive) {
-    // Add Win32 device namespace prefix, required for some Windows APIs.
-    path.insert(0, kNTDotPrefix);
+    path = base::string16(kNTDotPrefix) + path;
+    added_implied_device = true;
   }
 
-  // Ensure that volume path matches start of path.
-  wchar_t vol_path[MAX_PATH];
-  if (!::GetVolumePathNameW(path.c_str(), vol_path, MAX_PATH)) {
-    // This will fail if this is a device that isn't volume related, which can't
-    // then be a reparse point.
-    return is_device_path ? ERROR_NOT_A_REPARSE_POINT : ERROR_INVALID_NAME;
-  }
-
-  // vol_path includes a trailing slash, so reduce size for path and loop check.
-  size_t vol_path_len = wcslen(vol_path) - 1;
-  if (!EqualPath(path, vol_path, vol_path_len)) {
-    return ERROR_INVALID_NAME;
-  }
+  base::string16::size_type last_pos = base::string16::npos;
+  bool passed_once = false;
 
   do {
+    path = path.substr(0, last_pos);
+
     DWORD attributes = ::GetFileAttributes(path.c_str());
     if (INVALID_FILE_ATTRIBUTES == attributes) {
       DWORD error = ::GetLastError();
-      if (error != ERROR_FILE_NOT_FOUND &&
-          error != ERROR_PATH_NOT_FOUND &&
-          error != ERROR_INVALID_FUNCTION &&
+      if (error != ERROR_FILE_NOT_FOUND && error != ERROR_PATH_NOT_FOUND &&
           error != ERROR_INVALID_NAME) {
         // Unexpected error.
+        if (passed_once && added_implied_device &&
+            (path.rfind(L'\\') == kNTDotPrefixLen - 1)) {
+          break;
+        }
         NOTREACHED_NT();
         return error;
       }
@@ -245,8 +242,9 @@ DWORD IsReparsePoint(const base::string16& full_path) {
       return ERROR_SUCCESS;
     }
 
-    path.resize(path.rfind(L'\\'));
-  } while (path.size() > vol_path_len);  // Skip root dir.
+    passed_once = true;
+    last_pos = path.rfind(L'\\');
+  } while (last_pos > 2);  // Skip root dir.
 
   return ERROR_NOT_A_REPARSE_POINT;
 }
@@ -266,11 +264,11 @@ bool SameObject(HANDLE handle, const wchar_t* full_path) {
   DCHECK_NT(!path.empty());
 
   // This may end with a backslash.
-  if (path.back() == L'\\') {
-    path.pop_back();
-  }
+  const wchar_t kBackslash = '\\';
+  if (path.back() == kBackslash)
+    path = path.substr(0, path.length() - 1);
 
-  // Perfect match (case-insensitive check).
+  // Perfect match (case-insesitive check).
   if (EqualPath(actual_path, path))
     return true;
 
@@ -279,44 +277,40 @@ bool SameObject(HANDLE handle, const wchar_t* full_path) {
 
   if (!has_drive && nt_path) {
     base::string16 simple_actual_path;
-    if (IsDevicePath(path, &path)) {
-      if (IsDevicePath(actual_path, &simple_actual_path)) {
-        // Perfect match (case-insensitive check).
-        return (EqualPath(simple_actual_path, path));
-      } else {
-        return false;
-      }
-    } else {
-      // Add Win32 device namespace for GetVolumePathName.
-      path.insert(0, kNTDotPrefix);
-    }
+    if (!IsDevicePath(actual_path, &simple_actual_path))
+      return false;
+
+    // Perfect match (case-insesitive check).
+    return (EqualPath(simple_actual_path, path));
   }
 
-  // Get the volume path in the same format as actual_path.
-  wchar_t vol_path[MAX_PATH];
-  if (!::GetVolumePathName(path.c_str(), vol_path, MAX_PATH)) {
+  if (!has_drive)
     return false;
-  }
-  size_t vol_path_len = wcslen(vol_path);
-  base::string16 nt_vol;
-  if (!GetNtPathFromWin32Path(vol_path, &nt_vol)) {
+
+  // We only need 3 chars, but let's alloc a buffer for four.
+  wchar_t drive[4] = {0};
+  wchar_t vol_name[MAX_PATH];
+  memcpy(drive, &path[0], 2 * sizeof(*drive));
+
+  // We'll get a double null terminated string.
+  DWORD vol_length = ::QueryDosDeviceW(drive, vol_name, MAX_PATH);
+  if (vol_length < 2 || vol_length == MAX_PATH)
     return false;
-  }
+
+  // Ignore the nulls at the end.
+  vol_length = static_cast<DWORD>(wcslen(vol_name));
 
   // The two paths should be the same length.
-  if (nt_vol.size() + path.size() - vol_path_len != actual_path.size()) {
+  if (vol_length + path.size() - 2 != actual_path.size())
     return false;
-  }
 
-  // Check the volume matches.
-  if (!EqualPath(actual_path, nt_vol.c_str(), nt_vol.size())) {
+  // Check up to the drive letter.
+  if (!EqualPath(actual_path, vol_name, vol_length))
     return false;
-  }
 
-  // Check the path after the volume matches.
-  if (!EqualPath(actual_path, nt_vol.size(), path, vol_path_len)) {
+  // Check the path after the drive letter.
+  if (!EqualPath(actual_path, vol_length, path, 2))
     return false;
-  }
 
   return true;
 }
@@ -362,13 +356,13 @@ bool ConvertToLongPath(base::string16* native_path,
   DWORD size = MAX_PATH;
   std::unique_ptr<wchar_t[]> long_path_buf(new wchar_t[size]);
 
-  DWORD return_value = ::GetLongPathName(temp_path.c_str(), long_path_buf.get(),
-                                         size);
+  DWORD return_value =
+      ::GetLongPathName(temp_path.c_str(), long_path_buf.get(), size);
   while (return_value >= size) {
     size *= 2;
     long_path_buf.reset(new wchar_t[size]);
-    return_value = ::GetLongPathName(temp_path.c_str(), long_path_buf.get(),
-                                     size);
+    return_value =
+        ::GetLongPathName(temp_path.c_str(), long_path_buf.get(), size);
   }
 
   DWORD last_error = ::GetLastError();
@@ -416,7 +410,7 @@ bool ConvertToLongPath(base::string16* native_path,
 }
 
 bool GetPathFromHandle(HANDLE handle, base::string16* path) {
-  NtQueryObjectFunction NtQueryObject = NULL;
+  NtQueryObjectFunction NtQueryObject = nullptr;
   ResolveNTFunctionPtr("NtQueryObject", &NtQueryObject);
 
   OBJECT_NAME_INFORMATION initial_buffer;
@@ -424,8 +418,8 @@ bool GetPathFromHandle(HANDLE handle, base::string16* path) {
   ULONG size = sizeof(initial_buffer);
   // Query the name information a first time to get the size of the name.
   // Windows XP requires that the size of the buffer passed in here be != 0.
-  NTSTATUS status = NtQueryObject(handle, ObjectNameInformation, name, size,
-                                  &size);
+  NTSTATUS status =
+      NtQueryObject(handle, ObjectNameInformation, name, size, &size);
 
   std::unique_ptr<BYTE[]> name_ptr;
   if (size) {
@@ -440,16 +434,16 @@ bool GetPathFromHandle(HANDLE handle, base::string16* path) {
   if (STATUS_SUCCESS != status)
     return false;
 
-  path->assign(name->ObjectName.Buffer, name->ObjectName.Length /
-                                        sizeof(name->ObjectName.Buffer[0]));
+  path->assign(name->ObjectName.Buffer,
+               name->ObjectName.Length / sizeof(name->ObjectName.Buffer[0]));
   return true;
 }
 
 bool GetNtPathFromWin32Path(const base::string16& path,
                             base::string16* nt_path) {
-  HANDLE file = ::CreateFileW(path.c_str(), 0,
-    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-    OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+  HANDLE file = ::CreateFileW(
+      path.c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+      nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
   if (file == INVALID_HANDLE_VALUE)
     return false;
   bool rv = GetPathFromHandle(file, nt_path);
@@ -457,22 +451,24 @@ bool GetNtPathFromWin32Path(const base::string16& path,
   return rv;
 }
 
-bool WriteProtectedChildMemory(HANDLE child_process, void* address,
-                               const void* buffer, size_t length,
-                               DWORD writeProtection) {
+bool WriteProtectedChildMemory(HANDLE child_process,
+                               void* address,
+                               const void* buffer,
+                               size_t length) {
   // First, remove the protections.
   DWORD old_protection;
-  if (!::VirtualProtectEx(child_process, address, length,
-                          writeProtection, &old_protection))
+  if (!::VirtualProtectEx(child_process, address, length, PAGE_WRITECOPY,
+                          &old_protection))
     return false;
 
   SIZE_T written;
-  bool ok = ::WriteProcessMemory(child_process, address, buffer, length,
-                                 &written) && (length == written);
+  bool ok =
+      ::WriteProcessMemory(child_process, address, buffer, length, &written) &&
+      (length == written);
 
   // Always attempt to restore the original protection.
-  if (!::VirtualProtectEx(child_process, address, length,
-                          old_protection, &old_protection))
+  if (!::VirtualProtectEx(child_process, address, length, old_protection,
+                          &old_protection))
     return false;
 
   return ok;
@@ -487,7 +483,7 @@ DWORD GetLastErrorFromNtStatus(NTSTATUS status) {
 // This function uses the undocumented PEB ImageBaseAddress field to extract
 // the base address of the new process.
 void* GetProcessBaseAddress(HANDLE process) {
-  NtQueryInformationProcessFunction query_information_process = NULL;
+  NtQueryInformationProcessFunction query_information_process = nullptr;
   ResolveNTFunctionPtr("NtQueryInformationProcess", &query_information_process);
   if (!query_information_process)
     return nullptr;
@@ -517,37 +513,13 @@ void* GetProcessBaseAddress(HANDLE process) {
   if (magic[0] != 'M' || magic[1] != 'Z')
     return nullptr;
 
-#if defined(_M_ARM64)
-  // Windows 10 on ARM64 has multi-threaded DLL loading that does not work with
-  // the sandbox. (On x86 this gets disabled by hook detection code that was not
-  // ported to ARM64). This overwrites the LoaderThreads value in the process
-  // parameters part of the PEB, if it is set to the default of 0 (which
-  // actually means it defaults to 4 loading threads). This is an undocumented
-  // field so there is a, probably small, risk that it might change or move in
-  // the future. In order to slightly guard against that we only update if the
-  // value is currently 0.
-  uint8_t* processParameters = static_cast<uint8_t*>(peb.ProcessParameters);
-  const uint32_t loaderThreadsOffset = 0x40c;
-  uint32_t maxLoaderThreads = 0;
-  BOOL memoryRead = ::ReadProcessMemory(
-      process, processParameters + loaderThreadsOffset, &maxLoaderThreads,
-      sizeof(maxLoaderThreads), &bytes_read);
-  if (memoryRead && (sizeof(maxLoaderThreads) == bytes_read) &&
-      (maxLoaderThreads == 0)) {
-    maxLoaderThreads = 1;
-    WriteProtectedChildMemory(process, processParameters + loaderThreadsOffset,
-                              &maxLoaderThreads, sizeof(maxLoaderThreads),
-                              PAGE_READWRITE);
-  }
-#endif
-
   return base_address;
 }
 
-};  // namespace sandbox
+}  // namespace sandbox
 
 void ResolveNTFunctionPtr(const char* name, void* ptr) {
-  static volatile HMODULE ntdll = NULL;
+  static volatile HMODULE ntdll = nullptr;
 
   if (!ntdll) {
     HMODULE ntdll_local = ::GetModuleHandle(sandbox::kNtdllName);
@@ -556,7 +528,7 @@ void ResolveNTFunctionPtr(const char* name, void* ptr) {
     CHECK_NT(ntdll_peimage.VerifyMagic());
     // Race-safe way to set static ntdll.
     ::InterlockedCompareExchangePointer(
-        reinterpret_cast<PVOID volatile*>(&ntdll), ntdll_local, NULL);
+        reinterpret_cast<PVOID volatile*>(&ntdll), ntdll_local, nullptr);
   }
 
   CHECK_NT(ntdll);

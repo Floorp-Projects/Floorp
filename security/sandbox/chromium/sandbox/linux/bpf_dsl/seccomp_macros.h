@@ -19,6 +19,7 @@
 #endif
 #endif
 
+#include "build/build_config.h"
 #include "sandbox/linux/system_headers/linux_seccomp.h"  // For AUDIT_ARCH_*
 
 // Impose some reasonable maximum BPF program size. Realistically, the
@@ -190,7 +191,7 @@ typedef user_regs regs_struct;
 #define SECCOMP_PT_PARM5(_regs)   (_regs).REG_r4
 #define SECCOMP_PT_PARM6(_regs)   (_regs).REG_r5
 
-#elif defined(__mips__) && (_MIPS_SIM == _MIPS_SIM_ABI32)
+#elif defined(ARCH_CPU_MIPS_FAMILY) && defined(ARCH_CPU_32_BITS)
 #define SECCOMP_ARCH        AUDIT_ARCH_MIPSEL
 #define SYSCALL_EIGHT_ARGS
 // MIPS sigcontext_t is different from i386/x86_64 and ARM.
@@ -224,7 +225,7 @@ typedef user_regs regs_struct;
 #define SECCOMP_ARG_LSB_IDX(nr) (offsetof(struct arch_seccomp_data, args) +   \
                                  8*(nr) + 0)
 
-// On Mips we don't have structures like user_regs or user_regs_struct in
+// On MIPS we don't have structures like user_regs or user_regs_struct in
 // sys/user.h that we could use, so we just define regs_struct directly.
 struct regs_struct {
   unsigned long long regs[32];
@@ -243,6 +244,65 @@ struct regs_struct {
 #define SECCOMP_PT_PARM2(_regs)   (_regs).REG_a1
 #define SECCOMP_PT_PARM3(_regs)   (_regs).REG_a2
 #define SECCOMP_PT_PARM4(_regs)   (_regs).REG_a3
+
+#elif defined(ARCH_CPU_MIPS_FAMILY) && defined(ARCH_CPU_64_BITS)
+#define SECCOMP_ARCH        AUDIT_ARCH_MIPSEL64
+#define SYSCALL_EIGHT_ARGS
+// MIPS sigcontext_t is different from i386/x86_64 and ARM.
+// See </arch/mips/include/uapi/asm/sigcontext.h> in the Linux kernel.
+#define SECCOMP_REG(_ctx, _reg) ((_ctx)->uc_mcontext.gregs[_reg])
+// Based on MIPS n64 ABI syscall convention.
+// On MIPS, when an indirect syscall is being made (syscall(__NR_foo)),
+// the real identifier (__NR_foo) is not in v0, but in a0.
+#define SECCOMP_RESULT(_ctx)    SECCOMP_REG(_ctx, 2)
+#define SECCOMP_SYSCALL(_ctx)   SECCOMP_REG(_ctx, 2)
+#define SECCOMP_IP(_ctx)        (_ctx)->uc_mcontext.pc
+#define SECCOMP_PARM1(_ctx)     SECCOMP_REG(_ctx, 4)
+#define SECCOMP_PARM2(_ctx)     SECCOMP_REG(_ctx, 5)
+#define SECCOMP_PARM3(_ctx)     SECCOMP_REG(_ctx, 6)
+#define SECCOMP_PARM4(_ctx)     SECCOMP_REG(_ctx, 7)
+#define SECCOMP_PARM5(_ctx)     SECCOMP_REG(_ctx, 8)
+#define SECCOMP_PARM6(_ctx)     SECCOMP_REG(_ctx, 9)
+#define SECCOMP_PARM7(_ctx)     SECCOMP_REG(_ctx, 10)
+#define SECCOMP_PARM8(_ctx)     SECCOMP_REG(_ctx, 11)
+#define SECCOMP_NR_IDX          (offsetof(struct arch_seccomp_data, nr))
+#define SECCOMP_ARCH_IDX        (offsetof(struct arch_seccomp_data, arch))
+#define SECCOMP_IP_MSB_IDX      (offsetof(struct arch_seccomp_data,           \
+                                          instruction_pointer) + 4)
+#define SECCOMP_IP_LSB_IDX      (offsetof(struct arch_seccomp_data,           \
+                                          instruction_pointer) + 0)
+#define SECCOMP_ARG_MSB_IDX(nr) (offsetof(struct arch_seccomp_data, args) +   \
+                                 8*(nr) + 4)
+#define SECCOMP_ARG_LSB_IDX(nr) (offsetof(struct arch_seccomp_data, args) +   \
+                                 8*(nr) + 0)
+
+// On MIPS we don't have structures like user_regs or user_regs_struct in
+// sys/user.h that we could use, so we just define regs_struct directly.
+struct regs_struct {
+  unsigned long long regs[32];
+};
+
+#define REG_a7 regs[11]
+#define REG_a6 regs[10]
+#define REG_a5 regs[9]
+#define REG_a4 regs[8]
+#define REG_a3 regs[7]
+#define REG_a2 regs[6]
+#define REG_a1 regs[5]
+#define REG_a0 regs[4]
+#define REG_v1 regs[3]
+#define REG_v0 regs[2]
+
+#define SECCOMP_PT_RESULT(_regs)  (_regs).REG_v0
+#define SECCOMP_PT_SYSCALL(_regs) (_regs).REG_v0
+#define SECCOMP_PT_PARM1(_regs)   (_regs).REG_a0
+#define SECCOMP_PT_PARM2(_regs)   (_regs).REG_a1
+#define SECCOMP_PT_PARM3(_regs)   (_regs).REG_a2
+#define SECCOMP_PT_PARM4(_regs)   (_regs).REG_a3
+#define SECCOMP_PT_PARM5(_regs)   (_regs).REG_a4
+#define SECCOMP_PT_PARM6(_regs)   (_regs).REG_a5
+#define SECCOMP_PT_PARM7(_regs)   (_regs).REG_a6
+#define SECCOMP_PT_PARM8(_regs)   (_regs).REG_a7
 
 #elif defined(__aarch64__)
 struct regs_struct {

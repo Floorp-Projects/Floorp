@@ -25,6 +25,12 @@ class LockImpl;
 
 namespace debug {
 
+class BASE_EXPORT GlobalActivityTracker {
+ public:
+  static bool IsEnabled() { return false; }
+  DISALLOW_COPY_AND_ASSIGN(GlobalActivityTracker);
+};
+
 class BASE_EXPORT ScopedLockAcquireActivity
 {
  public:
@@ -48,7 +54,6 @@ class BASE_EXPORT ScopedThreadJoinActivity
   explicit ScopedThreadJoinActivity(const base::PlatformThreadHandle* thread) {}
   DISALLOW_COPY_AND_ASSIGN(ScopedThreadJoinActivity);
 };
-
 
 }  // namespace debug
 }  // namespace base

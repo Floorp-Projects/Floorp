@@ -96,7 +96,7 @@ HANDLE FindCsrPortHeap() {
     // This functionality has not been verified on versions before Win10.
     return nullptr;
   }
-  DWORD number_of_heaps = ::GetProcessHeaps(0, NULL);
+  DWORD number_of_heaps = ::GetProcessHeaps(0, nullptr);
   std::unique_ptr<HANDLE[]> all_heaps(new HANDLE[number_of_heaps]);
   if (::GetProcessHeaps(number_of_heaps, all_heaps.get()) != number_of_heaps)
     return nullptr;
@@ -111,7 +111,7 @@ HANDLE FindCsrPortHeap() {
       continue;
     }
     if ((flags & kHeapClassMask) == kHeapClass8) {
-      if (nullptr != csr_port_heap) {
+      if (csr_port_heap) {
         DLOG(ERROR) << "Found multiple suitable CSR Port heaps";
         return nullptr;
       }

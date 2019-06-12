@@ -8,6 +8,7 @@
 #include <stddef.h>
 
 #include <iterator>
+#include <utility>
 
 #include "base/macros.h"
 
@@ -19,35 +20,16 @@ namespace internal {
 template <typename T>
 class ReversedAdapter {
  public:
-  using Iterator = decltype(static_cast<T*>(nullptr)->rbegin());
+  using Iterator = decltype(std::rbegin(std::declval<T&>()));
 
   explicit ReversedAdapter(T& t) : t_(t) {}
   ReversedAdapter(const ReversedAdapter& ra) : t_(ra.t_) {}
 
-  // TODO(mdempsky): Once we can use C++14 library features, use std::rbegin
-  // and std::rend instead, so we can remove the specialization below.
-  Iterator begin() const { return t_.rbegin(); }
-  Iterator end() const { return t_.rend(); }
+  Iterator begin() const { return std::rbegin(t_); }
+  Iterator end() const { return std::rend(t_); }
 
  private:
   T& t_;
-
-  DISALLOW_ASSIGN(ReversedAdapter);
-};
-
-template <typename T, size_t N>
-class ReversedAdapter<T[N]> {
- public:
-  using Iterator = std::reverse_iterator<T*>;
-
-  explicit ReversedAdapter(T (&t)[N]) : t_(t) {}
-  ReversedAdapter(const ReversedAdapter& ra) : t_(ra.t_) {}
-
-  Iterator begin() const { return Iterator(&t_[N]); }
-  Iterator end() const { return Iterator(&t_[0]); }
-
- private:
-  T (&t_)[N];
 
   DISALLOW_ASSIGN(ReversedAdapter);
 };

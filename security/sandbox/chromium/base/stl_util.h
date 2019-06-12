@@ -11,6 +11,7 @@
 #include <deque>
 #include <forward_list>
 #include <functional>
+#include <initializer_list>
 #include <iterator>
 #include <list>
 #include <map>
@@ -21,6 +22,7 @@
 #include <vector>
 
 #include "base/logging.h"
+#include "base/optional.h"
 
 namespace base {
 
@@ -38,6 +40,79 @@ void IterateAndEraseIf(Container& container, Predicate pred) {
 }
 
 }  // namespace internal
+
+// C++14 implementation of C++17's std::size():
+// http://en.cppreference.com/w/cpp/iterator/size
+template <typename Container>
+constexpr auto size(const Container& c) -> decltype(c.size()) {
+  return c.size();
+}
+
+template <typename T, size_t N>
+constexpr size_t size(const T (&array)[N]) noexcept {
+  return N;
+}
+
+// C++14 implementation of C++17's std::empty():
+// http://en.cppreference.com/w/cpp/iterator/empty
+template <typename Container>
+constexpr auto empty(const Container& c) -> decltype(c.empty()) {
+  return c.empty();
+}
+
+template <typename T, size_t N>
+constexpr bool empty(const T (&array)[N]) noexcept {
+  return false;
+}
+
+template <typename T>
+constexpr bool empty(std::initializer_list<T> il) noexcept {
+  return il.size() == 0;
+}
+
+// C++14 implementation of C++17's std::data():
+// http://en.cppreference.com/w/cpp/iterator/data
+template <typename Container>
+constexpr auto data(Container& c) -> decltype(c.data()) {
+  return c.data();
+}
+
+// std::basic_string::data() had no mutable overload prior to C++17 [1].
+// Hence this overload is provided.
+// Note: str[0] is safe even for empty strings, as they are guaranteed to be
+// null-terminated [2].
+//
+// [1] http://en.cppreference.com/w/cpp/string/basic_string/data
+// [2] http://en.cppreference.com/w/cpp/string/basic_string/operator_at
+template <typename CharT, typename Traits, typename Allocator>
+CharT* data(std::basic_string<CharT, Traits, Allocator>& str) {
+  return std::addressof(str[0]);
+}
+
+template <typename Container>
+constexpr auto data(const Container& c) -> decltype(c.data()) {
+  return c.data();
+}
+
+template <typename T, size_t N>
+constexpr T* data(T (&array)[N]) noexcept {
+  return array;
+}
+
+template <typename T>
+constexpr const T* data(std::initializer_list<T> il) noexcept {
+  return il.begin();
+}
+
+// Returns a const reference to the underlying container of a container adapter.
+// Works for std::priority_queue, std::queue, and std::stack.
+template <class A>
+const typename A::container_type& GetUnderlyingContainer(const A& adapter) {
+  struct ExposedAdapter : A {
+    using A::c;
+  };
+  return adapter.*&ExposedAdapter::c;
+}
 
 // Clears internal memory of an STL object.
 // STL clear()/reserve(0) does not always free internal memory allocated
@@ -57,23 +132,6 @@ typename std::iterator_traits<
     typename Container::const_iterator>::difference_type
 STLCount(const Container& container, const T& val) {
   return std::count(container.begin(), container.end(), val);
-}
-
-// Return a mutable char* pointing to a string's internal buffer,
-// which may not be null-terminated. Writing through this pointer will
-// modify the string.
-//
-// string_as_array(&str)[i] is valid for 0 <= i < str.size() until the
-// next call to a string method that invalidates iterators.
-//
-// As of 2006-04, there is no standard-blessed way of getting a
-// mutable reference to a string's internal buffer. However, issue 530
-// (http://www.open-std.org/JTC1/SC22/WG21/docs/lwg-active.html#530)
-// proposes this as the method. According to Matt Austern, this should
-// already work on all current implementations.
-inline char* string_as_array(std::string* str) {
-  // DO NOT USE const_cast<char*>(str->data())
-  return str->empty() ? NULL : &*str->begin();
 }
 
 // Test to see if a set or map contains a particular key.
@@ -114,11 +172,7 @@ bool ContainsValue(const Collection& collection, const Value& value) {
 // Returns true if the container is sorted.
 template <typename Container>
 bool STLIsSorted(const Container& cont) {
-  // Note: Use reverse iterator on container to ensure we only require
-  // value_type to implement operator<.
-  return std::adjacent_find(cont.rbegin(), cont.rend(),
-                            std::less<typename Container::value_type>())
-      == cont.rend();
+  return std::is_sorted(std::begin(cont), std::end(cont));
 }
 
 // Returns a new ResultType containing the difference of two sorted containers.
@@ -305,6 +359,46 @@ template <class Key,
 void EraseIf(std::unordered_multiset<Key, Hash, KeyEqual, Allocator>& container,
              Predicate pred) {
   internal::IterateAndEraseIf(container, pred);
+}
+
+// A helper class to be used as the predicate with |EraseIf| to implement
+// in-place set intersection. Helps implement the algorithm of going through
+// each container an element at a time, erasing elements from the first
+// container if they aren't in the second container. Requires each container be
+// sorted. Note that the logic below appears inverted since it is returning
+// whether an element should be erased.
+template <class Collection>
+class IsNotIn {
+ public:
+  explicit IsNotIn(const Collection& collection)
+      : i_(collection.begin()), end_(collection.end()) {}
+
+  bool operator()(const typename Collection::value_type& x) {
+    while (i_ != end_ && *i_ < x)
+      ++i_;
+    if (i_ == end_)
+      return true;
+    if (*i_ == x) {
+      ++i_;
+      return false;
+    }
+    return true;
+  }
+
+ private:
+  typename Collection::const_iterator i_;
+  const typename Collection::const_iterator end_;
+};
+
+// Helper for returning the optional value's address, or nullptr.
+template <class T>
+T* OptionalOrNullptr(base::Optional<T>& optional) {
+  return optional.has_value() ? &optional.value() : nullptr;
+}
+
+template <class T>
+const T* OptionalOrNullptr(const base::Optional<T>& optional) {
+  return optional.has_value() ? &optional.value() : nullptr;
 }
 
 }  // namespace base
