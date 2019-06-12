@@ -30,7 +30,7 @@ add_task(async function testNsIURI() {
 
 add_task(async function testPermissionsListing() {
   let expectedPermissions = ["autoplay-media", "camera", "cookie", "desktop-notification", "focus-tab-by-prompt",
-     "geo", "image", "install", "microphone", "popup", "screen", "shortcuts",
+     "geo", "image", "install", "microphone", "plugin:flash", "popup", "screen", "shortcuts",
      "persistent-storage", "storage-access"];
   if (RESIST_FINGERPRINTING_ENABLED) {
     // Canvas permission should be hidden unless privacy.resistFingerprinting
@@ -133,7 +133,7 @@ add_task(async function testExactHostMatch() {
     exactHostMatched.push("midi");
     exactHostMatched.push("midi-sysex");
   }
-  let nonExactHostMatched = ["image", "cookie", "popup", "install", "shortcuts",
+  let nonExactHostMatched = ["image", "cookie", "plugin:flash", "popup", "install", "shortcuts",
                              "storage-access"];
 
   let permissions = SitePermissions.listPermissions();
