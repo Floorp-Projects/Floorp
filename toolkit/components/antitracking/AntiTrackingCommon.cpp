@@ -1341,7 +1341,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
 }
 
 bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-    nsIHttpChannel* aChannel, nsIURI* aURI, uint32_t* aRejectedReason) {
+    nsIChannel* aChannel, nsIURI* aURI, uint32_t* aRejectedReason) {
   MOZ_ASSERT(aURI);
   MOZ_ASSERT(aChannel);
 
@@ -1380,6 +1380,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     toplevelPrincipal = loadInfo->LoadingPrincipal();
   }
 
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+
   // If we don't have a loading principal and this is a document channel, we are
   // a top-level window!
   if (!toplevelPrincipal) {
@@ -1388,8 +1390,10 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
          "channel"
          " that belongs to a top-level window"));
     bool isDocument = false;
-    rv = aChannel->GetIsMainDocumentChannel(&isDocument);
-    if (NS_SUCCEEDED(rv) && isDocument) {
+    if (httpChannel) {
+      rv = httpChannel->GetIsMainDocumentChannel(&isDocument);
+    }
+    if (httpChannel && NS_SUCCEEDED(rv) && isDocument) {
       rv = ssm->GetChannelResultPrincipal(aChannel,
                                           getter_AddRefs(toplevelPrincipal));
       if (NS_SUCCEEDED(rv)) {
@@ -1463,7 +1467,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return true;
   }
 
-  if (CheckContentBlockingAllowList(aChannel)) {
+  if (httpChannel && CheckContentBlockingAllowList(httpChannel)) {
     return true;
   }
 
@@ -1511,14 +1515,14 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
 
   // Not a tracker.
   if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    if (!aChannel->IsThirdPartyTrackingResource()) {
+    if (httpChannel && !httpChannel->IsThirdPartyTrackingResource()) {
       LOG(("Our channel isn't a third-party tracking channel"));
       return true;
     }
   } else {
     MOZ_ASSERT(behavior ==
                nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
-    if (aChannel->IsThirdPartyTrackingResource()) {
+    if (httpChannel && httpChannel->IsThirdPartyTrackingResource()) {
       // fall through
     } else if (nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel,
                                                            aURI)) {
