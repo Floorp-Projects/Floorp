@@ -48,23 +48,6 @@ class ChildProfilerController;
 
 using mozilla::loader::PScriptCacheChild;
 
-#if !defined(XP_WIN)
-// Returns whether or not the currently running build is an unpackaged
-// developer build. This check is implemented by looking for omni.ja in the
-// the obj/dist dir. We use this routine to detect when the build dir will
-// use symlinks to the repo and object dir. On Windows, dev builds don't
-// use symlinks.
-bool IsDevelopmentBuild();
-#endif /* !XP_WIN */
-
-#if defined(XP_MACOSX)
-// Return the repo directory and the repo object directory respectively. These
-// should only be used on Mac developer builds to determine the path to the
-// repo or object directory.
-nsresult GetRepoDir(nsIFile** aRepoDir);
-nsresult GetObjDir(nsIFile** aObjDir);
-#endif /* XP_MACOSX */
-
 namespace ipc {
 class URIParams;
 }  // namespace ipc

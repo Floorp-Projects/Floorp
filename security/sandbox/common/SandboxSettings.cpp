@@ -7,6 +7,7 @@
 #include "mozISandboxSettings.h"
 
 #include "mozilla/Components.h"
+#include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
 
 #include "prenv.h"
@@ -73,6 +74,14 @@ NS_IMETHODIMP SandboxSettings::GetEffectiveContentSandboxLevel(
   *aRetVal = mozilla::GetEffectiveContentSandboxLevel();
   return NS_OK;
 }
+
+#if !defined(XP_WIN)
+bool IsDevelopmentBuild() {
+  nsCOMPtr<nsIFile> path = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
+  // If the path doesn't exist, we're a dev build.
+  return path == nullptr;
+}
+#endif /* !XP_WIN */
 
 }  // namespace mozilla
 
