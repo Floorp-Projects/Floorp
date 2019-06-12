@@ -26,7 +26,7 @@ TEST_F(APZCSnappingOnMomentumTester, Snap_On_Momentum) {
 
   // Set up some basic scroll snapping
   ScrollSnapInfo snap;
-  snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
+  snap.mScrollSnapTypeY = StyleScrollSnapStrictness::Mandatory;
 
   if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
     snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
