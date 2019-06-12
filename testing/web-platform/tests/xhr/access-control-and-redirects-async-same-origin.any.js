@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Tests that asynchronous XMLHttpRequests handle redirects according to the CORS standard.</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <script src="/common/get-host-info.sub.js"></script>
-  </head>
-  <body>
-    <script>
+// META: title=Tests that asynchronous XMLHttpRequests handle redirects according to the CORS standard.
+// META: script=/common/get-host-info.sub.js
+
     function runTest(test, path, credentials, expectSuccess) {
       const xhr = new XMLHttpRequest();
       xhr.withCredentials = credentials;
@@ -66,6 +59,3 @@
       runTest(t, "/xhr/resources/access-control-basic-allow-no-credentials.py",
           withCredentials, fails)
     }, "Request with credentials is redirected to a cross-origin response with a specific Access-Control-Allow-Origin (no credentials)");
-    </script>
-  </body>
-</html>

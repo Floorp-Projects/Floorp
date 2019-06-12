@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Tests cross-origin async request with non-CORS-safelisted method</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <script src="/common/get-host-info.sub.js"></script>
-  </head>
-  <body>
-    <script type="text/javascript">
+// META: title=Tests cross-origin async request with non-CORS-safelisted method
+// META: script=/common/get-host-info.sub.js
+
     async_test((test) => {
       const xhr = new XMLHttpRequest;
 
@@ -22,6 +15,3 @@
       xhr.setRequestHeader("Content-Type", "text/plain; charset=UTF-8");
       xhr.send("PASS: PUT data received");
     }, "Allow async PUT request");
-    </script>
-  </body>
-</html>
