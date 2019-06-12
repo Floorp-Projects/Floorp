@@ -872,8 +872,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                 if self.config['enable_webrender']:
                     env['MOZ_WEBRENDER'] = '1'
                     env['MOZ_ACCELERATED'] = '1'
-                else:
-                    env['MOZ_WEBRENDER'] = '0'
 
                 if self.config['single_stylo_traversal']:
                     env['STYLO_THREADS'] = '1'
