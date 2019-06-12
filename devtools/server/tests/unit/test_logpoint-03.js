@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * Check that logpoints generate console messages.
+ * Check that logpoints generate console errors if the logpoint statement is invalid.
  */
 
 var gDebuggee;
@@ -43,11 +43,11 @@ function test_simple_breakpoint() {
       packet.frame.where.actor
     );
 
-    // Set a logpoint which should invoke console.log.
+    // Set a logpoint which should throw an error message.
     gThreadClient.setBreakpoint({
       sourceUrl: source.url,
       line: 3,
-    }, { logValue: "a" });
+    }, { logValue: "c" });
 
     // Execute the rest of the code.
     gThreadClient.resume();
@@ -63,7 +63,7 @@ function test_simple_breakpoint() {
                    1);
   /* eslint-enable */
 
-  Assert.equal(lastMessage.level, "logPoint");
-  Assert.equal(lastMessage.arguments[0], "three");
+  Assert.equal(lastMessage.level, "logPointError");
+  Assert.equal(lastMessage.arguments[0], "[Logpoint threw]: c is not defined");
   finishClient(gClient);
 }
