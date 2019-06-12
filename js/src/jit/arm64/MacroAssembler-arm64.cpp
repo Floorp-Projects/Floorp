@@ -1036,7 +1036,7 @@ void MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value,
                                        MIRType valueType, const T& dest,
                                        MIRType slotType) {
   if (valueType == MIRType::Double) {
-    storeDouble(value.reg().typedReg().fpu(), dest);
+    boxDouble(value.reg().typedReg().fpu(), dest);
     return;
   }
 
