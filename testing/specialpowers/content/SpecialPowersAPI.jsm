@@ -497,7 +497,7 @@ class SpecialPowersAPI {
 
      Allow can be a boolean value of true/false or ALLOW_ACTION/DENY_ACTION/PROMPT_ACTION/UNKNOWN_ACTION
   */
-  pushPermissions(inPermissions, callback) {
+  async pushPermissions(inPermissions, callback) {
     inPermissions = Cu.waiveXrays(inPermissions);
     var pendingPermissions = [];
     var cleanupPermissions = [];
@@ -507,13 +507,13 @@ class SpecialPowersAPI {
         var originalValue = Ci.nsIPermissionManager.UNKNOWN_ACTION;
         var context = Cu.unwaiveXrays(permission.context); // Sometimes |context| is a DOM object on which we expect
                                                            // to be able to access .nodePrincipal, so we need to unwaive.
-        if (this.testPermission(permission.type, Ci.nsIPermissionManager.ALLOW_ACTION, context)) {
+        if (await this.testPermission(permission.type, Ci.nsIPermissionManager.ALLOW_ACTION, context)) {
           originalValue = Ci.nsIPermissionManager.ALLOW_ACTION;
-        } else if (this.testPermission(permission.type, Ci.nsIPermissionManager.DENY_ACTION, context)) {
+        } else if (await this.testPermission(permission.type, Ci.nsIPermissionManager.DENY_ACTION, context)) {
           originalValue = Ci.nsIPermissionManager.DENY_ACTION;
-        } else if (this.testPermission(permission.type, Ci.nsIPermissionManager.PROMPT_ACTION, context)) {
+        } else if (await this.testPermission(permission.type, Ci.nsIPermissionManager.PROMPT_ACTION, context)) {
           originalValue = Ci.nsIPermissionManager.PROMPT_ACTION;
-        } else if (this.testPermission(permission.type, Ci.nsICookiePermission.ACCESS_SESSION, context)) {
+        } else if (await this.testPermission(permission.type, Ci.nsICookiePermission.ACCESS_SESSION, context)) {
           originalValue = Ci.nsICookiePermission.ACCESS_SESSION;
         }
 
@@ -628,26 +628,32 @@ class SpecialPowersAPI {
   }
 
   popPermissions(callback) {
-    if (this._permissionsUndoStack.length > 0) {
-      // See pushPermissions comment regarding delay.
-      let cb = callback ? this._delayCallbackTwice(callback) : null;
-      /* Each pop from the stack will yield an object {op/type/permission/value/url/appid/isInIsolatedMozBrowserElement} or null */
-      this._pendingPermissions.push([this._permissionsUndoStack.pop(), cb]);
-      this._applyPermissions();
-    } else {
-      if (this._observingPermissions) {
-        this._observingPermissions = false;
-        this._removeMessageListener("specialpowers-perm-changed", this.permChangedProxy.bind(this));
+    let promise = new Promise(resolve => {
+      if (this._permissionsUndoStack.length > 0) {
+        // See pushPermissions comment regarding delay.
+        let cb = this._delayCallbackTwice(resolve);
+        /* Each pop from the stack will yield an object {op/type/permission/value/url/appid/isInIsolatedMozBrowserElement} or null */
+        this._pendingPermissions.push([this._permissionsUndoStack.pop(), cb]);
+        this._applyPermissions();
+      } else {
+        if (this._observingPermissions) {
+          this._observingPermissions = false;
+          this._removeMessageListener("specialpowers-perm-changed", this.permChangedProxy.bind(this));
+        }
+        this._setTimeout(resolve);
       }
-      this._setTimeout(callback);
+    });
+    if (callback) {
+      promise.then(callback);
     }
+    return promise;
   }
 
   flushPermissions(callback) {
     while (this._permissionsUndoStack.length > 1)
       this.popPermissions(null);
 
-    this.popPermissions(callback);
+    return this.popPermissions(callback);
   }
 
 
