@@ -94,7 +94,7 @@ add_task(async function testAsyncEncryptStrings() {
     "aaa 一二三", // Includes Unicode with code points outside [0, 255].
   ];
 
-  let encrypteds = await sdr.asyncEncryptStrings(inputs.length, inputs);
+  let encrypteds = await sdr.asyncEncryptStrings(inputs);
   for (let i = 0; i < inputs.length; i++) {
     let encrypted = encrypteds[i];
     let input = inputs[i];
