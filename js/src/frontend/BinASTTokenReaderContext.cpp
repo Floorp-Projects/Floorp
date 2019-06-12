@@ -799,7 +799,9 @@ class HuffmanPreludeReader {
 
     // First read the bit lengths for all symbols.
     for (size_t i = 0; i < numberOfSymbols; ++i) {
-      BINJS_MOZ_TRY_DECL(bitLength, reader.readByte());
+      BINJS_MOZ_TRY_DECL(
+          bitLength,
+          reader.readByte<BinASTTokenReaderContext::Compression::Yes>());
       if (bitLength == 0) {
         // A value with a bits length of 0? That makes no sense.
         return raiseInvalidTableData(entry.identity);
@@ -845,7 +847,8 @@ class HuffmanPreludeReader {
     }
 
     uint8_t headerByte;
-    MOZ_TRY_VAR(headerByte, reader.readByte());
+    MOZ_TRY_VAR(headerByte,
+                reader.readByte<BinASTTokenReaderContext::Compression::Yes>());
     switch (headerByte) {
       case TableHeader::SingleValue: {
         // Construct in-place.
@@ -896,7 +899,8 @@ class HuffmanPreludeReader {
   MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<Boolean>(
       Boolean::Table& table, const Boolean& entry) {
     uint8_t indexByte;
-    MOZ_TRY_VAR(indexByte, reader.readByte());
+    MOZ_TRY_VAR(indexByte,
+                reader.readByte<BinASTTokenReaderContext::Compression::Yes>());
     if (indexByte >= 2) {
       return raiseInvalidTableData(entry.identity);
     }
@@ -929,7 +933,8 @@ class HuffmanPreludeReader {
   MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<MaybeInterface>(
       MaybeInterface::Table& table, const MaybeInterface& entry) {
     uint8_t indexByte;
-    MOZ_TRY_VAR(indexByte, reader.readByte());
+    MOZ_TRY_VAR(indexByte,
+                reader.readByte<BinASTTokenReaderContext::Compression::Yes>());
     if (indexByte >= 2) {
       return raiseInvalidTableData(entry.identity);
     }
@@ -960,7 +965,8 @@ class HuffmanPreludeReader {
   template <>
   MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<Sum>(
       HuffmanTableIndexedSymbolsSum& table, const Sum& sum) {
-    BINJS_MOZ_TRY_DECL(index, reader.readVarU32());
+    BINJS_MOZ_TRY_DECL(
+        index, reader.readVarU32<BinASTTokenReaderContext::Compression::Yes>());
     if (index >= sum.maxNumberOfSymbols()) {
       return raiseInvalidTableData(sum.identity);
     }
@@ -990,9 +996,10 @@ class HuffmanPreludeReader {
 
   // Reading a single-value table of sums of interfaces.
   template <>
-  BINJS_MOZ_TRY_DECL(index, reader.readVarU32());
   MOZ_MUST_USE JS::Result<Ok> readSingleValueTable<MaybeSum>(
       HuffmanTableIndexedSymbolsSum& table, const MaybeSum& sum) {
+    BINJS_MOZ_TRY_DECL(
+        index, reader.readVarU32<BinASTTokenReaderContext::Compression::Yes>());
     if (index >= sum.maxNumberOfSymbols()) {
       return raiseInvalidTableData(sum.identity);
     }
