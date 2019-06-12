@@ -18,7 +18,7 @@
 using namespace js;
 using namespace js::frontend;
 
-void CGNumberList::finish(mozilla::Span<GCPtrValue> array) {
+void CGBigIntList::finish(mozilla::Span<GCPtrBigInt> array) {
   MOZ_ASSERT(length() == array.size());
 
   for (unsigned i = 0; i < length(); i++) {
@@ -171,7 +171,7 @@ void BytecodeSection::updateDepth(BytecodeOffset target) {
 
 PerScriptData::PerScriptData(JSContext* cx)
     : scopeList_(cx),
-      numberList_(cx),
+      bigIntList_(cx),
       atomIndices_(cx->frontendCollectionPool()) {}
 
 bool PerScriptData::init(JSContext* cx) { return atomIndices_.acquire(cx); }
