@@ -82,14 +82,10 @@
   font-size: smaller;
 }
 
-.meta-info:not(:first-of-type) {
-  margin-top: 0;
-}
-
-.meta-info:not(:last-of-type) {
-  margin-bottom: 0;
-}
-
 .meta-info:first-of-type {
+  padding-top: 1em;
   border-top: 1px solid var(--in-content-box-border-color);
+  width: 40px;
+  /* Show a non-full length border but constrain the text to this width */
+  white-space: nowrap;
 }
