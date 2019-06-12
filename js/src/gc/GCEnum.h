@@ -110,7 +110,8 @@ enum class ZealMode {
   _(ArgumentsData)                         \
   _(RareArgumentsData)                     \
   _(FileObjectFile)                        \
-  _(RegExpStatics)
+  _(RegExpStatics)                         \
+  _(RegExpSharedBytecode)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
