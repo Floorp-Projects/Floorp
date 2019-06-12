@@ -22,10 +22,11 @@ add_task(async function() {
 
   // Click the call stack to get to debugger-line-1
   await clickElement(dbg, "frame", 2);
+  await waitForRequestsToSettle(dbg);
   await waitForSelectedSource(dbg, "simple1.js");
 
   // Resume, which ends all pausing and would trigger the problem
-  resume(dbg);
+  await resume(dbg);
 
   // Select the source that had the initial debug line
   await selectSource(dbg, "simple2.js");

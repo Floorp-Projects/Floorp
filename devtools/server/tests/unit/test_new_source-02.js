@@ -35,12 +35,10 @@ function test_simple_new_source() {
   gThreadClient.once("paused", function() {
     gThreadClient.once("newSource", async function(packet2) {
       // The "stopMe" eval source is emitted first.
-      Assert.equal(packet2.type, "newSource");
       Assert.ok(!!packet2.source);
       Assert.ok(packet2.source.introductionType, "eval");
 
       gThreadClient.once("newSource", function(packet) {
-        Assert.equal(packet.type, "newSource");
         dump(JSON.stringify(packet, null, 2));
         Assert.ok(!!packet.source);
         Assert.ok(!!packet.source.url.match(/example\.com/));

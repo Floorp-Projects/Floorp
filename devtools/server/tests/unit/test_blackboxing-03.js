@@ -88,9 +88,10 @@ async function test_black_box_dbg_statement() {
 async function test_unblack_box_dbg_statement(sourceFront) {
   await unBlackBox(sourceFront);
 
-  gThreadClient.once("paused", function(packet) {
+  gThreadClient.once("paused", async function(packet) {
     Assert.equal(packet.why.type, "debuggerStatement",
                  "We should stop at the debugger statement again");
+    await gThreadClient.resume();
     finishClient(gClient);
   });
   gDebuggee.runTest();

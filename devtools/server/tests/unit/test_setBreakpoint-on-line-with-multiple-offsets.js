@@ -14,7 +14,6 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   let packet = await executeOnNextTickAndWaitForPause(function() {
     Cu.evalInSandbox("f()", debuggee);
   }, threadClient);
-  Assert.equal(packet.type, "paused");
   let why = packet.why;
   Assert.equal(why.type, "breakpoint");
   Assert.equal(why.actors.length, 1);
@@ -32,7 +31,6 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
     () => resume(threadClient),
     threadClient
   );
-  Assert.equal(packet.type, "paused");
   why = packet.why;
   Assert.equal(why.type, "breakpoint");
   Assert.equal(why.actors.length, 1);

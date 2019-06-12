@@ -21,21 +21,18 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   await executeOnNextTickAndWaitForPause(() => evaluateTestCode(debuggee), threadClient);
 
   const step1 = await stepIn(threadClient);
-  equal(step1.type, "paused");
   equal(step1.frame.where.line, 3);
   equal(step1.why.type, "resumeLimit");
   equal(debuggee.a, undefined);
   equal(debuggee.b, undefined);
 
   const step2 = await stepIn(threadClient);
-  equal(step2.type, "paused");
   equal(step2.frame.where.line, 4);
   equal(step2.why.type, "resumeLimit");
   equal(debuggee.a, 1);
   equal(debuggee.b, undefined);
 
   const step3 = await stepIn(threadClient);
-  equal(step3.type, "paused");
   equal(step3.frame.where.line, 4);
   equal(step3.why.type, "resumeLimit");
   equal(debuggee.a, 1);
@@ -44,7 +41,6 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   await new Promise(async resolve => {
     await threadClient.stepIn();
     threadClient.once("paused", (packet) => {
-      equal(packet.type, "paused");
       // Before fixing bug 785689, the type was resumeLimit.
       equal(packet.why.type, "debuggerStatement");
       resolve();

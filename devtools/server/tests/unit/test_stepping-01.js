@@ -10,7 +10,6 @@
  */
 
 async function testFinish({threadClient, debuggerClient}) {
-  await resume(threadClient);
   await close(debuggerClient);
 
   do_test_finished();
@@ -57,7 +56,7 @@ async function stepOutOfA(dbg, func, expectedLocation) {
 
   deepEqual(getPauseLocation(packet), expectedLocation, `step out location in ${func}`);
 
-  await resume(threadClient);
+  await threadClient.resume();
 }
 
 async function stepOverInA(dbg, func, expectedLocation) {
@@ -71,8 +70,7 @@ async function stepOverInA(dbg, func, expectedLocation) {
 
   packet = await stepOver(threadClient);
   deepEqual(getPauseLocation(packet), expectedLocation, `step out location in ${func}`);
-
-  await resume(dbg.threadClient);
+  await dbg.threadClient.resume();
 }
 
 async function testStep(dbg, func, expectedLocation) {

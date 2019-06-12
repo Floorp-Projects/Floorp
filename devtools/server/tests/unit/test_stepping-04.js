@@ -14,7 +14,6 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
 
   dumpn("Step Over to f()");
   const step1 = await stepOver(threadClient);
-  equal(step1.type, "paused");
   equal(step1.why.type, "resumeLimit");
   equal(step1.frame.where.line, 6);
   equal(debuggee.a, undefined);
@@ -22,7 +21,6 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
 
   dumpn("Step Over f()");
   const step2 = await stepOver(threadClient);
-  equal(step2.type, "paused");
   equal(step2.frame.where.line, 7);
   equal(step2.why.type, "resumeLimit");
   equal(debuggee.a, 1);

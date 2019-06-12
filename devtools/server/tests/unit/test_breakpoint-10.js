@@ -9,7 +9,7 @@
  * triggers no matter which entry point we reach.
  */
 
-add_task(threadClientTest(({ threadClient, debuggee }) => {
+add_task(threadClientTest(({ threadClient, client, debuggee }) => {
   return new Promise(resolve => {
     threadClient.once("paused", async function(packet) {
       const source = await getSourceById(
@@ -23,16 +23,17 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
       };
 
       threadClient.setBreakpoint(location, {});
+      await client.waitForRequestsToSettle();
 
-      threadClient.once("paused", function(packet) {
+      threadClient.once("paused", async function(packet) {
         // Check the return value.
-        Assert.equal(packet.type, "paused");
         Assert.equal(packet.why.type, "breakpoint");
         // Check that the breakpoint worked.
         Assert.equal(debuggee.i, 0);
 
         // Remove the breakpoint.
         threadClient.removeBreakpoint(location);
+        await client.waitForRequestsToSettle();
 
         const location2 = {
           sourceUrl: source.url,
@@ -40,26 +41,27 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
           column: 12,
         };
         threadClient.setBreakpoint(location2, {});
+        await client.waitForRequestsToSettle();
 
-        threadClient.once("paused", function(packet) {
+        threadClient.once("paused", async function(packet) {
           // Check the return value.
-          Assert.equal(packet.type, "paused");
           Assert.equal(packet.why.type, "breakpoint");
           // Check that the breakpoint worked.
           Assert.equal(debuggee.i, 1);
 
           // Remove the breakpoint.
           threadClient.removeBreakpoint(location2);
+          await client.waitForRequestsToSettle();
 
           threadClient.resume().then(resolve);
         });
 
         // Continue until the breakpoint is hit again.
-        threadClient.resume();
+        await threadClient.resume();
       });
 
       // Continue until the breakpoint is hit.
-      threadClient.resume();
+      await threadClient.resume();
     });
 
     /* eslint-disable */

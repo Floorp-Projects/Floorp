@@ -48,9 +48,12 @@ function test_simple_breakpoint() {
       sourceUrl: source.url,
       line: 4,
     }, { logValue: "a", condition: "a === 5" });
+    await gClient.waitForRequestsToSettle();
 
     // Execute the rest of the code.
-    gThreadClient.resume();
+    await gThreadClient.resume();
+    Assert.equal(lastMessage.arguments[0], 5);
+    finishClient(gClient);
   });
 
   /* eslint-disable */
@@ -64,7 +67,4 @@ function test_simple_breakpoint() {
                    "test.js",
                    1);
   /* eslint-enable */
-
-  Assert.equal(lastMessage.arguments[0], 5);
-  finishClient(gClient);
 }
