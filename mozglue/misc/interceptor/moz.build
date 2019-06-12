@@ -10,6 +10,7 @@ EXPORTS.mozilla.interceptor += [
     'PatcherBase.h',
     'PatcherDetour.h',
     'PatcherNopSpace.h',
+    'RangeMap.h',
     'TargetFunction.h',
     'Trampoline.h',
     'VMSharingPolicies.h',
