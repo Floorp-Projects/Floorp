@@ -534,6 +534,7 @@ class nsDocShell final : public nsDocLoader,
   nsresult AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
                                nsIPrincipal* aTriggeringPrincipal,
                                nsIPrincipal* aPrincipalToInherit,
+                               nsIPrincipal* aStoragePrincipalToInherit,
                                nsIContentSecurityPolicy* aCsp,
                                bool aCloneChildren, nsISHEntry** aNewEntry);
 
@@ -607,7 +608,8 @@ class nsDocShell final : public nsDocLoader,
   // will be upgraded to HTTPS.
   bool OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                 nsIPrincipal* aTriggeringPrincipal,
-                nsIPrincipal* aPrincipalToInherit, uint32_t aLoadType,
+                nsIPrincipal* aPrincipalToInherit,
+                nsIPrincipal* aStoragePrincipalToInehrit, uint32_t aLoadType,
                 nsIContentSecurityPolicy* aCsp, bool aFireOnLocationChange,
                 bool aAddToGlobalHistory, bool aCloneSHChildren);
 
