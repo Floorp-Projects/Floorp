@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=698929
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=698929">Mozilla Bug 698929</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -27,11 +27,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=698929
     function() {
       ++c;
     });
-  document.body.addEventListener("foo", function(e) {
+  document.body.addEventListener("foo", function(event) {
     ++b;
-    e.stopImmediatePropagation();
+    event.stopImmediatePropagation();
   });
-  document.body.addEventListener("foo", function(e) {
+  document.body.addEventListener("foo", function(event) {
     ++b;
   });
   document.body.dispatchEvent(e);

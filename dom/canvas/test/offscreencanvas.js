@@ -327,8 +327,8 @@ function entryFunction(testStr, subtests, offscreenCanvas) {
       var findTransferables = function(t) {
         if (t.test == "subworker") {
           var result = [];
-          t.subtests.forEach(function(test) {
-            result = result.concat(findTransferables(test));
+          t.subtests.forEach(function(subWorkerTest) {
+            result = result.concat(findTransferables(subWorkerTest));
           });
 
           return result;
@@ -350,8 +350,8 @@ onmessage = function(evt) {
 onconnect = function(evt) {
   port = evt.ports[0];
 
-  port.addEventListener('message', function(evt) {
-    entryFunction(evt.data.test, evt.data.subtests, evt.data.canvas);
+  port.addEventListener('message', function(event) {
+    entryFunction(event.data.test, event.data.subtests, event.data.canvas);
   });
 
   port.start();

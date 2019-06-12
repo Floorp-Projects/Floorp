@@ -407,7 +407,7 @@ function testPreventDefault() {
     aEvent.preventDefault();
   }
 
-  let tests = [
+  let subTests = [
     [{ name: "touchstart", prevent: false },
      { name: "touchmove", prevent: false },
      { name: "touchmove", prevent: false },
@@ -446,9 +446,9 @@ function testPreventDefault() {
       target.removeEventListener(aTest.name, preventFunction);
   }
 
-  for (var i = 0; i < tests.length; i++) {
-    for (var j = 0; j < tests[i].length; j++) {
-      dotest(tests[i][j]);
+  for (var i = 0; i < subTests.length; i++) {
+    for (var j = 0; j < subTests[i].length; j++) {
+      dotest(subTests[i][j]);
     }
   }
 

@@ -103,8 +103,7 @@ if (HasExt('WEBGL_color_buffer_float')) {
     ok(implicitEnabled, 'OES_texture_float should implicitly enable WEBGL_color_buffer_float.');
 
     if (HasExt('EXT_float_blend')) {
-        const implicitEnabled = CheckBlending();
-        ok(implicitEnabled, 'OES_texture_float should implicitly enable EXT_float_blend.');
+        ok(CheckBlending(), 'OES_texture_float should implicitly enable EXT_float_blend.');
     }
 }
 

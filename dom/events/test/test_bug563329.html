@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=563329
 /*  ui.click_hold_context_menus preference */
 
 var target = null;
-var tests = getTests();
+var testGen = getTests();
 var currentTest = null;
 
 function getTests() {
@@ -44,13 +44,13 @@ function doTest() {
     SimpleTest.ok(true, currentTest.message);
     synthesizeMouse(target, 0, 0, {type: "mouseup"});
     SimpleTest.executeSoon(function() {
-      currentTest = tests.next();
+      currentTest = testGen.next();
       currentTest.func();
     });
   });
 
   SimpleTest.executeSoon(function() {
-    currentTest = tests.next();
+    currentTest = testGen.next();
     currentTest.func();
   });
 }

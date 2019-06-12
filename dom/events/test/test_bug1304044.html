@@ -26,9 +26,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1304044
       return node;
     }
 
-    function TargetAndListener(listener, target) {
+    function TargetAndListener(listener, targetInner) {
       this.listener = listener;
-      this.target = target;
+      this.target = targetInner;
     }
 
     TargetAndListener.prototype.toString = function() {

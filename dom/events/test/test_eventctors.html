@@ -895,8 +895,8 @@ is(e.dataTransfer, dataTransfer, "InputEvent should have the dataTransfer");
 is(e.dataTransfer.getData("text/plain"), "foo", "InputEvent.dataTransfer should keep handling its data");
 try {
   e.dataTransfer.setData("text/plain", "bar");
-} catch (ex) {
-  ok(false, `InputEvent.dataTransfer.setData("text/plain", "bar") shouldn't fail (${ex})`);
+} catch (exp) {
+  ok(false, `InputEvent.dataTransfer.setData("text/plain", "bar") shouldn't fail (${exp})`);
 }
 is(e.dataTransfer.getData("text/plain"), "bar", "InputEvent.dataTransfer should be modified by a call of its setData()");
 is(e.inputType, "invalid input type", "InputEvent should have inputType attribute");

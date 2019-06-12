@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=721569
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=721569">Mozilla Bug 721569</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -119,7 +119,7 @@ for (var i = 0; i < 16; i++) {
   int8View[i] = i+65;
 }
 
-let testData = 
+let testData =
  [
     // Test 3 strings
     [["foo", "bar", "baz"], {},
@@ -213,18 +213,18 @@ function runTests() {
   let [blobs, options] = currentTest;
   let test = currentTest[2].shift();
 
-  let blob;
+  let blob3;
   if (options !== undefined) {
-    blob = new Blob(blobs, options);
+    blob3 = new Blob(blobs, options);
   } else {
-    blob = new Blob(blobs);
+    blob3 = new Blob(blobs);
   }
 
-  ok(blob, "Test " + testCounter + " got blob");
-  ok(blob instanceof Blob, "Test " + testCounter + " blob is a Blob");
-  ok(!(blob instanceof File), "Test " + testCounter + " blob is not a File");
+  ok(blob3, "Test " + testCounter + " got blob");
+  ok(blob3 instanceof Blob, "Test " + testCounter + " blob is a Blob");
+  ok(!(blob3 instanceof File), "Test " + testCounter + " blob is not a File");
 
-  let slice = blob.slice(test.start, test.start + test.length);
+  let slice = blob3.slice(test.start, test.start + test.length);
   ok(slice, "Test " + testCounter + " got slice");
   ok(slice instanceof Blob, "Test " + testCounter + " slice is a Blob");
   ok(!(slice instanceof File), "Test " + testCounter + " slice is not a File");

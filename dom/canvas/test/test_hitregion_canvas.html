@@ -37,7 +37,7 @@ function test_hitregions() {
     ctx.removeHitRegion("b");
 
     ctx.clearHitRegions();
-  } catch (e) {
+  } catch (ex) {
       _thrown_outer = true;
   }
   ok(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
@@ -51,7 +51,7 @@ function test_hitregions() {
     ctx.addHitRegion({id: "a", control: d});
 
     ctx.clearHitRegions();
-  } catch (e) {
+  } catch (ex) {
       _thrown_outer = true;
   }
   ok(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
@@ -67,7 +67,7 @@ function test_hitregions() {
 </script>
 
 <script>
- 
+
 function runTests() {
  try {
   test_hitregions();

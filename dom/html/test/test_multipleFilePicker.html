@@ -42,14 +42,14 @@ let pickerCount = 0;
 }))
 
 // Let's wait a bit more, then let's do a click.
-.then(_ => {
+.then(() => {
   return new Promise(resolve => {
     MockFilePicker.showCallback = function(filepicker) {
       ++pickerCount;
       resolve();
     }
 
-    setTimeout(_ => {
+    setTimeout(() => {
       is(pickerCount, 1, "Only 1 file picker");
       is(clickCount, 10, "10 clicks triggered");
       clickCount = 0;
@@ -61,7 +61,7 @@ let pickerCount = 0;
 
 // Another click...
 .then(_ => {
-  setTimeout(_ => {
+  setTimeout(() => {
     is(pickerCount, 1, "Only 1 file picker");
     is(clickCount, 10, "10 clicks triggered");
     MockFilePicker.cleanup();

@@ -13,7 +13,7 @@ function is(a, b, message) {
 }
 
 onmessage = function(e) {
-  self[e.data.func](e.data.blob, e.data.content).then(ok => {
+  self[e.data.func](e.data.blob, e.data.content).then(() => {
     postMessage({type: 'done'});
   }, exc => {
     dump(exc);
