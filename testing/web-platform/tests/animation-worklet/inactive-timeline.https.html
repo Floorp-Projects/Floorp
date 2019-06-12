@@ -37,14 +37,14 @@ function createScrollLinkedWorkletAnimation(test) {
   });
   const DURATION = 1000; // ms
   const KEYFRAMES = { transform: ['translateY(100px)', 'translateY(200px)'] };
-  return new WorkletAnimation('passthrough_except_nan', new KeyframeEffect(createDiv(test),
+  return new WorkletAnimation('passthrough', new KeyframeEffect(createDiv(test),
         KEYFRAMES, DURATION), timeline);
 }
 
 setup(setupAndRegisterTests, {explicit_done: true});
 
 function setupAndRegisterTests() {
-  registerPassthroughExceptNaNAnimator().then(() => {
+  registerPassthroughAnimator().then(() => {
 
     promise_test(async t => {
       const animation = createScrollLinkedWorkletAnimation(t);
