@@ -52,4 +52,27 @@ describe("<ContextMenu>", () => {
     const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
     assert.lengthOf(wrapper.find(".context-menu-item button.disabled"), 1);
   });
+  it("should have the context-menu-item class", () => {
+    const options = [{label: "item1", icon: "icon1"}];
+    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
+    assert.lengthOf(wrapper.find(".context-menu-item"), 1);
+  });
+  it("should call onClick when onKeyDown is called", () => {
+    const onClick = sinon.spy();
+    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={[{label: "item1", onClick}]} />);
+    wrapper.find(".context-menu-item button").simulate("keydown", {key: "Enter"});
+    assert.calledOnce(onClick);
+  });
+  it("should call focusSibling when onKeyDown is called with ArrowUp", () => {
+    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={[{label: "item1"}]} />);
+    const focusSibling = sinon.stub(wrapper.find(ContextMenuItem).instance(), "focusSibling");
+    wrapper.find(".context-menu-item button").simulate("keydown", {key: "ArrowUp"});
+    assert.calledOnce(focusSibling);
+  });
+  it("should call focusSibling when onKeyDown is called with ArrowDown", () => {
+    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={[{label: "item1"}]} />);
+    const focusSibling = sinon.stub(wrapper.find(ContextMenuItem).instance(), "focusSibling");
+    wrapper.find(".context-menu-item button").simulate("keydown", {key: "ArrowDown"});
+    assert.calledOnce(focusSibling);
+  });
 });

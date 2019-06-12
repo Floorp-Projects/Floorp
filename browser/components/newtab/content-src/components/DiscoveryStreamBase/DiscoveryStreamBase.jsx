@@ -141,6 +141,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
         return (
           <List
             data={component.data}
+            feed={component.feed}
             fullWidth={component.properties.full_width}
             hasBorders={component.properties.border === "border"}
             hasImages={component.properties.has_images}

@@ -987,7 +987,7 @@ class _ASRouter {
         break;
       case "fxa_bookmark_panel":
         if (force) {
-          BookmarkPanelHub._forceShowMessage(message);
+          BookmarkPanelHub._forceShowMessage(target, message);
         }
         break;
       default:

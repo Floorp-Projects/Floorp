@@ -187,6 +187,7 @@ const TEST_GLOBAL = {
       getBoolPref() {},
       getCharPref() {},
       setBoolPref() {},
+      setCharPref() {},
       setIntPref() {},
       getBranch() {},
       PREF_BOOL: "boolean",

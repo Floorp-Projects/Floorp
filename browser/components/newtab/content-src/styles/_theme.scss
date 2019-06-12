@@ -24,8 +24,6 @@ body {
   --newtab-background-color: #{$grey-10};
   --newtab-border-primary-color: #{$grey-40};
   --newtab-border-secondary-color: #{$grey-30};
-  --newtab-button-primary-color: #{$blue-60};
-  --newtab-button-secondary-color: inherit;
   --newtab-element-active-color: #{$grey-30-60};
   --newtab-element-hover-color: #{$grey-20};
   --newtab-icon-primary-color: #{$grey-90-80};
@@ -40,6 +38,17 @@ body {
   --newtab-textbox-background-color: #{$white};
   --newtab-textbox-border: #{$grey-90-20};
   @include textbox-focus($blue-60); // sass-lint:disable-line mixins-before-declarations
+
+  // Buttons
+  --newtab-button-primary-color: #{$blue-60};
+  --newtab-button-secondary-color: inherit;
+  // Feed buttons
+  --newtab-feed-button-background: #{$grey-20};
+  --newtab-feed-button-text: #{$grey-90};
+  --newtab-feed-button-background-faded: #{$grey-20-60};
+  --newtab-feed-button-text-faded: #{$grey-90-00};
+  --newtab-feed-button-spinner: #{$grey-50};
+
 
   // Context menu
   --newtab-contextmenu-background-color: #{$grey-10};
@@ -106,6 +115,13 @@ body {
     --newtab-textbox-background-color: #{$grey-70};
     --newtab-textbox-border: #{$grey-10-20};
     @include textbox-focus($blue-40); // sass-lint:disable-line mixins-before-declarations
+
+    // Feed buttons
+    --newtab-feed-button-background: #{$grey-70};
+    --newtab-feed-button-text: #{$grey-10};
+    --newtab-feed-button-background-faded: #{$grey-70-60};
+    --newtab-feed-button-text-faded: #{$grey-10-00};
+    --newtab-feed-button-spinner: #{$grey-30};
 
     // Context menu
     --newtab-contextmenu-background-color: #{$grey-60};

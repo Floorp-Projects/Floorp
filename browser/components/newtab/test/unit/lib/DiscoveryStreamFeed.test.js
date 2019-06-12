@@ -12,7 +12,9 @@ const REC_IMPRESSION_TRACKING_PREF = "discoverystream.rec.impressions";
 const THIRTY_MINUTES = 30 * 60 * 1000;
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000; // 1 week
 
-describe("DiscoveryStreamFeed", () => {
+const FAKE_UUID = "{foo-123-foo}";
+
+describe("DiscoveryStreamFeed", () => { // eslint-disable-line max-statements
   let DiscoveryStreamFeed;
   let feed;
   let sandbox;
@@ -61,7 +63,11 @@ describe("DiscoveryStreamFeed", () => {
       DiscoveryStreamFeed,
     } = injector({
       "lib/UserDomainAffinityProvider.jsm": {UserDomainAffinityProvider: FakeUserDomainAffinityProvider},
+      "lib/TelemetryFeed.jsm": {PREF_IMPRESSION_ID: "fake-pref-impression-id"},
     }));
+
+    globals = new GlobalOverrider();
+    globals.set("gUUIDGenerator", {generateUUID: () => FAKE_UUID});
 
     // Feed
     feed = new DiscoveryStreamFeed();
@@ -77,7 +83,8 @@ describe("DiscoveryStreamFeed", () => {
 
     sandbox.stub(feed, "_maybeUpdateCachedData").resolves();
 
-    globals = new GlobalOverrider();
+    globals.set("setTimeout", callback => { callback(); });
+
     fakeNewTabUtils = {
       blockedLinks: {
         links: [],
@@ -147,6 +154,40 @@ describe("DiscoveryStreamFeed", () => {
 
       assert.calledWithMatch(fetchStub, "https://getpocket.cdn.mozilla.net/dummy?consumer_key=replaced", {credentials: "omit"});
     });
+    it("should allow POST and with other options", async () => {
+      await feed.fetchFromEndpoint("https://getpocket.cdn.mozilla.net/dummy", {
+        method: "POST",
+        body: "{}",
+      });
+
+      assert.calledWithMatch(fetchStub, "https://getpocket.cdn.mozilla.net/dummy", {
+        credentials: "omit",
+        method: "POST",
+        body: "{}",
+      });
+    });
+  });
+
+  describe("#getOrCreateImpressionId", () => {
+    it("should create impression id in constructor", async () => {
+      assert.equal(feed._impressionId, FAKE_UUID);
+    });
+    it("should create impression id if none exists", async () => {
+      sandbox.stub(global.Services.prefs, "setCharPref").returns();
+
+      const result = feed.getOrCreateImpressionId();
+
+      assert.equal(result, FAKE_UUID);
+      assert.calledOnce(global.Services.prefs.setCharPref);
+    });
+    it("should use impression id if exists", async () => {
+      sandbox.stub(global.Services.prefs, "getCharPref").returns("from get");
+
+      const result = feed.getOrCreateImpressionId();
+
+      assert.equal(result, "from get");
+      assert.calledOnce(global.Services.prefs.getCharPref);
+    });
   });
 
   describe("#loadLayout", () => {
@@ -211,7 +252,7 @@ describe("DiscoveryStreamFeed", () => {
       await feed.loadLayout(feed.store.dispatch);
 
       assert.notCalled(feed.fetchLayout);
-      assert.equal(feed.store.getState().DiscoveryStream.spocs.spocs_endpoint, "https://getpocket.cdn.mozilla.net/v3/firefox/unique-spocs?consumer_key=$apiKey");
+      assert.equal(feed.store.getState().DiscoveryStream.spocs.spocs_endpoint, "https://getpocket.cdn.mozilla.net/v3/firefox/unique-spocs");
     });
     it("should fetch local layout for invalid layout endpoint or when fetch layout fails", async () => {
       feed.config.hardcoded_layout = false;
@@ -220,7 +261,7 @@ describe("DiscoveryStreamFeed", () => {
       await feed.loadLayout(feed.store.dispatch, true);
 
       assert.calledOnce(fetchStub);
-      assert.equal(feed.store.getState().DiscoveryStream.spocs.spocs_endpoint, "https://getpocket.cdn.mozilla.net/v3/firefox/unique-spocs?consumer_key=$apiKey");
+      assert.equal(feed.store.getState().DiscoveryStream.spocs.spocs_endpoint, "https://getpocket.cdn.mozilla.net/v3/firefox/unique-spocs");
     });
   });
 
@@ -346,7 +387,7 @@ describe("DiscoveryStreamFeed", () => {
 
         assert.calledWith(feed.store.dispatch.firstCall, {
           type: at.DISCOVERY_STREAM_FEED_UPDATE,
-          data: {feed: null, url: "foo.com"},
+          data: {feed: {data: {status: "failed"}}, url: "foo.com"},
         });
         assert.calledWith(feed.store.dispatch.secondCall, {
           type: at.DISCOVERY_STREAM_FEEDS_UPDATE,
@@ -440,12 +481,17 @@ describe("DiscoveryStreamFeed", () => {
 
       const feedResp = await feed.getComponentFeed("foo.com");
 
-      assert.isNull(feedResp);
+      assert.deepEqual(feedResp, {data: {status: "failed"}});
     });
   });
 
   describe("#loadSpocs", () => {
     beforeEach(() => {
+      feed._prefCache = {
+        config: {
+          api_key_pref: "",
+        },
+      };
       Object.defineProperty(feed, "showSpocs", {get: () => true});
     });
     it("should not fetch or update cache if no spocs endpoint is defined", async () => {
@@ -879,6 +925,25 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#retryFeed", () => {
+    it("should retry a feed fetch", async () => {
+      sandbox.stub(feed, "getComponentFeed").returns(Promise.resolve({}));
+      sandbox.stub(feed, "filterRecommendations").returns({});
+      sandbox.spy(feed.store, "dispatch");
+
+      await feed.retryFeed({url: "https://feed.com"});
+
+      assert.calledOnce(feed.getComponentFeed);
+      assert.calledOnce(feed.filterRecommendations);
+      assert.calledOnce(feed.store.dispatch);
+      assert.equal(feed.store.dispatch.firstCall.args[0].type, "DISCOVERY_STREAM_FEED_UPDATE");
+      assert.deepEqual(feed.store.dispatch.firstCall.args[0].data, {
+        feed: {},
+        url: "https://feed.com",
+      });
+    });
+  });
+
   describe("#recordCampaignImpression", () => {
     it("should return false if time based cap is hit", () => {
       sandbox.stub(feed, "readImpressionsPref").returns({});
@@ -1204,6 +1269,15 @@ describe("DiscoveryStreamFeed", () => {
         },
         type: at.SET_PREF,
       });
+    });
+  });
+
+  describe("#onAction: DISCOVERY_STREAM_RETRY_FEED", async () => {
+    it("should call retryFeed", async () => {
+      sandbox.spy(feed, "retryFeed");
+      feed.onAction({type: at.DISCOVERY_STREAM_RETRY_FEED, data: {feed: {url: "https://feed.com"}}});
+      assert.calledOnce(feed.retryFeed);
+      assert.calledWith(feed.retryFeed, {url: "https://feed.com"});
     });
   });
 
