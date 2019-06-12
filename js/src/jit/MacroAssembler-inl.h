@@ -744,13 +744,8 @@ template void MacroAssembler::storeDouble(FloatRegister src,
 template void MacroAssembler::storeDouble(FloatRegister src,
                                           const BaseIndex& dest);
 
-template <class T>
-void MacroAssembler::boxDouble(FloatRegister src, const T& dest) {
-#if defined(JS_NUNBOX32)
+void MacroAssembler::boxDouble(FloatRegister src, const Address& dest) {
   storeDouble(src, dest);
-#elif defined(JS_PUNBOX64)
-  MacroAssemblerSpecific::boxDouble(src, dest);
-#endif
 }
 
 template <class T>

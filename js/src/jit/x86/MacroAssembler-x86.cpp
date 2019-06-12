@@ -1241,6 +1241,4 @@ void MacroAssembler::convertInt64ToFloat32(Register64 input,
   freeStack(2 * sizeof(intptr_t));
 }
 
-void MacroAssembler::PushBoxed(FloatRegister reg) { Push(reg); }
-
 //}}} check_macroassembler_style

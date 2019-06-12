@@ -85,8 +85,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   // X64 helpers.
   /////////////////////////////////////////////////////////////////
   void writeDataRelocation(const Value& val) {
-    // Raw GC pointer relocations and Value relocations both end up in
-    // Assembler::TraceDataRelocations.
     if (val.isGCThing()) {
       gc::Cell* cell = val.toGCThing();
       if (cell && gc::IsInsideNursery(cell)) {
@@ -202,15 +200,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     loadValue(src, dest);
   }
   void tagValue(JSValueType type, Register payload, ValueOperand dest) {
+    ScratchRegisterScope scratch(asMasm());
+    MOZ_ASSERT(dest.valueReg() != scratch);
     if (payload != dest.valueReg()) {
       movq(payload, dest.valueReg());
     }
-    if (ImmShiftedTag(type).value != 0) {
-      ScratchRegisterScope scratch(asMasm());
-      MOZ_ASSERT(dest.valueReg() != scratch);
-      mov(ImmShiftedTag(type), scratch);
-      orq(scratch, dest.valueReg());
-    }
+    mov(ImmShiftedTag(type), scratch);
+    orq(scratch, dest.valueReg());
   }
   void pushValue(ValueOperand val) { push(val.valueReg()); }
   void popValue(ValueOperand val) { pop(val.valueReg()); }
@@ -275,18 +271,18 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
   Condition testDouble(Condition cond, Register tag) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmp32(tag, Imm32(JSVAL_TAG_MAX_NON_DOUBLE));
-    return cond == Equal ? Above : BelowOrEqual;
+    cmp32(tag, Imm32(JSVAL_TAG_MAX_DOUBLE));
+    return cond == Equal ? BelowOrEqual : Above;
   }
   Condition testNumber(Condition cond, Register tag) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmp32(tag, Imm32(JSVAL_TAG_INT32));
-    return cond == Equal ? AboveOrEqual : Below;
+    cmp32(tag, Imm32(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET));
+    return cond == Equal ? BelowOrEqual : Above;
   }
   Condition testGCThing(Condition cond, Register tag) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmp32(tag, Imm32(JSVAL_TAG_UNDEFINED));
-    return cond == Equal ? Below : AboveOrEqual;
+    cmp32(tag, Imm32(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+    return cond == Equal ? AboveOrEqual : Below;
   }
 
   Condition testMagic(Condition cond, Register tag) {
@@ -299,14 +295,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
   Condition testPrimitive(Condition cond, Register tag) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmp32(tag, ImmTag(JSVAL_TAG_OBJECT));
-    return cond == Equal ? NotEqual : Equal;
+    cmp32(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET));
+    return cond == Equal ? Below : AboveOrEqual;
   }
 
   Condition testUndefined(Condition cond, const ValueOperand& src) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_UNDEFINED));
-    return cond;
+    ScratchRegisterScope scratch(asMasm());
+    splitTag(src, scratch);
+    return testUndefined(cond, scratch);
   }
   Condition testInt32(Condition cond, const ValueOperand& src) {
     ScratchRegisterScope scratch(asMasm());
@@ -319,19 +315,19 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     return testBoolean(cond, scratch);
   }
   Condition testDouble(Condition cond, const ValueOperand& src) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_MIN_DOUBLE));
-    return cond == Equal ? AboveOrEqual : Below;
+    ScratchRegisterScope scratch(asMasm());
+    splitTag(src, scratch);
+    return testDouble(cond, scratch);
   }
   Condition testNumber(Condition cond, const ValueOperand& src) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_MIN_INT32));
-    return cond == Equal ? AboveOrEqual : Below;
+    ScratchRegisterScope scratch(asMasm());
+    splitTag(src, scratch);
+    return testNumber(cond, scratch);
   }
   Condition testNull(Condition cond, const ValueOperand& src) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_SHIFTED_TAG_NULL));
-    return cond;
+    ScratchRegisterScope scratch(asMasm());
+    splitTag(src, scratch);
+    return testNull(cond, scratch);
   }
   Condition testString(Condition cond, const ValueOperand& src) {
     ScratchRegisterScope scratch(asMasm());
@@ -349,19 +345,19 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     return testBigInt(cond, scratch);
   }
   Condition testObject(Condition cond, const ValueOperand& src) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_MAX_OBJ_PTR));
-    return cond == Equal ? BelowOrEqual : Above;
+    ScratchRegisterScope scratch(asMasm());
+    splitTag(src, scratch);
+    return testObject(cond, scratch);
   }
   Condition testGCThing(Condition cond, const ValueOperand& src) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_UNDEFINED));
-    return cond == Equal ? Below : AboveOrEqual;
+    ScratchRegisterScope scratch(asMasm());
+    splitTag(src, scratch);
+    return testGCThing(cond, scratch);
   }
   Condition testPrimitive(Condition cond, const ValueOperand& src) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src.valueReg(), ImmWord(JSVAL_PUN64_BOXED_MAX_OBJ_PTR));
-    return cond == Equal ? Above : BelowOrEqual;
+    ScratchRegisterScope scratch(asMasm());
+    splitTag(src, scratch);
+    return testPrimitive(cond, scratch);
   }
 
   Condition testUndefined(Condition cond, const Address& src) {
@@ -378,14 +374,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     return cond;
   }
   Condition testDouble(Condition cond, const Address& src) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src, ImmWord(JSVAL_PUN64_BOXED_MIN_DOUBLE));
-    return cond == Equal ? AboveOrEqual : Below;
+    ScratchRegisterScope scratch(asMasm());
+    splitTag(src, scratch);
+    return testDouble(cond, scratch);
   }
   Condition testNumber(Condition cond, const Address& src) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src, ImmWord(JSVAL_PUN64_BOXED_MIN_INT32));
-    return cond == Equal ? AboveOrEqual : Below;
+    ScratchRegisterScope scratch(asMasm());
+    splitTag(src, scratch);
+    return testNumber(cond, scratch);
   }
   Condition testNull(Condition cond, const Address& src) {
     cmp32(ToUpper32(src), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_NULL))));
@@ -412,14 +408,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     return testObject(cond, scratch);
   }
   Condition testPrimitive(Condition cond, const Address& src) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src, ImmWord(JSVAL_PUN64_BOXED_MAX_OBJ_PTR));
-    return cond == Equal ? Above : BelowOrEqual;
+    ScratchRegisterScope scratch(asMasm());
+    splitTag(src, scratch);
+    return testPrimitive(cond, scratch);
   }
   Condition testGCThing(Condition cond, const Address& src) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    cmpPtr(src, ImmWord(JSVAL_PUN64_BOXED_UNDEFINED));
-    return cond == Equal ? Below : AboveOrEqual;
+    ScratchRegisterScope scratch(asMasm());
+    splitTag(src, scratch);
+    return testGCThing(cond, scratch);
   }
   Condition testMagic(Condition cond, const Address& src) {
     ScratchRegisterScope scratch(asMasm());
@@ -713,25 +709,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     emitSet(cond, dest);
   }
 
-  void boxDouble(FloatRegister src, const Operand& dest, Register scratch) {
-    vmovq(src, scratch);
-    movq(scratch, Operand(dest));
-    movq(ImmWord(JSVAL_PUN64_DOUBLE_ADJUST), scratch);
-    addq(scratch, Operand(dest));
-  }
-  void boxDouble(FloatRegister src, const Address& dest, Register scratch) {
-    boxDouble(src, Operand(dest), scratch);
-  }
-  template <typename T>
-  void boxDouble(FloatRegister src, const T& dest) {
-    ScratchRegisterScope scratch(asMasm());
-    boxDouble(src, Operand(dest), scratch);
-  }
   void boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister) {
-    ScratchRegisterScope scratch(asMasm());
     vmovq(src, dest.valueReg());
-    movq(ImmWord(JSVAL_PUN64_DOUBLE_ADJUST), scratch);
-    addq(scratch, dest.valueReg());
   }
   void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest) {
     MOZ_ASSERT(src != dest.valueReg());
@@ -747,14 +726,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void unboxInt32(const Address& src, Register dest) {
     unboxInt32(Operand(src), dest);
   }
-  template <typename T>
-  void unboxDouble(const T& src, FloatRegister dest) {
-    // The value we want to produce is: to_float(src - ADJUST)
-    // we note that (src - ADJUST) == -ADJUST + src
-    ScratchRegisterScope scratch(asMasm());
-    movq(ImmWord(-JSVAL_PUN64_DOUBLE_ADJUST), scratch);
-    addq(Operand(src), scratch);
-    vmovq(scratch, dest);
+  void unboxDouble(const Address& src, FloatRegister dest) {
+    loadDouble(Operand(src), dest);
   }
 
   void unboxArgObjMagic(const ValueOperand& src, Register dest) {
@@ -780,12 +753,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
 
   void unboxDouble(const ValueOperand& src, FloatRegister dest) {
-    // The value we want to produce is: to_float(src - ADJUST)
-    // we note that (src - ADJUST) == -ADJUST + src
-    ScratchRegisterScope scratch(asMasm());
-    movq(ImmWord(-JSVAL_PUN64_DOUBLE_ADJUST), scratch);
-    addq(src.valueReg(), scratch);
-    vmovq(scratch, dest);
+    vmovq(src.valueReg(), dest);
   }
   void unboxPrivate(const ValueOperand& src, const Register dest) {
     movq(src.valueReg(), dest);
@@ -801,13 +769,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
       movl(src.valueReg(), dest);
       return;
     }
-    if (JSVAL_TYPE_TO_SHIFTED_TAG(type) == 0) {
-      MOZ_ASSERT(type == JSVAL_TYPE_OBJECT);
-      if (src.valueReg() != dest) {
-        movq(src.valueReg(), dest);
-      }
-      return;
-    }
     if (src.valueReg() == dest) {
       ScratchRegisterScope scratch(asMasm());
       mov(ImmWord(JSVAL_TYPE_TO_SHIFTED_TAG(type)), scratch);
@@ -821,15 +782,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     MOZ_ASSERT(type != JSVAL_TYPE_DOUBLE);
     if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
       movl(src, dest);
-      return;
-    }
-    if (JSVAL_TYPE_TO_SHIFTED_TAG(type) == 0) {
-      MOZ_ASSERT(type == JSVAL_TYPE_OBJECT);
-      // Perform a simple move in all cases, except when the src
-      // is a simple register operand that's the same as `dest`.
-      if ((src.kind() != Operand::REG) || (src.reg() != dest.encoding())) {
-        movq(src, dest);
-      }
       return;
     }
     // Explicitly permits |dest| to be used in |src|.
@@ -896,7 +848,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void unboxObjectOrNull(const T& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
     ScratchRegisterScope scratch(asMasm());
-    mov(ImmWord(~JSVAL_SHIFTED_TAG_NULL), scratch);
+    mov(ImmWord(~JSVAL_OBJECT_OR_NULL_BIT), scratch);
     andq(scratch, dest);
   }
 
@@ -1033,7 +985,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
           // Ideally we would call unboxObjectOrNull, but we need an extra
           // scratch register for that. So unbox as object, then clear the
           // object-or-null bit.
-          mov(ImmWord(~JSVAL_SHIFTED_TAG_NULL), scratch);
+          mov(ImmWord(~JSVAL_OBJECT_OR_NULL_BIT), scratch);
           andq(scratch, Operand(address));
         }
         return;

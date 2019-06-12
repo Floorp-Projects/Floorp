@@ -47,14 +47,10 @@ void AssemblerX86Shared::TraceDataRelocations(JSTracer* trc, JitCode* code,
     void* data = X86Encoding::GetPointer(src);
 
 #ifdef JS_PUNBOX64
-    // Data relocations can be for Values or for raw pointers. If a Value is
-    // zero-tagged, we can trace it as if it were a raw pointer. If a Value
-    // is not zero-tagged, we have to interpret it as a Value to ensure that the
-    // tag bits are masked off to recover the actual pointer.
-
+    // All pointers on x64 will have the top bits cleared. If those bits
+    // are not cleared, this must be a Value.
     uintptr_t word = reinterpret_cast<uintptr_t>(data);
     if (word >> JSVAL_TAG_SHIFT) {
-      // This relocation is a Value with a non-zero tag.
       Value value = Value::fromRawBits(word);
       MOZ_ASSERT_IF(value.isGCThing(),
                     gc::IsCellPointerValid(value.toGCThing()));
@@ -68,7 +64,6 @@ void AssemblerX86Shared::TraceDataRelocations(JSTracer* trc, JitCode* code,
     }
 #endif
 
-    // This relocation is a raw pointer or a Value with a zero tag.
     gc::Cell* cell = static_cast<gc::Cell*>(data);
     MOZ_ASSERT(gc::IsCellPointerValid(cell));
     TraceManuallyBarrieredGenericPointerEdge(trc, &cell, "jit-masm-ptr");
