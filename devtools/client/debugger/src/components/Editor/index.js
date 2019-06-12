@@ -10,7 +10,7 @@ import { bindActionCreators } from "redux";
 import ReactDOM from "react-dom";
 import { connect } from "../../utils/connect";
 import classnames from "classnames";
-import { debounce } from "lodash";
+import { throttle } from "lodash";
 
 import { isFirefox } from "devtools-environment";
 import { features } from "../../utils/prefs";
@@ -285,7 +285,7 @@ class Editor extends PureComponent<Props, State> {
     this.toggleConditionalPanel(line, isLog);
   };
 
-  onEditorScroll = debounce(this.props.updateViewport, 75);
+  onEditorScroll = throttle(this.props.updateViewport, 100);
 
   onKeyDown(e: KeyboardEvent) {
     const { codeMirror } = this.state.editor;
