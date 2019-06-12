@@ -175,8 +175,17 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   inline bool IsHandlingResizeEvent() const;
 
   // Note: not related to IsLoading.  Set to false if there's an error, etc.
-  void SetActiveLoadingState(bool aIsActiveLoading);
-  void AddAfterLoadRunner(nsIRunnable* aRunner);
+  virtual void SetActiveLoadingState(bool aIsActiveLoading) = 0;
+
+  nsPIDOMWindowInner* GetWindowForDeprioritizedLoadRunner();
+
+  /**
+   * The runnable will be called once there is idle time, or the top level
+   * page has been loaded or if a timeout has fired.
+   * Must be called only on the top level window, the one
+   * GetWindowForDeprioritizedLoadRunner returns.
+   */
+  virtual void AddDeprioritizedLoadRunner(nsIRunnable* aRunner) = 0;
 
   bool AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
   void RemoveAudioContext(mozilla::dom::AudioContext* aAudioContext);
@@ -677,8 +686,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // This will be non-null during the full lifetime of the window, initialized
   // during SetNewDocument, and cleared during FreeInnerObjects.
   RefPtr<mozilla::dom::WindowGlobalChild> mWindowGlobalChild;
-
-  nsTArray<nsCOMPtr<nsIRunnable>> mAfterLoadRunners;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
