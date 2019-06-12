@@ -87,7 +87,6 @@
 #include "PLDHashTable.h"
 #include "plstr.h"
 #include "prlink.h"
-#include "xpcpublic.h"
 
 #ifdef DEBUG
 #  include <map>
@@ -1692,8 +1691,7 @@ static void NotifyCallbacks(const char* aPrefName, const PrefWrapper* aPref) {
   }
 
 #ifdef DEBUG
-  if (XRE_IsParentProcess() &&
-      (StaticPrefs::preferences_check_once_policy() || xpc::IsInAutomation())) {
+  if (XRE_IsParentProcess() && StaticPrefs::preferences_check_once_policy()) {
     // Check that we aren't modifying a `Once` pref using that prefName.
     // We have about 100 `Once` StaticPrefs defined. std::map performs a search
     // in O(log n), so this is fast enough for our case.
