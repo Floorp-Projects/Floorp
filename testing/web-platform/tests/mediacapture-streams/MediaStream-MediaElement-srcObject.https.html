@@ -229,6 +229,39 @@ promise_test(async t => {
   assert_greater_than_equal(vid.currentTime, lastTime,
     "currentTime advanced after stopping");
 }, "Tests that a media element with an assigned MediaStream reports the currentTime attribute as expected");
+
+
+promise_test(async t => {
+  const stream = await navigator.mediaDevices.getUserMedia({video: true});
+  t.add_cleanup(() => {
+    vid.srcObject = null;
+    stream.getTracks().forEach(track => track.stop());
+  });
+  assert_equals(vid.loop, false, "loop is false by default");
+  vid.srcObject = stream;
+
+  vid.loop = true;
+  assert_equals(vid.loop, true,
+    "loop can be changed when assigned a MediaStream");
+
+  await new Promise(r => vid.onloadeddata = r);
+  vid.loop = false;
+  assert_equals(vid.loop, false,
+    "loop can be changed when having loaded a MediaStream");
+
+  vid.play();
+  await new Promise(r => vid.ontimeupdate = r);
+  vid.loop = true;
+  assert_equals(vid.loop, true,
+    "loop can be changed when playing a MediaStream");
+
+  for(const t of stream.getTracks()) {
+    t.stop();
+  }
+  // If loop is ignored, we get "ended",
+  // otherwise the media element sets currentTime to 0 without ending.
+  await new Promise(r => vid.onended = r);
+}, "Tests that the loop attribute has no effect on a media element with an assigned MediaStream");
 </script>
 </body>
 </html>
