@@ -13,5 +13,5 @@ include hidden/reftest.list
 include color/reftest.list
 include datetime/reftest.list
 
-== selector-read-write-type-change-001.html selector-read-write-type-change-001-ref.html
+fuzzy-if(geckoview,0-1,0-2) == selector-read-write-type-change-001.html selector-read-write-type-change-001-ref.html
 == selector-read-write-type-change-002.html selector-read-write-type-change-002-ref.html
