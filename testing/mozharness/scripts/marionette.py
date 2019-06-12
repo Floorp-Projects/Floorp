@@ -343,6 +343,8 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
         if self.config['enable_webrender']:
             env['MOZ_WEBRENDER'] = '1'
             env['MOZ_ACCELERATED'] = '1'
+        else:
+            env['MOZ_WEBRENDER'] = '0'
 
         if self.config['headless']:
             env['MOZ_HEADLESS'] = '1'

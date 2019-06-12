@@ -591,6 +591,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             self.info("webrender is enabled so setting MOZ_WEBRENDER=1 and MOZ_ACCELERATED=1")
             env['MOZ_WEBRENDER'] = '1'
             env['MOZ_ACCELERATED'] = '1'
+        else:
+            env['MOZ_WEBRENDER'] = '0'
 
         # mitmproxy needs path to mozharness when installing the cert, and tooltool
         env['SCRIPTSPATH'] = scripts_path

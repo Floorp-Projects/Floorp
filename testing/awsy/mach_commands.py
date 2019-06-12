@@ -76,6 +76,8 @@ class MachCommands(MachCommandBase):
         if 'enable_webrender' in kwargs and kwargs['enable_webrender']:
             os.environ['MOZ_WEBRENDER'] = '1'
             os.environ['MOZ_ACCELERATED'] = '1'
+        else:
+            os.environ['MOZ_WEBRENDER'] = '0'
 
         runtime_testvars = {}
         for arg in ('webRootDir', 'pageManifest', 'resultsDir', 'entities', 'iterations',
