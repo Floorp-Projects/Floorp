@@ -18,20 +18,14 @@
 #include "sandbox/win/src/policy_params.h"
 #include "sandbox/win/src/sandbox.h"
 
-
 namespace sandbox {
 
 NamedPipeDispatcher::NamedPipeDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall create_params = {
       {IPC_CREATENAMEDPIPEW_TAG,
-       {WCHAR_TYPE,
-        UINT32_TYPE,
-        UINT32_TYPE,
-        UINT32_TYPE,
-        UINT32_TYPE,
-        UINT32_TYPE,
-        UINT32_TYPE}},
+       {WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE,
+        UINT32_TYPE, UINT32_TYPE}},
       reinterpret_cast<CallbackGeneric>(&NamedPipeDispatcher::CreateNamedPipe)};
 
   ipc_calls_.push_back(create_params);
@@ -59,12 +53,12 @@ bool NamedPipeDispatcher::CreateNamedPipe(IPCInfo* ipc,
 
   base::StringPiece16 dotdot(L"..");
 
-  for (const base::StringPiece16& path : base::SplitStringPiece(
-           *name, base::string16(1, '/'),
-           base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL)) {
-    for (const base::StringPiece16& inner : base::SplitStringPiece(
-             path, base::string16(1, '\\'),
-             base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL)) {
+  for (const base::StringPiece16& path :
+       base::SplitStringPiece(*name, base::string16(1, '/'),
+                              base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL)) {
+    for (const base::StringPiece16& inner :
+         base::SplitStringPiece(path, base::string16(1, '\\'),
+                                base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL)) {
       if (inner == dotdot)
         return true;
     }
@@ -74,8 +68,8 @@ bool NamedPipeDispatcher::CreateNamedPipe(IPCInfo* ipc,
   CountedParameterSet<NameBased> params;
   params[NameBased::NAME] = ParamPickerMake(pipe_name);
 
-  EvalResult eval = policy_base_->EvalPolicy(IPC_CREATENAMEDPIPEW_TAG,
-                                             params.GetBase());
+  EvalResult eval =
+      policy_base_->EvalPolicy(IPC_CREATENAMEDPIPEW_TAG, params.GetBase());
 
   // "For file I/O, the "\\?\" prefix to a path string tells the Windows APIs to
   // disable all string parsing and to send the string that follows it straight
@@ -88,12 +82,9 @@ bool NamedPipeDispatcher::CreateNamedPipe(IPCInfo* ipc,
     name->replace(0, 4, L"\\\\\?\\");
 
   HANDLE pipe;
-  DWORD ret = NamedPipePolicy::CreateNamedPipeAction(eval, *ipc->client_info,
-                                                     *name, open_mode,
-                                                     pipe_mode, max_instances,
-                                                     out_buffer_size,
-                                                     in_buffer_size,
-                                                     default_timeout, &pipe);
+  DWORD ret = NamedPipePolicy::CreateNamedPipeAction(
+      eval, *ipc->client_info, *name, open_mode, pipe_mode, max_instances,
+      out_buffer_size, in_buffer_size, default_timeout, &pipe);
 
   ipc->return_info.win32_result = ret;
   ipc->return_info.handle = pipe;

@@ -614,7 +614,7 @@ MapObject* MapObject::create(JSContext* cx,
     return nullptr;
   }
 
-  mapObj->initPrivate(map.release());
+  InitObjectPrivate(mapObj, map.release(), MemoryUse::MapObjectTable);
   mapObj->initReservedSlot(NurseryKeysSlot, PrivateValue(nullptr));
   mapObj->initReservedSlot(HasNurseryMemorySlot,
                            JS::BooleanValue(insideNursery));
@@ -624,13 +624,14 @@ MapObject* MapObject::create(JSContext* cx,
 void MapObject::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   if (ValueMap* map = obj->as<MapObject>().getData()) {
-    fop->delete_(map);
+    fop->delete_(obj, map, MemoryUse::MapObjectTable);
   }
 }
 
 /* static */
 void MapObject::sweepAfterMinorGC(FreeOp* fop, MapObject* mapobj) {
-  if (IsInsideNursery(mapobj) && !IsForwarded(mapobj)) {
+  bool wasInsideNursery = IsInsideNursery(mapobj);
+  if (wasInsideNursery && !IsForwarded(mapobj)) {
     finalize(fop, mapobj);
     return;
   }
@@ -638,6 +639,10 @@ void MapObject::sweepAfterMinorGC(FreeOp* fop, MapObject* mapobj) {
   mapobj = MaybeForwarded(mapobj);
   mapobj->getData()->destroyNurseryRanges();
   SetHasNurseryMemory(mapobj, false);
+
+  if (wasInsideNursery) {
+    AddCellMemory(mapobj, sizeof(ValueMap), MemoryUse::MapObjectTable);
+  }
 }
 
 bool MapObject::construct(JSContext* cx, unsigned argc, Value* vp) {
@@ -1223,7 +1228,7 @@ SetObject* SetObject::create(JSContext* cx,
     return nullptr;
   }
 
-  obj->initPrivate(set.release());
+  InitObjectPrivate(obj, set.release(), MemoryUse::MapObjectTable);
   obj->initReservedSlot(NurseryKeysSlot, PrivateValue(nullptr));
   obj->initReservedSlot(HasNurseryMemorySlot, JS::BooleanValue(insideNursery));
   return obj;
@@ -1242,13 +1247,14 @@ void SetObject::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   SetObject* setobj = static_cast<SetObject*>(obj);
   if (ValueSet* set = setobj->getData()) {
-    fop->delete_(set);
+    fop->delete_(obj, set, MemoryUse::MapObjectTable);
   }
 }
 
 /* static */
 void SetObject::sweepAfterMinorGC(FreeOp* fop, SetObject* setobj) {
-  if (IsInsideNursery(setobj) && !IsForwarded(setobj)) {
+  bool wasInsideNursery = IsInsideNursery(setobj);
+  if (wasInsideNursery && !IsForwarded(setobj)) {
     finalize(fop, setobj);
     return;
   }
@@ -1256,6 +1262,10 @@ void SetObject::sweepAfterMinorGC(FreeOp* fop, SetObject* setobj) {
   setobj = MaybeForwarded(setobj);
   setobj->getData()->destroyNurseryRanges();
   SetHasNurseryMemory(setobj, false);
+
+  if (wasInsideNursery) {
+    AddCellMemory(setobj, sizeof(ValueSet), MemoryUse::MapObjectTable);
+  }
 }
 
 bool SetObject::isBuiltinAdd(HandleValue add) {

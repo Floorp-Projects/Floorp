@@ -14,12 +14,12 @@
 // as the indication that the process is the broker or the target:
 //
 // BrokerServices* broker_services = SandboxFactory::GetBrokerServices();
-// if (NULL != broker_services) {
+// if (broker_services) {
 //   //we are the broker, call broker api here
 //   broker_services->Init();
 // } else {
 //   TargetServices* target_services = SandboxFactory::GetTargetServices();
-//   if (NULL != target_services) {
+//   if (target_services) {
 //    //we are the target, call target api here
 //    target_services->Init();
 //  }
@@ -35,13 +35,14 @@ namespace sandbox {
 
 class SandboxFactory {
  public:
-  // Returns the Broker API interface, returns NULL if this process is the
+  // Returns the Broker API interface, returns nullptr if this process is the
   // target.
   static BrokerServices* GetBrokerServices();
 
-  // Returns the Target API interface, returns NULL if this process is the
+  // Returns the Target API interface, returns nullptr if this process is the
   // broker.
   static TargetServices* GetTargetServices();
+
  private:
   DISALLOW_IMPLICIT_CONSTRUCTORS(SandboxFactory);
 };

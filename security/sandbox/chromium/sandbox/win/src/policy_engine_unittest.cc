@@ -46,18 +46,16 @@ TEST(PolicyEngineTest, Rules1) {
   OpcodeFactory opcode_maker(policy, policy_sz - 0x40);
 
   // Add rule set #1
-  opcode_maker.MakeOpWStringMatch(FileNameArg,
-                                  L"c:\\documents and settings\\",
+  opcode_maker.MakeOpWStringMatch(FileNameArg, L"c:\\documents and settings\\",
                                   0, CASE_INSENSITIVE, kPolNone);
   opcode_maker.MakeOpNumberMatch(CreationDispositionArg, OPEN_EXISTING,
                                  kPolNone);
-  opcode_maker.MakeOpVoidPtrMatch(SecurityAttributes, (void*)NULL,
-                                 kPolNone);
+  opcode_maker.MakeOpVoidPtrMatch(SecurityAttributes, nullptr, kPolNone);
   opcode_maker.MakeOpAction(ASK_BROKER, kPolNone);
 
   // Add rule set #2
-  opcode_maker.MakeOpWStringMatch(FileNameArg, L".TXT",
-                                  kSeekToEnd, CASE_INSENSITIVE, kPolNone);
+  opcode_maker.MakeOpWStringMatch(FileNameArg, L".TXT", kSeekToEnd,
+                                  CASE_INSENSITIVE, kPolNone);
   opcode_maker.MakeOpNumberMatch(CreationDispositionArg, CREATE_NEW,
                                  kPolNegateEval);
   opcode_maker.MakeOpAction(FAKE_ACCESS_DENIED, kPolNone);
@@ -66,7 +64,7 @@ TEST(PolicyEngineTest, Rules1) {
   const wchar_t* filename = L"c:\\Documents and Settings\\Microsoft\\BLAH.txt";
   uint32_t creation_mode = OPEN_EXISTING;
   uint32_t flags = FILE_ATTRIBUTE_NORMAL;
-  void* security_descriptor = NULL;
+  void* security_descriptor = nullptr;
 
   POLPARAMS_BEGIN(eval_params)
     POLPARAM(filename)
@@ -99,7 +97,7 @@ TEST(PolicyEngineTest, Rules1) {
   EXPECT_EQ(POLICY_MATCH, pr);
   EXPECT_EQ(FAKE_ACCESS_DENIED, pol_ev.GetAction());
 
-  delete [] reinterpret_cast<char*>(policy);
+  delete[] reinterpret_cast<char*>(policy);
 }
 
 }  // namespace sandbox

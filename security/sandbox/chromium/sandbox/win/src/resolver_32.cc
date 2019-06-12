@@ -46,32 +46,33 @@ struct InternalThunk {
     opcodes_6 = 0xc35a;
     extra_argument = 0;
     interceptor_function = 0;
-  };
-  ULONG opcodes_1;         // = 0x5208ec83
-  ULONG opcodes_2;         // = 0x0c24548b
-  ULONG opcodes_3;         // = 0x08245489
-  ULONG opcodes_4;         // = 0x0c2444c7
+  }
+  ULONG opcodes_1;  // = 0x5208ec83
+  ULONG opcodes_2;  // = 0x0c24548b
+  ULONG opcodes_3;  // = 0x08245489
+  ULONG opcodes_4;  // = 0x0c2444c7
   ULONG extra_argument;
-  ULONG opcodes_5;         // = 0x042444c7
+  ULONG opcodes_5;  // = 0x042444c7
   ULONG interceptor_function;
-  USHORT opcodes_6;         // = 0xc35a
+  USHORT opcodes_6;  // = 0xc35a
 };
 #pragma pack(pop)
 
-};  // namespace
+}  // namespace
 
 namespace sandbox {
 
-bool ResolverThunk::SetInternalThunk(void* storage, size_t storage_bytes,
+bool ResolverThunk::SetInternalThunk(void* storage,
+                                     size_t storage_bytes,
                                      const void* original_function,
                                      const void* interceptor) {
   if (storage_bytes < sizeof(InternalThunk))
     return false;
 
-  InternalThunk* thunk = new(storage) InternalThunk;
+  InternalThunk* thunk = new (storage) InternalThunk;
 
 #pragma warning(push)
-#pragma warning(disable: 4311)
+#pragma warning(disable : 4311)
   // These casts generate warnings because they are 32 bit specific.
   thunk->interceptor_function = reinterpret_cast<ULONG>(interceptor);
   thunk->extra_argument = reinterpret_cast<ULONG>(original_function);

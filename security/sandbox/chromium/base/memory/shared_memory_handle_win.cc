@@ -7,6 +7,8 @@
 #include "base/logging.h"
 #include "base/unguessable_token.h"
 
+#include <windows.h>
+
 namespace base {
 
 SharedMemoryHandle::SharedMemoryHandle() {}

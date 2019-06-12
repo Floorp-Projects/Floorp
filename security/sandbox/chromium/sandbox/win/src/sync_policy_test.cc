@@ -5,15 +5,15 @@
 #include "sandbox/win/src/sync_policy_test.h"
 
 #include "base/win/scoped_handle.h"
-#include "sandbox/win/src/sandbox.h"
-#include "sandbox/win/src/sandbox_policy.h"
-#include "sandbox/win/src/sandbox_factory.h"
 #include "sandbox/win/src/nt_internals.h"
+#include "sandbox/win/src/sandbox.h"
+#include "sandbox/win/src/sandbox_factory.h"
+#include "sandbox/win/src/sandbox_policy.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace sandbox {
 
-SBOX_TESTS_COMMAND int Event_Open(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int Event_Open(int argc, wchar_t** argv) {
   if (argc != 2)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
@@ -21,42 +21,41 @@ SBOX_TESTS_COMMAND int Event_Open(int argc, wchar_t **argv) {
   if (L'f' == argv[0][0])
     desired_access = EVENT_ALL_ACCESS;
 
-  base::win::ScopedHandle event_open(::OpenEvent(
-      desired_access, FALSE, argv[1]));
+  base::win::ScopedHandle event_open(
+      ::OpenEvent(desired_access, false, argv[1]));
   DWORD error_open = ::GetLastError();
 
   if (event_open.IsValid())
     return SBOX_TEST_SUCCEEDED;
 
-  if (ERROR_ACCESS_DENIED == error_open ||
-      ERROR_BAD_PATHNAME == error_open ||
+  if (ERROR_ACCESS_DENIED == error_open || ERROR_BAD_PATHNAME == error_open ||
       ERROR_FILE_NOT_FOUND == error_open)
     return SBOX_TEST_DENIED;
 
   return SBOX_TEST_FAILED;
 }
 
-SBOX_TESTS_COMMAND int Event_CreateOpen(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int Event_CreateOpen(int argc, wchar_t** argv) {
   if (argc < 2 || argc > 3)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
-  wchar_t *event_name = NULL;
+  wchar_t* event_name = nullptr;
   if (3 == argc)
     event_name = argv[2];
 
-  BOOL manual_reset = FALSE;
-  BOOL initial_state = FALSE;
+  bool manual_reset = false;
+  bool initial_state = false;
   if (L't' == argv[0][0])
-    manual_reset = TRUE;
+    manual_reset = true;
   if (L't' == argv[1][0])
-    initial_state = TRUE;
+    initial_state = true;
 
-  base::win::ScopedHandle event_create(::CreateEvent(
-      NULL, manual_reset, initial_state, event_name));
+  base::win::ScopedHandle event_create(
+      ::CreateEvent(nullptr, manual_reset, initial_state, event_name));
   DWORD error_create = ::GetLastError();
   base::win::ScopedHandle event_open;
   if (event_name)
-    event_open.Set(::OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name));
+    event_open.Set(::OpenEvent(EVENT_ALL_ACCESS, false, event_name));
 
   if (event_create.IsValid()) {
     DWORD wait = ::WaitForSingleObject(event_create.Get(), 0);
@@ -82,8 +81,7 @@ SBOX_TESTS_COMMAND int Event_CreateOpen(int argc, wchar_t **argv) {
       return SBOX_TEST_SUCCEEDED;
   }
 
-  if (ERROR_ACCESS_DENIED == error_create ||
-      ERROR_BAD_PATHNAME == error_create)
+  if (ERROR_ACCESS_DENIED == error_create || ERROR_BAD_PATHNAME == error_create)
     return SBOX_TEST_DENIED;
 
   return SBOX_TEST_FAILED;
@@ -93,11 +91,9 @@ SBOX_TESTS_COMMAND int Event_CreateOpen(int argc, wchar_t **argv) {
 TEST(SyncPolicyTest, TestEvent) {
   TestRunner runner;
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_SYNC,
-                             TargetPolicy::EVENTS_ALLOW_ANY,
-                             L"test1"));
+                             TargetPolicy::EVENTS_ALLOW_ANY, L"test1"));
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_SYNC,
-                             TargetPolicy::EVENTS_ALLOW_ANY,
-                             L"test2"));
+                             TargetPolicy::EVENTS_ALLOW_ANY, L"test2"));
 
   EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"Event_CreateOpen f f"));
   EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"Event_CreateOpen t f"));
@@ -117,22 +113,22 @@ TEST(SyncPolicyTest, TestEvent) {
 TEST(SyncPolicyTest, TestEventReadOnly) {
   TestRunner runner;
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_SYNC,
-                             TargetPolicy::EVENTS_ALLOW_READONLY,
-                             L"test1"));
+                             TargetPolicy::EVENTS_ALLOW_READONLY, L"test1"));
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_SYNC,
-                             TargetPolicy::EVENTS_ALLOW_READONLY,
-                             L"test2"));
+                             TargetPolicy::EVENTS_ALLOW_READONLY, L"test2"));
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_SYNC,
-                             TargetPolicy::EVENTS_ALLOW_READONLY,
-                             L"test5"));
+                             TargetPolicy::EVENTS_ALLOW_READONLY, L"test5"));
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_SYNC,
-                             TargetPolicy::EVENTS_ALLOW_READONLY,
-                             L"test6"));
+                             TargetPolicy::EVENTS_ALLOW_READONLY, L"test6"));
 
-  base::win::ScopedHandle handle1(::CreateEvent(NULL, FALSE, FALSE, L"test1"));
-  base::win::ScopedHandle handle2(::CreateEvent(NULL, FALSE, FALSE, L"test2"));
-  base::win::ScopedHandle handle3(::CreateEvent(NULL, FALSE, FALSE, L"test3"));
-  base::win::ScopedHandle handle4(::CreateEvent(NULL, FALSE, FALSE, L"test4"));
+  base::win::ScopedHandle handle1(
+      ::CreateEvent(nullptr, false, false, L"test1"));
+  base::win::ScopedHandle handle2(
+      ::CreateEvent(nullptr, false, false, L"test2"));
+  base::win::ScopedHandle handle3(
+      ::CreateEvent(nullptr, false, false, L"test3"));
+  base::win::ScopedHandle handle4(
+      ::CreateEvent(nullptr, false, false, L"test4"));
 
   EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"Event_CreateOpen f f"));
   EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"Event_CreateOpen t f"));

@@ -40,7 +40,7 @@ class BPFTesterDelegate {
 // run a test function (via |bpf_tester_delegate|) if the current kernel
 // configuration allows it. If it can not run the test under seccomp-bpf,
 // Run() will still compile the policy which should allow to get some coverage
-// under tools such as Valgrind.
+// under tools that behave like Valgrind.
 class SandboxBPFTestRunner : public SandboxTestRunner {
  public:
   // This constructor takes ownership of the |bpf_tester_delegate| object.

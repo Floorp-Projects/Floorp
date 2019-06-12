@@ -13,31 +13,69 @@ namespace sandbox {
 
 SANDBOX_INTERCEPT NtExports g_nt;
 
+const char VERIFIER_DLL_NAME[] = "verifier.dll";
+const char KERNEL32_DLL_NAME[] = "kernel32.dll";
+
+enum SectionLoadState {
+  kBeforeKernel32,
+  kAfterKernel32,
+};
+
 // Hooks NtMapViewOfSection to detect the load of DLLs. If hot patching is
 // required for this dll, this functions patches it.
-NTSTATUS WINAPI TargetNtMapViewOfSection(
-    NtMapViewOfSectionFunction orig_MapViewOfSection, HANDLE section,
-    HANDLE process, PVOID *base, ULONG_PTR zero_bits, SIZE_T commit_size,
-    PLARGE_INTEGER offset, PSIZE_T view_size, SECTION_INHERIT inherit,
-    ULONG allocation_type, ULONG protect) {
+NTSTATUS WINAPI
+TargetNtMapViewOfSection(NtMapViewOfSectionFunction orig_MapViewOfSection,
+                         HANDLE section,
+                         HANDLE process,
+                         PVOID* base,
+                         ULONG_PTR zero_bits,
+                         SIZE_T commit_size,
+                         PLARGE_INTEGER offset,
+                         PSIZE_T view_size,
+                         SECTION_INHERIT inherit,
+                         ULONG allocation_type,
+                         ULONG protect) {
   NTSTATUS ret = orig_MapViewOfSection(section, process, base, zero_bits,
                                        commit_size, offset, view_size, inherit,
                                        allocation_type, protect);
-
-  static int s_load_count = 0;
-  if (1 == s_load_count) {
-    SandboxFactory::GetTargetServices()->GetState()->SetKernel32Loaded();
-    s_load_count = 2;
-  }
+  static SectionLoadState s_state = kBeforeKernel32;
 
   do {
     if (!NT_SUCCESS(ret))
       break;
 
-    if (!InitHeap())
+    if (!IsSameProcess(process))
       break;
 
-    if (!IsSameProcess(process))
+    // Only check for verifier.dll or kernel32.dll loading if we haven't moved
+    // past that state yet.
+    if (s_state == kBeforeKernel32) {
+      const char* ansi_module_name =
+          GetAnsiImageInfoFromModule(reinterpret_cast<HMODULE>(*base));
+
+      // _strnicmp below may hit read access violations for some sections. We
+      // find what looks like a valid export directory for a PE module but the
+      // pointer to the module name will be pointing to invalid memory.
+      __try {
+        // Don't initialize the heap if verifier.dll is being loaded. This
+        // indicates Application Verifier is enabled and we should wait until
+        // the next module is loaded.
+        if (ansi_module_name &&
+            (g_nt._strnicmp(ansi_module_name, VERIFIER_DLL_NAME,
+                            sizeof(VERIFIER_DLL_NAME)) == 0))
+          break;
+
+        if (ansi_module_name &&
+            (g_nt._strnicmp(ansi_module_name, KERNEL32_DLL_NAME,
+                            sizeof(KERNEL32_DLL_NAME)) == 0)) {
+          SandboxFactory::GetTargetServices()->GetState()->SetKernel32Loaded();
+          s_state = kAfterKernel32;
+        }
+      } __except (EXCEPTION_EXECUTE_HANDLER) {
+      }
+    }
+
+    if (!InitHeap())
       break;
 
     if (!IsValidImageSection(section, base, offset, view_size))
@@ -60,6 +98,7 @@ NTSTATUS WINAPI TargetNtMapViewOfSection(
       if (!agent->OnDllLoad(file_name, module_name, *base)) {
         // Interception agent is demanding to un-map the module.
         g_nt.UnmapViewOfSection(process, *base);
+        *base = nullptr;
         ret = STATUS_UNSUCCESSFUL;
       }
     }
@@ -72,15 +111,13 @@ NTSTATUS WINAPI TargetNtMapViewOfSection(
 
   } while (false);
 
-  if (!s_load_count)
-    s_load_count = 1;
-
   return ret;
 }
 
-NTSTATUS WINAPI TargetNtUnmapViewOfSection(
-    NtUnmapViewOfSectionFunction orig_UnmapViewOfSection, HANDLE process,
-    PVOID base) {
+NTSTATUS WINAPI
+TargetNtUnmapViewOfSection(NtUnmapViewOfSectionFunction orig_UnmapViewOfSection,
+                           HANDLE process,
+                           PVOID base) {
   NTSTATUS ret = orig_UnmapViewOfSection(process, base);
 
   if (!NT_SUCCESS(ret))

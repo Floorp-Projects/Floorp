@@ -514,7 +514,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/ipc_tags.h b/security/san
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox.h b/security/sandbox/chromium/sandbox/win/src/sandbox.h
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox.h
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox.h
-@@ -136,14 +136,28 @@ class TargetServices {
+@@ -136,16 +136,30 @@ class TargetServices {
    // processing any untrusted data or running third-party code. If this call
    // fails the current process could be terminated immediately.
    virtual void LowerToken() = 0;
@@ -537,26 +537,28 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox.h b/security/sand
 +                                     HANDLE* target_handle,
 +                                     DWORD desired_access,
 +                                     DWORD options) = 0;
+ 
+  protected:
+   ~TargetServices() {}
  };
  
  }  // namespace sandbox
  
  
- #endif  // SANDBOX_WIN_SRC_SANDBOX_H_
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h b/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
-@@ -21,27 +21,31 @@ class TargetPolicy {
+@@ -24,27 +24,31 @@ class TargetPolicy {
    // exactly like the CreateProcess API does. See the comment at the top of
    // process_thread_dispatcher.cc for more details.
    enum SubSystem {
-     SUBSYS_FILES,             // Creation and opening of files and pipes.
-     SUBSYS_NAMED_PIPES,       // Creation of named pipes.
-     SUBSYS_PROCESS,           // Creation of child processes.
-     SUBSYS_REGISTRY,          // Creation and opening of registry keys.
-     SUBSYS_SYNC,              // Creation of named sync objects.
-+    SUBSYS_HANDLES,           // Duplication of handles to other processes.
-     SUBSYS_WIN32K_LOCKDOWN    // Win32K Lockdown related policy.
+     SUBSYS_FILES,           // Creation and opening of files and pipes.
+     SUBSYS_NAMED_PIPES,     // Creation of named pipes.
+     SUBSYS_PROCESS,         // Creation of child processes.
+     SUBSYS_REGISTRY,        // Creation and opening of registry keys.
+     SUBSYS_SYNC,            // Creation of named sync objects.
++    SUBSYS_HANDLES,         // Duplication of handles to other processes.
+     SUBSYS_WIN32K_LOCKDOWN  // Win32K Lockdown related policy.
    };
  
    // Allowable semantics when a rule is matched.

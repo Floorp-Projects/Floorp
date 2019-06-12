@@ -12,30 +12,30 @@
 
 namespace {
 
-  // A single rule can use at most this amount of memory.
-  const size_t kRuleBufferSize = 1024*4;
+// A single rule can use at most this amount of memory.
+const size_t kRuleBufferSize = 1024 * 4;
 
-  // The possible states of the string matching opcode generator.
-  enum {
-    PENDING_NONE,
-    PENDING_ASTERISK,    // Have seen an '*' but have not generated an opcode.
-    PENDING_QMARK,       // Have seen an '?' but have not generated an opcode.
-  };
+// The possible states of the string matching opcode generator.
+enum {
+  PENDING_NONE,
+  PENDING_ASTERISK,  // Have seen an '*' but have not generated an opcode.
+  PENDING_QMARK,     // Have seen an '?' but have not generated an opcode.
+};
 
-  // The category of the last character seen by the string matching opcode
-  // generator.
-  const uint32_t kLastCharIsNone = 0;
-  const uint32_t kLastCharIsAlpha = 1;
-  const uint32_t kLastCharIsWild = 2;
-  const uint32_t kLastCharIsAsterisk = kLastCharIsWild + 4;
-  const uint32_t kLastCharIsQuestionM = kLastCharIsWild + 8;
-}
+// The category of the last character seen by the string matching opcode
+// generator.
+const uint32_t kLastCharIsNone = 0;
+const uint32_t kLastCharIsAlpha = 1;
+const uint32_t kLastCharIsWild = 2;
+const uint32_t kLastCharIsAsterisk = kLastCharIsWild + 4;
+const uint32_t kLastCharIsQuestionM = kLastCharIsWild + 8;
+
+}  // namespace
 
 namespace sandbox {
 
 LowLevelPolicy::LowLevelPolicy(PolicyGlobal* policy_store)
-    : policy_store_(policy_store) {
-}
+    : policy_store_(policy_store) {}
 
 // Adding a rule is nothing more than pushing it into an stl container. Done()
 // is called for the rule in case the code that made the rule in the first
@@ -77,9 +77,9 @@ bool LowLevelPolicy::Done() {
   }
 
   PolicyBuffer* current_buffer = &policy_store_->data[0];
-  char* buffer_end = reinterpret_cast<char*>(current_buffer) +
-    policy_store_->data_size;
-  size_t avail_size =  policy_store_->data_size;
+  char* buffer_end =
+      reinterpret_cast<char*>(current_buffer) + policy_store_->data_size;
+  size_t avail_size = policy_store_->data_size;
 
   for (Mmap::iterator it = mmap.begin(); it != mmap.end(); ++it) {
     uint32_t service = (*it).first;
@@ -103,8 +103,8 @@ bool LowLevelPolicy::Done() {
       }
       size_t data_size = avail_size - opcodes_size;
       PolicyOpcode* opcodes_start = &current_buffer->opcodes[svc_opcode_count];
-      if (!rule->RebindCopy(opcodes_start, opcodes_size,
-                            buffer_end, &data_size)) {
+      if (!rule->RebindCopy(opcodes_start, opcodes_size, buffer_end,
+                            &data_size)) {
         return false;
       }
       size_t used = avail_size - data_size;
@@ -114,21 +114,20 @@ bool LowLevelPolicy::Done() {
     }
 
     current_buffer->opcode_count += svc_opcode_count;
-    size_t policy_byte_count = (svc_opcode_count * sizeof(PolicyOpcode))
-                                / sizeof(current_buffer[0]);
+    size_t policy_byte_count =
+        (svc_opcode_count * sizeof(PolicyOpcode)) / sizeof(current_buffer[0]);
     current_buffer = &current_buffer[policy_byte_count + 1];
   }
 
   return true;
 }
 
-PolicyRule::PolicyRule(EvalResult action)
-    : action_(action), done_(false) {
+PolicyRule::PolicyRule(EvalResult action) : action_(action), done_(false) {
   char* memory = new char[sizeof(PolicyBuffer) + kRuleBufferSize];
   buffer_ = reinterpret_cast<PolicyBuffer*>(memory);
   buffer_->opcode_count = 0;
-  opcode_factory_ = new OpcodeFactory(buffer_,
-                                      kRuleBufferSize + sizeof(PolicyOpcode));
+  opcode_factory_ =
+      new OpcodeFactory(buffer_, kRuleBufferSize + sizeof(PolicyOpcode));
 }
 
 PolicyRule::PolicyRule(const PolicyRule& other) {
@@ -176,7 +175,7 @@ bool PolicyRule::GenStringOpcode(RuleType rule_type,
     options = kPolUseOREval | kPolNegateEval;
   }
 
-  PolicyOpcode* op = NULL;
+  PolicyOpcode* op = nullptr;
 
   // The fragment string contains the accumulated characters to match with, it
   // never contains wildcards (unless they have been escaped) and while there
@@ -195,12 +194,10 @@ bool PolicyRule::GenStringOpcode(RuleType rule_type,
   if (PENDING_ASTERISK == state) {
     if (last_call) {
       op = opcode_factory_->MakeOpWStringMatch(parameter, fragment->c_str(),
-                                               kSeekToEnd, match_opts,
-                                               options);
+                                               kSeekToEnd, match_opts, options);
     } else {
-      op = opcode_factory_->MakeOpWStringMatch(parameter, fragment->c_str(),
-                                               kSeekForward, match_opts,
-                                               options);
+      op = opcode_factory_->MakeOpWStringMatch(
+          parameter, fragment->c_str(), kSeekForward, match_opts, options);
     }
 
   } else if (PENDING_QMARK == state) {
@@ -209,14 +206,13 @@ bool PolicyRule::GenStringOpcode(RuleType rule_type,
     *skip_count = 0;
   } else {
     if (last_call) {
-      match_opts = static_cast<StringMatchOptions>(EXACT_LENGHT | match_opts);
+      match_opts = static_cast<StringMatchOptions>(EXACT_LENGTH | match_opts);
     }
     op = opcode_factory_->MakeOpWStringMatch(parameter, fragment->c_str(), 0,
                                              match_opts, options);
   }
-  if (NULL == op) {
+  if (!op)
     return false;
-  }
   ++buffer_->opcode_count;
   fragment->clear();
   return true;
@@ -244,8 +240,8 @@ bool PolicyRule::AddStringMatch(RuleType rule_type,
           // '**' and '&*' is an error.
           return false;
         }
-        if (!GenStringOpcode(rule_type, match_opts, parameter,
-                             state, false, &skip_count, &fragment)) {
+        if (!GenStringOpcode(rule_type, match_opts, parameter, state, false,
+                             &skip_count, &fragment)) {
           return false;
         }
         last_char = kLastCharIsAsterisk;
@@ -256,8 +252,8 @@ bool PolicyRule::AddStringMatch(RuleType rule_type,
           // '*?' is an error.
           return false;
         }
-        if (!GenStringOpcode(rule_type, match_opts, parameter,
-                             state, false, &skip_count, &fragment)) {
+        if (!GenStringOpcode(rule_type, match_opts, parameter, state, false,
+                             &skip_count, &fragment)) {
           return false;
         }
         ++skip_count;
@@ -269,6 +265,7 @@ bool PolicyRule::AddStringMatch(RuleType rule_type,
         if (L'?' == current_char[1]) {
           ++current_char;
         }
+        FALLTHROUGH;
       default:
         fragment += *current_char;
         last_char = kLastCharIsAlpha;
@@ -276,8 +273,8 @@ bool PolicyRule::AddStringMatch(RuleType rule_type,
     ++current_char;
   }
 
-  if (!GenStringOpcode(rule_type, match_opts, parameter,
-                       state, true, &skip_count, &fragment)) {
+  if (!GenStringOpcode(rule_type, match_opts, parameter, state, true,
+                       &skip_count, &fragment)) {
     return false;
   }
   return true;
@@ -294,14 +291,11 @@ bool PolicyRule::AddNumberMatch(RuleType rule_type,
   uint32_t opts = (rule_type == IF_NOT) ? kPolNegateEval : kPolNone;
 
   if (EQUAL == comparison_op) {
-    if (NULL == opcode_factory_->MakeOpNumberMatch(parameter, number, opts)) {
+    if (!opcode_factory_->MakeOpNumberMatch(parameter, number, opts))
       return false;
-    }
   } else if (AND == comparison_op) {
-    if (NULL == opcode_factory_->MakeOpNumberAndMatch(parameter, number,
-                                                      opts)) {
+    if (!opcode_factory_->MakeOpNumberAndMatch(parameter, number, opts))
       return false;
-    }
   }
   ++buffer_->opcode_count;
   return true;
@@ -311,16 +305,17 @@ bool PolicyRule::Done() {
   if (done_) {
     return true;
   }
-  if (NULL == opcode_factory_->MakeOpAction(action_, kPolNone)) {
+  if (!opcode_factory_->MakeOpAction(action_, kPolNone))
     return false;
-  }
   ++buffer_->opcode_count;
   done_ = true;
   return true;
 }
 
-bool PolicyRule::RebindCopy(PolicyOpcode* opcode_start, size_t opcode_size,
-                            char* data_start, size_t* data_size) const {
+bool PolicyRule::RebindCopy(PolicyOpcode* opcode_start,
+                            size_t opcode_size,
+                            char* data_start,
+                            size_t* data_size) const {
   size_t count = buffer_->opcode_count;
   for (size_t ix = 0; ix != count; ++ix) {
     if (opcode_size < sizeof(PolicyOpcode)) {
@@ -353,7 +348,7 @@ bool PolicyRule::RebindCopy(PolicyOpcode* opcode_start, size_t opcode_size,
 }
 
 PolicyRule::~PolicyRule() {
-  delete [] reinterpret_cast<char*>(buffer_);
+  delete[] reinterpret_cast<char*>(buffer_);
   delete opcode_factory_;
 }
 
