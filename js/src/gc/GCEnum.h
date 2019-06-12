@@ -111,7 +111,8 @@ enum class ZealMode {
   _(RareArgumentsData)                     \
   _(RegExpStatics)                         \
   _(RegExpSharedBytecode)                  \
-  _(TypedArrayElements)
+  _(TypedArrayElements)                    \
+  _(TypeDescrTraceList)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
