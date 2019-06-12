@@ -3,18 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 object GeckoVersions {
-    const val nightly_version = "69.0.20190522093426"
-    const val beta_version = "68.0.20190604110028"
+    const val beta_version = "68.0.20190611143747"
     const val release_version = "67.0.20190521210220"
 }
 
 @Suppress("MaxLineLength")
 object Gecko {
-    const val geckoview_nightly_arm = "org.mozilla.geckoview:geckoview-nightly-armeabi-v7a:${GeckoVersions.nightly_version}"
-    const val geckoview_nightly_aarch64 = "org.mozilla.geckoview:geckoview-nightly-arm64-v8a:${GeckoVersions.nightly_version}"
-    const val geckoview_nightly_x86 = "org.mozilla.geckoview:geckoview-nightly-x86:${GeckoVersions.nightly_version}"
-    const val geckoview_nightly_x86_64 = "org.mozilla.geckoview:geckoview-nightly-x86_64:${GeckoVersions.nightly_version}"
-
     const val geckoview_beta_arm = "org.mozilla.geckoview:geckoview-beta-armeabi-v7a:${GeckoVersions.beta_version}"
     const val geckoview_beta_aarch64 = "org.mozilla.geckoview:geckoview-beta-arm64-v8a:${GeckoVersions.beta_version}"
     const val geckoview_beta_x86 = "org.mozilla.geckoview:geckoview-beta-x86:${GeckoVersions.beta_version}"
