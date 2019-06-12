@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.transition.TransitionInflater
@@ -83,6 +84,8 @@ import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.toTab
+import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
+import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -104,6 +107,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     private lateinit var toolbarComponent: ToolbarComponent
 
+    private var tabCollectionObserver: Observer<List<TabCollection>>? = null
     private var sessionObserver: Session.Observer? = null
     private var sessionManagerObserver: SessionManager.Observer? = null
 
@@ -453,6 +457,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     override fun onResume() {
         sessionObserver = subscribeToSession()
         sessionManagerObserver = subscribeToSessions()
+        tabCollectionObserver = subscribeToTabCollections()
+
         getSessionById()?.let { updateBookmarkState(it) }
 
         if (getSessionById() == null) findNavController(this).popBackStack(R.id.homeFragment, false)
@@ -619,6 +625,9 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     override fun onStop() {
         super.onStop()
+        tabCollectionObserver?.let {
+            requireComponents.core.tabCollectionStorage.getCollections().removeObserver(it)
+        }
         sessionObserver?.let {
             getSessionById()?.unregister(it)
         }
@@ -848,6 +857,15 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         context.getSystemService<ClipboardManager>()?.apply {
             primaryClip = ClipData.newPlainText(url, url)
         }
+    }
+
+    private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
+        val observer = Observer<List<TabCollection>> {
+            requireComponents.core.tabCollectionStorage.cachedTabCollections = it
+            getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(it))
+        }
+        requireComponents.core.tabCollectionStorage.getCollections().observe(this, observer)
+        return observer
     }
 
     private fun subscribeToSession(): Session.Observer {
