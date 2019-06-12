@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.bookmarks.selectfolder
 
+import android.content.Context
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -19,7 +20,6 @@ import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.*
 import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.view.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
@@ -36,6 +36,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.setRootTitles
+import org.mozilla.fenix.ext.withOptionalDesktopFolders
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.library.bookmarks.SignInAction
 import org.mozilla.fenix.library.bookmarks.SignInChange
@@ -58,7 +60,13 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
     private lateinit var signInComponent: SignInComponent
 
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
+        get() = Main + job
+
+    // Fill out our title map once we have context.
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        setRootTitles(context)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -109,7 +117,8 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
         checkIfSignedIn()
 
         launch(IO) {
-            bookmarkNode = requireComponents.core.bookmarksStorage.getTree(folderGuid!!, true)
+            bookmarkNode =
+                requireComponents.core.bookmarksStorage.getTree(folderGuid!!, true).withOptionalDesktopFolders(context)
             launch(Main) {
                 (activity as HomeActivity).title = bookmarkNode?.title ?: getString(R.string.library_bookmarks)
                 val adapter = SelectBookmarkFolderAdapter(sharedViewModel)

@@ -14,6 +14,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.TestUtils
 import org.mozilla.fenix.TestUtils.bus
+import org.mozilla.fenix.ext.minus
 import org.mozilla.fenix.mvi.getManagedEmitter
 
 class BookmarkViewModelTest {

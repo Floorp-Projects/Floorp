@@ -7,6 +7,7 @@ package org.mozilla.fenix.library.bookmarks.selectfolder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
@@ -79,6 +80,7 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
         init {
             bookmark_favicon.visibility = View.VISIBLE
             bookmark_title.visibility = View.VISIBLE
+            bookmark_url.visibility = View.GONE
             bookmark_separator.visibility = View.GONE
             bookmark_layout.isClickable = true
         }
@@ -90,6 +92,14 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
                 } else {
                     R.attr.neutral.getColorIntFromAttr(containerView!!.context)
                 }
+
+            // Center the bookmark title since we don't have a url
+            val constraintSet = ConstraintSet()
+            constraintSet.clone(bookmark_layout)
+            constraintSet.connect(
+                bookmark_title.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM
+            )
+            constraintSet.applyTo(bookmark_layout)
 
             val backgroundTintList = ContextCompat.getColorStateList(containerView.context, backgroundTint)
             bookmark_favicon.backgroundTintList = backgroundTintList
