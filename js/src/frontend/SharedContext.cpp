@@ -162,6 +162,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
       isGetter_(fun->isGetter()),
       isSetter_(fun->isSetter()),
       isMethod_(fun->isMethod()),
+      nargs_(0),
       kind_(fun->kind()),
       explicitName_(fun->explicitName()) {
   // Functions created at parse time may be set singleton after parsing and

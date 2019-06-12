@@ -1639,6 +1639,10 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   }
 
   FunctionBox* funbox = pc_->functionBox();
+
+  // Synchronize functionBox argCount with Function.
+  funbox->function()->setArgCount(funbox->nargs());
+
   bool hasParameterExprs = funbox->hasParameterExprs;
 
   if (hasParameterExprs) {
@@ -1695,6 +1699,10 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   FunctionBox* funbox = pc_->functionBox();
   RootedFunction fun(cx_, funbox->function());
+
+  // Synchronize functionBox argCount with Function.
+  funbox->function()->setArgCount(funbox->nargs());
+
   LazyScript* lazy = LazyScript::Create(
       cx_, fun, sourceObject_, pc_->closedOverBindingsForLazy(),
       pc_->innerFunctionsForLazy, funbox->bufStart, funbox->bufEnd,
@@ -2433,7 +2441,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
       funbox->hasDirectEvalInParameterExpr = true;
     }
 
-    funbox->function()->setArgCount(positionalFormals.length());
+    funbox->setArgCount(positionalFormals.length());
   } else if (kind == FunctionSyntaxKind::Setter) {
     error(JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
     return false;
@@ -7238,9 +7246,9 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
                                        /* duplicatedParam = */ nullptr)) {
       return null();
     }
-    funbox->function()->setArgCount(1);
+    funbox->setArgCount(1);
   } else {
-    funbox->function()->setArgCount(0);
+    funbox->setArgCount(0);
   }
 
   pc_->functionScope().useAsVarScope(pc_);
@@ -7433,7 +7441,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     return null();
   }
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
-  funbox->function()->setArgCount(0);
+  funbox->setArgCount(0);
 
   funbox->usesThis = true;
   NameNodeType thisName = newThisName();
