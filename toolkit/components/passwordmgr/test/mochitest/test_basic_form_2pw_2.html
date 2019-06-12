@@ -56,12 +56,14 @@ function checkSubmit(formNum) {
   if (formNum == 999) {
     is(numSubmittedForms, 999, "Ensuring all forms submitted for testing.");
 
-    var numEndingLogins = LoginManager.countLogins("", "", "");
+    (async () => {
+      var numEndingLogins = await LoginManager.countLogins("", "", "");
 
-    ok(numEndingLogins > 0, "counting logins at end");
-    is(numStartingLogins, numEndingLogins + 222, "counting logins at end");
+      ok(numEndingLogins > 0, "counting logins at end");
+      is(numStartingLogins, numEndingLogins + 222, "counting logins at end");
 
-    SimpleTest.finish();
+      SimpleTest.finish();
+    })();
     return false; // return false to cancel current form submission
   }
 
