@@ -698,6 +698,12 @@ void MemoryTracker::checkEmptyOnDestroy() {
   MOZ_ASSERT(ok);
 }
 
+inline bool MemoryTracker::allowMultipleAssociations(MemoryUse use) const {
+  // For most uses only one association is possible for each GC thing. Allow a
+  // one-to-many relationship only where necessary.
+  return false;
+}
+
 void MemoryTracker::trackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
   MOZ_ASSERT(cell->isTenured());
 
@@ -707,8 +713,12 @@ void MemoryTracker::trackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
   AutoEnterOOMUnsafeRegion oomUnsafe;
   auto ptr = map.lookupForAdd(key);
   if (ptr) {
-    MOZ_CRASH_UNSAFE_PRINTF("Association already present: %p 0x%zx %s", cell,
-                            nbytes, MemoryUseName(use));
+    if (!allowMultipleAssociations(use)) {
+      MOZ_CRASH_UNSAFE_PRINTF("Association already present: %p 0x%zx %s", cell,
+                              nbytes, MemoryUseName(use));
+    }
+    ptr->value() += nbytes;
+    return;
   }
 
   if (!map.add(ptr, key, nbytes)) {
@@ -727,13 +737,26 @@ void MemoryTracker::untrackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
     MOZ_CRASH_UNSAFE_PRINTF("Association not found: %p 0x%zx %s", cell, nbytes,
                             MemoryUseName(use));
   }
-  if (ptr->value() != nbytes) {
+
+  if (!allowMultipleAssociations(use) && ptr->value() != nbytes) {
     MOZ_CRASH_UNSAFE_PRINTF(
         "Association for %p %s has different size: "
         "expected 0x%zx but got 0x%zx",
         cell, MemoryUseName(use), ptr->value(), nbytes);
   }
-  map.remove(ptr);
+
+  if (ptr->value() < nbytes) {
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "Association for %p %s size is too small: "
+        "expected at least 0x%zx but got 0x%zx",
+        cell, MemoryUseName(use), nbytes, ptr->value());
+  }
+
+  ptr->value() -= nbytes;
+
+  if (ptr->value() == 0) {
+    map.remove(ptr);
+  }
 }
 
 void MemoryTracker::swapMemory(Cell* a, Cell* b, MemoryUse use) {
