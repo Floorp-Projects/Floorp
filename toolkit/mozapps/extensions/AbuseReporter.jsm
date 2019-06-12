@@ -135,13 +135,12 @@ const AbuseReporter = {
       const {source, method} = addon.installTelemetryInfo;
       switch (source) {
         case "enterprise-policy":
-        case "file-uri":
+        case "file-url":
         case "system-addon":
         case "temporary-addon":
           install_method = source.replace(/-/g, "_");
           break;
         case "distribution":
-        case "sideload":
         case "sync":
           install_method = source;
           break;
@@ -150,6 +149,7 @@ const AbuseReporter = {
       }
 
       switch (method) {
+        case "sideload":
         case "link":
           install_method = method;
           break;
