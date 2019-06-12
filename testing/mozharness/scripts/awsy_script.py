@@ -56,12 +56,6 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
           "default": False,
           "help": "Tries to enable the WebRender compositor.",
           }],
-        [["--disable-webrender"],
-         {"action": "store_true",
-          "dest": "disable_webrender",
-          "default": False,
-          "help": "Force-disables the WebRender compositor.",
-          }],
         [["--base"],
          {"action": "store_true",
           "dest": "test_about_blank",
@@ -260,13 +254,13 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
         # TODO: consider getting rid of this as stylo is enabled by default
         env['STYLO_FORCE_ENABLED'] = '1'
 
+        # Force WebRender on or off depending on the flag, so that we don't
+        # have it accidentally getting enabled because the underlying hardware
+        # running the test becomes part of the WR-qualified set.
         if self.config['enable_webrender']:
             env['MOZ_WEBRENDER'] = '1'
             env['MOZ_ACCELERATED'] = '1'
-
-        # Allow explicitly disabling webrender, so that we don't run WR on non-QR
-        # test platforms just because they run on qualified hardware.
-        if self.config['disable_webrender']:
+        else:
             env['MOZ_WEBRENDER'] = '0'
 
         env['MOZ_UPLOAD_DIR'] = dirs['abs_blob_upload_dir']

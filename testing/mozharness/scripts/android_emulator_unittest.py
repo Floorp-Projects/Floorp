@@ -93,13 +93,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
          "default": False,
          "help": "Run with WebRender enabled.",
          }
-    ], [
-        ['--disable-webrender'],
-        {"action": "store_true",
-         "dest": "disable_webrender",
-         "default": False,
-         "help": "Run with WebRender force-disabled.",
-         }
     ]] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(code_coverage_config_options)
 
@@ -144,7 +137,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         self.log_tbpl_level = c.get('log_tbpl_level')
         self.e10s = c.get('e10s')
         self.enable_webrender = c.get('enable_webrender')
-        self.disable_webrender = c.get('disable_webrender')
         if self.enable_webrender:
             # AndroidMixin uses this when launching the emulator. We only want
             # GLES3 if we're running WebRender
@@ -288,10 +280,13 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 if self.total_chunks is not None:
                     cmd.extend(['--total-chunks', self.total_chunks])
 
-        if self.disable_webrender:
-            cmd.extend(['--setenv', 'MOZ_WEBRENDER=0'])
-        elif self.enable_webrender:
+        # Force WebRender on or off depending on the flag, so that we don't
+        # have it accidentally getting enabled because the underlying hardware
+        # running the test becomes part of the WR-qualified set.
+        if self.enable_webrender:
             cmd.extend(['--setenv', 'MOZ_WEBRENDER=1'])
+        else:
+            cmd.extend(['--setenv', 'MOZ_WEBRENDER=0'])
 
         try_options, try_tests = self.try_args(self.test_suite)
         cmd.extend(try_options)
