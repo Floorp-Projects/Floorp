@@ -3077,7 +3077,7 @@ inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
             &huge)
             ->Search(&key);
     if (node) {
-      *aInfo = {TagLiveHuge, node->mAddr, node->mSize, node->mArena->mId};
+      *aInfo = {TagLiveAlloc, node->mAddr, node->mSize, node->mArena->mId};
       return;
     }
   }
@@ -3101,21 +3101,8 @@ inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
   size_t mapbits = chunk->map[pageind].bits;
 
   if (!(mapbits & CHUNK_MAP_ALLOCATED)) {
-    PtrInfoTag tag = TagFreedPageDirty;
-    if (mapbits & CHUNK_MAP_DIRTY) {
-      tag = TagFreedPageDirty;
-    } else if (mapbits & CHUNK_MAP_DECOMMITTED) {
-      tag = TagFreedPageDecommitted;
-    } else if (mapbits & CHUNK_MAP_MADVISED) {
-      tag = TagFreedPageMadvised;
-    } else if (mapbits & CHUNK_MAP_ZEROED) {
-      tag = TagFreedPageZeroed;
-    } else {
-      MOZ_CRASH();
-    }
-
     void* pageaddr = (void*)(uintptr_t(aPtr) & ~gPageSizeMask);
-    *aInfo = {tag, pageaddr, gPageSize, chunk->arena->mId};
+    *aInfo = {TagFreedPage, pageaddr, gPageSize, chunk->arena->mId};
     return;
   }
 
@@ -3148,7 +3135,7 @@ inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
     }
 
     void* addr = ((char*)chunk) + (pageind << gPageSize2Pow);
-    *aInfo = {TagLiveLarge, addr, size, chunk->arena->mId};
+    *aInfo = {TagLiveAlloc, addr, size, chunk->arena->mId};
     return;
   }
 
@@ -3177,7 +3164,7 @@ inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
   unsigned elm = regind >> (LOG2(sizeof(int)) + 3);
   unsigned bit = regind - (elm << (LOG2(sizeof(int)) + 3));
   PtrInfoTag tag =
-      ((run->mRegionsMask[elm] & (1U << bit))) ? TagFreedSmall : TagLiveSmall;
+      ((run->mRegionsMask[elm] & (1U << bit))) ? TagFreedAlloc : TagLiveAlloc;
 
   *aInfo = {tag, addr, size, chunk->arena->mId};
 }
