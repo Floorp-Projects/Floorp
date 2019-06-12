@@ -9,6 +9,10 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 Cu.importGlobalProperties(["fetch"]);
 
 const PREF_ABUSE_REPORT_URL  = "extensions.abuseReport.url";
+
+// Maximum length of the string properties sent to the API endpoint.
+const MAX_STRING_LENGTH = 255;
+
 // Minimum time between report submissions (in ms).
 const MIN_MS_BETWEEN_SUBMITS = 30000;
 
@@ -119,11 +123,15 @@ const AbuseReporter = {
    *         An object that contains the collected details.
    */
   async getReportData(addon) {
+    const truncateString = (text) =>
+      typeof text == "string" ? text.slice(0, MAX_STRING_LENGTH) : text;
+
     const data = {
       addon: addon.id,
       addon_version: addon.version,
-      addon_summary: addon.description,
-      addon_install_origin: addon.sourceURI && addon.sourceURI.spec,
+      addon_name: truncateString(addon.name),
+      addon_summary: truncateString(addon.description),
+      addon_install_origin: addon.sourceURI && truncateString(addon.sourceURI.spec),
       install_date: addon.installDate && addon.installDate.toISOString(),
     };
 
