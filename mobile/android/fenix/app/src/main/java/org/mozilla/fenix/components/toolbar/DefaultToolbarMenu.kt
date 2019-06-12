@@ -24,7 +24,7 @@ class DefaultToolbarMenu(
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : ToolbarMenu {
 
-    override val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
+    override val menuBuilder by lazy { BrowserMenuBuilder(menuItems, endOfMenuAlwaysVisible = true) }
 
     override val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.TwoStateButton(
