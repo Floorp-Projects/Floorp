@@ -202,7 +202,7 @@ var OSKeyStore = {
       textArr.push(char.charCodeAt(0));
     }
 
-    let rawEncryptedText = await nativeOSKeyStore.asyncEncryptBytes(this.STORE_LABEL, textArr.length, textArr);
+    let rawEncryptedText = await nativeOSKeyStore.asyncEncryptBytes(this.STORE_LABEL, textArr);
 
     // Mark the output with a version number.
     return rawEncryptedText;

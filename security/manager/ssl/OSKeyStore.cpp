@@ -172,17 +172,15 @@ nsresult OSKeyStore::DeleteSecret(const nsACString& aLabel) {
 
 enum Cipher { Encrypt = true, Decrypt = false };
 
-nsresult OSKeyStore::EncryptBytes(const nsACString& aLabel, uint32_t inLen,
-                                  uint8_t* inBytes,
+nsresult OSKeyStore::EncryptBytes(const nsACString& aLabel,
+                                  const std::vector<uint8_t>& aInBytes,
                                   /*out*/ nsACString& aEncryptedBase64Text) {
   NS_ENSURE_STATE(mKs);
-  NS_ENSURE_ARG_POINTER(inBytes);
 
   nsAutoCString label = mLabelPrefix + aLabel;
   aEncryptedBase64Text.Truncate();
-  const std::vector<uint8_t> in(inBytes, inBytes + inLen);
   std::vector<uint8_t> outBytes;
-  nsresult rv = mKs->EncryptDecrypt(label, in, outBytes, Cipher::Encrypt);
+  nsresult rv = mKs->EncryptDecrypt(label, aInBytes, outBytes, Cipher::Encrypt);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -526,13 +524,12 @@ OSKeyStore::AsyncDeleteSecret(const nsACString& aLabel, JSContext* aCx,
   return mKsThread->Dispatch(runnable.forget());
 }
 
-void BackgroundEncryptBytes(const nsACString& aLabel,
-                            std::vector<uint8_t> inBytes,
-                            RefPtr<Promise>& aPromise,
-                            RefPtr<OSKeyStore> self) {
+static void BackgroundEncryptBytes(const nsACString& aLabel,
+                                   const std::vector<uint8_t>& aInBytes,
+                                   RefPtr<Promise>& aPromise,
+                                   RefPtr<OSKeyStore> self) {
   nsAutoCString ciphertext;
-  nsresult rv =
-      self->EncryptBytes(aLabel, inBytes.size(), inBytes.data(), ciphertext);
+  nsresult rv = self->EncryptBytes(aLabel, aInBytes, ciphertext);
   nsAutoString ctext;
   CopyUTF8toUTF16(ciphertext, ctext);
 
@@ -549,8 +546,8 @@ void BackgroundEncryptBytes(const nsACString& aLabel,
 }
 
 NS_IMETHODIMP
-OSKeyStore::AsyncEncryptBytes(const nsACString& aLabel, uint32_t inLen,
-                              uint8_t* inBytes, JSContext* aCx,
+OSKeyStore::AsyncEncryptBytes(const nsACString& aLabel,
+                              const nsTArray<uint8_t>& inBytes, JSContext* aCx,
                               Promise** promiseOut) {
   MOZ_ASSERT(NS_IsMainThread());
   if (!NS_IsMainThread()) {
@@ -558,7 +555,6 @@ OSKeyStore::AsyncEncryptBytes(const nsACString& aLabel, uint32_t inLen,
   }
 
   NS_ENSURE_ARG_POINTER(aCx);
-  NS_ENSURE_ARG_POINTER(inBytes);
   NS_ENSURE_STATE(mKsThread);
 
   RefPtr<Promise> promiseHandle;
@@ -570,7 +566,9 @@ OSKeyStore::AsyncEncryptBytes(const nsACString& aLabel, uint32_t inLen,
   RefPtr<OSKeyStore> self = this;
   nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
       "BackgroundEncryptBytes",
-      [promiseHandle, inBytes = std::vector<uint8_t>(inBytes, inBytes + inLen),
+      [promiseHandle,
+       inBytes = std::vector<uint8_t>(inBytes.Elements(),
+                                      inBytes.Elements() + inBytes.Length()),
        aLabel = nsAutoCString(aLabel), self]() mutable {
         BackgroundEncryptBytes(aLabel, inBytes, promiseHandle, self);
       }));
