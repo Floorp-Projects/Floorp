@@ -32,6 +32,14 @@ const char CX_MAGIC_HEADER[] =
 // The latest format version understood by this tokenizer.
 const uint32_t MAGIC_FORMAT_VERSION = 2;
 
+// The maximal length of a single Huffman code, in bits.
+//
+// Hardcoded in the format.
+const uint8_t MAX_CODE_BIT_LENGTH = 20;
+
+// Hardcoded limit to avoid allocating too eagerly.
+const uint32_t MAX_NUMBER_OF_SYMBOLS = 32768;
+
 using AutoList = BinASTTokenReaderContext::AutoList;
 using AutoTaggedTuple = BinASTTokenReaderContext::AutoTaggedTuple;
 using CharSlice = BinaryASTSupport::CharSlice;
@@ -410,7 +418,11 @@ class HuffmanPreludeReader {
   // It MUST be empty.
   HuffmanPreludeReader(JSContext* cx, BinASTTokenReaderContext& reader,
                        HuffmanDictionary& dictionary)
-      : cx_(cx), reader(reader), dictionary(dictionary), stack(cx_) {}
+      : cx_(cx),
+        reader(reader),
+        dictionary(dictionary),
+        stack(cx_),
+        auxStorageBitLengths(cx_) {}
 
   // Start reading the prelude.
   MOZ_MUST_USE JS::Result<Ok> run(size_t initialCapacity) {
@@ -497,7 +509,13 @@ class HuffmanPreludeReader {
 
   // A boolean. May not be null.
   struct Boolean : EntryBase {
+    // The C++ type of values for this grammar type.
+    using Type = bool;
     Boolean(const NormalizedInterfaceAndField identity) : EntryBase(identity) {}
+    size_t maxMumberOfSymbols() {
+      // Sadly, to this day, there are only two known booleans.
+      return 2;
+    }
   };
 
   // A field encoding a lazy offset.
@@ -691,11 +709,19 @@ class HuffmanPreludeReader {
     return Ok();
   }
 
+  // Read a single symbol.
+  template <typename Entry>
+  MOZ_MUST_USE JS::Result<typename Entry::Type> readSymbol();
+
   // Read a table in the optimized "only one value" format.
   template <typename Table, typename Entry>
   MOZ_MUST_USE JS::Result<Ok> readSingleValueTable(Table& table, Entry entry);
 
   // Read a table in the non-optimized format.
+  //
+  // Entries in the table are represented in an order that is specific to each
+  // type. See the documentation of each `EntryMatcher::operator()` for a
+  // discussion on each order.
   template <typename Table, typename Entry>
   MOZ_MUST_USE JS::Result<Ok> readMultipleValuesTable(Table& table, Entry entry,
                                                       size_t numberOfSymbols);
@@ -731,14 +757,37 @@ class HuffmanPreludeReader {
     MOZ_TRY(table.impl.initBegin(cx_, numberOfSymbols));
     for (size_t i = 0; i < numberOfSymbols; ++i) {
       BINJS_MOZ_TRY_DECL(bitLength, reader.readByte());
-      MOZ_TRY(table.impl.initBitLength(i, bitLength));
+      if (bitLength == 0) {
+        // A value with a bits length of 0? That makes no sense.
+        return raiseInvalidTableData(entry.identity);
+      }
+      BINJS_TRY(auxStorageBitLengths.append(bitLength));
     }
+    // Append a terminator.
+    BINJS_TRY(auxStorageBitLengths.append(MAX_CODE_BIT_LENGTH));
+
+    // Now read the symbols and assign bits.
+    uint32_t code = 0;
+    MOZ_TRY(table.impl.init(cx_, numberOfSymbols));
 
     for (size_t i = 0; i < numberOfSymbols; ++i) {
-      BINJS_MOZ_TRY_DECL(symbol, reader.readByte());
-      MOZ_TRY(table.impl.initSymbol(i, symbol != 0));
+      const auto bitLength = auxStorageBitLengths[i];
+      const auto nextBitLength =
+          auxStorageBitLengths[i + 1];  // Valid thanks to the terminator.
+      if (bitLength > nextBitLength) {
+        // By format invariant, bit lengths are always ranked by increasing
+        // order.
+        return raiseInvalidTableData(entry.identity);
+      }
+
+      BINJS_MOZ_TRY_DECL(symbol, readSymbol<Entry>());
+
+      MOZ_TRY(table.impl.addSymbol(code, bitLength, std::move(symbol)));
+
+      code = (code + 1) << (nextBitLength - bitLength);
     }
-    MOZ_TRY(table.impl.initDone());
+
+    auxStorageBitLengths.clear();
     return Ok();
   }
 
@@ -762,6 +811,9 @@ class HuffmanPreludeReader {
         // Table contains multiple values.
         // Read and validate length.
         BINJS_MOZ_TRY_DECL(numberOfSymbols, reader.readVarU32());
+        if (numberOfSymbols > entry.maxMumberOfSymbols()) {
+          return raiseInvalidTableData(entry.identity);
+        }
         return readMultipleValuesTable<Table, Entry>(table.as<Table>(), entry,
                                                      numberOfSymbols);
       }
@@ -773,6 +825,38 @@ class HuffmanPreludeReader {
     }
   }
 
+  // Reading tables of booleans
+  // 0 -> False
+  // _ -> True
+  template <>
+  MOZ_MUST_USE JS::Result<Ok>
+  readSingleValueTable<HuffmanTableIndexedSymbolsBool, Boolean>(
+      HuffmanTableIndexedSymbolsBool& table, Boolean entry) {
+    uint8_t indexByte;
+    MOZ_TRY_VAR(indexByte, reader.readByte());
+    if (indexByte >= 2) {
+      return raiseInvalidTableData(entry.identity);
+    }
+
+    MOZ_TRY(table.impl.initWithSingleValue(cx_, indexByte != 0));
+    return Ok();
+  }
+
+  // Reading a single boolean.
+  // 0 -> False
+  // _ -> True
+  template <>
+  MOZ_MUST_USE JS::Result<bool> readSymbol<Boolean>() {
+    BINJS_MOZ_TRY_DECL(symbol, reader.readByte());
+    return symbol != 0;
+  }
+
+ private:
+  // An auxiliary storage of bit lengths.
+  // Used to avoid (re)allocating a vector of bit lengths each time we read a
+  // table.
+  Vector<uint8_t> auxStorageBitLengths;
+
   // Implementation of pattern-matching cases for `entry.match`.
   struct EntryMatcher {
     // The owning HuffmanPreludeReader.
@@ -780,15 +864,21 @@ class HuffmanPreludeReader {
 
     EntryMatcher(HuffmanPreludeReader& owner) : owner(owner) {}
 
+    // Lazy.
+    // Values: no value/
     MOZ_MUST_USE JS::Result<Ok> operator()(const Lazy& entry) {
       // Nothing to do.
       return Ok();
     }
 
+    // Boolean.
+    // Values: [false, true], in this order.
     MOZ_MUST_USE JS::Result<Ok> operator()(const Boolean& entry) {
       return owner.readTable<HuffmanTableIndexedSymbolsBool, Boolean>(entry);
     }
 
+    // Interface.
+    // Values: no value.
     MOZ_MUST_USE JS::Result<Ok> operator()(const Interface& entry) {
       // No table here, just push fields.
       owner.pushFields(entry.kind);
@@ -880,10 +970,36 @@ class HuffmanPreludeReader {
 template <typename T, int N>
 JS::Result<Ok> HuffmanTableImpl<T, N>::initWithSingleValue(JSContext* cx,
                                                            T&& value) {
-  MOZ_ASSERT(values.length() == 0);  // Make sure that we're initializing.
+  MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
   if (!values.append(HuffmanEntry<T>(0, 0, std::move(value)))) {
     return cx->alreadyReportedError();
   }
+  return Ok();
+}
+
+template <typename T, int N>
+JS::Result<Ok> HuffmanTableImpl<T, N>::init(JSContext* cx,
+                                            size_t numberOfSymbols) {
+  MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
+  if (!values.initCapacity(numberOfSymbols)) {
+    return cx->alreadyReportedError();
+  }
+  return Ok();
+}
+
+template <typename T, int N>
+JS::Result<Ok> HuffmanTableImpl<T, N>::addSymbol(uint32_t bits,
+                                                 uint8_t bits_length,
+                                                 T&& value) {
+  MOZ_ASSERT(bits_lengths != 0,
+             "Adding a symbol with a bits_length of 0 doesn't make sense.");
+  MOZ_ASSERT(values.empty() || values.back()->bits_length <= bits_length,
+             "Symbols must be ranked by increasing bits length");
+  MOZ_ASSERT(bits >> bits_len == 0);
+  if (!values.emplaceBack(bits, bits_length, std::move(value))) {
+    MOZ_CRASH();  // Memory was reserved in `init()`.
+  }
+
   return Ok();
 }
 
