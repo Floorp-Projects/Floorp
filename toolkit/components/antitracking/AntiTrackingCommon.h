@@ -15,7 +15,6 @@
 
 class nsIChannel;
 class nsICookieSettings;
-class nsIHttpChannel;
 class nsIPermission;
 class nsIPrincipal;
 class nsIURI;
@@ -48,7 +47,7 @@ class AntiTrackingCommon final {
       uint32_t* aRejectedReason);
 
   // Note: you should use IsFirstPartyStorageAccessGrantedFor() passing the
-  // nsIHttpChannel! Use this method _only_ if the channel is not available.
+  // nsIChannel! Use this method _only_ if the channel is not available.
   // For first party window, it's impossible to know if the aURI is a tracking
   // resource synchronously, so here we return the best guest: if we are sure
   // that the permission is granted for the origin of aURI, this method returns
@@ -60,7 +59,7 @@ class AntiTrackingCommon final {
   // aChannel can be a 3rd party channel, or not.
   // See IsFirstPartyStorageAccessGrantedFor(window) to see the possible values
   // of aRejectedReason.
-  static bool IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel,
+  static bool IsFirstPartyStorageAccessGrantedFor(nsIChannel* aChannel,
                                                   nsIURI* aURI,
                                                   uint32_t* aRejectedReason);
 
