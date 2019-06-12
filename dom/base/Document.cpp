@@ -68,6 +68,7 @@
 #include "ChildIterator.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertValidity.h"
+#include "nsIX509CertList.h"
 #include "nsITransportSecurityInfo.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
@@ -1479,6 +1480,100 @@ void Document::GetFailedCertSecurityInfo(
     return;
   }
   aInfo.mSubjectAltNames = subjectAltNames;
+
+  nsAutoString issuerCommonName;
+  int64_t maxValidity = std::numeric_limits<int64_t>::max();
+  int64_t minValidity = 0;
+  PRTime notBefore, notAfter;
+  nsCOMPtr<nsIX509CertList> failedChain;
+  rv = tsi->GetFailedCertChain(getter_AddRefs(failedChain));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+  if (NS_WARN_IF(!failedChain)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  rv = failedChain->GetEnumerator(getter_AddRefs(enumerator));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+  if (NS_WARN_IF(!enumerator)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  bool hasMore;
+  rv = enumerator->HasMoreElements(&hasMore);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  while (hasMore) {
+    nsCOMPtr<nsISupports> supports;
+    rv = enumerator->GetNext(getter_AddRefs(supports));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
+    if (NS_WARN_IF(!supports)) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return;
+    }
+
+    nsCOMPtr<nsIX509Cert> certificate(do_QueryInterface(supports));
+    if (NS_WARN_IF(!certificate)) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return;
+    }
+
+    rv = certificate->GetIssuerCommonName(issuerCommonName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
+
+    rv = certificate->GetValidity(getter_AddRefs(validity));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
+    if (NS_WARN_IF(!validity)) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return;
+    }
+
+    rv = validity->GetNotBefore(&notBefore);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
+
+    rv = validity->GetNotAfter(&notAfter);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
+
+    notBefore = std::max(minValidity, notBefore);
+    notAfter = std::min(maxValidity, notAfter);
+
+    rv = enumerator->HasMoreElements(&hasMore);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
+  }
+
+  aInfo.mIssuerCommonName.Assign(issuerCommonName);
+  aInfo.mCertValidityRangeNotAfter = DOMTimeStamp(notAfter / PR_USEC_PER_MSEC);
+  aInfo.mCertValidityRangeNotBefore =
+      DOMTimeStamp(notBefore / PR_USEC_PER_MSEC);
 }
 
 bool Document::IsAboutPage() const {
