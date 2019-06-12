@@ -14,13 +14,14 @@ Win2kThreadPool::Win2kThreadPool() {
   ::InitializeCriticalSection(&lock_);
 }
 
-bool Win2kThreadPool::RegisterWait(const void* cookie, HANDLE waitable_object,
+bool Win2kThreadPool::RegisterWait(const void* cookie,
+                                   HANDLE waitable_object,
                                    CrossCallIPCCallback callback,
                                    void* context) {
   if (0 == cookie) {
     return false;
   }
-  HANDLE pool_object = NULL;
+  HANDLE pool_object = nullptr;
   // create a wait for a kernel object, with no timeout
   if (!::RegisterWaitForSingleObject(&pool_object, waitable_object, callback,
                                      context, INFINITE, WT_EXECUTEDEFAULT)) {

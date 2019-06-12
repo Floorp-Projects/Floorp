@@ -16,7 +16,6 @@
 
 #include "base/compiler_specific.h"
 #include "base/logging.h"
-#include "base/third_party/valgrind/valgrind.h"
 #include "build/build_config.h"
 #include "sandbox/linux/system_headers/capability.h"
 #include "sandbox/linux/system_headers/linux_signal.h"

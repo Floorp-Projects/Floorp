@@ -44,8 +44,7 @@ namespace sandbox {
 
 // TODO(cpu): Move this constant to crosscall_client.h.
 const size_t kMaxServiceCount = 64;
-static_assert(IPC_LAST_TAG <= kMaxServiceCount,
-              "kMaxServiceCount is too low");
+static_assert(IPC_LAST_TAG <= kMaxServiceCount, "kMaxServiceCount is too low");
 
 // Defines the memory layout of the policy. This memory is filled by
 // LowLevelPolicy object.
@@ -120,7 +119,7 @@ enum RuleType {
 enum RuleOp {
   EQUAL,
   AND,
-  RANGE   // TODO(cpu): Implement this option.
+  RANGE  // TODO(cpu): Implement this option.
 };
 
 // Provides the means to collect a set of comparisons into a single
@@ -155,9 +154,7 @@ class PolicyRule {
                       RuleOp comparison_op);
 
   // Returns the number of opcodes generated so far.
-  size_t GetOpcodeCount() const {
-    return buffer_->opcode_count;
-  }
+  size_t GetOpcodeCount() const { return buffer_->opcode_count; }
 
   // Called when there is no more comparisons to add. Internally it generates
   // the last opcode (the action opcode). Returns false if this operation fails.
@@ -180,8 +177,10 @@ class PolicyRule {
   // addresses from opcode_start and copy the extra data (strings usually) into
   // decreasing addresses from data_start. Extra data is only present in the
   // string evaluation opcodes.
-  bool RebindCopy(PolicyOpcode* opcode_start, size_t opcode_size,
-                  char* data_start, size_t* data_size) const;
+  bool RebindCopy(PolicyOpcode* opcode_start,
+                  size_t opcode_size,
+                  char* data_start,
+                  size_t* data_size) const;
   PolicyBuffer* buffer_;
   OpcodeFactory* opcode_factory_;
   EvalResult action_;

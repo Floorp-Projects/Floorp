@@ -9,6 +9,7 @@
 #include "base/logging.h"
 #include "base/macros.h"
 #include "base/synchronization/lock_impl.h"
+#include "base/thread_annotations.h"
 #include "base/threading/platform_thread.h"
 #include "build/build_config.h"
 
@@ -17,12 +18,16 @@ namespace base {
 // A convenient wrapper for an OS specific critical section.  The only real
 // intelligence in this class is in debug mode for the support for the
 // AssertAcquired() method.
-class BASE_EXPORT Lock {
+class LOCKABLE BASE_EXPORT Lock {
  public:
 #if !DCHECK_IS_ON()
-   // Optimized wrapper implementation
+  // Optimized wrapper implementation
   Lock() : lock_() {}
   ~Lock() {}
+
+  // TODO(lukasza): https://crbug.com/831825: Add EXCLUSIVE_LOCK_FUNCTION
+  // annotation to Acquire method and similar annotations to Release, Try and
+  // AssertAcquired methods (here and in the #else branch).
   void Acquire() { lock_.Lock(); }
   void Release() { lock_.Unlock(); }
 
@@ -64,26 +69,24 @@ class BASE_EXPORT Lock {
   // Whether Lock mitigates priority inversion when used from different thread
   // priorities.
   static bool HandlesMultipleThreadPriorities() {
-#if defined(OS_POSIX)
-    // POSIX mitigates priority inversion by setting the priority of a thread
-    // holding a Lock to the maximum priority of any other thread waiting on it.
-    return internal::LockImpl::PriorityInheritanceAvailable();
-#elif defined(OS_WIN)
+#if defined(OS_WIN)
     // Windows mitigates priority inversion by randomly boosting the priority of
     // ready threads.
     // https://msdn.microsoft.com/library/windows/desktop/ms684831.aspx
     return true;
+#elif defined(OS_POSIX) || defined(OS_FUCHSIA)
+    // POSIX mitigates priority inversion by setting the priority of a thread
+    // holding a Lock to the maximum priority of any other thread waiting on it.
+    return internal::LockImpl::PriorityInheritanceAvailable();
 #else
 #error Unsupported platform
 #endif
   }
 
-#if defined(OS_POSIX) || defined(OS_WIN)
   // Both Windows and POSIX implementations of ConditionVariable need to be
   // able to see our lock and tweak our debugging counters, as they release and
   // acquire locks inside of their condition variable APIs.
   friend class ConditionVariable;
-#endif
 
  private:
 #if DCHECK_IS_ON()
@@ -107,46 +110,11 @@ class BASE_EXPORT Lock {
 };
 
 // A helper class that acquires the given Lock while the AutoLock is in scope.
-class AutoLock {
- public:
-  struct AlreadyAcquired {};
-
-  explicit AutoLock(Lock& lock) : lock_(lock) {
-    lock_.Acquire();
-  }
-
-  AutoLock(Lock& lock, const AlreadyAcquired&) : lock_(lock) {
-    lock_.AssertAcquired();
-  }
-
-  ~AutoLock() {
-    lock_.AssertAcquired();
-    lock_.Release();
-  }
-
- private:
-  Lock& lock_;
-  DISALLOW_COPY_AND_ASSIGN(AutoLock);
-};
+using AutoLock = internal::BasicAutoLock<Lock>;
 
 // AutoUnlock is a helper that will Release() the |lock| argument in the
 // constructor, and re-Acquire() it in the destructor.
-class AutoUnlock {
- public:
-  explicit AutoUnlock(Lock& lock) : lock_(lock) {
-    // We require our caller to have the lock.
-    lock_.AssertAcquired();
-    lock_.Release();
-  }
-
-  ~AutoUnlock() {
-    lock_.Acquire();
-  }
-
- private:
-  Lock& lock_;
-  DISALLOW_COPY_AND_ASSIGN(AutoUnlock);
-};
+using AutoUnlock = internal::BasicAutoUnlock<Lock>;
 
 }  // namespace base
 

@@ -23,7 +23,7 @@
 #include "base/mac/scoped_mach_port.h"
 #include "base/memory/ref_counted.h"
 #include "base/synchronization/lock.h"
-#elif defined(OS_POSIX)
+#elif defined(OS_POSIX) || defined(OS_FUCHSIA)
 #include <list>
 #include <utility>
 
@@ -64,7 +64,8 @@ class BASE_EXPORT WaitableEvent {
 
   // Constructs a WaitableEvent with policy and initial state as detailed in
   // the above enums.
-  WaitableEvent(ResetPolicy reset_policy, InitialState initial_state);
+  WaitableEvent(ResetPolicy reset_policy = ResetPolicy::MANUAL,
+                InitialState initial_state = InitialState::NOT_SIGNALED);
 
 #if defined(OS_WIN)
   // Create a WaitableEvent from an Event HANDLE which has already been
@@ -112,6 +113,14 @@ class BASE_EXPORT WaitableEvent {
   HANDLE handle() const { return handle_.Get(); }
 #endif
 
+  // Declares that this WaitableEvent will only ever be used by a thread that is
+  // idle at the bottom of its stack and waiting for work (in particular, it is
+  // not synchronously waiting on this event before resuming ongoing work). This
+  // is useful to avoid telling base-internals that this thread is "blocked"
+  // when it's merely idle and ready to do work. As such, this is only expected
+  // to be used by thread and thread pool impls.
+  void declare_only_used_while_idle() { waiting_is_blocking_ = false; }
+
   // Wait, synchronously, on multiple events.
   //   waitables: an array of WaitableEvent pointers
   //   count: the number of elements in @waitables
@@ -155,7 +164,7 @@ class BASE_EXPORT WaitableEvent {
     virtual bool Compare(void* tag) = 0;
 
    protected:
-    virtual ~Waiter() {}
+    virtual ~Waiter() = default;
   };
 
  private:
@@ -190,7 +199,7 @@ class BASE_EXPORT WaitableEvent {
    public:
     ReceiveRight(mach_port_t name, bool create_slow_watch_list);
 
-    mach_port_t Name() const { return right_.get(); };
+    mach_port_t Name() const { return right_.get(); }
 
     // This structure is used iff UseSlowWatchList() is true. See the comment
     // in Signal() for details.
@@ -229,7 +238,7 @@ class BASE_EXPORT WaitableEvent {
   // the event, unlike the receive right, since a deleted event cannot be
   // signaled.
   mac::ScopedMachSendRight send_right_;
-#else
+#elif defined(OS_POSIX) || defined(OS_FUCHSIA)
   // On Windows, you must not close a HANDLE which is currently being waited on.
   // The MSDN documentation says that the resulting behaviour is 'undefined'.
   // To solve that issue each WaitableEventWatcher duplicates the given event
@@ -274,6 +283,10 @@ class BASE_EXPORT WaitableEvent {
 
   scoped_refptr<WaitableEventKernel> kernel_;
 #endif
+
+  // Whether a thread invoking Wait() on this WaitableEvent should be considered
+  // blocked as opposed to idle (and potentially replaced if part of a pool).
+  bool waiting_is_blocking_ = true;
 
   DISALLOW_COPY_AND_ASSIGN(WaitableEvent);
 };

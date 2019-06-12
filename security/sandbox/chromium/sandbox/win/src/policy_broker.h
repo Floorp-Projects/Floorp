@@ -20,7 +20,7 @@ bool SetupBasicInterceptions(InterceptionManager* manager,
 
 // Sets up imports from NTDLL for the given target process so the interceptions
 // can work.
-bool SetupNtdllImports(TargetProcess *child);
+bool SetupNtdllImports(TargetProcess* child);
 
 }  // namespace sandbox
 

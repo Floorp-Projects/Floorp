@@ -25,8 +25,8 @@ extern void* g_heap;
 SANDBOX_INTERCEPT NtExports g_nt;
 
 // Policy data.
-extern void* volatile     g_shared_policy_memory;
-SANDBOX_INTERCEPT size_t  g_shared_policy_size;
+extern void* volatile g_shared_policy_memory;
+SANDBOX_INTERCEPT size_t g_shared_policy_size;
 
 bool QueryBroker(int ipc_id, CountedParameterSetBase* params) {
   DCHECK_NT(static_cast<size_t>(ipc_id) < kMaxServiceCount);
@@ -53,7 +53,7 @@ bool QueryBroker(int ipc_id, CountedParameterSetBase* params) {
     return false;
   }
 
-  for (int i = 0; i < params->count; i++) {
+  for (size_t i = 0; i < params->count; i++) {
     if (!params->parameters[i].IsValid()) {
       NOTREACHED_NT();
       return false;
@@ -61,8 +61,8 @@ bool QueryBroker(int ipc_id, CountedParameterSetBase* params) {
   }
 
   PolicyProcessor processor(policy);
-  PolicyResult result = processor.Evaluate(kShortEval, params->parameters,
-                                           params->count);
+  PolicyResult result =
+      processor.Evaluate(kShortEval, params->parameters, params->count);
   DCHECK_NT(POLICY_ERROR != result);
 
   return POLICY_MATCH == result && ASK_BROKER == processor.GetAction();
@@ -73,8 +73,10 @@ bool QueryBroker(int ipc_id, CountedParameterSetBase* params) {
 // Hooks NtSetInformationThread to block RevertToSelf from being
 // called before the actual call to LowerToken.
 NTSTATUS WINAPI TargetNtSetInformationThread(
-    NtSetInformationThreadFunction orig_SetInformationThread, HANDLE thread,
-    NT_THREAD_INFORMATION_CLASS thread_info_class, PVOID thread_information,
+    NtSetInformationThreadFunction orig_SetInformationThread,
+    HANDLE thread,
+    NT_THREAD_INFORMATION_CLASS thread_info_class,
+    PVOID thread_information,
     ULONG thread_information_bytes) {
   do {
     if (SandboxFactory::GetTargetServices()->GetState()->RevertedToSelf())
@@ -95,32 +97,37 @@ NTSTATUS WINAPI TargetNtSetInformationThread(
     return STATUS_SUCCESS;
   } while (false);
 
-  return orig_SetInformationThread(thread, thread_info_class,
-                                   thread_information,
-                                   thread_information_bytes);
+  return orig_SetInformationThread(
+      thread, thread_info_class, thread_information, thread_information_bytes);
 }
 
 // Hooks NtOpenThreadToken to force the open_as_self parameter to be set to
-// FALSE if we are still running with the impersonation token. open_as_self set
-// to TRUE means that the token will be open using the process token instead of
+// false if we are still running with the impersonation token. open_as_self set
+// to true means that the token will be open using the process token instead of
 // the impersonation token. This is bad because the process token does not have
 // access to open the thread token.
-NTSTATUS WINAPI TargetNtOpenThreadToken(
-    NtOpenThreadTokenFunction orig_OpenThreadToken, HANDLE thread,
-    ACCESS_MASK desired_access, BOOLEAN open_as_self, PHANDLE token) {
+NTSTATUS WINAPI
+TargetNtOpenThreadToken(NtOpenThreadTokenFunction orig_OpenThreadToken,
+                        HANDLE thread,
+                        ACCESS_MASK desired_access,
+                        BOOLEAN open_as_self,
+                        PHANDLE token) {
   if (!SandboxFactory::GetTargetServices()->GetState()->RevertedToSelf())
-    open_as_self = FALSE;
+    open_as_self = false;
 
   return orig_OpenThreadToken(thread, desired_access, open_as_self, token);
 }
 
 // See comment for TargetNtOpenThreadToken
-NTSTATUS WINAPI TargetNtOpenThreadTokenEx(
-    NtOpenThreadTokenExFunction orig_OpenThreadTokenEx, HANDLE thread,
-    ACCESS_MASK desired_access, BOOLEAN open_as_self, ULONG handle_attributes,
-    PHANDLE token) {
+NTSTATUS WINAPI
+TargetNtOpenThreadTokenEx(NtOpenThreadTokenExFunction orig_OpenThreadTokenEx,
+                          HANDLE thread,
+                          ACCESS_MASK desired_access,
+                          BOOLEAN open_as_self,
+                          ULONG handle_attributes,
+                          PHANDLE token) {
   if (!SandboxFactory::GetTargetServices()->GetState()->RevertedToSelf())
-    open_as_self = FALSE;
+    open_as_self = false;
 
   return orig_OpenThreadTokenEx(thread, desired_access, open_as_self,
                                 handle_attributes, token);

@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#if defined(OS_POSIX)
+#if defined(OS_POSIX) || defined(OS_FUCHSIA)
 // For ssize_t
 #include <unistd.h>
 #endif

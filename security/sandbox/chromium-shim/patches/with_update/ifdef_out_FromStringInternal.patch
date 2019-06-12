@@ -28,7 +28,7 @@ diff --git a/security/sandbox/chromium/base/time/time.cc b/security/sandbox/chro
  bool Time::FromStringInternal(const char* time_string,
                                bool is_local,
                                Time* parsed_time) {
-   DCHECK((time_string != NULL) && (parsed_time != NULL));
+   DCHECK((time_string != nullptr) && (parsed_time != nullptr));
  
    if (time_string[0] == '\0')
      return false;

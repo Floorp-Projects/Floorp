@@ -10,9 +10,19 @@
 #include <string>
 
 #include "base/base_export.h"
+#include "base/gtest_prod_util.h"
 #include "base/macros.h"
+#include "base/version.h"
 
 typedef void* HANDLE;
+struct _OSVERSIONINFOEXW;
+struct _SYSTEM_INFO;
+
+namespace base {
+namespace test {
+class ScopedOSInfoOverride;
+}  // namespace test
+}  // namespace base
 
 namespace base {
 namespace win {
@@ -36,7 +46,12 @@ enum Version {
   VERSION_WIN10_TH2 = 8,    // Threshold 2: Version 1511, Build 10586.
   VERSION_WIN10_RS1 = 9,    // Redstone 1: Version 1607, Build 14393.
   VERSION_WIN10_RS2 = 10,   // Redstone 2: Version 1703, Build 15063.
-  VERSION_WIN_LAST,         // Indicates error condition.
+  VERSION_WIN10_RS3 = 11,   // Redstone 3: Version 1709, Build 16299.
+  VERSION_WIN10_RS4 = 12,   // Redstone 4: Version 1803, Build 17134.
+  VERSION_WIN10_RS5 = 13,   // Redstone 5: Version 1809, Build 17763.
+  // On edit, update tools\metrics\histograms\enums.xml "WindowsVersion" and
+  // "GpuBlacklistFeatureTestResultsWindows2".
+  VERSION_WIN_LAST,  // Indicates error condition.
 };
 
 // A rough bucketing of the available types of versions of Windows. This is used
@@ -78,6 +93,7 @@ class BASE_EXPORT OSInfo {
     X86_ARCHITECTURE,
     X64_ARCHITECTURE,
     IA64_ARCHITECTURE,
+    ARM64_ARCHITECTURE,
     OTHER_ARCHITECTURE,
   };
 
@@ -94,30 +110,43 @@ class BASE_EXPORT OSInfo {
 
   static OSInfo* GetInstance();
 
-  Version version() const { return version_; }
-  Version Kernel32Version() const;
-  // The next two functions return arrays of values, [major, minor(, build)].
-  VersionNumber version_number() const { return version_number_; }
-  VersionType version_type() const { return version_type_; }
-  ServicePack service_pack() const { return service_pack_; }
-  std::string service_pack_str() const { return service_pack_str_; }
-  WindowsArchitecture architecture() const { return architecture_; }
-  int processors() const { return processors_; }
-  size_t allocation_granularity() const { return allocation_granularity_; }
-  WOW64Status wow64_status() const { return wow64_status_; }
-  std::string processor_model_name();
+  // Separate from the rest of OSInfo so it can be used during early process
+  // initialization.
+  static WindowsArchitecture GetArchitecture();
 
   // Like wow64_status(), but for the supplied handle instead of the current
   // process.  This doesn't touch member state, so you can bypass the singleton.
   static WOW64Status GetWOW64StatusForProcess(HANDLE process_handle);
 
+  Version version() const { return version_; }
+  Version Kernel32Version() const;
+  base::Version Kernel32BaseVersion() const;
+  // The next two functions return arrays of values, [major, minor(, build)].
+  VersionNumber version_number() const { return version_number_; }
+  VersionType version_type() const { return version_type_; }
+  ServicePack service_pack() const { return service_pack_; }
+  std::string service_pack_str() const { return service_pack_str_; }
+  // TODO(thestig): Switch callers to GetArchitecture().
+  WindowsArchitecture architecture() const { return GetArchitecture(); }
+  int processors() const { return processors_; }
+  size_t allocation_granularity() const { return allocation_granularity_; }
+  WOW64Status wow64_status() const { return wow64_status_; }
+  std::string processor_model_name();
+
  private:
-  OSInfo();
+  friend class base::test::ScopedOSInfoOverride;
+  FRIEND_TEST_ALL_PREFIXES(OSInfo, MajorMinorBuildToVersion);
+  static OSInfo** GetInstanceStorage();
+
+  OSInfo(const _OSVERSIONINFOEXW& version_info,
+         const _SYSTEM_INFO& system_info,
+         int os_type);
   ~OSInfo();
 
+  // Returns a Version value for a given OS version tuple.
+  static Version MajorMinorBuildToVersion(int major, int minor, int build);
+
   Version version_;
-  mutable Version kernel32_version_;
-  mutable bool got_kernel32_version_;
   VersionNumber version_number_;
   VersionType version_type_;
   ServicePack service_pack_;
@@ -126,7 +155,6 @@ class BASE_EXPORT OSInfo {
   // installed on the system. If no Service Pack has been installed, the string
   // is empty.
   std::string service_pack_str_;
-  WindowsArchitecture architecture_;
   int processors_;
   size_t allocation_granularity_;
   WOW64Status wow64_status_;

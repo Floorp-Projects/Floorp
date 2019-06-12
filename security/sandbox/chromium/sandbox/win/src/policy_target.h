@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#ifndef SANDBOX_WIN_SRC_POLICY_TARGET_H_
+#define SANDBOX_WIN_SRC_POLICY_TARGET_H_
+
 #include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/sandbox_types.h"
-
-#ifndef SANDBOX_SRC_POLICY_TARGET_H__
-#define SANDBOX_SRC_POLICY_TARGET_H__
 
 namespace sandbox {
 
@@ -42,4 +42,4 @@ SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtOpenThreadTokenEx(
 
 }  // namespace sandbox
 
-#endif  // SANDBOX_SRC_POLICY_TARGET_H__
+#endif  // SANDBOX_WIN_SRC_POLICY_TARGET_H_

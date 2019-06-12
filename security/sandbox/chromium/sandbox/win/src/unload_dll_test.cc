@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "base/win/scoped_handle.h"
+#include "build/build_config.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #include "sandbox/win/src/target_services.h"
@@ -13,7 +14,7 @@ namespace sandbox {
 
 // Loads and or unloads a DLL passed in the second parameter of argv.
 // The first parameter of argv is 'L' = load, 'U' = unload or 'B' for both.
-SBOX_TESTS_COMMAND int UseOneDLL(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int UseOneDLL(int argc, wchar_t** argv) {
   if (argc != 2)
     return SBOX_TEST_FAILED_TO_RUN_TEST;
   int rv = SBOX_TEST_FAILED_TO_RUN_TEST;
@@ -21,7 +22,7 @@ SBOX_TESTS_COMMAND int UseOneDLL(int argc, wchar_t **argv) {
   wchar_t option = (argv[0])[0];
   if ((option == L'L') || (option == L'B')) {
     HMODULE module1 = ::LoadLibraryW(argv[1]);
-    rv = (module1 == NULL) ? SBOX_TEST_FAILED : SBOX_TEST_SUCCEEDED;
+    rv = (!module1) ? SBOX_TEST_FAILED : SBOX_TEST_SUCCEEDED;
   }
 
   if ((option == L'U') || (option == L'B')) {
@@ -32,15 +33,21 @@ SBOX_TESTS_COMMAND int UseOneDLL(int argc, wchar_t **argv) {
 }
 
 // Opens an event passed as the first parameter of argv.
-SBOX_TESTS_COMMAND int SimpleOpenEvent(int argc, wchar_t **argv) {
+SBOX_TESTS_COMMAND int SimpleOpenEvent(int argc, wchar_t** argv) {
   if (argc != 1)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
-  base::win::ScopedHandle event_open(::OpenEvent(SYNCHRONIZE, FALSE, argv[0]));
+  base::win::ScopedHandle event_open(::OpenEvent(SYNCHRONIZE, false, argv[0]));
   return event_open.Get() ? SBOX_TEST_SUCCEEDED : SBOX_TEST_FAILED;
 }
 
-TEST(UnloadDllTest, BaselineAvicapDll) {
+// Fails on Windows ARM64: https://crbug.com/905526
+#if defined(ARCH_CPU_ARM64)
+#define MAYBE_BaselineAvicapDll DISABLED_BaselineAvicapDll
+#else
+#define MAYBE_BaselineAvicapDll BaselineAvicapDll
+#endif
+TEST(UnloadDllTest, MAYBE_BaselineAvicapDll) {
   TestRunner runner;
   runner.SetTestState(BEFORE_REVERT);
   runner.SetTimeout(2000);
@@ -72,8 +79,8 @@ TEST(UnloadDllTest, UnloadAviCapDllWithPatching) {
   sandbox::TargetPolicy* policy = runner.GetPolicy();
   policy->AddDllToUnload(L"avicap32.dll");
 
-  base::win::ScopedHandle handle1(::CreateEvent(
-      NULL, FALSE, FALSE, L"tst0001"));
+  base::win::ScopedHandle handle1(
+      ::CreateEvent(nullptr, false, false, L"tst0001"));
 
   // Add a couple of rules that ensures that the interception agent add EAT
   // patching on the client which makes sure that the unload dll record does

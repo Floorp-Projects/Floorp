@@ -5,14 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This is a dummy version of Chromium source file base/metrics/histogram_macros.h.
-// To provide to histogram macros required in base/memory/shared_memory_win.cc
-// UMA_HISTOGRAM_ENUMERATION and UMA_HISTOGRAM_SPARSE_SLOWLY.
+// To provide empty histogram macros required for compilation.
 // We don't require Chromiums histogram collection code.
 
 #ifndef BASE_METRICS_HISTOGRAM_MACROS_H_
 #define BASE_METRICS_HISTOGRAM_MACROS_H_
 
 #define UMA_HISTOGRAM_ENUMERATION(name, sample, enum_max) do { } while (0)
-#define UMA_HISTOGRAM_SPARSE_SLOWLY(name, sample) do { } while (0)
+#define SCOPED_UMA_HISTOGRAM_TIMER(name) do { } while (0)
 
 #endif  // BASE_METRICS_HISTOGRAM_MACROS_H_

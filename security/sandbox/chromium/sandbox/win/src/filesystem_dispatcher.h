@@ -42,7 +42,7 @@ class FilesystemDispatcher : public Dispatcher {
                   uint32_t share_access,
                   uint32_t create_options);
 
-    // Processes IPC requests coming from calls to NtQueryAttributesFile in the
+  // Processes IPC requests coming from calls to NtQueryAttributesFile in the
   // target.
   bool NtQueryAttributesFile(IPCInfo* ipc,
                              base::string16* name,

@@ -5,12 +5,12 @@
 #ifndef BASE_AT_EXIT_H_
 #define BASE_AT_EXIT_H_
 
-#include <stack>
-
 #include "base/base_export.h"
 #include "base/callback.h"
+#include "base/containers/stack.h"
 #include "base/macros.h"
 #include "base/synchronization/lock.h"
+#include "base/thread_annotations.h"
 
 namespace base {
 
@@ -62,9 +62,15 @@ class BASE_EXPORT AtExitManager {
 
  private:
   base::Lock lock_;
-  std::stack<base::Closure> stack_;
-  bool processing_callbacks_;
-  AtExitManager* next_manager_;  // Stack of managers to allow shadowing.
+
+  base::stack<base::Closure> stack_ GUARDED_BY(lock_);
+
+#if DCHECK_IS_ON()
+  bool processing_callbacks_ GUARDED_BY(lock_) = false;
+#endif
+
+  // Stack of managers to allow shadowing.
+  AtExitManager* const next_manager_;
 
   DISALLOW_COPY_AND_ASSIGN(AtExitManager);
 };

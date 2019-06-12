@@ -10,7 +10,7 @@
 namespace sandbox {
 
 // The section for IPC and policy.
-SANDBOX_INTERCEPT HANDLE g_shared_section = NULL;
+SANDBOX_INTERCEPT HANDLE g_shared_section = nullptr;
 
 // This is the list of all imported symbols from ntdll.dll.
 SANDBOX_INTERCEPT NtExports g_nt = {};
