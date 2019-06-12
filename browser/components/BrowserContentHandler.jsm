@@ -251,6 +251,7 @@ function openBrowserWindow(cmdLine, triggeringPrincipal, urlOrUrlList, postData 
                          // needs a conversion. Hopefully bug 1485961 will fix.
               undefined, // user context id
               null, // origin principal
+              null, // origin storage principal
               triggeringPrincipal];
     }
   }

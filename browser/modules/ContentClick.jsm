@@ -75,6 +75,7 @@ var ContentClick = {
       allowMixedContent: json.allowMixedContent,
       isContentWindowPrivate: json.isContentWindowPrivate,
       originPrincipal: json.originPrincipal,
+      originStoragePrincipal: json.originStoragePrincipal,
       triggeringPrincipal: json.triggeringPrincipal,
       csp: json.csp ? E10SUtils.deserializeCSP(json.csp) : null,
       frameOuterWindowID: json.frameOuterWindowID,
