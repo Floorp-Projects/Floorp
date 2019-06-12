@@ -41,23 +41,12 @@ class GitHasher(object):
 
     def _local_changes(self):
         """get a set of files which have changed between HEAD and working copy"""
-        changes = set()
 
-        cmd = ["status", "-z", "--ignore-submodules=all"]
+        # note that git runs the command with tests_root as the cwd, which may
+        # not be the root of the git repo (e.g., within a browser repo)
+        cmd = [b"diff-index", b"--relative", b"--no-renames", b"--name-only", b"-z", b"HEAD"]
         data = self.git(*cmd)
-
-        in_rename = False
-        for line in data.split(b"\0")[:-1]:
-            if in_rename:
-                changes.add(line)
-                in_rename = False
-            else:
-                status = line[:2]
-                if b"R" in status or b"C" in status:
-                    in_rename = True
-                changes.add(line[3:])
-
-        return changes
+        return set(data.split(b"\0"))
 
     def hash_cache(self):
         # type: () -> Dict[str, Optional[str]]
@@ -66,6 +55,8 @@ class GitHasher(object):
         """
         hash_cache = {}
 
+        # note that git runs the command with tests_root as the cwd, which may
+        # not be the root of the git repo (e.g., within a browser repo)
         cmd = ["ls-tree", "-r", "-z", "HEAD"]
         local_changes = self._local_changes()
         for result in self.git(*cmd).split("\0")[:-1]:
