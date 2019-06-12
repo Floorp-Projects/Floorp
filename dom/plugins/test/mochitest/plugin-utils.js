@@ -33,8 +33,8 @@ function setTestPluginEnabledState(newEnabledState, pluginName) {
   SpecialPowers.Services.tm.spinEventLoopUntil(() => {
     return plugin.enabledState == newEnabledState;
   });
-  SimpleTest.registerCleanupFunction(function() {
-    SpecialPowers.setTestPluginEnabledState(oldEnabledState, pluginName);
+  SimpleTest.registerCleanupFunction(async function() {
+    return SpecialPowers.setTestPluginEnabledState(await oldEnabledState, pluginName);
   });
 }
 
