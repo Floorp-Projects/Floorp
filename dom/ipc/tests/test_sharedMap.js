@@ -13,8 +13,6 @@ ExtensionTestUtils.init(this);
 
 let contentPage;
 
-Cu.importGlobalProperties(["Blob", "FileReader"]);
-
 async function readBlob(key, sharedData = Services.cpmm.sharedData) {
   let reader = new FileReader();
   reader.readAsText(sharedData.get(key));

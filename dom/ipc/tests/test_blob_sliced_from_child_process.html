@@ -14,8 +14,6 @@
 function childFrameScript() {
   "use strict";
 
-  Cu.importGlobalProperties(["Blob"]);
-
   const messageName = "test:blob-slice-test";
   const blobData = ["So", " ", "many", " ", "blobs!"];
   const blobType = "text/plain";
