@@ -53,15 +53,6 @@ interface nsITLSServerSocket : nsIServerSocket
   void setRequestClientCertificate(in unsigned long aRequestClientCert);
 
   /**
-   * setCipherSuites
-   *
-   * The server's cipher suites that is used by the TLS handshake.
-   * This is required to be set before calling |asyncListen|.
-   */
-  void setCipherSuites([array, size_is(aLength)] in unsigned short aCipherSuites,
-                       in unsigned long aLength);
-
-  /**
    * setVersionRange
    *
    * The server's TLS versions that is used by the TLS handshake.
