@@ -566,6 +566,7 @@ enum class StyleWhiteSpace : uint8_t {
   PreWrap,
   PreLine,
   PreSpace,
+  BreakSpaces,
 };
 
 // ruby-align, see nsStyleText

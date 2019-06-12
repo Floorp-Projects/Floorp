@@ -1171,6 +1171,7 @@ static nsTextFrameUtils::CompressionMode GetCSSWhitespaceToCompressionMode(
       return nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE;
     case StyleWhiteSpace::Pre:
     case StyleWhiteSpace::PreWrap:
+    case StyleWhiteSpace::BreakSpaces:
       if (!aStyleText->NewlineIsSignificant(aFrame)) {
         // If newline is set to be preserved, but then suppressed,
         // transform newline to space.
@@ -8979,8 +8980,11 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
   bool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant() ||
                                    (GetStateBits() & TEXT_IS_IN_TOKEN_MATHML);
+
+  bool isBreakSpaces = textStyle->mWhiteSpace == StyleWhiteSpace::BreakSpaces;
   // allow whitespace to overflow the container
-  bool whitespaceCanHang = textStyle->WhiteSpaceCanWrapStyle() &&
+  bool whitespaceCanHang = !isBreakSpaces &&
+                           textStyle->WhiteSpaceCanWrapStyle() &&
                            textStyle->WhiteSpaceIsSignificant();
   gfxBreakPriority breakPriority = aLineLayout.LastOptionalBreakPriority();
   gfxTextRun::SuppressBreak suppressBreak = gfxTextRun::eNoSuppressBreak;
@@ -8996,7 +9000,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
       suppressBreak, canTrimTrailingWhitespace ? &trimmedWidth : nullptr,
       whitespaceCanHang, &textMetrics, boundingBoxType, aDrawTarget,
       &usedHyphenation, &transformedLastBreak, textStyle->WordCanWrap(this),
-      &breakPriority);
+      isBreakSpaces, &breakPriority);
   if (!length && !textMetrics.mAscent && !textMetrics.mDescent) {
     // If we're measuring a zero-length piece of text, update
     // the height manually.

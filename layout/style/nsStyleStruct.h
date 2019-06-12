@@ -1295,30 +1295,35 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   bool WhiteSpaceIsSignificant() const {
     return mWhiteSpace == mozilla::StyleWhiteSpace::Pre ||
            mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap ||
+           mWhiteSpace == mozilla::StyleWhiteSpace::BreakSpaces ||
            mWhiteSpace == mozilla::StyleWhiteSpace::PreSpace;
   }
 
   bool NewlineIsSignificantStyle() const {
     return mWhiteSpace == mozilla::StyleWhiteSpace::Pre ||
            mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap ||
+           mWhiteSpace == mozilla::StyleWhiteSpace::BreakSpaces ||
            mWhiteSpace == mozilla::StyleWhiteSpace::PreLine;
   }
 
   bool WhiteSpaceOrNewlineIsSignificant() const {
     return mWhiteSpace == mozilla::StyleWhiteSpace::Pre ||
            mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap ||
+           mWhiteSpace == mozilla::StyleWhiteSpace::BreakSpaces ||
            mWhiteSpace == mozilla::StyleWhiteSpace::PreLine ||
            mWhiteSpace == mozilla::StyleWhiteSpace::PreSpace;
   }
 
   bool TabIsSignificant() const {
     return mWhiteSpace == mozilla::StyleWhiteSpace::Pre ||
-           mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap;
+           mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap ||
+           mWhiteSpace == mozilla::StyleWhiteSpace::BreakSpaces;
   }
 
   bool WhiteSpaceCanWrapStyle() const {
     return mWhiteSpace == mozilla::StyleWhiteSpace::Normal ||
            mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap ||
+           mWhiteSpace == mozilla::StyleWhiteSpace::BreakSpaces ||
            mWhiteSpace == mozilla::StyleWhiteSpace::PreLine;
   }
 
