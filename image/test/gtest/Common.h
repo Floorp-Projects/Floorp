@@ -18,6 +18,7 @@
 #include "gfxColor.h"
 #include "imgITools.h"
 #include "nsCOMPtr.h"
+#include "SurfaceFlags.h"
 #include "SurfacePipe.h"
 #include "SurfacePipeFactory.h"
 
@@ -86,6 +87,7 @@ struct ImageTestCase {
         mSize(aSize),
         mOutputSize(aSize),
         mFlags(aFlags),
+        mSurfaceFlags(DefaultSurfaceFlags()),
         mColor(BGRAColor::Green()) {}
 
   ImageTestCase(const char* aPath, const char* aMimeType, gfx::IntSize aSize,
@@ -96,6 +98,7 @@ struct ImageTestCase {
         mSize(aSize),
         mOutputSize(aOutputSize),
         mFlags(aFlags),
+        mSurfaceFlags(DefaultSurfaceFlags()),
         mColor(BGRAColor::Green()) {}
 
   const char* mPath;
@@ -103,6 +106,7 @@ struct ImageTestCase {
   gfx::IntSize mSize;
   gfx::IntSize mOutputSize;
   uint32_t mFlags;
+  SurfaceFlags mSurfaceFlags;
   BGRAColor mColor;
 };
 
@@ -120,6 +124,22 @@ struct ImageTestCase {
 class AutoInitializeImageLib {
  public:
   AutoInitializeImageLib();
+};
+
+/**
+ * A test fixture class used for benchmark tests. It preloads the image data
+ * from disk to avoid including that in the timing.
+ */
+class ImageBenchmarkBase : public ::testing::Test {
+ protected:
+  ImageBenchmarkBase(const ImageTestCase& aTestCase) : mTestCase(aTestCase) {}
+
+  void SetUp() override;
+  void TearDown() override;
+
+  AutoInitializeImageLib mInit;
+  ImageTestCase mTestCase;
+  RefPtr<SourceBuffer> mSourceBuffer;
 };
 
 /// Spins on the main thread to process any pending events.
@@ -464,6 +484,19 @@ ImageTestCase TruncatedSmallGIFTestCase();
 ImageTestCase LargeICOWithBMPTestCase();
 ImageTestCase LargeICOWithPNGTestCase();
 ImageTestCase GreenMultipleSizesICOTestCase();
+
+ImageTestCase PerfGrayJPGTestCase();
+ImageTestCase PerfCmykJPGTestCase();
+ImageTestCase PerfYCbCrJPGTestCase();
+ImageTestCase PerfRgbPNGTestCase();
+ImageTestCase PerfRgbAlphaPNGTestCase();
+ImageTestCase PerfGrayPNGTestCase();
+ImageTestCase PerfGrayAlphaPNGTestCase();
+ImageTestCase PerfRgbLosslessWebPTestCase();
+ImageTestCase PerfRgbAlphaLosslessWebPTestCase();
+ImageTestCase PerfRgbLossyWebPTestCase();
+ImageTestCase PerfRgbAlphaLossyWebPTestCase();
+ImageTestCase PerfRgbGIFTestCase();
 
 }  // namespace image
 }  // namespace mozilla
