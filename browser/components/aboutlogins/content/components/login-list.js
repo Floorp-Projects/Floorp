@@ -18,6 +18,7 @@ export default class LoginList extends ReflectedFluentElement {
     this._logins = [];
     this._filter = "";
     this._selectedGuid = null;
+    this._blankLoginListItem = new LoginListItem({});
   }
 
   connectedCallback() {
@@ -41,8 +42,23 @@ export default class LoginList extends ReflectedFluentElement {
   render() {
     let list = this.shadowRoot.querySelector("ol");
     list.textContent = "";
+
+    if (!this._logins.length) {
+      document.l10n.setAttributes(this, "login-list", {count: 0});
+      return;
+    }
+
+    if (!this._selectedGuid) {
+      this._blankLoginListItem.classList.add("selected");
+      list.append(this._blankLoginListItem);
+    }
+
     for (let login of this._logins) {
-      list.append(new LoginListItem(login));
+      let listItem = new LoginListItem(login);
+      if (login.guid == this._selectedGuid) {
+        listItem.classList.add("selected");
+      }
+      list.append(listItem);
     }
 
     let visibleLoginCount = this._applyFilter();
@@ -61,6 +77,10 @@ export default class LoginList extends ReflectedFluentElement {
     }
 
     for (let listItem of this.shadowRoot.querySelectorAll("login-list-item")) {
+      if (!listItem.hasAttribute("guid")) {
+        // Don't hide the 'New Login' item if it is present.
+        continue;
+      }
       if (matchingLoginGuids.includes(listItem.getAttribute("guid"))) {
         if (listItem.hidden) {
           listItem.hidden = false;
@@ -87,16 +107,12 @@ export default class LoginList extends ReflectedFluentElement {
         break;
       }
       case "AboutLoginsLoginSelected": {
-        if (this._selectedGuid) {
-          if (this._selectedGuid == event.detail.guid) {
-            return;
-          }
-          let oldSelected = this.shadowRoot.querySelector(`login-list-item[guid="${this._selectedGuid}"]`);
-          oldSelected.classList.remove("selected");
+        if (this._selectedGuid == event.detail.guid) {
+          return;
         }
-        this._selectedGuid = event.detail.guid;
-        let newSelected = this.shadowRoot.querySelector(`login-list-item[guid="${event.detail.guid}"]`);
-        newSelected.classList.add("selected");
+
+        this._selectedGuid = event.detail.guid || null;
+        this.render();
         break;
       }
     }
@@ -107,6 +123,8 @@ export default class LoginList extends ReflectedFluentElement {
             "last-used-option",
             "last-changed-option",
             "name-option",
+            "new-login-subtitle",
+            "new-login-title",
             "sort-label-text"];
   }
 
@@ -114,13 +132,14 @@ export default class LoginList extends ReflectedFluentElement {
     return this.reflectedFluentIDs;
   }
 
-  clearSelection() {
-    if (!this._selectedGuid) {
-      return;
+  handleSpecialCaseFluentString(attrName) {
+    if (attrName != "new-login-subtitle" &&
+        attrName != "new-login-title") {
+      return false;
     }
-    let listItem = this.shadowRoot.querySelector(`login-list-item[guid="${this._selectedGuid}"]`);
-    listItem.classList.remove("selected");
-    this._selectedGuid = null;
+
+    this._blankLoginListItem.setAttribute(attrName, this.getAttribute(attrName));
+    return true;
   }
 
   setLogins(logins) {
