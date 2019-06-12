@@ -480,8 +480,9 @@ struct HuffmanTableExplicitSymbolsU32 {
   HuffmanTableImpl<uint32_t> impl;
 };
 
-struct HuffmanTableIndexedSymbolsTag {
+struct HuffmanTableIndexedSymbolsSum {
   HuffmanTableImpl<BinASTKind> impl;
+  HuffmanTableIndexedSymbolsSum(JSContext* cx) : impl(cx) {}
 };
 
 struct HuffmanTableIndexedSymbolsBool {
@@ -523,13 +524,13 @@ struct HuffmanTableIndexedSymbolsOptionalLiteralString {
 using HuffmanTable = mozilla::Variant<
     HuffmanTableUnreachable,  // Default value.
     HuffmanTableExplicitSymbolsF64, HuffmanTableExplicitSymbolsU32,
-    HuffmanTableIndexedSymbolsTag, HuffmanTableIndexedSymbolsMaybeInterface,
+    HuffmanTableIndexedSymbolsSum, HuffmanTableIndexedSymbolsMaybeInterface,
     HuffmanTableIndexedSymbolsBool, HuffmanTableIndexedSymbolsStringEnum,
     HuffmanTableIndexedSymbolsLiteralString,
     HuffmanTableIndexedSymbolsOptionalLiteralString>;
 
 // A single Huffman table, specialized for list lengths.
-using HuffmanTable =
+using HuffmanTableListLength =
     mozilla::Variant<HuffmanTableUnreachable,  // Default value.
                      HuffmanTableExplicitSymbolsU32>;
 
