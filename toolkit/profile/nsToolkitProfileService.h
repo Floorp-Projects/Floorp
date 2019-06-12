@@ -138,6 +138,10 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   nsINIParser mProfileDB;
   // The section in the profiles db for the current install.
   nsCString mInstallSection;
+  // A legacy install section which may have been generated against an
+  // installation directory with an incorrect case (see bug 1555319). It is only
+  // really held here so that it can be overridden by tests.
+  nsCString mLegacyInstallSection;
   // Whether to start with the selected profile by default.
   bool mStartWithLast;
   // True if during startup it appeared that this is the first run.
