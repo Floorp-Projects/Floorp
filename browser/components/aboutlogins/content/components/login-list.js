@@ -17,7 +17,7 @@ export default class LoginList extends ReflectedFluentElement {
     super();
     this._logins = [];
     this._filter = "";
-    this._selectedItem = null;
+    this._selectedGuid = null;
   }
 
   connectedCallback() {
@@ -87,14 +87,16 @@ export default class LoginList extends ReflectedFluentElement {
         break;
       }
       case "AboutLoginsLoginSelected": {
-        if (this._selectedItem) {
-          if (this._selectedItem.getAttribute("guid") == event.detail.guid) {
+        if (this._selectedGuid) {
+          if (this._selectedGuid == event.detail.guid) {
             return;
           }
-          this._selectedItem.classList.remove("selected");
+          let oldSelected = this.shadowRoot.querySelector(`login-list-item[guid="${this._selectedGuid}"]`);
+          oldSelected.classList.remove("selected");
         }
-        this._selectedItem = this.shadowRoot.querySelector(`login-list-item[guid="${event.detail.guid}"]`);
-        this._selectedItem.classList.add("selected");
+        this._selectedGuid = event.detail.guid;
+        let newSelected = this.shadowRoot.querySelector(`login-list-item[guid="${event.detail.guid}"]`);
+        newSelected.classList.add("selected");
         break;
       }
     }
@@ -113,11 +115,12 @@ export default class LoginList extends ReflectedFluentElement {
   }
 
   clearSelection() {
-    if (!this._selectedItem) {
+    if (!this._selectedGuid) {
       return;
     }
-    this._selectedItem.classList.remove("selected");
-    this._selectedItem = null;
+    let listItem = this.shadowRoot.querySelector(`login-list-item[guid="${this._selectedGuid}"]`);
+    listItem.classList.remove("selected");
+    this._selectedGuid = null;
   }
 
   setLogins(logins) {
