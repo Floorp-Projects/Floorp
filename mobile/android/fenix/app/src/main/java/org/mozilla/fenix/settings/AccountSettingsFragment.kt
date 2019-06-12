@@ -6,10 +6,12 @@ package org.mozilla.fenix.settings
 
 import android.content.Context
 import android.os.Bundle
+import android.text.InputFilter
 import android.text.format.DateUtils
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.Navigation
 import androidx.preference.CheckBoxPreference
+import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
@@ -111,10 +113,13 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
         // Device Name
         val deviceConstellation = accountManager.authenticatedAccount()?.deviceConstellation()
         val deviceNameKey = context!!.getPreferenceKey(R.string.pref_key_sync_device_name)
-        findPreference<Preference>(deviceNameKey)?.apply {
+        findPreference<EditTextPreference>(deviceNameKey)?.apply {
             onPreferenceChangeListener = getChangeListenerForDeviceName()
             deviceConstellation?.state()?.currentDevice?.let { device ->
                 summary = device.displayName
+            }
+            setOnBindEditTextListener { editText ->
+                editText.filters = arrayOf(InputFilter.LengthFilter(DEVICE_NAME_MAX_LENGTH))
             }
         }
 
@@ -256,5 +261,9 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
                 DateUtils.getRelativeTimeSpanString(lastSyncTime)
             )
         }
+    }
+
+    companion object {
+        private const val DEVICE_NAME_MAX_LENGTH = 128
     }
 }
