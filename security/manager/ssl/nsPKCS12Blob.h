@@ -27,7 +27,8 @@ class nsPKCS12Blob {
                           uint32_t& error);
 
   // PKCS#12 Export
-  nsresult ExportToFile(nsIFile* file, nsIX509Cert** certs, int numCerts,
+  nsresult ExportToFile(nsIFile* file,
+                        const nsTArray<RefPtr<nsIX509Cert>>& certs,
                         const nsAString& password, uint32_t& error);
 
  private:
