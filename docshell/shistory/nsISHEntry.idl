@@ -150,6 +150,12 @@ interface nsISHEntry : nsISupports
     [infallible] attribute nsIPrincipal principalToInherit;
 
     /**
+     * Get the storage principal, if any, that is used when the inherit flag is
+     * set.
+     */
+    [infallible] attribute nsIPrincipal storagePrincipalToInherit;
+
+    /**
      * Get the csp, if any, that was used for this document load. That
      * is not the CSP that was applied to subresource loads within the
      * document, but the CSP that was applied to this document load.
@@ -285,6 +291,7 @@ interface nsISHEntry : nsISupports
                            in unsigned long cacheKey, in ACString contentType,
                            in nsIPrincipal triggeringPrincipal,
                            in nsIPrincipal principalToInherit,
+                           in nsIPrincipal storagePrincipalToInherit,
                            in nsIContentSecurityPolicy aCsp,
                            in nsIDRef docshellID,
                            in boolean dynamicCreation);

@@ -80,6 +80,7 @@ class nsSHEntryShared final : public nsIBFCacheEntry,
   nsCOMArray<nsIDocShellTreeItem> mChildShells;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
+  nsCOMPtr<nsIPrincipal> mStoragePrincipalToInherit;
   nsCOMPtr<nsIContentSecurityPolicy> mCsp;
   nsCString mContentType;
 
