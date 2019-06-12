@@ -57,6 +57,14 @@ SOURCES += [ '/gfx/ots/tests/%s' % p for p in [
     'layout_common_table_test.cc',
 ]]
 
+# ICC profiles used for verifying QCMS transformations. The copyright
+# notice embedded in the profiles should be reviewed to ensure there are
+# no known restrictions on distribution.
+TEST_HARNESS_FILES.gtest += [
+    'icc_profiles/lcms_samsung_syncmaster.icc',
+    'icc_profiles/lcms_thinkpad_w540.icc',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
