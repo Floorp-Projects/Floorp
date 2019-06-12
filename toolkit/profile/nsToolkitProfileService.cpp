@@ -771,9 +771,22 @@ nsresult nsToolkitProfileService::Init() {
     // Try to find the descriptor for the default profile for this install.
     rv = mProfileDB.GetString(mInstallSection.get(), "Default",
                               installProfilePath);
+
     // Not having a value means this install doesn't appear in installs.ini so
     // this is the first run for this install.
-    mIsFirstRun = NS_FAILED(rv);
+    if (NS_FAILED(rv)) {
+      mIsFirstRun = true;
+
+      // Gets the install section that would have been created if the install
+      // path has incorrect casing (see bug 1555319). We use this later during
+      // profile selection.
+      rv = gDirServiceProvider->GetLegacyInstallHash(installHash);
+      NS_ENSURE_SUCCESS(rv, rv);
+      CopyUTF16toUTF8(installHash, mLegacyInstallSection);
+      mLegacyInstallSection.Insert(INSTALL_PREFIX, 0);
+    } else {
+      mIsFirstRun = false;
+    }
   }
 
   nsToolkitProfile* currentProfile = nullptr;
@@ -1098,8 +1111,9 @@ nsresult nsToolkitProfileService::CreateDefaultProfile(
 NS_IMETHODIMP
 nsToolkitProfileService::SelectStartupProfile(
     const nsTArray<nsCString>& aArgv, bool aIsResetting,
-    const nsACString& aUpdateChannel, nsIFile** aRootDir, nsIFile** aLocalDir,
-    nsIToolkitProfile** aProfile, bool* aDidCreate) {
+    const nsACString& aUpdateChannel, const nsACString& aLegacyInstallHash,
+    nsIFile** aRootDir, nsIFile** aLocalDir, nsIToolkitProfile** aProfile,
+    bool* aDidCreate) {
   int argc = aArgv.Length();
   // Our command line handling expects argv to be null-terminated so construct
   // an appropriate array.
@@ -1115,6 +1129,10 @@ nsToolkitProfileService::SelectStartupProfile(
   argv[argc] = nullptr;
 
   mUpdateChannel = aUpdateChannel;
+  if (!aLegacyInstallHash.IsEmpty()) {
+    mLegacyInstallSection.Assign(aLegacyInstallHash);
+    mLegacyInstallSection.Insert(INSTALL_PREFIX, 0);
+  }
 
   bool wasDefault;
   nsresult rv =
@@ -1361,6 +1379,49 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
   }
   if (ar == ARG_FOUND) {
     return NS_ERROR_SHOW_PROFILE_MANAGER;
+  }
+
+  if (mIsFirstRun && mUseDedicatedProfile &&
+      !mInstallSection.Equals(mLegacyInstallSection)) {
+    // The default profile could be assigned to a hash generated from an
+    // incorrectly cased version of the installation directory (see bug
+    // 1555319). Ideally we'd do all this while loading profiles.ini but we
+    // can't override the legacy section value before that for tests.
+    nsCString defaultDescriptor;
+    rv = mProfileDB.GetString(mLegacyInstallSection.get(), "Default",
+                              defaultDescriptor);
+
+    if (NS_SUCCEEDED(rv)) {
+      // There is a default here, need to see if it matches any profiles.
+      bool isRelative;
+      nsCString descriptor;
+
+      for (RefPtr<nsToolkitProfile> profile : mProfiles) {
+        GetProfileDescriptor(profile, descriptor, &isRelative);
+
+        if (descriptor.Equals(defaultDescriptor)) {
+          // Found the default profile. Copy the install section over to
+          // the correct location. We leave the old info in place for older
+          // versions of Firefox to use.
+          nsTArray<UniquePtr<KeyValue>> strings =
+              GetSectionStrings(&mProfileDB, mLegacyInstallSection.get());
+          for (const auto& kv : strings) {
+            mProfileDB.SetString(mInstallSection.get(), kv->key.get(),
+                                 kv->value.get());
+          }
+
+          // Flush now. This causes a small blip in startup but it should be
+          // one time only whereas not flushing means we have to do this search
+          // on every startup.
+          Flush();
+
+          // Now start up with the found profile.
+          mDedicatedProfile = profile;
+          mIsFirstRun = false;
+          break;
+        }
+      }
+    }
   }
 
   // If this is a first run then create a new profile.

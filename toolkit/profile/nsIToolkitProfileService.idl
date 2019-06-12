@@ -87,6 +87,7 @@ interface nsIToolkitProfileService : nsISupports
      */
     bool selectStartupProfile(in Array<ACString> aArgv,
                               in boolean aIsResetting, in AUTF8String aUpdateChannel,
+                              in AUTF8String aLegacyInstallHash,
                               out nsIFile aRootDir, out nsIFile aLocalDir,
                               out nsIToolkitProfile aProfile);
 

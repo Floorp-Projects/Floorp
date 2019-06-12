@@ -98,14 +98,14 @@ function makeRandomProfileDir(name) {
  * A wrapper around nsIToolkitProfileService.selectStartupProfile to make it
  * a bit nicer to use from JS.
  */
-function selectStartupProfile(args = [], isResetting = false) {
+function selectStartupProfile(args = [], isResetting = false, legacyHash = "") {
   let service = getProfileService();
   let rootDir = {};
   let localDir = {};
   let profile = {};
   let didCreate = service.selectStartupProfile(["xpcshell", ...args], isResetting,
-                                               UPDATE_CHANNEL, rootDir, localDir,
-                                               profile);
+                                               UPDATE_CHANNEL, legacyHash, rootDir,
+                                               localDir, profile);
 
   if (profile.value) {
     Assert.ok(rootDir.value.equals(profile.value.rootDir), "Should have matched the root dir.");
