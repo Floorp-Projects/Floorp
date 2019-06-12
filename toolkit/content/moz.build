@@ -27,7 +27,7 @@ DEFINES['RUSTFLAGS'] = ' '.join(rustflags)
 
 cxx_flags = []
 for var in ('OS_CPPFLAGS', 'OS_CXXFLAGS', 'DEBUG', 'OPTIMIZE', 'FRAMEPTR'):
-    cxx_flags += COMPILE_FLAGS.get(var, [])
+    cxx_flags += COMPILE_FLAGS[var] or []
 
 DEFINES['CXXFLAGS'] = ' '.join(cxx_flags)
 
