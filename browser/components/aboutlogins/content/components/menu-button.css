@@ -41,6 +41,10 @@
   left: 0;
 }
 
+.menuitem {
+  display: flex;
+}
+
 .menuitem-button {
   padding: 4px 8px;
   /* 32px = 8px (padding) + 16px (icon) + 8px (padding) */
@@ -52,12 +56,22 @@
   border-radius: 0;
   /* Override common.inc.css box-shadow on these buttons */
   box-shadow: none !important;
+  flex-grow: 1;
+  text-align: start;
 }
 
 .menuitem-button:dir(rtl) {
   background-position: right 8px center;
 }
 
+.menuitem-import {
+  background-image: url("chrome://browser/skin/save.svg");
+}
+
 .menuitem-preferences {
   background-image: url("chrome://browser/skin/settings.svg");
+}
+
+:host(:not(.Win32)) .windows-only {
+  display: none;
 }
