@@ -482,6 +482,11 @@ public class BrowserApp extends GeckoApp
         // Global onKey handler. This is called if the focused UI doesn't
         // handle the key event, and before Gecko swallows the events.
         if (event.getAction() != KeyEvent.ACTION_DOWN) {
+            // workaround for suppresed back button after the first redirect (see bug #1551458)
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                return false;
+            }
+
             if (mSuppressNextKeyUp && event.getAction() == KeyEvent.ACTION_UP) {
                 mSuppressNextKeyUp = false;
                 return true;
