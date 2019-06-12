@@ -33,7 +33,7 @@ function tryToCreateNodeOnClosedContext(ctx) {
       args: [new Audio()],
       onOfflineAudioContext: false },
     { name: "createMediaStreamSource",
-      args: [(new AudioContext()).createMediaStreamDestination().stream],
+      args: [new Audio().mozCaptureStream()],
       onOfflineAudioContext: false } ].forEach(function(e) {
 
       if (e.onOfflineAudioContext == false &&
@@ -74,6 +74,7 @@ function tryLegalOpeerationsOnClosedContext(ctx) {
   loadFile("ting-44.1k-1ch.ogg", function(buf) {
     ctx.decodeAudioData(buf).then(function(decodedBuf) {
       ok(true, "decodeAudioData on a closed context should work, it did.")
+      todo(false, "0 " + (ctx instanceof OfflineAudioContext ? "Offline" : "Realtime"));
       finish();
     }).catch(function(e){
       ok(false, "decodeAudioData on a closed context should work, it did not");
@@ -120,6 +121,8 @@ function testMultiContextOutput() {
         }
       }
 
+      todo(false, "input buffer is " + (silent ? "silent" : "noisy"));
+
       if (silent) {
         silentBuffersInARow++;
         if (silentBuffersInARow == 10) {
@@ -128,6 +131,7 @@ function testMultiContextOutput() {
           sp2.onaudioprocess = null;
           ac1.close();
           ac2.close();
+          todo(false,"1");
           finish();
         }
       } else {
@@ -178,6 +182,7 @@ function testMultiContextInput() {
         ac2.close();
         sp1.onaudioprocess = null;
         sp2.onaudioprocess = null;
+        todo(false, "2");
         finish();
       }
     }
@@ -226,6 +231,7 @@ function testScriptProcessNodeSuspended() {
         }
       } else {
         sp.onaudioprocess = null;
+        todo(false,"3");
         finish();
       }
     }
