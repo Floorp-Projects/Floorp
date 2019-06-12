@@ -474,6 +474,7 @@ struct HuffmanTableUnreachable {};
 
 struct HuffmanTableExplicitSymbolsF64 {
   HuffmanTableImpl<double> impl;
+  HuffmanTableExplicitSymbolsF64(JSContext* cx) : impl(cx) {}
 };
 
 struct HuffmanTableExplicitSymbolsU32 {
@@ -529,10 +530,15 @@ using HuffmanTable = mozilla::Variant<
     HuffmanTableIndexedSymbolsLiteralString,
     HuffmanTableIndexedSymbolsOptionalLiteralString>;
 
+struct HuffmanTableExplicitSymbolsListLength {
+  HuffmanTableImpl<uint32_t> impl;
+  HuffmanTableExplicitSymbolsListLength(JSContext* cx) : impl(cx) {}
+};
+
 // A single Huffman table, specialized for list lengths.
 using HuffmanTableListLength =
     mozilla::Variant<HuffmanTableUnreachable,  // Default value.
-                     HuffmanTableExplicitSymbolsU32>;
+                     HuffmanTableExplicitSymbolsListLength>;
 
 // A Huffman dictionary for the current file.
 //
