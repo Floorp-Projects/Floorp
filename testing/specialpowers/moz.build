@@ -19,11 +19,10 @@ FINAL_TARGET_FILES.content += [
     'content/MockColorPicker.jsm',
     'content/MockFilePicker.jsm',
     'content/MockPermissionPrompt.jsm',
-    'content/SpecialPowers.jsm',
     'content/SpecialPowersAPI.jsm',
-    'content/specialpowersFrameScript.js',
-    'content/SpecialPowersObserver.jsm',
-    'content/SpecialPowersObserverAPI.jsm',
+    'content/SpecialPowersAPIParent.jsm',
+    'content/SpecialPowersChild.jsm',
+    'content/SpecialPowersParent.jsm',
     'content/WrapPrivileged.jsm',
 ]
 
