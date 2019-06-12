@@ -17,7 +17,17 @@ job-defaults:
     shipping-phase: push
 
 jobs:
-    fennec-push-to-release:
+    fennec-beta-push-to-release:
+        attributes:
+            release-type: beta
+        name: fennec_push_to_release
+        product: fennec
+        shipping-product: fennec
+        treeherder-platform: fennec-beta/opt
+
+    fennec-release-push-to-release:
+        attributes:
+            release-type: release
         name: fennec_push_to_release
         product: fennec
         shipping-product: fennec

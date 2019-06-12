@@ -147,3 +147,50 @@ jobs:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
+
+    android-api-16-release/pgo:
+        description: "Android 4.0 api-16+ Release PGO instrumented"
+        shipping-phase: build
+        shipping-product: fennec
+        attributes:
+            enable-full-crashsymbols: true
+        treeherder:
+            platform: android-4-0-armv7-api16-release/pgo
+        worker-type: b-linux
+        worker:
+            docker-image: {in-tree: android-build}
+            max-run-time: 7200
+            env:
+                GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
+                TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+                PERFHERDER_EXTRA_OPTIONS: instrumented
+            artifacts:
+                - name: public/build
+                  path: /builds/worker/artifacts/
+                  type: directory
+                - name: public/build/geckoview-androidTest.apk
+                  path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
+                  type: file
+                - name: public/build/geckoview_example.apk
+                  path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
+                  type: file
+        run:
+            using: mozharness
+            actions: [get-secrets, build]
+            config:
+                - builds/releng_base_android_64_builds.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            secrets: true
+            custom-build-variant-cfg: api-16-profile-generate
+            tooltool-downloads: internal
+        toolchains:
+            - android-gradle-dependencies
+            - android-ndk-linux
+            - android-sdk-linux
+            - linux64-clang-android-cross
+            - linux64-rust-android
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node

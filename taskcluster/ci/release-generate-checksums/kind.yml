@@ -84,6 +84,24 @@ jobs:
                         stage_product: "mobile"
                         bucket_name: "net-mozaws-stage-delivery-archive"
         treeherder:
+            platform: fennec-beta/opt
+
+    fennec-release:
+        shipping-product: fennec
+        attributes:
+            build_platform: fennec-release
+            build_type: opt
+            release-type: release
+        run:
+            extra-config:
+                by-release-level:
+                    production:
+                        stage_product: "mobile"
+                        bucket_name: "net-mozaws-prod-delivery-archive"
+                    staging:
+                        stage_product: "mobile"
+                        bucket_name: "net-mozaws-stage-delivery-archive"
+        treeherder:
             platform: fennec-release/opt
 
     devedition:

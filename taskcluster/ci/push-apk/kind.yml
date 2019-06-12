@@ -66,3 +66,19 @@ jobs:
                     staging: null
         treeherder:
             symbol: pub(gp-b)
+
+    push-apk-release/opt:
+        attributes:
+            release-type: release
+        worker:
+            google-play-track:
+                by-release-level:
+                    production: rollout
+                    staging: alpha
+            rollout-percentage:
+                by-release-level:
+                    # XXX Change this value if google-play-track becomes rollout
+                    production: 10
+                    staging: null
+        treeherder:
+            symbol: pub(gp-r)

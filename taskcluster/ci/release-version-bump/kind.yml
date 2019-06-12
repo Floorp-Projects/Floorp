@@ -57,6 +57,15 @@ jobs:
             bump-files:
                 - mobile/android/config/version-files/beta/version_display.txt
 
+    fennec-release:
+        attributes:
+            release-type: release
+        name: fennec-release-version-bump
+        shipping-product: fennec
+        worker:
+            bump-files:
+                - mobile/android/config/version-files/release/version_display.txt
+
     firefox:
         name: firefox-version-bump
         shipping-product: firefox
