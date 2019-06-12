@@ -228,4 +228,16 @@ class GeckoEngineTest {
 
         captor.value.onShutdown()
     }
+
+    @Test
+    fun `test parsing engine version`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+        val version = engine.version
+
+        println(version)
+
+        assertTrue(version.major >= 67)
+        assertTrue(version.isAtLeast(67, 0, 0))
+    }
 }

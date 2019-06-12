@@ -7,6 +7,7 @@ package mozilla.components.concept.engine
 import android.content.Context
 import android.util.AttributeSet
 import mozilla.components.concept.engine.Engine.BrowsingData
+import mozilla.components.concept.engine.utils.EngineVersion
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -18,6 +19,9 @@ import java.lang.UnsupportedOperationException
 class EngineTest {
 
     private val testEngine = object : Engine {
+        override val version: EngineVersion
+            get() = throw NotImplementedError("Not needed for test")
+
         override fun createView(context: Context, attrs: AttributeSet?): EngineView {
             throw NotImplementedError("Not needed for test")
         }

@@ -13,6 +13,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.utils.EngineVersion
 import org.json.JSONObject
 
 /**
@@ -41,6 +42,8 @@ class ServoEngine(
     override fun speculativeConnect(url: String) = Unit
 
     override fun name(): String = "Servo"
+
+    override val version: EngineVersion = EngineVersion(0, 0, 0)
 
     /**
      * See [Engine.settings]

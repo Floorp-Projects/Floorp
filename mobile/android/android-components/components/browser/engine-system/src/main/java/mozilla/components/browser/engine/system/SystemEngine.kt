@@ -17,7 +17,9 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.utils.EngineVersion
 import org.json.JSONObject
+import java.lang.IllegalStateException
 
 /**
  * WebView-based implementation of the Engine interface.
@@ -58,6 +60,23 @@ class SystemEngine(
      * See [Engine.name]
      */
     override fun name(): String = "System"
+
+    @Suppress("TooGenericExceptionCaught")
+    override val version: EngineVersion
+        get() {
+            val userAgent = WebSettings.getDefaultUserAgent(context)
+            val version = try {
+                "Chrome/([^ ]+)".toRegex().find(userAgent)?.groups?.get(1)?.value
+                    ?: throw IllegalStateException("Could not get version from user agent: $userAgent")
+            } catch (e: IllegalStateException) {
+                throw IllegalStateException("Could not get version from user agent: $userAgent")
+            } catch (e: IndexOutOfBoundsException) {
+                throw IllegalStateException("Could not get version from user agent: $userAgent")
+            }
+
+            return EngineVersion.parse(version)
+                ?: throw IllegalStateException("Could not determine engine version: $version")
+        }
 
     override fun createSessionState(json: JSONObject): EngineSessionState {
         return SystemEngineSessionState.fromJSON(json)

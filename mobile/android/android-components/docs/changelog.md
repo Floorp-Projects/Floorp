@@ -17,6 +17,9 @@ permalink: /changelog/
   * ui-progress
   * ui-doorhanger
 
+* **concept-engine**, **browser-engine-gecko(-beta/nightly)**, **browser-engine-system**
+  * Added `Engine.version` property (`EngineVersion`) for printing and comparing the version of the used engine.
+
 * **browser-menu**
   * Added `endOfMenuAlwaysVisible` property/parameter to `BrowserMenuBuilder` constructor and to `BrowserMenu.show` function.
     When is set to true makes sure the bottom of the menu is always visible, this allows use cases like [#3211](https://github.com/mozilla-mobile/android-components/issues/3211).

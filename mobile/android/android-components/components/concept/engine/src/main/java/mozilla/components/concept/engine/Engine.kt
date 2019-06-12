@@ -6,6 +6,7 @@ package mozilla.components.concept.engine
 
 import android.content.Context
 import android.util.AttributeSet
+import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
 import org.json.JSONObject
 import java.lang.UnsupportedOperationException
@@ -136,4 +137,9 @@ interface Engine {
      * Provides access to the settings of this engine.
      */
     val settings: Settings
+
+    /**
+     * Returns the version of the engine as [EngineVersion] object.
+     */
+    val version: EngineVersion
 }

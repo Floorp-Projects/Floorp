@@ -399,4 +399,16 @@ class GeckoEngineTest {
         assertTrue(onErrorCalled)
         assertSame(exception, throwable)
     }
+
+    @Test
+    fun `test parsing engine version`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        val version = engine.version
+
+        println(version)
+
+        assertTrue(version.major >= 68)
+        assertTrue(version.isAtLeast(68, 0, 0))
+    }
 }

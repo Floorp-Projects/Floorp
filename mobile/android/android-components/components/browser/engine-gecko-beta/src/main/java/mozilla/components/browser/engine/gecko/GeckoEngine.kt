@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
+import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoResult
@@ -25,6 +26,7 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
+import java.lang.IllegalStateException
 
 /**
  * Gecko-based implementation of Engine interface.
@@ -127,6 +129,9 @@ class GeckoEngine(
     }
 
     override fun name(): String = "Gecko"
+
+    override val version: EngineVersion = EngineVersion.parse(org.mozilla.geckoview.BuildConfig.MOZILLA_VERSION)
+        ?: throw IllegalStateException("Could not determine engine version")
 
     /**
      * See [Engine.settings]
