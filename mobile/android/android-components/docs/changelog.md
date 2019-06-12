@@ -20,6 +20,11 @@ permalink: /changelog/
 * **browser-menu**
   * Added `endOfMenuAlwaysVisible` property/parameter to `BrowserMenuBuilder` constructor and to `BrowserMenu.show` function.
     When is set to true makes sure the bottom of the menu is always visible, this allows use cases like [#3211](https://github.com/mozilla-mobile/android-components/issues/3211).
+    
+* **feature-tab-collections**
+  * Tabs can now be restored without restoring the ID of the `Session` by using the `restoreSessionId` flag. An app may
+    prefer to use new IDs if it expects sessions to get restored multiple times - otherwise breaking the promise of a
+    unique ID.
 
 * **browser-search**
   * Added `getProvidedDefaultSearchEngine` to `SearchEngineManager` to return the provided default search engine or the first

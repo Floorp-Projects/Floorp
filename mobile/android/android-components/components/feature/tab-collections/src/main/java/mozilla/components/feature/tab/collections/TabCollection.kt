@@ -5,6 +5,7 @@
 package mozilla.components.feature.tab.collections
 
 import android.content.Context
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 
@@ -29,11 +30,28 @@ interface TabCollection {
 
     /**
      * Restores all tabs in this collection and returns a matching [SessionManager.Snapshot].
+     *
+     * @param restoreSessionId If true the original [Session.id] of [Session]s will be restored. Otherwise a new ID
+     * will be generated. An app may prefer to use a new ID if it expects sessions to get restored multiple times -
+     * otherwise breaking the promise of a unique ID per [Session].
      */
-    fun restore(context: Context, engine: Engine): SessionManager.Snapshot
+    fun restore(
+        context: Context,
+        engine: Engine,
+        restoreSessionId: Boolean = false
+    ): SessionManager.Snapshot
 
     /**
      * Restores a subset of the tabs in this collection and returns a matching [SessionManager.Snapshot].
+     *
+     * @param restoreSessionId If true the original [Session.id] of [Session]s will be restored. Otherwise a new ID
+     * will be generated. An app may prefer to use a new ID if it expects sessions to get restored multiple times -
+     * otherwise breaking the promise of a unique ID per [Session].
      */
-    fun restoreSubset(context: Context, engine: Engine, tabs: List<Tab>): SessionManager.Snapshot
+    fun restoreSubset(
+        context: Context,
+        engine: Engine,
+        tabs: List<Tab>,
+        restoreSessionId: Boolean = false
+    ): SessionManager.Snapshot
 }

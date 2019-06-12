@@ -9,6 +9,7 @@ import mozilla.components.browser.session.Session
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,7 +28,7 @@ class SnapshotSerializerTest {
         }
 
         val json = serializeSession(originalSession)
-        val restoredSession = deserializeSession(json)
+        val restoredSession = deserializeSession(json, restoreId = true)
 
         assertEquals("https://www.mozilla.org", restoredSession.url)
         assertEquals(Session.Source.ACTION_VIEW, restoredSession.source)
@@ -45,11 +46,37 @@ class SnapshotSerializerTest {
             put("parentUuid", "")
         }
 
-        val restoredSession = deserializeSession(json)
+        val restoredSession = deserializeSession(json, restoreId = true)
 
         assertEquals("https://www.mozilla.org", restoredSession.url)
         assertEquals(Session.Source.ACTION_VIEW, restoredSession.source)
         assertEquals("test-id", restoredSession.id)
         assertFalse(restoredSession.readerMode)
+    }
+
+    @Test
+    fun `Deserialize session without restoring id`() {
+        val originalSession = Session(
+            "https://www.mozilla.org",
+            source = Session.Source.ACTION_VIEW,
+            id = "test-id").apply {
+            title = "Hello World"
+            readerMode = true
+        }
+
+        val json = serializeSession(originalSession)
+        val restoredSession = deserializeSession(json, restoreId = false)
+
+        assertEquals("https://www.mozilla.org", restoredSession.url)
+        assertEquals(Session.Source.ACTION_VIEW, restoredSession.source)
+        assertNotEquals("test-id", restoredSession.id)
+        assertTrue(restoredSession.id.isNotBlank())
+        assertEquals("Hello World", restoredSession.title)
+        assertTrue(restoredSession.readerMode)
+
+        val restoredSessionAgain = deserializeSession(json, restoreId = false)
+        assertNotEquals("test-id", restoredSessionAgain.id)
+        assertNotEquals(restoredSession.id, restoredSessionAgain.id)
+        assertTrue(restoredSessionAgain.id.isNotBlank())
     }
 }

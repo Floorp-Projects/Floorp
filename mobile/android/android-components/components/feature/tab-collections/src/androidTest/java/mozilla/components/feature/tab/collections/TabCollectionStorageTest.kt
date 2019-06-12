@@ -15,6 +15,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.feature.tab.collections.db.TabCollectionDatabase
@@ -24,6 +25,7 @@ import mozilla.components.support.ktx.java.io.truncateDirectory
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
@@ -31,6 +33,7 @@ import org.junit.Test
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+@Suppress("LargeClass") // Large test is large
 class TabCollectionStorageTest {
     private lateinit var context: Context
     private lateinit var sessionManager: SessionManager
@@ -165,6 +168,52 @@ class TabCollectionStorageTest {
             assertEquals(1, collections.size)
 
             assertEquals("Articles", collections[0].title)
+        }
+    }
+
+    @Test
+    fun testCreatingCollectionAndRestoringState() {
+        val session1 = Session("https://www.mozilla.org").apply { title = "Mozilla" }
+        val session2 = Session("https://www.firefox.com").apply { title = "Firefox" }
+
+        storage.createCollection("Articles", listOf(session1, session2))
+
+        getAllCollections().let { collections ->
+            assertEquals(1, collections.size)
+
+            val collection = collections[0]
+
+            val snapshot = collection.restore(context, FakeEngine(), restoreSessionId = true)
+            assertEquals(2, snapshot.sessions.size)
+
+            // We restored the same sessions
+            assertEquals(session1, snapshot.sessions[0].session)
+            assertEquals(session2, snapshot.sessions[1].session)
+
+            assertEquals(session1.id, snapshot.sessions[0].session.id)
+            assertEquals(session2.id, snapshot.sessions[1].session.id)
+        }
+
+        getAllCollections().let { collections ->
+            assertEquals(1, collections.size)
+
+            val collection = collections[0]
+
+            val snapshot = collection.restore(context, FakeEngine(), restoreSessionId = false)
+            assertEquals(2, snapshot.sessions.size)
+
+            // The sessions are not the same but contain the same data
+            assertNotEquals(session1, snapshot.sessions[0].session)
+            assertNotEquals(session2, snapshot.sessions[1].session)
+
+            assertNotEquals(session1.id, snapshot.sessions[0].session.id)
+            assertNotEquals(session2.id, snapshot.sessions[1].session.id)
+
+            assertEquals(session1.url, snapshot.sessions[0].session.url)
+            assertEquals(session2.url, snapshot.sessions[1].session.url)
+
+            assertEquals(session1.title, snapshot.sessions[0].session.title)
+            assertEquals(session2.title, snapshot.sessions[1].session.title)
         }
     }
 
@@ -308,8 +357,7 @@ class FakeEngine : Engine {
     override fun createSession(private: Boolean): EngineSession =
         throw UnsupportedOperationException()
 
-    override fun createSessionState(json: JSONObject) =
-        throw UnsupportedOperationException()
+    override fun createSessionState(json: JSONObject) = FakeEngineSessionState()
 
     override fun name(): String =
         throw UnsupportedOperationException()
@@ -318,4 +366,8 @@ class FakeEngine : Engine {
         throw UnsupportedOperationException()
 
     override val settings: Settings = DefaultSettings()
+}
+
+class FakeEngineSessionState : EngineSessionState {
+    override fun toJSON() = JSONObject()
 }

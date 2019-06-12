@@ -29,18 +29,28 @@ internal class TabCollectionAdapter(
     override val id: Long
         get() = entity.collection.id!!
 
-    override fun restore(context: Context, engine: Engine): SessionManager.Snapshot {
-        return restore(context, engine, entity.tabs)
+    override fun restore(context: Context, engine: Engine, restoreSessionId: Boolean): SessionManager.Snapshot {
+        return restore(context, engine, entity.tabs, restoreSessionId)
     }
 
-    override fun restoreSubset(context: Context, engine: Engine, tabs: List<Tab>): SessionManager.Snapshot {
+    override fun restoreSubset(
+        context: Context,
+        engine: Engine,
+        tabs: List<Tab>,
+        restoreSessionId: Boolean
+    ): SessionManager.Snapshot {
         val entities = entity.tabs.filter { candidate -> tabs.find { tab -> tab.id == candidate.id } != null }
-        return restore(context, engine, entities)
+        return restore(context, engine, entities, restoreSessionId)
     }
 
-    private fun restore(context: Context, engine: Engine, tabs: List<TabEntity>): SessionManager.Snapshot {
+    private fun restore(
+        context: Context,
+        engine: Engine,
+        tabs: List<TabEntity>,
+        restoreSessionId: Boolean
+    ): SessionManager.Snapshot {
         val items = tabs.mapNotNull { tab ->
-            tab.getStateFile(context.filesDir).readSnapshotItem(engine)
+            tab.getStateFile(context.filesDir).readSnapshotItem(engine, restoreSessionId)
         }
         return SessionManager.Snapshot(items, SessionManager.NO_SELECTION)
     }

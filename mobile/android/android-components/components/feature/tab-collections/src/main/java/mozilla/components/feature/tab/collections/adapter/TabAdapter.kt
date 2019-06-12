@@ -26,8 +26,13 @@ internal class TabAdapter(
     /**
      * Restores a single tab from this collection and returns a matching [SessionManager.Snapshot].
      */
-    override fun restore(context: Context, engine: Engine, tab: Tab): SessionManager.Snapshot {
-        val item = entity.getStateFile(context.filesDir).readSnapshotItem(engine)
+    override fun restore(
+        context: Context,
+        engine: Engine,
+        tab: Tab,
+        restoreSessionId: Boolean
+    ): SessionManager.Snapshot {
+        val item = entity.getStateFile(context.filesDir).readSnapshotItem(engine, restoreSessionId)
         return SessionManager.Snapshot(if (item == null) emptyList() else listOf(item), SessionManager.NO_SELECTION)
     }
 

@@ -153,7 +153,7 @@ class AtomicFileKtTest {
 
         file.writeSnapshotItem(item)
 
-        val restoredItem = file.readSnapshotItem(engine)
+        val restoredItem = file.readSnapshotItem(engine, restoreSessionId = true)
         assertNotNull(restoredItem!!)
         assertNotNull(restoredItem.engineSessionState!!)
 

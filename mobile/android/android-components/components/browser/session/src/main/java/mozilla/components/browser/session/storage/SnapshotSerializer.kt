@@ -11,14 +11,21 @@ import mozilla.components.concept.engine.Engine
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.util.UUID
 
 // Current version of the format used.
 private const val VERSION = 1
 
 /**
  * Helper to transform [SessionManager.Snapshot] instances to JSON and back.
+ *
+ * @param restoreSessionIds If true the original [Session.id] of [Session]s will be restored. Otherwise a new ID will be
+ * generated. An app may prefer to use new IDs if it expects sessions to get restored multiple times - otherwise
+ * breaking the promise of a unique ID.
  */
-class SnapshotSerializer {
+class SnapshotSerializer(
+    private val restoreSessionIds: Boolean = true
+) {
     fun toJSON(snapshot: SessionManager.Snapshot): String {
         val json = JSONObject()
         json.put(Keys.VERSION_KEY, VERSION)
@@ -66,7 +73,7 @@ class SnapshotSerializer {
     }
 
     fun itemFromJSON(engine: Engine, json: JSONObject): SessionManager.Snapshot.Item {
-        val session = deserializeSession(json.getJSONObject(Keys.SESSION_KEY))
+        val session = deserializeSession(json.getJSONObject(Keys.SESSION_KEY), restoreSessionIds)
         val state = engine.createSessionState(json.getJSONObject(Keys.ENGINE_SESSION_KEY))
 
         return SessionManager.Snapshot.Item(session, engineSession = null, engineSessionState = state)
@@ -88,7 +95,7 @@ internal fun serializeSession(session: Session): JSONObject {
 
 @Throws(JSONException::class)
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-internal fun deserializeSession(json: JSONObject): Session {
+internal fun deserializeSession(json: JSONObject, restoreId: Boolean): Session {
     val source = try {
         Session.Source.valueOf(json.getString(Keys.SESSION_SOURCE_KEY))
     } catch (e: IllegalArgumentException) {
@@ -99,7 +106,11 @@ internal fun deserializeSession(json: JSONObject): Session {
         // Currently, snapshot cannot contain private sessions.
         false,
         source,
-        json.getString(Keys.SESSION_UUID_KEY)
+        if (restoreId) {
+            json.getString(Keys.SESSION_UUID_KEY)
+        } else {
+            UUID.randomUUID().toString()
+        }
     )
     session.parentId = json.getString(Keys.SESSION_PARENT_UUID_KEY).takeIf { it != "" }
     session.title = if (json.has(Keys.SESSION_TITLE)) json.getString(Keys.SESSION_TITLE) else ""
