@@ -3736,6 +3736,11 @@ NS_IMETHODIMP BrowserChild::OnRefreshAttempted(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
+NS_IMETHODIMP BrowserChild::NotifyNavigationFinished() {
+  Unused << SendNavigationFinished();
+  return NS_OK;
+}
+
 nsresult BrowserChild::PrepareProgressListenerData(
     nsIWebProgress* aWebProgress, nsIRequest* aRequest,
     Maybe<WebProgressData>& aWebProgressData, RequestData& aRequestData) {
