@@ -13,7 +13,7 @@ async_test(function() {
   worker.postMessage('dedicated');
 }, 'dedicated');
 async_test(function() {
-  var shared = new SharedWorker('#', '');
+  var shared = new SharedWorker('001.js', '');
   shared.port.onmessage = this.step_func(function(e) {
     assert_equals(e.data, 'shared');
     this.done();
