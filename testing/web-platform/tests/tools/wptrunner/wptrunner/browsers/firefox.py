@@ -1,4 +1,5 @@
 import json
+import multiprocessing
 import os
 import platform
 import signal
@@ -184,6 +185,7 @@ def update_properties():
 
 class FirefoxBrowser(Browser):
     used_ports = set()
+    used_ports_lock = multiprocessing.Lock()
     init_timeout = 70
     shutdown_timeout = 70
 
@@ -249,8 +251,9 @@ class FirefoxBrowser(Browser):
         self.mozleak_thresholds = kwargs.get("mozleak_thresholds")
 
         if self.marionette_port is None:
-            self.marionette_port = get_free_port(2828, exclude=self.used_ports)
-            self.used_ports.add(self.marionette_port)
+            with FirefoxBrowser.used_ports_lock:
+                self.marionette_port = get_free_port(2828, exclude=self.used_ports)
+                self.used_ports.add(self.marionette_port)
 
         if self.asan:
             self.lsan_handler = mozleak.LSANLeaks(self.logger,
