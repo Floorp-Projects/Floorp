@@ -8,7 +8,6 @@ add_task(async function() {
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
     await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins", gTestBrowser);
     resetBlocklist();
-    Services.prefs.clearUserPref("plugins.click_to_play");
     gBrowser.removeCurrentTab();
     window.focus();
     gTestBrowser = null;
@@ -16,7 +15,6 @@ add_task(async function() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gTestBrowser = gBrowser.selectedBrowser;
 
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
   // Prime the blocklist service, the remote service doesn't launch on startup.
