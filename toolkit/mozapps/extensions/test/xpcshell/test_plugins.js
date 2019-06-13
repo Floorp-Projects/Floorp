@@ -103,7 +103,7 @@ async function run_test_1() {
   Assert.ok(p.isCompatible);
   Assert.ok(p.providesUpdatesSecurely);
   Assert.equal(p.blocklistState, 0);
-  Assert.equal(p.permissions, AddonManager.PERM_CAN_DISABLE | AddonManager.PERM_CAN_ENABLE);
+  Assert.equal(p.permissions, AddonManager.PERM_CAN_DISABLE);
   Assert.equal(p.pendingOperations, 0);
   Assert.ok(p.updateDate > 0);
   Assert.ok("isCompatibleWith" in p);
@@ -132,6 +132,7 @@ async function run_test_2(p) {
     () => p.disable());
 
   Assert.ok(p.userDisabled);
+  Assert.equal(p.permissions, AddonManager.PERM_CAN_ASK_TO_ACTIVATE);
   Assert.ok(!p.appDisabled);
   Assert.ok(!p.isActive);
 
@@ -158,13 +159,13 @@ async function run_test_3(p) {
     },
     () => p.enable());
 
-  Assert.ok(!p.userDisabled);
+  Assert.equal(p.userDisabled, "askToActivate");
   Assert.ok(!p.appDisabled);
   Assert.ok(p.isActive);
 
   let p2 = await AddonManager.getAddonByID(gID);
   Assert.notEqual(p2, null);
-  Assert.ok(!p2.userDisabled);
+  Assert.equal(p2.userDisabled, "askToActivate");
   Assert.ok(!p2.appDisabled);
   Assert.ok(p2.isActive);
   Assert.equal(p2.name, "Shockwave Flash");

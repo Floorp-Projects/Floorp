@@ -443,6 +443,12 @@ nsPluginTag::GetDescription(nsACString& aDescription) {
 }
 
 NS_IMETHODIMP
+nsPluginTag::GetIsFlashPlugin(bool* aIsFlash) {
+  *aIsFlash = mIsFlashPlugin;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPluginTag::GetFilename(nsACString& aFileName) {
   aFileName = mFileName;
   return NS_OK;
@@ -762,6 +768,12 @@ nsFakePluginTag::GetSandboxScript(nsAString& aSandboxScript) {
 NS_IMETHODIMP
 nsFakePluginTag::GetDescription(/* utf-8 */ nsACString& aResult) {
   aResult = mDescription;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFakePluginTag::GetIsFlashPlugin(bool* aIsFlash) {
+  *aIsFlash = false;
   return NS_OK;
 }
 
