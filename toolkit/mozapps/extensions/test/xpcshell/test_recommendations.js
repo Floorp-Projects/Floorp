@@ -102,6 +102,28 @@ add_task(async function test_temporary() {
   await addon.uninstall();
 });
 
+add_task(async function test_builtin() {
+  const id = "builtin@test.web.extension";
+  let extension = await installBuiltinExtension({
+    manifest: {
+      applications: {gecko: {id}},
+    },
+    background: `browser.test.sendMessage("started");`,
+    files: {
+      [RECOMMENDATION_FILE_NAME]: {
+        addon_id: id,
+        states: ["recommended"],
+        validity: {not_before, not_after},
+      },
+    },
+  });
+  await extension.awaitMessage("started");
+
+  ok(!extension.addon.isRecommended, "The add-on is not recommended");
+
+  await extension.unload();
+});
+
 add_task(async function test_theme() {
   const id = "theme@test.web.extension";
   let xpi = AddonTestUtils.createTempWebExtensionFile({
