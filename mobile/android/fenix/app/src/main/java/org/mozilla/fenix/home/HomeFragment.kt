@@ -125,6 +125,10 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         sessionObserver = BrowserSessionsObserver(sessionManager, singleSessionObserver) {
             emitSessionChanges()
         }
+
+        if (!onboarding.userHasBeenOnboarded()) {
+            requireComponents.analytics.metrics.track(Event.OpenedAppFirstRun)
+        }
     }
 
     override fun onCreateView(

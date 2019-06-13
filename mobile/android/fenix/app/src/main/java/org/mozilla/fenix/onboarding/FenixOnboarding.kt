@@ -6,6 +6,8 @@ package org.mozilla.fenix.onboarding
 
 import android.content.Context
 import android.content.SharedPreferences
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 
 class FenixOnboarding(private val context: Context) {
     private val onboardingPrefs = context.applicationContext.getSharedPreferences(
@@ -19,6 +21,7 @@ class FenixOnboarding(private val context: Context) {
 
     fun finish() {
         onboardingPrefs.onboardedVersion = CURRENT_ONBOARDING_VERSION
+        context.components.analytics.metrics.track(Event.DismissedOnboarding)
     }
 
     fun userHasBeenOnboarded(): Boolean {

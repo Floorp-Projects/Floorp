@@ -69,6 +69,8 @@ class SearchFragment : Fragment(), BackHandler {
 //            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
 //                SHARED_TRANSITION_MS
 //            )
+
+        requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
     }
 
     override fun onCreateView(
