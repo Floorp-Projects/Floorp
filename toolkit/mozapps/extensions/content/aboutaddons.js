@@ -29,6 +29,10 @@ XPCOMUtils.defineLazyGetter(this, "brandBundle", () => {
   return Services.strings.createBundle(
       "chrome://branding/locale/brand.properties");
 });
+XPCOMUtils.defineLazyGetter(this, "extBundle", function() {
+  return Services.strings.createBundle(
+    "chrome://mozapps/locale/extensions/extensions.properties");
+});
 XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
   const {ExtensionParent} =
     ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
@@ -151,6 +155,85 @@ function hasPermission(addon, permission) {
 function isPending(addon, action) {
   const amAction = AddonManager["PENDING_" + action.toUpperCase()];
   return !!(addon.pendingOperations & amAction);
+}
+
+async function getAddonMessageInfo(addon) {
+  const {name} = addon;
+  const appName = brandBundle.GetStringFromName("brandShortName");
+  const {
+    STATE_BLOCKED, STATE_OUTDATED, STATE_SOFTBLOCKED,
+    STATE_VULNERABLE_UPDATE_AVAILABLE, STATE_VULNERABLE_NO_UPDATE,
+  } = Ci.nsIBlocklistService;
+
+  const formatString = (name, args) =>
+    extBundle.formatStringFromName(
+      `details.notification.${name}`, args, args.length);
+  const getString = name =>
+    extBundle.GetStringFromName(`details.notification.${name}`);
+
+  if (addon.blocklistState === STATE_BLOCKED) {
+    return {
+      linkText: getString("blocked.link"),
+      linkUrl: await addon.getBlocklistURL(),
+      message: formatString("blocked", [name]),
+      type: "error",
+    };
+  } else if (isDisabledUnsigned(addon)) {
+    return {
+      linkText: getString("unsigned.link"),
+      linkUrl: SUPPORT_URL + "unsigned-addons",
+      message: formatString("unsignedAndDisabled", [name, appName]),
+      type: "error",
+    };
+  } else if (!addon.isCompatible && (AddonManager.checkCompatibility ||
+      addon.blocklistState !== STATE_SOFTBLOCKED)) {
+    return {
+      message: formatString(
+        "incompatible", [name, appName, Services.appinfo.version]),
+      type: "warning",
+    };
+  } else if (!isCorrectlySigned(addon)) {
+    return {
+      linkText: getString("unsigned.link"),
+      linkUrl: SUPPORT_URL + "unsigned-addons",
+      message: formatString("unsigned", [name, appName]),
+      type: "warning",
+    };
+  } else if (addon.blocklistState === STATE_SOFTBLOCKED) {
+    return {
+      linkText: getString("softblocked.link"),
+      linkUrl: await addon.getBlocklistURL(),
+      message: formatString("softblocked", [name]),
+      type: "warning",
+    };
+  } else if (addon.blocklistState === STATE_OUTDATED) {
+    return {
+      linkText: getString("outdated.link"),
+      linkUrl: await addon.getBlocklistURL(),
+      message: formatString("outdated", [name]),
+      type: "warning",
+    };
+  } else if (addon.blocklistState === STATE_VULNERABLE_UPDATE_AVAILABLE) {
+    return {
+      linkText: getString("vulnerableUpdatable.link"),
+      linkUrl: await addon.getBlocklistURL(),
+      message: formatString("vulnerableUpdatable", [name]),
+      type: "error",
+    };
+  } else if (addon.blocklistState === STATE_VULNERABLE_NO_UPDATE) {
+    return {
+      linkText: getString("vulnerableNoUpdate.link"),
+      linkUrl: await addon.getBlocklistURL(),
+      message: formatString("vulnerableNoUpdate", [name]),
+      type: "error",
+    };
+  } else if (addon.isGMPlugin && !addon.isInstalled && addon.isActive) {
+    return {
+      message: formatString("gmpPending", [name]),
+      type: "warning",
+    };
+  }
+  return {};
 }
 
 // Don't change how we handle this while the page is open.
@@ -1467,6 +1550,12 @@ class AddonCard extends HTMLElement {
           this.panel.hide();
           openAbuseReport({addonId: addon.id, reportEntryPoint: "menu"});
           break;
+        case "link":
+          if (e.target.getAttribute("url")) {
+            windowRoot.ownerGlobal.openWebLinkIn(
+              e.target.getAttribute("url"), "tab");
+          }
+          break;
         default:
           // Handle a click on the card itself.
           if (!this.expanded) {
@@ -1642,12 +1731,35 @@ class AddonCard extends HTMLElement {
     // Update description.
     card.querySelector(".addon-description").textContent = addon.description;
 
+    this.updateMessage();
+
     // Update the details if they're shown.
     if (this.details) {
       this.details.update();
     }
 
     this.sendEvent("update");
+  }
+
+  async updateMessage() {
+    let {addon, card} = this;
+    let messageBar = card.querySelector(".addon-card-message");
+    let link = messageBar.querySelector("button");
+
+    let {message, type = "", linkText, linkUrl} =
+      await getAddonMessageInfo(addon);
+
+    if (message) {
+      messageBar.querySelector("span").textContent = message;
+      messageBar.setAttribute("type", type);
+      if (linkText) {
+        link.textContent = linkText;
+        link.setAttribute("url", linkUrl);
+      }
+    }
+
+    messageBar.hidden = !message;
+    link.hidden = !linkText;
   }
 
   showPrefs() {
