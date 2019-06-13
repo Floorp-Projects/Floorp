@@ -6,14 +6,12 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.feature.sitepermissions.SitePermissions
 import org.jetbrains.anko.alert
@@ -22,15 +20,12 @@ import org.jetbrains.anko.yesButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.PhoneFeature.CAMERA
-import org.mozilla.fenix.settings.PhoneFeature.MICROPHONE
 import org.mozilla.fenix.settings.PhoneFeature.LOCATION
+import org.mozilla.fenix.settings.PhoneFeature.MICROPHONE
 import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
-import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions")
-class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat(), CoroutineScope {
-    private lateinit var job: Job
-    override val coroutineContext: CoroutineContext get() = Dispatchers.IO + job
+class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     private lateinit var sitePermissions: SitePermissions
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,7 +37,6 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat(), Cor
             .sitePermissions
 
         (activity as AppCompatActivity).title = sitePermissions.origin
-        job = Job()
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -51,7 +45,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat(), Cor
 
     override fun onResume() {
         super.onResume()
-        launch(IO) {
+        lifecycleScope.launch(IO) {
             val context = requireContext()
             sitePermissions =
                 requireNotNull(context.components.core.permissionStorage.findSitePermissionsBy(sitePermissions.origin))
@@ -59,11 +53,6 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat(), Cor
                 bindCategoryPhoneFeatures()
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
     }
 
     private fun bindCategoryPhoneFeatures() {
@@ -112,7 +101,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat(), Cor
     }
 
     private fun clearSitePermissions() {
-        launch(IO) {
+        lifecycleScope.launch(IO) {
             requireContext().components.core.permissionStorage.deleteSitePermissions(sitePermissions)
             launch(Main) {
                 Navigation.findNavController(requireNotNull(view)).popBackStack()

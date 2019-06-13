@@ -20,11 +20,10 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.net.toUri
 import androidx.core.widget.NestedScrollView
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.sitepermissions.SitePermissions
@@ -43,12 +42,11 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.settings.PhoneFeature
 import java.net.MalformedURLException
 import java.net.URL
-import kotlin.coroutines.CoroutineContext
 
 private const val REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS = 4
 
 @SuppressWarnings("TooManyFunctions")
-class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineScope {
+class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private val safeArguments get() = requireNotNull(arguments)
     private val sessionId: String by lazy { QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).sessionId }
     private val url: String by lazy { QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).url }
@@ -58,16 +56,8 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
     }
     private val promptGravity: Int by lazy { QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).gravity }
     private lateinit var quickSettingsComponent: QuickSettingsComponent
-    private lateinit var job: Job
 
     private var sitePermissions: SitePermissions? = null
-
-    override val coroutineContext: CoroutineContext get() = Dispatchers.IO + job
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        job = Job()
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -150,11 +140,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
-    }
-
     private fun arePermissionsGranted(requestCode: Int, grantResults: IntArray) =
         requestCode == REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS && grantResults.all { it == PERMISSION_GRANTED }
 
@@ -164,7 +149,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
         } catch (e: MalformedURLException) {
             url
         }
-        launch {
+        lifecycleScope.launch {
             if (!ExceptionDomains.load(context).contains(host)) {
                 ExceptionDomains.add(context, host)
             } else {
@@ -188,7 +173,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
                         findNavController(this@QuickSettingsSheetDialogFragment).navigate(directions)
                     }
                     is QuickSettingsAction.SelectReportProblem -> {
-                        launch(Dispatchers.Main) {
+                        lifecycleScope.launch(Dispatchers.Main) {
                             val reportUrl =
                                 String.format(BrowserFragment.REPORT_SITE_ISSUE_URL, it.url)
                             requireComponents.useCases.tabsUseCases.addTab.invoke(reportUrl)
@@ -204,7 +189,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
                     is QuickSettingsAction.ToggleTrackingProtection -> {
                         val trackingEnabled = it.trackingProtection
                         context?.let { context: Context -> toggleTrackingProtection(context, url) }
-                        launch(Dispatchers.Main) {
+                        lifecycleScope.launch(Dispatchers.Main) {
                             getManagedEmitter<QuickSettingsChange>().onNext(
                                 QuickSettingsChange.Change(
                                     url,
@@ -218,7 +203,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
                     }
                     is QuickSettingsAction.TogglePermission -> {
 
-                        launch {
+                        lifecycleScope.launch {
                             sitePermissions = quickSettingsComponent.toggleSitePermission(
                                 context = requireContext(),
                                 featurePhone = it.featurePhone,
@@ -251,7 +236,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
     private val sessionObserver = object : Session.Observer {
         override fun onUrlChanged(session: Session, url: String) {
             super.onUrlChanged(session, url)
-            launch {
+            lifecycleScope.launch {
                 val host = session.url.toUri()?.host
                 val sitePermissions: SitePermissions? = host?.let {
                     val storage = requireContext().components.core.permissionStorage

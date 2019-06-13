@@ -18,9 +18,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.fragment_share.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import mozilla.components.concept.sync.DeviceEventOutgoing
 import mozilla.components.concept.sync.OAuthAccount
 import org.mozilla.fenix.FenixViewModelProvider
@@ -29,12 +26,8 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
-import kotlin.coroutines.CoroutineContext
 
-class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
-    private lateinit var job: Job
+class ShareFragment : AppCompatDialogFragment() {
     private lateinit var component: ShareComponent
     private var tabs: Array<ShareTab> = emptyArray()
 
@@ -51,7 +44,6 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
             throw IllegalStateException("URL and tabs cannot both be null.")
         }
 
-        job = Job()
         tabs = args.tabs ?: arrayOf(ShareTab(args.url!!, args.title ?: ""))
 
         component = ShareComponent(
@@ -71,11 +63,6 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
     override fun onResume() {
         super.onResume()
         subscribeToActions()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        job.cancel()
     }
 
     @SuppressWarnings("ComplexMethod")

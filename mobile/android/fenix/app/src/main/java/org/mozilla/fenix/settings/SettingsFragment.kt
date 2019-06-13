@@ -13,13 +13,12 @@ import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
@@ -326,7 +325,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     override fun onAuthenticated(account: OAuthAccount) {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleScope.launch {
             context?.let {
                 updateAccountUIState(it, it.components.backgroundServices.accountManager.accountProfile())
             }
@@ -336,7 +335,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     override fun onError(error: Exception) {}
 
     override fun onLoggedOut() {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleScope.launch {
             context?.let {
                 updateAccountUIState(it, it.components.backgroundServices.accountManager.accountProfile())
             }
@@ -344,7 +343,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     override fun onProfileUpdated(profile: Profile) {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleScope.launch {
             context?.let {
                 updateAccountUIState(it, profile)
             }
@@ -352,7 +351,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     override fun onAuthenticationProblems() {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleScope.launch {
             context?.let {
                 updateAccountUIState(it, it.components.backgroundServices.accountManager.accountProfile())
             }

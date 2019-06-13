@@ -6,12 +6,11 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
@@ -68,7 +67,7 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
 
     private fun getClickListenerForSignOut(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
-            CoroutineScope(Dispatchers.Main).launch {
+            lifecycleScope.launch {
                 requireComponents.backgroundServices.accountManager.logoutAsync().await()
                 Navigation.findNavController(view!!).popBackStack()
             }
@@ -78,7 +77,7 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
 
     // We're told our auth problems have been fixed; close this fragment.
     override fun onAuthenticated(account: OAuthAccount) {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleScope.launch {
             NavHostFragment.findNavController(this@AccountProblemFragment).popBackStack()
         }
     }
@@ -89,7 +88,7 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
 
     // We're told there are no more auth problems since there is no more account; close this fragment.
     override fun onLoggedOut() {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleScope.launch {
             NavHostFragment.findNavController(this@AccountProblemFragment).popBackStack()
         }
     }

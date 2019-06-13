@@ -12,6 +12,7 @@ import android.view.View
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -19,8 +20,6 @@ import androidx.navigation.ui.NavigationUI
 import io.sentry.Sentry
 import io.sentry.event.Breadcrumb
 import io.sentry.event.BreadcrumbBuilder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
@@ -138,13 +137,15 @@ open class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        CoroutineScope(Dispatchers.Main).launch {
-            // Make sure accountManager is initialized.
-            components.backgroundServices.accountManager.initAsync().await()
-            // If we're authenticated, kick-off a sync and a device state refresh.
-            components.backgroundServices.accountManager.authenticatedAccount()?.let {
-                components.backgroundServices.syncManager?.syncNow(startup = true)
-                it.deviceConstellation().refreshDeviceStateAsync().await()
+        lifecycleScope.launch {
+            with(components.backgroundServices) {
+                // Make sure accountManager is initialized.
+                accountManager.initAsync().await()
+                // If we're authenticated, kick-off a sync and a device state refresh.
+                accountManager.authenticatedAccount()?.let {
+                    syncManager?.syncNow(startup = true)
+                    it.deviceConstellation().refreshDeviceStateAsync().await()
+                }
             }
         }
     }

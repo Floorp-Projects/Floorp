@@ -13,11 +13,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.*
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.view.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,23 +27,17 @@ import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.requireComponents
-import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions")
-class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
+class DeleteBrowsingDataFragment : Fragment() {
     private lateinit var sessionObserver: SessionManager.Observer
     private var tabCollections: List<TabCollection> = listOf()
-
-    private lateinit var job: Job
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
         inflater.inflate(R.layout.fragment_delete_browsing_data, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        job = Job()
 
         sessionObserver = object : SessionManager.Observer {
             override fun onSessionAdded(session: Session) {
@@ -88,11 +81,6 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        job.cancel()
-    }
-
     override fun onResume() {
         super.onResume()
         (activity as AppCompatActivity).apply {
@@ -132,7 +120,7 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
         val collectionsChecked = view!!.collections_item!!.isChecked
 
         startDeletion()
-        launch(Dispatchers.IO) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             if (openTabsChecked) deleteTabs()
             if (browsingDataChecked) deleteBrowsingData()
             if (collectionsChecked) deleteCollections()
@@ -187,7 +175,7 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
     private fun updateHistoryCount() {
         view?.browsing_data_item?.subtitleView?.text = ""
 
-        launch(Dispatchers.IO) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val historyCount = requireComponents.core.historyStorage.getVisited().size
             launch(Dispatchers.Main) {
                 view?.browsing_data_item?.apply {
@@ -204,7 +192,7 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
     private fun updateCollectionsCount() {
         view?.browsing_data_item?.subtitleView?.text = ""
 
-        launch(Dispatchers.IO) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val collectionsCount = requireComponents.core.tabCollectionStorage.getTabCollectionsCount()
             launch(Dispatchers.Main) {
                 view?.collections_item?.apply {
