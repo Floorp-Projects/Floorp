@@ -1115,7 +1115,8 @@
             this._enableBtn.disabled = true;
             this._disableBtn.disabled = true;
             this._askToActivateMenuitem.disabled = !this.hasPermission("ask_to_activate");
-            this._alwaysActivateMenuitem.disabled = !this.hasPermission("enable");
+            let alwaysActivateProp = this.mAddon.isFlashPlugin ? "hidden" : "disabled";
+            this._alwaysActivateMenuitem[alwaysActivateProp] = !this.hasPermission("enable");
             this._neverActivateMenuitem.disabled = !this.hasPermission("disable");
             if (!this.mAddon.isActive) {
               this._stateMenulist.selectedItem = this._neverActivateMenuitem;
@@ -1128,6 +1129,9 @@
               ["ask_to_activate", "enable", "disable"].some(perm => this.hasPermission(perm));
             this._stateMenulist.disabled = !hasActivatePermission;
             this._stateMenulist.hidden = false;
+            this._askToActivateMenuitem.classList.add("no-auto-hide");
+            this._alwaysActivateMenuitem.classList.add("no-auto-hide");
+            this._neverActivateMenuitem.classList.add("no-auto-hide");
             this._stateMenulist.classList.add("no-auto-hide");
           } else {
             this._stateMenulist.hidden = true;
