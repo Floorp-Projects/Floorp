@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="reftest-wait">
 <head>
 <meta charset="utf-8">
 <title>mfrac created dynamically</title>
@@ -7,11 +7,17 @@
 <meta name="assert" content="A dynamically added mfrac should render like the equivalent markup.">
 <link rel="match" href="frac-created-dynamically-3-ref.html">
 <script>
-  window.addEventListener("DOMContentLoaded", function() {
+  window.addEventListener("load", function() {
+
+  // force initial layout so we're sure what we're testing against
+  document.documentElement.getBoundingClientRect();
+
   var mi3 = document.createElementNS("http://www.w3.org/1998/Math/MathML","mi");
   mi3.appendChild(document.createTextNode("3"));
   document.getElementsByTagName("mfrac")[0].appendChild(mi3);
   document.getElementById("mi2").remove();
+
+  document.documentElement.classList.remove('reftest-wait');
   });
 </script>
 </head>
