@@ -68,7 +68,7 @@ describe("wasm source maps", () => {
     expect(pos3).toHaveLength(1);
     expect(pos3[0].line).toEqual(14);
     expect(pos3[0].column).toEqual(0);
-    expect(pos3[0].lastColumn).toEqual(Infinity);
+    expect(pos3[0].lastColumn).toEqual(0);
   });
 
   test("content presents", async () => {
