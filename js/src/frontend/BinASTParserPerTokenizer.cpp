@@ -335,7 +335,7 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
   // handled by setting the appropriate funbox field during argument parsing.
   if (!lazyScript_ ||
       lazyScript_->functionNonDelazifying() != funbox->function()) {
-    funbox->setArgCount(params ? uint16_t(params->count()) : 0);
+    funbox->function()->setArgCount(params ? uint16_t(params->count()) : 0);
   }
 
   // ParseNode represents the body as concatenated after the params.
