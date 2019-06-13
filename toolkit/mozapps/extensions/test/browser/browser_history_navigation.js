@@ -121,7 +121,7 @@ function is_in_list(aManager, view, canGoBack, canGoForward) {
   is(doc.getElementById("categories").selectedItem.value, view, "Should be on the right category");
 
   if (aManager.useHtmlViews) {
-    is(get_current_view(aManager).id, "html-view-browser",
+    is(get_current_view(aManager).id, "html-view",
        "the current view should be set to the HTML about:addons browser");
     const doc = aManager.getHtmlBrowser().contentDocument;
     ok(doc.querySelector("addon-list"), "Got a list-view in the HTML about:addons browser");
@@ -138,7 +138,7 @@ function is_in_detail(aManager, view, canGoBack, canGoForward) {
   is(doc.getElementById("categories").selectedItem.value, view, "Should be on the right category");
 
   if (aManager.useHtmlViews) {
-    is(get_current_view(aManager).id, "html-view-browser",
+    is(get_current_view(aManager).id, "html-view",
        "the current view should be set to the HTML about:addons browser");
     const doc = aManager.getHtmlBrowser().contentDocument;
     is(doc.querySelectorAll("addon-card").length, 1,
@@ -152,7 +152,7 @@ function is_in_detail(aManager, view, canGoBack, canGoForward) {
 
 function is_in_discovery(aManager, url, canGoBack, canGoForward) {
   if (Services.prefs.getBoolPref("extensions.htmlaboutaddons.discover.enabled")) {
-    is(get_current_view(aManager).id, "html-view-browser",
+    is(get_current_view(aManager).id, "html-view",
        "the current view should be set to the HTML about:addons browser");
     const doc = aManager.getHtmlBrowser().contentDocument;
     ok(doc.querySelector("discovery-pane"),
