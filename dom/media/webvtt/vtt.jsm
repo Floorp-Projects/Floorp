@@ -1098,6 +1098,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
   // It's used to record how many cues we process in the last `processCues` run.
   var lastDisplayedCueNums = 0;
 
+  const DIV_COMPUTING_STATE = {
+    REUSE : 0,
+    REUSE_AND_CLEAR : 1,
+    COMPUTE_AND_CLEAR : 2
+  };
+
   // Runs the processing model over the cues and regions passed to it.
   // Spec https://www.w3.org/TR/webvtt1/#processing-model
   // @parem window : JS window
@@ -1125,32 +1131,44 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       controlBarShown = false;
     }
 
-    // Determine if we need to compute the display states of the cues. This could
-    // be the case if a cue's state has been changed since the last computation or
-    // if it has not been computed yet, or the displayed cues number changes.
-    function shouldCompute(cues) {
-      if (lastDisplayedCueNums != cues.length) {
-        return true;
-      }
-
+    /**
+     * This function is used to tell us if we have to recompute or reuse current
+     * cue's display state. Display state is a DIV element with corresponding
+     * CSS style to display cue on the screen. When the cue is being displayed
+     * first time, we will compute its display state. After that, we could reuse
+     * its state until following conditions happen.
+     * (1) control changes : it means the rendering area changes so we should
+     * recompute cues' position.
+     * (2) cue's `hasBeenReset` flag is true : it means cues' line or position
+     * property has been modified, we also need to recompute cues' position.
+     * (3) the amount of showing cues changes : it means some cue would disappear
+     * but other cues should stay at the same place without recomputing, so we
+     * can resume their display state.
+     */
+    function getDIVComputingState(cues) {
       if (overlay.lastControlBarShownStatus != controlBarShown) {
-        return true;
+        return DIV_COMPUTING_STATE.COMPUTE_AND_CLEAR;
       }
 
       for (let i = 0; i < cues.length; i++) {
         if (cues[i].hasBeenReset || !cues[i].displayState) {
-          return true;
+          return DIV_COMPUTING_STATE.COMPUTE_AND_CLEAR;
         }
       }
-      return false;
+
+      if (lastDisplayedCueNums != cues.length) {
+        return DIV_COMPUTING_STATE.REUSE_AND_CLEAR;
+      }
+      return DIV_COMPUTING_STATE.REUSE;
     }
 
-    // We don't need to recompute the cues' display states. Just reuse them.
-    if (!shouldCompute(cues)) {
-      LOG(`Abort processing because no need to compute cues' display state.`);
+    const divState = getDIVComputingState(cues);
+    overlay.lastControlBarShownStatus = controlBarShown;
+
+    if (divState == DIV_COMPUTING_STATE.REUSE) {
+      LOG(`reuse current cue's display state and abort processing`);
       return;
     }
-    overlay.lastControlBarShownStatus = controlBarShown;
 
     clearAllCuesDiv(overlay);
     let rootOfCues = window.document.createElement("div");
