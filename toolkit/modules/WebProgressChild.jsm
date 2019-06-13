@@ -89,10 +89,6 @@ class WebProgressChild {
 
     this._send("Content:SecurityChange", json);
   }
-
-  sendLoadCallResult() {
-    this.mm.sendAsyncMessage("Content:LoadURIResult");
-  }
 }
 
 WebProgressChild.prototype.QueryInterface =

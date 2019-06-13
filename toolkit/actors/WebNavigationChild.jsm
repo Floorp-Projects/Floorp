@@ -54,7 +54,9 @@ class WebNavigationChild extends ActorChild {
     try {
       fn();
     } finally {
-      this.mm.WebProgress.sendLoadCallResult();
+      this.mm.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIBrowserChild)
+        .notifyNavigationFinished();
     }
   }
 
