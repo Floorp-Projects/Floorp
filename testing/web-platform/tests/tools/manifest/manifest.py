@@ -2,7 +2,7 @@ import itertools
 import json
 import os
 from collections import MutableMapping, defaultdict
-from six import iteritems, iterkeys, itervalues, string_types
+from six import iteritems, iterkeys, itervalues, string_types, binary_type, text_type
 
 from . import vcs
 from .item import (ConformanceCheckerTest, ManifestItem, ManualTest, RefTest, RefTestNode, Stub,
@@ -323,7 +323,7 @@ class Manifest(object):
 
         for source_file, update in tree:
             if not update:
-                assert isinstance(source_file, (bytes, str))
+                assert isinstance(source_file, (binary_type, text_type))
                 rel_path = source_file  # type: Text
                 seen_files.add(rel_path)
                 assert rel_path in path_hash
