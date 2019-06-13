@@ -120,8 +120,7 @@ class ConnectionData : public nsITransportEventSink,
   void StartTimer(uint32_t aTimeout);
   void StopTimer();
 
-  explicit ConnectionData(Dashboard* target)
-      : mPort(0), mProtocol(nullptr), mTimeout(0) {
+  explicit ConnectionData(Dashboard* target) : mPort(0), mTimeout(0) {
     mEventTarget = nullptr;
     mDashboard = target;
   }
@@ -135,7 +134,7 @@ class ConnectionData : public nsITransportEventSink,
 
   nsCString mHost;
   uint32_t mPort;
-  const char* mProtocol;
+  nsCString mProtocol;
   uint32_t mTimeout;
 
   nsString mStatus;
@@ -854,16 +853,15 @@ nsresult Dashboard::TestNewConnection(ConnectionData* aConnectionData) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
-  if (connectionData->mProtocol &&
-      NS_LITERAL_STRING("ssl").EqualsASCII(connectionData->mProtocol)) {
+  if (connectionData->mProtocol.EqualsLiteral("ssl")) {
+    AutoTArray<nsCString, 1> socketTypes = {connectionData->mProtocol};
     rv = gSocketTransportService->CreateTransport(
-        &connectionData->mProtocol, 1, connectionData->mHost,
-        connectionData->mPort, nullptr,
+        socketTypes, connectionData->mHost, connectionData->mPort, nullptr,
         getter_AddRefs(connectionData->mSocket));
   } else {
     rv = gSocketTransportService->CreateTransport(
-        nullptr, 0, connectionData->mHost, connectionData->mPort, nullptr,
-        getter_AddRefs(connectionData->mSocket));
+        nsTArray<nsCString>(), connectionData->mHost, connectionData->mPort,
+        nullptr, getter_AddRefs(connectionData->mSocket));
   }
   if (NS_FAILED(rv)) {
     return rv;

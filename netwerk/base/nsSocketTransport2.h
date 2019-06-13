@@ -126,9 +126,8 @@ class nsSocketTransport final : public nsASocketHandler,
 
   // this method instructs the socket transport to open a socket of the
   // given type(s) to the given host or proxy.
-  nsresult Init(const char** socketTypes, uint32_t typeCount,
-                const nsACString& host, uint16_t port,
-                const nsACString& hostRoute, uint16_t portRoute,
+  nsresult Init(const nsTArray<nsCString>& socketTypes, const nsACString& host,
+                uint16_t port, const nsACString& hostRoute, uint16_t portRoute,
                 nsIProxyInfo* proxyInfo);
 
   // this method instructs the socket transport to use an already connected
@@ -174,7 +173,6 @@ class nsSocketTransport final : public nsASocketHandler,
 
  protected:
   virtual ~nsSocketTransport();
-  void CleanupTypes();
 
  private:
   static SECStatus StoreResumptionToken(PRFileDesc* fd,
@@ -283,8 +281,7 @@ class nsSocketTransport final : public nsASocketHandler,
   //-------------------------------------------------------------------------
 
   // socket type info:
-  char** mTypes;
-  uint32_t mTypeCount;
+  nsTArray<nsCString> mTypes;
   nsCString mHost;
   nsCString mProxyHost;
   nsCString mOriginHost;
