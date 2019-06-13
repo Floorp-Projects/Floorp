@@ -229,7 +229,6 @@ class RefCountedRegion {
 
 struct InactiveLayerData {
   RefPtr<layers::BasicLayerManager> mLayerManager;
-  FrameLayerBuilder* mLayerBuilder;
   RefPtr<layers::Layer> mLayer;
   UniquePtr<layers::LayerProperties> mProps;
 
