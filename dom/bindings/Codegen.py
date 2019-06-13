@@ -2003,6 +2003,9 @@ def isChromeOnly(m):
     return m.getExtendedAttribute("ChromeOnly")
 
 
+def prefIdentifier(pref):
+    return pref.replace(".", "_").replace("-", "_")
+
 class MemberCondition:
     """
     An object representing the condition for a member to actually be
@@ -2022,6 +2025,12 @@ class MemberCondition:
         assert isinstance(secureContext, bool)
         assert nonExposedGlobals is None or isinstance(nonExposedGlobals, set)
         self.pref = pref
+        if self.pref:
+            identifier = prefIdentifier(self.pref)
+            self.prefFuncIndex = "WebIDLPrefIndex::" + identifier
+        else:
+            self.prefFuncIndex = "WebIDLPrefIndex::NoPref"
+
         self.secureContext = secureContext
 
         def toFuncPtr(val):
@@ -2065,10 +2074,6 @@ class PropertyDefiner:
     def __init__(self, descriptor, name):
         self.descriptor = descriptor
         self.name = name
-        # self.prefCacheData will store an array of (prefname, bool*)
-        # pairs for our bool var caches.  generateArray will fill it
-        # in as needed.
-        self.prefCacheData = []
 
     def hasChromeOnly(self):
         return len(self.chrome) > 0
@@ -2228,9 +2233,8 @@ class PropertyDefiner:
 
         disablersTemplate = dedent(
             """
-            // Can't be const because the pref-enabled boolean needs to be writable
-            static PrefableDisablers %s_disablers%d = {
-              true, %s, %s, %s
+            static const PrefableDisablers %s_disablers%d = {
+              %s, %s, %s, %s
             };
             """)
         prefableWithDisablersTemplate = '  { &%s_disablers%d, &%s_specs[%d] }'
@@ -2238,18 +2242,13 @@ class PropertyDefiner:
         prefCacheTemplate = '&%s[%d].disablers->enabled'
 
         def switchToCondition(condition, specs):
-            # Remember the info about where our pref-controlled
-            # booleans live.
-            if condition.pref is not None:
-                self.prefCacheData.append(
-                    (condition.pref,
-                     prefCacheTemplate % (name, len(prefableSpecs))))
             # Set up pointers to the new sets of specs inside prefableSpecs
             if condition.hasDisablers():
                 prefableSpecs.append(prefableWithDisablersTemplate %
                                      (name, len(specs), name, len(specs)))
                 disablers.append(disablersTemplate %
                                  (name, len(specs),
+                                  condition.prefFuncIndex,
                                   toStringBool(condition.secureContext),
                                   condition.nonExposedGlobals,
                                   condition.func))
@@ -3116,22 +3115,6 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             initIds = None
 
-        prefCacheData = []
-        for var in self.properties.arrayNames():
-            props = getattr(self.properties, var)
-            prefCacheData.extend(props.prefCacheData)
-        if len(prefCacheData) != 0:
-            prefCacheData = [
-                CGGeneric('Preferences::AddBoolVarCache(%s, "%s");\n' % (ptr, pref))
-                for pref, ptr in prefCacheData]
-            prefCache = CGWrapper(CGIndenter(CGList(prefCacheData)),
-                                  pre=("static bool sPrefCachesInited = false;\n"
-                                       "if (!sPrefCachesInited && NS_IsMainThread()) {\n"
-                                       "  sPrefCachesInited = true;\n"),
-                                  post="}\n")
-        else:
-            prefCache = None
-
         if self.descriptor.interface.ctor():
             constructArgs = methodLength(self.descriptor.interface.ctor())
         else:
@@ -3361,7 +3344,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
 
         return CGList(
             [getParentProto, getConstructorProto, initIds,
-             prefCache, CGGeneric(call), defineAliases, unforgeableHolderSetup,
+             CGGeneric(call), defineAliases, unforgeableHolderSetup,
              makeProtoPrototypeImmutable],
             "\n").define()
 
@@ -3506,16 +3489,13 @@ def getConditionList(idlobj, cxName, objName):
     objName is the name of the object that we're working with, because some of
     our test functions want that.
 
-    The return value is a pair.  The first element is a possibly-empty CGList
-    of conditions.  The second element, if not None, is a CGThing for som code
-    that needs to run before the list of conditions can be evaluated.
+    The return value is a possibly-empty CGList of conditions.
     """
     conditions = []
     pref = idlobj.getExtendedAttribute("Pref")
     if pref:
         assert isinstance(pref, list) and len(pref) == 1
-        conditions.append("StaticPrefs::%s()" %
-                          pref[0].replace(".", "_").replace("-", "_"))
+        conditions.append("StaticPrefs::%s()" % prefIdentifier(pref[0]))
     if idlobj.getExtendedAttribute("ChromeOnly"):
         conditions.append("nsContentUtils::ThreadsafeIsSystemCaller(%s)" % cxName)
     func = idlobj.getExtendedAttribute("Func")
@@ -14603,18 +14583,13 @@ class CGBindingRoot(CGThing):
 
         bindingHeaders["js/Symbol.h"] = any(descriptorHasIteratorAlias(d) for d in descriptors)
 
-        def descriptorRequiresPreferences(desc):
-            iface = desc.interface
-            return any(m.getExtendedAttribute("Pref") for m in iface.members + [iface])
-
         def descriptorDeprecated(desc):
             iface = desc.interface
             return any(m.getExtendedAttribute("Deprecated") for m in iface.members + [iface])
 
         bindingHeaders["mozilla/dom/Document.h"] = any(
             descriptorDeprecated(d) for d in descriptors)
-        bindingHeaders["mozilla/Preferences.h"] = any(
-            descriptorRequiresPreferences(d) for d in descriptors)
+
         bindingHeaders["mozilla/dom/DOMJSProxyHandler.h"] = any(
             d.concrete and d.proxy for d in descriptors)
         hasCrossOriginObjects = any(
@@ -14663,6 +14638,27 @@ class CGBindingRoot(CGThing):
         def descriptorNeedsNonSystemPrincipal(d):
             return any(needsNonSystemPrincipal(m) for m in d.interface.members)
 
+        def descriptorHasPrefDisabler(desc):
+            iface = desc.interface
+            return any(PropertyDefiner.getControllingCondition(m, desc).hasDisablers()
+                       for m in iface.members if (m.isMethod() or m.isAttr() or m.isConst()))
+
+        def dictionaryHasPrefControlledMember(dictionary):
+            while dictionary:
+                if (any(m.getExtendedAttribute("Pref") for m in dictionary.members)):
+                    return True
+                dictionary = dictionary.parent
+            return False
+
+        def descriptorRequiresPreferences(desc):
+            iface = desc.interface
+            return iface.getExtendedAttribute("Pref") is not None
+
+        bindingHeaders["mozilla/StaticPrefs.h"] = (
+            any(descriptorRequiresPreferences(d) for d in descriptors) or
+            any(dictionaryHasPrefControlledMember(d) for d in dictionaries))
+        bindingHeaders["mozilla/dom/WebIDLPrefs.h"] = any(
+            descriptorHasPrefDisabler(d) for d in descriptors)
         bindingHeaders["nsContentUtils.h"] = (
             any(descriptorHasChromeOnly(d) for d in descriptors) or
             any(descriptorNeedsNonSystemPrincipal(d) for d in descriptors) or
@@ -17961,6 +17957,51 @@ class GlobalGenRoots():
 
         # Done.
         return curr
+
+    @staticmethod
+    def WebIDLPrefs(config):
+        prefs = set()
+        headers = set(["mozilla/dom/WebIDLPrefs.h", "mozilla/StaticPrefs.h"])
+        for d in config.getDescriptors(hasInterfaceOrInterfacePrototypeObject=True):
+            for m in d.interface.members:
+                pref = PropertyDefiner.getStringAttr(m, "Pref")
+                if pref:
+                    prefs.add((pref, prefIdentifier(pref)))
+        prefs = sorted(prefs)
+        declare = fill(
+            """
+            enum class WebIDLPrefIndex : uint8_t {
+              NoPref,
+              $*{prefs}
+            };
+            typedef bool (*WebIDLPrefFunc)();
+            extern const WebIDLPrefFunc sWebIDLPrefs[${len}];
+            """,
+            prefs=",\n".join(map(lambda p: "// " + p[0] + "\n" + p[1], prefs)) + "\n",
+            len=len(prefs) + 1)
+        define = fill(
+            """
+            const WebIDLPrefFunc sWebIDLPrefs[] = {
+              nullptr,
+              $*{prefs}
+            };
+            """,
+            prefs=",\n".join(map(lambda p: "// " + p[0] + "\nStaticPrefs::" + p[1], prefs)) + "\n")
+        prefFunctions = CGGeneric(declare=declare, define=define)
+
+        # Wrap all of that in our namespaces.
+        curr = CGNamespace.build(['mozilla', 'dom'], prefFunctions)
+
+        curr = CGWrapper(curr, post='\n')
+
+        curr = CGHeaders([], [], [], [], [], headers, 'WebIDLPrefs', curr)
+
+        # Add include guards.
+        curr = CGIncludeGuard('WebIDLPrefs', curr)
+
+        # Done.
+        return curr
+
 
 
 # Code generator for simple events
