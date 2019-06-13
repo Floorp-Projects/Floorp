@@ -149,9 +149,9 @@ this.GeckoDriver = function(server) {
   this.listener = proxy.toListener(
       this.sendAsync.bind(this), () => this.curBrowser);
 
-  // points to an alert instance if a modal dialog is present
+  // used for modal dialogs or tab modal alerts
   this.dialog = null;
-  this.dialogHandler = this.modalDialogHandler.bind(this);
+  this.dialogObserver = null;
 };
 
 Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
@@ -304,16 +304,16 @@ GeckoDriver.prototype.uninit = function() {
  * Callback used to observe the creation of new modal or tab modal dialogs
  * during the session's lifetime.
  */
-GeckoDriver.prototype.modalDialogHandler = function(subject, topic) {
-  logger.trace(`Received observer notification ${topic}`);
+GeckoDriver.prototype.handleModalDialog = function(action, dialog, win) {
+  // Only care about modals of the currently selected window.
+  if (win !== this.curBrowser.window) {
+    return;
+  }
 
-  switch (topic) {
-    case modal.COMMON_DIALOG_LOADED:
-    case modal.TABMODAL_DIALOG_LOADED:
-      // Always keep a weak reference to the current dialog
-      let winRef = Cu.getWeakReference(subject);
-      this.dialog = new modal.Dialog(() => this.curBrowser, winRef);
-      break;
+  if (action === modal.ACTION_OPENED) {
+    this.dialog = new modal.Dialog(() => this.curBrowser, dialog);
+  } else if (action === modal.ACTION_CLOSED) {
+    this.dialog = null;
   }
 };
 
@@ -797,9 +797,11 @@ GeckoDriver.prototype.newSession = async function(cmd) {
     this.curBrowser.contentBrowser.focus();
   }
 
-  // Setup global listener for modal dialogs, and check if there is already
-  // one open for the currently selected browser window.
-  modal.addHandler(this.dialogHandler);
+  // Setup observer for modal dialogs
+  this.dialogObserver = new modal.DialogObserver(this);
+  this.dialogObserver.add(this.handleModalDialog.bind(this));
+
+  // Check if there is already an open dialog for the selected browser window.
   this.dialog = modal.findModalDialogs(this.curBrowser);
 
   return {
@@ -2886,7 +2888,10 @@ GeckoDriver.prototype.deleteSession = function() {
     this.observing = null;
   }
 
-  modal.removeHandler(this.dialogHandler);
+  if (this.dialogObserver) {
+    this.dialogObserver.cleanup();
+    this.dialogObserver = null;
+  }
 
   this.sandboxes.clear();
   CertificateOverrideManager.uninstall();
@@ -3178,8 +3183,7 @@ GeckoDriver.prototype.dismissDialog = async function() {
   (button1 ? button1 : button0).click();
 
   await dialogClosed;
-
-  this.dialog = null;
+  await new IdlePromise(win);
 };
 
 /**
@@ -3196,8 +3200,7 @@ GeckoDriver.prototype.acceptDialog = async function() {
   button0.click();
 
   await dialogClosed;
-
-  this.dialog = null;
+  await new IdlePromise(win);
 };
 
 /**

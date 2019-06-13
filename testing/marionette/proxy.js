@@ -78,7 +78,7 @@ proxy.AsyncMessageChannel = class {
     this.activeMessageId = null;
 
     this.listeners_ = new Map();
-    this.dialogueObserver_ = null;
+    this.dialogHandler = null;
     this.closeHandler = null;
   }
 
@@ -164,7 +164,12 @@ proxy.AsyncMessageChannel = class {
       // A modal or tab modal dialog has been opened. To be able to handle it,
       // the active command has to be aborted. Therefore remove all handlers,
       // and cancel any ongoing requests in the listener.
-      this.dialogueObserver_ = (subject, topic) => {
+      this.dialogHandler = (action, dialogRef, win) => {
+        // Only care about modals of the currently selected window.
+        if (win !== this.browser.window) {
+          return;
+        }
+
         this.removeAllListeners_();
         // TODO(ato): It's not ideal to have listener specific behaviour here:
         this.sendAsync("cancelRequest");
@@ -187,7 +192,7 @@ proxy.AsyncMessageChannel = class {
    * Add all necessary handlers for events and observer notifications.
    */
   addHandlers() {
-    modal.addHandler(this.dialogueObserver_);
+    this.browser.driver.dialogObserver.add(this.dialogHandler.bind(this));
 
     // Register event handlers in case the command closes the current
     // tab or window, and the promise has to be escaped.
@@ -206,7 +211,7 @@ proxy.AsyncMessageChannel = class {
    * Remove all registered handlers for events and observer notifications.
    */
   removeHandlers() {
-    modal.removeHandler(this.dialogueObserver_);
+    this.browser.driver.dialogObserver.remove(this.dialogHandler.bind(this));
 
     if (this.browser) {
       this.browser.window.removeEventListener("unload", this.closeHandler);
