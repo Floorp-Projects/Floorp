@@ -13,6 +13,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "OverscrollHandoffState.h"
 #include "QueuedInput.h"
+#include "mozilla/StaticPrefs.h"
 
 #define INPQ_LOG(...)
 // #define INPQ_LOG(...) printf_stderr("INPQ: " __VA_ARGS__)
@@ -82,7 +83,7 @@ nsEventStatus InputQueue::ReceiveTouchInput(
   if (aEvent.mType == MultiTouchInput::MULTITOUCH_START) {
     nsTArray<TouchBehaviorFlags> currentBehaviors;
     bool haveBehaviors = false;
-    if (!StaticPrefs::TouchActionEnabled()) {
+    if (!StaticPrefs::layout_css_touch_action_enabled()) {
       haveBehaviors = true;
     } else if (mActiveTouchBlock) {
       haveBehaviors =
@@ -114,7 +115,7 @@ nsEventStatus InputQueue::ReceiveTouchInput(
           aTarget, InputBlockState::TargetConfirmationState::eConfirmed,
           nullptr /* the block was just created so it has no events */,
           false /* not a scrollbar drag */);
-      if (StaticPrefs::TouchActionEnabled()) {
+      if (StaticPrefs::layout_css_touch_action_enabled()) {
         block->SetAllowedTouchBehaviors(currentBehaviors);
       }
       INPQ_LOG("block %p tagged as fast-motion\n", block);

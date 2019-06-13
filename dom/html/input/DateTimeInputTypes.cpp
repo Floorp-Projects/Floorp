@@ -8,6 +8,7 @@
 
 #include "js/Date.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsDOMTokenList.h"
 
@@ -19,19 +20,6 @@ const double DateTimeInputTypeBase::kMsPerDay = 24 * 60 * 60 * 1000;
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-/* static */
-bool DateTimeInputTypeBase::IsInputDateTimeEnabled() {
-  static bool sDateTimeEnabled = false;
-  static bool sDateTimePrefCached = false;
-  if (!sDateTimePrefCached) {
-    sDateTimePrefCached = true;
-    mozilla::Preferences::AddBoolVarCache(&sDateTimeEnabled,
-                                          "dom.forms.datetime", false);
-  }
-
-  return sDateTimeEnabled;
-}
 
 bool DateTimeInputTypeBase::IsMutable() const {
   return !mInputElement->IsDisabled() &&
@@ -187,7 +175,7 @@ bool DateTimeInputTypeBase::GetTimeFromMs(double aValue, uint16_t* aHours,
 // input type=date
 
 nsresult DateInputType::GetBadInputMessage(nsAString& aMessage) {
-  if (!IsInputDateTimeEnabled()) {
+  if (!StaticPrefs::dom_forms_datetime()) {
     return NS_ERROR_UNEXPECTED;
   }
 

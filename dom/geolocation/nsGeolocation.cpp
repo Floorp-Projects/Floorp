@@ -15,6 +15,7 @@
 #include "mozilla/dom/PositionErrorBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -502,16 +503,13 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsGeolocationService)
 NS_IMPL_RELEASE(nsGeolocationService)
 
-static bool sGeoEnabled = true;
 static int32_t sProviderTimeout = 6000;  // Time, in milliseconds, to wait for
                                          // the location provider to spin up.
 
 nsresult nsGeolocationService::Init() {
   Preferences::AddIntVarCache(&sProviderTimeout, "geo.timeout",
                               sProviderTimeout);
-  Preferences::AddBoolVarCache(&sGeoEnabled, "geo.enabled", sGeoEnabled);
-
-  if (!sGeoEnabled) {
+  if (!StaticPrefs::geo_enabled()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -644,7 +642,7 @@ CachedPositionAndAccuracy nsGeolocationService::GetCachedPosition() {
 }
 
 nsresult nsGeolocationService::StartDevice(nsIPrincipal* aPrincipal) {
-  if (!sGeoEnabled) {
+  if (!StaticPrefs::geo_enabled()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -1069,7 +1067,7 @@ nsresult Geolocation::GetCurrentPosition(GeoPositionCallback callback,
       this, std::move(callback), std::move(errorCallback), std::move(options),
       static_cast<uint8_t>(mProtocolType), target);
 
-  if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
+  if (!StaticPrefs::geo_enabled() || ShouldBlockInsecureRequests() ||
       !FeaturePolicyBlocked()) {
     request->RequestDelayedTask(target,
                                 nsGeolocationRequest::DelayedTaskType::Deny);
@@ -1142,7 +1140,7 @@ int32_t Geolocation::WatchPosition(GeoPositionCallback aCallback,
       std::move(aOptions), static_cast<uint8_t>(mProtocolType), target, true,
       watchId);
 
-  if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
+  if (!StaticPrefs::geo_enabled() || ShouldBlockInsecureRequests() ||
       !FeaturePolicyBlocked()) {
     request->RequestDelayedTask(target,
                                 nsGeolocationRequest::DelayedTaskType::Deny);

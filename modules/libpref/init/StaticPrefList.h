@@ -104,6 +104,12 @@
 
 // clang-format off
 
+#ifdef RELEASE_OR_BETA
+# define NOT_IN_RELEASE_OR_BETA_VALUE false
+#else
+# define NOT_IN_RELEASE_OR_BETA_VALUE true
+#endif
+
 //---------------------------------------------------------------------------
 // Prefs starting with "accessibility."
 //---------------------------------------------------------------------------
@@ -683,6 +689,18 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Prefs starting with "beacon."
+//---------------------------------------------------------------------------
+
+// Is support for Navigator.sendBeacon enabled?
+VARCACHE_PREF(
+  Live,
+  "beacon.enabled",
+  beacon_enabled,
+  bool, true
+)
+
+//---------------------------------------------------------------------------
 // Prefs starting with "browser."
 //---------------------------------------------------------------------------
 
@@ -959,6 +977,30 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Is support for CanvasRenderingContext2D.filter enabled?
+VARCACHE_PREF(
+  Live,
+  "canvas.filters.enabled",
+  canvas_filters_enabled,
+  bool, true
+)
+
+// Provide ability to turn on support for canvas focus rings.
+VARCACHE_PREF(
+  Live,
+  "canvas.focusring.enabled",
+  canvas_focusring_enabled,
+  bool, true
+)
+
+// Is support for CanvasRenderingContext2D's hitRegion APIs enabled?
+VARCACHE_PREF(
+  Live,
+  "canvas.hitregions.enabled",
+  canvas_hitregions_enabled,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Prefs starting with "channelclassifier."
 //---------------------------------------------------------------------------
@@ -990,6 +1032,15 @@ VARCACHE_PREF(
 //---------------------------------------------------------------------------
 // Prefs starting with "device."
 //---------------------------------------------------------------------------
+
+// Is support for the device sensors API enabled?
+VARCACHE_PREF(
+  Live,
+  "device.sensors.enabled",
+  device_sensors_enabled,
+  bool, true
+)
+
 VARCACHE_PREF(
   Live,
   "device.sensors.ambientLight.enabled",
@@ -1153,6 +1204,14 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Is support for Navigator.getBattery enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.battery.enabled",
+  dom_battery_enabled,
+  bool, true
+)
+
 // Block multiple external protocol URLs in iframes per single event.
 VARCACHE_PREF(
   Live,
@@ -1214,6 +1273,14 @@ VARCACHE_PREF(
   Live,
   "dom.disable_open_during_load",
   dom_disable_open_during_load,
+  bool, false
+)
+
+// Is support for Performance.mozMemory enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.enable_memory_stats",
+  dom_enable_memory_stats,
   bool, false
 )
 
@@ -1439,6 +1506,54 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Is support for input type=date and type=time enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.forms.datetime",
+  dom_forms_datetime,
+  bool, true
+)
+
+// Is support for HTMLInputElement.inputMode enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.forms.inputmode",
+  dom_forms_inputmode,
+  bool, NOT_IN_RELEASE_OR_BETA_VALUE
+)
+
+// Enable Directory API. By default, disabled.
+VARCACHE_PREF(
+  Live,
+  "dom.input.dirpicker",
+  dom_input_dirpicker,
+  bool, false
+)
+
+// Is support for InputEvent.data enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.inputevent.data.enabled",
+  dom_inputevent_data_enabled,
+  bool, true
+)
+
+// Is support for InputEvent.dataTransfer enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.inputevent.datatransfer.enabled",
+  dom_inputevent_datatransfer_enabled,
+  bool, true
+)
+
+// Is support for InputEvent.inputType enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.inputevent.inputtype.enabled",
+  dom_inputevent_inputtype_enabled,
+  bool, true
+)
+
 // How long a content process can take before closing its IPC channel
 // after shutdown is initiated.  If the process exceeds the timeout,
 // we fear the worst and kill it.
@@ -1485,6 +1600,24 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Whether window.onappinstalled from "W3C Web Manifest" is enabled
+VARCACHE_PREF(
+  Live,
+  "dom.manifest.onappinstalled",
+  dom_manifest_onappinstalled,
+  bool, false
+)
+
+// This pref is used to enable/disable the `document.autoplayPolicy` API which
+// returns a enum string which presents current autoplay policy and can change
+// overtime based on user session activity.
+VARCACHE_PREF(
+  Live,
+  "dom.media.autoplay.autoplay-policy-api",
+  dom_media_autoplay_autoplay_policy_api,
+  bool, false
+)
+
 VARCACHE_PREF(
   Live,
   "dom.meta-viewport.enabled",
@@ -1496,6 +1629,22 @@ VARCACHE_PREF(
   Live,
   "dom.metaElement.setCookie.allowed",
   dom_metaElement_setCookie_allowed,
+  bool, false
+)
+
+// Is support for module scripts (<script type="module">) enabled for content?
+VARCACHE_PREF(
+  Live,
+  "dom.moduleScripts.enabled",
+  dom_moduleScripts_enabled,
+  bool, true
+)
+
+// Is support for mozBrowser frames enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.mozBrowserFramesEnabled",
+  dom_mozBrowserFramesEnabled,
   bool, false
 )
 
@@ -1523,6 +1672,14 @@ VARCACHE_PREF(
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
+
+// Is support for Window.paintWorklet enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.paintWorklet.enabled",
+  dom_paintWorklet_enabled,
+  bool, false
+)
 
 // Enable/disable the PaymentRequest API
 VARCACHE_PREF(
@@ -1573,6 +1730,46 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Is support for PerformanceTiming.timeToContentfulPaint enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.performance.time_to_contentful_paint.enabled",
+  dom_performance_time_to_contentful_paint_enabled,
+  bool, false
+)
+
+// Is support for PerformanceTiming.timeToDOMContentFlushed enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.performance.time_to_dom_content_flushed.enabled",
+  dom_performance_time_to_dom_content_flushed_enabled,
+  bool, false
+)
+
+// Is support for PerformanceTiming.timeToFirstInteractive enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.performance.time_to_first_interactive.enabled",
+  dom_performance_time_to_first_interactive_enabled,
+  bool, false
+)
+
+// Is support for PerformanceTiming.timeToNonBlankPaint enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.performance.time_to_non_blank_paint.enabled",
+  dom_performance_time_to_non_blank_paint_enabled,
+  bool, false
+)
+
+// Is support for Permissions.revoke enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.permissions.revoke.enable",
+  dom_permissions_revoke_enable,
+  bool, false
+)
+
 // Whether we should show the placeholder when the element is focused but empty.
 VARCACHE_PREF(
   Live,
@@ -1581,27 +1778,44 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Is support for Element.requestPointerLock enabled?
+// This is added for accessibility purpose. When user has no way to exit
+// pointer lock (e.g. no keyboard available), they can use this pref to
+// disable the Pointer Lock API altogether.
+VARCACHE_PREF(
+  Live,
+  "dom.pointer-lock.enabled",
+  dom_pointer_lock_enabled,
+  bool, true
+)
+
 // Presentation API
+#if defined(ANDROID)
+# define PREF_VALUE NOT_IN_RELEASE_OR_BETA_VALUE
+#else
+# define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Live,
   "dom.presentation.enabled",
   dom_presentation_enabled,
-  bool, false
+  bool, PREF_VALUE
 )
 
 VARCACHE_PREF(
   Live,
   "dom.presentation.controller.enabled",
   dom_presentation_controller_enabled,
-  bool, false
+  bool, PREF_VALUE
 )
 
 VARCACHE_PREF(
   Live,
   "dom.presentation.receiver.enabled",
   dom_presentation_receiver_enabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
@@ -1633,6 +1847,14 @@ VARCACHE_PREF(
   "dom.push.enabled",
   dom_push_enabled,
   RelaxedAtomicBool, false
+)
+
+// Is support for Navigator.registerContentHandler enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.registerContentHandler.enabled",
+  dom_registerContentHandler_enabled,
+  bool, false
 )
 
 // Reporting API.
@@ -1796,6 +2018,14 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for selection event APIs enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.select_events.enabled",
+  dom_select_events_enabled,
+  bool, true
+)
+
 VARCACHE_PREF(
   Live,
   "dom.separate_event_queue_for_post_message.enabled",
@@ -1820,6 +2050,15 @@ VARCACHE_PREF(
   "dom.serviceWorkers.testing.enabled",
   dom_serviceWorkers_testing_enabled,
   RelaxedAtomicBool, false
+)
+
+// External.AddSearchProvider is deprecated and it will be removed in the next
+// cycles.
+VARCACHE_PREF(
+  Live,
+  "dom.sidebar.enabled",
+  dom_sidebar_enabled,
+  bool, true
 )
 
 // Are shared memory User Agent style sheets enabled?
@@ -1852,6 +2091,14 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for Storage test APIs enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.storage.testing",
+  dom_storage_testing,
+  bool, false
+)
+
 // For area and anchor elements with target=_blank and no rel set to
 // opener/noopener.
 #ifdef EARLY_BETA_OR_EARLIER
@@ -1866,6 +2113,14 @@ VARCACHE_PREF(
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
+
+// Is support for Selection.GetRangesForInterval enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.testing.selection.GetRangesForInterval",
+  dom_testing_selection_GetRangesForInterval,
+  bool, false
+)
 
 VARCACHE_PREF(
   Live,
@@ -1899,12 +2154,29 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Is support for Window.visualViewport enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.visualviewport.enabled",
+  dom_visualviewport_enabled,
+  bool, false
+)
+
+// Is support for WebVR APIs enabled?
+// Enabled by default in beta and release for Windows and OS X and for all
+// platforms in nightly and aurora.
+#if defined(XP_WIN) || defined(XP_DARWIN) || !defined(RELEASE_OR_BETA)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "dom.vr.enabled",
   dom_vr_enabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
@@ -2096,6 +2368,14 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for Navigator.webdriver enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.webdriver.enabled",
+  dom_webdriver_enabled,
+  bool, true
+)
+
 // In case Touch API is enabled, this pref controls whether to support
 // ontouch* event handlers, document.createTouch, document.createTouchList and
 // document.createEvent("TouchEvent").
@@ -2149,6 +2429,20 @@ VARCACHE_PREF(
   dom_webgpu_enable,
   bool, false
 )
+
+// Is support for HTMLInputElement.webkitEntries enabled?
+#if !defined(MOZ_WIDGET_ANDROID)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  Live,
+  "dom.webkitBlink.filesystem.enabled",
+  dom_webkitBlink_filesystem_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
 
 // Whether the WebMIDI API is enabled
 VARCACHE_PREF(
@@ -2205,6 +2499,14 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// Is support for Window.event enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.window.event.enabled",
+  dom_window_event_enabled,
+  bool, true
+)
+
 // Enable the "noreferrer" feature argument for window.open()
 VARCACHE_PREF(
   Live,
@@ -2255,6 +2557,45 @@ VARCACHE_PREF(
   "dom.xhr.standard_content_type_normalization",
   dom_xhr_standard_content_type_normalization,
   RelaxedAtomicBool, true
+)
+
+// Is support for XMLDocument.async enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.xmldocument.async.enabled",
+  dom_xmldocument_async_enabled,
+  bool, false
+)
+
+// Is support for XMLDocument.load enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.xmldocument.load.enabled",
+  dom_xmldocument_load_enabled,
+  bool, false
+)
+
+// Is support for Navigator.geolocation enabled?
+VARCACHE_PREF(
+  Live,
+  "geo.enabled",
+  geo_enabled,
+  bool, true
+)
+
+// WebIDL test prefs
+
+VARCACHE_PREF(
+  Live,
+  "abc.def",
+  abc_def,
+  bool, true
+)
+VARCACHE_PREF(
+  Live,
+  "ghi.jkl",
+  ghi_jkl,
+  bool, true
 )
 
 //---------------------------------------------------------------------------
@@ -4247,6 +4588,14 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for GeometryUtils.convert*FromNode enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.convertFromNode.enabled",
+  layout_css_convertFromNode_enabled,
+  bool, NOT_IN_RELEASE_OR_BETA_VALUE
+)
+
 // Is support for DOMMatrix enabled?
 VARCACHE_PREF(
   Live,
@@ -4335,7 +4684,15 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.individual-transform.enabled",
-  IndividualTransform,
+  layout_css_individual_transform_enabled,
+  bool, false
+)
+
+// Is support for CSS initial-letter property enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.initial-letter.enabled",
+  layout_css_initial_letter_enabled,
   bool, false
 )
 
@@ -4344,6 +4701,22 @@ VARCACHE_PREF(
   Live,
   "layout.css.line-height-moz-block-height.content.enabled",
   layout_css_line_height_moz_block_height_content_enabled,
+  bool, false
+)
+
+// Is support for motion-path enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.motion-path.enabled",
+  layout_css_motion_path_enabled,
+  bool, NOT_IN_RELEASE_OR_BETA_VALUE
+)
+
+// Is support for -moz-binding enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.moz-binding.content.enabled",
+  layout_css_moz_binding_content_enabled,
   bool, false
 )
 
@@ -4378,6 +4751,36 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Is -moz-osx-font-smoothing enabled? (Only supported in OSX builds)
+#if defined(XP_MACOSX)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  Live,
+  "layout.css.osx-font-smoothing.enabled",
+  layout_css_osx_font_smoothing_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Is support for CSS overflow-clip-box enabled for non-UA sheets?
+VARCACHE_PREF(
+  Live,
+  "layout.css.overflow-clip-box.enabled",
+  layout_css_overflow_clip_box_enabled,
+  bool, false
+)
+
+// Is support for overscroll-behavior enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.overscroll-behavior.enabled",
+  layout_css_overscroll_behavior_enabled,
+  bool, true
+)
+
 VARCACHE_PREF(
   Live,
   "layout.css.paint-order.enabled",
@@ -4393,11 +4796,59 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Is support for -moz-prefixed animation properties enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.prefixes.animations",
+  layout_css_prefixes_animations,
+  bool, true
+)
+
+// Is support for -moz-border-image enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.prefixes.border-image",
+  layout_css_prefixes_border_image,
+  bool, true
+)
+
+// Is support for -moz-box-sizing enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.prefixes.box-sizing",
+  layout_css_prefixes_box_sizing,
+  bool, true
+)
+
 // Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
 VARCACHE_PREF(
   Live,
   "layout.css.prefixes.device-pixel-ratio-webkit",
   layout_css_prefixes_device_pixel_ratio_webkit,
+  bool, true
+)
+
+// Is support for -moz-prefixed font feature properties enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.prefixes.font-features",
+  layout_css_prefixes_font_features,
+  bool, true
+)
+
+// Is support for -moz-prefixed transform properties enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.prefixes.transforms",
+  layout_css_prefixes_transforms,
+  bool, true
+)
+
+// Is support for -moz-prefixed transition properties enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.prefixes.transitions",
+  layout_css_prefixes_transitions,
   bool, true
 )
 
@@ -4414,6 +4865,22 @@ VARCACHE_PREF(
   "layout.css.scroll-behavior.damping-ratio",
   ScrollBehaviorDampingRatio,
   AtomicFloat, 1.0f
+)
+
+// Is support for scrollbar-color property enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.scrollbar-color.enabled",
+  layout_css_scrollbar_color_enabled,
+  bool, true
+)
+
+// Is support for scrollbar-width property enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.scrollbar-width.enabled",
+  layout_css_scrollbar_width_enabled,
+  bool, true
 )
 
 #ifdef NIGHTLY_BUILD
@@ -4472,11 +4939,16 @@ VARCACHE_PREF(
   bool, true
 )
 
+// W3C touch-action css property (related to touch and pointer events)
+// Note that we turn this on even on platforms/configurations where touch
+// events are not supported (e.g. OS X, or Windows with e10s disabled). For
+// those platforms we don't handle touch events anyway so it's conceptually
+// a no-op.
 VARCACHE_PREF(
   Live,
   "layout.css.touch_action.enabled",
-  TouchActionEnabled,
-  RelaxedAtomicBool, false
+  layout_css_touch_action_enabled,
+  RelaxedAtomicBool, true
 )
 
 // Does arbitrary ::-webkit-* pseudo-element parsed?
@@ -4766,6 +5238,14 @@ VARCACHE_PREF(
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
+
+// Is support for CSS text-justify property enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.text-justify.enabled",
+  layout_css_text_justify_enabled,
+  bool, true
+)
 
 // Is support for -webkit-line-clamp enabled?
 VARCACHE_PREF(
@@ -5536,7 +6016,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.videocontrols.lock-video-orientation",
-  MediaVideocontrolsLockVideoOrientation,
+  media_videocontrols_lock_video_orientation,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -5608,7 +6088,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.test.video-suspend",
-  MediaTestVideoSuspend,
+  media_test_video_suspend,
   RelaxedAtomicBool, false
 )
 
@@ -5650,6 +6130,27 @@ VARCACHE_PREF(
   Live,
   "media.peerconnection.enabled",
   media_peerconnection_enabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.peerconnection.dtmf.enabled",
+  media_peerconnection_dtmf_enabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.peerconnection.identity.enabled",
+  media_peerconnection_identity_enabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.peerconnection.rtpsourcesapi.enabled",
+  media_peerconnection_rtpsourcesapi_enabled,
   bool, true
 )
 
@@ -5702,6 +6203,61 @@ VARCACHE_PREF(
 #undef PREF_VALUE
 
 #endif // MOZ_WEBRTC
+
+// HTMLMediaElement.allowedToPlay should be exposed to web content when
+// block autoplay rides the trains to release. Until then, Nightly only.
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  Live,
+  "media.allowed-to-play.enabled",
+  media_allowed_to_play_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Is support for MediaKeys.getStatusForPolicy enabled?
+VARCACHE_PREF(
+  Live,
+  "media.eme.hdcp-policy-check.enabled",
+  media_eme_hdcp_policy_check_enabled,
+  bool, false
+)
+
+// Is support for MediaDevices.ondevicechange enabled?
+VARCACHE_PREF(
+  Live,
+  "media.ondevicechange.enabled",
+  media_ondevicechange_enabled,
+  bool, true
+)
+
+// Is support for HTMLMediaElement.seekToNextFrame enabled?
+VARCACHE_PREF(
+  Live,
+  "media.seekToNextFrame.enabled",
+  media_seekToNextFrame_enabled,
+  bool, true
+)
+
+// setSinkId will be enabled in bug 1498512. Till then the
+// implementation will remain hidden behind this pref (Bug 1152401, Bug 934425).
+VARCACHE_PREF(
+  Live,
+  "media.setsinkid.enabled",
+  media_setsinkid_enabled,
+  bool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.useAudioChannelService.testing",
+  media_useAudioChannelService_testing,
+  bool, false
+)
 
 //---------------------------------------------------------------------------
 // Prefs starting with "mousewheel."
@@ -5844,14 +6400,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "network.cookie.thirdparty.sessionOnly",
-   network_cookie_thirdparty_sessionOnly,
+  network_cookie_thirdparty_sessionOnly,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "network.cookie.thirdparty.nonsecureSessionOnly",
-   network_cookie_thirdparty_nonsecureSessionOnly,
+  network_cookie_thirdparty_nonsecureSessionOnly,
   bool, false
 )
 
@@ -6348,6 +6904,18 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Prefs starting with "svg."
+//---------------------------------------------------------------------------
+
+// Is support for transform-box enabled?
+VARCACHE_PREF(
+  Live,
+  "svg.transform-box.enabled",
+  svg_transform_box_enabled,
+  bool, true
+)
+
+//---------------------------------------------------------------------------
 // Prefs starting with "telemetry."
 //---------------------------------------------------------------------------
 
@@ -6735,6 +7303,7 @@ VARCACHE_PREF(
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
+
 
 //---------------------------------------------------------------------------
 // End of prefs

@@ -395,9 +395,8 @@ nsFileControlFrame::DnDListener::HandleEvent(Event* aEvent) {
       inputElement->MozSetDndFilesAndDirectories(array);
     } else {
       bool blinkFileSystemEnabled =
-          Preferences::GetBool("dom.webkitBlink.filesystem.enabled", false);
-      bool dirPickerEnabled =
-          Preferences::GetBool("dom.input.dirpicker", false);
+          StaticPrefs::dom_webkitBlink_filesystem_enabled();
+      bool dirPickerEnabled = StaticPrefs::dom_input_dirpicker();
       if (blinkFileSystemEnabled || dirPickerEnabled) {
         FileList* files = static_cast<FileList*>(fileList.get());
         if (files) {

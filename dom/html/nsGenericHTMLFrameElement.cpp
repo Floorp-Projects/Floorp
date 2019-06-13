@@ -11,6 +11,7 @@
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/ErrorResult.h"
 #include "GeckoProfiler.h"
 #include "nsAttrValueInlines.h"
@@ -318,7 +319,8 @@ nsresult nsGenericHTMLFrameElement::AfterSetAttr(
         }
       }
     } else if (aName == nsGkAtoms::mozbrowser) {
-      mReallyIsBrowser = !!aValue && BrowserFramesEnabled() &&
+      mReallyIsBrowser = !!aValue &&
+                         StaticPrefs::dom_mozBrowserFramesEnabled() &&
                          PrincipalAllowsBrowserFrame(NodePrincipal());
     }
   }
@@ -407,26 +409,6 @@ bool nsGenericHTMLFrameElement::IsHTMLFocusable(bool aWithMouse,
   }
 
   return false;
-}
-
-static bool sMozBrowserFramesEnabled = false;
-#ifdef DEBUG
-static bool sBoolVarCacheInitialized = false;
-#endif
-
-void nsGenericHTMLFrameElement::InitStatics() {
-  MOZ_ASSERT(!sBoolVarCacheInitialized);
-  MOZ_ASSERT(NS_IsMainThread());
-  Preferences::AddBoolVarCache(&sMozBrowserFramesEnabled,
-                               "dom.mozBrowserFramesEnabled");
-#ifdef DEBUG
-  sBoolVarCacheInitialized = true;
-#endif
-}
-
-bool nsGenericHTMLFrameElement::BrowserFramesEnabled() {
-  MOZ_ASSERT(sBoolVarCacheInitialized);
-  return sMozBrowserFramesEnabled;
 }
 
 /**
