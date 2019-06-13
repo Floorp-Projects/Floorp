@@ -3504,6 +3504,10 @@ struct AssertNonGrayTracer final : public JS::CallbackTracer {
   void onChild(const JS::GCCellPtr& thing) override {
     MOZ_ASSERT(!thing.asCell()->isMarkedGray());
   }
+  // This is used by the UnmarkGray tracer only, and needs to report itself
+  // as the non-gray tracer to not trigger assertions.  Do not use it in another
+  // context without making this more generic.
+  TracerKind getTracerKind() const override { return TracerKind::UnmarkGray; }
 };
 #endif
 
