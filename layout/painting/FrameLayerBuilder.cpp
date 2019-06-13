@@ -3754,13 +3754,14 @@ UniquePtr<InactiveLayerData> PaintedLayerData::CreateInactiveLayerData(
   UniquePtr<InactiveLayerData> data = MakeUnique<InactiveLayerData>();
   data->mLayerManager = tempManager;
 
-  data->mLayerBuilder = new FrameLayerBuilder();
-  data->mLayerBuilder->Init(aState->Builder(), tempManager, this, true,
+  FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
+  // Ownership of layerBuilder is passed to tempManager.
+  layerBuilder->Init(aState->Builder(), tempManager, this, true,
                             &aItem->GetClip());
 
   tempManager->BeginTransaction();
   if (aState->LayerBuilder()->GetRetainingLayerManager()) {
-    data->mLayerBuilder->DidBeginRetainedLayerTransaction(tempManager);
+    layerBuilder->DidBeginRetainedLayerTransaction(tempManager);
   }
 
   data->mProps = LayerProperties::CloneFrom(tempManager->GetRoot());
@@ -5372,7 +5373,7 @@ void FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
   if (aItem.mInactiveLayerData) {
     RefPtr<BasicLayerManager> tempManager =
         aItem.mInactiveLayerData->mLayerManager;
-    FrameLayerBuilder* layerBuilder = aItem.mInactiveLayerData->mLayerBuilder;
+    FrameLayerBuilder* layerBuilder = tempManager->GetLayerBuilder();
     Layer* tmpLayer = aItem.mInactiveLayerData->mLayer;
 
     // We have no easy way of detecting if this transaction will ever actually
