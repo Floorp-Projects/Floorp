@@ -6,93 +6,92 @@ package mozilla.components.lib.crash.prompt
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.TextView
+import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ActivityScenario.launch
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
+import mozilla.components.lib.crash.prompt.CrashReporterActivity.Companion.PREFERENCE_KEY_SEND_REPORT
+import mozilla.components.lib.crash.prompt.CrashReporterActivity.Companion.SHARED_PREFERENCES_NAME
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.Mockito.verify
-import org.robolectric.Robolectric
+import org.mockito.MockitoAnnotations.initMocks
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class CrashReporterActivityTest {
 
-    @Test
-    fun `Pressing close button sends report`() {
-        val service: CrashReporterService = mock()
+    @Mock
+    lateinit var service: CrashReporterService
 
+    @Before
+    fun setUp() {
+        initMocks(this)
+    }
+
+    @Test
+    fun `Pressing close button sends report`() = runBlockingTest {
         CrashReporter(
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service)
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
+        val scenario = launchActivityWith(crash)
 
-        val intent = Intent()
-        crash.fillIn(intent)
-
-        val activity = Robolectric.buildActivity(CrashReporterActivity::class.java, intent)
-            .create()
-            .visible()
-            .start()
-            .resume()
-            .get()
-
-        val closeButton = activity.findViewById<Button>(R.id.closeButton)
-        closeButton.performClick()
-
-        runBlocking {
-            delay(100)
+        scenario.onActivity { activity ->
+            // When
+            activity.closeButton.performClick()
         }
 
+        // Await for all coroutines to be finished
+        advanceUntilIdle()
+
+        // Then
         verify(service).report(crash)
     }
 
     @Test
-    fun `Pressing restart button sends report`() {
-        val service: CrashReporterService = mock()
-
+    fun `Pressing restart button sends report`() = runBlockingTest {
         CrashReporter(
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service)
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
+        val scenario = launchActivityWith(crash)
 
-        val intent = Intent()
-        crash.fillIn(intent)
-
-        val activity = Robolectric.buildActivity(CrashReporterActivity::class.java, intent)
-            .create()
-            .visible()
-            .start()
-            .resume()
-            .get()
-
-        val restartButton = activity.findViewById<Button>(R.id.restartButton)
-        restartButton.performClick()
-
-        runBlocking {
-            delay(100)
+        scenario.onActivity { activity ->
+            // When
+            activity.restartButton.performClick()
         }
 
+        // Await for all coroutines to be finished
+        advanceUntilIdle()
+
+        // Then
         verify(service).report(crash)
     }
 
     @Test
-    fun `Custom message is set on CrashReporterActivity`() {
+    fun `Custom message is set on CrashReporterActivity`() = runBlockingTest {
         CrashReporter(
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             promptConfiguration = CrashReporter.PromptConfiguration(
@@ -103,51 +102,65 @@ class CrashReporterActivityTest {
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
+        val scenario = launchActivityWith(crash)
 
-        val intent = Intent()
-        crash.fillIn(intent)
-
-        val activity = Robolectric.buildActivity(CrashReporterActivity::class.java, intent)
-            .create()
-            .visible()
-            .start()
-            .resume()
-            .get()
-
-        val view = activity.findViewById<TextView>(R.id.messageView)
-        assertEquals("Hello World!", view.text)
+        scenario.onActivity { activity ->
+            // Then
+            assertEquals("Hello World!", activity.messageView.text)
+        }
     }
 
     @Test
-    fun `Sending crash report saves checkbox state`() {
-        val service: CrashReporterService = mock()
-
+    fun `Sending crash report saves checkbox state`() = runBlockingTest {
         CrashReporter(
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service)
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
+        val scenario = launchActivityWith(crash)
 
-        val intent = Intent()
-        crash.fillIn(intent)
+        scenario.onActivity { activity ->
+            // When
+            activity.sendCheckbox.isChecked = true
 
-        val activity = Robolectric.buildActivity(CrashReporterActivity::class.java, intent)
-            .create()
-            .visible()
-            .start()
-            .resume()
-            .get()
+            // Then
+            assertFalse(activity.isSendReportPreferenceEnabled)
 
-        val checkBox = activity.findViewById<CheckBox>(R.id.sendCheckbox)
-        checkBox.isChecked = true
+            // When
+            activity.restartButton.performClick()
 
-        val preference = activity.getSharedPreferences("mozac_lib_crash_settings", Context.MODE_PRIVATE)
-        assertFalse(preference.getBoolean("sendCrashReport", false))
-
-        val restartButton = activity.findViewById<Button>(R.id.restartButton)
-        restartButton.performClick()
-
-        assertTrue(preference.getBoolean("sendCrashReport", false))
+            // Then
+            assertTrue(activity.isSendReportPreferenceEnabled)
+        }
     }
 }
+
+/**
+ * Launch activity scenario for certain [crash].
+ */
+@ExperimentalCoroutinesApi
+private fun TestCoroutineScope.launchActivityWith(
+    crash: Crash.UncaughtExceptionCrash
+): ActivityScenario<CrashReporterActivity> = run {
+    val intent = Intent(testContext, CrashReporterActivity::class.java)
+        .also { crash.fillIn(it) }
+
+    launch<CrashReporterActivity>(intent).apply {
+        onActivity { activity ->
+            activity.reporterCoroutineContext = coroutineContext
+        }
+    }
+}
+
+// Views
+private val CrashReporterActivity.closeButton: Button get() = findViewById(R.id.closeButton)
+private val CrashReporterActivity.restartButton: Button get() = findViewById(R.id.restartButton)
+private val CrashReporterActivity.messageView: TextView get() = findViewById(R.id.messageView)
+private val CrashReporterActivity.sendCheckbox: CheckBox get() = findViewById(R.id.sendCheckbox)
+
+// Preferences
+private val CrashReporterActivity.preferences: SharedPreferences
+    get() = getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+private val CrashReporterActivity.isSendReportPreferenceEnabled: Boolean
+    get() = preferences.getBoolean(PREFERENCE_KEY_SEND_REPORT, false)
