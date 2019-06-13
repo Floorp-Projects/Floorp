@@ -5278,8 +5278,8 @@ class PDFFindController {
         const pageNumber = this._selected.pageIdx + 1;
         const linkService = this._linkService;
 
-        if (pageNumber >= 1 && pageNumber <= linkService.pagesCount && linkService.page !== pageNumber && linkService.isPageVisible && !linkService.isPageVisible(pageNumber)) {
-          break;
+        if (pageNumber >= 1 && pageNumber <= linkService.pagesCount && pageNumber !== linkService.page && !linkService.isPageVisible(pageNumber)) {
+          return true;
         }
 
         return false;
@@ -6893,9 +6893,16 @@ class PDFOutlineViewer {
     }
   }
 
-  _addToggleButton(div) {
+  _addToggleButton(div, {
+    count,
+    items
+  }) {
     let toggler = document.createElement('div');
     toggler.className = 'outlineItemToggler';
+
+    if (count < 0 && Math.abs(count) === items.length) {
+      toggler.classList.add('outlineItemsHidden');
+    }
 
     toggler.onclick = evt => {
       evt.stopPropagation();
@@ -6952,10 +6959,9 @@ class PDFOutlineViewer {
     let hasAnyNesting = false;
 
     while (queue.length > 0) {
-      let levelData = queue.shift();
+      const levelData = queue.shift();
 
-      for (let i = 0, len = levelData.items.length; i < len; i++) {
-        let item = levelData.items[i];
+      for (const item of levelData.items) {
         let div = document.createElement('div');
         div.className = 'outlineItem';
         let element = document.createElement('a');
@@ -6970,7 +6976,7 @@ class PDFOutlineViewer {
         if (item.items.length > 0) {
           hasAnyNesting = true;
 
-          this._addToggleButton(div);
+          this._addToggleButton(div, item);
 
           let itemsDiv = document.createElement('div');
           itemsDiv.className = 'outlineItems';
@@ -6988,6 +6994,7 @@ class PDFOutlineViewer {
 
     if (hasAnyNesting) {
       this.container.classList.add('outlineWithDeepNesting');
+      this.lastToggleIsShow = fragment.querySelectorAll('.outlineItemsHidden').length === 0;
     }
 
     this.container.appendChild(fragment);
@@ -11768,6 +11775,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.FirefoxPrintService = FirefoxPrintService;
 
+var _app_options = __webpack_require__(3);
+
 var _ui_utils = __webpack_require__(2);
 
 var _app = __webpack_require__(1);
@@ -11776,7 +11785,7 @@ var _pdfjsLib = __webpack_require__(4);
 
 function composePage(pdfDocument, pageNumber, size, printContainer) {
   let canvas = document.createElement('canvas');
-  const PRINT_RESOLUTION = 150;
+  const PRINT_RESOLUTION = _app_options.AppOptions.get('printResolution') || 150;
   const PRINT_UNITS = PRINT_RESOLUTION / 72.0;
   canvas.width = Math.floor(size.width * PRINT_UNITS);
   canvas.height = Math.floor(size.height * PRINT_UNITS);
