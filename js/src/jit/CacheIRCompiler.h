@@ -131,6 +131,10 @@ class IonCacheIRCompiler;
   _(CallNumberToString)                   \
   _(BooleanToString)                      \
   _(CallIsSuspendedGeneratorResult)       \
+  _(CallNativeGetElementResult)           \
+  _(CallProxyHasPropResult)               \
+  _(CallProxyGetByValueResult)            \
+  _(CallGetSparseElementResult)           \
   _(MetaTwoByte)                          \
   _(WrapResult)
 
@@ -708,6 +712,9 @@ class AutoOutputRegister;
 class MOZ_RAII CacheIRCompiler {
  protected:
   friend class AutoOutputRegister;
+  friend class AutoStubFrame;
+  friend class AutoSaveLiveRegisters;
+  friend class AutoCallVM;
 
   enum class Mode { Baseline, Ion };
 
@@ -715,8 +722,8 @@ class MOZ_RAII CacheIRCompiler {
 
   bool isBaseline();
   bool isIon();
-  BaselineCacheIRCompiler& asBaseline();
-  IonCacheIRCompiler& asIon();
+  BaselineCacheIRCompiler* asBaseline();
+  IonCacheIRCompiler* asIon();
 
   JSContext* cx_;
   CacheIRReader reader;
@@ -946,6 +953,46 @@ class MOZ_RAII AutoOutputRegister {
   operator TypedOrValueRegister() const { return output_; }
 };
 
+enum class CallCanGC { CanGC, CanNotGC };
+
+// Instructions that have to perform a callVM require a stub frame. Call its
+// enter() and leave() methods to enter/leave the stub frame.
+// Hoisted from jit/BaselineCacheIRCompiler.cpp. See there for method
+// definitions.
+class MOZ_RAII AutoStubFrame {
+  BaselineCacheIRCompiler& compiler;
+#ifdef DEBUG
+  uint32_t framePushedAtEnterStubFrame_;
+#endif
+
+  AutoStubFrame(const AutoStubFrame&) = delete;
+  void operator=(const AutoStubFrame&) = delete;
+
+ public:
+  explicit AutoStubFrame(BaselineCacheIRCompiler& compiler);
+
+  void enter(MacroAssembler& masm, Register scratch,
+             CallCanGC canGC = CallCanGC::CanGC);
+  void leave(MacroAssembler& masm, bool calledIntoIon = false);
+
+#ifdef DEBUG
+  ~AutoStubFrame();
+#endif
+};
+// AutoSaveLiveRegisters must be used when we make a call that can GC. The
+// constructor ensures all live registers are stored on the stack (where the GC
+// expects them) and the destructor restores these registers.
+class MOZ_RAII AutoSaveLiveRegisters {
+  IonCacheIRCompiler& compiler_;
+
+  AutoSaveLiveRegisters(const AutoSaveLiveRegisters&) = delete;
+  void operator=(const AutoSaveLiveRegisters&) = delete;
+
+ public:
+  explicit AutoSaveLiveRegisters(IonCacheIRCompiler& compiler);
+
+  ~AutoSaveLiveRegisters();
+};
 // Like AutoScratchRegister, but reuse a register of |output| if possible.
 class MOZ_RAII AutoScratchRegisterMaybeOutput {
   mozilla::Maybe<AutoScratchRegister> scratch_;
@@ -967,6 +1014,65 @@ class MOZ_RAII AutoScratchRegisterMaybeOutput {
   }
 
   operator Register() const { return scratchReg_; }
+};
+
+// AutoCallVM is a wrapper class that unifies methods shared by
+// IonCacheIRCompiler and BaselineCacheIRCompiler that perform a callVM, but
+// require stub specific functionality before performing the VM call.
+//
+// Expected Usage:
+//
+//   OPs with implementations that may be unified by this class must:
+//     - Be listed in the CACHEIR_OPS list but not in the CACHE_IR_SHARED_OPS
+//     list
+//     - Differ only in their use of `AutoSaveLiveRegisters`,
+//       `AutoOutputRegister`, and `AutoScratchRegister`. The Ion
+//       implementation will use `AutoSaveLiveRegisters` and
+//       `AutoOutputRegister`, while the Baseline implementation will use
+//       `AutoScratchRegister`.
+//     - Both use the `callVM` method.
+//
+//   Using AutoCallVM:
+//     - The constructor initializes `AutoOutputRegister` and
+//       `AutoSaveLiveRegisters` variables for CacheIRCompilers with the mode
+//       Ion, and initializes `AutoScratchRegister` and `AutoStubFrame`
+//       variables for CacheIRCompilers with mode Baseline.
+//     - The `prepare()` method calls the IonCacheIRCompiler method
+//       `prepareVMCall` for IonCacheIRCompilers, calls the `enter()` method of
+//       `AutoStubFrame` for BaselineCacheIRCompilers, and calls the
+//       `discardStack` method of the `Register` class for both compiler types.
+//     - The destructor calls the `masm` method `storeCallResultValue` for
+//       IonCacheIRCompilers, and calls the `leave` method of `AutoStubFrame`
+//       for BaselineCacheIRCompilers.
+//
+//   Expected Usage Example:
+//     See: `CacheIRCompiler::emitCallGetSparseElementResult()`
+//
+// Restrictions:
+//   - OPs that do not meet the criteria listed above can not be unified with
+//     AutoCallVM
+//
+
+class MOZ_RAII AutoCallVM {
+  MacroAssembler& masm_;
+  CacheIRCompiler* compiler_;
+  CacheRegisterAllocator& allocator_;
+
+  // Baseline specific stuff
+  mozilla::Maybe<AutoStubFrame> stubFrame_;
+  mozilla::Maybe<AutoScratchRegister> scratch_;
+
+  // Ion specific stuff
+  mozilla::Maybe<AutoOutputRegister> output_;
+  mozilla::Maybe<AutoSaveLiveRegisters> save_;
+
+ public:
+  AutoCallVM(MacroAssembler& masm, CacheIRCompiler* compiler,
+             CacheRegisterAllocator& allocator);
+
+  void prepare();
+
+  ~AutoCallVM();
 };
 
 // See the 'Sharing Baseline stub code' comment in CacheIR.h for a description

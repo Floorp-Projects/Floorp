@@ -59,63 +59,48 @@ BaselineCacheIRCompiler::BaselineCacheIRCompiler(
 CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
 #undef DEFINE_SHARED_OP
 
-enum class CallCanGC { CanGC, CanNotGC };
-
-// Instructions that have to perform a callVM require a stub frame. Call its
-// enter() and leave() methods to enter/leave the stub frame.
-class MOZ_RAII AutoStubFrame {
-  BaselineCacheIRCompiler& compiler;
+// AutoStubFrame methods
+AutoStubFrame::AutoStubFrame(BaselineCacheIRCompiler& compiler)
+    : compiler(compiler)
 #ifdef DEBUG
-  uint32_t framePushedAtEnterStubFrame_;
+      ,
+      framePushedAtEnterStubFrame_(0)
+#endif
+{
+}
+void AutoStubFrame::enter(MacroAssembler& masm, Register scratch,
+                          CallCanGC canGC) {
+  MOZ_ASSERT(compiler.allocator.stackPushed() == 0);
+
+  EmitBaselineEnterStubFrame(masm, scratch);
+
+#ifdef DEBUG
+  framePushedAtEnterStubFrame_ = masm.framePushed();
 #endif
 
-  AutoStubFrame(const AutoStubFrame&) = delete;
-  void operator=(const AutoStubFrame&) = delete;
-
- public:
-  explicit AutoStubFrame(BaselineCacheIRCompiler& compiler)
-      : compiler(compiler)
-#ifdef DEBUG
-        ,
-        framePushedAtEnterStubFrame_(0)
-#endif
-  {
+  MOZ_ASSERT(!compiler.preparedForVMCall_);
+  compiler.preparedForVMCall_ = true;
+  if (canGC == CallCanGC::CanGC) {
+    compiler.makesGCCalls_ = true;
   }
-
-  void enter(MacroAssembler& masm, Register scratch,
-             CallCanGC canGC = CallCanGC::CanGC) {
-    MOZ_ASSERT(compiler.allocator.stackPushed() == 0);
-
-    EmitBaselineEnterStubFrame(masm, scratch);
+}
+void AutoStubFrame::leave(MacroAssembler& masm, bool calledIntoIon) {
+  MOZ_ASSERT(compiler.preparedForVMCall_);
+  compiler.preparedForVMCall_ = false;
 
 #ifdef DEBUG
-    framePushedAtEnterStubFrame_ = masm.framePushed();
-#endif
-
-    MOZ_ASSERT(!compiler.preparedForVMCall_);
-    compiler.preparedForVMCall_ = true;
-    if (canGC == CallCanGC::CanGC) {
-      compiler.makesGCCalls_ = true;
-    }
+  masm.setFramePushed(framePushedAtEnterStubFrame_);
+  if (calledIntoIon) {
+    masm.adjustFrame(sizeof(intptr_t));  // Calls into ion have this extra.
   }
-  void leave(MacroAssembler& masm, bool calledIntoIon = false) {
-    MOZ_ASSERT(compiler.preparedForVMCall_);
-    compiler.preparedForVMCall_ = false;
-
-#ifdef DEBUG
-    masm.setFramePushed(framePushedAtEnterStubFrame_);
-    if (calledIntoIon) {
-      masm.adjustFrame(sizeof(intptr_t));  // Calls into ion have this extra.
-    }
 #endif
 
-    EmitBaselineLeaveStubFrame(masm, calledIntoIon);
-  }
+  EmitBaselineLeaveStubFrame(masm, calledIntoIon);
+}
 
 #ifdef DEBUG
-  ~AutoStubFrame() { MOZ_ASSERT(!compiler.preparedForVMCall_); }
+AutoStubFrame::~AutoStubFrame() { MOZ_ASSERT(!compiler.preparedForVMCall_); }
 #endif
-};
 
 }  // namespace jit
 }  // namespace js
@@ -647,81 +632,6 @@ bool BaselineCacheIRCompiler::emitCallProxyGetResult() {
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleId, MutableHandleValue);
   callVM<Fn, ProxyGetProperty>(masm);
-
-  stubFrame.leave(masm);
-  return true;
-}
-
-bool BaselineCacheIRCompiler::emitCallProxyGetByValueResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
-
-  AutoScratchRegister scratch(allocator, masm);
-
-  allocator.discardStack(masm);
-
-  AutoStubFrame stubFrame(*this);
-  stubFrame.enter(masm, scratch);
-
-  masm.Push(idVal);
-  masm.Push(obj);
-
-  using Fn =
-      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-  callVM<Fn, ProxyGetPropertyByValue>(masm);
-
-  stubFrame.leave(masm);
-  return true;
-}
-
-bool BaselineCacheIRCompiler::emitCallProxyHasPropResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
-  bool hasOwn = reader.readBool();
-
-  AutoScratchRegister scratch(allocator, masm);
-
-  allocator.discardStack(masm);
-
-  AutoStubFrame stubFrame(*this);
-  stubFrame.enter(masm, scratch);
-
-  masm.Push(idVal);
-  masm.Push(obj);
-
-  using Fn =
-      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-  if (hasOwn) {
-    callVM<Fn, ProxyHasOwn>(masm);
-  } else {
-    callVM<Fn, ProxyHas>(masm);
-  }
-
-  stubFrame.leave(masm);
-  return true;
-}
-
-bool BaselineCacheIRCompiler::emitCallNativeGetElementResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
-
-  AutoScratchRegister scratch(allocator, masm);
-
-  allocator.discardStack(masm);
-
-  AutoStubFrame stubFrame(*this);
-  stubFrame.enter(masm, scratch);
-
-  masm.Push(index);
-  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
-  masm.Push(obj);
-
-  using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, int32_t,
-                      MutableHandleValue);
-  callVM<Fn, NativeGetElement>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -1814,28 +1724,6 @@ bool BaselineCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper() {
   using Fn = bool (*)(JSContext * cx, HandleArrayObject obj, int32_t int_id,
                       HandleValue v, bool strict);
   callVM<Fn, AddOrUpdateSparseElementHelper>(masm);
-
-  stubFrame.leave(masm);
-  return true;
-}
-
-bool BaselineCacheIRCompiler::emitCallGetSparseElementResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register id = allocator.useRegister(masm, reader.int32OperandId());
-  AutoScratchRegister scratch(allocator, masm);
-
-  allocator.discardStack(masm);
-
-  AutoStubFrame stubFrame(*this);
-  stubFrame.enter(masm, scratch);
-
-  masm.Push(id);
-  masm.Push(obj);
-
-  using Fn = bool (*)(JSContext * cx, HandleArrayObject obj, int32_t int_id,
-                      MutableHandleValue result);
-  callVM<Fn, GetSparseElementHelper>(masm);
 
   stubFrame.leave(masm);
   return true;

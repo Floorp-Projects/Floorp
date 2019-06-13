@@ -33,8 +33,6 @@ using mozilla::Maybe;
 namespace js {
 namespace jit {
 
-class AutoSaveLiveRegisters;
-
 // IonCacheIRCompiler compiles CacheIR to IonIC native code.
 IonCacheIRCompiler::IonCacheIRCompiler(
     JSContext* cx, const CacheIRWriter& writer, IonIC* ic, IonScript* ionScript,
@@ -88,30 +86,22 @@ void IonCacheIRCompiler::pushStubCodePointer() {
 // AutoSaveLiveRegisters must be used when we make a call that can GC. The
 // constructor ensures all live registers are stored on the stack (where the GC
 // expects them) and the destructor restores these registers.
-class MOZ_RAII AutoSaveLiveRegisters {
-  IonCacheIRCompiler& compiler_;
-
-  AutoSaveLiveRegisters(const AutoSaveLiveRegisters&) = delete;
-  void operator=(const AutoSaveLiveRegisters&) = delete;
-
- public:
-  explicit AutoSaveLiveRegisters(IonCacheIRCompiler& compiler)
-      : compiler_(compiler) {
-    MOZ_ASSERT(compiler_.liveRegs_.isSome());
-    compiler_.allocator.saveIonLiveRegisters(
-        compiler_.masm, compiler_.liveRegs_.ref(),
-        compiler_.ic_->scratchRegisterForEntryJump(), compiler_.ionScript_);
-    compiler_.savedLiveRegs_ = true;
-  }
-  ~AutoSaveLiveRegisters() {
-    MOZ_ASSERT(compiler_.stubJitCodeOffset_.isSome(),
-               "Must have pushed JitCode* pointer");
-    compiler_.allocator.restoreIonLiveRegisters(compiler_.masm,
-                                                compiler_.liveRegs_.ref());
-    MOZ_ASSERT(compiler_.masm.framePushed() ==
-               compiler_.ionScript_->frameSize());
-  }
-};
+AutoSaveLiveRegisters::AutoSaveLiveRegisters(IonCacheIRCompiler& compiler)
+    : compiler_(compiler) {
+  MOZ_ASSERT(compiler_.liveRegs_.isSome());
+  MOZ_ASSERT(compiler_.ic_);
+  compiler_.allocator.saveIonLiveRegisters(
+      compiler_.masm, compiler_.liveRegs_.ref(),
+      compiler_.ic_->scratchRegisterForEntryJump(), compiler_.ionScript_);
+  compiler_.savedLiveRegs_ = true;
+}
+AutoSaveLiveRegisters::~AutoSaveLiveRegisters() {
+  MOZ_ASSERT(compiler_.stubJitCodeOffset_.isSome(),
+             "Must have pushed JitCode* pointer");
+  compiler_.allocator.restoreIonLiveRegisters(compiler_.masm,
+                                              compiler_.liveRegs_.ref());
+  MOZ_ASSERT(compiler_.masm.framePushed() == compiler_.ionScript_->frameSize());
+}
 
 }  // namespace jit
 }  // namespace js
@@ -1105,81 +1095,6 @@ bool IonCacheIRCompiler::emitCallProxyGetResult() {
 
   // masm.leaveExitFrame & pop locals
   masm.adjustStack(IonOOLProxyExitFrameLayout::Size());
-  return true;
-}
-
-bool IonCacheIRCompiler::emitCallProxyGetByValueResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  AutoSaveLiveRegisters save(*this);
-  AutoOutputRegister output(*this);
-
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
-
-  allocator.discardStack(masm);
-
-  prepareVMCall(masm, save);
-
-  masm.Push(idVal);
-  masm.Push(obj);
-
-  using Fn =
-      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-  callVM<Fn, ProxyGetPropertyByValue>(masm);
-
-  masm.storeCallResultValue(output);
-  return true;
-}
-
-bool IonCacheIRCompiler::emitCallProxyHasPropResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  AutoSaveLiveRegisters save(*this);
-  AutoOutputRegister output(*this);
-
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
-  bool hasOwn = reader.readBool();
-
-  allocator.discardStack(masm);
-
-  prepareVMCall(masm, save);
-
-  masm.Push(idVal);
-  masm.Push(obj);
-
-  using Fn =
-      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-  if (hasOwn) {
-    callVM<Fn, ProxyHasOwn>(masm);
-  } else {
-    callVM<Fn, ProxyHas>(masm);
-  }
-
-  masm.storeCallResultValue(output);
-  return true;
-}
-
-bool IonCacheIRCompiler::emitCallNativeGetElementResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  AutoSaveLiveRegisters save(*this);
-  AutoOutputRegister output(*this);
-
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
-
-  allocator.discardStack(masm);
-
-  prepareVMCall(masm, save);
-
-  masm.Push(index);
-  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
-  masm.Push(obj);
-
-  using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, int32_t,
-                      MutableHandleValue);
-  callVM<Fn, NativeGetElement>(masm);
-
-  masm.storeCallResultValue(output);
   return true;
 }
 
@@ -2197,27 +2112,6 @@ bool IonCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper() {
   using Fn = bool (*)(JSContext * cx, HandleArrayObject obj, int32_t int_id,
                       HandleValue v, bool strict);
   callVM<Fn, AddOrUpdateSparseElementHelper>(masm);
-  return true;
-}
-
-bool IonCacheIRCompiler::emitCallGetSparseElementResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  AutoSaveLiveRegisters save(*this);
-  AutoOutputRegister output(*this);
-
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register id = allocator.useRegister(masm, reader.int32OperandId());
-
-  allocator.discardStack(masm);
-  prepareVMCall(masm, save);
-  masm.Push(id);
-  masm.Push(obj);
-
-  using Fn = bool (*)(JSContext * cx, HandleArrayObject obj, int32_t int_id,
-                      MutableHandleValue result);
-  callVM<Fn, GetSparseElementHelper>(masm);
-
-  masm.storeCallResultValue(output);
   return true;
 }
 

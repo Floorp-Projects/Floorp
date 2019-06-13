@@ -17,6 +17,7 @@
 #include "jit/IonIC.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
+#include "proxy/Proxy.h"
 #include "vm/GeneratorObject.h"
 
 #include "builtin/Boolean-inl.h"
@@ -4390,6 +4391,86 @@ bool CacheIRCompiler::emitMetaTwoByte() {
   return true;
 }
 
+bool CacheIRCompiler::emitCallNativeGetElementResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register index = allocator.useRegister(masm, reader.int32OperandId());
+
+  allocator.discardStack(masm);
+
+  callvm.prepare();
+
+  masm.Push(index);
+  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
+  masm.Push(obj);
+
+  using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, int32_t,
+                      MutableHandleValue);
+  callVM<Fn, NativeGetElement>(masm);
+
+  return true;
+}
+
+bool CacheIRCompiler::emitCallProxyHasPropResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
+  bool hasOwn = reader.readBool();
+
+  callvm.prepare();
+
+  masm.Push(idVal);
+  masm.Push(obj);
+
+  using Fn =
+      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
+  if (hasOwn) {
+    callVM<Fn, ProxyHasOwn>(masm);
+  } else {
+    callVM<Fn, ProxyHas>(masm);
+  }
+  return true;
+}
+
+bool CacheIRCompiler::emitCallProxyGetByValueResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
+
+  callvm.prepare();
+  masm.Push(idVal);
+  masm.Push(obj);
+
+  using Fn =
+      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
+  callVM<Fn, ProxyGetPropertyByValue>(masm);
+  return true;
+}
+
+bool CacheIRCompiler::emitCallGetSparseElementResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  Register id = allocator.useRegister(masm, reader.int32OperandId());
+
+  callvm.prepare();
+  masm.Push(id);
+  masm.Push(obj);
+
+  using Fn = bool (*)(JSContext * cx, HandleArrayObject obj, int32_t int_id,
+                      MutableHandleValue result);
+  callVM<Fn, GetSparseElementHelper>(masm);
+  return true;
+}
+
 template <typename Fn, Fn fn>
 void CacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
@@ -4431,12 +4512,55 @@ bool CacheIRCompiler::isBaseline() { return mode_ == Mode::Baseline; }
 
 bool CacheIRCompiler::isIon() { return mode_ == Mode::Ion; }
 
-BaselineCacheIRCompiler& CacheIRCompiler::asBaseline() {
+BaselineCacheIRCompiler* CacheIRCompiler::asBaseline() {
   MOZ_ASSERT(this->isBaseline());
-  return *static_cast<BaselineCacheIRCompiler*>(this);
+  return static_cast<BaselineCacheIRCompiler*>(this);
 }
 
-IonCacheIRCompiler& CacheIRCompiler::asIon() {
+IonCacheIRCompiler* CacheIRCompiler::asIon() {
   MOZ_ASSERT(this->isIon());
-  return *static_cast<IonCacheIRCompiler*>(this);
+  return static_cast<IonCacheIRCompiler*>(this);
+}
+
+AutoCallVM::AutoCallVM(MacroAssembler& masm, CacheIRCompiler* compiler,
+                       CacheRegisterAllocator& allocator)
+    : masm_(masm), compiler_(compiler), allocator_(allocator) {
+  // Ion needs to `prepareVMCall` before it can callVM
+  // Ion also needs to initialize AutoOutputRegister and AutoSaveLiveRegisters
+  // values
+  if (compiler_->mode_ == CacheIRCompiler::Mode::Ion) {
+    // Will need to use a downcast here as well, in order to pass the
+    // stub to AutoSaveLiveRegisters
+    IonCacheIRCompiler* ionCompiler = compiler_->asIon();
+
+    save_.emplace(*ionCompiler);
+    output_.emplace(*ionCompiler);
+    return;
+  }
+  MOZ_ASSERT(compiler_->mode_ == CacheIRCompiler::Mode::Baseline);
+
+  stubFrame_.emplace(*compiler_->asBaseline());
+  scratch_.emplace(allocator_, masm_);
+}
+
+void AutoCallVM::prepare() {
+  allocator_.discardStack(masm_);
+  MOZ_ASSERT(compiler_ != nullptr);
+  if (compiler_->mode_ == CacheIRCompiler::Mode::Ion) {
+    compiler_->asIon()->prepareVMCall(masm_, *save_.ptr());
+    return;
+  }
+  MOZ_ASSERT(compiler_->mode_ == CacheIRCompiler::Mode::Baseline);
+  stubFrame_->enter(masm_, scratch_.ref());
+}
+
+AutoCallVM::~AutoCallVM() {
+  if (compiler_->mode_ == CacheIRCompiler::Mode::Ion) {
+    if (output_.isSome()) {
+      masm_.storeCallResultValue(output_.ref());
+    }
+    return;
+  }
+  MOZ_ASSERT(compiler_->mode_ == CacheIRCompiler::Mode::Baseline);
+  stubFrame_->leave(masm_);
 }

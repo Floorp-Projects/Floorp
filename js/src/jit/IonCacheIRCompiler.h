@@ -7,6 +7,7 @@
 #ifndef jit_IonCacheIRCompiler_h
 #define jit_IonCacheIRCompiler_h
 
+#include "mozilla/Maybe.h"
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/IonIC.h"
@@ -18,6 +19,7 @@ namespace jit {
 class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
  public:
   friend class AutoSaveLiveRegisters;
+  friend class AutoCallVM;
 
   IonCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, IonIC* ic,
                      IonScript* ionScript, IonICStub* stub,
@@ -41,10 +43,9 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
 
   CodeOffsetJump rejoinOffset_;
   Vector<CodeOffset, 4, SystemAllocPolicy> nextCodeOffsets_;
-  Maybe<LiveRegisterSet> liveRegs_;
-  Maybe<CodeOffset> stubJitCodeOffset_;
+  mozilla::Maybe<LiveRegisterSet> liveRegs_;
+  mozilla::Maybe<CodeOffset> stubJitCodeOffset_;
 
- private:
   bool savedLiveRegs_;
 
   template <typename T>
