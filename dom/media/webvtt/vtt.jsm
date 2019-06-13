@@ -427,6 +427,11 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         break;
     }
 
+    if (!input) {
+      root.appendChild(window.document.createTextNode(""));
+      return root;
+    }
+
     let current = root,
         t,
         tagStack = [];
