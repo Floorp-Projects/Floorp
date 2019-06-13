@@ -28,14 +28,21 @@ class TabCounterToolbarButton(
 
         val view = TabCounter(parent.context).apply {
             reference = WeakReference(this)
-            setCount(sessionManager.sessions.count {
-                    it.private == isPrivate
-                })
             setOnClickListener {
                 showTabs.invoke()
             }
             contentDescription =
                 parent.context.getString(R.string.mozac_feature_tabs_toolbar_tabs_button)
+
+            addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View?) {
+                    setCount(sessionManager.sessions.count {
+                        it.private == isPrivate
+                    })
+                }
+
+                override fun onViewDetachedFromWindow(v: View?) { /* no-op */ }
+            })
         }
 
         // Set selectableItemBackgroundBorderless
