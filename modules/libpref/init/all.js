@@ -464,6 +464,9 @@ pref("media.getusermedia.audiocapture.enabled", false);
 // WebVTT pseudo element and class support.
 pref("media.webvtt.pseudo.enabled", true);
 
+// WebVTT debug logging.
+pref("media.webvtt.debug.logging", false);
+
 // Whether to enable MediaSource support.
 pref("media.mediasource.enabled", true);
 
