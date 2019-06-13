@@ -9,6 +9,7 @@
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/PWindowGlobal.h"
 #include "mozilla/dom/Promise.h"
+#include "js/Promise.h"
 
 namespace mozilla {
 namespace dom {
@@ -45,8 +46,7 @@ void JSWindowActor::AfterDestroy() {
 }
 
 void JSWindowActor::DestroyCallback(DestroyCallbackFunction callback) {
-  AutoEntryScript aes(GetParentObject(),
-                      "JSWindowActor destroy callback");
+  AutoEntryScript aes(GetParentObject(), "JSWindowActor destroy callback");
   JSContext* cx = aes.cx();
   MozActorDestroyCallbacks callbacksHolder;
   NS_ENSURE_TRUE_VOID(GetWrapper());
@@ -88,8 +88,8 @@ void JSWindowActor::SendAsyncMessage(JSContext* aCx,
                                      JS::Handle<JS::Value> aTransfers,
                                      ErrorResult& aRv) {
   ipc::StructuredCloneData data;
-  if (!aObj.isUndefined() && !nsFrameMessageManager::GetParamsForMessage(
-                                 aCx, aObj, aTransfers, data)) {
+  if (!nsFrameMessageManager::GetParamsForMessage(aCx, aObj, aTransfers,
+                                                  data)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
@@ -106,8 +106,8 @@ already_AddRefed<Promise> JSWindowActor::SendQuery(
     JSContext* aCx, const nsAString& aMessageName, JS::Handle<JS::Value> aObj,
     JS::Handle<JS::Value> aTransfers, ErrorResult& aRv) {
   ipc::StructuredCloneData data;
-  if (!aObj.isUndefined() && !nsFrameMessageManager::GetParamsForMessage(
-                                 aCx, aObj, aTransfers, data)) {
+  if (!nsFrameMessageManager::GetParamsForMessage(aCx, aObj, aTransfers,
+                                                  data)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return nullptr;
   }
@@ -137,8 +137,7 @@ already_AddRefed<Promise> JSWindowActor::SendQuery(
 
 void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
                                       ipc::StructuredCloneData&& aData) {
-  AutoEntryScript aes(GetParentObject(),
-                      "JSWindowActor message handler");
+  AutoEntryScript aes(GetParentObject(), "JSWindowActor message handler");
   JSContext* cx = aes.cx();
 
   // Read the message into a JS object from IPC.
@@ -146,6 +145,11 @@ void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
   JS::Rooted<JS::Value> data(cx);
   aData.Read(cx, &data, error);
   if (NS_WARN_IF(error.Failed())) {
+    if (XRE_IsParentProcess()) {
+      MOZ_ASSERT(false, "Should not receive non-decodable data");
+    } else {
+      MOZ_DIAGNOSTIC_ASSERT(false, "Should not receive non-decodable data");
+    }
     MOZ_ALWAYS_TRUE(error.MaybeSetPendingException(cx));
     return;
   }
@@ -266,8 +270,9 @@ void JSWindowActor::QueryHandler::RejectedCallback(
   Unused << JS::CallOriginalPromiseReject(aCx, aValue);
 
   // The exception probably isn't cloneable, so just send down undefined.
-  SendReply(aCx, JSWindowActorMessageKind::QueryReject,
-            ipc::StructuredCloneData());
+  ipc::StructuredCloneData data;
+  data.Write(aCx, JS::UndefinedHandleValue, IgnoredErrorResult());
+  SendReply(aCx, JSWindowActorMessageKind::QueryReject, std::move(data));
 }
 
 void JSWindowActor::QueryHandler::ResolvedCallback(
@@ -293,8 +298,9 @@ void JSWindowActor::QueryHandler::ResolvedCallback(
 
     JS_ClearPendingException(aCx);
 
-    SendReply(aCx, JSWindowActorMessageKind::QueryReject,
-              ipc::StructuredCloneData());
+    ipc::StructuredCloneData data;
+    data.Write(aCx, JS::UndefinedHandleValue, IgnoredErrorResult());
+    SendReply(aCx, JSWindowActorMessageKind::QueryReject, std::move(data));
     return;
   }
 
