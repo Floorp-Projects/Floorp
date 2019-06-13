@@ -296,61 +296,38 @@ interface nsISearchService : nsISupports
    * @param name
    *        The search engine's name. Must be unique. Must not be null.
    *
-   * @param iconURL
-   *        Optional: A URL string pointing to the icon to be used to represent
-   *        the engine.
-   *        This is a jsval so that an object can be passed to replace the
-   *        parameters below.
+   * @param  details
+   *         An object that can contain the following fields:
    *
-   * @param alias
-   *        Optional: A unique shortcut that can be used to retrieve the
-   *        search engine.
+   *         {iconURL} Optional: A URL string pointing to the icon to be used to
+   *                   represent the engine. 
    *
-   * @param description
-   *        Optional: a description of the search engine.
+   *         {alias} Optional: A unique shortcut that can be used to retrieve the
+   *                 search engine.
    *
-   * @param method
-   *        Optional: The HTTP request method used when submitting a search query.
-   *        Case insensitive value of either "get" or "post".
-   *        Defaults to "get".
+   *         {description} Optional: A description of the search engine.
    *
-   * @param template
-   *        The template for the URL to which search queries should be sent. The
-   *        template will be subjected to OpenSearch parameter substitution.
-   *        See http://www.opensearch.org/Specifications/OpenSearch
-   *        Must not be null.
+   *         {method} Optional: The HTTP request method used when submitting a
+   *                  search query. Case insensitive value of either "get" or "post".
+   *                  Defaults to "get".
    *
-   * @param extensionID [optional]
-   *        Optional: The correct extensionID if called by an add-on.
+   *         {template} The template for the URL to which search queries should be
+   *                    sent. The template will be subjected to OpenSearch parameter
+   *                    substitution.
+   *                    See http://www.opensearch.org/Specifications/OpenSearch
+   *                    Must not be null.
    *
-   * Alternatively, all of these parameters except for name can be
-   * passed as an object in place of parameter two.
+   *         {extensionID} Optional: The correct extensionID if called by an add-on.
    *
-   *   Services.search.addEngineWithDetails("Example engine", {
-   *     template: "http://example.com/?search={searchTerms}",
-   *     description: "Example search engine description",
-   *     suggestURL: http://example.com/?suggest={searchTerms},
-   * });
+   *         {suggestURL} Optional: The URL to which search suggestion requests should
+   *                      be sent.
    *
-   * Using this method, you can use new parameters:
-   *
-   * @param suggestURL [optional]
-   *        Optional: The URL to which search suggestion requests
-   *        should be sent.
-   *
-   * @param postData [optional]
-   *        Optional: For POST requests, a string of URL parameters
-   *        to send, separated by '&'.  The string will be subjected
-   *        to OpenSearch parameter substitution.
+   *         {postData} Optional: For POST requests, a string of URL parameters to send,
+   *                    seperated by '&'. The string will be subjected to OpenSearch
+   *                    parameter substitution.
    *
    */
-  Promise addEngineWithDetails(in AString name,
-                               in jsval iconURL,
-                               [optional] in AString alias,
-                               [optional] in AString description,
-                               [optional] in AString method,
-                               [optional] in AString url,
-                               [optional] in AString extensionID);
+  Promise addEngineWithDetails(in AString name, in jsval details);
 
   /**
    * Adds search providers to the search service.  If the search
