@@ -386,7 +386,7 @@ void WorkerErrorReport::LogErrorToConsole(const ErrorData& aReport,
 
   if (scriptError) {
     nsAutoCString category("Web Worker");
-    if (NS_FAILED(scriptError->InitWithWindowID(
+    if (NS_FAILED(scriptError->nsIScriptError::InitWithWindowID(
             aReport.message(), aReport.filename(), aReport.line(),
             aReport.lineNumber(), aReport.columnNumber(), aReport.flags(),
             category, aInnerWindowId))) {

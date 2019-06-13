@@ -1222,7 +1222,7 @@ static nsresult JSErrorToXPCException(JSContext* cx, const char* toStringResult,
     const char16_t* linebuf = report->linebuf();
 
     data = new nsScriptError();
-    data->InitWithWindowID(
+    data->nsIScriptError::InitWithWindowID(
         bestMessage, NS_ConvertASCIItoUTF16(report->filename),
         linebuf ? nsDependentString(linebuf, report->linebufLength())
                 : EmptyString(),
