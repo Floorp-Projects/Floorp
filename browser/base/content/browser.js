@@ -6686,8 +6686,11 @@ function promptRemoveExtension(addon) {
   let checkboxState = {value: false};
   let checkboxMessage = null;
 
-  // Enable abuse report checkbox in the remove extension dialog.
-  if (gHtmlAboutAddonsEnabled && gAddonAbuseReportEnabled) {
+  // Enable abuse report checkbox in the remove extension dialog,
+  // if enabled by the about:config prefs and the addon type
+  // is currently supported.
+  if (gHtmlAboutAddonsEnabled && gAddonAbuseReportEnabled &&
+      ["extension", "theme"].includes(addon.type)) {
     checkboxMessage = getFormattedString("webext.remove.abuseReportCheckbox.message", [
       document.getElementById("bundle_brand").getString("vendorShortName"),
     ]);
