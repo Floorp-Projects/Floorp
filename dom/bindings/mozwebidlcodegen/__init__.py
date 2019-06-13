@@ -136,6 +136,7 @@ class WebIDLCodegenManager(LoggingMixin):
         'RegisterWorkletBindings.h',
         'UnionConversions.h',
         'UnionTypes.h',
+        'WebIDLPrefs.h',
     }
 
     # Global parser derived definition files.
@@ -146,6 +147,7 @@ class WebIDLCodegenManager(LoggingMixin):
         'RegisterWorkletBindings.cpp',
         'UnionTypes.cpp',
         'PrototypeList.cpp',
+        'WebIDLPrefs.cpp',
     }
 
     def __init__(self, config_path, webidl_root, inputs, exported_header_dir,

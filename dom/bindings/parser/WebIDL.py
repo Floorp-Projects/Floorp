@@ -482,9 +482,6 @@ class IDLExposureMixins():
     def isExposedOnMainThread(self):
         return self.isExposedInWindow()
 
-    def isExposedOffMainThread(self):
-        return len(self.exposureSet - {'Window', 'FakeTestPrimaryGlobal'}) > 0
-
     def isExposedInAnyWorker(self):
         return len(self.getWorkerExposureSet()) > 0
 
@@ -1325,11 +1322,6 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
                 for bindingAlias in member.bindingAliases:
                     checkDuplicateNames(member, bindingAlias, "BindingAlias")
 
-
-        if self.getExtendedAttribute("Pref") and self.isExposedOffMainThread():
-            raise WebIDLError("[Pref] used on an interface that is not "
-                              "main-thread-only",
-                              [self.location])
 
         # Conditional exposure makes no sense for interfaces with no
         # interface object, unless they're navigator properties.
@@ -3692,11 +3684,6 @@ class IDLInterfaceMember(IDLObjectWithIdentifier, IDLExposureMixins):
         IDLExposureMixins.finish(self, scope)
 
     def validate(self):
-        if self.getExtendedAttribute("Pref") and self.isExposedOffMainThread():
-            raise WebIDLError("[Pref] used on an interface member that is not "
-                              "main-thread-only",
-                              [self.location])
-
         if self.isAttr() or self.isMethod():
             if self.affects == "Everything" and self.dependsOn != "Everything":
                 raise WebIDLError("Interface member is flagged as affecting "
@@ -4580,7 +4567,8 @@ class IDLArgument(IDLObjectWithIdentifier):
             elif identifier == "TreatNonCallableAsNull":
                 self._allowTreatNonCallableAsNull = True
             elif (self.dictionaryMember and
-                  (identifier == "ChromeOnly" or identifier == "Func" or
+                  (identifier == "ChromeOnly" or
+                   identifier == "Func" or
                    identifier == "Pref")):
                 if not self.optional:
                     raise WebIDLError("[%s] must not be used on a required "

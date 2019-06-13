@@ -16,6 +16,7 @@
 #include "mozilla/Likely.h"
 
 #include "mozilla/dom/PrototypeList.h"  // auto-generated
+#include "mozilla/dom/WebIDLPrefs.h"    // auto-generated
 
 #include "mozilla/dom/JSSlots.h"
 
@@ -110,21 +111,13 @@ static const uint32_t AudioWorkletGlobalScope = 1u << 7;
 
 struct PrefableDisablers {
   inline bool isEnabled(JSContext* cx, JS::Handle<JSObject*> obj) const {
-    // Reading "enabled" on a worker thread is technically undefined behavior,
-    // because it's written only on main threads, with no barriers of any sort.
-    // So we want to avoid doing that.  But we don't particularly want to make
-    // expensive NS_IsMainThread calls here.
-    //
-    // The good news is that "enabled" is only written for things that have a
-    // Pref annotation, and such things can never be exposed on non-Window
-    // globals; our IDL parser enforces that.  So as long as we check our
-    // exposure set before checking "enabled" we will be ok.
     if (nonExposedGlobals &&
         IsNonExposedGlobal(cx, JS::GetNonCCWObjectGlobal(obj),
                            nonExposedGlobals)) {
       return false;
     }
-    if (!enabled) {
+    if (prefIndex != WebIDLPrefIndex::NoPref &&
+        !sWebIDLPrefs[uint16_t(prefIndex)]()) {
       return false;
     }
     if (secureContext && !IsSecureContextOrObjectIsFromSecureContext(cx, obj)) {
@@ -136,9 +129,8 @@ struct PrefableDisablers {
     return true;
   }
 
-  // A boolean indicating whether this set of specs is enabled. Not const
-  // because it will change at runtime if the corresponding pref is changed.
-  bool enabled;
+  // Index into the array of StaticPrefs
+  const WebIDLPrefIndex prefIndex;
 
   // A boolean indicating whether a Secure Context is required.
   const bool secureContext;
@@ -164,7 +156,7 @@ struct Prefable {
 
   // Things that can disable this set of specs. |nullptr| means "cannot be
   // disabled".
-  PrefableDisablers* const disablers;
+  const PrefableDisablers* const disablers;
 
   // Array of specs, terminated in whatever way is customary for T.
   // Null to indicate a end-of-array for Prefable, when such an
