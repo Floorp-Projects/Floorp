@@ -13,7 +13,6 @@ var classifierTester = {
   NEVER_ACTIVATE_PREF_VALUE: 0,
   ASK_TO_ACTIVATE_PREF_VALUE: 1,
   ALWAYS_ACTIVATE_PREF_VALUE: 2,
-  ALLOW_CTA_PREF: "plugins.click_to_play",
 
   dbUrls: [
     {
@@ -66,7 +65,6 @@ var classifierTester = {
                                flashBlockEnable);
     Services.prefs.setIntPref(classifierTester.FLASH_PLUGIN_USER_SETTING_PREF,
                               flashSetting);
-    Services.prefs.setBoolPref(classifierTester.ALLOW_CTA_PREF, true);
   },
 
   unsetPrefs() {
@@ -77,7 +75,6 @@ var classifierTester = {
     Services.prefs.clearUserPref(classifierTester.URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF);
     Services.prefs.clearUserPref(classifierTester.FLASHBLOCK_ENABLE_PREF);
     Services.prefs.clearUserPref(classifierTester.FLASH_PLUGIN_USER_SETTING_PREF);
-    Services.prefs.clearUserPref(classifierTester.ALLOW_CTA_PREF);
   },
 
   // The |domains| property describes the domains of the nested documents making

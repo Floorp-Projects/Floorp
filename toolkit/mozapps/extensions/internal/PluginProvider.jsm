@@ -305,10 +305,11 @@ PluginWrapper.prototype = {
     if (tag.disabled)
       return true;
 
-    if ((Services.prefs.getBoolPref("plugins.click_to_play") && tag.clicktoplay) ||
+    if (tag.clicktoplay ||
         this.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE ||
-        this.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE)
+        this.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE) {
       return AddonManager.STATE_ASK_TO_ACTIVATE;
+    }
 
     return false;
   },
@@ -457,17 +458,14 @@ PluginWrapper.prototype = {
       if (this.userDisabled !== true)
         permissions |= AddonManager.PERM_CAN_DISABLE;
 
+      if (this.userDisabled !== AddonManager.STATE_ASK_TO_ACTIVATE) {
+        permissions |= AddonManager.PERM_CAN_ASK_TO_ACTIVATE;
+      }
+
       let blocklistState = this.blocklistState;
       let isCTPBlocklisted =
         (blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE ||
          blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
-
-      if (this.userDisabled !== AddonManager.STATE_ASK_TO_ACTIVATE &&
-          (Services.prefs.getBoolPref("plugins.click_to_play") ||
-           isCTPBlocklisted)) {
-        permissions |= AddonManager.PERM_CAN_ASK_TO_ACTIVATE;
-      }
-
       if (this.userDisabled !== false && !isCTPBlocklisted) {
         permissions |= AddonManager.PERM_CAN_ENABLE;
       }

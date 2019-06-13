@@ -6,7 +6,6 @@ add_task(async function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
-    Services.prefs.clearUserPref("plugins.click_to_play");
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
     gBrowser.removeCurrentTab();
     window.focus();
@@ -19,7 +18,6 @@ add_task(async function() {
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
   let bindingPromise = BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "PluginBindingAttached", true, null, true);
   await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
