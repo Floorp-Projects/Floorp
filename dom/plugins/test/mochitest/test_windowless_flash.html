@@ -5,11 +5,20 @@
   <script type="application/javascript" src="plugin-utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runTests()">
+<body onload="addPerms()">
   <script type="application/javascript" src="plugin-utils.js"></script>
   <script type="text/javascript">
   SimpleTest.waitForExplicitFinish();
   SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  function addPerms() {
+    SpecialPowers.pushPermissions([{type: "plugin:flash", allow: true, context: document}], function() {
+      for (let p of SpecialPowers.DOMWindowUtils.plugins) {
+        p.playPlugin();
+      }
+      runTests();
+    });
+  }
+
 
   function runTests() {
     var p1 = document.getElementById("plugin1");

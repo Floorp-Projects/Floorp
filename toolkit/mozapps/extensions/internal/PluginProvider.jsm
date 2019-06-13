@@ -233,17 +233,9 @@ var PluginProvider = {
   },
 };
 
-function isFlashPlugin(aPlugin) {
-  for (let type of aPlugin.pluginMimeTypes) {
-    if (type.type == FLASH_MIME_TYPE) {
-      return true;
-    }
-  }
-  return false;
-}
 // Protected mode is win32-only, not win64
 function canDisableFlashProtectedMode(aPlugin) {
-  return isFlashPlugin(aPlugin) && Services.appinfo.XPCOMABI == "x86-msvc";
+  return aPlugin.isFlashPlugin && Services.appinfo.XPCOMABI == "x86-msvc";
 }
 
 const wrapperMap = new WeakMap();
@@ -316,6 +308,10 @@ PluginWrapper.prototype = {
 
   set userDisabled(val) {
     let previousVal = this.userDisabled;
+    if (val === false && this.isFlashPlugin) {
+      val = AddonManager.STATE_ASK_TO_ACTIVATE;
+    }
+
     if (val === previousVal)
       return val;
 
@@ -466,7 +462,7 @@ PluginWrapper.prototype = {
       let isCTPBlocklisted =
         (blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE ||
          blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
-      if (this.userDisabled !== false && !isCTPBlocklisted) {
+      if (this.userDisabled !== false && !isCTPBlocklisted && !this.isFlashPlugin) {
         permissions |= AddonManager.PERM_CAN_ENABLE;
       }
     }
@@ -516,6 +512,15 @@ PluginWrapper.prototype = {
       aListener.onNoUpdateAvailable(this);
     if ("onUpdateFinished" in aListener)
       aListener.onUpdateFinished(this);
+  },
+
+  get isFlashPlugin() {
+    for (let type of this.pluginMimeTypes) {
+      if (type.type == FLASH_MIME_TYPE) {
+        return true;
+      }
+    }
+    return false;
   },
 };
 
