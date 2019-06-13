@@ -204,14 +204,6 @@ public class CrashReporterActivity extends AppCompatActivity
             Log.e(LOGTAG, "Cannot send the crash ping: ", e);
         }
 
-        // Notify GeckoApp that we've crashed, so it can react appropriately during the next start.
-        try {
-            File crashFlag = new File(GeckoProfileDirectories.getMozillaDirectory(this), "CRASHED");
-            crashFlag.createNewFile();
-        } catch (GeckoProfileDirectories.NoMozillaDirectoryException | IOException e) {
-            Log.e(LOGTAG, "Cannot set crash flag: ", e);
-        }
-
         final CheckBox allowContactCheckBox = (CheckBox) findViewById(R.id.allow_contact);
         final CheckBox includeUrlCheckBox = (CheckBox) findViewById(R.id.include_url);
         final CheckBox sendReportCheckBox = (CheckBox) findViewById(R.id.send_report);
