@@ -20,11 +20,7 @@ export default class MenuButton extends ReflectedFluentElement {
   }
 
   static get reflectedFluentIDs() {
-    return [
-      "button-title",
-      "menuitem-import",
-      "menuitem-preferences",
-    ];
+    return ["button-title", "menuitem-preferences"];
   }
 
   static get observedAttributes() {
@@ -50,15 +46,12 @@ export default class MenuButton extends ReflectedFluentElement {
             event.originalTarget == this.shadowRoot.querySelector(".menu-button")) {
           return;
         }
-        let classList = event.originalTarget.classList;
-        if (classList.contains("menuitem-import") ||
-            classList.contains("menuitem-preferences")) {
-          let eventName = event.originalTarget.dataset.eventName;
-          document.dispatchEvent(new CustomEvent(eventName, {
+        if (event.originalTarget.classList.contains("menuitem-preferences")) {
+          document.dispatchEvent(new CustomEvent("AboutLoginsOpenPreferences", {
             bubbles: true,
           }));
           this.hideMenu();
-          break;
+          return;
         }
         this.toggleMenu();
         break;
@@ -67,7 +60,7 @@ export default class MenuButton extends ReflectedFluentElement {
   }
 
   toggleMenu() {
-    let wasHidden = this.shadowRoot.querySelector(".menu").hidden;
+    let wasHidden = this.shadowRoot.querySelector(".menu").getAttribute("aria-hidden") == "true";
     if (wasHidden) {
       this.showMenu();
     } else {
@@ -76,12 +69,12 @@ export default class MenuButton extends ReflectedFluentElement {
   }
 
   hideMenu() {
-    this.shadowRoot.querySelector(".menu").hidden = true;
+    this.shadowRoot.querySelector(".menu").setAttribute("aria-hidden", "true");
     document.documentElement.removeEventListener("click", this, true);
   }
 
   showMenu() {
-    this.shadowRoot.querySelector(".menu").hidden = false;
+    this.shadowRoot.querySelector(".menu").setAttribute("aria-hidden", "false");
 
     // Add a catch-all event listener to close the menu.
     document.documentElement.addEventListener("click", this, true);
