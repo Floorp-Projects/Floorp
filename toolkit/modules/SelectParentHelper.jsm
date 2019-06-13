@@ -28,7 +28,6 @@ const PROPERTIES_RESET_WHEN_ACTIVE = [
 var currentBrowser = null;
 var currentMenulist = null;
 var selectRect = null;
-var actor = null;
 
 var currentZoom = 1;
 var closedWithEnter = false;
@@ -146,8 +145,7 @@ var SelectParentHelper = {
                      selectStyle, selectBackgroundSet, sheet);
   },
 
-  open(browser, menulist, rect, isOpenedViaTouch, selectParentActor) {
-    actor = selectParentActor;
+  open(browser, menulist, rect, isOpenedViaTouch) {
     menulist.hidden = false;
     currentBrowser = browser;
     closedWithEnter = false;
@@ -203,16 +201,15 @@ var SelectParentHelper = {
         let x = event.screenX, y = event.screenY;
         let onAnchor = !inRect(currentMenulist.menupopup.getOuterScreenRect(), x, y) &&
                         inRect(selectRect, x, y) && currentMenulist.menupopup.state == "open";
-        actor.sendAsyncMessage("Forms:MouseUp", { onAnchor });
+        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseUp", { onAnchor });
         break;
 
       case "mouseover":
-        actor.sendAsyncMessage("Forms:MouseOver", {});
-
+        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseOver", {});
         break;
 
       case "mouseout":
-        actor.sendAsyncMessage("Forms:MouseOut", {});
+        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseOut", {});
         break;
 
       case "keydown":
@@ -223,7 +220,7 @@ var SelectParentHelper = {
 
       case "command":
         if (event.target.hasAttribute("value")) {
-          actor.sendAsyncMessage("Forms:SelectDropDownItem", {
+          currentBrowser.messageManager.sendAsyncMessage("Forms:SelectDropDownItem", {
             value: event.target.value,
             closedWithEnter,
           });
@@ -237,7 +234,7 @@ var SelectParentHelper = {
         break;
 
       case "popuphidden":
-        actor.sendAsyncMessage("Forms:DismissedDropDown", {});
+        currentBrowser.messageManager.sendAsyncMessage("Forms:DismissedDropDown", {});
         let popup = event.target;
         this._unregisterListeners(currentBrowser, popup);
         popup.parentNode.hidden = true;
@@ -245,7 +242,6 @@ var SelectParentHelper = {
         currentMenulist = null;
         selectRect = null;
         currentZoom = 1;
-        actor = null;
         break;
     }
   },
@@ -274,7 +270,7 @@ var SelectParentHelper = {
       // Restore scroll position to what it was prior to the update.
       scrollBox.scrollTop = scrollTop;
     } else if (msg.name == "Forms:BlurDropDown-Ping") {
-      actor.sendAsyncMessage("Forms:BlurDropDown-Pong", {});
+      currentBrowser.messageManager.sendAsyncMessage("Forms:BlurDropDown-Pong", {});
     }
   },
 
@@ -286,6 +282,8 @@ var SelectParentHelper = {
     browser.ownerGlobal.addEventListener("mouseup", this, true);
     browser.ownerGlobal.addEventListener("keydown", this, true);
     browser.ownerGlobal.addEventListener("fullscreen", this, true);
+    browser.messageManager.addMessageListener("Forms:UpdateDropDown", this);
+    browser.messageManager.addMessageListener("Forms:BlurDropDown-Ping", this);
   },
 
   _unregisterListeners(browser, popup) {
@@ -296,6 +294,8 @@ var SelectParentHelper = {
     browser.ownerGlobal.removeEventListener("mouseup", this, true);
     browser.ownerGlobal.removeEventListener("keydown", this, true);
     browser.ownerGlobal.removeEventListener("fullscreen", this, true);
+    browser.messageManager.removeMessageListener("Forms:UpdateDropDown", this);
+    browser.messageManager.removeMessageListener("Forms:BlurDropDown-Ping", this);
   },
 
 };
@@ -547,7 +547,7 @@ function onSearchFocus() {
   let menupopup = searchObj.closest("menupopup");
   menupopup.parentElement.activeChild = null;
   menupopup.setAttribute("ignorekeys", "true");
-  actor.sendAsyncMessage("Forms:SearchFocused", {});
+  currentBrowser.messageManager.sendAsyncMessage("Forms:SearchFocused", {});
 }
 
 function onSearchBlur() {

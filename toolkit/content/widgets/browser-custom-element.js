@@ -234,6 +234,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
     this._controller = null;
 
+    this._selectParentHelper = null;
+
     this._remoteWebNavigation = null;
 
     this._remoteWebProgress = null;
@@ -1116,6 +1118,11 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
       this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
 
+      if (this.hasAttribute("selectmenulist")) {
+        this.messageManager.addMessageListener("Forms:ShowDropDown", this);
+        this.messageManager.addMessageListener("Forms:HideDropDown", this);
+      }
+
       if (!this.hasAttribute("disablehistory")) {
         Services.obs.addObserver(this.observer, "browser:purge-session-history", true);
       }
@@ -1182,6 +1189,11 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       this.messageManager.addMessageListener("AudioPlayback:ActiveMediaBlockStop", this);
       this.messageManager.addMessageListener("UnselectedTabHover:Toggle", this);
       this.messageManager.addMessageListener("GloballyAutoplayBlocked", this);
+
+      if (this.hasAttribute("selectmenulist")) {
+        this.messageManager.addMessageListener("Forms:ShowDropDown", this);
+        this.messageManager.addMessageListener("Forms:HideDropDown", this);
+      }
     }
   }
 
@@ -1193,11 +1205,9 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     elementsToDestroyOnUnload.delete(this);
 
     // Make sure that any open select is closed.
-    let menulist = document.getElementById(this.getAttribute("selectmenulist"));
-    if (menulist) {
-      let resourcePath = "resource://gre/modules/SelectParentHelper.jsm";
-      let {SelectParentHelper} = ChromeUtils.import(resourcePath);
-      SelectParentHelper.hide(menulist, this);
+    if (this._selectParentHelper) {
+      let menulist = document.getElementById(this.getAttribute("selectmenulist"));
+      this._selectParentHelper.hide(menulist, this);
     }
 
     this.resetFields();
@@ -1296,6 +1306,35 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       case "GloballyAutoplayBlocked":
         this.notifyGloballyAutoplayBlocked();
         break;
+      case "Forms:ShowDropDown":
+        {
+          if (!this._selectParentHelper) {
+            this._selectParentHelper =
+              ChromeUtils.import("resource://gre/modules/SelectParentHelper.jsm", {}).SelectParentHelper;
+          }
+
+          let menulist = document.getElementById(this.getAttribute("selectmenulist"));
+          menulist.menupopup.style.direction = data.style.direction;
+
+          let useFullZoom = !this.isRemoteBrowser ||
+                            Services.prefs.getBoolPref("browser.zoom.full") ||
+                            this.isSyntheticDocument;
+          let zoom = useFullZoom ? this._fullZoom : this._textZoom;
+          this._selectParentHelper.populate(menulist, data.options.options,
+            data.options.uniqueStyles, data.selectedIndex, zoom,
+            data.defaultStyle, data.style);
+          this._selectParentHelper.open(this, menulist, data.rect, data.isOpenedViaTouch);
+          break;
+        }
+
+      case "Forms:HideDropDown":
+        {
+          if (this._selectParentHelper) {
+            let menulist = document.getElementById(this.getAttribute("selectmenulist"));
+            this._selectParentHelper.hide(menulist, this);
+          }
+          break;
+        }
     }
     return undefined;
   }
