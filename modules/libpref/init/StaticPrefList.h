@@ -741,7 +741,7 @@ VARCACHE_PREF(
   Live,
   "browser.contentblocking.database.enabled",
   browser_contentblocking_database_enabled,
-  bool, true
+  bool, false
 )
 
 // How many recent block/unblock actions per origins we remember in the
