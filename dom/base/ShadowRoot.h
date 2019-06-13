@@ -153,6 +153,10 @@ class ShadowRoot final : public DocumentFragment,
   void AddSlot(HTMLSlotElement* aSlot);
   void RemoveSlot(HTMLSlotElement* aSlot);
   bool HasSlots() const { return !mSlotMap.IsEmpty(); };
+  HTMLSlotElement* GetDefaultSlot() const {
+    SlotArray* list = mSlotMap.Get(NS_LITERAL_STRING(""));
+    return list ? (*list)->ElementAt(0) : nullptr;
+  }
 
   void PartAdded(const Element&);
   void PartRemoved(const Element&);
