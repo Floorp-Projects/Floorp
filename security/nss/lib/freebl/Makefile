@@ -493,6 +493,9 @@ endif # Solaris for non-sparc family CPUs
 endif # target == SunO
 
 ifdef USE_64
+# no __int128 at least up to lcc 1.23 (pretending to be gcc5)
+# NB: CC_NAME is not defined here
+ifneq ($(shell $(CC) -? 2>&1 >/dev/null | sed -e 's/:.*//;1q'),lcc)
     ifdef CC_IS_CLANG
             HAVE_INT128_SUPPORT = 1
             DEFINES += -DHAVE_INT128_SUPPORT
@@ -506,7 +509,8 @@ ifdef USE_64
             DEFINES += -DHAVE_INT128_SUPPORT
         endif
     endif
-endif
+endif # lcc
+endif # USE_64
 
 ifndef HAVE_INT128_SUPPORT
     DEFINES += -DKRML_NOUINT128
