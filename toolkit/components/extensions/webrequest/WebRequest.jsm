@@ -837,13 +837,22 @@ HttpObserverManager = {
             channel.redirectTo(Services.io.newURI(result.redirectUrl));
             // Web Extensions using the WebRequest API are allowed
             // to redirect a channel to a data: URI, hence we mark
-            // the channel to let the redirect blocker know. Please
-            // note that this markind needs to happen after the
-            // channel.redirectTo is called because the channel's
-            // RedirectTo() implementation explicitly drops the flag
-            // to avoid additional redirects not caused by the
-            // Web Extension.
+            // the channel to let the redirect blocker know.
             channel.loadInfo.allowInsecureRedirectToDataURI = true;
+
+            // Web Extentions using the WebRequest API are also allowed
+            // to redirect a channel before any data has been send.
+            // This means we dont have  "Access-Control-Allow-Origin"
+            // information at that point so CORS checks would fail.
+            // Since we trust the WebExtention, we mark the Channel
+            // to skip the CORS check.
+            channel.loadInfo.bypassCORSChecks = true;
+
+            // Please note that this marking needs to happen after the
+            // channel.redirectTo is called because the channel's
+            // RedirectTo() implementation explicitly drops the flags
+            // to avoid redirects not caused by the
+            // Web Extension.
             return;
           } catch (e) {
             Cu.reportError(e);

@@ -558,6 +558,13 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
     // service workers to intercept CORS preflights.
     return NS_OK;
   }
+  if (loadInfo->GetBypassCORSChecks()) {
+    // This flag gets set if a WebExtention redirects a channel
+    // @onBeforeRequest. At this point no request has been made so we don't have
+    // the "Access-Control-Allow-Origin" header yet and the redirect would fail.
+    // So we're skipping the CORS check in that case.
+    return NS_OK;
+  }
 
   // Check the Access-Control-Allow-Origin header
   RefPtr<CheckOriginHeader> visitor = new CheckOriginHeader();

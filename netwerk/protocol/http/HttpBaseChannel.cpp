@@ -1914,10 +1914,12 @@ HttpBaseChannel::RedirectTo(nsIURI* targetURI) {
   NS_ENSURE_FALSE(mOnStartRequestCalled, NS_ERROR_NOT_AVAILABLE);
 
   mAPIRedirectToURI = targetURI;
-  // Only Web Extensions are allowed to redirect a channel to a data:
-  // URI. To avoid any bypasses after the channel was flagged by
+  // Only Web Extensions are allowed to redirect a channel to a data URI
+  // and to bypass CORS for early redirects.
+  // To avoid any bypasses after the channel was flagged by
   // the WebRequst API, we are dropping the flag here.
   if (mLoadInfo) {
+    mLoadInfo->SetBypassCORSChecks(false);
     mLoadInfo->SetAllowInsecureRedirectToDataURI(false);
   }
   return NS_OK;
