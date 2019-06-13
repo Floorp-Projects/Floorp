@@ -607,12 +607,16 @@ class WebSocketDaemon(object):
 
         # Logging needs to be configured both before and after reloading,
         # because some modules store loggers as global variables.
-        pywebsocket._configure_logging(opts)
+        # GECKO PATCH: disable logging from pywebsocket until it interops
+        # correctly with mozlog
+        # pywebsocket._configure_logging(opts)
         # Ensure that when we start this in a new process we have the global
         # lock in the logging module unlocked.
         reload_module(logging)
         release_mozlog_lock()
-        pywebsocket._configure_logging(opts)
+        # GECKO PATCH: disable logging from pywebsocket until it interops
+        # correctly with mozlog
+        # pywebsocket._configure_logging(opts)
         # DO NOT LOG BEFORE THIS LINE.
 
         self.server = pywebsocket.WebSocketServer(opts)
