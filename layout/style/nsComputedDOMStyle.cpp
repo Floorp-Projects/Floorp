@@ -2099,8 +2099,17 @@ bool nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord) {
   AssertFlushedPendingReflows();
 
   nscoord blockHeight = NS_UNCONSTRAINEDSIZE;
-  if (StyleText()->mLineHeight.IsMozBlockHeight()) {
-    if (!mInnerFrame) return false;
+  const auto& lh = StyleText()->mLineHeight;
+
+  if (lh.IsNormal() &&
+      StaticPrefs::layout_css_line_height_normal_as_resolved_value_enabled()) {
+    return false;
+  }
+
+  if (lh.IsMozBlockHeight()) {
+    if (!mInnerFrame) {
+      return false;
+    }
 
     if (nsLayoutUtils::IsNonWrapperBlock(mInnerFrame)) {
       blockHeight = mInnerFrame->GetContentRect().height;
