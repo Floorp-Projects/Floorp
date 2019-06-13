@@ -82,6 +82,10 @@
   align-items: center;
 }
 
+:host([align="center"]) .container {
+  justify-content: center;
+}
+
 :host([dismissable]) .container {
   /* Add padding on the end of the container when the bar is dismissable. */
   padding-inline-end: 4px;
@@ -93,7 +97,6 @@
 
 .content {
   margin-inline-end: 4px;
-  flex-grow: 1;
   display: flex;
   /* Ensure that the message bar content is vertically aligned. */
   align-items: center;
