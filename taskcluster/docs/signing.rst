@@ -113,7 +113,7 @@ on the input. This format includes ``signcode``, ``osslsigncode``,
 ``mar`` signing signs our update files (Mozilla ARchive). ``mar_sha384`` is
 the same, but with a different hashing algorithm.
 
-``widevine`` and ``widevine_blessed`` are also video-related; see the
+``autograph_widevine`` is also video-related; see the
 `widevine site`_. We sign specific files inside the package and rebuild the
 ``precomplete`` file that we use for updates.
 
