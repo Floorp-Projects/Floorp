@@ -1,9 +1,14 @@
-// META: title=IndexedDB: large nested objects are cloned correctly
-// META: timeout=long
-// META: script=support-promises.js
-// META: script=nested-cloning-common.js
-// META: global=window,dedicatedworker,sharedworker,serviceworker
-'use strict';
+<!doctype html>
+<meta charset="utf8">
+<meta name="timeout" content="long">
+<title>IndexedDB: large nested objects are cloned correctly</title>
+<link rel="help" href="https://w3c.github.io/IndexedDB/#abort-transaction">
+<link rel="author" href="pwnall@chromium.org" title="Victor Costan">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="support-promises.js"></script>
+<script src="nested-cloning-common.js"></script>
+<script>
 
 cloningTestWithKeyGenerator(
     'multiple requests of objects with blobs and large typed arrays', [
@@ -45,3 +50,5 @@ cloningTestWithKeyGenerator(
     { type: 'blob', size: wrapThreshold, mimeType: 'text/x-blink20', seed: 20 },
   ],
 ]);
+
+</script>
