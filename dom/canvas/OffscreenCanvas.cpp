@@ -6,7 +6,6 @@
 
 #include "OffscreenCanvas.h"
 
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"

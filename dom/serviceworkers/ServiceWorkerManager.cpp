@@ -40,7 +40,6 @@
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/ConsoleUtils.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/InternalHeaders.h"
