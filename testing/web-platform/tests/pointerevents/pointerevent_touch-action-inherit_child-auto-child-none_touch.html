@@ -117,9 +117,9 @@
 
                 // Inject touch inputs.
                 actions_promise = touchScrollInTarget(scrollTarget, 'down').then(function() {
-                    touchScrollInTarget(scrollTarget, 'right');
+                    return touchScrollInTarget(scrollTarget, 'right');
                 }).then(function() {
-                    clickInTarget("touch", btnComplete);
+                    return clickInTarget("touch", btnComplete);
                 });
             }
         </script>
