@@ -350,6 +350,9 @@ toolkit/components/reader/JSDOMParser.js
 # Uses preprocessing
 toolkit/components/reader/Readerable.jsm
 
+# Should be going away soon
+toolkit/content/widgets/wizard.xml
+
 # Uses preprocessing
 toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js
 toolkit/modules/AppConstants.jsm
