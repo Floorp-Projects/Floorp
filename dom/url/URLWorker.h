@@ -18,7 +18,10 @@ class nsStandardURL;
 
 namespace dom {
 
-class URLWorker final {
+class WorkerPrivate;
+
+// URLWorker implements the URL object in workers.
+class URLWorker final : public URL {
  public:
   static already_AddRefed<URLWorker> Constructor(
       const GlobalObject& aGlobal, const nsAString& aURL,
@@ -37,6 +40,23 @@ class URLWorker final {
 
   static bool IsValidURL(const GlobalObject& aGlobal, const nsAString& aUrl,
                          ErrorResult& aRv);
+
+  explicit URLWorker(WorkerPrivate* aWorkerPrivate);
+
+  void Init(const nsAString& aURL, const Optional<nsAString>& aBase,
+            ErrorResult& aRv);
+
+  virtual void SetHref(const nsAString& aHref, ErrorResult& aRv) override;
+
+  virtual void GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const override;
+
+  virtual void SetProtocol(const nsAString& aProtocol,
+                           ErrorResult& aRv) override;
+
+ private:
+  ~URLWorker();
+
+  WorkerPrivate* mWorkerPrivate;
 };
 
 }  // namespace dom

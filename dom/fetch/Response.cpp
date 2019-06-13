@@ -126,8 +126,7 @@ already_AddRefed<Response> Response::Redirect(const GlobalObject& aGlobal,
     worker->AssertIsOnWorkerThread();
 
     NS_ConvertUTF8toUTF16 baseURL(worker->GetLocationInfo().mHref);
-    RefPtr<URL> url =
-        URL::Constructor(aGlobal.GetAsSupports(), aUrl, baseURL, aRv);
+    RefPtr<URL> url = URL::WorkerConstructor(aGlobal, aUrl, baseURL, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
