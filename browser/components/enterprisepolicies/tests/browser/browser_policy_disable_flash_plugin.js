@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const labelTextAlwaysActivate = "Always Activate";
 const labelTextAskToActivate = "Ask to Activate";
 const labelTextNeverActivate = "Never Activate";
 
@@ -29,8 +28,10 @@ async function assert_flash_locked_status(win, locked, expectedLabelText) {
     // are expected to be disabled if locked is true.
     for (const item of pluginOptions.querySelectorAll("panel-item")) {
       const actionName = item.getAttribute("action");
-      if (!item.hasAttribute("checked") && actionName !== "expand" &&
-          actionName !== "preferences") {
+      if (actionName.includes("always")) {
+        ok(item.hidden, `Plugin action "${actionName}" should be hidden.`);
+      } else if (!item.hasAttribute("checked") && actionName !== "expand" &&
+                 actionName !== "preferences") {
         is(item.shadowRoot.querySelector("button").disabled, locked,
            `Plugin action "${actionName}" should be ${locked ? "disabled" : "enabled"}`);
       }
@@ -71,7 +72,7 @@ add_task(async function test_enabled() {
   });
 
   const testCase = () => test_flash_status({
-    expectedLabelText: labelTextAlwaysActivate,
+    expectedLabelText: labelTextAskToActivate,
     locked: false,
   });
   await testOnAboutAddonsType("XUL", testCase);
@@ -91,7 +92,7 @@ add_task(async function test_enabled_locked() {
   });
 
   const testCase = () => test_flash_status({
-    expectedLabelText: labelTextAlwaysActivate,
+    expectedLabelText: labelTextAskToActivate,
     locked: true,
   });
   await testOnAboutAddonsType("XUL", testCase);
