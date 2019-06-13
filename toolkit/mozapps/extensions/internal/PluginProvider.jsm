@@ -17,7 +17,6 @@ ChromeUtils.defineModuleGetter(this, "Blocklist",
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const LIST_UPDATED_TOPIC     = "plugins-list-updated";
-const FLASH_MIME_TYPE        = "application/x-shockwave-flash";
 
 const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.plugins";
@@ -515,12 +514,7 @@ PluginWrapper.prototype = {
   },
 
   get isFlashPlugin() {
-    for (let type of this.pluginMimeTypes) {
-      if (type.type == FLASH_MIME_TYPE) {
-        return true;
-      }
-    }
-    return false;
+    return pluginFor(this).tags.some(t => t.isFlashPlugin);
   },
 };
 
