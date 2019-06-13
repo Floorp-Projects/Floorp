@@ -365,7 +365,16 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 }
             }
             is TabAction.CloseAll -> {
-                removeAllTabsWithUndo(action.private)
+                if (pendingSessionDeletion?.deletionJob == null) removeAllTabsWithUndo(action.private) else {
+                    pendingSessionDeletion?.deletionJob?.let {
+                        launch {
+                            it.invoke()
+                        }.invokeOnCompletion {
+                            pendingSessionDeletion = null
+                            removeAllTabsWithUndo(action.private)
+                        }
+                    }
+                }
             }
             is TabAction.PrivateBrowsingLearnMore -> {
                 (activity as HomeActivity).openToBrowserAndLoad(
