@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script type="text/javascript" src="pointerevent_support.js"></script>
         <script>
             var detected_pointertypes = {};
@@ -102,6 +105,21 @@
                     });
                     test_pointerEvent.done();
                 });
+
+                // Inject mouse inputs.
+                new test_driver.Actions()
+                    .pointerMove(0, 0, {origin: target0})
+                    .pointerDown()
+                    .pointerMove(0, 10, {origin: target0})
+                    .pointerMove(0, 20, {origin: target0})
+                    .pointerMove(0, -10, {origin: target1})
+                    .pointerMove(0, 0, {origin: target1})
+                    .pointerMove(0, 10, {origin: target1})
+                    .pointerUp()
+                    .pointerMove(0, 0, {origin: target1})
+                    .pointerDown()
+                    .pointerUp()
+                    .send();
             }
         </script>
     </head>
