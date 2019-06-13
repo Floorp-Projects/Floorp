@@ -525,6 +525,12 @@ class ContextMenuChild extends JSWindowActorChild {
     let context = this.context;
     this.target = context.target;
 
+    // _setContext may have determined that we don't actually want to open a contextmenu
+    // for this event, in which case we can bail out early.
+    if (!context.shouldDisplay) {
+      return;
+    }
+
     let spellInfo = null;
     let editFlags = null;
     let principal = null;
