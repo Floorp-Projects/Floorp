@@ -7,4 +7,5 @@
 
     <string name="crash_fatal">Crash (Fatal)</string>
     <string name="crash_nonfatal">Crash (Non-Fatal)</string>
+    <string name="crash_fatal_service">Crash (Fatal; background service)</string>
 </resources>

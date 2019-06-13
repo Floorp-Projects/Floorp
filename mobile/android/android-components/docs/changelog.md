@@ -45,6 +45,9 @@ permalink: /changelog/
 * **service-firefox-accounts**
   * Disabled periodic device event polling.
 
+* **lib-crash**
+  * [Restrictions to background activity starts](https://developer.android.com/preview/privacy/background-activity-starts) in Android Q+ make it impossible to launch the crash reporter prompt after certain crashes. In those situations the library will show a "crash notification" instead. Clicking on the notification will launch the crash reporter prompt allowing the user to submit a crash report.
+
 # 0.56.2
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.56.1...v0.56.2)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.56.2/buildSrc/src/main/java/Dependencies.kt)

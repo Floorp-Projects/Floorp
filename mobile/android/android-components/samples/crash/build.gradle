@@ -30,6 +30,7 @@ android {
 
 dependencies {
     implementation project(':lib-crash')
+    implementation project(':support-base')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

@@ -39,6 +39,7 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
 
         fatalCrashButton.setOnClickListener(this)
         crashButton.setOnClickListener(this)
+        fatalServiceCrashButton.setOnClickListener(this)
     }
 
     override fun onResume() {
@@ -77,6 +78,11 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
                 intent.putExtra("minidumpSuccess", true)
 
                 ContextCompat.startForegroundService(this, intent)
+            }
+
+            fatalServiceCrashButton -> {
+                startService(Intent(this, CrashService::class.java))
+                finish()
             }
         }
     }

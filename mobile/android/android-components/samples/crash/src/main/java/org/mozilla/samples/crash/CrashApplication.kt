@@ -15,12 +15,16 @@ import kotlinx.coroutines.launch
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.support.base.log.Log
+import mozilla.components.support.base.log.sink.AndroidLogSink
 
 class CrashApplication : Application() {
     internal lateinit var crashReporter: CrashReporter
 
     override fun onCreate() {
         super.onCreate()
+
+        Log.addSink(AndroidLogSink())
 
         crashReporter = CrashReporter(
             services = listOf(createDummyCrashService(this)),

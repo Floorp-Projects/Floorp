@@ -10,7 +10,8 @@ import android.content.Intent
 import androidx.annotation.StyleRes
 import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.crash.handler.ExceptionHandler
-import mozilla.components.lib.crash.prompt.CrashReporterActivity
+import mozilla.components.lib.crash.notification.CrashNotification
+import mozilla.components.lib.crash.prompt.CrashPrompt
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.base.log.logger.Logger
 
@@ -91,21 +92,13 @@ class CrashReporter(
 
         logger.info("Received crash: $crash")
 
-        if (shouldPromptForCrash(crash)) {
-            if (crash is Crash.NativeCodeCrash &&
-                !crash.isFatal &&
-                nonFatalCrashIntent != null) {
+        if (CrashPrompt.shouldPromptForCrash(shouldPrompt, crash)) {
+            if (shouldSendIntent(crash)) {
                 // This crash was not fatal and the app has registered a pending intent: Send Intent to app and let the
                 // app handle showing a confirmation UI.
-                logger.info("Invoking non-fatal PendingIntent")
-
-                val additionalIntent = Intent()
-                crash.fillIn(additionalIntent)
-                nonFatalCrashIntent.send(context, 0, additionalIntent)
+                launchCrashIntent(context, crash)
             } else {
-                logger.info("Showing prompt")
-
-                showPrompt(context, crash)
+                showPromptOrNotification(context, crash)
             }
         } else {
             logger.info("Immediately submitting crash report")
@@ -114,22 +107,42 @@ class CrashReporter(
         }
     }
 
-    internal fun showPrompt(context: Context, crash: Crash) {
-        val intent = Intent(context, CrashReporterActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+    private fun launchCrashIntent(context: Context, crash: Crash) {
+        logger.info("Invoking non-fatal PendingIntent")
 
-        crash.fillIn(intent)
-
-        context.startActivity(intent)
+        val additionalIntent = Intent()
+        crash.fillIn(additionalIntent)
+        nonFatalCrashIntent?.send(context, 0, additionalIntent)
     }
 
-    private fun shouldPromptForCrash(crash: Crash): Boolean {
-        return when (shouldPrompt) {
-            Prompt.ALWAYS -> true
-            Prompt.NEVER -> false
-            Prompt.ONLY_NATIVE_CRASH -> crash is Crash.NativeCodeCrash
+    private fun showPromptOrNotification(context: Context, crash: Crash) {
+        if (CrashNotification.shouldShowNotificationInsteadOfPrompt(crash)) {
+            // If this is a fatal crash taking down the app then we may not be able to show a crash reporter
+            // prompt on Android Q+. Unfortunately it's not possible to easily determine if we can launch an
+            // activity here. So instead we fallback to just showing a notification
+            // https://developer.android.com/preview/privacy/background-activity-starts
+            logger.info("Showing notification")
+            val notification = CrashNotification(context, crash, promptConfiguration)
+            notification.show()
+        } else {
+            logger.info("Showing prompt")
+            showPrompt(context, crash)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun showPrompt(context: Context, crash: Crash) {
+        val prompt = CrashPrompt(context, crash)
+        prompt.show()
+    }
+
+    private fun shouldSendIntent(crash: Crash): Boolean {
+        return if (nonFatalCrashIntent == null) {
+            // If the app has not registered any intent then we can't send one.
+            false
+        } else {
+            // If this is a non-fatal native code crash then we can recover and can notify the app
+            crash is Crash.NativeCodeCrash && !crash.isFatal
         }
     }
 

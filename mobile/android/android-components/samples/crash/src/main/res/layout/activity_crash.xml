@@ -16,4 +16,10 @@
         android:layout_height="wrap_content"
         android:text="@string/crash_fatal"/>
 
+    <Button
+        android:id="@+id/fatalServiceCrashButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/crash_fatal_service"/>
+
 </LinearLayout>
