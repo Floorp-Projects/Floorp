@@ -8,7 +8,6 @@ EXPORTS.mozilla.a11y += [
     'Accessible.h',
     'DocAccessible.h',
     'HyperTextAccessible.h',
-    'OuterDocAccessible.h',
 ]
 
 UNIFIED_SOURCES += [

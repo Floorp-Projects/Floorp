@@ -225,9 +225,6 @@
 #  ifdef XP_WIN
 #    include "mozilla/a11y/AccessibleWrap.h"
 #  endif
-#  include "mozilla/a11y/DocAccessible.h"
-#  include "mozilla/a11y/DocManager.h"
-#  include "mozilla/a11y/OuterDocAccessible.h"
 #endif
 
 #include "mozilla/dom/File.h"
@@ -2069,20 +2066,6 @@ already_AddRefed<RemoteBrowser> ContentChild::CreateBrowser(
       PromiseFlatString(aContext.PresentationURL()), aRemoteType,
       aBrowsingContext, chromeFlags, tabId);
   browserBridge->mIPCOpen = true;
-
-#if defined(ACCESSIBILITY)
-  a11y::DocAccessible* docAcc =
-      a11y::GetExistingDocAccessible(owner->OwnerDoc());
-  if (docAcc) {
-    a11y::Accessible* ownerAcc = docAcc->GetAccessible(owner);
-    if (ownerAcc) {
-      a11y::OuterDocAccessible* outerAcc = ownerAcc->AsOuterDoc();
-      if (outerAcc) {
-        outerAcc->SendEmbedderAccessible(browserBridge);
-      }
-    }
-  }
-#endif  // defined(ACCESSIBILITY)
 
   RefPtr<BrowserBridgeHost> browserBridgeHost =
       new BrowserBridgeHost(browserBridge);
