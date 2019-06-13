@@ -49,7 +49,7 @@ MockGMPInstallManager.prototype = {
 function openDetailsView(aId) {
   let view = get_current_view(gManagerWindow);
   if (gManagerWindow.useHtmlViews) {
-    Assert.equal(view.id, "html-view-browser", "Should be in the list view to use this function");
+    Assert.equal(view.id, "html-view", "Should be in the list view to use this function");
   } else {
     Assert.equal(view.id, "list-view", "Should be in the list view to use this function");
   }

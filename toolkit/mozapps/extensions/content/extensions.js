@@ -3818,23 +3818,29 @@ function getHtmlBrowser() {
 
 function htmlView(type) {
   return {
+    _browser: null,
     node: null,
     isRoot: type != "detail",
 
     initialize() {
-      this.node = getHtmlBrowser();
+      this._browser = getHtmlBrowser();
+      this.node = this._browser.closest("#html-view");
     },
 
     async show(param, request, state, refresh) {
       await htmlBrowserLoaded;
-      await this.node.contentWindow.show(type, param);
+      this.node.setAttribute("type", type);
+      this.node.setAttribute("param", param);
+      await this._browser.contentWindow.show(type, param);
       gViewController.updateCommands();
       gViewController.notifyViewChanged();
     },
 
     async hide() {
       await htmlBrowserLoaded;
-      return this.node.contentWindow.hide();
+      this.node.removeAttribute("type");
+      this.node.removeAttribute("param");
+      return this._browser.contentWindow.hide();
     },
 
     getSelectedAddon() {
