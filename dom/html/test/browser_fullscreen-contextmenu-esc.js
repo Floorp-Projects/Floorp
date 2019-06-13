@@ -6,6 +6,7 @@
 // error.
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 function frameScript() {
   addMessageListener("Test:RequestFullscreen", () => {
     content.document.body.requestFullscreen();
@@ -27,6 +28,7 @@ function frameScript() {
   }
   waitUntilActive();
 }
+/* eslint-enable mozilla/no-arbitrary-setTimeout */
 
 var gMessageManager;
 
@@ -95,6 +97,7 @@ add_task(async function() {
 
   // Wait a small time to confirm that the first ESC key
   // does not exit fullscreen.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
   gMessageManager.sendAsyncMessage("Test:QueryFullscreenState");
   state = await promiseOneMessage("Test:FullscreenState");

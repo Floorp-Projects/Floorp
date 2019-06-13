@@ -102,6 +102,7 @@ function discreteSum(sourceBuffer, destBuffer) {
 
 // Speaker channel interpretation mixing:
 // https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#UpMix
+// eslint-disable-next-line complexity
 function speakersSum(sourceBuffer, destBuffer)
 {
     var numberOfSourceChannels = sourceBuffer.numberOfChannels;

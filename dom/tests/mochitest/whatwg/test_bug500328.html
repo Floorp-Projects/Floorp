@@ -197,7 +197,7 @@ function expectException(func, msg) {
   ok(failed, msg + " succeeded, but should have failed.");
 }
 
-function runTest() {
+function* runTest() {
   // We can't enable universal XPConnect privleges in this function, because
   // test 5 needs to be running at normal privleges in order to test the
   // same-origin policy.
@@ -531,7 +531,7 @@ function runTest() {
   locationEndsWith(popup, "good1.html");
 
   // Even though we replaceState with title "state 1", the title should remain
-  // "test 1" because we ignore the title argument in push/replaceState.  
+  // "test 1" because we ignore the title argument in push/replaceState.
   // See bug 544535.
   is(getSHTitle(shistory), "test 1", "SHEntry title 'state 1'");
 

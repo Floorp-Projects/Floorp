@@ -315,6 +315,7 @@ var pedanticChecks = report => {
   [...report.keys()].forEach(key => is(report[key], undefined,
       `Report is not dictionary like, it lacks a property for key ${key}`));
 
+  // eslint-disable-next-line complexity
   report.forEach((statObj, mapKey) => {
     let tested = {};
     // Record what fields get tested.

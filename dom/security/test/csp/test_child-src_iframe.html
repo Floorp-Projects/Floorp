@@ -62,7 +62,6 @@ var tests = {
   },
   'none-src-by-frame-src': {
     id: "none-src-by-frame-src",
-    file: "file_child-src_iframe.html",
     file: IFRAME_SRC,
     result : "blocked",
     policy : "default-src 'none'; script-src 'unsafe-inline'; child-src http://mochi.test:8888; frame-src 'none'"

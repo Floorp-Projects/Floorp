@@ -1,5 +1,6 @@
 var seenIndex = false;
 
+// eslint-disable-next-line complexity
 onfetch = function(ev) {
   if (ev.request.url.includes("ignore")) {
     return;
