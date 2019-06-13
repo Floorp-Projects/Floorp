@@ -14,6 +14,7 @@ let filters = [];
 let tasks = new Map();
 let tags = new Map();
 let image_tasks = new Map();
+let parameters = {};
 
 let queue = new taskcluster.Queue({
   baseUrl: "http://taskcluster/queue/v1"
@@ -141,6 +142,10 @@ function convertTask(def) {
     scopes.push.apply(scopes, def.scopes)
   }
 
+  let extra = Object.assign({
+      treeherder: parseTreeherder(def)
+  }, parameters);
+
   return {
     provisionerId: def.provisioner || "aws-provisioner-v1",
     workerType: def.workerType || "hg-worker",
@@ -163,10 +168,7 @@ function convertTask(def) {
     },
 
     payload,
-
-    extra: {
-      treeherder: parseTreeherder(def)
-    }
+    extra,
   };
 }
 
@@ -176,6 +178,10 @@ export function map(fun) {
 
 export function filter(fun) {
   filters.push(fun);
+}
+
+export function addParameters(params) {
+  parameters = Object.assign(parameters, params);
 }
 
 export function clearFilters(fun) {
