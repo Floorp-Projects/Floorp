@@ -308,9 +308,8 @@ class BrowserParent final : public PBrowserParent,
 
   void ReconstructWebProgressAndRequest(
       nsIWebProgress* aManager, const Maybe<WebProgressData>& aWebProgressData,
-      const RequestData& aRequestData,
-      nsCOMPtr<nsIWebProgress>& aOutWebProgress,
-      nsCOMPtr<nsIRequest>& aOutRequest);
+      const RequestData& aRequestData, nsIWebProgress** aOutWebProgress,
+      nsIRequest** aOutRequest);
 
   mozilla::ipc::IPCResult RecvSessionStoreUpdate(
       const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
