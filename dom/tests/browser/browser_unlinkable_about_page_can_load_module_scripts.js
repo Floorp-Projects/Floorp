@@ -9,7 +9,7 @@ const kTestPage = getRootDirectory(gTestPath) + "file_load_module_script.html";
 
 const kDefaultFlags = Ci.nsIAboutModule.ALLOW_SCRIPT |
     Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD |
-    Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGED_CHILD |
+    Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS |
     Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT;
 
 const kAboutPagesRegistered = Promise.all([
