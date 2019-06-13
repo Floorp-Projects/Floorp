@@ -72,6 +72,17 @@ addon-list addon-card > .addon.card {
   -moz-user-select: none;
 }
 
+.addon-card-message {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin: 8px calc(var(--card-padding) * -1) calc(var(--card-padding) * -1);
+}
+
+addon-card[expanded] .addon-card-message {
+  border-radius: 0;
+  margin-bottom: 0;
+}
+
 /* Theme preview image. */
 .card-heading-image {
   /* If the width, height or aspect ratio changes, don't forget to update the

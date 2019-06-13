@@ -2,8 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// This test is testing a warning message that is not yet supported
-// by the HTML about:addons views (tracked by Bug 1544950).
+// The HTML tests are in browser_html_warning_messages.js.
 SpecialPowers.pushPrefEnv({
   set: [["extensions.htmlaboutaddons.enabled", false]],
 });
