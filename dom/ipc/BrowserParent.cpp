@@ -683,7 +683,7 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
 
     // If this was a crash, tell our nsFrameLoader to fire crash events.
     if (why == AbnormalShutdown) {
-      frameLoader->MaybeNotifyCrashed(GetIPCChannel());
+      frameLoader->MaybeNotifyCrashed(mBrowsingContext, GetIPCChannel());
     }
   }
 
