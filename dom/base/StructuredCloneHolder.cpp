@@ -120,6 +120,19 @@ void StructuredCloneCallbacksError(JSContext* aCx, uint32_t aErrorId) {
   NS_WARNING("Failed to clone data.");
 }
 
+void AssertTagValues() {
+  static_assert(SCTAG_DOM_IMAGEDATA == 0xffff8007 &&
+                    SCTAG_DOM_WEBCRYPTO_KEY == 0xffff800a &&
+                    SCTAG_DOM_NULL_PRINCIPAL == 0xffff800b &&
+                    SCTAG_DOM_SYSTEM_PRINCIPAL == 0xffff800c &&
+                    SCTAG_DOM_CONTENT_PRINCIPAL == 0xffff800d &&
+                    SCTAG_DOM_EXPANDED_PRINCIPAL == 0xffff8012 &&
+                    SCTAG_DOM_RTC_CERTIFICATE == 0xffff800f &&
+                    SCTAG_DOM_URLSEARCHPARAMS == 0xffff8014 &&
+                    SCTAG_DOM_STRUCTURED_CLONE_TESTER == 0xffff8018,
+                "Something has changed the sctag values. This is wrong!");
+}
+
 }  // anonymous namespace
 
 const JSStructuredCloneCallbacks StructuredCloneHolder::sCallbacks = {
@@ -319,6 +332,8 @@ void StructuredCloneHolder::ReadFromBuffer(nsISupports* aParent, JSContext* aCx,
 /* static */
 JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
     JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag) {
+  AssertTagValues();
+
   if (aTag == SCTAG_DOM_IMAGEDATA) {
     return ReadStructuredCloneImageData(aCx, aReader);
   }
@@ -413,6 +428,8 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
 bool StructuredCloneHolder::WriteFullySerializableObjects(
     JSContext* aCx, JSStructuredCloneWriter* aWriter,
     JS::Handle<JSObject*> aObj) {
+  AssertTagValues();
+
   JS::Rooted<JSObject*> obj(aCx, aObj);
 
   // See if this is a ImageData object.
