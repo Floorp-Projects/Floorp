@@ -371,7 +371,7 @@ class SocksTestClient {
                                       socks.username, socks.password, "", "",
                                       pi_flags, -1, null);
 
-    this.trans = sts.createTransport(null, 0, dest.host, dest.port, pi);
+    this.trans = sts.createTransport([], dest.host, dest.port, pi);
     this.input = this.trans.openInputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
     this.output = this.trans.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
     this.outbuf = String();

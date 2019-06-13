@@ -50,7 +50,7 @@ add_test(function test_sockets() {
     .getService(Ci.nsISocketTransportService);
   let threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
 
-  let transport = sts.createTransport(null, 0, "127.0.0.1",
+  let transport = sts.createTransport([], "127.0.0.1",
                                       gServerSocket.port, null);
   let listener = {
     onTransportStatus: function(aTransport, aStatus, aProgress, aProgressMax) {

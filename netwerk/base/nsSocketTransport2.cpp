@@ -693,9 +693,7 @@ nsSocketOutputStream::AsyncWait(nsIOutputStreamCallback* callback,
 //-----------------------------------------------------------------------------
 
 nsSocketTransport::nsSocketTransport()
-    : mTypes(nullptr),
-      mTypeCount(0),
-      mPort(0),
+    : mPort(0),
       mProxyPort(0),
       mOriginPort(0),
       mProxyTransparent(false),
@@ -750,23 +748,9 @@ nsSocketTransport::nsSocketTransport()
 
 nsSocketTransport::~nsSocketTransport() {
   SOCKET_LOG(("destroying nsSocketTransport @%p\n", this));
-
-  CleanupTypes();
 }
 
-void nsSocketTransport::CleanupTypes() {
-  // cleanup socket type info
-  if (mTypes) {
-    for (uint32_t i = 0; i < mTypeCount; ++i) {
-      PL_strfree(mTypes[i]);
-    }
-    free(mTypes);
-    mTypes = nullptr;
-  }
-  mTypeCount = 0;
-}
-
-nsresult nsSocketTransport::Init(const char** types, uint32_t typeCount,
+nsresult nsSocketTransport::Init(const nsTArray<nsCString>& types,
                                  const nsACString& host, uint16_t port,
                                  const nsACString& hostRoute,
                                  uint16_t portRoute,
@@ -813,8 +797,8 @@ nsresult nsSocketTransport::Init(const char** types, uint32_t typeCount,
        mProxyHost.get(), mProxyPort));
 
   // include proxy type as a socket type if proxy type is not "http"
-  mTypeCount = typeCount + (proxyType != nullptr);
-  if (!mTypeCount) return NS_OK;
+  uint32_t typeCount = types.Length() + (proxyType != nullptr);
+  if (!typeCount) return NS_OK;
 
   // if we have socket types, then the socket provider service had
   // better exist!
@@ -822,23 +806,20 @@ nsresult nsSocketTransport::Init(const char** types, uint32_t typeCount,
   nsCOMPtr<nsISocketProviderService> spserv =
       nsSocketProviderService::GetOrCreate();
 
-  mTypes = (char**)malloc(mTypeCount * sizeof(char*));
-  if (!mTypes) return NS_ERROR_OUT_OF_MEMORY;
+  if (!mTypes.SetCapacity(typeCount, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // now verify that each socket type has a registered socket provider.
-  for (uint32_t i = 0, type = 0; i < mTypeCount; ++i) {
+  for (uint32_t i = 0, type = 0; i < typeCount; ++i) {
     // store socket types
     if (i == 0 && proxyType)
-      mTypes[i] = PL_strdup(proxyType);
+      mTypes.AppendElement(proxyType);
     else
-      mTypes[i] = PL_strdup(types[type++]);
+      mTypes.AppendElement(types[type++]);
 
-    if (!mTypes[i]) {
-      mTypeCount = i;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     nsCOMPtr<nsISocketProvider> provider;
-    rv = spserv->GetSocketProvider(mTypes[i], getter_AddRefs(provider));
+    rv = spserv->GetSocketProvider(mTypes[i].get(), getter_AddRefs(provider));
     if (NS_FAILED(rv)) {
       NS_WARNING("no registered socket provider");
       return rv;
@@ -846,8 +827,7 @@ nsresult nsSocketTransport::Init(const char** types, uint32_t typeCount,
 
     // note if socket type corresponds to a transparent proxy
     // XXX don't hardcode SOCKS here (use proxy info's flags instead).
-    if ((strcmp(mTypes[i], "socks") == 0) ||
-        (strcmp(mTypes[i], "socks4") == 0)) {
+    if (mTypes[i].EqualsLiteral("socks") || mTypes[i].EqualsLiteral("socks4")) {
       mProxyTransparent = true;
 
       if (proxyInfo->Flags() & nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST) {
@@ -884,7 +864,6 @@ nsresult nsSocketTransport::InitWithName(const char* name, size_t length) {
     mHost.Assign(name, length);
   }
   mPort = 0;
-  mTypeCount = 0;
 
   mNetAddr.local.family = AF_LOCAL;
   memcpy(mNetAddr.local.path, name, length);
@@ -1070,8 +1049,8 @@ nsresult nsSocketTransport::ResolveHost() {
   if (mSocketTransportService->IsEsniEnabled() && NS_SUCCEEDED(rv) &&
       !(mConnectionFlags & (DONT_TRY_ESNI | BE_CONSERVATIVE))) {
     bool isSSL = false;
-    for (unsigned int i = 0; i < mTypeCount; ++i) {
-      if (!strcmp(mTypes[i], "ssl")) {
+    for (unsigned int i = 0; i < mTypes.Length(); ++i) {
+      if (mTypes[i].EqualsLiteral("ssl")) {
         isSSL = true;
         break;
       }
@@ -1113,7 +1092,7 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
   proxyTransparent = false;
   usingSSL = false;
 
-  if (mTypeCount == 0) {
+  if (mTypes.IsEmpty()) {
     fd = PR_OpenTCPSocket(mNetAddr.raw.family);
     rv = fd ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   } else {
@@ -1136,12 +1115,12 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
     uint32_t controlFlags = 0;
 
     uint32_t i;
-    for (i = 0; i < mTypeCount; ++i) {
+    for (i = 0; i < mTypes.Length(); ++i) {
       nsCOMPtr<nsISocketProvider> provider;
 
-      SOCKET_LOG(("  pushing io layer [%u:%s]\n", i, mTypes[i]));
+      SOCKET_LOG(("  pushing io layer [%u:%s]\n", i, mTypes[i].get()));
 
-      rv = spserv->GetSocketProvider(mTypes[i], getter_AddRefs(provider));
+      rv = spserv->GetSocketProvider(mTypes[i].get(), getter_AddRefs(provider));
       if (NS_FAILED(rv)) break;
 
       if (mProxyTransparentResolvesHost)
@@ -1173,7 +1152,8 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
         const char* socketProviderHost = host;
         int32_t socketProviderPort = port;
         if (mProxyTransparentResolvesHost &&
-            (!strcmp(mTypes[0], "socks") || !strcmp(mTypes[0], "socks4"))) {
+            (mTypes[0].EqualsLiteral("socks") ||
+             mTypes[0].EqualsLiteral("socks4"))) {
           SOCKET_LOG(("SOCKS %d Host/Route override: %s:%d -> %s:%d\n",
                       mHttpsProxy, socketProviderHost, socketProviderPort,
                       mHost.get(), mPort));
@@ -1211,8 +1191,8 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
 
       // if the service was ssl or starttls, we want to hold onto the socket
       // info
-      bool isSSL = (strcmp(mTypes[i], "ssl") == 0);
-      if (isSSL || (strcmp(mTypes[i], "starttls") == 0)) {
+      bool isSSL = mTypes[i].EqualsLiteral("ssl");
+      if (isSSL || mTypes[i].EqualsLiteral("starttls")) {
         // remember security info and give notification callbacks to PSM...
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
         {
@@ -1227,8 +1207,8 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
         if (secCtrl) secCtrl->SetNotificationCallbacks(callbacks);
         // remember if socket type is SSL so we can ProxyStartSSL if need be.
         usingSSL = isSSL;
-      } else if ((strcmp(mTypes[i], "socks") == 0) ||
-                 (strcmp(mTypes[i], "socks4") == 0)) {
+      } else if (mTypes[i].EqualsLiteral("socks") ||
+                 mTypes[i].EqualsLiteral("socks4")) {
         // since socks is transparent, any layers above
         // it do not have to worry about proxy stuff
         proxyInfo = nullptr;
@@ -1238,7 +1218,7 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
 
     if (NS_FAILED(rv)) {
       SOCKET_LOG(("  error pushing io layer [%u:%s rv=%" PRIx32 "]\n", i,
-                  mTypes[i], static_cast<uint32_t>(rv)));
+                  mTypes[i].get(), static_cast<uint32_t>(rv)));
       if (fd) {
         CloseSocket(
             fd, mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase());

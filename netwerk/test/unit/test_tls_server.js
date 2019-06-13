@@ -111,7 +111,7 @@ function startClient(port, cert, expectingAlert, tlsVersion) {
   let SSL_ERROR_BAD_CERT_ALERT = SSL_ERROR_BASE + 17;
   let SSL_ERROR_RX_CERTIFICATE_REQUIRED_ALERT = SSL_ERROR_BASE + 181;
   let transport =
-    socketTransportService.createTransport(["ssl"], 1, "127.0.0.1", port, null);
+    socketTransportService.createTransport(["ssl"], "127.0.0.1", port, null);
   let input;
   let output;
 

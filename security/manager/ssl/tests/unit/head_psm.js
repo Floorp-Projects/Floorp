@@ -414,7 +414,7 @@ function add_connection_test(aHost, aExpectedResult,
     this.defer = Promise.defer();
     let sts = Cc["@mozilla.org/network/socket-transport-service;1"]
                 .getService(Ci.nsISocketTransportService);
-    this.transport = sts.createTransport(["ssl"], 1, host, REMOTE_PORT, null);
+    this.transport = sts.createTransport(["ssl"], host, REMOTE_PORT, null);
     // See bug 1129771 - attempting to connect to [::1] when the server is
     // listening on 127.0.0.1 causes frequent failures on OS X 10.10.
     this.transport.connectionFlags |= Ci.nsISocketTransport.DISABLE_IPV6;

@@ -198,13 +198,11 @@ PresentationControlService.prototype = {
             Ci.nsICertOverrideService.ERROR_UNTRUSTED | Ci.nsICertOverrideService.ERROR_MISMATCH);
 
         socketTransport = sts.createTransport(["ssl"],
-                                              1,
                                               aDeviceInfo.address,
                                               aDeviceInfo.port,
                                               null);
       } else {
-        socketTransport = sts.createTransport(null,
-                                              0,
+        socketTransport = sts.createTransport([],
                                               aDeviceInfo.address,
                                               aDeviceInfo.port,
                                               null);
