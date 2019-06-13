@@ -429,7 +429,8 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     if (worker) {
       worker->AssertIsOnWorkerThread();
-      request->SetEnvironmentReferrerPolicy(worker->GetReferrerPolicy());
+      request->SetEnvironmentReferrerPolicy(
+          static_cast<net::ReferrerPolicy>(worker->GetReferrerPolicy()));
       principalInfo =
           MakeUnique<mozilla::ipc::PrincipalInfo>(worker->GetPrincipalInfo());
     }
