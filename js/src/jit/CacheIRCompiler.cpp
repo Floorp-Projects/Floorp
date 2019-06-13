@@ -12,6 +12,8 @@
 #include <utility>
 
 #include "jslibmath.h"
+#include "jit/BaselineCacheIRCompiler.h"
+#include "jit/IonCacheIRCompiler.h"
 #include "jit/IonIC.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
@@ -20,6 +22,8 @@
 #include "builtin/Boolean-inl.h"
 
 #include "jit/MacroAssembler-inl.h"
+#include "jit/SharedICHelpers-inl.h"
+#include "jit/VMFunctionList-inl.h"
 #include "vm/Realm-inl.h"
 
 using namespace js;
@@ -4384,4 +4388,60 @@ bool CacheIRCompiler::emitMetaTwoByte() {
   mozilla::Unused << reader.readByte();  // payload byte 2
 
   return true;
+}
+
+template <typename Fn, Fn fn>
+void CacheIRCompiler::callVM(MacroAssembler& masm) {
+  VMFunctionId id = VMFunctionToId<Fn, fn>::id;
+  callVMInternal(masm, id);
+}
+
+void CacheIRCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
+  if (mode_ == Mode::Ion) {
+#ifdef DEBUG
+    IonCacheIRCompiler* ionCompiler = &this->asIon();
+    MOZ_ASSERT(ionCompiler);
+    MOZ_ASSERT(ionCompiler->calledPrepareVMCall_);
+#endif
+    TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
+    const VMFunctionData& fun = GetVMFunction(id);
+    uint32_t frameSize = fun.explicitStackSlots() * sizeof(void*);
+    uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
+                                              ExitFrameLayout::Size());
+    masm.Push(Imm32(descriptor));
+    masm.callJit(code);
+
+    // Remove rest of the frame left on the stack. We remove the return address
+    // which is implicitly popped when returning.
+    int framePop = sizeof(ExitFrameLayout) - sizeof(void*);
+
+    // Pop arguments from framePushed.
+    masm.implicitPop(frameSize + framePop);
+    masm.freeStack(IonICCallFrameLayout::Size());
+    return;
+  }
+#ifdef DEBUG
+  MOZ_ASSERT(mode_ == Mode::Baseline);
+  BaselineCacheIRCompiler* baselineCompiler = &this->asBaseline();
+  MOZ_ASSERT(baselineCompiler);
+  MOZ_ASSERT(baselineCompiler->inStubFrame_);
+#endif
+  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
+  MOZ_ASSERT(GetVMFunction(id).expectTailCall == NonTailCall);
+
+  EmitBaselineCallVM(code, masm);
+}
+
+bool CacheIRCompiler::isBaseline() { return mode_ == Mode::Baseline; }
+
+bool CacheIRCompiler::isIon() { return mode_ == Mode::Ion; }
+
+BaselineCacheIRCompiler& CacheIRCompiler::asBaseline() {
+  MOZ_ASSERT(this->isBaseline());
+  return *static_cast<BaselineCacheIRCompiler*>(this);
+}
+
+IonCacheIRCompiler& CacheIRCompiler::asIon() {
+  MOZ_ASSERT(this->isIon());
+  return *static_cast<IonCacheIRCompiler*>(this);
 }
