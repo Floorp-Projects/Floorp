@@ -225,6 +225,22 @@ return credFetch(origin + "/cookies/resources/dropSecure.py")
  })
 }
 
+// Reset SameSite=None test cookies on |origin|. If |origin| matches
+// `self.origin`, assert (via `document.cookie`) that they were properly
+// removed.
+function resetSameSiteNoneCookies(origin, value) {
+  return credFetch(origin + "/cookies/resources/dropSameSiteNone.py")
+    .then(_ => {
+      if (origin == self.origin) {
+        assert_dom_cookie("samesite_none_insecure", value, false);
+        assert_dom_cookie("samesite_none_secure", value, false);
+      }
+    })
+    .then(_ => {
+      return credFetch(origin + "/cookies/resources/setSameSiteNone.py?" + value);
+    })
+}
+
 //
 // DOM based cookie manipulation APIs
 //
