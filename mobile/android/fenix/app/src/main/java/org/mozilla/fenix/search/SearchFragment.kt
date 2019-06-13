@@ -17,6 +17,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import androidx.transition.TransitionInflater
@@ -98,6 +99,7 @@ class SearchFragment : Fragment(), BackHandler {
         ).also {
             // Remove background from toolbar view since it conflicts with the search UI.
             it.uiView.view.background = null
+            it.uiView.view.layoutParams.height = CoordinatorLayout.LayoutParams.MATCH_PARENT
         }
 
         awesomeBarComponent = AwesomeBarComponent(
