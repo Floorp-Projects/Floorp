@@ -10313,7 +10313,8 @@ void Document::Destroy() {
   if (mIsGoingAway) return;
 
   // Make sure to report before IPC closed.
-  if (!nsContentUtils::IsInPrivateBrowsing(this)) {
+  if (!nsContentUtils::IsInPrivateBrowsing(this) &&
+      IsTopLevelContentDocument()) {
     mContentBlockingLog.ReportLog(NodePrincipal());
     mContentBlockingLog.ReportOrigins();
   }
