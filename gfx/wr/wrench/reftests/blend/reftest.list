@@ -6,7 +6,7 @@
 
 skip_on(android,debug) == multiply.yaml multiply-ref.yaml
 skip_on(android) == multiply-2.yaml multiply-2-ref.yaml
-skip_on(android) == color_targets(3) alpha_targets(0) multiply-3.yaml multiply-2-ref.yaml
+skip_on(android) == color_targets(4) alpha_targets(0) multiply-3.yaml multiply-2-ref.yaml
 skip_on(android) == difference.yaml difference-ref.yaml
 skip_on(android) fuzzy(1,30000) == difference-transparent.yaml difference-transparent-ref.yaml
 skip_on(android) == darken.yaml darken-ref.yaml
@@ -17,7 +17,7 @@ skip_on(android,debug) skip_on(android,device,release) == repeated-difference.ya
 == isolated.yaml isolated-ref.yaml
 skip_on(android) == isolated-2.yaml isolated-2-ref.yaml
 == isolated-with-filter.yaml isolated-ref.yaml
-== isolated-premultiplied.yaml blank.yaml
+skip_on(android,emulator) == isolated-premultiplied.yaml blank.yaml
 == isolated-premultiplied-2.yaml isolated-premultiplied-2-ref.yaml
 
 == large.yaml large-ref.yaml
