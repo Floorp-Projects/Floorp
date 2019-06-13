@@ -33,7 +33,11 @@ class JitCode;
 }  // namespace jit
 
 #ifdef DEBUG
-bool IsTracerKind(JSTracer* trc, JS::CallbackTracer::TracerKind kind);
+// Return true if this trace is happening on behalf of gray buffering during
+// the marking phase of incremental GC.
+bool IsBufferGrayRootsTracer(JSTracer* trc);
+
+bool IsUnmarkGrayTracer(JSTracer* trc);
 #endif
 
 namespace gc {

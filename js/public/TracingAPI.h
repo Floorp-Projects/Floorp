@@ -239,14 +239,14 @@ class JS_PUBLIC_API CallbackTracer : public JSTracer {
 
 #ifdef DEBUG
   enum class TracerKind {
-    Unspecified,
+    DoNotCare,
     Moving,
     GrayBuffering,
     VerifyTraceProtoAndIface,
     ClearEdges,
     UnmarkGray
   };
-  virtual TracerKind getTracerKind() const { return TracerKind::Unspecified; }
+  virtual TracerKind getTracerKind() const { return TracerKind::DoNotCare; }
 #endif
 
   // In C++, overriding a method hides all methods in the base class with
