@@ -305,6 +305,11 @@ var classifierTester = {
   },
 
   checkPluginInfo(pluginInfo, expectedClassification, flashSetting) {
+    // We've stopped allowing flash to be always activated, so check
+    // existing tests that attempt to do so get treated as using ask-to-activate.
+    if (flashSetting == classifierTester.ALWAYS_ACTIVATE_PREF_VALUE) {
+      flashSetting = classifierTester.ASK_TO_ACTIVATE_PREF_VALUE;
+    }
     is(pluginInfo.flashClassification, expectedClassification,
        "Page's classification should match expected");
 

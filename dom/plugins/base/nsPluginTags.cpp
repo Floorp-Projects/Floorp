@@ -516,6 +516,9 @@ nsPluginTag::GetEnabledState(uint32_t* aEnabledState) {
   int32_t enabledState;
   nsresult rv =
       Preferences::GetInt(GetStatePrefNameForPlugin(this).get(), &enabledState);
+  if (enabledState == nsIPluginTag::STATE_ENABLED && mIsFlashPlugin) {
+    enabledState = nsIPluginTag::STATE_CLICKTOPLAY;
+  }
   if (NS_SUCCEEDED(rv) && enabledState >= nsIPluginTag::STATE_DISABLED &&
       enabledState <= nsIPluginTag::STATE_ENABLED) {
     *aEnabledState = (uint32_t)enabledState;
@@ -526,6 +529,9 @@ nsPluginTag::GetEnabledState(uint32_t* aEnabledState) {
       mIsFromExtension ? kPrefDefaultEnabledStateXpi : kPrefDefaultEnabledState;
 
   enabledState = Preferences::GetInt(pref, nsIPluginTag::STATE_ENABLED);
+  if (enabledState == nsIPluginTag::STATE_ENABLED && mIsFlashPlugin) {
+    enabledState = nsIPluginTag::STATE_CLICKTOPLAY;
+  }
   if (enabledState >= nsIPluginTag::STATE_DISABLED &&
       enabledState <= nsIPluginTag::STATE_ENABLED) {
     *aEnabledState = (uint32_t)enabledState;
@@ -538,6 +544,9 @@ nsPluginTag::GetEnabledState(uint32_t* aEnabledState) {
 NS_IMETHODIMP
 nsPluginTag::SetEnabledState(uint32_t aEnabledState) {
   if (aEnabledState >= ePluginState_MaxValue) return NS_ERROR_ILLEGAL_VALUE;
+  if (aEnabledState == nsIPluginTag::STATE_ENABLED && mIsFlashPlugin) {
+    aEnabledState = nsIPluginTag::STATE_CLICKTOPLAY;
+  }
   uint32_t oldState = nsIPluginTag::STATE_DISABLED;
   GetEnabledState(&oldState);
   if (oldState != aEnabledState) {
