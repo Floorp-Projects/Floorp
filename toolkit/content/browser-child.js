@@ -15,10 +15,6 @@ docShell.QueryInterface(Ci.nsIInterfaceRequestor)
   .getInterface(Ci.nsIBrowserChild)
   .beginSendingWebProgressEventsToParent();
 
-// This message is used to measure content process startup performance in Talos
-// tests.
-sendAsyncMessage("Content:BrowserChildReady", { time: Services.telemetry.msSystemNow() });
-
 addEventListener("DOMTitleChanged", function(aEvent) {
   if (!aEvent.isTrusted || aEvent.target.defaultView != content)
     return;
