@@ -34,7 +34,6 @@
 #include "nsSize.h"
 #include "mozilla/FlushType.h"
 #include "prclist.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
 #include "mozilla/dom/NavigatorBinding.h"

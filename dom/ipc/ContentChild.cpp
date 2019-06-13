@@ -36,7 +36,6 @@
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/ChildProcessMessageManager.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocGroup.h"
@@ -1346,8 +1345,6 @@ void ContentChild::InitXPCOM(
 
   // Set the dynamic scalar definitions for this process.
   TelemetryIPC::AddDynamicScalarDefinitions(aXPCOMInit.dynamicScalarDefs());
-
-  DOMPrefs::Initialize();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvRequestMemoryReport(

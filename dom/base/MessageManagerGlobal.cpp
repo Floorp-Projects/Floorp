@@ -6,8 +6,8 @@
 
 #include "mozilla/dom/MessageManagerGlobal.h"
 #include "mozilla/IntentionalCrash.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "nsContentUtils.h"
+#include "nsJSUtils.h"
 
 #ifdef ANDROID
 #  include <android/log.h>
@@ -20,7 +20,7 @@ namespace mozilla {
 namespace dom {
 
 void MessageManagerGlobal::Dump(const nsAString& aStr) {
-  if (!DOMPrefs::DumpEnabled()) {
+  if (!nsJSUtils::DumpEnabled()) {
     return;
   }
 

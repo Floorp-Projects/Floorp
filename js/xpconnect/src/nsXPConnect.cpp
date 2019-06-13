@@ -24,7 +24,6 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/Promise.h"
 
@@ -38,6 +37,7 @@
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "nsScriptError.h"
+#include "nsJSUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -259,7 +259,7 @@ void xpc::ErrorBase::AppendErrorDetailsTo(nsCString& error) {
 }
 
 void xpc::ErrorNote::LogToStderr() {
-  if (!DOMPrefs::DumpEnabled()) {
+  if (!nsJSUtils::DumpEnabled()) {
     return;
   }
 
@@ -272,7 +272,7 @@ void xpc::ErrorNote::LogToStderr() {
 }
 
 void xpc::ErrorReport::LogToStderr() {
-  if (!DOMPrefs::DumpEnabled()) {
+  if (!nsJSUtils::DumpEnabled()) {
     return;
   }
 

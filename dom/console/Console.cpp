@@ -11,7 +11,6 @@
 
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FunctionBinding.h"
