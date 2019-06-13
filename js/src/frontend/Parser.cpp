@@ -1639,10 +1639,6 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   }
 
   FunctionBox* funbox = pc_->functionBox();
-
-  // Synchronize functionBox argCount with Function.
-  funbox->function()->setArgCount(funbox->nargs());
-
   bool hasParameterExprs = funbox->hasParameterExprs;
 
   if (hasParameterExprs) {
@@ -1699,10 +1695,6 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   FunctionBox* funbox = pc_->functionBox();
   RootedFunction fun(cx_, funbox->function());
-
-  // Synchronize functionBox argCount with Function.
-  funbox->function()->setArgCount(funbox->nargs());
-
   LazyScript* lazy = LazyScript::Create(
       cx_, fun, sourceObject_, pc_->closedOverBindingsForLazy(),
       pc_->innerFunctionsForLazy, funbox->bufStart, funbox->bufEnd,
@@ -2441,7 +2433,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
       funbox->hasDirectEvalInParameterExpr = true;
     }
 
-    funbox->setArgCount(positionalFormals.length());
+    funbox->function()->setArgCount(positionalFormals.length());
   } else if (kind == FunctionSyntaxKind::Setter) {
     error(JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
     return false;
@@ -7013,7 +7005,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     }
 
     // Set the same information, but on the lazyScript.
-    if (ctorbox->isInterpretedLazy()) {
+    if (ctorbox->function()->isInterpretedLazy()) {
       ctorbox->function()->lazyScript()->setToStringEnd(classEndOffset);
 
       if (numFields > 0) {
@@ -7246,9 +7238,9 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
                                        /* duplicatedParam = */ nullptr)) {
       return null();
     }
-    funbox->setArgCount(1);
+    funbox->function()->setArgCount(1);
   } else {
-    funbox->setArgCount(0);
+    funbox->function()->setArgCount(0);
   }
 
   pc_->functionScope().useAsVarScope(pc_);
@@ -7441,7 +7433,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     return null();
   }
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
-  funbox->setArgCount(0);
+  funbox->function()->setArgCount(0);
 
   funbox->usesThis = true;
   NameNodeType thisName = newThisName();
