@@ -38,7 +38,7 @@ interface MediaRecorder : EventTarget {
   attribute EventHandler onwarning;
 
   [Throws]
-  void start(optional long timeSlice);
+  void start(optional unsigned long timeslice);
 
   [Throws]
   void stop();
