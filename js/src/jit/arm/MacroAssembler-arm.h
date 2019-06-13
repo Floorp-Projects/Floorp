@@ -858,6 +858,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   }
   void unboxDouble(const ValueOperand& src, FloatRegister dest);
   void unboxDouble(const Address& src, FloatRegister dest);
+  void unboxDouble(const BaseIndex& src, FloatRegister dest);
+
   void unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType type);
   void unboxPrivate(const ValueOperand& src, Register dest);
 

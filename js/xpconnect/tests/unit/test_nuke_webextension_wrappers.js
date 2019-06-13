@@ -16,7 +16,7 @@ function getWindowlessBrowser(url) {
 
   let docShell = webnav.docShell;
 
-  docShell.createAboutBlankContentViewer(principal);
+  docShell.createAboutBlankContentViewer(principal, principal);
 
   return webnav;
 }

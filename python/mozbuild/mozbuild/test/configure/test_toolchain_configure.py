@@ -190,17 +190,14 @@ def CLANGXX(version):
 
 CLANG_3_3 = CLANG('3.3.0') + DEFAULT_C99
 CLANGXX_3_3 = CLANGXX('3.3.0')
-CLANG_3_6 = CLANG('3.6.2') + DEFAULT_C11
-CLANGXX_3_6 = CLANGXX('3.6.2') + {
-    '-std=gnu++11': {
-        '__has_builtin(__builtin_bitreverse8)': '1',
-    },
-    '-std=gnu++14': {
-        '__has_builtin(__builtin_bitreverse8)': '1',
-    },
+CLANG_4_0 = CLANG('4.0.2') + DEFAULT_C11 + {
+    '__has_attribute(diagnose_if)': '1',
 }
-DEFAULT_CLANG = CLANG_3_6
-DEFAULT_CLANGXX = CLANGXX_3_6
+CLANGXX_4_0 = CLANGXX('4.0.2') + {
+    '__has_attribute(diagnose_if)': '1',
+}
+DEFAULT_CLANG = CLANG_4_0
+DEFAULT_CLANGXX = CLANGXX_4_0
 
 
 def CLANG_PLATFORM(gcc_platform):
@@ -443,8 +440,8 @@ class LinuxToolchainTest(BaseToolchainTest):
         '/usr/bin/g++-7': GXX_7 + GCC_PLATFORM_X86_64_LINUX,
         '/usr/bin/clang': DEFAULT_CLANG + CLANG_PLATFORM_X86_64_LINUX,
         '/usr/bin/clang++': DEFAULT_CLANGXX + CLANG_PLATFORM_X86_64_LINUX,
-        '/usr/bin/clang-3.6': CLANG_3_6 + CLANG_PLATFORM_X86_64_LINUX,
-        '/usr/bin/clang++-3.6': CLANGXX_3_6 + CLANG_PLATFORM_X86_64_LINUX,
+        '/usr/bin/clang-4.0': CLANG_4_0 + CLANG_PLATFORM_X86_64_LINUX,
+        '/usr/bin/clang++-4.0': CLANGXX_4_0 + CLANG_PLATFORM_X86_64_LINUX,
         '/usr/bin/clang-3.3': CLANG_3_3 + CLANG_PLATFORM_X86_64_LINUX,
         '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_64_LINUX,
     }
@@ -486,30 +483,24 @@ class LinuxToolchainTest(BaseToolchainTest):
     DEFAULT_GCC_RESULT = GCC_6_RESULT + {'compiler': '/usr/bin/gcc'}
     DEFAULT_GXX_RESULT = GXX_6_RESULT + {'compiler': '/usr/bin/g++'}
 
-    CLANG_3_3_RESULT = CompilerResult(
-        flags=[],
-        version='3.3.0',
-        type='clang',
-        compiler='/usr/bin/clang-3.3',
-        language='C',
-    )
-    CLANGXX_3_3_RESULT = 'Only clang/llvm 3.9 or newer is supported.'
-    CLANG_3_6_RESULT = CompilerResult(
+    CLANG_3_3_RESULT = 'Only clang/llvm 4.0 or newer is supported.'
+    CLANGXX_3_3_RESULT = 'Only clang/llvm 4.0 or newer is supported.'
+    CLANG_4_0_RESULT = CompilerResult(
         flags=['-std=gnu99'],
-        version='3.6.2',
+        version='4.0.2',
         type='clang',
-        compiler='/usr/bin/clang-3.6',
+        compiler='/usr/bin/clang-4.0',
         language='C',
     )
-    CLANGXX_3_6_RESULT = CompilerResult(
+    CLANGXX_4_0_RESULT = CompilerResult(
         flags=['-std=gnu++14'],
-        version='3.6.2',
+        version='4.0.2',
         type='clang',
-        compiler='/usr/bin/clang++-3.6',
+        compiler='/usr/bin/clang++-4.0',
         language='C++',
     )
-    DEFAULT_CLANG_RESULT = CLANG_3_6_RESULT + {'compiler': '/usr/bin/clang'}
-    DEFAULT_CLANGXX_RESULT = CLANGXX_3_6_RESULT + {'compiler': '/usr/bin/clang++'}
+    DEFAULT_CLANG_RESULT = CLANG_4_0_RESULT + {'compiler': '/usr/bin/clang'}
+    DEFAULT_CLANGXX_RESULT = CLANGXX_4_0_RESULT + {'compiler': '/usr/bin/clang++'}
 
     def test_default(self):
         # We'll try clang and gcc, and find clang first.
@@ -638,10 +629,10 @@ class LinuxToolchainTest(BaseToolchainTest):
     def test_guess_cxx_clang(self):
         # When CXX is not set, we guess it from CC.
         self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.CLANG_3_6_RESULT,
-            'cxx_compiler': self.CLANGXX_3_6_RESULT,
+            'c_compiler': self.CLANG_4_0_RESULT,
+            'cxx_compiler': self.CLANGXX_4_0_RESULT,
         }, environ={
-            'CC': 'clang-3.6',
+            'CC': 'clang-4.0',
         })
 
     def test_unsupported_clang(self):
@@ -814,8 +805,8 @@ class OSXToolchainTest(BaseToolchainTest):
         '/usr/bin/g++-7': GXX_7 + GCC_PLATFORM_X86_64_OSX,
         '/usr/bin/clang': DEFAULT_CLANG + CLANG_PLATFORM_X86_64_OSX,
         '/usr/bin/clang++': DEFAULT_CLANGXX + CLANG_PLATFORM_X86_64_OSX,
-        '/usr/bin/clang-3.6': CLANG_3_6 + CLANG_PLATFORM_X86_64_OSX,
-        '/usr/bin/clang++-3.6': CLANGXX_3_6 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang-4.0': CLANG_4_0 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang++-4.0': CLANGXX_4_0 + CLANG_PLATFORM_X86_64_OSX,
         '/usr/bin/clang-3.3': CLANG_3_3 + CLANG_PLATFORM_X86_64_OSX,
         '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_64_OSX,
     }
@@ -893,8 +884,8 @@ class WindowsToolchainTest(BaseToolchainTest):
         '/usr/bin/g++-6': GXX_6 + GCC_PLATFORM_X86_WIN,
         '/usr/bin/clang': DEFAULT_CLANG + CLANG_PLATFORM_X86_WIN,
         '/usr/bin/clang++': DEFAULT_CLANGXX + CLANG_PLATFORM_X86_WIN,
-        '/usr/bin/clang-3.6': CLANG_3_6 + CLANG_PLATFORM_X86_WIN,
-        '/usr/bin/clang++-3.6': CLANGXX_3_6 + CLANG_PLATFORM_X86_WIN,
+        '/usr/bin/clang-4.0': CLANG_4_0 + CLANG_PLATFORM_X86_WIN,
+        '/usr/bin/clang++-4.0': CLANGXX_4_0 + CLANG_PLATFORM_X86_WIN,
         '/usr/bin/clang-3.3': CLANG_3_3 + CLANG_PLATFORM_X86_WIN,
         '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_WIN,
     }
@@ -1010,8 +1001,8 @@ class Windows64ToolchainTest(WindowsToolchainTest):
         '/usr/bin/g++-7': GXX_7 + GCC_PLATFORM_X86_64_WIN,
         '/usr/bin/clang': DEFAULT_CLANG + CLANG_PLATFORM_X86_64_WIN,
         '/usr/bin/clang++': DEFAULT_CLANGXX + CLANG_PLATFORM_X86_64_WIN,
-        '/usr/bin/clang-3.6': CLANG_3_6 + CLANG_PLATFORM_X86_64_WIN,
-        '/usr/bin/clang++-3.6': CLANGXX_3_6 + CLANG_PLATFORM_X86_64_WIN,
+        '/usr/bin/clang-4.0': CLANG_4_0 + CLANG_PLATFORM_X86_64_WIN,
+        '/usr/bin/clang++-4.0': CLANGXX_4_0 + CLANG_PLATFORM_X86_64_WIN,
         '/usr/bin/clang-3.3': CLANG_3_3 + CLANG_PLATFORM_X86_64_WIN,
         '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_64_WIN,
     }

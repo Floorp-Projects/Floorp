@@ -357,6 +357,7 @@ nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
                   uint32_t aCacheKey, const nsACString& aContentType,
                   nsIPrincipal* aTriggeringPrincipal,
                   nsIPrincipal* aPrincipalToInherit,
+                  nsIPrincipal* aStoragePrincipalToInherit,
                   nsIContentSecurityPolicy* aCsp, const nsID& aDocShellID,
                   bool aDynamicCreation) {
   MOZ_ASSERT(
@@ -374,6 +375,7 @@ nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
   mShared->mContentType = aContentType;
   mShared->mTriggeringPrincipal = aTriggeringPrincipal;
   mShared->mPrincipalToInherit = aPrincipalToInherit;
+  mShared->mStoragePrincipalToInherit = aStoragePrincipalToInherit;
   mShared->mCsp = aCsp;
   mShared->mDocShellID = aDocShellID;
   mShared->mDynamicallyCreated = aDynamicCreation;
@@ -466,6 +468,21 @@ nsSHEntry::GetPrincipalToInherit(nsIPrincipal** aPrincipalToInherit) {
 NS_IMETHODIMP
 nsSHEntry::SetPrincipalToInherit(nsIPrincipal* aPrincipalToInherit) {
   mShared->mPrincipalToInherit = aPrincipalToInherit;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetStoragePrincipalToInherit(
+    nsIPrincipal** aStoragePrincipalToInherit) {
+  NS_IF_ADDREF(*aStoragePrincipalToInherit =
+                   mShared->mStoragePrincipalToInherit);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetStoragePrincipalToInherit(
+    nsIPrincipal* aStoragePrincipalToInherit) {
+  mShared->mStoragePrincipalToInherit = aStoragePrincipalToInherit;
   return NS_OK;
 }
 

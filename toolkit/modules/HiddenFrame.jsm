@@ -106,7 +106,7 @@ HiddenFrame.prototype = {
     this._webProgress.addProgressListener(this._listener, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
     let docShell = this._browser.docShell;
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    docShell.createAboutBlankContentViewer(systemPrincipal);
+    docShell.createAboutBlankContentViewer(systemPrincipal, systemPrincipal);
     docShell.useGlobalHistory = false;
     let loadURIOptions = {
       triggeringPrincipal: systemPrincipal,

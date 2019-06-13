@@ -24,8 +24,16 @@ this.PartitionedStorageHelper = {
   },
 
   runPartitioningTest(name, getDataCallback, addDataCallback, cleanupFunction) {
+    this.runPartitioningTestInner(name, getDataCallback, addDataCallback,
+                                  cleanupFunction, "normal");
+    this.runPartitioningTestInner(name, getDataCallback, addDataCallback,
+                                  cleanupFunction, "initial-aboutblank");
+  },
+
+  runPartitioningTestInner(name, getDataCallback, addDataCallback, cleanupFunction, variant) {
     add_task(async _ => {
-      info("Starting test `" + name + "' to check that 2 tabs are correctly partititioned");
+      info("Starting test `" + name + "' variant `" + variant +
+           "' to check that 2 tabs are correctly partititioned");
 
       await SpecialPowers.flushPrefEnv();
       await SpecialPowers.pushPrefEnv({"set": [
@@ -61,7 +69,7 @@ this.PartitionedStorageHelper = {
 
       async function getDataFromThirdParty(browser, result) {
         await ContentTask.spawn(browser, {
-                                  page: TEST_4TH_PARTY_PARTITIONED_PAGE,
+                                  page: TEST_4TH_PARTY_PARTITIONED_PAGE + "?variant=" + variant,
                                   getDataCallback: getDataCallback.toString(),
                                   result,
                                 },
@@ -88,12 +96,21 @@ this.PartitionedStorageHelper = {
         await ContentTask.spawn(browser, {
                                   getDataCallback: getDataCallback.toString(),
                                   result,
+                                  variant,
                                 },
                                 async obj => {
           let runnableStr = `(() => {return (${obj.getDataCallback});})();`;
           let runnable = eval(runnableStr); // eslint-disable-line no-eval
+          let win = content;
+          if (obj.variant == "initial-aboutblank") {
+            let i = win.document.createElement("iframe");
+            i.src = "about:blank";
+            win.document.body.appendChild(i);
+            // override win to make it point to the initial about:blank window
+            win = i.contentWindow;
+          }
 
-          let result = await runnable.call(content, content);
+          let result = await runnable.call(content, win);
           is(result, obj.result, "Partitioned cookie jar is empty: " + obj.result);
         });
       }
@@ -109,7 +126,7 @@ this.PartitionedStorageHelper = {
 
       async function createDataInThirdParty(browser, value) {
         await ContentTask.spawn(browser, {
-                                  page: TEST_4TH_PARTY_PARTITIONED_PAGE,
+                                  page: TEST_4TH_PARTY_PARTITIONED_PAGE + "?variant=" + variant,
                                   addDataCallback: addDataCallback.toString(),
                                   value,
                                 },
@@ -131,12 +148,21 @@ this.PartitionedStorageHelper = {
         await ContentTask.spawn(browser, {
                                   addDataCallback: addDataCallback.toString(),
                                   value,
+                                  variant,
                                 },
                                 async obj => {
           let runnableStr = `(() => {return (${obj.addDataCallback});})();`;
           let runnable = eval(runnableStr); // eslint-disable-line no-eval
+          let win = content;
+          if (obj.variant == "initial-aboutblank") {
+            let i = win.document.createElement("iframe");
+            i.src = "about:blank";
+            win.document.body.appendChild(i);
+            // override win to make it point to the initial about:blank window
+            win = i.contentWindow;
+          }
 
-          let result = await runnable.call(content, content, obj.value);
+          let result = await runnable.call(content, win, obj.value);
           ok(result, "Data created");
         });
       }

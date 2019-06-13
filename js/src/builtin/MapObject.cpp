@@ -29,8 +29,6 @@ using namespace js;
 using mozilla::IsNaN;
 using mozilla::NumberEqualsInt32;
 
-using JS::DoubleNaNValue;
-
 /*** HashableValue **********************************************************/
 
 bool HashableValue::setValue(JSContext* cx, HandleValue v) {
@@ -46,13 +44,12 @@ bool HashableValue::setValue(JSContext* cx, HandleValue v) {
     int32_t i;
     if (NumberEqualsInt32(d, &i)) {
       // Normalize int32_t-valued doubles to int32_t for faster hashing and
-      // testing.
+      // testing. Note: we use NumberEqualsInt32 here instead of NumberIsInt32
+      // because we want -0 and 0 to be normalized to the same thing.
       value = Int32Value(i);
-    } else if (IsNaN(d)) {
-      // NaNs with different bits must hash and test identically.
-      value = DoubleNaNValue();
     } else {
-      value = v;
+      // Normalize the sign bit of a NaN.
+      value = JS::CanonicalizedDoubleValue(d);
     }
   } else {
     value = v;

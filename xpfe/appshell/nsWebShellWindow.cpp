@@ -230,7 +230,9 @@ nsresult nsWebShellWindow::Initialize(
     if (nsContentUtils::IsExpandedPrincipal(principal)) {
       principal = nullptr;
     }
-    rv = mDocShell->CreateAboutBlankContentViewer(principal,
+    // Use the subject (or system) principal as the storage principal too until
+    // the new window finishes navigating and gets a real storage principal.
+    rv = mDocShell->CreateAboutBlankContentViewer(principal, principal,
                                                   /* aCsp = */ nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
     RefPtr<Document> doc = mDocShell->GetDocument();

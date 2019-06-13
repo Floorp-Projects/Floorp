@@ -1402,6 +1402,7 @@ window._gBrowser = {
     var aUserContextId;
     var aSameProcessAsFrameLoader;
     var aOriginPrincipal;
+    var aOriginStoragePrincipal;
     var aOpener;
     var aOpenerBrowser;
     var aCreateLazyBrowser;
@@ -1429,6 +1430,7 @@ window._gBrowser = {
       aUserContextId = params.userContextId;
       aSameProcessAsFrameLoader = params.sameProcessAsFrameLoader;
       aOriginPrincipal = params.originPrincipal;
+      aOriginStoragePrincipal = params.originStoragePrincipal;
       aOpener = params.opener;
       aOpenerBrowser = params.openerBrowser;
       aCreateLazyBrowser = params.createLazyBrowser;
@@ -1464,6 +1466,7 @@ window._gBrowser = {
       preferredRemoteType: aPreferredRemoteType,
       userContextId: aUserContextId,
       originPrincipal: aOriginPrincipal,
+      originStoragePrincipal: aOriginStoragePrincipal,
       sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
       opener: aOpener,
       openerBrowser: aOpenerBrowser,
@@ -2266,6 +2269,7 @@ window._gBrowser = {
     opener,
     openerBrowser,
     originPrincipal,
+    originStoragePrincipal,
     ownerTab,
     pinned,
     postData,
@@ -2550,13 +2554,13 @@ window._gBrowser = {
     let evt = new CustomEvent("TabOpen", { bubbles: true, detail: eventDetail || {} });
     t.dispatchEvent(evt);
 
-    if (!usingPreloadedContent && originPrincipal && aURI) {
+    if (!usingPreloadedContent && originPrincipal && originStoragePrincipal && aURI) {
       let { URI_INHERITS_SECURITY_CONTEXT } = Ci.nsIProtocolHandler;
       // Unless we know for sure we're not inheriting principals,
       // force the about:blank viewer to have the right principal:
       if (!aURIObject ||
           (doGetProtocolFlags(aURIObject) & URI_INHERITS_SECURITY_CONTEXT)) {
-        b.createAboutBlankContentViewer(originPrincipal);
+        b.createAboutBlankContentViewer(originPrincipal, originStoragePrincipal);
       }
     }
 

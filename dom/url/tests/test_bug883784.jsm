@@ -1,7 +1,5 @@
 var EXPORTED_SYMBOLS = ["Test"];
 
-Cu.importGlobalProperties(["URL", "XMLHttpRequest"]);
-
 var Test = {
   start(ok, is, finish) {
     let worker = new ChromeWorker("jsm_url_worker.js");

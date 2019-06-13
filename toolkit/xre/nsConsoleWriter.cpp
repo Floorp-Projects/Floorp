@@ -46,16 +46,15 @@ void WriteConsoleLog() {
     return;
   }
 
-  nsIConsoleMessage** messages;
-  uint32_t mcount;
+  nsTArray<RefPtr<nsIConsoleMessage>> messages;
 
-  rv = csrv->GetMessageArray(&mcount, &messages);
+  rv = csrv->GetMessageArray(messages);
   if (NS_FAILED(rv)) {
     PR_Close(file);
     return;
   }
 
-  if (mcount) {
+  if (!messages.IsEmpty()) {
     PRExplodedTime etime;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &etime);
     char datetime[512];
@@ -66,21 +65,16 @@ void WriteConsoleLog() {
                datetime);
   }
 
-  // From this point on, we have to release all the messages, and free
-  // the memory allocated for the messages array. XPCOM arrays suck.
-
   nsString msg;
   nsAutoCString nativemsg;
 
-  for (uint32_t i = 0; i < mcount; ++i) {
-    rv = messages[i]->GetMessageMoz(msg);
+  for (auto& message : messages) {
+    rv = message->GetMessageMoz(msg);
     if (NS_SUCCEEDED(rv)) {
       NS_CopyUnicodeToNative(msg, nativemsg);
       PR_fprintf(file, "%s" NS_LINEBREAK, nativemsg.get());
     }
-    NS_IF_RELEASE(messages[i]);
   }
 
   PR_Close(file);
-  free(messages);
 }
