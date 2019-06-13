@@ -1,8 +1,4 @@
-<!DOCTYPE html>
-<title>MediaCapabilities.decodingInfo()</title>
-<script src=/resources/testharness.js></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+'use strict';
 
 // Minimal VideoConfiguration that will be allowed per spec. All optional
 // properties are missing.
@@ -325,5 +321,3 @@ async_test(t => {
     }
   }), t.unreached_func('Promise.all should not reject for valid types'));
 }, "Test that decodingInfo rejects if the MediaConfiguration does not have a valid type");
-
-</script>
