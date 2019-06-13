@@ -1,10 +1,23 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-<title>WakeLock: passing an AbortSignal already set aborts</title>
-<link rel="help" href="https://w3c.github.io/wake-lock/">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=WakeLock.request() AbortSignal Test
+
+'use strict';
+
+promise_test(async t => {
+  const invalidSignals = [
+    "string",
+    123,
+    {},
+    true,
+    Symbol(),
+    () => {},
+    self
+  ];
+
+  for (let signal of invalidSignals) {
+    await promise_rejects(t, new TypeError(), WakeLock.request('screen', { signal: signal }));
+  }
+}, "'TypeError' is thrown when the signal option is not an AbortSignal");
+
 promise_test(t => {
   const abortController = new AbortController();
   const abortSignal = abortController.signal;
@@ -28,4 +41,3 @@ promise_test(async t => {
   await promise_rejects(t, "AbortError", lock2);
   await promise_rejects(t, "AbortError", lock3);
 }, "The same AbortSignal can be used to cause multiple wake locks to abort");
-</script>
