@@ -1093,15 +1093,6 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvCreateAudioIPCConnection(
       CreateAudioIPCConnectionResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvKeygenProcessValue(const nsString& oldValue,
-                                                 const nsString& challenge,
-                                                 const nsString& keytype,
-                                                 const nsString& keyparams,
-                                                 nsString* newValue);
-
-  mozilla::ipc::IPCResult RecvKeygenProvideContent(
-      nsString* aAttribute, nsTArray<nsString>* aContent);
-
   PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
       const mozilla::ipc::FileDescriptor&);
 
