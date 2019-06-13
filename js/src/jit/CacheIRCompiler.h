@@ -14,6 +14,9 @@
 namespace js {
 namespace jit {
 
+class BaselineCacheIRCompiler;
+class IonCacheIRCompiler;
+
 // The ops below are defined in CacheIRCompiler and codegen is shared between
 // BaselineCacheIRCompiler and IonCacheIRCompiler.
 #define CACHE_IR_SHARED_OPS(_)            \
@@ -708,6 +711,11 @@ class MOZ_RAII CacheIRCompiler {
 
   enum class Mode { Baseline, Ion };
 
+  bool isBaseline();
+  bool isIon();
+  BaselineCacheIRCompiler& asBaseline();
+  IonCacheIRCompiler& asIon();
+
   JSContext* cx_;
   CacheIRReader reader;
   const CacheIRWriter& writer_;
@@ -895,6 +903,10 @@ class MOZ_RAII CacheIRCompiler {
   // fun_apply IC.  Keep this small to avoid controllable stack
   // overflows by attackers passing large arrays.
   static const uint32_t MAX_ARGS_ARRAY_LENGTH = 16;
+
+  void callVMInternal(MacroAssembler& masm, VMFunctionId id);
+  template <typename Fn, Fn fn>
+  void callVM(MacroAssembler& masm);
 };
 
 // Ensures the IC's output register is available for writing.
