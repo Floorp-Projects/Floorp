@@ -1417,9 +1417,8 @@ Path2D includes CanvasPath;
 
 [Exposed=(Window,Worker)]
 interface ImageBitmapRenderingContext {
-    [ImplementedAs=getHTMLOrOffscreenCanvas] readonly attribute (HTMLCanvasElement or OffscreenCanvas) canvas;
-
-    [RaisesException] void transferFromImageBitmap(ImageBitmap? bitmap);
+  readonly attribute (HTMLCanvasElement or OffscreenCanvas) canvas;
+  void transferFromImageBitmap(ImageBitmap? bitmap);
 };
 
 dictionary ImageBitmapRenderingContextSettings {
