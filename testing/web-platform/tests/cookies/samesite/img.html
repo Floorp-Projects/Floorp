@@ -40,6 +40,7 @@
         .then(_ => {
           return Promise.all([
             assert_cookie_present(target, "samesite_none", value),
+            assert_cookie_present(target, "samesite_unspecified", value),
             expectedStatus == SameSiteStatus.STRICT ?
               assert_cookie_present(target, "samesite_strict", value) :
               assert_cookie_absent(target, "samesite_strict", value),
