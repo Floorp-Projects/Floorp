@@ -40,6 +40,8 @@ The project includes unit and doc tests embedded in the `src/` files, integratio
 ./run-all-examples.sh
 ```
 
+Note: the test fixtures in the `tests/envs/` subdirectory aren't included in the package published to crates.io, so you must clone this repository in order to run the tests that depend on those fixtures or use the `rand` and `dump` executables to recreate them.
+
 ## Contribute
 
 Of the various open source archetypes described in [A Framework for Purposeful Open Source](https://medium.com/mozilla-open-innovation/whats-your-open-source-strategy-here-are-10-answers-383221b3f9d3), the rkv project most closely resembles the Specialty Library, and we welcome contributions. Please report problems or ask questions using this repo's GitHub [issue tracker](https://github.com/mozilla/rkv/issues) and submit [pull requests](https://github.com/mozilla/rkv/pulls) for code and documentation changes.
