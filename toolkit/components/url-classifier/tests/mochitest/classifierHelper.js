@@ -39,12 +39,12 @@ classifierHelper.waitForInit = function() {
 classifierHelper.allowCompletion = function(lists, url) {
   for (var list of lists) {
     // Add test db to provider
-    var pref = SpecialPowers.getCharPref(PREFS.PROVIDER_LISTS);
+    var pref = await SpecialPowers.getParentCharPref(PREFS.PROVIDER_LISTS);
     pref += "," + list;
     SpecialPowers.setCharPref(PREFS.PROVIDER_LISTS, pref);
 
     // Rename test db so we will not disallow it from completions
-    pref = SpecialPowers.getCharPref(PREFS.DISALLOW_COMPLETIONS);
+    pref = await SpecialPowers.getParentCharPref(PREFS.DISALLOW_COMPLETIONS);
     pref = pref.replace(list, list + "-backup");
     SpecialPowers.setCharPref(PREFS.DISALLOW_COMPLETIONS, pref);
   }
