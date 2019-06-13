@@ -20,7 +20,7 @@ function test_computed_value(property, specified, computed) {
 
   test(() => {
     const target = document.getElementById('target');
-    assert_own_property(getComputedStyle(target), property);
+    assert_true(property in getComputedStyle(target), property + " doesn't seem to be supported in the computed style");
     target.style[property] = '';
     target.style[property] = specified;
 
