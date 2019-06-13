@@ -14,7 +14,6 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsIURIMutator.h"
-#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace dom {
@@ -38,46 +37,19 @@ already_AddRefed<URL> URL::Constructor(const GlobalObject& aGlobal,
                                        const nsAString& aURL,
                                        const Optional<nsAString>& aBase,
                                        ErrorResult& aRv) {
-  if (aBase.WasPassed()) {
-    return Constructor(aGlobal.GetAsSupports(), aURL, aBase.Value(), aRv);
+  if (NS_IsMainThread()) {
+    return URLMainThread::Constructor(aGlobal, aURL, aBase, aRv);
   }
 
-  return Constructor(aGlobal.GetAsSupports(), aURL, nullptr, aRv);
+  return URLWorker::Constructor(aGlobal, aURL, aBase, aRv);
 }
 
 /* static */
-already_AddRefed<URL> URL::Constructor(nsISupports* aParent,
-                                       const nsAString& aURL,
-                                       const nsAString& aBase,
-                                       ErrorResult& aRv) {
-  nsCOMPtr<nsIURI> baseUri;
-  nsresult rv = NS_NewURI(getter_AddRefs(baseUri), aBase, nullptr, nullptr,
-                          nsContentUtils::GetIOService());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(aBase);
-    return nullptr;
-  }
-
-  return Constructor(aParent, aURL, baseUri, aRv);
-}
-
-/* static */
-already_AddRefed<URL> URL::Constructor(nsISupports* aParent,
-                                       const nsAString& aURL, nsIURI* aBase,
-                                       ErrorResult& aRv) {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, aBase,
-                          nsContentUtils::GetIOService());
-  if (NS_FAILED(rv)) {
-    // No need to warn in this case. It's common to use the URL constructor
-    // to determine if a URL is valid and an exception will be propagated.
-    aRv.ThrowTypeError<MSG_INVALID_URL>(aURL);
-    return nullptr;
-  }
-
-  RefPtr<URL> url = new URL(aParent);
-  url->SetURI(uri.forget());
-  return url.forget();
+already_AddRefed<URL> URL::WorkerConstructor(const GlobalObject& aGlobal,
+                                             const nsAString& aURL,
+                                             const nsAString& aBase,
+                                             ErrorResult& aRv) {
+  return URLWorker::Constructor(aGlobal, aURL, aBase, aRv);
 }
 
 void URL::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
@@ -156,67 +128,9 @@ void URL::URLSearchParamsUpdated(URLSearchParams* aSearchParams) {
 
 void URL::GetHref(nsAString& aHref) const { URL_GETTER(aHref, GetSpec); }
 
-void URL::SetHref(const nsAString& aHref, ErrorResult& aRv) {
-  AssertIsOnMainThread();
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref, nullptr, nullptr,
-                          nsContentUtils::GetIOService());
-  if (NS_FAILED(rv)) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(aHref);
-    return;
-  }
-
-  mURI = std::move(uri);
-  UpdateURLSearchParams();
-}
-
-void URL::GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const {
-  nsresult rv = nsContentUtils::GetUTFOrigin(GetURI(), aOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aOrigin.Truncate();
-  }
-}
-
 void URL::GetProtocol(nsAString& aProtocol) const {
   URL_GETTER(aProtocol, GetScheme);
   aProtocol.Append(char16_t(':'));
-}
-
-void URL::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv) {
-  nsAString::const_iterator start;
-  aProtocol.BeginReading(start);
-
-  nsAString::const_iterator end;
-  aProtocol.EndReading(end);
-
-  nsAString::const_iterator iter(start);
-  FindCharInReadable(':', iter, end);
-
-  // Changing the protocol of a URL, changes the "nature" of the URI
-  // implementation. In order to do this properly, we have to serialize the
-  // existing URL and reparse it in a new object.
-  nsCOMPtr<nsIURI> clone;
-  nsresult rv = NS_MutateURI(GetURI())
-                    .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
-                    .Finalize(clone);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  nsAutoCString href;
-  rv = clone->GetSpec(href);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), href);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  mURI = std::move(uri);
 }
 
 void URL::GetUsername(nsAString& aUsername) const {
