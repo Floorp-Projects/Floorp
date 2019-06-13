@@ -1403,6 +1403,13 @@ Element* TextServicesDocument::GetDocumentContentRootNode() const {
   }
 
   if (mDocument->IsHTMLOrXHTML()) {
+    Element* rootElement = mDocument->GetRootElement();
+    if (rootElement && rootElement->IsXULElement()) {
+      // HTML documents with root XUL elements should eventually be transitioned
+      // to a regular document structure, but for now the content root node will
+      // be the document element.
+      return mDocument->GetDocumentElement();
+    }
     // For HTML documents, the content root node is the body.
     return mDocument->GetBody();
   }
