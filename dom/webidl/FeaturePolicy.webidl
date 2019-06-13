@@ -14,7 +14,7 @@ interface Policy {
   sequence<DOMString> getAllowlistForFeature(DOMString feature);
 };
 
-[Func="mozilla::dom::DOMPrefs::dom_reporting_featurePolicy_enabled"]
+[Pref="dom.reporting.featurePolicy.enabled"]
 interface FeaturePolicyViolationReportBody : ReportBody {
   readonly attribute DOMString featureId;
   readonly attribute DOMString? sourceFile;
