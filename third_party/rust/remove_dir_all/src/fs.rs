@@ -1,8 +1,8 @@
 use std::ffi::OsString;
 use std::fs::{self, File, OpenOptions};
-use std::{io, ptr};
 use std::os::windows::prelude::*;
 use std::path::{Path, PathBuf};
+use std::{io, ptr};
 
 use winapi::shared::minwindef::*;
 use winapi::shared::winerror::*;
@@ -24,9 +24,11 @@ struct RmdirContext<'a> {
 /// ```rust
 /// extern crate remove_dir_all;
 ///
+/// use std::fs;
 /// use remove_dir_all::*;
 ///
 /// fn main() {
+///     fs::create_dir("./temp/").unwrap();
 ///     remove_dir_all("./temp/").unwrap();
 /// }
 /// ```
@@ -77,8 +79,7 @@ pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
         let path = path.as_ref();
         let mut opts = OpenOptions::new();
         opts.access_mode(FILE_READ_ATTRIBUTES);
-        opts.custom_flags(FILE_FLAG_BACKUP_SEMANTICS |
-                          FILE_FLAG_OPEN_REPARSE_POINT);
+        opts.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT);
         let file = opts.open(path)?;
         (get_path(&file)?, path.metadata()?)
     };
@@ -86,8 +87,12 @@ pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
     let mut ctx = RmdirContext {
         base_dir: match path.parent() {
             Some(dir) => dir,
-            None => return Err(io::Error::new(io::ErrorKind::PermissionDenied,
-                                              "Can't delete root directory"))
+            None => {
+                return Err(io::Error::new(
+                    io::ErrorKind::PermissionDenied,
+                    "Can't delete root directory",
+                ))
+            }
         },
         readonly: metadata.permissions().readonly(),
         counter: 0,
@@ -101,7 +106,10 @@ pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
             remove_item(path.as_ref(), &mut ctx)
         }
     } else {
-        Err(io::Error::new(io::ErrorKind::PermissionDenied, "Not a directory"))
+        Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "Not a directory",
+        ))
     }
 }
 
@@ -116,9 +124,11 @@ fn remove_item(path: &Path, ctx: &mut RmdirContext) -> io::Result<()> {
 
     let mut opts = OpenOptions::new();
     opts.access_mode(DELETE);
-    opts.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | // delete directory
+    opts.custom_flags(
+        FILE_FLAG_BACKUP_SEMANTICS | // delete directory
                         FILE_FLAG_OPEN_REPARSE_POINT | // delete symlink
-                        FILE_FLAG_DELETE_ON_CLOSE);
+                        FILE_FLAG_DELETE_ON_CLOSE,
+    );
     let file = opts.open(path)?;
     move_item(&file, ctx)?;
 
@@ -129,8 +139,8 @@ fn remove_item(path: &Path, ctx: &mut RmdirContext) -> io::Result<()> {
                 let mut perm = metadata.permissions();
                 perm.set_readonly(true);
                 fs::set_permissions(&path, perm)?;
-            },
-            Err(ref err) if err.kind() == io::ErrorKind::NotFound => {},
+            }
+            Err(ref err) if err.kind() == io::ErrorKind::NotFound => {}
             err => return err.map(|_| ()),
         }
     }
@@ -139,13 +149,15 @@ fn remove_item(path: &Path, ctx: &mut RmdirContext) -> io::Result<()> {
 }
 
 fn move_item(file: &File, ctx: &mut RmdirContext) -> io::Result<()> {
-    let mut tmpname = ctx.base_dir.join(format!{"rm-{}", ctx.counter});
+    let mut tmpname = ctx.base_dir.join(format! {"rm-{}", ctx.counter});
     ctx.counter += 1;
 
     // Try to rename the file. If it already exists, just retry with an other
     // filename.
     while let Err(err) = rename(file, &tmpname, false) {
-        if err.kind() != io::ErrorKind::AlreadyExists { return Err(err) };
+        if err.kind() != io::ErrorKind::AlreadyExists {
+            return Err(err);
+        };
         tmpname = ctx.base_dir.join(format!("rm-{}", ctx.counter));
         ctx.counter += 1;
     }
@@ -156,13 +168,14 @@ fn move_item(file: &File, ctx: &mut RmdirContext) -> io::Result<()> {
 fn rename(file: &File, new: &Path, replace: bool) -> io::Result<()> {
     // &self must be opened with DELETE permission
     use std::iter;
-    #[cfg(target_arch = "x86")]
+    #[cfg(target_pointer_width = "32")]
     const STRUCT_SIZE: usize = 12;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     const STRUCT_SIZE: usize = 20;
 
     // FIXME: check for internal NULs in 'new'
-    let mut data: Vec<u16> = iter::repeat(0u16).take(STRUCT_SIZE/2)
+    let mut data: Vec<u16> = iter::repeat(0u16)
+        .take(STRUCT_SIZE / 2)
         .chain(new.as_os_str().encode_wide())
         .collect();
     data.push(0);
@@ -177,10 +190,12 @@ fn rename(file: &File, new: &Path, replace: bool) -> io::Result<()> {
         (*info).ReplaceIfExists = if replace { -1 } else { FALSE };
         (*info).RootDirectory = ptr::null_mut();
         (*info).FileNameLength = (size - STRUCT_SIZE) as DWORD;
-        let result = SetFileInformationByHandle(file.as_raw_handle(),
-        FileRenameInfo,
-        data.as_mut_ptr() as *mut _ as *mut _,
-        size as DWORD);
+        let result = SetFileInformationByHandle(
+            file.as_raw_handle(),
+            FileRenameInfo,
+            data.as_mut_ptr() as *mut _ as *mut _,
+            size as DWORD,
+        );
 
         if result == 0 {
             Err(io::Error::last_os_error())
@@ -191,25 +206,22 @@ fn rename(file: &File, new: &Path, replace: bool) -> io::Result<()> {
 }
 
 fn get_path(f: &File) -> io::Result<PathBuf> {
-
-    fill_utf16_buf(|buf, sz| unsafe {
-        GetFinalPathNameByHandleW(f.as_raw_handle(), buf, sz, VOLUME_NAME_DOS)
-    }, |buf| {
-        PathBuf::from(OsString::from_wide(buf))
-    })
+    fill_utf16_buf(
+        |buf, sz| unsafe { GetFinalPathNameByHandleW(f.as_raw_handle(), buf, sz, VOLUME_NAME_DOS) },
+        |buf| PathBuf::from(OsString::from_wide(buf)),
+    )
 }
 
-fn remove_dir_all_recursive(path: &Path, ctx: &mut RmdirContext)
-                            -> io::Result<()> {
+fn remove_dir_all_recursive(path: &Path, ctx: &mut RmdirContext) -> io::Result<()> {
     let dir_readonly = ctx.readonly;
-    for child in try!(fs::read_dir(path)) {
-        let child = try!(child);
-        let child_type = try!(child.file_type());
-        ctx.readonly = try!(child.metadata()).permissions().readonly();
+    for child in fs::read_dir(path)? {
+        let child = child?;
+        let child_type = child.file_type()?;
+        ctx.readonly = child.metadata()?.permissions().readonly();
         if child_type.is_dir() {
-            try!(remove_dir_all_recursive(&child.path(), ctx));
+            remove_dir_all_recursive(&child.path(), ctx)?;
         } else {
-            try!(remove_item(&child.path().as_ref(), ctx));
+            remove_item(&child.path().as_ref(), ctx)?;
         }
     }
     ctx.readonly = dir_readonly;
@@ -217,8 +229,9 @@ fn remove_dir_all_recursive(path: &Path, ctx: &mut RmdirContext)
 }
 
 fn fill_utf16_buf<F1, F2, T>(mut f1: F1, f2: F2) -> io::Result<T>
-    where F1: FnMut(*mut u16, DWORD) -> DWORD,
-          F2: FnOnce(&[u16]) -> T
+where
+    F1: FnMut(*mut u16, DWORD) -> DWORD,
+    F2: FnOnce(&[u16]) -> T,
 {
     // Start off with a stack buf but then spill over to the heap if we end up
     // needing more space.
@@ -257,9 +270,8 @@ fn fill_utf16_buf<F1, F2, T>(mut f1: F1, f2: F2) -> io::Result<T>
             } else if k >= n {
                 n = k;
             } else {
-                return Ok(f2(&buf[..k]))
+                return Ok(f2(&buf[..k]));
             }
         }
     }
 }
-

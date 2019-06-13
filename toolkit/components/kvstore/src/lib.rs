@@ -16,6 +16,7 @@ extern crate nserror;
 extern crate nsstring;
 extern crate rkv;
 extern crate storage_variant;
+extern crate tempfile;
 extern crate thin_vec;
 extern crate xpcom;
 
