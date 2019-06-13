@@ -12,6 +12,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+
+* **browser-toolbar**
+  * Adds `focus()` which provides a hook for calling `editMode.focus()` to focus the edit mode `urlView` 
+  
 * **browser-awesomebar**
   * Updated `DefaultSuggestionViewHolder` to have a style more consistent with Fenix mocks.
   
@@ -73,7 +77,7 @@ permalink: /changelog/
 * **browser-search**
   * Added `getProvidedDefaultSearchEngine` to `SearchEngineManager` to return the provided default search engine or the first
     search engine if the default is not set. This allows use cases like [#3344](https://github.com/mozilla-mobile/android-components/issues/3344).
-
+  
 * **feature-tab-collections**
   * Behavior change: `TabCollection` instances returned by `TabCollectionStorage` are now ordered by the last time they have been updated (instead of the time they have been created).
 

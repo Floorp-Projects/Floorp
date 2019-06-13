@@ -504,6 +504,13 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
+     * Focuses the editToolbar if already in edit mode
+     */
+    fun focus() {
+        editToolbar.focus()
+    }
+
+    /**
      * Switches to URL editing mode.
      */
     override fun editMode() {
@@ -512,10 +519,9 @@ class BrowserToolbar @JvmOverloads constructor(
         val shouldAutoComplete = searchTerms.isEmpty()
 
         editToolbar.updateUrl(urlValue.toString(), shouldAutoComplete)
-
         updateState(State.EDIT)
-
         editToolbar.focus()
+        editToolbar.urlView.selectAll()
     }
 
     /**
