@@ -33,9 +33,7 @@ extern "C" int sandbox_init(const char* profile, uint64_t flags, char** errorbuf
 extern "C" int sandbox_init_with_parameters(const char* profile, uint64_t flags,
                                             const char* const parameters[], char** errorbuf);
 extern "C" void sandbox_free_error(char* errorbuf);
-#ifdef DEBUG
 extern "C" int sandbox_check(pid_t pid, const char* operation, int type, ...);
-#endif
 
 #define MAC_OS_X_VERSION_10_0_HEX 0x00001000
 #define MAC_OS_X_VERSION_10_6_HEX 0x00001060
@@ -151,6 +149,11 @@ void MacSandboxInfo::AppendAsParams(std::vector<std::string>& aParams) const {
       break;
     case MacSandboxType_Utility:
       break;
+    case MacSandboxType_GMP:
+      this->AppendPluginPathParam(aParams);
+      this->AppendWindowServerParam(aParams);
+      this->AppendReadPathParams(aParams);
+      break;
     default:
       // Before supporting a new process type, add a case statement
       // here to append any neccesary process-type-specific params.
@@ -172,6 +175,11 @@ void MacSandboxInfo::AppendLoggingParam(std::vector<std::string>& aParams) const
 void MacSandboxInfo::AppendAppPathParam(std::vector<std::string>& aParams) const {
   aParams.push_back("-sbAppPath");
   aParams.push_back(this->appPath);
+}
+
+void MacSandboxInfo::AppendPluginPathParam(std::vector<std::string>& aParams) const {
+  aParams.push_back("-sbPluginPath");
+  aParams.push_back(this->pluginPath);
 }
 
 /* static */
@@ -298,14 +306,28 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
     profile = const_cast<char*>(SandboxPolicyGMP);
     params.push_back("SHOULD_LOG");
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
-    params.push_back("PLUGIN_BINARY_PATH");
-    params.push_back(aInfo.pluginBinaryPath.c_str());
     params.push_back("APP_PATH");
     params.push_back(aInfo.appPath.c_str());
-    params.push_back("APP_BINARY_PATH");
-    params.push_back(aInfo.appBinaryPath.c_str());
+    params.push_back("PLUGIN_PATH");
+    params.push_back(aInfo.pluginPath.c_str());
+    if (!aInfo.pluginBinaryPath.empty()) {
+      params.push_back("PLUGIN_BINARY_PATH");
+      params.push_back(aInfo.pluginBinaryPath.c_str());
+    }
     params.push_back("HAS_WINDOW_SERVER");
     params.push_back(aInfo.hasWindowServer ? "TRUE" : "FALSE");
+    if (!aInfo.crashServerPort.empty()) {
+      params.push_back("CRASH_PORT");
+      params.push_back(aInfo.crashServerPort.c_str());
+    }
+    if (!aInfo.testingReadPath1.empty()) {
+      params.push_back("TESTING_READ_PATH1");
+      params.push_back(aInfo.testingReadPath1.c_str());
+    }
+    if (!aInfo.testingReadPath2.empty()) {
+      params.push_back("TESTING_READ_PATH2");
+      params.push_back(aInfo.testingReadPath2.c_str());
+    }
   } else if (aInfo.type == MacSandboxType_Content) {
     MOZ_ASSERT(aInfo.level >= 1);
     if (aInfo.level >= 1) {
@@ -433,7 +455,7 @@ bool GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aI
 
   // Read access directories used in testing
   int nTestingReadPaths = 0;
-  std::string testingReadPaths[MAX_TESTING_READ_PATHS] = {};
+  std::string testingReadPaths[MAX_CONTENT_TESTING_READ_PATHS] = {};
 
   // Collect sandbox params from CLI arguments
   for (int i = 0; i < aArgc; i++) {
@@ -479,7 +501,9 @@ bool GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aI
     }
 
     if ((strcmp(aArgv[i], "-sbTestingReadPath") == 0) && (i + 1 < aArgc)) {
-      MOZ_ASSERT(nTestingReadPaths < MAX_TESTING_READ_PATHS);
+      if (nTestingReadPaths >= MAX_CONTENT_TESTING_READ_PATHS) {
+        MOZ_CRASH("Too many content process -sbTestingReadPath arguments");
+      }
       testingReadPaths[nTestingReadPaths] = aArgv[i + 1];
       nTestingReadPaths++;
       i++;
@@ -571,6 +595,77 @@ bool GetUtilitySandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aI
   return true;
 }
 
+bool GetPluginSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo) {
+  // Ensure we find these paramaters in the command
+  // line arguments. Return false if any are missing.
+  bool foundAppPath = false;
+  bool foundPluginPath = false;
+
+  // Read access directories used in testing
+  int nTestingReadPaths = 0;
+  std::string testingReadPaths[MAX_GMP_TESTING_READ_PATHS] = {};
+
+  // Collect sandbox params from CLI arguments
+  for (int i = 0; i < aArgc; i++) {
+    if (strcmp(aArgv[i], "-sbLogging") == 0) {
+      aInfo.shouldLog = true;
+      continue;
+    }
+
+    if ((strcmp(aArgv[i], "-sbAppPath") == 0) && (i + 1 < aArgc)) {
+      foundAppPath = true;
+      aInfo.appPath.assign(aArgv[i + 1]);
+      i++;
+      continue;
+    }
+
+    if ((strcmp(aArgv[i], "-sbPluginPath") == 0) && (i + 1 < aArgc)) {
+      foundPluginPath = true;
+      aInfo.pluginPath.assign(aArgv[i + 1]);
+      i++;
+      continue;
+    }
+
+    if (strcmp(aArgv[i], "-sbAllowWindowServer") == 0) {
+      aInfo.hasWindowServer = true;
+      continue;
+    }
+
+    if ((strcmp(aArgv[i], "-sbTestingReadPath") == 0) && (i + 1 < aArgc)) {
+      if (nTestingReadPaths >= MAX_GMP_TESTING_READ_PATHS) {
+        MOZ_CRASH("Too many GMP process -sbTestingReadPath arguments");
+      }
+      testingReadPaths[nTestingReadPaths] = aArgv[i + 1];
+      nTestingReadPaths++;
+      i++;
+      continue;
+    }
+
+    // Handle crash server positional argument
+    if (strstr(aArgv[i], "gecko-crash-server-pipe") != NULL) {
+      aInfo.crashServerPort.assign(aArgv[i]);
+      continue;
+    }
+  }
+
+  if (!foundPluginPath) {
+    fprintf(stderr, "GMP sandbox disabled due to "
+                    "missing sandbox CLI plugin path parameter.\n");
+    return false;
+  }
+
+  if (!foundAppPath) {
+    fprintf(stderr, "GMP sandbox disabled due to "
+                    "missing sandbox CLI app path parameter.\n");
+    return false;
+  }
+
+  aInfo.testingReadPath1 = testingReadPaths[0];
+  aInfo.testingReadPath2 = testingReadPaths[1];
+
+  return true;
+}
+
 /*
  * Returns true if no errors were encountered or if early sandbox startup is
  * not enabled for this process. Returns false if an error was encountered.
@@ -611,6 +706,11 @@ bool StartMacSandboxIfEnabled(const MacSandboxType aSandboxType, int aArgc, char
         return false;
       }
       break;
+    case MacSandboxType_GMP:
+      if (!GetPluginSandboxParamsFromArgs(aArgc, aArgv, info)) {
+        return false;
+      }
+      break;
     default:
       MOZ_RELEASE_ASSERT(false);
       break;
@@ -618,6 +718,8 @@ bool StartMacSandboxIfEnabled(const MacSandboxType aSandboxType, int aArgc, char
 
   return StartMacSandbox(info, aErrorMessage);
 }
+
+bool IsMacSandboxStarted() { return sandbox_check(getpid(), NULL, 0) == 1; }
 
 #ifdef DEBUG
 // sandbox_check returns 1 if the specified process is sandboxed
