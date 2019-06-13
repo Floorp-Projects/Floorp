@@ -27,10 +27,6 @@ ICStub* AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
 
 // BaselineCacheIRCompiler compiles CacheIR to BaselineIC native code.
 class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
- public:
-  bool inStubFrame_;
-
- private:
   bool makesGCCalls_;
   BaselineCacheIRStubKind kind_;
 
