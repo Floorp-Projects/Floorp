@@ -22,10 +22,14 @@ body { margin:0 }
     background: rgba(0,0,0,0.8);
     color: green;
 }
+.cueTextGoingUp {
+    position: relative;
+    top: -1.8px; /* 1% height of video's height */
+}
 </style>
 <div class="video">
     <span class="cue">
-        <div><span class="cueText">This is another test subtitle</span></div>
+        <div><span class="cueText cueTextGoingUp">This is another test subtitle</span></div>
         <div><span class="cueText">This is a test subtitle</span></div>
     </span>
 </div>
