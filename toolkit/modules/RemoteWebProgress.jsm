@@ -12,10 +12,6 @@ const RemoteWebProgressRequest = Components.Constructor(
     "@mozilla.org/dom/remote-web-progress-request;1",
     "nsIRemoteWebProgressRequest", "init");
 
-ChromeUtils.defineModuleGetter(this, "E10SUtils",
-                               "resource://gre/modules/E10SUtils.jsm");
-
-
 class RemoteWebProgressManager {
   constructor(aBrowser) {
     this._topLevelWebProgress = new RemoteWebProgress(
@@ -28,14 +24,12 @@ class RemoteWebProgressManager {
 
   swapBrowser(aBrowser) {
     if (this._messageManager) {
-      this._messageManager.removeMessageListener("Content:LocationChange", this);
       this._messageManager.removeMessageListener("Content:SecurityChange", this);
       this._messageManager.removeMessageListener("Content:LoadURIResult", this);
     }
 
     this._browser = aBrowser;
     this._messageManager = aBrowser.messageManager;
-    this._messageManager.addMessageListener("Content:LocationChange", this);
     this._messageManager.addMessageListener("Content:SecurityChange", this);
     this._messageManager.addMessageListener("Content:LoadURIResult", this);
   }
@@ -184,48 +178,7 @@ class RemoteWebProgressManager {
       request = request.QueryInterface(Ci.nsIRequest);
     }
 
-    if (isTopLevel) {
-      // Setting a content-type back to `null` is quite nonsensical for the
-      // frontend, especially since we're not expecting it.
-      if (json.documentContentType !== null) {
-        this._browser._documentContentType = json.documentContentType;
-      }
-      if (typeof json.isNavigating != "undefined") {
-        this._browser.isNavigating = json.isNavigating;
-      }
-      if (json.charset) {
-        this._browser._characterSet = json.charset;
-        this._browser._mayEnableCharacterEncodingMenu = json.mayEnableCharacterEncodingMenu;
-        this._browser._charsetAutodetected = json.charsetAutodetected;
-      }
-    }
-
     switch (aMessage.name) {
-    case "Content:LocationChange":
-      let location = Services.io.newURI(json.location);
-      let flags = json.flags;
-      let remoteWebNav = this._browser._remoteWebNavigationImpl;
-
-      // These properties can change even for a sub-frame navigation.
-      remoteWebNav.canGoBack = json.canGoBack;
-      remoteWebNav.canGoForward = json.canGoForward;
-
-      if (isTopLevel) {
-        remoteWebNav._currentURI = location;
-        this._browser._documentURI = Services.io.newURI(json.documentURI);
-        this._browser._contentTitle = json.title;
-        this._browser._imageDocument = null;
-        this._browser._contentPrincipal = json.principal;
-        this._browser._contentStoragePrincipal = json.storagePrincipal;
-        this._browser._csp = E10SUtils.deserializeCSP(json.csp);
-        this._browser._isSyntheticDocument = json.synthetic;
-        this._browser._innerWindowID = json.innerWindowID;
-        this._browser._contentRequestContextID = json.requestContextID;
-      }
-
-      this.onLocationChange(webProgress, request, location, flags);
-      break;
-
     case "Content:SecurityChange":
       let [secInfo, state] = this._fixSecInfoAndState(json.secInfo, json.state);
 
