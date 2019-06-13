@@ -8,6 +8,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script src="pointerevent_support.js"></script>
         <style>
             #target0 {
@@ -38,7 +41,8 @@
     </head>
     <body onload="run()">
         <h2>Pointer Events touch-action attribute support</h2>
-        <h4 id="desc">Test Description: Try to scroll element DOWN starting your touch over the 1st Row. Wait for description update.</h4>
+        <h4 id="desc">Test Description: Try to scroll element DOWN then RIGHT starting your touch over the 1st Row. <br>
+        And try to scroll element DOWN then RIGHT starting your touch inside of the Cell 3, then tap complete button.</h4>
         <p>Note: this test is for touch only</p>
         <div id="target0">
             <table id="testtable">
@@ -56,14 +60,13 @@
             var xScrollIsReceived = false;
             var yScrollIsReceived = false;
             var xScr0, yScr0, xScr1, yScr1;
-            var scrollReturnInterval = 1000;
             var isFirstPart = true;
-            setup({ explicit_timeout: true });
             add_completion_callback(showPointerTypes);
 
             function run() {
                 var target0 = document.getElementById("target0");
                 var btnComplete = document.getElementById("btnComplete");
+                var actions_promise;
 
                 //TA 15.19
                 var test_touchaction_cell = async_test("touch-action attribute test on the cell");
@@ -74,11 +77,15 @@
 
                 on_event(btnComplete, 'click', function(event) {
                     test_touchaction_cell.step(function() {
-                        assert_equals(target0.scrollLeft, 0, "table scroll x offset should be 0 in the end of the test");
-                        assert_equals(target0.scrollTop, 0, "table scroll y offset should be 0 in the end of the test");
+                        assert_equals(target0.scrollLeft, xScr1, "table scroll x offset should be 0 in the end of the test");
+                        assert_equals(target0.scrollTop, yScr1, "table scroll y offset should be 0 in the end of the test");
                         assert_true(xScrollIsReceived && yScrollIsReceived, "target0 x and y scroll offsets should be greater than 0 after first two interactions (outside red border) respectively");
                     });
-                    test_touchaction_cell.done();
+
+                    // Make sure the test finishes after all the input actions are completed.
+                    actions_promise.then( () => {
+                        test_touchaction_cell.done();
+                    });
                     updateDescriptionComplete();
                 });
 
@@ -99,43 +106,29 @@
                             test_touchaction_row.step(function () {
                                 yScrollIsReceived = true;
                             });
-                            updateDescriptionSecondStepTable(target0, scrollReturnInterval);
                         }
 
                         if(xScrollIsReceived && yScrollIsReceived) {
                             test_touchaction_row.done();
-                            updateDescriptionThirdStepTable(target0, scrollReturnInterval, function() {
-                                setTimeout(function() {
-                                    isFirstPart = false;
-                                }, scrollReturnInterval); // avoid immediate triggering while scroll is still being performed
-                            });
                         }
                     }
                     else {
                         test_touchaction_cell.step(failOnScroll, "scroll received while shouldn't");
                     }
                 });
-            }
 
-            function updateDescriptionSecondStepTable(target, scrollReturnInterval, element) {
-                window.setTimeout(function() {
-                    objectScroller(target, 'up', 0);
-                }
-                , scrollReturnInterval);
-                document.getElementById('desc').innerHTML = "Test Description: Try to scroll element RIGHT staring your touch over the Row 1";
+                // Inject touch inputs.
+                actions_promise = touchScrollInTarget(row1, 'down').then(function() {
+                    return touchScrollInTarget(row1, 'right');
+                }).then(function() {
+                    isFirstPart = false;
+                    return touchScrollInTarget(cell3, 'down');
+                }).then(function() {
+                    return touchScrollInTarget(cell3, 'right');
+                }).then(function() {
+                    return clickInTarget("touch", btnComplete);
+                });
             }
-
-            function updateDescriptionThirdStepTable(target, scrollReturnInterval, callback = null) {
-                window.setTimeout(function() {
-                    objectScroller(target, 'left', 0);
-                    if (callback) {
-                        callback();
-                    }
-                }
-                , scrollReturnInterval);
-                document.getElementById('desc').innerHTML = "Test Description: Try to scroll element DOWN then RIGHT starting your touch inside of the Cell 3";
-            }
-
         </script>
         <h1>touch-action: none</h1>
         <div id="complete-notice">
