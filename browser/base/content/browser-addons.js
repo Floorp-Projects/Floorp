@@ -363,12 +363,11 @@ var gXPInstallObserver = {
 
   // Remove all opened addon installation notifications
   removeAllNotifications(browser) {
-    this.NOTIFICATION_IDS.forEach((id) => {
-      let notification = PopupNotifications.getNotification(id, browser);
-      if (notification) {
-        PopupNotifications.remove(notification);
-      }
-    });
+    let notifications = this.NOTIFICATION_IDS
+      .map(id => PopupNotifications.getNotification(id, browser))
+      .filter(notification => notification != null);
+
+      PopupNotifications.remove(notifications);
   },
 
   observe(aSubject, aTopic, aData) {
