@@ -431,6 +431,8 @@ MessageManagerTunnel.prototype = {
     "Link:AddSearch",
     "PageStyle:StyleSheets",
     // Messages sent to RemoteWebProgress.jsm
+    "Content:LoadURIResult",
+    "Content:LocationChange",
     "Content:SecurityChange",
     // Messages sent to browser.js
     "DOMTitleChanged",

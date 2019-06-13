@@ -2402,8 +2402,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
   nsCOMPtr<nsIWebProgress> webProgress;
   nsCOMPtr<nsIRequest> request;
   ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
-                                   getter_AddRefs(webProgress),
-                                   getter_AddRefs(request));
+                                   webProgress, request);
 
   if (aWebProgressData && aWebProgressData->isTopLevel()) {
     Unused << browser->SetIsNavigating(aStateChangeData->isNavigating());
@@ -2442,65 +2441,11 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnProgressChange(
   nsCOMPtr<nsIWebProgress> webProgress;
   nsCOMPtr<nsIRequest> request;
   ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
-                                   getter_AddRefs(webProgress),
-                                   getter_AddRefs(request));
+                                   webProgress, request);
 
   Unused << managerAsListener->OnProgressChange(
       webProgress, request, aCurSelfProgress, aMaxSelfProgress,
       aCurTotalProgress, aMaxTotalProgress);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
-    const Maybe<WebProgressData>& aWebProgressData,
-    const RequestData& aRequestData, nsIURI* aLocation, const uint32_t aFlags,
-    const bool aCanGoBack, const bool aCanGoForward,
-    const Maybe<WebProgressLocationChangeData>& aLocationChangeData) {
-  nsCOMPtr<nsIBrowser> browser;
-  nsCOMPtr<nsIWebProgress> manager;
-  nsCOMPtr<nsIWebProgressListener> managerAsListener;
-  if (!GetWebProgressListener(getter_AddRefs(browser), getter_AddRefs(manager),
-                              getter_AddRefs(managerAsListener))) {
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIWebProgress> webProgress;
-  nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
-                                   getter_AddRefs(webProgress),
-                                   getter_AddRefs(request));
-
-  Unused << browser->UpdateWebNavigationForLocationChange(aCanGoBack,
-                                                          aCanGoForward);
-
-  if (aWebProgressData && aWebProgressData->isTopLevel()) {
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    if (aLocationChangeData->csp().isSome()) {
-      csp = CSPInfoToCSP(aLocationChangeData->csp().ref(), nullptr, nullptr);
-    }
-
-    nsCOMPtr<nsIPrincipal> constentPrincipal =
-        PrincipalInfoToPrincipal(aLocationChangeData->contentPrincipal());
-    nsCOMPtr<nsIPRincipal> contentStoragePrincipal = PrincipalInfoToPrincipal(
-        aLocationChangeData->contentStoragePrincipal());
-
-    Unused << browser->SetIsNavigating(aLocationChangeData->isNavigating());
-    Unused << browser->UpdateForLocationChange(
-        aLocation, aLocationChangeData->charset(),
-        aLocationChangeData->mayEnableCharacterEncodingMenu(),
-        aLocationChangeData->charsetAutodetected(),
-        aLocationChangeData->documentURI(), aLocationChangeData->title(),
-        contentPrincipal, contentStoragePrincipal, csp,
-        aLocationChangeData->isSyntheticDocument(),
-        aWebProgressData->innerDOMWindowID(),
-        aLocationChangeData->requestContextID().isSome(),
-        aLocationChangeData->requestContextID().valueOr(0),
-        aLocationChangeData->contentType());
-  }
-
-  Unused << managerAsListener->OnLocationChange(webProgress, request, aLocation,
-                                                aFlags);
 
   return IPC_OK();
 }
@@ -2520,8 +2465,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStatusChange(
   nsCOMPtr<nsIWebProgress> webProgress;
   nsCOMPtr<nsIRequest> request;
   ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
-                                   getter_AddRefs(webProgress),
-                                   getter_AddRefs(request));
+                                   webProgress, request);
 
   Unused << managerAsListener->OnStatusChange(webProgress, request, aStatus,
                                               aMessage.get());
@@ -2543,22 +2487,10 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnContentBlockingEvent(
   nsCOMPtr<nsIWebProgress> webProgress;
   nsCOMPtr<nsIRequest> request;
   ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
-                                   getter_AddRefs(webProgress),
-                                   getter_AddRefs(request));
+                                   webProgress, request);
 
   Unused << managerAsListener->OnContentBlockingEvent(webProgress, request,
                                                       aEvent);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserParent::RecvNavigationFinished() {
-  nsCOMPtr<nsIBrowser> browser =
-      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
-
-  if (browser) {
-    browser->SetIsNavigating(false);
-  }
 
   return IPC_OK();
 }
@@ -2597,31 +2529,21 @@ bool BrowserParent::GetWebProgressListener(
 
 void BrowserParent::ReconstructWebProgressAndRequest(
     nsIWebProgress* aManager, const Maybe<WebProgressData>& aWebProgressData,
-    const RequestData& aRequestData, nsIWebProgress** aOutWebProgress,
-    nsIRequest** aOutRequest) {
-  MOZ_DIAGNOSTIC_ASSERT(aOutWebProgress,
-                        "aOutWebProgress should never be null");
-  MOZ_DIAGNOSTIC_ASSERT(aOutRequest, "aOutRequest should never be null");
-
-  nsCOMPtr<nsIWebProgress> webProgress;
+    const RequestData& aRequestData, nsCOMPtr<nsIWebProgress>& aOutWebProgress,
+    nsCOMPtr<nsIRequest>& aOutRequest) {
   if (aWebProgressData) {
-    webProgress = new RemoteWebProgress(
+    aOutWebProgress = MakeAndAddRef<RemoteWebProgress>(
         aManager, aWebProgressData->outerDOMWindowID(),
         aWebProgressData->innerDOMWindowID(), aWebProgressData->loadType(),
         aWebProgressData->isLoadingDocument(), aWebProgressData->isTopLevel());
   } else {
-    webProgress = new RemoteWebProgress(aManager, 0, 0, 0, false, false);
+    aOutWebProgress =
+        MakeAndAddRef<RemoteWebProgress>(aManager, 0, 0, 0, false, false);
   }
-  webProgress.forget(aOutWebProgress);
 
-  if (aRequestData.requestURI()) {
-    nsCOMPtr<nsIRequest> request = MakeAndAddRef<RemoteWebProgressRequest>(
-        aRequestData.requestURI(), aRequestData.originalRequestURI(),
-        aRequestData.matchedList());
-    request.forget(aOutRequest);
-  } else {
-    *aOutRequest = nullptr;
-  }
+  aOutRequest = MakeAndAddRef<RemoteWebProgressRequest>(
+      aRequestData.requestURI(), aRequestData.originalRequestURI(),
+      aRequestData.matchedList());
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
