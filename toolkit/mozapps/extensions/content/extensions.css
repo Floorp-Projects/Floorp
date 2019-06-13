@@ -146,6 +146,7 @@ row[unsupported="true"] {
 
 /* Plugins aren't yet disabled by safemode (bug 342333),
    so don't show that warning when viewing plugins. */
+#addons-page[warning="safemode"] #html-view[type="list"][param="plugin"] .global-warning-safemode,
 #addons-page[warning="safemode"] .view-pane[type="plugin"] .global-warning-container,
 #addons-page[warning="safemode"] #detail-view[loading="true"] .global-warning {
   display: none;
@@ -161,6 +162,14 @@ row[unsupported="true"] {
 
 .list-view-notice > .message-bar {
   width: 664px;
+}
+
+.html-alert-container > .message-bar {
+  margin-bottom: 8px;
+}
+
+.html-global-warning-button {
+  margin-inline: 0;
 }
 
 .addon .relnotes {
