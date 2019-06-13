@@ -12,23 +12,8 @@
 namespace mozilla {
 namespace dom {
 
-// The URL implementation for the main-thread
-class URLMainThread final : public URL {
+class URLMainThread final {
  public:
-  static already_AddRefed<URLMainThread> Constructor(
-      const GlobalObject& aGlobal, const nsAString& aURL,
-      const Optional<nsAString>& aBase, ErrorResult& aRv);
-
-  static already_AddRefed<URLMainThread> Constructor(nsISupports* aParent,
-                                                     const nsAString& aURL,
-                                                     const nsAString& aBase,
-                                                     ErrorResult& aRv);
-
-  static already_AddRefed<URLMainThread> Constructor(nsISupports* aParent,
-                                                     const nsAString& aURL,
-                                                     nsIURI* aBase,
-                                                     ErrorResult& aRv);
-
   static void CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
                               nsAString& aResult, ErrorResult& aRv);
 
@@ -40,18 +25,6 @@ class URLMainThread final : public URL {
 
   static bool IsValidURL(const GlobalObject& aGlobal, const nsAString& aURL,
                          ErrorResult& aRv);
-
-  explicit URLMainThread(nsISupports* aParent);
-
-  virtual void SetHref(const nsAString& aHref, ErrorResult& aRv) override;
-
-  virtual void GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const override;
-
-  virtual void SetProtocol(const nsAString& aProtocol,
-                           ErrorResult& aRv) override;
-
- private:
-  ~URLMainThread();
 };
 
 }  // namespace dom

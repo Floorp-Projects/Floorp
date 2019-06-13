@@ -26,29 +26,32 @@ class Blob;
 class MediaSource;
 class GlobalObject;
 
-class URL : public URLSearchParamsObserver, public nsWrapperCache {
+class URL final : public URLSearchParamsObserver, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(URL)
 
-  URL(nsISupports* aParent) : mParent(aParent) {}
+  explicit URL(nsISupports* aParent) : mParent(aParent) {}
 
   // WebIDL methods
   nsISupports* GetParentObject() const { return mParent; }
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<URL> Constructor(const GlobalObject& aGlobal,
                                            const nsAString& aURL,
                                            const Optional<nsAString>& aBase,
                                            ErrorResult& aRv);
 
-  // Helper for Fetch API
-  static already_AddRefed<URL> WorkerConstructor(const GlobalObject& aGlobal,
-                                                 const nsAString& aURL,
-                                                 const nsAString& aBase,
-                                                 ErrorResult& aRv);
+  static already_AddRefed<URL> Constructor(nsISupports* aParent,
+                                           const nsAString& aURL,
+                                           const nsAString& aBase,
+                                           ErrorResult& aRv);
+
+  static already_AddRefed<URL> Constructor(nsISupports* aParent,
+                                           const nsAString& aURL, nsIURI* aBase,
+                                           ErrorResult& aRv);
 
   static void CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
                               nsAString& aResult, ErrorResult& aRv);
@@ -64,13 +67,13 @@ class URL : public URLSearchParamsObserver, public nsWrapperCache {
 
   void GetHref(nsAString& aHref) const;
 
-  virtual void SetHref(const nsAString& aHref, ErrorResult& aRv) = 0;
+  void SetHref(const nsAString& aHref, ErrorResult& aRv);
 
-  virtual void GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const = 0;
+  void GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const;
 
   void GetProtocol(nsAString& aProtocol) const;
 
-  virtual void SetProtocol(const nsAString& aProtocol, ErrorResult& aRv) = 0;
+  void SetProtocol(const nsAString& aProtocol, ErrorResult& aRv);
 
   void GetUsername(nsAString& aUsername) const;
 
@@ -98,7 +101,7 @@ class URL : public URLSearchParamsObserver, public nsWrapperCache {
 
   void GetSearch(nsAString& aSearch) const;
 
-  virtual void SetSearch(const nsAString& aSearch);
+  void SetSearch(const nsAString& aSearch);
 
   URLSearchParams* SearchParams();
 
@@ -113,8 +116,8 @@ class URL : public URLSearchParamsObserver, public nsWrapperCache {
   // URLSearchParamsObserver
   void URLSearchParamsUpdated(URLSearchParams* aSearchParams) override;
 
- protected:
-  virtual ~URL() = default;
+ private:
+  ~URL() = default;
 
   void SetURI(already_AddRefed<nsIURI> aURI);
 
