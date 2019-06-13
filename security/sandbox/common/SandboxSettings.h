@@ -25,14 +25,5 @@ int ClampFlashSandboxLevel(const int aLevel);
 bool StartOpenBSDSandbox(GeckoProcessType type);
 #endif
 
-#if !defined(XP_WIN)
-// Returns whether or not the currently running build is an unpackaged
-// developer build. This check is implemented by looking for omni.ja in the
-// the obj/dist dir. We use this routine to detect when the build dir will
-// use symlinks to the repo and object dir. On Windows, dev builds don't
-// use symlinks.
-bool IsDevelopmentBuild();
-#endif /* !XP_WIN */
-
 }  // namespace mozilla
 #endif  // mozilla_SandboxPolicies_h
