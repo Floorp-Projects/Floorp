@@ -65,6 +65,6 @@ partial interface WindowOrWorkerGlobalScope {
 
 // https://w3c.github.io/ServiceWorker/#self-caches
 partial interface WindowOrWorkerGlobalScope {
-  [Throws, Func="mozilla::dom::DOMPrefs::dom_caches_enabled", SameObject]
+  [Throws, Pref="dom.caches.enabled", SameObject]
   readonly attribute CacheStorage caches;
 };

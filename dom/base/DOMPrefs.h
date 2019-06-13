@@ -17,12 +17,6 @@ class DOMPrefs final {
 
   // Returns true if the browser.dom.window.dump.enabled pref is set.
   static bool DumpEnabled();
-
-#define DOM_WEBIDL_PREF(name) static bool name(JSContext* aCx, JSObject* aObj);
-
-#include "DOMPrefsInternal.h"
-
-#undef DOM_WEBIDL_PREF
 };
 
 }  // namespace dom
