@@ -44,10 +44,6 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   Maybe<LiveRegisterSet> liveRegs_;
   Maybe<CodeOffset> stubJitCodeOffset_;
 
- public:
-#ifdef DEBUG
-  bool calledPrepareVMCall_;
-#endif
  private:
   bool savedLiveRegs_;
 

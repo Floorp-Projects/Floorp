@@ -711,6 +711,8 @@ class MOZ_RAII CacheIRCompiler {
 
   enum class Mode { Baseline, Ion };
 
+  bool preparedForVMCall_;
+
   bool isBaseline();
   bool isIon();
   BaselineCacheIRCompiler& asBaseline();
@@ -763,7 +765,8 @@ class MOZ_RAII CacheIRCompiler {
 
   CacheIRCompiler(JSContext* cx, const CacheIRWriter& writer,
                   uint32_t stubDataOffset, Mode mode, StubFieldPolicy policy)
-      : cx_(cx),
+      : preparedForVMCall_(false),
+        cx_(cx),
         reader(writer),
         writer_(writer),
         allocator(writer_),

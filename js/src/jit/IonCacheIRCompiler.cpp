@@ -47,9 +47,6 @@ IonCacheIRCompiler::IonCacheIRCompiler(
       ionScript_(ionScript),
       stub_(stub),
       typeCheckInfo_(typeCheckInfo),
-#ifdef DEBUG
-      calledPrepareVMCall_(false),
-#endif
       savedLiveRegs_(false) {
   MOZ_ASSERT(ic_);
   MOZ_ASSERT(ionScript_);
@@ -287,9 +284,7 @@ void IonCacheIRCompiler::prepareVMCall(MacroAssembler& masm,
   masm.Push(Imm32(descriptor));
   masm.Push(ImmPtr(GetReturnAddressToIonCode(cx_)));
 
-#ifdef DEBUG
-  calledPrepareVMCall_ = true;
-#endif
+  preparedForVMCall_ = true;
 }
 
 bool IonCacheIRCompiler::init() {

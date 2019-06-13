@@ -4398,11 +4398,7 @@ void CacheIRCompiler::callVM(MacroAssembler& masm) {
 
 void CacheIRCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
   if (mode_ == Mode::Ion) {
-#ifdef DEBUG
-    IonCacheIRCompiler* ionCompiler = &this->asIon();
-    MOZ_ASSERT(ionCompiler);
-    MOZ_ASSERT(ionCompiler->calledPrepareVMCall_);
-#endif
+    MOZ_ASSERT(preparedForVMCall_);
     TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
     const VMFunctionData& fun = GetVMFunction(id);
     uint32_t frameSize = fun.explicitStackSlots() * sizeof(void*);
@@ -4420,12 +4416,11 @@ void CacheIRCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
     masm.freeStack(IonICCallFrameLayout::Size());
     return;
   }
-#ifdef DEBUG
+
   MOZ_ASSERT(mode_ == Mode::Baseline);
-  BaselineCacheIRCompiler* baselineCompiler = &this->asBaseline();
-  MOZ_ASSERT(baselineCompiler);
-  MOZ_ASSERT(baselineCompiler->inStubFrame_);
-#endif
+
+  MOZ_ASSERT(preparedForVMCall_);
+
   TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
   MOZ_ASSERT(GetVMFunction(id).expectTailCall == NonTailCall);
 

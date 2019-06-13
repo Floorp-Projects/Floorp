@@ -49,7 +49,6 @@ BaselineCacheIRCompiler::BaselineCacheIRCompiler(
     BaselineCacheIRStubKind stubKind)
     : CacheIRCompiler(cx, writer, stubDataOffset, Mode::Baseline,
                       StubFieldPolicy::Address),
-      inStubFrame_(false),
       makesGCCalls_(false),
       kind_(stubKind) {}
 
@@ -93,15 +92,15 @@ class MOZ_RAII AutoStubFrame {
     framePushedAtEnterStubFrame_ = masm.framePushed();
 #endif
 
-    MOZ_ASSERT(!compiler.inStubFrame_);
-    compiler.inStubFrame_ = true;
+    MOZ_ASSERT(!compiler.preparedForVMCall_);
+    compiler.preparedForVMCall_ = true;
     if (canGC == CallCanGC::CanGC) {
       compiler.makesGCCalls_ = true;
     }
   }
   void leave(MacroAssembler& masm, bool calledIntoIon = false) {
-    MOZ_ASSERT(compiler.inStubFrame_);
-    compiler.inStubFrame_ = false;
+    MOZ_ASSERT(compiler.preparedForVMCall_);
+    compiler.preparedForVMCall_ = false;
 
 #ifdef DEBUG
     masm.setFramePushed(framePushedAtEnterStubFrame_);
@@ -114,7 +113,7 @@ class MOZ_RAII AutoStubFrame {
   }
 
 #ifdef DEBUG
-  ~AutoStubFrame() { MOZ_ASSERT(!compiler.inStubFrame_); }
+  ~AutoStubFrame() { MOZ_ASSERT(!compiler.preparedForVMCall_); }
 #endif
 };
 
@@ -141,7 +140,7 @@ void BaselineCacheIRCompiler::tailCallVM(MacroAssembler& masm) {
 
 void BaselineCacheIRCompiler::tailCallVMInternal(MacroAssembler& masm,
                                                  TailCallVMFunctionId id) {
-  MOZ_ASSERT(!inStubFrame_);
+  MOZ_ASSERT(!preparedForVMCall_);
 
   TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
   const VMFunctionData& fun = GetVMFunction(id);
@@ -195,7 +194,7 @@ JitCode* BaselineCacheIRCompiler::compile() {
     allocator.nextOp();
   } while (reader.more());
 
-  MOZ_ASSERT(!inStubFrame_);
+  MOZ_ASSERT(!preparedForVMCall_);
   masm.assumeUnreachable("Should have returned from IC");
 
   // Done emitting the main IC code. Now emit the failure paths.
