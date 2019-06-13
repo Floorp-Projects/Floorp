@@ -44,92 +44,17 @@ BaseValueIndex CacheRegisterAllocator::addressOf(MacroAssembler& masm,
 }
 
 // BaselineCacheIRCompiler compiles CacheIR to BaselineIC native code.
-class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
-  bool inStubFrame_;
-  bool makesGCCalls_;
-  BaselineCacheIRStubKind kind_;
-
-  void callVMInternal(MacroAssembler& masm, VMFunctionId id);
-
-  template <typename Fn, Fn fn>
-  void callVM(MacroAssembler& masm) {
-    VMFunctionId id = VMFunctionToId<Fn, fn>::id;
-    callVMInternal(masm, id);
-  }
-
-  void tailCallVMInternal(MacroAssembler& masm, TailCallVMFunctionId id);
-
-  template <typename Fn, Fn fn>
-  void tailCallVM(MacroAssembler& masm) {
-    TailCallVMFunctionId id = TailCallVMFunctionToId<Fn, fn>::id;
-    tailCallVMInternal(masm, id);
-  }
-
-  MOZ_MUST_USE bool callTypeUpdateIC(Register obj, ValueOperand val,
-                                     Register scratch,
-                                     LiveGeneralRegisterSet saveRegs);
-
-  MOZ_MUST_USE bool emitStoreSlotShared(bool isFixed);
-  MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
-
-  bool updateArgc(CallFlags flags, Register argcReg, Register scratch);
-  void loadStackObject(ArgumentKind kind, CallFlags flags, size_t stackPushed,
-                       Register argcReg, Register dest);
-  void pushArguments(Register argcReg, Register calleeReg, Register scratch,
-                     Register scratch2, CallFlags flags, bool isJitCall);
-  void pushStandardArguments(Register argcReg, Register scratch,
-                             Register scratch2, bool isJitCall,
-                             bool isConstructing);
-  void pushArrayArguments(Register argcReg, Register scratch, Register scratch2,
-                          bool isJitCall, bool isConstructing);
-  void pushFunCallArguments(Register argcReg, Register calleeReg,
-                            Register scratch, Register scratch2,
-                            bool isJitCall);
-  void pushFunApplyArgs(Register argcReg, Register calleeReg, Register scratch,
-                        Register scratch2, bool isJitCall);
-  void createThis(Register argcReg, Register calleeReg, Register scratch,
-                  CallFlags flags);
-  void updateReturnValue();
-
-  enum class NativeCallType { Native, ClassHook };
-  bool emitCallNativeShared(NativeCallType callType);
-
-  MOZ_MUST_USE bool emitCallScriptedGetterResultShared(
-      TypedOrValueRegister receiver);
-
-  template <typename T, typename CallVM>
-  MOZ_MUST_USE bool emitCallNativeGetterResultShared(T receiver,
-                                                     const CallVM& emitCallVM);
-
- public:
-  friend class AutoStubFrame;
-
-  BaselineCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer,
-                          uint32_t stubDataOffset,
-                          BaselineCacheIRStubKind stubKind)
-      : CacheIRCompiler(cx, writer, stubDataOffset, Mode::Baseline,
-                        StubFieldPolicy::Address),
-        inStubFrame_(false),
-        makesGCCalls_(false),
-        kind_(stubKind) {}
-
-  MOZ_MUST_USE bool init(CacheKind kind);
-
-  JitCode* compile();
-
-  bool makesGCCalls() const { return makesGCCalls_; }
-
- private:
-#define DEFINE_OP(op, ...) MOZ_MUST_USE bool emit##op();
-  CACHE_IR_OPS(DEFINE_OP)
-#undef DEFINE_OP
-  Address stubAddress(uint32_t offset) const {
-    return Address(ICStubReg, stubDataOffset_ + offset);
-  }
-};
+BaselineCacheIRCompiler::BaselineCacheIRCompiler(
+    JSContext* cx, const CacheIRWriter& writer, uint32_t stubDataOffset,
+    BaselineCacheIRStubKind stubKind)
+    : CacheIRCompiler(cx, writer, stubDataOffset, Mode::Baseline,
+                      StubFieldPolicy::Address),
+      inStubFrame_(false),
+      makesGCCalls_(false),
+      kind_(stubKind) {}
 
 #define DEFINE_SHARED_OP(op)                 \
-  bool BaselineCacheIRCompiler::emit##op() { \
+    bool BaselineCacheIRCompiler::emit##op() { \
     return CacheIRCompiler::emit##op();      \
   }
 CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
@@ -195,6 +120,26 @@ class MOZ_RAII AutoStubFrame {
 
 }  // namespace jit
 }  // namespace js
+
+bool BaselineCacheIRCompiler::makesGCCalls() const { return makesGCCalls_; }
+
+Address BaselineCacheIRCompiler::stubAddress(uint32_t offset) const {
+  return Address(ICStubReg, stubDataOffset_ + offset);
+}
+
+template <typename Fn, Fn fn>
+void BaselineCacheIRCompiler::callVM(MacroAssembler& masm) {
+  VMFunctionId id = VMFunctionToId<Fn, fn>::id;
+  callVMInternal(masm, id);
+}
+
+template <typename Fn, Fn fn>
+void BaselineCacheIRCompiler::tailCallVM(MacroAssembler& masm) {
+  TailCallVMFunctionId id = TailCallVMFunctionToId<Fn, fn>::id;
+  tailCallVMInternal(masm, id);
+}
+
+
 
 void BaselineCacheIRCompiler::callVMInternal(MacroAssembler& masm,
                                              VMFunctionId id) {
