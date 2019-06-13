@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as queue from "./queue";
+import path from 'path'
+import fs from 'fs'
 import intersect from "intersect";
 import parse_args from "minimist";
 import util from "util";
@@ -165,6 +167,16 @@ async function getCommitComment() {
 
 export async function initFilter() {
   let comment = await getCommitComment();
+
+  // Load try_task_config.json
+  // Add parameters to queue for created tasks
+  let config_path = path.normalize(path.join(__dirname, '../../../../try_task_config.json'))
+  if (fs.existsSync(config_path)) {
+    var payload = JSON.parse(fs.readFileSync(config_path));
+    if (payload['version'] == 2) {
+      queue.addParameters(payload['parameters']);
+    }
+  }
 
   // Check for try syntax in changeset comment.
   let match = comment.match(/\btry:\s*(.*)\s*$/m);
