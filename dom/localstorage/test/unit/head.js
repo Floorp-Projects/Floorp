@@ -83,6 +83,18 @@ function resetOriginLimit() {
   Services.prefs.clearUserPref("dom.storage.default_quota");
 }
 
+function setTimeout(callback, timeout) {
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+  timer.initWithCallback({
+    notify() {
+      callback();
+    },
+  }, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+
+  return timer;
+}
+
 function init() {
   let request = Services.qms.init();
 
