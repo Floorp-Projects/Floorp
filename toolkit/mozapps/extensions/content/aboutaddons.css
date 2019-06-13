@@ -120,10 +120,22 @@ addon-list addon-card > .addon.card {
   width: 16px;
   height: 16px;
   background-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-inline-end: 8px;
 }
 
 .addon-badge-private-browsing-allowed {
   background-image: url("chrome://browser/skin/private-browsing.svg");
+}
+
+.addon-badge-recommended {
+  background-color: var(--orange-50);
+  background-image: url("chrome://mozapps/skin/extensions/recommended.svg");
+  background-size: 10px;
+  border-radius: 8px;
+  fill: #fff;
+  -moz-context-properties: fill;
 }
 
 .addon-description {
