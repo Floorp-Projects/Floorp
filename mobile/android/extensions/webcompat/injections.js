@@ -94,13 +94,35 @@ for (const injection of [
       css: [{file: "injections/css/bug1518781-twitch.tv-webkit-scrollbar.css"}],
     },
   }, {
+    id: "bug1554014",
+    platform: "all",
+    domain: "Sites using TinyMCE 3, version 3.4.4 and older",
+    bug: "1554014",
+    rewriteResponses: {
+      urls: ["*://*/*tiny_mce.js", "*://*/*tiny_mce_src.js"],
+      types: ["script"],
+      match: /\bisGecko\s*=([^=])/,
+      maxMatchLength: 9 + 4, // only consider up to 4 optional whitespaces
+      replacement: "isGecko=false && $1",
+      precondition: {
+        match: /majorVersion\s*:\s*["'](\d+)["']\s*,\s*minorVersion\s*:\s*["'](\d+(\.\d+)?)/,
+        maxMatchLength: 37 + 24, // only consider up to 24 optional whitespaces
+        checkMatch: (_, major, minor) => {
+          return major == 3 && parseFloat(minor) < 4.5;
+        },
+      },
+    },
+  }, {
     id: "bug1551672",
     platform: "android",
     domain: "Sites using PDK 5 video",
     bug: "1551672",
-    pdk5fix: {
+    rewriteResponses: {
       urls: ["https://*/*/tpPdk.js", "https://*/*/pdk/js/*/*.js"],
       types: ["script"],
+      match: /\bVideoContextChromeAndroid\b/,
+      maxMatchLength: 25,
+      replacement: "VideoContextAndroid",
     },
   }, {
     id: "bug1305028",
@@ -135,21 +157,77 @@ async function registerContentScripts() {
   portsToAboutCompatTabs.broadcast({interventionsChanged: filterOverrides(Injections)});
 }
 
-function replaceStringInRequest(requestId, inString, outString, inEncoding = "utf-8") {
+function rewriteResponses(config) {
+  const {urls, types, match, maxMatchLength, replacement,
+         inputEncoding = "utf-8", precondition} = config;
+
+  if (!(match instanceof RegExp)) {
+    throw new Error("Invalid match parameter; expect a regular expression");
+  }
+  if (maxMatchLength instanceof Number) {
+    throw new Error("Invalid maxMatch parameter; expect a number");
+  }
+  if (precondition) {
+    if (!(precondition.match instanceof RegExp)) {
+      throw new Error("Invalid precondition match parameter; expect a regular expression");
+    }
+    if (typeof precondition.checkMatch !== "function") {
+      throw new Error("Invalid precondition check parameter; expect function");
+    }
+  }
+
+  // We rewrite the response as it arrives in streamed chunks, so we need to
+  // buffer a certain amount of the incoming data in case the bits we're
+  // interested in span across those chunks. This buffer's length depends
+  // on the maxMatchLength of all regexes we will match, including the main
+  // replacement and the optional precondition.
+  let streamingBufferLength = maxMatchLength;
+  if (precondition) {
+    streamingBufferLength = Math.max(precondition.maxMatchLength, streamingBufferLength);
+  }
+
+  const listener = config.listener = ({requestId}) => {
+    replaceInRequest({
+      requestId,
+      match,
+      replacement,
+      streamingBufferLength,
+      inputEncoding,
+      precondition,
+    });
+    return {};
+  };
+  browser.webRequest.onBeforeRequest.addListener(listener, {urls, types}, ["blocking"]);
+}
+
+function replaceInRequest({requestId, streamingBufferLength, match, replacement, inputEncoding = "utf-8", precondition}) {
   const filter = browser.webRequest.filterResponseData(requestId);
-  const decoder = new TextDecoder(inEncoding);
+  const decoder = new TextDecoder(inputEncoding);
   const encoder = new TextEncoder();
-  const RE = new RegExp(inString, "g");
-  const carryoverLength = inString.length;
-  let carryover = "";
+  // As the incoming data will be streamed, we must buffer some of it in case
+  // the matches we are interested in span across two streamed chunks.
+  let bufferedCarryover = "";
+  // If a precondition is required, then we will not actually replace anything
+  // until we've seen that precondition in the incoming data.
+  let preconditionMet = !precondition;
   filter.ondata = event => {
-    const replaced = (carryover + decoder.decode(event.data, {stream: true})).replace(RE, outString);
-    filter.write(encoder.encode(replaced.slice(0, -carryoverLength)));
-    carryover = replaced.slice(-carryoverLength);
+    let chunk = bufferedCarryover + decoder.decode(event.data, {stream: true});
+    if (!preconditionMet) {
+      const matches = chunk.match(precondition.match);
+      if (matches) {
+        preconditionMet = !precondition.checkMatch ||
+                          precondition.checkMatch.apply(null, matches);
+      }
+    }
+    if (preconditionMet) {
+      chunk = chunk.replace(match, replacement);
+    }
+    filter.write(encoder.encode(chunk.slice(0, -streamingBufferLength)));
+    bufferedCarryover = chunk.slice(-streamingBufferLength);
   };
   filter.onstop = event => {
-    if (carryover.length) {
-      filter.write(encoder.encode(carryover));
+    if (bufferedCarryover.length) {
+      filter.write(encoder.encode(bufferedCarryover));
     }
     filter.close();
   };
@@ -160,13 +238,8 @@ async function enableInjection(injection) {
     return;
   }
 
-  if ("pdk5fix" in injection) {
-    const {urls, types} = injection.pdk5fix;
-    const listener = injection.pdk5fix.listener = ({requestId}) => {
-      replaceStringInRequest(requestId, "VideoContextChromeAndroid", "VideoContextAndroid");
-      return {};
-    };
-    browser.webRequest.onBeforeRequest.addListener(listener, {urls, types}, ["blocking"]);
+  if ("rewriteResponses" in injection) {
+    rewriteResponses(injection.rewriteResponses);
     injection.active = true;
     return;
   }
@@ -193,11 +266,11 @@ async function disableInjection(injection) {
     return;
   }
 
-  if (injection.pdk5fix) {
-    const {listener} = injection.pdk5fix;
+  if ("rewriteResponses" in injection) {
+    const {listener} = injection.rewriteResponses;
     browser.webRequest.onBeforeRequest.removeListener(listener);
     injection.active = false;
-    delete injection.pdk5fix.listener;
+    delete injection.rewriteResponses.listener;
     return;
   }
 
