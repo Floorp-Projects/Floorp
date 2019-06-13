@@ -26,15 +26,13 @@ internal const val UNDO_DELAY = 3000L
  * @param onCancel A suspend block to execute in case of cancellation.
  * @param operation A suspend block to execute if user doesn't cancel via the displayed [FenixSnackbar].
  */
-fun allowUndo(
+fun CoroutineScope.allowUndo(
     view: View,
     message: String,
     undoActionTitle: String,
     onCancel: suspend () -> Unit = {},
     operation: suspend () -> Unit
 ) {
-    val mainScope = CoroutineScope(Dispatchers.Main)
-
     // By using an AtomicBoolean, we achieve memory effects of reading and
     // writing a volatile variable.
     val requestedUndo = AtomicBoolean(false)
@@ -45,7 +43,7 @@ fun allowUndo(
         .setText(message)
         .setAction(undoActionTitle) {
             requestedUndo.set(true)
-            mainScope.launch {
+            launch {
                 onCancel.invoke()
             }
         }
@@ -55,7 +53,7 @@ fun allowUndo(
 
     // Wait a bit, and if user didn't request cancellation, proceed with
     // requested operation and hide the snackbar.
-    mainScope.launch {
+    launch {
         delay(UNDO_DELAY)
 
         if (!requestedUndo.get()) {

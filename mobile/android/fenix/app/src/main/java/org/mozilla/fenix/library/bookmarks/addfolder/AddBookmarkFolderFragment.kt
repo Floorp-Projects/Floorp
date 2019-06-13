@@ -15,14 +15,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_add_bookmark_folder.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import org.mozilla.fenix.R
@@ -31,23 +29,14 @@ import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
-import kotlin.coroutines.CoroutineContext
 
-class AddBookmarkFolderFragment : Fragment(), CoroutineScope {
+class AddBookmarkFolderFragment : Fragment() {
 
-    private lateinit var sharedViewModel: BookmarksSharedViewModel
-    private lateinit var job: Job
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
+    private val sharedViewModel: BookmarksSharedViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        job = Job()
         setHasOptionsMenu(true)
-        sharedViewModel = activity?.run {
-            ViewModelProviders.of(this).get(BookmarksSharedViewModel::class.java)
-        }!!
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -60,7 +49,7 @@ class AddBookmarkFolderFragment : Fragment(), CoroutineScope {
             getString(R.string.bookmark_add_folder_fragment_label)
         (activity as AppCompatActivity).supportActionBar?.show()
 
-        launch(IO) {
+        lifecycleScope.launch(IO) {
             sharedViewModel.selectedFolder = sharedViewModel.selectedFolder
                 ?: requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Mobile.id)
             launch(Main) {
@@ -79,11 +68,6 @@ class AddBookmarkFolderFragment : Fragment(), CoroutineScope {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
-    }
-
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.bookmarks_add_folder, menu)
         menu.findItem(R.id.confirm_add_folder_button).icon.colorFilter =
@@ -97,7 +81,7 @@ class AddBookmarkFolderFragment : Fragment(), CoroutineScope {
                     bookmark_add_folder_title_edit.error = getString(R.string.bookmark_empty_title_error)
                     return true
                 }
-                launch(IO) {
+                lifecycleScope.launch(IO) {
                     val newGuid = requireComponents.core.bookmarksStorage.addFolder(
                         sharedViewModel.selectedFolder!!.guid, bookmark_add_folder_title_edit.text.toString(), null
                     )

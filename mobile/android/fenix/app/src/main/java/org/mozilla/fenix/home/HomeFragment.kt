@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home
 
 import android.animation.Animator
-import android.content.Context
 import android.content.DialogInterface
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
@@ -14,12 +13,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -27,9 +28,7 @@ import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -79,11 +78,10 @@ import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.allowUndo
-import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
+class HomeFragment : Fragment(), AccountObserver {
     private val bus = ActionBusFactory.get(this)
     private var tabCollectionObserver: Observer<List<TabCollection>>? = null
 
@@ -110,10 +108,6 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var sessionControlComponent: SessionControlComponent
 
-    private lateinit var job: Job
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 // Disabled while awaiting a better solution to #3209
@@ -135,7 +129,6 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        job = Job()
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
         val mode = currentMode()
@@ -177,7 +170,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
         val listener = object : ViewTreeObserver.OnPreDrawListener {
             override fun onPreDraw(): Boolean {
-                launch {
+                viewLifecycleOwner.lifecycleScope.launch {
                     delay(ANIM_SCROLL_DELAY)
                     restoreLayoutState()
                     startPostponedEnterTransition()
@@ -209,7 +202,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
         setupHomeMenu()
 
-        launch(Dispatchers.Default) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
 
             val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(
@@ -274,7 +267,6 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
     override fun onDestroyView() {
         homeMenu = null
-        job.cancel()
         super.onDestroyView()
     }
 
@@ -359,7 +351,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                     removeTabWithUndo(action.sessionId)
                 } else {
                     pendingSessionDeletion?.deletionJob?.let {
-                        launch {
+                        viewLifecycleOwner.lifecycleScope.launch {
                             it.invoke()
                         }.invokeOnCompletion {
                             pendingSessionDeletion = null
@@ -379,7 +371,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                     sessionManager.filteredSessions(action.private)
                 ) else {
                     pendingSessionDeletion?.deletionJob?.let {
-                        launch {
+                        viewLifecycleOwner.lifecycleScope.launch {
                             it.invoke()
                         }.invokeOnCompletion {
                             pendingSessionDeletion = null
@@ -413,7 +405,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
     private fun invokePendingDeleteJobs() {
         pendingSessionDeletion?.deletionJob?.let {
-            launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 it.invoke()
             }.invokeOnCompletion {
                 pendingSessionDeletion = null
@@ -421,7 +413,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         }
 
         deleteAllSessionsJob?.let {
-            launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 it.invoke()
             }.invokeOnCompletion {
                 deleteAllSessionsJob = null
@@ -438,7 +430,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                     dialog.cancel()
                 }
                 setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
-                    launch(Dispatchers.IO) {
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                         requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
                     }.invokeOnCompletion {
                         dialog.dismiss()
@@ -517,7 +509,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                         )
                     }
                 }
-                launch {
+                viewLifecycleOwner.lifecycleScope.launch {
                     delay(ANIM_SCROLL_DELAY)
                     sessionControlComponent.view.smoothScrollToPosition(0)
                 }
@@ -527,7 +519,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 share(tabs = shareTabs)
             }
             is CollectionAction.RemoveTab -> {
-                launch(Dispatchers.IO) {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     requireComponents.core.tabCollectionStorage.removeTabFromCollection(action.collection, action.tab)
                 }
             }
@@ -608,7 +600,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         }
         deleteAllSessionsJob = deleteOperation
 
-        allowUndo(
+        viewLifecycleOwner.lifecycleScope.allowUndo(
             view!!,
             getString(R.string.snackbar_tabs_deleted),
             getString(R.string.snackbar_deleted_undo), {
@@ -631,7 +623,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
         pendingSessionDeletion = PendingSessionDeletion(deleteOperation, sessionId)
 
-        allowUndo(
+        viewLifecycleOwner.lifecycleScope.allowUndo(
             view!!,
             getString(R.string.snackbar_tab_deleted),
             getString(R.string.snackbar_deleted_undo), {
@@ -732,7 +724,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     private fun scrollAndAnimateCollection(tabsAddedToCollectionSize: Int, changedCollection: TabCollection? = null) {
-        launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             val recyclerView = sessionControlComponent.view
             delay(ANIM_SCROLL_DELAY)
             val tabsSize = getListOfSessions().size
@@ -768,7 +760,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     private fun animateCollection(addedTabsSize: Int, indexOfCollection: Int) {
-        launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             val viewHolder = sessionControlComponent.view.findViewHolderForAdapterPosition(indexOfCollection)
             val border = (viewHolder as? CollectionViewHolder)?.view?.findViewById<View>(R.id.selected_border)
             val listener = object : Animator.AnimatorListener {
@@ -815,27 +807,24 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     private fun showSavedSnackbar(tabSize: Int) {
-        launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             delay(ANIM_SNACKBAR_DELAY)
-            context?.let { context: Context ->
-                view?.let { view: View ->
-                    val string =
-                        if (tabSize > 1) context.getString(R.string.create_collection_tabs_saved) else
-                            context.getString(R.string.create_collection_tab_saved)
-                    val snackbar = FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
-                    snackbar.show()
+            view?.let { view ->
+                @StringRes
+                val stringRes = if (tabSize > 1) {
+                    R.string.create_collection_tabs_saved
+                } else {
+                    R.string.create_collection_tab_saved
                 }
+                FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(view.context.getString(stringRes)).show()
             }
         }
     }
 
     private fun showRenamedSnackbar() {
-        context?.let { context: Context ->
-            view?.let { view: View ->
-                val string = context.getString(R.string.snackbar_collection_renamed)
-                FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
-                    .show()
-            }
+        view?.let { view ->
+            val string = view.context.getString(R.string.snackbar_collection_renamed)
+            FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string).show()
         }
     }
 

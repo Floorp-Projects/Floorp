@@ -11,27 +11,22 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.lifecycleScope
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.sessioncontrol.toSessionBundle
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
-import kotlin.coroutines.CoroutineContext
 
-class CreateCollectionFragment : DialogFragment(), CoroutineScope {
+class CreateCollectionFragment : DialogFragment() {
     private lateinit var collectionCreationComponent: CollectionCreationComponent
-    private lateinit var job: Job
     private lateinit var viewModel: CreateCollectionViewModel
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +39,6 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        job = Job()
         val view = inflater.inflate(R.layout.fragment_create_collection, container, false)
 
         viewModel = activity!!.run {
@@ -86,11 +80,6 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
         subscribeToActions()
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        job.cancel()
-    }
-
     @Suppress("ComplexMethod")
     private fun subscribeToActions() {
         getAutoDisposeObservable<CollectionCreationAction>().subscribe {
@@ -129,8 +118,8 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
 
                     context?.let { context ->
                         val sessionBundle = it.tabs.toList().toSessionBundle(context)
-                        launch(Dispatchers.IO) {
-                            requireComponents.core.tabCollectionStorage.createCollection(it.name, sessionBundle)
+                        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                            context.components.core.tabCollectionStorage.createCollection(it.name, sessionBundle)
                         }
                     }
                 }
@@ -138,15 +127,15 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                     dismiss()
                     context?.let { context ->
                         val sessionBundle = it.tabs.toList().toSessionBundle(context)
-                        launch(Dispatchers.IO) {
-                            requireComponents.core.tabCollectionStorage
+                        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                            context.components.core.tabCollectionStorage
                                 .addTabsToCollection(it.collection, sessionBundle)
                         }
                     }
                 }
                 is CollectionCreationAction.RenameCollection -> {
                     dismiss()
-                    launch(Dispatchers.IO) {
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                         requireComponents.core.tabCollectionStorage.renameCollection(it.collection, it.name)
                     }
                 }

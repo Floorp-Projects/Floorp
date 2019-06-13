@@ -23,14 +23,13 @@ import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.android.synthetic.main.fragment_search.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
@@ -100,10 +99,9 @@ import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.utils.Settings
 import java.net.MalformedURLException
 import java.net.URL
-import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
+class BrowserFragment : Fragment(), BackHandler {
 
     private lateinit var toolbarComponent: ToolbarComponent
 
@@ -125,11 +123,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
     private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
     private var findBookmarkJob: Job? = null
-    private lateinit var job: Job
 
     var customTabSessionId: String? = null
-
-    override val coroutineContext: CoroutineContext get() = Dispatchers.IO + job
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -139,7 +134,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 //            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
 //                SHARED_TRANSITION_MS
 //            )
-        job = Job()
     }
 
     @SuppressWarnings("ComplexMethod")
@@ -564,9 +558,9 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     private fun bookmarkTapped() {
         getSessionById()?.let { session ->
-            CoroutineScope(IO).launch {
-                val components = requireComponents
-                val existing = components.core.bookmarksStorage.getBookmarksWithUrl(session.url)
+            lifecycleScope.launch(IO) {
+                val bookmarksStorage = requireComponents.core.bookmarksStorage
+                val existing = bookmarksStorage.getBookmarksWithUrl(session.url)
                 val found = existing.isNotEmpty() && existing[0].url == session.url
                 if (found) {
                     launch(Main) {
@@ -577,13 +571,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                         )
                     }
                 } else {
-                    val guid = components.core.bookmarksStorage
-                        .addItem(
-                            BookmarkRoot.Mobile.id,
-                            session.url,
-                            session.title,
-                            null
-                        )
+                    val guid = bookmarksStorage.addItem(
+                        BookmarkRoot.Mobile.id,
+                        session.url,
+                        session.title,
+                        null
+                    )
                     launch(Main) {
                         getManagedEmitter<QuickActionChange>()
                             .onNext(QuickActionChange.BookmarkedStateChange(true))
@@ -683,11 +676,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         promptsFeature.withFeature { it.onActivityResult(requestCode, resultCode, data) }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
     }
 
     // This method triggers the complexity warning. However it's actually not that hard to understand.
@@ -824,8 +812,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     private fun showQuickSettingsDialog() {
         val session = getSessionById() ?: return
-        launch {
-            val host = session.url.toUri()?.host
+        lifecycleScope.launch(IO) {
+            val host = session.url.toUri().host
             val sitePermissions: SitePermissions? = host?.let {
                 val storage = requireContext().components.core.permissionStorage
                 storage.findSitePermissionsBy(it)
@@ -923,7 +911,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     private fun updateBookmarkState(session: Session) {
         if (findBookmarkJob?.isActive == true) findBookmarkJob?.cancel()
-        findBookmarkJob = launch {
+        findBookmarkJob = lifecycleScope.launch(IO) {
             val found = findBookmarkedURL(session)
             launch(Main) {
                 getManagedEmitter<QuickActionChange>()

@@ -10,11 +10,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_exceptions.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.FenixViewModelProvider
@@ -22,18 +22,9 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
-import kotlin.coroutines.CoroutineContext
 
-class ExceptionsFragment : Fragment(), CoroutineScope {
-    private var job = Job()
-    override val coroutineContext: CoroutineContext
-        get() = job + Dispatchers.Main
+class ExceptionsFragment : Fragment() {
     private lateinit var exceptionsComponent: ExceptionsComponent
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        job = Job()
-    }
 
     override fun onResume() {
         super.onResume()
@@ -65,14 +56,14 @@ class ExceptionsFragment : Fragment(), CoroutineScope {
         getAutoDisposeObservable<ExceptionsAction>()
             .subscribe {
                 when (it) {
-                    is ExceptionsAction.Delete.All -> launch(Dispatchers.IO) {
+                    is ExceptionsAction.Delete.All -> viewLifecycleOwner.lifecycleScope.launch(IO) {
                         val domains = ExceptionDomains.load(context!!)
                         ExceptionDomains.remove(context!!, domains)
-                        launch(Dispatchers.Main) {
-                            view?.let { view: View -> Navigation.findNavController(view).navigateUp() }
+                        launch(Main) {
+                            view?.let { view -> Navigation.findNavController(view).navigateUp() }
                         }
                     }
-                    is ExceptionsAction.Delete.One -> launch(Dispatchers.IO) {
+                    is ExceptionsAction.Delete.One -> viewLifecycleOwner.lifecycleScope.launch(IO) {
                         ExceptionDomains.remove(context!!, listOf(it.item.url))
                         reloadData()
                     }
@@ -93,7 +84,7 @@ class ExceptionsFragment : Fragment(), CoroutineScope {
         val items = loadAndMapExceptions()
 
         coroutineScope {
-            launch(Dispatchers.Main) {
+            launch(Main) {
                 if (items.isEmpty()) {
                     view?.let { view: View -> Navigation.findNavController(view).navigateUp() }
                     return@launch

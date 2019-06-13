@@ -21,10 +21,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_bookmark.view.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
@@ -55,12 +55,10 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.utils.allowUndo
-import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserver {
+class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
 
-    private lateinit var job: Job
     private lateinit var bookmarkComponent: BookmarkComponent
     private lateinit var signInComponent: SignInComponent
     var currentRoot: BookmarkNode? = null
@@ -73,9 +71,6 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.ClearSelection)
         }
     lateinit var initialJob: Job
-
-    override val coroutineContext: CoroutineContext
-        get() = Main + job
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_bookmark, container, false)
@@ -109,7 +104,6 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        job = Job()
         activity?.title = getString(R.string.library_bookmarks)
         setHasOptionsMenu(true)
     }
@@ -126,11 +120,11 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     }
 
     private fun loadInitialBookmarkFolder(currentGuid: String): Job {
-        return launch(IO) {
+        return lifecycleScope.launch(IO) {
             currentRoot =
                 context?.bookmarkStorage()?.getTree(currentGuid).withOptionalDesktopFolders(context) as BookmarkNode
 
-            launch(Main) {
+            lifecycleScope.launch(Main) {
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot!!))
 
                 activity?.run {
@@ -151,7 +145,6 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     override fun onDestroy() {
         super.onDestroy()
         navigation.removeOnDestinationChangedListener(onDestinationChangedListener)
-        job.cancel()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -260,7 +253,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                             getManagedEmitter<BookmarkChange>()
                                 .onNext(BookmarkChange.Change(currentRoot - it.item.guid))
 
-                            allowUndo(
+                            lifecycleScope.allowUndo(
                                 view!!,
                                 getString(
                                     R.string.bookmark_deletion_snackbar_message,
@@ -340,7 +333,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 val selectedBookmarks = getSelectedBookmarks()
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot - selectedBookmarks))
 
-                allowUndo(
+                lifecycleScope.allowUndo(
                     view!!, getString(R.string.bookmark_deletion_multiple_snackbar_message),
                     getString(R.string.bookmark_undo_deletion), { refreshBookmarks() }
                 ) {
@@ -359,7 +352,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
     override fun onAuthenticated(account: OAuthAccount) {
         getManagedEmitter<SignInChange>().onNext(SignInChange.SignedIn)
-        launch {
+        lifecycleScope.launch {
             refreshBookmarks()
         }
     }

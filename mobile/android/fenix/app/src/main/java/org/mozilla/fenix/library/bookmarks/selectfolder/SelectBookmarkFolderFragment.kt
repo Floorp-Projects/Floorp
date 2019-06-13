@@ -16,13 +16,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.*
 import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.view.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
@@ -47,20 +46,15 @@ import org.mozilla.fenix.library.bookmarks.SignInViewModel
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
-import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions")
-class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver {
+class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
 
-    private lateinit var sharedViewModel: BookmarksSharedViewModel
-    private lateinit var job: Job
+    private val sharedViewModel: BookmarksSharedViewModel by activityViewModels()
     private var folderGuid: String? = null
     private var bookmarkNode: BookmarkNode? = null
 
     private lateinit var signInComponent: SignInComponent
-
-    override val coroutineContext: CoroutineContext
-        get() = Main + job
 
     // Fill out our title map once we have context.
     override fun onAttach(context: Context) {
@@ -70,11 +64,7 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        job = Job()
         setHasOptionsMenu(true)
-        sharedViewModel = activity?.run {
-            ViewModelProviders.of(this).get(BookmarksSharedViewModel::class.java)
-        }!!
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -116,7 +106,7 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
         folderGuid = SelectBookmarkFolderFragmentArgs.fromBundle(arguments!!).folderGuid ?: BookmarkRoot.Root.id
         checkIfSignedIn()
 
-        launch(IO) {
+        lifecycleScope.launch(IO) {
             bookmarkNode =
                 requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Root.id, true)
                     .withOptionalDesktopFolders(context, showMobileRoot = true)
@@ -136,11 +126,6 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
             ?: getManagedEmitter<SignInChange>().onNext(SignInChange.SignedOut)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
-    }
-
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         val visitedAddBookmark = SelectBookmarkFolderFragmentArgs.fromBundle(arguments!!).visitedAddBookmark
         if (!visitedAddBookmark) {
@@ -153,7 +138,7 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.add_folder_button -> {
-                launch(Main) {
+                lifecycleScope.launch(Main) {
                     nav(
                         R.id.bookmarkSelectFolderFragment,
                         SelectBookmarkFolderFragmentDirections

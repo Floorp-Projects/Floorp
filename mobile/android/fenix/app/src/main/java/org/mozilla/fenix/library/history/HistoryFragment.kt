@@ -18,14 +18,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_history.view.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.VisitType
@@ -47,7 +44,7 @@ import org.mozilla.fenix.share.ShareTab
 import java.util.concurrent.TimeUnit
 
 @SuppressWarnings("TooManyFunctions")
-class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
+class HistoryFragment : Fragment(), BackHandler {
 
     private lateinit var historyComponent: HistoryComponent
     private val navigation by lazy { Navigation.findNavController(requireView()) }
@@ -78,7 +75,7 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        launch { reloadData() }
+        lifecycleScope.launch { reloadData() }
     }
 
     override fun onStart() {
@@ -93,11 +90,6 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
             title = getString(R.string.library_history)
             supportActionBar?.show()
         }
-    }
-
-    override fun onDestroy() {
-        coroutineContext.cancel()
-        super.onDestroy()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -144,7 +136,7 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
             val components = context?.applicationContext?.components!!
             val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
 
-            GlobalScope.launch(Main) {
+            lifecycleScope.launch(Main) {
                 deleteSelectedHistory(selectedHistory, components)
                 reloadData()
             }
@@ -200,13 +192,13 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
                 emitChange { HistoryChange.ExitEditMode }
             is HistoryAction.Delete.All ->
                 displayDeleteAllDialog()
-            is HistoryAction.Delete.One -> launch {
+            is HistoryAction.Delete.One -> lifecycleScope.launch {
                 requireComponents.core
                     .historyStorage
                     .deleteVisit(action.item.url, action.item.visitedAt)
                 reloadData()
             }
-            is HistoryAction.Delete.Some -> launch {
+            is HistoryAction.Delete.Some -> lifecycleScope.launch {
                 val storage = requireComponents.core.historyStorage
                 for (item in action.items) {
                     storage.deleteVisit(item.url, item.visitedAt)
@@ -235,7 +227,7 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
                 }
                 setPositiveButton(R.string.history_clear_dialog) { dialog: DialogInterface, _ ->
                     emitChange { HistoryChange.EnterDeletionMode }
-                    launch {
+                    lifecycleScope.launch {
                         requireComponents.core.historyStorage.deleteEverything()
                         reloadData()
                         launch(Dispatchers.Main) {

@@ -18,7 +18,8 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import com.jakewharton.rxbinding3.widget.textChanges
 import com.uber.autodispose.AutoDispose
@@ -28,10 +29,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_edit_bookmark.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.UrlParseFailed
 import mozilla.components.concept.storage.BookmarkInfo
@@ -46,26 +45,17 @@ import org.mozilla.fenix.ext.setRootTitles
 import org.mozilla.fenix.ext.withRootTitle
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.CoroutineContext
 
-class EditBookmarkFragment : Fragment(), CoroutineScope {
+class EditBookmarkFragment : Fragment() {
 
-    private lateinit var sharedViewModel: BookmarksSharedViewModel
-    private lateinit var job: Job
     private lateinit var guidToEdit: String
+    private val sharedViewModel: BookmarksSharedViewModel by activityViewModels()
     private var bookmarkNode: BookmarkNode? = null
     private var bookmarkParent: BookmarkNode? = null
 
-    override val coroutineContext: CoroutineContext
-        get() = Main + job
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        job = Job()
         setHasOptionsMenu(true)
-        sharedViewModel = activity?.run {
-            ViewModelProviders.of(this).get(BookmarksSharedViewModel::class.java)
-        }!!
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -83,7 +73,7 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
         activity?.supportActionBar?.show()
 
         guidToEdit = EditBookmarkFragmentArgs.fromBundle(arguments!!).guidToEdit
-        launch(IO) {
+        lifecycleScope.launch(IO) {
             bookmarkNode = requireComponents.core.bookmarksStorage.getTree(guidToEdit)
             bookmarkParent = sharedViewModel.selectedFolder
                 ?: bookmarkNode?.parentGuid?.let {
@@ -149,11 +139,6 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
             }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
-    }
-
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.bookmarks_edit, menu)
         menu.findItem(R.id.delete_bookmark_button).icon.colorFilter =
@@ -178,7 +163,7 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
                     dialog.cancel()
                 }
                 setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
-                    launch(IO) {
+                    lifecycleScope.launch(IO) {
                         requireComponents.core.bookmarksStorage.deleteNode(guidToEdit)
                         requireComponents.analytics.metrics.track(Event.RemoveBookmark)
                         launch(Main) {
@@ -193,7 +178,7 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
     }
 
     private fun updateBookmarkNode(pair: Pair<String?, String?>) {
-        launch(IO) {
+        lifecycleScope.launch(IO) {
             try {
                 requireComponents.let {
                     if (pair != Pair(bookmarkNode?.title, bookmarkNode?.url)) {
