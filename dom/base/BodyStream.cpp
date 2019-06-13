@@ -350,11 +350,11 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
   {
     MutexAutoUnlock unlock(mMutex);
-    JS::ReadableStreamUpdateDataAvailableFromSource(cx, stream, size);
-  }
+    bool ok = JS::ReadableStreamUpdateDataAvailableFromSource(cx, stream, size);
 
-  // The WriteInto callback changes mState to eChecking.
-  MOZ_DIAGNOSTIC_ASSERT(mState == eChecking);
+    // The WriteInto callback changes mState to eChecking.
+    MOZ_DIAGNOSTIC_ASSERT_IF(ok, mState == eChecking);
+  }
 
   return NS_OK;
 }
