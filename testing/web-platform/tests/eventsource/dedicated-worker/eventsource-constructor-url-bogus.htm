@@ -1,13 +1,4 @@
-<!--
-try {
-  var source = new EventSource("http://this is invalid/")
-  postMessage([false, 'no exception thrown'])
-  source.close()
-} catch(e) {
-  postMessage([true, e.code])
-}
-/*-->
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>dedicated worker - EventSource: constructor (invalid URL)</title>
@@ -19,7 +10,7 @@ try {
     <script>
       var test = async_test()
       test.step(function() {
-        var worker = new Worker('#')
+        var worker = new Worker('eventsource-constructor-url-bogus.js')
         worker.onmessage = function(e) {
           test.step(function() {
             assert_true(e.data[0], e.data[1])
@@ -31,4 +22,3 @@ try {
     </script>
   </body>
 </html>
-<!--*/ //-->
