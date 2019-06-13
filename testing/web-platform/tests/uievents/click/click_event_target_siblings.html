@@ -16,35 +16,36 @@
     </style>
   </head>
   <body id='body'>
-    <h1>Click targeting when targets of down and up are different</h1>
+    <h1>Click targeting when targets of down and up are sibling elements</h1>
+    This test verifies that click event always goes to the first common ancestor of down and up event targets.
 
     <ul>
       <li>Press down the primary button on red div and move to blue box and release.</li>
       <li>Press down the primary button on button b1 and move to button b2 and release.</li>
+      <li>Press down the primary button on input i1 and move to input i2 and release.</li>
       <li>Press down the primary button on link 1 and move to link 2 and release.</li>
       <li>Click done.</li>
     </ul>
 
     <div id="div_container" style="background: green">
-      <div id="red_div" style="background: red">
-      </div>
-      <div id="blue_div" style="background: blue">
-      </div>
+      <div id="red_div" style="background: red"></div>
+      <div id="blue_div" style="background: blue"></div>
     </div>
 
     <div id="button_container" style="background: green">
-      <button id="button1"> b1
-      </button>
-      <button id="button2"> b2
-      </button>
+      <button id="button1">b1</button>
+      <button id="button2">b2</button>
+    </div>
+
+    <div id="input_container" style="background: green">
+      <input id="input1" value="i1">
+      <input id="input2" value="i2">
     </div>
 
     <div id="link_container" style="background: green">
-      <a id="link1" href="#">link1
-      </a>
+      <a id="link1" href="#">link1</a>
       <br/>
-      <a id="link2" href="#">link2
-      </a>
+      <a id="link2" href="#">link2</a>
     </div>
 
     <button id="done">Done</button>
@@ -55,7 +56,7 @@
     document.addEventListener('dragstart', (e) => e.preventDefault());
 
     var events = [];
-    var nodes = ['div_container', 'red_div', 'blue_div', 'button_container', 'button1', 'button2', 'link_container', 'link1', 'link2', 'body'];
+    var nodes = ['div_container', 'red_div', 'blue_div', 'button_container', 'button1', 'button2', 'input_container', 'input1', 'input2', 'link_container', 'link1', 'link2', 'body'];
 
     for (var i = 0; i < nodes.length; i++) {
      ['mousedown', 'mouseup', 'click'].forEach((eventName) => {
