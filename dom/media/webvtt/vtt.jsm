@@ -32,10 +32,10 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
                                       "media.webvtt.pseudo.enabled", false);
+XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
+                                      "media.webvtt.debug.logging", false);
 
 (function(global) {
-  var DEBUG_LOG = false;
-
   function LOG(message) {
     if (DEBUG_LOG) {
       dump("[vtt] " + message + "\n");
