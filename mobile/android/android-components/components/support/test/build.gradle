@@ -28,8 +28,6 @@ android {
 
         lintConfig file("lint.xml")
     }
-
-    testOptions.unitTests.includeAndroidResources = true
 }
 
 dependencies {

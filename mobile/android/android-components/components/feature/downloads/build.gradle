@@ -20,8 +20,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
-    testOptions.unitTests.includeAndroidResources = true
 }
 
 dependencies {

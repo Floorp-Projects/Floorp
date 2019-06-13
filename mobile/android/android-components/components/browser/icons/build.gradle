@@ -31,8 +31,6 @@ android {
             resources.srcDirs += ['src/test/resources']
         }
     }
-
-    testOptions.unitTests.includeAndroidResources = true
 }
 
 dependencies {

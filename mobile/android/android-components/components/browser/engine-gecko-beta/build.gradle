@@ -24,8 +24,6 @@ android {
     packagingOptions {
         exclude 'META-INF/proguard/androidx-annotations.pro'
     }
-
-    testOptions.unitTests.includeAndroidResources = true
 }
 
 dependencies {
