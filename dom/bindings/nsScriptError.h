@@ -65,8 +65,8 @@ class nsScriptErrorBase : public nsIScriptError {
   void InitializationHelper(const nsAString& message,
                             const nsAString& sourceLine, uint32_t lineNumber,
                             uint32_t columnNumber, uint32_t flags,
-                            const nsACString& category,
-                            uint64_t aInnerWindowID);
+                            const nsACString& category, uint64_t aInnerWindowID,
+                            bool aFromChromeContext);
 
   nsCOMArray<nsIScriptErrorNote> mNotes;
   nsString mMessage;
