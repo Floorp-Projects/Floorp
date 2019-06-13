@@ -7,8 +7,9 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 addons = [
-  'normandydriver-1.0',
-  'normandydriver-2.0',
+  'normandydriver-a-1.0',
+  'normandydriver-b-1.0',
+  'normandydriver-a-2.0',
 ]
 
 output_dir = OBJDIR_FILES._tests.testing.mochitest.browser.toolkit.components.normandy.test.browser.addons

@@ -65,6 +65,24 @@ add_task(async function test_integer_values() {
   ok(!JsonSchemaValidator.validateAndParseParameters(null, schema)[0], "Invalid value");
 });
 
+add_task(async function test_null_values() {
+  let schema = {
+    type: "null",
+  };
+
+  let valid, parsed;
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(null, schema);
+  ok(valid, "Null should be valid");
+  ok(parsed === null, "Parsed value should be null");
+
+  // Invalid values:
+  ok(!JsonSchemaValidator.validateAndParseParameters(1, schema)[0], "Number should be invalid");
+  ok(!JsonSchemaValidator.validateAndParseParameters("1", schema)[0], "String should be invalid");
+  ok(!JsonSchemaValidator.validateAndParseParameters(true, schema)[0], "Boolean should be invalid");
+  ok(!JsonSchemaValidator.validateAndParseParameters({}, schema)[0], "Object should be invalid");
+  ok(!JsonSchemaValidator.validateAndParseParameters([], schema)[0], "Array should be invalid");
+});
+
 add_task(async function test_string_values() {
   let schema = {
     type: "string",
@@ -201,7 +219,7 @@ add_task(async function test_array_values() {
 });
 
 add_task(async function test_non_strict_arrays() {
-  // Non-srict arrays ignores invalid values (don't include
+  // Non-strict arrays ignores invalid values (don't include
   // them in the parsed output), instead of failing the validation.
   // Note: invalid values might still report errors to the console.
   let schema = {
@@ -421,6 +439,27 @@ add_task(async function test_number_or_array_values() {
   ok(!JsonSchemaValidator.validateAndParseParameters(["a", "b"], schema)[0], "Invalid value");
   ok(!JsonSchemaValidator.validateAndParseParameters([[]], schema)[0], "Invalid value");
   ok(!JsonSchemaValidator.validateAndParseParameters([0, 1, [2, 3]], schema)[0], "Invalid value");
+});
+
+add_task(function test_number_or_null_Values() {
+  let schema = {
+    type: ["number", "null"],
+  };
+
+  let valid, parsed;
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(1, schema);
+  ok(valid, "Number should be valid");
+  is(parsed, 1, "Number should be parsed correctly");
+
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(null, schema);
+  ok(valid, "Null should be valid");
+  is(parsed, null, "Null should be parsed correctly");
+
+  // Invalid values:
+  ok(!JsonSchemaValidator.validateAndParseParameters(true, schema)[0], "Boolean should be rejected");
+  ok(!JsonSchemaValidator.validateAndParseParameters("string", schema)[0], "String should be rejected");
+  ok(!JsonSchemaValidator.validateAndParseParameters({}, schema)[0], "Object should be rejected");
+  ok(!JsonSchemaValidator.validateAndParseParameters(["a", "b"], schema)[0], "Array should be rejected");
 });
 
 add_task(async function test_patternProperties() {

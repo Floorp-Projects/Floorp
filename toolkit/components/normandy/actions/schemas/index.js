@@ -101,6 +101,66 @@ const ActionSchemas = {
     },
   },
 
+  "branched-addon-study": {
+    $schema: "http://json-schema.org/draft-04/schema#",
+    title: "Enroll a user in an add-on experiment, with managed branches",
+    type: "object",
+    required: [
+      "slug",
+      "userFacingName",
+      "userFacingDescription",
+      "branches",
+    ],
+    properties: {
+      slug: {
+        description: "Machine-readable identifier",
+        type: "string",
+        minLength: 1,
+      },
+      userFacingName: {
+        description: "User-facing name of the study",
+        type: "string",
+        minLength: 1,
+      },
+      userFacingDescription: {
+        description: "User-facing description of the study",
+        type: "string",
+        minLength: 1,
+      },
+      isEnrollmentPaused: {
+        description: "If true, new users will not be enrolled in the study.",
+        type: "boolean",
+        default: false,
+      },
+      "branches": {
+        description: "List of experimental branches",
+        type: "array",
+        minItems: 1,
+        items: {
+          type: "object",
+          required: ["slug", "ratio", "extensionApiId"],
+          properties: {
+            slug: {
+              description: "Unique identifier for this branch of the experiment.",
+              type: "string",
+              pattern: "^[A-Za-z0-9\\-_]+$",
+            },
+            ratio: {
+              description: "Ratio of users who should be grouped into this branch.",
+              type: "integer",
+              minimum: 1,
+            },
+            extensionApiId: {
+              description: "The record ID of the add-on uploaded to the Normandy server. May be null, in which case no add-on will be installed.",
+              type: ["number", "null"],
+              default: null,
+            },
+          },
+        },
+      },
+    },
+  },
+
   "show-heartbeat": {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "Show a Heartbeat survey.",

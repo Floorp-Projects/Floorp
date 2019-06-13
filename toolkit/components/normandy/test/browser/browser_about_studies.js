@@ -79,21 +79,24 @@ decorate_task(
 decorate_task(
   AddonStudies.withStudies([
     addonStudyFactory({
-      name: "A Fake Add-on Study",
+      slug: "fake-study-a",
+      userFacingName: "A Fake Add-on Study",
       active: true,
-      description: "A fake description",
+      userFacingDescription: "A fake description",
       studyStartDate: new Date(2018, 0, 4),
     }),
     addonStudyFactory({
-      name: "B Fake Add-on Study",
+      slug: "fake-study-b",
+      userFacingName: "B Fake Add-on Study",
       active: false,
-      description: "B fake description",
+      userFacingDescription: "B fake description",
       studyStartDate: new Date(2018, 0, 2),
     }),
     addonStudyFactory({
-      name: "C Fake Add-on Study",
+      slug: "fake-study-c",
+      userFacingName: "C Fake Add-on Study",
       active: true,
-      description: "C fake description",
+      userFacingDescription: "C fake description",
       studyStartDate: new Date(2018, 0, 1),
     }),
   ]),
@@ -119,30 +122,30 @@ decorate_task(
     await ContentTask.spawn(browser, { addonStudies, prefStudies }, async ({ addonStudies, prefStudies }) => {
       const doc = content.document;
 
-      function getStudyRow(docElem, studyName) {
-        return docElem.querySelector(`.study[data-study-name="${studyName}"]`);
+      function getStudyRow(docElem, slug) {
+        return docElem.querySelector(`.study[data-study-slug="${slug}"]`);
       }
 
       await ContentTaskUtils.waitForCondition(() => doc.querySelectorAll(".active-study-list .study").length);
       const activeNames = Array.from(doc.querySelectorAll(".active-study-list .study"))
-        .map(row => row.dataset.studyName);
+        .map(row => row.dataset.studySlug);
       const inactiveNames = Array.from(doc.querySelectorAll(".inactive-study-list .study"))
-        .map(row => row.dataset.studyName);
+        .map(row => row.dataset.studySlug);
 
       Assert.deepEqual(
         activeNames,
-        [prefStudies[2].name, addonStudies[0].name, prefStudies[0].name, addonStudies[2].name],
+        [prefStudies[2].name, addonStudies[0].slug, prefStudies[0].name, addonStudies[2].slug],
         "Active studies are grouped by enabled status, and sorted by date",
       );
       Assert.deepEqual(
         inactiveNames,
-        [prefStudies[1].name, addonStudies[1].name],
+        [prefStudies[1].name, addonStudies[1].slug],
         "Inactive studies are grouped by enabled status, and sorted by date",
       );
 
-      const activeAddonStudy = getStudyRow(doc, addonStudies[0].name);
+      const activeAddonStudy = getStudyRow(doc, addonStudies[0].slug);
       ok(
-        activeAddonStudy.querySelector(".study-description").textContent.includes(addonStudies[0].description),
+        activeAddonStudy.querySelector(".study-description").textContent.includes(addonStudies[0].userFacingDescription),
         "Study descriptions are shown in about:studies."
       );
       is(
@@ -160,7 +163,7 @@ decorate_task(
         "Study icons use the first letter of the study name."
       );
 
-      const inactiveAddonStudy = getStudyRow(doc, addonStudies[1].name);
+      const inactiveAddonStudy = getStudyRow(doc, addonStudies[1].slug);
       is(
         inactiveAddonStudy.querySelector(".study-status").textContent,
         "Complete",
@@ -205,10 +208,10 @@ decorate_task(
 
       activeAddonStudy.querySelector(".remove-button").click();
       await ContentTaskUtils.waitForCondition(() => (
-        getStudyRow(doc, addonStudies[0].name).matches(".study.disabled")
+        getStudyRow(doc, addonStudies[0].slug).matches(".study.disabled")
       ));
       ok(
-        getStudyRow(doc, addonStudies[0].name).matches(".study.disabled"),
+        getStudyRow(doc, addonStudies[0].slug).matches(".study.disabled"),
         "Clicking the remove button updates the UI to show that the study has been disabled."
       );
 
@@ -260,9 +263,10 @@ decorate_task(
   withAboutStudies,
   AddonStudies.withStudies([
     addonStudyFactory({
-      name: "A Fake Add-on Study",
+      userFacingName: "A Fake Add-on Study",
+      slug: "fake-addon-study",
       active: false,
-      description: "A fake description",
+      userFacingDescription: "A fake description",
       studyStartDate: new Date(2018, 0, 4),
     }),
   ]),
