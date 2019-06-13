@@ -3855,15 +3855,6 @@ mozilla::ipc::IPCResult ContentChild::RecvDetachBrowsingContext(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvDetachBrowsingContextChildren(
-    BrowsingContext* aContext) {
-  MOZ_RELEASE_ASSERT(aContext);
-
-  aContext->DetachChildren(/* aFromIPC */ true);
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvCacheBrowsingContextChildren(
     BrowsingContext* aContext) {
   MOZ_RELEASE_ASSERT(aContext);
