@@ -5,6 +5,7 @@
 /* eslint-env mozilla/frame-script */
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var RefreshBlocker = {
   PREF: "accessibility.blockautorefresh",
@@ -92,7 +93,12 @@ var RefreshBlocker = {
   },
 
   send(data) {
-    sendAsyncMessage("RefreshBlocker:Blocked", data);
+    // Due to the |nsDocLoader| calling its |nsIWebProgressListener|s in
+    // reverse order, this will occur *before* the |BrowserChild| can send its
+    // |OnLocationChange| event to the parent, but we need this message to
+    // arrive after to ensure that the refresh blocker notification is not
+    // immediately cleared by the |OnLocationChange| from |BrowserChild|.
+    setTimeout(() => sendAsyncMessage("RefreshBlocker:Blocked", data), 0);
   },
 
   /**
