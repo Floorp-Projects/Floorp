@@ -23,7 +23,6 @@ function setTestPluginState(state) {
 async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
   Services.prefs.setBoolPref("plugin.load_flash_only", false);
 
   setTestPluginState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
@@ -180,8 +179,6 @@ async function run_test_4() {
   let p = await AddonManager.getAddonByID(gID);
   Assert.notEqual(p, null);
   Assert.equal(p.name, "Shockwave Flash");
-
-  Services.prefs.clearUserPref("plugins.click_to_play");
 
   executeSoon(do_test_finished);
 }

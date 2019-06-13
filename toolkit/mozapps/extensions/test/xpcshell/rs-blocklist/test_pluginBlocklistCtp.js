@@ -208,9 +208,8 @@ add_task(async function test_disable_blocklist() {
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
 
-  // it should still be possible to make a plugin click-to-play via the pref
-  // and setting that plugin's enabled state to click-to-play
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
+  // it should still be possible to make a plugin click-to-play
+  // by setting that plugin's enabled state to click-to-play
   let previousEnabledState = plugin.enabledState;
   plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   Assert.equal(gPluginHost.getStateForType("application/x-test"), Ci.nsIPluginTag.STATE_CLICKTOPLAY);
