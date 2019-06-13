@@ -6320,7 +6320,7 @@ bool nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
       LinePosition kidPosition;
       nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
       // If aFrame is fieldset, kid might be a legend frame here, but that's ok.
-      if (GetFirstLinePosition(aWM, kid, &kidPosition)) {
+      if (kid && GetFirstLinePosition(aWM, kid, &kidPosition)) {
         *aResult = kidPosition +
                    kid->GetLogicalNormalPosition(aWM, aFrame->GetSize()).B(aWM);
         return true;
