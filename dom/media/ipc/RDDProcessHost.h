@@ -99,7 +99,7 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   // To allow filling a MacSandboxInfo from the child
   // process without an instance of RDDProcessHost.
   // Only needed for late-start sandbox enabling.
-  static void StaticFillMacSandboxInfo(MacSandboxInfo& aInfo);
+  static bool StaticFillMacSandboxInfo(MacSandboxInfo& aInfo);
 
   // Return the sandbox type to be used with this process type.
   static MacSandboxType GetMacSandboxType();
@@ -130,7 +130,7 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   bool IsMacSandboxLaunchEnabled() override { return sLaunchWithMacSandbox; }
 
   // Override so we can turn on RDD process-specific sandbox logging
-  void FillMacSandboxInfo(MacSandboxInfo& aInfo) override;
+  bool FillMacSandboxInfo(MacSandboxInfo& aInfo) override;
 #endif
 
   DISALLOW_COPY_AND_ASSIGN(RDDProcessHost);
