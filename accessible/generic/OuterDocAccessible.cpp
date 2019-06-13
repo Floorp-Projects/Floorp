@@ -37,8 +37,14 @@ OuterDocAccessible::OuterDocAccessible(nsIContent* aContent,
   if (IPCAccessibilityActive()) {
     auto bridge = dom::BrowserBridgeChild::GetFrom(aContent);
     if (bridge) {
-      // This is an iframe which will be rendered in another process.
-      SendEmbedderAccessible(bridge);
+      // This is an iframe which will be rendered in another process. Tell the
+      // parent process the iframe accessible so it can link the
+      // trees together when the iframe document is added.
+      DocAccessibleChild* ipcDoc = aDoc->IPCDoc();
+      if (ipcDoc) {
+        uint64_t id = reinterpret_cast<uintptr_t>(UniqueID());
+        bridge->SendSetEmbedderAccessible(ipcDoc, id);
+      }
     }
   }
 
@@ -52,16 +58,6 @@ OuterDocAccessible::OuterDocAccessible(nsIContent* aContent,
 }
 
 OuterDocAccessible::~OuterDocAccessible() {}
-
-void OuterDocAccessible::SendEmbedderAccessible(
-    dom::BrowserBridgeChild* aBridge) {
-  MOZ_ASSERT(mDoc);
-  DocAccessibleChild* ipcDoc = mDoc->IPCDoc();
-  if (ipcDoc) {
-    uint64_t id = reinterpret_cast<uintptr_t>(UniqueID());
-    aBridge->SendSetEmbedderAccessible(ipcDoc, id);
-  }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible public (DON'T add methods here)
