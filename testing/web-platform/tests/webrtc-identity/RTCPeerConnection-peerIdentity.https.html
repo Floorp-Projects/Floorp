@@ -112,15 +112,10 @@
 
     const offer = await pc1.createOffer();
 
-    try {
-      await pc2.setRemoteDescription(offer);
-      assert_true(false, "Previous line (sRD) should have thrown!");
-    } catch (e) {
-      assert_equals(e.name, 'InvalidModificationError');
-    }
-
-    assert_true(pc2.signalingState, 'closed',
-      'Expect peer connection to be closed after mismatch peer identity');
+    await promise_rejects(t, 'InvalidModificationError',
+      pc2.setRemoteDescription(offer));
+    await promise_rejects(t, 'InvalidModificationError',
+      pc2.peerIdentity);
   }, 'setRemoteDescription() on offer with a=identity that resolve to value different from target peer identity should reject with InvalidModificationError');
 
   /*
