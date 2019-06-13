@@ -320,6 +320,7 @@ function openLinkIn(url, where, params) {
   var aUserContextId        = params.userContextId;
   var aIndicateErrorPageLoad = params.indicateErrorPageLoad;
   var aPrincipal            = params.originPrincipal;
+  var aStoragePrincipal     = params.originStoragePrincipal;
   var aTriggeringPrincipal  = params.triggeringPrincipal;
   var aCsp                  = params.csp;
   var aForceAboutBlankViewerInCurrent =
@@ -372,12 +373,14 @@ function openLinkIn(url, where, params) {
       let attrs = {
         userContextId: aUserContextId,
         privateBrowsingId: aIsPrivate || (w && PrivateBrowsingUtils.isWindowPrivate(w)),
+        firstPartyDomain: principal.originAttributes.firstPartyDomain,
       };
       return Services.scriptSecurityManager.principalWithOA(principal, attrs);
     }
     return principal;
   }
   aPrincipal = useOAForPrincipal(aPrincipal);
+  aStoragePrincipal = useOAForPrincipal(aStoragePrincipal);
   aTriggeringPrincipal = useOAForPrincipal(aTriggeringPrincipal);
 
   if (!w || where == "window") {
@@ -420,6 +423,7 @@ function openLinkIn(url, where, params) {
     sa.appendElement(allowThirdPartyFixupSupports);
     sa.appendElement(userContextIdSupports);
     sa.appendElement(aPrincipal);
+    sa.appendElement(aStoragePrincipal);
     sa.appendElement(aTriggeringPrincipal);
     sa.appendElement(null); // allowInheritPrincipal
     sa.appendElement(aCsp);
@@ -525,7 +529,7 @@ function openLinkIn(url, where, params) {
          (doGetProtocolFlags(uriObj) & URI_INHERITS_SECURITY_CONTEXT))) {
       // Unless we know for sure we're not inheriting principals,
       // force the about:blank viewer to have the right principal:
-      targetBrowser.createAboutBlankContentViewer(aPrincipal);
+      targetBrowser.createAboutBlankContentViewer(aPrincipal, aStoragePrincipal);
     }
 
     // When navigating a recording tab, use a new content process in order to
@@ -569,6 +573,7 @@ function openLinkIn(url, where, params) {
       allowMixedContent: aAllowMixedContent,
       userContextId: aUserContextId,
       originPrincipal: aPrincipal,
+      originStoragePrincipal: aStoragePrincipal,
       triggeringPrincipal: aTriggeringPrincipal,
       allowInheritPrincipal: aAllowInheritPrincipal,
       csp: aCsp,

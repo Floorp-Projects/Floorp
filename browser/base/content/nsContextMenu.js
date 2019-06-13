@@ -34,6 +34,7 @@ function openContextMenu(aMessage, aBrowser, aActor) {
   let spellInfo = data.spellInfo;
   let frameReferrerInfo = data.frameReferrerInfo;
   let principal = data.principal;
+  let storagePrincipal = data.storagePrincipal;
 
   if (spellInfo) {
     spellInfo.target = browser.messageManager;
@@ -53,9 +54,15 @@ function openContextMenu(aMessage, aBrowser, aActor) {
   if (principal) {
     principal = E10SUtils.deserializePrincipal(principal);
   }
+  if (storagePrincipal) {
+    storagePrincipal = E10SUtils.deserializePrincipal(storagePrincipal);
+  }
 
   if (data.context.principal) {
     data.context.principal = E10SUtils.deserializePrincipal(data.context.principal);
+  }
+  if (data.context.storagePrincipal) {
+    data.context.storagePrincipal = E10SUtils.deserializePrincipal(data.context.storagePrincipal);
   }
 
   gContextMenuContentData = { context: data.context,
@@ -65,6 +72,7 @@ function openContextMenu(aMessage, aBrowser, aActor) {
                               editFlags: data.editFlags,
                               spellInfo,
                               principal,
+                              storagePrincipal,
                               customMenuItems: data.customMenuItems,
                               documentURIObject,
                               docLocation: data.docLocation,
@@ -229,6 +237,7 @@ nsContextMenu.prototype = {
     this.targetIdentifier = context.targetIdentifier;
 
     this.principal = context.principal;
+    this.storagePrincipal = context.storagePrincipal;
     this.frameOuterWindowID = context.frameOuterWindowID;
 
     this.inSyntheticDoc = context.inSyntheticDoc;
@@ -781,6 +790,7 @@ nsContextMenu.prototype = {
   _openLinkInParameters(extra) {
     let params = { charset: gContextMenuContentData.charSet,
                    originPrincipal: this.principal,
+                   originStoragePrincipal: this.storagePrincipal,
                    triggeringPrincipal: this.principal,
                    csp: this.csp,
                    frameOuterWindowID: gContextMenuContentData.frameOuterWindowID};

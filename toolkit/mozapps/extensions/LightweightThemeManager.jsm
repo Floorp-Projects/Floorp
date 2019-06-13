@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyGetter(this, "hiddenWindow", () => {
 
   let browser = Services.appShell.createWindowlessBrowser(true);
   let principal = Services.scriptSecurityManager.getSystemPrincipal();
-  browser.docShell.createAboutBlankContentViewer(principal);
+  browser.docShell.createAboutBlankContentViewer(principal, principal);
 
   Services.obs.addObserver(() => { browser.close(); }, "xpcom-will-shutdown");
 

@@ -17,7 +17,7 @@ var hash = Cc["@mozilla.org/security/hash;1"]
            .createInstance(Ci.nsICryptoHash);
 
 // Expose Cache and Fetch symbols on the global
-Cu.importGlobalProperties(["caches", "File", "fetch"]);
+Cu.importGlobalProperties(["caches", "fetch"]);
 
 // Extract a zip file into the profile
 function create_test_profile(zipFileName) {
@@ -81,4 +81,3 @@ function getCacheDir() {
 
   return cacheDir;
 }
-

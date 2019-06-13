@@ -170,7 +170,9 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
     }
   }
 
-  if (aURI) {
+  // Ignore about:blank URIs here since they have no domain and attempting to
+  // compare against them will fail.
+  if (aURI && !NS_IsAboutBlank(aURI)) {
     // Determine whether aURI is foreign with respect to currentURI.
     nsresult rv = IsThirdPartyInternal(bottomDomain, aURI, &result);
     if (NS_FAILED(rv)) return rv;

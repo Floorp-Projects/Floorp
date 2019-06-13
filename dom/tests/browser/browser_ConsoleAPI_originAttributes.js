@@ -69,7 +69,7 @@ function test() {
 
   let chromeWebNav = Services.appShell.createWindowlessBrowser(true);
   let docShell = chromeWebNav.docShell;
-  docShell.createAboutBlankContentViewer(principal);
+  docShell.createAboutBlankContentViewer(principal, principal);
 
   info("fake webextension docShell created");
 

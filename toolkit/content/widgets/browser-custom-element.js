@@ -250,6 +250,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
     this._contentPrincipal = null;
 
+    this._contentStoragePrincipal = null;
+
     this._csp = null;
 
     this._contentRequestContextID = null;
@@ -634,6 +636,10 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
   get contentPrincipal() {
     return this.isRemoteBrowser ? this._contentPrincipal : this.contentDocument.nodePrincipal;
+  }
+
+  get contentStoragePrincipal() {
+    return this.isRemoteBrowser ? this._contentStoragePrincipal : this.contentDocument.effectiveStoragePrincipal;
   }
 
   get csp() {
@@ -1439,7 +1445,7 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     this.messageManager.sendAsyncMessage("Browser:PurgeSessionHistory");
   }
 
-  createAboutBlankContentViewer(aPrincipal) {
+  createAboutBlankContentViewer(aPrincipal, aStoragePrincipal) {
     if (this.isRemoteBrowser) {
       // Ensure that the content process has the permissions which are
       // needed to create a document with the given principal.
@@ -1460,11 +1466,13 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       // So we'll continue to use the message manager until we come up with a better
       // solution.
       this.messageManager.sendAsyncMessage("BrowserElement:CreateAboutBlank",
-                                           aPrincipal);
+                                           {principal: aPrincipal,
+                                            storagePrincipal: aStoragePrincipal});
       return;
     }
     let principal = BrowserUtils.principalWithMatchingOA(aPrincipal, this.contentPrincipal);
-    this.docShell.createAboutBlankContentViewer(principal);
+    let storagePrincipal = BrowserUtils.principalWithMatchingOA(aStoragePrincipal, this.contentStoragePrincipal);
+    this.docShell.createAboutBlankContentViewer(principal, storagePrincipal);
   }
 
   stopScroll() {

@@ -410,7 +410,6 @@ struct JSStructuredCloneReader {
 
   BigInt* readBigInt(uint32_t data);
 
-  bool checkDouble(double d);
   MOZ_MUST_USE bool readTypedArray(uint32_t arrayType, uint32_t nelems,
                                    MutableHandleValue vp, bool v1Read = false);
   MOZ_MUST_USE bool readDataView(uint32_t byteLength, MutableHandleValue vp);
@@ -713,14 +712,11 @@ void SCInput::getPair(uint64_t data, uint32_t* tagp, uint32_t* datap) {
 }
 
 bool SCInput::readDouble(double* p) {
-  union {
-    uint64_t u;
-    double d;
-  } pun;
-  if (!read(&pun.u)) {
+  uint64_t u;
+  if (!read(&u)) {
     return false;
   }
-  *p = CanonicalizeNaN(pun.d);
+  *p = CanonicalizeNaN(mozilla::BitwiseCast<double>(u));
   return true;
 }
 
@@ -2007,15 +2003,6 @@ bool JSStructuredCloneWriter::write(HandleValue v) {
   return transferOwnership();
 }
 
-bool JSStructuredCloneReader::checkDouble(double d) {
-  if (!JS::IsCanonicalized(d)) {
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                              JSMSG_SC_BAD_SERIALIZED_DATA, "unrecognized NaN");
-    return false;
-  }
-  return true;
-}
-
 template <typename CharT>
 static UniquePtr<CharT[], JS::FreePolicy> AllocateChars(JSContext* cx,
                                                         size_t len) {
@@ -2420,10 +2407,10 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp) {
 
     case SCTAG_NUMBER_OBJECT: {
       double d;
-      if (!in.readDouble(&d) || !checkDouble(d)) {
+      if (!in.readDouble(&d)) {
         return false;
       }
-      vp.setDouble(d);
+      vp.setDouble(CanonicalizeNaN(d));
       if (!PrimitiveToObject(context(), vp)) {
         return false;
       }
@@ -2445,7 +2432,7 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp) {
 
     case SCTAG_DATE_OBJECT: {
       double d;
-      if (!in.readDouble(&d) || !checkDouble(d)) {
+      if (!in.readDouble(&d)) {
         return false;
       }
       JS::ClippedTime t = JS::TimeClip(d);
@@ -2594,10 +2581,7 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp) {
     default: {
       if (tag <= SCTAG_FLOAT_MAX) {
         double d = ReinterpretPairAsDouble(tag, data);
-        if (!checkDouble(d)) {
-          return false;
-        }
-        vp.setNumber(d);
+        vp.setNumber(CanonicalizeNaN(d));
         break;
       }
 

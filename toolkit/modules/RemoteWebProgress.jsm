@@ -216,6 +216,7 @@ class RemoteWebProgressManager {
         this._browser._contentTitle = json.title;
         this._browser._imageDocument = null;
         this._browser._contentPrincipal = json.principal;
+        this._browser._contentStoragePrincipal = json.storagePrincipal;
         this._browser._csp = E10SUtils.deserializeCSP(json.csp);
         this._browser._isSyntheticDocument = json.synthetic;
         this._browser._innerWindowID = json.innerWindowID;

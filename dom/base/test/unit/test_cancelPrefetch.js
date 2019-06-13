@@ -4,7 +4,6 @@ var prefetch = Cc["@mozilla.org/prefetch-service;1"].
 var ios = Services.io;
 var prefs = Services.prefs;
 
-Cu.importGlobalProperties(["DOMParser"]);
 var parser = new DOMParser();
 
 var doc;

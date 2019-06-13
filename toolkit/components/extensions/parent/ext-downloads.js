@@ -738,8 +738,8 @@ this.downloads = class extends ExtensionAPI {
 
             return new Promise((resolve, reject) => {
               let chromeWebNav = Services.appShell.createWindowlessBrowser(true);
-              chromeWebNav.docShell
-                .createAboutBlankContentViewer(Services.scriptSecurityManager.getSystemPrincipal());
+              let system = Services.scriptSecurityManager.getSystemPrincipal();
+              chromeWebNav.docShell.createAboutBlankContentViewer(system, system);
 
               let img = chromeWebNav.document.createElement("img");
               img.width = size;
