@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<html class="reftest-wait">
 <meta charset="utf-8">
 <title>CSS Overflow: Dynamically changing -webkit-box-orient when -webkit-line-clamp applies</title>
 <link rel="author" title="Cameron McCormack" href="mailto:cam@mcc.id.au">
@@ -24,8 +23,6 @@ Line 4
 Line 5</div>
 <p>Following content.</p>
 <script>
-window.onload = function() {
+  document.body.offsetTop;
   document.querySelector(".clamp").style.webkitBoxOrient = "horizontal";
-  document.documentElement.className = "";
-};
 </script>
