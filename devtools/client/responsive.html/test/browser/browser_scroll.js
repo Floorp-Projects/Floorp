@@ -12,11 +12,6 @@ const TEST_URL = "data:text/html;charset=utf-8," +
   "<div style=\"background:blue; width:200px; height:200px\"></div>";
 
 addRDMTask(TEST_URL, async function({ ui, manager }) {
-  info("Turning off keyboard APZ for this test.");
-  await SpecialPowers.pushPrefEnv({
-    set: [["apz.keyboard.enabled", false]],
-  });
-
   await setViewportSize(ui, manager, 100, 100);
   const browser = ui.getViewportBrowser();
 
