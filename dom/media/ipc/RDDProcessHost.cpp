@@ -261,16 +261,15 @@ void RDDProcessHost::DestroyProcess() {
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 /* static */
-bool RDDProcessHost::StaticFillMacSandboxInfo(MacSandboxInfo& aInfo) {
+void RDDProcessHost::StaticFillMacSandboxInfo(MacSandboxInfo& aInfo) {
   GeckoChildProcessHost::StaticFillMacSandboxInfo(aInfo);
   if (!aInfo.shouldLog && PR_GetEnv("MOZ_SANDBOX_RDD_LOGGING")) {
     aInfo.shouldLog = true;
   }
-  return true;
 }
 
-bool RDDProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
-  return RDDProcessHost::StaticFillMacSandboxInfo(aInfo);
+void RDDProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
+  RDDProcessHost::StaticFillMacSandboxInfo(aInfo);
 }
 
 /* static */
