@@ -25,13 +25,11 @@ class RemoteWebProgressManager {
   swapBrowser(aBrowser) {
     if (this._messageManager) {
       this._messageManager.removeMessageListener("Content:SecurityChange", this);
-      this._messageManager.removeMessageListener("Content:LoadURIResult", this);
     }
 
     this._browser = aBrowser;
     this._messageManager = aBrowser.messageManager;
     this._messageManager.addMessageListener("Content:SecurityChange", this);
-    this._messageManager.addMessageListener("Content:LoadURIResult", this);
   }
 
   swapListeners(aOtherRemoteWebProgressManager) {
@@ -146,14 +144,6 @@ class RemoteWebProgressManager {
 
   receiveMessage(aMessage) {
     let json = aMessage.json;
-    // This message is a custom one we send as a result of a loadURI call.
-    // It shouldn't go through the same processing as all the forwarded
-    // webprogresslistener messages.
-    if (aMessage.name == "Content:LoadURIResult") {
-      this._browser.isNavigating = false;
-      return;
-    }
-
     let webProgress = null;
     let isTopLevel = json.webProgress && json.webProgress.isTopLevel;
     // The top-level WebProgress is always the same, but because we don't
