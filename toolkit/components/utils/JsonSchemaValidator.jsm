@@ -71,6 +71,7 @@ function validateAndParseParamRecursive(param, properties) {
     case "URL":
     case "URLorEmpty":
     case "origin":
+    case "null":
       return validateAndParseSimpleParam(param, properties.type);
 
     case "array":
@@ -200,6 +201,10 @@ function validateAndParseSimpleParam(param, type) {
     // integer is an alias to "number" that some JSON schema tools use
     case "integer":
       valid = (typeof(param) == "number");
+      break;
+
+    case "null":
+      valid = param === null;
       break;
 
     case "origin":
