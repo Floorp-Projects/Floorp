@@ -101,7 +101,8 @@ enum class PartialUpdateFailReason {
   RebuildLimit,
   FrameType,
   Disabled,
-  Content
+  Content,
+  VisibleRect,
 };
 
 struct RetainedDisplayListMetrics {
@@ -146,6 +147,8 @@ struct RetainedDisplayListMetrics {
         return "Disabled";
       case PartialUpdateFailReason::Content:
         return "Content";
+      case PartialUpdateFailReason::VisibleRect:
+        return "VisibleRect";
       default:
         MOZ_ASSERT_UNREACHABLE("Enum value not handled!");
     }
@@ -254,6 +257,7 @@ struct RetainedDisplayListBuilder {
 
   nsDisplayListBuilder mBuilder;
   RetainedDisplayList mList;
+  nsRect mPreviousVisibleRect;
   WeakFrame mPreviousCaret;
   RetainedDisplayListMetrics mMetrics;
 };

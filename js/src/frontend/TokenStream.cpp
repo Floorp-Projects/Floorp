@@ -1992,7 +1992,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getDirective(
     }
 
     if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
-      if (unicode::IsSpaceOrBOM2(unit)) {
+      if (unicode::IsSpace(AssertedCast<Latin1Char>(unit))) {
         break;
       }
 
@@ -2016,13 +2016,13 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getDirective(
     // This ignores encoding errors: subsequent caller-side code to
     // handle the remaining source text in the comment will do so.
     PeekedCodePoint<Unit> peeked = this->sourceUnits.peekCodePoint();
-    if (peeked.isNone() || unicode::IsSpaceOrBOM2(peeked.codePoint())) {
+    if (peeked.isNone() || unicode::IsSpace(peeked.codePoint())) {
       break;
     }
 
     MOZ_ASSERT(!IsLineTerminator(peeked.codePoint()),
-               "!IsSpaceOrBOM2 must imply !IsLineTerminator or else we'll "
-               "fail to maintain line-info/flags for EOL");
+               "!IsSpace must imply !IsLineTerminator or else we'll fail to "
+               "maintain line-info/flags for EOL");
     this->sourceUnits.consumeKnownCodePoint(peeked);
 
     if (!appendCodePointToCharBuffer(peeked.codePoint())) {
@@ -2743,12 +2743,11 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
     }
 
     if (MOZ_UNLIKELY(!isAsciiCodePoint(unit))) {
-      // Non-ASCII code points can only be identifiers or whitespace.
-      // It would be nice to compute these *after* discarding whitespace,
-      // but IN A WORLD where |unicode::IsSpaceOrBOM2| requires consuming
-      // a variable number of code points, it's easier to assume it's an
-      // identifier and maybe do a little wasted work, than to unget and
-      // compute and reget if whitespace.
+      // Non-ASCII code points can only be identifiers or whitespace.  It would
+      // be nice to compute these *after* discarding whitespace, but IN A WORLD
+      // where |unicode::IsSpace| requires consuming a variable number of code
+      // units, it's easier to assume it's an identifier and maybe do a little
+      // wasted work, than to unget and compute and reget if whitespace.
       TokenStart start(this->sourceUnits, 0);
       const Unit* identStart = this->sourceUnits.addressOfNextCodeUnit();
 
@@ -2760,7 +2759,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
       }
 
       char32_t cp = peeked.codePoint();
-      if (unicode::IsSpaceOrBOM2(cp)) {
+      if (unicode::IsSpace(cp)) {
         this->sourceUnits.consumeKnownCodePoint(peeked);
         if (IsLineTerminator(cp)) {
           if (!updateLineInfoForEOL()) {
