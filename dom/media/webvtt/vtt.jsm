@@ -1263,9 +1263,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
             boxPositions.push(cueBox);
             LOG(`cue ${i}, ` + cueBox.getBoxInfoInChars());
           }
-        } else {
-          LOG(`can not find a proper position to place cue ${i}`);
-          rootOfCues.removeChild(styleBox.div);
         }
       }
     } else {
