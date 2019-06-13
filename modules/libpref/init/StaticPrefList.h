@@ -5249,34 +5249,6 @@ VARCACHE_PREF(
   bool, true
 )
 
-// Whether the computed value of line-height: normal returns the `normal`
-// keyword rather than a pixel value based on the first available font.
-//
-// Only enabled on Nightly and early beta, at least for now.
-//
-// NOTE(emilio): If / when removing this pref, the GETCS_NEEDS_LAYOUT_FLUSH flag
-// should be removed from line-height (and we should let -moz-block-height
-// compute to the keyword as well, which shouldn't be observable anyway since
-// it's an internal value).
-//
-// It'd be nice to make numbers compute also to themselves, but it looks like
-// everybody agrees on turning them into pixels, see the discussion starting
-// from [1].
-//
-// [1]: https://github.com/w3c/csswg-drafts/issues/3749#issuecomment-477287453
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
-VARCACHE_PREF(
-  Live,
-  "layout.css.line-height.normal-as-resolved-value.enabled",
-  layout_css_line_height_normal_as_resolved_value_enabled,
-  bool, PREF_VALUE
-)
-#undef PREF_VALUE
-
 //---------------------------------------------------------------------------
 // Prefs starting with "media."
 //---------------------------------------------------------------------------
