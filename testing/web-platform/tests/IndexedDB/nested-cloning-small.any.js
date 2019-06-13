@@ -1,14 +1,9 @@
-<!doctype html>
-<meta charset="utf8">
-<meta name="timeout" content="long">
-<title>IndexedDB: small nested objects are cloned correctly</title>
-<link rel="help" href="https://w3c.github.io/IndexedDB/#abort-transaction">
-<link rel="author" href="pwnall@chromium.org" title="Victor Costan">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="support-promises.js"></script>
-<script src="nested-cloning-common.js"></script>
-<script>
+// META: title=IndexedDB: small nested objects are cloned correctly
+// META: timeout=long
+// META: script=support-promises.js
+// META: script=nested-cloning-common.js
+// META: global=window,dedicatedworker,sharedworker,serviceworker
+'use strict';
 
 cloningTest('small typed array', [
   { type: 'buffer', size: 64, seed: 1 },
@@ -43,5 +38,3 @@ cloningTestWithKeyGenerator('array of blobs and small typed arrays', [
     { type: 'blob', size: wrapThreshold, mimeType: 'text/x-blink-05', seed: 5 },
   ],
 ]);
-
-</script>
