@@ -12,7 +12,8 @@ add_task(async function() {
   // Turn on BC preservation and frameloader rebuilding to ensure that the
   // BrowsingContext is preserved.
   await SpecialPowers.pushPrefEnv({set: [["fission.preserve_browsing_contexts", true],
-                                         ["fission.rebuild_frameloaders_on_remoteness_change", true]]});
+                                         ["fission.rebuild_frameloaders_on_remoteness_change", true],
+                                         ["browser.tabs.remote.useHTTPResponseProcessSelection", true]]});
 
   // Open a window with fission force-enabled in it.
   let win = await BrowserTestUtils.openNewBrowserWindow({fission: true, remote: true});
