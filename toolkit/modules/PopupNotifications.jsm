@@ -636,16 +636,23 @@ PopupNotifications.prototype = {
   },
 
   /**
-   * Removes a Notification.
-   * @param notification
-   *        The Notification object to remove.
+   * Removes one or many Notifications.
+   * @param {Notification|Notification[]} notification - The Notification object/s to remove.
    */
   remove: function PopupNotifications_remove(notification) {
-    this._remove(notification);
+    let notificationArray = Array.isArray(notification) ? notification : [notification];
+    let activeBrowser;
 
-    if (this._isActiveBrowser(notification.browser)) {
-      let notifications = this._getNotificationsForBrowser(notification.browser);
-      this._update(notifications);
+    notificationArray.forEach((n) => {
+      this._remove(n);
+      if (!activeBrowser && this._isActiveBrowser(n.browser)) {
+        activeBrowser = n.browser;
+      }
+    });
+
+    if (activeBrowser) {
+      let browserNotifications = this._getNotificationsForBrowser(activeBrowser);
+      this._update(browserNotifications);
     }
   },
 
