@@ -652,7 +652,7 @@ asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html 
 == 370629-1.html 370629-1-ref.html
 == 370629-2.html 370629-2-ref.html
 == 370692-1.xhtml 370692-1-ref.xhtml
-pref(layout.css.line-height.normal-as-resolved-value.enabled,false) == 371041-1.html 371041-1-ref.html
+== 371041-1.html 371041-1-ref.html
 == 371043-1.html 371043-1-ref.html
 == 371354-1.html 371354-1-ref.html
 == 371483-1.html about:blank # assertion test
