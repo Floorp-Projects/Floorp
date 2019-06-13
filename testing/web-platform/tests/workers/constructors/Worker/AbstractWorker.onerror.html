@@ -16,7 +16,7 @@ async_test(function() {
     assert_equals('' + a, '[object ErrorEvent]');
     assert_true("message" in a, 'ErrorEvent.message');
     assert_equals(typeof a.message, "string", 'ErrorEvent.message');
-    assert_equals(a.filename, document.URL + '#', 'ErrorEvent.filename');
+    assert_equals(a.filename, document.URL.replace('.html', '.js'), 'ErrorEvent.filename');
     assert_true("lineno" in a, 'ErrorEvent.lineno');
     assert_equals(typeof a.lineno, "number", 'ErrorEvent.lineno');
     assert_equals(b, undefined, 'unexpected second argument to onerror');
