@@ -42,6 +42,12 @@ add_task(async function() {
 
 async function overflowTabs() {
   let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
+  const originalSmoothScroll = arrowScrollbox.smoothScroll;
+  arrowScrollbox.smoothScroll = false;
+  registerCleanupFunction(() => {
+    arrowScrollbox.smoothScroll = originalSmoothScroll;
+  });
+
   let width = ele => ele.getBoundingClientRect().width;
   let tabMinWidth = parseInt(getComputedStyle(gBrowser.selectedTab, null).minWidth);
   let tabCountForOverflow = Math.ceil(width(arrowScrollbox) / tabMinWidth * 1.1);
