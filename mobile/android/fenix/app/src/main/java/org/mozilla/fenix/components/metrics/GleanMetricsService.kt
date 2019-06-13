@@ -93,14 +93,14 @@ private val Event.wrapper
             { ContextMenu.itemTappedKeys.valueOf(it) }
         )
         is Event.CrashReporterOpened -> EventWrapper<NoExtraKeys>(
-            { CrashReporter.opened }
+            { CrashReporter.opened.record(it) }
         )
         is Event.CrashReporterClosed -> EventWrapper(
-            { CrashReporter.closed },
+            { CrashReporter.closed.record(it) },
             { CrashReporter.closedKeys.valueOf(it) }
         )
         is Event.BrowserMenuItemTapped -> EventWrapper(
-            { Events.browserMenuAction },
+            { Events.browserMenuAction.record(it) },
             { Events.browserMenuActionKeys.valueOf(it) }
         )
         is Event.QuickActionSheetOpened -> EventWrapper<NoExtraKeys>(
@@ -185,11 +185,11 @@ private val Event.wrapper
             { Library.closed.record(it) }
         )
         is Event.LibrarySelectedItem -> EventWrapper(
-            { Library.selectedItem },
+            { Library.selectedItem.record(it) },
             { Library.selectedItemKeys.valueOf(it) }
         )
         is Event.ErrorPageVisited -> EventWrapper(
-            { ErrorPage.visitedError },
+            { ErrorPage.visitedError.record(it) },
             { ErrorPage.visitedErrorKeys.valueOf(it) }
         )
         is Event.SyncAuthOpened -> EventWrapper<NoExtraKeys>(
