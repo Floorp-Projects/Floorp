@@ -222,7 +222,7 @@ nsScriptErrorBase::Init(const nsAString& message, const nsAString& sourceName,
                         bool fromChromeContext) {
   InitializationHelper(message, sourceLine, lineNumber, columnNumber, flags,
                        category ? nsDependentCString(category) : EmptyCString(),
-                       0 /* inner Window ID */);
+                       0 /* inner Window ID */, fromChromeContext);
   AssignSourceNameHelper(mSourceName, sourceName);
 
   mIsFromPrivateWindow = fromPrivateWindow;
@@ -233,7 +233,7 @@ nsScriptErrorBase::Init(const nsAString& message, const nsAString& sourceName,
 void nsScriptErrorBase::InitializationHelper(
     const nsAString& message, const nsAString& sourceLine, uint32_t lineNumber,
     uint32_t columnNumber, uint32_t flags, const nsACString& category,
-    uint64_t aInnerWindowID) {
+    uint64_t aInnerWindowID, bool aFromChromeContext) {
   mMessage.Assign(message);
   mLineNumber = lineNumber;
   mSourceLine.Assign(sourceLine);
@@ -242,6 +242,7 @@ void nsScriptErrorBase::InitializationHelper(
   mCategory = category;
   mTimeStamp = JS_Now() / 1000;
   mInnerWindowID = aInnerWindowID;
+  mIsFromChromeContext = aFromChromeContext;
 }
 
 NS_IMETHODIMP
@@ -250,9 +251,10 @@ nsScriptErrorBase::InitWithWindowID(const nsAString& message,
                                     const nsAString& sourceLine,
                                     uint32_t lineNumber, uint32_t columnNumber,
                                     uint32_t flags, const nsACString& category,
-                                    uint64_t aInnerWindowID) {
+                                    uint64_t aInnerWindowID,
+                                    bool aFromChromeContext) {
   InitializationHelper(message, sourceLine, lineNumber, columnNumber, flags,
-                       category, aInnerWindowID);
+                       category, aInnerWindowID, aFromChromeContext);
   AssignSourceNameHelper(mSourceName, sourceName);
 
   if (aInnerWindowID && NS_IsMainThread()) InitializeOnMainThread();
@@ -264,9 +266,10 @@ NS_IMETHODIMP
 nsScriptErrorBase::InitWithSanitizedSource(
     const nsAString& message, const nsAString& sourceName,
     const nsAString& sourceLine, uint32_t lineNumber, uint32_t columnNumber,
-    uint32_t flags, const nsACString& category, uint64_t aInnerWindowID) {
+    uint32_t flags, const nsACString& category, uint64_t aInnerWindowID,
+    bool aFromChromeContext) {
   InitializationHelper(message, sourceLine, lineNumber, columnNumber, flags,
-                       category, aInnerWindowID);
+                       category, aInnerWindowID, aFromChromeContext);
   mSourceName = sourceName;
 
   if (aInnerWindowID && NS_IsMainThread()) InitializeOnMainThread();
@@ -280,9 +283,10 @@ nsScriptErrorBase::InitWithSourceURI(const nsAString& message,
                                      const nsAString& sourceLine,
                                      uint32_t lineNumber, uint32_t columnNumber,
                                      uint32_t flags, const nsACString& category,
-                                     uint64_t aInnerWindowID) {
+                                     uint64_t aInnerWindowID,
+                                     bool aFromChromeContext) {
   InitializationHelper(message, sourceLine, lineNumber, columnNumber, flags,
-                       category, aInnerWindowID);
+                       category, aInnerWindowID, aFromChromeContext);
   AssignSourceNameHelper(sourceURI, mSourceName);
 
   if (aInnerWindowID && NS_IsMainThread()) InitializeOnMainThread();

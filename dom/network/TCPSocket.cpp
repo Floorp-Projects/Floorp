@@ -237,16 +237,15 @@ nsresult TCPSocket::Init() {
   nsCOMPtr<nsISocketTransportService> sts =
       do_GetService("@mozilla.org/network/socket-transport-service;1");
 
-  const char* socketTypes[1];
+  AutoTArray<nsCString, 1> socketTypes;
   if (mSsl) {
-    socketTypes[0] = "ssl";
+    socketTypes.AppendElement(NS_LITERAL_CSTRING("ssl"));
   } else {
-    socketTypes[0] = "starttls";
+    socketTypes.AppendElement(NS_LITERAL_CSTRING("starttls"));
   }
   nsCOMPtr<nsISocketTransport> transport;
-  nsresult rv =
-      sts->CreateTransport(socketTypes, 1, NS_ConvertUTF16toUTF8(mHost), mPort,
-                           nullptr, getter_AddRefs(transport));
+  nsresult rv = sts->CreateTransport(socketTypes, NS_ConvertUTF16toUTF8(mHost),
+                                     mPort, nullptr, getter_AddRefs(transport));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return InitWithUnconnectedTransport(transport);

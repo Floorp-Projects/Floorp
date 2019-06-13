@@ -880,7 +880,6 @@ class nsFrameSelection final {
 
   int8_t mCaretMovementStyle = 0;
 
-  static bool sSelectionEventsEnabled;
   static bool sSelectionEventsOnTextControlsEnabled;
 };
 

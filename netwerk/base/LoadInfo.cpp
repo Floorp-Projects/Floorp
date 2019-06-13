@@ -74,6 +74,7 @@ LoadInfo::LoadInfo(
       mBrowserWouldUpgradeInsecureRequests(false),
       mForceAllowDataURI(false),
       mAllowInsecureRedirectToDataURI(false),
+      mBypassCORSChecks(false),
       mSkipContentPolicyCheckForWebRequest(false),
       mOriginalFrameSrcLoad(false),
       mForceInheritPrincipalDropped(false),
@@ -332,6 +333,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mBrowserWouldUpgradeInsecureRequests(false),
       mForceAllowDataURI(false),
       mAllowInsecureRedirectToDataURI(false),
+      mBypassCORSChecks(false),
       mSkipContentPolicyCheckForWebRequest(false),
       mOriginalFrameSrcLoad(false),
       mForceInheritPrincipalDropped(false),
@@ -435,6 +437,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
           rhs.mBrowserWouldUpgradeInsecureRequests),
       mForceAllowDataURI(rhs.mForceAllowDataURI),
       mAllowInsecureRedirectToDataURI(rhs.mAllowInsecureRedirectToDataURI),
+      mBypassCORSChecks(rhs.mBypassCORSChecks),
       mSkipContentPolicyCheckForWebRequest(
           rhs.mSkipContentPolicyCheckForWebRequest),
       mOriginalFrameSrcLoad(rhs.mOriginalFrameSrcLoad),
@@ -483,7 +486,7 @@ LoadInfo::LoadInfo(
     LoadTainting aTainting, bool aUpgradeInsecureRequests,
     bool aBrowserUpgradeInsecureRequests,
     bool aBrowserWouldUpgradeInsecureRequests, bool aForceAllowDataURI,
-    bool aAllowInsecureRedirectToDataURI,
+    bool aAllowInsecureRedirectToDataURI, bool aBypassCORSChecks,
     bool aSkipContentPolicyCheckForWebRequest,
     bool aForceInheritPrincipalDropped, uint64_t aInnerWindowID,
     uint64_t aOuterWindowID, uint64_t aParentOuterWindowID,
@@ -522,6 +525,7 @@ LoadInfo::LoadInfo(
           aBrowserWouldUpgradeInsecureRequests),
       mForceAllowDataURI(aForceAllowDataURI),
       mAllowInsecureRedirectToDataURI(aAllowInsecureRedirectToDataURI),
+      mBypassCORSChecks(aBypassCORSChecks),
       mSkipContentPolicyCheckForWebRequest(
           aSkipContentPolicyCheckForWebRequest),
       mOriginalFrameSrcLoad(false),
@@ -929,6 +933,18 @@ NS_IMETHODIMP
 LoadInfo::GetAllowInsecureRedirectToDataURI(
     bool* aAllowInsecureRedirectToDataURI) {
   *aAllowInsecureRedirectToDataURI = mAllowInsecureRedirectToDataURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetBypassCORSChecks(bool aBypassCORSChecks) {
+  mBypassCORSChecks = aBypassCORSChecks;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetBypassCORSChecks(bool* aBypassCORSChecks) {
+  *aBypassCORSChecks = mBypassCORSChecks;
   return NS_OK;
 }
 

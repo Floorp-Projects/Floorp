@@ -40,19 +40,16 @@ nsresult nsNetworkInfoService::ListNetworkAddresses(
   }
 
   uint32_t addrCount = addrMap.Count();
-  const char** addrStrings =
-      (const char**)malloc(sizeof(*addrStrings) * addrCount);
-  if (!addrStrings) {
+  nsTArray<nsCString> addrStrings;
+  if (!addrStrings.SetCapacity(addrCount, fallible)) {
     aListener->OnListNetworkAddressesFailed();
     return NS_OK;
   }
-  auto autoFreeAddrStrings = MakeScopeExit([&] { free(addrStrings); });
 
-  uint32_t idx = 0;
   for (auto iter = addrMap.Iter(); !iter.Done(); iter.Next()) {
-    addrStrings[idx++] = iter.Data().get();
+    addrStrings.AppendElement(iter.Data());
   }
-  aListener->OnListedNetworkAddresses(addrStrings, addrCount);
+  aListener->OnListedNetworkAddresses(addrStrings);
   return NS_OK;
 }
 

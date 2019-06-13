@@ -1985,7 +1985,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
       return Ok();
 
     case JSOP_BIGINT:
-      pushConstant(info().getConst(pc));
+      pushConstant(BigIntValue(info().getBigInt(pc)));
       return Ok();
 
     case JSOP_STRING:

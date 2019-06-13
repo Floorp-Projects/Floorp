@@ -9,7 +9,6 @@
 
 #include "gfxTypes.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/RefPtr.h"
 #include "CanvasRenderingContextHelper.h"

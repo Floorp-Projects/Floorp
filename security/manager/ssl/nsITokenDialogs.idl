@@ -10,13 +10,6 @@ interface nsIProtectedAuthThread;
 [scriptable, uuid(a1cbc159-468c-495d-8068-61dd538cbcca)]
 interface nsITokenDialogs : nsISupports
 {
-  [must_use]
-  void ChooseToken(in nsIInterfaceRequestor ctx,
-                   [array, size_is(count)] in wstring tokenNameList,
-                   in unsigned long count,
-                   out AString tokenName,
-                   out boolean canceled);
-
   /**
    * Displays notification dialog to the user that they are expected to
    * authenticate to the token using its "protected authentication path" feature.

@@ -25,5 +25,5 @@ config = {
     "minidump_stackwalk_path": "linux64-minidump_stackwalk",
     "per_test_category": "web-platform",
     "tooltool_cache": os.environ.get("TOOLTOOL_CACHE"),
-    "tooltool_servers": ['http://relengapi/tooltool/'],
+    "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/'],
 }

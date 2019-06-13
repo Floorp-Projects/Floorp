@@ -9,7 +9,6 @@
   <body>
     <script class="testbody" type="application/javascript">
       const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-      Services.prefs.setBoolPref("plugins.click_to_play", true);
       var pluginHost = Cc["@mozilla.org/plugin/host;1"]
                        .getService(Ci.nsIPluginHost);
 
@@ -28,8 +27,6 @@
 
       testPlugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
       is(pluginHost.getStateForType("application/x-test"), Ci.nsIPluginTag.STATE_CLICKTOPLAY, "click-to-play should be on for Test Plug-in now");
-
-      Services.prefs.clearUserPref("plugins.click_to_play");
     </script>
   </body>
 </html>

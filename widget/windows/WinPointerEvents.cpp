@@ -22,15 +22,12 @@ WinPointerEvents::GetPointerTypePtr WinPointerEvents::getPointerType = nullptr;
 WinPointerEvents::GetPointerInfoPtr WinPointerEvents::getPointerInfo = nullptr;
 WinPointerEvents::GetPointerPenInfoPtr WinPointerEvents::getPointerPenInfo =
     nullptr;
-bool WinPointerEvents::sPointerEventEnabled = true;
 bool WinPointerEvents::sFirePointerEventsByWinPointerMessages = false;
 
 WinPointerEvents::WinPointerEvents() {
   InitLibrary();
   static bool addedPointerEventEnabled = false;
   if (!addedPointerEventEnabled) {
-    Preferences::AddBoolVarCache(&sPointerEventEnabled,
-                                 "dom.w3c_pointer_events.enabled", true);
     Preferences::AddBoolVarCache(
         &sFirePointerEventsByWinPointerMessages,
         "dom.w3c_pointer_events.dispatch_by_pointer_messages", false);
@@ -73,7 +70,7 @@ bool WinPointerEvents::ShouldHandleWinPointerMessages(UINT aMsg,
                                                       WPARAM aWParam) {
   MOZ_ASSERT(aMsg == WM_POINTERDOWN || aMsg == WM_POINTERUP ||
              aMsg == WM_POINTERUPDATE || aMsg == WM_POINTERLEAVE);
-  if (!sLibraryHandle || !sPointerEventEnabled) {
+  if (!sLibraryHandle || !StaticPrefs::dom_w3c_pointer_events_enabled()) {
     return false;
   }
 
@@ -135,13 +132,13 @@ bool WinPointerEvents::ShouldRollupOnPointerEvent(UINT aMsg, WPARAM aWParam) {
 }
 
 bool WinPointerEvents::ShouldFirePointerEventByWinPointerMessages() {
-  MOZ_ASSERT(sLibraryHandle && sPointerEventEnabled);
+  MOZ_ASSERT(sLibraryHandle && StaticPrefs::dom_w3c_pointer_events_enabled());
   return sFirePointerEventsByWinPointerMessages;
 }
 
 WinPointerInfo* WinPointerEvents::GetCachedPointerInfo(UINT aMsg,
                                                        WPARAM aWParam) {
-  if (!sLibraryHandle || !sPointerEventEnabled ||
+  if (!sLibraryHandle || !StaticPrefs::dom_w3c_pointer_events_enabled() ||
       MOUSE_INPUT_SOURCE() != dom::MouseEvent_Binding::MOZ_SOURCE_PEN ||
       ShouldFirePointerEventByWinPointerMessages()) {
     return nullptr;

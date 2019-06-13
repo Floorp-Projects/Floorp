@@ -32,6 +32,7 @@
 #include "nsGlobalWindow.h"
 #include "nsXBLPrototypeBinding.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/Element.h"
@@ -583,6 +584,15 @@ bool nsJSUtils::GetScopeChainForXBL(
 
 /* static */
 void nsJSUtils::ResetTimeZone() { JS::ResetTimeZone(); }
+
+/* static */
+bool nsJSUtils::DumpEnabled() {
+#if defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP)
+  return true;
+#else
+  return StaticPrefs::browser_dom_window_dump_enabled();
+#endif
+}
 
 //
 // nsDOMJSUtils.h

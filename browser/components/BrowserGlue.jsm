@@ -2271,7 +2271,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 83;
+    const UI_VERSION = 84;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -2579,6 +2579,20 @@ BrowserGlue.prototype = {
 
     if (currentUIVersion < 83) {
       Services.prefs.clearUserPref("browser.search.reset.status");
+    }
+
+    if (currentUIVersion < 84) {
+      // Reset flash "always allow/block" permissions
+      // We keep session and policy permissions, which could both be
+      // the result of enterprise policy settings. "Never/Always allow"
+      // settings for flash were actually time-bound on recent-ish Firefoxen,
+      // so we remove EXPIRE_TIME entries, too.
+      const {EXPIRE_NEVER, EXPIRE_TIME} = Services.perms;
+      let flashPermissions =
+        Services.perms.getAllWithTypePrefix("plugin:flash").filter(p =>
+          p.type == "plugin:flash" &&
+          (p.expireType == EXPIRE_NEVER || p.expireType == EXPIRE_TIME));
+      flashPermissions.forEach(p => Services.perms.removePermission(p));
     }
 
     // Update the migration version.

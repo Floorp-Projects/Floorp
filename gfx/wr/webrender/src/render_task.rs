@@ -19,10 +19,10 @@ use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use crate::glyph_rasterizer::GpuGlyphCacheKey;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind, SnapOffsets};
-use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex};
+use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex, TextureSource};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
-use crate::prim_store::PictureIndex;
+use crate::prim_store::{PictureIndex, PrimitiveVisibilityMask};
 use crate::prim_store::image::ImageCacheKey;
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
 use crate::prim_store::line_dec::LineDecorationCacheKey;
@@ -75,7 +75,6 @@ impl RenderTaskId {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskAddress(pub u16);
 
-#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskGraph {
@@ -457,6 +456,16 @@ pub enum RenderTaskLocation {
         /// The target region within the above layer.
         rect: DeviceIntRect,
     },
+    /// This render task will be drawn to a picture cache texture that is
+    /// persisted between both frames and scenes, if the content remains valid.
+    PictureCache {
+        /// The texture ID to draw to.
+        texture: TextureSource,
+        /// Slice index in the texture array to draw to.
+        layer: i32,
+        /// Size in device pixels of this picture cache tile.
+        size: DeviceIntSize,
+    },
 }
 
 impl RenderTaskLocation {
@@ -473,6 +482,7 @@ impl RenderTaskLocation {
             RenderTaskLocation::Fixed(rect) => rect.size,
             RenderTaskLocation::Dynamic(_, size) => *size,
             RenderTaskLocation::TextureCache { rect, .. } => rect.size,
+            RenderTaskLocation::PictureCache { size, .. } => *size,
         }
     }
 }
@@ -497,17 +507,6 @@ pub struct ClipRegionTask {
     pub device_pixel_scale: DevicePixelScale,
 }
 
-#[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct TileBlit {
-    pub target: CacheItem,
-    pub src_offset: DeviceIntPoint,
-    pub dest_offset: DeviceIntPoint,
-    pub size: DeviceIntSize,
-}
-
-#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureTask {
@@ -515,10 +514,12 @@ pub struct PictureTask {
     pub can_merge: bool,
     pub content_origin: DeviceIntPoint,
     pub uv_rect_handle: GpuCacheHandle,
-    pub root_spatial_node_index: SpatialNodeIndex,
     pub surface_spatial_node_index: SpatialNodeIndex,
     uv_rect_kind: UvRectKind,
     device_pixel_scale: DevicePixelScale,
+    /// A bitfield that describes which dirty regions should be included
+    /// in batches built for this picture task.
+    pub vis_mask: PrimitiveVisibilityMask,
 }
 
 #[derive(Debug)]
@@ -621,7 +622,6 @@ pub struct RenderTaskData {
     pub data: [f32; FLOATS_PER_RENDER_TASK_INFO],
 }
 
-#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTaskKind {
@@ -703,7 +703,6 @@ impl BlurTaskKey {
     }
 }
 
-#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTask {
@@ -754,14 +753,15 @@ impl RenderTask {
         pic_index: PictureIndex,
         content_origin: DeviceIntPoint,
         uv_rect_kind: UvRectKind,
-        root_spatial_node_index: SpatialNodeIndex,
         surface_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
+        vis_mask: PrimitiveVisibilityMask,
     ) -> Self {
         let size = match location {
             RenderTaskLocation::Dynamic(_, size) => size,
             RenderTaskLocation::Fixed(rect) => rect.size,
             RenderTaskLocation::TextureCache { rect, .. } => rect.size,
+            RenderTaskLocation::PictureCache { size, .. } => size,
         };
 
         render_task_sanity_check(&size);
@@ -778,9 +778,9 @@ impl RenderTask {
                 can_merge,
                 uv_rect_handle: GpuCacheHandle::new(),
                 uv_rect_kind,
-                root_spatial_node_index,
                 surface_spatial_node_index,
                 device_pixel_scale,
+                vis_mask,
             }),
             clear_mode: ClearMode::Transparent,
             saved_index: None,
@@ -1347,6 +1347,7 @@ impl RenderTask {
             RenderTaskLocation::Fixed(..) => DeviceIntSize::zero(),
             RenderTaskLocation::Dynamic(_, size) => size,
             RenderTaskLocation::TextureCache { rect, .. } => rect.size,
+            RenderTaskLocation::PictureCache { size, .. } => size,
         }
     }
 
@@ -1377,6 +1378,15 @@ impl RenderTask {
             }
             RenderTaskLocation::TextureCache {layer, rect, .. } => {
                 (rect, RenderTargetIndex(layer as usize))
+            }
+            RenderTaskLocation::PictureCache { size, layer, .. } => {
+                (
+                    DeviceIntRect::new(
+                        DeviceIntPoint::zero(),
+                        size,
+                    ),
+                    RenderTargetIndex(layer as usize),
+                )
             }
         }
     }
@@ -1535,7 +1545,8 @@ impl RenderTask {
             RenderTaskLocation::Dynamic(..) => {
                 self.saved_index = Some(SavedTargetIndex::PENDING);
             }
-            RenderTaskLocation::TextureCache { .. } => {
+            RenderTaskLocation::TextureCache { .. } |
+            RenderTaskLocation::PictureCache { .. } => {
                 panic!("Unable to mark a permanently cached task for saving!");
             }
         }
@@ -1645,6 +1656,7 @@ impl RenderTaskCache {
         // Find out what size to alloc in the texture cache.
         let size = match render_task.location {
             RenderTaskLocation::Fixed(..) |
+            RenderTaskLocation::PictureCache { .. } |
             RenderTaskLocation::TextureCache { .. } => {
                 panic!("BUG: dynamic task was expected");
             }

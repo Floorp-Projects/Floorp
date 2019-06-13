@@ -1,9 +1,9 @@
 == filter-grayscale.yaml filter-grayscale-ref.yaml
-platform(linux,mac) == draw_calls(6) color_targets(6) alpha_targets(0) filter-blur.yaml filter-blur.png
+platform(linux,mac) == draw_calls(7) color_targets(7) alpha_targets(0) filter-blur.yaml filter-blur.png
 == isolated.yaml isolated-ref.yaml
 == invisible.yaml invisible-ref.yaml
-color_targets(1) alpha_targets(0) == opacity.yaml opacity-ref.yaml
-color_targets(1) alpha_targets(0) == opacity-combined.yaml opacity-combined-ref.yaml
+color_targets(2) alpha_targets(0) == opacity.yaml opacity-ref.yaml
+color_targets(2) alpha_targets(0) == opacity-combined.yaml opacity-combined-ref.yaml
 == opacity-overlap.yaml opacity-overlap-ref.yaml
 == filter-brightness.yaml filter-brightness-ref.yaml
 == filter-brightness-2.yaml filter-brightness-2-ref.yaml
@@ -15,7 +15,7 @@ skip_on(android,device) == filter-color-matrix.yaml filter-color-matrix-ref.yaml
 == filter-invert.yaml filter-invert-ref.yaml
 == filter-invert-2.yaml filter-invert-2-ref.yaml
 platform(linux,mac) fuzzy(1,133) == filter-large-blur-radius.yaml filter-large-blur-radius.png
-skip_on(android) == draw_calls(4) color_targets(4) alpha_targets(0) filter-small-blur-radius.yaml filter-small-blur-radius.png  # fails on Android emulator and Pixel2
+skip_on(android) == draw_calls(6) color_targets(6) alpha_targets(0) filter-small-blur-radius.yaml filter-small-blur-radius.png  # fails on Android emulator and Pixel2
 == filter-saturate-red-1.yaml filter-saturate-red-1-ref.yaml
 == filter-saturate-red-2.yaml filter-saturate-red-2-ref.yaml
 == filter-saturate-red-3.yaml filter-saturate-red-3-ref.yaml
@@ -28,7 +28,7 @@ skip_on(android) == draw_calls(4) color_targets(4) alpha_targets(0) filter-small
 == filter-saturate-red-alpha-1.yaml filter-saturate-red-alpha-1-ref.yaml
 == filter-saturate-green-alpha-1.yaml filter-saturate-green-alpha-1-ref.yaml
 == filter-saturate-blue-alpha-1.yaml filter-saturate-blue-alpha-1-ref.yaml
-== filter-hue-rotate-1.yaml filter-hue-rotate-1-ref.yaml
+fuzzy(1,1) == filter-hue-rotate-1.yaml filter-hue-rotate-1-ref.yaml
 skip_on(android,device) == filter-hue-rotate-alpha-1.yaml filter-hue-rotate-alpha-1-ref.yaml  # Fails on Pixel2
 skip_on(android) fuzzy(1,14) == filter-long-chain.yaml filter-long-chain.png  # fails on Android emulator and Pixel2
 platform(linux,mac) == filter-drop-shadow.yaml filter-drop-shadow.png

@@ -362,7 +362,8 @@ impl SpatialNode {
                                 cur_transform.flatten_z_output();
                             }
                             let world_transform = cur_transform.post_mul(&parent_system.world_transform);
-                            info.invertible = world_transform.determinant() != 0.0;
+                            let determinant = world_transform.determinant();
+                            info.invertible = determinant != 0.0 && !determinant.is_nan();
 
                             CoordinateSystem {
                                 transform,

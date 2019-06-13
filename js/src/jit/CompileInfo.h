@@ -293,9 +293,7 @@ class CompileInfo {
 
   inline JSFunction* getFunction(jsbytecode* pc) const;
 
-  const Value& getConst(jsbytecode* pc) const {
-    return script_->getConst(GET_UINT32_INDEX(pc));
-  }
+  BigInt* getBigInt(jsbytecode* pc) const { return script_->getBigInt(pc); }
 
   jssrcnote* getNote(GSNCache& gsn, jsbytecode* pc) const {
     return GetSrcNote(gsn, script(), pc);

@@ -4,11 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-// The WebIDL compiler does not accept a Pref-ed interface exposed to any scopes
-// other than *only* `Window`, so the Func is Pref-ed instead.
 [Constructor(boolean serializable, boolean deserializable),
  Exposed=(Window,Worker),
- Func="mozilla::dom::DOMPrefs::dom_testing_structuredclonetester_enabled"]
+ Pref="dom.testing.structuredclonetester.enabled"]
 interface StructuredCloneTester {
   readonly attribute boolean serializable;
   readonly attribute boolean deserializable;

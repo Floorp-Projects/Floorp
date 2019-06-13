@@ -24,6 +24,7 @@
 #include "p12plcy.h"
 #include "mozpkix/pkixtypes.h"
 #include "secerr.h"
+#include "p12plcy.h"
 
 using namespace mozilla;
 extern LazyLogModule gPIPNSSLog;

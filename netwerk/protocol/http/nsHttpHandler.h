@@ -120,9 +120,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   PRIntervalTime ResponseTimeoutEnabled() { return mResponseTimeoutEnabled; }
   uint32_t NetworkChangedTimeout() { return mNetworkChangedTimeout; }
   uint16_t MaxRequestAttempts() { return mMaxRequestAttempts; }
-  const char* DefaultSocketType() {
-    return mDefaultSocketType.IsVoid() ? nullptr : mDefaultSocketType.get();
-  }
+  const nsCString& DefaultSocketType() { return mDefaultSocketType; }
   uint32_t PhishyUserPassLength() { return mPhishyUserPassLength; }
   uint8_t GetQoSBits() { return mQoSBits; }
   uint16_t GetIdleSynTimeout() { return mIdleSynTimeout; }

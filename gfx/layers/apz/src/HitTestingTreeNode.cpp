@@ -6,6 +6,7 @@
 
 #include "AsyncPanZoomController.h"   // for AsyncPanZoomController
 #include "LayersLogging.h"            // for Stringify
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/gfx/Point.h"        // for Point4D
 #include "mozilla/layers/APZUtils.h"  // for CompleteAsyncTransform
 #include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform::operator Matrix4x4()
@@ -272,7 +273,7 @@ CompositorHitTestInfo HitTestingTreeNode::HitTest(
     if (mEventRegions.mDTCRequiresTargetConfirmation) {
       result += CompositorHitTestFlags::eRequiresTargetConfirmation;
     }
-  } else if (StaticPrefs::TouchActionEnabled()) {
+  } else if (StaticPrefs::layout_css_touch_action_enabled()) {
     if (mEventRegions.mNoActionRegion.Contains(point.x, point.y)) {
       // set all the touch-action flags as disabled
       result += CompositorHitTestTouchActionMask;

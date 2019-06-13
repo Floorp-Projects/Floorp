@@ -25,9 +25,8 @@ interface nsISocketTransportService : nsISupports
      * Creates a transport for a specified host and port.
      *
      * @param aSocketTypes
-     *        array of socket type strings.  null if using default socket type.
-     * @param aTypeCount
-     *        specifies length of aSocketTypes.
+     *        array of socket type strings.  Empty array if using default
+     *        socket type.
      * @param aHost
      *        specifies the target hostname or IP address literal of the peer
      *        for this socket.
@@ -43,9 +42,7 @@ interface nsISocketTransportService : nsISupports
      *
      * NOTE: this function can be called from any thread
      */
-    nsISocketTransport createTransport([array, size_is(aTypeCount)]
-                                       in string aSocketTypes,
-                                       in unsigned long aTypeCount,
+    nsISocketTransport createTransport(in Array<ACString> aSocketTypes,
                                        in AUTF8String aHost,
                                        in long aPort,
                                        in nsIProxyInfo aProxyInfo);
@@ -138,9 +135,7 @@ interface nsIRoutedSocketTransportService : nsISocketTransportService
 {
     // use this instead of createTransport when you have a transport
     // that distinguishes between origin and route (aka connection)
-    nsISocketTransport createRoutedTransport([array, size_is(aTypeCount)]
-                                             in string aSocketTypes,
-                                             in unsigned long aTypeCount,
+    nsISocketTransport createRoutedTransport(in Array<ACString> aSocketTypes,
                                              in AUTF8String aHost, // origin
                                              in long aPort, // origin
                                              in AUTF8String aHostRoute,

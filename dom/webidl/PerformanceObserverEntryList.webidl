@@ -14,7 +14,7 @@ dictionary PerformanceEntryFilterOptions {
   DOMString initiatorType;
 };
 
-[Func="mozilla::dom::DOMPrefs::dom_enable_performance_observer",
+[Pref="dom.enable_performance_observer",
  Exposed=(Window,Worker)]
 interface PerformanceObserverEntryList {
   PerformanceEntryList getEntries(optional PerformanceEntryFilterOptions filter);

@@ -1000,6 +1000,7 @@ using GCPtrNativeObject = GCPtr<NativeObject*>;
 using GCPtrArrayObject = GCPtr<ArrayObject*>;
 using GCPtrBaseShape = GCPtr<BaseShape*>;
 using GCPtrAtom = GCPtr<JSAtom*>;
+using GCPtrBigInt = GCPtr<BigInt*>;
 using GCPtrFlatString = GCPtr<JSFlatString*>;
 using GCPtrFunction = GCPtr<JSFunction*>;
 using GCPtrObject = GCPtr<JSObject*>;

@@ -67,7 +67,7 @@ var testData = [
   [ "<label>foo</label>", 0 ],
   [ "<progress>", 0 ],
   [ "<meter>", 0 ],
-  [ "<keygen>", 1, [ HTMLSelectElement ] ],
+  [ "<keygen>", 0 ],
   [ "<legend></legend>", 0 ],
   [ "<legend><input></legend>", 1, [ HTMLInputElement ] ],
   [ "<legend><input></legend><legend><input></legend>", 2, [ HTMLInputElement, HTMLInputElement ] ],
@@ -75,7 +75,7 @@ var testData = [
   [ "<fieldset></fieldset>", 1, [ HTMLFieldSetElement ] ],
   [ "<fieldset><input></fieldset>", 2, [ HTMLFieldSetElement, HTMLInputElement ] ],
   [ "<fieldset><fieldset><input></fieldset></fieldset>", 3, [ HTMLFieldSetElement, HTMLFieldSetElement, HTMLInputElement ] ],
-  [ "<button></button><fieldset></fieldset><input><keygen><object><output></output><select></select><textarea></textarea>", 8, [ HTMLButtonElement, HTMLFieldSetElement, HTMLInputElement, HTMLSelectElement, HTMLObjectElement, HTMLOutputElement, HTMLSelectElement, HTMLTextAreaElement ] ],
+  [ "<button></button><fieldset></fieldset><input><keygen><object><output></output><select></select><textarea></textarea>", 7, [ HTMLButtonElement, HTMLFieldSetElement, HTMLInputElement, HTMLObjectElement, HTMLOutputElement, HTMLSelectElement, HTMLTextAreaElement ] ],
 ];
 
 for (var data of testData) {

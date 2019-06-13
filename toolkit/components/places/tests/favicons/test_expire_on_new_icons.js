@@ -1,8 +1,11 @@
+/* Any copyright is dedicated to the Public Domain.
+ * https://creativecommons.org/publicdomain/zero/1.0/ */
+
 /*
  * Tests that adding new icons for a page expired old ones.
  */
 
-add_task(async function test_replaceFaviconData_validHistoryURI() {
+add_task(async function test_expire_associated() {
   const TEST_URL = "http://mozilla.com/";
   await PlacesTestUtils.addVisits(TEST_URL);
   const TEST_URL2 = "http://test.mozilla.com/";
@@ -54,4 +57,45 @@ add_task(async function test_replaceFaviconData_validHistoryURI() {
   Assert.equal(await getFaviconUrlForPage(TEST_URL2, 16),
                TEST_URL + favicons[0].name,
                "Should retrieve the expired 16px icon");
+});
+
+add_task(async function test_expire_root() {
+  async function countEntries(tablename) {
+    await PlacesTestUtils.promiseAsyncUpdates();
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.execute("SELECT * FROM " + tablename);
+    return rows.length;
+  }
+
+  // Clear the database.
+  let promise = promiseTopicObserved(PlacesUtils.TOPIC_FAVICONS_EXPIRED);
+  PlacesUtils.favicons.expireAllFavicons();
+  await promise;
+
+  Assert.equal(await countEntries("moz_icons"), 0, "There should be no icons");
+
+  let pageURI = NetUtil.newURI("http://root.mozilla.com/");
+  await PlacesTestUtils.addVisits(pageURI);
+
+  // Insert an expired icon.
+  let iconURI = NetUtil.newURI(pageURI.spec + "favicon-normal16.png");
+  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+    iconURI, SMALLPNG_DATA_URI.spec, PlacesUtils.toPRTime(new Date(1)),
+    systemPrincipal);
+  await setFaviconForPage(pageURI, iconURI);
+
+  Assert.equal(await countEntries("moz_icons_to_pages"), 1,
+               "There should be 1 association");
+
+  // Now insert a new root icon.
+  let rootIconURI = NetUtil.newURI(pageURI.spec + "favicon.ico");
+  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+    rootIconURI, SMALLPNG_DATA_URI.spec, 0, systemPrincipal);
+  await setFaviconForPage(pageURI, rootIconURI);
+
+  // Only the root icon should have survived.
+  Assert.equal(await getFaviconUrlForPage(pageURI, 16), rootIconURI.spec,
+               "Should retrieve the root icon.");
+  Assert.equal(await countEntries("moz_icons_to_pages"), 0,
+               "There should be no associations");
 });

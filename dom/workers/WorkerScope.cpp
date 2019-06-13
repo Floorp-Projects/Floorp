@@ -14,7 +14,6 @@
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/IDBFactory.h"
@@ -31,8 +30,9 @@
 #include "mozilla/dom/WorkerLocation.h"
 #include "mozilla/dom/WorkerNavigator.h"
 #include "mozilla/dom/cache/CacheStorage.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/StorageAccess.h"
+#include "nsContentUtils.h"
+#include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 
 #include "mozilla/dom/Document.h"
@@ -347,11 +347,9 @@ void WorkerGlobalScope::Dump(const Optional<nsAString>& aString) const {
     return;
   }
 
-#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-  if (!DOMPrefs::DumpEnabled()) {
+  if (!nsJSUtils::DumpEnabled()) {
     return;
   }
-#endif
 
   NS_ConvertUTF16toUTF8 str(aString.Value());
 

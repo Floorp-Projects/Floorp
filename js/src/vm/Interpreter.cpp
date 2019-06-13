@@ -1313,6 +1313,7 @@ again:
 #define PUSH_DOUBLE(d) REGS.sp++->setDouble(d)
 #define PUSH_INT32(i) REGS.sp++->setInt32(i)
 #define PUSH_SYMBOL(s) REGS.sp++->setSymbol(s)
+#define PUSH_BIGINT(b) REGS.sp++->setBigInt(b)
 #define PUSH_STRING(s)               \
   do {                               \
     REGS.sp++->setString(s);         \
@@ -4351,10 +4352,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(JSOP_TONUMERIC)
 
-    CASE(JSOP_BIGINT) {
-      PUSH_COPY(script->getConst(GET_UINT32_INDEX(REGS.pc)));
-      MOZ_ASSERT(REGS.sp[-1].isBigInt());
-    }
+    CASE(JSOP_BIGINT) { PUSH_BIGINT(script->getBigInt(REGS.pc)); }
     END_CASE(JSOP_BIGINT)
 
     DEFAULT() {

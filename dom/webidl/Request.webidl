@@ -60,7 +60,7 @@ dictionary RequestInit {
 
   AbortSignal? signal;
 
-  [Func="mozilla::dom::DOMPrefs::dom_fetchObserver_enabled"]
+  [Pref="dom.fetchObserver.enabled"]
   ObserverCallback observe;
 };
 

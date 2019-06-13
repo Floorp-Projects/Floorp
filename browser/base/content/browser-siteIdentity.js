@@ -1081,12 +1081,7 @@ var gIdentityHandler = {
     container.setAttribute("role", "group");
 
     let img = document.createXULElement("image");
-    img.classList.add("identity-popup-permission-icon");
-    if (aPermission.id == "plugin:flash") {
-      img.classList.add("plugin-icon");
-    } else {
-      img.classList.add(aPermission.id + "-icon");
-    }
+    img.classList.add("identity-popup-permission-icon", aPermission.id + "-icon");
     if (aPermission.state == SitePermissions.BLOCK)
       img.classList.add("blocked-permission-icon");
 

@@ -5,13 +5,16 @@
   <script type="application/javascript" src="plugin-utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onLoad="addPluginElement()">
+<body onLoad="addPerms()">
 
   <script type="text/javascript">
    SimpleTest.waitForExplicitFinish();
-   SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+   function addPerms() {
+     SpecialPowers.pushPermissions([{type: "plugin:flash", allow: true, context: document}], addPluginElement);
+   }
 
    function addPluginElement() {
+     SpecialPowers.DOMWindowUtils.plugins[0].playPlugin();
      var p = document.createElement("embed");
      p.setAttribute("id", "plugin2");
      p.setAttribute("type", "application/x-shockwave-flash-test");

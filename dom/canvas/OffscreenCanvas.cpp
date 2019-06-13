@@ -6,7 +6,6 @@
 
 #include "OffscreenCanvas.h"
 
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
@@ -305,7 +304,7 @@ bool OffscreenCanvas::PrefEnabledOnWorkerThread(JSContext* aCx,
     return true;
   }
 
-  return DOMPrefs::gfx_offscreencanvas_enabled(aCx, aObj);
+  return StaticPrefs::gfx_offscreencanvas_enabled();
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(OffscreenCanvas, DOMEventTargetHelper,

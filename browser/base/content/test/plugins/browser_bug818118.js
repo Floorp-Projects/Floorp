@@ -4,7 +4,6 @@ var gTestBrowser = null;
 add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
-    Services.prefs.clearUserPref("plugins.click_to_play");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
     gBrowser.removeCurrentTab();
@@ -14,8 +13,6 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
-
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gTestBrowser = gBrowser.selectedBrowser;
 

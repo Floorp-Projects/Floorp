@@ -36,8 +36,6 @@ using namespace hal;
 
 #define DEFAULT_SENSOR_POLL 100
 
-static bool gPrefSensorsEnabled = false;
-
 static const nsTArray<nsIDOMWindow*>::index_type NoIndex =
     nsTArray<nsIDOMWindow*>::NoIndex;
 
@@ -98,8 +96,6 @@ NS_IMPL_ISUPPORTS(nsDeviceSensors, nsIDeviceSensors)
 nsDeviceSensors::nsDeviceSensors() {
   mIsUserProximityNear = false;
   mLastDOMMotionEventTime = TimeStamp::Now();
-  Preferences::AddBoolVarCache(&gPrefSensorsEnabled, "device.sensors.enabled",
-                               true);
 
   for (int i = 0; i < NUM_SENSOR_TYPE; i++) {
     nsTArray<nsIDOMWindow*>* windows = new nsTArray<nsIDOMWindow*>();
@@ -521,7 +517,7 @@ void nsDeviceSensors::FireDOMMotionEvent(Document* doc, EventTarget* target,
 bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
                                             nsIDOMWindow* aWindow) {
   // checks "device.sensors.enabled" master pref
-  if (!gPrefSensorsEnabled) {
+  if (!StaticPrefs::device_sensors_enabled()) {
     return false;
   }
 

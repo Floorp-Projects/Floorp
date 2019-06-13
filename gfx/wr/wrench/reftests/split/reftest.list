@@ -1,4 +1,4 @@
-== simple.yaml simple-ref.yaml
+skip_on(android,emulator) == simple.yaml simple-ref.yaml
 == order-1.yaml order-1-ref.yaml
 == order-2.yaml order-2-ref.yaml
 == nested.yaml nested-ref.yaml
