@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jit/IonCacheIRCompiler.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
@@ -35,102 +36,57 @@ namespace jit {
 class AutoSaveLiveRegisters;
 
 // IonCacheIRCompiler compiles CacheIR to IonIC native code.
-class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
- public:
-  friend class AutoSaveLiveRegisters;
-
-  IonCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, IonIC* ic,
-                     IonScript* ionScript, IonICStub* stub,
-                     const PropertyTypeCheckInfo* typeCheckInfo,
-                     uint32_t stubDataOffset)
-      : CacheIRCompiler(cx, writer, stubDataOffset, Mode::Ion,
-                        StubFieldPolicy::Constant),
-        writer_(writer),
-        ic_(ic),
-        ionScript_(ionScript),
-        stub_(stub),
-        typeCheckInfo_(typeCheckInfo),
+IonCacheIRCompiler::IonCacheIRCompiler(
+    JSContext* cx, const CacheIRWriter& writer, IonIC* ic, IonScript* ionScript,
+    IonICStub* stub, const PropertyTypeCheckInfo* typeCheckInfo,
+    uint32_t stubDataOffset)
+    : CacheIRCompiler(cx, writer, stubDataOffset, Mode::Ion,
+                      StubFieldPolicy::Constant),
+      writer_(writer),
+      ic_(ic),
+      ionScript_(ionScript),
+      stub_(stub),
+      typeCheckInfo_(typeCheckInfo),
 #ifdef DEBUG
-        calledPrepareVMCall_(false),
+      calledPrepareVMCall_(false),
 #endif
-        savedLiveRegs_(false) {
-    MOZ_ASSERT(ic_);
-    MOZ_ASSERT(ionScript_);
-  }
+      savedLiveRegs_(false) {
+  MOZ_ASSERT(ic_);
+  MOZ_ASSERT(ionScript_);
+}
 
-  MOZ_MUST_USE bool init();
-  JitCode* compile();
+template <typename T>
+T IonCacheIRCompiler::rawWordStubField(uint32_t offset) {
+  static_assert(sizeof(T) == sizeof(uintptr_t), "T must have word size");
+  return (T)readStubWord(offset, StubField::Type::RawWord);
+}
+template <typename T>
+T IonCacheIRCompiler::rawInt64StubField(uint32_t offset) {
+  static_assert(sizeof(T) == sizeof(int64_t), "T musthave int64 size");
+  return (T)readStubInt64(offset, StubField::Type::RawInt64);
+}
 
- private:
-  const CacheIRWriter& writer_;
-  IonIC* ic_;
-  IonScript* ionScript_;
+uint64_t* IonCacheIRCompiler::expandoGenerationStubFieldPtr(uint32_t offset) {
+  DebugOnly<uint64_t> generation =
+      readStubInt64(offset, StubField::Type::DOMExpandoGeneration);
+  uint64_t* ptr = reinterpret_cast<uint64_t*>(stub_->stubDataStart() + offset);
+  MOZ_ASSERT(*ptr == generation);
+  return ptr;
+}
 
-  // The stub we're generating code for.
-  IonICStub* stub_;
+template <typename Fn, Fn fn>
+void IonCacheIRCompiler::callVM(MacroAssembler& masm) {
+  VMFunctionId id = VMFunctionToId<Fn, fn>::id;
+  callVMInternal(masm, id);
+}
 
-  // Information necessary to generate property type checks. Non-null iff
-  // this is a SetProp/SetElem stub.
-  const PropertyTypeCheckInfo* typeCheckInfo_;
+bool IonCacheIRCompiler::needsPostBarrier() const {
+  return ic_->asSetPropertyIC()->needsPostBarrier();
+}
 
-  CodeOffsetJump rejoinOffset_;
-  Vector<CodeOffset, 4, SystemAllocPolicy> nextCodeOffsets_;
-  Maybe<LiveRegisterSet> liveRegs_;
-  Maybe<CodeOffset> stubJitCodeOffset_;
-
-#ifdef DEBUG
-  bool calledPrepareVMCall_;
-#endif
-  bool savedLiveRegs_;
-
-  template <typename T>
-  T rawWordStubField(uint32_t offset) {
-    static_assert(sizeof(T) == sizeof(uintptr_t), "T must have word size");
-    return (T)readStubWord(offset, StubField::Type::RawWord);
-  }
-  template <typename T>
-  T rawInt64StubField(uint32_t offset) {
-    static_assert(sizeof(T) == sizeof(int64_t), "T musthave int64 size");
-    return (T)readStubInt64(offset, StubField::Type::RawInt64);
-  }
-
-  uint64_t* expandoGenerationStubFieldPtr(uint32_t offset) {
-    DebugOnly<uint64_t> generation =
-        readStubInt64(offset, StubField::Type::DOMExpandoGeneration);
-    uint64_t* ptr =
-        reinterpret_cast<uint64_t*>(stub_->stubDataStart() + offset);
-    MOZ_ASSERT(*ptr == generation);
-    return ptr;
-  }
-
-  void prepareVMCall(MacroAssembler& masm, const AutoSaveLiveRegisters&);
-  void callVMInternal(MacroAssembler& masm, VMFunctionId id);
-
-  template <typename Fn, Fn fn>
-  void callVM(MacroAssembler& masm) {
-    VMFunctionId id = VMFunctionToId<Fn, fn>::id;
-    callVMInternal(masm, id);
-  }
-
-  MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
-  MOZ_MUST_USE bool emitCallScriptedGetterResultShared(
-      TypedOrValueRegister receiver, TypedOrValueRegister output);
-  MOZ_MUST_USE bool emitCallNativeGetterResultShared(
-      TypedOrValueRegister receiver, const AutoOutputRegister& output,
-      AutoSaveLiveRegisters& save);
-
-  bool needsPostBarrier() const {
-    return ic_->asSetPropertyIC()->needsPostBarrier();
-  }
-
-  void pushStubCodePointer() {
-    stubJitCodeOffset_.emplace(masm.PushWithPatch(ImmPtr((void*)-1)));
-  }
-
-#define DEFINE_OP(op, ...) MOZ_MUST_USE bool emit##op();
-  CACHE_IR_OPS(DEFINE_OP)
-#undef DEFINE_OP
-};
+void IonCacheIRCompiler::pushStubCodePointer() {
+  stubJitCodeOffset_.emplace(masm.PushWithPatch(ImmPtr((void*)-1)));
+}
 
 // AutoSaveLiveRegisters must be used when we make a call that can GC. The
 // constructor ensures all live registers are stored on the stack (where the GC
