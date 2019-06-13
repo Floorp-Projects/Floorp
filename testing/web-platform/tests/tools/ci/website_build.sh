@@ -56,12 +56,12 @@ git config --global user.name "wpt-pr-bot"
 
 # Prepare the output directory so that the new build can be pushed to the
 # repository as an incremental change to the prior build.
-mkdir --parents docs/_build/html
+mkdir -p docs/_build/html
 cd docs/_build/html
 git init
 git fetch --depth 1 ${remote_url} gh-pages
 git checkout FETCH_HEAD
-git rm -r .
+git rm -rf .
 
 # Build the website
 cd ../..
@@ -78,7 +78,7 @@ touch .nojekyll
 # Publish the website by pushing the built contents to the `gh-pages` branch
 git add .
 
-if ! git diff --exit-code --quiet --staged ; then
+if git diff --exit-code --quiet --staged ; then
   echo No change to the website contents. Exiting without publishing.
 
   exit ${neutral_status}
