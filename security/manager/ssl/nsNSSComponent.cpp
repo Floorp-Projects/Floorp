@@ -6,6 +6,7 @@
 
 #include "nsNSSComponent.h"
 
+#include "CryptoTask.h"
 #include "EnterpriseRoots.h"
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"

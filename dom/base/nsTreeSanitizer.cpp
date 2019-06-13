@@ -90,6 +90,7 @@ const nsStaticAtom* const kElementsHTML[] = {
   nsGkAtoms::input,
   nsGkAtoms::ins,
   nsGkAtoms::kbd,
+  nsGkAtoms::keygen,
   nsGkAtoms::label,
   nsGkAtoms::legend,
   nsGkAtoms::li,
@@ -970,8 +971,7 @@ bool nsTreeSanitizer::MustFlatten(int32_t aNamespace, nsAtom* aLocal) {
     }
     if (mDropForms &&
         (nsGkAtoms::form == aLocal || nsGkAtoms::input == aLocal ||
-         nsGkAtoms::keygen == aLocal || nsGkAtoms::option == aLocal ||
-         nsGkAtoms::optgroup == aLocal)) {
+         nsGkAtoms::option == aLocal || nsGkAtoms::optgroup == aLocal)) {
       return true;
     }
     if (mFullDocument &&
