@@ -11,6 +11,7 @@
 #include "SelectionChangeEventDispatcher.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
@@ -77,7 +78,7 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
                                                        int16_t aReason) {
   Document* doc = aSel->GetParentObject();
   if (!(doc && nsContentUtils::IsSystemPrincipal(doc->NodePrincipal())) &&
-      !nsFrameSelection::sSelectionEventsEnabled) {
+      !StaticPrefs::dom_select_events_enabled()) {
     return;
   }
 

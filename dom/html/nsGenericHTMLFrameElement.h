@@ -114,9 +114,6 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
    */
   void CreateRemoteFrameLoader(mozilla::dom::BrowserParent* aBrowserParent);
 
-  static void InitStatics();
-  static bool BrowserFramesEnabled();
-
   /**
    * Helper method to map a HTML 'scrolling' attribute value to a nsIScrollable
    * enum value.  scrolling="no" (and its synonyms) maps to

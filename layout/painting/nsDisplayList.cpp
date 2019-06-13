@@ -889,7 +889,7 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
           GroupAnimationsByProperty(matchedAnimations, propertySet);
   // Bug 1424900: Drop this pref check after shipping individual transforms.
   const bool hasMultipleTransformLikeProperties =
-      StaticPrefs::IndividualTransform() &&
+      StaticPrefs::layout_css_individual_transform_enabled() &&
       aType == DisplayItemType::TYPE_TRANSFORM;
   nsCSSPropertyIDSet nonAnimatingProperties =
       nsCSSPropertyIDSet::TransformLikeProperties();

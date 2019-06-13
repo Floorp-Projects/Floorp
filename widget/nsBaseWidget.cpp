@@ -85,6 +85,7 @@
 #include "gfxConfig.h"
 #include "nsView.h"
 #include "nsViewManager.h"
+#include "mozilla/StaticPrefs.h"
 
 #ifdef DEBUG
 #  include "nsIObserver.h"
@@ -898,7 +899,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
   // have code that can deal with them properly. If APZ is not enabled, this
   // function doesn't get called.
   if (Preferences::GetInt("dom.w3c_touch_events.enabled", 0) ||
-      Preferences::GetBool("dom.w3c_pointer_events.enabled", false)) {
+      StaticPrefs::dom_w3c_pointer_events_enabled()) {
     RegisterTouchWindow();
   }
 }
@@ -976,7 +977,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
     UniquePtr<DisplayportSetListener> postLayerization;
     if (WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent()) {
       if (touchEvent->mMessage == eTouchStart) {
-        if (StaticPrefs::TouchActionEnabled()) {
+        if (StaticPrefs::layout_css_touch_action_enabled()) {
           APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
               this, GetDocument(), *(original->AsTouchEvent()), aInputBlockId,
               mSetAllowedTouchBehaviorCallback);

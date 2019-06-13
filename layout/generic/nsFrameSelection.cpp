@@ -15,6 +15,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -585,8 +586,6 @@ void nsFrameSelection::Init(mozilla::PresShell* aPresShell,
   if (!prefCachesInitialized) {
     prefCachesInitialized = true;
 
-    Preferences::AddBoolVarCache(&sSelectionEventsEnabled,
-                                 "dom.select_events.enabled", false);
     Preferences::AddBoolVarCache(&sSelectionEventsOnTextControlsEnabled,
                                  "dom.select_events.textcontrols.enabled",
                                  false);
@@ -601,7 +600,7 @@ void nsFrameSelection::Init(mozilla::PresShell* aPresShell,
   bool plaintextControl = (aLimiter != nullptr);
   bool initSelectEvents = plaintextControl
                               ? sSelectionEventsOnTextControlsEnabled
-                              : sSelectionEventsEnabled;
+                              : StaticPrefs::dom_select_events_enabled();
 
   Document* doc = aPresShell->GetDocument();
   if (initSelectEvents ||
@@ -613,7 +612,6 @@ void nsFrameSelection::Init(mozilla::PresShell* aPresShell,
   }
 }
 
-bool nsFrameSelection::sSelectionEventsEnabled = false;
 bool nsFrameSelection::sSelectionEventsOnTextControlsEnabled = false;
 
 nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,

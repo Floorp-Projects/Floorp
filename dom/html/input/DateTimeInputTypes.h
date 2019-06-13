@@ -28,12 +28,6 @@ class DateTimeInputTypeBase : public ::InputType {
   explicit DateTimeInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)
       : InputType(aInputElement) {}
 
-  /**
-   * Checks preference "dom.forms.datetime" to determine if input date and time
-   * should be supported.
-   */
-  static bool IsInputDateTimeEnabled();
-
   bool IsMutable() const override;
 
   /**
