@@ -66,10 +66,11 @@
 
         <CheckBox
             android:id="@+id/tab_selected_checkbox"
-            android:clickable="false"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
+            android:buttonTint="?accentBright"
+            android:clickable="false"
             android:elevation="1dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
