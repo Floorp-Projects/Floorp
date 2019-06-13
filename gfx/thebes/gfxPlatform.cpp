@@ -41,6 +41,8 @@
 #include "VRProcessManager.h"
 #include "VRThread.h"
 
+#include "mozilla/arm.h"
+
 #ifdef XP_WIN
 #  include <process.h>
 #  define getpid _getpid
@@ -1987,6 +1989,11 @@ eCMSMode gfxPlatform::GetCMSMode() {
     if (enableV4) {
       qcms_enable_iccv4();
     }
+#ifdef MOZILLA_MAY_SUPPORT_NEON
+    if (mozilla::supports_neon()) {
+      qcms_enable_neon();
+    }
+#endif
     gCMSInitialized = true;
   }
   return gCMSMode;
