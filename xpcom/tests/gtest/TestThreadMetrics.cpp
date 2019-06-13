@@ -9,7 +9,6 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/TaskCategory.h"

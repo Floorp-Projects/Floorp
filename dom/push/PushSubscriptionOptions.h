@@ -10,7 +10,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/DOMPrefs.h"
 
 class nsIGlobalObject;
 

@@ -8,7 +8,7 @@
 #include "mozilla/dom/WorkletGlobalScopeBinding.h"
 #include "mozilla/dom/WorkletImpl.h"
 #include "mozilla/dom/Console.h"
-#include "mozilla/StaticPrefs.h"
+#include "nsJSUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -66,7 +66,7 @@ already_AddRefed<Console> WorkletGlobalScope::GetConsole(JSContext* aCx,
 void WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const {
   WorkletThread::AssertIsOnWorkletThread();
 
-  if (!StaticPrefs::browser_dom_window_dump_enabled()) {
+  if (!nsJSUtils::DumpEnabled()) {
     return;
   }
 

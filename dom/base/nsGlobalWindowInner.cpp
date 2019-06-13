@@ -20,7 +20,6 @@
 #include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/LocalStorageCommon.h"
@@ -3412,7 +3411,7 @@ bool nsGlobalWindowInner::GetFullScreen() {
 }
 
 void nsGlobalWindowInner::Dump(const nsAString& aStr) {
-  if (!DOMPrefs::DumpEnabled()) {
+  if (!nsJSUtils::DumpEnabled()) {
     return;
   }
 

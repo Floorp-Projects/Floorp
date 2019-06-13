@@ -237,6 +237,8 @@ class nsJSUtils {
       JS::MutableHandleVector<JSObject*> aScopeChain);
 
   static void ResetTimeZone();
+
+  static bool DumpEnabled();
 };
 
 template <typename T>

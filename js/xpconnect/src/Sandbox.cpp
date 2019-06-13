@@ -37,7 +37,6 @@
 #include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/DOMParserBinding.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
@@ -125,7 +124,7 @@ already_AddRefed<nsIXPCComponents_utils_Sandbox> xpc::NewSandboxConstructor() {
 }
 
 static bool SandboxDump(JSContext* cx, unsigned argc, Value* vp) {
-  if (!DOMPrefs::DumpEnabled()) {
+  if (!nsJSUtils::DumpEnabled()) {
     return true;
   }
 
