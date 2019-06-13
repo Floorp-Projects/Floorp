@@ -58,7 +58,12 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
                 tree[position].node == sharedViewModel.selectedFolder,
                 object : SelectionInterface {
                     override fun itemSelected(node: BookmarkNode) {
-                        sharedViewModel.selectedFolder = node
+                        sharedViewModel.apply {
+                            when (selectedFolder) {
+                                node -> selectedFolder = null
+                                else -> selectedFolder = node
+                            }
+                        }
                         notifyDataSetChanged()
                     }
                 })
