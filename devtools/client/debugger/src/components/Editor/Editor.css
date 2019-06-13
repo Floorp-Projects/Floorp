@@ -107,7 +107,32 @@ html[dir="rtl"] .editor-mount {
 
 .debug-expression {
   background-color: var(--debug-expression-background);
+  border-style: solid;
+  border-color: var(--debug-expression-background);
+  border-width: 1px 0px 1px 0px;
+  position: relative;
 }
+
+.debug-expression::before {
+  content: "";
+  line-height: 1px;
+  border-top: 1px solid var(--blue-50);
+  background: transparent;
+  position: absolute;
+  top: -2px;
+  left: 0px;
+  width: 100%;
+ }
+
+.debug-expression::after {
+  content: "";
+  line-height: 1px;
+  border-bottom: 1px solid var(--blue-50);
+  position: absolute;
+  bottom: -2px;
+  left: 0px;
+  width: 100%;
+ }
 
 .to-line-end ~ .CodeMirror-widget {
   background-color: var(--debug-expression-background);
