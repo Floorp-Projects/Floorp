@@ -2688,9 +2688,8 @@ void MessageChannel::Close() {
     }
 
     if (ChannelClosed == mChannelState) {
-      // XXX be strict about this until there's a compelling reason
-      // to relax
-      MOZ_CRASH("Close() called on closed channel!");
+      // Slightly unexpected but harmless; ignore.  See bug 1554244.
+      return;
     }
 
     // Notify the other side that we're about to close our socket. If we've
