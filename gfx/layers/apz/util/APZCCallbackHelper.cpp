@@ -406,7 +406,7 @@ void APZCCallbackHelper::InitializeRootDisplayport(PresShell* aPresShell) {
                                                        &viewId)) {
     nsPresContext* pc = aPresShell->GetPresContext();
     // This code is only correct for root content or toplevel documents.
-    MOZ_ASSERT(!pc || pc->IsRootContentDocument() ||
+    MOZ_ASSERT(!pc || pc->IsRootContentDocumentCrossProcess() ||
                !pc->GetParentPresContext());
     nsIFrame* frame = aPresShell->GetRootScrollFrame();
     if (!frame) {
