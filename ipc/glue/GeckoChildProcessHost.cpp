@@ -68,6 +68,7 @@
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+#  include "GMPProcessParent.h"
 #  include "nsMacUtilsImpl.h"
 #endif
 
@@ -370,8 +371,8 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
   PrepareLaunch();
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  if (IsMacSandboxLaunchEnabled()) {
-    AppendMacSandboxParams(aExtraOpts);
+  if (IsMacSandboxLaunchEnabled() && !AppendMacSandboxParams(aExtraOpts)) {
+    return false;
   }
 #endif
 
@@ -1397,15 +1398,18 @@ void GeckoChildProcessHost::LaunchAndroidService(
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-void GeckoChildProcessHost::AppendMacSandboxParams(StringVector& aArgs) {
+bool GeckoChildProcessHost::AppendMacSandboxParams(StringVector& aArgs) {
   MacSandboxInfo info;
-  FillMacSandboxInfo(info);
+  if (!FillMacSandboxInfo(info)) {
+    return false;
+  }
   info.AppendAsParams(aArgs);
+  return true;
 }
 
 // Fill |aInfo| with the flags needed to launch the utility sandbox
 /* static */
-void GeckoChildProcessHost::StaticFillMacSandboxInfo(MacSandboxInfo& aInfo) {
+bool GeckoChildProcessHost::StaticFillMacSandboxInfo(MacSandboxInfo& aInfo) {
   aInfo.type = GetDefaultMacSandboxType();
   aInfo.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
                     PR_GetEnv("MOZ_SANDBOX_LOGGING");
@@ -1415,10 +1419,11 @@ void GeckoChildProcessHost::StaticFillMacSandboxInfo(MacSandboxInfo& aInfo) {
     MOZ_CRASH("Failed to get app path");
   }
   aInfo.appPath.assign(appPath.get());
+  return true;
 }
 
-void GeckoChildProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
-  GeckoChildProcessHost::StaticFillMacSandboxInfo(aInfo);
+bool GeckoChildProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
+  return GeckoChildProcessHost::StaticFillMacSandboxInfo(aInfo);
 }
 
 //
@@ -1432,9 +1437,9 @@ bool GeckoChildProcessHost::StartMacSandbox(int aArgc, char** aArgv,
                                             std::string& aErrorMessage) {
   MacSandboxType sandboxType = MacSandboxType_Invalid;
   switch (XRE_GetProcessType()) {
-    // For now, only support early sandbox startup for content
-    // processes. Add case statements for the additional process
-    // types once early sandbox startup is implemented for them.
+    // For now, only support early sandbox startup for content,
+    // RDD, and GMP processes. Add case statements for the additional
+    // process types once early sandbox startup is implemented for them.
     case GeckoProcessType_Content:
       // Content processes don't use GeckoChildProcessHost
       // to configure sandboxing so hard code the sandbox type.
@@ -1442,6 +1447,9 @@ bool GeckoChildProcessHost::StartMacSandbox(int aArgc, char** aArgv,
       break;
     case GeckoProcessType_RDD:
       sandboxType = RDDProcessHost::GetMacSandboxType();
+      break;
+    case GeckoProcessType_GMPlugin:
+      sandboxType = gmp::GMPProcessParent::GetMacSandboxType();
       break;
     default:
       return true;

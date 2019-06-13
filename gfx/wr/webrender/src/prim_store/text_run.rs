@@ -10,7 +10,7 @@ use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_L
 use crate::gpu_cache::GpuCache;
 use crate::intern;
 use crate::internal_types::LayoutPrimitiveInfo;
-use crate::picture::SurfaceInfo;
+use crate::picture::{SubpixelMode, SurfaceInfo};
 use crate::prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
 use crate::prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
 use crate::render_task::{RenderTaskGraph};
@@ -221,7 +221,7 @@ impl TextRunPrimitive {
         specified_font: &FontInstance,
         device_pixel_scale: DevicePixelScale,
         transform: &LayoutToWorldTransform,
-        allow_subpixel_aa: bool,
+        subpixel_mode: SubpixelMode,
         raster_space: RasterSpace,
     ) -> bool {
         // If local raster space is specified, include that in the scale
@@ -274,7 +274,7 @@ impl TextRunPrimitive {
         // If subpixel AA is disabled due to the backing surface the glyphs
         // are being drawn onto, disable it (unless we are using the
         // specifial subpixel mode that estimates background color).
-        if (!allow_subpixel_aa && self.used_font.bg_color.a == 0) ||
+        if (subpixel_mode == SubpixelMode::Deny && self.used_font.bg_color.a == 0) ||
             // If using local space glyphs, we don't want subpixel AA.
             !transform_glyphs {
             self.used_font.disable_subpixel_aa();
@@ -291,6 +291,7 @@ impl TextRunPrimitive {
         transform: &LayoutToWorldTransform,
         surface: &SurfaceInfo,
         raster_space: RasterSpace,
+        subpixel_mode: SubpixelMode,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskGraph,
@@ -302,7 +303,7 @@ impl TextRunPrimitive {
             specified_font,
             device_pixel_scale,
             transform,
-            surface.allow_subpixel_aa,
+            subpixel_mode,
             raster_space,
         );
 

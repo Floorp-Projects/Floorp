@@ -1044,23 +1044,6 @@ parent:
 
     async RequestAnonymousTemporaryFile(uint64_t aID);
 
-    /**
-     * Keygen requires us to call it after a <keygen> element is parsed and
-     * before one is submitted. This is urgent because an extension might use
-     * a CPOW to synchronously submit a keygen element.
-     */
-    nested(inside_cpow) sync KeygenProcessValue(nsString oldValue,
-                                                nsString challenge,
-                                                nsString keytype,
-                                                nsString keyparams)
-        returns (nsString newValue);
-
-    /**
-     * Called to provide the options for <keygen> elements.
-     */
-    sync KeygenProvideContent()
-        returns (nsString aAttribute, nsString[] aContent);
-
     /** Clear RemoteFrameInfo of the given tab id. */
     async UnregisterRemoteFrame(TabId tabId,
                                 ContentParentId cpId,

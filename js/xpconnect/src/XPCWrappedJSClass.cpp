@@ -19,7 +19,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/MozQueryInterface.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 
@@ -657,7 +656,7 @@ nsresult nsXPCWrappedJS::CheckForException(XPCCallContext& ccx,
     }
 
     if (reportable) {
-      if (DOMPrefs::DumpEnabled()) {
+      if (nsJSUtils::DumpEnabled()) {
         static const char line[] =
             "************************************************************\n";
         static const char preamble[] =

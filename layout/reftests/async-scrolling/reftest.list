@@ -8,7 +8,7 @@ skip-if(!asyncPan) == bg-fixed-child-clip-2.html bg-fixed-child-clip-ref.html
 fuzzy(0-1,0-246) fuzzy-if(skiaContent,0-2,0-170) fuzzy-if(browserIsRemote&&d2d,0-59,0-187) fuzzy-if(webrender,41-41,166-166) skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
 skip-if(!asyncPan) == bg-fixed-in-opacity.html bg-fixed-in-opacity-ref.html
 # Passing the test below without WebRender would require implementing CSS filters in the Gecko compositor.
-fails-if(!webrender) skip-if(!asyncPan) fuzzy-if(webrender&&gtkWidget,0-1,0-87) fuzzy-if(webrender&&!gtkWidget,0-1,0-8) == bg-fixed-in-css-filter.html bg-fixed-in-css-filter-ref.html # bug 1454794 for webrender fuzziness
+fails-if(!webrender) skip-if(!asyncPan) fuzzy-if(webrender&&gtkWidget,0-1,0-87) fuzzy-if(webrender&&!gtkWidget,0-1,0-3951) == bg-fixed-in-css-filter.html bg-fixed-in-css-filter-ref.html # bug 1454794 for webrender fuzziness
 skip-if(!asyncPan) == bg-fixed-child-no-culling-1.html bg-fixed-child-no-culling-1-ref.html
 skip-if(!asyncPan) == bg-fixed-child-no-culling-2.html bg-fixed-child-no-culling-2-ref.html
 skip-if(!asyncPan) == bg-fixed-child-no-culling-3.html bg-fixed-child-no-culling-3-ref.html
@@ -47,7 +47,7 @@ skip-if(!asyncPan) == position-fixed-inside-sticky-3.html position-fixed-inside-
 skip-if(!asyncPan) fuzzy-if(geckoview,1-1,100-100) == sticky-inside-fixed-1.html sticky-inside-fixed-1-ref.html
 skip-if(!asyncPan) fails-if(!webrender) == sticky-inside-transform-1.html sticky-inside-transform-1-ref.html
 fuzzy(0-1,0-60000) skip-if(!asyncPan) fuzzy-if(geckoview,2-2,60000-60000) == group-opacity-surface-size-1.html group-opacity-surface-size-1-ref.html
-fuzzy-if(Android,0-1,0-197) skip-if(!asyncPan) == position-sticky-transformed.html position-sticky-transformed-ref.html
+fuzzy-if(Android,0-1,0-197) fuzzy-if(webrender,0-1,0-1) skip-if(!asyncPan) == position-sticky-transformed.html position-sticky-transformed-ref.html
 skip-if(!asyncPan) == offscreen-prerendered-active-opacity.html offscreen-prerendered-active-opacity-ref.html
 fuzzy-if(Android,0-6,0-4) fuzzy-if(skiaContent&&!Android,0-1,0-34) skip-if(!asyncPan) fuzzy-if(geckoview,1-1,50-50) == offscreen-clipped-blendmode-1.html offscreen-clipped-blendmode-ref.html
 fuzzy-if(Android,0-6,0-4) skip-if(!asyncPan) == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-ref.html

@@ -5,7 +5,7 @@
 use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle};
 use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation, ScrollSensitivity};
 use api::units::*;
-use euclid::{TypedPoint2D, TypedScale, TypedTransform3D};
+use euclid::TypedTransform3D;
 use crate::gpu_types::TransformPalette;
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::print_tree::{PrintableTree, PrintTree, PrintTreePrinter};
@@ -184,30 +184,6 @@ impl<Src, Dst> CoordinateSpaceMapping<Src, Dst> {
         }
     }
 
-    pub fn project_2d_origin(&self) -> Option<TypedPoint2D<f32, Dst>> {
-        match *self {
-            CoordinateSpaceMapping::Local => Some(TypedPoint2D::zero()),
-            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => Some(
-                scale_offset.offset.to_point() * TypedScale::new(1.0)
-            ),
-            CoordinateSpaceMapping::Transform(ref transform) => {
-                transform.transform_point2d(&TypedPoint2D::zero())
-            }
-        }
-    }
-
-    pub fn inverse_project_2d_origin(&self) -> Option<TypedPoint2D<f32, Src>> {
-        match *self {
-            CoordinateSpaceMapping::Local => Some(TypedPoint2D::zero()),
-            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => Some(
-                scale_offset.inverse().offset.to_point() * TypedScale::new(1.0)
-            ),
-            CoordinateSpaceMapping::Transform(ref transform) => {
-                transform.inverse_project_2d_origin()
-            }
-        }
-    }
-
     pub fn scale_factors(&self) -> (f32, f32) {
         match *self {
             CoordinateSpaceMapping::Local => (1.0, 1.0),
@@ -365,28 +341,6 @@ impl ClipScrollTree {
         index: SpatialNodeIndex,
     ) -> CoordinateSpaceMapping<LayoutPixel, WorldPixel> {
         self.get_world_transform_impl(index, TransformScroll::Unscrolled)
-    }
-
-
-    /// Returns true if the spatial node is the same as the parent, or is
-    /// a child of the parent.
-    pub fn is_same_or_child_of(
-        &self,
-        spatial_node_index: SpatialNodeIndex,
-        parent_spatial_node_index: SpatialNodeIndex,
-    ) -> bool {
-        let mut index = spatial_node_index;
-
-        loop {
-            if index == parent_spatial_node_index {
-                return true;
-            }
-
-            index = match self.spatial_nodes[index.0 as usize].parent {
-                Some(parent) => parent,
-                None => return false,
-            }
-        }
     }
 
     /// The root reference frame, which is the true root of the ClipScrollTree. Initially
@@ -632,6 +586,37 @@ impl ClipScrollTree {
         self.pipelines_to_discard.insert(pipeline_id);
     }
 
+    /// Find the spatial node that is the scroll root for a given spatial node.
+    /// A scroll root is the first spatial node when found travelling up the
+    /// spatial node tree that is an explicit scroll frame.
+    pub fn find_scroll_root(
+        &self,
+        spatial_node_index: SpatialNodeIndex,
+    ) -> SpatialNodeIndex {
+        let mut scroll_root = ROOT_SPATIAL_NODE_INDEX;
+        let mut node_index = spatial_node_index;
+
+        while node_index != ROOT_SPATIAL_NODE_INDEX {
+            let node = &self.spatial_nodes[node_index.0 as usize];
+            match node.node_type {
+                SpatialNodeType::ReferenceFrame(..) |
+                SpatialNodeType::StickyFrame(..) => {
+                    // TODO(gw): In future, we may need to consider sticky frames.
+                }
+                SpatialNodeType::ScrollFrame(ref info) => {
+                    // If we found an explicit scroll root, store that
+                    // and keep looking up the tree.
+                    if let ScrollFrameKind::Explicit = info.frame_kind {
+                        scroll_root = node_index;
+                    }
+                }
+            }
+            node_index = node.parent.expect("unable to find parent node");
+        }
+
+        scroll_root
+    }
+
     fn print_node<T: PrintTreePrinter>(
         &self,
         index: SpatialNodeIndex,
@@ -649,6 +634,7 @@ impl ClipScrollTree {
                 pt.add_item(format!("scrollable_size: {:?}", scrolling_info.scrollable_size));
                 pt.add_item(format!("scroll offset: {:?}", scrolling_info.offset));
                 pt.add_item(format!("external_scroll_offset: {:?}", scrolling_info.external_scroll_offset));
+                pt.add_item(format!("kind: {:?}", scrolling_info.frame_kind));
             }
             SpatialNodeType::ReferenceFrame(ref info) => {
                 pt.new_level(format!("ReferenceFrame"));

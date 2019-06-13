@@ -267,7 +267,6 @@ nsresult nsLayoutStatics::Initialize() {
   nsApplicationCacheService::AppClearDataObserverInit();
 
   HTMLVideoElement::InitStatics();
-  nsGenericHTMLFrameElement::InitStatics();
 
 #ifdef MOZ_XUL
   nsMenuBarListener::InitializeStatics();
@@ -303,7 +302,6 @@ nsresult nsLayoutStatics::Initialize() {
   if (XRE_IsParentProcess()) {
     // On content process we initialize these components when PContentChild is
     // fully initialized.
-    mozilla::dom::DOMPrefs::Initialize();
     mozilla::dom::RemoteWorkerService::Initialize();
     // This one should be initialized on the parent only
     mozilla::dom::BrowserParent::InitializeStatics();

@@ -31,7 +31,7 @@ dictionary ChromeFilePropertyBag : FilePropertyBag {
 
 // https://wicg.github.io/entries-api
 partial interface File {
-  [BinaryName="relativePath", Func="mozilla::dom::DOMPrefs::dom_webkitBlink_dirPicker_enabled"]
+  [BinaryName="relativePath", Pref="dom.webkitBlink.dirPicker.enabled"]
   readonly attribute USVString webkitRelativePath;
 };
 

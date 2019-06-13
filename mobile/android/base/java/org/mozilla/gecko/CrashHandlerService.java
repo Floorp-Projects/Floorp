@@ -8,10 +8,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.provider.Settings;
+import android.util.Log;
 
 import org.mozilla.gecko.notifications.NotificationHelper;
 
+import java.io.File;
+import java.io.IOException;
+
 public class CrashHandlerService extends Service {
+    private static final String LOGTAG = "CrashHandlerService";
     private static final String ACTION_STOP = "action_stop";
     // Build.VERSION_CODES.Q placeholder. While Android Q is in Beta it shares API 28 with Android P.
     private static final int ANDROID_Q = 29;
@@ -21,6 +26,14 @@ public class CrashHandlerService extends Service {
         if (ACTION_STOP.equals(intent.getAction())) {
             dismissNotification();
         } else {
+            // Notify GeckoApp that we've crashed, so it can react appropriately during the next start.
+            try {
+                File crashFlag = new File(GeckoProfileDirectories.getMozillaDirectory(this), "CRASHED");
+                crashFlag.createNewFile();
+            } catch (GeckoProfileDirectories.NoMozillaDirectoryException | IOException e) {
+                Log.e(LOGTAG, "Cannot set crash flag: ", e);
+            }
+
             intent.setClass(this, CrashReporterActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 

@@ -10,7 +10,6 @@ function updateAllTestPlugins(aState) {
 add_task(async function() {
   registerCleanupFunction(async function() {
     clearAllPluginPermissions();
-    Services.prefs.clearUserPref("plugins.click_to_play");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
     await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins", gTestBrowser);
@@ -26,7 +25,6 @@ add_task(async function() {
   gTestBrowser = gBrowser.selectedBrowser;
 
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
 
   updateAllTestPlugins(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 

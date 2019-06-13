@@ -6,7 +6,7 @@ use api::{BorderRadius, ClipMode, ColorF};
 use api::{ImageRendering, RepeatMode};
 use api::{PremultipliedColorF, PropertyBinding, Shadow, GradientStop};
 use api::{BoxShadowClipMode, LineStyle, LineOrientation};
-use api::{PrimitiveKeyKind, RasterSpace};
+use api::{PrimitiveKeyKind};
 use api::units::*;
 use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::border::BorderSegmentCacheKey;
@@ -27,8 +27,8 @@ use crate::gpu_types::{BrushFlags, SnapOffsets};
 use crate::image::{Repetition};
 use crate::intern;
 use malloc_size_of::MallocSizeOf;
-use crate::picture::{PictureCompositeMode, PicturePrimitive, SurfaceInfo};
-use crate::picture::{ClusterIndex, PrimitiveList, RecordedDirtyRegion, SurfaceIndex, RetainedTiles};
+use crate::picture::{PictureCompositeMode, PicturePrimitive};
+use crate::picture::{ClusterIndex, PrimitiveList, RecordedDirtyRegion, SurfaceIndex, RetainedTiles, RasterConfig};
 use crate::prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
 use crate::prim_store::gradient::{LinearGradientPrimitive, LinearGradientDataHandle, RadialGradientDataHandle};
@@ -309,7 +309,7 @@ pub struct PrimitiveSceneData {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, MallocSizeOf, PartialEq)]
+#[derive(Copy, Debug, Clone, MallocSizeOf, PartialEq)]
 pub struct RectangleKey {
     x: f32,
     y: f32,
@@ -348,6 +348,17 @@ impl From<RectangleKey> for WorldRect {
 
 impl From<LayoutRect> for RectangleKey {
     fn from(rect: LayoutRect) -> RectangleKey {
+        RectangleKey {
+            x: rect.origin.x,
+            y: rect.origin.y,
+            w: rect.size.width,
+            h: rect.size.height,
+        }
+    }
+}
+
+impl From<PictureRect> for RectangleKey {
+    fn from(rect: PictureRect) -> RectangleKey {
         RectangleKey {
             x: rect.origin.x,
             y: rect.origin.y,
@@ -530,6 +541,15 @@ impl From<PointKey> for LayoutPoint {
 
 impl From<LayoutPoint> for PointKey {
     fn from(p: LayoutPoint) -> PointKey {
+        PointKey {
+            x: p.x,
+            y: p.y,
+        }
+    }
+}
+
+impl From<PicturePoint> for PointKey {
+    fn from(p: PicturePoint) -> PointKey {
         PointKey {
             x: p.x,
             y: p.y,
@@ -963,10 +983,12 @@ impl BrushSegment {
                 );
 
                 let clip_task_id = frame_state.render_tasks.add(clip_task);
-                frame_state.render_tasks.add_dependency(
-                    frame_state.surfaces[surface_index.0].render_tasks.unwrap().port,
-                    clip_task_id,
-                );
+                let port = frame_state
+                    .surfaces[surface_index.0]
+                    .render_tasks
+                    .expect(&format!("bug: no task for surface {:?}", surface_index))
+                    .port;
+                frame_state.render_tasks.add_dependency(port, clip_task_id);
                 ClipMaskKind::Mask(clip_task_id)
             }
             None => {
@@ -1317,6 +1339,15 @@ pub enum PrimitiveInstanceKind {
         /// Handle to the common interned data for this primitive.
         data_handle: PrimitiveDataHandle,
     },
+    /// These are non-visual instances. They are used during the
+    /// visibility pass to allow pushing/popping a clip chain
+    /// without the presence of a stacking context / picture.
+    /// TODO(gw): In some ways this seems like a hack, in some
+    ///           ways it seems reasonable. We should discuss
+    ///           other potential methods for non-visual items
+    ///           without the need for a grouping picture.
+    PushClipChain,
+    PopClipChain,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -1330,6 +1361,9 @@ impl PrimitiveVisibilityIndex {
 /// A bit mask describing which dirty regions a primitive is visible in.
 /// A value of 0 means not visible in any region, while a mask of 0xffff
 /// would be considered visible in all regions.
+#[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimitiveVisibilityMask {
     bits: u16,
 }
@@ -1342,8 +1376,23 @@ impl PrimitiveVisibilityMask {
         }
     }
 
+    pub fn all() -> Self {
+        PrimitiveVisibilityMask {
+            bits: !0,
+        }
+    }
+
+    pub fn include(&mut self, other: PrimitiveVisibilityMask) {
+        self.bits |= other.bits;
+    }
+
+    pub fn intersects(&self, other: PrimitiveVisibilityMask) -> bool {
+        (self.bits & other.bits) != 0
+    }
+
     /// Mark a given region index as visible
     pub fn set_visible(&mut self, region_index: usize) {
+        debug_assert!(region_index < PrimitiveVisibilityMask::MAX_DIRTY_REGIONS);
         self.bits |= 1 << region_index;
     }
 
@@ -1351,6 +1400,9 @@ impl PrimitiveVisibilityMask {
     pub fn is_empty(&self) -> bool {
         self.bits == 0
     }
+
+    /// The maximum number of supported dirty regions.
+    pub const MAX_DIRTY_REGIONS: usize = 8 * mem::size_of::<PrimitiveVisibilityMask>();
 }
 
 /// Information stored for a visible primitive about the visible
@@ -1502,6 +1554,10 @@ impl PrimitiveInstance {
             }
             PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
                 data_handle.uid()
+            }
+            PrimitiveInstanceKind::PushClipChain |
+            PrimitiveInstanceKind::PopClipChain => {
+                unreachable!();
             }
         }
     }
@@ -1716,12 +1772,10 @@ impl PrimitiveStore {
     pub fn destroy(
         mut self,
         retained_tiles: &mut RetainedTiles,
-        clip_scroll_tree: &ClipScrollTree,
     ) {
         for pic in &mut self.pictures {
             pic.destroy(
                 retained_tiles,
-                clip_scroll_tree,
             );
         }
     }
@@ -1740,37 +1794,51 @@ impl PrimitiveStore {
         &mut self,
         pic_index: PictureIndex,
         parent_surface_index: SurfaceIndex,
+        world_culling_rect: &WorldRect,
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
     ) -> Option<PictureRect> {
-        let (mut prim_list, surface_index, apply_local_clip_rect, raster_space) = {
+        let (mut prim_list, surface_index, apply_local_clip_rect, world_culling_rect, is_composite) = {
             let pic = &mut self.pictures[pic_index.0];
+            let mut world_culling_rect = *world_culling_rect;
 
             let prim_list = mem::replace(&mut pic.prim_list, PrimitiveList::empty());
-            let surface_index = match pic.raster_config {
-                Some(ref raster_config) => raster_config.surface_index,
-                None => parent_surface_index,
+            let (surface_index, is_composite) = match pic.raster_config {
+                Some(ref raster_config) => (raster_config.surface_index, true),
+                None => (parent_surface_index, false)
             };
 
-            if let Some(mut tile_cache) = pic.tile_cache.take() {
-                debug_assert!(frame_state.tile_cache.is_none());
+            let viewport = match pic.raster_config {
+                Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) => {
+                    let mut tile_cache = pic.tile_cache.take().unwrap();
+                    debug_assert!(frame_state.tile_cache.is_none());
 
-                // If we have a tile cache for this picture, see if any of the
-                // relative transforms have changed, which means we need to
-                // re-map the dependencies of any child primitives.
-                tile_cache.pre_update(
-                    pic.unsnapped_local_rect,
-                    frame_context,
-                    frame_state,
-                    surface_index,
-                );
+                    // If we have a tile cache for this picture, see if any of the
+                    // relative transforms have changed, which means we need to
+                    // re-map the dependencies of any child primitives.
+                    world_culling_rect = tile_cache.pre_update(
+                        PictureRect::from_untyped(&pic.unsnapped_local_rect.to_untyped()),
+                        surface_index,
+                        frame_context,
+                        frame_state,
+                    );
 
-                frame_state.tile_cache = Some(tile_cache);
-            }
+                    let viewport = tile_cache.world_viewport_rect;
 
-            let raster_space = pic.get_raster_space(frame_context.clip_scroll_tree);
+                    frame_state.tile_cache = Some(tile_cache);
 
-            (prim_list, surface_index, pic.apply_local_clip_rect, raster_space)
+                    viewport
+                }
+                _ => {
+                    WorldRect::max_rect()
+                }
+            };
+
+            if is_composite {
+                frame_state.clip_chain_stack.push_surface(viewport);
+            };
+
+            (prim_list, surface_index, pic.apply_local_clip_rect, world_culling_rect, is_composite)
         };
 
         let surface = &frame_context.surfaces[surface_index.0 as usize];
@@ -1782,7 +1850,7 @@ impl PrimitiveStore {
         let map_surface_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             surface.surface_spatial_node_index,
-            frame_context.screen_world_rect,
+            frame_context.global_screen_world_rect,
             frame_context.clip_scroll_tree,
         );
 
@@ -1820,37 +1888,42 @@ impl PrimitiveStore {
             );
 
             let (is_passthrough, snap_to_visible, prim_local_rect, prim_shadow_rect) = match prim_instance.kind {
+                PrimitiveInstanceKind::PushClipChain => {
+                    frame_state.clip_chain_stack.push_clip(
+                        prim_instance.clip_chain_id,
+                        frame_state.clip_store,
+                        frame_state.data_stores,
+                        frame_context.clip_scroll_tree,
+                        frame_context.global_screen_world_rect,
+                    );
+                    continue;
+                }
+                PrimitiveInstanceKind::PopClipChain => {
+                    frame_state.clip_chain_stack.pop_clip();
+                    continue;
+                }
                 PrimitiveInstanceKind::Picture { pic_index, .. } => {
-                    let is_composite = {
-                        let pic = &self.pictures[pic_index.0];
-                        if !pic.is_visible() {
-                            continue;
-                        }
-
-                        // If this picture has a surface, we will handle any active clips from parents
-                        // when compositing this surface. Otherwise, push the clip chain from this
-                        // picture on to the active stack for any child primitive(s) to include.
-                        match pic.raster_config {
-                            Some(ref rc) => match rc.composite_mode {
-                                PictureCompositeMode::TileCache { ..} => false,
-                                _ => true,
-                            }
-                            None => false,
-                        }
-                    };
-
-                    if is_composite {
-                        frame_state.clip_chain_stack.push_surface();
-                    } else {
-                        frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
+                    if !self.pictures[pic_index.0].is_visible() {
+                        continue;
                     }
+
+                    frame_state.clip_chain_stack.push_clip(
+                        prim_instance.clip_chain_id,
+                        frame_state.clip_store,
+                        frame_state.data_stores,
+                        frame_context.clip_scroll_tree,
+                        frame_context.global_screen_world_rect,
+                    );
 
                     let pic_surface_rect = self.update_visibility(
                         pic_index,
                         surface_index,
+                        &world_culling_rect,
                         frame_context,
                         frame_state,
                     );
+
+                    frame_state.clip_chain_stack.pop_clip();
 
                     let pic = &self.pictures[pic_index.0];
 
@@ -1864,13 +1937,6 @@ impl PrimitiveStore {
                     //           size in the picture primitive, to that there isn't
                     //           any duplicated data.
                     prim_instance.prim_origin = pic.snapped_local_rect.origin;
-
-                    // Similar to above, pop either the clip chain or root entry off the current clip stack.
-                    if is_composite {
-                        frame_state.clip_chain_stack.pop_surface();
-                    } else {
-                        frame_state.clip_chain_stack.pop_clip();
-                    }
 
                     let shadow_rect = match pic.raster_config {
                         Some(ref rc) => match rc.composite_mode {
@@ -1958,33 +2024,18 @@ impl PrimitiveStore {
                 };
 
                 // Include the clip chain for this primitive in the current stack.
-                frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
-
-                if let Some(ref mut tile_cache) = frame_state.tile_cache {
-                    if !tile_cache.update_prim_dependencies(
-                        prim_instance,
-                        &frame_state.clip_chain_stack,
-                        prim_local_rect,
-                        frame_context.clip_scroll_tree,
-                        frame_state.data_stores,
-                        &frame_state.clip_store.clip_chain_nodes,
-                        &self.pictures,
-                        frame_state.resource_cache,
-                        &self.opacity_bindings,
-                        &self.images,
-                    ) {
-                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
-                        // Ensure the primitive clip is popped - perhaps we can use
-                        // some kind of scope to do this automatically in future.
-                        frame_state.clip_chain_stack.pop_clip();
-                        continue;
-                    }
-                }
+                frame_state.clip_chain_stack.push_clip(
+                    prim_instance.clip_chain_id,
+                    frame_state.clip_store,
+                    frame_state.data_stores,
+                    frame_context.clip_scroll_tree,
+                    frame_context.global_screen_world_rect,
+                );
 
                 frame_state.clip_store.set_active_clips(
                     prim_instance.local_clip_rect,
                     prim_instance.spatial_node_index,
-                    frame_state.clip_chain_stack.current_clips(),
+                    frame_state.clip_chain_stack.current_clips_array(),
                     &frame_context.clip_scroll_tree,
                     &mut frame_state.data_stores.clip,
                 );
@@ -1999,10 +2050,32 @@ impl PrimitiveStore {
                         frame_state.gpu_cache,
                         frame_state.resource_cache,
                         surface.device_pixel_scale,
-                        &frame_context.screen_world_rect,
+                        &world_culling_rect,
                         &mut frame_state.data_stores.clip,
                         true,
                     );
+
+                if let Some(ref mut tile_cache) = frame_state.tile_cache {
+                    if !tile_cache.update_prim_dependencies(
+                        prim_instance,
+                        clip_chain.as_ref(),
+                        prim_local_rect,
+                        frame_context.clip_scroll_tree,
+                        frame_state.data_stores,
+                        frame_state.clip_store,
+                        &self.pictures,
+                        frame_state.resource_cache,
+                        &self.opacity_bindings,
+                        &self.images,
+                        surface_index,
+                    ) {
+                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                        // Ensure the primitive clip is popped - perhaps we can use
+                        // some kind of scope to do this automatically in future.
+                        frame_state.clip_chain_stack.pop_clip();
+                        continue;
+                    }
+                }
 
                 // Ensure the primitive clip is popped
                 frame_state.clip_chain_stack.pop_clip();
@@ -2034,7 +2107,7 @@ impl PrimitiveStore {
                     }
                 };
 
-                let clipped_world_rect = match world_rect.intersection(&frame_context.screen_world_rect) {
+                let clipped_world_rect = match world_rect.intersection(&world_culling_rect) {
                     Some(rect) => rect,
                     None => {
                         continue;
@@ -2111,6 +2184,8 @@ impl PrimitiveStore {
                 // primitive.
                 if frame_context.debug_flags.contains(::api::DebugFlags::PRIMITIVE_DBG) {
                     let debug_color = match prim_instance.kind {
+                        PrimitiveInstanceKind::PushClipChain |
+                        PrimitiveInstanceKind::PopClipChain |
                         PrimitiveInstanceKind::Picture { .. } => ColorF::TRANSPARENT,
                         PrimitiveInstanceKind::TextRun { .. } => debug_colors::RED,
                         PrimitiveInstanceKind::LineDecoration { .. } => debug_colors::PURPLE,
@@ -2147,13 +2222,15 @@ impl PrimitiveStore {
 
                 self.request_resources_for_prim(
                     prim_instance,
-                    surface,
-                    raster_space,
                     &map_local_to_surface,
-                    frame_context,
                     frame_state,
                 );
             }
+        }
+
+        // Similar to above, pop either the clip chain or root entry off the current clip stack.
+        if is_composite {
+            frame_state.clip_chain_stack.pop_surface();
         }
 
         let pic = &mut self.pictures[pic_index.0];
@@ -2230,36 +2307,16 @@ impl PrimitiveStore {
     fn request_resources_for_prim(
         &mut self,
         prim_instance: &mut PrimitiveInstance,
-        surface: &SurfaceInfo,
-        raster_space: RasterSpace,
         map_local_to_surface: &SpaceMapper<LayoutPixel, PicturePixel>,
-        frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
     ) {
         match prim_instance.kind {
-            PrimitiveInstanceKind::TextRun { data_handle, run_index, .. } => {
-                let prim_data = &mut frame_state.data_stores.text_run[data_handle];
-                let run = &mut self.text_runs[run_index];
-
-                // The transform only makes sense for screen space rasterization
-                let relative_transform = frame_context
-                    .clip_scroll_tree
-                    .get_world_transform(prim_instance.spatial_node_index)
-                    .into_transform();
-                let prim_offset = prim_instance.prim_origin.to_vector() - run.reference_frame_relative_offset;
-
-                run.request_resources(
-                    prim_offset,
-                    &prim_data.font,
-                    &prim_data.glyphs,
-                    &relative_transform,
-                    surface,
-                    raster_space,
-                    frame_state.resource_cache,
-                    frame_state.gpu_cache,
-                    frame_state.render_tasks,
-                    frame_state.scratch,
-                );
+            PrimitiveInstanceKind::TextRun { .. } => {
+                // Text runs can't request resources early here, as we don't
+                // know until TileCache::post_update() whether we are drawing
+                // on an opaque surface.
+                // TODO(gw): We might be able to detect simple cases of this earlier,
+                //           during the picture traversal. But it's probably not worth it?
             }
             PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
                 let prim_data = &mut frame_state.data_stores.image[data_handle];
@@ -2417,6 +2474,8 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::YuvImage { .. } |
             PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::RadialGradient { .. } |
+            PrimitiveInstanceKind::PushClipChain |
+            PrimitiveInstanceKind::PopClipChain |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 // These prims don't support opacity collapse
             }
@@ -2528,6 +2587,7 @@ impl PrimitiveStore {
                         pic_context.surface_spatial_node_index,
                         pic_context.raster_spatial_node_index,
                         pic_context.surface_index,
+                        pic_context.subpixel_mode,
                         frame_state,
                         frame_context,
                     ) {
@@ -2552,6 +2612,8 @@ impl PrimitiveStore {
                 PrimitiveInstanceKind::Image { .. } |
                 PrimitiveInstanceKind::LinearGradient { .. } |
                 PrimitiveInstanceKind::RadialGradient { .. } |
+                PrimitiveInstanceKind::PushClipChain |
+                PrimitiveInstanceKind::PopClipChain |
                 PrimitiveInstanceKind::Clear { .. } => {
                     None
                 }
@@ -2648,36 +2710,15 @@ impl PrimitiveStore {
                 let visibility_info = &mut scratch.prim_info[prim_instance.visibility_info.0 as usize];
                 let dirty_region = frame_state.current_dirty_region();
 
-                // Check if the primitive world rect intersects with the overall dirty rect first.
-                match visibility_info.clipped_world_rect.intersection(&dirty_region.combined.world_rect) {
-                    Some(rect) => {
-                        // It does intersect the overall dirty rect, so it *might* be visible.
-                        // Store this reduced rect here, which is used for clip mask and other
-                        // render task size calculations. In future, we may consider creating multiple
-                        // render task graphs, one per dirty region.
-                        visibility_info.clipped_world_rect = rect;
-
-                        // If there is more than one dirty region, it's possible that this primitive
-                        // is inside the overal dirty rect, but doesn't intersect any of the individual
-                        // dirty rects. If that's the case, then we can skip drawing this primitive too.
-                        if dirty_region.dirty_rects.len() > 1 {
-                            for (region_index, region) in dirty_region.dirty_rects.iter().enumerate() {
-                                if visibility_info.clipped_world_rect.intersects(&region.world_rect) {
-                                    visibility_info.visibility_mask.set_visible(region_index);
-                                }
-                            }
-
-                            if visibility_info.visibility_mask.is_empty() {
-                                prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
-                                continue;
-                            }
-                        }
+                for dirty_region in &dirty_region.dirty_rects {
+                    if visibility_info.clipped_world_rect.intersects(&dirty_region.world_rect) {
+                        visibility_info.visibility_mask.include(dirty_region.visibility_mask);
                     }
-                    None => {
-                        // Outside the overall dirty rect, so can be skipped.
-                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
-                        continue;
-                    }
+                }
+
+                if visibility_info.visibility_mask.is_empty() {
+                    prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                    continue;
                 }
             }
 
@@ -2768,8 +2809,34 @@ impl PrimitiveStore {
                     ));
                 }
             }
-            PrimitiveInstanceKind::TextRun { data_handle, .. } => {
+            PrimitiveInstanceKind::TextRun { run_index, data_handle, .. } => {
                 let prim_data = &mut data_stores.text_run[*data_handle];
+                let run = &mut self.text_runs[*run_index];
+
+                // The transform only makes sense for screen space rasterization
+                let relative_transform = frame_context
+                    .clip_scroll_tree
+                    .get_world_transform(prim_instance.spatial_node_index)
+                    .into_transform();
+                let prim_offset = prim_instance.prim_origin.to_vector() - run.reference_frame_relative_offset;
+
+                let pic = &self.pictures[pic_context.pic_index.0];
+                let raster_space = pic.get_raster_space(frame_context.clip_scroll_tree);
+                let surface = &frame_state.surfaces[pic_context.surface_index.0];
+
+                run.request_resources(
+                    prim_offset,
+                    &prim_data.font,
+                    &prim_data.glyphs,
+                    &relative_transform,
+                    surface,
+                    raster_space,
+                    pic_context.subpixel_mode,
+                    frame_state.resource_cache,
+                    frame_state.gpu_cache,
+                    frame_state.render_tasks,
+                    scratch,
+                );
 
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
@@ -3111,7 +3178,7 @@ impl PrimitiveStore {
                             prim_instance.spatial_node_index,
                             pic.snapped_local_rect,
                             &prim_info.combined_local_clip_rect,
-                            frame_context.screen_world_rect,
+                            frame_context.global_screen_world_rect,
                             plane_split_anchor,
                         );
                     }
@@ -3142,6 +3209,8 @@ impl PrimitiveStore {
                     prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
                 }
             }
+            PrimitiveInstanceKind::PushClipChain |
+            PrimitiveInstanceKind::PopClipChain => {}
         };
     }
 }
@@ -3347,8 +3416,13 @@ impl<'a> GpuDataRequest<'a> {
                     continue;
                 }
                 ClipItem::Image { .. } => {
-                    rect_clips_only = false;
-                    continue;
+                    // If we encounter an image mask, bail out from segment building.
+                    // It's not possible to know which parts of the primitive are affected
+                    // by the mask (without inspecting the pixels). We could do something
+                    // better here in the future if it ever shows up as a performance issue
+                    // (for instance, at least segment based on the bounding rect of the
+                    // image mask if it's non-repeating).
+                    return false;
                 }
             };
 
@@ -3460,6 +3534,8 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::Clear { .. } |
             PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::RadialGradient { .. } |
+            PrimitiveInstanceKind::PushClipChain |
+            PrimitiveInstanceKind::PopClipChain |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 // These primitives don't support / need segments.
                 return;
@@ -3524,6 +3600,8 @@ impl PrimitiveInstance {
         let segments = match self.kind {
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::Clear { .. } |
+            PrimitiveInstanceKind::PushClipChain |
+            PrimitiveInstanceKind::PopClipChain |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 return false;
             }
@@ -3633,7 +3711,7 @@ impl PrimitiveInstance {
             );
             clip_mask_instances.push(clip_mask_kind);
         } else {
-            let dirty_world_rect = frame_state.current_dirty_region().combined.world_rect;
+            let dirty_world_rect = frame_state.current_dirty_region().combined;
 
             for segment in segments {
                 // Build a clip chain for the smaller segment rect. This will

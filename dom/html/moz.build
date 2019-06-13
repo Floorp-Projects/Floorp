@@ -37,7 +37,6 @@ EXPORTS += [
     'nsIConstraintValidation.h',
     'nsIForm.h',
     'nsIFormControl.h',
-    'nsIFormProcessor.h',
     'nsIHTMLCollection.h',
     'nsIRadioGroupContainer.h',
     'nsIRadioVisitor.h',

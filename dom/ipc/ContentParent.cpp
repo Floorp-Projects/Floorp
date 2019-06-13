@@ -149,7 +149,6 @@
 #include "mozilla/dom/WakeLock.h"
 #include "nsIDOMWindow.h"
 #include "nsIExternalProtocolService.h"
-#include "nsIFormProcessor.h"
 #include "nsIGfxInfo.h"
 #include "nsIIdleService.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -1990,7 +1989,7 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
   if (mozilla::IsDevelopmentBuild()) {
     // Repo dir
     nsCOMPtr<nsIFile> repoDir;
-    rv = mozilla::GetRepoDir(getter_AddRefs(repoDir));
+    rv = nsMacUtilsImpl::GetRepoDir(getter_AddRefs(repoDir));
     if (NS_FAILED(rv)) {
       MOZ_CRASH("Failed to get path to repo dir");
     }
@@ -2000,7 +1999,7 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
 
     // Object dir
     nsCOMPtr<nsIFile> objDir;
-    rv = mozilla::GetObjDir(getter_AddRefs(objDir));
+    rv = nsMacUtilsImpl::GetObjDir(getter_AddRefs(objDir));
     if (NS_FAILED(rv)) {
       MOZ_CRASH("Failed to get path to build object dir");
     }
@@ -4434,34 +4433,6 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateAudioIPCConnection(
     result = NS_ERROR_FAILURE;
   }
   aResolver(std::move(result));
-  return IPC_OK();
-}
-
-static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
-
-mozilla::ipc::IPCResult ContentParent::RecvKeygenProcessValue(
-    const nsString& oldValue, const nsString& challenge,
-    const nsString& keytype, const nsString& keyparams, nsString* newValue) {
-  nsCOMPtr<nsIFormProcessor> formProcessor = do_GetService(kFormProcessorCID);
-  if (!formProcessor) {
-    newValue->Truncate();
-    return IPC_OK();
-  }
-
-  formProcessor->ProcessValueIPC(oldValue, challenge, keytype, keyparams,
-                                 *newValue);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvKeygenProvideContent(
-    nsString* aAttribute, nsTArray<nsString>* aContent) {
-  nsCOMPtr<nsIFormProcessor> formProcessor = do_GetService(kFormProcessorCID);
-  if (!formProcessor) {
-    return IPC_OK();
-  }
-
-  formProcessor->ProvideContent(NS_LITERAL_STRING("SELECT"), *aContent,
-                                *aAttribute);
   return IPC_OK();
 }
 

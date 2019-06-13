@@ -5005,10 +5005,10 @@ bool BytecodeEmitter::emitCopyDataProperties(CopyOption option) {
 }
 
 bool BytecodeEmitter::emitBigIntOp(BigInt* bigint) {
-  if (!perScriptData().numberList().append(BigIntValue(bigint))) {
+  if (!perScriptData().bigIntList().append(bigint)) {
     return false;
   }
-  return emitIndex32(JSOP_BIGINT, perScriptData().numberList().length() - 1);
+  return emitIndex32(JSOP_BIGINT, perScriptData().bigIntList().length() - 1);
 }
 
 bool BytecodeEmitter::emitIterator() {

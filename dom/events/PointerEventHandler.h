@@ -44,9 +44,6 @@ class PointerEventHandler final {
   static void InitializeStatics();
   static void ReleaseStatics();
 
-  // Return the preference value of pointer event enabled.
-  static bool IsPointerEventEnabled();
-
   // Return the preference value of implicit capture.
   static bool IsPointerEventImplicitCaptureForTouchEnabled();
 

@@ -7,11 +7,11 @@
  * https://w3c.github.io/reporting/#interface-reporting-observer
  */
 
-[Func="mozilla::dom::DOMPrefs::dom_reporting_enabled"]
+[Pref="dom.reporting.enabled"]
 interface ReportBody {
 };
 
-[Func="mozilla::dom::DOMPrefs::dom_reporting_enabled"]
+[Pref="dom.reporting.enabled"]
 interface Report {
   readonly attribute DOMString type;
   readonly attribute DOMString url;
@@ -19,7 +19,7 @@ interface Report {
 };
 
 [Constructor(ReportingObserverCallback callback, optional ReportingObserverOptions options),
- Func="mozilla::dom::DOMPrefs::dom_reporting_enabled"]
+ Pref="dom.reporting.enabled"]
 interface ReportingObserver {
   void observe();
   void disconnect();
@@ -35,7 +35,7 @@ dictionary ReportingObserverOptions {
 
 typedef sequence<Report> ReportList;
 
-[Func="mozilla::dom::DOMPrefs::dom_reporting_enabled"]
+[Pref="dom.reporting.enabled"]
 interface DeprecationReportBody : ReportBody {
   readonly attribute DOMString id;
   readonly attribute Date? anticipatedRemoval;
@@ -46,7 +46,7 @@ interface DeprecationReportBody : ReportBody {
 };
 
 [Constructor(), Deprecated="DeprecatedTestingInterface",
- Func="mozilla::dom::DOMPrefs::dom_reporting_testing_enabled",
+ Pref="dom.reporting.testing.enabled",
  Exposed=(Window,DedicatedWorker)]
 interface TestingDeprecatedInterface {
   [Deprecated="DeprecatedTestingMethod"]

@@ -44,7 +44,7 @@ use api::channel;
 use api::units::*;
 pub use api::DebugFlags;
 use api::channel::{MsgSender, PayloadReceiverHelperMethods};
-use crate::batch::{BatchKind, BatchTextures, BrushBatchKind, ClipBatchList};
+use crate::batch::{AlphaBatchContainer, BatchKind, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use crate::debug_colors;
@@ -55,8 +55,7 @@ use crate::device::{ShaderError, TextureFilter, TextureFlags,
              VertexUsageHint, VAO, VBO, CustomVAO};
 use crate::device::{ProgramCache};
 use crate::device::query::GpuTimer;
-use euclid::rect;
-use euclid::{Transform3D, TypedScale};
+use euclid::{rect, Transform3D, TypedScale};
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use gleam::gl;
 use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
@@ -70,7 +69,7 @@ use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSe
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use crate::internal_types::{RenderTargetInfo, SavedTargetIndex};
 use malloc_size_of::MallocSizeOfOps;
-use crate::picture::{RecordedDirtyRegion, TileCache};
+use crate::picture::{RecordedDirtyRegion, TILE_SIZE_WIDTH, TILE_SIZE_HEIGHT};
 use crate::prim_store::DeferredResolve;
 use crate::profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
@@ -104,7 +103,7 @@ use std::thread;
 use std::cell::RefCell;
 use crate::texture_cache::TextureCache;
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use crate::tiling::{AlphaRenderTarget, ColorRenderTarget};
+use crate::tiling::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget};
 use crate::tiling::{BlitJob, BlitJobSource, RenderPassKind, RenderTargetList};
 use crate::tiling::{Frame, RenderTarget, RenderTargetKind, TextureCacheRenderTarget};
 #[cfg(not(feature = "pathfinder"))]
@@ -209,7 +208,6 @@ const GPU_TAG_SCALE: GpuProfileTag = GpuProfileTag {
     label: "Scale",
     color: debug_colors::GHOSTWHITE,
 };
-
 const GPU_SAMPLER_TAG_ALPHA: GpuProfileTag = GpuProfileTag {
     label: "Alpha Targets",
     color: debug_colors::BLACK,
@@ -1976,6 +1974,7 @@ impl Renderer {
             gpu_supports_advanced_blend: ext_blend_equation_advanced,
             advanced_blend_is_coherent: ext_blend_equation_advanced_coherent,
             batch_lookback_count: options.batch_lookback_count,
+            background_color: options.clear_color,
         };
         info!("WR {:?}", config);
 
@@ -2080,7 +2079,7 @@ impl Renderer {
                 max_texture_size,
                 max_texture_layers,
                 if config.enable_picture_caching {
-                    Some(TileCache::tile_dimensions(config.testing))
+                    Some(DeviceIntSize::new(TILE_SIZE_WIDTH, TILE_SIZE_HEIGHT))
                 } else {
                     None
                 },
@@ -2554,10 +2553,10 @@ impl Renderer {
                     RenderPassKind::MainFramebuffer { ref main_target, .. } => {
                         debug_targets.push(Self::debug_color_target(main_target));
                     }
-                    RenderPassKind::OffScreen { ref alpha, ref color, ref texture_cache } => {
+                    RenderPassKind::OffScreen { ref alpha, ref color, ref texture_cache, .. } => {
                         debug_targets.extend(alpha.targets.iter().map(Self::debug_alpha_target));
                         debug_targets.extend(color.targets.iter().map(Self::debug_color_target));
-                        debug_targets.extend(texture_cache.iter().map(|(_, target)| Self::debug_texture_cache_target(target)))
+                        debug_targets.extend(texture_cache.iter().map(|(_, target)| Self::debug_texture_cache_target(target)));
                     }
                 }
 
@@ -3028,7 +3027,7 @@ impl Renderer {
                                 info.filter,
                                 // This needs to be a render target because some render
                                 // tasks get rendered into the texture cache.
-                                Some(RenderTargetInfo { has_depth: false }),
+                                Some(RenderTargetInfo { has_depth: info.has_depth }),
                                 info.layer_count,
                             );
 
@@ -3377,6 +3376,256 @@ impl Renderer {
         );
     }
 
+    fn draw_picture_cache_target(
+        &mut self,
+        target: &PictureCacheTarget,
+        draw_target: DrawTarget,
+        content_origin: DeviceIntPoint,
+        projection: &Transform3D<f32>,
+        render_tasks: &RenderTaskGraph,
+        stats: &mut RendererStats,
+    ) {
+        self.profile_counters.color_targets.inc();
+        let _gm = self.gpu_profile.start_marker("picture cache target");
+        let framebuffer_kind = FramebufferKind::Other;
+
+        {
+            let _timer = self.gpu_profile.start_timer(GPU_TAG_SETUP_TARGET);
+            self.device.bind_draw_target(draw_target);
+            self.device.disable_depth();
+            self.device.enable_depth_write();
+            self.set_blend(false, framebuffer_kind);
+
+            self.device.clear_target(
+                target.clear_color.map(|c| c.to_array()),
+                Some(1.0),
+                None,
+            );
+
+            self.device.disable_depth_write();
+        }
+
+        self.draw_alpha_batch_container(
+            &target.alpha_batch_container,
+            draw_target,
+            content_origin,
+            framebuffer_kind,
+            projection,
+            render_tasks,
+            stats,
+        );
+    }
+
+    /// Draw an alpha batch container into a given draw target. This is used
+    /// by both color and picture cache target kinds.
+    fn draw_alpha_batch_container(
+        &mut self,
+        alpha_batch_container: &AlphaBatchContainer,
+        draw_target: DrawTarget,
+        content_origin: DeviceIntPoint,
+        framebuffer_kind: FramebufferKind,
+        projection: &Transform3D<f32>,
+        render_tasks: &RenderTaskGraph,
+        stats: &mut RendererStats,
+    ) {
+        let uses_scissor = alpha_batch_container.task_scissor_rect.is_some();
+
+        if uses_scissor {
+            self.device.enable_scissor();
+            let scissor_rect = draw_target.build_scissor_rect(
+                alpha_batch_container.task_scissor_rect,
+                content_origin,
+            );
+            self.device.set_scissor_rect(scissor_rect)
+        }
+
+        if !alpha_batch_container.opaque_batches.is_empty()
+            && !self.debug_flags.contains(DebugFlags::DISABLE_OPAQUE_PASS) {
+            let _gl = self.gpu_profile.start_marker("opaque batches");
+            let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
+            self.set_blend(false, framebuffer_kind);
+            //Note: depth equality is needed for split planes
+            self.device.set_depth_func(DepthFunction::LessEqual);
+            self.device.enable_depth();
+            self.device.enable_depth_write();
+
+            // Draw opaque batches front-to-back for maximum
+            // z-buffer efficiency!
+            for batch in alpha_batch_container
+                .opaque_batches
+                .iter()
+                .rev()
+                {
+                    if should_skip_batch(&batch.key.kind, &self.debug_flags) {
+                        continue;
+                    }
+
+                    self.shaders.borrow_mut()
+                        .get(&batch.key, self.debug_flags)
+                        .bind(
+                            &mut self.device, projection,
+                            &mut self.renderer_errors,
+                        );
+
+                    let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
+                    self.draw_instanced_batch(
+                        &batch.instances,
+                        VertexArrayKind::Primitive,
+                        &batch.key.textures,
+                        stats
+                    );
+                }
+
+            self.device.disable_depth_write();
+            self.gpu_profile.finish_sampler(opaque_sampler);
+        }
+
+        if !alpha_batch_container.alpha_batches.is_empty()
+            && !self.debug_flags.contains(DebugFlags::DISABLE_ALPHA_PASS) {
+            let _gl = self.gpu_profile.start_marker("alpha batches");
+            let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
+            self.set_blend(true, framebuffer_kind);
+            let mut prev_blend_mode = BlendMode::None;
+
+            // If the device supports pixel local storage, initialize the PLS buffer for
+            // the transparent pass. This involves reading the current framebuffer value
+            // and storing that in PLS.
+            // TODO(gw): This is quite expensive and relies on framebuffer fetch being
+            //           available. We can probably switch the opaque pass over to use
+            //           PLS too, and remove this pass completely.
+            if self.device.get_capabilities().supports_pixel_local_storage {
+                // TODO(gw): If using PLS, the fixed function blender is disabled. It's possible
+                //           we could take advantage of this by skipping batching on the blend
+                //           mode in these cases.
+                self.init_pixel_local_storage(
+                    alpha_batch_container.task_rect,
+                    projection,
+                    stats,
+                );
+            }
+
+            for batch in &alpha_batch_container.alpha_batches {
+                if should_skip_batch(&batch.key.kind, &self.debug_flags) {
+                    continue;
+                }
+
+                self.shaders.borrow_mut()
+                    .get(&batch.key, self.debug_flags)
+                    .bind(
+                        &mut self.device, projection,
+                        &mut self.renderer_errors,
+                    );
+
+                if batch.key.blend_mode != prev_blend_mode {
+                    match batch.key.blend_mode {
+                        _ if self.debug_flags.contains(DebugFlags::SHOW_OVERDRAW) &&
+                            framebuffer_kind == FramebufferKind::Main => {
+                            self.device.set_blend_mode_show_overdraw();
+                        }
+                        BlendMode::None => {
+                            unreachable!("bug: opaque blend in alpha pass");
+                        }
+                        BlendMode::Alpha => {
+                            self.device.set_blend_mode_alpha();
+                        }
+                        BlendMode::PremultipliedAlpha => {
+                            self.device.set_blend_mode_premultiplied_alpha();
+                        }
+                        BlendMode::PremultipliedDestOut => {
+                            self.device.set_blend_mode_premultiplied_dest_out();
+                        }
+                        BlendMode::SubpixelDualSource => {
+                            self.device.set_blend_mode_subpixel_dual_source();
+                        }
+                        BlendMode::SubpixelConstantTextColor(color) => {
+                            self.device.set_blend_mode_subpixel_constant_text_color(color);
+                        }
+                        BlendMode::SubpixelWithBgColor => {
+                            // Using the three pass "component alpha with font smoothing
+                            // background color" rendering technique:
+                            //
+                            // /webrender/doc/text-rendering.md
+                            //
+                            self.device.set_blend_mode_subpixel_with_bg_color_pass0();
+                            self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass0 as _);
+                        }
+                        BlendMode::Advanced(mode) => {
+                            if self.enable_advanced_blend_barriers {
+                                self.device.gl().blend_barrier_khr();
+                            }
+                            self.device.set_blend_mode_advanced(mode);
+                        }
+                    }
+                    prev_blend_mode = batch.key.blend_mode;
+                }
+
+                // Handle special case readback for composites.
+                if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = batch.key.kind {
+                    // composites can't be grouped together because
+                    // they may overlap and affect each other.
+                    debug_assert_eq!(batch.instances.len(), 1);
+                    self.handle_readback_composite(
+                        draw_target,
+                        uses_scissor,
+                        &render_tasks[source_id],
+                        &render_tasks[task_id],
+                        &render_tasks[backdrop_id],
+                    );
+                }
+
+                let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
+
+                self.draw_instanced_batch(
+                    &batch.instances,
+                    VertexArrayKind::Primitive,
+                    &batch.key.textures,
+                    stats
+                );
+
+                if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
+                    self.set_blend_mode_subpixel_with_bg_color_pass1(framebuffer_kind);
+                    self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass1 as _);
+
+                    // When drawing the 2nd and 3rd passes, we know that the VAO, textures etc
+                    // are all set up from the previous draw_instanced_batch call,
+                    // so just issue a draw call here to avoid re-uploading the
+                    // instances and re-binding textures etc.
+                    self.device
+                        .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+
+                    self.set_blend_mode_subpixel_with_bg_color_pass2(framebuffer_kind);
+                    self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass2 as _);
+
+                    self.device
+                        .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+                }
+
+                if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
+                    prev_blend_mode = BlendMode::None;
+                }
+            }
+
+            // If the device supports pixel local storage, resolve the PLS values.
+            // This pass reads the final PLS color value, and writes it to a normal
+            // fragment output.
+            if self.device.get_capabilities().supports_pixel_local_storage {
+                self.resolve_pixel_local_storage(
+                    alpha_batch_container.task_rect,
+                    projection,
+                    stats,
+                );
+            }
+
+            self.device.disable_depth();
+            self.set_blend(false, framebuffer_kind);
+            self.gpu_profile.finish_sampler(transparent_sampler);
+        }
+
+        if uses_scissor {
+            self.device.disable_scissor();
+        }
+    }
+
     fn draw_color_target(
         &mut self,
         draw_target: DrawTarget,
@@ -3495,298 +3744,16 @@ impl Renderer {
             stats,
         );
 
-        // Small helper fn to iterate a regions list, also invoking the closure
-        // if there are no regions.
-        fn iterate_regions<F>(
-            regions: &[DeviceIntRect],
-            mut f: F,
-        ) where F: FnMut(Option<DeviceIntRect>) {
-            if regions.is_empty() {
-                f(None)
-            } else {
-                for region in regions {
-                    f(Some(*region))
-                }
-            }
-        }
-
-        fn should_skip_batch(kind: &BatchKind, flags: &DebugFlags) -> bool {
-            match kind {
-                BatchKind::TextRun(_) => {
-                    flags.contains(DebugFlags::DISABLE_TEXT_PRIMS)
-                }
-                BatchKind::Brush(BrushBatchKind::RadialGradient) |
-                BatchKind::Brush(BrushBatchKind::LinearGradient) => {
-                    flags.contains(DebugFlags::DISABLE_GRADIENT_PRIMS)
-                }
-                _ => false,
-            }
-        }
-
         for alpha_batch_container in &target.alpha_batch_containers {
-            let uses_scissor = alpha_batch_container.task_scissor_rect.is_some() ||
-                               !alpha_batch_container.regions.is_empty();
-
-            if uses_scissor {
-                self.device.enable_scissor();
-                let scissor_rect = draw_target.build_scissor_rect(
-                    alpha_batch_container.task_scissor_rect,
-                    content_origin,
-                );
-                self.device.set_scissor_rect(scissor_rect)
-            }
-
-            if !alpha_batch_container.opaque_batches.is_empty()
-                    && !self.debug_flags.contains(DebugFlags::DISABLE_OPAQUE_PASS) {
-                let _gl = self.gpu_profile.start_marker("opaque batches");
-                let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
-                self.set_blend(false, framebuffer_kind);
-                //Note: depth equality is needed for split planes
-                self.device.set_depth_func(DepthFunction::LessEqual);
-                self.device.enable_depth();
-                self.device.enable_depth_write();
-
-                // Draw opaque batches front-to-back for maximum
-                // z-buffer efficiency!
-                for batch in alpha_batch_container
-                    .opaque_batches
-                    .iter()
-                    .rev()
-                {
-                    if should_skip_batch(&batch.key.kind, &self.debug_flags) {
-                        continue;
-                    }
-
-                    self.shaders.borrow_mut()
-                        .get(&batch.key, self.debug_flags)
-                        .bind(
-                            &mut self.device, projection,
-                            &mut self.renderer_errors,
-                        );
-
-                    let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
-
-                    iterate_regions(
-                        &alpha_batch_container.regions,
-                        |region| {
-                            if let Some(region) = region {
-                                let scissor_rect = draw_target.build_scissor_rect(
-                                    Some(region),
-                                    content_origin,
-                                );
-                                self.device.set_scissor_rect(scissor_rect);
-                            }
-
-                            self.draw_instanced_batch(
-                                &batch.instances,
-                                VertexArrayKind::Primitive,
-                                &batch.key.textures,
-                                stats
-                            );
-                        }
-                    );
-                }
-
-                self.device.disable_depth_write();
-                self.gpu_profile.finish_sampler(opaque_sampler);
-            }
-
-            if !alpha_batch_container.alpha_batches.is_empty()
-                    && !self.debug_flags.contains(DebugFlags::DISABLE_ALPHA_PASS) {
-                let _gl = self.gpu_profile.start_marker("alpha batches");
-                let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
-                self.set_blend(true, framebuffer_kind);
-                let mut prev_blend_mode = BlendMode::None;
-
-                // If the device supports pixel local storage, initialize the PLS buffer for
-                // the transparent pass. This involves reading the current framebuffer value
-                // and storing that in PLS.
-                // TODO(gw): This is quite expensive and relies on framebuffer fetch being
-                //           available. We can probably switch the opaque pass over to use
-                //           PLS too, and remove this pass completely.
-                if self.device.get_capabilities().supports_pixel_local_storage {
-                    // TODO(gw): If using PLS, the fixed function blender is disabled. It's possible
-                    //           we could take advantage of this by skipping batching on the blend
-                    //           mode in these cases.
-                    self.init_pixel_local_storage(
-                        alpha_batch_container.task_rect,
-                        projection,
-                        stats,
-                    );
-                }
-
-                for batch in &alpha_batch_container.alpha_batches {
-                    if should_skip_batch(&batch.key.kind, &self.debug_flags) {
-                        continue;
-                    }
-
-                    self.shaders.borrow_mut()
-                        .get(&batch.key, self.debug_flags)
-                        .bind(
-                            &mut self.device, projection,
-                            &mut self.renderer_errors,
-                        );
-
-                    if batch.key.blend_mode != prev_blend_mode {
-                        match batch.key.blend_mode {
-                            _ if self.debug_flags.contains(DebugFlags::SHOW_OVERDRAW) &&
-                                    framebuffer_kind == FramebufferKind::Main => {
-                                self.device.set_blend_mode_show_overdraw();
-                            }
-                            BlendMode::None => {
-                                unreachable!("bug: opaque blend in alpha pass");
-                            }
-                            BlendMode::Alpha => {
-                                self.device.set_blend_mode_alpha();
-                            }
-                            BlendMode::PremultipliedAlpha => {
-                                self.device.set_blend_mode_premultiplied_alpha();
-                            }
-                            BlendMode::PremultipliedDestOut => {
-                                self.device.set_blend_mode_premultiplied_dest_out();
-                            }
-                            BlendMode::SubpixelDualSource => {
-                                self.device.set_blend_mode_subpixel_dual_source();
-                            }
-                            BlendMode::SubpixelConstantTextColor(color) => {
-                                self.device.set_blend_mode_subpixel_constant_text_color(color);
-                            }
-                            BlendMode::SubpixelWithBgColor => {
-                                // Using the three pass "component alpha with font smoothing
-                                // background color" rendering technique:
-                                //
-                                // /webrender/doc/text-rendering.md
-                                //
-                                self.device.set_blend_mode_subpixel_with_bg_color_pass0();
-                                self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass0 as _);
-                            }
-                            BlendMode::Advanced(mode) => {
-                                if self.enable_advanced_blend_barriers {
-                                    self.device.gl().blend_barrier_khr();
-                                }
-                                self.device.set_blend_mode_advanced(mode);
-                            }
-                        }
-                        prev_blend_mode = batch.key.blend_mode;
-                    }
-
-                    // Handle special case readback for composites.
-                    if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = batch.key.kind {
-                        // composites can't be grouped together because
-                        // they may overlap and affect each other.
-                        debug_assert_eq!(batch.instances.len(), 1);
-                        self.handle_readback_composite(
-                            draw_target,
-                            uses_scissor,
-                            &render_tasks[source_id],
-                            &render_tasks[task_id],
-                            &render_tasks[backdrop_id],
-                        );
-                    }
-
-                    let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
-
-                    iterate_regions(
-                        &alpha_batch_container.regions,
-                        |region| {
-                            if let Some(region) = region {
-                                let scissor_rect = draw_target.build_scissor_rect(
-                                    Some(region),
-                                    content_origin,
-                                );
-                                self.device.set_scissor_rect(scissor_rect);
-                            }
-
-                            self.draw_instanced_batch(
-                                &batch.instances,
-                                VertexArrayKind::Primitive,
-                                &batch.key.textures,
-                                stats
-                            );
-
-                            if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
-                                self.set_blend_mode_subpixel_with_bg_color_pass1(framebuffer_kind);
-                                self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass1 as _);
-
-                                // When drawing the 2nd and 3rd passes, we know that the VAO, textures etc
-                                // are all set up from the previous draw_instanced_batch call,
-                                // so just issue a draw call here to avoid re-uploading the
-                                // instances and re-binding textures etc.
-                                self.device
-                                    .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
-
-                                self.set_blend_mode_subpixel_with_bg_color_pass2(framebuffer_kind);
-                                self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass2 as _);
-
-                                self.device
-                                    .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
-                            }
-                        }
-                    );
-
-                    if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
-                        prev_blend_mode = BlendMode::None;
-                    }
-                }
-
-                // If the device supports pixel local storage, resolve the PLS values.
-                // This pass reads the final PLS color value, and writes it to a normal
-                // fragment output.
-                if self.device.get_capabilities().supports_pixel_local_storage {
-                    self.resolve_pixel_local_storage(
-                        alpha_batch_container.task_rect,
-                        projection,
-                        stats,
-                    );
-                }
-
-                self.device.disable_depth();
-                self.set_blend(false, framebuffer_kind);
-                self.gpu_profile.finish_sampler(transparent_sampler);
-            }
-
-            if uses_scissor {
-                self.device.disable_scissor();
-            }
-
-            // At the end of rendering a container, blit across any cache tiles
-            // to the texture cache for use on subsequent frames.
-            if !alpha_batch_container.tile_blits.is_empty() {
-                let _timer = self.gpu_profile.start_timer(GPU_TAG_BLIT);
-
-                for blit in &alpha_batch_container.tile_blits {
-                    let texture = self.texture_resolver
-                        .resolve(&blit.target.texture_id)
-                        .expect("BUG: invalid target texture");
-
-                    let blit_target = DrawTarget::from_texture(
-                        texture,
-                        blit.target.texture_layer as usize,
-                        false,
-                    );
-
-                    let src_rect = draw_target.to_framebuffer_rect(DeviceIntRect::new(
-                        blit.src_offset - content_origin.to_vector(),
-                        blit.size,
-                    ));
-
-                    let target_rect = blit.target.uv_rect.to_i32();
-
-                    let dest_rect = blit_target.to_framebuffer_rect(DeviceIntRect::new(
-                        blit.dest_offset + (target_rect.origin - content_origin),
-                        blit.size,
-                    ));
-
-                    self.device.blit_render_target_invert_y(
-                        draw_target.into(),
-                        src_rect,
-                        blit_target,
-                        dest_rect,
-                    );
-                }
-
-                self.device.bind_draw_target(draw_target);
-            }
+            self.draw_alpha_batch_container(
+                alpha_batch_container,
+                draw_target,
+                content_origin,
+                framebuffer_kind,
+                projection,
+                render_tasks,
+                stats,
+            );
         }
 
         // For any registered image outputs on this render target,
@@ -4498,7 +4465,12 @@ impl Renderer {
                         );
                     }
                 }
-                RenderPassKind::OffScreen { ref mut alpha, ref mut color, ref mut texture_cache } => {
+                RenderPassKind::OffScreen {
+                    ref mut alpha,
+                    ref mut color,
+                    ref mut texture_cache,
+                    ref mut picture_cache,
+                } => {
                     let alpha_tex = self.allocate_target_texture(alpha, &mut frame.profile_counters);
                     let color_tex = self.allocate_target_texture(color, &mut frame.profile_counters);
 
@@ -4511,6 +4483,38 @@ impl Renderer {
                                 &texture_id,
                                 target_index,
                                 target,
+                                &frame.render_tasks,
+                                stats,
+                            );
+                        }
+
+                        // Draw picture caching tiles for this pass.
+                        for picture_target in picture_cache {
+                            stats.color_target_count += 1;
+
+                            let texture = self.texture_resolver
+                                .resolve(&picture_target.texture)
+                                .expect("bug");
+                            let draw_target = DrawTarget::from_texture(
+                                texture,
+                                picture_target.layer,
+                                true,
+                            );
+
+                            let projection = Transform3D::ortho(
+                                0.0,
+                                draw_target.dimensions().width as f32,
+                                0.0,
+                                draw_target.dimensions().height as f32,
+                                ORTHO_NEAR_PLANE,
+                                ORTHO_FAR_PLANE,
+                            );
+
+                            self.draw_picture_cache_target(
+                                picture_target,
+                                draw_target,
+                                frame.content_origin,
+                                &projection,
                                 &frame.render_tasks,
                                 stats,
                             );
@@ -5507,6 +5511,7 @@ struct PlainTexture {
     size: (DeviceIntSize, i32),
     format: ImageFormat,
     filter: TextureFilter,
+    has_depth: bool,
 }
 
 
@@ -5616,6 +5621,7 @@ impl Renderer {
             size: (rect_size, texture.get_layer_count()),
             format: texture.get_format(),
             filter: texture.get_filter(),
+            has_depth: texture.supports_depth(),
         }
     }
 
@@ -5823,7 +5829,7 @@ impl Renderer {
                 let t = Self::load_texture(
                     TextureTarget::Array,
                     &texture,
-                    Some(RenderTargetInfo { has_depth: false }),
+                    Some(RenderTargetInfo { has_depth: texture.has_depth }),
                     &root,
                     &mut self.device
                 );
@@ -5885,6 +5891,7 @@ impl Renderer {
                             size: (descriptor.size, layer_count),
                             format: descriptor.format,
                             filter,
+                            has_depth: false,
                         };
                         let t = Self::load_texture(
                             target,
@@ -5952,4 +5959,17 @@ fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
 enum FramebufferKind {
     Main,
     Other,
+}
+
+fn should_skip_batch(kind: &BatchKind, flags: &DebugFlags) -> bool {
+    match kind {
+        BatchKind::TextRun(_) => {
+            flags.contains(DebugFlags::DISABLE_TEXT_PRIMS)
+        }
+        BatchKind::Brush(BrushBatchKind::RadialGradient) |
+        BatchKind::Brush(BrushBatchKind::LinearGradient) => {
+            flags.contains(DebugFlags::DISABLE_GRADIENT_PRIMS)
+        }
+        _ => false,
+    }
 }

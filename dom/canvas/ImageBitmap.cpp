@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/Promise.h"

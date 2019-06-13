@@ -36,14 +36,6 @@
 <!ENTITY pkcs12.setpassword.label2 "Certificate backup password (again):">
 <!ENTITY pkcs12.setpassword.reminder "Important: If you forget your certificate backup password, you will not be able to restore this backup later.  Please record it in a safe location.">
 
-<!ENTITY chooseToken.title  "Choose Token Dialog">
-<!ENTITY chooseToken.message1 "Please choose a token.">
-
-<!-- Strings for the CreateCertInfo dialog  -->
-<!ENTITY createCertInfo.title "Generating A Private Key">
-<!ENTITY createCertInfo.msg1 "Key Generation in progress… This may take a few minutes….">
-<!ENTITY createCertInfo.msg2 "Please wait…">
-
 <!-- Strings for protectedAuth dialog -->
 <!ENTITY protectedAuth.title "Protected Token Authentication">
 <!ENTITY protectedAuth.msg "Please authenticate to the token. Authentication method depends on the type of your token.">

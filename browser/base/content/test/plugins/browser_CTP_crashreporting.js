@@ -41,7 +41,6 @@ add_task(async function setup() {
   env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
   env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
 
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
   registerCleanupFunction(function cleanUp() {
@@ -49,7 +48,6 @@ add_task(async function setup() {
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
     env.set("MOZ_CRASHREPORTER_URL", serverURL);
-    Services.prefs.clearUserPref("plugins.click_to_play");
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
     window.focus();
   });

@@ -1172,9 +1172,9 @@ public static final ElementName MN = new ElementName("mn", "mn",
 // CPPONLY: NS_NewSVGUnknownElement, 
 TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
 public static final ElementName KEYGEN = new ElementName("keygen", "keygen", 
-// CPPONLY: NS_NewHTMLSpanElement,
+// CPPONLY: NS_NewHTMLElement,
 // CPPONLY: NS_NewSVGUnknownElement, 
-TreeBuilder.KEYGEN);
+TreeBuilder.KEYGEN | SPECIAL);
 public static final ElementName MAIN = new ElementName("main", "main", 
 // CPPONLY: NS_NewHTMLElement,
 // CPPONLY: NS_NewSVGUnknownElement, 

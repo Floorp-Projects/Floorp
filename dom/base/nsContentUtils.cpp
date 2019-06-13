@@ -6147,7 +6147,7 @@ bool nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent) {
 }
 
 bool nsContentUtils::IsUserFocusIgnored(nsINode* aNode) {
-  if (!nsGenericHTMLFrameElement::BrowserFramesEnabled()) {
+  if (!StaticPrefs::dom_mozBrowserFramesEnabled()) {
     return false;
   }
 

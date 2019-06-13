@@ -20,7 +20,6 @@
 #include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/LocalStorageCommon.h"
@@ -1052,6 +1051,8 @@ nsGlobalWindowInner::~nsGlobalWindowInner() {
 
   nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
   if (ac) ac->RemoveWindowAsListener(this);
+
+  mDeprioritizedLoadRunner.clear();
 
   nsLayoutStatics::Release();
 }
@@ -2547,7 +2548,7 @@ void nsPIDOMWindowInner::SetAudioCapture(bool aCapture) {
   }
 }
 
-void nsPIDOMWindowInner::SetActiveLoadingState(bool aIsLoading) {
+void nsGlobalWindowInner::SetActiveLoadingState(bool aIsLoading) {
   if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
     if (!aIsLoading) {
       Document* doc = GetExtantDoc();
@@ -2565,15 +2566,33 @@ void nsPIDOMWindowInner::SetActiveLoadingState(bool aIsLoading) {
   }
 
   if (!aIsLoading) {
-    for (uint32_t i = 0; i < mAfterLoadRunners.Length(); ++i) {
-      NS_DispatchToCurrentThread(mAfterLoadRunners[i].forget());
+    while (!mDeprioritizedLoadRunner.isEmpty()) {
+      nsCOMPtr<nsIRunnable> runner = mDeprioritizedLoadRunner.popFirst();
+      NS_DispatchToCurrentThread(runner.forget());
     }
-    mAfterLoadRunners.Clear();
   }
 }
 
-void nsPIDOMWindowInner::AddAfterLoadRunner(nsIRunnable* aRunner) {
-  mAfterLoadRunners.AppendElement(aRunner);
+nsPIDOMWindowInner* nsPIDOMWindowInner::GetWindowForDeprioritizedLoadRunner() {
+  Document* doc = GetExtantDoc();
+  if (!doc) {
+    return nullptr;
+  }
+  doc = doc->GetTopLevelContentDocument();
+  if (!doc || (doc->GetReadyStateEnum() <= Document::READYSTATE_UNINITIALIZED ||
+               doc->GetReadyStateEnum() >= Document::READYSTATE_COMPLETE)) {
+    return nullptr;
+  }
+
+  return doc->GetInnerWindow();
+}
+
+void nsGlobalWindowInner::AddDeprioritizedLoadRunner(nsIRunnable* aRunner) {
+  MOZ_ASSERT(GetWindowForDeprioritizedLoadRunner() == this);
+  RefPtr<DeprioritizedLoadRunner> runner = new DeprioritizedLoadRunner(aRunner);
+  mDeprioritizedLoadRunner.insertBack(runner);
+  NS_DispatchToCurrentThreadQueue(runner.forget(), 5000,
+                                  EventQueuePriority::Idle);
 }
 
 // nsISpeechSynthesisGetter
@@ -3412,7 +3431,7 @@ bool nsGlobalWindowInner::GetFullScreen() {
 }
 
 void nsGlobalWindowInner::Dump(const nsAString& aStr) {
-  if (!DOMPrefs::DumpEnabled()) {
+  if (!nsJSUtils::DumpEnabled()) {
     return;
   }
 

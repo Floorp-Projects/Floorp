@@ -25,13 +25,13 @@ class RemoteAutomation(Automation):
 
     def __init__(self, device, appName='', remoteProfile=None, remoteLog=None,
                  processArgs=None):
+        super(RemoteAutomation, self).__init__()
         self.device = device
         self.appName = appName
         self.remoteProfile = remoteProfile
         self.remoteLog = remoteLog
         self.processArgs = processArgs or {}
         self.lastTestSeen = "remoteautomation.py"
-        Automation.__init__(self)
 
     def runApp(self, testURL, env, app, profileDir, extraArgs,
                utilityPath=None, xrePath=None, debuggerInfo=None, symbolsPath=None,

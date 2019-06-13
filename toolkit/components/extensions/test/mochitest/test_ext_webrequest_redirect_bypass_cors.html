@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1450965: Skip Cors Check for Early WebExtention Redirects </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+/* Description of the test:
+ * We try to Check if a WebExtention can redirect a request and bypass CORS
+ * We're redirecting a fetch request in onBeforeRequest
+ * which should not be blocked, even though we do not have
+ * the CORS information yet.
+ */
+
+const WIN_URL =
+  "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_redirect_cors_bypass.html";
+
+
+add_task(async function test_webRequest_redirect_cors_bypass() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "<all_urls>",
+      ],
+    },
+    background() {
+      browser.webRequest.onBeforeRequest.addListener((details) => {
+        if (details.url.includes("file_cors_blocked.txt")) {
+          // File_cors_blocked does not need to exist, because we're redirecting anyway.
+          const testPath = "example.org/tests/toolkit/components/extensions/test/mochitest";
+          let redirectUrl = `https://${testPath}/file_sample.txt`;
+
+          // If the WebExtion cant bypass CORS, the fetch will throw a CORS-Exception
+          // because we do not have the CORS header yet for 'file-cors-blocked.txt'
+          return {redirectUrl};
+        }
+      }, {urls: ["<all_urls>"]}, ["blocking"]);
+    },
+
+  });
+
+  await extension.startup();
+  let win = window.open(WIN_URL);
+  // Creating a message channel to the new tab.
+  const channel = new BroadcastChannel("test_bus");
+  await new Promise((resolve, reject) => {
+    channel.onmessage = async function(fetch_result) {
+      // Fetch result data will either be the text content of file_sample.txt -> 'Sample'
+      // or a network-Error.
+      // In case it's 'Sample' the redirect did happen correctly.
+      ok(fetch_result.data == "Sample", "Cors was Bypassed");
+      win.close();
+      await extension.unload();
+      resolve();
+    };
+  });
+});
+
+</script>
+</body>
+</html>

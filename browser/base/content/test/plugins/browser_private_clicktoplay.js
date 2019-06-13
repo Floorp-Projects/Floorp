@@ -40,7 +40,6 @@ add_task(async function test() {
   gTestBrowser = gBrowser.selectedBrowser;
   let promise = BrowserTestUtils.browserLoaded(gTestBrowser);
 
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
   getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   await promise;

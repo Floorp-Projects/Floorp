@@ -940,23 +940,6 @@
       testElm("kbd_container", obj);
 
       // ////////////////////////////////////////////////////////////////////////
-      // HTML:keygen
-
-      obj = {
-        role: ROLE_COMBOBOX,
-        states: STATE_COLLAPSED | STATE_HASPOPUP,
-        extraStates: EXT_STATE_EXPANDABLE,
-        actions: "open",
-        children: [
-          { COMBOBOX_LIST: [
-            { role: ROLE_COMBOBOX_OPTION }, // high grade
-            { role: ROLE_COMBOBOX_OPTION }, // medium grade
-          ] },
-        ],
-      };
-      testElm("keygen", obj);
-
-      // ////////////////////////////////////////////////////////////////////////
       // HTML:label
 
       obj = {
@@ -1685,7 +1668,6 @@
 
   <p id="ins_container">normal<ins>Inserted</ins></p>
   <p id="kbd_container">normal<kbd>cmd</kbd></p>
-  <keygen id="keygen" name="RSA public key" challenge="123456789" keytype="RSA">
 
   <label id="label">label<input id="label_input"></label>
   <label id="label_for" for="label_for_input">label</label>

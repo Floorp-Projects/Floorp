@@ -81,7 +81,6 @@ pref("image.cache.size", 1048576); // bytes
 
 /* offline cache prefs */
 pref("browser.offline-apps.notify", true);
-pref("browser.cache.offline.enable", true);
 pref("browser.cache.offline.capacity", 5120); // kilobytes
 pref("offline-apps.quota.warn", 1024); // kilobytes
 
@@ -173,7 +172,6 @@ pref("browser.formfill.enable", true);
 pref("layout.spellcheckDefault", 0);
 
 /* new html5 forms */
-pref("dom.forms.datetime", true);
 pref("dom.forms.datetime.others", true);
 
 /* extension manager and xpinstall */
@@ -344,9 +342,6 @@ pref("privacy.item.sessions", true);
 pref("privacy.item.geolocation", true);
 pref("privacy.item.siteSettings", true);
 pref("privacy.item.syncAccount", true);
-
-// enable geo
-pref("geo.enabled", true);
 
 // content sink control -- controls responsiveness during page load
 // see https://bugzilla.mozilla.org/show_bug.cgi?id=481566#c9
@@ -794,11 +789,6 @@ pref("consoleservice.logcat", false);
 pref("consoleservice.logcat", true);
 #endif
 
-#ifndef RELEASE_OR_BETA
-// Enable VR on mobile, making it enable by default.
-pref("dom.vr.enabled", true);
-#endif
-
 pref("browser.tabs.showAudioPlayingIcon", true);
 
 pref("dom.serviceWorkers.enabled", true);
@@ -828,13 +818,6 @@ pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com
 
 // Token server used by Firefox Account-authenticated Sync.
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
-
-#ifndef RELEASE_OR_BETA
-// Enable Presentation API on Nightly
-pref("dom.presentation.enabled", true);
-pref("dom.presentation.controller.enabled", true); // enable 1-UA mode
-pref("dom.presentation.receiver.enabled", true); // enable 1-UA mode
-#endif
 
 pref("dom.audiochannel.audioCompeting", true);
 pref("dom.audiochannel.mediaControl", true);

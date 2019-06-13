@@ -648,7 +648,15 @@
       "../../whatwg-url/lib/public-api.js": 497,
       "../../whatwg-url/lib/URL.js": 498,
       "../../whatwg-url/lib/URL-impl.js": 499,
-      "../../whatwg-url/lib/URLSearchParams-impl.js": 500
+      "../../whatwg-url/lib/URLSearchParams-impl.js": 500,
+      "../../babel-loader/lib/index.js?ignore=src/lib!../../devtools-modules/src/plural-form.js": 501,
+      "multi ../../whatwg-url/lib/public-api.js": 502,
+      "external \"devtools/client/shared/vendor/whatwg-url\"": 503,
+      "external \"resource://devtools/client/shared/vendor/whatwg-url\"": 504,
+      "external \"\\n(() => { \\n  importScripts \\\"resource://devtools/client/shared/vendor/whatwg-url\\\";\\n  return { URL: self.URL }\\n})()\\n\"": 505,
+      "external \"\\n(() => { \\n  importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\");\\n  return { URL: self.URL }\\n})()\\n\"": 506,
+      "external \"\\n(() => { \\n  importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\");\\n  return { URL }\\n})()\\n\"": 507,
+      "external \"\\n(() => { \\n  console.log('>> yo',importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\"));\\n  return { URL }\\n})()\\n\"": 508
     },
     "usedIds": {
       "0": 0,
@@ -1151,7 +1159,15 @@
       "497": 497,
       "498": 498,
       "499": 499,
-      "500": 500
+      "500": 500,
+      "501": 501,
+      "502": 502,
+      "503": 503,
+      "504": 504,
+      "505": 505,
+      "506": 506,
+      "507": 507,
+      "508": 508
     }
   },
   "chunks": {
@@ -1162,7 +1178,8 @@
       "source-map-worker": 3,
       "search-worker": 4,
       "pretty-print-worker": 5,
-      "source-map-index": 6
+      "source-map-index": 6,
+      "whatwg-url": 7
     },
     "byBlocks": {},
     "usedIds": {

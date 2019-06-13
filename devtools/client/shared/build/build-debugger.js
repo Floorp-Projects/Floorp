@@ -29,10 +29,12 @@ const mappings = Object.assign(
     "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",
     "react-redux": "devtools/client/shared/vendor/react-redux",
     redux: "devtools/client/shared/vendor/redux",
+    reselect: "devtools/client/shared/vendor/reselect",
     "prop-types": "devtools/client/shared/vendor/react-prop-types",
     "devtools-services": "Services",
     "wasmparser/dist/WasmParser": "devtools/client/shared/vendor/WasmParser",
     "wasmparser/dist/WasmDis": "devtools/client/shared/vendor/WasmDis",
+    "whatwg-url": "devtools/client/shared/vendor/whatwg-url",
   },
   EXCLUDED_FILES
 );
@@ -63,8 +65,6 @@ const VENDORS = [
   "lodash-move",
   "react-aria-components/src/tabs",
   "react-transition-group/Transition",
-  "reselect",
-  "whatwg-url",
   "Svg",
 ];
 

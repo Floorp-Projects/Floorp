@@ -8,7 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1088761
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
-    input, textarea, fieldset, button, select, keygen, output, object { background-color: rgb(0,0,0) !important; }
+    input, textarea, fieldset, button, select, output, object { background-color: rgb(0,0,0) !important; }
     :valid   { background-color: rgb(0,255,0) !important; }
     :invalid { background-color: rgb(255,0,0) !important; }
   </style>
@@ -23,7 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1088761
   <select id='s' required oninvalid="invalidEventHandler(event, true);"></select>
   <textarea id='t' required oninvalid="invalidEventHandler(event, true);"></textarea>
   <output id='o' oninvalid="invalidEventHandler(event, true);"></output>
-  <keygen id='k' oninvalid="invalidEventHandler(event, true);"></keygen>
   <object id='obj' oninvalid="invalidEventHandler(event, true);"></object>
 </div>
 <div id="content2" style="display: none">
@@ -33,7 +32,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1088761
   <select id='s2' required oninvalid="invalidEventHandler(event, false);"></select>
   <textarea id='t2' required oninvalid="invalidEventHandler(event, false);"></textarea>
   <output id='o2' oninvalid="invalidEventHandler(event, false);"></output>
-  <keygen id='k2' oninvalid="invalidEventHandler(event, false);"></keygen>
   <object id='obj2' oninvalid="invalidEventHandler(event, false);"></object>
 </div>
 <pre id="test">
@@ -78,12 +76,10 @@ checkReportValidityForInvalid(document.getElementById('s2'));
 checkReportValidityForInvalid(document.getElementById('t2'));
 
 checkReportValidityForValid(document.getElementById('o'));
-checkReportValidityForValid(document.getElementById('k'));
 checkReportValidityForValid(document.getElementById('obj'));
 checkReportValidityForValid(document.getElementById('f'));
 
 checkReportValidityForValid(document.getElementById('o2'));
-checkReportValidityForValid(document.getElementById('k2'));
 checkReportValidityForValid(document.getElementById('obj2'));
 checkReportValidityForValid(document.getElementById('f2'));
 
