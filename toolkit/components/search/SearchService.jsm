@@ -1825,23 +1825,10 @@ SearchService.prototype = {
     return null;
   },
 
-  async addEngineWithDetails(name, iconURL, alias, description, method, template, extensionID) {
+  async addEngineWithDetails(name, details) {
     SearchUtils.log("addEngineWithDetails: Adding \"" + name + "\".");
     let isCurrent = false;
-    var params;
-
-    if (iconURL && typeof iconURL == "object") {
-      params = iconURL;
-    } else {
-      params = {
-        iconURL,
-        alias,
-        description,
-        method,
-        template,
-        extensionID,
-      };
-    }
+    var params = details;
 
     let isBuiltin = !!params.isBuiltin;
     // We install search extensions during the init phase, both built in
