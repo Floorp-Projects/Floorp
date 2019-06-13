@@ -345,9 +345,10 @@ void xpc::ErrorReport::LogToConsoleWithStack(
   errorObject->SetErrorMessageName(mErrorMsgName);
   errorObject->SetTimeWarpTarget(aTimeWarpTarget);
 
-  nsresult rv = errorObject->InitWithWindowID(mErrorMsg, mFileName, mSourceLine,
-                                              mLineNumber, mColumn, mFlags,
-                                              mCategory, mWindowID);
+  nsresult rv = errorObject->InitWithWindowID(
+      mErrorMsg, mFileName, mSourceLine, mLineNumber, mColumn, mFlags,
+      mCategory, mWindowID,
+      mCategory.Equals(NS_LITERAL_CSTRING("chrome javascript")));
   NS_ENSURE_SUCCESS_VOID(rv);
 
   rv = errorObject->InitSourceId(mSourceId);
