@@ -142,6 +142,7 @@ async function resetSameSiteCookies(origin, value) {
       assert_dom_cookie("samesite_strict", value, false);
       assert_dom_cookie("samesite_lax", value, false);
       assert_dom_cookie("samesite_none", value, false);
+      assert_dom_cookie("samesite_unspecified", value, false);
     }
 
     w.postMessage({type: "set", value: value, useOwnOrigin: true}, "*");
@@ -150,6 +151,7 @@ async function resetSameSiteCookies(origin, value) {
       assert_dom_cookie("samesite_strict", value, true);
       assert_dom_cookie("samesite_lax", value, true);
       assert_dom_cookie("samesite_none", value, true);
+      assert_dom_cookie("samesite_unspecified", value, true);
     }
   } finally {
     w.close();
@@ -159,7 +161,8 @@ async function resetSameSiteCookies(origin, value) {
 // Given an |expectedStatus| and |expectedValue|, assert the |cookies| contains the
 // proper set of cookie names and values.
 function verifySameSiteCookieState(expectedStatus, expectedValue, cookies) {
-    assert_equals(cookies["samesite_none"], expectedValue, "Non-SameSite cookies are always sent.");
+    assert_equals(cookies["samesite_none"], expectedValue, "SameSite=None cookies are always sent.");
+    assert_equals(cookies["samesite_unspecified"], expectedValue, "Unspecified-SameSite cookies are always sent.");
     if (expectedStatus == SameSiteStatus.CROSS_SITE) {
       assert_not_equals(cookies["samesite_strict"], expectedValue, "SameSite=Strict cookies are not sent with cross-site requests.");
       assert_not_equals(cookies["samesite_lax"], expectedValue, "SameSite=Lax cookies are not sent with cross-site requests.");

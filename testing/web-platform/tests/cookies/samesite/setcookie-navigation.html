@@ -6,7 +6,7 @@
 <script src="/cookies/resources/cookie-helper.sub.js"></script>
 <script>
   function assert_samesite_cookies_present(cookies, value) {
-    let samesite_cookie_names = ["samesite_strict", "samesite_lax", "samesite_none"];
+    let samesite_cookie_names = ["samesite_strict", "samesite_lax", "samesite_none", "samesite_unspecified"];
     for (name of samesite_cookie_names) {
       let re = new RegExp("(?:^|; )" + name + "=" + value + "(?:$|;)");
       assert_true(re.test(cookies), "`" + name + "=" + value + "` in cookies");

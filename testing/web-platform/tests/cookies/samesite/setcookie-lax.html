@@ -13,6 +13,7 @@
     assert_dom_cookie("samesite_strict", e.data.value, true);
     assert_dom_cookie("samesite_lax", e.data.value, true);
     assert_dom_cookie("samesite_none", e.data.value, true);
+    assert_dom_cookie("samesite_unspecified", e.data.value, true);
     w.close();
   }, "Same-site window should be able to set `SameSite=Lax` or `SameSite=Strict` cookies.");
 
@@ -25,6 +26,7 @@
     assert_dom_cookie("samesite_strict", e.data.value, false);
     assert_dom_cookie("samesite_lax", e.data.value, false);
     assert_dom_cookie("samesite_none", e.data.value, true);
+    assert_dom_cookie("samesite_unspecified", e.data.value, true);
     w.close();
   }, "Cross-site window shouldn't be able to set `SameSite=Lax` or `SameSite=Strict` cookies.");
 </script>
