@@ -220,6 +220,8 @@ clang_checkers:
   - name: readability-inconsistent-declaration-parameter-name
     reliability: high
   - name: readability-isolate-declaration
+    # As per bug 1558987 - we don't want to have this enabled
+    publish: !!bool no
     reliability: high
   - name: readability-magic-numbers
     # Bug 1553495 - we must see first its impact on our code.
