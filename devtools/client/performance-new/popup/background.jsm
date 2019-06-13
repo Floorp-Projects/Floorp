@@ -226,6 +226,7 @@ function intializeState() {
     tasktracer: false,
     trackopts: false,
     jstracer: false,
+    jsallocations: false,
   };
 
   if (AppConstants.platform === "android") {
