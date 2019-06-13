@@ -205,7 +205,7 @@ def _rerun_task(task_id, label):
     status = taskcluster.status_task(task_id)
     if status not in RERUN_STATES:
         logger.warning(
-            "No need to to rerun {}: state '{}' not in {}!".format(label, status, RERUN_STATES)
+            "No need to rerun {}: state '{}' not in {}!".format(label, status, RERUN_STATES)
         )
         return
     taskcluster.rerun_task(task_id)
