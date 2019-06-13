@@ -566,7 +566,19 @@ FxAccountsInternal.prototype = {
       await this.signOut();
       return currentState.resolve(null);
     }
-    if (!this.isUserEmailVerified(data)) {
+    if (this.isUserEmailVerified(data)) {
+      // This is a work-around for preferences being reset (bug 1550967).
+      // Many things check this preference as a flag for "is sync configured",
+      // and if not, we try and avoid loading these modules at all. So if a user
+      // is signed in but this pref isn't set, things go weird.
+      // However, some thing do unconditionally load fxaccounts, such as
+      // about:prefs. When that happens we can detect the state and re-add the
+      // pref. Note that we only do this for verified users as that's what sync
+      // does (ie, if the user is unverified, sync will set it on verification)
+      if (!Services.prefs.prefHasUserValue("services.sync.username") && data.email) {
+        Services.prefs.setStringPref("services.sync.username", data.email);
+      }
+    } else {
       // If the email is not verified, start polling for verification,
       // but return null right away.  We don't want to return a promise
       // that might not be fulfilled for a long time.
