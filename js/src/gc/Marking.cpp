@@ -232,10 +232,6 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
       MapTypeToTraceKind<typename mozilla::RemovePointer<T>::Type>::kind ==
       thing->getTraceKind());
 
-  /*
-   * Do not check IsMarkingTracer directly -- it should only be used in paths
-   * where we cannot be the gray buffering tracer.
-   */
   bool isGcMarkingTracer = trc->isMarkingTracer();
 
   MOZ_ASSERT_IF(zone->requireGCTracer(),
