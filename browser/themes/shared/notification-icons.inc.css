@@ -291,10 +291,6 @@ html|*#webRTC-previewVideo {
   transition: fill 1.5s;
 }
 
-.plugin-icon.blocked-permission-icon {
-  list-style-image: url(chrome://global/skin/plugins/plugin-blocked.svg);
-}
-
 #plugin-icon-badge {
   list-style-image: url(chrome://browser/skin/notification-icons/plugin-badge.svg);
   opacity: 0;
