@@ -173,7 +173,7 @@ function test_hostnames_resolving_to_addresses(host, next) {
     var sts = Cc["@mozilla.org/network/socket-transport-service;1"]
               .getService(Ci.nsISocketTransportService);
     Assert.notEqual(typeof(sts), undefined);
-    var transport = sts.createTransport(null, 0, host, 80, null);
+    var transport = sts.createTransport([], host, 80, null);
     Assert.notEqual(typeof(transport), undefined);
 
     transport.connectionFlags = Ci.nsISocketTransport.DISABLE_RFC1918;
@@ -248,7 +248,7 @@ function test_proxies(proxyHost, next) {
     var proxyInfo = pps.newProxyInfo("http", proxyHost, 8080, "", "", 0, 1, null);
     Assert.notEqual(typeof(proxyInfo), undefined);
 
-    var transport = sts.createTransport(null, 0, "dummyHost", 80, proxyInfo);
+    var transport = sts.createTransport([], "dummyHost", 80, proxyInfo);
     Assert.notEqual(typeof(transport), undefined);
 
     transport.connectionFlags = Ci.nsISocketTransport.DISABLE_RFC1918;

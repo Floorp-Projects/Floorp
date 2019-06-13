@@ -17,7 +17,7 @@ function launchConnection(socks_vers, socks_port, dest_host, dest_port, dns)
   var pps = new ProtocolProxyService();
   var pi = pps.newProxyInfo(socks_vers, 'localhost', socks_port, '', '',
           pi_flags, -1, null);
-  var trans = sts.createTransport(null, 0, dest_host, dest_port, pi);
+  var trans = sts.createTransport([], dest_host, dest_port, pi);
   var input = trans.openInputStream(Ci.nsITransport.OPEN_BLOCKING,0,0);
   var output = trans.openOutputStream(Ci.nsITransport.OPEN_BLOCKING,0,0);
   var bin = new BinaryInputStream(input);
