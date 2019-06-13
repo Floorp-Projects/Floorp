@@ -54,7 +54,7 @@ BaselineCacheIRCompiler::BaselineCacheIRCompiler(
       kind_(stubKind) {}
 
 #define DEFINE_SHARED_OP(op)                 \
-    bool BaselineCacheIRCompiler::emit##op() { \
+  bool BaselineCacheIRCompiler::emit##op() { \
     return CacheIRCompiler::emit##op();      \
   }
 CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
@@ -137,18 +137,6 @@ template <typename Fn, Fn fn>
 void BaselineCacheIRCompiler::tailCallVM(MacroAssembler& masm) {
   TailCallVMFunctionId id = TailCallVMFunctionToId<Fn, fn>::id;
   tailCallVMInternal(masm, id);
-}
-
-
-
-void BaselineCacheIRCompiler::callVMInternal(MacroAssembler& masm,
-                                             VMFunctionId id) {
-  MOZ_ASSERT(inStubFrame_);
-
-  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
-  MOZ_ASSERT(GetVMFunction(id).expectTailCall == NonTailCall);
-
-  EmitBaselineCallVM(code, masm);
 }
 
 void BaselineCacheIRCompiler::tailCallVMInternal(MacroAssembler& masm,

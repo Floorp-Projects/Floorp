@@ -292,27 +292,6 @@ void IonCacheIRCompiler::prepareVMCall(MacroAssembler& masm,
 #endif
 }
 
-void IonCacheIRCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
-  MOZ_ASSERT(calledPrepareVMCall_);
-
-  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
-
-  const VMFunctionData& fun = GetVMFunction(id);
-  uint32_t frameSize = fun.explicitStackSlots() * sizeof(void*);
-  uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
-                                            ExitFrameLayout::Size());
-  masm.Push(Imm32(descriptor));
-  masm.callJit(code);
-
-  // Remove rest of the frame left on the stack. We remove the return address
-  // which is implicitly popped when returning.
-  int framePop = sizeof(ExitFrameLayout) - sizeof(void*);
-
-  // Pop arguments from framePushed.
-  masm.implicitPop(frameSize + framePop);
-  masm.freeStack(IonICCallFrameLayout::Size());
-}
-
 bool IonCacheIRCompiler::init() {
   if (!allocator.init()) {
     return false;

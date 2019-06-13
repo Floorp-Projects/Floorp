@@ -44,9 +44,11 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   Maybe<LiveRegisterSet> liveRegs_;
   Maybe<CodeOffset> stubJitCodeOffset_;
 
+ public:
 #ifdef DEBUG
   bool calledPrepareVMCall_;
 #endif
+ private:
   bool savedLiveRegs_;
 
   template <typename T>
@@ -58,7 +60,6 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   uint64_t* expandoGenerationStubFieldPtr(uint32_t offset);
 
   void prepareVMCall(MacroAssembler& masm, const AutoSaveLiveRegisters&);
-  void callVMInternal(MacroAssembler& masm, VMFunctionId id);
 
   template <typename Fn, Fn fn>
   void callVM(MacroAssembler& masm);
