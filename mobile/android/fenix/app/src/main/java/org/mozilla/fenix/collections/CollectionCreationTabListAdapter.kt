@@ -48,6 +48,8 @@ class CollectionCreationTabListAdapter(
                     } else if (checkChanged.shouldBeUnchecked) {
                         holder.view.tab_selected_checkbox.isChecked = false
                     }
+                    holder.view.tab_selected_checkbox.visibility =
+                        if (checkChanged.shouldHideCheckBox) View.GONE else View.VISIBLE
                 }
             }
         }
@@ -123,14 +125,14 @@ private class TabDiffUtil(
         val shouldBeChecked = newSelected.contains(new[newItemPosition]) && !oldSelected.contains(old[oldItemPosition])
         val shouldBeUnchecked =
             !newSelected.contains(new[newItemPosition]) && oldSelected.contains(old[oldItemPosition])
-        return CheckChanged(shouldBeChecked, shouldBeUnchecked)
+        return CheckChanged(shouldBeChecked, shouldBeUnchecked, newHideCheckboxes)
     }
 
     override fun getOldListSize(): Int = old.size
     override fun getNewListSize(): Int = new.size
 }
 
-data class CheckChanged(val shouldBeChecked: Boolean, val shouldBeUnchecked: Boolean)
+data class CheckChanged(val shouldBeChecked: Boolean, val shouldBeUnchecked: Boolean, val shouldHideCheckBox: Boolean)
 
 class TabViewHolder(
     val view: View,
