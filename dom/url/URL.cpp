@@ -170,7 +170,7 @@ void URL::SetHref(const nsAString& aHref, ErrorResult& aRv) {
 }
 
 void URL::GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const {
-  nsresult rv = nsContentUtils::GetThreadSafeUTFOrigin(GetURI(), aOrigin);
+  nsresult rv = nsContentUtils::GetUTFOrigin(GetURI(), aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aOrigin.Truncate();
   }
