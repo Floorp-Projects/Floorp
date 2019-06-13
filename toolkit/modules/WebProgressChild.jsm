@@ -6,8 +6,17 @@
 
 var EXPORTED_SYMBOLS = ["WebProgressChild"];
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "AppConstants",
+                               "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils",
+                               "resource://gre/modules/E10SUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
+                                   "@mozilla.org/xre/app-info;1",
+                                   "nsICrashReporter");
 XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
                                    "@mozilla.org/network/serialization-helper;1",
                                    "nsISerializationHelper");
@@ -16,13 +25,12 @@ class WebProgressChild {
   constructor(mm) {
     this.mm = mm;
 
-    // NOTIFY_PROGRESS, NOTIFY_STATE_ALL, NOTIFY_STATUS, NOTIFY_LOCATION, NOTIFY_REFRESH, and
+    // NOTIFY_PROGRESS, NOTIFY_STATE_ALL, NOTIFY_STATUS, NOTIFY_REFRESH, and
     // NOTIFY_CONTENT_BLOCKING are handled by PBrowser.
     let notifyCode = Ci.nsIWebProgress.NOTIFY_ALL &
                         ~Ci.nsIWebProgress.NOTIFY_STATE_ALL &
                         ~Ci.nsIWebProgress.NOTIFY_PROGRESS &
                         ~Ci.nsIWebProgress.NOTIFY_STATUS &
-                        ~Ci.nsIWebProgress.NOTIFY_LOCATION &
                         ~Ci.nsIWebProgress.NOTIFY_REFRESH &
                         ~Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING;
 
@@ -34,6 +42,9 @@ class WebProgressChild {
     let webProgress = this.mm.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this._filter, notifyCode);
+
+    // This message is used for measuring this.mm.content process startup performance.
+    this.mm.sendAsyncMessage("Content:BrowserChildReady", { time: Services.telemetry.msSystemNow() });
   }
 
   _requestSpec(aRequest, aPropertyName) {
@@ -42,11 +53,26 @@ class WebProgressChild {
     return aRequest[aPropertyName].spec;
   }
 
-  _setupJSON(aWebProgress, aRequest) {
+  _setupJSON(aWebProgress, aRequest, aStateFlags) {
+    // Avoid accessing this.mm.content.document when being called from onStateChange
+    // unless if we are in STATE_STOP, because otherwise the getter will
+    // instantiate an about:blank document for us.
+    let contentDocument = null;
+    if (aStateFlags) {
+      // We're being called from onStateChange
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+        contentDocument = this.mm.content.document;
+      }
+    } else {
+      contentDocument = this.mm.content.document;
+    }
+
+    let innerWindowID = null;
     if (aWebProgress) {
       let domWindowID = null;
       try {
         domWindowID = aWebProgress.DOMWindowID;
+        innerWindowID = aWebProgress.innerDOMWindowID;
       } catch (e) {
         // The DOM Window ID getters above may throw if the inner or outer
         // windows aren't created yet or are destroyed at the time we're making
@@ -65,11 +91,55 @@ class WebProgressChild {
       webProgress: aWebProgress || null,
       requestURI: this._requestSpec(aRequest, "URI"),
       originalRequestURI: this._requestSpec(aRequest, "originalURI"),
+      documentContentType: contentDocument ? contentDocument.contentType : null,
+      innerWindowID,
     };
   }
 
   _send(name, data) {
     this.mm.sendAsyncMessage(name, data);
+  }
+
+  onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
+    let json = this._setupJSON(aWebProgress, aRequest);
+
+    json.location = aLocationURI ? aLocationURI.spec : "";
+    json.flags = aFlags;
+
+    // These properties can change even for a sub-frame navigation.
+    let webNav = this.mm.docShell.QueryInterface(Ci.nsIWebNavigation);
+    json.canGoBack = webNav.canGoBack;
+    json.canGoForward = webNav.canGoForward;
+
+    if (aWebProgress && aWebProgress.isTopLevel) {
+      json.documentURI = this.mm.content.document.documentURIObject.spec;
+      json.title = this.mm.content.document.title;
+      json.charset = this.mm.content.document.characterSet;
+      json.mayEnableCharacterEncodingMenu = this.mm.docShell.mayEnableCharacterEncodingMenu;
+      json.charsetAutodetected = this.mm.docShell.charsetAutodetected;
+      json.principal = this.mm.content.document.nodePrincipal;
+      json.storagePrincipal = this.mm.content.document.effectiveStoragePrincipal;
+      let csp = this.mm.content.document.csp;
+      json.csp = E10SUtils.serializeCSP(csp);
+      json.synthetic = this.mm.content.document.mozSyntheticDocument;
+      json.isNavigating = this.mm.docShell.isNavigating;
+      json.requestContextID = this.mm.content.document.documentLoadGroup
+        ? this.mm.content.document.documentLoadGroup.requestContextID
+        : null;
+
+      if (AppConstants.MOZ_CRASHREPORTER && CrashReporter.enabled) {
+        let uri = aLocationURI;
+        try {
+          // If the current URI contains a username/password, remove it.
+          uri = uri.mutate()
+                   .setUserPass("")
+                   .finalize();
+        } catch (ex) { /* Ignore failures on about: URIs. */ }
+        CrashReporter.annotateCrashReport("URL", uri.spec);
+      }
+    }
+
+    this._send("Content:LocationChange", json);
   }
 
   getSecInfoAsString() {
@@ -88,6 +158,10 @@ class WebProgressChild {
     json.secInfo = this.getSecInfoAsString();
 
     this._send("Content:SecurityChange", json);
+  }
+
+  sendLoadCallResult() {
+    this.mm.sendAsyncMessage("Content:LoadURIResult");
   }
 }
 
