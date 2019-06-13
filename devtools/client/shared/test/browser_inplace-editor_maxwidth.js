@@ -97,7 +97,7 @@ const testMaxWidth = async function(editor) {
 function getLines(textarea) {
   const win = textarea.ownerDocument.defaultView;
   const style = win.getComputedStyle(textarea);
-  return Math.floor(textarea.clientHeight / parseFloat(style.lineHeight));
+  return Math.floor(textarea.clientHeight / parseFloat(style.fontSize));
 }
 
 /**
