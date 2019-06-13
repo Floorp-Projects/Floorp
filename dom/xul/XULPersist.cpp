@@ -55,18 +55,17 @@ void XULPersist::AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
                                   const nsAttrValue* aOldValue) {
   NS_ASSERTION(aElement->OwnerDoc() == mDocument, "unexpected doc");
 
-  // Might not need this, but be safe for now.
-  nsCOMPtr<nsIDocumentObserver> kungFuDeathGrip(this);
-
   // See if there is anything we need to persist in the localstore.
   //
   // XXX Namespace handling broken :-(
   nsAutoString persist;
-  aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::persist, persist);
   // Persistence of attributes of xul:window is handled in nsXULWindow.
-  if (ShouldPersistAttribute(aElement, aAttribute) && !persist.IsEmpty() &&
+  if (aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::persist, persist) &&
+      ShouldPersistAttribute(aElement, aAttribute) && !persist.IsEmpty() &&
       // XXXldb This should check that it's a token, not just a substring.
       persist.Find(nsDependentAtomString(aAttribute)) >= 0) {
+    // Might not need this, but be safe for now.
+    nsCOMPtr<nsIDocumentObserver> kungFuDeathGrip(this);
     nsContentUtils::AddScriptRunner(
         NewRunnableMethod<Element*, int32_t, nsAtom*>(
             "dom::XULPersist::Persist", this, &XULPersist::Persist, aElement,
