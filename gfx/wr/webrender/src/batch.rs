@@ -15,13 +15,13 @@ use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance}
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use crate::internal_types::{FastHashMap, SavedTargetIndex, TextureSource, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
-use crate::prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind, PrimitiveVisibilityIndex};
+use crate::prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind, PrimitiveVisibilityIndex, PrimitiveVisibilityMask};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, VECS_PER_SEGMENT};
 use crate::prim_store::{recompute_snap_offsets};
 use crate::prim_store::image::ImageSource;
 use crate::render_backend::DataStores;
-use crate::render_task::{RenderTaskAddress, RenderTaskId, RenderTaskGraph, TileBlit};
+use crate::render_task::{RenderTaskAddress, RenderTaskId, RenderTaskGraph};
 use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache, ImageProperties};
@@ -305,32 +305,149 @@ impl OpaqueBatchList {
     }
 }
 
-pub struct BatchList {
-    pub alpha_batch_list: AlphaBatchList,
-    pub opaque_batch_list: OpaqueBatchList,
-    /// A list of rectangle regions this batch should be drawn
-    /// in. Each region will have scissor rect set before drawing.
-    pub regions: Vec<DeviceIntRect>,
-    pub tile_blits: Vec<TileBlit>,
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct PrimitiveBatch {
+    pub key: BatchKey,
+    pub instances: Vec<PrimitiveInstanceData>,
 }
 
-impl BatchList {
+impl PrimitiveBatch {
+    fn new(key: BatchKey) -> PrimitiveBatch {
+        PrimitiveBatch {
+            key,
+            instances: Vec::new(),
+        }
+    }
+}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct AlphaBatchContainer {
+    pub opaque_batches: Vec<PrimitiveBatch>,
+    pub alpha_batches: Vec<PrimitiveBatch>,
+    /// The overall scissor rect for this render task, if one
+    /// is required.
+    pub task_scissor_rect: Option<DeviceIntRect>,
+    /// The rectangle of the owning render target that this
+    /// set of batches affects.
+    pub task_rect: DeviceIntRect,
+}
+
+impl AlphaBatchContainer {
+    pub fn new(
+        task_scissor_rect: Option<DeviceIntRect>,
+    ) -> AlphaBatchContainer {
+        AlphaBatchContainer {
+            opaque_batches: Vec::new(),
+            alpha_batches: Vec::new(),
+            task_scissor_rect,
+            task_rect: DeviceIntRect::zero(),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.opaque_batches.is_empty() &&
+        self.alpha_batches.is_empty()
+    }
+
+    fn merge(&mut self, builder: AlphaBatchBuilder, task_rect: &DeviceIntRect) {
+        self.task_rect = self.task_rect.union(task_rect);
+
+        for other_batch in builder.opaque_batch_list.batches {
+            let batch_index = self.opaque_batches.iter().position(|batch| {
+                batch.key.is_compatible_with(&other_batch.key)
+            });
+
+            match batch_index {
+                Some(batch_index) => {
+                    self.opaque_batches[batch_index].instances.extend(other_batch.instances);
+                }
+                None => {
+                    self.opaque_batches.push(other_batch);
+                }
+            }
+        }
+
+        let mut min_batch_index = 0;
+
+        for other_batch in builder.alpha_batch_list.batches {
+            let batch_index = self.alpha_batches.iter().skip(min_batch_index).position(|batch| {
+                batch.key.is_compatible_with(&other_batch.key)
+            });
+
+            match batch_index {
+                Some(batch_index) => {
+                    let batch_index = batch_index + min_batch_index;
+                    self.alpha_batches[batch_index].instances.extend(other_batch.instances);
+                    min_batch_index = batch_index;
+                }
+                None => {
+                    self.alpha_batches.push(other_batch);
+                    min_batch_index = self.alpha_batches.len();
+                }
+            }
+        }
+    }
+}
+
+/// Each segment can optionally specify a per-segment
+/// texture set and one user data field.
+#[derive(Debug, Copy, Clone)]
+struct SegmentInstanceData {
+    textures: BatchTextures,
+    user_data: i32,
+}
+
+/// Encapsulates the logic of building batches for items that are blended.
+pub struct AlphaBatchBuilder {
+    pub alpha_batch_list: AlphaBatchList,
+    pub opaque_batch_list: OpaqueBatchList,
+    pub render_task_id: RenderTaskId,
+    render_task_address: RenderTaskAddress,
+    pub vis_mask: PrimitiveVisibilityMask,
+}
+
+impl AlphaBatchBuilder {
     pub fn new(
         screen_size: DeviceIntSize,
-        regions: Vec<DeviceIntRect>,
-        tile_blits: Vec<TileBlit>,
         break_advanced_blend_batches: bool,
         lookback_count: usize,
+        render_task_id: RenderTaskId,
+        render_task_address: RenderTaskAddress,
+        vis_mask: PrimitiveVisibilityMask,
     ) -> Self {
         // The threshold for creating a new batch is
         // one quarter the screen size.
         let batch_area_threshold = (screen_size.width * screen_size.height) as f32 / 4.0;
 
-        BatchList {
+        AlphaBatchBuilder {
             alpha_batch_list: AlphaBatchList::new(break_advanced_blend_batches, lookback_count),
             opaque_batch_list: OpaqueBatchList::new(batch_area_threshold, lookback_count),
-            regions,
-            tile_blits,
+            render_task_id,
+            render_task_address,
+            vis_mask,
+        }
+    }
+
+    pub fn build(
+        mut self,
+        batch_containers: &mut Vec<AlphaBatchContainer>,
+        merged_batches: &mut AlphaBatchContainer,
+        task_rect: DeviceIntRect,
+        task_scissor_rect: Option<DeviceIntRect>,
+    ) {
+        self.opaque_batch_list.finalize();
+
+        if task_scissor_rect.is_none() {
+            merged_batches.merge(self, &task_rect);
+        } else {
+            batch_containers.push(AlphaBatchContainer {
+                alpha_batches: self.alpha_batch_list.batches,
+                opaque_batches: self.opaque_batch_list.batches,
+                task_scissor_rect,
+                task_rect,
+            });
         }
     }
 
@@ -368,201 +485,6 @@ impl BatchList {
             }
         }
     }
-
-    fn finalize(&mut self) {
-        self.opaque_batch_list.finalize()
-    }
-}
-
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct PrimitiveBatch {
-    pub key: BatchKey,
-    pub instances: Vec<PrimitiveInstanceData>,
-}
-
-impl PrimitiveBatch {
-    fn new(key: BatchKey) -> PrimitiveBatch {
-        PrimitiveBatch {
-            key,
-            instances: Vec::new(),
-        }
-    }
-}
-
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct AlphaBatchContainer {
-    pub opaque_batches: Vec<PrimitiveBatch>,
-    pub alpha_batches: Vec<PrimitiveBatch>,
-    /// The overall scissor rect for this render task, if one
-    /// is required.
-    pub task_scissor_rect: Option<DeviceIntRect>,
-    /// A list of rectangle regions this batch should be drawn
-    /// in. Each region will have scissor rect set before drawing.
-    pub regions: Vec<DeviceIntRect>,
-    pub tile_blits: Vec<TileBlit>,
-    /// The rectangle of the owning render target that this
-    /// set of batches affects.
-    pub task_rect: DeviceIntRect,
-}
-
-impl AlphaBatchContainer {
-    pub fn new(
-        task_scissor_rect: Option<DeviceIntRect>,
-        regions: Vec<DeviceIntRect>,
-    ) -> AlphaBatchContainer {
-        AlphaBatchContainer {
-            opaque_batches: Vec::new(),
-            alpha_batches: Vec::new(),
-            task_scissor_rect,
-            regions,
-            tile_blits: Vec::new(),
-            task_rect: DeviceIntRect::zero(),
-        }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.opaque_batches.is_empty() &&
-        self.alpha_batches.is_empty()
-    }
-
-    fn merge(&mut self, batch_list: BatchList, task_rect: &DeviceIntRect) {
-        self.task_rect = self.task_rect.union(task_rect);
-
-        for other_batch in batch_list.opaque_batch_list.batches {
-            let batch_index = self.opaque_batches.iter().position(|batch| {
-                batch.key.is_compatible_with(&other_batch.key)
-            });
-
-            match batch_index {
-                Some(batch_index) => {
-                    self.opaque_batches[batch_index].instances.extend(other_batch.instances);
-                }
-                None => {
-                    self.opaque_batches.push(other_batch);
-                }
-            }
-        }
-
-        let mut min_batch_index = 0;
-
-        for other_batch in batch_list.alpha_batch_list.batches {
-            let batch_index = self.alpha_batches.iter().skip(min_batch_index).position(|batch| {
-                batch.key.is_compatible_with(&other_batch.key)
-            });
-
-            match batch_index {
-                Some(batch_index) => {
-                    let batch_index = batch_index + min_batch_index;
-                    self.alpha_batches[batch_index].instances.extend(other_batch.instances);
-                    min_batch_index = batch_index;
-                }
-                None => {
-                    self.alpha_batches.push(other_batch);
-                    min_batch_index = self.alpha_batches.len();
-                }
-            }
-        }
-    }
-}
-
-/// Each segment can optionally specify a per-segment
-/// texture set and one user data field.
-#[derive(Debug, Copy, Clone)]
-struct SegmentInstanceData {
-    textures: BatchTextures,
-    user_data: i32,
-}
-
-/// Encapsulates the logic of building batches for items that are blended.
-pub struct AlphaBatchBuilder {
-    pub batch_lists: Vec<BatchList>,
-    screen_size: DeviceIntSize,
-    break_advanced_blend_batches: bool,
-    lookback_count: usize,
-    render_task_id: RenderTaskId,
-    render_task_address: RenderTaskAddress,
-}
-
-impl AlphaBatchBuilder {
-    pub fn new(
-        screen_size: DeviceIntSize,
-        break_advanced_blend_batches: bool,
-        lookback_count: usize,
-        render_task_id: RenderTaskId,
-        render_task_address: RenderTaskAddress,
-    ) -> Self {
-        let batch_lists = vec![
-            BatchList::new(
-                screen_size,
-                Vec::new(),
-                Vec::new(),
-                break_advanced_blend_batches,
-                lookback_count,
-            ),
-        ];
-
-        AlphaBatchBuilder {
-            batch_lists,
-            screen_size,
-            break_advanced_blend_batches,
-            lookback_count,
-            render_task_id,
-            render_task_address,
-        }
-    }
-
-    fn push_new_batch_list(
-        &mut self,
-        regions: Vec<DeviceIntRect>,
-        tile_blits: Vec<TileBlit>,
-    ) {
-        self.batch_lists.push(BatchList::new(
-            self.screen_size,
-            regions,
-            tile_blits,
-            self.break_advanced_blend_batches,
-            self.lookback_count,
-        ));
-    }
-
-    fn current_batch_list(&mut self) -> &mut BatchList {
-        self.batch_lists.last_mut().unwrap()
-    }
-
-    fn can_merge(&self) -> bool {
-        self.batch_lists.len() == 1
-    }
-
-    pub fn build(
-        mut self,
-        batch_containers: &mut Vec<AlphaBatchContainer>,
-        merged_batches: &mut AlphaBatchContainer,
-        task_rect: DeviceIntRect,
-        task_scissor_rect: Option<DeviceIntRect>,
-    ) {
-        for batch_list in &mut self.batch_lists {
-            batch_list.finalize();
-        }
-
-        if task_scissor_rect.is_none() && self.can_merge() {
-            let batch_list = self.batch_lists.pop().unwrap();
-            debug_assert!(batch_list.tile_blits.is_empty());
-            merged_batches.merge(batch_list, &task_rect);
-        } else {
-            for batch_list in self.batch_lists {
-                batch_containers.push(AlphaBatchContainer {
-                    alpha_batches: batch_list.alpha_batch_list.batches,
-                    opaque_batches: batch_list.opaque_batch_list.batches,
-                    task_scissor_rect,
-                    regions: batch_list.regions,
-                    tile_blits: batch_list.tile_blits,
-                    task_rect,
-                });
-            }
-        }
-    }
 }
 
 /// Supports (recursively) adding a list of primitives and pictures to an alpha batch
@@ -573,23 +495,19 @@ pub struct BatchBuilder {
     /// to reduce memory allocations.
     glyph_fetch_buffer: Vec<GlyphFetchResult>,
 
-    /// The batchers that primitives will be added to as the
-    /// picture tree is traversed.
-    batcher: AlphaBatchBuilder,
+    pub batchers: Vec<AlphaBatchBuilder>,
 }
 
 impl BatchBuilder {
-    pub fn new(
-        batcher: AlphaBatchBuilder,
-    ) -> Self {
+    pub fn new(batchers: Vec<AlphaBatchBuilder>) -> Self {
         BatchBuilder {
             glyph_fetch_buffer: Vec::new(),
-            batcher,
+            batchers,
         }
     }
 
-    pub fn finalize(self) -> AlphaBatchBuilder {
-        self.batcher
+    pub fn finalize(self) -> Vec<AlphaBatchBuilder> {
+        self.batchers
     }
 
     fn add_brush_instance_to_batches(
@@ -603,29 +521,30 @@ impl BatchBuilder {
         brush_flags: BrushFlags,
         prim_header_index: PrimitiveHeaderIndex,
         user_data: i32,
+        prim_vis_mask: PrimitiveVisibilityMask,
     ) {
-        // TODO(gw): In future, this will be a loop adding the primitive
-        //           to multiple batch list(s), depending on the primitive
-        //           visibility mask.
+        for batcher in &mut self.batchers {
+            if batcher.vis_mask.intersects(prim_vis_mask) {
+                let render_task_address = batcher.render_task_address;
 
-        let render_task_address = self.batcher.render_task_address;
+                let instance = BrushInstance {
+                    segment_index,
+                    edge_flags,
+                    clip_task_address,
+                    render_task_address,
+                    brush_flags,
+                    prim_header_index,
+                    user_data,
+                };
 
-        let instance = BrushInstance {
-            segment_index,
-            edge_flags,
-            clip_task_address,
-            render_task_address,
-            brush_flags,
-            prim_header_index,
-            user_data,
-        };
-
-        self.batcher.current_batch_list().push_single_instance(
-            batch_key,
-            bounding_rect,
-            z_id,
-            PrimitiveInstanceData::from(instance),
-        );
+                batcher.push_single_instance(
+                    batch_key,
+                    bounding_rect,
+                    z_id,
+                    PrimitiveInstanceData::from(instance),
+                );
+            }
+        }
     }
 
     fn add_split_composite_instance_to_batches(
@@ -635,24 +554,25 @@ impl BatchBuilder {
         z_id: ZBufferId,
         prim_header_index: PrimitiveHeaderIndex,
         polygons_address: GpuCacheAddress,
+        prim_vis_mask: PrimitiveVisibilityMask,
     ) {
-        // TODO(gw): In future, this will be a loop adding the primitive
-        //           to multiple batch list(s), depending on the primitive
-        //           visibility mask.
+        for batcher in &mut self.batchers {
+            if batcher.vis_mask.intersects(prim_vis_mask) {
+                let render_task_address = batcher.render_task_address;
 
-        let render_task_address = self.batcher.render_task_address;
-
-        self.batcher.current_batch_list().push_single_instance(
-            batch_key,
-            bounding_rect,
-            z_id,
-            PrimitiveInstanceData::from(SplitCompositeInstance {
-                prim_header_index,
-                render_task_address,
-                polygons_address,
-                z: z_id,
-            }),
-        );
+                batcher.push_single_instance(
+                    batch_key,
+                    bounding_rect,
+                    z_id,
+                    PrimitiveInstanceData::from(SplitCompositeInstance {
+                        prim_header_index,
+                        render_task_address,
+                        polygons_address,
+                        z: z_id,
+                    }),
+                );
+            }
+        }
     }
 
     /// Add a picture to a given batch builder.
@@ -735,6 +655,7 @@ impl BatchBuilder {
         );
 
         let snap_offsets = prim_info.snap_offsets;
+        let prim_vis_mask = prim_info.visibility_mask;
 
         if is_chased {
             println!("\tbatch {:?} with bound {:?}", prim_rect, bounding_rect);
@@ -746,6 +667,9 @@ impl BatchBuilder {
         }
 
         match prim_instance.kind {
+            PrimitiveInstanceKind::PushClipChain |
+            PrimitiveInstanceKind::PopClipChain => {}
+
             PrimitiveInstanceKind::Clear { data_handle } => {
                 let prim_data = &ctx.data_stores.prim[data_handle];
                 let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
@@ -789,6 +713,7 @@ impl BatchBuilder {
                     BrushFlags::PERSPECTIVE_INTERPOLATION,
                     prim_header_index,
                     0,
+                    prim_vis_mask,
                 );
             }
             PrimitiveInstanceKind::NormalBorder { data_handle, ref cache_handles, .. } => {
@@ -862,6 +787,7 @@ impl BatchBuilder {
                     render_tasks,
                     z_id,
                     prim_info.clip_task_index,
+                    prim_vis_mask,
                     ctx,
                 );
             }
@@ -906,10 +832,7 @@ impl BatchBuilder {
                 let base_instance = GlyphInstance::new(
                     prim_header_index,
                 );
-                let alpha_batch_list = &mut self.batcher.batch_lists.last_mut().unwrap().alpha_batch_list;
-                let render_task_address = render_tasks.get_task_address(
-                    self.batcher.render_task_id,
-                );
+                let batchers = &mut self.batchers;
 
                 ctx.resource_cache.fetch_glyphs(
                     run.used_font.clone(),
@@ -978,20 +901,26 @@ impl BatchBuilder {
                         };
 
                         let key = BatchKey::new(kind, blend_mode, textures);
-                        let batch = alpha_batch_list.set_params_and_get_batch(
-                            key,
-                            bounding_rect,
-                            z_id,
-                        );
 
-                        for glyph in glyphs {
-                            batch.push(base_instance.build(
-                                glyph.index_in_text_run | ((render_task_address.0 as i32) << 16),
-                                glyph.uv_rect_address.as_int(),
-                                (rasterization_space as i32) << 16 |
-                                (subpx_dir as u32 as i32) << 8 |
-                                (color_mode as u32 as i32),
-                            ));
+                        for batcher in batchers.iter_mut() {
+                            if batcher.vis_mask.intersects(prim_vis_mask) {
+                                let render_task_address = batcher.render_task_address;
+                                let batch = batcher.alpha_batch_list.set_params_and_get_batch(
+                                    key,
+                                    bounding_rect,
+                                    z_id,
+                                );
+
+                                for glyph in glyphs {
+                                    batch.push(base_instance.build(
+                                        glyph.index_in_text_run | ((render_task_address.0 as i32) << 16),
+                                        glyph.uv_rect_address.as_int(),
+                                        (rasterization_space as i32) << 16 |
+                                        (subpx_dir as u32 as i32) << 8 |
+                                        (color_mode as u32 as i32),
+                                    ));
+                                }
+                            }
                         }
                     },
                 );
@@ -1080,6 +1009,7 @@ impl BatchBuilder {
                     BrushFlags::PERSPECTIVE_INTERPOLATION,
                     prim_header_index,
                     segment_user_data,
+                    prim_vis_mask,
                 );
             }
             PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, .. } => {
@@ -1104,18 +1034,7 @@ impl BatchBuilder {
 
                             let child_pic_index = match child_prim_instance.kind {
                                 PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
-                                PrimitiveInstanceKind::LineDecoration { .. } |
-                                PrimitiveInstanceKind::TextRun { .. } |
-                                PrimitiveInstanceKind::NormalBorder { .. } |
-                                PrimitiveInstanceKind::ImageBorder { .. } |
-                                PrimitiveInstanceKind::Rectangle { .. } |
-                                PrimitiveInstanceKind::YuvImage { .. } |
-                                PrimitiveInstanceKind::Image { .. } |
-                                PrimitiveInstanceKind::LinearGradient { .. } |
-                                PrimitiveInstanceKind::RadialGradient { .. } |
-                                PrimitiveInstanceKind::Clear { .. } => {
-                                    unreachable!();
-                                }
+                                _ => unreachable!(),
                             };
                             let pic = &ctx.prim_store.pictures[child_pic_index.0];
 
@@ -1169,6 +1088,7 @@ impl BatchBuilder {
                                 z_id,
                                 prim_header_index,
                                 child.gpu_address,
+                                prim_info.visibility_mask,
                             );
                         }
                     }
@@ -1201,167 +1121,71 @@ impl BatchBuilder {
                             PictureCompositeMode::TileCache { .. } => {
                                 let tile_cache = picture.tile_cache.as_ref().unwrap();
 
-                                // If the tile cache is disabled, just recurse into the
-                                // picture like a normal pass-through picture, adding
-                                // any child primitives into the parent surface batches.
-                                if !tile_cache.is_enabled {
-                                    // Forcefully break the batches if the
-                                    if surface.surface_spatial_node_index != surface_spatial_node_index {
-                                        self.batcher.push_new_batch_list(
-                                            Vec::new(),
-                                            Vec::new(),
-                                        );
+                                let tile_clip_rect = match tile_cache.local_rect.intersection(&tile_cache.local_clip_rect) {
+                                    Some(rect) => rect,
+                                    None => {
+                                        return;
                                     }
+                                };
+                                let local_tile_clip_rect = LayoutRect::from_untyped(&tile_clip_rect.to_untyped());
 
-                                    self.add_pic_to_batch(
-                                        picture,
-                                        ctx,
-                                        gpu_cache,
-                                        render_tasks,
-                                        deferred_resolves,
-                                        prim_headers,
-                                        transforms,
-                                        root_spatial_node_index,
-                                        surface.surface_spatial_node_index,
-                                        z_generator,
-                                    );
+                                for key in &tile_cache.tiles_to_draw {
+                                    let tile = &tile_cache.tiles[key];
 
-                                    if surface.surface_spatial_node_index != surface_spatial_node_index {
-                                        self.batcher.push_new_batch_list(
-                                            Vec::new(),
-                                            Vec::new(),
-                                        );
-                                    }
+                                    debug_assert!(tile.is_valid);
+                                    let local_tile_rect = LayoutRect::from_untyped(&tile.rect.to_untyped());
+                                    let prim_header = PrimitiveHeader {
+                                        local_rect: local_tile_rect,
+                                        local_clip_rect: local_tile_clip_rect,
+                                        snap_offsets: SnapOffsets::empty(),
+                                        specific_prim_address: prim_cache_address,
+                                        transform_id,
+                                    };
 
-                                    return;
-                                }
+                                    let (opacity, blend_mode) = if tile.is_opaque || tile_cache.is_opaque() {
+                                        (PrimitiveOpacity::opaque(), BlendMode::None)
+                                    } else {
+                                        (PrimitiveOpacity::translucent(), BlendMode::PremultipliedAlpha)
+                                    };
 
-                                // Construct a local clip rect that ensures we only draw pixels where
-                                // the local bounds of the picture extend to within the edge tiles.
-                                let local_clip_rect = prim_info
-                                    .combined_local_clip_rect
-                                    .intersection(&picture.snapped_local_rect)
-                                    .and_then(|rect| {
-                                        rect.intersection(&tile_cache.local_clip_rect)
-                                    });
-
-                                if let Some(local_clip_rect) = local_clip_rect {
-                                    // Step through each tile in the cache, and draw it with an image
-                                    // brush primitive if visible.
-
-                                    let kind = BatchKind::Brush(
-                                        BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
-                                    );
-
-                                    for tile_index in &tile_cache.tiles_to_draw {
-                                        let tile = &tile_cache.tiles[tile_index.0];
-
-                                        // Get the local rect of the tile.
-                                        let tile_rect = tile.local_rect;
-
-                                        // Adjust the snap offsets for the tile.
-                                        let snap_offsets = recompute_snap_offsets(
-                                            tile_rect,
-                                            prim_rect,
-                                            snap_offsets,
-                                        );
-
-                                        let prim_header = PrimitiveHeader {
-                                            local_rect: tile_rect,
-                                            local_clip_rect,
-                                            snap_offsets,
-                                            specific_prim_address: prim_cache_address,
-                                            transform_id,
-                                        };
-
-                                        let prim_header_index = prim_headers.push(&prim_header, z_id, [
+                                    let cache_item = ctx.resource_cache.texture_cache.get(&tile.handle);
+                                    let uv_rect_address = gpu_cache
+                                        .get_address(&cache_item.uv_rect_handle)
+                                        .as_int();
+                                    let textures = BatchTextures::color(cache_item.texture_id);
+                                    let batch_params = BrushBatchParameters::shared(
+                                        BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
+                                        textures,
+                                        [
                                             ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
                                             RasterizationSpace::Local as i32,
                                             get_shader_opacity(1.0),
                                             0,
-                                        ]);
+                                        ],
+                                        uv_rect_address,
+                                    );
 
-                                        let cache_item = ctx
-                                            .resource_cache
-                                            .get_texture_cache_item(&tile.handle);
+                                    let prim_header_index = prim_headers.push(
+                                        &prim_header,
+                                        z_id,
+                                        batch_params.prim_user_data,
+                                    );
 
-                                        let key = BatchKey::new(
-                                            kind,
-                                            BlendMode::None,
-                                            BatchTextures::color(cache_item.texture_id),
-                                        );
-
-                                        let uv_rect_address = gpu_cache
-                                            .get_address(&cache_item.uv_rect_handle)
-                                            .as_int();
-
-                                        self.add_brush_instance_to_batches(
-                                            key,
-                                            bounding_rect,
-                                            z_id,
-                                            INVALID_SEGMENT_INDEX,
-                                            EdgeAaSegmentMask::empty(),
-                                            clip_task_address,
-                                            brush_flags,
-                                            prim_header_index,
-                                            uv_rect_address,
-                                        );
-                                    }
-
-                                    // If there is a dirty rect for the tile cache, recurse into the
-                                    // main picture primitive list, and draw them first.
-                                    if !tile_cache.dirty_region.is_empty() {
-                                        let mut tile_blits = Vec::new();
-
-                                        let (target_rect, _) = render_tasks[self.batcher.render_task_id]
-                                            .get_target_rect();
-
-                                        for blit in &tile_cache.pending_blits {
-                                            tile_blits.push(TileBlit {
-                                                dest_offset: blit.dest_offset,
-                                                size: blit.size,
-                                                target: blit.target.clone(),
-                                                src_offset: DeviceIntPoint::new(
-                                                    blit.src_offset.x + target_rect.origin.x,
-                                                    blit.src_offset.y + target_rect.origin.y,
-                                                ),
-                                            })
-                                        }
-
-                                        // Collect the list of regions to scissor and repeat
-                                        // the draw calls into, based on dirty rects.
-                                        let batch_regions = tile_cache
-                                            .dirty_region
-                                            .dirty_rects
-                                            .iter()
-                                            .map(|dirty_rect| {
-                                                (dirty_rect.world_rect * ctx.global_device_pixel_scale).round().to_i32()
-                                            })
-                                            .collect();
-
-                                        self.batcher.push_new_batch_list(
-                                            batch_regions,
-                                            tile_blits,
-                                        );
-
-                                        self.add_pic_to_batch(
-                                            picture,
-                                            ctx,
-                                            gpu_cache,
-                                            render_tasks,
-                                            deferred_resolves,
-                                            prim_headers,
-                                            transforms,
-                                            root_spatial_node_index,
-                                            surface.surface_spatial_node_index,
-                                            z_generator,
-                                        );
-
-                                        self.batcher.push_new_batch_list(
-                                            Vec::new(),
-                                            Vec::new(),
-                                        );
-                                    }
+                                    self.add_segmented_prim_to_batch(
+                                        None,
+                                        opacity,
+                                        &batch_params,
+                                        blend_mode,
+                                        blend_mode,
+                                        prim_header_index,
+                                        bounding_rect,
+                                        transform_kind,
+                                        render_tasks,
+                                        z_id,
+                                        prim_info.clip_task_index,
+                                        prim_vis_mask,
+                                        ctx,
+                                    );
                                 }
                             }
                             PictureCompositeMode::Filter(ref filter) => {
@@ -1397,6 +1221,7 @@ impl BatchBuilder {
                                             brush_flags,
                                             prim_header_index,
                                             uv_rect_address.as_int(),
+                                            prim_vis_mask,
                                         );
                                     }
                                     Filter::DropShadows(shadows) => {
@@ -1467,6 +1292,7 @@ impl BatchBuilder {
                                                 brush_flags,
                                                 shadow_prim_header_index,
                                                 shadow_uv_rect_address,
+                                                prim_vis_mask,
                                             );
                                         }
                                         let z_id_content = z_generator.next();
@@ -1488,6 +1314,7 @@ impl BatchBuilder {
                                             brush_flags,
                                             content_prim_header_index,
                                             content_uv_rect_address,
+                                            prim_vis_mask,
                                         );
                                     }
                                     _ => {
@@ -1567,6 +1394,7 @@ impl BatchBuilder {
                                             brush_flags,
                                             prim_header_index,
                                             0,
+                                            prim_vis_mask,
                                         );
                                     }
                                 }
@@ -1612,6 +1440,7 @@ impl BatchBuilder {
                                     brush_flags,
                                     prim_header_index,
                                     0,
+                                    prim_vis_mask,
                                 );
                             }
                             PictureCompositeMode::MixBlend(mode) if ctx.use_advanced_blending => {
@@ -1643,16 +1472,22 @@ impl BatchBuilder {
                                     brush_flags,
                                     prim_header_index,
                                     uv_rect_address.as_int(),
+                                    prim_vis_mask,
                                 );
                             }
                             PictureCompositeMode::MixBlend(mode) => {
                                 let cache_task_id = surface_task.expect("bug: surface must be allocated by now");
                                 let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
 
+                                // TODO(gw): For now, mix-blend is not supported as a picture
+                                //           caching root, so we can safely assume there is
+                                //           only a single batcher present.
+                                assert_eq!(self.batchers.len(), 1);
+
                                 let key = BatchKey::new(
                                     BatchKind::Brush(
                                         BrushBatchKind::MixBlend {
-                                            task_id: self.batcher.render_task_id,
+                                            task_id: self.batchers[0].render_task_id,
                                             source_id: cache_task_id,
                                             backdrop_id,
                                         },
@@ -1679,6 +1514,7 @@ impl BatchBuilder {
                                     brush_flags,
                                     prim_header_index,
                                     0,
+                                    prim_vis_mask,
                                 );
                             }
                             PictureCompositeMode::Blit(_) => {
@@ -1745,6 +1581,7 @@ impl BatchBuilder {
                                     render_tasks,
                                     z_id,
                                     prim_info.clip_task_index,
+                                    prim_vis_mask,
                                     ctx,
                                 );
                             }
@@ -1833,6 +1670,7 @@ impl BatchBuilder {
                     render_tasks,
                     z_id,
                     prim_info.clip_task_index,
+                    prim_vis_mask,
                     ctx,
                 );
             }
@@ -1894,6 +1732,7 @@ impl BatchBuilder {
                     render_tasks,
                     z_id,
                     prim_info.clip_task_index,
+                    prim_vis_mask,
                     ctx,
                 );
             }
@@ -2001,6 +1840,7 @@ impl BatchBuilder {
                     render_tasks,
                     z_id,
                     prim_info.clip_task_index,
+                    prim_vis_mask,
                     ctx,
                 );
             }
@@ -2105,6 +1945,7 @@ impl BatchBuilder {
                         render_tasks,
                         z_id,
                         prim_info.clip_task_index,
+                        prim_vis_mask,
                         ctx,
                     );
                 } else {
@@ -2162,6 +2003,7 @@ impl BatchBuilder {
                                     BrushFlags::SEGMENT_RELATIVE | BrushFlags::PERSPECTIVE_INTERPOLATION,
                                     prim_header_index,
                                     uv_rect_address.as_int(),
+                                    prim_vis_mask,
                                 );
                             }
                         }
@@ -2238,6 +2080,7 @@ impl BatchBuilder {
                         BrushFlags::PERSPECTIVE_INTERPOLATION,
                         prim_header_index,
                         segment_user_data,
+                        prim_vis_mask,
                     );
                 } else if gradient.visible_tiles_range.is_empty() {
                     let batch_params = BrushBatchParameters::shared(
@@ -2278,6 +2121,7 @@ impl BatchBuilder {
                         render_tasks,
                         z_id,
                         prim_info.clip_task_index,
+                        prim_vis_mask,
                         ctx,
                     );
                 } else {
@@ -2299,6 +2143,7 @@ impl BatchBuilder {
                         &prim_header,
                         prim_headers,
                         z_id,
+                        prim_vis_mask,
                     );
                 }
             }
@@ -2362,6 +2207,7 @@ impl BatchBuilder {
                         render_tasks,
                         z_id,
                         prim_info.clip_task_index,
+                        prim_vis_mask,
                         ctx,
                     );
                 } else {
@@ -2383,6 +2229,7 @@ impl BatchBuilder {
                         &prim_header,
                         prim_headers,
                         z_id,
+                        prim_vis_mask,
                     );
                 }
             }
@@ -2404,6 +2251,7 @@ impl BatchBuilder {
         z_id: ZBufferId,
         prim_opacity: PrimitiveOpacity,
         clip_task_index: ClipTaskIndex,
+        prim_vis_mask: PrimitiveVisibilityMask,
         ctx: &RenderTargetContext,
     ) {
         debug_assert!(clip_task_index != ClipTaskIndex::INVALID);
@@ -2441,6 +2289,7 @@ impl BatchBuilder {
             BrushFlags::PERSPECTIVE_INTERPOLATION | segment.brush_flags,
             prim_header_index,
             segment_data.user_data,
+            prim_vis_mask,
         );
     }
 
@@ -2458,6 +2307,7 @@ impl BatchBuilder {
         render_tasks: &RenderTaskGraph,
         z_id: ZBufferId,
         clip_task_index: ClipTaskIndex,
+        prim_vis_mask: PrimitiveVisibilityMask,
         ctx: &RenderTargetContext,
     ) {
         match (brush_segments, &params.segment_data) {
@@ -2483,6 +2333,7 @@ impl BatchBuilder {
                         z_id,
                         prim_opacity,
                         clip_task_index,
+                        prim_vis_mask,
                         ctx,
                     );
                 }
@@ -2507,6 +2358,7 @@ impl BatchBuilder {
                         z_id,
                         prim_opacity,
                         clip_task_index,
+                        prim_vis_mask,
                         ctx,
                     );
                 }
@@ -2533,6 +2385,7 @@ impl BatchBuilder {
                     BrushFlags::PERSPECTIVE_INTERPOLATION,
                     prim_header_index,
                     segment_data.user_data,
+                    prim_vis_mask,
                 );
             }
             (None, SegmentDataKind::Instanced(..)) => {
@@ -2555,6 +2408,7 @@ impl BatchBuilder {
         base_prim_header: &PrimitiveHeader,
         prim_headers: &mut PrimitiveHeaders,
         z_id: ZBufferId,
+        prim_vis_mask: PrimitiveVisibilityMask,
     ) {
         let key = BatchKey {
             blend_mode,
@@ -2591,6 +2445,7 @@ impl BatchBuilder {
                 BrushFlags::PERSPECTIVE_INTERPOLATION,
                 prim_header_index,
                 0,
+                prim_vis_mask,
             );
         }
     }
@@ -2697,6 +2552,8 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::Rectangle { .. } |
             PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::RadialGradient { .. } |
+            PrimitiveInstanceKind::PushClipChain |
+            PrimitiveInstanceKind::PopClipChain |
             PrimitiveInstanceKind::Clear { .. } => {
                 return true;
             }

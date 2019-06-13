@@ -45,7 +45,7 @@ fuzzy(255,2664) == repeat-radial-negative.yaml repeat-radial-ref.yaml
 
 # fuzzy because of thin spaced out column of pixels that are 1 off
 fuzzy(1,83164) == tiling-linear-1.yaml tiling-linear-1-ref.yaml
-fuzzy(1,46279) == tiling-linear-2.yaml tiling-linear-2-ref.yaml
+fuzzy(1,46293) == tiling-linear-2.yaml tiling-linear-2-ref.yaml
 fuzzy(1,62154) == tiling-linear-3.yaml tiling-linear-3-ref.yaml
 
 fuzzy(1,17) == tiling-radial-1.yaml tiling-radial-1-ref.yaml
