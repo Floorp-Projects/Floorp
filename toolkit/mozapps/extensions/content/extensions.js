@@ -12,7 +12,6 @@
 const {DeferredTask} = ChromeUtils.import("resource://gre/modules/DeferredTask.jsm");
 const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 const {AddonRepository} = ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
-const {AddonSettings} = ChromeUtils.import("resource://gre/modules/addons/AddonSettings.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AMTelemetry",
                                "resource://gre/modules/AddonManager.jsm");
@@ -301,19 +300,6 @@ function loadView(aViewId) {
   } else {
     gViewController.loadView(aViewId);
   }
-}
-
-function isCorrectlySigned(aAddon) {
-  // Add-ons without an "isCorrectlySigned" property are correctly signed as
-  // they aren't the correct type for signing.
-  return aAddon.isCorrectlySigned !== false;
-}
-
-function isDisabledUnsigned(addon) {
-  let signingRequired = (addon.type == "locale") ?
-                        AddonSettings.LANGPACKS_REQUIRE_SIGNING :
-                        AddonSettings.REQUIRE_SIGNING;
-  return signingRequired && !isCorrectlySigned(addon);
 }
 
 function isLegacyExtension(addon) {
