@@ -24,7 +24,15 @@ dom/media/webspeech/recognition/energy_endpointer.cc
 dom/media/webspeech/recognition/energy_endpointer.h
 dom/media/webspeech/recognition/energy_endpointer_params.cc
 dom/media/webspeech/recognition/energy_endpointer_params.h
+dom/tests/ajax/jquery/
+dom/tests/ajax/mochikit/
+dom/tests/mochitest/ajax/
+dom/tests/mochitest/dom-level1-core/
+dom/tests/mochitest/dom-level2-core/
+dom/tests/mochitest/dom-level2-html/
+dom/u2f/tests/pkijs/
 dom/webauthn/cbor-cpp/
+dom/webauthn/tests/pkijs/
 editor/libeditor/tests/browserscope/lib/richtext/
 editor/libeditor/tests/browserscope/lib/richtext2/
 extensions/spellcheck/hunspell/src/

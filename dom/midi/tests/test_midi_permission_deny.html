@@ -16,7 +16,7 @@
          await navigator.requestMIDIAccess({ "sysex": false });
          ok(false, "MIDI Access Request Deny failed");
          SimpleTest.finish();
-       } catch {
+       } catch (ex) {
          ok(true, "MIDI Access Request Deny successful!");
          SimpleTest.finish();
        }

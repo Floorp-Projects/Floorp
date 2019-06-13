@@ -12,52 +12,13 @@
 obj*/**
 
 # dom/ exclusions which should be removed (aka ESLint enabled)
-dom/animation/**
 dom/base/*.*
 dom/base/test/*.*
-dom/base/test/unit/test_serializers_entities*.js
-dom/base/test/unit_ipc/**
 dom/base/test/jsmodules/**
-dom/canvas/**
-dom/encoding/**
-dom/events/**
-dom/fetch/**
-dom/file/**
-dom/html/**
-dom/jsurl/**
 dom/media/test/**
 !dom/media/test/marionette/yttest/*.js
-dom/media/tests/**
-dom/media/webaudio/**
-dom/media/webspeech/**
-dom/messagechannel/**
-dom/midi/**
-dom/network/**
-dom/payments/**
-dom/performance/**
-dom/permission/**
 dom/promise/**
-dom/quota/**
-dom/security/test/cors/**
-dom/security/test/csp/**
-dom/security/test/general/**
-dom/security/test/mixedcontentblocker/**
-dom/security/test/sri/**
-dom/serviceworkers/**
-dom/smil/**
-dom/tests/mochitest/**
-dom/u2f/**
-dom/vr/**
-dom/webauthn/**
-dom/webgpu/**
-dom/websocket/**
-dom/workers/**
-dom/worklet/**
-dom/xbl/**
 dom/xhr/**
-dom/xml/**
-dom/xslt/**
-dom/xul/**
 
 # build/ third-party code
 build/pgo/js-input/**
@@ -206,6 +167,26 @@ dom/media/webaudio/test/blink/**
 dom/media/webvtt/**
 dom/svg/test/test_nonAnimStrings.xhtml
 dom/svg/test/test_SVG_namespace_ids.html
+
+# Strange encodings
+dom/encoding/test/test_utf16_files.html
+dom/encoding/test/file_utf16_be_bom.js
+dom/encoding/test/file_utf16_le_bom.js
+
+# Not parsable
+dom/tests/mochitest/general/test_focusrings.xul
+dom/html/test/test_bug677658.html
+
+# Intentional broken files
+dom/base/test/file_js_cache_syntax_error.js
+dom/media/tests/mochitest/identity/idp-bad.js
+dom/serviceworkers/test/file_js_cache_syntax_error.js
+dom/serviceworkers/test/parse_error_worker.js
+dom/tests/mochitest/bugs/test_bug531176.html
+dom/webauthn/tests/cbor.js
+dom/workers/test/importScripts_worker_imported3.js
+dom/workers/test/invalid.js
+dom/workers/test/threadErrors_worker1.js
 
 # Third-party
 editor/libeditor/tests/browserscope/**

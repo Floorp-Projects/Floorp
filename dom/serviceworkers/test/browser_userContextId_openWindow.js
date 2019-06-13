@@ -11,9 +11,11 @@ const USER_CONTEXT_ID = 3
 let mockAlertsService = {
   showAlert: function(alert, alertListener) {
     ok(true, "Showing alert");
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     setTimeout(function () {
       alertListener.observe(null, "alertshow", alert.cookie);
     }, 100);
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     setTimeout(function () {
       alertListener.observe(null, "alertclickcallback", alert.cookie);
     }, 100);
