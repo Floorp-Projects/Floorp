@@ -1232,6 +1232,17 @@ qcms_transform* qcms_transform_create(
 #endif
 		    } else
 #endif
+#if defined(__arm__) || defined(__aarch64__)
+                    if (qcms_supports_neon) {
+			    if (in_type == QCMS_DATA_RGB_8) {
+				    transform->transform_fn = qcms_transform_data_rgb_out_lut_neon;
+			    } else if (in_type == QCMS_DATA_RGBA_8) {
+				    transform->transform_fn = qcms_transform_data_rgba_out_lut_neon;
+			    } else if (in_type == QCMS_DATA_BGRA_8) {
+				    transform->transform_fn = qcms_transform_data_bgra_out_lut_neon;
+			    }
+                    } else
+#endif
 #if (defined(__POWERPC__) || defined(__powerpc__) && !defined(__NO_FPRS__))
 		    if (have_altivec()) {
 			    if (in_type == QCMS_DATA_RGB_8) {
@@ -1366,4 +1377,14 @@ bool qcms_supports_iccv4;
 void qcms_enable_iccv4()
 {
 	qcms_supports_iccv4 = true;
+}
+
+#if defined(__arm__) || defined(__aarch64__)
+bool qcms_supports_neon;
+#endif
+void qcms_enable_neon()
+{
+#if defined(__arm__) || defined(__aarch64__)
+	qcms_supports_neon = true;
+#endif
 }
