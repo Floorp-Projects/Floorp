@@ -50,7 +50,7 @@ class Wizard(UIBaseLib):
 
     @property
     def _buttons(self):
-        return self.element.get_property('_wizardButtons')
+        return self.element.find_element(By.ANON_ATTRIBUTE, {'anonid': 'Buttons'})
 
     @property
     def cancel_button(self):
