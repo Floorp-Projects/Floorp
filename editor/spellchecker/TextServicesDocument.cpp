@@ -1610,7 +1610,6 @@ bool TextServicesDocument::IsBlockNode(nsIContent* aContent) {
           nsGkAtoms::font    != atom &&
           nsGkAtoms::i       != atom &&
           nsGkAtoms::kbd     != atom &&
-          nsGkAtoms::keygen  != atom &&
           nsGkAtoms::nobr    != atom &&
           nsGkAtoms::s       != atom &&
           nsGkAtoms::samp    != atom &&

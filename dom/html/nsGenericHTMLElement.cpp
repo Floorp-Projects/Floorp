@@ -1472,7 +1472,7 @@ already_AddRefed<nsINodeList> nsGenericHTMLElement::Labels() {
 
 bool nsGenericHTMLElement::IsInteractiveHTMLContent(
     bool aIgnoreTabindex) const {
-  return IsAnyOfHTMLElements(nsGkAtoms::embed, nsGkAtoms::keygen) ||
+  return IsAnyOfHTMLElements(nsGkAtoms::embed) ||
          (!aIgnoreTabindex && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex));
 }
 
@@ -2178,13 +2178,10 @@ void nsGenericHTMLFormElement::FieldSetDisabledChanged(bool aNotify) {
 }
 
 bool nsGenericHTMLFormElement::IsLabelable() const {
-  // TODO: keygen should be in that list, see bug 101019.
   uint32_t type = ControlType();
   return (type & NS_FORM_INPUT_ELEMENT && type != NS_FORM_INPUT_HIDDEN) ||
-         type & NS_FORM_BUTTON_ELEMENT ||
-         // type == NS_FORM_KEYGEN ||
-         type == NS_FORM_OUTPUT || type == NS_FORM_SELECT ||
-         type == NS_FORM_TEXTAREA;
+         type & NS_FORM_BUTTON_ELEMENT || type == NS_FORM_OUTPUT ||
+         type == NS_FORM_SELECT || type == NS_FORM_TEXTAREA;
 }
 
 void nsGenericHTMLFormElement::GetFormAction(nsString& aValue) {

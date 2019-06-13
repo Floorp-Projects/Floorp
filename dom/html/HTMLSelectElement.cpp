@@ -26,7 +26,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIFormControlFrame.h"
 #include "nsIForm.h"
-#include "nsIFormProcessor.h"
 #include "nsIFrame.h"
 #include "nsListControlFrame.h"
 #include "nsISelectControlFrame.h"
@@ -1396,8 +1395,6 @@ HTMLSelectElement::Reset() {
   return NS_OK;
 }
 
-static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
-
 NS_IMETHODIMP
 HTMLSelectElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
   // Disabled elements don't submit
@@ -1419,13 +1416,6 @@ HTMLSelectElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
   //
   uint32_t len = Length();
 
-  nsAutoString mozType;
-  nsCOMPtr<nsIFormProcessor> keyGenProcessor;
-  if (GetAttr(kNameSpaceID_None, nsGkAtoms::moztype, mozType) &&
-      mozType.EqualsLiteral("-mozilla-keygen")) {
-    keyGenProcessor = do_GetService(kFormProcessorCID);
-  }
-
   for (uint32_t optIndex = 0; optIndex < len; optIndex++) {
     HTMLOptionElement* option = Item(optIndex);
 
@@ -1440,13 +1430,6 @@ HTMLSelectElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
 
     nsString value;
     option->GetValue(value);
-
-    if (keyGenProcessor) {
-      nsString tmp(value);
-      if (NS_SUCCEEDED(keyGenProcessor->ProcessValue(this, name, tmp))) {
-        value = tmp;
-      }
-    }
 
     aFormSubmission->AddNameValuePair(name, value);
   }
