@@ -81,12 +81,16 @@ struct ParamTraits<mozilla::dom::EffectsInfo> {
   typedef mozilla::dom::EffectsInfo paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mVisible);
+    WriteParam(aMsg, aParam.mVisibleRect);
+    WriteParam(aMsg, aParam.mScaleX);
+    WriteParam(aMsg, aParam.mScaleY);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mVisible);
+    return ReadParam(aMsg, aIter, &aResult->mVisibleRect) &&
+           ReadParam(aMsg, aIter, &aResult->mScaleX) &&
+           ReadParam(aMsg, aIter, &aResult->mScaleY);
   }
 };
 

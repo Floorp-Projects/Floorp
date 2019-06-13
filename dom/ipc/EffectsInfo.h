@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_EffectsInfo_h
 #define mozilla_dom_EffectsInfo_h
 
+#include "nsRect.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -14,29 +16,37 @@ namespace dom {
  * An EffectsInfo contains information for a remote browser about the graphical
  * effects that are being applied to it by ancestor browsers in different
  * processes.
- *
- * TODO: This struct currently only reports visibility, and should be extended
- *       with information on clipping and scaling.
  */
 class EffectsInfo {
  public:
   EffectsInfo() { *this = EffectsInfo::FullyHidden(); }
-  static EffectsInfo FullyVisible() { return EffectsInfo{true}; }
-  static EffectsInfo FullyHidden() { return EffectsInfo{false}; }
+
+  static EffectsInfo VisibleWithinRect(const nsRect& aVisibleRect,
+                                       float aScaleX, float aScaleY) {
+    return EffectsInfo{aVisibleRect, aScaleX, aScaleY};
+  }
+  static EffectsInfo FullyHidden() { return EffectsInfo{nsRect(), 1.0f, 1.0f}; }
 
   bool operator==(const EffectsInfo& aOther) {
-    return mVisible == aOther.mVisible;
+    return mVisibleRect == aOther.mVisibleRect && mScaleX == aOther.mScaleX &&
+           mScaleY == aOther.mScaleY;
   }
   bool operator!=(const EffectsInfo& aOther) { return !(*this == aOther); }
 
-  // If you add new state here, you must also update operator==
-  bool mVisible;
-  /*
-   * TODO: Add information for ancestor scaling and clipping.
-   */
+  bool IsVisible() const { return !mVisibleRect.IsEmpty(); }
+
+  // The visible rect of this browser relative to the root frame. If this is
+  // empty then the browser can be considered invisible.
+  nsRect mVisibleRect;
+  // The desired scale factors to apply to rasterized content to match
+  // transforms applied in ancestor browsers.
+  float mScaleX;
+  float mScaleY;
+  // If you add new fields here, you must also update operator==
 
  private:
-  explicit EffectsInfo(bool aVisible) : mVisible(aVisible) {}
+  EffectsInfo(const nsRect& aVisibleRect, float aScaleX, float aScaleY)
+      : mVisibleRect(aVisibleRect), mScaleX(aScaleX), mScaleY(aScaleY) {}
 };
 
 }  // namespace dom

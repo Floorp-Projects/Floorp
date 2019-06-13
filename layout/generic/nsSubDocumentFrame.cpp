@@ -14,6 +14,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLFrameElement.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -1404,8 +1405,20 @@ already_AddRefed<mozilla::layers::Layer> nsDisplayRemote::BuildLayer(
 
   if (RefPtr<RemoteBrowser> remoteBrowser =
           GetFrameLoader()->GetRemoteBrowser()) {
+    // Adjust mItemVisibleRect, which is relative to the reference frame, to be
+    // relative to this frame
+    nsRect visibleRect;
+    if (aContainerParameters.mItemVisibleRect) {
+      visibleRect = *aContainerParameters.mItemVisibleRect - ToReferenceFrame();
+    } else {
+      visibleRect = mFrame->GetContentRectRelativeToSelf();
+    }
+
     // Generate an effects update notifying the browser it is visible
-    aBuilder->AddEffectUpdate(remoteBrowser, EffectsInfo::FullyVisible());
+    aBuilder->AddEffectUpdate(remoteBrowser,
+                              EffectsInfo::VisibleWithinRect(
+                                  visibleRect, aContainerParameters.mXScale,
+                                  aContainerParameters.mYScale));
     // FrameLayerBuilder will take care of notifying the browser when it is no
     // longer visible
   }
@@ -1465,8 +1478,10 @@ bool nsDisplayRemote::CreateWebRenderCommands(
   if (RefPtr<RemoteBrowser> remoteBrowser =
           GetFrameLoader()->GetRemoteBrowser()) {
     // Generate an effects update notifying the browser it is visible
-    aDisplayListBuilder->AddEffectUpdate(remoteBrowser,
-                                         EffectsInfo::FullyVisible());
+    // TODO - Gather visibleRect and scaling factors
+    aDisplayListBuilder->AddEffectUpdate(
+        remoteBrowser, EffectsInfo::VisibleWithinRect(
+                           mFrame->GetContentRectRelativeToSelf(), 1.0f, 1.0f));
 
     // Create a WebRenderRemoteData to notify the RemoteBrowser when it is no
     // longer visible
