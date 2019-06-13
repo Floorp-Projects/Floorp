@@ -13,7 +13,7 @@ var gCategoryUtilities;
 var gApp = document.getElementById("bundle_brand").getString("brandShortName");
 var gVersion = Services.appinfo.version;
 
-// Not implemented in HTML about:addons (Bug 1544950)
+// Tested in browser_html_warning_messages.js for HTML.
 SpecialPowers.pushPrefEnv({
   set: [["extensions.htmlaboutaddons.enabled", false]],
 });
