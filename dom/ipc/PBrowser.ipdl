@@ -26,6 +26,7 @@ include JavaScriptTypes;
 include URIParams;
 include PPrintingTypes;
 include PTabContext;
+include PBackgroundSharedTypes;
 
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
@@ -133,6 +134,22 @@ struct WebProgressStateChangeData
   nsIURI documentURI;
 };
 
+
+struct WebProgressLocationChangeData
+{
+  bool isNavigating;
+  bool isSyntheticDocument;
+  bool mayEnableCharacterEncodingMenu;
+  bool charsetAutodetected;
+  nsString contentType;
+  nsString title;
+  nsString charset;
+  nsIURI documentURI;
+  PrincipalInfo contentPrincipal;
+  PrincipalInfo contentStoragePrincipal;
+  CSPInfo? csp;
+  uint64_t? requestContextID;
+};
 
 /**
  * A PBrowser manages a maximal locally connected subtree of BrowsingContexts
@@ -570,6 +587,12 @@ parent:
                            RequestData aRequestData, int32_t aCurSelfProgress,
                            int32_t aMaxSelfProgress, int32_t aCurTotalProgress,
                            int32_t aMaxTotalProgress);
+
+    async OnLocationChange(WebProgressData? aWebProgressData,
+                           RequestData aRequestData, nsIURI aLocation,
+                           uint32_t aFlags, bool aCanGoBack,
+                           bool aCanGoForward,
+                           WebProgressLocationChangeData? aLocationChangeData);
 
     async OnStatusChange(WebProgressData? aWebProgressData,
                          RequestData aRequestData, nsresult aStatus,
