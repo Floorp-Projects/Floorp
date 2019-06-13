@@ -196,14 +196,7 @@ class JSTerm extends Component {
         };
 
         const onCtrlCmdEnter = () => {
-          const hasSuggestion = this.hasAutocompletionSuggestion();
-          if (!hasSuggestion &&
-            !Debugger.isCompilableUnit(this.getInputValueBeforeCursor())) {
-            // incomplete statement
-            return "CodeMirror.Pass";
-          }
-
-          if (hasSuggestion) {
+          if (this.hasAutocompletionSuggestion()) {
             return this.acceptProposedCompletion();
           }
 
