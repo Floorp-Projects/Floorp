@@ -1354,18 +1354,6 @@ class nsRootPresContext final : public nsPresContext {
 
   virtual bool IsRoot() override { return true; }
 
-  /**
-   * Add a runnable that will get called before the next paint. They will get
-   * run eventually even if painting doesn't happen. They might run well before
-   * painting happens.
-   */
-  void AddWillPaintObserver(nsIRunnable* aRunnable);
-
-  /**
-   * Run all runnables that need to get called before the next paint.
-   */
-  void FlushWillPaintObservers();
-
   virtual size_t SizeOfExcludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override;
 
@@ -1379,28 +1367,10 @@ class nsRootPresContext final : public nsPresContext {
    */
   void CancelApplyPluginGeometryTimer();
 
-  class RunWillPaintObservers : public mozilla::Runnable {
-   public:
-    explicit RunWillPaintObservers(nsRootPresContext* aPresContext)
-        : Runnable("nsPresContextType::RunWillPaintObservers"),
-          mPresContext(aPresContext) {}
-    void Revoke() { mPresContext = nullptr; }
-    NS_IMETHOD Run() override {
-      if (mPresContext) {
-        mPresContext->FlushWillPaintObservers();
-      }
-      return NS_OK;
-    }
-    // The lifetime of this reference is handled by an nsRevocableEventPtr
-    nsRootPresContext* MOZ_NON_OWNING_REF mPresContext;
-  };
-
   friend class nsPresContext;
 
   nsCOMPtr<nsITimer> mApplyPluginGeometryTimer;
   nsTHashtable<nsRefPtrHashKey<nsIContent>> mRegisteredPlugins;
-  nsTArray<nsCOMPtr<nsIRunnable>> mWillPaintObservers;
-  nsRevocableEventPtr<RunWillPaintObservers> mWillPaintFallbackEvent;
 };
 
 #ifdef MOZ_REFLOW_PERF
