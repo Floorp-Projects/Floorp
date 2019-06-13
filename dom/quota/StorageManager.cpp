@@ -6,7 +6,6 @@
 
 #include "StorageManager.h"
 
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/StorageManagerBinding.h"

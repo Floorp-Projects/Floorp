@@ -31,18 +31,20 @@ namespace js {
 
 class Scope;
 
+using BigIntVector = JS::GCVector<js::BigInt*>;
+
 namespace frontend {
 
 class ObjectBox;
 
-class CGNumberList {
-  JS::Rooted<ValueVector> vector;
+class CGBigIntList {
+  JS::Rooted<BigIntVector> vector;
 
  public:
-  explicit CGNumberList(JSContext* cx) : vector(cx, ValueVector(cx)) {}
-  MOZ_MUST_USE bool append(const JS::Value& v) { return vector.append(v); }
+  explicit CGBigIntList(JSContext* cx) : vector(cx, BigIntVector(cx)) {}
+  MOZ_MUST_USE bool append(js::BigInt* bi) { return vector.append(bi); }
   size_t length() const { return vector.length(); }
-  void finish(mozilla::Span<GCPtrValue> array);
+  void finish(mozilla::Span<GCPtrBigInt> array);
 };
 
 struct CGObjectList {
@@ -330,8 +332,8 @@ class PerScriptData {
 
   // ---- Literals ----
 
-  CGNumberList& numberList() { return numberList_; }
-  const CGNumberList& numberList() const { return numberList_; }
+  CGBigIntList& bigIntList() { return bigIntList_; }
+  const CGBigIntList& bigIntList() const { return bigIntList_; }
 
   CGObjectList& objectList() { return objectList_; }
   const CGObjectList& objectList() const { return objectList_; }
@@ -347,8 +349,8 @@ class PerScriptData {
 
   // ---- Literals ----
 
-  // List of double and bigint values used by script.
-  CGNumberList numberList_;
+  // List of bigints used by script.
+  CGBigIntList bigIntList_;
 
   // List of emitted objects.
   CGObjectList objectList_;

@@ -32,6 +32,28 @@ class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   bool CanShutdown() override { return true; }
   const std::string& GetPluginFilePath() { return mGMPPath; }
 
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  // Init static members on the main thread
+  static void InitStaticMainThread();
+
+  // Read prefs and environment variables to determine
+  // when and if to start the Mac sandbox for the child
+  // process. Starting the sandbox at launch is the new
+  // preferred method. Code to support starting the sandbox
+  // later at plugin start time should be removed once
+  // starting at launch is stable and shipping.
+  bool IsMacSandboxLaunchEnabled() override;
+
+  // For process sandboxing purposes, set whether or not this
+  // instance of the GMP process requires access to the macOS
+  // window server. At present, Widevine requires window server
+  // access, but OpenH264 decoding does not.
+  void SetRequiresWindowServer(bool aRequiresWindowServer);
+
+  // Return the sandbox type to be used with this process type.
+  static MacSandboxType GetMacSandboxType() { return MacSandboxType_GMP; };
+#endif
+
   using mozilla::ipc::GeckoChildProcessHost::GetChannel;
   using mozilla::ipc::GeckoChildProcessHost::GetChildProcessHandle;
 
@@ -42,6 +64,36 @@ class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
 
   std::string mGMPPath;
   nsCOMPtr<nsIRunnable> mDeletedCallback;
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  // Indicates whether we'll start the Mac GMP sandbox during
+  // process launch (earlyinit) which is the new preferred method
+  // or later in the process lifetime.
+  static bool sLaunchWithMacSandbox;
+
+  // Whether or not Mac sandbox violation logging is enabled.
+  static bool sMacSandboxGMPLogging;
+
+  // Override so we can set GMP-specific sandbox parameters
+  bool FillMacSandboxInfo(MacSandboxInfo& aInfo) override;
+
+  // For normalizing paths to be compatible with sandboxing.
+  // We use normalized paths to generate the sandbox ruleset. Once
+  // the sandbox has been started, resolving symlinks that point to
+  // allowed directories could require reading paths not allowed by
+  // the sandbox, so we should only attempt to load plugin libraries
+  // using normalized paths.
+  static nsresult NormalizePath(const char* aPath, nsACString& aNormalizedPath);
+
+  // Controls whether or not the sandbox will be configured with
+  // window service access.
+  bool mRequiresWindowServer;
+
+#  if defined(DEBUG)
+  // Used to assert InitStaticMainThread() is called before the constructor.
+  static bool sIsMainThreadInitDone;
+#  endif
+#endif
 
   DISALLOW_COPY_AND_ASSIGN(GMPProcessParent);
 };

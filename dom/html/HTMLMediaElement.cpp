@@ -6381,7 +6381,7 @@ void HTMLMediaElement::OnVisibilityChange(Visibility aNewVisibility) {
       ("OnVisibilityChange(): %s\n", VisibilityString(aNewVisibility)));
 
   mVisibilityState = aNewVisibility;
-  if (StaticPrefs::MediaTestVideoSuspend()) {
+  if (StaticPrefs::media_test_video_suspend()) {
     DispatchAsyncEvent(NS_LITERAL_STRING("visibilitychanged"));
   }
 

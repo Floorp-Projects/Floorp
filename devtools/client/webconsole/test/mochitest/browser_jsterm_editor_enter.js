@@ -53,12 +53,20 @@ async function performEditorEnabledTests() {
   const {visibleMessages} = hud.ui.wrapper.getStore().getState().messages;
   is(visibleMessages.length, 0, "input expressions should not have been executed");
 
-  const onMessage = waitForMessage(hud, "11", ".result");
+  let onMessage = waitForMessage(hud, "11", ".result");
   EventUtils.synthesizeKey("KEY_Enter", {
     [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
   });
   await onMessage;
   ok(true, "Input was executed on Ctrl/Cmd + Enter");
+
+  setInputValue(hud, "function x() {");
+  onMessage = waitForMessage(hud, "SyntaxError");
+  EventUtils.synthesizeKey("KEY_Enter", {
+    [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
+  });
+  await onMessage;
+  ok(true, "The expression was evaluated, even if it wasn't well-formed");
 }
 
 async function performEditorDisabledTests() {

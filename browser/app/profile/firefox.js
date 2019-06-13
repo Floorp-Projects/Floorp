@@ -706,7 +706,6 @@ pref("accessibility.typeaheadfind.flashBar", 1);
 pref("accessibility.support.url", "https://support.mozilla.org/%LOCALE%/kb/accessibility-services");
 pref("accessibility.indicator.enabled", false);
 
-pref("plugins.click_to_play", true);
 pref("plugins.testmode", false);
 
 // Should plugins that are hidden show the infobar UI?
@@ -1066,6 +1065,8 @@ pref("security.sandbox.gmp.win32k-disable", false);
 pref("security.sandbox.content.mac.earlyinit", true);
 // Remove this pref once RDD early init is stable on Release.
 pref("security.sandbox.rdd.mac.earlyinit", true);
+// Remove this pref once GMP early init is stable on Release.
+pref("security.sandbox.gmp.mac.earlyinit", true);
 
 // This pref is discussed in bug 1083344, the naming is inspired from its
 // Windows counterpart, but on Mac it's an integer which means:
@@ -1471,8 +1472,6 @@ pref("identity.fxaccounts.commands.missed.fetch_interval", 86400);
 pref("ui.key.menuAccessKeyFocuses", true);
 #endif
 
-pref("media.eme.hdcp-policy-check.enabled", false);
-
 // Whether we should run a test-pattern through EME GMPs before assuming they'll
 // decode H.264.
 pref("media.gmp.trial-create.enabled", true);
@@ -1561,6 +1560,8 @@ pref("privacy.trackingprotection.cryptomining.enabled", true);
 #endif
 
 pref("browser.contentblocking.allowlist.storage.enabled", true);
+
+pref("browser.contentblocking.database.enabled", true);
 
 pref("dom.storage_access.enabled", true);
 

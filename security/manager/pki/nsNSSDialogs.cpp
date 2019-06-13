@@ -17,7 +17,6 @@
 #include "nsIDialogParamBlock.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIKeygenThread.h"
 #include "nsIPK11Token.h"
 #include "nsIPromptService.h"
 #include "nsIProtectedAuthThread.h"
@@ -36,8 +35,7 @@ nsNSSDialogs::nsNSSDialogs() {}
 nsNSSDialogs::~nsNSSDialogs() {}
 
 NS_IMPL_ISUPPORTS(nsNSSDialogs, nsITokenPasswordDialogs, nsICertificateDialogs,
-                  nsIClientAuthDialogs, nsITokenDialogs,
-                  nsIGeneratingKeypairInfoDialogs)
+                  nsIClientAuthDialogs, nsITokenDialogs)
 
 nsresult nsNSSDialogs::Init() {
   nsresult rv;
@@ -323,61 +321,6 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor* aCtx,
-                                           nsIKeygenThread* runnable) {
-  nsresult rv;
-
-  // Get the parent window for the dialog
-  nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(aCtx);
-
-  rv = nsNSSDialogHelper::openDialog(
-      parent, "chrome://pippki/content/createCertInfo.xul", runnable);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsNSSDialogs::ChooseToken(nsIInterfaceRequestor* /*aCtx*/,
-                          const char16_t** aTokenList, uint32_t aCount,
-                          /*out*/ nsAString& aTokenChosen,
-                          /*out*/ bool* aCanceled) {
-  NS_ENSURE_ARG(aTokenList);
-  NS_ENSURE_ARG(aCanceled);
-
-  *aCanceled = false;
-
-  nsCOMPtr<nsIDialogParamBlock> block =
-      do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
-  if (!block) return NS_ERROR_FAILURE;
-
-  block->SetNumberStrings(aCount);
-
-  nsresult rv;
-  for (uint32_t i = 0; i < aCount; i++) {
-    rv = block->SetString(i, aTokenList[i]);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  rv = block->SetInt(0, aCount);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = nsNSSDialogHelper::openDialog(
-      nullptr, "chrome://pippki/content/choosetoken.xul", block);
-  if (NS_FAILED(rv)) return rv;
-
-  int32_t status;
-
-  rv = block->GetInt(0, &status);
-  if (NS_FAILED(rv)) return rv;
-
-  *aCanceled = (status == 0);
-  if (!*aCanceled) {
-    // retrieve the nickname
-    rv = block->GetString(0, getter_Copies(aTokenChosen));
-  }
-  return rv;
 }
 
 NS_IMETHODIMP

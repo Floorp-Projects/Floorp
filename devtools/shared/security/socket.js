@@ -248,9 +248,9 @@ var _attemptTransport = async function(settings) {
 var _attemptConnect = async function({ host, port, encryption }) {
   let s;
   if (encryption) {
-    s = socketTransportService.createTransport(["ssl"], 1, host, port, null);
+    s = socketTransportService.createTransport(["ssl"], host, port, null);
   } else {
-    s = socketTransportService.createTransport(null, 0, host, port, null);
+    s = socketTransportService.createTransport([], host, port, null);
   }
   // By default the CONNECT socket timeout is very long, 65535 seconds,
   // so that if we race to be in CONNECT state while the server socket is still

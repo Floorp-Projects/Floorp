@@ -121,10 +121,6 @@ add_task(async function testPluginData() {
     BrowserTestUtils.removeTab(tab);
   }
 
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("plugins.click_to_play");
-  });
   PLUGIN_TAG.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
 
   await extension.startup();

@@ -8,7 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=345624
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
-    input, textarea, fieldset, button, select, keygen, output, object { background-color: rgb(0,0,0) !important; }
+    input, textarea, fieldset, button, select, output, object { background-color: rgb(0,0,0) !important; }
     :valid   { background-color: rgb(0,255,0) !important; }
     :invalid { background-color: rgb(255,0,0) !important; }
   </style>
@@ -23,7 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=345624
   <select id='s' oninvalid="invalidEventHandler(event);"></select>
   <textarea id='t' oninvalid="invalidEventHandler(event);"></textarea>
   <output id='o' oninvalid="invalidEventHandler(event);"></output>
-  <keygen id='k'></keygen>
   <object id='obj'></object>
 </div>
 <pre id="test">
@@ -102,10 +101,6 @@ function checkDefaultPseudoClass()
        .getPropertyValue('background-color'), "rgb(0, 0, 0)",
      "Nor :valid and :invalid should apply");
 
-  todo_is(window.getComputedStyle(document.getElementById('k'))
-       .getPropertyValue('background-color'), "rgb(0, 0, 0)",
-     "Nor :valid and :invalid should apply");
-
   is(window.getComputedStyle(document.getElementById('s'))
        .getPropertyValue('background-color'), "rgb(0, 255, 0)",
      ":valid pseudo-class should apply");
@@ -125,10 +120,9 @@ function checkDefaultPseudoClass()
 
 function checkSpecificWillValidate()
 {
-  // fieldset, output, object, keygen (TODO) and select elements
+  // fieldset, output, object (TODO) and select elements
   ok(!document.getElementById('f').willValidate, "Fielset element should be barred from constraint validation");
   ok(!document.getElementById('obj').willValidate, "Object element should be barred from constraint validation");
-  todo(!document.getElementById('k').willValidate, "Keygen element should be barred from constraint validation");
   ok(document.getElementById('o').willValidate, "Output element should not be barred from constraint validation");
   ok(document.getElementById('s').willValidate, "Select element should not be barred from constraint validation");
 
@@ -303,7 +297,6 @@ checkConstraintValidationAPIExist(document.getElementById('i'));
 checkConstraintValidationAPIExist(document.getElementById('b'));
 checkConstraintValidationAPIExist(document.getElementById('s'));
 checkConstraintValidationAPIExist(document.getElementById('t'));
-checkConstraintValidationAPIExist(document.getElementById('k'));
 checkConstraintValidationAPIExist(document.getElementById('o'));
 checkConstraintValidationAPIExist(document.getElementById('obj'));
 
@@ -312,7 +305,6 @@ checkConstraintValidationAPIDefaultValues(document.getElementById('i'));
 checkConstraintValidationAPIDefaultValues(document.getElementById('b'));
 checkConstraintValidationAPIDefaultValues(document.getElementById('s'));
 checkConstraintValidationAPIDefaultValues(document.getElementById('t'));
-checkConstraintValidationAPIDefaultValues(document.getElementById('k'));
 checkConstraintValidationAPIDefaultValues(document.getElementById('o'));
 checkConstraintValidationAPIDefaultValues(document.getElementById('obj'));
 
@@ -320,14 +312,13 @@ checkDefaultPseudoClass();
 
 checkSpecificWillValidate();
 
-// Not checking button, fieldset, object and keygen
+// Not checking button, fieldset and object
 // because they are always barred from constraint validation.
 checkCommonWillValidate(document.getElementById('i'));
 checkCommonWillValidate(document.getElementById('s'));
 checkCommonWillValidate(document.getElementById('t'));
 checkCommonWillValidate(document.getElementById('o'));
 
-/* TODO: add "keygen" element */
 checkCustomError(document.getElementById('i'), false);
 checkCustomError(document.getElementById('s'), false);
 checkCustomError(document.getElementById('t'), false);
@@ -336,14 +327,13 @@ checkCustomError(document.getElementById('b'), false);
 checkCustomError(document.getElementById('f'), true);
 checkCustomError(document.getElementById('obj'), true);
 
-// Not checking button, fieldset, object and keygen
+// Not checking button, fieldset and object
 // because they are always barred from constraint validation.
 checkCheckValidity(document.getElementById('i'));
 checkCheckValidity(document.getElementById('s'));
 checkCheckValidity(document.getElementById('t'));
 checkCheckValidity(document.getElementById('o'));
 
-/* TODO: add "keygen" element */
 checkValidityStateObjectAliveWithoutElement("fieldset");
 checkValidityStateObjectAliveWithoutElement("input");
 checkValidityStateObjectAliveWithoutElement("button");

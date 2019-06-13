@@ -467,7 +467,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   friend class DestroyRunnable;
 
  public:
-  Session(MediaRecorder* aRecorder, int32_t aTimeSlice)
+  Session(MediaRecorder* aRecorder, uint32_t aTimeSlice)
       : mRecorder(aRecorder),
         mMediaStreamReady(false),
         mTimeSlice(aTimeSlice),
@@ -1223,10 +1223,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   // Timestamp of the last fired dataavailable event.
   TimeStamp mLastBlobTimeStamp;
   // The interval of passing encoded data from MutableBlobStorage to
-  // onDataAvailable handler. "mTimeSlice < 0" means Session object does not
-  // push encoded data to onDataAvailable, instead, it passive wait the client
-  // side pull encoded data by calling requestData API.
-  const int32_t mTimeSlice;
+  // onDataAvailable handler.
+  const uint32_t mTimeSlice;
   // The session's current main thread state. The error type gets setwhen ending
   // a recording with an error. An NS_OK error is invalid.
   // Main thread only.
@@ -1292,7 +1290,7 @@ void MediaRecorder::SetMimeType(const nsString& aMimeType) {
 
 void MediaRecorder::GetMimeType(nsString& aMimeType) { aMimeType = mMimeType; }
 
-void MediaRecorder::Start(const Optional<int32_t>& aTimeSlice,
+void MediaRecorder::Start(const Optional<uint32_t>& aTimeSlice,
                           ErrorResult& aResult) {
   LOG(LogLevel::Debug, ("MediaRecorder.Start %p", this));
 
@@ -1322,15 +1320,7 @@ void MediaRecorder::Start(const Optional<int32_t>& aTimeSlice,
     }
   }
 
-  int32_t timeSlice = 0;
-  if (aTimeSlice.WasPassed()) {
-    if (aTimeSlice.Value() < 0) {
-      aResult.Throw(NS_ERROR_INVALID_ARG);
-      return;
-    }
-
-    timeSlice = aTimeSlice.Value();
-  }
+  uint32_t timeSlice = aTimeSlice.WasPassed() ? aTimeSlice.Value() : 0;
   MediaRecorderReporter::AddMediaRecorder(this);
   mState = RecordingState::Recording;
   // Start a session.

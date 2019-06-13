@@ -2135,6 +2135,9 @@ class StaticAnalysis(MachCommandBase):
         self.cov_analysis_url = cov_config.get('package_url')
         self.cov_package_name = cov_config.get('package_name')
         self.cov_url = cov_config.get('server_url')
+        # In case we don't have a port in the secret we use the default one,
+        # for a default coverity deployment.
+        self.cov_port = cov_config.get('server_port', 8443)
         self.cov_auth = cov_config.get('auth_key')
         self.cov_package_ver = cov_config.get('package_ver')
         self.cov_full_stack = cov_config.get('full_stack', False)
@@ -2142,7 +2145,9 @@ class StaticAnalysis(MachCommandBase):
         return 0
 
     def download_coverity(self):
-        if self.cov_url is None or self.cov_analysis_url is None or self.cov_auth is None:
+        if self.cov_url is None or self.cov_port is None or \
+                self.cov_analysis_url is None or \
+                self.cov_auth is None:
             self.log(logging.ERROR, 'static-analysis', {}, 'Missing Coverity secret on try job!')
             return 1
 
@@ -2154,6 +2159,7 @@ class StaticAnalysis(MachCommandBase):
             "server": {
                 "host": "%s",
                 "ssl" : true,
+                "port": %s,
                 "on_new_cert" : "trust",
                 "auth_key_file": "%s"
             },
@@ -2168,7 +2174,7 @@ class StaticAnalysis(MachCommandBase):
         # Generate the coverity.conf and auth files
         cov_auth_path = mozpath.join(self.cov_state_path, 'auth')
         cov_setup_path = mozpath.join(self.cov_state_path, 'coverity.conf')
-        cov_conf = COVERITY_CONFIG % (self.cov_url, cov_auth_path)
+        cov_conf = COVERITY_CONFIG % (self.cov_url, self.cov_port, cov_auth_path)
 
         def download(artifact_url, target):
             import requests

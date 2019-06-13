@@ -136,7 +136,7 @@ class LoadInfo final : public nsILoadInfo {
            nsContentPolicyType aContentPolicyType, LoadTainting aTainting,
            bool aUpgradeInsecureRequests, bool aBrowserUpgradeInsecureRequests,
            bool aBrowserWouldUpgradeInsecureRequests, bool aForceAllowDataURI,
-           bool aAllowInsecureRedirectToDataURI,
+           bool aAllowInsecureRedirectToDataURI, bool aBypassCORSChecks,
            bool aSkipContentPolicyCheckForWebRequest,
            bool aForceInheritPrincipalDropped, uint64_t aInnerWindowID,
            uint64_t aOuterWindowID, uint64_t aParentOuterWindowID,
@@ -205,6 +205,7 @@ class LoadInfo final : public nsILoadInfo {
   bool mBrowserWouldUpgradeInsecureRequests;
   bool mForceAllowDataURI;
   bool mAllowInsecureRedirectToDataURI;
+  bool mBypassCORSChecks;
   bool mSkipContentPolicyCheckForWebRequest;
   bool mOriginalFrameSrcLoad;
   bool mForceInheritPrincipalDropped;

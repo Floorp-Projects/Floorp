@@ -348,7 +348,7 @@ TEST_F(APZCBasicTester, OverScroll_Bug1152051b) {
   uint64_t blockId;
   nsEventStatus status =
       TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time(), &blockId);
-  if (StaticPrefs::TouchActionEnabled() &&
+  if (StaticPrefs::layout_css_touch_action_enabled() &&
       status != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(apzc, blockId);
   }

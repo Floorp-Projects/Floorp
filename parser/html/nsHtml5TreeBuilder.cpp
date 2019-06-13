@@ -1105,11 +1105,11 @@ starttagloop:
           case OBJECT:
           case TABLE:
           case AREA_OR_WBR:
+          case KEYGEN:
           case BR:
           case EMBED:
           case IMG:
           case INPUT:
-          case KEYGEN:
           case HR:
           case TEXTAREA:
           case XMP:
@@ -1347,7 +1347,8 @@ starttagloop:
             }
             case BR:
             case EMBED:
-            case AREA_OR_WBR: {
+            case AREA_OR_WBR:
+            case KEYGEN: {
               reconstructTheActiveFormattingElements();
               MOZ_FALLTHROUGH;
             }
@@ -1373,7 +1374,6 @@ starttagloop:
               NS_HTML5_CONTINUE(starttagloop);
             }
             case IMG:
-            case KEYGEN:
             case INPUT: {
               reconstructTheActiveFormattingElements();
               appendVoidElementToCurrentMayFoster(elementName, attributes,
@@ -1770,8 +1770,7 @@ starttagloop:
             }
           }
           case INPUT:
-          case TEXTAREA:
-          case KEYGEN: {
+          case TEXTAREA: {
             errStartTagWithSelectOpen(name);
             eltPos = findLastInTableScope(nsGkAtoms::select);
             if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
@@ -2842,6 +2841,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
             break;
           }
           case AREA_OR_WBR:
+          case KEYGEN:
 #ifdef ENABLE_VOID_MENUITEM
           case MENUITEM:
 #endif
@@ -2850,7 +2850,6 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
           case IMG:
           case IMAGE:
           case INPUT:
-          case KEYGEN:
           case HR:
           case IFRAME:
           case NOEMBED:

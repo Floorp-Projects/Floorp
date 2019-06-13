@@ -297,6 +297,10 @@ impl DataStores {
                 let prim_data = &self.yuv_image[data_handle];
                 &prim_data.common
             }
+            PrimitiveInstanceKind::PushClipChain |
+            PrimitiveInstanceKind::PopClipChain => {
+                unreachable!();
+            }
         }
     }
 }
@@ -627,7 +631,6 @@ impl Document {
         if let Some(frame_builder) = self.frame_builder.take() {
             let globals = frame_builder.destroy(
                 &mut retained_tiles,
-                &self.clip_scroll_tree,
             );
 
             // Provide any cached tiles from the previous frame builder to

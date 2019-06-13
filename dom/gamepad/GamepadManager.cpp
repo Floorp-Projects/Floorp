@@ -60,7 +60,7 @@ GamepadManager::GamepadManager()
       mPromiseID(0) {}
 
 nsresult GamepadManager::Init() {
-  mEnabled = IsAPIEnabled();
+  mEnabled = StaticPrefs::dom_gamepad_enabled();
   mNonstandardEventsEnabled =
       StaticPrefs::dom_gamepad_non_standard_events_enabled();
   nsCOMPtr<nsIObserverService> observerService =
@@ -410,11 +410,6 @@ already_AddRefed<GamepadManager> GamepadManager::GetService() {
 
   RefPtr<GamepadManager> service(gGamepadManagerSingleton);
   return service.forget();
-}
-
-// static
-bool GamepadManager::IsAPIEnabled() {
-  return StaticPrefs::dom_gamepad_enabled();
 }
 
 bool GamepadManager::MaybeWindowHasSeenGamepad(nsGlobalWindowInner* aWindow,

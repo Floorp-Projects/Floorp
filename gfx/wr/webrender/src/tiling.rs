@@ -9,7 +9,7 @@ use api::units::*;
 use api::FontRenderMode;
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image, BatchBuilder};
 use crate::clip::ClipStore;
-use crate::clip_scroll_tree::{ClipScrollTree};
+use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX};
 use crate::debug_render::DebugItem;
 use crate::device::{Texture};
 #[cfg(feature = "pathfinder")]
@@ -23,7 +23,7 @@ use crate::internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex, Textu
 use pathfinder_partitioner::mesh::Mesh;
 use crate::picture::{RecordedDirtyRegion, SurfaceInfo};
 use crate::prim_store::gradient::GRADIENT_FP_STOPS;
-use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
+use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer, PrimitiveVisibilityMask};
 use crate::profiler::FrameProfileCounters;
 use crate::render_backend::{DataStores, FrameId};
 use crate::render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
@@ -122,7 +122,6 @@ pub trait RenderTarget {
     );
 
     fn needs_depth(&self) -> bool;
-    fn must_be_drawn(&self) -> bool;
 
     fn used_rect(&self) -> DeviceIntRect;
     fn add_used(&mut self, rect: DeviceIntRect);
@@ -274,10 +273,6 @@ impl<T: RenderTarget> RenderTargetList<T> {
         self.targets.iter().any(|target| target.needs_depth())
     }
 
-    pub fn must_be_drawn(&self) -> bool {
-        self.targets.iter().any(|target| target.must_be_drawn())
-    }
-
     pub fn check_ready(&self, t: &Texture) {
         let dimensions = t.get_dimensions();
         assert!(dimensions.width >= self.max_dynamic_size.width);
@@ -406,7 +401,7 @@ impl RenderTarget for ColorRenderTarget {
         transforms: &mut TransformPalette,
         z_generator: &mut ZBufferIdGenerator,
     ) {
-        let mut merged_batches = AlphaBatchContainer::new(None, Vec::new());
+        let mut merged_batches = AlphaBatchContainer::new(None);
 
         for task_id in &self.alpha_tasks {
             let task = &render_tasks[*task_id];
@@ -423,6 +418,17 @@ impl RenderTarget for ColorRenderTarget {
             match task.kind {
                 RenderTaskKind::Picture(ref pic_task) => {
                     let pic = &ctx.prim_store.pictures[pic_task.pic_index.0];
+
+                    let raster_spatial_node_index = match pic.raster_config {
+                        Some(ref raster_config) => {
+                            let surface = &ctx.surfaces[raster_config.surface_index.0];
+                            surface.raster_spatial_node_index
+                        }
+                        None => {
+                            // This must be the main framebuffer
+                            ROOT_SPATIAL_NODE_INDEX
+                        }
+                    };
 
                     let (target_rect, _) = task.get_target_rect();
 
@@ -443,10 +449,11 @@ impl RenderTarget for ColorRenderTarget {
                         ctx.batch_lookback_count,
                         *task_id,
                         render_tasks.get_task_address(*task_id),
+                        PrimitiveVisibilityMask::all(),
                     );
 
                     let mut batch_builder = BatchBuilder::new(
-                        alpha_batch_builder,
+                        vec![alpha_batch_builder],
                     );
 
                     batch_builder.add_pic_to_batch(
@@ -457,19 +464,21 @@ impl RenderTarget for ColorRenderTarget {
                         deferred_resolves,
                         prim_headers,
                         transforms,
-                        pic_task.root_spatial_node_index,
+                        raster_spatial_node_index,
                         pic_task.surface_spatial_node_index,
                         z_generator,
                     );
 
-                    let alpha_batch_builder = batch_builder.finalize();
+                    let alpha_batch_builders = batch_builder.finalize();
 
-                    alpha_batch_builder.build(
-                        &mut self.alpha_batch_containers,
-                        &mut merged_batches,
-                        target_rect,
-                        scissor_rect,
-                    );
+                    for batcher in alpha_batch_builders {
+                        batcher.build(
+                            &mut self.alpha_batch_containers,
+                            &mut merged_batches,
+                            target_rect,
+                            scissor_rect,
+                        );
+                    }
                 }
                 _ => {
                     unreachable!();
@@ -593,12 +602,6 @@ impl RenderTarget for ColorRenderTarget {
         }
     }
 
-    fn must_be_drawn(&self) -> bool {
-        self.alpha_batch_containers.iter().any(|ab| {
-            !ab.tile_blits.is_empty()
-        })
-    }
-
     fn needs_depth(&self) -> bool {
         self.alpha_batch_containers.iter().any(|ab| {
             !ab.opaque_batches.is_empty()
@@ -636,7 +639,7 @@ pub struct AlphaRenderTarget {
 
 impl RenderTarget for AlphaRenderTarget {
     fn new(
-        _screen_size: DeviceIntSize,
+        _: DeviceIntSize,
         gpu_supports_fast_clears: bool,
     ) -> Self {
         AlphaRenderTarget {
@@ -750,10 +753,6 @@ impl RenderTarget for AlphaRenderTarget {
         false
     }
 
-    fn must_be_drawn(&self) -> bool {
-        false
-    }
-
     fn used_rect(&self) -> DeviceIntRect {
         self.used_rect
     }
@@ -761,6 +760,15 @@ impl RenderTarget for AlphaRenderTarget {
     fn add_used(&mut self, rect: DeviceIntRect) {
         self.used_rect = self.used_rect.union(&rect);
     }
+}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct PictureCacheTarget {
+    pub texture: TextureSource,
+    pub layer: usize,
+    pub alpha_batch_container: AlphaBatchContainer,
+    pub clear_color: Option<ColorF>,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -926,6 +934,7 @@ pub enum RenderPassKind {
         alpha: RenderTargetList<AlphaRenderTarget>,
         color: RenderTargetList<ColorRenderTarget>,
         texture_cache: FastHashMap<(CacheTextureId, usize), TextureCacheRenderTarget>,
+        picture_cache: Vec<PictureCacheTarget>,
     },
 }
 
@@ -943,6 +952,8 @@ pub struct RenderPass {
     /// The set of tasks to be performed in this pass, as indices into the
     /// `RenderTaskGraph`.
     pub tasks: Vec<RenderTaskId>,
+    /// Screen size in device pixels - used for opaque alpha batch break threshold.
+    screen_size: DeviceIntSize,
 }
 
 impl RenderPass {
@@ -958,6 +969,7 @@ impl RenderPass {
                 main_target,
             },
             tasks: vec![],
+            screen_size,
         }
     }
 
@@ -979,8 +991,10 @@ impl RenderPass {
                     gpu_supports_fast_clears,
                 ),
                 texture_cache: FastHashMap::default(),
+                picture_cache: Vec::new(),
             },
             tasks: vec![],
+            screen_size,
         }
     }
 
@@ -1052,7 +1066,12 @@ impl RenderPass {
                     z_generator,
                 );
             }
-            RenderPassKind::OffScreen { ref mut color, ref mut alpha, ref mut texture_cache } => {
+            RenderPassKind::OffScreen {
+                ref mut color,
+                ref mut alpha,
+                ref mut texture_cache,
+                ref mut picture_cache,
+            } => {
                 let saved_color = if self.tasks.iter().any(|&task_id| {
                     let t = &render_tasks[task_id];
                     t.target_kind() == RenderTargetKind::Color && t.saved_index.is_some()
@@ -1069,6 +1088,11 @@ impl RenderPass {
                 } else {
                     None
                 };
+
+                // Collect a list of picture cache tasks, keyed by picture index.
+                // This allows us to only walk that picture root once, adding the
+                // primitives to all relevant batches at the same time.
+                let mut picture_cache_tasks = FastHashMap::default();
 
                 // Step through each task, adding to batches as appropriate.
                 for &task_id in &self.tasks {
@@ -1092,6 +1116,25 @@ impl RenderPass {
                                 };
                                 *origin = Some((alloc_origin, target_index));
                                 (None, target_index.0)
+                            }
+                            RenderTaskLocation::PictureCache { .. } => {
+                                // For picture cache tiles, just store them in the map
+                                // of picture cache tasks, to be handled below.
+                                let pic_index = match task.kind {
+                                    RenderTaskKind::Picture(ref info) => {
+                                        info.pic_index
+                                    }
+                                    _ => {
+                                        unreachable!();
+                                    }
+                                };
+
+                                picture_cache_tasks
+                                    .entry(pic_index)
+                                    .or_insert_with(Vec::new)
+                                    .push(task_id);
+
+                                continue;
                             }
                         };
 
@@ -1122,24 +1165,138 @@ impl RenderPass {
                         }
                         None => {
                             match target_kind {
-                                RenderTargetKind::Color => color.targets[layer].add_task(
-                                    task_id,
-                                    ctx,
-                                    gpu_cache,
-                                    render_tasks,
-                                    clip_store,
-                                    transforms,
-                                    deferred_resolves,
-                                ),
-                                RenderTargetKind::Alpha => alpha.targets[layer].add_task(
-                                    task_id,
-                                    ctx,
-                                    gpu_cache,
-                                    render_tasks,
-                                    clip_store,
-                                    transforms,
-                                    deferred_resolves,
-                                ),
+                                RenderTargetKind::Color => {
+                                    color.targets[layer].add_task(
+                                        task_id,
+                                        ctx,
+                                        gpu_cache,
+                                        render_tasks,
+                                        clip_store,
+                                        transforms,
+                                        deferred_resolves,
+                                    )
+                                }
+                                RenderTargetKind::Alpha => {
+                                    alpha.targets[layer].add_task(
+                                        task_id,
+                                        ctx,
+                                        gpu_cache,
+                                        render_tasks,
+                                        clip_store,
+                                        transforms,
+                                        deferred_resolves,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // For each picture in this pass that has picture cache tiles, create
+                // a batcher per task, and then build batches for each of the tasks
+                // at the same time.
+                for (pic_index, task_ids) in picture_cache_tasks {
+                    let pic = &ctx.prim_store.pictures[pic_index.0];
+                    let tile_cache = pic.tile_cache.as_ref().expect("bug");
+
+                    // Extract raster/surface spatial nodes for this surface.
+                    let (root_spatial_node_index, surface_spatial_node_index) = match pic.raster_config {
+                        Some(ref rc) => {
+                            let surface = &ctx.surfaces[rc.surface_index.0];
+                            (surface.raster_spatial_node_index, surface.surface_spatial_node_index)
+                        }
+                        None => {
+                            unreachable!();
+                        }
+                    };
+
+                    // Determine the clear color for this picture cache.
+                    // If the entire tile cache is opaque, we can skip clear completely.
+                    // If it's the first layer, clear it to white to allow subpixel AA on that
+                    // first layer even if it's technically transparent.
+                    // Otherwise, clear to transparent and composite with alpha.
+                    // TODO(gw): We can detect per-tile opacity for the clear color here
+                    //           which might be a significant win on some pages?
+                    let forced_opaque = match tile_cache.background_color {
+                        Some(color) => color.a >= 1.0,
+                        None => false,
+                    };
+                    // TODO(gw): Once we have multiple slices enabled, take advantage of
+                    //           option to skip clears if the slice is opaque.
+                    let clear_color = if forced_opaque {
+                        Some(ColorF::WHITE)
+                    } else {
+                        Some(ColorF::TRANSPARENT)
+                    };
+
+                    // Create an alpha batcher for each of the tasks of this picture.
+                    let mut batchers = Vec::new();
+                    for task_id in &task_ids {
+                        let task_id = *task_id;
+                        let vis_mask = match render_tasks[task_id].kind {
+                            RenderTaskKind::Picture(ref info) => info.vis_mask,
+                            _ => unreachable!(),
+                        };
+                        batchers.push(AlphaBatchBuilder::new(
+                            self.screen_size,
+                            ctx.break_advanced_blend_batches,
+                            ctx.batch_lookback_count,
+                            task_id,
+                            render_tasks.get_task_address(task_id),
+                            vis_mask,
+                        ));
+                    }
+
+                    // Run the batch creation code for this picture, adding items to
+                    // all relevant per-task batchers.
+                    let mut batch_builder = BatchBuilder::new(batchers);
+                    batch_builder.add_pic_to_batch(
+                        pic,
+                        ctx,
+                        gpu_cache,
+                        render_tasks,
+                        deferred_resolves,
+                        prim_headers,
+                        transforms,
+                        root_spatial_node_index,
+                        surface_spatial_node_index,
+                        z_generator,
+                    );
+
+                    // Create picture cache targets, one per render task, and assign
+                    // the correct batcher to them.
+                    let batchers = batch_builder.finalize();
+                    for (task_id, batcher) in task_ids.into_iter().zip(batchers.into_iter()) {
+                        let task = &render_tasks[task_id];
+                        let (target_rect, _) = task.get_target_rect();
+
+                        match task.location {
+                            RenderTaskLocation::PictureCache { texture, layer, .. } => {
+                                // TODO(gw): The interface here is a bit untidy since it's
+                                //           designed to support batch merging, which isn't
+                                //           relevant for picture cache targets. We
+                                //           can restructure / tidy this up a bit.
+                                let mut batch_containers = Vec::new();
+                                let mut alpha_batch_container = AlphaBatchContainer::new(None);
+                                batcher.build(
+                                    &mut batch_containers,
+                                    &mut alpha_batch_container,
+                                    target_rect,
+                                    None,
+                                );
+                                debug_assert!(batch_containers.is_empty());
+
+                                let target = PictureCacheTarget {
+                                    texture,
+                                    layer: layer as usize,
+                                    clear_color,
+                                    alpha_batch_container,
+                                };
+
+                                picture_cache.push(target);
+                            }
+                            _ => {
+                                unreachable!()
                             }
                         }
                     }

@@ -15,6 +15,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/Unused.h"
@@ -138,7 +139,6 @@ InputContext IMEStateManager::sActiveChildInputContext;
 bool IMEStateManager::sInstalledMenuKeyboardListener = false;
 bool IMEStateManager::sIsGettingNewIMEState = false;
 bool IMEStateManager::sCheckForIMEUnawareWebApps = false;
-bool IMEStateManager::sInputModeSupported = false;
 
 // static
 void IMEStateManager::Init() {
@@ -146,9 +146,6 @@ void IMEStateManager::Init() {
       &sCheckForIMEUnawareWebApps,
       "intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition",
       false);
-
-  Preferences::AddBoolVarCache(&sInputModeSupported, "dom.forms.inputmode",
-                               false);
 
   sOrigin = XRE_IsParentProcess() ? InputContext::ORIGIN_MAIN
                                   : InputContext::ORIGIN_CONTENT;
@@ -1349,7 +1346,7 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
       context.mHTMLInputType.Assign(nsGkAtoms::textarea->GetUTF16String());
     }
 
-    if (sInputModeSupported ||
+    if (StaticPrefs::dom_forms_inputmode() ||
         nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
       aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
                                      context.mHTMLInputInputmode);

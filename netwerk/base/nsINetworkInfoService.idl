@@ -15,8 +15,7 @@ interface nsIListNetworkAddressesListener : nsISupports
    * Each address in the array is a string IP address in canonical form,
    * e.g. 192.168.1.10, or an IPV6 address in string form.
    */
-  void onListedNetworkAddresses([array, size_is(aAddressArraySize)] in string aAddressArray,
-                                in unsigned long aAddressArraySize);
+  void onListedNetworkAddresses(in Array<ACString> aAddressArray);
   void onListNetworkAddressesFailed();
 };
 

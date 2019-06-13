@@ -1482,7 +1482,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
 
     case JOF_BIGINT: {
-      RootedValue v(cx, script->getConst(GET_UINT32_INDEX(pc)));
+      RootedValue v(cx, BigIntValue(script->getBigInt(pc)));
       UniqueChars bytes = ToDisassemblySource(cx, v);
       if (!bytes) {
         return 0;
@@ -1980,7 +1980,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     case JSOP_BIGINT:
 #if defined(DEBUG) || defined(JS_JITSPEW)
       // BigInt::dump() only available in this configuration.
-      script->getConst(GET_UINT32_INDEX(pc)).toBigInt()->dump(sprinter);
+      script->getBigInt(pc)->dump(sprinter);
       return !sprinter.hadOutOfMemory();
 #else
       return write("[bigint]");

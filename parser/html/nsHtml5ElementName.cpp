@@ -792,8 +792,8 @@ void nsHtml5ElementName::initializeStatics() {
       NS_NewSVGUnknownElement,
       nsHtml5TreeBuilder::MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
   ELT_KEYGEN = new nsHtml5ElementName(
-      nsGkAtoms::keygen, nsGkAtoms::keygen, NS_NewHTMLSpanElement,
-      NS_NewSVGUnknownElement, nsHtml5TreeBuilder::KEYGEN);
+      nsGkAtoms::keygen, nsGkAtoms::keygen, NS_NewHTMLElement,
+      NS_NewSVGUnknownElement, nsHtml5TreeBuilder::KEYGEN | SPECIAL);
   ELT_MAIN = new nsHtml5ElementName(
       nsGkAtoms::main, nsGkAtoms::main, NS_NewHTMLElement,
       NS_NewSVGUnknownElement,

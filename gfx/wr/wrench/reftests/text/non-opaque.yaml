@@ -2,7 +2,7 @@
 root:
   items:
     -
-      bounds: [0, 0, 200, 200]
+      bounds: [0, 0, 500, 500]
       glyphs: [55]
       offsets: [200, 200]
       size: 100

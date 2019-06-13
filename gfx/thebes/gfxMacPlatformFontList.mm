@@ -1311,20 +1311,22 @@ gfxFontEntry* gfxMacPlatformFontList::LookupLocalFont(const nsACString& aFontNam
     return nullptr;
   }
 
-  newFontEntry = new MacOSFontEntry(aFontName, fontRef, aWeightForEntry, aStretchForEntry,
-                                    aStyleForEntry, false, true);
+  newFontEntry = new MacOSFontEntry(aFontName, fontRef, aWeightForEntry,
+                                    aStretchForEntry, aStyleForEntry, false,
+                                    true);
   ::CFRelease(fontRef);
 
   return newFontEntry;
 }
 
-static void ReleaseData(void* info, const void* data, size_t size) { free((void*)data); }
+static void ReleaseData(void* info, const void* data, size_t size) {
+  free((void*)data);
+}
 
-gfxFontEntry* gfxMacPlatformFontList::MakePlatformFont(const nsACString& aFontName,
-                                                       WeightRange aWeightForEntry,
-                                                       StretchRange aStretchForEntry,
-                                                       SlantStyleRange aStyleForEntry,
-                                                       const uint8_t* aFontData, uint32_t aLength) {
+gfxFontEntry* gfxMacPlatformFontList::MakePlatformFont(
+    const nsACString& aFontName, WeightRange aWeightForEntry,
+    StretchRange aStretchForEntry, SlantStyleRange aStyleForEntry,
+    const uint8_t* aFontData, uint32_t aLength) {
   NS_ASSERTION(aFontData, "MakePlatformFont called with null data");
 
   // create the font entry
@@ -1345,22 +1347,11 @@ gfxFontEntry* gfxMacPlatformFontList::MakePlatformFont(const nsACString& aFontNa
   }
 
   auto newFontEntry =
-      MakeUnique<MacOSFontEntry>(NS_ConvertUTF16toUTF8(uniqueName), fontRef, aWeightForEntry,
-                                 aStretchForEntry, aStyleForEntry, true, false);
+      MakeUnique<MacOSFontEntry>(NS_ConvertUTF16toUTF8(uniqueName), fontRef,
+                                 aWeightForEntry, aStretchForEntry,
+                                 aStyleForEntry, true, false);
   ::CFRelease(fontRef);
-
-  // if succeeded and font cmap is good, return the new font
-  if (NS_SUCCEEDED(newFontEntry->ReadCMAP())) {
-    return newFontEntry.release();
-  }
-
-  // if something is funky about this font, delete immediately
-
-#if DEBUG
-  NS_WARNING("downloaded font not loaded properly");
-#endif
-
-  return nullptr;
+  return newFontEntry.release();
 }
 
 // Webkit code uses a system font meta name, so mimic that here

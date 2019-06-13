@@ -207,13 +207,15 @@ add_task(async function testContentBlockingMessage() {
 });
 
 let cpt = 0;
+const now = Date.now();
+
 /**
  * Emit a Content Blocking message. This is done by loading an image from an origin
  * tagged as tracker. The image is loaded with a incremented counter query parameter
  * each time so we can get the warning message.
  */
 function emitContentBlockingMessage() {
-  const url = `${CONTENT_BLOCKED_URL}?${++cpt}`;
+  const url = `${CONTENT_BLOCKED_URL}?${++cpt}-${now}`;
   ContentTask.spawn(gBrowser.selectedBrowser, url, function(innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
@@ -224,7 +226,7 @@ function emitContentBlockingMessage() {
  * origin, with the cookier permission rejecting foreign origin cookie access.
  */
 function emitStorageAccessBlockedMessage() {
-  const url = `${STORAGE_BLOCKED_URL}?${++cpt}`;
+  const url = `${STORAGE_BLOCKED_URL}?${++cpt}-${now}`;
   ContentTask.spawn(gBrowser.selectedBrowser, url, function(innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });

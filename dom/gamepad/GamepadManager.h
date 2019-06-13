@@ -34,8 +34,6 @@ class GamepadManager final : public nsIObserver {
   static bool IsServiceRunning();
   // Get the singleton service
   static already_AddRefed<GamepadManager> GetService();
-  // Return true if the API is preffed on.
-  static bool IsAPIEnabled();
 
   void BeginShutdown();
   void StopMonitoring();

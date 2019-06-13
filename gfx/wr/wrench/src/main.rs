@@ -509,6 +509,7 @@ fn main() {
         dim,
         args.is_present("rebuild"),
         args.is_present("no_subpixel_aa"),
+        args.is_present("no_picture_caching"),
         args.is_present("verbose"),
         args.is_present("no_scissor"),
         args.is_present("no_batch"),
