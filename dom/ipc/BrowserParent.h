@@ -293,6 +293,12 @@ class BrowserParent final : public PBrowserParent,
       const int32_t aMaxSelfProgress, const int32_t aCurTotalProgres,
       const int32_t aMaxTotalProgress);
 
+  mozilla::ipc::IPCResult RecvOnLocationChange(
+      const Maybe<WebProgressData>& aWebProgressData,
+      const RequestData& aRequestData, nsIURI* aLocation, const uint32_t aFlags,
+      const bool aCanGoBack, const bool aCanGoForward,
+      const Maybe<WebProgressLocationChangeData>& aLocationChangeData);
+
   mozilla::ipc::IPCResult RecvOnStatusChange(
       const Maybe<WebProgressData>& aWebProgressData,
       const RequestData& aRequestData, const nsresult aStatus,
