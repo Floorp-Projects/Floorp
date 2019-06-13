@@ -34,6 +34,13 @@ class MozSearchTextbox extends MozXULElement {
       });
     }
 
+    this.addEventListener("click", (event) => {
+      if (this.clickSelectsAll &&
+          document.activeElement == this.inputField &&
+          this.inputField.selectionStart == this.inputField.selectionEnd)
+      this.editor.selectAll();
+    });
+
     this.addEventListener("input", (event) => {
       if (this.searchButton) {
         this._searchIcons.selectedIndex = 0;
@@ -172,6 +179,18 @@ class MozSearchTextbox extends MozXULElement {
 
   get disabled() {
     return this.inputField.disabled;
+  }
+
+  get clickSelectsAll() {
+    return this.getAttribute("clickSelectsAll") == "true";
+  }
+
+  set clickSelectsAll(val) {
+    if (val) {
+      this.setAttribute("clickSelectsAll", "true");
+    } else {
+      this.removeAttribute("clickSelectsAll");
+    }
   }
 
   reset() {
