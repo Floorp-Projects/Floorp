@@ -82,14 +82,12 @@ static void FreeCallback(void* aPtr) {
   // XXX add optional stackwalk here
 }
 
+}  // namespace profiler
+}  // namespace mozilla
+
 //---------------------------------------------------------------------------
 // malloc/free interception
 //---------------------------------------------------------------------------
-
-static bool Init(malloc_table_t const* aMallocTable);
-
-}  // namespace profiler
-}  // namespace mozilla
 
 using namespace mozilla::profiler;
 
@@ -184,11 +182,10 @@ static void replace_moz_dispose_arena(arena_id_t aArenaId) {
 
 // Must come after all the replace_* funcs
 void replace_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge) {
-  if (mozilla::profiler::Init(aMallocTable)) {
+  gMallocTable = *aMallocTable;
 #define MALLOC_FUNCS (MALLOC_FUNCS_MALLOC_BASE | MALLOC_FUNCS_ARENA)
 #define MALLOC_DECL(name, ...) aMallocTable->name = replace_##name;
 #include "malloc_decls.h"
-  }
 }
 
 void profiler_replace_remove() {}
@@ -199,23 +196,16 @@ namespace profiler {
 // Initialization
 //---------------------------------------------------------------------------
 
-static bool Init(malloc_table_t const* aMallocTable) {
-  gMallocTable = *aMallocTable;
-
-  return true;
-}
-
 void install_memory_counter(bool aInstall) {
-  if (!sCounter) {
-    if (aInstall) {
+  if (aInstall) {
+    if (!sCounter) {
       sCounter = MakeUnique<ProfilerCounterTotal>("malloc", "Memory",
                                                   "Amount of allocated memory");
-    } else {
-      return;
     }
+    jemalloc_replace_dynamic(replace_init);
+  } else {
+    jemalloc_replace_dynamic(nullptr);
   }
-  // start counting memory allocations, or stop
-  jemalloc_replace_dynamic(aInstall ? replace_init : nullptr);
 }
 
 }  // namespace profiler
