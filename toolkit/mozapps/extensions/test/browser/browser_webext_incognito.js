@@ -91,6 +91,7 @@ function checkIsModifiable(expected) {
     } else {
       is_element_hidden(getHtmlElem(".addon-detail-row-private-browsing"), "Private browsing should be hidden");
     }
+    checkHelpRow(".addon-detail-row-private-browsing", expected);
     return;
   }
   if (expected) {
@@ -105,10 +106,12 @@ function checkIsModifiable(expected) {
 // Check whether the details view shows that private browsing is forcibly disallowed.
 function checkIsDisallowed(expected) {
   if (gManagerWindow.useHtmlViews) {
-    // TODO bug 1557792: Show when private browsing is forcibly disallowed.
     if (expected) {
-      is_element_hidden(getHtmlElem(".addon-detail-row-private-browsing"), "Private browsing cannot both be allowed and disallowed");
+      is_element_visible(getHtmlElem(".addon-detail-row-private-browsing-disallowed"), "Private browsing should be disallowed");
+    } else {
+      is_element_hidden(getHtmlElem(".addon-detail-row-private-browsing-disallowed"), "Private browsing should not be disallowed");
     }
+    checkHelpRow(".addon-detail-row-private-browsing-disallowed", expected);
     return;
   }
   if (expected) {
@@ -123,10 +126,12 @@ function checkIsDisallowed(expected) {
 // Check whether the details view shows that private browsing is forcibly allowed.
 function checkIsRequired(expected) {
   if (gManagerWindow.useHtmlViews) {
-    // TODO bug 1557792: Show when private browsing is forcibly allowed.
     if (expected) {
-      is_element_hidden(getHtmlElem(".addon-detail-row-private-browsing"), "Private browsing cannot both be mutable and required");
+      is_element_visible(getHtmlElem(".addon-detail-row-private-browsing-required"), "Private browsing should be required");
+    } else {
+      is_element_hidden(getHtmlElem(".addon-detail-row-private-browsing-required"), "Private browsing should not be required");
     }
+    checkHelpRow(".addon-detail-row-private-browsing-required", expected);
     return;
   }
   if (expected) {
@@ -135,6 +140,16 @@ function checkIsRequired(expected) {
   } else {
     is_element_hidden(get("detail-privateBrowsing-required"), "Private required should be hidden");
     is_element_hidden(get("detail-privateBrowsing-required-footer"), "Private required footer should be hidden");
+  }
+}
+
+function checkHelpRow(selector, expected) {
+  let helpRow = getHtmlElem(`${selector} + .addon-detail-help-row`);
+  if (expected) {
+    is_element_visible(helpRow, `Help row should be shown: ${selector}`);
+    is_element_visible(helpRow.querySelector("a, [action='pb-learn-more']"), "Expected learn more link");
+  } else {
+    is_element_hidden(helpRow, `Help row should be hidden: ${selector}`);
   }
 }
 
@@ -491,9 +506,48 @@ async function test_addon_postinstall_incognito_hidden_checkbox(withHtmlViews) {
 
     await addon.uninstall();
   }
+
+  // It is not possible to create a privileged add-on and install it, so just
+  // simulate an installed privileged add-on and check the UI.
+  await test_incognito_of_privileged_addons();
+
   // No popPrefEnv because of bug 1557397.
 }
 
+// Checks that the private browsing flag of privileged add-ons cannot be modified.
+async function test_incognito_of_privileged_addons() {
+  // In mochitests it is not possible to create and install a privileged add-on
+  // or a system add-on, so create a mock provider that simulates privileged
+  // add-ons (which lack the PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS permission).
+  let provider = new MockProvider();
+  provider.createAddons([{
+    name: "default incognito",
+    id: "default-incognito@mock",
+    incognito: "spanning", // This is the default.
+    // Anything without the PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS permission.
+    permissions: 0,
+  }, {
+    name: "not_allowed incognito",
+    id: "not-allowed-incognito@mock",
+    incognito: "not_allowed",
+    // Anything without the PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS permission.
+    permissions: 0,
+  }]);
+
+  gManagerWindow = await open_manager("addons://detail/default-incognito%40mock");
+  checkIsModifiable(false);
+  checkIsRequired(true);
+  checkIsDisallowed(false);
+  await close_manager(gManagerWindow);
+
+  gManagerWindow = await open_manager("addons://detail/not-allowed-incognito%40mock");
+  checkIsModifiable(false);
+  checkIsRequired(false);
+  checkIsDisallowed(true);
+  await close_manager(gManagerWindow);
+
+  provider.unregister();
+}
 
 add_task(async function test_badge_and_toggle_incognito_on_XUL_aboutaddons() {
   await SpecialPowers.pushPrefEnv({
