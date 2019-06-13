@@ -574,6 +574,16 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       return this.div.firstLineBoxBSize;
     }
 
+    setBidiRule() {
+      // This function is a workaround which is used to force the reflow in order
+      // to use the correct alignment for bidi text. Now this function would be
+      // called after calculating the final position of the cue box to ensure the
+      // rendering result is correct. See bug1557882 comment3 for more details.
+      // TODO : remove this function and set `unicode-bidi` when initiailizing
+      // the CueStyleBox, after fixing bug1558431.
+      this.applyStyles({ "unicode-bidi": "plaintext" });
+    }
+
     /**
      * Following methods are private functions, should not use them outside this
      * class.
@@ -610,7 +620,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     _getNodeDefaultStyles(cue) {
       let styles = {
         "position": "absolute",
-        "unicode-bidi": "plaintext",
+        // "unicode-bidi": "plaintext", (uncomment this line after fixing bug1558431)
         "overflow-wrap": "break-word",
         // "text-wrap": "balance", (we haven't supported this CSS attribute yet)
         "font": this.fontSize + " sans-serif",
@@ -1246,6 +1256,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
           // have any room for this cue.
           let cueBox = adjustBoxPosition(styleBox, containerBox, controlBarBox, boxPositions);
           if (cueBox) {
+            styleBox.setBidiRule();
             // Remember the computed div so that we don't have to recompute it later
             // if we don't have too.
             cue.displayState = styleBox.div;
