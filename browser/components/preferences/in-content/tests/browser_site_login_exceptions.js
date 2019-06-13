@@ -4,6 +4,9 @@ const PERMISSIONS_URL = "chrome://browser/content/preferences/permissions.xul";
 var exceptionsDialog;
 
 add_task(async function openLoginExceptionsSubDialog() {
+  // ensure rememberSignons is off for this test;
+  ok(!Services.prefs.getBoolPref("signon.rememberSignons"), "Check initial value of signon.rememberSignons pref");
+
   // Undo the save password change.
   registerCleanupFunction(async function() {
     await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {

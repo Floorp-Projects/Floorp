@@ -32,6 +32,8 @@ const PREF_NORMANDY_ENABLED = "app.normandy.enabled";
 
 const PREF_ADDON_RECOMMENDATIONS_ENABLED = "browser.discovery.enabled";
 
+const PREF_PASSWORD_GENERATION_AVAILABLE = "signon.generation.available";
+
 XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
   try {
     let alertsService = Cc["@mozilla.org/alerts-service;1"]
@@ -95,6 +97,7 @@ Preferences.addAll([
   { id: "dom.disable_open_during_load", type: "bool" },
   // Passwords
   { id: "signon.rememberSignons", type: "bool" },
+  { id: "signon.generation.enabled", type: "bool" },
 
   // Buttons
   { id: "pref.privacy.disable_button.view_passwords", type: "bool" },
@@ -354,7 +357,10 @@ var gPrivacyPane = {
       gPrivacyPane.showSecurityDevices);
 
     this._pane = document.getElementById("panePrivacy");
+
+    this._initPasswordGenerationUI();
     this._initMasterPasswordUI();
+
     this._initSafeBrowsing();
 
     setEventListener("autoplaySettingsButton", "command",
@@ -1419,6 +1425,16 @@ var gPrivacyPane = {
   },
 
   /**
+   * Set up the initial state for the password generation UI.
+   * It will be hidden unless the .available pref is true
+  */
+  _initPasswordGenerationUI() {
+    // we don't watch the .available pref for runtime changes
+    let prefValue = Services.prefs.getBoolPref(PREF_PASSWORD_GENERATION_AVAILABLE, false);
+    document.getElementById("generatePasswordsBox").hidden = !prefValue;
+  },
+
+  /**
  * Shows the sites where the user has saved passwords and the associated login
  * information.
  */
@@ -1434,20 +1450,26 @@ var gPrivacyPane = {
   },
 
   /**
-   * Enables/disables the Exceptions button used to configure sites where
+   * Enables/disables dependent controls related to password saving
+   * When password saving is not enabled, we need to also disable the password generation checkbox
+   * The Exceptions button is used to configure sites where
    * passwords are never saved. When browser is set to start in Private
    * Browsing mode, the "Remember passwords" UI is useless, so we disable it.
    */
   readSavePasswords() {
     var pref = Preferences.get("signon.rememberSignons");
     var excepts = document.getElementById("passwordExceptions");
+    var generatePasswords = document.getElementById("generatePasswords");
 
     if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
       document.getElementById("savePasswords").disabled = true;
       excepts.disabled = true;
+      generatePasswords.disabled = true;
       return false;
     }
     excepts.disabled = !pref.value;
+    generatePasswords.disabled = !pref.value;
+
     // don't override pref value in UI
     return undefined;
   },
