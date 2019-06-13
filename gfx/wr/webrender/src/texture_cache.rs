@@ -556,10 +556,10 @@ impl TextureCache {
         }
 
         let mut pending_updates = TextureUpdateList::new();
-        let picture_texture = if let Some(tile_size) = picture_tile_size{
+        let picture_texture = if let Some(tile_size) = picture_tile_size {
             let picture_texture = WholeTextureArray {
                 size: tile_size,
-                filter: TextureFilter::Linear,
+                filter: TextureFilter::Nearest,
                 format: PICTURE_TILE_FORMAT,
                 texture_id: CacheTextureId(1),
                 slices: {
@@ -569,6 +569,7 @@ impl TextureCache {
                     info!("Initializing picture texture with {}x{} slices", num_x, num_y);
                     vec![WholeTextureSlice { uv_rect_handle: None }; count]
                 },
+                has_depth: true,
             };
             pending_updates.push_alloc(picture_texture.texture_id, picture_texture.to_info());
             Some(picture_texture)
@@ -1092,6 +1093,7 @@ impl TextureCache {
                 filter: texture_array.filter,
                 layer_count: 1,
                 is_shared_cache: true,
+                has_depth: false,
             };
             self.pending_updates.push_alloc(texture_id, info);
 
@@ -1155,6 +1157,7 @@ impl TextureCache {
             filter: params.filter,
             layer_count: 1,
             is_shared_cache: false,
+            has_depth: false,
         };
         self.pending_updates.push_alloc(texture_id, info);
 
@@ -1223,6 +1226,7 @@ impl TextureCache {
                     filter: texture_array.filter,
                     layer_count: (num_regions + 1) as i32,
                     is_shared_cache: true,
+                    has_depth: false,
                 };
                 self.pending_updates.push_realloc(texture_array.texture_id.unwrap(), info);
                 texture_array.push_region();
@@ -1608,6 +1612,7 @@ struct WholeTextureArray {
     format: ImageFormat,
     texture_id: CacheTextureId,
     slices: Vec<WholeTextureSlice>,
+    has_depth: bool,
 }
 
 impl WholeTextureArray {
@@ -1619,6 +1624,7 @@ impl WholeTextureArray {
             filter: self.filter,
             layer_count: self.slices.len() as i32,
             is_shared_cache: true, //TODO: reconsider
+            has_depth: self.has_depth,
         }
     }
 

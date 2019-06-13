@@ -1060,6 +1060,15 @@ impl<T> ComparableVec<T> where T: PartialEq + Clone + fmt::Debug {
         self.current_index += 1;
     }
 
+    #[allow(dead_code)]
+    pub fn dump(&self, tag: &str) {
+        println!("{}", tag);
+        let items = self.items();
+        for (i, item) in items.iter().enumerate() {
+            println!("{}/{}: {:?}", i, items.len(), item);
+        }
+    }
+
     /// Return true if the contents of the vec are the same as the previous time.
     pub fn is_valid(&self) -> bool {
         self.is_same && self.prev_len == self.current_index

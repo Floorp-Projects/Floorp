@@ -8,7 +8,7 @@ fuzzy(8,60) == custom-clip-chains.yaml custom-clip-chains-ref.yaml
 == custom-clip-chain-node-ancestors.yaml custom-clip-chain-node-ancestors-ref.yaml
 == fixed-position-clipping.yaml fixed-position-clipping-ref.yaml
 platform(linux,mac) == segmentation-with-other-coordinate-system-clip.yaml segmentation-with-other-coordinate-system-clip.png
-== segmentation-across-rotation.yaml segmentation-across-rotation-ref.yaml
-== color_targets(2) alpha_targets(1) stacking-context-clip.yaml stacking-context-clip-ref.yaml
+skip_on(android,emulator) == segmentation-across-rotation.yaml segmentation-across-rotation-ref.yaml
+== color_targets(3) alpha_targets(1) stacking-context-clip.yaml stacking-context-clip-ref.yaml
 == snapping.yaml snapping-ref.yaml
-fuzzy(70,2400) == clip-and-filter-with-rotation.yaml clip-and-filter-with-rotation-ref.yaml
+skip_on(android,emulator) fuzzy(70,2400) == clip-and-filter-with-rotation.yaml clip-and-filter-with-rotation-ref.yaml
