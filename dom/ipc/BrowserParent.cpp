@@ -2452,6 +2452,59 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnProgressChange(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
+    const Maybe<WebProgressData>& aWebProgressData,
+    const RequestData& aRequestData, nsIURI* aLocation, const uint32_t aFlags,
+    const bool aCanGoBack, const bool aCanGoForward,
+    const Maybe<WebProgressLocationChangeData>& aLocationChangeData) {
+  nsCOMPtr<nsIBrowser> browser;
+  nsCOMPtr<nsIWebProgress> manager;
+  nsCOMPtr<nsIWebProgressListener> managerAsListener;
+  if (!GetWebProgressListener(getter_AddRefs(browser), getter_AddRefs(manager),
+                              getter_AddRefs(managerAsListener))) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIWebProgress> webProgress;
+  nsCOMPtr<nsIRequest> request;
+  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
+                                   getter_AddRefs(webProgress),
+                                   getter_AddRefs(request));
+
+  Unused << browser->UpdateWebNavigationForLocationChange(aCanGoBack,
+                                                          aCanGoForward);
+
+  if (aWebProgressData && aWebProgressData->isTopLevel()) {
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    if (aLocationChangeData->csp().isSome()) {
+      csp = CSPInfoToCSP(aLocationChangeData->csp().ref(), nullptr, nullptr);
+    }
+
+    nsCOMPtr<nsIPrincipal> contentPrincipal =
+        PrincipalInfoToPrincipal(aLocationChangeData->contentPrincipal());
+    nsCOMPtr<nsIPrincipal> contentStoragePrincipal = PrincipalInfoToPrincipal(
+        aLocationChangeData->contentStoragePrincipal());
+
+    Unused << browser->SetIsNavigating(aLocationChangeData->isNavigating());
+    Unused << browser->UpdateForLocationChange(
+        aLocation, aLocationChangeData->charset(),
+        aLocationChangeData->mayEnableCharacterEncodingMenu(),
+        aLocationChangeData->charsetAutodetected(),
+        aLocationChangeData->documentURI(), aLocationChangeData->title(),
+        contentPrincipal, contentStoragePrincipal, csp,
+        aLocationChangeData->isSyntheticDocument(),
+        aWebProgressData->innerDOMWindowID(),
+        aLocationChangeData->requestContextID().isSome(),
+        aLocationChangeData->requestContextID().valueOr(0),
+        aLocationChangeData->contentType());
+  }
+
+  Unused << managerAsListener->OnLocationChange(webProgress, request, aLocation,
+                                                aFlags);
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult BrowserParent::RecvOnStatusChange(
     const Maybe<WebProgressData>& aWebProgressData,
     const RequestData& aRequestData, const nsresult aStatus,
