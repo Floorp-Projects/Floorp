@@ -1179,73 +1179,82 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     rootOfCues.style.bottom = "0";
     overlay.appendChild(rootOfCues);
 
-    let boxPositions = [],
+    if (divState == DIV_COMPUTING_STATE.REUSE_AND_CLEAR) {
+      LOG(`clear display but reuse cues' display state.`);
+      for (let cue of cues) {
+        rootOfCues.appendChild(cue.displayState);
+      }
+    } else if (divState == DIV_COMPUTING_STATE.COMPUTE_AND_CLEAR) {
+      LOG(`clear display and recompute cues' display state.`);
+      let boxPositions = [],
         containerBox = new BoxPosition(rootOfCues);
 
-    let styleBox, cue, controlBarBox;
-    if (controlBarShown) {
-      controlBarBox = new BoxPosition(controlBar);
-      // Add an empty output box that cover the same region as video control bar.
-      boxPositions.push(controlBarBox);
-    }
+      let styleBox, cue, controlBarBox;
+      if (controlBarShown) {
+        controlBarBox = new BoxPosition(controlBar);
+        // Add an empty output box that cover the same region as video control bar.
+        boxPositions.push(controlBarBox);
+      }
 
-    // https://w3c.github.io/webvtt/#processing-model 6.1.12.1
-    // Create regionNode
-    let regionNodeBoxes = {};
-    let regionNodeBox;
+      // https://w3c.github.io/webvtt/#processing-model 6.1.12.1
+      // Create regionNode
+      let regionNodeBoxes = {};
+      let regionNodeBox;
 
-    LOG(`=== processCues, ` +
-        `lastDisplayedCueNums=${lastDisplayedCueNums}, currentCueNums=${cues.length} ===`);
-    lastDisplayedCueNums = cues.length;
-    for (let i = 0; i < cues.length; i++) {
-      cue = cues[i];
-      if (cue.region != null) {
-       // 6.1.14.1
-        styleBox = new RegionCueStyleBox(window, cue);
+      LOG(`lastDisplayedCueNums=${lastDisplayedCueNums}, currentCueNums=${cues.length}`);
+      lastDisplayedCueNums = cues.length;
+      for (let i = 0; i < cues.length; i++) {
+        cue = cues[i];
+        if (cue.region != null) {
+         // 6.1.14.1
+          styleBox = new RegionCueStyleBox(window, cue);
 
-        if (!regionNodeBoxes[cue.region.id]) {
-          // create regionNode
-          // Adjust the container hieght to exclude the controlBar
-          let adjustContainerBox = new BoxPosition(rootOfCues);
-          if (controlBarShown) {
-            adjustContainerBox.height -= controlBarBox.height;
-            adjustContainerBox.bottom += controlBarBox.height;
+          if (!regionNodeBoxes[cue.region.id]) {
+            // create regionNode
+            // Adjust the container hieght to exclude the controlBar
+            let adjustContainerBox = new BoxPosition(rootOfCues);
+            if (controlBarShown) {
+              adjustContainerBox.height -= controlBarBox.height;
+              adjustContainerBox.bottom += controlBarBox.height;
+            }
+            regionNodeBox = new RegionNodeBox(window, cue.region, adjustContainerBox);
+            regionNodeBoxes[cue.region.id] = regionNodeBox;
           }
-          regionNodeBox = new RegionNodeBox(window, cue.region, adjustContainerBox);
-          regionNodeBoxes[cue.region.id] = regionNodeBox;
-        }
-        // 6.1.14.3
-        let currentRegionBox = regionNodeBoxes[cue.region.id];
-        let currentRegionNodeDiv = currentRegionBox.div;
-        // 6.1.14.3.2
-        // TODO: fix me, it looks like the we need to set/change "top" attribute at the styleBox.div
-        // to do the "scroll up", however, we do not implement it yet?
-        if (cue.region.scroll == "up" && currentRegionNodeDiv.childElementCount > 0) {
-          styleBox.div.style.transitionProperty = "top";
-          styleBox.div.style.transitionDuration = "0.433s";
-        }
+          // 6.1.14.3
+          let currentRegionBox = regionNodeBoxes[cue.region.id];
+          let currentRegionNodeDiv = currentRegionBox.div;
+          // 6.1.14.3.2
+          // TODO: fix me, it looks like the we need to set/change "top" attribute at the styleBox.div
+          // to do the "scroll up", however, we do not implement it yet?
+          if (cue.region.scroll == "up" && currentRegionNodeDiv.childElementCount > 0) {
+            styleBox.div.style.transitionProperty = "top";
+            styleBox.div.style.transitionDuration = "0.433s";
+          }
 
-        currentRegionNodeDiv.appendChild(styleBox.div);
-        rootOfCues.appendChild(currentRegionNodeDiv);
-        cue.displayState = styleBox.div;
-        boxPositions.push(new BoxPosition(currentRegionBox));
-      } else {
-        // Compute the intial position and styles of the cue div.
-        styleBox = new CueStyleBox(window, cue, containerBox);
-        rootOfCues.appendChild(styleBox.div);
-
-        // Move the cue to correct position, we might get the null box if the
-        // result of algorithm doesn't want us to show the cue when we don't
-        // have any room for this cue.
-        let cueBox = adjustBoxPosition(styleBox, containerBox, controlBarBox, boxPositions);
-        if (cueBox) {
-          // Remember the computed div so that we don't have to recompute it later
-          // if we don't have too.
+          currentRegionNodeDiv.appendChild(styleBox.div);
+          rootOfCues.appendChild(currentRegionNodeDiv);
           cue.displayState = styleBox.div;
-          boxPositions.push(cueBox);
-          LOG(`cue ${i}, ` + cueBox.getBoxInfoInChars());
+          boxPositions.push(new BoxPosition(currentRegionBox));
+        } else {
+          // Compute the intial position and styles of the cue div.
+          styleBox = new CueStyleBox(window, cue, containerBox);
+          rootOfCues.appendChild(styleBox.div);
+
+          // Move the cue to correct position, we might get the null box if the
+          // result of algorithm doesn't want us to show the cue when we don't
+          // have any room for this cue.
+          let cueBox = adjustBoxPosition(styleBox, containerBox, controlBarBox, boxPositions);
+          if (cueBox) {
+            // Remember the computed div so that we don't have to recompute it later
+            // if we don't have too.
+            cue.displayState = styleBox.div;
+            boxPositions.push(cueBox);
+            LOG(`cue ${i}, ` + cueBox.getBoxInfoInChars());
+          }
         }
       }
+    } else {
+      LOG(`[ERROR] unknown div computing state`);
     }
   };
 
