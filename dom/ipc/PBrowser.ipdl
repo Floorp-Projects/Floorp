@@ -601,6 +601,8 @@ parent:
     async OnContentBlockingEvent(WebProgressData? aWebProgressData,
                                  RequestData aRequestData, uint32_t aEvent);
 
+    async NavigationFinished();
+
     async SessionStoreUpdate(nsCString? aDocShellCaps,
                              bool? aPrivatedMode,
                              nsCString[] aPositions,

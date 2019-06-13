@@ -2552,6 +2552,17 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnContentBlockingEvent(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvNavigationFinished() {
+  nsCOMPtr<nsIBrowser> browser =
+      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
+
+  if (browser) {
+    browser->SetIsNavigating(false);
+  }
+
+  return IPC_OK();
+}
+
 bool BrowserParent::GetWebProgressListener(
     nsIBrowser** aOutBrowser, nsIWebProgress** aOutManager,
     nsIWebProgressListener** aOutListener) {
