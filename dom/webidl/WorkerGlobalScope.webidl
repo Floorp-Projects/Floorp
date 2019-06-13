@@ -26,9 +26,9 @@ interface WorkerGlobalScope : EventTarget {
 
   attribute EventHandler onoffline;
   attribute EventHandler ononline;
-  [Func="mozilla::dom::DOMPrefs::dom_promise_rejection_events_enabled"]
+  [Pref="dom.promise_rejection_events.enabled"]
   attribute EventHandler onrejectionhandled;
-  [Func="mozilla::dom::DOMPrefs::dom_promise_rejection_events_enabled"]
+  [Pref="dom.promise_rejection_events.enabled"]
   attribute EventHandler onunhandledrejection;
   // also has additional members in a partial interface
 };

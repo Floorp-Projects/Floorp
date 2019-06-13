@@ -19,12 +19,6 @@ void DOMPrefs::Initialize() {
 #if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
   DOMPrefs::DumpEnabled();
 #endif
-
-#define DOM_WEBIDL_PREF(name)
-
-#include "DOMPrefsInternal.h"
-
-#undef DOM_WEBIDL_PREF
 }
 
 /* static */
@@ -35,15 +29,6 @@ bool DOMPrefs::DumpEnabled() {
   return true;
 #endif
 }
-
-#define DOM_WEBIDL_PREF(name)                                        \
-  /* static */ bool DOMPrefs::name(JSContext* aCx, JSObject* aObj) { \
-    return StaticPrefs::name();                                      \
-  }
-
-#include "DOMPrefsInternal.h"
-
-#undef DOM_WEBIDL_PREF
 
 }  // namespace dom
 }  // namespace mozilla

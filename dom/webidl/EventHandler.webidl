@@ -155,10 +155,10 @@ interface WindowEventHandlers {
            attribute EventHandler onpagehide;
            attribute EventHandler onpageshow;
            attribute EventHandler onpopstate;
-           [Func="mozilla::dom::DOMPrefs::dom_promise_rejection_events_enabled"]
+           [Pref="dom.promise_rejection_events.enabled"]
            attribute EventHandler onrejectionhandled;
            attribute EventHandler onstorage;
-           [Func="mozilla::dom::DOMPrefs::dom_promise_rejection_events_enabled"]
+           [Pref="dom.promise_rejection_events.enabled"]
            attribute EventHandler onunhandledrejection;
            attribute EventHandler onunload;
 };

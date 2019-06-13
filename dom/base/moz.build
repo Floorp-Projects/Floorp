@@ -175,7 +175,6 @@ EXPORTS.mozilla.dom += [
     'DOMParser.h',
     'DOMPoint.h',
     'DOMPrefs.h',
-    'DOMPrefsInternal.h',
     'DOMQuad.h',
     'DOMRect.h',
     'DOMRequest.h',
