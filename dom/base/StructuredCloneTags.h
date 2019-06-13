@@ -14,70 +14,131 @@ namespace dom {
 
 // CHANGING THE ORDER/PLACEMENT OF EXISTING ENUM VALUES MAY BREAK INDEXEDDB.
 // PROCEED WITH EXTREME CAUTION.
+//
+// If you are planning to add new tags which could be used by IndexedDB,
+// consider to use empty slots. See EMPTY_SLOT_x
 enum StructuredCloneTags {
   SCTAG_BASE = JS_SCTAG_USER_MIN,
 
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   SCTAG_DOM_BLOB,
-
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   // This tag is obsolete and exists only for backwards compatibility with
   // existing IndexedDB databases.
   SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE,
-
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   SCTAG_DOM_FILELIST,
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   SCTAG_DOM_MUTABLEFILE,
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   SCTAG_DOM_FILE,
-
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   SCTAG_DOM_WASM,
 
-  // New IDB tags go here!
-
-  // These tags are used for both main thread and workers.
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   SCTAG_DOM_IMAGEDATA,
-  SCTAG_DOM_MAP_MESSAGEPORT,
 
-  SCTAG_DOM_FUNCTION,
+  EMPTY_SLOT_1,
+  EMPTY_SLOT_2,
 
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   // This tag is for WebCrypto keys
   SCTAG_DOM_WEBCRYPTO_KEY,
 
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   SCTAG_DOM_NULL_PRINCIPAL,
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   SCTAG_DOM_SYSTEM_PRINCIPAL,
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   SCTAG_DOM_CONTENT_PRINCIPAL,
 
-  SCTAG_DOM_IMAGEBITMAP,
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  EMPTY_SLOT_3,
 
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
   SCTAG_DOM_RTC_CERTIFICATE,
 
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  EMPTY_SLOT_4,
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  EMPTY_SLOT_5,
+
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  SCTAG_DOM_EXPANDED_PRINCIPAL,
+
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  EMPTY_SLOT_6,
+
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  SCTAG_DOM_URLSEARCHPARAMS,
+
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  EMPTY_SLOT_7,
+
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  EMPTY_SLOT_8,
+
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  EMPTY_SLOT_9,
+
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  SCTAG_DOM_STRUCTURED_CLONE_TESTER,
+
+  // If you are planning to add new tags which could be used by IndexedDB,
+  // consider to use empty slots. See EMPTY_SLOT_x
+
+  // Please update the static assertions in StructuredCloneHolder.cpp and in
+  // IDBObjectStore.cpp, method CommonStructuredCloneReadCallback.
+
+  // --------------------------------------------------------------------------
+
+  // All the following tags are not written to disk and they are not used by
+  // IndexedDB directly or via
+  // StructuredCloneHolder::{Read,Write}FullySerializableObjects. In theory they
+  // can be 'less' stable.
+
+  // Principal written out by worker threads when serializing objects. When
+  // reading on the main thread this principal will be converted to a normal
+  // principal object using nsJSPrincipals::AutoSetActiveWorkerPrincipal.
+  SCTAG_DOM_WORKER_PRINCIPAL,
+
+  SCTAG_DOM_IMAGEBITMAP,
+  SCTAG_DOM_MAP_MESSAGEPORT,
   SCTAG_DOM_FORMDATA,
 
   // This tag is for OffscreenCanvas.
   SCTAG_DOM_CANVAS,
 
-  SCTAG_DOM_EXPANDED_PRINCIPAL,
-
   SCTAG_DOM_DIRECTORY,
-
-  // This tag is used by both main thread and workers.
-  SCTAG_DOM_URLSEARCHPARAMS,
 
   SCTAG_DOM_INPUTSTREAM,
 
   SCTAG_DOM_STRUCTURED_CLONE_HOLDER,
 
-  // When adding a new tag for IDB, please don't add it to the end of the list!
-  // Tags that are supported by IDB must not ever change. See the static assert
-  // in IDBObjectStore.cpp, method CommonStructuredCloneReadCallback.
-  // Adding to the end of the list would make removing of other tags harder in
-  // future.
-
-  SCTAG_DOM_MAX,
-
-  SCTAG_DOM_STRUCTURED_CLONE_TESTER,
-
-  // Principal written out by worker threads when serializing objects. When
-  // reading on the main thread this principal will be converted to a normal
-  // principal object using nsJSPrincipals::AutoSetActiveWorkerPrincipal.
-  SCTAG_DOM_WORKER_PRINCIPAL
+  // IMPORTANT: If you plan to add an new IDB tag, it _must_ be add before the
+  // "less stable" tags!
 };
 
 }  // namespace dom
