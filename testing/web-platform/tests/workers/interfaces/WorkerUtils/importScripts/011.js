@@ -1,4 +1,4 @@
- prevent recursion
+// prevent recursion
 if ('beenThere' in self) {
   throw 'null stringified to the empty string';
 }
