@@ -302,7 +302,21 @@ void qcms_transform_data_bgra_out_lut_altivec(const qcms_transform *transform,
                                               unsigned char *dest,
                                               size_t length);
 
+void qcms_transform_data_rgb_out_lut_neon(const qcms_transform *transform,
+                                          const unsigned char *src,
+                                          unsigned char *dest,
+                                          size_t length);
+void qcms_transform_data_rgba_out_lut_neon(const qcms_transform *transform,
+                                           const unsigned char *src,
+                                           unsigned char *dest,
+                                           size_t length);
+void qcms_transform_data_bgra_out_lut_neon(const qcms_transform *transform,
+                                           const unsigned char *src,
+                                           unsigned char *dest,
+                                           size_t length);
+
 extern bool qcms_supports_iccv4;
+extern bool qcms_supports_neon;
 
 #ifdef _MSC_VER
 
