@@ -59,19 +59,13 @@
                 app:deleteBrowsingDataItemIcon="@drawable/ic_collections_circle_background"
                 app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_collections_title"
                 app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_collections_subtitle" />
-            <Button android:id="@+id/delete_data"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/delete_data"
+                style="@style/ThemeIndependentMaterialGreyButtonDestructive"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="start"
                 android:layout_margin="12dp"
-                android:backgroundTint="?attr/neutral"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:text="@string/preferences_delete_browsing_data_button"
-                android:textAllCaps="false"
-                android:textColor="?attr/accentHighContrast"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:text="@string/preferences_delete_browsing_data_button" />
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
