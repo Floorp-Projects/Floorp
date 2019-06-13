@@ -654,11 +654,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
 
   void unlockGC() { gc.unlockGC(); }
 
-  /* Well-known numbers. */
-  const js::Value NaNValue;
-  const js::Value negativeInfinityValue;
-  const js::Value positiveInfinityValue;
-
   js::WriteOnceData<js::PropertyName*> emptyString;
 
  private:

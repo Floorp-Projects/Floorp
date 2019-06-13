@@ -33,6 +33,13 @@ class BaseAssemblerX64 : public BaseAssembler {
     m_formatter.oneByteOp64(OP_ADD_GvEv, addr, dst);
   }
 
+  void addq_mr(int32_t offset, RegisterID base, RegisterID index, int scale,
+               RegisterID dst) {
+    spew("addq       " MEM_obs ", %s", ADDR_obs(offset, base, index, scale),
+         GPReg64Name(dst));
+    m_formatter.oneByteOp64(OP_ADD_GvEv, offset, base, index, scale, dst);
+  }
+
   void addq_rm(RegisterID src, int32_t offset, RegisterID base) {
     spew("addq       %s, " MEM_ob, GPReg64Name(src), ADDR_ob(offset, base));
     m_formatter.oneByteOp64(OP_ADD_EvGv, offset, base, src);

@@ -110,7 +110,7 @@ static bool XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (hint == JSTYPE_NUMBER) {
-    args.rval().set(JS_GetNaNValue(cx));
+    args.rval().set(NaNValue());
     return true;
   }
 

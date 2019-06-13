@@ -218,6 +218,7 @@ this.windows = class extends ExtensionAPI {
           }
 
           args.appendElement(context.principal); // originPrincipal - not important.
+          args.appendElement(context.principal); // originStoragePrincipal - not important.
           args.appendElement(principal); // triggeringPrincipal
           args.appendElement(Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool)); // allowInheritPrincipal
           // There is no CSP associated with this extension, hence we explicitly pass null as the CSP argument.

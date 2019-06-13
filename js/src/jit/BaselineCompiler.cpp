@@ -3214,11 +3214,11 @@ bool BaselineCompilerCodeGen::tryOptimizeGetGlobalName() {
     return true;
   }
   if (name == cx->names().NaN) {
-    frame.push(cx->runtime()->NaNValue);
+    frame.push(JS::NaNValue());
     return true;
   }
   if (name == cx->names().Infinity) {
-    frame.push(cx->runtime()->positiveInfinityValue);
+    frame.push(JS::InfinityValue());
     return true;
   }
 

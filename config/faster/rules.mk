@@ -58,10 +58,6 @@ endif
 
 .PHONY: FORCE
 
-# Extra define to trigger some workarounds. We should strive to limit the
-# use of those. As of writing the only one is in browser/locales/jar.mn.
-ACDEFINES += -DBUILD_FASTER
-
 # Files under the faster/ sub-directory, however, are not meant to use the
 # fallback
 $(TOPOBJDIR)/faster/%: ;

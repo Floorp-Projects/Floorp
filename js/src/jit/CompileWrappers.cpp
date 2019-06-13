@@ -56,12 +56,6 @@ const StaticStrings& CompileRuntime::staticStrings() {
   return *runtime()->staticStrings;
 }
 
-const Value& CompileRuntime::NaNValue() { return runtime()->NaNValue; }
-
-const Value& CompileRuntime::positiveInfinityValue() {
-  return runtime()->positiveInfinityValue;
-}
-
 const WellKnownSymbols& CompileRuntime::wellKnownSymbols() {
   return *runtime()->wellKnownSymbols;
 }

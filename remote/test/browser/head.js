@@ -40,7 +40,7 @@ function createTestDocument() {
   // empty document using system principal and avoid any wrapper issues
   // when using document's JS Objects.
   const system = Services.scriptSecurityManager.getSystemPrincipal();
-  webNavigation.createAboutBlankContentViewer(system);
+  webNavigation.createAboutBlankContentViewer(system, system);
 
   registerCleanupFunction(() => browser.close());
   return webNavigation.document;

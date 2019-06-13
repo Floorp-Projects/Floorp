@@ -1793,11 +1793,11 @@ static void EmitStoreDenseElement(MacroAssembler& masm,
   if (reg.hasValue()) {
     masm.branchTestInt32(Assembler::NotEqual, reg.valueReg(), &storeValue);
     masm.int32ValueToDouble(reg.valueReg(), fpscratch);
-    masm.storeDouble(fpscratch, target);
+    masm.boxDouble(fpscratch, target);
   } else {
     MOZ_ASSERT(reg.type() == MIRType::Int32);
     masm.convertInt32ToDouble(reg.typedReg().gpr(), fpscratch);
-    masm.storeDouble(fpscratch, target);
+    masm.boxDouble(fpscratch, target);
   }
 
   masm.bind(&done);

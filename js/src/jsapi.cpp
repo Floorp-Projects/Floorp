@@ -268,18 +268,6 @@ JS_PUBLIC_API bool JS::ObjectOpResult::failNotDataDescriptor() {
 
 JS_PUBLIC_API int64_t JS_Now() { return PRMJ_Now(); }
 
-JS_PUBLIC_API Value JS_GetNaNValue(JSContext* cx) {
-  return cx->runtime()->NaNValue;
-}
-
-JS_PUBLIC_API Value JS_GetNegativeInfinityValue(JSContext* cx) {
-  return cx->runtime()->negativeInfinityValue;
-}
-
-JS_PUBLIC_API Value JS_GetPositiveInfinityValue(JSContext* cx) {
-  return cx->runtime()->positiveInfinityValue;
-}
-
 JS_PUBLIC_API Value JS_GetEmptyStringValue(JSContext* cx) {
   return StringValue(cx->runtime()->emptyString);
 }

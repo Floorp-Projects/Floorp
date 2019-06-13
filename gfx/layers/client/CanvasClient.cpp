@@ -22,6 +22,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
 #include "mozilla/layers/TextureClientOGL.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "nsDebug.h"      // for printf_stderr, NS_ASSERTION
 #include "nsXULAppAPI.h"  // for XRE_GetProcessType, etc
 #include "TextureClientSharedSurface.h"
@@ -172,6 +173,15 @@ already_AddRefed<TextureClient> CanvasClient2D::CreateTextureClientForCanvas(
   }
 
 #ifdef XP_WIN
+  // With WebRender, host side uses data of TextureClient longer.
+  // Then back buffer reuse in CanvasClient2D::Update() does not work. It causes
+  // a lot of TextureClient allocations.
+  // For reducing the allocations, TextureClientRecycler is used.
+  if (GetForwarder() &&
+      GetForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_WR) {
+    return GetTextureClientRecycler()->CreateOrRecycle(
+        aFormat, aSize, BackendSelector::Canvas, aFlags);
+  }
   return CreateTextureClientForDrawing(aFormat, aSize, BackendSelector::Canvas,
                                        aFlags);
 #else

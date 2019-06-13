@@ -177,19 +177,14 @@ static bool StorageDisabledByAntiTrackingInternal(
   }
 
   if (aChannel) {
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-    if (!httpChannel) {
-      return false;
-    }
-
     nsCOMPtr<nsIURI> uri;
-    nsresult rv = httpChannel->GetURI(getter_AddRefs(uri));
+    nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
     }
 
     return !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-        httpChannel, uri, &aRejectedReason);
+        aChannel, uri, &aRejectedReason);
   }
 
   MOZ_ASSERT(aPrincipal);

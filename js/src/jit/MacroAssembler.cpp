@@ -2621,9 +2621,9 @@ void MacroAssembler::Push(TypedOrValueRegister v) {
     if (v.type() == MIRType::Float32) {
       ScratchDoubleScope fpscratch(*this);
       convertFloat32ToDouble(reg, fpscratch);
-      Push(fpscratch);
+      PushBoxed(fpscratch);
     } else {
-      Push(reg);
+      PushBoxed(reg);
     }
   } else {
     Push(ValueTypeFromMIRType(v.type()), v.typedReg().gpr());

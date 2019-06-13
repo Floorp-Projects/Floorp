@@ -1,6 +1,4 @@
 function run_test() {
-    Cu.importGlobalProperties(["XMLHttpRequest"]);
-
     var x = new XMLHttpRequest({mozAnon: true, mozSystem: false});
     Assert.ok(x.mozAnon);
     Assert.ok(x.mozSystem); // Because we're system principal

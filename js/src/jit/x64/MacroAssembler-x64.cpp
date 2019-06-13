@@ -119,6 +119,11 @@ void MacroAssemblerX64::boxValue(JSValueType type, Register src,
   MOZ_ASSERT(src != dest);
 
   JSValueShiftedTag tag = (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
+  if (ImmShiftedTag(type).value == 0) {
+    MOZ_ASSERT(type == JSVAL_TYPE_OBJECT);
+    movq(src, dest);
+    return;
+  }
 #ifdef DEBUG
   if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
     Label upper32BitsZeroed;
@@ -426,7 +431,7 @@ void MacroAssembler::moveValue(const TypedOrValueRegister& src,
     convertFloat32ToDouble(freg, scratch);
     freg = scratch;
   }
-  vmovq(freg, dest.valueReg());
+  boxDouble(freg, dest, freg);
 }
 
 void MacroAssembler::moveValue(const ValueOperand& src,
@@ -542,7 +547,7 @@ void MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value,
                                        MIRType valueType, const T& dest,
                                        MIRType slotType) {
   if (valueType == MIRType::Double) {
-    storeDouble(value.reg().typedReg().fpu(), dest);
+    boxDouble(value.reg().typedReg().fpu(), dest);
     return;
   }
 
@@ -578,6 +583,12 @@ template void MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value,
 template void MacroAssembler::storeUnboxedValue(
     const ConstantOrRegister& value, MIRType valueType,
     const BaseObjectElementIndex& dest, MIRType slotType);
+
+void MacroAssembler::PushBoxed(FloatRegister reg) {
+  subq(Imm32(sizeof(double)), StackPointer);
+  boxDouble(reg, Address(StackPointer, 0));
+  adjustFrame(sizeof(double));
+}
 
 // ========================================================================
 // wasm support

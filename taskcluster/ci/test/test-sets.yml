@@ -314,18 +314,18 @@ macosx1014-64-tests:
     - firefox-ui-functional-remote
     # - gtest
     - jittest
-    # - jsreftest
+    - jsreftest
     - marionette
     # - mochitest
     - mochitest-a11y
     # - mochitest-browser-chrome
     # - mochitest-chrome
-    # - mochitest-devtools-chrome
+    - mochitest-devtools-chrome
     - mochitest-devtools-webreplay
     - mochitest-gpu
     # - mochitest-media
     - mochitest-webgl1-core
-    # - mochitest-webgl1-ext
+    - mochitest-webgl1-ext
     # - mochitest-webgl2-core
     # - mochitest-webgl2-ext test  # timeouts
     - reftest
@@ -344,13 +344,10 @@ macosx1014-64-qr-tests:
 
 macosx64-tests:
     - gtest
-    - jsreftest
     - mochitest
     - mochitest-browser-chrome
     - mochitest-chrome
-    - mochitest-devtools-chrome
     - mochitest-media
-    - mochitest-webgl1-ext
     - mochitest-webgl2-core
     # - mochitest-webgl2-ext test timeouts
 
