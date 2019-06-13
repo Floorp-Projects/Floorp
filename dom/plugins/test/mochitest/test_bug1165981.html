@@ -10,8 +10,11 @@
       "use strict";
 
       SimpleTest.waitForExplicitFinish();
-      ok(SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Shockwave Flash"), "Should find allowed test flash plugin");
-      ok(!SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Third Test Plug-in"), "Should not find disallowed plugin");
+      function addPerms() {
+        ok(SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Shockwave Flash"), "Should find allowed test flash plugin");
+        ok(!SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Third Test Plug-in"), "Should not find disallowed plugin");
+        SpecialPowers.pushPermissions([{type: "plugin:flash", allow: true, context: document}], run);
+      }
 
       function findPlugin(pluginName) {
           for (var i = 0; i < navigator.plugins.length; i++) {
@@ -67,6 +70,6 @@
       }
     </script>
 
-  <body onload="run()">
+  <body onload="addPerms()">
   </body>
 </html>
