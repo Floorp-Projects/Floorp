@@ -238,14 +238,11 @@ const GloballyBlockedPermissions = {
  */
 var SitePermissions = {
   // Permission states.
-  // PROMPT_HIDE state is only used to show the "Hide Prompt" state in the identity panel
-  // for the "plugin:flash" permission and not in pageinfo.
   UNKNOWN: Services.perms.UNKNOWN_ACTION,
   ALLOW: Services.perms.ALLOW_ACTION,
   BLOCK: Services.perms.DENY_ACTION,
   PROMPT: Services.perms.PROMPT_ACTION,
   ALLOW_COOKIES_FOR_SESSION: Ci.nsICookiePermission.ACCESS_SESSION,
-  PROMPT_HIDE: Ci.nsIObjectLoadingContent.PLUGIN_PERMISSION_PROMPT_ACTION_QUIET,
   AUTOPLAY_BLOCKED_ALL: Ci.nsIAutoplay.BLOCKED_ALL,
 
   // Permission scopes.
@@ -825,12 +822,6 @@ var SitePermissions = {
    *         unknown state was passed.
    */
   getCurrentStateLabel(state, id, scope = null) {
-    // We try to avoid a collision between SitePermissions.PROMPT_HIDE
-    // and SitePermissions.ALLOW_COOKIES_FOR_SESSION which share the same const value.
-    if (id.startsWith("plugin") && state == SitePermissions.PROMPT_HIDE) {
-      return gStringBundle.GetStringFromName("state.current.hide");
-    }
-
     switch (state) {
       case this.PROMPT:
         return gStringBundle.GetStringFromName("state.current.prompt");
@@ -873,8 +864,6 @@ var gPermissionObject = {
    *  - states
    *    Array of permission states to be exposed to the user.
    *    Defaults to ALLOW, BLOCK and the default state (see getDefault).
-   *    The PROMPT_HIDE state is deliberately excluded from "plugin:flash" since we
-   *    don't want to expose a "Hide Prompt" button to the user through pageinfo.
    */
 
   "autoplay-media": {
@@ -985,11 +974,6 @@ var gPermissionObject = {
   },
 
   "canvas": {
-  },
-
-  "plugin:flash": {
-    labelID: "flash-plugin",
-    states: [ SitePermissions.UNKNOWN, SitePermissions.ALLOW, SitePermissions.BLOCK ],
   },
 
   "midi": {
