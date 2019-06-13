@@ -32,13 +32,11 @@ enum XREnvironmentBlendMode {
   // Attributes
   readonly attribute XREnvironmentBlendMode environmentBlendMode;
   [SameObject] readonly attribute XRRenderState renderState;
-  [SameObject] readonly attribute XRSpace viewerSpace;
+  readonly attribute XRInputSourceArray inputSources;
 
   // Methods
   void updateRenderState(optional XRRenderStateInit state);
   Promise<XRReferenceSpace> requestReferenceSpace(XRReferenceSpaceType type);
-
-  FrozenArray<XRInputSource> getInputSources();
 
   long requestAnimationFrame(XRFrameRequestCallback callback);
   void cancelAnimationFrame(long handle);
@@ -85,11 +83,10 @@ callback XRFrameRequestCallback = void (DOMHighResTimeStamp time, XRFrame frame)
 };
 
 enum XRReferenceSpaceType {
-  "identity",
-  "position-disabled",
-  "eye-level",
-  "floor-level",
-  "bounded",
+  "viewer",
+  "local",
+  "local-floor",
+  "bounded-floor",
   "unbounded"
 };
 
@@ -106,6 +103,7 @@ interface XRBoundedReferenceSpace : XRReferenceSpace {
 };
 
 enum XREye {
+  "none",
   "left",
   "right"
 };
@@ -171,6 +169,13 @@ interface XRInputSource {
   [SameObject] readonly attribute Gamepad? gamepad;
 };
 
+[SecureContext, Exposed=Window]
+interface XRInputSourceArray {
+  iterable<XRInputSource>;
+  readonly attribute unsigned long length;
+  getter XRInputSource(unsigned long index);
+};
+
 enum GamepadMappingType {
   "",            // Defined in the Gamepad API
   "standard",    // Defined in the Gamepad API
@@ -207,7 +212,6 @@ interface XRWebGLLayer : XRLayer {
 
   // Methods
   XRViewport? getViewport(XRView view);
-  void requestViewportScaling(double viewportScaleFactor);
 
   // Static Methods
   static double getNativeFramebufferScaleFactor(XRSession session);
@@ -245,6 +249,20 @@ dictionary XRInputSourceEventInit : EventInit {
   required XRFrame frame;
   required XRInputSource inputSource;
   long? buttonIndex = null;
+};
+
+[SecureContext, Exposed=Window, Constructor(DOMString type, XRInputSourcesChangeEventInit eventInitDict)]
+interface XRInputSourcesChangeEvent : Event {
+  [SameObject] readonly attribute XRSession session;
+  [SameObject] readonly attribute FrozenArray<XRInputSource> added;
+  [SameObject] readonly attribute FrozenArray<XRInputSource> removed;
+};
+
+dictionary XRInputSourcesChangeEventInit : EventInit {
+  required XRSession session;
+  required FrozenArray<XRInputSource> added;
+  required FrozenArray<XRInputSource> removed;
+
 };
 
 [SecureContext, Exposed=Window, Constructor(DOMString type, XRReferenceSpaceEventInit eventInitDict)]
