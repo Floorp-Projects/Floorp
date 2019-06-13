@@ -34,9 +34,6 @@ class WebProgressChild {
     let webProgress = this.mm.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this._filter, notifyCode);
-
-    // This message is used for measuring this.mm.content process startup performance.
-    this.mm.sendAsyncMessage("Content:BrowserChildReady", { time: Services.telemetry.msSystemNow() });
   }
 
   _requestSpec(aRequest, aPropertyName) {
