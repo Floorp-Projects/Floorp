@@ -270,7 +270,9 @@ jobs:
 
 - job: results_safari
   displayName: 'all tests (Safari)'
-  condition: eq(variables['Build.Reason'], 'Schedule')
+  condition: |
+    or(eq(variables['Build.Reason'], 'Schedule'),
+       and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_safari']))
   strategy:
     parallel: 4 # chosen to make runtime ~2h
   timeoutInMinutes: 360
