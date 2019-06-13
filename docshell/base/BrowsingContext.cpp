@@ -179,7 +179,8 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
       mBrowsingContextId(aBrowsingContextId),
       mGroup(aGroup),
       mParent(aParent),
-      mIsInProcess(false) {
+      mIsInProcess(false),
+      mIsDiscarded(false) {
   MOZ_RELEASE_ASSERT(!mParent || mParent->Group() == mGroup);
   MOZ_RELEASE_ASSERT(mBrowsingContextId != 0);
   MOZ_RELEASE_ASSERT(mGroup);
@@ -210,7 +211,7 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
 
       MOZ_DIAGNOSTIC_ASSERT(mType == Type::Chrome, "must be chrome");
       MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "must be in parent");
-      MOZ_DIAGNOSTIC_ASSERT(!Group()->IsContextCached(this),
+      MOZ_DIAGNOSTIC_ASSERT(!mGroup->IsContextCached(this),
                             "cannot be in bfcache");
 
       RefPtr<BrowsingContext> kungFuDeathGrip(this);
@@ -248,7 +249,9 @@ void BrowsingContext::Attach(bool aFromIPC) {
            XRE_IsParentProcess() ? "Parent" : "Child", Id(),
            mParent ? mParent->Id() : 0));
 
-  MOZ_DIAGNOSTIC_ASSERT(!Group()->IsContextCached(this));
+  MOZ_DIAGNOSTIC_ASSERT(mGroup);
+  MOZ_DIAGNOSTIC_ASSERT(!mGroup->IsContextCached(this));
+  MOZ_DIAGNOSTIC_ASSERT(!mIsDiscarded);
 
   auto* children = mParent ? &mParent->mChildren : &mGroup->Toplevels();
   MOZ_DIAGNOSTIC_ASSERT(!children->Contains(this));
@@ -262,7 +265,7 @@ void BrowsingContext::Attach(bool aFromIPC) {
           GetIPCInitializer());
     } else if (IsContent()) {
       MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-      Group()->EachParent([&](ContentParent* aParent) {
+      mGroup->EachParent([&](ContentParent* aParent) {
         Unused << aParent->SendAttachBrowsingContext(GetIPCInitializer());
       });
     }
@@ -275,41 +278,56 @@ void BrowsingContext::Detach(bool aFromIPC) {
            XRE_IsParentProcess() ? "Parent" : "Child", Id(),
            mParent ? mParent->Id() : 0));
 
+  // Unlinking might remove our group before Detach gets called.
+  if (NS_WARN_IF(!mGroup)) {
+    return;
+  }
+
   RefPtr<BrowsingContext> kungFuDeathGrip(this);
 
-  if (Group() && !Group()->EvictCachedContext(this)) {
+  if (!mGroup->EvictCachedContext(this)) {
     Children* children = nullptr;
     if (mParent) {
       children = &mParent->mChildren;
-    } else if (mGroup) {
+    } else {
       children = &mGroup->Toplevels();
     }
 
-    if (children) {
-      // TODO(farre): This assert looks extremely fishy, I know, but
-      // what we're actually saying is this: if we're detaching, but our
-      // parent doesn't have any children, it is because we're being
-      // detached by the cycle collector destroying docshells out of
-      // order.
-      MOZ_DIAGNOSTIC_ASSERT(children->IsEmpty() || children->Contains(this));
-
-      children->RemoveElement(this);
-    }
+    children->RemoveElement(this);
   }
 
-  if (mGroup) {
-    mGroup->Unregister(this);
-  }
-
-  // As our nsDocShell is going away, this should implicitly mark us as closed.
-  // We directly set our member, rather than using a transaction as we're going
-  // to send a `Detach` message to other processes either way.
-  mClosed = true;
+  Unregister();
 
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);
     cc->SendDetachBrowsingContext(this);
+  }
+}
+
+void BrowsingContext::DetachChildren(bool aFromIPC) {
+  if (mChildren.IsEmpty()) {
+    return;
+  }
+
+  MOZ_LOG(GetLog(), LogLevel::Debug,
+          ("%s: Detaching all children of 0x%08" PRIx64 "",
+           XRE_IsParentProcess() ? "Parent" : "Child", Id()));
+
+  // TODO(farre). Watch out! Notice the missing call to
+  // BrowsingContextGroup::Unregister here, this is intentional. If we
+  // unregister and set the detached flag here, tests will fail
+  // because not being able to look up Window.top. (Un-)Fortunately
+  // nsDocShell::Destroy will still call BrowsingContext::Detach,
+  // which will set the detached flag at that point. Bug 1558176 would
+  // clean this up.
+
+  mChildren.Clear();
+
+  if (!aFromIPC && XRE_IsContentProcess()) {
+    auto cc = ContentChild::GetSingleton();
+    MOZ_DIAGNOSTIC_ASSERT(cc);
+    cc->SendDetachBrowsingContextChildren(this);
   }
 }
 
@@ -338,7 +356,7 @@ void BrowsingContext::CacheChildren(bool aFromIPC) {
           ("%s: Caching children of 0x%08" PRIx64 "",
            XRE_IsParentProcess() ? "Parent" : "Child", Id()));
 
-  Group()->CacheContexts(mChildren);
+  mGroup->CacheContexts(mChildren);
   mChildren.Clear();
 
   if (!aFromIPC && XRE_IsContentProcess()) {
@@ -355,7 +373,7 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
 
   for (BrowsingContext* child : aChildren) {
     MOZ_DIAGNOSTIC_ASSERT(child->GetParent() == this);
-    Unused << Group()->EvictCachedContext(child);
+    Unused << mGroup->EvictCachedContext(child);
   }
 
   mChildren.AppendElements(aChildren);
@@ -367,7 +385,7 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
   }
 }
 
-bool BrowsingContext::IsCached() { return Group()->IsContextCached(this); }
+bool BrowsingContext::IsCached() { return mGroup->IsContextCached(this); }
 
 bool BrowsingContext::HasOpener() const {
   return sBrowsingContexts->Contains(mOpenerId);
@@ -531,6 +549,12 @@ bool BrowsingContext::IsActive() const {
   return false;
 }
 
+void BrowsingContext::Unregister() {
+  MOZ_DIAGNOSTIC_ASSERT(mGroup);
+  mGroup->Unregister(this);
+  mIsDiscarded = true;
+}
+
 BrowsingContext::~BrowsingContext() {
   MOZ_DIAGNOSTIC_ASSERT(!mParent || !mParent->mChildren.Contains(this));
   MOZ_DIAGNOSTIC_ASSERT(!mGroup || !mGroup->Toplevels().Contains(this));
@@ -670,7 +694,7 @@ void BrowsingContext::Blur(ErrorResult& aError) {
 }
 
 Nullable<WindowProxyHolder> BrowsingContext::GetTop(ErrorResult& aError) {
-  if (mClosed) {
+  if (mIsDiscarded) {
     return nullptr;
   }
 
@@ -694,7 +718,7 @@ void BrowsingContext::GetOpener(JSContext* aCx,
 }
 
 Nullable<WindowProxyHolder> BrowsingContext::GetParent(ErrorResult& aError) {
-  if (mClosed) {
+  if (mIsDiscarded) {
     return nullptr;
   }
 
