@@ -7,6 +7,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script src="pointerevent_support.js"></script>
         <style>
             #target0 {
@@ -84,6 +87,7 @@
                 var target0 = document.getElementById("target0");
 
                 var test_touchaction = async_test("touch-action attribute test");
+                var actions_promise;
 
                 xScr0 = target0.scrollLeft;
                 yScr0 = target0.scrollTop;
@@ -107,10 +111,25 @@
                     }
 
                     if(xScrollIsReceived && yScrollIsReceived) {
-                        test_touchaction.done();
+                        // Make sure the test finishes after all the input actions are completed.
+                        actions_promise.then( () => {
+                            test_touchaction.done();
+                        });
                         updateDescriptionComplete();
                     }
                 });
+
+                // Inject keyboard scroll inputs.
+                actions_promise = new test_driver.Actions()
+                    .pointerMove(0, 0, {origin: target0})
+                    .pointerDown()
+                    .pointerUp()
+                    .addTick()
+                    .keyDown("\uE015")
+                    .keyUp("\uE015")
+                    .keyDown("\uE014")
+                    .keyUp("\uE014")
+                    .send();
             }
 
             function updateDescriptionNextStepKeyboard() {
