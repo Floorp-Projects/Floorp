@@ -2848,25 +2848,6 @@ class nsContentUtils {
   static already_AddRefed<nsPIWindowRoot> GetWindowRoot(Document* aDoc);
 
   /*
-   * Implements step 3.1 and 3.3 of the Determine request's Referrer algorithm
-   * from the Referrer Policy specification.
-   *
-   * The referrer policy of the document is applied by Necko when using
-   * channels.
-   *
-   * For documents representing an iframe srcdoc attribute, the document sets
-   * its own URI correctly, so this method simply uses the document's original
-   * or current URI as appropriate.
-   *
-   * aDoc may be null.
-   *
-   * https://w3c.github.io/webappsec/specs/referrer-policy/#determine-requests-referrer
-   */
-  static nsresult SetFetchReferrerURIWithPolicy(
-      nsIPrincipal* aPrincipal, Document* aDoc, nsIHttpChannel* aChannel,
-      mozilla::net::ReferrerPolicy aReferrerPolicy);
-
-  /*
    * If there is a Referrer-Policy response header in |aChannel|, parse a
    * referrer policy from the header.
    *
