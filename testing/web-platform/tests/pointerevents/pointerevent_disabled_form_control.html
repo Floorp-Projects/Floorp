@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
         <script>
@@ -32,6 +35,23 @@
                 });
                 on_event(target, "click", function (event) {
                     assert_unreached("click should not fire on disabled element");
+                });
+
+                // Inject touch inputs.
+                clickInTarget("mouse", target).then(function() {
+                    return new test_driver.Actions()
+                        .addPointer("mousePointer1", "mouse")
+                        .pointerMove(0, 0)
+                        .send();
+                }).then(function() {
+                    return pointerDragInTarget('touch', target, 'right');
+                }).then(function() {
+                    return clickInTarget("pen", target);
+                }).then(function() {
+                    return new test_driver.Actions()
+                        .addPointer("penPointer1", "pen")
+                        .pointerMove(0, 0)
+                        .send();
                 });
             }
         </script>
