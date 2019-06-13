@@ -15,10 +15,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-// On BSDs (including mac), environ is not declared anywhere:
-// https://stackoverflow.com/a/31347357/912144
-extern char **environ;
-
 namespace angle
 {
 
@@ -157,7 +153,7 @@ bool RunApp(const std::vector<const char *> &args,
             }
         }
 
-        // Execute the application, which doesn't return unless failed.  Note: execve takes argv as
+        // Execute the application, which doesn't return unless failed.  Note: execv takes argv as
         // `char * const *` for historical reasons.  It is safe to const_cast it:
         //
         // http://pubs.opengroup.org/onlinepubs/9699919799/functions/exec.html
@@ -170,7 +166,7 @@ bool RunApp(const std::vector<const char *> &args,
         // modify either the array of pointers or the characters to which the function points, but
         // this would disallow existing correct code. Instead, only the array of pointers is noted
         // as constant.
-        execve(args[0], const_cast<char *const *>(args.data()), environ);
+        execv(args[0], const_cast<char *const *>(args.data()));
         _exit(errno);
     }
 
