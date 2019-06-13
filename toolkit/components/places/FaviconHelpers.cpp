@@ -831,6 +831,33 @@ AsyncAssociateIconToPage::Run() {
     return NS_OK;
   }
 
+  // Expire old favicons to keep up with website changes. Associated icons must
+  // be expired also when storing a root favicon, because a page may change to
+  // only have a root favicon.
+  // Note that here we could also be in the process of adding further payloads
+  // to a page, and we don't want to expire just added payloads. For this
+  // reason we only remove expired payloads.
+  // Oprhan icons are not removed at this time because it'd be expensive. The
+  // privacy implications are limited, since history removal methods also expire
+  // orphan icons.
+  if (mPage.id > 0) {
+    nsCOMPtr<mozIStorageStatement> stmt;
+    stmt = DB->GetStatement(
+        "DELETE FROM moz_icons_to_pages "
+        "WHERE icon_id IN ( "
+        "  SELECT icon_id FROM moz_icons_to_pages "
+        "  JOIN moz_icons i ON icon_id = i.id "
+        "  WHERE page_id = :page_id "
+        "  AND expire_ms < strftime('%s','now','localtime','start of day','-7 days','utc') * 1000 "
+        ") AND page_id = :page_id ");
+    NS_ENSURE_STATE(stmt);
+    mozStorageStatementScoper scoper(stmt);
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPage.id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Don't associate pages to root domain icons, since those will be returned
   // regardless.  This saves a lot of work and database space since we don't
   // need to store urls and relations.
@@ -846,24 +873,7 @@ AsyncAssociateIconToPage::Run() {
     // it being elapsed. We don't remove orphan icons at this time since it
     // would have a cost. The privacy hit is limited since history removal
     // methods already expire orphan icons.
-    if (mPage.id != 0) {
-      nsCOMPtr<mozIStorageStatement> stmt;
-      stmt = DB->GetStatement(
-          "DELETE FROM moz_icons_to_pages "
-          "WHERE icon_id IN ( "
-          "SELECT icon_id FROM moz_icons_to_pages "
-          "JOIN moz_icons i ON icon_id = i.id "
-          "WHERE page_id = :page_id "
-          "AND expire_ms < strftime('%s','now','localtime','start of day','-7 "
-          "days','utc') * 1000 "
-          ") AND page_id = :page_id ");
-      NS_ENSURE_STATE(stmt);
-      mozStorageStatementScoper scoper(stmt);
-      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPage.id);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
+    if (mPage.id == 0) {
       // We need to create the page entry.
       nsCOMPtr<mozIStorageStatement> stmt;
       stmt = DB->GetStatement(
