@@ -24,6 +24,9 @@ using namespace js::jit;
 
 using mozilla::Maybe;
 
+namespace js {
+namespace jit {
+
 class AutoStubFrame;
 
 Address CacheRegisterAllocator::addressOf(MacroAssembler& masm,
@@ -189,6 +192,9 @@ class MOZ_RAII AutoStubFrame {
   ~AutoStubFrame() { MOZ_ASSERT(!compiler.inStubFrame_); }
 #endif
 };
+
+}  // namespace jit
+}  // namespace js
 
 void BaselineCacheIRCompiler::callVMInternal(MacroAssembler& masm,
                                              VMFunctionId id) {
