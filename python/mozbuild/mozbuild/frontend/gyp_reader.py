@@ -249,10 +249,6 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
             for define in defines:
                 if '=' in define:
                     name, value = define.split('=', 1)
-                    # The NSS gyp file doesn't expose a way to override this
-                    # currently, so we do so here.
-                    if name == 'NSS_ALLOW_SSLKEYLOGFILE' and config.substs.get('RELEASE_OR_BETA', False):
-                        continue
                     context['DEFINES'][name] = value
                 else:
                     context['DEFINES'][define] = True
