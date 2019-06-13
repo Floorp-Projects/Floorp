@@ -131,7 +131,7 @@ class HTMLVideoElement final : public HTMLMediaElement {
   already_AddRefed<VideoPlaybackQuality> GetVideoPlaybackQuality();
 
   bool MozOrientationLockEnabled() const {
-    return StaticPrefs::MediaVideocontrolsLockVideoOrientation();
+    return StaticPrefs::media_videocontrols_lock_video_orientation();
   }
 
   bool MozIsOrientationLocked() const { return mIsOrientationLocked; }

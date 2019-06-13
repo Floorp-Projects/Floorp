@@ -614,11 +614,11 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
 }
 
 TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_NoTouchAction) {
-  SCOPED_GFX_PREF(TouchActionEnabled, bool, false);
+  SCOPED_GFX_PREF(layout_css_touch_action_enabled, bool, false);
   TestCrossApzcAxisLock();
 }
 
 TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_TouchAction) {
-  SCOPED_GFX_PREF(TouchActionEnabled, bool, true);
+  SCOPED_GFX_PREF(layout_css_touch_action_enabled, bool, true);
   TestCrossApzcAxisLock();
 }

@@ -1672,7 +1672,7 @@ void EventStateManager::MaybeFirePointerCancel(WidgetInputEvent* aEvent) {
   RefPtr<PresShell> presShell = mPresContext->GetPresShell();
   AutoWeakFrame targetFrame = mCurrentTarget;
 
-  if (!PointerEventHandler::IsPointerEventEnabled() || !presShell ||
+  if (!StaticPrefs::dom_w3c_pointer_events_enabled() || !presShell ||
       !targetFrame) {
     return;
   }
@@ -4442,7 +4442,7 @@ static LayoutDeviceIntPoint GetWindowClientRectCenter(nsIWidget* aWidget) {
 
 void EventStateManager::GeneratePointerEnterExit(EventMessage aMessage,
                                                  WidgetMouseEvent* aEvent) {
-  if (!PointerEventHandler::IsPointerEventEnabled()) {
+  if (!StaticPrefs::dom_w3c_pointer_events_enabled()) {
     return;
   }
   WidgetPointerEvent pointerEvent(*aEvent);

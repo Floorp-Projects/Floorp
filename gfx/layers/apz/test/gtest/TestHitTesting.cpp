@@ -455,7 +455,7 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
 }
 
 TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
-  SCOPED_GFX_PREF(TouchActionEnabled, bool, false);
+  SCOPED_GFX_PREF(layout_css_touch_action_enabled, bool, false);
 
   // The main purpose of this test is to verify that touch-start events (or
   // anything that starts a new input block) don't ever get untransformed. This
@@ -637,7 +637,7 @@ TEST_F(APZHitTestingTester, Bug1148350) {
 
   uint64_t blockId;
   TouchDown(manager, ScreenIntPoint(100, 100), mcc->Time(), &blockId);
-  if (StaticPrefs::TouchActionEnabled()) {
+  if (StaticPrefs::layout_css_touch_action_enabled()) {
     SetDefaultAllowedTouchBehavior(manager, blockId);
   }
   mcc->AdvanceByMillis(100);
