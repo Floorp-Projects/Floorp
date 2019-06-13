@@ -11023,12 +11023,8 @@ void Document::SetReadyStateInternal(ReadyState rs,
 
   if (READYSTATE_INTERACTIVE == rs) {
     if (nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
-      Element* root = GetRootElement();
-      if ((root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozpersist)) ||
-          IsXULDocument()) {
-        mXULPersist = new XULPersist(this);
-        mXULPersist->Init();
-      }
+      mXULPersist = new XULPersist(this);
+      mXULPersist->Init();
     }
   }
 
