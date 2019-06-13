@@ -4,6 +4,9 @@
 ChromeUtils.import("resource://gre/modules/CanonicalJSON.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
+ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
+
+Cu.importGlobalProperties(["fetch"]);
 
 load("utils.js"); /* globals withMockApiServer, MockResponse, withScriptServer, withServer, makeMockApiServer */
 
@@ -172,4 +175,43 @@ add_task(withScriptServer("query_server.sjs", async function test_postData(serve
     data, {queryString: {}, body: {foo: "bar", baz: "biff"}},
     "NormandyApi sent an incorrect query string."
   );
+}));
+
+// Test that no credentials are sent, even if the cookie store contains them.
+add_task(withScriptServer("cookie_server.sjs", async function test_sendsNoCredentials(serverUrl) {
+  // This test uses cookie_server.sjs, which responds to all requests with a
+  // response that sets a cookie.
+
+  // send a request, to store a cookie in the cookie store
+  await fetch(serverUrl);
+
+  // A normal request should send that cookie
+  const cookieExpectedDeferred = PromiseUtils.defer();
+  function cookieExpectedObserver(aSubject, aTopic, aData) {
+    equal(aTopic, "http-on-modify-request", "Only the expected topic should be observed");
+    let httpChannel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+    equal(httpChannel.getRequestHeader("Cookie"), "type=chocolate-chip", "The header should be sent");
+    Services.obs.removeObserver(cookieExpectedObserver, "http-on-modify-request");
+    cookieExpectedDeferred.resolve();
+  };
+  Services.obs.addObserver(cookieExpectedObserver, "http-on-modify-request");
+  await fetch(serverUrl);
+  await cookieExpectedDeferred.promise;
+
+  // A request through the NormandyApi method should not send that cookie
+  const cookieNotExpectedDeferred = PromiseUtils.defer();
+  function cookieNotExpectedObserver(aSubject, aTopic, aData) {
+    equal(aTopic, "http-on-modify-request", "Only the expected topic should be observed");
+    let httpChannel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+    Assert.throws(
+      () => httpChannel.getRequestHeader("Cookie"),
+      /NS_ERROR_NOT_AVAILABLE/,
+      "The cookie header should not be sent"
+    );
+    Services.obs.removeObserver(cookieNotExpectedObserver, "http-on-modify-request");
+    cookieNotExpectedDeferred.resolve();
+  };
+  Services.obs.addObserver(cookieNotExpectedObserver, "http-on-modify-request");
+  await NormandyApi.get(serverUrl);
+  await cookieNotExpectedDeferred.promise;
 }));
