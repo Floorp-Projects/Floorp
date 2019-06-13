@@ -178,8 +178,7 @@ already_AddRefed<URL> ParseURLFromWorker(const GlobalObject& aGlobal,
   worker->AssertIsOnWorkerThread();
 
   NS_ConvertUTF8toUTF16 baseURL(worker->GetLocationInfo().mHref);
-  RefPtr<URL> url =
-      URL::Constructor(aGlobal.GetAsSupports(), aInput, baseURL, aRv);
+  RefPtr<URL> url = URL::WorkerConstructor(aGlobal, aInput, baseURL, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
   }
