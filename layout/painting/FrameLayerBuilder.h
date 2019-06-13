@@ -285,6 +285,7 @@ struct ContainerLayerParameters {
       : mXScale(aXScale),
         mYScale(aYScale),
         mLayerContentsVisibleRect(nullptr),
+        mItemVisibleRect(nullptr),
         mBackgroundColor(NS_RGBA(0, 0, 0, 0)),
         mScrollMetadataASR(nullptr),
         mCompositorASR(nullptr),
@@ -298,6 +299,7 @@ struct ContainerLayerParameters {
       : mXScale(aXScale),
         mYScale(aYScale),
         mLayerContentsVisibleRect(nullptr),
+        mItemVisibleRect(nullptr),
         mOffset(aOffset),
         mBackgroundColor(aParent.mBackgroundColor),
         mScrollMetadataASR(aParent.mScrollMetadataASR),
@@ -319,6 +321,11 @@ struct ContainerLayerParameters {
    * visible rect of the layer, in the coordinate system of the created layer.
    */
   nsIntRect* mLayerContentsVisibleRect;
+
+  /**
+   * If non-null, the rectangle which stores the item's visible rect.
+   */
+  nsRect* mItemVisibleRect;
 
   /**
    * An offset to apply to all child layers created.

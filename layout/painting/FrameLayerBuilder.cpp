@@ -4657,6 +4657,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       transformNode = transformNode->Parent();
     }
 
+    nsRect itemVisibleRectAu = itemContent;
     if (transformNode) {
       // If we are within transform, transform itemContent and itemDrawRect.
       MOZ_ASSERT(transformNode);
@@ -4818,6 +4819,15 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       ContainerLayerParameters params = mParameters;
       params.mBackgroundColor = uniformColor;
       params.mLayerCreationHint = GetLayerCreationHint(itemAGR);
+      if (!transformNode) {
+        params.mItemVisibleRect = &itemVisibleRectAu;
+      } else {
+        // We only use mItemVisibleRect for getting the visible rect for
+        // remote browsers (which should never have inactive transforms), so we
+        // avoid doing transforms on itemVisibleRectAu above and can't report
+        // an accurate bounds here.
+        params.mItemVisibleRect = nullptr;
+      }
       params.mScrollMetadataASR =
           ActiveScrolledRoot::IsAncestor(scrollMetadataASR,
                                          mContainerScrollMetadataASR)

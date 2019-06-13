@@ -60,6 +60,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Unused.h"
+#include "Units.h"
 #include "nsBrowserStatusFilter.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
@@ -436,7 +437,7 @@ BrowserChild::Observe(nsISupports* aSubject, const char* aTopic,
       nsCOMPtr<Document> subject(do_QueryInterface(aSubject));
       nsCOMPtr<Document> doc(GetTopLevelDocument());
 
-      if (subject == doc) {
+      if (subject == doc && doc->IsTopLevelContentDocument()) {
         RefPtr<PresShell> presShell = doc->GetPresShell();
         if (presShell) {
           presShell->SetIsFirstPaint(true);
@@ -2741,7 +2742,7 @@ bool BrowserChild::IsVisible() {
 }
 
 void BrowserChild::UpdateVisibility(bool aForceRepaint) {
-  bool shouldBeVisible = mIsTopLevel ? mRenderLayers : mEffectsInfo.mVisible;
+  bool shouldBeVisible = mIsTopLevel ? mRenderLayers : mEffectsInfo.IsVisible();
   bool isVisible = IsVisible();
 
   if (shouldBeVisible != isVisible) {
@@ -3327,6 +3328,17 @@ ScreenIntSize BrowserChild::GetInnerSize() {
   return ViewAs<ScreenPixel>(
       innerSize, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
 };
+
+nsRect BrowserChild::GetVisibleRect() {
+  bool isForceRendering = mIsTopLevel && mRenderLayers;
+  if (isForceRendering && !mEffectsInfo.IsVisible()) {
+    // We are forced to render even though we are not visible. In this case, we
+    // don't have an accurate visible rect, so we must be conservative.
+    return nsRect(nsPoint(), CSSPixel::ToAppUnits(mUnscaledInnerSize));
+  } else {
+    return mEffectsInfo.mVisibleRect;
+  }
+}
 
 ScreenIntRect BrowserChild::GetOuterRect() {
   LayoutDeviceIntRect outerRect =
