@@ -444,7 +444,6 @@ load 876092.html
 load 876221.html
 load 897852.html
 asserts(4-6) asserts-if(Android&&!asyncPan,2) load 898913.html # bug 847368
-pref(layers.acceleration.disabled,true) pref(layers.force-active,true) load 919434.html
 load 926728.html
 load 930381.html
 load 931450.html
