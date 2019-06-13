@@ -19,6 +19,6 @@
 == form-invalid-and-barred.html form-invalid-ref.html
 == form-invalid-and-barred-remove-barred.html form-invalid-ref.html
 == form-valid-and-barred.html form-valid-and-barred-ref.html
-== form-valid-and-barred-remove-barred.html form-valid-ref.html
+fuzzy-if(geckoview,0-4,0-2) == form-valid-and-barred-remove-barred.html form-valid-ref.html
 == form-with-invalid-element-add-barred-dynamic.html form-invalid-ref.html
 == form-with-valid-element-add-barred-dynamic.html form-valid-and-barred-ref.html
