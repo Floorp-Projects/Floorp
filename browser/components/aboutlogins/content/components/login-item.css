@@ -102,6 +102,10 @@
   white-space: nowrap;
 }
 
+:host(:not([editing])) input[name='password'] {
+  font-family: monospace;
+}
+
 .reveal-password-checkbox {
   /* !important is needed to override common.css styling for checkboxes */
   background-color: transparent !important;
