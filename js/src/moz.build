@@ -116,7 +116,6 @@ EXPORTS += [
 ]
 
 EXPORTS.js += [
-    '../public/AllocationRecording.h',
     '../public/AllocPolicy.h',
     '../public/ArrayBuffer.h',
     '../public/BuildId.h',
