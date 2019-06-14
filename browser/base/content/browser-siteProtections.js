@@ -27,6 +27,11 @@ var gProtectionsHandler = {
     return this._protectionsPopupTPSwitch =
       document.getElementById("protections-popup-tp-switch");
   },
+  get _protectionPopupSettingsButton() {
+    delete this._protectionPopupSettingsButton;
+    return this._protectionPopupSettingsButton =
+      document.getElementById("protections-popup-settings-button");
+  },
 
   handleProtectionsButtonEvent(event) {
     event.stopPropagation();

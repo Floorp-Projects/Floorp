@@ -251,6 +251,8 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
   // WebRenderTextureHost that supports NativeTexture
   bool useWrTextureWrapper =
       useExternalImage && wrTexture && wrTexture->SupportsWrNativeTexture();
+  // XXX Re-enable fast path for async native texture updates(Bug 1559294)
+  useWrTextureWrapper = false;
 
   // The non-external image code path falls back to converting the texture into
   // an rgb image.

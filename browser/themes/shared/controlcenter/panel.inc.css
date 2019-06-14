@@ -191,7 +191,8 @@
 #identity-popup-security-descriptions > description,
 #identity-popup-securityView-body > description,
 #identity-popup-permissions-content > description,
-#identity-popup-content-blocking-content > description {
+#identity-popup-content-blocking-content > description,
+.protections-popup-settings-label {
   font-size: 110%;
   margin: 0;
 }
@@ -398,7 +399,8 @@ description#identity-popup-content-verifier,
 }
 
 .identity-popup-content-blocking-category:-moz-focusring,
-.identity-popup-content-blocking-category:hover {
+.identity-popup-content-blocking-category:hover,
+#protections-popup-settings-button:hover {
   border-radius: 2px;
   background-color: var(--arrowpanel-dimmed);
   outline: none;
@@ -718,7 +720,8 @@ description#identity-popup-content-verifier,
 .identity-popup-content-blocking-category-label,
 .identity-popup-content-blocking-category-state-label,
 .identity-popup-permission-label,
-.identity-popup-permission-state-label {
+.identity-popup-permission-state-label,
+.protections-popup-settings-label {
   /* We need to align the action buttons and permission icons with the text.
      This is tricky because the icon height is defined in pixels, while the
      font height can vary with platform and system settings, and at least on
@@ -732,7 +735,8 @@ description#identity-popup-content-verifier,
 }
 
 .identity-popup-content-blocking-category-label,
-.identity-popup-permission-label {
+.identity-popup-permission-label,
+.protections-popup-settings-label {
   margin-inline-start: 1em;
 }
 
@@ -856,4 +860,22 @@ description#identity-popup-content-verifier,
 #protections-popup-tp-switch[enabled=true]:hover,
 #protections-popup-tp-switch[enabled=true]:-moz-focusring {
   background-color: #45a1ff;
+}
+
+#protections-popup-settings-section {
+  padding: 4px;
+  -moz-context-properties: fill, fill-opacity;
+}
+
+#protections-popup-settings-button {
+  /* We need to align the setting button with the labels in the tp switch
+     section. So we add 6px to offset the margin of labels. */
+  padding-inline-start: calc(1em + 6px);
+  min-height: 37px;
+}
+
+.protection-settings-icon {
+  width: 16px;
+  height: 16px;
+  list-style-image: url(chrome://browser/skin/settings.svg);
 }

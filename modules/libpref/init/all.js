@@ -299,7 +299,6 @@ pref("media.volume_scale", "1.0");
 pref("media.play-stand-alone", true);
 
 pref("media.hardware-video-decoding.enabled", true);
-pref("media.hardware-video-decoding.force-enabled", false);
 
 #ifdef MOZ_WMF
 pref("media.wmf.dxva.enabled", true);
@@ -315,7 +314,6 @@ pref("media.wmf.disable-d3d11-for-dlls", "igd11dxva64.dll: 20.19.15.4463, 20.19.
 pref("media.wmf.disable-d3d9-for-dlls", "igdumd64.dll: 8.15.10.2189, 8.15.10.2119, 8.15.10.2104, 8.15.10.2102, 8.771.1.0; atiumd64.dll: 7.14.10.833, 7.14.10.867, 7.14.10.885, 7.14.10.903, 7.14.10.911, 8.14.10.768, 9.14.10.1001, 9.14.10.1017, 9.14.10.1080, 9.14.10.1128, 9.14.10.1162, 9.14.10.1171, 9.14.10.1183, 9.14.10.1197, 9.14.10.945, 9.14.10.972, 9.14.10.984, 9.14.10.996");
 pref("media.wmf.deblacklisting-for-telemetry-in-gpu-process", true);
 pref("media.wmf.play-stand-alone", true);
-pref("media.wmf.use-sync-texture", true);
 #endif
 pref("media.gmp.decoder.aac", 0);
 pref("media.gmp.decoder.h264", 0);
@@ -564,12 +562,6 @@ pref("media.av1.use-dav1d", false);
 
 pref("media.webaudio.audiocontextoptions-samplerate.enabled", true);
 
-// Weather we allow AMD switchable graphics
-pref("layers.amd-switchable-gfx.enabled", true);
-
-// Whether to use async panning and zooming
-pref("layers.async-pan-zoom.enabled", true);
-
 // Whether to enable arbitrary layer geometry for OpenGL compositor
 pref("layers.geometry.opengl.enabled", true);
 
@@ -615,10 +607,6 @@ pref("apz.fling_accel_base_mult", "1.0");
 pref("apz.fling_accel_interval_ms", 500);
 pref("apz.fling_accel_min_velocity", "1.5");
 pref("apz.fling_accel_supplemental_mult", "1.0");
-pref("apz.fling_curve_function_x1", "0.0");
-pref("apz.fling_curve_function_y1", "0.0");
-pref("apz.fling_curve_function_x2", "1.0");
-pref("apz.fling_curve_function_y2", "1.0");
 pref("apz.fling_curve_threshold_inches_per_ms", "-1.0");
 pref("apz.fling_friction", "0.002");
 pref("apz.fling_min_velocity_threshold", "0.5");
@@ -626,15 +614,12 @@ pref("apz.fling_stop_on_tap_threshold", "0.05");
 pref("apz.fling_stopped_threshold", "0.01");
 pref("apz.frame_delay.enabled", true);
 #if !defined(MOZ_WIDGET_ANDROID)
-pref("apz.keyboard.enabled", true);
 pref("apz.keyboard.passive-listeners", true);
 #else
-pref("apz.keyboard.enabled", false);
 pref("apz.keyboard.passive-listeners", false);
 #endif
 pref("apz.max_tap_time", 300);
 pref("apz.max_velocity_inches_per_ms", "-1.0");
-pref("apz.max_velocity_queue_size", 5);
 pref("apz.min_skate_speed", "1.0");
 pref("apz.minimap.enabled", false);
 pref("apz.one_touch_pinch.enabled", true);
@@ -652,7 +637,6 @@ pref("apz.pinch_lock.mode", 1);
 pref("apz.pinch_lock.scoll_lock_threshold", "0.03125");  // 1/32 inches
 pref("apz.pinch_lock.span_breakout_threshold", "0.03125");  // 1/32 inches
 pref("apz.pinch_lock.span_lock_threshold", "0.03125");  // 1/32 inches
-pref("apz.pinch_lock.buffer_max_age", 50); // milliseconds
 pref("apz.popups.enabled", false);
 pref("apz.relative-update.enabled", true);
 
@@ -795,38 +779,11 @@ pref("gfx.content.azure.backends", "skia");
 #endif
 #endif
 
-pref("gfx.text.disable-aa", false);
-
-pref("gfx.work-around-driver-bugs", true);
-
 pref("gfx.draw-color-bars", false);
 
 pref("gfx.logging.painted-pixel-count.enabled", false);
-pref("gfx.logging.texture-usage.enabled", false);
-pref("gfx.logging.peak-texture-usage.enabled", false);
-pref("gfx.logging.slow-frames.enabled", false);
 
 pref("gfx.ycbcr.accurate-conversion", false);
-
-// We expose two prefs: gfx.webrender.all and gfx.webrender.enabled.
-// The first enables WR+additional features, and the second just enables WR.
-// For developer convenience, building with --enable-webrender=true or just
-// --enable-webrender will set gfx.webrender.enabled to true by default.
-//
-// We also have a pref gfx.webrender.all.qualified which is not exposed via
-// about:config. That pref enables WR but only on qualified hardware. This is
-// the pref we'll eventually flip to deploy WebRender to the target population.
-pref("gfx.webrender.all", false);
-#ifdef MOZ_ENABLE_WEBRENDER
-pref("gfx.webrender.enabled", true);
-#else
-pref("gfx.webrender.enabled", false);
-#endif
-
-// Also expose a pref to allow users to force-disable WR. This is exposed
-// on all channels because WR can be enabled on qualified hardware on all
-// channels.
-pref("gfx.webrender.force-disabled", false);
 
 #ifdef XP_WIN
 pref("gfx.webrender.force-angle", true);
@@ -869,7 +826,6 @@ pref("gfx.webrender.debug.small-screen", false);
 pref("gfx.webrender.dl.dump-parent", false);
 pref("gfx.webrender.dl.dump-content", false);
 pref("gfx.webrender.picture-caching", true);
-pref("gfx.webrender.split-render-roots", false);
 #ifdef NIGHTLY_BUILD
 // Keep this pref hidden on non-nightly builds to avoid people accidentally
 // turning it on
@@ -1061,11 +1017,6 @@ pref("layout.framevisibility.enabled", true);
 
 pref("layout.framevisibility.numscrollportwidths", 0);
 pref("layout.framevisibility.numscrollportheights", 1);
-
-// scrollbar snapping region
-// 0 - off
-// 1 and higher - slider thickness multiple
-pref("slider.snapMultiplier", 0);
 
 // URI fixup prefs
 pref("browser.fixup.alternate.enabled", true);
@@ -3735,9 +3686,6 @@ pref("ui.key.menuAccessKeyFocuses", true);
 // override double-click word selection behavior.
 pref("layout.word_select.eat_space_to_next_word", true);
 
-// scrollbar snapping region
-pref("slider.snapMultiplier", 6);
-
 // Locate plugins by the directories specified in the Windows registry for PLIDs
 // Which is currently HKLM\Software\MozillaPlugins\xxxPLIDxxx\Path
 pref("plugin.scan.plid.all", true);
@@ -4607,11 +4555,6 @@ pref("image.animated.decode-on-demand.threshold-kb", 20480);
 // animation's currently displayed frame.
 pref("image.animated.decode-on-demand.batch-size", 6);
 
-// Whether we should recycle already displayed frames instead of discarding
-// them. This saves on the allocation itself, and may be able to reuse the
-// contents as well. Only applies if generating full frames.
-pref("image.animated.decode-on-demand.recycle", true);
-
 // Resume an animated image from the last displayed frame rather than
 // advancing when out of view.
 pref("image.animated.resume-from-last-displayed", true);
@@ -4626,13 +4569,6 @@ pref("image.cache.factor2.threshold-surfaces", 4);
 // Maximum size of a surface in KB we are willing to produce when rasterizing
 // an SVG.
 pref("image.cache.max-rasterized-svg-threshold-kb", 204800);
-
-// The maximum size, in bytes, of the decoded images we cache
-pref("image.cache.size", 5242880);
-
-// A weight, from 0-1000, to place on time when comparing to size.
-// Size is given a weight of 1000 - timeweight.
-pref("image.cache.timeweight", 500);
 
 // Decode all images automatically on load, ignoring our normal heuristics.
 pref("image.decode-immediately.enabled", false);
@@ -4662,10 +4598,6 @@ pref("image.layout_network_priority", true);
 // compressed data.
 pref("image.mem.discardable", true);
 
-// Discards inactive image frames of _animated_ images and re-decodes them on
-// demand from compressed data. Has no effect if image.mem.discardable is false.
-pref("image.mem.animated.discardable", true);
-
 // Whether the heap should be used for frames from animated images. On Android,
 // volatile memory keeps file handles open for each buffer.
 #if defined(ANDROID)
@@ -4684,30 +4616,6 @@ pref("image.mem.shared", true);
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);
 
-// Chunk size for calls to the image decoders
-pref("image.mem.decode_bytes_at_a_time", 16384);
-
-// Minimum timeout for expiring unused images from the surface cache, in
-// milliseconds. This controls how long we store cached temporary surfaces.
-pref("image.mem.surfacecache.min_expiration_ms", 60000); // 60s
-
-// Maximum size for the surface cache, in kilobytes.
-pref("image.mem.surfacecache.max_size_kb", 1048576); // 1GB
-
-// The surface cache's size, within the constraints of the maximum size set
-// above, is determined as a fraction of main memory size. The size factor is
-// interpreted as a reciprocal, so a size factor of 4 means to use no more than
-// 1/4 of main memory.  The default should be a good balance for most systems.
-pref("image.mem.surfacecache.size_factor", 4);
-
-// How much of the data in the surface cache is discarded when we get a memory
-// pressure notification, as a fraction. The discard factor is interpreted as a
-// reciprocal, so a discard factor of 1 means to discard everything in the
-// surface cache on memory pressure, a discard factor of 2 means to discard half
-// of the data, and so forth. The default should be a good balance for desktop
-// and laptop systems, where we never discard visible images.
-pref("image.mem.surfacecache.discard_factor", 1);
-
 // What is the minimum buffer size in KB before using volatile memory over the
 // heap. On Android, volatile memory keeps file handles open for each buffer.
 #if defined(ANDROID)
@@ -4715,13 +4623,6 @@ pref("image.mem.volatile.min_threshold_kb", 100);
 #else
 pref("image.mem.volatile.min_threshold_kb", -1);
 #endif
-
-// How many threads we'll use for multithreaded decoding. If < 0, will be
-// automatically determined based on the system's number of cores.
-pref("image.multithreaded_decoding.limit", -1);
-
-// How long in ms before we should start shutting down idle decoder threads.
-pref("image.multithreaded_decoding.idle_timeout", 600000);
 
 // Whether we attempt to decode WebP images or not.
 pref("image.webp.enabled", true);
@@ -4830,35 +4731,14 @@ pref("network.tcp.tcp_fastopen_http_check_for_stalls_only_if_idle_for", 10);
 pref("network.tcp.tcp_fastopen_http_stalls_limit", 3);
 pref("network.tcp.tcp_fastopen_http_stalls_timeout", 20);
 
-// Whether to disable acceleration for all widgets.
-pref("layers.acceleration.disabled", false);
 // Preference that when switched at runtime will run a series of benchmarks
 // and output the result to stderr.
 pref("layers.bench.enabled", false);
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-pref("layers.gpu-process.enabled", true);
 #ifdef NIGHTLY_BUILD
 pref("layers.gpu-process.max_restarts", 3);
 #endif
-#endif
-
-#if defined(XP_WIN)
-pref("layers.gpu-process.allow-software", true);
-#elif defined(MOZ_WIDGET_GTK)
-pref("layers.gpu-process.allow-software", false);
-#endif
-
-// Whether to force acceleration on, ignoring blacklists.
-#ifdef ANDROID
-// bug 838603 -- on Android, accidentally blacklisting OpenGL layers
-// means a startup crash for everyone.
-// Temporarily force-enable GL compositing.  This is default-disabled
-// deep within the bowels of the widgetry system.  Remove me when GL
-// compositing isn't default disabled in widget/android.
-pref("layers.acceleration.force-enabled", true);
-#else
-pref("layers.acceleration.force-enabled", false);
 #endif
 
 pref("layers.acceleration.draw-fps", false);
@@ -4893,28 +4773,10 @@ pref("layers.max-active", -1);
 // 0  -> full-tilt mode: Recomposite even if not transaction occured.
 pref("layers.offmainthreadcomposition.frame-rate", -1);
 
-#if defined(XP_MACOSX) || defined (OS_OPENBSD)
-pref("layers.enable-tiles", true);
-#else
-pref("layers.enable-tiles", false);
-#endif
-#if defined(XP_WIN)
-pref("layers.enable-tiles-if-skia-pomtp", true);
-#else
-pref("layers.enable-tiles-if-skia-pomtp", false);
-#endif
 pref("layers.single-tile.enabled", true);
 pref("layers.low-precision-buffer", false);
 pref("layers.progressive-paint", false);
 pref("layers.tiles.retain-back-buffer", true);
-// If this is set the tile size will only be treated as a suggestion.
-// On B2G we will round this to the stride of the underlying allocation.
-// On any platform we may later use the screen size and ignore
-// tile-width/tile-height entirely. Its recommended to turn this off
-// if you change the tile size.
-pref("layers.tiles.adjust", true);
-pref("layers.tile-width", 512);
-pref("layers.tile-height", 512);
 #ifdef MOZ_WIDGET_ANDROID
 pref("layers.tiles.edge-padding", true);
 #else
@@ -4927,9 +4789,6 @@ pref("layers.offmainthreadcomposition.async-animations", true);
 // Whether to log information about off main thread animations to stderr
 pref("layers.offmainthreadcomposition.log-animations", false);
 
-pref("layers.bufferrotation.enabled", true);
-
-pref("layers.componentalpha.enabled", true);
 pref("layers.draw-mask-debug", false);
 
 pref("gfx.content.always-paint", false);
@@ -4953,19 +4812,9 @@ pref("widget.wayland_dmabuf_backend.enabled", false);
 pref("widget.window-transforms.disabled", false);
 
 #ifdef XP_WIN
-// Whether to disable the automatic detection and use of direct2d.
-pref("gfx.direct2d.disabled", false);
-
-// Whether to attempt to enable Direct2D regardless of automatic detection or
-// blacklisting
-pref("gfx.direct2d.force-enabled", false);
-
 // Whether to defer destruction of Direct2D DrawTargets to the paint thread
 // when using OMTP.
 pref("gfx.direct2d.destroy-dt-on-paintthread", true);
-
-pref("gfx.direct3d11.enable-debug-layer", false);
-pref("gfx.direct3d11.break-on-error", false);
 
 // Prefer flipping between two buffers over copying from our back buffer
 // to the OS.
@@ -4974,8 +4823,6 @@ pref("gfx.direct3d11.use-double-buffering", true);
 #else
 pref("gfx.direct3d11.use-double-buffering", false);
 #endif
-
-pref("layers.prefer-opengl", false);
 #endif
 
 // Copy-on-write canvas
@@ -5204,12 +5051,6 @@ pref("jsloader.shareGlobal", true);
 pref("dom.vr.autoactivate.enabled", false);
 // The threshold value of trigger inputs for VR controllers
 pref("dom.vr.controller_trigger_threshold", "0.1");
-// Enable external XR API integrations
-#if defined(XP_WIN)
-pref("dom.vr.external.enabled", true);
-#else
-pref("dom.vr.external.enabled", false);
-#endif
 // Minimum number of milliseconds the browser will wait before attempting
 // to re-start the VR service after an enumeration returned no devices.
 pref("dom.vr.external.notdetected.timeout", 60000);
@@ -5225,14 +5066,6 @@ pref("dom.vr.external.quit.timeout", 10000);
 // vrdisplayactivate from later calling VRDisplay.requestPresent, which would
 // result in a non-responsive browser in the VR headset.
 pref("dom.vr.navigation.timeout", 5000);
-// Oculus device
-#if defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
-// We are only enabling WebVR by default on 64-bit builds (Bug 1384459)
-pref("dom.vr.oculus.enabled", true);
-#else
-// On Android, this pref is irrelevant.
-pref("dom.vr.oculus.enabled", false);
-#endif
 // Minimum number of milliseconds after content has stopped VR presentation
 // before the Oculus session is re-initialized to an invisible / tracking
 // only mode.  If this value is too high, users will need to wait longer
@@ -5256,20 +5089,6 @@ pref("dom.vr.oculus.quit.timeout", 10000);
 // the headset, but might not be compatible with all versions of the Oculus
 // runtime.
 pref("dom.vr.oculus.invisible.enabled", true);
-// OSVR device
-pref("dom.vr.osvr.enabled", false);
-// OpenVR device
-#if !defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
-// We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
-pref("dom.vr.openvr.enabled", false);
-#elif defined(XP_WIN) || defined(XP_MACOSX)
-// We enable OpenVR by default for Windows and macOS
-pref("dom.vr.openvr.enabled", true);
-#else
-// See Bug 1310663 (Linux).  On Android, this pref is irrelevant.
-pref("dom.vr.openvr.enabled", false);
-#endif
-pref("dom.vr.openvr.action_input", true);
 // Minimum number of milliseconds that the browser will wait before
 // attempting to poll again for connected VR controllers.  The browser
 // will not attempt to poll for VR controllers until it needs to use them.
@@ -5293,12 +5112,6 @@ pref("dom.vr.poseprediction.enabled", true);
 // this requirement to be disabled for special cases such as during automated
 // tests or in a headless kiosk system.
 pref("dom.vr.require-gesture", true);
-// Enable a separate process for VR module.
-#if defined(XP_WIN)
-pref("dom.vr.process.enabled", true);
-#else
-pref("dom.vr.process.enabled", false);
-#endif
 // Puppet device, used for simulating VR hardware within tests and dev tools
 pref("dom.vr.puppet.enabled", false);
 // Allow displaying the result of vr submitframe (0: disable, 1: store the
@@ -5313,8 +5126,6 @@ pref("gfx.vr.osvr.clientKitLibPath", "");
 // When content is failing to submit frames on time or the lower level VR platform API's
 // are rejecting frames, it determines the rate at which RAF callbacks will be called.
 pref("dom.vr.display.rafMaxDuration", 50);
-// Enable the VR Service, which interfaces with VR hardware in a separate thread
-pref("dom.vr.service.enabled", true);
 
 // If the user puts a finger down on an element and we think the user
 // might be executing a pan gesture, how long do we wait before
@@ -5755,8 +5566,6 @@ pref("toolkit.telemetry.overrideUpdateChannel", "nightly-asan");
 #endif
 
 #if defined(XP_WIN)
-pref("layers.mlgpu.enabled", true);
-
 // Both this and the master "enabled" pref must be on to use Advanced Layers
 // on Windows 7.
 pref("layers.mlgpu.enable-on-windows7", true);
@@ -5794,7 +5603,6 @@ pref("layers.omtp.enabled", true);
 #else
 pref("layers.omtp.enabled", false);
 #endif
-pref("layers.omtp.paint-workers", -1);
 pref("layers.omtp.release-capture-on-main-thread", false);
 pref("layers.omtp.dump-capture", false);
 
@@ -5830,4 +5638,3 @@ pref("fission.preserve_browsing_contexts", false);
 //  * userContent.css
 //  * userChrome.css
 pref("toolkit.legacyUserProfileCustomizations.stylesheets", false);
-
