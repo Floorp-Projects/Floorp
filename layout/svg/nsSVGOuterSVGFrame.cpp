@@ -688,7 +688,7 @@ nsresult nsSVGOuterSVGFrame::AttributeChanged(int32_t aNameSpaceID,
               ? TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED
               : TRANSFORM_CHANGED);
 
-      if (aAttribute == nsGkAtoms::preserveAspectRatio) {
+      if (aAttribute != nsGkAtoms::transform) {
         static_cast<SVGSVGElement*>(GetContent())
             ->ChildrenOnlyTransformChanged();
       }
