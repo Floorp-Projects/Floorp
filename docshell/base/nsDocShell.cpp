@@ -10485,6 +10485,14 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
   if (SandboxFlagsImplyCookies(mSandboxFlags)) {
     loadFlags |= nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
   }
+
+  if (mSandboxFlags & SANDBOXED_AUXILIARY_NAVIGATION) {
+    nsCOMPtr<nsIHttpChannelInternal> httpChannel(do_QueryInterface(aChannel));
+    if (httpChannel) {
+      httpChannel->SetHasSandboxedAuxiliaryNavigations(true);
+    }
+  }
+
   // Load attributes depend on load type...
   switch (mLoadType) {
     case LOAD_HISTORY: {

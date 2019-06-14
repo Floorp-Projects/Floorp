@@ -627,6 +627,13 @@ void ClassifierDummyChannel::SetIPv4Disabled() {}
 
 void ClassifierDummyChannel::SetIPv6Disabled() {}
 
+bool ClassifierDummyChannel::GetHasSandboxedAuxiliaryNavigations() {
+  return false;
+}
+
+void ClassifierDummyChannel::SetHasSandboxedAuxiliaryNavigations(
+    bool aHasSandboxedAuxiliaryNavigations) {}
+
 NS_IMETHODIMP ClassifierDummyChannel::GetCrossOriginOpenerPolicy(
     nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
   return NS_ERROR_NOT_IMPLEMENTED;

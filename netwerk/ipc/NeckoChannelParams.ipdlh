@@ -274,6 +274,7 @@ struct HttpChannelOpenArgs
   TimeStamp                   handleFetchEventEnd;
   bool                        forceMainDocumentChannel;
   TimeStamp                   navigationStartTimeStamp;
+  bool                        hasSandboxedAuxiliaryNavigations;
 };
 
 struct HttpChannelConnectArgs
