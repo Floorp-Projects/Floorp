@@ -39,6 +39,52 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TimeoutHandler)
 NS_INTERFACE_MAP_END
 
 //-----------------------------------------------------------------------------
+// ScriptTimeoutHandler
+//-----------------------------------------------------------------------------
+
+ScriptTimeoutHandler::ScriptTimeoutHandler(JSContext* aCx,
+                                           nsIGlobalObject* aGlobal,
+                                           const nsAString& aExpression)
+    : TimeoutHandler(aCx), mGlobal(aGlobal), mExpr(aExpression) {}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptTimeoutHandler)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ScriptTimeoutHandler,
+                                                TimeoutHandler)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(ScriptTimeoutHandler)
+  if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
+    nsAutoCString name("ScriptTimeoutHandler");
+    name.AppendLiteral(" [");
+    name.Append(tmp->mFileName);
+    name.Append(':');
+    name.AppendInt(tmp->mLineNo);
+    name.Append(':');
+    name.AppendInt(tmp->mColumn);
+    name.Append(']');
+    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name.get());
+  } else {
+    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(ScriptTimeoutHandler, tmp->mRefCnt.get())
+  }
+
+  nsISupports* s = static_cast<nsISupports*>(p);
+  if (NS_CYCLE_COLLECTION_CLASSNAME(TimeoutHandler)::TraverseNative(s, cb) ==
+      NS_SUCCESS_INTERRUPTED_TRAVERSE) {
+    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ScriptTimeoutHandler)
+NS_INTERFACE_MAP_END_INHERITING(TimeoutHandler)
+
+NS_IMPL_ADDREF_INHERITED(ScriptTimeoutHandler, TimeoutHandler)
+NS_IMPL_RELEASE_INHERITED(ScriptTimeoutHandler, TimeoutHandler)
+
+//-----------------------------------------------------------------------------
 // CallbackTimeoutHandler
 //-----------------------------------------------------------------------------
 
