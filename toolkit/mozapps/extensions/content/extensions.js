@@ -833,7 +833,6 @@ var gViewController = {
     gHistory.replaceState(state);
 
     this.loadViewInternal(aViewId, null, state);
-    this.initialViewSelected = true;
     notifyInitialized();
   },
 
@@ -903,13 +902,14 @@ var gViewController = {
     headingName.textContent = headingLabel;
     setSearchLabel(view.param);
 
-
     if (aViewId == aPreviousView)
       this.currentViewObj.refresh(view.param, ++this.currentViewRequest, aState);
     else
       this.currentViewObj.show(view.param, ++this.currentViewRequest, aState);
 
     this.backButton.hidden = this.currentViewObj.isRoot || !gHistory.canGoBack;
+
+    this.initialViewSelected = true;
   },
 
   // Moves back in the document history and removes the current history entry
