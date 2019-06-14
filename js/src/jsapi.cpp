@@ -3468,6 +3468,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   introductionLineno = rhs.introductionLineno;
   introductionOffset = rhs.introductionOffset;
   hasIntroductionInfo = rhs.hasIntroductionInfo;
+  isProbablySystemCode = rhs.isProbablySystemCode;
   hideScriptFromDebugger = rhs.hideScriptFromDebugger;
   bigIntEnabledOption = rhs.bigIntEnabledOption;
   fieldsEnabledOption = rhs.fieldsEnabledOption;
@@ -3586,7 +3587,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       scriptOrModuleRoot(cx) {
   strictOption = cx->options().strictMode();
   extraWarningsOption = cx->realm()->behaviors().extraWarnings(cx);
-  discardSource = cx->realm()->behaviors().discardSource();
+  isProbablySystemCode = cx->realm()->isProbablySystemCode();
   werrorOption = cx->options().werror();
   if (!cx->options().asmJS()) {
     asmJSOption = AsmJSOption::Disabled;
