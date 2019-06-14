@@ -135,13 +135,20 @@ tasks:
                   - {$eval: 'default_task_definition'}
                   - scopes:
                       - ${assume_scope_prefix}:pull-request
+                      - project:mobile:fenix:releng:signing:cert:dep-signing
+                      - queue:create-task:highest:aws-provisioner-v1/mobile-1-*
+                      - queue:create-task:highest:proj-autophone/gecko-t-bitbar-gw-perf-g5
+                      - queue:create-task:highest:proj-autophone/gecko-t-bitbar-gw-perf-p2
+                      - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-dep-v1
+                      - queue:route:statuses
+                      - queue:route:tc-treeherder.v2.fenix.*
                     payload:
                       command:
                         - >-
                           git fetch ${repository} ${head_branch}
                           && git config advice.detachedHead false
                           && git checkout FETCH_HEAD
-                          && python automation/taskcluster/decision_task.py pull-request
+                          && python automation/taskcluster/decision_task.py raptor --staging
                       env:
                         GITHUB_PULL_TITLE: ${pull_request_title}
                     extra:
