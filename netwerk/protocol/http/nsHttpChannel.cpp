@@ -9685,23 +9685,14 @@ void nsHttpChannel::SetOriginHeader() {
   if (mRequestHead.IsGet() || mRequestHead.IsHead()) {
     return;
   }
-  nsresult rv;
-
   nsAutoCString existingHeader;
   Unused << mRequestHead.GetHeader(nsHttp::Origin, existingHeader);
   if (!existingHeader.IsEmpty()) {
     LOG(("nsHttpChannel::SetOriginHeader Origin header already present"));
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), existingHeader);
-    if (NS_SUCCEEDED(rv) &&
-        ReferrerInfo::ShouldSetNullOriginHeader(this, uri)) {
-      LOG(("nsHttpChannel::SetOriginHeader null Origin by Referrer-Policy"));
-      rv = mRequestHead.SetHeader(nsHttp::Origin, NS_LITERAL_CSTRING("null"),
-                                  false /* merge */);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
     return;
   }
+
+  DebugOnly<nsresult> rv;
 
   // Instead of consulting Preferences::GetInt() all the time we
   // can cache the result to speed things up.
@@ -9745,10 +9736,6 @@ void nsHttpChannel::SetOriginHeader() {
         return;
       }
     }
-  }
-
-  if (referrer && ReferrerInfo::ShouldSetNullOriginHeader(this, referrer)) {
-    origin.AssignLiteral("null");
   }
 
   rv = mRequestHead.SetHeader(nsHttp::Origin, origin, false /* merge */);
