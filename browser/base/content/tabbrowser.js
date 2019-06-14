@@ -4288,8 +4288,20 @@ window._gBrowser = {
             tab.linkedBrowser.frameLoader) {
           label += " (pid " + tab.linkedBrowser.frameLoader.remoteTab.osPid + ")";
 
-          if (window.docShell.QueryInterface(Ci.nsILoadContext).useRemoteSubframes) {
-            label += " [F]";
+          // If we're running with fission enabled, try to include PID
+          // information for every remote subframe.
+          if (gFissionBrowser) {
+            let pids = new Set();
+            let stack = [tab.linkedBrowser.browsingContext];
+            while (stack.length) {
+              let bc = stack.pop();
+              stack.push(...bc.getChildren());
+              if (bc.currentWindowGlobal) {
+                pids.add(bc.currentWindowGlobal.osPid);
+              }
+            }
+
+            label += " [F " + Array.from(pids).join(", ") + "]";
           }
         }
       }

@@ -156,6 +156,11 @@ uint64_t WindowGlobalParent::ContentParentId() {
   return browserParent ? browserParent->Manager()->ChildID() : 0;
 }
 
+int32_t WindowGlobalParent::OsPid() {
+  RefPtr<BrowserParent> browserParent = GetBrowserParent();
+  return browserParent ? browserParent->Manager()->Pid() : -1;
+}
+
 // A WindowGlobalPaernt is the root in its process if it has no parent, or its
 // embedder is in a different process.
 bool WindowGlobalParent::IsProcessRoot() {
