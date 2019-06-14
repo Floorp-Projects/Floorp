@@ -14,10 +14,10 @@
 #include "mozilla/TimeStamp.h"
 #include "nsIDocShell.h"
 #include "nsINamed.h"
-#include "nsITimeoutHandler.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/TabGroup.h"
+#include "mozilla/dom/TimeoutHandler.h"
 #include "TimeoutExecutor.h"
 #include "TimeoutBudgetManager.h"
 #include "mozilla/net/WebSocketEventService.h"
@@ -533,9 +533,9 @@ uint32_t TimeoutManager::GetTimeoutId(Timeout::Reason aReason) {
 
 bool TimeoutManager::IsRunningTimeout() const { return mRunningTimeout; }
 
-nsresult TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
-                                    int32_t interval, bool aIsInterval,
-                                    Timeout::Reason aReason, int32_t* aReturn) {
+nsresult TimeoutManager::SetTimeout(TimeoutHandler* aHandler, int32_t interval,
+                                    bool aIsInterval, Timeout::Reason aReason,
+                                    int32_t* aReturn) {
   // If we don't have a document (we could have been unloaded since
   // the call to setTimeout was made), do nothing.
   nsCOMPtr<Document> doc = mWindow.GetExtantDoc();

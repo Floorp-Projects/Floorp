@@ -35,7 +35,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(TimeoutHandler)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TimeoutHandler)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TimeoutHandler)
-  NS_INTERFACE_MAP_ENTRY(nsITimeoutHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 //-----------------------------------------------------------------------------
