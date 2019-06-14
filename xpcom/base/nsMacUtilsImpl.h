@@ -58,6 +58,8 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   static StaticAutoPtr<nsCString> sCachedAppPath;
   // For thread safe setting/checking of sCachedAppPath
   static StaticMutex sCachedAppPathMutex;
+  // Utility method to call ClearOnShutdown() on the main thread
+  static nsresult ClearCachedAppPathOnShutdown();
 #endif
 
   enum TCSMStatus { TCSM_Unknown = 0, TCSM_Available, TCSM_Unavailable };
