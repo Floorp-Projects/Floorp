@@ -68,6 +68,7 @@ import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.collections.getStepForCollectionsSize
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
+import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.BrowserMenuItemTapped.Item
 import org.mozilla.fenix.components.toolbar.SearchAction
@@ -458,6 +459,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         sessionObserver = subscribeToSession()
         sessionManagerObserver = subscribeToSessions()
         tabCollectionObserver = subscribeToTabCollections()
+        requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
 
         getSessionById()?.let { updateBookmarkState(it) }
 
@@ -919,6 +921,32 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             launch(Main) {
                 getManagedEmitter<QuickActionChange>()
                     .onNext(QuickActionChange.BookmarkedStateChange(found))
+            }
+        }
+    }
+
+    private val collectionStorageObserver = object : TabCollectionStorage.Observer {
+        override fun onCollectionCreated(title: String, sessions: List<Session>) {
+            super.onCollectionCreated(title, sessions)
+            showTabSavedToCollectionSnackbar()
+        }
+
+        override fun onTabsAdded(
+            tabCollection: mozilla.components.feature.tab.collections.TabCollection,
+            sessions: List<Session>
+        ) {
+            super.onTabsAdded(tabCollection, sessions)
+            showTabSavedToCollectionSnackbar()
+        }
+    }
+
+    private fun showTabSavedToCollectionSnackbar() {
+        context?.let { context: Context ->
+            view?.let { view: View ->
+                val string = context.getString(R.string.create_collection_tab_saved)
+                FenixSnackbar.make(view, Snackbar.LENGTH_SHORT).setText(string)
+                    .setAnchorView(toolbarComponent.uiView.view)
+                    .show()
             }
         }
     }
