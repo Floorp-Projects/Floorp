@@ -72,7 +72,6 @@ const threadSpec = generateActorSpec({
       request: {
         when: Arg(0, "json"),
       },
-      response: RetVal("nullable:json"),
     },
     sources: {
       response: RetVal("array:json"),
