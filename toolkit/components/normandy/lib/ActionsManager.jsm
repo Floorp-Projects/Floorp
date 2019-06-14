@@ -3,7 +3,6 @@ const {LogManager} = ChromeUtils.import("resource://normandy/lib/LogManager.jsm"
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonStudyAction: "resource://normandy/actions/AddonStudyAction.jsm",
-  BranchedAddonStudyAction: "resource://normandy/actions/BranchedAddonStudyAction.jsm",
   ConsoleLogAction: "resource://normandy/actions/ConsoleLogAction.jsm",
   PreferenceExperimentAction: "resource://normandy/actions/PreferenceExperimentAction.jsm",
   PreferenceRollbackAction: "resource://normandy/actions/PreferenceRollbackAction.jsm",
@@ -29,7 +28,6 @@ class ActionsManager {
 
     this.localActions = {
       "addon-study": addonStudyAction,
-      "branched-addon-study": new BranchedAddonStudyAction(),
       "console-log": new ConsoleLogAction(),
       "opt-out-study": addonStudyAction, // Legacy name used for addon-study on Normandy server
       "multi-preference-experiment": new PreferenceExperimentAction(),

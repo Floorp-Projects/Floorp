@@ -23,7 +23,7 @@ decorate_task(
 
 decorate_task(
   AddonStudies.withStudies([
-    addonStudyFactory({slug: "test-study"}),
+    addonStudyFactory({name: "test-study"}),
   ]),
   async function testGet([study]) {
     const storedStudy = await AddonStudies.get(study.recipeId);
@@ -48,7 +48,7 @@ decorate_task(
 
 decorate_task(
   AddonStudies.withStudies([
-    addonStudyFactory({slug: "test-study"}),
+    addonStudyFactory({name: "test-study"}),
   ]),
   async function testHas([study]) {
     let hasStudy = await AddonStudies.has(study.recipeId);
@@ -61,8 +61,8 @@ decorate_task(
 
 decorate_task(
   AddonStudies.withStudies([
-    addonStudyFactory({slug: "test-study1"}),
-    addonStudyFactory({slug: "test-study2"}),
+    addonStudyFactory({name: "test-study1"}),
+    addonStudyFactory({name: "test-study2"}),
   ]),
   async function testClear([study1, study2]) {
     const hasAll = (
@@ -82,14 +82,14 @@ decorate_task(
 
 decorate_task(
   AddonStudies.withStudies([
-    addonStudyFactory({slug: "foo"}),
+    addonStudyFactory({name: "foo"}),
   ]),
   async function testUpdate([study]) {
     Assert.deepEqual(await AddonStudies.get(study.recipeId), study);
 
     const updatedStudy = {
       ...study,
-      slug: "bar",
+      name: "bar",
     };
     await AddonStudies.update(updatedStudy);
 
@@ -118,11 +118,10 @@ decorate_task(
     events = (events.parent || []).filter(e => e[1] == "normandy");
     Assert.deepEqual(
       events[0].slice(2), // strip timestamp and "normandy"
-      ["unenroll", "addon_study", activeUninstalledStudy.slug, {
+      ["unenroll", "addon_study", activeUninstalledStudy.name, {
         addonId: activeUninstalledStudy.addonId,
         addonVersion: activeUninstalledStudy.addonVersion,
         reason: "uninstalled-sideload",
-        branch: AddonStudies.NO_BRANCHES_MARKER,
       }],
       "AddonStudies.init() should send the correct telemetry event"
     );
