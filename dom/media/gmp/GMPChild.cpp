@@ -17,7 +17,6 @@
 #include "gmp-video-decode.h"
 #include "gmp-video-encode.h"
 #include "GMPPlatform.h"
-#include "GMPProcessParent.h"
 #include "mozilla/Algorithm.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -561,22 +560,16 @@ mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
     return IPC_FAIL(this, "Can't sandbox GMP.");
   }
 #endif
-
   bool isChromium = aAdapter.EqualsLiteral("chromium");
-
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  // If we started the sandbox at launch ("earlyinit"), then we don't
-  // need to setup sandbox arguments here with SetMacSandboxInfo().
-  if (!IsMacSandboxStarted()) {
-    // Use of the chromium adapter indicates we are going to be
-    // running the Widevine plugin which requires access to the
-    // WindowServer in the Mac GMP sandbox policy.
-    if (!SetMacSandboxInfo(isChromium /* allow-window-server */)) {
-      NS_WARNING("Failed to set Mac GMP sandbox info");
-      delete platformAPI;
-      return IPC_FAIL(
-          this, nsPrintfCString("Failed to set Mac GMP sandbox info.").get());
-    }
+#if defined(MOZ_SANDBOX) && defined(XP_MACOSX)
+  // Use of the chromium adapter indicates we are going to be
+  // running the Widevine plugin which requires access to the
+  // WindowServer in the Mac GMP sandbox policy.
+  if (!SetMacSandboxInfo(isChromium /* allow-window-server */)) {
+    NS_WARNING("Failed to set Mac GMP sandbox info");
+    delete platformAPI;
+    return IPC_FAIL(
+        this, nsPrintfCString("Failed to set Mac GMP sandbox info.").get());
   }
 #endif
 

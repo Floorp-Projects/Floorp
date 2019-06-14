@@ -88,7 +88,7 @@ impl<'a> From<&'a SdpConnection> for RustSdpConnection {
             Some(x) => x as u64,
             None => 0
         };
-        RustSdpConnection { addr: RustIpAddr::from(&sdp_connection.addr),
+        RustSdpConnection { addr: RustIpAddr::from(&sdp_connection.address),
                             ttl: ttl, amount: amount }
     }
 }
