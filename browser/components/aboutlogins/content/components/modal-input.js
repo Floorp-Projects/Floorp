@@ -77,7 +77,7 @@ export default class ModalInput extends ReflectedFluentElement {
       case "editing": {
         let isEditing = newValue !== null;
         if (!isEditing) {
-          this.setAttribute("value", unlockedValue.value);
+          this.setAttribute("value", unlockedValue.defaultValue);
         }
         break;
       }
@@ -107,26 +107,26 @@ export default class ModalInput extends ReflectedFluentElement {
   }
 
   handleEvent(event) {
-    if (event.type != "click" ||
-        !event.target.classList.contains("reveal-checkbox")) {
-      return;
+    switch (event.type) {
+      case "click": {
+        let revealCheckbox = event.target;
+        let lockedValue = this.shadowRoot.querySelector(".locked-value");
+        let unlockedValue = this.shadowRoot.querySelector(".unlocked-value");
+        if (revealCheckbox.checked) {
+          lockedValue.textContent = this.value;
+          unlockedValue.setAttribute("type", "text");
+
+          recordTelemetryEvent({object: "password", method: "show"});
+        } else {
+          lockedValue.textContent = this.constructor.LOCKED_PASSWORD_DISPLAY;
+          unlockedValue.setAttribute("type", "password");
+
+          recordTelemetryEvent({object: "password", method: "hide"});
+        }
+        this.updateRevealCheckboxTitle();
+        break;
+      }
     }
-
-    let revealCheckbox = event.target;
-    let lockedValue = this.shadowRoot.querySelector(".locked-value");
-    let unlockedValue = this.shadowRoot.querySelector(".unlocked-value");
-    if (revealCheckbox.checked) {
-      lockedValue.textContent = this.value;
-      unlockedValue.setAttribute("type", "text");
-
-      recordTelemetryEvent({object: "password", method: "show"});
-    } else {
-      lockedValue.textContent = this.constructor.LOCKED_PASSWORD_DISPLAY;
-      unlockedValue.setAttribute("type", "password");
-
-      recordTelemetryEvent({object: "password", method: "hide"});
-    }
-    this.updateRevealCheckboxTitle();
   }
 
   get value() {
@@ -139,12 +139,22 @@ export default class ModalInput extends ReflectedFluentElement {
       this.setAttribute("value", val);
       return;
     }
-    this.shadowRoot.querySelector(".unlocked-value").value = val;
+    let unlockedValue = this.shadowRoot.querySelector(".unlocked-value");
+    let wasRequired = unlockedValue.hasAttribute("required");
+    let newUnlockedValue = document.createElement(unlockedValue.localName);
+    newUnlockedValue.defaultValue = val || "";
+    newUnlockedValue.className = unlockedValue.className;
+    newUnlockedValue.setAttribute("type", unlockedValue.getAttribute("type"));
+    if (wasRequired) {
+      newUnlockedValue.setAttribute("required", "");
+    }
+    unlockedValue.replaceWith(newUnlockedValue);
+    unlockedValue = newUnlockedValue;
     let lockedValue = this.shadowRoot.querySelector(".locked-value");
     if (this.getAttribute("type") == "password" && val && val.length) {
       lockedValue.textContent = this.constructor.LOCKED_PASSWORD_DISPLAY;
     } else {
-      lockedValue.textContent = val;
+      lockedValue.textContent = val || "";
     }
     let revealCheckbox = this.shadowRoot.querySelector(".reveal-checkbox");
     revealCheckbox.checked = false;

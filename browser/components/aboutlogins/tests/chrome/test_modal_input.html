@@ -39,7 +39,7 @@ add_task(async function setup() {
 add_task(async function test_initial_state() {
   ok(gModalInput, "modalInput exists");
   is(gModalInput.shadowRoot.querySelector(".locked-value").textContent, TEST_INPUT_VALUE, "Values are set initially");
-  is(gModalInput.shadowRoot.querySelector(".unlocked-value").value, TEST_INPUT_VALUE, "Values are set initially");
+  is(gModalInput.shadowRoot.querySelector(".unlocked-value").defaultValue, TEST_INPUT_VALUE, "Values are set initially");
   is(getComputedStyle(gModalInput.shadowRoot.querySelector(".locked-value")).display, "block", ".locked-value is visible by default");
   is(getComputedStyle(gModalInput.shadowRoot.querySelector(".unlocked-value")).display, "none", ".unlocked-value is hidden by default");
 });
@@ -54,11 +54,14 @@ add_task(async function test_editing_set_unset() {
   const NEW_VALUE = "editedValue";
   SpecialPowers.wrap(unlockedValue).setUserInput(NEW_VALUE);
   gModalInput.removeAttribute("editing");
+  unlockedValue = gModalInput.shadowRoot.querySelector(".unlocked-value");
 
-  is(lockedValue.textContent, NEW_VALUE, "Values are updated from edit");
-  is(unlockedValue.value, NEW_VALUE, "Values are updated from edit");
-  is(gModalInput.getAttribute("value"), NEW_VALUE, "The value attribute on the host element is updated from edit");
+  is(lockedValue.textContent, TEST_INPUT_VALUE, "Values are restored to value prior to edit");
+  is(unlockedValue.value, TEST_INPUT_VALUE, "Edited value is cleared after 'edit' mode is left");
+  is(unlockedValue.defaultValue, TEST_INPUT_VALUE, "Default value is maintained");
+  is(gModalInput.getAttribute("value"), TEST_INPUT_VALUE, "The value attribute on the host element is restored");
   is(getComputedStyle(lockedValue).display, "block", ".locked-value is visible when not editing");
+  unlockedValue = gModalInput.shadowRoot.querySelector(".unlocked-value");
   is(getComputedStyle(unlockedValue).display, "none", ".unlocked-value is hidden when not editing");
 });
 
@@ -69,12 +72,13 @@ add_task(async function test_password() {
 
   is(lockedValue.textContent, gModalInput.constructor.LOCKED_PASSWORD_DISPLAY,
      "type=password should display masked characters when locked");
-  is(unlockedValue.value, gModalInput.getAttribute("value"), "type=password should have actual value in .unlocked-value");
+  is(unlockedValue.defaultValue, gModalInput.getAttribute("value"), "type=password should have actual value in .unlocked-value");
   is(unlockedValue.getAttribute("type"), "password", "input[type=password] should be used for .unlocked-value with type=password");
 
   gModalInput.removeAttribute("value");
   is(lockedValue.textContent, "",
      "type=password should display nothing when locked without a value (.locked-value)");
+  unlockedValue = gModalInput.shadowRoot.querySelector(".unlocked-value");
   is(unlockedValue.value, "",
      "type=password should display nothing when locked without a value (.unlocked-value)");
 });
@@ -86,6 +90,7 @@ add_task(async function test_required() {
   gModalInput.setAttribute("required", "");
   ok(!unlockedValue.checkValidity(), "Setting 'required' on the modal-input should make the unlocked-value required");
 
+  unlockedValue = gModalInput.shadowRoot.querySelector(".unlocked-value");
   unlockedValue.value = "foo";
   ok(unlockedValue.checkValidity(), "Setting a value on the required modal-input should pass validation");
 });
