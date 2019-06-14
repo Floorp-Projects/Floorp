@@ -20,6 +20,7 @@ loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socke
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "RootFront", "devtools/shared/fronts/root", true);
+loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);
 
@@ -31,6 +32,10 @@ loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);
 function DebuggerClient(transport) {
   this._transport = transport;
   this._transport.hooks = this;
+
+  // Map actor ID to client instance for each actor type.
+  // To be removed once all clients are refactored to protocol.js
+  this._clients = new Map();
 
   this._pendingRequests = new Map();
   this._activeRequests = new Map();
@@ -212,9 +217,53 @@ DebuggerClient.prototype = {
 
     this.once("closed", deferred.resolve);
 
-    cleanup();
+    // Call each client's `detach` method by calling
+    // lastly registered ones first to give a chance
+    // to detach child clients first.
+    const clients = [...this._clients.values()];
+    this._clients.clear();
+    const detachClients = () => {
+      const client = clients.pop();
+      if (!client) {
+        // All clients detached.
+        cleanup();
+        return;
+      }
+      if (client.detach) {
+        client.detach(detachClients);
+        return;
+      }
+      detachClients();
+    };
+    detachClients();
 
     return deferred.promise;
+  },
+
+  /**
+   * Attach to a global-scoped thread actor for chrome debugging.
+   *
+   * @param string threadActor
+   *        The actor ID for the thread to attach.
+   * @param object options
+   *        Configuration options.
+   */
+  attachThread: function(threadActor, options = {}) {
+    if (this._clients.has(threadActor)) {
+      const client = this._clients.get(threadActor);
+      return promise.resolve([{}, client]);
+    }
+
+    const packet = {
+      to: threadActor,
+      type: "attach",
+      options,
+    };
+    return this.request(packet).then(response => {
+      const threadClient = new ThreadClient(this, threadActor);
+      this.registerClient(threadClient);
+      return [response, threadClient];
+    });
   },
 
   /**
@@ -546,13 +595,6 @@ DebuggerClient.prototype = {
       return;
     }
 
-    // support older browsers for Fx69+ for using the old thread client
-    if (!this.traits.hasThreadFront &&
-        packet.from.includes("context")) {
-      this.sendToDeprecatedThreadClient(packet);
-      return;
-    }
-
     // If we have a registered Front for this actor, let it handle the packet
     // and skip all the rest of this unpleasantness.
     const front = this.getActor(packet.from);
@@ -561,12 +603,24 @@ DebuggerClient.prototype = {
       return;
     }
 
+    if (this._clients.has(packet.from) && packet.type) {
+      const client = this._clients.get(packet.from);
+      const type = packet.type;
+      if (client.events.includes(type)) {
+        client.emit(type, packet);
+        // we ignore the rest, as the client is expected to handle this packet.
+        return;
+      }
+    }
+
     let activeRequest;
     // See if we have a handler function waiting for a reply from this
     // actor. (Don't count unsolicited notifications or pauses as
     // replies.)
     if (this._activeRequests.has(packet.from) &&
-        !(packet.type in UnsolicitedNotifications)) {
+        !(packet.type in UnsolicitedNotifications) &&
+        !(packet.type == ThreadStateTypes.paused &&
+          packet.why.type in UnsolicitedPauses)) {
       activeRequest = this._activeRequests.get(packet.from);
       this._activeRequests.delete(packet.from);
     }
@@ -575,6 +629,13 @@ DebuggerClient.prototype = {
     // transport.  Delivery of packets on the other end is always async, even
     // in the local transport case.
     this._attemptNextRequest(packet.from);
+
+    // Packets that indicate thread state changes get special treatment.
+    if (packet.type in ThreadStateTypes &&
+        this._clients.has(packet.from) &&
+        typeof this._clients.get(packet.from)._onThreadState == "function") {
+      this._clients.get(packet.from)._onThreadState(packet);
+    }
 
     // Only try to notify listeners on events, not responses to requests
     // that lack a packet type.
@@ -590,54 +651,6 @@ DebuggerClient.prototype = {
       } else {
         emitReply();
       }
-    }
-  },
-
-  // support older browsers for Fx69+
-  // The code duplication here is intentional until we drop support for
-  // these versions. Once that happens this code can be deleted.
-  sendToDeprecatedThreadClient(packet) {
-    const deprecatedThreadClient = this.getActor(packet.from);
-    if (deprecatedThreadClient && packet.type) {
-      const type = packet.type;
-      if (deprecatedThreadClient.events.includes(type)) {
-        deprecatedThreadClient.emit(type, packet);
-        // we ignore the rest, as the client is expected to handle this packet.
-        return;
-      }
-    }
-
-    let activeRequest;
-    // See if we have a handler function waiting for a reply from this
-    // actor. (Don't count unsolicited notifications or pauses as
-    // replies.)
-    if (this._activeRequests.has(packet.from) &&
-        !(packet.type == ThreadStateTypes.paused &&
-          packet.why.type in UnsolicitedPauses)) {
-      activeRequest = this._activeRequests.get(packet.from);
-      this._activeRequests.delete(packet.from);
-    }
-
-    // If there is a subsequent request for the same actor, hand it off to the
-    // transport.  Delivery of packets on the other end is always async, even
-    // in the local transport case.
-    this._attemptNextRequest(packet.from);
-
-    // Packets that indicate thread state changes get special treatment.
-    if (packet.type in ThreadStateTypes &&
-        deprecatedThreadClient &&
-        typeof deprecatedThreadClient._onThreadState == "function") {
-      deprecatedThreadClient._onThreadState(packet);
-    }
-
-    // Only try to notify listeners on events, not responses to requests
-    // that lack a packet type.
-    if (packet.type) {
-      this.emit(packet.type, packet);
-    }
-
-    if (activeRequest) {
-      activeRequest.emit("json-reply", packet);
     }
   },
 
@@ -846,6 +859,38 @@ DebuggerClient.prototype = {
       // Repeat, more requests may have started in response to those we just waited for
       return this.waitForRequestsToSettle();
     });
+  },
+
+  registerClient: function(client) {
+    const actorID = client.actor;
+    if (!actorID) {
+      throw new Error("DebuggerServer.registerClient expects " +
+                      "a client instance with an `actor` attribute.");
+    }
+    if (!Array.isArray(client.events)) {
+      throw new Error("DebuggerServer.registerClient expects " +
+                      "a client instance with an `events` attribute " +
+                      "that is an array.");
+    }
+    if (client.events.length > 0 && typeof (client.emit) != "function") {
+      throw new Error("DebuggerServer.registerClient expects " +
+                      "a client instance with non-empty `events` array to" +
+                      "have an `emit` function.");
+    }
+    if (this._clients.has(actorID)) {
+      throw new Error("DebuggerServer.registerClient already registered " +
+                      "a client for this actor.");
+    }
+    this._clients.set(actorID, client);
+  },
+
+  unregisterClient: function(client) {
+    const actorID = client.actor;
+    if (!actorID) {
+      throw new Error("DebuggerServer.unregisterClient expects " +
+                      "a Client instance with a `actor` attribute.");
+    }
+    this._clients.delete(actorID);
   },
 
   /**

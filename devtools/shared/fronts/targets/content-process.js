@@ -21,7 +21,6 @@ class ContentProcessTargetFront extends
     // Save the full form for Target class usage.
     // Do not use `form` name to avoid colliding with protocol.js's `form` method
     this.targetForm = json;
-    this.targetForm.contextActor = json.chromeDebugger;
     this._threadActor = json.chromeDebugger;
   }
 

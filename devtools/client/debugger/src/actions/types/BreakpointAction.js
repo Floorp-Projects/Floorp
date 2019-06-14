@@ -41,16 +41,16 @@ export type BreakpointAction =
       +index: number,
       +breakpoint: XHRBreakpoint,
     |}>
-  | PromiseAction<{|
+  | {|
       +type: "SET_BREAKPOINT",
       +cx: Context,
       +breakpoint: Breakpoint,
-    |}>
-  | PromiseAction<{|
+    |}
+  | {|
       +type: "REMOVE_BREAKPOINT",
       +cx: Context,
       +location: SourceLocation,
-    |}>
+    |}
   | {|
       +type: "REMOVE_PENDING_BREAKPOINT",
       +cx: Context,

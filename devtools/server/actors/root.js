@@ -173,8 +173,6 @@ RootActor.prototype = {
     // Supports native log points and modifying the condition/log of an existing
     // breakpoints. Fx66+
     nativeLogpoints: true,
-    // support older browsers for Fx69+
-    hasThreadFront: true,
   },
 
   /**
