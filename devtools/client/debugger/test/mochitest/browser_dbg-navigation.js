@@ -28,6 +28,7 @@ add_task(async function() {
   invokeInTab("firstCall");
   await waitForPaused(dbg);
 
+  await waitForRequestsToSettle(dbg);
   await navigate(dbg, "doc-scripts.html", "simple1.js");
   await selectSource(dbg, "simple1");
   await addBreakpoint(dbg, "simple1.js", 4);
@@ -39,18 +40,29 @@ add_task(async function() {
   assertPausedLocation(dbg);
   is(countSources(dbg), 5, "5 sources are loaded.");
 
+  await waitForRequestsToSettle(dbg);
+  // this test is intermittent without this
+  let onBreakpoint = waitForDispatch(dbg, "SET_BREAKPOINT");
   await navigate(dbg, "doc-scripts.html", ...sources);
+  await onBreakpoint
   is(countSources(dbg), 5, "5 sources are loaded.");
   ok(!getIsPaused(getCurrentThread()), "Is not paused");
 
+  await waitForRequestsToSettle(dbg);
+  // this test is intermittent without this
+  onBreakpoint = waitForDispatch(dbg, "SET_BREAKPOINT");
   await navigate(dbg, "doc-scripts.html", ...sources);
+  await onBreakpoint
   is(countSources(dbg), 5, "5 sources are loaded.");
 
   // Test that the current select source persists across reloads
   await selectSource(dbg, "long.js");
-  await waitForRequestsToSettle(dbg);
 
+  await waitForRequestsToSettle(dbg);
+  // this test is intermittent without this
+  onBreakpoint = waitForDispatch(dbg, "SET_BREAKPOINT");
   await reload(dbg, "long.js");
+  await onBreakpoint
   await waitForSelectedSource(dbg, "long.js");
 
   await waitForRequestsToSettle(dbg);
