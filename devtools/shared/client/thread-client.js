@@ -5,7 +5,7 @@
 
 "use strict";
 
-const {ThreadStateTypes} = require("devtools/shared/client/constants");
+const { ThreadStateTypes } = require("devtools/shared/client/constants");
 const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 const { threadSpec } = require("devtools/shared/specs/thread");
 
