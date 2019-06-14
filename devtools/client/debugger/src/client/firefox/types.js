@@ -138,11 +138,6 @@ export type PausedPacket = {
   },
 };
 
-export type ResumedPacket = {
-  from: ActorId,
-  type: string,
-};
-
 /**
  * Response from the `getFrames` function call
  * @memberof firefox
@@ -187,7 +182,7 @@ export type TabPayload = {
  */
 export type Actions = {
   paused: Pause => void,
-  resumed: ResumedPacket => void,
+  resumed: ActorId => void,
   newQueuedSources: (QueuedSourceData[]) => void,
   fetchEventListeners: () => void,
   updateWorkers: () => void,
@@ -369,6 +364,7 @@ export type ThreadClient = {
   getLastPausePacket: () => ?PausedPacket,
   _parent: TabClient,
   actor: ActorId,
+  actorID: ActorId,
   request: (payload: Object) => Promise<*>,
   url: string,
   setActiveEventBreakpoints: (string[]) => void,
