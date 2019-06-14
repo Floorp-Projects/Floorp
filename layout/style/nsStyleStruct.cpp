@@ -1512,7 +1512,7 @@ nsChangeHint nsStylePosition::CalcDifference(
       hint |=
           nsChangeHint_RecomputePosition | nsChangeHint_UpdateParentOverflow;
     } else {
-      hint |= nsChangeHint_AllReflowHints;
+      hint |= nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
     }
   }
   return hint;
