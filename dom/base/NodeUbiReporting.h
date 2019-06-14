@@ -7,8 +7,6 @@
 #ifndef dom_NodeUbiReporting_h
 #define dom_NodeUbiReporting_h
 
-#include "Attr.h"
-#include "Document.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsINode.h"

@@ -26,11 +26,6 @@ class XMLHttpRequestEventTarget : public DOMEventTargetHelper {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XMLHttpRequestEventTarget,
                                            DOMEventTargetHelper)
 
-  mozilla::Maybe<EventCallbackDebuggerNotificationType>
-  GetDebuggerNotificationType() const override {
-    return mozilla::Some(EventCallbackDebuggerNotificationType::Xhr);
-  }
-
   IMPL_EVENT_HANDLER(loadstart)
   IMPL_EVENT_HANDLER(progress)
   IMPL_EVENT_HANDLER(abort)
