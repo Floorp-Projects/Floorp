@@ -23,7 +23,12 @@ permalink: /changelog/
 * **browser-menu**
   * Added `endOfMenuAlwaysVisible` property/parameter to `BrowserMenuBuilder` constructor and to `BrowserMenu.show` function.
     When is set to true makes sure the bottom of the menu is always visible, this allows use cases like [#3211](https://github.com/mozilla-mobile/android-components/issues/3211).
-    
+  * Added `onDimiss` parameter to `BrowserMenu.show` function, called when the menu is dismissed.
+  * Changed `BrowserMenuHighlightableItem` constructor to allow for dynamically toggling the highlight with `invalidate()`.
+
+* **browser-toolbar**
+  * Added highlight effect to the overflow menu button when a highlighted `BrowserMenuHighlightableItem` is present.
+
 * **feature-tab-collections**
   * Tabs can now be restored without restoring the ID of the `Session` by using the `restoreSessionId` flag. An app may
     prefer to use new IDs if it expects sessions to get restored multiple times - otherwise breaking the promise of a
@@ -38,7 +43,7 @@ permalink: /changelog/
 
 * **lib-crash**
   * [Restrictions to background activity starts](https://developer.android.com/preview/privacy/background-activity-starts) in Android Q+ make it impossible to launch the crash reporter prompt after certain crashes. In those situations the library will show a "crash notification" instead. Clicking on the notification will launch the crash reporter prompt allowing the user to submit a crash report.
-  
+
 # 0.56.4
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.56.3...v0.56.4)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.56.4/buildSrc/src/main/java/Dependencies.kt)
@@ -126,7 +131,7 @@ permalink: /changelog/
 
 * **feature-app-links**
   * Add a flag to allow the app to not detect an external app if the user has told android to use the browser as default.
-  * Turn off interception of web links. 
+  * Turn off interception of web links.
 
 # 0.55.0
 
@@ -342,7 +347,7 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.53.0/buildSrc/src/main/java/Config.kt)
 
 * **concept-engine**, **browser-engine-gecko-nightly** and **browser-engine-gecko-beta**:
-  * Added new policies for Safe Browsing: `TrackingProtectionPolicy.SAFE_BROWSING_MALWARE`,`TrackingProtectionPolicy.SAFE_BROWSING_UNWANTED`,`TrackingProtectionPolicy.SAFE_BROWSING_PHISHING`, `TrackingProtectionPolicy.SAFE_BROWSING_HARMFUL` and `TrackingProtectionPolicy.SAFE_BROWSING_ALL`.
+  * Added new policies for Safe Browsing: `TrackingProtectionPolicy.SAFE_BROWSING_MALWARE`, `TrackingProtectionPolicy.SAFE_BROWSING_UNWANTED`, `TrackingProtectionPolicy.SAFE_BROWSING_PHISHING`, `TrackingProtectionPolicy.SAFE_BROWSING_HARMFUL` and `TrackingProtectionPolicy.SAFE_BROWSING_ALL`.
   * Added a new policy category : `trackingProtectionPolicy.recommended()` contains all the recommended policies categories. It blocks ads, analytics, social, test trackers, plus all the safe browsing policies.
 
 * **browser-engine-system**
