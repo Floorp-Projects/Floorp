@@ -752,7 +752,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 }
             }
             ToolbarMenu.Item.Help -> {
-                requireComponents.useCases.tabsUseCases.addTab.invoke(SupportUtils.HELP_URL)
+                requireComponents.useCases.tabsUseCases.addTab.invoke(
+                    SupportUtils.getSumoURLForTopic(
+                        requireContext(),
+                        SupportUtils.SumoTopic.HELP
+                    )
+                )
             }
             ToolbarMenu.Item.NewTab -> {
                 val directions = BrowserFragmentDirections

@@ -162,7 +162,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             }
             resources.getString(pref_key_help) -> {
                 (activity as HomeActivity).openToBrowserAndLoad(
-                    searchTermOrURL = SupportUtils.HELP_URL,
+                    searchTermOrURL = SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.HELP),
                     newTab = true,
                     from = BrowserDirection.FromSettings
                 )
