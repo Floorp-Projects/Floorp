@@ -8,7 +8,6 @@
 #define mozilla_dom_Worker_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/DebuggerNotificationBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WeakPtr.h"
@@ -38,11 +37,6 @@ class Worker : public DOMEventTargetHelper, public SupportsWeakPtr<Worker> {
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
-
-  Maybe<EventCallbackDebuggerNotificationType> GetDebuggerNotificationType()
-      const override {
-    return Some(EventCallbackDebuggerNotificationType::Worker);
-  }
 
   void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                    const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
