@@ -88,7 +88,6 @@ class SourceBufferResource final
 
   // Used by SourceBuffer.
   void AppendData(MediaByteBuffer* aData);
-  void AppendData(const MediaSpan& aData);
   void Ended();
   bool IsEnded() {
     MOZ_ASSERT(OnThread());
@@ -96,10 +95,11 @@ class SourceBufferResource final
   }
   // Remove data from resource if it holds more than the threshold reduced by
   // the given number of bytes. Returns amount evicted.
-  uint32_t EvictData(uint64_t aPlaybackOffset, int64_t aThresholdReduct);
+  uint32_t EvictData(uint64_t aPlaybackOffset, int64_t aThresholdReduct,
+                     ErrorResult& aRv);
 
   // Remove data from resource before the given offset.
-  void EvictBefore(uint64_t aOffset);
+  void EvictBefore(uint64_t aOffset, ErrorResult& aRv);
 
   // Remove all data from the resource
   uint32_t EvictAll();

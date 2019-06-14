@@ -79,21 +79,21 @@ nsresult SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset,
 }
 
 uint32_t SourceBufferResource::EvictData(uint64_t aPlaybackOffset,
-                                         int64_t aThreshold) {
+                                         int64_t aThreshold, ErrorResult& aRv) {
   MOZ_ASSERT(OnThread());
   SBR_DEBUG("EvictData(aPlaybackOffset=%" PRIu64
             ","
             "aThreshold=%" PRId64 ")",
             aPlaybackOffset, aThreshold);
-  uint32_t result = mInputBuffer.Evict(aPlaybackOffset, aThreshold);
+  uint32_t result = mInputBuffer.Evict(aPlaybackOffset, aThreshold, aRv);
   return result;
 }
 
-void SourceBufferResource::EvictBefore(uint64_t aOffset) {
+void SourceBufferResource::EvictBefore(uint64_t aOffset, ErrorResult& aRv) {
   MOZ_ASSERT(OnThread());
   SBR_DEBUG("EvictBefore(aOffset=%" PRIu64 ")", aOffset);
 
-  mInputBuffer.EvictBefore(aOffset);
+  mInputBuffer.EvictBefore(aOffset, aRv);
 }
 
 uint32_t SourceBufferResource::EvictAll() {
@@ -103,13 +103,9 @@ uint32_t SourceBufferResource::EvictAll() {
 }
 
 void SourceBufferResource::AppendData(MediaByteBuffer* aData) {
-  AppendData(MediaSpan(aData));
-}
-
-void SourceBufferResource::AppendData(const MediaSpan& aData) {
   MOZ_ASSERT(OnThread());
-  SBR_DEBUG("AppendData(aData=%p, aLength=%zu)", aData.Elements(),
-            aData.Length());
+  SBR_DEBUG("AppendData(aData=%p, aLength=%zu)", aData->Elements(),
+            aData->Length());
   mInputBuffer.AppendItem(aData);
   mEnded = false;
 }

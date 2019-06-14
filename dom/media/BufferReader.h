@@ -9,7 +9,6 @@
 #include "nscore.h"
 #include "nsTArray.h"
 #include "MediaData.h"
-#include "MediaSpan.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Result.h"
 
@@ -35,10 +34,6 @@ class MOZ_RAII BufferReader {
       : mPtr(aData->Elements()),
         mRemaining(aData->Length()),
         mLength(aData->Length()) {}
-  explicit BufferReader(const mozilla::MediaSpan& aData)
-      : mPtr(aData.Elements()),
-        mRemaining(aData.Length()),
-        mLength(aData.Length()) {}
 
   void SetData(const nsTArray<uint8_t>& aData) {
     MOZ_ASSERT(!mPtr && !mRemaining);
