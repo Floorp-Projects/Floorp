@@ -3553,6 +3553,11 @@ static bool IsInternalURIScheme(nsIURI* uri) {
     return true;
   }
 
+  bool isChrome;
+  if (NS_SUCCEEDED(uri->SchemeIs("chrome", &isChrome)) && isChrome) {
+    return true;
+  }
+
   return false;
 }
 
