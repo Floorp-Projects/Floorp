@@ -102,21 +102,6 @@ class ReferrerInfo : public nsIReferrerInfo {
    */
   static bool HideOnionReferrerSource();
 
-  /*
-   * Check whether referrer is allowed to send in secure to insecure scenario.
-   */
-  static nsresult HandleSecureToInsecureReferral(nsIURI* aOriginalURI,
-                                                 nsIURI* aURI, uint32_t aPolicy,
-                                                 bool& aAllowed);
-
-  /**
-   * Returns true if the given channel is cross-origin request
-   *
-   * Computing whether the request is cross-origin may be expensive, so please
-   * do that in cases where we're going to use this information later on.
-   */
-  static bool IsCrossOriginRequest(nsIHttpChannel* aChannel);
-
   /**
    * Return default referrer policy which is controlled by user
    * prefs:
@@ -194,6 +179,19 @@ class ReferrerInfo : public nsIReferrerInfo {
    * Return true if node has a rel="noreferrer" attribute.
    */
   bool HasRelNoReferrer(nsINode* aNode) const;
+
+  /**
+   * Returns true if the given channel is cross-origin request
+   *
+   * Computing whether the request is cross-origin may be expensive, so please
+   * do that in cases where we're going to use this information later on.
+   */
+  bool IsCrossOriginRequest(nsIHttpChannel* aChannel) const;
+
+  /*
+   * Check whether referrer is allowed to send in secure to insecure scenario.
+   */
+  nsresult HandleSecureToInsecureReferral(nsIURI* aURI, bool& aAllowed) const;
 
   /*
    * Handle user controlled pref network.http.referer.XOriginPolicy
