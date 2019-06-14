@@ -811,6 +811,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       this.left = isHTMLElement ? obj.offsetLeft : obj.left;
       this.width = isHTMLElement ? obj.offsetWidth : obj.width;
       this.height = isHTMLElement ? obj.offsetHeight : obj.height;
+      // This value is smaller than 1 app unit (~= 0.0166 px).
+      this.fuzz = 0.01;
     }
 
     get bottom() {
@@ -853,10 +855,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
 
     // Check if this box overlaps another box, b2.
     overlaps(b2) {
-      return this.left < b2.right &&
-             this.right > b2.left &&
-             this.top < b2.bottom &&
-             this.bottom > b2.top;
+      return (this.left < b2.right - this.fuzz) &&
+             (this.right > b2.left + this.fuzz) &&
+             (this.top < b2.bottom - this.fuzz) &&
+             (this.bottom > b2.top + this.fuzz);
     }
 
     // Check if this box overlaps any other boxes in boxes.
@@ -881,10 +883,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
 
     // Check if this box is within another box.
     within(container) {
-      return this.top >= container.top &&
-             this.bottom <= container.bottom &&
-             this.left >= container.left &&
-             this.right <= container.right;
+      return (this.top >= container.top - this.fuzz) &&
+             (this.bottom <= container.bottom + this.fuzz) &&
+             (this.left >= container.left - this.fuzz) &&
+             (this.right <= container.right + this.fuzz);
     }
 
     // Check whether this box is passed over the specfic axis boundary. The axis
@@ -893,13 +895,13 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     isOutsideTheAxisBoundary(container, axis) {
       switch (axis) {
       case "+x":
-        return this.right > container.right;
+        return this.right > container.right + this.fuzz;
       case "-x":
-        return this.left < container.left;
+        return this.left < container.left - this.fuzz;
       case "+y":
-        return this.bottom > container.bottom;
+        return this.bottom > container.bottom + this.fuzz;
       case "-y":
-        return this.top < container.top;
+        return this.top < container.top - this.fuzz;
       }
     }
 
