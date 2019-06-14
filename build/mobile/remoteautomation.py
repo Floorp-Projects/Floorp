@@ -9,6 +9,8 @@ import posixpath
 import tempfile
 import shutil
 
+import six
+
 from automation import Automation
 from mozdevice import ADBTimeoutError
 from mozlog import get_default_logger
@@ -291,7 +293,13 @@ class RemoteAutomation(Automation):
 
         for line in lines:
             # This passes the line to the logger (to be logged or buffered)
-            parsed_messages = self.messageLogger.write(line)
+            if isinstance(line, six.text_type):
+                # if line is unicode - let's encode it to bytes
+                parsed_messages = self.messageLogger.write(line.encode('UTF-8', 'replace'))
+            else:
+                # if line is bytes type, write it as it is
+                parsed_messages = self.messageLogger.write(line)
+
             for message in parsed_messages:
                 if isinstance(message, dict) and message.get('action') == 'test_start':
                     self.lastTestSeen = message['test']
