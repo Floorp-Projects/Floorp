@@ -55,7 +55,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptTimeoutHandler.h"
 #include "nsITimeoutHandler.h"
 #include "nsISlowScriptDebug.h"
 #include "nsWindowMemoryReporter.h"
@@ -2422,7 +2421,7 @@ void nsGlobalWindowOuter::DetachFromDocShell() {
     DocGroup* docGroup = GetDocGroup();
     RefPtr<nsIDocShell> docShell = GetDocShell();
     RefPtr<nsDocShell> dShell = nsDocShell::Cast(docShell);
-    if (dShell){
+    if (dShell) {
       docGroup->TryFlushIframePostMessages(dShell->GetOuterWindowID());
     }
   }
@@ -6062,7 +6061,6 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
     return;
   }
 
-
   if (mDoc &&
       StaticPrefs::dom_separate_event_queue_for_post_message_enabled() &&
       !DocGroup::TryToLoadIframesInBackground()) {
@@ -6077,7 +6075,6 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
   }
 
   if (mDoc && DocGroup::TryToLoadIframesInBackground()) {
-
     RefPtr<nsIDocShell> docShell = GetDocShell();
     RefPtr<nsDocShell> dShell = nsDocShell::Cast(docShell);
 
@@ -6095,7 +6092,8 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
         }
       } else if (mDoc->GetReadyStateEnum() < Document::READYSTATE_COMPLETE) {
         mozilla::dom::DocGroup* docGroup = GetDocGroup();
-        aError = docGroup->QueueIframePostMessages(event.forget(), dShell->GetOuterWindowID());
+        aError = docGroup->QueueIframePostMessages(event.forget(),
+                                                   dShell->GetOuterWindowID());
         return;
       }
     }

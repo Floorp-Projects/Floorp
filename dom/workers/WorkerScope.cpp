@@ -13,6 +13,7 @@
 #include "mozilla/dom/Clients.h"
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/Console.h"
+#include "mozilla/dom/CSPEvalChecker.h"
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FunctionBinding.h"
@@ -39,7 +40,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsIScriptError.h"
-#include "nsIScriptTimeoutHandler.h"
 
 #ifdef ANDROID
 #  include <android/log.h>
@@ -58,15 +58,57 @@
 #  undef PostMessage
 #endif
 
-extern already_AddRefed<nsIScriptTimeoutHandler> NS_CreateJSTimeoutHandler(
-    JSContext* aCx, mozilla::dom::WorkerPrivate* aWorkerPrivate,
-    const nsAString& aExpression, mozilla::ErrorResult& aRv);
-
 namespace mozilla {
 namespace dom {
 
 using mozilla::dom::cache::CacheStorage;
 using mozilla::ipc::PrincipalInfo;
+
+class WorkerScriptTimeoutHandler final : public ScriptTimeoutHandler {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WorkerScriptTimeoutHandler,
+                                           ScriptTimeoutHandler)
+
+  WorkerScriptTimeoutHandler(JSContext* aCx, nsIGlobalObject* aGlobal,
+                             const nsAString& aExpression)
+      : ScriptTimeoutHandler(aCx, aGlobal, aExpression) {}
+
+  MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* aExecutionReason) override;
+
+ private:
+  virtual ~WorkerScriptTimeoutHandler() {}
+};
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(WorkerScriptTimeoutHandler,
+                                   ScriptTimeoutHandler)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkerScriptTimeoutHandler)
+NS_INTERFACE_MAP_END_INHERITING(ScriptTimeoutHandler)
+
+NS_IMPL_ADDREF_INHERITED(WorkerScriptTimeoutHandler, ScriptTimeoutHandler)
+NS_IMPL_RELEASE_INHERITED(WorkerScriptTimeoutHandler, ScriptTimeoutHandler)
+
+bool WorkerScriptTimeoutHandler::Call(const char* aExecutionReason) {
+  nsAutoMicroTask mt;
+  AutoEntryScript aes(mGlobal, aExecutionReason, false);
+
+  JSContext* cx = aes.cx();
+  JS::CompileOptions options(cx);
+  options.setFileAndLine(mFileName.get(), mLineNo).setNoScriptRval(true);
+
+  JS::Rooted<JS::Value> unused(cx);
+  JS::SourceText<char16_t> srcBuf;
+  if (!srcBuf.init(cx, mExpr.BeginReading(), mExpr.Length(),
+                   JS::SourceOwnership::Borrowed) ||
+      !JS::Evaluate(cx, options, srcBuf, &unused)) {
+    if (!JS_IsExceptionPending(cx)) {
+      return false;
+    }
+  }
+
+  return true;
+};
 
 WorkerGlobalScope::WorkerGlobalScope(WorkerPrivate* aWorkerPrivate)
     : mSerialEventTarget(aWorkerPrivate->HybridEventTarget()),
@@ -256,15 +298,7 @@ int32_t WorkerGlobalScope::SetTimeout(JSContext* aCx, const nsAString& aHandler,
                                       const int32_t aTimeout,
                                       const Sequence<JS::Value>& /* unused */,
                                       ErrorResult& aRv) {
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  nsCOMPtr<nsIScriptTimeoutHandler> handler =
-      NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aRv);
-  if (!handler) {
-    return 0;
-  }
-
-  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, false, aRv);
+  return SetTimeoutOrInterval(aCx, aHandler, aTimeout, false, aRv);
 }
 
 void WorkerGlobalScope::ClearTimeout(int32_t aHandle) {
@@ -284,17 +318,7 @@ int32_t WorkerGlobalScope::SetInterval(JSContext* aCx,
                                        const int32_t aTimeout,
                                        const Sequence<JS::Value>& /* unused */,
                                        ErrorResult& aRv) {
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  Sequence<JS::Value> dummy;
-
-  nsCOMPtr<nsIScriptTimeoutHandler> handler =
-      NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return 0;
-  }
-
-  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, true, aRv);
+  return SetTimeoutOrInterval(aCx, aHandler, aTimeout, true, aRv);
 }
 
 void WorkerGlobalScope::ClearInterval(int32_t aHandle) {
@@ -315,6 +339,26 @@ int32_t WorkerGlobalScope::SetTimeoutOrInterval(
 
   nsCOMPtr<nsITimeoutHandler> handler =
       new CallbackTimeoutHandler(aCx, this, &aHandler, std::move(args));
+
+  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, aIsInterval, aRv);
+}
+
+int32_t WorkerGlobalScope::SetTimeoutOrInterval(JSContext* aCx,
+                                                const nsAString& aHandler,
+                                                const int32_t aTimeout,
+                                                bool aIsInterval,
+                                                ErrorResult& aRv) {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  bool allowEval = false;
+  aRv =
+      CSPEvalChecker::CheckForWorker(aCx, mWorkerPrivate, aHandler, &allowEval);
+  if (NS_WARN_IF(aRv.Failed()) || !allowEval) {
+    return 0;
+  }
+
+  nsCOMPtr<nsITimeoutHandler> handler =
+      new WorkerScriptTimeoutHandler(aCx, this, aHandler);
 
   return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, aIsInterval, aRv);
 }
