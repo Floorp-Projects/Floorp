@@ -43,12 +43,14 @@ login-item =
   .new-login-title = Create New Login
   .open-site-button = Launch
   .origin-label = Website Address
+  .origin-placeholder = https://www.example.com
   .password-label = Password
   .save-changes-button = Save Changes
   .time-created = Created: { DATETIME($timeCreated, day: "numeric", month: "long", year: "numeric") }
   .time-changed = Last modified: { DATETIME($timeChanged, day: "numeric", month: "long", year: "numeric") }
   .time-used = Last used: { DATETIME($timeUsed, day: "numeric", month: "long", year: "numeric") }
   .username-label = Username
+  .username-placeholder = name@example.com
 
 master-password-notification-message = Please enter your master password to view saved logins & passwords
 # TODO: Not sure how to use formatValue with these as attributes on a single ID
