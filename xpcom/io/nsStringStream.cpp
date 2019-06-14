@@ -194,6 +194,11 @@ nsStringInputStream::SetData(const char* aData, int32_t aDataLen) {
 }
 
 NS_IMETHODIMP
+nsStringInputStream::SetUTF8Data(const nsACString& aData) {
+  return nsStringInputStream::SetData(aData);
+}
+
+NS_IMETHODIMP
 nsStringInputStream::AdoptData(char* aData, int32_t aDataLen) {
   ReentrantMonitorAutoEnter lock(mMon);
 
