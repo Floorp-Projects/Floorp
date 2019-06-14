@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = ["SpecialPowersObserverAPI", "SpecialPowersError"];
 
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -204,46 +203,6 @@ class SpecialPowersObserverAPI {
 
   _getURI(url) {
     return Services.io.newURI(url);
-  }
-
-  _readUrlAsString(aUrl) {
-    // Fetch script content as we can't use scriptloader's loadSubScript
-    // to evaluate http:// urls...
-    var scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
-                             .getService(Ci.nsIScriptableInputStream);
-
-    var channel = NetUtil.newChannel({
-      uri: aUrl,
-      loadUsingSystemPrincipal: true,
-    });
-    var input = channel.open();
-    scriptableStream.init(input);
-
-    var str;
-    var buffer = [];
-
-    while ((str = scriptableStream.read(4096))) {
-      buffer.push(str);
-    }
-
-    var output = buffer.join("");
-
-    scriptableStream.close();
-    input.close();
-
-    var status;
-    if (channel instanceof Ci.nsIHttpChannel) {
-      status = channel.responseStatus;
-    }
-
-    if (status == 404) {
-      throw new SpecialPowersError(
-        "Error while executing chrome script '" + aUrl + "':\n" +
-        "The script doesn't exists. Ensure you have registered it in " +
-        "'support-files' in your mochitest.ini.");
-    }
-
-    return output;
   }
 
   _sendReply(aMessage, aReplyName, aReplyMsg) {
@@ -446,14 +405,12 @@ class SpecialPowersObserverAPI {
 
       case "SPLoadChromeScript": {
         let id = aMessage.json.id;
-        let jsScript;
         let scriptName;
 
+        let jsScript = aMessage.json.function.body;
         if (aMessage.json.url) {
-          jsScript = this._readUrlAsString(aMessage.json.url);
           scriptName = aMessage.json.url;
         } else if (aMessage.json.function) {
-          jsScript = aMessage.json.function.body;
           scriptName = aMessage.json.function.name
             || "<loadChromeScript anonymous function>";
         } else {

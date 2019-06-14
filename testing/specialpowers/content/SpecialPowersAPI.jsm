@@ -235,6 +235,46 @@ class SpecialPowersAPI {
     return mc.port2;
   }
 
+  _readUrlAsString(aUrl) {
+    // Fetch script content as we can't use scriptloader's loadSubScript
+    // to evaluate http:// urls...
+    var scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
+                             .getService(Ci.nsIScriptableInputStream);
+
+    var channel = NetUtil.newChannel({
+      uri: aUrl,
+      loadUsingSystemPrincipal: true,
+    });
+    var input = channel.open();
+    scriptableStream.init(input);
+
+    var str;
+    var buffer = [];
+
+    while ((str = scriptableStream.read(4096))) {
+      buffer.push(str);
+    }
+
+    var output = buffer.join("");
+
+    scriptableStream.close();
+    input.close();
+
+    var status;
+    if (channel instanceof Ci.nsIHttpChannel) {
+      status = channel.responseStatus;
+    }
+
+    if (status == 404) {
+      throw new Error(
+        `Error while executing chrome script '${aUrl}':\n` +
+        "The script doesn't exist. Ensure you have registered it in " +
+        "'support-files' in your mochitest.ini.");
+    }
+
+    return output;
+  }
+
   loadChromeScript(urlOrFunction, sandboxOptions) {
     // Create a unique id for this chrome script
     let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
@@ -249,6 +289,14 @@ class SpecialPowersAPI {
         name: urlOrFunction.name,
       };
     } else {
+      // Note: We need to do this in the child since, even though
+      // `_readUrlAsString` pretends to be synchronous, its channel
+      // winds up spinning the event loop when loading HTTP URLs. That
+      // leads to unexpected out-of-order operations if the child sends
+      // a message immediately after loading the script.
+      scriptArgs.function = {
+        body: this._readUrlAsString(urlOrFunction),
+      };
       scriptArgs.url = urlOrFunction;
     }
     this._sendSyncMessage("SPLoadChromeScript",
