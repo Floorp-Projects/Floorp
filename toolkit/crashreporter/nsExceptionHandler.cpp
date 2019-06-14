@@ -48,6 +48,7 @@
 
 #  include "nsWindowsDllInterceptor.h"
 #  include "mozilla/WindowsVersion.h"
+#  include "psapi.h"  // For PERFORMANCE_INFORAMTION
 #elif defined(XP_MACOSX)
 #  include "breakpad-client/mac/crash_generation/client_info.h"
 #  include "breakpad-client/mac/crash_generation/crash_generation_server.h"
@@ -671,8 +672,10 @@ static void WriteMemoryAnnotation(PlatformWriter& aWriter,
     WriteAnnotation(aWriter, aAnnotation, buffer);
   }
 }
+#endif  // XP_WIN
 
-static void WriteGlobalMemoryStatus(PlatformWriter& aWriter) {
+static void WriteMemoryStatus(PlatformWriter& aWriter) {
+#ifdef XP_WIN
   MEMORYSTATUSEX statex;
   statex.dwLength = sizeof(statex);
   if (GlobalMemoryStatusEx(&statex)) {
@@ -682,17 +685,22 @@ static void WriteGlobalMemoryStatus(PlatformWriter& aWriter) {
                           statex.ullTotalVirtual);
     WriteMemoryAnnotation(aWriter, Annotation::AvailableVirtualMemory,
                           statex.ullAvailVirtual);
-    WriteMemoryAnnotation(aWriter, Annotation::TotalPageFile,
-                          statex.ullTotalPageFile);
-    WriteMemoryAnnotation(aWriter, Annotation::AvailablePageFile,
-                          statex.ullAvailPageFile);
     WriteMemoryAnnotation(aWriter, Annotation::TotalPhysicalMemory,
                           statex.ullTotalPhys);
     WriteMemoryAnnotation(aWriter, Annotation::AvailablePhysicalMemory,
                           statex.ullAvailPhys);
   }
-}
+
+  PERFORMANCE_INFORMATION info;
+  if (K32GetPerformanceInfo(&info, sizeof(info))) {
+    WriteMemoryAnnotation(aWriter, Annotation::TotalPageFile,
+                          info.CommitLimit * info.PageSize);
+    WriteMemoryAnnotation(
+        aWriter, Annotation::AvailablePageFile,
+        (info.CommitLimit - info.CommitTotal) * info.PageSize);
+  }
 #endif  // XP_WIN
+}
 
 #if !defined(MOZ_WIDGET_ANDROID)
 
@@ -897,9 +905,9 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
 #  ifdef HAS_DLL_BLOCKLIST
   DllBlocklist_WriteNotes(pw.Handle());
 #  endif
-  WriteGlobalMemoryStatus(pw);
 #endif  // XP_WIN
 
+  WriteMemoryStatus(pw);
   WriteEscapedMozCrashReason(pw);
 
   char oomAllocationSizeBuffer[32] = "";
@@ -1191,9 +1199,7 @@ static void PrepareChildExceptionTimeAnnotations(void* context) {
 
   // ...and write out any annotations. These must be escaped if necessary
   // (but don't call EscapeAnnotation here, because it touches the heap).
-#ifdef XP_WIN
-  WriteGlobalMemoryStatus(apiData);
-#endif
+  WriteMemoryStatus(apiData);
 
   char oomAllocationSizeBuffer[32] = "";
   if (gOOMAllocationSize) {

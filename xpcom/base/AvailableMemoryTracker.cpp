@@ -12,6 +12,7 @@
 #  include "nsICrashReporter.h"
 #  include "nsIMemoryReporter.h"
 #  include "nsMemoryPressure.h"
+#  include "psapi.h"
 #endif
 
 #include "nsIObserver.h"
@@ -53,7 +54,6 @@ typedef struct _HEAP_OPTIMIZE_RESOURCES_INFORMATION {
 
 Atomic<uint32_t, MemoryOrdering::Relaxed> sNumLowVirtualMemEvents;
 Atomic<uint32_t, MemoryOrdering::Relaxed> sNumLowCommitSpaceEvents;
-Atomic<uint32_t, MemoryOrdering::Relaxed> sNumLowPhysicalMemEvents;
 
 class nsAvailableMemoryWatcher final : public nsIObserver,
                                        public nsITimerCallback {
@@ -78,12 +78,7 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   // commit space (physical memory plus page file) left.
   static const size_t kLowCommitSpaceThreshold = 384 * 1024 * 1024;
 
-  // Fire a low-memory notification if we have less than this many bytes of
-  // physical memory available on the whole machine.
-  static const size_t kLowPhysicalMemoryThreshold = 0;
-
-  // Don't fire a low-memory notification because of low available physical
-  // memory or low commit space more often than this interval.
+  // Don't fire a low-memory notification more often than this interval.
   static const uint32_t kLowMemoryNotificationIntervalMS = 10000;
 
   // Poll the amount of free memory at this rate.
@@ -92,9 +87,8 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   // Observer topics we subscribe to, see below.
   static const char* const kObserverTopics[];
 
-  static bool IsVirtualMemoryLow(const MEMORYSTATUSEX& aStat);
-  static bool IsCommitSpaceLow(const MEMORYSTATUSEX& aStat);
-  static bool IsPhysicalMemoryLow(const MEMORYSTATUSEX& aStat);
+  static bool IsVirtualMemoryLow();
+  static bool IsCommitSpaceLow();
 
   ~nsAvailableMemoryWatcher(){};
   bool OngoingMemoryPressure() { return mUnderMemoryPressure; }
@@ -151,37 +145,38 @@ void nsAvailableMemoryWatcher::Shutdown() {
 }
 
 /* static */
-bool nsAvailableMemoryWatcher::IsVirtualMemoryLow(const MEMORYSTATUSEX& aStat) {
-  if ((kLowVirtualMemoryThreshold != 0) &&
-      (aStat.ullAvailVirtual < kLowVirtualMemoryThreshold)) {
-    sNumLowVirtualMemEvents++;
-    return true;
+bool nsAvailableMemoryWatcher::IsVirtualMemoryLow() {
+  if (kLowVirtualMemoryThreshold != 0) {
+    MEMORYSTATUSEX stat;
+    stat.dwLength = sizeof(stat);
+    bool success = GlobalMemoryStatusEx(&stat);
+
+    if (success && (stat.ullAvailVirtual < kLowVirtualMemoryThreshold)) {
+      sNumLowVirtualMemEvents++;
+      return true;
+    }
   }
 
   return false;
 }
 
 /* static */
-bool nsAvailableMemoryWatcher::IsCommitSpaceLow(const MEMORYSTATUSEX& aStat) {
-  if ((kLowCommitSpaceThreshold != 0) &&
-      (aStat.ullAvailPageFile < kLowCommitSpaceThreshold)) {
-    sNumLowCommitSpaceEvents++;
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::LowCommitSpaceEvents,
-        uint32_t(sNumLowCommitSpaceEvents));
-    return true;
-  }
+bool nsAvailableMemoryWatcher::IsCommitSpaceLow() {
+  if (kLowCommitSpaceThreshold != 0) {
+    PERFORMANCE_INFORMATION info;
+    bool success = K32GetPerformanceInfo(&info, sizeof(info));
 
-  return false;
-}
+    if (success) {
+      size_t commitFree = (info.CommitLimit - info.CommitTotal) * info.PageSize;
 
-/* static */
-bool nsAvailableMemoryWatcher::IsPhysicalMemoryLow(
-    const MEMORYSTATUSEX& aStat) {
-  if ((kLowPhysicalMemoryThreshold != 0) &&
-      (aStat.ullAvailPhys < kLowPhysicalMemoryThreshold)) {
-    sNumLowPhysicalMemEvents++;
-    return true;
+      if (commitFree < kLowCommitSpaceThreshold) {
+        sNumLowCommitSpaceEvents++;
+        CrashReporter::AnnotateCrashReport(
+            CrashReporter::Annotation::LowCommitSpaceEvents,
+            uint32_t(sNumLowCommitSpaceEvents));
+        return true;
+      }
+    }
   }
 
   return false;
@@ -222,24 +217,17 @@ void nsAvailableMemoryWatcher::AdjustPollingInterval(const bool aLowMemory) {
 // polling interval accordingly.
 NS_IMETHODIMP
 nsAvailableMemoryWatcher::Notify(nsITimer* aTimer) {
-  MEMORYSTATUSEX stat;
-  stat.dwLength = sizeof(stat);
-  bool success = GlobalMemoryStatusEx(&stat);
+  bool lowMemory = IsVirtualMemoryLow() || IsCommitSpaceLow();
 
-  if (success) {
-    bool lowMemory = IsVirtualMemoryLow(stat) || IsCommitSpaceLow(stat) ||
-                     IsPhysicalMemoryLow(stat);
-
-    if (lowMemory) {
-      SendMemoryPressureEvent();
-      MaybeSaveMemoryReport();
-    } else {
-      mSavedReport = false;  // Save a new report if memory gets low again
-    }
-
-    AdjustPollingInterval(lowMemory);
-    mUnderMemoryPressure = lowMemory;
+  if (lowMemory) {
+    SendMemoryPressureEvent();
+    MaybeSaveMemoryReport();
+  } else {
+    mSavedReport = false;  // Save a new report if memory gets low again
   }
+
+  AdjustPollingInterval(lowMemory);
+  mUnderMemoryPressure = lowMemory;
 
   return NS_OK;
 }
@@ -272,10 +260,6 @@ static int64_t LowMemoryEventsCommitSpaceDistinguishedAmount() {
   return sNumLowCommitSpaceEvents;
 }
 
-static int64_t LowMemoryEventsPhysicalDistinguishedAmount() {
-  return sNumLowPhysicalMemEvents;
-}
-
 class LowEventsReporter final : public nsIMemoryReporter {
   ~LowEventsReporter() {}
 
@@ -289,28 +273,19 @@ class LowEventsReporter final : public nsIMemoryReporter {
       "low-memory-events/virtual", KIND_OTHER, UNITS_COUNT_CUMULATIVE,
       LowMemoryEventsVirtualDistinguishedAmount(),
 "Number of low-virtual-memory events fired since startup. We fire such an "
-"event if we notice there is less than memory.low_virtual_mem_threshold_mb of "
-"virtual address space available (if zero, this behavior is disabled). The "
-"process will probably crash if it runs out of virtual address space, so "
-"this event is dire.");
+"event if we notice there is less than predefined amount of virtual address "
+"space available (if zero, this behavior is disabled, see "
+"xpcom/base/AvailableMemoryTracker.cpp). The process will probably crash if "
+"it runs out of virtual address space, so this event is dire.");
 
     MOZ_COLLECT_REPORT(
       "low-memory-events/commit-space", KIND_OTHER, UNITS_COUNT_CUMULATIVE,
       LowMemoryEventsCommitSpaceDistinguishedAmount(),
 "Number of low-commit-space events fired since startup. We fire such an "
-"event if we notice there is less than memory.low_commit_space_threshold_mb of "
-"commit space available (if zero, this behavior is disabled). Windows will "
-"likely kill the process if it runs out of commit space, so this event is "
-"dire.");
-
-    MOZ_COLLECT_REPORT(
-      "low-memory-events/physical", KIND_OTHER, UNITS_COUNT_CUMULATIVE,
-      LowMemoryEventsPhysicalDistinguishedAmount(),
-"Number of low-physical-memory events fired since startup. We fire such an "
-"event if we notice there is less than memory.low_physical_memory_threshold_mb "
-"of physical memory available (if zero, this behavior is disabled).  The "
-"machine will start to page if it runs out of physical memory.  This may "
-"cause it to run slowly, but it shouldn't cause it to crash.");
+"event if we notice there is less than a predefined amount of commit space "
+"available (if zero, this behavior is disabled, see "
+"xpcom/base/AvailableMemoryTracker.cpp). Windows will likely kill the process "
+"if it runs out of commit space, so this event is dire.");
     // clang-format on
 
     return NS_OK;
@@ -431,8 +406,6 @@ void Init() {
       LowMemoryEventsVirtualDistinguishedAmount);
   RegisterLowMemoryEventsCommitSpaceDistinguishedAmount(
       LowMemoryEventsCommitSpaceDistinguishedAmount);
-  RegisterLowMemoryEventsPhysicalDistinguishedAmount(
-      LowMemoryEventsPhysicalDistinguishedAmount);
 
   if (XRE_IsParentProcess()) {
     RefPtr<nsAvailableMemoryWatcher> poller = new nsAvailableMemoryWatcher();
