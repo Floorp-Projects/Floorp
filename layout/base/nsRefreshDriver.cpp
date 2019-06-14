@@ -52,6 +52,7 @@
 #include "nsViewManager.h"
 #include "GeckoProfiler.h"
 #include "nsNPAPIPluginInstance.h"
+#include "mozilla/dom/CallbackDebuggerNotification.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Selection.h"
@@ -1695,6 +1696,12 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
                 callback.mHandle)) {
           continue;
         }
+
+        nsCOMPtr<nsIGlobalObject> global(innerWindow ? innerWindow->AsGlobal()
+                                                     : nullptr);
+        CallbackDebuggerNotificationGuard guard(
+            global, DebuggerNotificationType::RequestAnimationFrameCallback);
+
         // MOZ_KnownLive is OK, because the stack array frameRequestCallbacks
         // keeps callback alive and the mCallback strong reference can't be
         // mutated by the call.
