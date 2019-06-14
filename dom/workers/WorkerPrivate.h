@@ -28,6 +28,7 @@
 #include "mozilla/ThreadBound.h"
 
 class nsIThreadInternal;
+class nsITimeoutHandler;
 
 namespace mozilla {
 class ThrottledEventQueue;
@@ -249,7 +250,7 @@ class WorkerPrivate : public RelativeTimeline {
   static void ReportErrorToConsole(const char* aMessage,
                                    const nsTArray<nsString>& aParams);
 
-  int32_t SetTimeout(JSContext* aCx, nsIScriptTimeoutHandler* aHandler,
+  int32_t SetTimeout(JSContext* aCx, nsITimeoutHandler* aHandler,
                      int32_t aTimeout, bool aIsInterval, ErrorResult& aRv);
 
   void ClearTimeout(int32_t aId);

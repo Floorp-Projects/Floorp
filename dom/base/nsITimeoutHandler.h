@@ -20,7 +20,7 @@ class nsITimeoutHandler : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITIMEOUTHANDLER_IID)
 
-  MOZ_CAN_RUN_SCRIPT virtual void Call() = 0;
+  MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* aExecutionReason) = 0;
 
   // Get the location of the script.
   // Note: The memory pointed to by aFileName is owned by the

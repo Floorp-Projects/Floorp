@@ -920,7 +920,7 @@ struct WorkerPrivate::TimeoutInfo {
     return mTargetTime < aOther.mTargetTime;
   }
 
-  nsCOMPtr<nsIScriptTimeoutHandler> mHandler;
+  nsCOMPtr<nsITimeoutHandler> mHandler;
   mozilla::TimeStamp mTargetTime;
   mozilla::TimeDuration mInterval;
   int32_t mId;
@@ -4155,8 +4155,7 @@ void WorkerPrivate::ReportErrorToConsole(const char* aMessage,
   ReportErrorToConsoleRunnable::Report(wp, aMessage, aParams);
 }
 
-int32_t WorkerPrivate::SetTimeout(JSContext* aCx,
-                                  nsIScriptTimeoutHandler* aHandler,
+int32_t WorkerPrivate::SetTimeout(JSContext* aCx, nsITimeoutHandler* aHandler,
                                   int32_t aTimeout, bool aIsInterval,
                                   ErrorResult& aRv) {
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
@@ -4309,18 +4308,18 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
       reason = "setTimeout handler";
     }
 
-    RefPtr<Function> callback = info->mHandler->GetCallback();
-    if (!callback) {
+    if (nsCOMPtr<nsIScriptTimeoutHandler> scriptHandler =
+            do_QueryInterface(info->mHandler)) {
       nsAutoMicroTask mt;
 
       AutoEntryScript aes(global, reason, false);
 
       // Evaluate the timeout expression.
-      const nsAString& script = info->mHandler->GetHandlerText();
+      const nsAString& script = scriptHandler->GetHandlerText();
 
       const char* filename = nullptr;
       uint32_t lineNo = 0, dummyColumn = 0;
-      info->mHandler->GetLocation(&filename, &lineNo, &dummyColumn);
+      scriptHandler->GetLocation(&filename, &lineNo, &dummyColumn);
 
       JS::CompileOptions options(aes.cx());
       options.setFileAndLine(filename, lineNo).setNoScriptRval(true);
@@ -4337,17 +4336,11 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
         }
       }
     } else {
-      ErrorResult rv;
-      JS::Rooted<JS::Value> ignoredVal(aCx);
-      RefPtr<WorkerGlobalScope> scope = GlobalScope();
-      callback->Call(scope, info->mHandler->GetArgs(), &ignoredVal, rv, reason);
-      if (rv.IsUncatchableException()) {
-        rv.SuppressException();
+      nsCOMPtr<nsITimeoutHandler> handler(info->mHandler);
+      if (!handler->Call(reason)) {
         retval = false;
         break;
       }
-
-      rv.SuppressException();
     }
 
     NS_ASSERTION(data->mRunningExpiredTimeouts, "Someone changed this!");

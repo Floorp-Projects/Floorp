@@ -426,7 +426,7 @@ class IdleRequestExecutorTimeoutHandler final : public TimeoutHandler {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IdleRequestExecutorTimeoutHandler,
                                            TimeoutHandler)
 
-  void Call() override;
+  bool Call(const char* /* unused */) override;
 
  private:
   ~IdleRequestExecutorTimeoutHandler() override {}
@@ -625,10 +625,11 @@ void IdleRequestExecutor::DelayedDispatch(uint32_t aDelay) {
   mDelayedExecutorHandle = Some(handle);
 }
 
-void IdleRequestExecutorTimeoutHandler::Call() {
+bool IdleRequestExecutorTimeoutHandler::Call(const char* /* unused */) {
   if (!mExecutor->IsCancelled()) {
     mExecutor->ScheduleDispatch();
   }
+  return true;
 }
 
 void nsGlobalWindowInner::ScheduleIdleRequestDispatch() {
@@ -721,10 +722,11 @@ class IdleRequestTimeoutHandler final : public TimeoutHandler {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IdleRequestTimeoutHandler,
                                            TimeoutHandler)
 
-  MOZ_CAN_RUN_SCRIPT void Call() override {
+  MOZ_CAN_RUN_SCRIPT bool Call(const char* /* unused */) override {
     RefPtr<nsGlobalWindowInner> window(nsGlobalWindowInner::Cast(mWindow));
     RefPtr<IdleRequest> request(mIdleRequest);
     window->RunIdleRequest(request, 0.0, true);
+    return true;
   }
 
  private:
@@ -5705,11 +5707,21 @@ int32_t nsGlobalWindowInner::SetTimeoutOrInterval(
                                        aIsInterval, aError);
   }
 
-  nsCOMPtr<nsIScriptTimeoutHandler> handler =
-      NS_CreateJSTimeoutHandler(aCx, this, aFunction, aArguments, aError);
-  if (!handler) {
+  if (!GetContextInternal() || !HasJSGlobal()) {
+    // This window was already closed, or never properly initialized,
+    // don't let a timer be scheduled on such a window.
+    aError.Throw(NS_ERROR_NOT_INITIALIZED);
     return 0;
   }
+
+  nsTArray<JS::Heap<JS::Value>> args;
+  if (!args.AppendElements(aArguments, fallible)) {
+    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return 0;
+  }
+
+  nsCOMPtr<nsITimeoutHandler> handler =
+      new CallbackTimeoutHandler(aCx, this, &aFunction, std::move(args));
 
   int32_t result;
   aError =
@@ -5781,62 +5793,44 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
   }
 
   bool abortIntervalHandler = false;
-  nsCOMPtr<nsIScriptTimeoutHandler> handler(
-      do_QueryInterface(timeout->mScriptHandler));
-  if (handler) {
-    RefPtr<Function> callback = handler->GetCallback();
+  if (nsCOMPtr<nsIScriptTimeoutHandler> handler =
+          do_QueryInterface(timeout->mScriptHandler)) {
+    // Evaluate the timeout expression.
+    const char* filename = nullptr;
+    uint32_t lineNo = 0, dummyColumn = 0;
+    handler->GetLocation(&filename, &lineNo, &dummyColumn);
 
-    if (!callback) {
-      // Evaluate the timeout expression.
-      const char* filename = nullptr;
-      uint32_t lineNo = 0, dummyColumn = 0;
-      handler->GetLocation(&filename, &lineNo, &dummyColumn);
+    // New script entry point required, due to the "Create a script" sub-step
+    // of
+    // http://www.whatwg.org/specs/web-apps/current-work/#timer-initialisation-steps
+    nsAutoMicroTask mt;
+    AutoEntryScript aes(this, reason, true);
+    JS::CompileOptions options(aes.cx());
+    options.setFileAndLine(filename, lineNo);
+    options.setNoScriptRval(true);
+    JS::Rooted<JSObject*> global(aes.cx(), GetGlobalJSObject());
+    nsresult rv;
+    {
+      nsJSUtils::ExecutionContext exec(aes.cx(), global);
+      rv = exec.Compile(options, handler->GetHandlerText());
 
-      // New script entry point required, due to the "Create a script" sub-step
-      // of
-      // http://www.whatwg.org/specs/web-apps/current-work/#timer-initialisation-steps
-      nsAutoMicroTask mt;
-      AutoEntryScript aes(this, reason, true);
-      JS::CompileOptions options(aes.cx());
-      options.setFileAndLine(filename, lineNo);
-      options.setNoScriptRval(true);
-      JS::Rooted<JSObject*> global(aes.cx(), GetGlobalJSObject());
-      nsresult rv;
-      {
-        nsJSUtils::ExecutionContext exec(aes.cx(), global);
-        rv = exec.Compile(options, handler->GetHandlerText());
-
-        JS::Rooted<JSScript*> script(aes.cx(), exec.MaybeGetScript());
-        if (script) {
-          LoadedScript* initiatingScript = handler->GetInitiatingScript();
-          if (initiatingScript) {
-            initiatingScript->AssociateWithScript(script);
-          }
-
-          rv = exec.ExecScript();
+      JS::Rooted<JSScript*> script(aes.cx(), exec.MaybeGetScript());
+      if (script) {
+        LoadedScript* initiatingScript = handler->GetInitiatingScript();
+        if (initiatingScript) {
+          initiatingScript->AssociateWithScript(script);
         }
-      }
 
-      if (rv == NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
-        abortIntervalHandler = true;
+        rv = exec.ExecScript();
       }
-    } else {
-      // Hold strong ref to ourselves while we call the callback.
-      nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow*>(this));
-      ErrorResult rv;
-      JS::Rooted<JS::Value> ignoredVal(RootingCx());
-      callback->Call(me, handler->GetArgs(), &ignoredVal, rv, reason);
-      if (rv.IsUncatchableException()) {
-        abortIntervalHandler = true;
-      }
+    }
 
-      rv.SuppressException();
+    if (rv == NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
+      abortIntervalHandler = true;
     }
   } else {
     nsCOMPtr<nsITimeoutHandler> basicHandler(timeout->mScriptHandler);
-    nsCOMPtr<nsISupports> kungFuDeathGrip(static_cast<nsIDOMWindow*>(this));
-    mozilla::Unused << kungFuDeathGrip;
-    basicHandler->Call();
+    abortIntervalHandler = !basicHandler->Call(reason);
   }
 
   // If we received an uncatchable exception, do not schedule the timeout again.
