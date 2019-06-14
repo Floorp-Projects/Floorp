@@ -940,6 +940,12 @@ class nsINode : public mozilla::dom::EventTarget {
       const override;
   virtual mozilla::EventListenerManager* GetOrCreateListenerManager() override;
 
+  mozilla::Maybe<mozilla::dom::EventCallbackDebuggerNotificationType>
+  GetDebuggerNotificationType() const override {
+    return mozilla::Some(
+        mozilla::dom::EventCallbackDebuggerNotificationType::Node);
+  }
+
   bool ComputeDefaultWantsUntrusted(mozilla::ErrorResult& aRv) final;
 
   virtual bool IsApzAware() const override;

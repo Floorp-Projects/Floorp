@@ -13,6 +13,7 @@
 #include "mozilla/dom/Clients.h"
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/Console.h"
+#include "mozilla/dom/DebuggerNotification.h"
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FunctionBinding.h"
@@ -103,6 +104,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WorkerGlobalScope,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNavigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCacheStorage)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDebuggerNotificationManager)
   tmp->TraverseHostObjectURIs(cb);
   tmp->mWorkerPrivate->TraverseTimeouts(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -117,6 +119,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WorkerGlobalScope,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNavigator)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCacheStorage)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDebuggerNotificationManager)
   tmp->UnlinkHostObjectURIs();
   tmp->mWorkerPrivate->UnlinkTimeouts();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -256,6 +259,8 @@ int32_t WorkerGlobalScope::SetTimeout(JSContext* aCx, Function& aHandler,
                                       ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
+  DebuggerNotificationDispatch(this, DebuggerNotificationType::SetTimeout);
+
   nsCOMPtr<nsIScriptTimeoutHandler> handler =
       NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aArguments, aRv);
   if (!handler) {
@@ -271,6 +276,8 @@ int32_t WorkerGlobalScope::SetTimeout(JSContext* aCx, const nsAString& aHandler,
                                       ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
+  DebuggerNotificationDispatch(this, DebuggerNotificationType::SetTimeout);
+
   nsCOMPtr<nsIScriptTimeoutHandler> handler =
       NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aRv);
   if (!handler) {
@@ -282,6 +289,9 @@ int32_t WorkerGlobalScope::SetTimeout(JSContext* aCx, const nsAString& aHandler,
 
 void WorkerGlobalScope::ClearTimeout(int32_t aHandle) {
   mWorkerPrivate->AssertIsOnWorkerThread();
+
+  DebuggerNotificationDispatch(this, DebuggerNotificationType::ClearTimeout);
+
   mWorkerPrivate->ClearTimeout(aHandle);
 }
 
@@ -290,6 +300,8 @@ int32_t WorkerGlobalScope::SetInterval(JSContext* aCx, Function& aHandler,
                                        const Sequence<JS::Value>& aArguments,
                                        ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
+
+  DebuggerNotificationDispatch(this, DebuggerNotificationType::SetInterval);
 
   nsCOMPtr<nsIScriptTimeoutHandler> handler =
       NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aArguments, aRv);
@@ -307,6 +319,8 @@ int32_t WorkerGlobalScope::SetInterval(JSContext* aCx,
                                        ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
+  DebuggerNotificationDispatch(this, DebuggerNotificationType::SetInterval);
+
   Sequence<JS::Value> dummy;
 
   nsCOMPtr<nsIScriptTimeoutHandler> handler =
@@ -320,6 +334,9 @@ int32_t WorkerGlobalScope::SetInterval(JSContext* aCx,
 
 void WorkerGlobalScope::ClearInterval(int32_t aHandle) {
   mWorkerPrivate->AssertIsOnWorkerThread();
+
+  DebuggerNotificationDispatch(this, DebuggerNotificationType::ClearInterval);
+
   mWorkerPrivate->ClearTimeout(aHandle);
 }
 
@@ -458,6 +475,20 @@ nsISerialEventTarget* WorkerGlobalScope::EventTargetFor(
 AbstractThread* WorkerGlobalScope::AbstractMainThreadFor(
     TaskCategory aCategory) {
   MOZ_CRASH("AbstractMainThreadFor not supported for workers.");
+}
+
+mozilla::dom::DebuggerNotificationManager*
+WorkerGlobalScope::GetOrCreateDebuggerNotificationManager() {
+  if (!mDebuggerNotificationManager) {
+    mDebuggerNotificationManager = new DebuggerNotificationManager(this);
+  }
+
+  return mDebuggerNotificationManager;
+}
+
+mozilla::dom::DebuggerNotificationManager*
+WorkerGlobalScope::GetExistingDebuggerNotificationManager() {
+  return mDebuggerNotificationManager;
 }
 
 Maybe<ClientInfo> WorkerGlobalScope::GetClientInfo() const {
