@@ -12,9 +12,13 @@ import android.view.View
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
+import io.sentry.Sentry
+import io.sentry.event.Breadcrumb
+import io.sentry.event.BreadcrumbBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,6 +32,7 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.utils.SafeIntent
+import org.mozilla.fenix.components.isSentryEnabled
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -55,32 +60,30 @@ open class HomeActivity : AppCompatActivity() {
 
     lateinit var browsingModeManager: BrowsingModeManager
 
+    private val onDestinationChangedListener = NavController.OnDestinationChangedListener { _, dest, _ ->
+        val fragmentName = resources.getResourceEntryName(dest.id)
+        Sentry.getContext().recordBreadcrumb(
+            BreadcrumbBuilder()
+                .setCategory("DestinationChanged")
+                .setMessage("Changing to fragment $fragmentName, isCustomTab: $isCustomTab")
+                .setLevel(Breadcrumb.Level.INFO)
+                .build()
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         components.publicSuffixList.prefetch()
-        browsingModeManager = createBrowsingModeManager()
-        themeManager = createThemeManager(
-            when (browsingModeManager.isPrivate) {
-                true -> ThemeManager.Theme.Private
-                false -> ThemeManager.Theme.Normal
-            }
-        )
-
-        setTheme(themeManager.currentTheme)
-        ThemeManager.applyStatusBarTheme(window, themeManager, this)
+        setupThemeAndBrowsingMode()
 
         setContentView(R.layout.activity_home)
 
-        // Add ids to this that we don't want to have a toolbar back button
-        val appBarConfiguration = AppBarConfiguration.Builder().build()
-        val navigationToolbar = findViewById<Toolbar>(R.id.navigationToolbar)
-        setSupportActionBar(navigationToolbar)
-        NavigationUI.setupWithNavController(navigationToolbar, navHost.navController, appBarConfiguration)
-        navigationToolbar.setNavigationOnClickListener {
-            onBackPressed()
+        setupToolbarAndNavigation()
+
+        if (Settings.getInstance(this).isTelemetryEnabled && isSentryEnabled()) {
+            navHost.navController.addOnDestinationChangedListener(onDestinationChangedListener)
         }
-        supportActionBar?.hide()
 
         intent
             ?.let { SafeIntent(it) }
@@ -97,8 +100,33 @@ open class HomeActivity : AppCompatActivity() {
         handleOpenedFromExternalSourceIfNecessary(intent)
     }
 
+    private fun setupThemeAndBrowsingMode() {
+        browsingModeManager = createBrowsingModeManager()
+        themeManager = createThemeManager(
+            when (browsingModeManager.isPrivate) {
+                true -> ThemeManager.Theme.Private
+                false -> ThemeManager.Theme.Normal
+            }
+        )
+        setTheme(themeManager.currentTheme)
+        ThemeManager.applyStatusBarTheme(window, themeManager, this)
+    }
+
+    private fun setupToolbarAndNavigation() {
+        // Add ids to this that we don't want to have a toolbar back button
+        val appBarConfiguration = AppBarConfiguration.Builder().build()
+        val navigationToolbar = findViewById<Toolbar>(R.id.navigationToolbar)
+        setSupportActionBar(navigationToolbar)
+        NavigationUI.setupWithNavController(navigationToolbar, navHost.navController, appBarConfiguration)
+        navigationToolbar.setNavigationOnClickListener {
+            onBackPressed()
+        }
+        supportActionBar?.hide()
+    }
+
     override fun onDestroy() {
         sessionObserver?.let { components.core.sessionManager.unregister(it) }
+        navHost.navController.removeOnDestinationChangedListener(onDestinationChangedListener)
         super.onDestroy()
     }
 

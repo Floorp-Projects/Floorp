@@ -34,7 +34,7 @@ class Analytics(
     val crashReporter: CrashReporter by lazy {
         val services = mutableListOf<CrashReporterService>()
 
-        if (!BuildConfig.SENTRY_TOKEN.isNullOrEmpty()) {
+        if (isSentryEnabled()) {
             val sentryService = SentryService(
                 context,
                 BuildConfig.SENTRY_TOKEN,
@@ -85,3 +85,5 @@ class Analytics(
         )
     }
 }
+
+fun isSentryEnabled() = !BuildConfig.SENTRY_TOKEN.isNullOrEmpty()
