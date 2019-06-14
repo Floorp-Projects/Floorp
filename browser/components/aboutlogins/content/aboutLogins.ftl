@@ -25,7 +25,6 @@ login-list =
     }
   .last-changed-option = Last Changed
   .last-used-option = Last Used
-  .missing-username = (no username)
   .name-option = Name
   .new-login-subtitle = Enter your login credentials
   .new-login-title = New Login
@@ -39,19 +38,18 @@ login-item =
   .copy-username-button = Copy
   .delete-button = Delete
   .edit-button = Edit
+  .field-required-symbol = *
+  .modal-input-reveal-checkbox-hide = Hide password
+  .modal-input-reveal-checkbox-show = Show password
   .new-login-title = Create New Login
   .open-site-button = Launch
   .origin-label = Website Address
-  .origin-placeholder = https://www.example.com
-  .password-hide-title = Hide password
   .password-label = Password
-  .password-show-title = Show password
   .save-changes-button = Save Changes
   .time-created = Created: { DATETIME($timeCreated, day: "numeric", month: "long", year: "numeric") }
   .time-changed = Last modified: { DATETIME($timeChanged, day: "numeric", month: "long", year: "numeric") }
   .time-used = Last used: { DATETIME($timeUsed, day: "numeric", month: "long", year: "numeric") }
   .username-label = Username
-  .username-placeholder = name@example.com
 
 master-password-notification-message = Please enter your master password to view saved logins & passwords
 # TODO: Not sure how to use formatValue with these as attributes on a single ID

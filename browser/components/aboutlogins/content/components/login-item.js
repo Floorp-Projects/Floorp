@@ -36,16 +36,10 @@ export default class LoginItem extends ReflectedFluentElement {
 
     window.addEventListener("AboutLoginsLoginSelected", this);
 
-    let originInput = this.shadowRoot.querySelector("input[name='origin']");
-    originInput.addEventListener("blur", this);
-
-    let revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
-    revealCheckbox.addEventListener("click", this);
-
     let copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
     let copyPasswordButton = this.shadowRoot.querySelector(".copy-password-button");
-    copyUsernameButton.relatedInput = this.shadowRoot.querySelector("input[name='username']");
-    copyPasswordButton.relatedInput = this.shadowRoot.querySelector("input[name='password']");
+    copyUsernameButton.relatedInput = this.shadowRoot.querySelector("modal-input[name='username']");
+    copyPasswordButton.relatedInput = this.shadowRoot.querySelector("modal-input[name='password']");
 
     this.render();
   }
@@ -59,19 +53,18 @@ export default class LoginItem extends ReflectedFluentElement {
       "copy-username-button",
       "delete-button",
       "edit-button",
+      "field-required-symbol",
+      "modal-input-reveal-checkbox-hide",
+      "modal-input-reveal-checkbox-show",
       "new-login-title",
       "open-site-button",
       "origin-label",
-      "origin-placeholder",
-      "password-hide-title",
       "password-label",
-      "password-show-title",
       "save-changes-button",
       "time-created",
       "time-changed",
       "time-used",
       "username-label",
-      "username-placeholder",
     ];
   }
 
@@ -95,27 +88,29 @@ export default class LoginItem extends ReflectedFluentElement {
         copyUsernameButton.setAttribute(newAttrName, this.getAttribute(attrName));
         break;
       }
+      case "field-required-symbol": {
+        for (let labelSelector of [".origin-label", ".password-label"]) {
+          let label = this.shadowRoot.querySelector(labelSelector);
+          label.setAttribute("field-required-symbol", this.getAttribute(attrName));
+        }
+        break;
+      }
+      case "modal-input-reveal-checkbox-hide": {
+        this.shadowRoot.querySelector("modal-input[name='password']")
+                       .setAttribute("reveal-checkbox-hide", this.getAttribute(attrName));
+        break;
+      }
+      case "modal-input-reveal-checkbox-show": {
+        this.shadowRoot.querySelector("modal-input[name='password']")
+                       .setAttribute("reveal-checkbox-show", this.getAttribute(attrName));
+        break;
+      }
       case "new-login-title": {
         let title = this.shadowRoot.querySelector(".title");
         title.setAttribute(attrName, this.getAttribute(attrName));
         if (!this._login.title) {
           title.textContent = this.getAttribute(attrName);
         }
-        break;
-      }
-      case "origin-placeholder": {
-        let originInput = this.shadowRoot.querySelector("input[name='origin']");
-        originInput.setAttribute("placeholder", this.getAttribute(attrName));
-        break;
-      }
-      case "password-hide-title":
-      case "password-show-title": {
-        this.updatePasswordRevealState();
-        break;
-      }
-      case "username-placeholder": {
-        let usernameInput = this.shadowRoot.querySelector("input[name='username']");
-        usernameInput.setAttribute("placeholder", this.getAttribute(attrName));
         break;
       }
       default:
@@ -134,10 +129,10 @@ export default class LoginItem extends ReflectedFluentElement {
 
     let title = this.shadowRoot.querySelector(".title");
     title.textContent = this._login.title || title.getAttribute("new-login-title");
-    this.shadowRoot.querySelector("input[name='origin']").defaultValue = this._login.origin || "";
-    this.shadowRoot.querySelector("input[name='username']").defaultValue = this._login.username || "";
-    this.shadowRoot.querySelector("input[name='password']").defaultValue = this._login.password || "";
-    this.updatePasswordRevealState();
+    this.shadowRoot.querySelector(".origin-saved-value").textContent = this._login.origin || "";
+    this.shadowRoot.querySelector("input[name='origin']").value = this._login.origin || "";
+    this.shadowRoot.querySelector("modal-input[name='username']").setAttribute("value", this._login.username || "");
+    this.shadowRoot.querySelector("modal-input[name='password']").setAttribute("value", this._login.password || "");
   }
 
   handleEvent(event) {
@@ -146,28 +141,10 @@ export default class LoginItem extends ReflectedFluentElement {
         this.setLogin(event.detail);
         break;
       }
-      case "blur": {
-        // Add https:// prefix if one was not provided.
-        let originInput = this.shadowRoot.querySelector("input[name='origin']");
-        let originValue = originInput.value.trim();
-        if (!originValue) {
-          return;
-        }
-        if (!originValue.match(/:\/\//)) {
-          originInput.value = "https://" + originValue;
-        }
-        break;
-      }
       case "click": {
         if (event.target.classList.contains("cancel-button")) {
-          if (this._login.guid) {
-            this.setLogin(this._login);
-          } else {
-            // TODO, should select the first login if it exists
-            // or show the no-logins view otherwise
-            this.toggleEditing();
-            this.render();
-          }
+          this.toggleEditing();
+          this.render();
 
           recordTelemetryEvent({
             object: this._login.guid ? "existing_login" : "new_login",
@@ -199,14 +176,6 @@ export default class LoginItem extends ReflectedFluentElement {
           recordTelemetryEvent({object: "existing_login", method: "open_site"});
           return;
         }
-        if (event.target.classList.contains("reveal-password-checkbox")) {
-          this.updatePasswordRevealState();
-
-          let revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
-          let method = revealCheckbox.checked ? "show" : "hide";
-          recordTelemetryEvent({object: "password", method});
-          return;
-        }
         if (event.target.classList.contains("save-changes-button")) {
           if (!this._isFormValid({reportErrors: true})) {
             return;
@@ -236,26 +205,8 @@ export default class LoginItem extends ReflectedFluentElement {
 
   setLogin(login) {
     this._login = login;
-
-    let originInput =
-      this.resetValidation(this.shadowRoot.querySelector("input[name='origin']"), login.origin);
-    originInput.addEventListener("blur", this);
-    let usernameInput =
-      this.resetValidation(this.shadowRoot.querySelector("input[name='username']"), login.username);
-    let passwordInput =
-      this.resetValidation(this.shadowRoot.querySelector("input[name='password']"), login.password);
-
-    let copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
-    let copyPasswordButton = this.shadowRoot.querySelector(".copy-password-button");
-    copyUsernameButton.relatedInput = usernameInput;
-    copyPasswordButton.relatedInput = passwordInput;
-
     this.toggleAttribute("isNewLogin", !login.guid);
     this.toggleEditing(!login.guid);
-
-    let revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
-    revealCheckbox.checked = false;
-
     this.render();
   }
 
@@ -297,53 +248,11 @@ export default class LoginItem extends ReflectedFluentElement {
       this.removeAttribute("isNewLogin");
     }
 
-    if (shouldEdit) {
-      this.shadowRoot.querySelector("input[name='password']").style.removeProperty("width");
-    } else {
-      // Need to set a shorter width than -moz-available so the reveal checkbox
-      // will still appear next to the password.
-      this.shadowRoot.querySelector("input[name='password']").style.width =
-        (this._login.password || "").length + "ch";
-    }
-
     this.shadowRoot.querySelector(".delete-button").disabled = this.hasAttribute("isNewLogin");
     this.shadowRoot.querySelector(".edit-button").disabled = shouldEdit;
-    this.shadowRoot.querySelector("input[name='origin']").readOnly = !this.hasAttribute("isNewLogin");
-    this.shadowRoot.querySelector("input[name='username']").readOnly = !shouldEdit;
-    this.shadowRoot.querySelector("input[name='password']").readOnly = !shouldEdit;
+    this.shadowRoot.querySelectorAll("modal-input")
+                   .forEach(el => el.toggleAttribute("editing", shouldEdit));
     this.toggleAttribute("editing", shouldEdit);
-  }
-
-  resetValidation(formElement, value) {
-    let wasRequired = formElement.required;
-    let newFormElement = document.createElement(formElement.localName);
-    if (value) {
-      newFormElement.defaultValue = value;
-    }
-    newFormElement.className = formElement.className;
-    newFormElement.placeholder = formElement.placeholder;
-    newFormElement.setAttribute("name", formElement.getAttribute("name"));
-    newFormElement.setAttribute("type", formElement.getAttribute("type"));
-    if (wasRequired) {
-      newFormElement.required = true;
-    }
-    formElement.replaceWith(newFormElement);
-    return newFormElement;
-  }
-
-  updatePasswordRevealState() {
-    let revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
-    let labelAttr = revealCheckbox.checked ? "password-show-title"
-                                           : "password-hide-title";
-    revealCheckbox.setAttribute("aria-label", this.getAttribute(labelAttr));
-    revealCheckbox.setAttribute("title", this.getAttribute(labelAttr));
-
-    let passwordInput = this.shadowRoot.querySelector("input[name='password']");
-    if (revealCheckbox.checked) {
-      passwordInput.setAttribute("type", "text");
-      return;
-    }
-    passwordInput.setAttribute("type", "password");
   }
 
   /**
@@ -354,7 +263,7 @@ export default class LoginItem extends ReflectedFluentElement {
    *                               to the user.
    */
   _isFormValid({reportErrors} = {}) {
-    let fields = [this.shadowRoot.querySelector("input[name='password']")];
+    let fields = [this.shadowRoot.querySelector("modal-input[name='password']")];
     if (this.hasAttribute("isNewLogin")) {
       fields.push(this.shadowRoot.querySelector("input[name='origin']"));
     }
@@ -373,9 +282,10 @@ export default class LoginItem extends ReflectedFluentElement {
 
   _loginFromForm() {
     return {
-      username: this.shadowRoot.querySelector("input[name='username']").value.trim(),
-      password: this.shadowRoot.querySelector("input[name='password']").value.trim(),
-      origin: this.shadowRoot.querySelector("input[name='origin']").value.trim(),
+      username: this.shadowRoot.querySelector("modal-input[name='username']").value.trim(),
+      password: this.shadowRoot.querySelector("modal-input[name='password']").value.trim(),
+      origin: this.hasAttribute("isNewLogin") ? this.shadowRoot.querySelector("input[name='origin']").value.trim()
+                                              : this.shadowRoot.querySelector(".origin-saved-value").textContent,
     };
   }
 }

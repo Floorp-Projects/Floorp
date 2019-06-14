@@ -29,11 +29,11 @@
   background-color: var(--in-content-box-background-hover);
 }
 
-.title {
+.origin {
   font-weight: bold;
 }
 
-.title,
+.origin,
 .username {
   display: block;
   max-width: 50ch;
