@@ -23,6 +23,8 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   void ConstructProcessor(AudioWorkletImpl* aWorkletImpl,
                           const nsAString& aName,
                           StructuredCloneHolder* aOptionsSerialization);
+
+  void NotifyForcedShutdown() override {}
 };
 
 void WorkletNodeEngine::ConstructProcessor(
