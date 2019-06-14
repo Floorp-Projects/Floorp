@@ -16,6 +16,7 @@ async function assertStatus(tab, expected) {
 }
 
 async function waitForStatus(tab, expected) {
+  /* eslint-disable no-shadow */
   await ContentTask.spawn(tab.linkedBrowser, [expected], async function (expected) {
     return ContentTaskUtils.waitForCondition(() => {
       info("expecting " + expected + ", visbility state: " + content.document.visibilityState);
@@ -23,6 +24,7 @@ async function waitForStatus(tab, expected) {
       return content.document.getElementById("status").value == expected;
     });
   });
+  /* eslint-enable no-shadow */
 
   await assertStatus(tab, expected);
 }

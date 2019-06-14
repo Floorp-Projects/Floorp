@@ -76,17 +76,17 @@ onconnect = function(event) {
   // at us.
   (function() { return; 1; });
 
-  event.ports[0].onmessage = function(event) {
-    if (!(event instanceof MessageEvent)) {
+  event.ports[0].onmessage = function(msg) {
+    if (!(msg instanceof MessageEvent)) {
       throw new Error("'message' event is not a MessageEvent!");
     }
-    if (!("ports" in event)) {
+    if (!("ports" in msg)) {
       throw new Error("'message' event doesn't have a 'ports' property!");
     }
-    if (event.ports === null) {
+    if (msg.ports === null) {
       throw new Error("'message' event has a null 'ports' property!");
     }
-    event.target.postMessage(event.data);
-    throw new Error(event.data);
+    msg.target.postMessage(msg.data);
+    throw new Error(msg.data);
   };
 };

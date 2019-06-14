@@ -44,8 +44,8 @@ if (self.Notification) {
         if (nextTest.length === 0) {
           finishTest();
         }
-      } catch (e) {
-        ok(false, "Test threw exception! " + nextTest + " " + e);
+      } catch (ex) {
+        ok(false, "Test threw exception! " + nextTest + " " + ex);
         finishTest();
       }
     })(steps);

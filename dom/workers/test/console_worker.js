@@ -99,8 +99,8 @@ function nextSteps(event) {
   // Recursive:
   if (event.data == true) {
     var worker = new Worker('console_worker.js');
-    worker.onmessage = function(event) {
-      postMessage(event.data);
+    worker.onmessage = function(msg) {
+      postMessage(msg.data);
     }
     worker.postMessage(false);
   } else {

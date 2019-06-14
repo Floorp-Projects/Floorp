@@ -31,7 +31,7 @@
         ok(event.data.status, event.data.msg);
 
       } else if (event.data.type == 'getPrefs') {
-        var result = {};
+        let result = {};
         event.data.prefs.forEach(function(pref) {
           result[pref] = SpecialPowers.Services.prefs.getBoolPref(pref);
         });

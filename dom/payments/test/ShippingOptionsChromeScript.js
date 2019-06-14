@@ -22,16 +22,16 @@ function showResponse(requestId) {
   const showResponseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
                               createInstance(Ci.nsIGeneralResponseData);
   showResponseData.initData({});
-  const showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
+  const showActionResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
                           createInstance(Ci.nsIPaymentShowActionResponse);
-  showResponse.init(requestId,
+  showActionResponse.init(requestId,
                     Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
                     "testing-payment-method",   // payment method
                     showResponseData,           // payment method data
                     "Bill A. Pacheco",          // payer name
                     "",                         // payer email
                     "");                        // payer phone
-  paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+  paymentSrv.respondPayment(showActionResponse.QueryInterface(Ci.nsIPaymentActionResponse));
 }
 
 function showRequest(requestId) {

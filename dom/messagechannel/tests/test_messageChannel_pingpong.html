@@ -34,12 +34,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
       if (evt.data.type == 'PORT') {
         var port = evt.data.port;
         var counter = 0;
-        port.onmessage = function(evt) {
+        port.onmessage = function(event) {
           // only 1 message should be received by this port.
           if (counter++ == 0) {
-            ok(evt.data % 2, "The number " + evt.data + " has been received correctly by the main window");
+            ok(event.data % 2, "The number " + event.data + " has been received correctly by the main window");
 
-            if (evt.data < MAX - 1) {
+            if (event.data < MAX - 1) {
               ifr.contentWindow.postMessage({ type: 'PORT', port: port }, '*', [port]);
             } else {
               SimpleTest.finish();

@@ -295,7 +295,7 @@ onfetch = function(ev) {
 
   else if (ev.request.url.includes("index.html")) {
     if (seenIndex) {
-        var body = "<script>" +
+        let body = "<script>" +
                      "opener.postMessage({status: 'ok', result: " + ev.isReload + "," +
                                          "message: 'reload status should be indicated'}, '*');" +
                      "opener.postMessage({status: 'done'}, '*');" +
