@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import LoginListItem from "chrome://browser/content/aboutlogins/components/login-list-item.js";
-import ReflectedFluentElement from "chrome://browser/content/aboutlogins/components/reflected-fluent-element.js";
+import LoginListItem from "./login-list-item.js";
+import ReflectedFluentElement from "./reflected-fluent-element.js";
 
 const collator = new Intl.Collator();
 const sortFnOptions = {
@@ -55,6 +55,7 @@ export default class LoginList extends ReflectedFluentElement {
 
     for (let login of this._logins) {
       let listItem = new LoginListItem(login);
+      listItem.setAttribute("missing-username", this.getAttribute("missing-username"));
       if (login.guid == this._selectedGuid) {
         listItem.classList.add("selected");
       }
@@ -122,6 +123,7 @@ export default class LoginList extends ReflectedFluentElement {
     return ["count",
             "last-used-option",
             "last-changed-option",
+            "missing-username",
             "name-option",
             "new-login-subtitle",
             "new-login-title",
@@ -133,12 +135,18 @@ export default class LoginList extends ReflectedFluentElement {
   }
 
   handleSpecialCaseFluentString(attrName) {
-    if (attrName != "new-login-subtitle" &&
-        attrName != "new-login-title") {
-      return false;
+    switch (attrName) {
+      case "missing-username": {
+        break;
+      }
+      case "new-login-subtitle":
+      case "new-login-title": {
+        this._blankLoginListItem.setAttribute(attrName, this.getAttribute(attrName));
+        break;
+      }
+      default:
+        return false;
     }
-
-    this._blankLoginListItem.setAttribute(attrName, this.getAttribute(attrName));
     return true;
   }
 

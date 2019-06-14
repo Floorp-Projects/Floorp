@@ -4467,7 +4467,8 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
 }
 
 void js::ArraySpeciesLookup::reset() {
-  AlwaysPoison(this, 0xBB, sizeof(*this), MemCheckKind::MakeUndefined);
+  AlwaysPoison(this, JS_RESET_VALUE_PATTERN, sizeof(*this),
+               MemCheckKind::MakeUndefined);
   state_ = State::Uninitialized;
 }
 

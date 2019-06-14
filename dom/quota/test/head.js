@@ -173,11 +173,11 @@ function getSimpleDatabase(principal)
 
 function requestFinished(request) {
   return new Promise(function(resolve, reject) {
-    request.callback = function(request) {
-      if (request.resultCode == Cr.NS_OK) {
-        resolve(request.result);
+    request.callback = function(req) {
+      if (req.resultCode == Cr.NS_OK) {
+        resolve(req.result);
       } else {
-        reject(request.resultCode);
+        reject(req.resultCode);
       }
     }
   });

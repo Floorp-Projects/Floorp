@@ -3944,6 +3944,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   script->setFlag(ImmutableFlags::Strict, bce->sc->strict());
   script->setFlag(ImmutableFlags::BindingsAccessedDynamically,
                   bce->sc->bindingsAccessedDynamically());
+  script->setFlag(ImmutableFlags::HasCallSiteObj, bce->hasCallSiteObj);
   script->setFlag(ImmutableFlags::HasSingletons, bce->hasSingletons);
   script->setFlag(ImmutableFlags::IsForEval, bce->sc->isEvalContext());
   script->setFlag(ImmutableFlags::IsModule, bce->sc->isModuleContext());
@@ -4111,7 +4112,8 @@ void JSScript::finalize(FreeOp* fop) {
 
   if (data_) {
     size_t size = computedSizeOfData();
-    AlwaysPoison(data_, 0xdb, size, MemCheckKind::MakeNoAccess);
+    AlwaysPoison(data_, JS_POISONED_JSSCRIPT_DATA_PATTERN, size,
+                 MemCheckKind::MakeNoAccess);
     fop->free_(this, data_, size, MemoryUse::ScriptPrivateData);
   }
 

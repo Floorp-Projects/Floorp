@@ -16,11 +16,11 @@
       navigator.serviceWorker.getRegistration()
       .then(function(reg) {
         if (!reg) {
-          navigator.serviceWorker.ready.then(function(reg) {
-            if (reg.active.state == "activating") {
-              reg.active.onstatechange = function(e) {
-                reg.active.onstatechange = null;
-                if (reg.active.state == "activated") {
+          navigator.serviceWorker.ready.then(function(registration) {
+            if (registration.active.state == "activating") {
+              registration.active.onstatechange = function(e) {
+                registration.active.onstatechange = null;
+                if (registration.active.state == "activated") {
                   success("Registered and activated");
                 }
               }

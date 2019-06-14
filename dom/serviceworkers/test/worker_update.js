@@ -4,7 +4,7 @@
 onmessage = function(e) {
   self.registration.update().then(function(v) {
     return v instanceof ServiceWorkerRegistration ? 'FINISH' : 'FAIL';
-  }).catch(function(e) {
+  }).catch(function(ex) {
     return 'FAIL';
   }).then(function(result) {
     clients.matchAll().then(function(c) {

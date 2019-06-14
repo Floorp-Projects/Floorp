@@ -39,11 +39,11 @@ function makeFileBlob(obj) {
       var data = { blob: blob, index: 5 };
 
       objectStore = db.transaction('test', 'readwrite').objectStore('test');
-      objectStore.add(data).onsuccess = function(evt) {
-        var key = evt.target.result;
+      objectStore.add(data).onsuccess = function(evt1) {
+        var key = evt1.target.result;
         objectStore = db.transaction('test').objectStore('test');
-        objectStore.get(key).onsuccess = function(evt) {
-          resolve(evt.target.result.blob);
+        objectStore.get(key).onsuccess = function(evt2) {
+          resolve(evt2.target.result.blob);
         };
       };
     };
@@ -74,4 +74,3 @@ addEventListener('message', function(evt) {
 </pre>
 </body>
 </html>
-

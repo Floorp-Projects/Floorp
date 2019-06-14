@@ -10,12 +10,14 @@ function promiseU2FRegister(tab, app_id) {
   let challenge = crypto.getRandomValues(new Uint8Array(16));
   challenge = bytesToBase64UrlSafe(challenge);
 
+  /* eslint-disable no-shadow */
   return ContentTask.spawn(tab.linkedBrowser, [app_id, challenge], async function ([app_id, challenge]) {
     return new Promise(resolve => {
       let version = "U2F_V2";
       content.u2f.register(app_id, [{version, challenge}], [], resolve);
     });
   });
+  /* eslint-enable no-shadow */
 }
 
 add_task(async function () {

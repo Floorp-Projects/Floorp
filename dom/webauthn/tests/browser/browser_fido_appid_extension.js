@@ -21,6 +21,7 @@ let expectNotSupportedError = expectError("NotSupported");
 let expectInvalidStateError = expectError("InvalidState");
 let expectSecurityError = expectError("Security");
 
+/* eslint-disable no-shadow */
 function promiseU2FRegister(tab, app_id) {
   let challenge = crypto.getRandomValues(new Uint8Array(16));
   challenge = bytesToBase64UrlSafe(challenge);
@@ -89,6 +90,7 @@ function promiseWebAuthnSign(tab, key_handle, extensions = {}) {
         })
     });
 }
+/* eslint-enable no-shadow */
 
 add_task(function test_setup() {
   Services.prefs.setBoolPref("security.webauth.u2f", true);

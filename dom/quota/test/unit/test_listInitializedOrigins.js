@@ -34,9 +34,9 @@ async function testSteps()
     }
   ];
 
-  function verifyResult(result, origins) {
+  function verifyResult(result, expectedOrigins) {
     ok(result instanceof Array, "Got an array object");
-    ok(result.length == origins.length, "Correct number of elements");
+    ok(result.length == expectedOrigins.length, "Correct number of elements");
 
     info("Sorting elements");
 
@@ -57,7 +57,7 @@ async function testSteps()
 
     for (let i = 0; i < result.length; i++) {
       let a = result[i];
-      let b = origins[i];
+      let b = expectedOrigins[i];
       ok(a.origin == b.origin, "Origin equals");
     }
   }
@@ -82,8 +82,8 @@ async function testSteps()
   info("Getting origins after initializing the storage");
 
   await new Promise(resolve => {
-    listInitializedOrigins(request => {
-      verifyResult(request.result, origins);
+    listInitializedOrigins(req => {
+      verifyResult(req.result, origins);
       resolve();
   })});
 }

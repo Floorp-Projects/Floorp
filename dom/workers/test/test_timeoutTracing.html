@@ -23,7 +23,7 @@ Tests of DOM Worker Threads
     worker.onmessage = null;
 
     // 1 second should be enough to crash.
-    window.setTimeout(function(event) {
+    window.setTimeout(function() {
       ok(true, "Didn't crash!");
       SimpleTest.finish();
     }, 1000);
@@ -45,4 +45,3 @@ Tests of DOM Worker Threads
 </pre>
 </body>
 </html>
-

@@ -44,8 +44,8 @@ add_task(async function test_login_item() {
     }, "Waiting for login item to get populated");
     ok(loginItemPopulated, "The login item should get populated");
 
-    let usernameInput = loginItem.shadowRoot.querySelector("modal-input[name='username']");
-    let passwordInput = loginItem.shadowRoot.querySelector("modal-input[name='password']");
+    let usernameInput = loginItem.shadowRoot.querySelector("input[name='username']");
+    let passwordInput = loginItem.shadowRoot.querySelector("input[name='password']");
 
     let editButton = loginItem.shadowRoot.querySelector(".edit-button");
     editButton.click();
@@ -56,7 +56,8 @@ add_task(async function test_login_item() {
 
     let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
     cancelButton.click();
-    await Promise.resolve();
+    usernameInput = loginItem.shadowRoot.querySelector("input[name='username']");
+    passwordInput = loginItem.shadowRoot.querySelector("input[name='password']");
     is(usernameInput.value, login.username, "Username change should be reverted");
     is(passwordInput.value, login.password, "Password change should be reverted");
 
@@ -71,6 +72,8 @@ add_task(async function test_login_item() {
     let saveChangesButton = loginItem.shadowRoot.querySelector(".save-changes-button");
     saveChangesButton.click();
 
+    usernameInput = loginItem.shadowRoot.querySelector("input[name='username']");
+    passwordInput = loginItem.shadowRoot.querySelector("input[name='password']");
     await ContentTaskUtils.waitForCondition(() => {
       loginListItem = Cu.waiveXrays(loginList.shadowRoot.querySelector("login-list-item"));
       return loginListItem._login.username == usernameInput.value &&

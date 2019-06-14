@@ -14,11 +14,13 @@ async function assertStatus(tab, expected) {
 }
 
 async function waitForStatus(tab, expected) {
+  /* eslint-disable no-shadow */
   await ContentTask.spawn(tab.linkedBrowser, [expected], async function (expected) {
     return ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("status").value == expected;
     });
   });
+  /* eslint-enable no-shadow */
 
   await assertStatus(tab, expected);
 }
@@ -27,6 +29,7 @@ function startMakeCredentialRequest(tab) {
   let challenge = crypto.getRandomValues(new Uint8Array(16));
   challenge = bytesToBase64UrlSafe(challenge);
 
+  /* eslint-disable no-shadow */
   return ContentTask.spawn(tab.linkedBrowser, [challenge], async function ([challenge]) {
     let appId = content.location.origin;
     let request = {version: "U2F_V2", challenge};
@@ -39,6 +42,7 @@ function startMakeCredentialRequest(tab) {
 
     status.value = "pending";
   });
+  /* eslint-enable no-shadow */
 }
 
 function startGetAssertionRequest(tab) {
@@ -48,6 +52,7 @@ function startGetAssertionRequest(tab) {
   let keyHandle = crypto.getRandomValues(new Uint8Array(16));
   keyHandle = bytesToBase64UrlSafe(keyHandle);
 
+  /* eslint-disable no-shadow */
   return ContentTask.spawn(tab.linkedBrowser, [challenge, keyHandle], async function ([challenge, keyHandle]) {
     let appId = content.location.origin;
     let key = {version: "U2F_V2", keyHandle};
@@ -60,6 +65,7 @@ function startGetAssertionRequest(tab) {
 
     status.value = "pending";
   });
+  /* eslint-enable no-shadow */
 }
 
 

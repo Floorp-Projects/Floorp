@@ -40,8 +40,8 @@
 
       var promise = new Promise((resolve, reject) => {
         info("Waiting until workers are ready...");
-        worker.addEventListener("message", function onmessage(e) {
-          is(e.data, "ready", "We want to receive: -ready-");
+        worker.addEventListener("message", function onmessage(msg) {
+          is(msg.data, "ready", "We want to receive: -ready-");
           worker.removeEventListener("message", onmessage);
           resolve();
         });
@@ -95,8 +95,8 @@
 
     var promise = new Promise((resolve, reject) => {
       info("Waiting until workers are ready...");
-      worker.addEventListener("message", function onmessage(e) {
-        is(e.data, "ready", "We want to receive: -ready-");
+      worker.addEventListener("message", function onmessage(msg) {
+        is(msg.data, "ready", "We want to receive: -ready-");
         worker.removeEventListener("message", onmessage);
         resolve();
       });
@@ -132,4 +132,3 @@
   </script>
 </body>
 </html>
-

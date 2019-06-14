@@ -9,15 +9,15 @@
           return;
         }
         var promise = navigator.serviceWorker.register("worker.js");
-        window.onmessage = function (event) {
-          if (event.data === "register") {
-            promise.then(function (registration) {
+        window.onmessage = function (e) {
+          if (e.data === "register") {
+            promise.then(function() {
               return navigator.serviceWorker.register("worker2.js")
                 .then(function(registration) {
                   reg = registration;
                 });
             });
-          } else if (event.data === "unregister") {
+          } else if (e.data === "unregister") {
             reg.unregister();
           }
         };

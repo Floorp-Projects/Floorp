@@ -255,6 +255,10 @@ static MOZ_ALWAYS_INLINE void PodSet(T* aDst, const T& aSrc, size_t aNElem) {
  * pointer. These values should be odd, see the comment in IsThingPoisoned.
  *
  * Note: new patterns should also be added to the array in IsThingPoisoned!
+ *
+ * We try to keep our IRC bot, mrgiggles, up to date with these and other
+ * patterns:
+ * https://bitbucket.org/sfink/mrgiggles/src/default/plugins/knowledge/__init__.py
  */
 const uint8_t JS_FRESH_NURSERY_PATTERN = 0x2F;
 const uint8_t JS_SWEPT_NURSERY_PATTERN = 0x2B;
@@ -268,6 +272,15 @@ const uint8_t JS_FREED_CHUNK_PATTERN = 0x8B;
 const uint8_t JS_FREED_ARENA_PATTERN = 0x9B;
 const uint8_t JS_SWEPT_TI_PATTERN = 0x6F;
 const uint8_t JS_FRESH_MARK_STACK_PATTERN = 0x9F;
+const uint8_t JS_RESET_VALUE_PATTERN = 0xBB;
+const uint8_t JS_POISONED_JSSCRIPT_DATA_PATTERN = 0xDB;
+const uint8_t JS_OOB_PARSE_NODE_PATTERN = 0xFF;
+const uint8_t JS_LIFO_UNDEFINED_PATTERN = 0xcd;
+const uint8_t JS_LIFO_UNINITIALIZED_PATTERN = 0xce;
+
+// Even ones
+const uint8_t JS_NEW_NATIVE_ITERATOR_PATTERN = 0xCC;
+const uint8_t JS_SCOPE_DATA_TRAILING_NAMES_PATTERN = 0xCC;
 
 /*
  * Ensure JS_SWEPT_CODE_PATTERN is a byte pattern that will crash immediately
