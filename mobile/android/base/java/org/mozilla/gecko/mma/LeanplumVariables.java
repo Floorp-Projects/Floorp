@@ -14,7 +14,7 @@ import com.leanplum.annotations.Variable;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.firstrun.FirstrunPanel;
-import org.mozilla.gecko.util.OnboardingStringUtil;
+import org.mozilla.gecko.util.OnboardingResources;
 
 import java.lang.reflect.Field;
 
@@ -84,21 +84,23 @@ public class LeanplumVariables {
         welcomePanelTitle = appResources.getString(R.string.firstrun_panel_title_welcome);
         privacyPanelTitle = appResources.getString(R.string.firstrun_panel_title_privacy);
         customizePanelTitle = appResources.getString(R.string.firstrun_panel_title_customize);
-        syncPanelTitle = appResources.getString(R.string.firstrun_sync_title);
 
         // The new Onboarding UX uses different messages and images. Only if they are localized.
-        if (OnboardingStringUtil.getInstance(context).areStringsLocalized()) {
-            welcomePanelMessage = appResources.getString(R.string.newfirstrun_urlbar_message);
-            welcomePanelSubtext = appResources.getString(R.string.newfirstrun_privacy_subtext);
+        OnboardingResources onboardingUtil = OnboardingResources.getInstance(context);
+        syncPanelTitle = onboardingUtil.getSyncTitle();
+
+        if (onboardingUtil.useNewOnboarding()) {
+            welcomePanelMessage = onboardingUtil.getWelcomeMessage();
+            welcomePanelSubtext = onboardingUtil.getWelcomeSubtext();
             welcomeDrawableId = R.drawable.firstrun_welcome2;
 
             privacyPanelMessage = FirstrunPanel.NO_MESSAGE;
-            privacyPanelSubtext = appResources.getString(R.string.newfirstrun_privacy_subtext);
+            privacyPanelSubtext = onboardingUtil.getPrivacySubtext();
             privacyDrawableId = R.drawable.firstrun_private2;
 
             syncPanelMessage = FirstrunPanel.NO_MESSAGE;
-            syncPanelSubtext = appResources.getString(R.string.newfirstrun_sync_subtext);
-            syncDrawableId = R.drawable.firstrun_sync2;
+            syncPanelSubtext = onboardingUtil.getSyncSubtext();
+            syncDrawableId = onboardingUtil.getSyncImageResId();
         } else {
             welcomePanelMessage = appResources.getString(R.string.firstrun_urlbar_message);
             welcomePanelSubtext = appResources.getString(R.string.firstrun_urlbar_subtext);
