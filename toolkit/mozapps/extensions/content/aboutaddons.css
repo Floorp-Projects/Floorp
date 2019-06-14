@@ -310,10 +310,6 @@ addon-details {
   padding-bottom: 0;
 }
 
-.addon-detail-row-has-help[hidden] + .addon-detail-help-row {
-  display: none;
-}
-
 .addon-detail-row input[type="checkbox"] {
   margin: 0;
 }
