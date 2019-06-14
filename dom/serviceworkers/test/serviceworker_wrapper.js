@@ -71,11 +71,11 @@ addEventListener('message', function workerWrapperOnMessage(e) {
     }
     try {
       importScripts(data.script);
-    } catch(e) {
+    } catch(ex) {
       client.postMessage({
         type: 'status',
         status: false,
-        msg: 'worker failed to import ' + data.script + "; error: " + e.message
+        msg: 'worker failed to import ' + data.script + "; error: " + ex.message
       });
     }
     completeInstall();

@@ -42,8 +42,8 @@ onmessage = function(event) {
       }
     }
   }
-  xhr.onerror = function(event) {
-    ok(false, "Got an error event: " + event);
+  xhr.onerror = function(e) {
+    ok(false, "Got an error event: " + e);
     postMessage({type: "finish" });
   }
 

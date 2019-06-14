@@ -10,8 +10,8 @@ onmessage = function(e) {
       try {
         close();
         ok(false, "close() should throw");
-      } catch (e) {
-        ok(e.name === "InvalidAccessError", "close() should throw InvalidAccessError");
+      } catch (ex) {
+        ok(ex.name === "InvalidAccessError", "close() should throw InvalidAccessError");
       }
       client.postMessage({status: "done"});
     });

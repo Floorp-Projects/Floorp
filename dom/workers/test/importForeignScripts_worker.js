@@ -47,8 +47,8 @@ onmessage = function(e) {
 
 onconnect = function(e) {
   target = e.ports[0];
-  e.ports[0].onmessage = function(e) {
-    if (e.data === "start") {
+  e.ports[0].onmessage = function(msg) {
+    if (msg.data === "start") {
       runTests();
     }
   };

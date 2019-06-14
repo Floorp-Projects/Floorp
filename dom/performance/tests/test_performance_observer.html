@@ -36,8 +36,8 @@ let test = promise_test = fn => {
       ok(false, `got unexpected exception ${e}`);
     }
     try {
-      for (const fn of cleanups) {
-        fn();
+      for (const f of cleanups) {
+        f();
       }
       runNextTest();
     } catch (e) {

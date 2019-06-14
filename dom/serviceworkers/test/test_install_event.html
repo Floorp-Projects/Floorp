@@ -92,8 +92,8 @@
           swr.installing.onstatechange = function(e) {
             e.target.onstatechange = null;
             if (swr.waiting) {
-              swr.waiting.onstatechange = function(e) {
-                e.target.onstatechange = null;
+              swr.waiting.onstatechange = function(event) {
+                event.target.onstatechange = null;
                 testActive(swr.active).then(resolve, reject);
               }
             } else {
@@ -141,4 +141,3 @@
 </pre>
 </body>
 </html>
-

@@ -80,8 +80,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
     a.port1.onmessage = function(evt) {
       ok(evt.ports.length == 1, "Iframe sent a new port!");
-      evt.ports[0].onmessage = function(evt) {
-        is(evt.data, "hello world!", "Message sent and received!");
+      evt.ports[0].onmessage = function(event) {
+        is(event.data, "hello world!", "Message sent and received!");
         runTests();
       }
 

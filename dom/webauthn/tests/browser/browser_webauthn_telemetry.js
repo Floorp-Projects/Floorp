@@ -54,6 +54,7 @@ function promiseMakeCredentialRequest(tab) {
 }
 
 function promiseGetAssertionRequest(tab, rawId) {
+  /* eslint-disable no-shadow */
   return ContentTask.spawn(tab.linkedBrowser, [rawId], ([rawId]) => {
     let newCredential = {
       type: "public-key",
@@ -76,6 +77,7 @@ function promiseGetAssertionRequest(tab, rawId) {
       };
     });
   });
+  /* eslint-enable no-shadow */
 }
 
 function checkRpIdHash(rpIdHash) {

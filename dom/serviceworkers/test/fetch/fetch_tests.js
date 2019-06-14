@@ -166,7 +166,7 @@ fetchXHR('readable-stream-already-consumed.txt', function(xhr) {
 });
 
 var expectedUncompressedResponse = "";
-for (var i = 0; i < 10; ++i) {
+for (let i = 0; i < 10; ++i) {
   expectedUncompressedResponse += "hello";
 }
 expectedUncompressedResponse += "\n";
@@ -324,7 +324,7 @@ fetch('http://example.com/cors-for-no-cors', { mode: "no-cors" })
 
 function arrayBufferFromString(str) {
   var arr = new Uint8Array(str.length);
-  for (var i = 0; i < str.length; ++i) {
+  for (let i = 0; i < str.length; ++i) {
     arr[i] = str.charCodeAt(i);
   }
   return arr;

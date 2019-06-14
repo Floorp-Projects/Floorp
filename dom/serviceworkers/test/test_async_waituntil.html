@@ -45,9 +45,9 @@ add_task(async function async_wait_until() {
   var worker;
   let registration = await navigator.serviceWorker.register(
     "async_waituntil_worker.js", { scope: "./"} )
-    .then(function(registration) {
-      worker = registration.installing;
-      return waitForState(worker, 'activated', registration);
+    .then(function(reg) {
+      worker = reg.installing;
+      return waitForState(worker, 'activated', reg);
     });
 
   // The service worker will claim us when it becomes active.
