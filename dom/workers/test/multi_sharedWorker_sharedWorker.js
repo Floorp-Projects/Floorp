@@ -16,7 +16,7 @@ self.onconnect = function(event) {
   var port = event.ports[0];
 
   if (registeredPorts.length) {
-    var data = {
+    let data = {
       type: "connect"
     };
 
@@ -25,8 +25,8 @@ self.onconnect = function(event) {
     });
   }
 
-  port.onmessage = function(event) {
-    switch (event.data.command) {
+  port.onmessage = function(msg) {
+    switch (msg.data.command) {
       case "start":
         break;
 
@@ -34,7 +34,7 @@ self.onconnect = function(event) {
         throw new Error("Expected");
 
       case "store":
-        storedData = event.data.data;
+        storedData = msg.data.data;
         break;
 
       case "retrieve":

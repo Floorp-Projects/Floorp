@@ -74,8 +74,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345365
         payRequest.abort().then((abortResult) => {
           is(abortResult, undefined, "abort() should be resolved with undefined.");
           resolve();
-        }).catch( (err) => {
-          ok(false, "Expected no error, but got '" + err.name + "'.");
+        }).catch( (error) => {
+          ok(false, "Expected no error, but got '" + error.name + "'.");
           resolve();
         }).finally(handler.destruct);
       });

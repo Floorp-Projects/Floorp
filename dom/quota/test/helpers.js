@@ -362,9 +362,9 @@ function getSimpleDatabase()
 
 function requestFinished(request) {
   return new Promise(function(resolve, reject) {
-    request.callback = SpecialPowers.wrapCallback(function(request) {
-      if (request.resultCode === SpecialPowers.Cr.NS_OK) {
-        let result = request.result;
+    request.callback = SpecialPowers.wrapCallback(function(req) {
+      if (req.resultCode === SpecialPowers.Cr.NS_OK) {
+        let result = req.result;
         if (SpecialPowers.call_Instanceof(result,
                                           SpecialPowers.Ci.nsISDBResult)) {
           let wrapper = {};
@@ -379,7 +379,7 @@ function requestFinished(request) {
         }
         resolve(result);
       } else {
-        reject(request.resultCode);
+        reject(req.resultCode);
       }
     });
   });

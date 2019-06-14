@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=525444
 
 var langUriMap = {};
 
-for (var voice of speechSynthesis.getVoices()) {
+for (let voice of speechSynthesis.getVoices()) {
   langUriMap[voice.lang] = voice.voiceURI;
   ok(true, voice.lang + ' ' + voice.voiceURI + ' ' + voice.default);
   is(voice.default, voice.lang == 'en-JM', 'Only Jamaican voice should be default');
@@ -58,7 +58,7 @@ function testFunc(done_cb) {
     function () {
       var test_data = [];
       var voices = speechSynthesis.getVoices();
-      for (var voice of voices) {
+      for (let voice of voices) {
         if (voice.lang.split("-").length > 2) {
           // Skip voices that don't automatically end with success
           continue;

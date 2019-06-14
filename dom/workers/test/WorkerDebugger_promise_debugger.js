@@ -11,8 +11,8 @@ self.onmessage = function (event) {
   Promise.resolve().then(function () {
     var dbg = new Debugger(global);
     dbg.onDebuggerStatement = function () {
-      self.onmessage = function (event) {
-        if (event.data !== "resume") {
+      self.onmessage = function (e) {
+        if (e.data !== "resume") {
           return;
         }
         // This then-handler should be executed inside the nested event loop,

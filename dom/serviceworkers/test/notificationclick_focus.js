@@ -30,8 +30,8 @@ onnotificationclick = function(e) {
       clients.forEach(function(client) {
         client.postMessage({ok: true});
       });
-    }).catch(function(e) {
-      dump("Error " + e + "\n");
+    }).catch(function(ex) {
+      dump("Error " + ex + "\n");
       clients.forEach(function(client) {
         client.postMessage({ok: false});
       });

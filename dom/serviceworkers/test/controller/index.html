@@ -54,8 +54,8 @@
         e.unregister().then(function(result) {
           my_ok(result, "Unregistering the SW should succeed");
           finish();
-        }, function(e) {
-          dump("Error unregistering the SW: " + e + "\n");
+        }, function(error) {
+          dump("Error unregistering the SW: " + error + "\n");
         });
       });
     } else {
@@ -70,5 +70,3 @@
 </pre>
 </body>
 </html>
-
-

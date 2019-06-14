@@ -39,20 +39,20 @@ function doTests() {
   testOnWindow(false, function(aWin) {
     wN = aWin;
 
-    testOnWindow(true, function(aWin) {
-      wP = aWin;
+    testOnWindow(true, function(win) {
+      wP = win;
 
       var sharedWorker1 = new wP.content.SharedWorker('sharedWorker_privateBrowsing.js');
       sharedWorker1.port.onmessage = function(event) {
         is(event.data, 1, "Only 1 sharedworker expected in the private window");
 
         var sharedWorker2 = new wN.content.SharedWorker('sharedWorker_privateBrowsing.js');
-        sharedWorker2.port.onmessage = function(event) {
-          is(event.data, 1, "Only 1 sharedworker expected in the normal window");
+        sharedWorker2.port.onmessage = function(event1) {
+          is(event1.data, 1, "Only 1 sharedworker expected in the normal window");
 
           var sharedWorker3 = new wP.content.SharedWorker('sharedWorker_privateBrowsing.js');
-          sharedWorker3.port.onmessage = function(event) {
-            is(event.data, 2, "Only 2 sharedworker expected in the private window");
+          sharedWorker3.port.onmessage = function(event2) {
+            is(event2.data, 2, "Only 2 sharedworker expected in the private window");
             runTest();
           }
         }

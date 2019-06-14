@@ -44,12 +44,12 @@ objectWithThrowingGetter.__defineGetter__("foo", function() {
 });
 
 var typedArrayWithValues = new Int8Array(5);
-for (var index in typedArrayWithValues) {
+for (let index in typedArrayWithValues) {
   typedArrayWithValues[index] = index;
 }
 
 var typedArrayWithFunBuffer = new Int8Array(4);
-for (var index in typedArrayWithFunBuffer) {
+for (let index in typedArrayWithFunBuffer) {
   typedArrayWithFunBuffer[index] = 255;
 }
 
@@ -299,7 +299,7 @@ var messages = [
   }
 ];
 
-for (var index = 0; index < messages.length; index++) {
+for (let index = 0; index < messages.length; index++) {
   var message = messages[index];
   if (message.hasOwnProperty("compareValue")) {
     continue;
@@ -311,7 +311,7 @@ for (var index = 0; index < messages.length; index++) {
 }
 
 onmessage = function(event) {
-  for (var index = 0; index < messages.length; index++) {
+  for (let index = 0; index < messages.length; index++) {
     var exception = undefined;
 
     try {

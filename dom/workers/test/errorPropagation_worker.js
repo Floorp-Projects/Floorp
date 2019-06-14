@@ -20,23 +20,23 @@ onmessage = function(event) {
   if (workerId > 1) {
     var worker = new Worker("errorPropagation_worker.js");
 
-    worker.onmessage = function(event) {
-      postMessage(event.data);
+    worker.onmessage = function(msg) {
+      postMessage(msg.data);
     };
 
     var seenWorkerError;
-    worker.onerror = function(event) {
+    worker.onerror = function(error) {
       if (!seenWorkerError) {
         seenWorkerError = true;
         postMessage({
           type: "worker",
           data: {
-            message: event.message,
-            filename: event.filename,
-            lineno: event.lineno
+            message: error.message,
+            filename: error.filename,
+            lineno: error.lineno
           }
         });
-        event.preventDefault();
+        error.preventDefault();
       }
     };
 

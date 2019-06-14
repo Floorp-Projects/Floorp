@@ -425,9 +425,9 @@ function promiseCatchNoArg() {
 
 function promiseNestedPromise() {
   new Promise(function(resolve, reject) {
-    resolve(new Promise(function(resolve, reject) {
+    resolve(new Promise(function(r) {
       ok(true, "Nested promise is executed");
-      resolve(42);
+      r(42);
     }));
   }).then(function(value) {
     is(value, 42, "Nested promise is executed and then == 42");
@@ -437,9 +437,9 @@ function promiseNestedPromise() {
 
 function promiseNestedNestedPromise() {
   new Promise(function(resolve, reject) {
-    resolve(new Promise(function(resolve, reject) {
+    resolve(new Promise(function(r) {
       ok(true, "Nested promise is executed");
-      resolve(42);
+      r(42);
     }).then(function(what) { return what+1; }));
   }).then(function(value) {
     is(value, 43, "Nested promise is executed and then == 43");
@@ -466,9 +466,9 @@ function promiseLoop() {
   new Promise(function(resolve, reject) {
     resolve(new Promise(function(r1, r2) {
       ok(true, "Nested promise is executed");
-      r1(new Promise(function(r1, r2) {
+      r1(new Promise(function(r3, r4) {
         ok(true, "Nested nested promise is executed");
-        r1(42);
+        r3(42);
       }));
     }));
   }).then(function(value) {

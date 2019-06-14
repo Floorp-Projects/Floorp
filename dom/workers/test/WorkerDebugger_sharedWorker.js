@@ -1,8 +1,8 @@
 "use strict";
 
 self.onconnect = function (event) {
-  event.ports[0].onmessage = function (event) {
-    switch (event.data) {
+  event.ports[0].onmessage = function (e) {
+    switch (e.data) {
     case "close":
       close();
       break;

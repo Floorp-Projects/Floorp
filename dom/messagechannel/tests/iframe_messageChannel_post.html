@@ -10,8 +10,8 @@
     port = evt.data.port;
 
     port.addEventListener('message', receivePostMessage);
-    function receivePostMessage(evt) {
-      port.postMessage(evt.data);
+    function receivePostMessage(event) {
+      port.postMessage(event.data);
     }
     port.start();
 
@@ -21,4 +21,3 @@
   </script>
 </body>
 </html>
-

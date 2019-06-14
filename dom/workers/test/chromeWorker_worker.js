@@ -13,8 +13,8 @@ if (ctypes.toString() != "[object ctypes]") {
 
 onmessage = function(event) {
   let worker = new ChromeWorker("chromeWorker_subworker.js");
-  worker.onmessage = function(event) {
-    postMessage(event.data);
+  worker.onmessage = function(msg) {
+    postMessage(msg.data);
   }
   worker.postMessage(event.data);
 }

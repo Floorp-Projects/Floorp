@@ -7,11 +7,11 @@ onmessage = function(event) {
 
   worker.postMessage(event.data);
 
-  worker.onmessage = function(event) {
-    postMessage(event.data);
+  worker.onmessage = function(msg) {
+    postMessage(msg.data);
   }
 
-  worker.onerror = function(event) {
+  worker.onerror = function(error) {
     postMessage(undefined);
   }
 };
