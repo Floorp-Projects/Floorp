@@ -98,6 +98,7 @@ class BrowsingContextTargetFront extends
       const response = await super.attach();
 
       this._threadActor = response.threadActor;
+      this.targetForm.contextActor = this._threadActor;
       this.configureOptions.javascriptEnabled = response.javascriptEnabled;
       this.traits = response.traits || {};
 
