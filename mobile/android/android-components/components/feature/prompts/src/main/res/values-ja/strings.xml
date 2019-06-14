@@ -9,6 +9,15 @@
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
     <string name="mozac_feature_prompts_no_more_dialogs">このページによる追加のダイアログ表示を抑止する</string>
 
+    <!-- Title of a date picker dialog, this text is shown above a date picker. -->
+    <string name="mozac_feature_prompts_pick_a_date">日付を入力</string>
+
+    <!-- Title of a time picker dialog, this text is shown above a time picker. -->
+    <string name="mozac_feature_prompts_pick_a_time">時刻を入力</string>
+
+    <!-- Title of a date and time picker dialog, this text is shown above the picker. -->
+    <string name="mozac_feature_prompts_pick_a_date_and_time">日付と時刻を入力</string>
+
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">設定</string>
 

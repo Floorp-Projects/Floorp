@@ -9,6 +9,15 @@
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
     <string name="mozac_feature_prompts_no_more_dialogs">Diese Seite daran hindern, weitere Dialoge zu öffnen</string>
 
+    <!-- Title of a date picker dialog, this text is shown above a date picker. -->
+    <string name="mozac_feature_prompts_pick_a_date">Datum auswählen</string>
+
+    <!-- Title of a time picker dialog, this text is shown above a time picker. -->
+    <string name="mozac_feature_prompts_pick_a_time">Uhrzeit auswählen</string>
+
+    <!-- Title of a date and time picker dialog, this text is shown above the picker. -->
+    <string name="mozac_feature_prompts_pick_a_date_and_time">Datum und Uhrzeit auswählen</string>
+
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">Übernehmen</string>
 
