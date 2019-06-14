@@ -63,6 +63,7 @@ const PERMISSION_MASKS = {
   "never-activate": AddonManager.PERM_CAN_DISABLE,
   uninstall: AddonManager.PERM_CAN_UNINSTALL,
   upgrade: AddonManager.PERM_CAN_UPGRADE,
+  "change-privatebrowsing": AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS,
 };
 
 const PREF_DISCOVERY_API_URL = "extensions.getAddons.discovery.api_url";
@@ -1166,11 +1167,13 @@ class AddonDetails extends HTMLElement {
       this.render();
     }
     this.deck.addEventListener("view-changed", this);
+    this.addEventListener("keypress", this);
   }
 
   disconnectedCallback() {
     this.inlineOptions.destroyBrowser();
     this.deck.removeEventListener("view-changed", this);
+    this.removeEventListener("keypress", this);
   }
 
   handleEvent(e) {
@@ -1194,6 +1197,11 @@ class AddonDetails extends HTMLElement {
             this.inlineOptions.ensureBrowserCreated();
           }
           break;
+      }
+    } else if (e.type == "keypress") {
+      if (e.keyCode == KeyEvent.DOM_VK_RETURN &&
+          e.target.getAttribute("action") === "pb-learn-more") {
+        e.target.click();
       }
     }
   }
@@ -1278,19 +1286,29 @@ class AddonDetails extends HTMLElement {
     this.querySelector(".addon-detail-row-updates").hidden =
       !hasPermission(addon, "upgrade");
 
-    let pbRow = this.querySelector(".addon-detail-row-private-browsing");
-    if (!allowPrivateBrowsingByDefault && addon.type == "extension" &&
-        addon.incognito != "not_allowed") {
+    // By default, all private browsing rows are hidden. Possibly show one.
+    if (allowPrivateBrowsingByDefault || addon.type != "extension") {
+      // All add-addons of this type are allowed in private browsing mode, so
+      // do not show any UI.
+    } else if (addon.incognito == "not_allowed") {
+      let pbRowNotAllowed =
+        this.querySelector(".addon-detail-row-private-browsing-disallowed");
+      pbRowNotAllowed.hidden = false;
+      pbRowNotAllowed.nextElementSibling.hidden = false;
+    } else if (!hasPermission(addon, "change-privatebrowsing")) {
+      let pbRowRequired =
+        this.querySelector(".addon-detail-row-private-browsing-required");
+      pbRowRequired.hidden = false;
+      pbRowRequired.nextElementSibling.hidden = false;
+    } else {
+      let pbRow = this.querySelector(".addon-detail-row-private-browsing");
+      pbRow.hidden = false;
+      pbRow.nextElementSibling.hidden = false;
       let isAllowed = await isAllowedInPrivateBrowsing(addon);
       pbRow.querySelector(`[value="${isAllowed ? 1 : 0}"]`).checked = true;
       let learnMore = pbRow.nextElementSibling
         .querySelector('a[data-l10n-name="learn-more"]');
       learnMore.href = SUPPORT_URL + "extensions-pb";
-    } else {
-      // Remove the help row, which is right after the settings.
-      pbRow.nextElementSibling.hidden = true;
-      // Then remove the actual settings.
-      pbRow.hidden = true;
     }
 
     // Author.
@@ -1555,6 +1573,10 @@ class AddonCard extends HTMLElement {
             windowRoot.ownerGlobal.openWebLinkIn(
               e.target.getAttribute("url"), "tab");
           }
+          break;
+        case "pb-learn-more":
+          windowRoot.ownerGlobal.openTrustedLinkIn(
+            SUPPORT_URL + "extensions-pb", "tab");
           break;
         default:
           // Handle a click on the card itself.
