@@ -104,6 +104,7 @@ class CollectionCreationUIView(
 
         view.tab_list.run {
             adapter = collectionCreationTabListAdapter
+            itemAnimator = null
             layoutManager = LinearLayoutManager(container.context, RecyclerView.VERTICAL, true)
         }
 
