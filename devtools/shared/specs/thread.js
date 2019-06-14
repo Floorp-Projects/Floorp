@@ -18,8 +18,18 @@ const threadSpec = generateActorSpec({
   typeName: "context",
 
   events: {
+    paused: {
+      actor: Option(0, "nullable:string"),
+      frame: Option(0, "nullable:json"),
+      why: Option(0, "nullable:json"),
+      poppedFrames: Option(0, "nullable:json"),
+      error: Option(0, "nullable:json"),
+    },
+    resumed: {},
+    detached: {},
+    willInterrupt: {},
     newSource: {
-      source: Option(0, "source"),
+      source: Option(0, "json"),
     },
     progress: {
       recording: Option(0, "json"),
@@ -61,7 +71,7 @@ const threadSpec = generateActorSpec({
       request: {
         when: Arg(0, "json"),
       },
-      response: RetVal("array:json"),
+      response: RetVal("nullable:json"),
     },
     sources: {
       response: RetVal("array:json"),
