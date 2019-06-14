@@ -334,48 +334,6 @@ nsresult ReferrerInfo::HandleUserXOriginSendingPolicy(nsIURI* aURI,
   return NS_OK;
 }
 
-/* static */
-bool ReferrerInfo::ShouldSetNullOriginHeader(net::HttpBaseChannel* aChannel,
-                                             nsIURI* aOriginURI) {
-  MOZ_ASSERT(aChannel);
-  MOZ_ASSERT(aOriginURI);
-
-  // When we're dealing with CORS (mode is "cors"), we shouldn't take the
-  // Referrer-Policy into account
-  uint32_t corsMode = CORS_NONE;
-  NS_ENSURE_SUCCESS(aChannel->GetCorsMode(&corsMode), false);
-  if (corsMode == CORS_USE_CREDENTIALS) {
-    return false;
-  }
-
-  nsCOMPtr<nsIReferrerInfo> referrerInfo;
-  NS_ENSURE_SUCCESS(aChannel->GetReferrerInfo(getter_AddRefs(referrerInfo)),
-                    false);
-  if (!referrerInfo) {
-    return false;
-  }
-  uint32_t policy = referrerInfo->GetReferrerPolicy();
-  if (policy == nsIHttpChannel::REFERRER_POLICY_NO_REFERRER) {
-    return true;
-  }
-
-  bool allowed = false;
-  nsCOMPtr<nsIURI> uri;
-  NS_ENSURE_SUCCESS(aChannel->GetURI(getter_AddRefs(uri)), false);
-
-  if (NS_SUCCEEDED(ReferrerInfo::HandleSecureToInsecureReferral(
-          aOriginURI, uri, policy, allowed)) &&
-      !allowed) {
-    return true;
-  }
-
-  if (policy == nsIHttpChannel::REFERRER_POLICY_SAME_ORIGIN) {
-    return ReferrerInfo::IsCrossOriginRequest(aChannel);
-  }
-
-  return false;
-}
-
 nsresult ReferrerInfo::HandleUserReferrerSendingPolicy(nsIHttpChannel* aChannel,
                                                        bool& aAllowed) const {
   aAllowed = false;
