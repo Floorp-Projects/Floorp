@@ -33,10 +33,8 @@ add_task(async function test_create_login() {
       let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
 
       let originInput = loginItem.shadowRoot.querySelector("input[name='origin']");
-      let usernameInput = loginItem.shadowRoot.querySelector("modal-input[name='username']")
-                                   .shadowRoot.querySelector(".unlocked-value");
-      let passwordInput = loginItem.shadowRoot.querySelector("modal-input[name='password']")
-                                   .shadowRoot.querySelector(".unlocked-value");
+      let usernameInput = loginItem.shadowRoot.querySelector("input[name='username']");
+      let passwordInput = loginItem.shadowRoot.querySelector("input[name='password']");
 
       originInput.value = aOriginTuple[0];
       usernameInput.value = "testuser1";
@@ -74,10 +72,8 @@ add_task(async function test_create_login() {
       let editButton = loginItem.shadowRoot.querySelector(".edit-button");
       editButton.click();
 
-      let usernameInput = loginItem.shadowRoot.querySelector("modal-input[name='username']")
-                                   .shadowRoot.querySelector(".unlocked-value");
-      let passwordInput = loginItem.shadowRoot.querySelector("modal-input[name='password']")
-                                   .shadowRoot.querySelector(".unlocked-value");
+      let usernameInput = loginItem.shadowRoot.querySelector("input[name='username']");
+      let passwordInput = loginItem.shadowRoot.querySelector("input[name='password']");
       usernameInput.value = "testuser2";
       passwordInput.value = "testpass2";
 
