@@ -926,6 +926,13 @@ void gfxUserFontEntry::LoadPlatformFontAsync(
 
   // Do the OpenType sanitization over on the font loading thread.  Once that is
   // complete, we'll continue in ContinuePlatformFontLoadOnMainThread.
+  //
+  // We hold a strong reference to the gfxUserFontSet during this work, since
+  // the document might be closed while we are OMT, and release it at the end
+  // of ContinuePlatformFontLoadOnMainThread.
+
+  mFontSet->AddRef();
+
   nsCOMPtr<nsIRunnable> event =
       NewRunnableMethod<const uint8_t*, uint32_t,
                         nsMainThreadPtrHandle<nsIFontLoadCompleteCallback>>(
@@ -952,10 +959,11 @@ void gfxUserFontEntry::ContinuePlatformFontLoadOnMainThread(
   if (loaded) {
     IncrementGeneration();
     aCallback->FontLoadComplete();
-    return;
+  } else {
+    FontLoadFailed(aCallback);
   }
 
-  FontLoadFailed(aCallback);
+  mFontSet->Release();  // for the AddRef in LoadPlatformFontAsync
 }
 
 void gfxUserFontEntry::FontLoadFailed(nsIFontLoadCompleteCallback* aCallback) {
