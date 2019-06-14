@@ -25,6 +25,7 @@ login-list =
     }
   .last-changed-option = Last Changed
   .last-used-option = Last Used
+  .missing-username = (no username)
   .name-option = Name
   .new-login-subtitle = Enter your login credentials
   .new-login-title = New Login

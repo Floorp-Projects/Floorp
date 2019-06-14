@@ -37,7 +37,7 @@ export default class LoginListItem extends HTMLElement {
 
     this.setAttribute("guid", this._login.guid);
     origin.textContent = this._login.origin;
-    username.textContent = this._login.username;
+    username.textContent = this._login.username.trim() || this.getAttribute("missing-username");
   }
 
   handleEvent(event) {
