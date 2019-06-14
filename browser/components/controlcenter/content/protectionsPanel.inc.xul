@@ -33,6 +33,15 @@
               oncommand="gProtectionsHandler.onTPSwitchCommand();" />
         </vbox>
       </hbox>
+
+      <vbox id="protections-popup-settings-section"
+            class="identity-popup-section">
+        <toolbarbutton id="protections-popup-settings-button"
+                       oncommand="ContentBlocking.openPreferences();">
+          <image class="protection-settings-icon"/>
+          <label class="protections-popup-settings-label" flex="1">Protection Settings</label>
+        </toolbarbutton>
+      </vbox>
     </panelview>
   </panelmultiview>
 </panel>
