@@ -14,6 +14,7 @@
 #include "nsIFile.h"
 #include "nsIProperties.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "prenv.h"
 
@@ -212,10 +213,23 @@ bool nsMacUtilsImpl::GetAppPath(nsCString& aAppPath) {
 
   if (!sCachedAppPath) {
     sCachedAppPath = new nsCString(aAppPath);
-    ClearOnShutdown(&sCachedAppPath);
+
+    if (NS_IsMainThread()) {
+      nsMacUtilsImpl::ClearCachedAppPathOnShutdown();
+    } else {
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "nsMacUtilsImpl::ClearCachedAppPathOnShutdown",
+          [] { nsMacUtilsImpl::ClearCachedAppPathOnShutdown(); }));
+    }
   }
 
   return true;
+}
+
+nsresult nsMacUtilsImpl::ClearCachedAppPathOnShutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
+  ClearOnShutdown(&sCachedAppPath);
+  return NS_OK;
 }
 
 /*

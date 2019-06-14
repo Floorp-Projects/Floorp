@@ -18,6 +18,13 @@
 
 #include <string>
 
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+#  include "mozilla/dom/ContentChild.h"
+#  include "mozilla/Sandbox.h"
+#  include "mozilla/SandboxSettings.h"
+#  include "nsMacUtilsImpl.h"
+#endif
+
 using std::string;
 using std::vector;
 
@@ -29,9 +36,47 @@ static const int kInvalidFd = -1;
 namespace mozilla {
 namespace gmp {
 
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+bool GMPProcessParent::sLaunchWithMacSandbox = true;
+bool GMPProcessParent::sMacSandboxGMPLogging = false;
+#  if defined(DEBUG)
+bool GMPProcessParent::sIsMainThreadInitDone = false;
+#  endif
+#endif
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+/* static */
+void GMPProcessParent::InitStaticMainThread() {
+  // The GMPProcessParent constructor is called off the
+  // main thread. Do main thread initialization here.
+  MOZ_ASSERT(NS_IsMainThread());
+  sLaunchWithMacSandbox =
+      Preferences::GetBool("security.sandbox.gmp.mac.earlyinit", true) &&
+      (getenv("MOZ_DISABLE_GMP_SANDBOX") == nullptr);
+  sMacSandboxGMPLogging =
+      Preferences::GetBool("security.sandbox.logging.enabled") ||
+      PR_GetEnv("MOZ_SANDBOX_GMP_LOGGING") || PR_GetEnv("MOZ_SANDBOX_LOGGING");
+  GMP_LOG("GMPProcessParent::InitStaticMainThread: earlyinit=%s, logging=%s",
+          sLaunchWithMacSandbox ? "true" : "false",
+          sMacSandboxGMPLogging ? "true" : "false");
+#  if defined(DEBUG)
+  sIsMainThreadInitDone = true;
+#  endif
+}
+#endif
+
 GMPProcessParent::GMPProcessParent(const std::string& aGMPPath)
-    : GeckoChildProcessHost(GeckoProcessType_GMPlugin), mGMPPath(aGMPPath) {
+    : GeckoChildProcessHost(GeckoProcessType_GMPlugin),
+      mGMPPath(aGMPPath)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+      ,
+      mRequiresWindowServer(false)
+#endif
+{
   MOZ_COUNT_CTOR(GMPProcessParent);
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  MOZ_ASSERT(sIsMainThreadInitDone == true);
+#endif
 }
 
 GMPProcessParent::~GMPProcessParent() { MOZ_COUNT_DTOR(GMPProcessParent); }
@@ -68,6 +113,21 @@ bool GMPProcessParent::Launch(int32_t aTimeoutMs) {
   }
 
   args.push_back(WideToUTF8(wGMPPath));
+#elif defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  // Resolve symlinks in the plugin path. The sandbox prevents
+  // resolving symlinks in the child process if access to link
+  // source file is denied.
+  nsAutoCString normalizedPath;
+  nsresult rv = NormalizePath(mGMPPath.c_str(), normalizedPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    GMP_LOG(
+        "GMPProcessParent::Launch: "
+        "plugin path normaliziation failed for path: %s",
+        mGMPPath.c_str());
+    args.push_back(mGMPPath);
+  } else {
+    args.push_back(normalizedPath.get());
+  }
 #else
   args.push_back(mGMPPath);
 #endif
@@ -97,6 +157,109 @@ void GMPProcessParent::DoDelete() {
 
   Destroy();
 }
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+bool GMPProcessParent::IsMacSandboxLaunchEnabled() {
+  return sLaunchWithMacSandbox;
+}
+
+void GMPProcessParent::SetRequiresWindowServer(bool aRequiresWindowServer) {
+  mRequiresWindowServer = aRequiresWindowServer;
+}
+
+bool GMPProcessParent::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
+  aInfo.type = MacSandboxType_GMP;
+  aInfo.hasWindowServer = mRequiresWindowServer;
+  aInfo.shouldLog = (aInfo.shouldLog || sMacSandboxGMPLogging);
+  nsAutoCString appPath;
+  if (!nsMacUtilsImpl::GetAppPath(appPath)) {
+    GMP_LOG("GMPProcessParent::FillMacSandboxInfo: failed to get app path");
+    return false;
+  }
+  aInfo.appPath.assign(appPath.get());
+
+  GMP_LOG(
+      "GMPProcessParent::FillMacSandboxInfo: "
+      "plugin dir path: %s",
+      mGMPPath.c_str());
+  nsCOMPtr<nsIFile> pluginDir;
+  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(mGMPPath.c_str()), true,
+                                getter_AddRefs(pluginDir));
+  if (NS_FAILED(rv)) {
+    GMP_LOG(
+        "GMPProcessParent::FillMacSandboxInfo: "
+        "NS_NewLocalFile failed for plugin dir, rv=%d",
+        rv);
+    return false;
+  }
+
+  rv = pluginDir->Normalize();
+  if (NS_FAILED(rv)) {
+    GMP_LOG(
+        "GMPProcessParent::FillMacSandboxInfo: "
+        "failed to normalize plugin dir path, rv=%d",
+        rv);
+    return false;
+  }
+
+  nsAutoCString resolvedPluginPath;
+  pluginDir->GetNativePath(resolvedPluginPath);
+  aInfo.pluginPath.assign(resolvedPluginPath.get());
+  GMP_LOG(
+      "GMPProcessParent::FillMacSandboxInfo: "
+      "resolved plugin dir path: %s",
+      resolvedPluginPath.get());
+
+  if (mozilla::IsDevelopmentBuild()) {
+    GMP_LOG("GMPProcessParent::FillMacSandboxInfo: IsDevelopmentBuild()=true");
+
+    // Repo dir
+    nsCOMPtr<nsIFile> repoDir;
+    rv = nsMacUtilsImpl::GetRepoDir(getter_AddRefs(repoDir));
+    if (NS_FAILED(rv)) {
+      GMP_LOG("GMPProcessParent::FillMacSandboxInfo: failed to get repo dir");
+      return false;
+    }
+    nsCString repoDirPath;
+    Unused << repoDir->GetNativePath(repoDirPath);
+    aInfo.testingReadPath1 = repoDirPath.get();
+    GMP_LOG(
+        "GMPProcessParent::FillMacSandboxInfo: "
+        "repo dir path: %s",
+        repoDirPath.get());
+
+    // Object dir
+    nsCOMPtr<nsIFile> objDir;
+    rv = nsMacUtilsImpl::GetObjDir(getter_AddRefs(objDir));
+    if (NS_FAILED(rv)) {
+      GMP_LOG("GMPProcessParent::FillMacSandboxInfo: failed to get object dir");
+      return false;
+    }
+    nsCString objDirPath;
+    Unused << objDir->GetNativePath(objDirPath);
+    aInfo.testingReadPath2 = objDirPath.get();
+    GMP_LOG(
+        "GMPProcessParent::FillMacSandboxInfo: "
+        "object dir path: %s",
+        objDirPath.get());
+  }
+  return true;
+}
+
+nsresult GMPProcessParent::NormalizePath(const char* aPath,
+                                         nsACString& aNormalizedPath) {
+  nsCOMPtr<nsIFile> fileOrDir;
+  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(aPath), true,
+                                getter_AddRefs(fileOrDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = fileOrDir->Normalize();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  fileOrDir->GetNativePath(aNormalizedPath);
+  return NS_OK;
+}
+#endif
 
 }  // namespace gmp
 }  // namespace mozilla
