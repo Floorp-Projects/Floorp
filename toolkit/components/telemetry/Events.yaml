@@ -270,7 +270,7 @@ normandy:
       experimentType: >
         For preference_study recipes, the type of experiment this is ("exp" or "exp-highpop").
       branch: >
-        For preference_study recipes, the slug of the branch that was chosen for this client.
+        The slug of the branch that was chosen for this client.
       addonId: For addon_study recipes, the ID of the addon that was installed.
       addonVersion: For addon_study recipes, the version of the addon that was installed.
     bug_numbers: [1443560]
@@ -290,8 +290,9 @@ normandy:
         For preference_rollout when reason=conflict, the name of the preference
         that was going to be modified.
       detail: >
-        Extra text describing the failure.
-        Currently only provided for addon_study.
+        For addon_study and branched_addon study, extra text describing the failure.
+      branch: >
+        The branch that failed to enroll.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
     record_in_processes: [main]
@@ -311,6 +312,7 @@ normandy:
         previously.
       addonId: For addon_study recipes, the ID of the addon that was updated.
       addonVersion: For addon_study recipes, the version of the addon that was installed.
+      branch: The branch that was updated.
     bug_numbers: [1443560, 1474413]
     notification_emails: ["normandy-notifications@mozilla.com"]
     record_in_processes: [main]
@@ -326,8 +328,8 @@ normandy:
     extra_keys:
       reason: An error code describing the failure.
       detail: >
-        Extra text describing the failure.
-        Currently only provided for addon_study.
+        Extra text describing the failure. Currently only provided for addon_study.
+      branch: The branch that failed to update.
     bug_numbers: [1474413]
     notification_emails: ["normandy-notifications@mozilla.com"]
     record_in_processes: [main]
@@ -346,7 +348,7 @@ normandy:
         For preference_study, "true" or "false" according to whether we put the preference back the way it was.
       addonId: For addon_study, the ID of the addon that ended.
       addonVersion: For addon_study, the version of the addon for which the recipe ended.
-      branch: For preference_study, the branch of the experiment that this client was on.
+      branch: The branch of the experiment that this client was on.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
     record_in_processes: [main]

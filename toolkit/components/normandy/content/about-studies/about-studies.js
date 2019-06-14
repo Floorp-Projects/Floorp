@@ -153,7 +153,7 @@ class StudyList extends React.Component {
         r("ul", { className: "study-list active-study-list" },
           activeStudies.map(study => (
             study.type === "addon"
-            ? r(AddonStudyListItem, { key: study.name, study, translations })
+            ? r(AddonStudyListItem, { key: study.slug, study, translations })
             : r(PreferenceStudyListItem, { key: study.name, study, translations })
           )),
         ),
@@ -161,7 +161,7 @@ class StudyList extends React.Component {
         r("ul", { className: "study-list inactive-study-list" },
           inactiveStudies.map(study => (
             study.type === "addon"
-            ? r(AddonStudyListItem, { key: study.name, study, translations })
+            ? r(AddonStudyListItem, { key: study.slug, study, translations })
             : r(PreferenceStudyListItem, { key: study.name, study, translations })
           )),
         ),
@@ -195,19 +195,19 @@ class AddonStudyListItem extends React.Component {
     return (
       r("li", {
         className: classnames("study addon-study", { disabled: !study.active }),
-        "data-study-name": study.name,
+        "data-study-slug": study.slug, // used to identify this row in tests
       },
         r("div", { className: "study-icon" },
-          study.name.replace(/-?add-?on-?/, "").replace(/-?study-?/, "").slice(0, 1)
+          study.userFacingName.replace(/-?add-?on-?/i, "").replace(/-?study-?/i, "").slice(0, 1)
         ),
         r("div", { className: "study-details" },
           r("div", { className: "study-header" },
-            r("span", { className: "study-name" }, study.name),
+            r("span", { className: "study-name" }, study.userFacingName),
             r("span", {}, "\u2022"), // &bullet;
             r("span", { className: "study-status" }, study.active ? translations.activeStatus : translations.completeStatus),
           ),
           r("div", { className: "study-description" },
-            study.description
+            study.userFacingDescription
           ),
         ),
         r("div", { className: "study-actions" },
@@ -225,9 +225,10 @@ class AddonStudyListItem extends React.Component {
 AddonStudyListItem.propTypes = {
   study: PropTypes.shape({
     recipeId: PropTypes.number.isRequired,
-    name: PropTypes.string.isRequired,
+    slug: PropTypes.string.isRequired,
+    userFacingName: PropTypes.string.isRequired,
     active: PropTypes.bool.isRequired,
-    description: PropTypes.string.isRequired,
+    userFacingDescription: PropTypes.string.isRequired,
   }).isRequired,
   translations: PropTypes.object.isRequired,
 };
@@ -277,7 +278,7 @@ class PreferenceStudyListItem extends React.Component {
     return (
       r("li", {
         className: classnames("study pref-study", { disabled: study.expired }),
-        "data-study-name": study.name,
+        "data-study-slug": study.name, // used to identify this row in tests
       },
         r("div", { className: "study-icon" },
           userFacingName,

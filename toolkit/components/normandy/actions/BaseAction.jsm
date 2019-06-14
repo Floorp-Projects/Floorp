@@ -98,6 +98,17 @@ class BaseAction {
     // Does nothing, may be overridden
   }
 
+  validateArguments(args, schema = this.schema) {
+    let [valid, validated] = JsonSchemaValidator.validateAndParseParameters(args, schema);
+    if (!valid) {
+      throw new Error(
+        `Arguments do not match schema. arguments:\n${JSON.stringify(args)}\n`
+        + `schema:\n${JSON.stringify(schema)}`
+      );
+    }
+    return validated;
+  }
+
   /**
    * Execute the per-recipe behavior of this action for a given
    * recipe.  Reports Uptake telemetry for the execution of the recipe.
@@ -118,14 +129,13 @@ class BaseAction {
       return;
     }
 
-    let [valid, validatedArguments] = JsonSchemaValidator.validateAndParseParameters(recipe.arguments, this.schema);
-    if (!valid) {
-      Cu.reportError(new Error(`Arguments do not match schema. arguments: ${JSON.stringify(recipe.arguments)}. schema: ${JSON.stringify(this.schema)}`));
+    try {
+      recipe.arguments = this.validateArguments(recipe.arguments);
+    } catch (error) {
+      Cu.reportError(error);
       Uptake.reportRecipe(recipe, Uptake.RECIPE_EXECUTION_ERROR);
       return;
     }
-
-    recipe.arguments = validatedArguments;
 
     let status = Uptake.RECIPE_SUCCESS;
     try {
