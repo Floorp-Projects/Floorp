@@ -49,39 +49,44 @@ class ContextMenuCandidateTest {
     }
 
     @Test
-    fun `Candidate "Open Link in New Tab"`() {
+    fun `Candidate "Open Link in New Tab" showFor displayed in correct cases`() {
+        val sessionManager = spy(SessionManager(mock()))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        val tabsUseCases = TabsUseCases(sessionManager)
+        val parentView = CoordinatorLayout(testContext)
+        val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
+                testContext, tabsUseCases, parentView, snackbarDelegate)
+
+        assertTrue(openInNewTab.showFor(
+                Session("https://www.mozilla.org"),
+                HitResult.UNKNOWN("https://www.mozilla.org")))
+
+        assertFalse(openInNewTab.showFor(
+                Session("https://www.mozilla.org", private = true),
+                HitResult.UNKNOWN("https://www.mozilla.org")))
+
+        assertTrue(openInNewTab.showFor(
+                Session("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")))
+
+        assertFalse(openInNewTab.showFor(
+                Session("https://www.mozilla.org"),
+                HitResult.IMAGE("https://www.mozilla.org")))
+
+        assertFalse(openInNewTab.showFor(
+                Session("https://www.mozilla.org"),
+                HitResult.VIDEO("https://www.mozilla.org")))
+    }
+
+    @Test
+    fun `Candidate "Open Link in New Tab" action properly executes and shows snackbar`() {
         val sessionManager = spy(SessionManager(mock()))
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
         val session = Session("https://www.mozilla.org").apply { sessionManager.add(this) }
         val tabsUseCases = TabsUseCases(sessionManager)
         val parentView = CoordinatorLayout(testContext)
-
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
             testContext, tabsUseCases, parentView, snackbarDelegate)
-
-        // showFor
-
-        assertTrue(openInNewTab.showFor(
-            Session("https://www.mozilla.org"),
-            HitResult.UNKNOWN("https://www.mozilla.org")))
-
-        assertFalse(openInNewTab.showFor(
-            Session("https://www.mozilla.org", private = true),
-            HitResult.UNKNOWN("https://www.mozilla.org")))
-
-        assertTrue(openInNewTab.showFor(
-            Session("https://www.mozilla.org"),
-            HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")))
-
-        assertFalse(openInNewTab.showFor(
-            Session("https://www.mozilla.org"),
-            HitResult.IMAGE("https://www.mozilla.org")))
-
-        assertFalse(openInNewTab.showFor(
-            Session("https://www.mozilla.org"),
-            HitResult.VIDEO("https://www.mozilla.org")))
-
-        // action
 
         assertEquals(1, sessionManager.size)
         assertFalse(snackbarDelegate.hasShownSnackbar)
@@ -90,81 +95,132 @@ class ContextMenuCandidateTest {
 
         assertEquals(2, sessionManager.size)
         assertTrue(snackbarDelegate.hasShownSnackbar)
-        assertNotNull(snackbarDelegate.lastAcionListener)
+        assertNotNull(snackbarDelegate.lastActionListener)
         assertEquals("https://firefox.com", sessionManager.sessions.get(1).url)
-
-        // action with image
-
-        openInNewTab.action.invoke(session,  HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org"))
-        assertEquals("https://www.mozilla_uri.org", sessionManager.sessions.get(1).url)
-
-        // Snackbar action
-
-        assertEquals(sessionManager.selectedSession, session)
-
-        snackbarDelegate.lastAcionListener!!.invoke(mock())
-
-        assertNotEquals(sessionManager.selectedSession, session)
     }
 
     @Test
-    fun `Candidate "Open Link in Private Tab"`() {
+    fun `Candidate "Open Link in New Tab" snackbar action works`() {
         val sessionManager = spy(SessionManager(mock()))
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
         val session = Session("https://www.mozilla.org").apply { sessionManager.add(this) }
         val tabsUseCases = TabsUseCases(sessionManager)
         val parentView = CoordinatorLayout(testContext)
+        val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
+                testContext, tabsUseCases, parentView, snackbarDelegate)
 
+        assertEquals(1, sessionManager.size)
+        assertFalse(snackbarDelegate.hasShownSnackbar)
+
+        openInNewTab.action.invoke(session, HitResult.UNKNOWN("https://firefox.com"))
+        assertEquals(sessionManager.selectedSession, session)
+
+        snackbarDelegate.lastActionListener!!.invoke(mock())
+
+        assertNotEquals(sessionManager.selectedSession, session)
+    }
+
+    @Test
+    fun `Candidate "Open Link in New Tab" action properly handles link with an image`() {
+        val sessionManager = spy(SessionManager(mock()))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        val session = Session("https://www.mozilla.org").apply { sessionManager.add(this) }
+        val tabsUseCases = TabsUseCases(sessionManager)
+        val parentView = CoordinatorLayout(testContext)
+        val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
+                testContext, tabsUseCases, parentView, snackbarDelegate)
+
+        assertEquals(1, sessionManager.size)
+        openInNewTab.action.invoke(session, HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org"))
+        assertEquals("https://www.mozilla_uri.org", sessionManager.sessions[1].url)
+    }
+
+    /* Private */
+    @Test
+    fun `Candidate "Open Link in Private Tab" showFor displayed in correct cases`() {
+        val sessionManager = spy(SessionManager(mock()))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        val tabsUseCases = TabsUseCases(sessionManager)
+        val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-            testContext, tabsUseCases, parentView, snackbarDelegate)
-
-        // showFor
+                testContext, tabsUseCases, parentView, snackbarDelegate)
 
         assertTrue(openInPrivateTab.showFor(
-            Session("https://www.mozilla.org"),
-            HitResult.UNKNOWN("https://www.mozilla.org")))
+                Session("https://www.mozilla.org"),
+                HitResult.UNKNOWN("https://www.mozilla.org")))
 
         assertTrue(openInPrivateTab.showFor(
-            Session("https://www.mozilla.org", private = true),
-            HitResult.UNKNOWN("https://www.mozilla.org")))
+                Session("https://www.mozilla.org", private = true),
+                HitResult.UNKNOWN("https://www.mozilla.org")))
 
         assertTrue(openInPrivateTab.showFor(
-            Session("https://www.mozilla.org"),
-            HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")))
+                Session("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")))
 
         assertFalse(openInPrivateTab.showFor(
-            Session("https://www.mozilla.org"),
-            HitResult.IMAGE("https://www.mozilla.org")))
+                Session("https://www.mozilla.org"),
+                HitResult.IMAGE("https://www.mozilla.org")))
 
         assertFalse(openInPrivateTab.showFor(
-            Session("https://www.mozilla.org"),
-            HitResult.VIDEO("https://www.mozilla.org")))
+                Session("https://www.mozilla.org"),
+                HitResult.VIDEO("https://www.mozilla.org")))
+    }
 
-        // action
+    @Test
+    fun `Candidate "Open Link in Private Tab" action properly executes and shows snackbar`() {
+        val sessionManager = spy(SessionManager(mock()))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        val session = Session("https://www.mozilla.org").apply { sessionManager.add(this) }
+        val tabsUseCases = TabsUseCases(sessionManager)
+        val parentView = CoordinatorLayout(testContext)
+        val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
+                testContext, tabsUseCases, parentView, snackbarDelegate)
 
         assertEquals(1, sessionManager.size)
         assertFalse(snackbarDelegate.hasShownSnackbar)
 
         openInPrivateTab.action.invoke(session, HitResult.UNKNOWN("https://firefox.com"))
 
-        assertTrue(sessionManager.sessions[1].private)
         assertEquals(2, sessionManager.size)
-        assertEquals("https://firefox.com", sessionManager.sessions[1].url)
         assertTrue(snackbarDelegate.hasShownSnackbar)
-        assertNotNull(snackbarDelegate.lastAcionListener)
+        assertNotNull(snackbarDelegate.lastActionListener)
+        assertEquals("https://firefox.com", sessionManager.sessions.get(1).url)
+    }
 
-        // action with image
+    @Test
+    fun `Candidate "Open Link in Private Tab" snackbar action works`() {
+        val sessionManager = spy(SessionManager(mock()))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        val session = Session("https://www.mozilla.org").apply { sessionManager.add(this) }
+        val tabsUseCases = TabsUseCases(sessionManager)
+        val parentView = CoordinatorLayout(testContext)
+        val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
+                testContext, tabsUseCases, parentView, snackbarDelegate)
 
-        openInPrivateTab.action.invoke(session,  HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org"))
-        assertEquals("https://www.mozilla_uri.org", sessionManager.sessions.get(1).url)
+        assertEquals(1, sessionManager.size)
+        assertFalse(snackbarDelegate.hasShownSnackbar)
 
-        // Snackbar action
-
+        openInPrivateTab.action.invoke(session, HitResult.UNKNOWN("https://firefox.com"))
         assertEquals(sessionManager.selectedSession, session)
 
-        snackbarDelegate.lastAcionListener!!.invoke(mock())
+        snackbarDelegate.lastActionListener!!.invoke(mock())
 
         assertNotEquals(sessionManager.selectedSession, session)
+    }
+
+    @Test
+    fun `Candidate "Open Link in Private Tab" action properly handles link with an image`() {
+        val sessionManager = spy(SessionManager(mock()))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        val session = Session("https://www.mozilla.org").apply { sessionManager.add(this) }
+        val tabsUseCases = TabsUseCases(sessionManager)
+        val parentView = CoordinatorLayout(testContext)
+        val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
+                testContext, tabsUseCases, parentView, snackbarDelegate)
+
+        assertEquals(1, sessionManager.size)
+        openInPrivateTab.action.invoke(session, HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org"))
+        assertEquals("https://www.mozilla_uri.org", sessionManager.sessions[1].url)
     }
 
     @Test
@@ -211,13 +267,13 @@ class ContextMenuCandidateTest {
         assertFalse(sessionManager.sessions[1].private)
         assertEquals("https://firefox.com", sessionManager.sessions[1].url)
         assertTrue(snackbarDelegate.hasShownSnackbar)
-        assertNotNull(snackbarDelegate.lastAcionListener)
+        assertNotNull(snackbarDelegate.lastActionListener)
 
         // Snackbar action
 
         assertEquals(sessionManager.selectedSession, session)
 
-        snackbarDelegate.lastAcionListener!!.invoke(mock())
+        snackbarDelegate.lastActionListener!!.invoke(mock())
 
         assertNotEquals(sessionManager.selectedSession, session)
     }
@@ -423,10 +479,10 @@ class ContextMenuCandidateTest {
 
 private class TestSnackbarDelegate : ContextMenuCandidate.SnackbarDelegate {
     var hasShownSnackbar = false
-    var lastAcionListener: ((v: View) -> Unit)? = null
+    var lastActionListener: ((v: View) -> Unit)? = null
 
     override fun show(snackBarParentView: View, text: Int, duration: Int, action: Int, listener: ((v: View) -> Unit)?) {
         hasShownSnackbar = true
-        lastAcionListener = listener
+        lastActionListener = listener
     }
 }
