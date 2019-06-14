@@ -19,8 +19,9 @@ function run_test() {
       gClient, "test-nesting",
       function(response, targetFront, threadClient) {
         // Reach over the protocol connection and get a reference to the thread actor.
+        // TODO: rewrite the test so we don't do this..
         gThreadActor =
-          threadClient._transport._serverConnection.getActor(threadClient._actor);
+          gClient._transport._serverConnection.getActor(threadClient.actorID);
 
         test_nesting();
       });
