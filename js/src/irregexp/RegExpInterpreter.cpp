@@ -130,9 +130,8 @@ irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const CharT* cha
     if (!stack.init())
         return RegExpRunStatus_Error;
 
-    auto header = reinterpret_cast<const RegExpByteCodeHeader*>(byteCode);
-    int32_t numRegisters = header->numRegisters;
-    pc += sizeof(RegExpByteCodeHeader);
+    int32_t numRegisters = Load32Aligned(pc);
+    pc += 4;
 
     // Most of the time we need 8 or fewer registers.  Specify an initial
     // size of 8 here, therefore, so that the vector contents can be stack

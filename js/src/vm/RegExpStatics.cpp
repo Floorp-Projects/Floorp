@@ -24,7 +24,7 @@ static void resc_finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   RegExpStatics* res =
       static_cast<RegExpStatics*>(obj->as<RegExpStaticsObject>().getPrivate());
-  fop->delete_(obj, res, MemoryUse::RegExpStatics);
+  fop->delete_(res);
 }
 
 static void resc_trace(JSTracer* trc, JSObject* obj) {
@@ -36,7 +36,7 @@ static void resc_trace(JSTracer* trc, JSObject* obj) {
 
 static const ClassOps RegExpStaticsObjectClassOps = {nullptr, /* addProperty */
                                                      nullptr, /* delProperty */
-                                                     nullptr, /* enumreate */
+                                                     nullptr, /* enumerate */
                                                      nullptr, /* newEnumerate */
                                                      nullptr, /* resolve */
                                                      nullptr, /* mayResolve */
@@ -60,9 +60,7 @@ RegExpStaticsObject* RegExpStatics::create(JSContext* cx) {
   if (!res) {
     return nullptr;
   }
-  // TODO: This doesn't account for match vector heap memory used if there are
-  // more 10 matches. This is likely to be rare.
-  InitObjectPrivate(obj, res, MemoryUse::RegExpStatics);
+  obj->setPrivate(static_cast<void*>(res));
   return obj;
 }
 
