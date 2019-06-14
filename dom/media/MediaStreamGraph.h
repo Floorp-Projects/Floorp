@@ -511,6 +511,10 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   void DecrementSuspendCount();
 
  protected:
+  // Called on graph thread before handing control to the main thread to
+  // release streams.
+  virtual void NotifyForcedShutdown() {}
+
   // |AdvanceTimeVaryingValuesToCurrentTime| will be override in
   // SourceMediaStream.
   virtual void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime,

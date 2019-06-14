@@ -333,6 +333,10 @@ class AudioNodeEngine {
   // returning false, then the stream can be suspended.
   virtual bool IsActive() const { return false; }
 
+  // Called on forced shutdown of the MediaStreamGraph before handing ownership
+  // from graph thread to main thread.
+  virtual void NotifyForcedShutdown() {}
+
   bool HasNode() const {
     MOZ_ASSERT(NS_IsMainThread());
     return !!mNode;
