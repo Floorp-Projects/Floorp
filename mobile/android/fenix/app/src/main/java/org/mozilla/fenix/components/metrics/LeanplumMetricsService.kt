@@ -11,7 +11,7 @@ import com.leanplum.annotations.Parser
 import com.leanplum.internal.LeanplumInternal
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.utils.Settings
-import java.util.*
+import java.util.UUID
 
 private val Event.name: String?
     get() = when (this) {

@@ -18,10 +18,5 @@ Fenix sends event pings that allows us to measure feature performance. These are
 
 Fenix sends an activation ping once, at startup. Further documentation can be found in the [`activation` ping](activation.md) docs.
 
-## Leanplum Events
-
-| Event           |  Leanplum Key | extras                |
-|-----------------|---------------|-----------------------|
-| OpenedApp       | E_Opened_App  | source*               |
-
-* `source`: The method used to open Fenix (For exmaple: `app_icon`, `custom_tab` or `link`)
+## Leanplum
+See [here](https://github.com/mozilla-mobile/fenix/blob/master/docs/mma.md) for details on Leanplum usage in Firefox Preview.
