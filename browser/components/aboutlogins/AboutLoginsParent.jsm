@@ -76,6 +76,13 @@ var AboutLoginsParent = {
     switch (message.name) {
       case "AboutLogins:CreateLogin": {
         let newLogin = message.data.login;
+        // Remove the path from the origin, if it was provided.
+        let origin = LoginHelper.getLoginOrigin(newLogin.origin);
+        if (!origin) {
+          Cu.reportError("AboutLogins:CreateLogin: Unable to get an origin from the login details.");
+          return;
+        }
+        newLogin.origin = origin;
         Object.assign(newLogin, {
           formActionOrigin: "",
           usernameField: "",
