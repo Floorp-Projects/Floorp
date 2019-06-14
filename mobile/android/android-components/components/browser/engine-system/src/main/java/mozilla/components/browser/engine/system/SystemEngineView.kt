@@ -437,7 +437,7 @@ class SystemEngineView @JvmOverloads constructor(
                 session.notifyObservers {
                     onPromptRequest(
                         PromptRequest.TextPrompt(
-                            title ?: "",
+                            title,
                             message ?: "",
                             defaultValue ?: "",
                             areDialogsBeingAbused(),

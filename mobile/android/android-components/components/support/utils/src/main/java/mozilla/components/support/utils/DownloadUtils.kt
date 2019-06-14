@@ -151,7 +151,7 @@ object DownloadUtils {
                 val encodedFileName = m.group(ENCODED_FILE_NAME_GROUP)
                 val encoding = m.group(ENCODING_GROUP)
 
-                if (encodedFileName != null) {
+                if (encodedFileName != null && encoding != null) {
                     return decodeHeaderField(encodedFileName, encoding)
                 }
 

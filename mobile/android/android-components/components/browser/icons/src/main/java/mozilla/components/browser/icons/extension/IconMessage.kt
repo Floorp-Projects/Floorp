@@ -7,6 +7,7 @@ package mozilla.components.browser.icons.extension
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -88,7 +89,7 @@ private fun JSONObject.toIconResource(): IconRequest.Resource? {
         val type = typeMap[getString("type")]
             ?: return null
         val sizes = optJSONArray("sizes").toResourceSizes()
-        val mimeType = optString("mimeType", null)
+        val mimeType = tryGetString("mimeType")
 
         return IconRequest.Resource(url, type, sizes, if (mimeType.isNullOrEmpty()) null else mimeType)
     } catch (e: JSONException) {

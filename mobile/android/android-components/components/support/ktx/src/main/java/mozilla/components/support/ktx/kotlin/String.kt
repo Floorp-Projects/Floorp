@@ -42,8 +42,8 @@ fun String.isGeoLocation() = re.geoish.matches(this)
  */
 fun String.toDate(format: String, locale: Locale = Locale.ROOT): Date {
     val formatter = SimpleDateFormat(format, locale)
-    return if (!this.isEmpty()) {
-        formatter.parse(this)
+    return if (isNotEmpty()) {
+        formatter.parse(this) ?: Date()
     } else {
         Date()
     }

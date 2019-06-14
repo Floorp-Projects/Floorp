@@ -39,13 +39,13 @@ internal class TextPromptDialogFragment : PromptDialogFragment(), TextWatcher {
      * Contains the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt#Parameters">default()</a>
      * value provided by this [sessionId].
      */
-    internal val defaultInputValue: String by lazy { safeArguments.getString(KEY_DEFAULT_INPUT_VALUE) }
+    internal val defaultInputValue: String? by lazy { safeArguments.getString(KEY_DEFAULT_INPUT_VALUE) }
 
     /**
      * Contains the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt#Parameters">message</a>
      * value provided by this [sessionId].
      */
-    internal val labelInput: String by lazy { safeArguments.getString(KEY_LABEL_INPUT) }
+    internal val labelInput: String? by lazy { safeArguments.getString(KEY_LABEL_INPUT) }
 
     /**
      * Stores the user's decision from the checkbox

@@ -29,11 +29,11 @@ internal class MultiButtonDialogFragment : PromptDialogFragment() {
      */
     internal val hasShownManyDialogs: Boolean by lazy { safeArguments.getBoolean(KEY_MANY_ALERTS) }
 
-    internal val positiveButtonTitle: String by lazy { safeArguments.getString(KEY_POSITIVE_BUTTON_TITLE) }
+    internal val positiveButtonTitle: String? by lazy { safeArguments.getString(KEY_POSITIVE_BUTTON_TITLE) }
 
-    internal val negativeButtonTitle: String by lazy { safeArguments.getString(KEY_NEGATIVE_BUTTON_TITLE) }
+    internal val negativeButtonTitle: String? by lazy { safeArguments.getString(KEY_NEGATIVE_BUTTON_TITLE) }
 
-    internal val neutralButtonTitle: String by lazy { safeArguments.getString(KEY_NEUTRAL_BUTTON_TITLE) }
+    internal val neutralButtonTitle: String? by lazy { safeArguments.getString(KEY_NEUTRAL_BUTTON_TITLE) }
 
     /**
      * Stores the user's decision from the checkbox
@@ -74,18 +74,17 @@ internal class MultiButtonDialogFragment : PromptDialogFragment() {
     }
 
     private fun AlertDialog.Builder.setupButtons(): AlertDialog.Builder {
-        if (positiveButtonTitle.isNotEmpty()) {
+        if (!positiveButtonTitle.isNullOrBlank()) {
             setPositiveButton(positiveButtonTitle) { _, _ ->
                 feature?.onConfirm(sessionId, userSelectionNoMoreDialogs to ButtonType.POSITIVE)
             }
         }
-
-        if (negativeButtonTitle.isNotEmpty()) {
+        if (!negativeButtonTitle.isNullOrBlank()) {
             setNegativeButton(negativeButtonTitle) { _, _ ->
                 feature?.onConfirm(sessionId, userSelectionNoMoreDialogs to ButtonType.NEGATIVE)
             }
         }
-        if (neutralButtonTitle.isNotEmpty()) {
+        if (!neutralButtonTitle.isNullOrBlank()) {
             setNeutralButton(neutralButtonTitle) { _, _ ->
                 feature?.onConfirm(sessionId, userSelectionNoMoreDialogs to ButtonType.NEUTRAL)
             }

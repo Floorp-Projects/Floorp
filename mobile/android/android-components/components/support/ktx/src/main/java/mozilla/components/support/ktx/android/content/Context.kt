@@ -27,19 +27,13 @@ import mozilla.components.support.ktx.R
  * attribute. E.g. "2.0".
  */
 val Context.appVersionName: String?
-    get() {
-        val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        return packageInfo.versionName
-    }
+    get() = packageManager.getPackageInfo(packageName, 0).versionName
 
 /**
  * Returns the name (label) of the application or the package name as a fallback.
  */
 val Context.appName: String
-    get() {
-        return packageManager.getApplicationLabel(applicationInfo)?.toString()
-            ?: packageName
-    }
+    get() = packageManager.getApplicationLabel(applicationInfo).toString()
 
 /**
  * Returns whether or not the operating system is under low memory conditions.

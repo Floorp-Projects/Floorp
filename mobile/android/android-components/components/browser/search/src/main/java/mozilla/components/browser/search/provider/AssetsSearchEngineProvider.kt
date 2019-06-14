@@ -205,8 +205,9 @@ class AssetsSearchEngineProvider(
     private fun applyOverridesIfNeeded(config: JSONObject, jsonSearchEngineIdentifiers: JSONArray): List<String> {
         val overrides = config.getJSONObject("regionOverrides")
         val searchEngineIdentifiers = mutableListOf<String>()
-        val regionOverrides = if (localizationProvider.region != null && overrides.has(localizationProvider.region)) {
-            overrides.getJSONObject(localizationProvider.region)
+        val region = localizationProvider.region
+        val regionOverrides = if (region != null && overrides.has(region)) {
+            overrides.getJSONObject(region)
         } else {
             null
         }

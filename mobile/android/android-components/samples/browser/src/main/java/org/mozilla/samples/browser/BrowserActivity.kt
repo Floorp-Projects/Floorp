@@ -48,7 +48,7 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
         super.onBackPressed()
     }
 
-    override fun onCreateView(parent: View?, name: String?, context: Context, attrs: AttributeSet?): View? =
+    override fun onCreateView(parent: View?, name: String, context: Context, attrs: AttributeSet): View? =
         when (name) {
             EngineView::class.java.name -> components.engine.createView(context, attrs).asView()
             TabsTray::class.java.name -> BrowserTabsTray(context, attrs)

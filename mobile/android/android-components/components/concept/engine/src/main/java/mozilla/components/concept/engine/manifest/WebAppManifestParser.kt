@@ -49,13 +49,13 @@ class WebAppManifestParser {
                 shortName = shortName,
                 startUrl = json.getString("start_url"),
                 display = getDisplayMode(json),
-                backgroundColor = parseColor(json.optString("background_color", null)),
-                description = json.optString("description", null),
+                backgroundColor = parseColor(json.tryGetString("background_color")),
+                description = json.tryGetString("description"),
                 icons = parseIcons(json),
-                scope = json.optString("scope", null),
-                themeColor = parseColor(json.optString("theme_color", null)),
+                scope = json.tryGetString("scope"),
+                themeColor = parseColor(json.tryGetString("theme_color")),
                 dir = parseTextDirection(json),
-                lang = json.optString("lang", null),
+                lang = json.tryGetString("lang"),
                 orientation = parseOrientation(json)
             ))
         } catch (e: JSONException) {
@@ -107,17 +107,15 @@ private fun parseIcons(json: JSONObject): List<WebAppManifest.Icon> {
 }
 
 private fun parseIconSizes(json: JSONObject): List<Size> {
-    val sizes = json.optString("sizes") ?: return emptyList()
+    val sizes = json.tryGetString("sizes") ?: return emptyList()
 
     return sizes
         .split(whitespace)
         .mapNotNull { Size.parse(it) }
 }
 
-private fun parsePurposes(json: JSONObject): Set<WebAppManifest.Icon.Purpose> {
-    val purposes = json.optString("purpose") ?: return emptySet()
-
-    return purposes
+private fun parsePurposes(json: JSONObject): Set<WebAppManifest.Icon.Purpose> =
+    json.tryGetString("purpose").orEmpty()
         .split(whitespace)
         .mapNotNull {
             when (it.toLowerCase()) {
@@ -129,7 +127,6 @@ private fun parsePurposes(json: JSONObject): Set<WebAppManifest.Icon.Purpose> {
         }
         .toSet()
         .ifEmpty { setOf(WebAppManifest.Icon.Purpose.ANY) }
-}
 
 private fun parseTextDirection(json: JSONObject): WebAppManifest.TextDirection {
     return when (json.optString("dir")) {

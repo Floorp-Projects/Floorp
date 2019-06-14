@@ -5,6 +5,8 @@
 package mozilla.components.browser.domains
 
 import android.content.Context
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES
 import android.os.LocaleList
 import android.text.TextUtils
 import java.io.IOException
@@ -46,9 +48,9 @@ object Domains {
         val availableDomains = LinkedHashSet<String>()
         val assetManager = context.assets
         val domains = try {
-            assetManager.list("domains")
+            assetManager.list("domains") ?: emptyArray<String>()
         } catch (e: IOException) {
-            arrayOf<String>()
+            emptyArray<String>()
         }
         availableDomains.addAll(domains)
         return availableDomains
@@ -57,7 +59,7 @@ object Domains {
     private fun loadDomainsForLanguage(context: Context, domains: MutableSet<String>, country: String) {
         val assetManager = context.assets
         val languageDomains = try {
-            assetManager.open("domains/" + country).bufferedReader().readLines()
+            assetManager.open("domains/$country").bufferedReader().readLines()
         } catch (e: IOException) {
             emptyList<String>()
         }
@@ -68,7 +70,7 @@ object Domains {
         val countries = java.util.LinkedHashSet<String>()
         val addIfNotEmpty = { c: String -> if (!TextUtils.isEmpty(c)) countries.add(c.toLowerCase(Locale.US)) }
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+        if (SDK_INT >= VERSION_CODES.N) {
             val list = LocaleList.getDefault()
             for (i in 0 until list.size()) {
                 addIfNotEmpty(list.get(i).country)
