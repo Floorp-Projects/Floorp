@@ -20,7 +20,6 @@ var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 add_task(async function testWhilePaused() {
   const dbg = await initWorkerDebugger(TAB_URL, WORKER_URL);
   const {client, tab, workerTargetFront, toolbox} = dbg;
-  const workerThreadClient = await workerTargetFront.getFront("context");
 
   // Execute some basic math to make sure evaluations are working.
   const jsterm = await getSplitConsole(toolbox);
@@ -28,7 +27,7 @@ add_task(async function testWhilePaused() {
   ok(executed.textContent.includes("10001"), "Text for message appeared correct");
 
   await clickElement(dbg, "pause");
-  workerThreadClient.once("willInterrupt").then(() => {
+  once(dbg.client, "willInterrupt").then(() => {
     info("Posting message to worker, then waiting for a pause");
     postMessageToWorkerInTab(tab, WORKER_URL, "ping");
   });

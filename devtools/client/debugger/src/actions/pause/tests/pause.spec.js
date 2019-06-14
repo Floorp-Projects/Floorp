@@ -72,7 +72,6 @@ const mockThreadClient = {
   },
   getBreakpointPositions: async () => ({}),
   getBreakableLines: async () => [],
-  actorID: "threadActorID",
 };
 
 const mockFrameId = "1";
@@ -100,6 +99,9 @@ function createPauseInfo(
   };
 }
 
+function resumedPacket() {
+  return { from: "FakeThread", type: "resumed" };
+}
 describe("pause", () => {
   describe("stepping", () => {
     it("should set and clear the command", async () => {
@@ -381,7 +383,7 @@ describe("pause", () => {
 
       const cx = selectors.getThreadContext(getState());
       dispatch(actions.stepIn(cx));
-      await dispatch(actions.resumed(mockThreadClient.actorID));
+      await dispatch(actions.resumed(resumedPacket()));
       expect(client.evaluateExpressions.mock.calls).toHaveLength(1);
     });
 
@@ -399,7 +401,7 @@ describe("pause", () => {
       client.evaluateExpressions.mockReturnValue(Promise.resolve(["YAY"]));
       await dispatch(actions.paused(mockPauseInfo));
 
-      await dispatch(actions.resumed(mockThreadClient.actorID));
+      await dispatch(actions.resumed(resumedPacket()));
       const expression = selectors.getExpression(getState(), "foo");
       expect(expression && expression.value).toEqual("YAY");
     });

@@ -3,9 +3,7 @@
   "description": "This package file is for node modules used in mozilla-central",
   "repository": {},
   "license": "MPL-2.0",
-  "dependencies": {
-    "yarn": "^1.16.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "babel-eslint": "10.0.1",
     "eslint": "5.16.0",

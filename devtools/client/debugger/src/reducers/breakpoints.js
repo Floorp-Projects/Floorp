@@ -50,17 +50,11 @@ function update(
 ): BreakpointsState {
   switch (action.type) {
     case "SET_BREAKPOINT": {
-      if (action.status === "start") {
-        return setBreakpoint(state, action);
-      }
-      return state;
+      return setBreakpoint(state, action);
     }
 
     case "REMOVE_BREAKPOINT": {
-      if (action.status === "start") {
-        return removeBreakpoint(state, action);
-      }
-      return state;
+      return removeBreakpoint(state, action);
     }
 
     case "NAVIGATE": {
