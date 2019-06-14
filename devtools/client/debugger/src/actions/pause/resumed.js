@@ -9,7 +9,7 @@ import { evaluateExpressions } from "../expressions";
 import { inDebuggerEval } from "../../utils/pause";
 
 import type { ThunkArgs } from "../types";
-import type { ResumedPacket } from "../../client/firefox/types";
+import type { ActorId } from "../../types";
 
 /**
  * Debugger has just resumed
@@ -17,9 +17,8 @@ import type { ResumedPacket } from "../../client/firefox/types";
  * @memberof actions/pause
  * @static
  */
-export function resumed(packet: ResumedPacket) {
+export function resumed(thread: ActorId) {
   return async ({ dispatch, client, getState }: ThunkArgs) => {
-    const thread = packet.from;
     const why = getPauseReason(getState(), thread);
     const wasPausedInEval = inDebuggerEval(why);
     const wasStepping = isStepping(getState(), thread);
