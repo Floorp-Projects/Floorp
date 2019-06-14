@@ -15,7 +15,7 @@ Test the reflected-fluent-element component
   <p id="display">
   </p>
 <div id="content" style="display: none">
-  <iframe id="templateFrame" src="chrome://browser/content/aboutlogins/aboutLogins.html"
+  <iframe id="templateFrame" src="aboutLogins.html"
           sandbox="allow-same-origin"></iframe>
 </div>
 <pre id="test">
@@ -73,7 +73,7 @@ add_task(async function setup() {
   // element is defined.
   for (let scriptSrc of ["login-filter.js", "login-item.js", "login-list.js"]) {
     let scriptEl = document.createElement("script");
-    scriptEl.setAttribute("src", `chrome://browser/content/aboutlogins/components/${scriptSrc}`);
+    scriptEl.setAttribute("src", scriptSrc);
     scriptEl.setAttribute("type", "module");
     document.head.appendChild(scriptEl);
   }
