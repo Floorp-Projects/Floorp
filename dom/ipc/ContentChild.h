@@ -57,6 +57,14 @@ using mozilla::loader::PScriptCacheChild;
 bool IsDevelopmentBuild();
 #endif /* !XP_WIN */
 
+#if defined(XP_MACOSX)
+// Return the repo directory and the repo object directory respectively. These
+// should only be used on Mac developer builds to determine the path to the
+// repo or object directory.
+nsresult GetRepoDir(nsIFile** aRepoDir);
+nsresult GetObjDir(nsIFile** aObjDir);
+#endif /* XP_MACOSX */
+
 namespace ipc {
 class URIParams;
 }  // namespace ipc

@@ -13,7 +13,6 @@
 #include "GMPVideoDecoderParent.h"
 #include "nsIObserverService.h"
 #include "GeckoChildProcessHost.h"
-#include "GMPProcessParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsXPCOMPrivate.h"
@@ -103,17 +102,13 @@ class GMPServiceCreateHelper final : public mozilla::Runnable {
             new GeckoMediaPluginServiceParent();
         service->Init();
         sSingletonService = service;
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-        // GMPProcessParent should only be instantiated in the parent
-        // so initialization only needs to be done in the parent.
-        GMPProcessParent::InitStaticMainThread();
-#endif
       } else {
         RefPtr<GeckoMediaPluginServiceChild> service =
             new GeckoMediaPluginServiceChild();
         service->Init();
         sSingletonService = service;
       }
+
       ClearOnShutdown(&sSingletonService);
     }
 
