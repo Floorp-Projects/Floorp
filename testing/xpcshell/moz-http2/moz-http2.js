@@ -611,6 +611,13 @@ function handleRequest(req, res) {
     function emitResponse(response, requestPayload) {
       let packet = dnsPacket.decode(requestPayload);
 
+      // This shuts down the connection so we can test if the client reconnects
+      if (packet.questions.length > 0 &&
+        packet.questions[0].name == "closeme.com") {
+        response.stream.connection.close('INTERNAL_ERROR', response.stream.id);
+        return;
+      }
+
       function responseType() {
         if (packet.questions.length > 0 &&
           packet.questions[0].name == "confirm.example.com" &&
