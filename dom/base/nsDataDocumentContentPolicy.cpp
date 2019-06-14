@@ -11,7 +11,6 @@
  */
 
 #include "nsContentUtils.h"
-#include "nsContentPolicyUtils.h"
 #include "nsDataDocumentContentPolicy.h"
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
@@ -41,7 +40,7 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
                                         nsILoadInfo* aLoadInfo,
                                         const nsACString& aMimeGuess,
                                         int16_t* aDecision) {
-  auto setBlockingReason = mozilla::MakeScopeExit([&]() {
+  auto setBlockingReason = MakeScopeExit([&]() {
     if (NS_CP_REJECTED(*aDecision)) {
       NS_SetRequestBlockingReason(
           aLoadInfo, nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_DATA_DOCUMENT);

@@ -12,6 +12,7 @@
 #define nsDOMAttributeMap_h
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/dom/Attr.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsRefPtrHashtable.h"
@@ -19,15 +20,10 @@
 #include "nsWrapperCache.h"
 
 class nsAtom;
-class nsINode;
 
 namespace mozilla {
 namespace dom {
-class Attr;
 class DocGroup;
-class Document;
-class Element;
-class NodeInfo;
 }  // namespace dom
 }  // namespace mozilla
 

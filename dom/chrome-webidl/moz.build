@@ -35,8 +35,6 @@ PREPROCESSED_WEBIDL_FILES = [
 WEBIDL_FILES = [
     'BrowsingContext.webidl',
     'ChannelWrapper.webidl',
-    'DebuggerNotification.webidl',
-    'DebuggerNotificationObserver.webidl',
     'DocumentL10n.webidl',
     'DominatorTree.webidl',
     'DOMLocalization.webidl',
