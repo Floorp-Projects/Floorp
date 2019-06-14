@@ -22,8 +22,8 @@ impl<'a> From<&'a str> for StringView {
     }
 }
 
-impl Into<Result<String,Box<Error>>> for StringView {
-    fn into(self) -> Result<String,Box<Error>> {
+impl Into<Result<String, Box<dyn Error>>> for StringView {
+    fn into(self) -> Result<String, Box<dyn Error>> {
 
         // This block must be unsafe as it converts a StringView, most likly provided from the
         // C++ code, into a rust String and thus needs to operate with raw pointers.

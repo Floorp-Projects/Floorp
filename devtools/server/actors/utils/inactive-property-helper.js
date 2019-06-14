@@ -112,6 +112,7 @@ class InactivePropertyHelper {
       {
         invalidProperties: [
           "align-self",
+          "place-self",
         ],
         when: () => !this.gridItem && !this.flexItem,
         fixId: "inactive-css-not-grid-or-flex-item-fix",
@@ -124,6 +125,8 @@ class InactivePropertyHelper {
           "align-content",
           "align-items",
           "justify-content",
+          "place-content",
+          "place-items",
           "row-gap",
         ],
         when: () => !this.gridContainer && !this.flexContainer,
