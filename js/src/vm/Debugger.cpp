@@ -9722,9 +9722,11 @@ void DebuggerFrame::freeFrameIterData(FreeOp* fop) {
 void DebuggerFrame::maybeDecrementFrameScriptStepperCount(
     FreeOp* fop, AbstractFramePtr frame) {
   // If this frame has an onStep handler, decrement the script's count.
-  if (getReservedSlot(ONSTEP_HANDLER_SLOT).isUndefined()) {
+  OnStepHandler* handler = onStepHandler();
+  if (!handler) {
     return;
   }
+
   if (frame.isWasmDebugFrame()) {
     wasm::Instance* instance = frame.wasmInstance();
     instance->debug().decrementStepperCount(
@@ -9735,6 +9737,7 @@ void DebuggerFrame::maybeDecrementFrameScriptStepperCount(
 
   // In the case of generator frames, we may end up trying to clean up the step
   // count in more than one place, so make this method idempotent.
+  handler->drop();
   setReservedSlot(ONSTEP_HANDLER_SLOT, UndefinedValue());
 }
 
