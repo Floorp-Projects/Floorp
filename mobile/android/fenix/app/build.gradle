@@ -424,7 +424,7 @@ task printBuildVariants {
 
 task printGeckoviewVersions {
     doLast {
-        println "nightly: " + groovy.json.JsonOutput.toJson(GeckoVersions.nightly_version)
+        println "beta: " + groovy.json.JsonOutput.toJson(GeckoVersions.beta_version)
     }
 }
 

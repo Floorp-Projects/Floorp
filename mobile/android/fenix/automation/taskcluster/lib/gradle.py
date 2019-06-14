@@ -29,7 +29,7 @@ def get_geckoview_versions():
     output = _run_gradle_process('printGeckoviewVersions')
 
     versions = {}
-    for version_type in ('nightly',):
+    for version_type in ('beta',):
         version = _extract_content_from_command_output(output, prefix='{}: '.format(version_type))
         version = version.strip('"')
         versions[version_type] = version
