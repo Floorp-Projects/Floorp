@@ -112,6 +112,7 @@ class InactivePropertyHelper {
       {
         invalidProperties: [
           "align-self",
+          "place-self",
         ],
         when: () => !this.gridItem && !this.flexItem,
         fixId: "inactive-css-not-grid-or-flex-item-fix",
