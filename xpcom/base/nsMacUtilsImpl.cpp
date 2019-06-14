@@ -8,22 +8,15 @@
 
 #include "base/command_line.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/ContentChild.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "nsIProperties.h"
 #include "nsServiceManagerUtils.h"
-#include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "prenv.h"
 
-#if defined(MOZ_SANDBOX)
-#include "mozilla/SandboxSettings.h"
-#endif
-
 #include <CoreFoundation/CoreFoundation.h>
-#include <CoreServices/CoreServices.h>
 #include <sys/sysctl.h>
 
 NS_IMPL_ISUPPORTS(nsMacUtilsImpl, nsIMacUtils)
@@ -35,11 +28,6 @@ using mozilla::Unused;
 StaticAutoPtr<nsCString> nsMacUtilsImpl::sCachedAppPath;
 StaticMutex nsMacUtilsImpl::sCachedAppPathMutex;
 #endif
-
-// Info.plist key associated with the developer repo path
-#define MAC_DEV_REPO_KEY "MozillaDeveloperRepoPath"
-// Info.plist key associated with the developer repo object directory
-#define MAC_DEV_OBJ_KEY "MozillaDeveloperObjPath"
 
 // Initialize with Unknown until we've checked if TCSM is available to set
 Atomic<nsMacUtilsImpl::TCSMStatus> nsMacUtilsImpl::sTCSMStatus(TCSM_Unknown);
@@ -213,109 +201,10 @@ bool nsMacUtilsImpl::GetAppPath(nsCString& aAppPath) {
 
   if (!sCachedAppPath) {
     sCachedAppPath = new nsCString(aAppPath);
-
-    if (NS_IsMainThread()) {
-      nsMacUtilsImpl::ClearCachedAppPathOnShutdown();
-    } else {
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "nsMacUtilsImpl::ClearCachedAppPathOnShutdown",
-          [] { nsMacUtilsImpl::ClearCachedAppPathOnShutdown(); }));
-    }
+    ClearOnShutdown(&sCachedAppPath);
   }
 
   return true;
-}
-
-nsresult nsMacUtilsImpl::ClearCachedAppPathOnShutdown() {
-  MOZ_ASSERT(NS_IsMainThread());
-  ClearOnShutdown(&sCachedAppPath);
-  return NS_OK;
-}
-
-/*
- * Helper function to read a string value for a given key from the .app's
- * Info.plist.
- */
-static nsresult GetStringValueFromBundlePlist(const nsAString& aKey,
-                                              nsAutoCString& aValue) {
-  CFBundleRef mainBundle = CFBundleGetMainBundle();
-  if (mainBundle == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Read this app's bundle Info.plist as a dictionary
-  CFDictionaryRef bundleInfoDict = CFBundleGetInfoDictionary(mainBundle);
-  if (bundleInfoDict == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsAutoCString keyAutoCString = NS_ConvertUTF16toUTF8(aKey);
-  CFStringRef key = CFStringCreateWithCString(
-      kCFAllocatorDefault, keyAutoCString.get(), kCFStringEncodingUTF8);
-  if (key == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
-
-  CFStringRef value = (CFStringRef)CFDictionaryGetValue(bundleInfoDict, key);
-  CFRelease(key);
-  if (value == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
-
-  CFIndex valueLength = CFStringGetLength(value);
-  if (valueLength == 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  const char* valueCString =
-      CFStringGetCStringPtr(value, kCFStringEncodingUTF8);
-  if (valueCString) {
-    aValue.Assign(valueCString);
-    return NS_OK;
-  }
-
-  CFIndex maxLength =
-      CFStringGetMaximumSizeForEncoding(valueLength, kCFStringEncodingUTF8) + 1;
-  char* valueBuffer = static_cast<char*>(moz_xmalloc(maxLength));
-
-  if (!CFStringGetCString(value, valueBuffer, maxLength,
-                          kCFStringEncodingUTF8)) {
-    free(valueBuffer);
-    return NS_ERROR_FAILURE;
-  }
-
-  aValue.Assign(valueBuffer);
-  free(valueBuffer);
-  return NS_OK;
-}
-/*
- * Helper function for reading a path string from the .app's Info.plist
- * and returning a directory object for that path with symlinks resolved.
- */
-static nsresult GetDirFromBundlePlist(const nsAString& aKey, nsIFile** aDir) {
-  nsresult rv;
-
-  nsAutoCString dirPath;
-  rv = GetStringValueFromBundlePlist(aKey, dirPath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIFile> dir;
-  rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(dirPath), false,
-                       getter_AddRefs(dir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = dir->Normalize();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool isDirectory = false;
-  rv = dir->IsDirectory(&isDirectory);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!isDirectory) {
-    return NS_ERROR_FILE_NOT_DIRECTORY;
-  }
-
-  dir.swap(*aDir);
-  return NS_OK;
 }
 
 #  if defined(DEBUG)
@@ -426,105 +315,3 @@ uint32_t nsMacUtilsImpl::GetPhysicalCPUCount() {
   }
   return oldVal;
 }
-
-/*
- * Helper function to read a string value for a given key from the .app's
- * Info.plist.
- */
-static nsresult GetStringValueFromBundlePlist(const nsAString& aKey,
-                                              nsAutoCString& aValue) {
-  CFBundleRef mainBundle = CFBundleGetMainBundle();
-  if (mainBundle == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Read this app's bundle Info.plist as a dictionary
-  CFDictionaryRef bundleInfoDict = CFBundleGetInfoDictionary(mainBundle);
-  if (bundleInfoDict == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsAutoCString keyAutoCString = NS_ConvertUTF16toUTF8(aKey);
-  CFStringRef key = CFStringCreateWithCString(
-      kCFAllocatorDefault, keyAutoCString.get(), kCFStringEncodingUTF8);
-  if (key == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
-
-  CFStringRef value = (CFStringRef)CFDictionaryGetValue(bundleInfoDict, key);
-  CFRelease(key);
-  if (value == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
-
-  CFIndex valueLength = CFStringGetLength(value);
-  if (valueLength == 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  const char* valueCString =
-      CFStringGetCStringPtr(value, kCFStringEncodingUTF8);
-  if (valueCString) {
-    aValue.Assign(valueCString);
-    return NS_OK;
-  }
-
-  CFIndex maxLength =
-      CFStringGetMaximumSizeForEncoding(valueLength, kCFStringEncodingUTF8) + 1;
-  char* valueBuffer = static_cast<char*>(moz_xmalloc(maxLength));
-
-  if (!CFStringGetCString(value, valueBuffer, maxLength,
-                          kCFStringEncodingUTF8)) {
-    free(valueBuffer);
-    return NS_ERROR_FAILURE;
-  }
-
-  aValue.Assign(valueBuffer);
-  free(valueBuffer);
-  return NS_OK;
-}
-
-/*
- * Helper function for reading a path string from the .app's Info.plist
- * and returning a directory object for that path with symlinks resolved.
- */
-static nsresult GetDirFromBundlePlist(const nsAString& aKey, nsIFile** aDir) {
-  nsresult rv;
-
-  nsAutoCString dirPath;
-  rv = GetStringValueFromBundlePlist(aKey, dirPath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIFile> dir;
-  rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(dirPath), false,
-                       getter_AddRefs(dir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = dir->Normalize();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool isDirectory = false;
-  rv = dir->IsDirectory(&isDirectory);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!isDirectory) {
-    return NS_ERROR_FILE_NOT_DIRECTORY;
-  }
-
-  dir.swap(*aDir);
-  return NS_OK;
-}
-
-nsresult nsMacUtilsImpl::GetRepoDir(nsIFile** aRepoDir) {
-#if defined(MOZ_SANDBOX)
-  MOZ_ASSERT(mozilla::IsDevelopmentBuild());
-#endif
-  return GetDirFromBundlePlist(NS_LITERAL_STRING(MAC_DEV_REPO_KEY), aRepoDir);
-}
-
-nsresult nsMacUtilsImpl::GetObjDir(nsIFile** aObjDir) {
-#if defined(MOZ_SANDBOX)
-  MOZ_ASSERT(mozilla::IsDevelopmentBuild());
-#endif
-  return GetDirFromBundlePlist(NS_LITERAL_STRING(MAC_DEV_OBJ_KEY), aObjDir);
-}
-
