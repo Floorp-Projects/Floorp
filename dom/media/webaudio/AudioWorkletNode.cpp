@@ -15,6 +15,22 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(AudioWorkletNode, AudioNode)
 
+class WorkletNodeEngine final : public AudioNodeEngine {
+ public:
+  explicit WorkletNodeEngine(AudioWorkletNode* aNode)
+      : AudioNodeEngine(aNode) {}
+
+  void ConstructProcessor(AudioWorkletImpl* aWorkletImpl,
+                          const nsAString& aName,
+                          StructuredCloneHolder* aOptionsSerialization);
+};
+
+void WorkletNodeEngine::ConstructProcessor(
+    AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
+    StructuredCloneHolder* aOptionsSerialization) {
+  // TODO: bug 1542931
+}
+
 AudioWorkletNode::AudioWorkletNode(AudioContext* aAudioContext,
                                    const nsAString& aName,
                                    const AudioWorkletNodeOptions& aOptions)
@@ -100,6 +116,25 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+
+  audioWorkletNode->mStream = AudioNodeStream::Create(
+      &aAudioContext, new WorkletNodeEngine(audioWorkletNode),
+      AudioNodeStream::NO_STREAM_FLAGS, aAudioContext.Graph());
+  /**
+   * 10. Queue a control message to create an AudioWorkletProcessor, given
+   *     nodeName, processorPortSerialization, optionsSerialization, and node.
+   */
+  Worklet* worklet = aAudioContext.GetAudioWorklet(aRv);
+  MOZ_ASSERT(worklet, "Worklet already existed and so getter shouldn't fail.");
+  auto workletImpl = static_cast<AudioWorkletImpl*>(worklet->Impl());
+  audioWorkletNode->mStream->SendRunnable(NS_NewRunnableFunction(
+      "WorkletNodeEngine::ConstructProcessor",
+      [stream = audioWorkletNode->mStream,
+       workletImpl = RefPtr<AudioWorkletImpl>(workletImpl),
+       name = nsString(aName), options = std::move(optionsSerialization)]() {
+        auto engine = static_cast<WorkletNodeEngine*>(stream->Engine());
+        engine->ConstructProcessor(workletImpl, name, options.get());
+      }));
 
   return audioWorkletNode.forget();
 }
