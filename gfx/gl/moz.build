@@ -125,7 +125,6 @@ UNIFIED_SOURCES += [
     'GLContext.cpp',
     'GLContextFeatures.cpp',
     'GLContextProviderEGL.cpp',
-    'GLContextTypes.cpp',
     'GLDebugUtils.cpp',
     'GLLibraryEGL.cpp',
     'GLLibraryLoader.cpp',
@@ -138,7 +137,6 @@ UNIFIED_SOURCES += [
     'SharedSurface.cpp',
     'SharedSurfaceEGL.cpp',
     'SharedSurfaceGL.cpp',
-    'SurfaceTypes.cpp',
     'TextureImageEGL.cpp',
 ]
 

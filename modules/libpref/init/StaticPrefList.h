@@ -3507,13 +3507,6 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
-VARCACHE_PREF(
-  Live,
-  "gl.msaa-level",
-  MSAALevel,
-  RelaxedAtomicUint32, 2
-)
-
 #if defined(XP_MACOSX)
 VARCACHE_PREF(
   Live,
