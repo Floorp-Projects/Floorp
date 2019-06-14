@@ -19,8 +19,8 @@ namespace mozilla {
 
 UniquePtr<Sdp> RsdparsaSdpParser::Parse(const std::string& sdpText) {
   ClearParseErrors();
-  RustSdpSession* result = nullptr;
-  RustSdpError* err = nullptr;
+  RustSdpSession* result;
+  RustSdpError* err;
   StringView sdpTextView{sdpText.c_str(), sdpText.length()};
   nsresult rv = parse_sdp(sdpTextView, false, &result, &err);
   if (rv != NS_OK) {
