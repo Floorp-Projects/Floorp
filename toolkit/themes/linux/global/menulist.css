@@ -40,7 +40,7 @@ menulist:hover {
 
 menulist:hover:active,
 menulist[open="true"] {
-  color: ButtonText;
+  color: -moz-gtk-buttonactivetext;
 }
 
 menulist[disabled="true"],

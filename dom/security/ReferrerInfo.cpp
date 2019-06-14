@@ -629,6 +629,55 @@ ReferrerInfo::InitWithNode(nsINode* aNode) {
   return NS_OK;
 }
 
+/* static */
+already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForFetch(
+    nsIPrincipal* aPrincipal, Document* aDoc) {
+  MOZ_ASSERT(aPrincipal);
+
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+  if (!aPrincipal || aPrincipal->IsSystemPrincipal()) {
+    referrerInfo = new ReferrerInfo(nullptr);
+    return referrerInfo.forget();
+  }
+
+  nsCOMPtr<nsIURI> principalURI;
+  aPrincipal->GetURI(getter_AddRefs(principalURI));
+
+  if (!aDoc) {
+    referrerInfo = new ReferrerInfo(principalURI, RP_Unset);
+    return referrerInfo.forget();
+  }
+
+  // If it weren't for history.push/replaceState, we could just use the
+  // principal's URI here.  But since we want changes to the URI effected
+  // by push/replaceState to be reflected in the XHR referrer, we have to
+  // be more clever.
+  //
+  // If the document's original URI (before any push/replaceStates) matches
+  // our principal, then we use the document's current URI (after
+  // push/replaceStates).  Otherwise (if the document is, say, a data:
+  // URI), we just use the principal's URI.
+  nsCOMPtr<nsIURI> docCurURI = aDoc->GetDocumentURI();
+  nsCOMPtr<nsIURI> docOrigURI = aDoc->GetOriginalURI();
+
+  nsCOMPtr<nsIURI> referrerURI;
+
+  if (principalURI && docCurURI && docOrigURI) {
+    bool equal = false;
+    principalURI->Equals(docOrigURI, &equal);
+    if (equal) {
+      referrerURI = docCurURI;
+    }
+  }
+
+  if (!referrerURI) {
+    referrerURI = principalURI;
+  }
+
+  referrerInfo = new ReferrerInfo(referrerURI, aDoc->GetReferrerPolicy());
+  return referrerInfo.forget();
+}
+
 void ReferrerInfo::GetReferrerPolicyFromAtribute(nsINode* aNode,
                                                  uint32_t& aPolicy) const {
   aPolicy = mozilla::net::RP_Unset;

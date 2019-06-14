@@ -4388,23 +4388,31 @@ static
 
 #  define MALLOC_DECL(name, return_type, ...) MozJemalloc::name,
 
-static const malloc_table_t gReplaceMallocTableDefault = {
+// The default malloc table, i.e. plain allocations. It never changes. It's
+// used by init(), and not used after that.
+static const malloc_table_t gDefaultMallocTable = {
 #  include "malloc_decls.h"
 };
-static malloc_table_t gReplaceMallocTables[2] = {
-    {
-#  include "malloc_decls.h"
-    },
-    {
-#  include "malloc_decls.h"
-    },
-};
-unsigned gReplaceMallocIndex = 0;
 
-// Avoid races when swapping malloc impls dynamically
+// The malloc table installed by init(). It never changes from that point
+// onward. It will be the same as gDefaultMallocTable if no replace-malloc tool
+// is enabled at startup.
+static malloc_table_t gOriginalMallocTable = {
+#  include "malloc_decls.h"
+};
+
+// The malloc table installed by jemalloc_replace_dynamic(). (Read the
+// comments above that function for more details.)
+static malloc_table_t gDynamicMallocTable = {
+#  include "malloc_decls.h"
+};
+
+// This briefly points to gDefaultMallocTable at startup. After that, it points
+// to either gOriginalMallocTable or gDynamicMallocTable. It's atomic to avoid
+// races when switching between tables.
 static Atomic<malloc_table_t const*, mozilla::MemoryOrdering::Relaxed,
               recordreplay::Behavior::DontPreserve>
-    gReplaceMallocTable;
+    gMallocTablePtr;
 
 #  ifdef MOZ_DYNAMIC_REPLACE_INIT
 #    undef replace_init
@@ -4461,7 +4469,7 @@ bool Equals(const malloc_table_t& aTable1, const malloc_table_t& aTable2) {
 // replacement functions if they exist.
 static ReplaceMallocBridge* gReplaceMallocBridge = nullptr;
 static void init() {
-  malloc_table_t tempTable = gReplaceMallocTableDefault;
+  malloc_table_t tempTable = gDefaultMallocTable;
 
 #  ifdef MOZ_DYNAMIC_REPLACE_INIT
   replace_malloc_handle_t handle = replace_malloc_handle();
@@ -4472,77 +4480,94 @@ static void init() {
 
   // Set this *before* calling replace_init, otherwise if replace_init calls
   // malloc() we'll get an infinite loop.
-  gReplaceMallocTable = &gReplaceMallocTableDefault;
+  gMallocTablePtr = &gDefaultMallocTable;
 
-  // Pass in the a new (default allocator table so replace functions can
-  // copy and use it for their allocations.  The replace_init() function
-  // should modify the table if it wants to be active, otherwise leave it
-  // unmodified.
+  // Pass in the default allocator table so replace functions can copy and use
+  // it for their allocations. The replace_init() function should modify the
+  // table if it wants to be active, otherwise leave it unmodified.
   if (replace_init) {
     replace_init(&tempTable, &gReplaceMallocBridge);
   }
 #  ifdef MOZ_REPLACE_MALLOC_STATIC
-  if (Equals(tempTable, gReplaceMallocTableDefault)) {
+  if (Equals(tempTable, gDefaultMallocTable)) {
     logalloc_init(&tempTable, &gReplaceMallocBridge);
   }
 #    ifdef MOZ_DMD
-  if (Equals(tempTable, gReplaceMallocTableDefault)) {
+  if (Equals(tempTable, gDefaultMallocTable)) {
     dmd_init(&tempTable, &gReplaceMallocBridge);
   }
 #    endif
 #  endif
-  if (!Equals(tempTable, gReplaceMallocTableDefault)) {
+  if (!Equals(tempTable, gDefaultMallocTable)) {
     replace_malloc_init_funcs(&tempTable);
-    gReplaceMallocIndex = (gReplaceMallocIndex + 1) % 2;
-    gReplaceMallocTables[gReplaceMallocIndex] = tempTable;
-    // Atomic change
-    gReplaceMallocTable = &gReplaceMallocTables[gReplaceMallocIndex];
   }
+  gOriginalMallocTable = tempTable;
+  gMallocTablePtr = &gOriginalMallocTable;
 }
 
-// Note: since other allocations have happened before this, it must deal
-// with allocations being freed that weren't allocated through it, and when
-// it's removed the normal allocator must deal with allocations made by the
-// replacement that are freed by the normal allocator.
+// WARNING WARNING WARNING: this function should be used with extreme care. It
+// is not as general-purpose as it looks. It is currently used by
+// tools/profiler/core/memory_hooks.cpp for counting allocations and probably
+// should not be used for any other purpose.
 //
-// This means that simple replacements that don't modify much about the
-// allocations or just record information about it are fine.
+// This function allows the original malloc table to be temporarily replaced by
+// a different malloc table. Or, if the argument is nullptr, it switches back to
+// the original malloc table.
+//
+// Limitations:
+//
+// - It is not threadsafe. If multiple threads pass it the same
+//   `replace_init_func` at the same time, there will be data races writing to
+//   the malloc_table_t within that function.
+//
+// - Only one replacement can be installed. No nesting is allowed.
+//
+// - The new malloc table must be able to free allocations made by the original
+//   malloc table, and upon removal the original malloc table must be able to
+//   free allocations made by the new malloc table. This means the new malloc
+//   table can only do simple things like recording extra information, while
+//   delegating actual allocation/free operations to the original malloc table.
+//
 MOZ_JEMALLOC_API void jemalloc_replace_dynamic(
     jemalloc_init_func replace_init_func) {
-  malloc_table_t tempTable = gReplaceMallocTableDefault;
   if (replace_init_func) {
+    malloc_table_t tempTable = gOriginalMallocTable;
     (*replace_init_func)(&tempTable, &gReplaceMallocBridge);
-    if (!Equals(tempTable, gReplaceMallocTableDefault)) {
+    if (!Equals(tempTable, gOriginalMallocTable)) {
       replace_malloc_init_funcs(&tempTable);
-      // flip-flop between two tables
-      gReplaceMallocIndex = (gReplaceMallocIndex + 1) % 2;
-      gReplaceMallocTables[gReplaceMallocIndex] = tempTable;
-      gReplaceMallocTable = &gReplaceMallocTables[gReplaceMallocIndex];
+
+      // Temporarily switch back to the original malloc table. In the
+      // (supported) non-nested case, this is a no-op. But just in case this is
+      // a (unsupported) nested call, it makes the overwriting of
+      // gDynamicMallocTable less racy, because ongoing calls to malloc() and
+      // friends won't go through gDynamicMallocTable.
+      gMallocTablePtr = &gOriginalMallocTable;
+
+      gDynamicMallocTable = tempTable;
+      gMallocTablePtr = &gDynamicMallocTable;
       // We assume that dynamic replaces don't occur close enough for a
       // thread to still have old copies of the table pointer when the 2nd
       // replace occurs.
-      return;
     }
+  } else {
+    // Switch back to the original malloc table.
+    gMallocTablePtr = &gOriginalMallocTable;
   }
-  // When a replacer is removed, switch back to the original default.  A
-  // new replacement will not immediately re-use the same table array index
-  // as the last malloc replacer.
-  gReplaceMallocTable = &gReplaceMallocTableDefault;
 }
 
-#  define MALLOC_DECL(name, return_type, ...)                               \
-    template <>                                                             \
-    inline return_type ReplaceMalloc::name(                                 \
-        ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) {                           \
-      if (MOZ_UNLIKELY(!gReplaceMallocTable)) {                             \
-        init();                                                             \
-      }                                                                     \
-      return (*gReplaceMallocTable).name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
+#  define MALLOC_DECL(name, return_type, ...)                           \
+    template <>                                                         \
+    inline return_type ReplaceMalloc::name(                             \
+        ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) {                       \
+      if (MOZ_UNLIKELY(!gMallocTablePtr)) {                             \
+        init();                                                         \
+      }                                                                 \
+      return (*gMallocTablePtr).name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
     }
 #  include "malloc_decls.h"
 
 MOZ_JEMALLOC_API struct ReplaceMallocBridge* get_bridge(void) {
-  if (MOZ_UNLIKELY(!gReplaceMallocTable)) {
+  if (MOZ_UNLIKELY(!gMallocTablePtr)) {
     init();
   }
   return gReplaceMallocBridge;

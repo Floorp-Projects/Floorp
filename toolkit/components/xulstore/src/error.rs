@@ -5,7 +5,7 @@
 use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_ILLEGAL_VALUE, NS_ERROR_NOT_AVAILABLE, NS_ERROR_UNEXPECTED,
 };
-use rkv::StoreError as RkvStoreError;
+use rkv::{migrate::MigrateError as RkvMigrateError, StoreError as RkvStoreError};
 use serde_json::Error as SerdeJsonError;
 use std::{io::Error as IoError, str::Utf8Error, string::FromUtf16Error, sync::PoisonError};
 
@@ -34,6 +34,9 @@ pub(crate) enum XULStoreError {
     #[fail(display = "poison error getting read/write lock")]
     PoisonError,
 
+    #[fail(display = "migrate error: {:?}", _0)]
+    RkvMigrateError(RkvMigrateError),
+
     #[fail(display = "store error: {:?}", _0)]
     RkvStoreError(RkvStoreError),
 
@@ -60,6 +63,7 @@ impl From<XULStoreError> for nsresult {
             XULStoreError::JsonError(_) => NS_ERROR_FAILURE,
             XULStoreError::NsResult(result) => result,
             XULStoreError::PoisonError => NS_ERROR_UNEXPECTED,
+            XULStoreError::RkvMigrateError(_) => NS_ERROR_FAILURE,
             XULStoreError::RkvStoreError(_) => NS_ERROR_FAILURE,
             XULStoreError::IdAttrNameTooLong => NS_ERROR_ILLEGAL_VALUE,
             XULStoreError::Unavailable => NS_ERROR_NOT_AVAILABLE,
@@ -84,6 +88,12 @@ impl From<nsresult> for XULStoreError {
 impl<T> From<PoisonError<T>> for XULStoreError {
     fn from(_: PoisonError<T>) -> XULStoreError {
         XULStoreError::PoisonError
+    }
+}
+
+impl From<RkvMigrateError> for XULStoreError {
+    fn from(err: RkvMigrateError) -> XULStoreError {
+        XULStoreError::RkvMigrateError(err)
     }
 }
 

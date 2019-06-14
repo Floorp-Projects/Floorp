@@ -217,6 +217,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(
   info.mPrincipalInfo = new PrincipalInfo(aData.principalInfo());
   info.mStoragePrincipalInfo = new PrincipalInfo(aData.storagePrincipalInfo());
 
+  info.mReferrerInfo = aData.referrerInfo();
   info.mDomain = aData.domain();
   info.mPrincipal = principal;
   info.mStoragePrincipal = storagePrincipal;
@@ -270,7 +271,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(
       info.mResolvedScriptURI, clientInfo,
       aData.isSharedWorker() ? nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER
                              : nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER,
-      info.mCookieSettings, getter_AddRefs(info.mChannel));
+      info.mCookieSettings, info.mReferrerInfo, getter_AddRefs(info.mChannel));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

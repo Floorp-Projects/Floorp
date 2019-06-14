@@ -192,20 +192,24 @@ class TestModalAlerts(BaseAlertTestCase):
 
     def setUp(self):
         super(TestModalAlerts, self).setUp()
-        self.marionette.set_pref("network.auth.non-web-content-triggered-resources-http-auth-allow",
-                                 True)
+        self.marionette.set_pref(
+            "network.auth.non-web-content-triggered-resources-http-auth-allow",
+            True,
+        )
+
+        self.new_tab = self.open_tab()
+        self.marionette.switch_to_window(self.new_tab)
 
     def tearDown(self):
-        # Ensure to close a possible remaining modal dialog
-        self.close_all_windows()
-        self.marionette.clear_pref("network.auth.non-web-content-triggered-resources-http-auth-allow")
+        self.close_all_tabs()
+        self.marionette.clear_pref(
+            "network.auth.non-web-content-triggered-resources-http-auth-allow")
 
         super(TestModalAlerts, self).tearDown()
 
     def test_http_auth_dismiss(self):
         self.marionette.navigate(self.marionette.absolute_url("http_auth"))
         self.wait_for_alert(timeout=self.marionette.timeout.page_load)
-
         alert = self.marionette.switch_to_alert()
         alert.dismiss()
 

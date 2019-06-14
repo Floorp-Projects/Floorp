@@ -391,7 +391,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   void SkipBrowsingContextDetach();
 
-  void MaybeNotifyCrashed(mozilla::ipc::MessageChannel* aChannel);
+  void MaybeNotifyCrashed(mozilla::dom::BrowsingContext* aBrowsingContext,
+                          mozilla::ipc::MessageChannel* aChannel);
 
  private:
   nsFrameLoader(mozilla::dom::Element* aOwner,

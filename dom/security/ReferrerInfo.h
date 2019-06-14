@@ -27,6 +27,7 @@ class nsIURI;
 class nsIChannel;
 class nsILoadInfo;
 class nsINode;
+class nsIPrincipal;
 
 namespace mozilla {
 namespace net {
@@ -73,6 +74,16 @@ class ReferrerInfo : public nsIReferrerInfo {
   already_AddRefed<nsIReferrerInfo> CloneWithNewOriginalReferrer(
       nsIURI* aOriginalReferrer) const;
 
+  /*
+   * Implements step 3.1 and 3.3 of the Determine request's Referrer algorithm
+   * from the Referrer Policy specification.
+   *
+   * https://w3c.github.io/webappsec/specs/referrer-policy/#determine-requests-referrer
+   */
+
+  static already_AddRefed<nsIReferrerInfo> CreateForFetch(
+      nsIPrincipal* aPrincipal, Document* aDoc);
+
   /**
    * Check whether the given referrer's scheme is allowed to be computed and
    * sent. The whitelist schemes are: http, https, ftp.
@@ -105,7 +116,7 @@ class ReferrerInfo : public nsIReferrerInfo {
                                            nsIURI* aURI = nullptr,
                                            bool privateBrowsing = false);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREFERRERINFO
   NS_DECL_NSISERIALIZABLE
 

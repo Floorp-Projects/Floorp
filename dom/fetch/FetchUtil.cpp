@@ -123,12 +123,11 @@ nsresult FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal, Document* aDoc,
   if (referrer.IsEmpty()) {
     // This is the case request’s referrer is "no-referrer"
     referrerInfo = new ReferrerInfo(nullptr, net::RP_No_Referrer);
-    rv = aChannel->SetReferrerInfoWithoutClone(referrerInfo);
-    NS_ENSURE_SUCCESS(rv, rv);
   } else if (referrer.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
-    rv = nsContentUtils::SetFetchReferrerURIWithPolicy(aPrincipal, aDoc,
-                                                       aChannel, policy);
-    NS_ENSURE_SUCCESS(rv, rv);
+    referrerInfo = ReferrerInfo::CreateForFetch(aPrincipal, aDoc);
+    // In the first step, we should use referrer info from requetInit
+    referrerInfo = static_cast<ReferrerInfo*>(referrerInfo.get())
+                       ->CloneWithNewPolicy(policy);
   } else {
     // From "Determine request's Referrer" step 3
     // "If request's referrer is a URL, let referrerSource be request's
@@ -137,9 +136,10 @@ nsresult FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal, Document* aDoc,
     rv = NS_NewURI(getter_AddRefs(referrerURI), referrer, nullptr, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
     referrerInfo = new ReferrerInfo(referrerURI, policy);
-    rv = aChannel->SetReferrerInfoWithoutClone(referrerInfo);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  rv = aChannel->SetReferrerInfoWithoutClone(referrerInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> computedReferrer;
   referrerInfo = aChannel->GetReferrerInfo();

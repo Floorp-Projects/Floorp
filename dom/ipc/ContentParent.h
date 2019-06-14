@@ -626,6 +626,9 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvDetachBrowsingContext(BrowsingContext* aContext);
 
+  mozilla::ipc::IPCResult RecvDetachBrowsingContextChildren(
+      BrowsingContext* aContext);
+
   mozilla::ipc::IPCResult RecvCacheBrowsingContextChildren(
       BrowsingContext* aContext);
 

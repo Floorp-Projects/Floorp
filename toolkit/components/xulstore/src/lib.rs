@@ -18,6 +18,7 @@ extern crate nserror;
 extern crate nsstring;
 extern crate rkv;
 extern crate serde_json;
+extern crate tempfile;
 #[macro_use]
 extern crate xpcom;
 

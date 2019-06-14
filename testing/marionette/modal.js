@@ -5,6 +5,11 @@
 "use strict";
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
+
+XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 this.EXPORTED_SYMBOLS = ["modal"];
 
@@ -15,38 +20,8 @@ const isFirefox = () =>
 
 /** @namespace */
 this.modal = {
-  COMMON_DIALOG_LOADED: "common-dialog-loaded",
-  TABMODAL_DIALOG_LOADED: "tabmodal-dialog-loaded",
-  handlers: {
-    "common-dialog-loaded": new Set(),
-    "tabmodal-dialog-loaded": new Set(),
-  },
-};
-
-/**
- * Add handler that will be called when a global- or tab modal dialogue
- * appears.
- *
- * This is achieved by installing observers for common-
- * and tab modal loaded events.
- *
- * This function is a no-op if called on any other product than Firefox.
- *
- * @param {function(Object, string)} handler
- *     The handler to be called, which is passed the
- *     subject (e.g. ChromeWindow) and the topic (one of
- *     {@code modal.COMMON_DIALOG_LOADED} or
- *     {@code modal.TABMODAL_DIALOG_LOADED}.
- */
-modal.addHandler = function(handler) {
-  if (!isFirefox()) {
-    return;
-  }
-
-  Object.keys(this.handlers).map(topic => {
-    this.handlers[topic].add(handler);
-    Services.obs.addObserver(handler, topic);
-  });
+  ACTION_CLOSED: "closed",
+  ACTION_OPENED: "opened",
 };
 
 /**
@@ -89,32 +64,109 @@ modal.findModalDialogs = function(context) {
 };
 
 /**
- * Remove modal dialogue handler by function reference.
+ * Observer for modal and tab modal dialogs.
  *
- * This function is a no-op if called on any other product than Firefox.
- *
- * @param {function} toRemove
- *     The handler previously passed to modal.addHandler which will now
- *     be removed.
+ * @return {modal.DialogObserver}
+ *     Returns instance of the DialogObserver class.
  */
-modal.removeHandler = function(toRemove) {
-  if (!isFirefox()) {
-    return;
+modal.DialogObserver = class {
+  constructor() {
+    this.callbacks = new Set();
+    this.register();
   }
 
-  for (let topic of Object.keys(this.handlers)) {
-    let handlers = this.handlers[topic];
-    for (let handler of handlers) {
-      if (handler == toRemove) {
-        Services.obs.removeObserver(handler, topic);
-        handlers.delete(handler);
-      }
+  register() {
+    Services.obs.addObserver(this, "common-dialog-loaded");
+    Services.obs.addObserver(this, "tabmodal-dialog-loaded");
+    Services.obs.addObserver(this, "toplevel-window-ready");
+
+    // Register event listener for all already open windows
+    for (let win of Services.wm.getEnumerator(null)) {
+      win.addEventListener("DOMModalDialogClosed", this);
     }
+  }
+
+  unregister() {
+    Services.obs.removeObserver(this, "common-dialog-loaded");
+    Services.obs.removeObserver(this, "tabmodal-dialog-loaded");
+    Services.obs.removeObserver(this, "toplevel-window-ready");
+
+    // Unregister event listener for all open windows
+    for (let win of Services.wm.getEnumerator(null)) {
+      win.removeEventListener("DOMModalDialogClosed", this);
+    }
+  }
+
+  cleanup() {
+    this.callbacks.clear();
+    this.unregister();
+  }
+
+  handleEvent(event) {
+    logger.trace(`Received event ${event.type}`);
+
+    let chromeWin = event.target.opener ? event.target.opener.ownerGlobal :
+        event.target.ownerGlobal;
+
+    let targetRef = Cu.getWeakReference(event.target);
+
+    this.callbacks.forEach(callback => {
+      callback(modal.ACTION_CLOSED, targetRef, chromeWin);
+    });
+  }
+
+  observe(subject, topic) {
+    logger.trace(`Received observer notification ${topic}`);
+
+    switch (topic) {
+      case "common-dialog-loaded":
+      case "tabmodal-dialog-loaded":
+        let chromeWin = subject.opener ? subject.opener.ownerGlobal :
+            subject.ownerGlobal;
+
+        // Always keep a weak reference to the current dialog
+        let targetRef = Cu.getWeakReference(subject);
+
+        this.callbacks.forEach(callback => {
+          callback(modal.ACTION_OPENED, targetRef, chromeWin);
+        });
+        break;
+
+      case "toplevel-window-ready":
+        subject.addEventListener("DOMModalDialogClosed", this);
+        break;
+    }
+  }
+
+  /**
+   * Add dialog handler by function reference.
+   *
+   * @param {function} callback
+   *     The handler to be added.
+   */
+  add(callback) {
+    if (this.callbacks.has(callback)) {
+      return;
+    }
+    this.callbacks.add(callback);
+  }
+
+  /**
+   * Remove dialog handler by function reference.
+   *
+   * @param {function} callback
+   *     The handler to be removed.
+   */
+  remove(callback) {
+    if (!this.callbacks.has(callback)) {
+      return;
+    }
+    this.callbacks.delete(callback);
   }
 };
 
 /**
- * Represents the current modal dialogue.
+ * Represents a modal dialog.
  *
  * @param {function(): browser.Context} curBrowserFn
  *     Function that returns the current |browser.Context|.
