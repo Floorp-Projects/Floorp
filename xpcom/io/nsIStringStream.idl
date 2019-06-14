@@ -37,6 +37,16 @@ interface nsIStringInputStream : nsIInputStream
     void setData(in string data, in long dataLen);
 
     /**
+     * SetUTF8Data - encode input data to UTF-8 and assign it to the input
+     * stream.
+     *
+     * @param data    - stream data
+     *
+     * NOTE: This method is meant to be used by JS callers,
+     */
+    void setUTF8Data(in AUTF8String data);
+
+    /**
      * NOTE: the following methods are designed to give C++ code added control
      * over the ownership and lifetime of the stream data.  Use with care :-)
      */
