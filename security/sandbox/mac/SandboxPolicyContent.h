@@ -6,7 +6,7 @@
 #ifndef mozilla_SandboxPolicyContent_h
 #define mozilla_SandboxPolicyContent_h
 
-#define MAX_TESTING_READ_PATHS 4
+#define MAX_CONTENT_TESTING_READ_PATHS 4
 
 namespace mozilla {
 
