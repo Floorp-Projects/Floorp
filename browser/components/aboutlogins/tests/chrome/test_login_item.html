@@ -182,8 +182,24 @@ add_task(async function test_set_login_empty() {
   gLoginItem.shadowRoot.querySelector(".save-changes-button").click();
   ok(!createEventDispatched, "Clicking the .save-changes-button shouldn't dispatch the event when fields are invalid");
   ok(originInput.matches(":invalid"), "origin value is required");
+  is(originInput.value, "", "origin input should be blank at start");
 
-  originInput.value = "https://example.com/foo";
+  originInput.focus();
+  for (let originTuple of [
+    ["ftp://ftp.example.com/", "ftp://ftp.example.com/"],
+    ["https://example.com/", "https://example.com/"],
+    ["http://example.com/", "http://example.com/"],
+    ["www.example.com/bar", "https://www.example.com/bar"],
+    ["example.com/foo", "https://example.com/foo"],
+  ]) {
+    originInput.value = originTuple[0];
+    sendKey("TAB");
+    is(originInput.value, originTuple[1],
+      "origin input should have https:// prefix when not provided by user");
+    // Return focus back to the origin input
+    synthesizeKey("VK_TAB", { shiftKey: true });
+  }
+
   gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value = "user1";
   gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value = "pass1";
 

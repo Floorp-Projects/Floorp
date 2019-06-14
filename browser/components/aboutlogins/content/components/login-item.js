@@ -36,6 +36,9 @@ export default class LoginItem extends ReflectedFluentElement {
 
     window.addEventListener("AboutLoginsLoginSelected", this);
 
+    let originInput = this.shadowRoot.querySelector("input[name='origin']");
+    originInput.addEventListener("blur", this);
+
     let copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
     let copyPasswordButton = this.shadowRoot.querySelector(".copy-password-button");
     copyUsernameButton.relatedInput = this.shadowRoot.querySelector("modal-input[name='username']");
@@ -58,12 +61,14 @@ export default class LoginItem extends ReflectedFluentElement {
       "new-login-title",
       "open-site-button",
       "origin-label",
+      "origin-placeholder",
       "password-label",
       "save-changes-button",
       "time-created",
       "time-changed",
       "time-used",
       "username-label",
+      "username-placeholder",
     ];
   }
 
@@ -105,6 +110,16 @@ export default class LoginItem extends ReflectedFluentElement {
         }
         break;
       }
+      case "origin-placeholder": {
+        let originInput = this.shadowRoot.querySelector("input[name='origin']");
+        originInput.setAttribute("placeholder", this.getAttribute(attrName));
+        break;
+      }
+      case "username-placeholder": {
+        let usernameInput = this.shadowRoot.querySelector("modal-input[name='username']");
+        usernameInput.setAttribute("placeholder", this.getAttribute(attrName));
+        break;
+      }
       default:
         return false;
     }
@@ -131,6 +146,18 @@ export default class LoginItem extends ReflectedFluentElement {
     switch (event.type) {
       case "AboutLoginsLoginSelected": {
         this.setLogin(event.detail);
+        break;
+      }
+      case "blur": {
+        // Add https:// prefix if one was not provided.
+        let originInput = this.shadowRoot.querySelector("input[name='origin']");
+        let originValue = originInput.value.trim();
+        if (!originValue) {
+          return;
+        }
+        if (!originValue.match(/:\/\//)) {
+          originInput.value = "https://" + originValue;
+        }
         break;
       }
       case "click": {
