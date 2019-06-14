@@ -1011,7 +1011,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
   if (mode == XDR_DECODE) {
     /* see BytecodeEmitter::tellDebuggerAboutCompiledScript */
-    if (!fun && !cx->helperThread()) {
+    if (!fun && !cx->isHelperThreadContext()) {
       Debugger::onNewScript(cx, script);
     }
   }
@@ -3243,7 +3243,7 @@ bool ScriptSource::setDisplayURL(JSContext* cx, const char16_t* displayURL) {
   MOZ_ASSERT(displayURL);
   if (hasDisplayURL()) {
     // FIXME: filename_.get() should be UTF-8 (bug 987069).
-    if (!cx->helperThread() &&
+    if (!cx->isHelperThreadContext() &&
         !JS_ReportErrorFlagsAndNumberLatin1(
             cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
             JSMSG_ALREADY_HAS_PRAGMA, filename_.get(), "//# sourceURL")) {

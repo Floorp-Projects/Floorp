@@ -57,7 +57,7 @@ ErrorResult<JS::Error&> BinASTTokenReaderBase::raiseInvalidField(
 }
 
 bool BinASTTokenReaderBase::hasRaisedError() const {
-  if (cx_->helperThread()) {
+  if (cx_->isHelperThreadContext()) {
     // When performing off-main-thread parsing, we don't set a pending
     // exception but instead add a pending compile error.
     return cx_->isCompileErrorPending();

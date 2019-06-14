@@ -186,6 +186,10 @@ struct JSContext : public JS::RootingContext,
     return kind_ == js::ContextKind::MainThread;
   }
 
+  bool isHelperThreadContext() const {
+    return kind_ == js::ContextKind::HelperThread;
+  }
+
   js::gc::FreeLists& freeLists() {
     MOZ_ASSERT(freeLists_);
     return *freeLists_;
@@ -208,7 +212,7 @@ struct JSContext : public JS::RootingContext,
 
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) {
-    if (helperThread()) {
+    if (isHelperThreadContext()) {
       addPendingOutOfMemory();
       return nullptr;
     }
@@ -1358,8 +1362,8 @@ struct MOZ_RAII AutoSetThreadIsSweeping {
 
 } /* namespace js */
 
-#define CHECK_THREAD(cx)                   \
-  MOZ_ASSERT_IF(cx && !cx->helperThread(), \
+#define CHECK_THREAD(cx)                            \
+  MOZ_ASSERT_IF(cx && !cx->isHelperThreadContext(), \
                 CurrentThreadCanAccessRuntime(cx->runtime()))
 
 #endif /* vm_JSContext_h */

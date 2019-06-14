@@ -1856,7 +1856,7 @@ static bool ParseCompileOptions(JSContext* cx, CompileOptions& options,
 
 static void my_LargeAllocFailCallback() {
   JSContext* cx = TlsContext.get();
-  if (!cx || cx->helperThread()) {
+  if (!cx || cx->isHelperThreadContext()) {
     return;
   }
 

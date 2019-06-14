@@ -65,7 +65,7 @@ bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
   // it later.
   CompileError tempErr;
   CompileError* err = &tempErr;
-  if (cx->helperThread() && !cx->addPendingCompileError(&err)) {
+  if (cx->isHelperThreadContext() && !cx->addPendingCompileError(&err)) {
     return false;
   }
 
@@ -88,7 +88,7 @@ bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
     return false;
   }
 
-  if (!cx->helperThread()) {
+  if (!cx->isHelperThreadContext()) {
     err->throwError(cx);
   }
 
@@ -103,7 +103,7 @@ void js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata,
   // it later.
   CompileError tempErr;
   CompileError* err = &tempErr;
-  if (cx->helperThread() && !cx->addPendingCompileError(&err)) {
+  if (cx->isHelperThreadContext() && !cx->addPendingCompileError(&err)) {
     return;
   }
 
@@ -126,7 +126,7 @@ void js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata,
     return;
   }
 
-  if (!cx->helperThread()) {
+  if (!cx->isHelperThreadContext()) {
     err->throwError(cx);
   }
 }

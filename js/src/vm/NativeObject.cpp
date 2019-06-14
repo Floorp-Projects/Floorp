@@ -419,7 +419,7 @@ bool NativeObject::addDenseElementPure(JSContext* cx, NativeObject* obj) {
 }
 
 static void FreeSlots(JSContext* cx, HeapSlot* slots) {
-  if (cx->helperThread()) {
+  if (cx->isHelperThreadContext()) {
     js_free(slots);
   } else {
     cx->nursery().freeBuffer(slots);
@@ -1181,7 +1181,7 @@ static MOZ_ALWAYS_INLINE bool CallAddPropertyHook(JSContext* cx,
                                                   HandleValue value) {
   JSAddPropertyOp addProperty = obj->getClass()->getAddProperty();
   if (MOZ_UNLIKELY(addProperty)) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
 
     if (!CallJSAddPropertyOp(cx, addProperty, obj, id, value)) {
       NativeObject::removeProperty(cx, obj, id);
@@ -1207,7 +1207,7 @@ static MOZ_ALWAYS_INLINE bool CallAddPropertyHookDense(JSContext* cx,
 
   JSAddPropertyOp addProperty = obj->getClass()->getAddProperty();
   if (MOZ_UNLIKELY(addProperty)) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
 
     if (!obj->maybeCopyElementsForWrite(cx)) {
       return false;
@@ -1574,7 +1574,7 @@ static bool GetExistingPropertyValue(JSContext* cx, HandleNativeObject obj,
   if (prop.isDenseOrTypedArrayElement()) {
     return obj->getDenseOrTypedArrayElement<CanGC>(cx, JSID_TO_INT(id), vp);
   }
-  MOZ_ASSERT(!cx->helperThread());
+  MOZ_ASSERT(!cx->isHelperThreadContext());
 
   MOZ_ASSERT(prop.shape()->propid() == id);
   MOZ_ASSERT(obj->contains(cx, prop.shape()));
@@ -1681,7 +1681,7 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
         return result.fail(JSMSG_CANT_REDEFINE_PROP);
       }
 
-      MOZ_ASSERT(!cx->helperThread());
+      MOZ_ASSERT(!cx->isHelperThreadContext());
       return ArraySetLength(cx, arr, id, desc_.attributes(), desc_.value(),
                             result);
     }
@@ -1697,7 +1697,7 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     // 9.4.5.3 step 3. Indexed properties of typed arrays are special.
     uint64_t index;
     if (IsTypedArrayIndex(id, &index)) {
-      MOZ_ASSERT(!cx->helperThread());
+      MOZ_ASSERT(!cx->isHelperThreadContext());
       return DefineTypedArrayElement(cx, obj, index, desc_, result);
     }
   } else if (obj->is<ArgumentsObject>()) {
@@ -1854,7 +1854,7 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
       } else {
         // Step 7.a.i.2.
         bool same;
-        MOZ_ASSERT(!cx->helperThread());
+        MOZ_ASSERT(!cx->isHelperThreadContext());
         if (!SameValue(cx, desc.value(), currentValue, &same)) {
           return false;
         }
@@ -1936,7 +1936,7 @@ bool js::NativeDefineAccessorProperty(JSContext* cx, HandleNativeObject obj,
     // Off-thread callers should not get here: they must call this
     // function only with known-valid arguments. Populating a new
     // PlainObject with configurable properties is fine.
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     result.reportError(cx, obj, id);
     return false;
   }
@@ -1963,7 +1963,7 @@ bool js::NativeDefineAccessorProperty(JSContext* cx, HandleNativeObject obj,
     // Off-thread callers should not get here: they must call this
     // function only with known-valid arguments. Populating a new
     // PlainObject with configurable properties is fine.
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     result.reportError(cx, obj, id);
     return false;
   }
@@ -1982,7 +1982,7 @@ bool js::NativeDefineDataProperty(JSContext* cx, HandleNativeObject obj,
     // Off-thread callers should not get here: they must call this
     // function only with known-valid arguments. Populating a new
     // PlainObject with configurable properties is fine.
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     result.reportError(cx, obj, id);
     return false;
   }
@@ -2832,7 +2832,7 @@ static bool SetNonexistentProperty(JSContext* cx, HandleNativeObject obj,
       Rooted<PropertyDescriptor> desc(cx);
       desc.initFields(nullptr, v, JSPROP_ENUMERATE, nullptr, nullptr);
 
-      MOZ_ASSERT(!cx->helperThread());
+      MOZ_ASSERT(!cx->isHelperThreadContext());
       return op(cx, obj, id, desc, result);
     }
 

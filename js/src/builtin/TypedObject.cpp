@@ -2601,7 +2601,7 @@ bool StoreReferenceAny::store(JSContext* cx, GCPtrValue* heap, const Value& v,
   // value properties of typed objects, as these properties are always
   // considered to contain undefined.
   if (!v.isUndefined()) {
-    if (!cx->helperThread()) {
+    if (!cx->isHelperThreadContext()) {
       AddTypePropertyId(cx, obj, id, v);
     } else if (!HasTypePropertyId(obj, id, v)) {
       return false;
@@ -2620,7 +2620,7 @@ bool StoreReferenceObject::store(JSContext* cx, GCPtrObject* heap,
   // object properties of typed objects, as these properties are always
   // considered to contain null.
   if (v.isObject()) {
-    if (!cx->helperThread()) {
+    if (!cx->isHelperThreadContext()) {
       AddTypePropertyId(cx, obj, id, v);
     } else if (!HasTypePropertyId(obj, id, v)) {
       return false;
