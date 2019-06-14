@@ -32,10 +32,6 @@ function DebuggerClient(transport) {
   this._transport = transport;
   this._transport.hooks = this;
 
-  // Map actor ID to client instance for each actor type.
-  // To be removed once all clients are refactored to protocol.js
-  this._clients = new Map();
-
   this._pendingRequests = new Map();
   this._activeRequests = new Map();
   this._eventsEnabled = true;
@@ -850,38 +846,6 @@ DebuggerClient.prototype = {
       // Repeat, more requests may have started in response to those we just waited for
       return this.waitForRequestsToSettle();
     });
-  },
-
-  registerClient: function(client) {
-    const actorID = client.actor;
-    if (!actorID) {
-      throw new Error("DebuggerServer.registerClient expects " +
-                      "a client instance with an `actor` attribute.");
-    }
-    if (!Array.isArray(client.events)) {
-      throw new Error("DebuggerServer.registerClient expects " +
-                      "a client instance with an `events` attribute " +
-                      "that is an array.");
-    }
-    if (client.events.length > 0 && typeof (client.emit) != "function") {
-      throw new Error("DebuggerServer.registerClient expects " +
-                      "a client instance with non-empty `events` array to" +
-                      "have an `emit` function.");
-    }
-    if (this._clients.has(actorID)) {
-      throw new Error("DebuggerServer.registerClient already registered " +
-                      "a client for this actor.");
-    }
-    this._clients.set(actorID, client);
-  },
-
-  unregisterClient: function(client) {
-    const actorID = client.actor;
-    if (!actorID) {
-      throw new Error("DebuggerServer.unregisterClient expects " +
-                      "a Client instance with a `actor` attribute.");
-    }
-    this._clients.delete(actorID);
   },
 
   /**
