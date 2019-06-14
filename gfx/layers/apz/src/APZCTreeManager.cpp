@@ -2548,7 +2548,8 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetTargetAPZC(
   if (gfx::gfxVars::UseWebRender()) {
     target = GetAPZCAtPointWR(aPoint, &hitResult, aOutLayersId, &scrollbarNode);
   } else {
-    target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, &scrollbarNode);
+    target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, aOutLayersId,
+                            &scrollbarNode);
   }
 
   if (aOutHitResult) {
@@ -2727,7 +2728,7 @@ AsyncPanZoomController* APZCTreeManager::GetTargetApzcForNode(
 
 AsyncPanZoomController* APZCTreeManager::GetAPZCAtPoint(
     HitTestingTreeNode* aNode, const ScreenPoint& aHitTestPoint,
-    CompositorHitTestInfo* aOutHitResult,
+    CompositorHitTestInfo* aOutHitResult, LayersId* aOutLayersId,
     HitTestingTreeNode** aOutScrollbarNode) {
   mTreeLock.AssertCurrentThreadIn();
 
@@ -2801,6 +2802,9 @@ AsyncPanZoomController* APZCTreeManager::GetAPZCAtPoint(
         RefPtr<AsyncPanZoomController> scrollTarget =
             GetTargetAPZC(n->GetLayersId(), n->GetScrollTargetId());
         if (scrollTarget) {
+          if (aOutLayersId) {
+            *aOutLayersId = n->GetLayersId();
+          }
           return scrollTarget.get();
         }
       }
@@ -2814,6 +2818,9 @@ AsyncPanZoomController* APZCTreeManager::GetAPZCAtPoint(
     }
     APZCTM_LOG("Successfully matched APZC %p via node %p (hit result 0x%x)\n",
                result, resultNode, aOutHitResult->serialize());
+    if (aOutLayersId) {
+      *aOutLayersId = resultNode->GetLayersId();
+    }
     return result;
   }
 
