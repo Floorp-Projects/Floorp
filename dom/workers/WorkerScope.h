@@ -69,6 +69,11 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   explicit WorkerGlobalScope(WorkerPrivate* aWorkerPrivate);
   virtual ~WorkerGlobalScope();
 
+  int32_t SetTimeoutOrInterval(JSContext* aCx, Function& aHandler,
+                               const int32_t aTimeout,
+                               const Sequence<JS::Value>& aArguments,
+                               bool aIsInterval, ErrorResult& aRv);
+
  public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
