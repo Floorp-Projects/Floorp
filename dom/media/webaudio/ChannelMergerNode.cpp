@@ -20,7 +20,8 @@ class ChannelMergerNodeEngine final : public AudioNodeEngine {
   }
 
   void ProcessBlocksOnPorts(AudioNodeStream* aStream,
-                            const OutputChunks& aInput, OutputChunks& aOutput,
+                            Span<const AudioBlock> aInput,
+                            Span<AudioBlock> aOutput,
                             bool* aFinished) override {
     MOZ_ASSERT(aInput.Length() == InputCount());
     MOZ_ASSERT(aOutput.Length() == 1, "Should have only one output port");

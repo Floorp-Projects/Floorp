@@ -25,6 +25,13 @@ class WorkletNodeEngine final : public AudioNodeEngine {
       AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
       NotNull<StructuredCloneHolder*> aOptionsSerialization);
 
+  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+                    const AudioBlock& aInput, AudioBlock* aOutput,
+                    bool* aFinished) override {
+    ProcessBlocksOnPorts(aStream, MakeSpan(&aInput, 1), MakeSpan(aOutput, 1),
+                         aFinished);
+  }
+
   void NotifyForcedShutdown() override { ReleaseJSResources(); }
 
  private:
