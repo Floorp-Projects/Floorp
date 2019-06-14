@@ -93,14 +93,17 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     private val singleSessionObserver = object : Session.Observer {
         override fun onTitleChanged(session: Session, title: String) {
             super.onTitleChanged(session, title)
-            if (deleteAllSessionsJob != null) return
-            emitSessionChanges(pendingSessionDeletion?.sessionId)
+            if (deleteAllSessionsJob != null) { return }
+            emitSessionChanges()
         }
     }
 
     private lateinit var sessionObserver: BrowserSessionsObserver
 
     private var homeMenu: HomeMenu? = null
+
+    private val sessionManager: SessionManager
+        get() = requireComponents.core.sessionManager
 
     var deleteAllSessionsJob: (suspend () -> Unit)? = null
     private var pendingSessionDeletion: PendingSessionDeletion? = null
@@ -120,7 +123,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
             .setDuration(SHARED_TRANSITION_MS)
 
-        sessionObserver = BrowserSessionsObserver(requireComponents.core.sessionManager, singleSessionObserver) {
+        sessionObserver = BrowserSessionsObserver(sessionManager, singleSessionObserver) {
             emitSessionChanges()
         }
     }
@@ -285,7 +288,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
         getManagedEmitter<SessionControlChange>().onNext(
             SessionControlChange.Change(
-                tabs = getListOfTabs(sessionManager = requireComponents.core.sessionManager),
+                tabs = getListOfSessions().toTabs(),
                 mode = currentMode(),
                 collections = requireComponents.core.tabCollectionStorage.cachedTabCollections
             )
@@ -336,9 +339,8 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             }
             is TabAction.Select -> {
                 invokePendingDeleteJobs()
-                val session =
-                    requireComponents.core.sessionManager.findSessionById(action.sessionId)
-                requireComponents.core.sessionManager.select(session!!)
+                val session = sessionManager.findSessionById(action.sessionId)
+                sessionManager.select(session!!)
                 val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null)
                 val extras =
                     FragmentNavigator.Extras.Builder()
@@ -347,7 +349,9 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 nav(R.id.homeFragment, directions, extras)
             }
             is TabAction.Close -> {
-                if (pendingSessionDeletion?.deletionJob == null) removeTabWithUndo(action.sessionId) else {
+                if (pendingSessionDeletion?.deletionJob == null) {
+                    removeTabWithUndo(action.sessionId)
+                } else {
                     pendingSessionDeletion?.deletionJob?.let {
                         launch {
                             it.invoke()
@@ -360,7 +364,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             }
             is TabAction.Share -> {
                 invokePendingDeleteJobs()
-                requireComponents.core.sessionManager.findSessionById(action.sessionId)?.let { session ->
+                sessionManager.findSessionById(action.sessionId)?.let { session ->
                     share(session.url)
                 }
             }
@@ -391,7 +395,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             }
             is TabAction.ShareTabs -> {
                 invokePendingDeleteJobs()
-                val shareTabs = requireComponents.core.sessionManager.sessions.map {
+                val shareTabs = sessionManager.sessions.map {
                     ShareTab(it.url, it.title, it.id)
                 }
                 share(tabs = shareTabs)
@@ -556,14 +560,12 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     private fun removeAllTabsWithUndo(isPrivate: Boolean) {
-        val currentFilteredSessions =
-            context?.components?.core?.sessionManager?.sessions?.filter { it.private == isPrivate } ?: return
         val useCases = context?.components?.useCases?.tabsUseCases ?: return
 
         getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.TabsChange(listOf()))
 
         val deleteOperation: (suspend () -> Unit) = {
-            currentFilteredSessions.forEach {
+            sessionManager.filteredSessions(isPrivate) { it.id == pendingSessionDeletion?.sessionId }.forEach {
                 useCases.removeTab.invoke(it)
             }
         }
@@ -582,11 +584,6 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     private fun removeTabWithUndo(sessionId: String) {
-        val sessionManager = requireComponents.core.sessionManager
-
-        // Update the UI with the tab removed, but don't remove it from storage yet
-        emitSessionChanges(sessionId)
-
         val deleteOperation: (suspend () -> Unit) = {
             sessionManager.findSessionById(sessionId)
                 ?.let { session ->
@@ -606,27 +603,23 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             },
             operation = deleteOperation
         )
+
+        // Update the UI with the tab removed, but don't remove it from storage yet
+        emitSessionChanges()
     }
 
-    private fun emitSessionChanges(pendingDeletionSessionId: String? = null) {
-        val sessionManager = context?.components?.core?.sessionManager ?: return
-
+    private fun emitSessionChanges() {
         getManagedEmitter<SessionControlChange>().onNext(
             SessionControlChange.TabsChange(
-                getListOfTabs(sessionManager, pendingDeletionSessionId)
+                getListOfSessions().toTabs()
             )
         )
     }
 
-    private fun getListOfTabs(sessionManager: SessionManager, pendingDeletionSessionId: String? = null): List<Tab> {
-        val context = context ?: return listOf()
-        return sessionManager.sessions
-            .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
-            .filter { pendingDeletionSessionId != it.id }
-            .map {
-                val selected = it == sessionManager.selectedSession
-                it.toTab(context, selected)
-            }
+    private fun getListOfSessions(): List<Session> {
+        val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
+        val notPendingDeletion: (Session) -> Boolean = { it.id != pendingSessionDeletion?.sessionId }
+        return sessionManager.filteredSessions(isPrivate, notPendingDeletion)
     }
 
     private fun emitAccountChanges() {
@@ -641,10 +634,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     ) {
         if (findNavController(this).currentDestination?.id == R.id.createCollectionFragment) return
 
-        val context = context?.let { it } ?: return
-
-        val tabs = requireComponents.core.sessionManager.sessions.filter { !it.private }
-            .map { it.toTab(context) }
+        val tabs = getListOfSessions().toTabs()
 
         val viewModel = activity?.run {
             ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
@@ -704,13 +694,12 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         emitAccountChanges()
     }
 
-    private fun scrollAndAnimateCollection(addedTabsSize: Int, changedCollection: TabCollection? = null) {
+    private fun scrollAndAnimateCollection(tabsAddedToCollectionSize: Int, changedCollection: TabCollection? = null) {
         launch {
             val recyclerView = sessionControlComponent.view
             delay(ANIM_SCROLL_DELAY)
-            val tabsSize = requireComponents.core.sessionManager.sessions.filter {
-                (activity as HomeActivity).browsingModeManager.isPrivate == it.private
-            }.size
+            val tabsSize = getListOfSessions().size
+
             var indexOfCollection = tabsSize + NON_TAB_ITEM_NUM
             changedCollection?.let { changedCollection ->
                 requireComponents.core.tabCollectionStorage.cachedTabCollections.filterIndexed { index, tabCollection ->
@@ -728,7 +717,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                     override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                         super.onScrollStateChanged(recyclerView, newState)
                         if (newState == SCROLL_STATE_IDLE) {
-                            animateCollection(addedTabsSize = addedTabsSize, indexOfCollection = indexOfCollection)
+                            animateCollection(tabsAddedToCollectionSize, indexOfCollection)
                             recyclerView.removeOnScrollListener(this)
                         }
                     }
@@ -736,7 +725,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 recyclerView.addOnScrollListener(onScrollListener)
                 recyclerView.smoothScrollToPosition(indexOfCollection)
             } else {
-                animateCollection(addedTabsSize = addedTabsSize, indexOfCollection = indexOfCollection)
+                animateCollection(tabsAddedToCollectionSize, indexOfCollection)
             }
         }
     }
@@ -813,6 +802,17 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         }
     }
 
+    private fun SessionManager.filteredSessions(private: Boolean, sessionFilter: (Session) -> Boolean): List<Session> {
+        return this.sessions
+            .filter { private == it.private }
+            .filter(sessionFilter)
+    }
+
+    private fun List<Session>.toTabs(): List<Tab> {
+        val selected = sessionManager.selectedSession
+        return this.map { it.toTab(requireContext(), it == selected) }
+    }
+
     companion object {
         private const val NON_TAB_ITEM_NUM = 3
         private const val ANIM_SCROLL_DELAY = 100L
@@ -827,7 +827,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 }
 
 /**
- * Wrapper around sessions manager to obvserve changes in sessions.
+ * Wrapper around sessions manager to observe changes in sessions.
  * Similar to [mozilla.components.browser.session.utils.AllSessionsObserver] but ignores CustomTab sessions.
  *
  * Call [onStart] to start receiving updates into [onChanged] callback.
