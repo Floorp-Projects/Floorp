@@ -19,7 +19,11 @@ async function testSteps()
     // manually.
     // "storage/default/https+++smaug----.github.io/",
     // Deprecated client
-    "storage/default/https+++example.com/asmjs/"
+    "storage/default/https+++example.com/asmjs/",
+    "storage/default/about+home+1",
+    "storage/default/about+home+1+q",
+    // about:reader?url=xxx before bug 1422456
+    "storage/default/about+reader+url=https%3A%2F%2Fexample.com",
   ];
   const obsoleteFilePath =
     "storage/default/https+++example.com/idb/UUID123.tmp";
