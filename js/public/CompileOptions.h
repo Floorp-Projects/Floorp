@@ -195,6 +195,7 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
   bool nonSyntacticScope = false;
   bool noScriptRval = false;
   bool allowSyntaxParser = true;
+  bool discardSource = false;
 
  private:
   friend class CompileOptions;
