@@ -181,6 +181,11 @@ void WebGLRenderbuffer::RenderbufferStorage(uint32_t samples,
   const GLenum error = DoRenderbufferStorage(samples, usage, width, height);
   if (error) {
     mContext->GenerateWarning("Unexpected error %s", EnumString(error).c_str());
+    if (error == LOCAL_GL_OUT_OF_MEMORY) {
+      // Truncate.
+      mImageInfo = {};
+      InvalidateCaches();
+    }
     return;
   }
 
