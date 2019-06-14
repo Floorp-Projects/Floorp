@@ -4107,7 +4107,8 @@ void JSScript::finalize(FreeOp* fop) {
 
   if (data_) {
     size_t size = computedSizeOfData();
-    AlwaysPoison(data_, 0xdb, size, MemCheckKind::MakeNoAccess);
+    AlwaysPoison(data_, JS_POISONED_JSSCRIPT_DATA_PATTERN, size,
+                 MemCheckKind::MakeNoAccess);
     fop->free_(this, data_, size, MemoryUse::ScriptPrivateData);
   }
 

@@ -268,6 +268,13 @@ const uint8_t JS_FREED_CHUNK_PATTERN = 0x8B;
 const uint8_t JS_FREED_ARENA_PATTERN = 0x9B;
 const uint8_t JS_SWEPT_TI_PATTERN = 0x6F;
 const uint8_t JS_FRESH_MARK_STACK_PATTERN = 0x9F;
+const uint8_t JS_RESET_VALUE_PATTERN = 0xBB;
+const uint8_t JS_POISONED_JSSCRIPT_DATA_PATTERN = 0xDB;
+const uint8_t JS_OOB_PARSE_NODE_PATTERN = 0xFF;
+
+// Even ones
+const uint8_t JS_NEW_NATIVE_ITERATOR_PATTERN = 0xCC;
+const uint8_t JS_SCOPE_DATA_TRAILING_NAMES_PATTERN = 0xCC;
 
 /*
  * Ensure JS_SWEPT_CODE_PATTERN is a byte pattern that will crash immediately
