@@ -43,7 +43,20 @@ const TEST_GLOBAL = {
   ClientEnvironment: {
     get userId() { return "foo123"; },
   },
-  Components: {isSuccessCode: () => true},
+  Components: {
+    Constructor(classId) {
+      switch (classId) {
+        case "@mozilla.org/referrer-info;1":
+          return function(referrerPolicy, sendReferrer, originalReferrer) {
+            this.referrerPolicy = referrerPolicy;
+            this.sendReferrer = sendReferrer;
+            this.originalReferrer = originalReferrer;
+          };
+      }
+      return function() {};
+    },
+    isSuccessCode: () => true,
+  },
   // eslint-disable-next-line object-shorthand
   ContentSearchUIController: function() {}, // NB: This is a function/constructor
   Cc: {
