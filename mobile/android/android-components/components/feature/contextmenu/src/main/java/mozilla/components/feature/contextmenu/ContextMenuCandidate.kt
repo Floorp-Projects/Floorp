@@ -94,7 +94,7 @@ data class ContextMenuCandidate(
             showFor = { _, hitResult -> hitResult.isLink() },
             action = { parent, hitResult ->
                 val session = tabsUseCases.addPrivateTab.invoke(
-                    hitResult.src, selectTab = false, startLoading = true, parent = parent)
+                    hitResult.getLink(), selectTab = false, startLoading = true, parent = parent)
 
                 snackbarDelegate.show(
                     snackBarParentView,

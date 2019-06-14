@@ -93,6 +93,11 @@ class ContextMenuCandidateTest {
         assertNotNull(snackbarDelegate.lastAcionListener)
         assertEquals("https://firefox.com", sessionManager.sessions.get(1).url)
 
+        // action with image
+
+        openInNewTab.action.invoke(session,  HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org"))
+        assertEquals("https://www.mozilla_uri.org", sessionManager.sessions.get(1).url)
+
         // Snackbar action
 
         assertEquals(sessionManager.selectedSession, session)
@@ -147,6 +152,11 @@ class ContextMenuCandidateTest {
         assertEquals("https://firefox.com", sessionManager.sessions[1].url)
         assertTrue(snackbarDelegate.hasShownSnackbar)
         assertNotNull(snackbarDelegate.lastAcionListener)
+
+        // action with image
+
+        openInPrivateTab.action.invoke(session,  HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org"))
+        assertEquals("https://www.mozilla_uri.org", sessionManager.sessions.get(1).url)
 
         // Snackbar action
 
