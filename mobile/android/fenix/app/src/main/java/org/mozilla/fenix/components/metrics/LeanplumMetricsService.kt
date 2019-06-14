@@ -11,6 +11,7 @@ import com.leanplum.annotations.Parser
 import com.leanplum.internal.LeanplumInternal
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.utils.Settings
+import java.util.*
 
 private val Event.name: String?
     get() = when (this) {
@@ -57,11 +58,18 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
 
         Leanplum.setIsTestModeEnabled(false)
         Leanplum.setApplicationContext(application)
+        Leanplum.setDeviceId(UUID.randomUUID().toString())
         Parser.parseVariables(application)
 
         LeanplumActivityHelper.enableLifecycleCallbacks(application)
+
+        val installedApps = MozillaProductDetector.getInstalledMozillaProducts(application)
+
         Leanplum.start(application, hashMapOf(
-            "default_browser" to (MozillaProductDetector.getMozillaBrowserDefault(application) ?: "")
+            "default_browser" to (MozillaProductDetector.getMozillaBrowserDefault(application) ?: ""),
+            "fennec_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.FIREFOX.productName),
+            "focus_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.FOCUS.productName),
+            "klar_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.KLAR.productName)
         ))
     }
 

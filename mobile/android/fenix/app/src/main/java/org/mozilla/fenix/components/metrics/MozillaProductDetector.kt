@@ -20,6 +20,7 @@ object MozillaProductDetector {
         REFERENCE_BROWSER_DEBUG("org.mozilla.reference.browser.debug"),
         FENIX("org.mozilla.fenix"),
         FOCUS("org.mozilla.focus"),
+        KLAR("org.mozilla.klar"),
 
         // Other products
         LOCKWISE("mozilla.lockbox")
