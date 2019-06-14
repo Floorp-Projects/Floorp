@@ -1987,6 +1987,16 @@ VARCACHE_PREF(
   int32_t, 0
 )
 
+// Is support for decoding external (non-inline) classic or module DOM scripts
+// (i.e. anything but workers) as UTF-8, then directly compiling without
+// inflating to UTF-16, enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.script_loader.external_scripts.utf8_parsing.enabled",
+  dom_script_loader_external_scripts_utf8_parsing_enabled,
+  bool, NOT_IN_RELEASE_OR_BETA_VALUE
+)
+
 #ifdef NIGHTLY_BUILD
 # define PREF_VALUE true
 #else
@@ -2524,18 +2534,12 @@ VARCACHE_PREF(
 
 // Is support for compiling DOM worker scripts directly from UTF-8 (without ever
 // inflating to UTF-16) enabled?
-#ifdef RELEASE_OR_BETA
-# define PREF_VALUE false
-#else
-# define PREF_VALUE true
-#endif
 VARCACHE_PREF(
   Live,
   "dom.worker.script_loader.utf8_parsing.enabled",
   dom_worker_script_loader_utf8_parsing_enabled,
-  RelaxedAtomicBool, PREF_VALUE
+  RelaxedAtomicBool, NOT_IN_RELEASE_OR_BETA_VALUE
 )
-#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
