@@ -217,8 +217,8 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
                             nav(
                                 R.id.bookmarkFragment,
                                 BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
-                                    this,
-                                    it.item.title
+                                    url = this,
+                                    title = it.item.title
                                 )
                             )
                             metrics()?.track(Event.ShareBookmark)

@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.fragment_share.view.*
 import mozilla.components.concept.sync.DeviceEventOutgoing
 import mozilla.components.concept.sync.OAuthAccount
 import org.mozilla.fenix.FenixViewModelProvider
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -28,6 +29,10 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 
 class ShareFragment : AppCompatDialogFragment() {
+    interface TabsSharedCallback {
+        fun onTabsShared(tabsSize: Int)
+    }
+
     private lateinit var component: ShareComponent
     private var tabs: Array<ShareTab> = emptyArray()
 
@@ -39,7 +44,6 @@ class ShareFragment : AppCompatDialogFragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_share, container, false)
         val args = ShareFragmentArgs.fromBundle(arguments!!)
-
         if (args.url == null && args.tabs.isNullOrEmpty()) {
             throw IllegalStateException("URL and tabs cannot both be null.")
         }
@@ -131,6 +135,7 @@ class ShareFragment : AppCompatDialogFragment() {
                 )
             }
         }
+        (activity as? HomeActivity)?.onTabsShared(tabs.size)
     }
 }
 

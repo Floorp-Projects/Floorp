@@ -717,7 +717,10 @@ class HomeFragment : Fragment(), AccountObserver {
 
     private fun share(url: String? = null, tabs: List<ShareTab>? = null) {
         val directions =
-            HomeFragmentDirections.actionHomeFragmentToShareFragment(url = url, tabs = tabs?.toTypedArray())
+            HomeFragmentDirections.actionHomeFragmentToShareFragment(
+                url = url,
+                tabs = tabs?.toTypedArray()
+            )
         nav(R.id.homeFragment, directions)
     }
 

@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
+import com.google.android.material.snackbar.Snackbar
 import io.sentry.Sentry
 import io.sentry.event.Breadcrumb
 import io.sentry.event.BreadcrumbBuilder
@@ -31,9 +32,11 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.utils.SafeIntent
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.isSentryEnabled
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
@@ -44,10 +47,11 @@ import org.mozilla.fenix.settings.AccountProblemFragmentDirections
 import org.mozilla.fenix.settings.PairFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TurnOnSyncFragmentDirections
+import org.mozilla.fenix.share.ShareFragment
 import org.mozilla.fenix.utils.Settings
 
-@SuppressWarnings("TooManyFunctions")
-open class HomeActivity : AppCompatActivity() {
+@SuppressWarnings("TooManyFunctions", "LargeClass")
+open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback {
     open val isCustomTab = false
     private var sessionObserver: SessionManager.Observer? = null
 
@@ -368,6 +372,17 @@ open class HomeActivity : AppCompatActivity() {
                 }
             }
         }.also { components.core.sessionManager.register(it, this) }
+    }
+
+    override fun onTabsShared(tabsSize: Int) {
+        this@HomeActivity.getRootView()?.let {
+            FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
+                getString(
+                    if (tabsSize == 1) R.string.sync_sent_tab_snackbar else
+                        R.string.sync_sent_tabs_snackbar
+                )
+            ).show()
+        }
     }
 
     companion object {

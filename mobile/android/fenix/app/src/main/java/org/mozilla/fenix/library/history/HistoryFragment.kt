@@ -287,7 +287,10 @@ class HistoryFragment : Fragment(), BackHandler {
 
     private fun share(url: String? = null, tabs: List<ShareTab>? = null) {
         val directions =
-            HistoryFragmentDirections.actionHistoryFragmentToShareFragment(url = url, tabs = tabs?.toTypedArray())
+            HistoryFragmentDirections.actionHistoryFragmentToShareFragment(
+                url = url,
+                tabs = tabs?.toTypedArray()
+            )
         nav(R.id.historyFragment, directions)
     }
 

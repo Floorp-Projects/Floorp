@@ -419,8 +419,8 @@
         <argument
             android:name="tabs"
             android:defaultValue="@null"
-            app:nullable="true"
-            app:argType="org.mozilla.fenix.share.ShareTab[]" />
+            app:argType="org.mozilla.fenix.share.ShareTab[]"
+            app:nullable="true" />
         <action
             android:id="@+id/action_shareFragment_to_turnOnSyncFragment"
             app:destination="@+id/turnOnSyncFragment"

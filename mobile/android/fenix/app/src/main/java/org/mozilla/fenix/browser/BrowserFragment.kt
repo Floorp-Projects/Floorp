@@ -104,7 +104,6 @@ import java.net.URL
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class BrowserFragment : Fragment(), BackHandler {
-
     private lateinit var toolbarComponent: ToolbarComponent
 
     private var tabCollectionObserver: Observer<List<TabCollection>>? = null
@@ -953,7 +952,7 @@ class BrowserFragment : Fragment(), BackHandler {
     }
 
     private fun shareUrl(url: String) {
-        val directions = BrowserFragmentDirections.actionBrowserFragmentToShareFragment(url)
+        val directions = BrowserFragmentDirections.actionBrowserFragmentToShareFragment(url = url)
         nav(R.id.browserFragment, directions)
     }
 
