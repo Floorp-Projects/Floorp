@@ -61,6 +61,7 @@ master-password-reload-button-accesskey = L
 
 menu-button =
   .button-title = Open menu
+  .menuitem-import = Import Passwords…
   .menuitem-preferences =
     { PLATFORM() ->
         [windows] Options
