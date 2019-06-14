@@ -116,6 +116,7 @@
 @BINPATH@/msvcp*.dll
 @BINPATH@/libEGL.dll
 @BINPATH@/libGLESv2.dll
+@BINPATH@/d3dcompiler_47.dll
 #endif
 
 [browser]
