@@ -24,7 +24,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.NavHostFragment.findNavController
-import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.*
@@ -133,11 +132,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        postponeEnterTransition()
-        sharedElementEnterTransition =
-            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
-                SHARED_TRANSITION_MS
-            )
+// Disabled while awaiting a better solution to #3209
+//        postponeEnterTransition()
+//        sharedElementEnterTransition =
+//            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
+//                SHARED_TRANSITION_MS
+//            )
         job = Job()
     }
 

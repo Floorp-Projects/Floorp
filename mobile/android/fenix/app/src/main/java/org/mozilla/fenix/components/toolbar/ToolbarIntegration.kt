@@ -8,7 +8,6 @@ import android.content.Context
 import android.view.ViewGroup
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
-import androidx.navigation.fragment.FragmentNavigator
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSession
@@ -60,13 +59,15 @@ class ToolbarIntegration(
                         // We need to dynamically add the options here because if you do it in XML it overwrites
                         val options = NavOptions.Builder().setPopUpTo(R.id.homeFragment, true)
                             .setEnterAnim(R.anim.fade_in).build()
-                        val extras =
-                            FragmentNavigator.Extras.Builder()
-                                .addSharedElement(
-                                    browserLayout,
-                                    "$TAB_ITEM_TRANSITION_NAME${sessionManager.selectedSession?.id}"
-                                )
-                                .build()
+                        val extras = null
+// Disabled while awaiting a better solution to #3209
+//                        val extras =
+//                            FragmentNavigator.Extras.Builder()
+//                                .addSharedElement(
+//                                    browserLayout,
+//                                    "$TAB_ITEM_TRANSITION_NAME${sessionManager.selectedSession?.id}"
+//                                )
+//                                .build()
                         val navController = Navigation.findNavController(toolbar)
                         if (!navController.popBackStack(
                                 R.id.homeFragment,

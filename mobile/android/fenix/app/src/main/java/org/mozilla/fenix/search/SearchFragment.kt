@@ -20,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
-import androidx.transition.TransitionInflater
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import mozilla.components.browser.search.SearchEngine
@@ -64,11 +63,12 @@ class SearchFragment : Fragment(), BackHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        postponeEnterTransition()
-        sharedElementEnterTransition =
-            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
-                SHARED_TRANSITION_MS
-            )
+// Disabled while awaiting a better solution to #3209
+//        postponeEnterTransition()
+//        sharedElementEnterTransition =
+//            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
+//                SHARED_TRANSITION_MS
+//            )
     }
 
     override fun onCreateView(

@@ -20,12 +20,10 @@ import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
-import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
@@ -119,9 +117,10 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        postponeEnterTransition()
-        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
-            .setDuration(SHARED_TRANSITION_MS)
+// Disabled while awaiting a better solution to #3209
+//        postponeEnterTransition()
+//        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+//            .setDuration(SHARED_TRANSITION_MS)
 
         sessionObserver = BrowserSessionsObserver(sessionManager, singleSessionObserver) {
             emitSessionChanges()
@@ -235,11 +234,13 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             invokePendingDeleteJobs()
             onboarding.finish()
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
-            val extras =
-                FragmentNavigator.Extras.Builder()
-                    .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
-                    .build()
-            nav(R.id.homeFragment, directions, extras)
+// Disabled while awaiting a better solution to #3209
+//            val extras =
+//                FragmentNavigator.Extras.Builder()
+//                    .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
+//                    .build()
+//            nav(R.id.homeFragment, directions, extras)
+            nav(R.id.homeFragment, directions)
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
 
@@ -342,11 +343,13 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 val session = sessionManager.findSessionById(action.sessionId)
                 sessionManager.select(session!!)
                 val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null)
-                val extras =
-                    FragmentNavigator.Extras.Builder()
-                        .addSharedElement(action.tabView, "$TAB_ITEM_TRANSITION_NAME${action.sessionId}")
-                        .build()
-                nav(R.id.homeFragment, directions, extras)
+// Disabled while awaiting a better solution to #3209
+//                val extras =
+//                    FragmentNavigator.Extras.Builder()
+//                        .addSharedElement(action.tabView, "$TAB_ITEM_TRANSITION_NAME${action.sessionId}")
+//                        .build()
+//                nav(R.id.homeFragment, directions, extras)
+                nav(R.id.homeFragment, directions)
             }
             is TabAction.Close -> {
                 if (pendingSessionDeletion?.deletionJob == null) {
