@@ -394,16 +394,15 @@ class TaskBuilder(object):
         self, assemble_task_id, variant, is_staging,
     ):
         staging_prefix = '.staging' if is_staging else ''
-        # routes = [
-        #     "index.project.mobile.fenix.v2{}.performance-test.{}.{}.{}.latest.{}".format(
-        #         staging_prefix, self.date.year, self.date.month, self.date.day, variant.abi
-        #     ),
-        #     "index.project.mobile.fenix.v2{}.performance-test.{}.{}.{}.revision.{}.{}".format(
-        #         staging_prefix, self.date.year, self.date.month, self.date.day, self.commit, variant.abi
-        #     ),
-        #     "index.project.mobile.fenix.v2{}.performance-test.latest.{}".format(staging_prefix, variant.abi),
-        # ]
-        routes = []
+        routes = [
+            "index.project.mobile.fenix.v2{}.performance-test.{}.{}.{}.latest.{}".format(
+                staging_prefix, self.date.year, self.date.month, self.date.day, variant.abi
+            ),
+            "index.project.mobile.fenix.v2{}.performance-test.{}.{}.{}.revision.{}.{}".format(
+                staging_prefix, self.date.year, self.date.month, self.date.day, self.commit, variant.abi
+            ),
+            "index.project.mobile.fenix.v2{}.performance-test.latest.{}".format(staging_prefix, variant.abi),
+        ]
 
         return self._craft_signing_task(
             name='sign: {}'.format(variant.raw),
