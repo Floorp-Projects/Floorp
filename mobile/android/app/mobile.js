@@ -98,7 +98,6 @@ pref("network.protocol-handler.warn-external.vnd.youtube", false);
 
 /* http prefs */
 pref("network.http.keep-alive.timeout", 109);
-pref("network.http.max-connections", 20);
 pref("network.http.max-persistent-connections-per-server", 6);
 pref("network.http.max-persistent-connections-per-proxy", 20);
 

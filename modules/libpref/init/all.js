@@ -1549,7 +1549,7 @@ pref("network.http.response.timeout", 300);
 // Note: the socket transport service will clamp the number below this if the OS
 // cannot allocate that many FDs
 #ifdef ANDROID
-pref("network.http.max-connections", 256);
+pref("network.http.max-connections", 40);
 #else
 pref("network.http.max-connections", 900);
 #endif
