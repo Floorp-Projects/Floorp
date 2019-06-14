@@ -18,9 +18,11 @@
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsPIDOMWindow.h"
 
 NS_IMPL_ISUPPORTS(ThirdPartyUtil, mozIThirdPartyUtil)
@@ -90,6 +92,16 @@ nsresult ThirdPartyUtil::IsThirdPartyInternal(const nsCString& aFirstDomain,
 
   *aResult = IsThirdPartyInternal(aFirstDomain, secondDomain);
   return NS_OK;
+}
+
+nsCString ThirdPartyUtil::GetBaseDomainFromWindow(nsPIDOMWindowOuter* aWindow) {
+  mozilla::dom::Document* doc = aWindow ? aWindow->GetExtantDoc() : nullptr;
+
+  if (!doc) {
+    return EmptyCString();
+  }
+
+  return doc->GetBaseDomain();
 }
 
 NS_IMETHODIMP

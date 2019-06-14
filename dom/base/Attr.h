@@ -12,6 +12,7 @@
 #define mozilla_dom_Attr_h
 
 #include "mozilla/Attributes.h"
+#include "nsDOMAttributeMap.h"
 #include "nsINode.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
