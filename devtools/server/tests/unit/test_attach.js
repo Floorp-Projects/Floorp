@@ -3,7 +3,7 @@
 
 "use strict";
 
-const ThreadClient = require("devtools/shared/client/thread-client");
+const { ThreadClient } = require("devtools/shared/client/thread-client");
 const { BrowsingContextTargetFront } = require("devtools/shared/fronts/targets/browsing-context");
 
 /**
