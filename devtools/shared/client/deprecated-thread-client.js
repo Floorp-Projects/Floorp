@@ -227,10 +227,18 @@ ThreadClient.prototype = {
    */
   detach: DebuggerClient.requester({
     type: "detach",
-  }, {
-    after: function(response) {
-      return response;
-    },
+  }),
+
+  destroy: function() {
+    return this.detach();
+  },
+
+  /**
+   * attach to the thread actor.
+   */
+  attach: DebuggerClient.requester({
+    type: "attach",
+    options: arg(0),
   }),
 
   /**
@@ -341,7 +349,7 @@ ThreadClient.prototype = {
     // The debugger UI may not be initialized yet so we want to keep
     // the packet around so it knows what to pause state to display
     // when it's initialized
-    this._lastPausePacket = packet;
+    this._lastPausePacket = packet.type === "resumed" ? null : packet;
     this._clearPauseGrips();
     packet.type === ThreadStateTypes.detached && this._clearThreadGrips();
     this.client._eventsEnabled && this.emit(packet.type, packet);
