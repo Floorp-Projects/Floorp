@@ -1047,14 +1047,8 @@ add_task(async function test_trigger_abusereport_from_browserAction_remove() {
   const extension = await installTestExtension(EXT_ID, "extension", {
     browser_action: {},
   });
-
-  // Prepare the mocked prompt service.
-  const promptService = mockPromptService();
-  promptService.confirmEx = createPromptConfirmEx({remove: true, report: true});
-
-  await BrowserTestUtils.withNewTab("about:blank", async function() {
-    info(`Open browserAction context menu in toolbar context menu`);
-    let buttonId = `${makeWidgetId(EXT_ID)}-browser-action`;
+  const buttonId = `${makeWidgetId(EXT_ID)}-browser-action`;
+  async function reportFromContextMenuRemove() {
     const menu = document.getElementById("toolbar-context-menu");
     const node = document.getElementById(CSS.escape(buttonId));
     const shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
@@ -1066,13 +1060,11 @@ add_task(async function test_trigger_abusereport_from_browserAction_remove() {
       ".customize-context-removeExtension");
     removeExtension.click();
 
-    // Wait about:addons to be loaded.
-    const browser = gBrowser.selectedBrowser;
-    await BrowserTestUtils.browserLoaded(browser);
-    is(browser.currentURI.spec, "about:addons",
-      "about:addons tab currently selected");
-    menu.hidePopup();
+    return menu;
+  }
 
+  async function assertAbuseReportPanelOpen() {
+    const browser = gBrowser.selectedBrowser;
     const abuseReportFrame = browser.contentDocument
       .querySelector("addon-abuse-report-xulframe");
 
@@ -1082,7 +1074,53 @@ add_task(async function test_trigger_abusereport_from_browserAction_remove() {
       "Abuse report frame has the expected addon id");
     is(abuseReportFrame.report.reportEntryPoint, "uninstall",
       "Abuse report frame has the expected reportEntryPoint");
-  });
+
+    const panelEl = await abuseReportFrame.promiseAbuseReport;
+    const onceCancelled = BrowserTestUtils.waitForEvent(
+      abuseReportFrame, "abuse-report:cancel");
+    panelEl.dispatchEvent(new CustomEvent("abuse-report:cancel"));
+    await onceCancelled;
+  }
+
+  // Prepare the mocked prompt service.
+  const promptService = mockPromptService();
+  promptService.confirmEx = createPromptConfirmEx({remove: true, report: true});
+
+  await BrowserTestUtils.withNewTab("about:blank", async function() {
+    info(`Open browserAction context menu in toolbar context menu`);
+
+    let menu = await reportFromContextMenuRemove();
+
+    // Wait about:addons to be loaded.
+    let browser = gBrowser.selectedBrowser;
+    await BrowserTestUtils.browserLoaded(browser);
+    is(browser.currentURI.spec, "about:addons",
+      "about:addons tab currently selected");
+    menu.hidePopup();
+
+    await assertAbuseReportPanelOpen();
+
+    const addon = await AddonManager.getAddonByID(EXT_ID);
+    await addon.cancelUninstall();
+
+    // Reload the tab to verify Bug 1559124 didn't regressed.
+    browser.contentWindow.location.reload();
+    await BrowserTestUtils.browserLoaded(browser);
+    is(browser.currentURI.spec, "about:addons",
+      "about:addons tab currently selected");
+    const abuseReportFrame = browser.contentDocument
+      .querySelector("addon-abuse-report-xulframe");
+
+    const onceReportFrameShown = BrowserTestUtils.waitForEvent(
+      abuseReportFrame, "abuse-report:frame-shown");
+    menu = await reportFromContextMenuRemove();
+    await onceReportFrameShown;
+
+    await assertAbuseReportPanelOpen();
+
+    menu.hidePopup();
+    await addon.cancelUninstall();
+   });
 
   await extension.unload();
 });
