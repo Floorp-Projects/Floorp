@@ -10,14 +10,17 @@
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 
-struct AudioWorkletNodeOptions;
-class ErrorResult;
-class GlobalObject;
-class MessagePort;
 class nsIGlobalObject;
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
+
+struct AudioWorkletNodeOptions;
+class GlobalObject;
+class MessagePort;
 
 class AudioWorkletProcessor final : public nsWrapperCache {
  public:
