@@ -71,7 +71,7 @@ parent:
    */
   async Activate();
 
-  async Deactivate();
+  async Deactivate(bool aWindowLowering);
 
   async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 
