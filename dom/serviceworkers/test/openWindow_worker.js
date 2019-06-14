@@ -109,8 +109,7 @@ onnotificationclick = function(e) {
   promises.push(testForUrl(redirect_xorigin + same_origin, null,
                            {url: same_origin}, results));
 
-  e.waitUntil(Promise.all(promises).then(function(e) {
+  e.waitUntil(Promise.all(promises).then(function() {
     client.postMessage(results);
   }));
 }
-

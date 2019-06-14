@@ -79,8 +79,8 @@ if (self.Notification) {
         if (nextTest.length === 0) {
           finishTest();
         }
-      } catch (e) {
-        ok(false, "Test threw exception! " + nextTest + " " + e);
+      } catch (ex) {
+        ok(false, "Test threw exception! " + nextTest + " " + ex);
         finishTest();
       }
     })(steps);
@@ -89,4 +89,3 @@ if (self.Notification) {
   ok(true, "Notifications are not enabled in workers on the platform.");
   postMessage({ type: 'finish' });
 }
-

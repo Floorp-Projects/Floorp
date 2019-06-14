@@ -232,32 +232,26 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk> {
 #endif
 
   // Poison the memory with memset, in order to catch errors due to
-  // use-after-free, with undefinedChunkMemory pattern, or to catch
-  // use-before-init with uninitializedChunkMemory.
+  // use-after-free, with JS_LIFO_UNDEFINED_PATTERN pattern, or to catch
+  // use-before-init with JS_LIFO_UNINITIALIZED_PATTERN.
 #if defined(DEBUG)
 #  define LIFO_HAVE_MEM_CHECKS 1
-
-  // Byte used for poisoning unused memory after releasing memory.
-  static constexpr int undefinedChunkMemory = 0xcd;
-  // Byte used for poisoning uninitialized memory after reserving memory.
-  static constexpr int uninitializedChunkMemory = 0xce;
-
-#  define LIFO_MAKE_MEM_NOACCESS(addr, size)  \
-    do {                                      \
-      uint8_t* base = (addr);                 \
-      size_t sz = (size);                     \
-      MOZ_MAKE_MEM_UNDEFINED(base, sz);       \
-      memset(base, undefinedChunkMemory, sz); \
-      MOZ_MAKE_MEM_NOACCESS(base, sz);        \
+#  define LIFO_MAKE_MEM_NOACCESS(addr, size)       \
+    do {                                           \
+      uint8_t* base = (addr);                      \
+      size_t sz = (size);                          \
+      MOZ_MAKE_MEM_UNDEFINED(base, sz);            \
+      memset(base, JS_LIFO_UNDEFINED_PATTERN, sz); \
+      MOZ_MAKE_MEM_NOACCESS(base, sz);             \
     } while (0)
 
-#  define LIFO_MAKE_MEM_UNDEFINED(addr, size)     \
-    do {                                          \
-      uint8_t* base = (addr);                     \
-      size_t sz = (size);                         \
-      MOZ_MAKE_MEM_UNDEFINED(base, sz);           \
-      memset(base, uninitializedChunkMemory, sz); \
-      MOZ_MAKE_MEM_UNDEFINED(base, sz);           \
+#  define LIFO_MAKE_MEM_UNDEFINED(addr, size)          \
+    do {                                               \
+      uint8_t* base = (addr);                          \
+      size_t sz = (size);                              \
+      MOZ_MAKE_MEM_UNDEFINED(base, sz);                \
+      memset(base, JS_LIFO_UNINITIALIZED_PATTERN, sz); \
+      MOZ_MAKE_MEM_UNDEFINED(base, sz);                \
     } while (0)
 
 #elif defined(MOZ_HAVE_MEM_CHECKS)

@@ -30,15 +30,15 @@ add_task(function setupPrefs() {
 add_task(async function test_worker_ref_gc() {
   let registration = await navigator.serviceWorker.register(
     "lazy_worker.js", { scope: "./lazy_worker_scope_timeout"} )
-    .then(function(registration) {
+    .then(function(reg) {
       SpecialPowers.exactGC();
-      var worker = registration.installing;
+      var worker = reg.installing;
       return new Promise(function(resolve) {
         worker.addEventListener('statechange', function() {
           info("state is " + worker.state + "\n");
           SpecialPowers.exactGC();
           if (worker.state === 'activated') {
-            resolve(registration);
+            resolve(reg);
           }
         });
       });

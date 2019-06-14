@@ -313,7 +313,10 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
   // be the state of the parent media element's crossorigin content attribute.
   // Otherwise, let CORS mode be No CORS."
   //
-  CORSMode corsMode = mMediaParent ? mMediaParent->GetCORSMode() : CORS_NONE;
+  CORSMode corsMode =
+      mMediaParent ? AttrValueToCORSMode(
+                         mMediaParent->GetParsedAttr(nsGkAtoms::crossorigin))
+                   : CORS_NONE;
 
   // Determine the security flag based on corsMode.
   nsSecurityFlags secFlags;

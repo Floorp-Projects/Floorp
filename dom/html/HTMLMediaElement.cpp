@@ -2213,6 +2213,9 @@ void HTMLMediaElement::NotifyMediaTrackDisabled(MediaTrack* aTrack) {
       MOZ_ASSERT(!ms.mCapturingMediaStream);
       continue;
     }
+    if (ms.mCapturingAudioOnly && aTrack->AsVideoTrack()) {
+      continue;
+    }
     MOZ_ASSERT(ms.mCapturingMediaStream);
     for (int32_t i = ms.mTrackPorts.Length() - 1; i >= 0; --i) {
       if (ms.mTrackPorts[i].first() == aTrack->GetId()) {

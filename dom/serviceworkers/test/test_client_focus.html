@@ -27,7 +27,7 @@
                                             { scope: "./sw_clients/focus_stealing_client.html" })
       .then((swr) => {
         registration = swr;
-        returun waitForState(swr.installing, 'activated', swr);
+        return waitForState(swr.installing, 'activated', swr);
       });
   }
 
@@ -97,4 +97,3 @@
 </pre>
 </body>
 </html>
-

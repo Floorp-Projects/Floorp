@@ -9142,7 +9142,8 @@ auto OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs)
     QM_WARNING("Origin '%s' failed to parse, handled tokens: %s", mOrigin.get(),
                mHandledTokens.get());
 
-    return mSchemeType == eChrome ? ObsoleteOrigin : InvalidOrigin;
+    return (mSchemeType == eChrome || mSchemeType == eAbout) ? ObsoleteOrigin
+                                                             : InvalidOrigin;
   }
 
   MOZ_ASSERT(mState == eComplete || mState == eHandledTrailingSeparator);
@@ -9399,7 +9400,20 @@ void OriginParser::HandleToken(const nsDependentCSubstring& aToken) {
         return;
       }
 
-      mState = mTokenizer.hasMoreTokens() ? eExpectingPort : eComplete;
+      if (mTokenizer.hasMoreTokens()) {
+        if (mSchemeType == eAbout) {
+          QM_WARNING("Expected an empty string after host!");
+
+          mError = true;
+          return;
+        }
+
+        mState = eExpectingPort;
+
+        return;
+      }
+
+      mState = eComplete;
 
       return;
     }

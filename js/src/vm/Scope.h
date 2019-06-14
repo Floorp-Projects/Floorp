@@ -178,7 +178,8 @@ class TrailingNamesArray {
 
   explicit TrailingNamesArray(size_t nameCount) {
     if (nameCount) {
-      AlwaysPoison(&data_, 0xCC, sizeof(BindingName) * nameCount,
+      AlwaysPoison(&data_, JS_SCOPE_DATA_TRAILING_NAMES_PATTERN,
+                   sizeof(BindingName) * nameCount,
                    MemCheckKind::MakeUndefined);
     }
   }

@@ -17,6 +17,7 @@ const kKeyList = [
 const kStrictKeyPressEvents =
   SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
 
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 function frameScript() {
   let doc = content.document;
   addMessageListener("Test:RequestFullscreen", () => {
@@ -52,6 +53,7 @@ function frameScript() {
   }
   waitUntilActive();
 }
+/* eslint-enable mozilla/no-arbitrary-setTimeout */
 
 var gMessageManager;
 

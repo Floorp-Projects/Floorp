@@ -36,6 +36,7 @@ add_task(async function test_update() {
   is(existingCount, 0, "Previous tests should have cleaned up!");
 
   info("Let's start the test...");
+  /* eslint-disable no-shadow */
   let status = await ContentTask.spawn(browser1, sw, function(url) {
     // Let the SW be served immediately once by triggering a relase immediately.
     // We don't need to await this.  We do this from a frame script because
@@ -107,6 +108,7 @@ add_task(async function test_update() {
       });
     });
   });
+  /* eslint-enable no-shadow */
 
   if (status == 0) {
     ok(false, "both succeeded. This is wrong.");
@@ -118,6 +120,7 @@ add_task(async function test_update() {
 
   // let's clean up the registration and get the fetch count.  The count
   // should be 1 for the initial fetch and 1 for the update.
+  /* eslint-disable no-shadow */
   const count = await ContentTask.spawn(browser1, sw, async function(url) {
     // We stored the registration on the frame script's wrapper, hence directly
     // accesss content without using wrappedJSObject.
@@ -126,6 +129,7 @@ add_task(async function test_update() {
       await content.fetch(url + "?get-and-clear-count").then(r => r.json());
     return count;
   });
+  /* eslint-enable no-shadow */
   is(count, 2, "SW should have been fetched only twice");
 
   BrowserTestUtils.removeTab(tab1);

@@ -9,8 +9,8 @@
         }
         var promise = navigator.serviceWorker.register("worker.js",
                                                        { updateViaCache: 'all' });
-        window.onmessage = function (event) {
-          if (event.data !== "unregister") {
+        window.onmessage = function (e) {
+          if (e.data !== "unregister") {
             return;
           }
           promise.then(function (registration) {

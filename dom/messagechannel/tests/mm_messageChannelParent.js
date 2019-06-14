@@ -17,7 +17,7 @@ function todo_is(v1, v2, message) {
   return opener.wrappedJSObject.todo_is(v1, v2, message);
 }
 
-function finish() {
+function cleanUp() {
   opener.setTimeout(function() { this.done(); }, 0);
   window.close();
 }
@@ -35,7 +35,7 @@ let tests = [ basic_test,
 function run_tests() {
   let test = tests.shift();
   if (test === undefined) {
-    finish();
+    cleanUp();
     return;
   }
 
@@ -51,8 +51,8 @@ function basic_test(finish) {
   let finishPrepare = (msg) => {
     is(msg.data.message, "OK", "");
     ok(port, "");
-    port.onmessage = (msg) => {
-      is(msg.data, "BasicTest:TestOK", "");
+    port.onmessage = (message) => {
+      is(message.data, "BasicTest:TestOK", "");
       finish();
     }
     port.postMessage("BasicTest:StartTest");
@@ -73,7 +73,7 @@ function close_test(finish) {
     is(msg.data.message, "OK", "");
     ok(port, "");
 
-    port.onmessage = (msg) => {
+    port.onmessage = (message) => {
       ok(false, "Port is alive.");
       finish();
     }

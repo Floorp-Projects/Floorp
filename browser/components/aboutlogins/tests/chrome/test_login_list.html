@@ -7,7 +7,7 @@ Test the login-list component
   <meta charset="utf-8">
   <title>Test the login-list component</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="module" src="login-list.js"></script>
+  <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
   <script src="aboutlogins_common.js"></script>
 
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
@@ -16,7 +16,7 @@ Test the login-list component
   <p id="display">
   </p>
 <div id="content" style="display: none">
-  <iframe id="templateFrame" src="aboutLogins.html"
+  <iframe id="templateFrame" src="chrome://browser/content/aboutlogins/aboutLogins.html"
           sandbox="allow-same-origin"></iframe>
 </div>
 <pre id="test">
@@ -27,10 +27,10 @@ Test the login-list component
 let gLoginList;
 const TEST_LOGIN_1 = {
   guid: "123456789",
-  origin: "https://abc-example.com",
+  origin: "https://abc.example.com",
   username: "user1",
   password: "pass1",
-  title: "abc-example.com",
+  title: "abc.example.com",
   // new Date("December 13, 2018").getTime()
   timeLastUsed: 1544677200000,
   timePasswordChanged: 1544677200000,
@@ -41,6 +41,16 @@ const TEST_LOGIN_2 = {
   username: "user2",
   password: "pass2",
   title: "example.com",
+  // new Date("June 1, 2019").getTime()
+  timeLastUsed: 1559361600000,
+  timePasswordChanged: 1559361600000,
+};
+const TEST_LOGIN_3 = {
+  guid: "1111122222",
+  origin: "https://def.example.com",
+  username: "",
+  password: "pass3",
+  title: "def.example.com",
   // new Date("June 1, 2019").getTime()
   timeLastUsed: 1559361600000,
   timePasswordChanged: 1559361600000,
@@ -64,13 +74,26 @@ add_task(async function test_empty_list() {
   is(gLoginList.textContent, "", "Initially empty");
 });
 
+add_task(async function test_empty_login_username_in_list() {
+  gLoginList.setLogins([TEST_LOGIN_3]);
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  is(loginListItems.length, 2, "A blank login and the one stored login should be displayed");
+  ok(!loginListItems[0].hasAttribute("guid"), "first login-list-item should be the 'new' item");
+  is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_3.guid, "login-list-item should have correct guid attribute");
+
+  loginListItems[1].setAttribute("missing-username", "(no username)");
+  loginListItems[1].render();
+  let loginUsername = loginListItems[1].shadowRoot.querySelector(".username");
+  is(loginUsername.textContent, "(no username)", "login should show missing username text");
+});
+
 add_task(async function test_populated_list() {
   gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2]);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 3, "A blank login and the two stored logins should be displayed");
   ok(!loginListItems[0].hasAttribute("guid"), "first login-list-item should be the 'new' item");
   is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
-  is(loginListItems[1].shadowRoot.querySelector(".origin").textContent, TEST_LOGIN_1.origin,
+  is(loginListItems[1].shadowRoot.querySelector(".title").textContent, TEST_LOGIN_1.title,
      "login-list-item origin should match");
   is(loginListItems[1].shadowRoot.querySelector(".username").textContent, TEST_LOGIN_1.username,
      "login-list-item username should match");
@@ -138,7 +161,7 @@ add_task(async function test_login_modified() {
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 2, "Both logins should be displayed");
   is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
-  is(loginListItems[0].shadowRoot.querySelector(".origin").textContent, TEST_LOGIN_1.origin,
+  is(loginListItems[0].shadowRoot.querySelector(".title").textContent, TEST_LOGIN_1.title,
      "login-list-item origin should match");
   is(loginListItems[0].shadowRoot.querySelector(".username").textContent, modifiedLogin.username,
      "login-list-item username should have been updated");
@@ -155,7 +178,7 @@ add_task(async function test_login_added() {
   is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
   is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
   is(loginListItems[2].getAttribute("guid"), newLogin.guid, "login-list-item3 should have correct guid attribute");
-  is(loginListItems[2].shadowRoot.querySelector(".origin").textContent, newLogin.origin,
+  is(loginListItems[2].shadowRoot.querySelector(".title").textContent, newLogin.title,
      "login-list-item origin should match");
   is(loginListItems[2].shadowRoot.querySelector(".username").textContent, newLogin.username,
      "login-list-item username should have been updated");

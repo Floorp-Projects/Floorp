@@ -8,15 +8,15 @@
           return;
         }
         var promise = navigator.serviceWorker.register("worker.js");
-        window.onmessage = function (event) {
-          if (event.data !== "register") {
+        window.onmessage = function (event1) {
+          if (event1.data !== "register") {
             return;
           }
           promise = promise.then(function (registration) {
             return navigator.serviceWorker.register("worker2.js");
           });
-          window.onmessage = function (event) {
-            if (event.data !== "unregister") {
+          window.onmessage = function (event2) {
+            if (event2.data !== "unregister") {
               return;
             }
             promise.then(function (registration) {

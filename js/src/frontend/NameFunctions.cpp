@@ -457,7 +457,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     MOZ_ASSERT(initialParents == nparents_, "nparents imbalance detected");
     MOZ_ASSERT(parents_[initialParents] == pn,
                "pushed child shouldn't change underneath us");
-    AlwaysPoison(&parents_[initialParents], 0xFF,
+    AlwaysPoison(&parents_[initialParents], JS_OOB_PARSE_NODE_PATTERN,
                  sizeof(parents_[initialParents]), MemCheckKind::MakeUndefined);
 
     return ok;

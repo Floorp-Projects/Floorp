@@ -306,7 +306,7 @@ for (var i = 0; i < timeEvents.length; ++i) {
   });
 
   // Without "Event" suffix.
-  var e = document.createEvent("timeevent");
+  let e = document.createEvent("timeevent");
   e.initEvent(timeEvents[i], true, true);
   d.dispatchEvent(e);
 

@@ -27,13 +27,13 @@
     ok(x > 0, "hardwareConcurrency should be greater than 0.");
 
     resistFingerprinting(true).then(() => {
-      getWorkerHardwareConcurrency(e => {
-        const y = e.data;
+      getWorkerHardwareConcurrency(msg => {
+        const y = msg.data;
         ok(y === 2, "hardwareConcurrency should always be 2 when we're resisting fingerprinting.");
 
         resistFingerprinting(false).then(() => {
-          getWorkerHardwareConcurrency(e => {
-            const z = e.data;
+          getWorkerHardwareConcurrency(msg1 => {
+            const z = msg1.data;
             ok(z === x, "hardwareConcurrency should be the same as before we were resisting fingerprinting.");
 
             SimpleTest.finish();

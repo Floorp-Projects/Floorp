@@ -1433,8 +1433,9 @@ public class GeckoAppShell {
             }
 
             Bitmap bitmap = ((BitmapDrawable)icon).getBitmap();
-            if (bitmap.getWidth() != resolvedIconSize || bitmap.getHeight() != resolvedIconSize)
+            if (bitmap.getWidth() != resolvedIconSize || bitmap.getHeight() != resolvedIconSize) {
                 bitmap = Bitmap.createScaledBitmap(bitmap, resolvedIconSize, resolvedIconSize, true);
+            }
 
             ByteBuffer buf = ByteBuffer.allocate(resolvedIconSize * resolvedIconSize * 4);
             bitmap.copyPixelsToBuffer(buf);

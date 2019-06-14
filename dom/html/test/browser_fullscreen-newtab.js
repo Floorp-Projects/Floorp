@@ -61,6 +61,7 @@ async function runTest() {
     // Ensure the browser exits fullscreen state in reasonable time.
     await Promise.race([
       BrowserTestUtils.waitForCondition(() => getSizeMode() == "normal"),
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
       new Promise(resolve => setTimeout(resolve, 2000))
     ]);
 

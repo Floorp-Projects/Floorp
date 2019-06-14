@@ -19,11 +19,11 @@ function makeFileBlob(obj) {
       var data = { blob: blob, index: 5 };
 
       objectStore = db.transaction('test', 'readwrite').objectStore('test');
-      objectStore.add(data).onsuccess = function(evt) {
-        var key = evt.target.result;
+      objectStore.add(data).onsuccess = function(event) {
+        var key = event.target.result;
         objectStore = db.transaction('test').objectStore('test');
-        objectStore.get(key).onsuccess = function(evt) {
-          resolve(evt.target.result.blob);
+        objectStore.get(key).onsuccess = function(event1) {
+          resolve(event1.target.result.blob);
         };
       };
     };
