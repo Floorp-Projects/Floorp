@@ -5745,7 +5745,6 @@ nsresult nsContentUtils::GetASCIIOrigin(nsIPrincipal* aPrincipal,
 /* static */
 nsresult nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin) {
   MOZ_ASSERT(aURI, "missing uri");
-  MOZ_ASSERT(NS_IsMainThread());
 
   bool isBlobURL = false;
   nsresult rv = aURI->SchemeIs(BLOBURI_SCHEME, &isBlobURL);
@@ -5797,69 +5796,6 @@ nsresult nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin) {
 }
 
 /* static */
-nsresult nsContentUtils::GetThreadSafeASCIIOrigin(nsIURI* aURI,
-                                                  nsACString& aOrigin) {
-  MOZ_ASSERT(aURI, "missing uri");
-
-  bool isBlobURL = false;
-  nsresult rv = aURI->SchemeIs(BLOBURI_SCHEME, &isBlobURL);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // For Blob URI, the path is the URL of the owning page.
-  if (isBlobURL) {
-    nsAutoCString path;
-    rv = aURI->GetPathQueryRef(path);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), path);
-    if (rv == NS_ERROR_UNKNOWN_PROTOCOL) {
-      return NS_ERROR_UNKNOWN_PROTOCOL;
-    }
-
-    if (NS_FAILED(rv)) {
-      aOrigin.AssignLiteral("null");
-      return NS_OK;
-    }
-
-    return GetThreadSafeASCIIOrigin(uri, aOrigin);
-  }
-
-  aOrigin.Truncate();
-
-  // This is not supported yet.
-  nsCOMPtr<nsINestedURI> nestedURI(do_QueryInterface(aURI));
-  if (nestedURI) {
-    return NS_ERROR_UNKNOWN_PROTOCOL;
-  }
-
-  nsAutoCString host;
-  rv = aURI->GetAsciiHost(host);
-
-  if (NS_SUCCEEDED(rv) && !host.IsEmpty()) {
-    nsAutoCString userPass;
-    aURI->GetUserPass(userPass);
-
-    nsCOMPtr<nsIURI> uri = aURI;
-
-    nsAutoCString prePath;
-    if (!userPass.IsEmpty()) {
-      rv = NS_MutateURI(uri).SetUserPass(EmptyCString()).Finalize(uri);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    rv = uri->GetPrePath(prePath);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aOrigin = prePath;
-  } else {
-    aOrigin.AssignLiteral("null");
-  }
-
-  return NS_OK;
-}
-
-/* static */
 nsresult nsContentUtils::GetUTFOrigin(nsIPrincipal* aPrincipal,
                                       nsAString& aOrigin) {
   MOZ_ASSERT(aPrincipal, "missing principal");
@@ -5877,7 +5813,6 @@ nsresult nsContentUtils::GetUTFOrigin(nsIPrincipal* aPrincipal,
 /* static */
 nsresult nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin) {
   MOZ_ASSERT(aURI, "missing uri");
-  MOZ_ASSERT(NS_IsMainThread());
   nsresult rv;
 
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
@@ -5895,24 +5830,6 @@ nsresult nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin) {
 
   nsAutoCString asciiOrigin;
   rv = GetASCIIOrigin(aURI, asciiOrigin);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aOrigin = NS_ConvertUTF8toUTF16(asciiOrigin);
-  return NS_OK;
-}
-
-/* static */
-nsresult nsContentUtils::GetThreadSafeUTFOrigin(nsIURI* aURI,
-                                                nsAString& aOrigin) {
-#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
-  return NS_ERROR_UNKNOWN_PROTOCOL;
-#endif
-
-  MOZ_ASSERT(aURI, "missing uri");
-  nsresult rv;
-
-  nsAutoCString asciiOrigin;
-  rv = GetThreadSafeASCIIOrigin(aURI, asciiOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aOrigin = NS_ConvertUTF8toUTF16(asciiOrigin);
@@ -7997,56 +7914,6 @@ bool nsContentUtils::IsUpgradableDisplayType(nsContentPolicyType aType) {
   MOZ_ASSERT(NS_IsMainThread());
   return (aType == nsIContentPolicy::TYPE_IMAGE ||
           aType == nsIContentPolicy::TYPE_MEDIA);
-}
-
-nsresult nsContentUtils::SetFetchReferrerURIWithPolicy(
-    nsIPrincipal* aPrincipal, Document* aDoc, nsIHttpChannel* aChannel,
-    mozilla::net::ReferrerPolicy aReferrerPolicy) {
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-  NS_ENSURE_ARG_POINTER(aChannel);
-
-  nsCOMPtr<nsIURI> principalURI;
-
-  if (aPrincipal->IsSystemPrincipal()) {
-    return NS_OK;
-  }
-
-  aPrincipal->GetURI(getter_AddRefs(principalURI));
-
-  nsCOMPtr<nsIReferrerInfo> referrerInfo;
-  if (!aDoc) {
-    referrerInfo = new ReferrerInfo(principalURI, aReferrerPolicy);
-    return aChannel->SetReferrerInfoWithoutClone(referrerInfo);
-  }
-
-  // If it weren't for history.push/replaceState, we could just use the
-  // principal's URI here.  But since we want changes to the URI effected
-  // by push/replaceState to be reflected in the XHR referrer, we have to
-  // be more clever.
-  //
-  // If the document's original URI (before any push/replaceStates) matches
-  // our principal, then we use the document's current URI (after
-  // push/replaceStates).  Otherwise (if the document is, say, a data:
-  // URI), we just use the principal's URI.
-  nsCOMPtr<nsIURI> docCurURI = aDoc->GetDocumentURI();
-  nsCOMPtr<nsIURI> docOrigURI = aDoc->GetOriginalURI();
-
-  nsCOMPtr<nsIURI> referrerURI;
-
-  if (principalURI && docCurURI && docOrigURI) {
-    bool equal = false;
-    principalURI->Equals(docOrigURI, &equal);
-    if (equal) {
-      referrerURI = docCurURI;
-    }
-  }
-
-  if (!referrerURI) {
-    referrerURI = principalURI;
-  }
-
-  referrerInfo = new ReferrerInfo(referrerURI, aReferrerPolicy);
-  return aChannel->SetReferrerInfoWithoutClone(referrerInfo);
 }
 
 // static

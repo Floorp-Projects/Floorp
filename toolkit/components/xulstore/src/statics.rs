@@ -7,16 +7,18 @@ use crate::{
     ffi::ProfileChangeObserver,
     make_key, SEPARATOR,
 };
+use lmdb::Error as LmdbError;
 use moz_task::is_main_thread;
 use nsstring::nsString;
-use rkv::{Rkv, SingleStore, StoreOptions, Value};
+use rkv::{migrate::Migrator, Rkv, SingleStore, StoreError, StoreOptions, Value};
 use std::{
     collections::BTreeMap,
-    fs::{create_dir_all, remove_file, File},
+    fs::{copy, create_dir_all, remove_file, File},
     path::PathBuf,
     str,
     sync::Mutex,
 };
+use tempfile::tempdir;
 use xpcom::{interfaces::nsIFile, XpCom};
 
 type XULStoreCache = BTreeMap<String, BTreeMap<String, BTreeMap<String, String>>>;
@@ -43,7 +45,27 @@ lazy_static! {
 
 pub(crate) fn get_database() -> XULStoreResult<Database> {
     let xulstore_dir = get_xulstore_dir()?;
-    let env = Rkv::new(xulstore_dir.as_path())?;
+    let xulstore_path = xulstore_dir.as_path();
+
+    let env = match Rkv::new(xulstore_path) {
+        Ok(env) => Ok(env),
+        Err(StoreError::LmdbError(LmdbError::Invalid)) => {
+            let temp_env = tempdir()?;
+            let mut migrator = Migrator::new(&xulstore_path)?;
+            migrator.migrate(temp_env.path())?;
+            copy(
+                temp_env.path().join("data.mdb"),
+                xulstore_path.join("data.mdb"),
+            )?;
+            copy(
+                temp_env.path().join("lock.mdb"),
+                xulstore_path.join("lock.mdb"),
+            )?;
+            Rkv::new(xulstore_path)
+        }
+        Err(err) => Err(err),
+    }?;
+
     let store = env.open_single("db", StoreOptions::create())?;
 
     Ok(Database::new(env, store))

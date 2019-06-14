@@ -1428,6 +1428,52 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     }
   }
 
+  updateWebNavigationForLocationChange(aCanGoBack, aCanGoForward) {
+    if (this.isRemoteBrowser && this.messageManager) {
+      let remoteWebNav = this._remoteWebNavigationImpl;
+      remoteWebNav.canGoBack = aCanGoBack;
+      remoteWebNav.canGoForward = aCanGoForward;
+    }
+  }
+
+  updateForLocationChange(aLocation,
+                          aCharset,
+                          aMayEnableCharacterEncodingMenu,
+                          aCharsetAutodetected,
+                          aDocumentURI,
+                          aTitle,
+                          aContentPrincipal,
+                          aContentStoragePrincipal,
+                          aCSP,
+                          aIsSynthetic,
+                          aInnerWindowID,
+                          aHaveRequestContextID,
+                          aRequestContextID,
+                          aContentType) {
+    if (this.isRemoteBrowser && this.messageManager) {
+      if (aCharset != null) {
+        this._characterSet = aCharset;
+        this._mayEnableCharacterEncodingMenu = aMayEnableCharacterEncodingMenu;
+        this._charsetAutodetected = aCharsetAutodetected;
+      }
+
+      if (aContentType != null) {
+        this._documentContentType = aContentType;
+      }
+
+      this._remoteWebNavigationImpl._currentURI = aLocation;
+      this._documentURI = aDocumentURI;
+      this._contentTile = aTitle;
+      this._imageDocument = null;
+      this._contentPrincipal = aContentPrincipal;
+      this._contentStoragePrincipal = aContentStoragePrincipal;
+      this._csp = aCSP;
+      this._isSyntheticDocument = aIsSynthetic;
+      this._innerWindowID = aInnerWindowID;
+      this._contentRequestContextID = aHaveRequestContextID ? aRequestContextID : null;
+    }
+  }
+
   purgeSessionHistory() {
     if (this.isRemoteBrowser) {
       try {

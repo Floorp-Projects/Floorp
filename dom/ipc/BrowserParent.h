@@ -293,6 +293,12 @@ class BrowserParent final : public PBrowserParent,
       const int32_t aMaxSelfProgress, const int32_t aCurTotalProgres,
       const int32_t aMaxTotalProgress);
 
+  mozilla::ipc::IPCResult RecvOnLocationChange(
+      const Maybe<WebProgressData>& aWebProgressData,
+      const RequestData& aRequestData, nsIURI* aLocation, const uint32_t aFlags,
+      const bool aCanGoBack, const bool aCanGoForward,
+      const Maybe<WebProgressLocationChangeData>& aLocationChangeData);
+
   mozilla::ipc::IPCResult RecvOnStatusChange(
       const Maybe<WebProgressData>& aWebProgressData,
       const RequestData& aRequestData, const nsresult aStatus,
@@ -302,15 +308,16 @@ class BrowserParent final : public PBrowserParent,
       const Maybe<WebProgressData>& aWebProgressData,
       const RequestData& aRequestData, const uint32_t& aEvent);
 
+  mozilla::ipc::IPCResult RecvNavigationFinished();
+
   bool GetWebProgressListener(nsIBrowser** aOutBrowser,
                               nsIWebProgress** aOutManager,
                               nsIWebProgressListener** aOutListener);
 
   void ReconstructWebProgressAndRequest(
       nsIWebProgress* aManager, const Maybe<WebProgressData>& aWebProgressData,
-      const RequestData& aRequestData,
-      nsCOMPtr<nsIWebProgress>& aOutWebProgress,
-      nsCOMPtr<nsIRequest>& aOutRequest);
+      const RequestData& aRequestData, nsIWebProgress** aOutWebProgress,
+      nsIRequest** aOutRequest);
 
   mozilla::ipc::IPCResult RecvSessionStoreUpdate(
       const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,

@@ -83,7 +83,7 @@ inline void SwapToISupportsArray(SmartPtr<T>& aSrc,
 WorkerLoadInfoData::WorkerLoadInfoData()
     : mLoadFlags(nsIRequest::LOAD_NORMAL),
       mWindowID(UINT64_MAX),
-      mReferrerPolicy(net::RP_Unset),
+      mReferrerInfo(new ReferrerInfo(nullptr)),
       mFromWindow(false),
       mEvalAllowed(false),
       mReportCSPViolations(false),

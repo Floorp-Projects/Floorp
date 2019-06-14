@@ -368,7 +368,7 @@ function checkRequest(requests, cohort = "") {
  *        {
  *          name: Engine name, used to wait for it to be loaded.
  *          xmlFileName: Name of the XML file in the "data" folder.
- *          details: Array containing the parameters of addEngineWithDetails,
+ *          details: Object containing the parameters of addEngineWithDetails,
  *                   except for the engine name.  Alternative to xmlFileName.
  *        }
  */
