@@ -512,7 +512,7 @@ pref("browser.tabs.remote.useHTTPResponseProcessSelection", false);
 
 
 // Unload tabs when available memory is running low
-pref("browser.tabs.unloadOnLowMemory", true);
+pref("browser.tabs.unloadOnLowMemory", false);
 
 pref("browser.ctrlTab.recentlyUsedOrder", true);
 
