@@ -25,6 +25,7 @@
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/SharedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
+#include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerLocation.h"
@@ -56,12 +57,6 @@
 #ifdef XP_WIN
 #  undef PostMessage
 #endif
-
-extern already_AddRefed<nsIScriptTimeoutHandler> NS_CreateJSTimeoutHandler(
-    JSContext* aCx, mozilla::dom::WorkerPrivate* aWorkerPrivate,
-    mozilla::dom::Function& aFunction,
-    const mozilla::dom::Sequence<JS::Value>& aArguments,
-    mozilla::ErrorResult& aError);
 
 extern already_AddRefed<nsIScriptTimeoutHandler> NS_CreateJSTimeoutHandler(
     JSContext* aCx, mozilla::dom::WorkerPrivate* aWorkerPrivate,
@@ -254,15 +249,7 @@ int32_t WorkerGlobalScope::SetTimeout(JSContext* aCx, Function& aHandler,
                                       const int32_t aTimeout,
                                       const Sequence<JS::Value>& aArguments,
                                       ErrorResult& aRv) {
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  nsCOMPtr<nsIScriptTimeoutHandler> handler =
-      NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aArguments, aRv);
-  if (!handler) {
-    return 0;
-  }
-
-  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, false, aRv);
+  return SetTimeoutOrInterval(aCx, aHandler, aTimeout, aArguments, false, aRv);
 }
 
 int32_t WorkerGlobalScope::SetTimeout(JSContext* aCx, const nsAString& aHandler,
@@ -289,15 +276,7 @@ int32_t WorkerGlobalScope::SetInterval(JSContext* aCx, Function& aHandler,
                                        const int32_t aTimeout,
                                        const Sequence<JS::Value>& aArguments,
                                        ErrorResult& aRv) {
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  nsCOMPtr<nsIScriptTimeoutHandler> handler =
-      NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aArguments, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return 0;
-  }
-
-  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, true, aRv);
+  return SetTimeoutOrInterval(aCx, aHandler, aTimeout, aArguments, true, aRv);
 }
 
 int32_t WorkerGlobalScope::SetInterval(JSContext* aCx,
@@ -321,6 +300,23 @@ int32_t WorkerGlobalScope::SetInterval(JSContext* aCx,
 void WorkerGlobalScope::ClearInterval(int32_t aHandle) {
   mWorkerPrivate->AssertIsOnWorkerThread();
   mWorkerPrivate->ClearTimeout(aHandle);
+}
+
+int32_t WorkerGlobalScope::SetTimeoutOrInterval(
+    JSContext* aCx, Function& aHandler, const int32_t aTimeout,
+    const Sequence<JS::Value>& aArguments, bool aIsInterval, ErrorResult& aRv) {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  nsTArray<JS::Heap<JS::Value>> args;
+  if (!args.AppendElements(aArguments, fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return 0;
+  }
+
+  nsCOMPtr<nsITimeoutHandler> handler =
+      new CallbackTimeoutHandler(aCx, this, &aHandler, std::move(args));
+
+  return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, aIsInterval, aRv);
 }
 
 void WorkerGlobalScope::GetOrigin(nsAString& aOrigin) const {

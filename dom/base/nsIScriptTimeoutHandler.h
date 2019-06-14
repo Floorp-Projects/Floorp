@@ -34,15 +34,8 @@ class nsIScriptTimeoutHandler : public nsITimeoutHandler {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTTIMEOUTHANDLER_IID)
 
-  // Get the Function to call.  If this returns nullptr, GetHandlerText() will
-  // be called to get the string.
-  virtual mozilla::dom::Function* GetCallback() = 0;
-
   // Get the handler text of not a compiled object.
   virtual const nsAString& GetHandlerText() = 0;
-
-  // If we have a Function, get the arguments for passing to it.
-  virtual const nsTArray<JS::Value>& GetArgs() = 0;
 
   // If we have an expression, get the initiating script.
   virtual mozilla::dom::LoadedScript* GetInitiatingScript() = 0;

@@ -8,11 +8,13 @@
 #define mozilla_dom_timeout_handler_h
 
 #include "nsCOMPtr.h"
+#include "nsIGlobalObject.h"
 #include "nsISupports.h"
 #include "nsITimeoutHandler.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/FunctionBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -27,7 +29,7 @@ class TimeoutHandler : public nsITimeoutHandler {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(TimeoutHandler)
 
-  MOZ_CAN_RUN_SCRIPT virtual void Call() override;
+  MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* /* unused */) override;
   virtual void GetLocation(const char** aFileName, uint32_t* aLineNo,
                            uint32_t* aColumn) override;
   virtual void MarkForCC() override {}
@@ -46,6 +48,29 @@ class TimeoutHandler : public nsITimeoutHandler {
   nsCString mFileName;
   uint32_t mLineNo;
   uint32_t mColumn;
+};
+
+class CallbackTimeoutHandler final : public TimeoutHandler {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CallbackTimeoutHandler,
+                                                         TimeoutHandler)
+
+  CallbackTimeoutHandler(JSContext* aCx, nsIGlobalObject* aGlobal,
+                         Function* aFunction,
+                         nsTArray<JS::Heap<JS::Value>>&& aArguments);
+
+  MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* aExecutionReason) override;
+  virtual void MarkForCC() override;
+
+  void ReleaseJSObjects();
+
+ private:
+  virtual ~CallbackTimeoutHandler() { ReleaseJSObjects(); }
+
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<Function> mFunction;
+  nsTArray<JS::Heap<JS::Value>> mArgs;
 };
 
 }  // namespace dom
