@@ -28,6 +28,10 @@ export default class ModalInput extends ReflectedFluentElement {
       unlockedValue.setAttribute("type", "password");
     }
 
+    if (this.getAttribute("placeholder")) {
+      unlockedValue.setAttribute("placeholder", this.getAttribute("placeholder"));
+    }
+
     if (this.hasAttribute("required")) {
       unlockedValue.setAttribute("required", "");
     }
@@ -40,7 +44,13 @@ export default class ModalInput extends ReflectedFluentElement {
   }
 
   static get observedAttributes() {
-    return ["editing", "required", "type", "value"].concat(ModalInput.reflectedFluentIDs);
+    return [
+      "editing",
+      "placeholder",
+      "required",
+      "type",
+      "value",
+    ].concat(ModalInput.reflectedFluentIDs);
   }
 
   handleSpecialCaseFluentString(attrName) {
@@ -69,6 +79,10 @@ export default class ModalInput extends ReflectedFluentElement {
         if (!isEditing) {
           this.setAttribute("value", unlockedValue.value);
         }
+        break;
+      }
+      case "placeholder": {
+        unlockedValue.setAttribute("placeholder", newValue);
         break;
       }
       case "required": {
