@@ -51,7 +51,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   void Activate();
 
-  void Deactivate();
+  void Deactivate(bool aWindowLowering);
 
   void SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 
