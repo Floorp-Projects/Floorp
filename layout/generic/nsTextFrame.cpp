@@ -5035,9 +5035,9 @@ void nsTextFrame::GetTextDecorations(
       break;
     }
 
-    const nsStyleTextReset* const styleText = context->StyleTextReset();
+    const nsStyleTextReset* const styleTextReset = context->StyleTextReset();
     const StyleTextDecorationLine textDecorations =
-        styleText->mTextDecorationLine;
+        styleTextReset->mTextDecorationLine;
 
     if (!useOverride &&
         (StyleTextDecorationLine_COLOR_OVERRIDE & textDecorations)) {
@@ -5085,7 +5085,7 @@ void nsTextFrame::GetTextDecorations(
     physicalBlockStartOffset +=
         vertical ? f->GetNormalPosition().x : f->GetNormalPosition().y;
 
-    const uint8_t style = styleText->mTextDecorationStyle;
+    const uint8_t style = styleTextReset->mTextDecorationStyle;
     if (textDecorations) {
       nscolor color;
       if (useOverride) {
@@ -5114,17 +5114,19 @@ void nsTextFrame::GetTextDecorations(
                                  ? StyleTextDecorationLine_UNDERLINE
                                  : StyleTextDecorationLine_OVERLINE;
 
+      const nsStyleText* const styleText = context->StyleText();
+
       if (textDecorations & kUnderline) {
-        aDecorations.mUnderlines.AppendElement(
-            nsTextFrame::LineDecoration(f, baselineOffset, color, style));
+        aDecorations.mUnderlines.AppendElement(nsTextFrame::LineDecoration(
+            f, baselineOffset, styleText->mTextUnderlineOffset, color, style));
       }
       if (textDecorations & kOverline) {
-        aDecorations.mOverlines.AppendElement(
-            nsTextFrame::LineDecoration(f, baselineOffset, color, style));
+        aDecorations.mOverlines.AppendElement(nsTextFrame::LineDecoration(
+            f, baselineOffset, styleText->mTextUnderlineOffset, color, style));
       }
       if (textDecorations & StyleTextDecorationLine_LINE_THROUGH) {
-        aDecorations.mStrikes.AppendElement(
-            nsTextFrame::LineDecoration(f, baselineOffset, color, style));
+        aDecorations.mStrikes.AppendElement(nsTextFrame::LineDecoration(
+            f, baselineOffset, styleText->mTextUnderlineOffset, color, style));
       }
     }
 
