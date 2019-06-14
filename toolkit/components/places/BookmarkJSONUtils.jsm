@@ -36,7 +36,7 @@ function generateHash(aString) {
   cryptoHash.init(Ci.nsICryptoHash.MD5);
   let stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
                        .createInstance(Ci.nsIStringInputStream);
-  stringStream.data = aString;
+  stringStream.setUTF8Data(aString);
   cryptoHash.updateFromStream(stringStream, -1);
   // base64 allows the '/' char, but we can't use it for filenames.
   return cryptoHash.finish(true).replace(/\//g, "-");
