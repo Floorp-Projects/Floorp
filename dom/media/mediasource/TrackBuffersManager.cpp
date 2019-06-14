@@ -93,7 +93,8 @@ class DispatchKeyNeededEvent : public Runnable {
 
 TrackBuffersManager::TrackBuffersManager(MediaSourceDecoder* aParentDecoder,
                                          const MediaContainerType& aType)
-    : mBufferFull(false),
+    : mInputBuffer(new MediaByteBuffer),
+      mBufferFull(false),
       mFirstInitializationSegmentReceived(false),
       mChangeTypeReceived(false),
       mNewMediaSegmentStarted(false),
@@ -210,11 +211,10 @@ void TrackBuffersManager::ProcessTasks() {
   switch (task->GetType()) {
     case Type::AppendBuffer:
       mCurrentTask = task;
-      if (!mInputBuffer || mInputBuffer->IsEmpty()) {
-        // Note: we reset mInputBuffer here to ensure it doesn't grow unbounded.
-        mInputBuffer.reset();
-        mInputBuffer = Some(MediaSpan(task->As<AppendBufferTask>()->mBuffer));
-      } else if (!mInputBuffer->Append(task->As<AppendBufferTask>()->mBuffer)) {
+      if (!mInputBuffer) {
+        mInputBuffer = task->As<AppendBufferTask>()->mBuffer;
+      } else if (!mInputBuffer->AppendElements(
+                     *task->As<AppendBufferTask>()->mBuffer, fallible)) {
         RejectAppend(NS_ERROR_OUT_OF_MEMORY, __func__);
         return;
       }
@@ -447,8 +447,8 @@ void TrackBuffersManager::CompleteResetParserState() {
   }
 
   // 7. Remove all bytes from the input buffer.
-  mPendingInputBuffer.reset();
-  mInputBuffer.reset();
+  mPendingInputBuffer = nullptr;
+  mInputBuffer = nullptr;
   if (mCurrentInputBuffer) {
     mCurrentInputBuffer->EvictAll();
     // The demuxer will be recreated during the next run of SegmentParserLoop.
@@ -470,7 +470,8 @@ void TrackBuffersManager::CompleteResetParserState() {
     CreateDemuxerforMIMEType();
     // Recreate our input buffer. We can't directly assign the initData buffer
     // to mInputBuffer as it will get modified in the Segment Parser Loop.
-    mInputBuffer = Some(MediaSpan::WithCopyOf(mInitData));
+    mInputBuffer = new MediaByteBuffer;
+    mInputBuffer->AppendElements(*mInitData);
     RecreateParser(true);
   } else {
     RecreateParser(false);
@@ -704,8 +705,7 @@ void TrackBuffersManager::SegmentParserLoop() {
     // steps:
     if (mSourceBufferAttributes->GetAppendState() ==
         AppendState::WAITING_FOR_SEGMENT) {
-      MediaResult haveInitSegment =
-          mParser->IsInitSegmentPresent(*mInputBuffer);
+      MediaResult haveInitSegment = mParser->IsInitSegmentPresent(mInputBuffer);
       if (NS_SUCCEEDED(haveInitSegment)) {
         SetAppendState(AppendState::PARSING_INIT_SEGMENT);
         if (mFirstInitializationSegmentReceived && !mChangeTypeReceived) {
@@ -715,7 +715,7 @@ void TrackBuffersManager::SegmentParserLoop() {
         continue;
       }
       MediaResult haveMediaSegment =
-          mParser->IsMediaSegmentPresent(*mInputBuffer);
+          mParser->IsMediaSegmentPresent(mInputBuffer);
       if (NS_SUCCEEDED(haveMediaSegment)) {
         SetAppendState(AppendState::PARSING_MEDIA_SEGMENT);
         mNewMediaSegmentStarted = true;
@@ -740,7 +740,7 @@ void TrackBuffersManager::SegmentParserLoop() {
 
     int64_t start, end;
     MediaResult newData =
-        mParser->ParseStartAndEndTimestamps(*mInputBuffer, start, end);
+        mParser->ParseStartAndEndTimestamps(mInputBuffer, start, end);
     if (!NS_SUCCEEDED(newData) && newData.Code() != NS_ERROR_NOT_AVAILABLE) {
       RejectAppend(newData, __func__);
       return;
@@ -752,7 +752,7 @@ void TrackBuffersManager::SegmentParserLoop() {
     if (mSourceBufferAttributes->GetAppendState() ==
         AppendState::PARSING_INIT_SEGMENT) {
       if (mParser->InitSegmentRange().IsEmpty()) {
-        mInputBuffer.reset();
+        mInputBuffer = nullptr;
         NeedMoreData();
         return;
       }
@@ -787,8 +787,8 @@ void TrackBuffersManager::SegmentParserLoop() {
           if (mPendingInputBuffer) {
             // We now have a complete media segment header. We can resume
             // parsing the data.
-            AppendDataToCurrentInputBuffer(*mPendingInputBuffer);
-            mPendingInputBuffer.reset();
+            AppendDataToCurrentInputBuffer(mPendingInputBuffer);
+            mPendingInputBuffer = nullptr;
           }
           mNewMediaSegmentStarted = false;
         } else {
@@ -797,14 +797,11 @@ void TrackBuffersManager::SegmentParserLoop() {
           // 2. If the input buffer does not contain a complete media segment
           // header yet, then jump to the need more data step below.
           if (!mPendingInputBuffer) {
-            mPendingInputBuffer = Some(MediaSpan(*mInputBuffer));
+            mPendingInputBuffer = mInputBuffer;
           } else {
-            // Note we reset mInputBuffer below, so this won't end up appending
-            // the contents of mInputBuffer to itself.
-            mPendingInputBuffer->Append(*mInputBuffer);
+            mPendingInputBuffer->AppendElements(*mInputBuffer);
           }
-
-          mInputBuffer.reset();
+          mInputBuffer = nullptr;
           NeedMoreData();
           return;
         }
@@ -976,7 +973,7 @@ void TrackBuffersManager::OnDemuxerResetDone(const MediaResult& aResult) {
     // We had a partial media segment header stashed aside.
     // Reparse its content so we can continue parsing the current input buffer.
     int64_t start, end;
-    mParser->ParseStartAndEndTimestamps(*mPendingInputBuffer, start, end);
+    mParser->ParseStartAndEndTimestamps(mPendingInputBuffer, start, end);
     mProcessedInput += mPendingInputBuffer->Length();
   }
 
@@ -984,7 +981,7 @@ void TrackBuffersManager::OnDemuxerResetDone(const MediaResult& aResult) {
 }
 
 void TrackBuffersManager::AppendDataToCurrentInputBuffer(
-    const MediaSpan& aData) {
+    MediaByteBuffer* aData) {
   MOZ_ASSERT(mCurrentInputBuffer);
   mCurrentInputBuffer->AppendData(aData);
   mInputDemuxer->NotifyDataArrived();
@@ -1010,8 +1007,12 @@ void TrackBuffersManager::InitializationSegmentReceived() {
   // to the resource.
   mCurrentInputBuffer->AppendData(mParser->InitData());
   uint32_t length = endInit - (mProcessedInput - mInputBuffer->Length());
-  MOZ_RELEASE_ASSERT(length <= mInputBuffer->Length());
-  mInputBuffer->RemoveFront(length);
+  if (mInputBuffer->Length() == length) {
+    mInputBuffer = nullptr;
+  } else {
+    MOZ_RELEASE_ASSERT(length <= mInputBuffer->Length());
+    mInputBuffer->RemoveElementsAt(0, length);
+  }
   CreateDemuxerforMIMEType();
   if (!mInputDemuxer) {
     NS_WARNING("TODO type not supported");
@@ -1336,8 +1337,8 @@ TrackBuffersManager::CodedFrameProcessing() {
 
   MediaByteRange mediaRange = mParser->MediaSegmentRange();
   if (mediaRange.IsEmpty()) {
-    AppendDataToCurrentInputBuffer(*mInputBuffer);
-    mInputBuffer.reset();
+    AppendDataToCurrentInputBuffer(mInputBuffer);
+    mInputBuffer = nullptr;
   } else {
     MOZ_ASSERT(mProcessedInput >= mInputBuffer->Length());
     if (int64_t(mProcessedInput - mInputBuffer->Length()) > mediaRange.mEnd) {
@@ -1359,8 +1360,13 @@ TrackBuffersManager::CodedFrameProcessing() {
       CompleteCodedFrameProcessing();
       return p;
     }
-    AppendDataToCurrentInputBuffer(mInputBuffer->To(length));
-    mInputBuffer->RemoveFront(length);
+    RefPtr<MediaByteBuffer> segment = new MediaByteBuffer;
+    if (!segment->AppendElements(mInputBuffer->Elements(), length, fallible)) {
+      return CodedFrameProcessingPromise::CreateAndReject(
+          NS_ERROR_OUT_OF_MEMORY, __func__);
+    }
+    AppendDataToCurrentInputBuffer(segment);
+    mInputBuffer->RemoveElementsAt(0, length);
   }
 
   RefPtr<CodedFrameProcessingPromise> p = mProcessingPromise.Ensure(__func__);
@@ -1537,7 +1543,13 @@ void TrackBuffersManager::CompleteCodedFrameProcessing() {
                HasAudio() ? mAudioTracks.mDemuxer->GetEvictionOffset(
                                 mAudioTracks.mLastParsedEndTime)
                           : INT64_MAX);
-  mCurrentInputBuffer->EvictBefore(safeToEvict);
+  ErrorResult rv;
+  mCurrentInputBuffer->EvictBefore(safeToEvict, rv);
+  if (rv.Failed()) {
+    rv.SuppressException();
+    RejectProcessing(NS_ERROR_OUT_OF_MEMORY, __func__);
+    return;
+  }
 
   mInputDemuxer->NotifyDataRemoved();
   RecreateParser(true);
@@ -2240,7 +2252,7 @@ void TrackBuffersManager::RecreateParser(bool aReuseInitData) {
   DDLINKCHILD("parser", mParser.get());
   if (aReuseInitData && mInitData) {
     int64_t start, end;
-    mParser->ParseStartAndEndTimestamps(MediaSpan(mInitData), start, end);
+    mParser->ParseStartAndEndTimestamps(mInitData, start, end);
     mProcessedInput = mInitData->Length();
   } else {
     mProcessedInput = 0;
