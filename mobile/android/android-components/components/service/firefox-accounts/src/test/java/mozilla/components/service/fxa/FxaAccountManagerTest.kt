@@ -182,8 +182,11 @@ class FxaAccountManagerTest {
         verify(constellation).ensureCapabilitiesAsync(listOf(DeviceCapability.SEND_TAB))
         verify(constellation, never()).initDeviceAsync(any(), any(), any())
 
-        // Assert that periodic account refresh started.
-        verify(constellation).startPeriodicRefresh()
+        // Assert that periodic account refresh never started.
+        // See https://github.com/mozilla-mobile/android-components/issues/3433
+        verify(constellation, never()).startPeriodicRefresh()
+        // Assert that we cancel any existing periodic jobs.
+        verify(constellation).stopPeriodicRefresh()
 
         // Assert that persistence callback is interacting with the storage layer.
         account.persistenceCallback!!.persist("test")
@@ -218,8 +221,9 @@ class FxaAccountManagerTest {
         verify(constellation).ensureCapabilitiesAsync(listOf(DeviceCapability.SEND_TAB))
         verify(constellation, never()).initDeviceAsync(any(), any(), any())
 
-        // Assert that periodic account refresh started.
-        verify(constellation).startPeriodicRefresh()
+        // Assert that periodic account refresh never started.
+        // See https://github.com/mozilla-mobile/android-components/issues/3433
+        verify(constellation, never()).startPeriodicRefresh()
 
         // Assert that persistence callback is interacting with the storage layer.
         account.persistenceCallback!!.persist("test")
@@ -339,8 +343,9 @@ class FxaAccountManagerTest {
         // Assert that persistence callback is set.
         assertNotNull(account.persistenceCallback)
 
-        // Assert that periodic account refresh started after finishing auth.
-        verify(constellation).startPeriodicRefresh()
+        // Assert that periodic account refresh is never started after finishing auth.
+        // See https://github.com/mozilla-mobile/android-components/issues/3433
+        verify(constellation, never()).startPeriodicRefresh()
 
         // Assert that initDevice fired, but not ensureCapabilities (since we're initing a new account).
         verify(constellation).initDeviceAsync(any(), any(), eq(listOf(DeviceCapability.SEND_TAB)))

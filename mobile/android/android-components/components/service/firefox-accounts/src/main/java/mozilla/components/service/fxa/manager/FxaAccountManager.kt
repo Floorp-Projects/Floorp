@@ -418,9 +418,6 @@ open class FxaAccountManager(
                             deviceTuple.name, deviceTuple.type, deviceTuple.capabilities
                         ).await()
 
-                        logger.info("Starting periodic refresh of the device constellation")
-                        account.deviceConstellation().startPeriodicRefresh()
-
                         notifyObservers { onAuthenticated(account) }
 
                         Event.FetchProfile
@@ -440,8 +437,11 @@ open class FxaAccountManager(
                             logger.warn("Failed to ensure device capabilities.")
                         }
 
-                        logger.info("Starting periodic refresh of the device constellation")
-                        account.deviceConstellation().startPeriodicRefresh()
+                        // We used to perform a periodic device event polling, but for now we do not.
+                        // This cancels any periodic jobs device may still have active.
+                        // See https://github.com/mozilla-mobile/android-components/issues/3433
+                        logger.info("Stopping periodic refresh of the device constellation")
+                        account.deviceConstellation().stopPeriodicRefresh()
 
                         notifyObservers { onAuthenticated(account) }
 
@@ -461,9 +461,6 @@ open class FxaAccountManager(
                         account.deviceConstellation().initDeviceAsync(
                                 deviceTuple.name, deviceTuple.type, deviceTuple.capabilities
                         ).await()
-
-                        logger.info("Starting periodic refresh of the device constellation")
-                        account.deviceConstellation().startPeriodicRefresh()
 
                         notifyObservers { onAuthenticated(account) }
 
