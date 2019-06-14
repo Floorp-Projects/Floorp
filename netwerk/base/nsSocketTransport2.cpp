@@ -1132,9 +1132,6 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
       if (mConnectionFlags & nsISocketTransport::NO_PERMANENT_STORAGE)
         controlFlags |= nsISocketProvider::NO_PERMANENT_STORAGE;
 
-      if (mConnectionFlags & nsISocketTransport::MITM_OK)
-        controlFlags |= nsISocketProvider::MITM_OK;
-
       if (mConnectionFlags & nsISocketTransport::BE_CONSERVATIVE)
         controlFlags |= nsISocketProvider::BE_CONSERVATIVE;
 
