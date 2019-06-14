@@ -19,19 +19,14 @@ enum class GLContextType { Unknown, WGL, CGL, GLX, EGL, EAGL };
 enum class OriginPos : uint8_t { TopLeft, BottomLeft };
 
 struct GLFormats {
-  // Constructs a zeroed object:
-  GLFormats();
+  GLenum color_texInternalFormat = 0;
+  GLenum color_texFormat = 0;
+  GLenum color_texType = 0;
+  GLenum color_rbFormat = 0;
 
-  GLenum color_texInternalFormat;
-  GLenum color_texFormat;
-  GLenum color_texType;
-  GLenum color_rbFormat;
-
-  GLenum depthStencil;
-  GLenum depth;
-  GLenum stencil;
-
-  GLsizei samples;
+  GLenum depthStencil = 0;
+  GLenum depth = 0;
+  GLenum stencil = 0;
 };
 
 enum class CreateContextFlags : uint8_t {

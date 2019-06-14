@@ -241,21 +241,10 @@ static void ChooseBufferBits(const SurfaceCaps& caps,
   screenCaps.depth = caps.depth;
   screenCaps.stencil = caps.stencil;
 
-  screenCaps.antialias = caps.antialias;
   screenCaps.preserve = caps.preserve;
 
-  if (caps.antialias) {
-    *out_drawCaps = screenCaps;
-    out_readCaps->Clear();
-
-    // Color caps need to be duplicated in readCaps.
-    out_readCaps->color = caps.color;
-    out_readCaps->alpha = caps.alpha;
-    out_readCaps->bpp16 = caps.bpp16;
-  } else {
-    out_drawCaps->Clear();
-    *out_readCaps = screenCaps;
-  }
+  out_drawCaps->Clear();
+  *out_readCaps = screenCaps;
 }
 
 SurfaceFactory::SurfaceFactory(

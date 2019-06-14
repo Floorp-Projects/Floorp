@@ -1154,26 +1154,15 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateOffscreen(
       return nullptr;
     }
   } else {
-    SurfaceCaps minBackbufferCaps = minOffscreenCaps;
-    if (minOffscreenCaps.antialias) {
-      minBackbufferCaps.antialias = false;
-      minBackbufferCaps.depth = false;
-      minBackbufferCaps.stencil = false;
-    }
-
     gl = GLContextEGL::CreateEGLPBufferOffscreenContext(
-        flags, size, minBackbufferCaps, out_failureId);
+        flags, size, minOffscreenCaps, out_failureId);
     if (!gl) return nullptr;
 
     // Pull the actual resulting caps to ensure that our offscreen matches our
     // backbuffer.
     minOffscreenCaps.alpha = gl->Caps().alpha;
-    if (!minOffscreenCaps.antialias) {
-      // Only update these if we don't have AA. If we do have AA, we ignore
-      // backbuffer depth/stencil.
-      minOffscreenCaps.depth = gl->Caps().depth;
-      minOffscreenCaps.stencil = gl->Caps().stencil;
-    }
+    minOffscreenCaps.depth = gl->Caps().depth;
+    minOffscreenCaps.stencil = gl->Caps().stencil;
   }
 
   // Init the offscreen with the updated offscreen caps.
