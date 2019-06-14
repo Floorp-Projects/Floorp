@@ -25,9 +25,14 @@ class nsMacUtilsImpl final : public nsIMacUtils {
 
   nsMacUtilsImpl() {}
 
+  // Return the repo directory and the repo object directory respectively.
+  // These should only be used on Mac developer builds to determine the path
+  // to the repo or object directory.
+  static nsresult GetRepoDir(nsIFile** aRepoDir);
+  static nsresult GetObjDir(nsIFile** aObjDir);
+
 #if defined(MOZ_SANDBOX)
   static bool GetAppPath(nsCString& aAppPath);
-
 #  ifdef DEBUG
   static nsresult GetBloatLogDir(nsCString& aDirectoryPath);
   static nsresult GetDirectoryPath(const char* aPath,
