@@ -39,20 +39,6 @@ class nsIScriptContext : public nsISupports {
    **/
   virtual nsIScriptGlobalObject* GetGlobalObject() = 0;
 
-  /**
-   * Initialize the context generally. Does not create a global object.
-   **/
-  virtual nsresult InitContext() = 0;
-
-  /**
-   * Check to see if context is as yet intialized. Used to prevent
-   * reentrancy issues during the initialization process.
-   *
-   * @return true if initialized, false if not
-   *
-   */
-  virtual bool IsContextInitialized() = 0;
-
   // SetProperty is suspect and jst believes should not be needed.  Currenly
   // used only for "arguments".
   virtual nsresult SetProperty(JS::Handle<JSObject*> aTarget,
@@ -65,22 +51,9 @@ class nsIScriptContext : public nsISupports {
   virtual void SetProcessingScriptTag(bool aResult) = 0;
 
   /**
-   * Initialize DOM classes on aGlobalObj, always call
-   * WillInitializeContext() before calling InitContext(), and always
-   * call DidInitializeContext() when a context is fully
-   * (successfully) initialized.
+   * Initialize DOM classes on aGlobalObj.
    */
   virtual nsresult InitClasses(JS::Handle<JSObject*> aGlobalObj) = 0;
-
-  /**
-   * Tell the context we're about to be reinitialize it.
-   */
-  virtual void WillInitializeContext() = 0;
-
-  /**
-   * Tell the context we're done reinitializing it.
-   */
-  virtual void DidInitializeContext() = 0;
 
   /**
    * Access the Window Proxy. The setter should only be called by

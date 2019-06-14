@@ -582,7 +582,6 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
       mGlobalObjectRef(aGlobalObject) {
   EnsureStatics();
 
-  mIsInitialized = false;
   mProcessingScriptTag = false;
   HoldJSObjects(this);
 }
@@ -609,7 +608,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSContext)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
-  tmp->mIsInitialized = false;
   tmp->mGCOnDestruction = false;
   tmp->mWindowProxy = nullptr;
   tmp->Destroy();
@@ -651,15 +649,6 @@ nsIScriptGlobalObject* nsJSContext::GetGlobalObject() {
 
   MOZ_ASSERT(mGlobalObjectRef);
   return mGlobalObjectRef;
-}
-
-nsresult nsJSContext::InitContext() {
-  // Make sure callers of this use
-  // WillInitializeContext/DidInitializeContext around this call.
-  NS_ENSURE_TRUE(!mIsInitialized, NS_ERROR_ALREADY_INITIALIZED);
-
-  // XXXbz Is there still a point to this function?
-  return NS_OK;
 }
 
 nsresult nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget,
@@ -1080,12 +1069,6 @@ nsresult nsJSContext::InitClasses(JS::Handle<JSObject*> aGlobalObj) {
 
   return NS_OK;
 }
-
-void nsJSContext::WillInitializeContext() { mIsInitialized = false; }
-
-void nsJSContext::DidInitializeContext() { mIsInitialized = true; }
-
-bool nsJSContext::IsContextInitialized() { return mIsInitialized; }
 
 bool nsJSContext::GetProcessingScriptTag() { return mProcessingScriptTag; }
 
