@@ -8,8 +8,8 @@ Test the login-filter component
   <title>Test the login-filter component</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <script type="module" src="chrome://browser/content/aboutlogins/components/login-filter.js"></script>
-  <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
+  <script type="module" src="login-filter.js"></script>
+  <script type="module" src="login-list.js"></script>
   <script src="aboutlogins_common.js"></script>
 
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
@@ -18,7 +18,7 @@ Test the login-filter component
   <p id="display">
   </p>
 <div id="content" style="display: none">
-  <iframe id="templateFrame" src="chrome://browser/content/aboutlogins/aboutLogins.html"
+  <iframe id="templateFrame" src="aboutLogins.html"
           sandbox="allow-same-origin"></iframe>
 </div>
 <pre id="test">

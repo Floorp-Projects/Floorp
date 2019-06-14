@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {recordTelemetryEvent} from "../aboutLoginsUtils.js";
+import {recordTelemetryEvent} from "chrome://browser/content/aboutlogins/aboutLoginsUtils.js";
 
 export default class LoginListItem extends HTMLElement {
   constructor(login) {
