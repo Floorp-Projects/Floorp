@@ -223,14 +223,13 @@ class TrackBuffersManager final
 
   // Demuxer objects and methods.
   void AppendDataToCurrentInputBuffer(const MediaSpan& aData);
-  void AppendDataToCurrentInputBuffer(MediaByteBuffer* aData);
 
   RefPtr<MediaByteBuffer> mInitData;
   // Temporary input buffer to handle partial media segment header.
   // We store the current input buffer content into it should we need to
   // reinitialize the demuxer once we have some samples and a discontinuity is
   // detected.
-  RefPtr<MediaByteBuffer> mPendingInputBuffer;
+  Maybe<MediaSpan> mPendingInputBuffer;
   RefPtr<SourceBufferResource> mCurrentInputBuffer;
   RefPtr<MediaDataDemuxer> mInputDemuxer;
   // Length already processed in current media segment.
