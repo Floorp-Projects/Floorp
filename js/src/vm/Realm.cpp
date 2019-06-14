@@ -613,11 +613,6 @@ void Realm::clearTables() {
   varNames_.clear();
 }
 
-// Check to see if this individual realm is recording allocations. Debuggers or
-// runtimes can try and record allocations, so this method can check to see if
-// any initialization is needed.
-bool Realm::isRecordingAllocations() { return !!allocationMetadataBuilder_; }
-
 void Realm::setAllocationMetadataBuilder(
     const js::AllocationMetadataBuilder* builder) {
   // Clear any jitcode in the runtime, which behaves differently depending on
@@ -628,8 +623,6 @@ void Realm::setAllocationMetadataBuilder(
 }
 
 void Realm::forgetAllocationMetadataBuilder() {
-  MOZ_ASSERT(allocationMetadataBuilder_);
-
   // Unlike setAllocationMetadataBuilder, we don't have to discard all JIT
   // code here (code is still valid, just a bit slower because it doesn't do
   // inline GC allocations when a metadata builder is present), but we do want
