@@ -1913,7 +1913,9 @@ class JSScript : public js::gc::TenuredCell {
     BindingsAccessedDynamically = 1 << 5,
     FunHasExtensibleScope = 1 << 6,
 
-    // (1 << 7) is unused.
+    // Bytecode contains JSOP_CALLSITEOBJ
+    // (We don't relazify functions with template strings, due to observability)
+    HasCallSiteObj = 1 << 7,
 
     // Script has singleton objects.
     HasSingletons = 1 << 8,
@@ -2322,6 +2324,10 @@ class JSScript : public js::gc::TenuredCell {
     return hasFlag(ImmutableFlags::FunHasExtensibleScope);
   }
 
+  bool hasCallSiteObj() const {
+    return hasFlag(ImmutableFlags::HasCallSiteObj);
+  }
+
   bool hasSingletons() const { return hasFlag(ImmutableFlags::HasSingletons); }
   bool treatAsRunOnce() const {
     return hasFlag(ImmutableFlags::TreatAsRunOnce);
@@ -2491,6 +2497,7 @@ class JSScript : public js::gc::TenuredCell {
     return needsArgsObj() && hasMappedArgsObj();
   }
 
+  bool hasDoNotRelazify() const { return hasFlag(MutableFlags::DoNotRelazify); }
   void setDoNotRelazify(bool b) { setFlag(MutableFlags::DoNotRelazify, b); }
 
   bool hasInnerFunctions() const {
@@ -2561,7 +2568,7 @@ class JSScript : public js::gc::TenuredCell {
   bool isRelazifiableIgnoringJitCode() const {
     return (selfHosted() || lazyScript) && !hasInnerFunctions() &&
            !isGenerator() && !isAsync() && !isDefaultClassConstructor() &&
-           !hasFlag(MutableFlags::DoNotRelazify);
+           !hasDoNotRelazify() && !hasCallSiteObj();
   }
   bool isRelazifiable() const {
     MOZ_ASSERT_IF(hasBaselineScript() || hasIonScript(), jitScript_);
