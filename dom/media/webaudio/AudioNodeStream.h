@@ -175,6 +175,7 @@ class AudioNodeStream : public ProcessedMediaStream {
   class AdvanceAndResumeMessage;
   class CheckForInactiveMessage;
 
+  void NotifyForcedShutdown() override;
   void DestroyImpl() override;
 
   /*
@@ -201,7 +202,7 @@ class AudioNodeStream : public ProcessedMediaStream {
   void DecrementActiveInputCount();
 
   // The engine that will generate output for this node.
-  nsAutoPtr<AudioNodeEngine> mEngine;
+  const nsAutoPtr<AudioNodeEngine> mEngine;
   // The mixed input blocks are kept from iteration to iteration to avoid
   // reallocating channel data arrays and any buffers for mixing.
   OutputChunks mInputChunks;
