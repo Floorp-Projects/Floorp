@@ -372,7 +372,7 @@ inline void JSContext::setZone(js::Zone* zone,
     return;
   }
 
-  if (isAtomsZone == AtomsZone && helperThread()) {
+  if (isAtomsZone == AtomsZone && isHelperThreadContext()) {
     MOZ_ASSERT(!zone_->wasGCStarted());
     freeLists_ = atomsZoneFreeLists_;
   } else {

@@ -109,7 +109,7 @@ static inline T* AllocateObjectBuffer(JSContext* cx, uint32_t count) {
 template <typename T>
 static inline T* AllocateObjectBuffer(JSContext* cx, JSObject* obj,
                                       uint32_t count) {
-  if (cx->helperThread()) {
+  if (cx->isHelperThreadContext()) {
     return cx->pod_malloc<T>(count);
   }
   size_t nbytes = JS_ROUNDUP(count * sizeof(T), sizeof(Value));
@@ -125,7 +125,7 @@ template <typename T>
 static inline T* ReallocateObjectBuffer(JSContext* cx, JSObject* obj,
                                         T* oldBuffer, uint32_t oldCount,
                                         uint32_t newCount) {
-  if (cx->helperThread()) {
+  if (cx->isHelperThreadContext()) {
     return obj->zone()->pod_realloc<T>(oldBuffer, oldCount, newCount);
   }
   T* buffer = static_cast<T*>(cx->nursery().reallocateBuffer(

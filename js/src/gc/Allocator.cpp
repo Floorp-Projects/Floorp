@@ -96,7 +96,7 @@ template <AllowGC allowGC>
 JSObject* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
                                          size_t nDynamicSlots,
                                          const Class* clasp) {
-  MOZ_RELEASE_ASSERT(!cx->helperThread());
+  MOZ_RELEASE_ASSERT(!cx->isHelperThreadContext());
 
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
   MOZ_ASSERT(!cx->isNurseryAllocSuppressed());
@@ -157,7 +157,7 @@ JSString* GCRuntime::tryNewNurseryString(JSContext* cx, size_t thingSize,
                                          AllocKind kind) {
   MOZ_ASSERT(IsNurseryAllocable(kind));
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
-  MOZ_ASSERT(!cx->helperThread());
+  MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(!cx->isNurseryAllocSuppressed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
@@ -246,7 +246,7 @@ T* js::Allocate(JSContext* cx) {
   size_t thingSize = sizeof(T);
   MOZ_ASSERT(thingSize == Arena::thingSize(kind));
 
-  if (!cx->helperThread()) {
+  if (!cx->isHelperThreadContext()) {
     if (!cx->runtime()->gc.checkAllocatorState<allowGC>(cx, kind)) {
       return nullptr;
     }
@@ -302,7 +302,7 @@ void GCRuntime::attemptLastDitchGC(JSContext* cx) {
   // size limit. Try to perform an all-compartments, non-incremental, shrinking
   // GC and wait for it to finish.
 
-  if (cx->helperThread()) {
+  if (cx->isHelperThreadContext()) {
     return;
   }
 
@@ -385,7 +385,7 @@ template <typename T>
 /* static */
 void GCRuntime::checkIncrementalZoneState(JSContext* cx, T* t) {
 #ifdef DEBUG
-  if (cx->helperThread() || !t) {
+  if (cx->isHelperThreadContext() || !t) {
     return;
   }
 
@@ -431,7 +431,7 @@ TenuredCell* GCRuntime::refillFreeListFromAnyThread(JSContext* cx,
                                                     AllocKind thingKind) {
   MOZ_ASSERT(cx->freeLists().isEmpty(thingKind));
 
-  if (!cx->helperThread()) {
+  if (!cx->isHelperThreadContext()) {
     return refillFreeListFromMainThread(cx, thingKind);
   }
 

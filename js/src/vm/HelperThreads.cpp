@@ -443,7 +443,7 @@ ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
       outOfMemory(false) {
   // Note that |cx| is the main thread context here but the parse task will
   // run with a different, helper thread, context.
-  MOZ_ASSERT(!cx->helperThread());
+  MOZ_ASSERT(!cx->isHelperThreadContext());
 
   MOZ_ALWAYS_TRUE(scripts.reserve(scripts.capacity()));
   MOZ_ALWAYS_TRUE(sourceObjects.reserve(sourceObjects.capacity()));
@@ -451,7 +451,7 @@ ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
 
 bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options,
                      JSObject* global) {
-  MOZ_ASSERT(!cx->helperThread());
+  MOZ_ASSERT(!cx->isHelperThreadContext());
 
   if (!this->options.copy(cx, options)) {
     return false;
@@ -529,7 +529,7 @@ ScriptParseTask<Unit>::ScriptParseTask(JSContext* cx,
 
 template <typename Unit>
 void ScriptParseTask<Unit>::parse(JSContext* cx) {
-  MOZ_ASSERT(cx->helperThread());
+  MOZ_ASSERT(cx->isHelperThreadContext());
 
   JSScript* script;
   Rooted<ScriptSourceObject*> sourceObject(cx);
@@ -575,7 +575,7 @@ ModuleParseTask<Unit>::ModuleParseTask(JSContext* cx,
 
 template <typename Unit>
 void ModuleParseTask<Unit>::parse(JSContext* cx) {
-  MOZ_ASSERT(cx->helperThread());
+  MOZ_ASSERT(cx->isHelperThreadContext());
 
   Rooted<ScriptSourceObject*> sourceObject(cx);
 
@@ -597,7 +597,7 @@ ScriptDecodeTask::ScriptDecodeTask(JSContext* cx,
       range(range) {}
 
 void ScriptDecodeTask::parse(JSContext* cx) {
-  MOZ_ASSERT(cx->helperThread());
+  MOZ_ASSERT(cx->isHelperThreadContext());
 
   RootedScript resultScript(cx);
   Rooted<ScriptSourceObject*> sourceObject(cx);
@@ -624,7 +624,7 @@ BinASTDecodeTask::BinASTDecodeTask(JSContext* cx, const uint8_t* buf,
       data(buf, length) {}
 
 void BinASTDecodeTask::parse(JSContext* cx) {
-  MOZ_ASSERT(cx->helperThread());
+  MOZ_ASSERT(cx->isHelperThreadContext());
 
   RootedScriptSourceObject sourceObject(cx);
 
@@ -648,7 +648,7 @@ MultiScriptsDecodeTask::MultiScriptsDecodeTask(
       sources(&sources) {}
 
 void MultiScriptsDecodeTask::parse(JSContext* cx) {
-  MOZ_ASSERT(cx->helperThread());
+  MOZ_ASSERT(cx->isHelperThreadContext());
 
   if (!scripts.reserve(sources->length()) ||
       !sourceObjects.reserve(sources->length())) {

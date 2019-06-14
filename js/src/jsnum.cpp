@@ -1744,7 +1744,7 @@ JS_PUBLIC_API bool js::ToNumberSlow(JSContext* cx, HandleValue v_,
   MOZ_ASSERT(!v.isNumber());
 
   if (!v.isPrimitive()) {
-    if (cx->helperThread()) {
+    if (cx->isHelperThreadContext()) {
       return false;
     }
 
@@ -1775,7 +1775,7 @@ JS_PUBLIC_API bool js::ToNumberSlow(JSContext* cx, HandleValue v_,
   }
 
   MOZ_ASSERT(v.isSymbol() || v.isBigInt());
-  if (!cx->helperThread()) {
+  if (!cx->isHelperThreadContext()) {
     unsigned errnum = JSMSG_SYMBOL_TO_NUMBER;
     if (v.isBigInt()) {
       errnum = JSMSG_BIGINT_TO_NUMBER;
@@ -1792,7 +1792,7 @@ bool js::ToNumericSlow(JSContext* cx, MutableHandleValue vp) {
 
   // Step 1.
   if (!vp.isPrimitive()) {
-    if (cx->helperThread()) {
+    if (cx->isHelperThreadContext()) {
       return false;
     }
     if (!ToPrimitive(cx, JSTYPE_NUMBER, vp)) {

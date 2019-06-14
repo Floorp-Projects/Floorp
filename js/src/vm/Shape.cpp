@@ -2269,7 +2269,7 @@ void EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape,
    * Clearing is not necessary when this context is running off
    * thread, as it will not use the new object cache for allocations.
    */
-  if (!cx->helperThread()) {
+  if (!cx->isHelperThreadContext()) {
     cx->caches().newObjectCache.invalidateEntriesForShape(cx, shape, proto);
   }
 }

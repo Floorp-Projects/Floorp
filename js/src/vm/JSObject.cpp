@@ -827,8 +827,9 @@ bool js::NewObjectWithTaggedProtoIsCachable(JSContext* cx,
                                             Handle<TaggedProto> proto,
                                             NewObjectKind newKind,
                                             const Class* clasp) {
-  return !cx->helperThread() && proto.isObject() && newKind == GenericObject &&
-         clasp->isNative() && !proto.toObject()->is<GlobalObject>();
+  return !cx->isHelperThreadContext() && proto.isObject() &&
+         newKind == GenericObject && clasp->isNative() &&
+         !proto.toObject()->is<GlobalObject>();
 }
 
 JSObject* js::NewObjectWithGivenTaggedProto(JSContext* cx, const Class* clasp,
@@ -878,7 +879,8 @@ JSObject* js::NewObjectWithGivenTaggedProto(JSContext* cx, const Class* clasp,
 
 static bool NewObjectIsCachable(JSContext* cx, NewObjectKind newKind,
                                 const Class* clasp) {
-  return !cx->helperThread() && newKind == GenericObject && clasp->isNative();
+  return !cx->isHelperThreadContext() && newKind == GenericObject &&
+         clasp->isNative();
 }
 
 JSObject* js::NewObjectWithClassProtoCommon(JSContext* cx, const Class* clasp,
@@ -945,7 +947,7 @@ JSObject* js::NewObjectWithClassProtoCommon(JSContext* cx, const Class* clasp,
 static bool NewObjectWithGroupIsCachable(JSContext* cx, HandleObjectGroup group,
                                          NewObjectKind newKind) {
   if (!group->proto().isObject() || newKind != GenericObject ||
-      !group->clasp()->isNative() || cx->helperThread()) {
+      !group->clasp()->isNative() || cx->isHelperThreadContext()) {
     return false;
   }
 
@@ -2902,7 +2904,7 @@ bool js::DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
   }
 
   if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     return op(cx, obj, id, desc, result);
   }
   return NativeDefineProperty(cx, obj.as<NativeObject>(), id, desc, result);
@@ -2914,7 +2916,7 @@ bool js::DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id,
   Rooted<PropertyDescriptor> desc(cx);
   desc.initFields(nullptr, value, attrs, nullptr, nullptr);
   if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     return op(cx, obj, id, desc, result);
   }
   return NativeDefineProperty(cx, obj.as<NativeObject>(), id, desc, result);
@@ -2945,7 +2947,7 @@ bool js::DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
     return false;
   }
   if (!result) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     result.reportError(cx, obj, id);
     return false;
   }
@@ -2959,7 +2961,7 @@ bool js::DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id,
     return false;
   }
   if (!result) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     result.reportError(cx, obj, id);
     return false;
   }
@@ -2990,7 +2992,7 @@ bool js::DefineDataElement(JSContext* cx, HandleObject obj, uint32_t index,
 bool js::SetImmutablePrototype(JSContext* cx, HandleObject obj,
                                bool* succeeded) {
   if (obj->hasDynamicPrototype()) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     return Proxy::setImmutablePrototype(cx, obj, succeeded);
   }
 

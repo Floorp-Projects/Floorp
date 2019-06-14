@@ -767,7 +767,7 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
     // off-thread parsing while collecting the atoms zone so this is not
     // necessary for helper threads.
     JSAtom* atom;
-    if (!cx->helperThread()) {
+    if (!cx->isHelperThreadContext()) {
       atom = *p;
     } else {
       atom = p->unbarrieredGet();
@@ -1080,7 +1080,7 @@ static JSAtom* ToAtomSlow(
 
   Value v = arg;
   if (!v.isPrimitive()) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     if (!allowGC) {
       return nullptr;
     }
@@ -1119,7 +1119,7 @@ static JSAtom* ToAtomSlow(
     return cx->names().null;
   }
   if (v.isSymbol()) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     if (allowGC) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_SYMBOL_TO_STRING);
@@ -1152,7 +1152,7 @@ JSAtom* js::ToAtom(JSContext* cx,
 
   JSAtom* atom = AtomizeString(cx, str);
   if (!atom && !allowGC) {
-    MOZ_ASSERT_IF(!cx->helperThread(), cx->isThrowingOutOfMemory());
+    MOZ_ASSERT_IF(!cx->isHelperThreadContext(), cx->isThrowingOutOfMemory());
     cx->recoverFromOutOfMemory();
   }
   return atom;

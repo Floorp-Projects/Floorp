@@ -60,7 +60,7 @@ MOZ_ALWAYS_INLINE bool AtomMarkingRuntime::inlinedMarkAtomInternal(
     cx->zone()->markedAtoms().setBit(bit);
   }
 
-  if (!cx->helperThread()) {
+  if (!cx->isHelperThreadContext()) {
     // Trigger a read barrier on the atom, in case there is an incremental
     // GC in progress. This is necessary if the atom is being marked
     // because a reference to it was obtained from another zone which is
