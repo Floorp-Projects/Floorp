@@ -208,17 +208,13 @@ bool ReferrerInfo::ShouldResponseInheritReferrerInfo(nsIChannel* aChannel) {
   return aboutSpec.EqualsLiteral("about:srcdoc");
 }
 
-/* static */
-nsresult ReferrerInfo::HandleSecureToInsecureReferral(nsIURI* aOriginalURI,
-                                                      nsIURI* aURI,
-                                                      uint32_t aPolicy,
-                                                      bool& aAllowed) {
-  NS_ENSURE_ARG(aOriginalURI);
+nsresult ReferrerInfo::HandleSecureToInsecureReferral(nsIURI* aURI,
+                                                      bool& aAllowed) const {
   NS_ENSURE_ARG(aURI);
 
   aAllowed = false;
   bool referrerIsHttpsScheme;
-  nsresult rv = aOriginalURI->SchemeIs("https", &referrerIsHttpsScheme);
+  nsresult rv = mOriginalReferrer->SchemeIs("https", &referrerIsHttpsScheme);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -238,9 +234,9 @@ nsresult ReferrerInfo::HandleSecureToInsecureReferral(nsIURI* aOriginalURI,
   // policy is "unsafe-url", "origin", or "origin-when-cross-origin".
   // in other referrer policies, https->http is not allowed...
 
-  if (aPolicy != nsIHttpChannel::REFERRER_POLICY_UNSAFE_URL &&
-      aPolicy != nsIHttpChannel::REFERRER_POLICY_ORIGIN_WHEN_XORIGIN &&
-      aPolicy != nsIHttpChannel::REFERRER_POLICY_ORIGIN && !uriIsHttpsScheme) {
+  if (mPolicy != nsIHttpChannel::REFERRER_POLICY_UNSAFE_URL &&
+      mPolicy != nsIHttpChannel::REFERRER_POLICY_ORIGIN_WHEN_XORIGIN &&
+      mPolicy != nsIHttpChannel::REFERRER_POLICY_ORIGIN && !uriIsHttpsScheme) {
     return NS_OK;
   }
 
@@ -361,8 +357,7 @@ nsresult ReferrerInfo::HandleUserReferrerSendingPolicy(nsIHttpChannel* aChannel,
   return NS_OK;
 }
 
-/* static */
-bool ReferrerInfo::IsCrossOriginRequest(nsIHttpChannel* aChannel) {
+bool ReferrerInfo::IsCrossOriginRequest(nsIHttpChannel* aChannel) const {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
   nsCOMPtr<nsIURI> triggeringURI;
@@ -794,8 +789,7 @@ nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {
   }
 
   bool isSecureToInsecureAllowed = false;
-  rv = HandleSecureToInsecureReferral(mOriginalReferrer, uri, mPolicy,
-                                      isSecureToInsecureAllowed);
+  rv = HandleSecureToInsecureReferral(uri, isSecureToInsecureAllowed);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
