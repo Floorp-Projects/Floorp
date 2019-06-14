@@ -193,8 +193,12 @@ describe("PlacesFeed", () => {
       feed.onAction(openLinkAction);
 
       const [, , params] = openLinkIn.firstCall.args;
-      assert.propertyVal(params, "referrerPolicy", 5);
-      assert.propertyVal(params.referrerURI, "spec", "foo.com/ref");
+      assert.nestedPropertyVal(params, "referrerInfo.referrerPolicy", 5);
+      assert.nestedPropertyVal(
+        params,
+        "referrerInfo.originalReferrer.spec",
+        "foo.com/ref"
+      );
     });
     it("should mark link with typed bonus as typed before opening OPEN_LINK", () => {
       const callOrder = [];
