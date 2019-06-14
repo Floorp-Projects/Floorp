@@ -45,7 +45,7 @@ bool ParsingResultComparer::Compare(const Sdp& rsdparsaSdp, const Sdp& sipccSdp,
                                     const std::string& originalSdp,
                                     const SdpComparisonResult expect) {
   mOriginalSdp = originalSdp;
-  MOZ_ASSERT(&rsdparsaSdp);
+
   const std::string sipccSdpStr = sipccSdp.ToString();
   const std::string rsdparsaSdpStr = rsdparsaSdp.ToString();
 
