@@ -22,6 +22,9 @@ class nsITimeoutHandler : public nsISupports {
 
   MOZ_CAN_RUN_SCRIPT virtual void Call() = 0;
 
+  // Get the location of the script.
+  // Note: The memory pointed to by aFileName is owned by the
+  // nsITimeoutHandler and should not be freed by the caller.
   virtual void GetLocation(const char** aFileName, uint32_t* aLineNo,
                            uint32_t* aColumn) = 0;
 

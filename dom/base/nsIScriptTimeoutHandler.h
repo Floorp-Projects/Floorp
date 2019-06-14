@@ -41,10 +41,6 @@ class nsIScriptTimeoutHandler : public nsITimeoutHandler {
   // Get the handler text of not a compiled object.
   virtual const nsAString& GetHandlerText() = 0;
 
-  // Get the location of the script.
-  // Note: The memory pointed to by aFileName is owned by the
-  // nsIScriptTimeoutHandler and should not be freed by the caller.
-
   // If we have a Function, get the arguments for passing to it.
   virtual const nsTArray<JS::Value>& GetArgs() = 0;
 
