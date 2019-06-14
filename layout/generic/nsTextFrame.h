@@ -696,26 +696,33 @@ class nsTextFrame : public nsFrame {
     // positive offsets are *above* the baseline and negative offsets below
     nscoord mBaselineOffset;
 
+    // This represents the offset from the initial position of the underline
+    const mozilla::LengthOrAuto mTextUnderlineOffset;
+
     nscolor mColor;
     uint8_t mStyle;
 
     LineDecoration(nsIFrame* const aFrame, const nscoord aOff,
+                   const mozilla::LengthOrAuto& aUnderline,
                    const nscolor aColor, const uint8_t aStyle)
         : mFrame(aFrame),
           mBaselineOffset(aOff),
+          mTextUnderlineOffset(aUnderline),
           mColor(aColor),
           mStyle(aStyle) {}
 
     LineDecoration(const LineDecoration& aOther)
         : mFrame(aOther.mFrame),
           mBaselineOffset(aOther.mBaselineOffset),
+          mTextUnderlineOffset(aOther.mTextUnderlineOffset),
           mColor(aOther.mColor),
           mStyle(aOther.mStyle) {}
 
     bool operator==(const LineDecoration& aOther) const {
       return mFrame == aOther.mFrame && mStyle == aOther.mStyle &&
              mColor == aOther.mColor &&
-             mBaselineOffset == aOther.mBaselineOffset;
+             mBaselineOffset == aOther.mBaselineOffset &&
+             mTextUnderlineOffset == aOther.mTextUnderlineOffset;
     }
 
     bool operator!=(const LineDecoration& aOther) const {
