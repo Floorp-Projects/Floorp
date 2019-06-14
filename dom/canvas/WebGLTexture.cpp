@@ -1029,6 +1029,13 @@ void WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname,
     mContext->gl->fTexParameterf(texTarget.get(), pname, clamped.f);
 }
 
+void WebGLTexture::Truncate() {
+  for (auto& cur : mImageInfoArr) {
+    cur = {};
+  }
+  InvalidateCaches();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLTexture)
