@@ -27,6 +27,7 @@
       <button id="create-login-button" data-l10n-id="create-login-button"></button>
       <menu-button data-l10n-id="menu-button"
                    data-l10n-attrs="button-title,
+                                    menuitem-import,
                                     menuitem-preferences"></menu-button>
     </header>
     <login-list data-l10n-id="login-list"
@@ -141,7 +142,12 @@
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/menu-button.css">
       <button class="menu-button alternate-button"></button>
       <ul class="menu" role="menu" aria-hidden="true">
-        <li role="menuitem" class="menuitem"><button class="menuitem-button menuitem-preferences alternate-button"></button></li>
+        <li role="menuitem" class="menuitem windows-only">
+          <button class="menuitem-button menuitem-import alternate-button" data-event-name="AboutLoginsImport"></button>
+        </li>
+        <li role="menuitem" class="menuitem">
+          <button class="menuitem-button menuitem-preferences alternate-button" data-event-name="AboutLoginsOpenPreferences"></button>
+        </li>
       </ul>
     </template>
 
