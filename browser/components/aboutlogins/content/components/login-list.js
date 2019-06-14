@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import LoginListItem from "chrome://browser/content/aboutlogins/components/login-list-item.js";
-import ReflectedFluentElement from "chrome://browser/content/aboutlogins/components/reflected-fluent-element.js";
+import LoginListItem from "./login-list-item.js";
+import ReflectedFluentElement from "./reflected-fluent-element.js";
 
 const collator = new Intl.Collator();
 const sortFnOptions = {
