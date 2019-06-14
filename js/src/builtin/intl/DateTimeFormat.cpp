@@ -548,14 +548,12 @@ bool js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp) {
 
   mozilla::Range<const char16_t> skelChars = skeleton.twoByteRange();
 
-  UErrorCode status = U_ZERO_ERROR;
+  SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
   UDateTimePatternGenerator* gen =
-      udatpg_open(IcuLocale(locale.get()), &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
+      sharedIntlData.getDateTimePatternGenerator(cx, locale.get());
+  if (!gen) {
     return false;
   }
-  ScopedICUObject<UDateTimePatternGenerator, udatpg_close> toClose(gen);
 
   JSString* str = CallICU(
       cx, [gen, &skelChars](UChar* chars, uint32_t size, UErrorCode* status) {
