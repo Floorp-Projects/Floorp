@@ -10,6 +10,7 @@
 // used by a subclass, specific to local tabs.
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
+loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/deprecated-thread-client");
 loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
 
 /**
@@ -404,7 +405,16 @@ function TargetMixin(parentClass) {
           "TargetMixin sub class should set _threadActor before calling " + "attachThread"
         );
       }
-      this.threadClient = await this.getFront("context");
+      if (this.getTrait("hasThreadFront")) {
+        this.threadClient = await this.getFront("context");
+      } else {
+        // Backwards compat for Firefox 68
+        // mimics behavior of a front
+        this.threadClient = new ThreadClient(this._client, this._threadActor);
+        this.fronts.set("context", this.threadClient);
+        this.threadClient.actorID = this._threadActor;
+        this.manage(this.threadClient);
+      }
       const result = await this.threadClient.attach(options);
 
       this.threadClient.on("newSource", this._onNewSource);
