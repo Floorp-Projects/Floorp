@@ -1916,9 +1916,9 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
   RefPtr<Http2PushTransactionBuffer> transactionBuffer =
       new Http2PushTransactionBuffer();
   transactionBuffer->SetConnection(self);
-  Http2PushedStream* pushedStream = new Http2PushedStream(
+  nsAutoPtr<Http2PushedStream> pushedStream(new Http2PushedStream(
       transactionBuffer, self, associatedStream, promisedID,
-      self->mCurrentForegroundTabOuterContentWindowId);
+      self->mCurrentForegroundTabOuterContentWindowId));
 
   rv = pushedStream->ConvertPushHeaders(&self->mDecompressor,
                                         self->mDecompressBuffer,
@@ -1927,7 +1927,6 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
   if (rv == NS_ERROR_NOT_IMPLEMENTED) {
     LOG3(("Http2Session::PushPromise Semantics not Implemented\n"));
     self->GenerateRstStream(REFUSED_STREAM_ERROR, promisedID);
-    delete pushedStream;
     self->ResetDownstreamState();
     return NS_OK;
   }
@@ -1936,7 +1935,6 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
     // This means the decompression completed ok, but there was a problem with
     // the decoded headers. Reset the stream and go away.
     self->GenerateRstStream(PROTOCOL_ERROR, promisedID);
-    delete pushedStream;
     self->ResetDownstreamState();
     return NS_OK;
   } else if (NS_FAILED(rv)) {
@@ -1945,14 +1943,17 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
     return rv;
   }
 
+  WeakPtr<Http2Stream> pushedWeak = pushedStream.forget();
+
   // Ownership of the pushed stream is by the transaction hash, just as it
   // is for a client initiated stream. Errors that aren't fatal to the
   // whole session must call cleanupStream() after this point in order
   // to remove the stream from that hash.
-  self->mStreamTransactionHash.Put(transactionBuffer, pushedStream);
-  self->mPushedStreams.AppendElement(pushedStream);
+  self->mStreamTransactionHash.Put(transactionBuffer, pushedWeak);
+  self->mPushedStreams.AppendElement(
+      static_cast<Http2PushedStream*>(pushedWeak.get()));
 
-  if (self->RegisterStreamID(pushedStream, promisedID) == kDeadStreamID) {
+  if (self->RegisterStreamID(pushedWeak, promisedID) == kDeadStreamID) {
     LOG3(("Http2Session::RecvPushPromise registerstreamid failed\n"));
     self->mGoAwayReason = INTERNAL_ERROR;
     return NS_ERROR_FAILURE;
@@ -1964,23 +1965,23 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
   // Fake the request side of the pushed HTTP transaction. Sets up hash
   // key and origin
   uint32_t notUsed;
-  Unused << pushedStream->ReadSegments(nullptr, 1, &notUsed);
+  Unused << pushedWeak->ReadSegments(nullptr, 1, &notUsed);
 
   nsAutoCString key;
-  if (!pushedStream->GetHashKey(key)) {
+  if (!static_cast<Http2PushedStream*>(pushedWeak.get())->GetHashKey(key)) {
     LOG3(
         ("Http2Session::RecvPushPromise one of :authority :scheme :path "
          "missing from push\n"));
-    self->CleanupStream(pushedStream, NS_ERROR_FAILURE, PROTOCOL_ERROR);
+    self->CleanupStream(pushedWeak, NS_ERROR_FAILURE, PROTOCOL_ERROR);
     self->ResetDownstreamState();
     return NS_OK;
   }
 
   // does the pushed origin belong on this connection?
   LOG3(("Http2Session::RecvPushPromise %p origin check %s", self,
-        pushedStream->Origin().get()));
+        pushedWeak->Origin().get()));
   nsCOMPtr<nsIURI> pushedOrigin;
-  rv = Http2Stream::MakeOriginURL(pushedStream->Origin(), pushedOrigin);
+  rv = Http2Stream::MakeOriginURL(pushedWeak->Origin(), pushedOrigin);
   nsAutoCString pushedHostName;
   int32_t pushedPort = -1;
   if (NS_SUCCEEDED(rv)) {
@@ -2002,25 +2003,26 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
   if (NS_FAILED(rv) || !self->TestJoinConnection(pushedHostName, pushedPort)) {
     LOG3((
         "Http2Session::RecvPushPromise %p pushed stream mismatched origin %s\n",
-        self, pushedStream->Origin().get()));
-    self->CleanupStream(pushedStream, NS_ERROR_FAILURE, REFUSED_STREAM_ERROR);
+        self, pushedWeak->Origin().get()));
+    self->CleanupStream(pushedWeak, NS_ERROR_FAILURE, REFUSED_STREAM_ERROR);
     self->ResetDownstreamState();
     return NS_OK;
   }
 
-  if (pushedStream->TryOnPush()) {
+  if (static_cast<Http2PushedStream*>(pushedWeak.get())->TryOnPush()) {
     LOG3(
         ("Http2Session::RecvPushPromise %p channel implements "
          "nsIHttpPushListener "
          "stream %p will not be placed into session cache.\n",
-         self, pushedStream));
+         self, pushedWeak.get()));
   } else {
     LOG3(("Http2Session::RecvPushPromise %p place stream into session cache\n",
           self));
-    if (!cache->RegisterPushedStreamHttp2(key, pushedStream)) {
+    if (!cache->RegisterPushedStreamHttp2(
+            key, static_cast<Http2PushedStream*>(pushedWeak.get()))) {
       // This only happens if they've already pushed us this item.
       LOG3(("Http2Session::RecvPushPromise registerPushedStream Failed\n"));
-      self->CleanupStream(pushedStream, NS_ERROR_FAILURE, REFUSED_STREAM_ERROR);
+      self->CleanupStream(pushedWeak, NS_ERROR_FAILURE, REFUSED_STREAM_ERROR);
       self->ResetDownstreamState();
       return NS_OK;
     }
@@ -2031,14 +2033,14 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
     nsCOMPtr<nsICacheStorageService> css =
         do_GetService("@mozilla.org/netwerk/cache-storage-service;1");
     mozilla::OriginAttributes oa;
-    pushedStream->GetOriginAttributes(&oa);
+    pushedWeak->GetOriginAttributes(&oa);
     RefPtr<LoadContextInfo> lci = GetLoadContextInfo(false, oa);
     nsCOMPtr<nsICacheStorage> ds;
     css->DiskCacheStorage(lci, false, getter_AddRefs(ds));
     // Build up our full URL for the cache lookup
     nsAutoCString spec;
-    spec.Assign(pushedStream->Origin());
-    spec.Append(pushedStream->Path());
+    spec.Assign(pushedWeak->Origin());
+    spec.Append(pushedWeak->Path());
     nsCOMPtr<nsIURI> pushedURL;
     // Nifty trick: this doesn't actually do anything origin-specific, it's just
     // named that way. So by passing it the full spec here, we get a URL with
@@ -2051,7 +2053,9 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
       LOG3(("Http2Session::RecvPushPromise %p check disk cache for entry",
             self));
       RefPtr<CachePushCheckCallback> cpcc = new CachePushCheckCallback(
-          self, promisedID, pushedStream->GetRequestString());
+          self, promisedID,
+          static_cast<Http2PushedStream*>(pushedWeak.get())
+              ->GetRequestString());
       if (NS_FAILED(ds->AsyncOpenURI(
               pushedURL, EmptyCString(),
               nsICacheStorage::OPEN_READONLY | nsICacheStorage::OPEN_SECRETLY,
@@ -2060,15 +2064,19 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
             ("Http2Session::RecvPushPromise %p failed to open cache entry for "
              "push check",
              self));
+      } else if (!pushedWeak) {
+        // We have an up to date entry in our cache, so the stream was closed
+        // and released in CachePushCheckCallback::OnCacheEntryCheck().
+        return NS_OK;
       }
     }
   }
 
-  pushedStream->SetHTTPState(Http2Stream::RESERVED_BY_REMOTE);
+  pushedWeak->SetHTTPState(Http2Stream::RESERVED_BY_REMOTE);
   static_assert(Http2Stream::kWorstPriority >= 0,
                 "kWorstPriority out of range");
-  uint32_t priorityDependency = pushedStream->PriorityDependency();
-  uint8_t priorityWeight = pushedStream->PriorityWeight();
+  uint32_t priorityDependency = pushedWeak->PriorityDependency();
+  uint8_t priorityWeight = pushedWeak->PriorityWeight();
   self->SendPriorityFrame(promisedID, priorityDependency, priorityWeight);
   self->ResetDownstreamState();
   return NS_OK;
