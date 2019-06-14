@@ -53,5 +53,6 @@ add_task(async function() {
   await reload(dbg, "long.js");
   await waitForSelectedSource(dbg, "long.js");
 
+  await waitForRequestsToSettle(dbg);
   ok(getSelectedSource().url.includes("long.js"), "Selected source is long.js");
 });
