@@ -311,6 +311,7 @@ class WebGLTexture final : public nsWrapperCache,
   void PopulateMipChain(uint32_t maxLevel);
   bool IsMipAndCubeComplete(uint32_t maxLevel, bool ensureInit,
                             bool* out_initFailed) const;
+  void Truncate();
 
   bool IsCubeMap() const { return (mTarget == LOCAL_GL_TEXTURE_CUBE_MAP); }
 };

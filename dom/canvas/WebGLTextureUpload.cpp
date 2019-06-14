@@ -1095,6 +1095,7 @@ void WebGLTexture::TexStorage(TexTarget target, GLsizei levels,
 
   if (error == LOCAL_GL_OUT_OF_MEMORY) {
     mContext->ErrorOutOfMemory("Ran out of memory during texture allocation.");
+    Truncate();
     return;
   }
   if (error) {
@@ -1232,6 +1233,7 @@ void WebGLTexture::TexImage(TexImageTarget target, GLint level,
 
   if (glError == LOCAL_GL_OUT_OF_MEMORY) {
     mContext->ErrorOutOfMemory("Driver ran out of memory during upload.");
+    Truncate();
     return;
   }
 
@@ -1312,6 +1314,7 @@ void WebGLTexture::TexSubImage(TexImageTarget target, GLint level,
 
   if (glError == LOCAL_GL_OUT_OF_MEMORY) {
     mContext->ErrorOutOfMemory("Driver ran out of memory during upload.");
+    Truncate();
     return;
   }
 
@@ -1418,6 +1421,7 @@ void WebGLTexture::CompressedTexImage(TexImageTarget target, GLint level,
   mContext->OnDataAllocCall();
   if (error == LOCAL_GL_OUT_OF_MEMORY) {
     mContext->ErrorOutOfMemory("Ran out of memory during upload.");
+    Truncate();
     return;
   }
   if (error) {
@@ -1564,6 +1568,7 @@ void WebGLTexture::CompressedTexSubImage(
       blob->mPtr);
   if (error == LOCAL_GL_OUT_OF_MEMORY) {
     mContext->ErrorOutOfMemory("Ran out of memory during upload.");
+    Truncate();
     return;
   }
   if (error) {
@@ -1916,7 +1921,7 @@ bool WebGLTexture::ValidateCopyTexImageForFeedback(uint32_t level,
 }
 
 static bool DoCopyTexOrSubImage(WebGLContext* webgl, bool isSubImage,
-                                const WebGLTexture* tex, TexImageTarget target,
+                                WebGLTexture* const tex, const TexImageTarget target,
                                 GLint level, GLint xWithinSrc, GLint yWithinSrc,
                                 uint32_t srcTotalWidth, uint32_t srcTotalHeight,
                                 const webgl::FormatUsageInfo* srcUsage,
@@ -2005,6 +2010,7 @@ static bool DoCopyTexOrSubImage(WebGLContext* webgl, bool isSubImage,
 
   if (error == LOCAL_GL_OUT_OF_MEMORY) {
     webgl->ErrorOutOfMemory("Ran out of memory during texture copy.");
+    tex->Truncate();
     return false;
   }
 
