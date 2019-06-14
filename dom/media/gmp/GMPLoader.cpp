@@ -160,12 +160,6 @@ class WinSandboxStarter : public mozilla::gmp::SandboxStarter {
 class MacSandboxStarter : public mozilla::gmp::SandboxStarter {
  public:
   bool Start(const char* aLibPath) override {
-    // If we started the sandbox at launch ("earlyinit"),
-    // then don't try to start the sandbox again.
-    if (IsMacSandboxStarted()) {
-      return true;
-    }
-
     std::string err;
     bool rv = mozilla::StartMacSandbox(mInfo, err);
     if (!rv) {

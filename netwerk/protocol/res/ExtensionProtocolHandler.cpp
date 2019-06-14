@@ -52,10 +52,6 @@
 #  include "WinUtils.h"
 #endif
 
-#if defined(XP_MACOSX)
-#  include "nsMacUtilsImpl.h"
-#endif
-
 #define EXTENSION_SCHEME "moz-extension"
 using mozilla::dom::Promise;
 using mozilla::ipc::FileDescriptor;
@@ -616,7 +612,7 @@ Result<bool, nsresult> ExtensionProtocolHandler::DevRepoContains(
   // On the first invocation, set mDevRepo
   if (!mAlreadyCheckedDevRepo) {
     mAlreadyCheckedDevRepo = true;
-    MOZ_TRY(nsMacUtilsImpl::GetRepoDir(getter_AddRefs(mDevRepo)));
+    MOZ_TRY(mozilla::GetRepoDir(getter_AddRefs(mDevRepo)));
     if (MOZ_LOG_TEST(gExtProtocolLog, LogLevel::Debug)) {
       nsAutoCString repoPath;
       Unused << mDevRepo->GetNativePath(repoPath);
