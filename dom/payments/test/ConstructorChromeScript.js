@@ -74,6 +74,7 @@ function checkSimplestRequest(payRequest) {
   }
 }
 
+// eslint-disable-next-line complexity
 function checkComplexRequest(payRequest) {
   if (payRequest.topLevelPrincipal.origin != "https://example.com") {
     emitTestFail("Top level principal's origin should be 'https://example.com', but got '"

@@ -16,7 +16,7 @@ function IsD2DEnabled() {
     try {
         enabled = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).D2DEnabled;
     } catch(e) {}
-    
+
     return enabled;
 }
 
@@ -34,7 +34,7 @@ function IsLinux() {
 
 function IsAzureSkia() {
   var enabled = false;
-  
+
   try {
     var backend = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).getInfo().AzureCanvasBackend;
     enabled = (backend == "skia");
@@ -45,7 +45,7 @@ function IsAzureSkia() {
 
 function IsAzureCairo() {
   var enabled = false;
-  
+
   try {
     var backend = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).getInfo().AzureCanvasBackend;
     enabled = (backend == "cairo");
@@ -3639,7 +3639,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.drawImage(undefined, 0, 0);
-} catch (e) { _thrown = e }; 
+} catch (e) { _thrown = e };
 ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 var _thrown = undefined; try {
@@ -5891,6 +5891,7 @@ isPixel(ctx, 40,20, 0,255,0,255, 2);
 <canvas id="c220" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
 
+// eslint-disable-next-line complexity
 function test_2d_gradient_linear_nonfinite() {
 
 var canvas = document.getElementById('c220');
@@ -6704,6 +6705,7 @@ var _thrown = undefined; try {
 <canvas id="c244" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
 
+// eslint-disable-next-line complexity
 function test_2d_gradient_radial_nonfinite() {
 
 var canvas = document.getElementById('c244');
@@ -7666,6 +7668,7 @@ ok(imgdata2.data[2] === 255, "imgdata2.data[\""+(2)+"\"] === 255");
 <canvas id="c265" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
 
+// eslint-disable-next-line complexity
 function test_2d_imageData_get_nonfinite() {
 
 var canvas = document.getElementById('c265');
@@ -8564,6 +8567,7 @@ isPixel(ctx, 75,25, 0,255,0,255, 2);
 <script>
 
 
+// eslint-disable-next-line complexity
 function test_2d_imageData_put_created() {
 
 var canvas = document.getElementById('c291');
@@ -8853,6 +8857,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 2);
 <canvas id="c299" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
 
+// eslint-disable-next-line complexity
 function test_2d_imageData_put_nonfinite() {
 
 var canvas = document.getElementById('c299');
@@ -9236,7 +9241,7 @@ var ctx = canvas.getContext('2d');
 var imgdata = { width: 1, height: 1, data: [255, 0, 0, 255] };
 var _thrown = undefined; try {
   ctx.putImageData(imgdata, 0, 0);
-} catch (e) { _thrown = e }; 
+} catch (e) { _thrown = e };
 ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 var _thrown = undefined; try {
@@ -10456,6 +10461,7 @@ isPixel(ctx, 86,25, 0,255,0,255, 0);
 <canvas id="c331" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
 
+// eslint-disable-next-line complexity
 function test_2d_missingargs() {
 
 var canvas = document.getElementById('c331');
@@ -19482,7 +19488,7 @@ ok(ctx.createLinearGradient(0, 0, 0, 0).addColorStop(0, 'white') === undefined, 
   <img id="i3" src="image_green-redirect">
 </p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -19502,7 +19508,7 @@ function test_bug397524() {
   $("canvas1").toDataURL("image/png");
 
   // Should not be able to get the data out of a cross-site load
-  var gotData = false;  
+  var gotData = false;
   try {
     $("canvas2").toDataURL("image/png");
     gotData = true;
@@ -19514,7 +19520,7 @@ function test_bug397524() {
   is(gotData, false, "Shouldn't be able to read images cross-site!");
 
   // Should not be able to get the data out of a redirected cross-site load
-  var gotData = false;  
+  var gotData = false;
   try {
     $("canvas3").toDataURL("image/png");
     gotData = true;
@@ -21160,7 +21166,7 @@ by multiplying by 255/a and rounding down.  So if
 
 we will get a change in value when we go through a putImageData/getImageData cycle.  Therefore, to make sure we don't have to worry about our color
 channels, our alpha channel should never be < 250, unless it's 0.  And when it's 0, all our color channels will come back as 0 too. */
-  
+
 /* Our tests.  Each test has two arrays: the array of values to set and the
    array of values that should read back as a result. */
 var tests = [
@@ -21236,7 +21242,7 @@ function doTests(type) {
 
 var canvas681;
 var ctx681;
-                      
+
 function test_2d_imagedata_coercion() {
 
 canvas681 = document.getElementById('c681');
@@ -22337,7 +22343,8 @@ function asyncTestsDone() {
 		setTimeout(asyncTestsDone, 500);
 	}
  }
- 
+
+// eslint-disable-next-line complexity
 function runTests() {
 /**
  * xor and lighter aren't well handled by cairo; they mostly work, but we don't want
@@ -22353,7 +22360,7 @@ function runTests() {
  //test_2d_composite_canvas_lighter();
  //test_2d_composite_clip_xor();
  //test_2d_composite_clip_lighter();
- 
+
 /**
  * Temporarily disabled tests; unbounded operators changed behaviour, need to reevaluate tests
  */
@@ -22365,7 +22372,7 @@ function runTests() {
  //test_2d_composite_image_destination_in();
  //test_2d_composite_image_source_in();
  //test_2d_composite_image_source_out();
- 
+
  /**
   * These tests only pass on Mac OS X >= 10.5; see bug 450114
   */
@@ -22373,7 +22380,7 @@ function runTests() {
  //test_2d_gradient_radial_touch1();
  //test_2d_gradient_radial_touch2();
  //test_2d_gradient_radial_touch3();
- 
+
  /**
   * These 19 tests receive special makefile treatment
   */
@@ -22396,7 +22403,7 @@ function runTests() {
  //test_2d_path_arc_shape_3();
  //test_2d_path_rect_selfintersect();
  //test_2d_strokeRect_zero_5();
- 
+
  /**
   * Other tests not being run
   */
@@ -22408,10 +22415,10 @@ function runTests() {
  //test_2d_composite_uncovered_pattern_destination_in();
  //test_2d_composite_uncovered_pattern_source_in();
  //test_2d_composite_uncovered_pattern_source_out();
- 
+
  //test_2d_path_rect_zero_6();	// This test is bogus according to the spec; see bug 407107
 
- // These tests are bogus according to the spec: shadows should not be 
+ // These tests are bogus according to the spec: shadows should not be
  // drawn if shadowBlur, shadowOffsetX, and shadowOffsetY are all zero, whic
  // they are in these tests
  //test_2d_shadow_composite_3();
@@ -25772,7 +25779,7 @@ function runTests() {
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_drawImage_animated_gif");
  }
- 
+
  setTimeout(asyncTestsDone, 500);
 }
 

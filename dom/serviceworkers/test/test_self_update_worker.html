@@ -69,12 +69,12 @@ add_task(async function test_update() {
   let registration = await navigator.serviceWorker.register(
     "self_update_worker.sjs",
     { scope: "./test_self_update_worker.html?random=" + Date.now()})
-    .then(function(registration) {
-      worker = registration.installing;
+    .then(function(reg) {
+      worker = reg.installing;
       // We can't wait for 'activated' here, since it's possible for
       // the update process to kill the worker before it activates.
       // See: https://github.com/w3c/ServiceWorker/issues/1285
-      return waitForState(worker, 'activating', registration);
+      return waitForState(worker, 'activating', reg);
     });
 
   // We need to wait a reasonable time to give the self updating worker a chance
@@ -111,12 +111,12 @@ add_task(async function test_delay_update() {
   let registration = await navigator.serviceWorker.register(
     "self_update_worker.sjs",
     { scope: "./test_self_update_worker.html?random=" + Date.now()})
-    .then(function(registration) {
-      worker = registration.installing;
+    .then(function(reg) {
+      worker = reg.installing;
       // We can't wait for 'activated' here, since it's possible for
       // the update process to kill the worker before it activates.
       // See: https://github.com/w3c/ServiceWorker/issues/1285
-      return waitForState(worker, 'activating', registration);
+      return waitForState(worker, 'activating', reg);
     });
 
   // We need to wait a reasonable time to give the self updating worker a chance

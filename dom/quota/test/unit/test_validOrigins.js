@@ -14,6 +14,7 @@ async function testSteps()
     "https://example.com",
     // About
     "about:home",
+    "about:reader",
     // IPv6
     "https://[::]",
     "https://[ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]",

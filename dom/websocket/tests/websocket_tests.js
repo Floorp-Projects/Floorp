@@ -781,16 +781,16 @@ function test35() {
       ok(e.wasClean, "test 35a closed cleanly");
       var wsb = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-35b");
 
-      wsb.onopen = function(e) {
+      wsb.onopen = function(event) {
         ok(true, "test 35b open");
         wsb.close();
       }
 
-      wsb.onclose = function(e) {
+      wsb.onclose = function(event) {
         ok(true, "test 35b close");
-        ok(e.wasClean, "test 35b closed cleanly");
-        is(e.code, 3501, "test 35 custom server code");
-        is(e.reason, "my code", "test 35 custom server reason");
+        ok(event.wasClean, "test 35b closed cleanly");
+        is(event.code, 3501, "test 35 custom server code");
+        is(event.reason, "my code", "test 35 custom server reason");
         resolve();
       }
     }
@@ -810,10 +810,10 @@ function test36() {
       try {
         ws.close(13200);
         ok(false, "testing custom close code out of range");
-       } catch (e) {
-         ok(true, "testing custom close code out of range");
-         ws.close(3200);
-       }
+      } catch (ex) {
+        ok(true, "testing custom close code out of range");
+        ws.close(3200);
+      }
     }
 
     ws.onclose = function(e) {
@@ -837,10 +837,10 @@ function test37() {
       try {
 	ws.close(3100,"0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123");
         ok(false, "testing custom close reason out of range");
-       } catch (e) {
-         ok(true, "testing custom close reason out of range");
-         ws.close(3100,"012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012");
-       }
+      } catch (ex) {
+        ok(true, "testing custom close reason out of range");
+        ws.close(3100,"012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012");
+      }
     }
 
     ws.onclose = function(e) {
@@ -849,32 +849,32 @@ function test37() {
 
       var wsb = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-37b");
 
-      wsb.onopen = function(e) {
+      wsb.onopen = function(event) {
         // now test that a rejected close code and reason dont persist
         ok(true, "test 37b open");
         try {
           wsb.close(3101,"0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123");
           ok(false, "testing custom close reason out of range 37b");
-        } catch (e) {
+        } catch (ex) {
           ok(true, "testing custom close reason out of range 37b");
           wsb.close();
         }
       }
 
-      wsb.onclose = function(e) {
+      wsb.onclose = function(event) {
         ok(true, "test 37b close");
-        ok(e.wasClean, "test 37b closed cleanly");
+        ok(event.wasClean, "test 37b closed cleanly");
 
         var wsc = CreateTestWS("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket", "test-37c");
 
-        wsc.onopen = function(e) {
+        wsc.onopen = function(eventInner) {
           ok(true, "test 37c open");
           wsc.close();
         }
 
-        wsc.onclose = function(e) {
-          isnot(e.code, 3101, "test 37c custom server code not present");
-          is(e.reason, "", "test 37c custom server reason not present");
+        wsc.onclose = function(eventInner) {
+          isnot(eventInner.code, 3101, "test 37c custom server code not present");
+          is(eventInner.reason, "", "test 37c custom server reason not present");
           resolve();
         }
       }
@@ -967,25 +967,25 @@ function test41() {
       // establish a hsts policy for example.com
       var wsb = CreateTestWS("wss://example.com/tests/dom/websocket/tests/file_websocket", "test-41b", 1);
 
-      wsb.onopen = function(e) {
+      wsb.onopen = function(event) {
         ok(true, "test 41b open");
         wsb.close();
       }
 
-      wsb.onclose = function(e) {
+      wsb.onclose = function(event) {
         ok(true, "test 41b close");
 
         // try ws:// again, it should be done over wss:// now due to hsts
         var wsc = CreateTestWS("ws://example.com/tests/dom/websocket/tests/file_websocket", "test-41c");
 
-        wsc.onopen = function(e) {
+        wsc.onopen = function() {
           ok(true, "test 41c open");
           is(wsc.url, "wss://example.com/tests/dom/websocket/tests/file_websocket",
              "test 41c ws should be redirected by hsts to wss");
           wsc.close();
         }
 
-        wsc.onclose = function(e) {
+        wsc.onclose = function() {
           ok(true, "test 41c close");
 
           // clean up the STS state
@@ -1266,4 +1266,3 @@ function test49()
     }
   });
 }
-

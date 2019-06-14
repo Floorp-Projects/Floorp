@@ -139,8 +139,8 @@
         reg.unregister().then(function(success) {
           ok(success, "The worker should be unregistered successfully");
           resolve();
-        }, function(e) {
-          dump("Error unregistering the worker: " + e + "\n");
+        }, function(error) {
+          dump("Error unregistering the worker: " + error + "\n");
         });
       } else if (e.data.type == "check") {
         ok(e.data.status, e.data.msg);
@@ -206,4 +206,3 @@
 </pre>
 </body>
 </html>
-

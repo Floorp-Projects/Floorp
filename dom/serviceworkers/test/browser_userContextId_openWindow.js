@@ -11,9 +11,11 @@ const USER_CONTEXT_ID = 3
 let mockAlertsService = {
   showAlert: function(alert, alertListener) {
     ok(true, "Showing alert");
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     setTimeout(function () {
       alertListener.observe(null, "alertshow", alert.cookie);
     }, 100);
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     setTimeout(function () {
       alertListener.observe(null, "alertclickcallback", alert.cookie);
     }, 100);
@@ -81,6 +83,7 @@ add_task(async function test() {
   let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
   // here the test.
+  /* eslint-disable no-shadow */
   let uci = await ContentTask.spawn(browser, URI, uri => {
     let uci = content.document.nodePrincipal.userContextId;
 
@@ -105,6 +108,7 @@ add_task(async function test() {
       return uci;
     });
   });
+  /* eslint-enable no-shadow */
 
   is(uci, USER_CONTEXT_ID, "Tab runs with UCI " + USER_CONTEXT_ID);
 
@@ -113,6 +117,7 @@ add_task(async function test() {
   is(newTab.getAttribute("usercontextid"), USER_CONTEXT_ID, "New tab has UCI equal " + USER_CONTEXT_ID);
 
   // wait for SW unregistration
+  /* eslint-disable no-shadow */
   uci = await ContentTask.spawn(browser, null, () => {
     let uci = content.document.nodePrincipal.userContextId;
 
@@ -123,6 +128,7 @@ add_task(async function test() {
       return uci;
     });
   });
+  /* eslint-enable no-shadow */
 
   is(uci, USER_CONTEXT_ID, "Tab runs with UCI " + USER_CONTEXT_ID);
 

@@ -13,8 +13,8 @@ onmessage = function(event) {
   var results = [];
   for (var i = 1; i <= 2; i++) {
     var worker = new Worker("fibonacci_worker.js");
-    worker.onmessage = function(event) {
-      results.push(parseInt(event.data));
+    worker.onmessage = function(msg) {
+      results.push(parseInt(msg.data));
       if (results.length == 2) {
         postMessage(results[0] + results[1]);
       }

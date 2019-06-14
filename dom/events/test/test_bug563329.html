@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=563329
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=563329">Mozilla Bug 563329</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -25,7 +25,7 @@ var target = null;
 var testGen = getTests();
 var currentTest = null;
 
-function getTests() {
+function* getTests() {
   let tests = [
     { "func": function() { setTimeout(doCheckContextMenu, 100)}, "message": "Context menu should has fired"},
     { "func": function() { setTimeout(doCheckDuration, 100)}, "message": "Context menu should has fired with delay"},

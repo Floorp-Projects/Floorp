@@ -7,8 +7,8 @@ self.onmessage = function (event) {
   // This then-handler should be executed inside the top-level event loop,
   // within the context of the worker's global.
   Promise.resolve().then(function () {
-    self.onmessage = function (event) {
-      if (event.data !== "pause") {
+    self.onmessage = function (e) {
+      if (e.data !== "pause") {
         return;
       }
       // This then-handler should be executed inside the top-level event loop,

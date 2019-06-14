@@ -1,8 +1,8 @@
 onmessage = function(event) {
   if (event.data != 0) {
     var worker = new Worker('websocket_loadgroup_worker.js');
-    worker.onmessage = function(event) {
-      postMessage(event.data);
+    worker.onmessage = function(e) {
+      postMessage(e.data);
     }
 
     worker.postMessage(event.data - 1);

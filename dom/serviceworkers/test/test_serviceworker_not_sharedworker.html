@@ -36,13 +36,13 @@
       window.onmessage = function(e) {
         is(e.data.result, "serviceworker", "We should be talking to a service worker");
         window.onmessage = null;
-        worker.port.onmessage = function(e) {
-          is(e.data.result, "sharedworker", "We should be talking to a shared worker");
+        worker.port.onmessage = function(msg) {
+          is(msg.data.result, "sharedworker", "We should be talking to a shared worker");
           registration.unregister().then(function(success) {
             ok(success, "unregister should succeed");
             SimpleTest.finish();
-          }, function(e) {
-            dump("Unregistering the SW failed with " + e + "\n");
+          }, function(ex) {
+            dump("Unregistering the SW failed with " + ex + "\n");
             SimpleTest.finish();
           });
         };

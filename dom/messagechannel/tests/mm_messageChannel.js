@@ -41,8 +41,8 @@ function basicTest(msg) {
   port = msg.ports[0];
   is(toString.call(port), "[object MessagePort]", "created MessagePort.");
 
-  port.onmessage = (msg) => {
-    is(msg.data, "BasicTest:StartTest", "Replied message is correct.");
+  port.onmessage = (message) => {
+    is(message.data, "BasicTest:StartTest", "Replied message is correct.");
     port.postMessage("BasicTest:TestOK");
   };
 
@@ -53,8 +53,8 @@ function closeTest(msg) {
   port = msg.ports[0];
   is(toString.call(port), "[object MessagePort]", "created MessagePort.");
 
-  port.onmessage = (msg) => {
-    ok(msg.data,"CloseTest:StartTest", "Replied message is correct.");
+  port.onmessage = (message) => {
+    ok(message.data,"CloseTest:StartTest", "Replied message is correct.");
     port.postMessage("CloseTest:TestOK");
   };
 
@@ -73,4 +73,3 @@ function emptyTest(msg) {
 function notTransferableTest(msg) {
   sendAsyncMessage("NotTransferableTest:FinishPrepare", {message: "OK"});
 }
-

@@ -21,11 +21,11 @@
   var file = new File(["file_content"], "file");
   var obj = { body : "object_content" };
 
-  function readBlob(blob) {
+  function readBlob(blobToRead) {
     return new Promise(function(resolve, reject) {
       var reader = new FileReader();
       reader.onloadend = () => resolve(reader.result);
-      reader.readAsText(blob);
+      reader.readAsText(blobToRead);
     });
   }
 
@@ -62,13 +62,13 @@
     });
   }
 
-  function testPostMessageObject(obj, test) {
+  function testPostMessageObject(object, test) {
     var p = new Promise(function(res, rej) {
       window.onmessage = function(e) {
         if (e.data === "READY") {
-          registration.active.postMessage(obj)
+          registration.active.postMessage(object)
         } else {
-          test(obj, e.data).then(res);
+          test(object, e.data).then(res);
         }
       }
     });
@@ -107,4 +107,3 @@
 </pre>
 </body>
 </html>
-

@@ -142,7 +142,7 @@ async function test_noUint8Array_continue(r, that) {
   try {
     await r.blob();
     that.ok(false, "We cannot have a blob here!");
-  } catch {
+  } catch (ex) {
     that.ok(true, "We cannot have a blob here!");
   }
 }

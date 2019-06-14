@@ -337,7 +337,7 @@ function testBFCache() {
         iframe.addEventListener('load', function() {
           socket.send(HELLO_WORLD, '127.0.0.1', msg.remotePort);
 
-          function recv_again_callback(msg) {
+          function recv_again_callback(message) {
             socket.removeEventListener('message', recv_again_callback);
             ok(false, 'should not receive packet after page unload');
           }
