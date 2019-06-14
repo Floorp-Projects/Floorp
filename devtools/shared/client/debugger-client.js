@@ -20,7 +20,7 @@ loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socke
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "RootFront", "devtools/shared/fronts/root", true);
-loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
+loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client", true);
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);
 
@@ -230,7 +230,7 @@ DebuggerClient.prototype = {
         return;
       }
       if (client.detach) {
-        client.detach(detachClients);
+        client.detach().then(detachClients);
         return;
       }
       detachClients();
@@ -248,22 +248,16 @@ DebuggerClient.prototype = {
    * @param object options
    *        Configuration options.
    */
-  attachThread: function(threadActor, options = {}) {
+  attachThread: async function(threadActor, options = {}) {
     if (this._clients.has(threadActor)) {
       const client = this._clients.get(threadActor);
       return promise.resolve([{}, client]);
     }
 
-    const packet = {
-      to: threadActor,
-      type: "attach",
-      options,
-    };
-    return this.request(packet).then(response => {
-      const threadClient = new ThreadClient(this, threadActor);
-      this.registerClient(threadClient);
-      return [response, threadClient];
-    });
+    const threadClient = new ThreadClient(this, threadActor);
+    const response = await threadClient.attach(options);
+    this.registerClient(threadClient);
+    return [response, threadClient];
   },
 
   /**
