@@ -485,6 +485,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   nsresult ProcessCrossOriginHeader();
   nsresult ProcessCrossOriginResourcePolicyHeader();
 
+  nsresult ComputeCrossOriginOpenerPolicyMismatch();
+
   /**
    * A function to process a single security header (STS or PKP), assumes
    * some basic sanity checks have been applied to the channel. Called
@@ -734,6 +736,10 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   // True only when we have computed the value of the top window origin.
   uint32_t mTopWindowOriginComputed : 1;
+
+  // True if this is a navigation to a page with a different cross origin
+  // opener policy ( see ComputeCrossOriginOpenerPolicyMismatch )
+  uint32_t mHasCrossOriginOpenerPolicyMismatch : 1;
 
   // The origin of the top window, only valid when mTopWindowOriginComputed is
   // true.

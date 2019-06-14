@@ -380,4 +380,6 @@ interface nsIHttpChannelInternal : nsISupports
 
     [noscript]
     nsILoadInfo_CrossOriginOpenerPolicy getCrossOriginOpenerPolicy();
+
+    [notxpcom, nostdcall] attribute boolean hasSandboxedAuxiliaryNavigations;
 };
