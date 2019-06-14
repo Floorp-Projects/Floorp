@@ -6,6 +6,29 @@ ChromeUtils.import("resource://normandy/actions/AddonStudyAction.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
 
+const FIXTURE_ADDON_ID = "normandydriver@example.com";
+const FIXTURE_ADDON_BASE_URL = "http://example.com/browser/toolkit/components/normandy/test/browser/addons/";
+
+const FIXTURE_ADDONS = [
+  "normandydriver-1.0",
+  "normandydriver-2.0",
+];
+
+// Generate fixture add-on details
+const FIXTURE_ADDON_DETAILS = {};
+FIXTURE_ADDONS.forEach(addon => {
+  const filename = `${addon}.xpi`;
+  const dir = getChromeDir(getResolvedURI(gTestPath));
+  dir.append("addons");
+  dir.append(filename);
+  const xpiFile = Services.io.newFileURI(dir).QueryInterface(Ci.nsIFileURL).file;
+
+  FIXTURE_ADDON_DETAILS[addon] = {
+    url: `${FIXTURE_ADDON_BASE_URL}${filename}`,
+    hash: CryptoUtils.getFileHash(xpiFile, "sha256"),
+  };
+});
+
 function addonStudyRecipeFactory(overrides = {}) {
   let args = {
     name: "Fake name",
@@ -18,6 +41,114 @@ function addonStudyRecipeFactory(overrides = {}) {
     delete overrides.arguments;
   }
   return recipeFactory(Object.assign({ action: "addon-study", arguments: args }, overrides));
+}
+
+function extensionDetailsFactory(overrides = {}) {
+  return Object.assign({
+    id: 1,
+    name: "Normandy Fixture",
+    xpi: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
+    extension_id: FIXTURE_ADDON_ID,
+    version: "1.0",
+    hash: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].hash,
+    hash_algorithm: "sha256",
+  }, overrides);
+}
+
+/**
+ * Utility function to uninstall addons safely. Preventing the issue mentioned
+ * in bug 1485569.
+ *
+ * addon.uninstall is async, but it also triggers the AddonStudies onUninstall
+ * listener, which is not awaited. Wrap it here and trigger a promise once it's
+ * done so we can wait until AddonStudies cleanup is finished.
+ */
+async function safeUninstallAddon(addon) {
+  const activeStudies = (await AddonStudies.getAll()).filter(study => study.active);
+  const matchingStudy = activeStudies.find(study => study.addonId === addon.id);
+
+  let studyEndedPromise;
+  if (matchingStudy) {
+    studyEndedPromise = TestUtils.topicObserved("shield-study-ended", (subject, message) => {
+      return message === `${matchingStudy.recipeId}`;
+    });
+  }
+
+  const addonUninstallPromise = addon.uninstall();
+
+  return Promise.all([studyEndedPromise, addonUninstallPromise]);
+}
+
+/**
+ * Test decorator that is a modified version of the withInstalledWebExtension
+ * decorator that safely uninstalls the created addon.
+ */
+function withInstalledWebExtensionSafe(manifestOverrides = {}) {
+  return testFunction => {
+    return async function wrappedTestFunction(...args) {
+      const decorated = withInstalledWebExtension(manifestOverrides, true)(async ([id, file]) => {
+        try {
+          await testFunction(...args, [id, file]);
+        } finally {
+          let addon = await AddonManager.getAddonByID(id);
+          if (addon) {
+            await safeUninstallAddon(addon);
+            addon = await AddonManager.getAddonByID(id);
+            ok(!addon, "add-on should be uninstalled");
+          }
+        }
+      });
+      await decorated();
+    };
+  };
+}
+
+/**
+ * Test decorator to provide a web extension installed from a URL.
+ */
+function withInstalledWebExtensionFromURL(url) {
+  return function wrapper(testFunction) {
+    return async function wrappedTestFunction(...args) {
+      let startupPromise;
+      let addonId;
+
+      const install = await AddonManager.getInstallForURL(url);
+      const listener = {
+        onInstallStarted(cbInstall) {
+          addonId = cbInstall.addon.id;
+          startupPromise = AddonTestUtils.promiseWebExtensionStartup(addonId);
+        },
+      };
+      install.addListener(listener);
+
+      await install.install();
+      await startupPromise;
+
+      try {
+        await testFunction(...args, [addonId, url]);
+      } finally {
+        const addonToUninstall = await AddonManager.getAddonByID(addonId);
+        await safeUninstallAddon(addonToUninstall);
+      }
+    };
+  };
+}
+
+/**
+ * Test decorator that checks that the test cleans up all add-ons installed
+ * during the test. Likely needs to be the first decorator used.
+ */
+function ensureAddonCleanup(testFunction) {
+  return async function wrappedTestFunction(...args) {
+    const beforeAddons = new Set(await AddonManager.getAllAddons());
+
+    try {
+      await testFunction(...args);
+    } finally {
+      const afterAddons = new Set(await AddonManager.getAllAddons());
+      Assert.deepEqual(beforeAddons, afterAddons, "The add-ons should be same before and after the test");
+    }
+  };
 }
 
 // Test that enroll is not called if recipe is already enrolled and update does nothing
@@ -33,8 +164,8 @@ decorate_task(
       id: study.recipeId,
       type: "addon-study",
       arguments: {
-        name: study.slug,
-        description: study.userFacingDescription,
+        name: study.name,
+        description: study.description,
         addonUrl: study.addonUrl,
         extensionApiId: study.extensionApiId,
       },
@@ -100,7 +231,7 @@ decorate_task(
     const recipe = addonStudyRecipeFactory({
       arguments: {
         extensionApiId: 1,
-        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
+        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
       },
     });
     mockApi.extensionDetails = {
@@ -135,7 +266,7 @@ decorate_task(
     const recipe = addonStudyRecipeFactory({
       arguments: {
         extensionApiId: 1,
-        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
+        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
       },
     });
     mockApi.extensionDetails = {
@@ -143,7 +274,7 @@ decorate_task(
         id: recipe.arguments.extensionApiId,
         xpi: recipe.arguments.addonUrl,
         version: "1.5",
-        hash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
+        hash: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].hash,
       }),
     };
     const action = new AddonStudyAction();
@@ -170,7 +301,7 @@ decorate_task(
   AddonStudies.withStudies(),
   async function conflictingEnrollment(mockApi, sendEventStub, [installedAddonId, installedAddonFile]) {
     is(installedAddonId, FIXTURE_ADDON_ID, "Generated, installed add-on should have the same ID as the fixture");
-    const addonUrl = FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url;
+    const addonUrl = FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url;
     const recipe = addonStudyRecipeFactory({
       arguments: {
         name: "conflicting",
@@ -201,14 +332,12 @@ decorate_task(
 // Test a successful enrollment
 decorate_task(
   ensureAddonCleanup,
-  withMockNormandyApi,
   withSendEventStub,
+  withMockNormandyApi,
   AddonStudies.withStudies(),
   async function successfulEnroll(mockApi, sendEventStub, studies) {
-    const initialAddonIds = (await AddonManager.getAllAddons()).map(addon => addon.id);
-
     const webExtStartupPromise = AddonTestUtils.promiseWebExtensionStartup(FIXTURE_ADDON_ID);
-    const addonUrl = FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url;
+    const addonUrl = FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url;
 
     let addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
     is(addon, null, "Before enroll, the add-on is not installed");
@@ -242,16 +371,13 @@ decorate_task(
       study,
       {
         recipeId: recipe.id,
-        branch: AddonStudies.NO_BRANCHES_MARKER,
-        slug: recipe.arguments.name,
-        userFacingName: recipe.arguments.name,
-        userFacingDescription: recipe.arguments.description,
+        name: recipe.arguments.name,
+        description: recipe.arguments.description,
         addonId: FIXTURE_ADDON_ID,
         addonVersion: "1.0",
         addonUrl,
         active: true,
-        studyStartDate: study.studyStartDate, // checked below
-        studyEndDate: null,
+        studyStartDate: study.studyStartDate,
         extensionApiId: recipe.arguments.extensionApiId,
         extensionHash: extensionDetails.hash,
         extensionHashAlgorithm: extensionDetails.hash_algorithm,
@@ -267,11 +393,7 @@ decorate_task(
 
     // cleanup
     await safeUninstallAddon(addon);
-    Assert.deepEqual(
-      (await AddonManager.getAllAddons()).map(addon => addon.id),
-      initialAddonIds,
-      "all test add-ons are removed",
-    );
+    Assert.deepEqual(AddonManager.getAllAddons(), [], "add-on should be uninstalled.");
   },
 );
 
@@ -281,25 +403,25 @@ decorate_task(
   withMockNormandyApi,
   AddonStudies.withStudies([addonStudyFactory({
     addonId: FIXTURE_ADDON_ID,
-    extensionHash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
+    extensionHash: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].hash,
     extensionHashAlgorithm: "sha256",
     addonVersion: "1.0",
   })]),
   withSendEventStub,
   withInstalledWebExtensionSafe({id: FIXTURE_ADDON_ID, version: "1.0"}),
   async function successfulUpdate(mockApi, [study], sendEventStub, installedAddon) {
-    const addonUrl = FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].url;
+    const addonUrl = FIXTURE_ADDON_DETAILS["normandydriver-2.0"].url;
     const recipe = recipeFactory({
       id: study.recipeId,
       type: "addon-study",
       arguments: {
-        name: study.userFacingName,
-        description: study.userFacingDescription,
+        name: study.name,
+        description: study.description,
         extensionApiId: study.extensionApiId,
         addonUrl,
       },
     });
-    const hash = FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].hash;
+    const hash = FIXTURE_ADDON_DETAILS["normandydriver-2.0"].hash;
     mockApi.extensionDetails = {
       [recipe.arguments.extensionApiId]: extensionDetailsFactory({
         id: recipe.arguments.extensionApiId,
@@ -320,7 +442,6 @@ decorate_task(
       [["update", "addon_study", recipe.arguments.name, {
         addonId: FIXTURE_ADDON_ID,
         addonVersion: "2.0",
-        branch: AddonStudies.NO_BRANCHES_MARKER,
       }]],
     );
 
@@ -359,17 +480,17 @@ decorate_task(
       id: study.recipeId,
       type: "addon-study",
       arguments: {
-        name: study.slug,
-        description: study.userFacingDescription,
+        name: study.name,
+        description: study.description,
         extensionApiId: study.extensionApiId,
-        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
+        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
       },
     });
     mockApi.extensionDetails = {
       [recipe.arguments.extensionApiId]: extensionDetailsFactory({
         id: recipe.arguments.extensionApiId,
         extension_id: FIXTURE_ADDON_ID,
-        xpi: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
+        xpi: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
       }),
     };
     const action = new AddonStudyAction();
@@ -407,17 +528,17 @@ decorate_task(
       id: study.recipeId,
       type: "addon-study",
       arguments: {
-        name: study.slug,
-        description: study.userFacingDescription,
+        name: study.name,
+        description: study.description,
         extensionApiId: study.extensionApiId,
-        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
+        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
       },
     });
     mockApi.extensionDetails = {
       [recipe.arguments.extensionApiId]: extensionDetailsFactory({
         id: recipe.arguments.extensionApiId,
         extension_id: study.addonId,
-        xpi: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
+        xpi: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
       }),
     };
     const action = new AddonStudyAction();
@@ -459,8 +580,8 @@ decorate_task(
       id: study.recipeId,
       type: "addon-study",
       arguments: {
-        name: study.slug,
-        description: study.userFacingDescription,
+        name: study.name,
+        description: study.description,
         extensionApiId: study.extensionApiId,
         addonUrl: "https://example.com/404.xpi",
       },
@@ -509,17 +630,17 @@ decorate_task(
       id: study.recipeId,
       type: "addon-study",
       arguments: {
-        name: study.slug,
-        description: study.userFacingDescription,
+        name: study.name,
+        description: study.description,
         extensionApiId: study.extensionApiId,
-        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
+        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
       },
     });
     mockApi.extensionDetails = {
       [recipe.arguments.extensionApiId]: extensionDetailsFactory({
         id: recipe.arguments.extensionApiId,
         extension_id: study.addonId,
-        xpi: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
+        xpi: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
         hash: "badhash",
       }),
     };
@@ -560,17 +681,17 @@ decorate_task(
       id: study.recipeId,
       type: "addon-study",
       arguments: {
-        name: study.slug,
-        description: study.userFacingDescription,
+        name: study.name,
+        description: study.description,
         extensionApiId: study.extensionApiId,
-        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
+        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
       },
     });
     mockApi.extensionDetails = {
       [recipe.arguments.extensionApiId]: extensionDetailsFactory({
         id: recipe.arguments.extensionApiId,
         extension_id: study.addonId,
-        xpi: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
+        xpi: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
         version: "1.0",
       }),
     };
@@ -599,30 +720,30 @@ decorate_task(
   withMockNormandyApi,
   AddonStudies.withStudies([addonStudyFactory({
     addonId: FIXTURE_ADDON_ID,
-    extensionHash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
+    extensionHash: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].hash,
     extensionHashAlgorithm: "sha256",
     addonVersion: "1.0",
   })]),
   withSendEventStub,
-  withInstalledWebExtensionFromURL(FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url),
+  withInstalledWebExtensionFromURL(FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url),
   async function upgradeFailsMetadataMismatchVersion(mockApi, [study], sendEventStub, installedAddon) {
     const recipe = recipeFactory({
       id: study.recipeId,
       type: "addon-study",
       arguments: {
-        name: study.slug,
-        description: study.userFacingDescription,
+        name: study.name,
+        description: study.description,
         extensionApiId: study.extensionApiId,
-        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].url,
+        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-2.0"].url,
       },
     });
     mockApi.extensionDetails = {
       [recipe.arguments.extensionApiId]: extensionDetailsFactory({
         id: recipe.arguments.extensionApiId,
         extension_id: study.addonId,
-        xpi: FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].url,
+        xpi: FIXTURE_ADDON_DETAILS["normandydriver-2.0"].url,
         version: "3.0",
-        hash: FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].hash,
+        hash: FIXTURE_ADDON_DETAILS["normandydriver-2.0"].hash,
       }),
     };
     const action = new AddonStudyAction();
@@ -707,7 +828,7 @@ decorate_task(
     is(addon, null, "the add-on should be uninstalled after unenrolling");
 
     sendEventStub.assertEvents(
-      [["unenroll", "addon_study", study.slug, {
+      [["unenroll", "addon_study", study.name, {
         addonId,
         addonVersion: study.addonVersion,
         reason: "test-reason",
@@ -731,7 +852,7 @@ decorate_task(
     await action.unenroll(study.recipeId);
 
     sendEventStub.assertEvents(
-      [["unenroll", "addon_study", study.slug, {
+      [["unenroll", "addon_study", study.name, {
         addonId: study.addonId,
         addonVersion: study.addonVersion,
         reason: "unknown",
@@ -778,7 +899,6 @@ decorate_task(
   async function testEnrollmentPaused(mockApi, sendEventStub) {
     const action = new AddonStudyAction();
     const enrollSpy = sinon.spy(action, "enroll");
-    const updateSpy = sinon.spy(action, "update");
     const recipe = addonStudyRecipeFactory({arguments: {isEnrollmentPaused: true}});
     const extensionDetails = extensionDetailsFactory({
       id: recipe.arguments.extensionApiId,
@@ -791,7 +911,6 @@ decorate_task(
     is(addon, null, "the add-on should not have been installed");
     await action.finalize();
     ok(enrollSpy.called, "enroll should be called");
-    ok(!updateSpy.called, "update should not be called");
     sendEventStub.assertEvents([]);
   },
 );
@@ -802,21 +921,21 @@ decorate_task(
   withMockNormandyApi,
   AddonStudies.withStudies([addonStudyFactory({
     addonId: FIXTURE_ADDON_ID,
-    extensionHash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
+    extensionHash: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].hash,
     extensionHashAlgorithm: "sha256",
     addonVersion: "1.0",
   })]),
   withSendEventStub,
   withInstalledWebExtensionSafe({id: FIXTURE_ADDON_ID, version: "1.0"}),
   async function testUpdateEnrollmentPaused(mockApi, [study], sendEventStub, installedAddon) {
-    const addonUrl = FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].url;
+    const addonUrl = FIXTURE_ADDON_DETAILS["normandydriver-2.0"].url;
     const recipe = recipeFactory({
       id: study.recipeId,
       type: "addon-study",
       arguments: {
         isEnrollmentPaused: true,
-        name: study.slug,
-        description: study.userFacingDescription,
+        name: study.name,
+        description: study.description,
         extensionApiId: study.extensionApiId,
         addonUrl,
       },
@@ -826,7 +945,7 @@ decorate_task(
         id: recipe.arguments.extensionApiId,
         extension_id: study.addonId,
         xpi: addonUrl,
-        hash: FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].hash,
+        hash: FIXTURE_ADDON_DETAILS["normandydriver-2.0"].hash,
         version: "2.0",
       }),
     };
@@ -854,12 +973,12 @@ decorate_task(
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([addonStudyFactory({
-    addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
+    addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url,
     addonId: FIXTURE_ADDON_ID,
     addonVersion: "1.0",
   })]),
   withSendEventStub,
-  withInstalledWebExtensionFromURL(FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url),
+  withInstalledWebExtensionFromURL(FIXTURE_ADDON_DETAILS["normandydriver-1.0"].url),
   async function updateWorksLegacyStudy(mockApi, [study], sendEventStub, installedAddon) {
     delete study.extensionHash;
     delete study.extensionHashAlgorithm;
@@ -869,19 +988,19 @@ decorate_task(
       id: study.recipeId,
       type: "addon-study",
       arguments: {
-        name: study.slug,
-        description: study.userFacingDescription,
+        name: study.name,
+        description: study.description,
         extensionApiId: study.extensionApiId,
-        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].url,
+        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-2.0"].url,
       },
     });
 
-    const hash = FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].hash;
+    const hash = FIXTURE_ADDON_DETAILS["normandydriver-2.0"].hash;
     mockApi.extensionDetails = {
       [recipe.arguments.extensionApiId]: extensionDetailsFactory({
         id: recipe.arguments.extensionApiId,
         extension_id: study.addonId,
-        xpi: FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].url,
+        xpi: FIXTURE_ADDON_DETAILS["normandydriver-2.0"].url,
         hash,
         version: "2.0",
       }),
@@ -896,8 +1015,8 @@ decorate_task(
     ok(!enrollSpy.called, "enroll should not be called");
     ok(updateSpy.called, "update should be called");
     sendEventStub.assertEvents(
-      [["update", "addon_study", study.slug, {
-        addonId: "normandydriver-a@example.com",
+      [["update", "addon_study", "Test study", {
+        addonId: "normandydriver@example.com",
         addonVersion: "2.0",
       }]],
     );
@@ -908,7 +1027,7 @@ decorate_task(
       {
         ...study,
         addonVersion: "2.0",
-        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].url,
+        addonUrl: FIXTURE_ADDON_DETAILS["normandydriver-2.0"].url,
         extensionApiId: recipe.arguments.extensionApiId,
         extensionHash: hash,
         extensionHashAlgorithm: "sha256",
