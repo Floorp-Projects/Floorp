@@ -9,6 +9,6 @@
         android:viewportHeight="24.0"
         android:autoMirrored="true">
     <path
-        android:fillColor="#ffffff"
+        android:fillColor="@color/mozac_ui_icons_fill"
         android:pathData="M21.207,11.293l-7.5,-7.5a1,1 0,0 0,-1.414 1.414L18.086,11H3a1,1 0,0 0,0 2H18.086l-5.793,5.793a1,1 0,1 0,1.414 1.414l7.5,-7.5A1,1 0,0 0,21.207 11.293Z"/>
 </vector>

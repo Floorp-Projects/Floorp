@@ -8,6 +8,6 @@
     android:viewportHeight="16"
     android:viewportWidth="16">
     <path
-        android:fillColor="#ffffff"
+        android:fillColor="@color/mozac_ui_icons_fill"
         android:pathData="M11,11L11,9a1,1 0,0 1,1 -1h1a1,1 0,0 1,1 1L14,5a2,2 0,0 0,-2 -2L4,3a2,2 0,0 0,-2 2v6L1,11a1,1 0,0 0,0 2h7v-1a1,1 0,0 1,1 -1zM15.5,12L13,12L13,9.5a0.5,0.5 0,0 0,-1 0L12,12L9.5,12a0.5,0.5 0,0 0,0 1L12,13v2.5a0.5,0.5 0,0 0,1 0L13,13h2.5a0.5,0.5 0,0 0,0 -1z" />
 </vector>

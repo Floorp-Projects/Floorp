@@ -8,7 +8,6 @@
         android:viewportWidth="24.0"
         android:viewportHeight="24.0"
         android:autoMirrored="true">
-    <path
-        android:fillColor="#ffffff"
-        android:pathData="M21,11H5.914l5.793,-5.793a1,1 0,0 0,-1.414 -1.414l-7.5,7.5a1,1 0,0 0,0 1.414l7.5,7.5a1,1 0,0 0,1.414 -1.414L5.914,13H21a1,1 0,0 0,0 -2Z"/>
+    <path android:fillColor="@color/mozac_ui_icons_fill"
+          android:pathData="M21,11H5.914l5.793,-5.793a1,1 0,0 0,-1.414 -1.414l-7.5,7.5a1,1 0,0 0,0 1.414l7.5,7.5a1,1 0,0 0,1.414 -1.414L5.914,13H21a1,1 0,0 0,0 -2Z"/>
 </vector>
