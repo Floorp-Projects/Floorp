@@ -3587,6 +3587,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       scriptOrModuleRoot(cx) {
   strictOption = cx->options().strictMode();
   extraWarningsOption = cx->realm()->behaviors().extraWarnings(cx);
+  discardSource = cx->realm()->behaviors().discardSource();
   isProbablySystemCode = cx->realm()->isProbablySystemCode();
   werrorOption = cx->options().werror();
   if (!cx->options().asmJS()) {
