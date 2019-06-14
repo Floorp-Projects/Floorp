@@ -7228,6 +7228,19 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+#ifdef MOZ_WIDGET_ANDROID
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  Live,
+  "webgl.default-antialias",
+  WebGLDefaultAntialias,
+  RelaxedAtomicBool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 VARCACHE_PREF(
   Live,
   "webgl.default-low-power",

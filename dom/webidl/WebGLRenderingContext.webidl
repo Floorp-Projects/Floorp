@@ -37,13 +37,15 @@ typedef unsigned long long GLuint64EXT;
 enum WebGLPowerPreference { "default", "low-power", "high-performance" };
 
 dictionary WebGLContextAttributes {
-    // boolean alpha = true;
-    // We deviate from the spec here.
-    // If alpha isn't specified, we rely on a pref ("webgl.default-no-alpha")
-    GLboolean alpha;
+    // We deviate from the spec for alpha and antialias:
+    // * alpha: Historically, we might use rgb565 instead of rgb(x)8, for 
+    //          memory bandwidth optimization.
+    // * antialias: On Android, DPI is high and mem-bandwidth is low, so we 
+    //              default to antialias:false if it's not set.
+    GLboolean alpha; // = true; // Default is controlled by webgl.default-no-alpha.
     GLboolean depth = true;
     GLboolean stencil = false;
-    GLboolean antialias = true;
+    GLboolean antialias; // = true; // Default is controlled by webgl.default-antialias.
     GLboolean premultipliedAlpha = true;
     GLboolean preserveDrawingBuffer = false;
     GLboolean failIfMajorPerformanceCaveat = false;
