@@ -38,6 +38,12 @@ class ThreadClient extends FrontClassWithSpec(threadSpec) {
     this._pauseGrips = {};
     this._threadGrips = {};
     this._state = "paused";
+    this._beforePaused = this._beforePaused.bind(this);
+    this._beforeResumed = this._beforeResumed.bind(this);
+    this._beforeDetached = this._beforeDetached.bind(this);
+    this.before("paused", this._beforePaused);
+    this.before("resumed", this._beforeResumed);
+    this.before("detached", this._beforeDetached);
     this.actorID = actor;
     this.manage(this);
   }
@@ -276,18 +282,31 @@ class ThreadClient extends FrontClassWithSpec(threadSpec) {
     this._clearObjectClients("_threadGrips");
   }
 
+  _beforePaused(packet) {
+    this._state = "paused";
+    this._onThreadState(packet);
+  }
+
+  _beforeResumed() {
+    this._state = "attached";
+    this._onThreadState(null);
+  }
+
+  _beforeDetached(packet) {
+    this._state = "detached";
+    this._onThreadState(packet);
+    this._clearThreadGrips();
+  }
+
   /**
    * Handle thread state change by doing necessary cleanup
    */
   _onThreadState(packet) {
-    this._state = ThreadStateTypes[packet.type];
     // The debugger UI may not be initialized yet so we want to keep
     // the packet around so it knows what to pause state to display
     // when it's initialized
-    this._lastPausePacket = packet.type === "resumed" ? null : packet;
+    this._lastPausePacket = packet;
     this._clearPauseGrips();
-    packet.type === ThreadStateTypes.detached && this._clearThreadGrips();
-    this.client._eventsEnabled && this.emit(packet.type, packet);
   }
 
   getLastPausePacket() {
