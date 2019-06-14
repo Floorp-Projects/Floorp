@@ -28,13 +28,21 @@ SimpleTest.waitForExplicitFinish();
   // A single test case is an object of the following shape:
   // - {String} info: a summary of the test case
   // - {String} property: the CSS property that should be tested
-  // - {String} tagName: the tagName of the element we're going to test
+  // - {String|undefined} tagName: the tagName of the element we're going to test.
+  //                               Optional only if there's a createTestElement property.
+  // - {Function|undefined} createTestElement: A function that takes a node as a parameter
+  //                                           where elements used for the test case will
+  //                                           be appended. The function should return the
+  //                                           element that will be passed to
+  //                                           isPropertyUsed.
+  //                                           Optional only if there's a tagName property
   // - {Array<String>} rules: An array of the rules that will be applied on the element.
   //                          This can't be empty as isPropertyUsed need a rule.
-  // - {Integer} ruleIndex (optional): If there are multiples rules in `rules`, the index
-  //                                   of the one that should be tested in isPropertyUsed.
+  // - {Integer|undefined} ruleIndex: If there are multiples rules in `rules`, the index
+  //                                  of the one that should be tested in isPropertyUsed.
   // - {Boolean} isActive: should the property be active (isPropertyUsed `used` result).
   const testFiles = [
+    "align-place-self.js",
     "gap.js",
     "max-min-width-height.js",
     "vertical-align.js",
@@ -44,25 +52,38 @@ SimpleTest.waitForExplicitFinish();
   const tests =
     (await Promise.all(testFiles.map(f => import(f).then(data => data.default)))).flat();
 
-  for (const { info: summary, property, tagName, rules, ruleIndex, isActive } of tests) {
-    info(summary);
-
+  for (const {
+    info: summary,
+    property,
+    tagName,
+    createTestElement,
+    rules,
+    ruleIndex,
+    isActive
+  } of tests) {
     // Create an element which will contain the test elements.
     const main = document.createElement("main");
     document.firstElementChild.appendChild(main);
 
-    // Create the element and insert the rules
-    const el = document.createElement(tagName);
+    // Apply the CSS rules to the document.
     const style = document.createElement("style");
-    main.append(style, el);
-
+    main.append(style);
     for (const dataRule of rules) {
       style.sheet.insertRule(dataRule);
     }
     const rule = style.sheet.cssRules[ruleIndex || 0];
 
+    // Create the test elements
+    let el;
+    if (createTestElement) {
+      el = createTestElement(main);
+    } else {
+      el = document.createElement(tagName);
+      main.append(el);
+    }
+
     const { used } = isPropertyUsed(el, getComputedStyle(el), rule, property);
-    ok(used === isActive, `"${property}" is ${isActive ? "active" : "inactive"}`);
+    ok(used === isActive, summary);
 
     main.remove();
   }
