@@ -17,6 +17,7 @@
 #include "nsBindingManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGlobalWindow.h"
+#include "nsIContentInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
 #include "nsIComponentManager.h"
