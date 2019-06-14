@@ -484,7 +484,7 @@ class BrowserParent final : public PBrowserParent,
 
   void Activate();
 
-  void Deactivate();
+  void Deactivate(bool aWindowLowering);
 
   bool MapEventCoordinatesForChildProcess(mozilla::WidgetEvent* aEvent);
 

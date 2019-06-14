@@ -1642,17 +1642,21 @@ bool nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
       }
     }
 
+    bool windowBeingLowered = !aWindowToClear && !aAncestorWindowToFocus &&
+                              aIsLeavingDocument && aAdjustWidgets;
     // if the object being blurred is a remote browser, deactivate remote
     // content
     if (BrowserParent* remote = BrowserParent::GetFrom(element)) {
-      remote->Deactivate();
-      LOGFOCUS(("Remote browser deactivated %p", remote));
+      remote->Deactivate(windowBeingLowered);
+      LOGFOCUS(
+          ("Remote browser deactivated %p, %d", remote, windowBeingLowered));
     }
 
     // Same as above but for out-of-process iframes
     if (BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(element)) {
-      bbc->Deactivate();
-      LOGFOCUS(("Out-of-process iframe deactivated %p", bbc));
+      bbc->Deactivate(windowBeingLowered);
+      LOGFOCUS(("Out-of-process iframe deactivated %p, %d", bbc,
+                windowBeingLowered));
     }
   }
 
