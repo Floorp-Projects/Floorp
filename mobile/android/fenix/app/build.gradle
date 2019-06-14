@@ -39,6 +39,7 @@ android {
             applicationIdSuffix ".debug"
             manifestPlaceholders.isRaptorEnabled = "true"
             resValue "bool", "IS_DEBUG", "true"
+            pseudoLocalesEnabled true
         }
         forPerformanceTest releaseTemplate >> { // the ">>" concatenates the raptor-specific options with the template
             manifestPlaceholders.isRaptorEnabled = "true"
