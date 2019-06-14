@@ -49,7 +49,7 @@ internal class EngineObserver(
     }
 
     override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
-        if (triggeredByWebContent) {
+        if (triggeredByRedirect || triggeredByWebContent) {
             session.searchTerms = ""
         }
 
