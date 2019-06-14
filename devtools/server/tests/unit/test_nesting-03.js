@@ -40,12 +40,12 @@ async function test_nesting() {
   try {
     await gThreadClient1.resume();
   } catch (e) {
-    Assert.equal(e.error, "wrongOrder");
+    Assert.ok(e.includes("wrongOrder"));
   }
   try {
     await gThreadClient2.resume();
   } catch (e) {
-    Assert.ok(!e.error);
+    Assert.ok(!e);
   }
 
   gThreadClient1.resume().then(response => {
