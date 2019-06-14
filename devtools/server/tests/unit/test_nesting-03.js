@@ -46,12 +46,10 @@ async function test_nesting() {
     await gThreadClient2.resume();
   } catch (e) {
     Assert.ok(!e.error);
-    Assert.equal(e.from, gThreadClient2.actor);
   }
 
   gThreadClient1.resume().then(response => {
     Assert.ok(!response.error);
-    Assert.equal(response.from, gThreadClient1.actor);
 
     gClient1.close(() => finishClient(gClient2));
   });
