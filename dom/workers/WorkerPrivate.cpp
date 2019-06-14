@@ -17,6 +17,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
+#include "mozilla/dom/CallbackDebuggerNotification.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/ClientState.h"
@@ -4309,6 +4310,11 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
       reason = "setTimeout handler";
     }
 
+    auto timerNotificationType =
+        info->mIsInterval ? DebuggerNotificationType::SetIntervalCallback
+                          : DebuggerNotificationType::SetTimeoutCallback;
+
+    RefPtr<WorkerGlobalScope> scope = GlobalScope();
     RefPtr<Function> callback = info->mHandler->GetCallback();
     if (!callback) {
       nsAutoMicroTask mt;
@@ -4328,6 +4334,9 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
       JS::Rooted<JS::Value> unused(aes.cx());
 
       JS::SourceText<char16_t> srcBuf;
+
+      CallbackDebuggerNotificationGuard guard(scope, timerNotificationType);
+
       if (!srcBuf.init(aes.cx(), script.BeginReading(), script.Length(),
                        JS::SourceOwnership::Borrowed) ||
           !JS::Evaluate(aes.cx(), options, srcBuf, &unused)) {
@@ -4339,8 +4348,13 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
     } else {
       ErrorResult rv;
       JS::Rooted<JS::Value> ignoredVal(aCx);
-      RefPtr<WorkerGlobalScope> scope = GlobalScope();
-      callback->Call(scope, info->mHandler->GetArgs(), &ignoredVal, rv, reason);
+
+      {
+        CallbackDebuggerNotificationGuard guard(scope, timerNotificationType);
+
+        callback->Call(scope, info->mHandler->GetArgs(), &ignoredVal, rv,
+                       reason);
+      }
       if (rv.IsUncatchableException()) {
         rv.SuppressException();
         retval = false;
