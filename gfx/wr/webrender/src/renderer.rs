@@ -2075,13 +2075,17 @@ impl Renderer {
                 thread_listener.thread_started(&rb_thread_name);
             }
 
+            let picture_tile_sizes = &[
+                DeviceIntSize::new(TILE_SIZE_WIDTH, TILE_SIZE_HEIGHT),
+            ];
+
             let texture_cache = TextureCache::new(
                 max_texture_size,
                 max_texture_layers,
                 if config.enable_picture_caching {
-                    Some(DeviceIntSize::new(TILE_SIZE_WIDTH, TILE_SIZE_HEIGHT))
+                    picture_tile_sizes
                 } else {
-                    None
+                    &[]
                 },
                 start_size,
             );
