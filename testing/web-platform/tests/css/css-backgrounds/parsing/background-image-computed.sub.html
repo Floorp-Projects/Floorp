@@ -14,8 +14,8 @@
 <script>
 test_computed_value("background-image", "none");
 
-test_computed_value("background-image", 'url("http://www.example.com/")');
-test_computed_value("background-image", 'none, url("http://www.example.com/")');
+test_computed_value("background-image", 'url("http://{{host}}/")');
+test_computed_value("background-image", 'none, url("http://{{host}}/")');
 </script>
 </body>
 </html>
