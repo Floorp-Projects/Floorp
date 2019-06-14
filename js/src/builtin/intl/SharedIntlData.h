@@ -8,6 +8,7 @@
 #define builtin_intl_SharedIntlData_h
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 
 #include <stddef.h>
 
@@ -19,9 +20,16 @@
 #include "js/Utility.h"
 #include "vm/StringType.h"
 
+using UDateTimePatternGenerator = void*;
+
 namespace js {
 
 namespace intl {
+
+class DateTimePatternGeneratorDeleter {
+ public:
+  void operator()(UDateTimePatternGenerator* ptr);
+};
 
 /**
  * Stores Intl data which can be shared across compartments (but not contexts).
@@ -202,6 +210,22 @@ class SharedIntlData {
    */
   bool isUpperCaseFirst(JSContext* cx, JS::Handle<JSString*> locale,
                         bool* isUpperFirst);
+
+ private:
+  using UniqueUDateTimePatternGenerator =
+      mozilla::UniquePtr<UDateTimePatternGenerator,
+                         DateTimePatternGeneratorDeleter>;
+
+  UniqueUDateTimePatternGenerator dateTimePatternGenerator;
+  JS::UniqueChars dateTimePatternGeneratorLocale;
+
+ public:
+  /**
+   * Wrapper around |udatpg_open| to return a possibly cached generator
+   * instance. The returned pointer must not be closed via |udatpg_close|.
+   */
+  UDateTimePatternGenerator* getDateTimePatternGenerator(JSContext* cx,
+                                                         const char* locale);
 
  public:
   void destroyInstance();

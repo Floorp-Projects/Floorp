@@ -704,9 +704,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       // from the following list.
       if (!cue.snapToLines) {
         if (isWritingDirectionHorizontal) {
-          yPosition = cue.computedPosition;
+          yPosition = cue.computedLine;
         } else {
-          xPosition = cue.computedPosition;
+          xPosition = cue.computedLine;
         }
       } else {
         if (isWritingDirectionHorizontal) {

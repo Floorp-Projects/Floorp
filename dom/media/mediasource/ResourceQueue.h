@@ -8,7 +8,7 @@
 #define MOZILLA_RESOURCEQUEUE_H_
 
 #include "nsDeque.h"
-#include "MediaData.h"
+#include "MediaSpan.h"
 
 namespace mozilla {
 
@@ -26,9 +26,9 @@ class ErrorResult;
 // timepoint.
 
 struct ResourceItem {
-  ResourceItem(MediaByteBuffer* aData, uint64_t aOffset);
+  ResourceItem(const MediaSpan& aData, uint64_t aOffset);
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
-  RefPtr<MediaByteBuffer> mData;
+  MediaSpan mData;
   uint64_t mOffset;
 };
 
@@ -46,13 +46,13 @@ class ResourceQueue : private nsDeque {
   // Copies aCount bytes from aOffset in the queue into aDest.
   void CopyData(uint64_t aOffset, uint32_t aCount, char* aDest);
 
-  void AppendItem(MediaByteBuffer* aData);
+  void AppendItem(const MediaSpan& aData);
 
   // Tries to evict at least aSizeToEvict from the queue up until
   // aOffset. Returns amount evicted.
-  uint32_t Evict(uint64_t aOffset, uint32_t aSizeToEvict, ErrorResult& aRv);
+  uint32_t Evict(uint64_t aOffset, uint32_t aSizeToEvict);
 
-  uint32_t EvictBefore(uint64_t aOffset, ErrorResult& aRv);
+  uint32_t EvictBefore(uint64_t aOffset);
 
   uint32_t EvictAll();
 
