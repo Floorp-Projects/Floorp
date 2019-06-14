@@ -20,8 +20,9 @@ function run_test() {
       function(response, targetFront, threadClient) {
         // Reach over the protocol connection and get a reference to the thread
         // actor.
+        // TODO: rewrite tests so we don't do this kind of reaching anymore..
         gThreadActor =
-          threadClient._transport._serverConnection.getActor(threadClient._actor);
+          gClient._transport._serverConnection.getActor(threadClient.actorID);
 
         test_nesting();
       });
