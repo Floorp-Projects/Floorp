@@ -87,6 +87,7 @@
 #include "PLDHashTable.h"
 #include "plstr.h"
 #include "prlink.h"
+#include "xpcpublic.h"
 
 #ifdef DEBUG
 #  include <map>
@@ -1705,7 +1706,9 @@ static void NotifyCallbacks(const char* aPrefName, const PrefWrapper* aPref) {
   }
 
 #ifdef DEBUG
-  if (XRE_IsParentProcess() && StaticPrefs::preferences_check_once_policy()) {
+  if (XRE_IsParentProcess() &&
+      !StaticPrefs::preferences_force_disable_check_once_policy() &&
+      (StaticPrefs::preferences_check_once_policy() || xpc::IsInAutomation())) {
     // Check that we aren't modifying a `Once` pref using that prefName.
     // We have about 100 `Once` StaticPrefs defined. std::map performs a search
     // in O(log n), so this is fast enough for our case.
@@ -5517,26 +5520,27 @@ void StaticPrefs::InitOncePrefs() {
   // and that maybe instead they should have been made `Live`.
 #define PREF(name, cpp_type, value)
 #ifdef DEBUG
-#  define VARCACHE_PREF(policy, name, id, cpp_type, value)                     \
-    if (UpdatePolicy::policy == UpdatePolicy::Once) {                          \
-      StaticPrefs::sVarCache_##id = PreferencesInternalMethods::GetPref(       \
-          name, StripAtomic<cpp_type>(value));                                 \
-      auto checkPref = [&]() {                                                 \
-        if (!sOncePrefRead) {                                                  \
-          return;                                                              \
-        }                                                                      \
-        StripAtomic<cpp_type> staticPrefValue = StaticPrefs::id();             \
-        StripAtomic<cpp_type> preferenceValue =                                \
-            PreferencesInternalMethods::GetPref(Get##id##PrefName(),           \
-                                                StripAtomic<cpp_type>(value)); \
-        MOZ_ASSERT(                                                            \
-            staticPrefValue == preferenceValue,                                \
-            "Preference '" name "' got modified since StaticPrefs::" #id       \
-            " got initialized. Consider using a `Live` StaticPrefs instead");  \
-      };                                                                       \
-      gOnceStaticPrefsAntiFootgun->insert(                                     \
-          std::pair<const char*, AntiFootgunCallback>(Get##id##PrefName(),     \
-                                                      std::move(checkPref)));  \
+#  define VARCACHE_PREF(policy, name, id, cpp_type, value)                    \
+    if (UpdatePolicy::policy == UpdatePolicy::Once) {                         \
+      StaticPrefs::sVarCache_##id = PreferencesInternalMethods::GetPref(      \
+          name, StripAtomic<cpp_type>(value));                                \
+      auto checkPref = [&]() {                                                \
+        if (!sOncePrefRead) {                                                 \
+          return;                                                             \
+        }                                                                     \
+        StripAtomic<cpp_type> staticPrefValue = StaticPrefs::id();            \
+        StripAtomic<cpp_type> preferenceValue =                               \
+            PreferencesInternalMethods::GetPref(                              \
+                StaticPrefs::Get##id##PrefName(),                             \
+                StripAtomic<cpp_type>(value));                                \
+        MOZ_ASSERT(                                                           \
+            staticPrefValue == preferenceValue,                               \
+            "Preference '" name "' got modified since StaticPrefs::" #id      \
+            " got initialized. Consider using a `Live` StaticPrefs instead"); \
+      };                                                                      \
+      gOnceStaticPrefsAntiFootgun->insert(                                    \
+          std::pair<const char*, AntiFootgunCallback>(Get##id##PrefName(),    \
+                                                      std::move(checkPref))); \
     }
 #else
 #  define VARCACHE_PREF(policy, name, id, cpp_type, value)               \
