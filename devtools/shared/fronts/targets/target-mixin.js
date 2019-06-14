@@ -404,15 +404,12 @@ function TargetMixin(parentClass) {
           "TargetMixin sub class should set _threadActor before calling " + "attachThread"
         );
       }
-      const [response, threadClient] = await this._client.attachThread(
-        this._threadActor,
-        options
-      );
-      this.threadClient = threadClient;
+      this.threadClient = await this.getFront("context");
+      const result = await this.threadClient.attach(options);
 
       this.threadClient.on("newSource", this._onNewSource);
 
-      return [response, threadClient];
+      return [result, this.threadClient];
     }
 
     // Listener for "newSource" event fired by the thread actor
@@ -454,7 +451,9 @@ function TargetMixin(parentClass) {
      */
     _teardownRemoteListeners() {
       // Remove listeners set in _setupRemoteListeners
-      this.client.off("closed", this.destroy);
+      if (this.client) {
+        this.client.off("closed", this.destroy);
+      }
       this.off("tabDetached", this.destroy);
 
       // Remove listeners set in attachThread
@@ -536,6 +535,8 @@ function TargetMixin(parentClass) {
 
         this._teardownRemoteListeners();
 
+        this.threadClient = null;
+
         if (this.isLocalTab) {
           // We started with a local tab and created the client ourselves, so we
           // should close it.
@@ -552,14 +553,6 @@ function TargetMixin(parentClass) {
             await this.detach();
           } catch (e) {
             console.warn(`Error while detaching target: ${e.message}`);
-          }
-        }
-
-        if (this.threadClient) {
-          try {
-            await this.threadClient.detach();
-          } catch (e) {
-            console.warn(`Error while detaching the thread front: ${e.message}`);
           }
         }
 
