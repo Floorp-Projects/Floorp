@@ -80,6 +80,27 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     return nullptr;
   }
 
+  /**
+   * 7. Let optionsSerialization be the result of StructuredSerialize(options).
+   */
+  JSContext* cx = aGlobal.Context();
+  JS::Rooted<JS::Value> optionsVal(cx);
+  if (NS_WARN_IF(!ToJSValue(cx, aOptions, &optionsVal))) {
+    aRv.NoteJSContextException(cx);
+    return nullptr;
+  }
+  // StructuredCloneHolder does not have a move constructor.  Instead allocate
+  // memory so that the pointer can be passed to the rendering thread.
+  UniquePtr<StructuredCloneHolder> optionsSerialization =
+      MakeUnique<StructuredCloneHolder>(
+          StructuredCloneHolder::CloningSupported,
+          StructuredCloneHolder::TransferringNotSupported,
+          JS::StructuredCloneScope::SameProcessDifferentThread);
+  optionsSerialization->Write(cx, optionsVal, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   return audioWorkletNode.forget();
 }
 
