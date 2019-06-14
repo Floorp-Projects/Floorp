@@ -19,7 +19,7 @@ function load_cert(cert, trust) {
 
 function getDERString(cert) {
   let derString = "";
-  for (let rawByte of cert.getRawDER({})) {
+  for (let rawByte of cert.getRawDER()) {
     derString += String.fromCharCode(rawByte);
   }
   return derString;

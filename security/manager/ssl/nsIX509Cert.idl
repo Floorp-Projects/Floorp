@@ -195,12 +195,10 @@ interface nsIX509Cert : nsISupports {
    *  Obtain a raw binary encoding of this certificate
    *  in DER format.
    *
-   *  @param length The number of bytes in the binary encoding.
-   *  @param data The bytes representing the DER encoded certificate.
+   *  @return The bytes representing the DER encoded certificate.
    */
   [must_use]
-  void getRawDER(out unsigned long length,
-	               [retval, array, size_is(length)] out octet data);
+  Array<octet> getRawDER();
 
   /**
    *  Test whether two certificate instances represent the

@@ -3528,8 +3528,7 @@ function getDetailedCertErrorInfo(location, securityInfo) {
 // TODO: can we pull getDERString and getPEMString in from pippki.js instead of
 // duplicating them here?
 function getDERString(cert) {
-  var length = {};
-  var derArray = cert.getRawDER(length);
+  var derArray = cert.getRawDER();
   var derString = "";
   for (var i = 0; i < derArray.length; i++) {
     derString += String.fromCharCode(derArray[i]);
