@@ -8,11 +8,11 @@
 #define mozilla_dom_timeout_h
 
 #include "mozilla/dom/PopupBlocker.h"
+#include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsITimeoutHandler.h"
 
 class nsIEventTarget;
 class nsIPrincipal;
@@ -77,7 +77,7 @@ class Timeout final : public LinkedListElement<RefPtr<Timeout>> {
   RefPtr<nsGlobalWindowInner> mWindow;
 
   // The language-specific information about the callback.
-  nsCOMPtr<nsITimeoutHandler> mScriptHandler;
+  RefPtr<TimeoutHandler> mScriptHandler;
 
   // Interval
   TimeDuration mInterval;

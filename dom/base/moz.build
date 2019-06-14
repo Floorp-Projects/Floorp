@@ -85,7 +85,6 @@ EXPORTS += [
     'nsIScriptGlobalObject.h',
     'nsIScriptObjectPrincipal.h',
     'nsIStyleSheetLinkingElement.h',
-    'nsITimeoutHandler.h',
     'nsJSEnvironment.h',
     'nsJSUtils.h',
     'nsLineBreaker.h',
