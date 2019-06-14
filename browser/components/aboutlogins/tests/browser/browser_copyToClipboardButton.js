@@ -35,7 +35,6 @@ add_task(async function test() {
         expectedValue: testCase[0],
         copyButtonSelector: testCase[1],
       };
-      info("waiting for " + testObj.expectedValue + " to be placed on clipboard");
       await SimpleTest.promiseClipboardChange(testObj.expectedValue, async () => {
         await ContentTask.spawn(browser, testObj, async function(aTestObj) {
           let loginItem = content.document.querySelector("login-item");
@@ -45,7 +44,7 @@ add_task(async function test() {
           innerButton.click();
         });
       });
-      ok(true, testObj.expectedValue + " is on clipboard now");
+      ok(true, "Username is on clipboard now");
 
       await ContentTask.spawn(browser, testObj, async function(aTestObj) {
         let loginItem = content.document.querySelector("login-item");

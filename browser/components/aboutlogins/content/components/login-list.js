@@ -55,7 +55,6 @@ export default class LoginList extends ReflectedFluentElement {
 
     for (let login of this._logins) {
       let listItem = new LoginListItem(login);
-      listItem.setAttribute("missing-username", this.getAttribute("missing-username"));
       if (login.guid == this._selectedGuid) {
         listItem.classList.add("selected");
       }
@@ -123,7 +122,6 @@ export default class LoginList extends ReflectedFluentElement {
     return ["count",
             "last-used-option",
             "last-changed-option",
-            "missing-username",
             "name-option",
             "new-login-subtitle",
             "new-login-title",
@@ -135,18 +133,12 @@ export default class LoginList extends ReflectedFluentElement {
   }
 
   handleSpecialCaseFluentString(attrName) {
-    switch (attrName) {
-      case "missing-username": {
-        break;
-      }
-      case "new-login-subtitle":
-      case "new-login-title": {
-        this._blankLoginListItem.setAttribute(attrName, this.getAttribute(attrName));
-        break;
-      }
-      default:
-        return false;
+    if (attrName != "new-login-subtitle" &&
+        attrName != "new-login-title") {
+      return false;
     }
+
+    this._blankLoginListItem.setAttribute(attrName, this.getAttribute(attrName));
     return true;
   }
 
