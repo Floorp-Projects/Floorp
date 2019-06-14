@@ -96,6 +96,8 @@ function TestTargetActor(connection, global) {
   this.conn.addActor(this.threadActor);
   this._attached = false;
   this._extraActors = {};
+  // This is a hack in order to enable threadActor to be accessed from getFront
+  this._extraActors.contextActor = this.threadActor;
   this.makeDebugger = makeDebugger.bind(null, {
     findDebuggees: () => [this._global],
     shouldAddNewGlobalAsDebuggee: g => {

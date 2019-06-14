@@ -31,9 +31,8 @@ loader.lazyRequireGetter(
  *        The actor ID for this thread.
  */
 class ThreadClient extends FrontClassWithSpec(threadSpec) {
-  constructor(client, actor) {
+  constructor(client) {
     super(client);
-    this.events = ["newSource", "progress"];
     this.client = client;
     this._pauseGrips = {};
     this._threadGrips = {};
@@ -44,13 +43,8 @@ class ThreadClient extends FrontClassWithSpec(threadSpec) {
     this.before("paused", this._beforePaused);
     this.before("resumed", this._beforeResumed);
     this.before("detached", this._beforeDetached);
-    this.actorID = actor;
-    this.manage(this);
-  }
-
-  destroy() {
-    this.client.unregisterClient(this);
-    super.destroy();
+    // Attribute name from which to retrieve the actorID out of the target actor's form
+    this.formAttributeName = "contextActor";
   }
 
   get state() {
