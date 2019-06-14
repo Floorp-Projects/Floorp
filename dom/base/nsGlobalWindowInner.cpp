@@ -17,9 +17,7 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
-#include "mozilla/dom/CallbackDebuggerNotification.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
-#include "mozilla/dom/DebuggerNotification.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/EventTarget.h"
@@ -1375,8 +1373,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCacheStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRDisplays)
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDebuggerNotificationManager)
-
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentTarget)
@@ -1474,8 +1470,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCacheStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mVRDisplays)
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDebuggerNotificationManager)
 
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeEventHandler)
@@ -3298,9 +3292,6 @@ int32_t nsGlobalWindowInner::RequestAnimationFrame(
     js::NotifyAnimationActivity(GetWrapperPreserveColor());
   }
 
-  DebuggerNotificationDispatch(this,
-                               DebuggerNotificationType::RequestAnimationFrame);
-
   int32_t handle;
   aError = mDoc->ScheduleFrameRequestCallback(aCallback, &handle);
   return handle;
@@ -3311,9 +3302,6 @@ void nsGlobalWindowInner::CancelAnimationFrame(int32_t aHandle,
   if (!mDoc) {
     return;
   }
-
-  DebuggerNotificationDispatch(this,
-                               DebuggerNotificationType::CancelAnimationFrame);
 
   mDoc->CancelFrameRequestCallback(aHandle);
 }
@@ -3745,16 +3733,12 @@ void nsGlobalWindowInner::MozScrollSnap() {
 }
 
 void nsGlobalWindowInner::ClearTimeout(int32_t aHandle) {
-  DebuggerNotificationDispatch(this, DebuggerNotificationType::ClearTimeout);
-
   if (aHandle > 0) {
     mTimeoutManager->ClearTimeout(aHandle, Timeout::Reason::eTimeoutOrInterval);
   }
 }
 
 void nsGlobalWindowInner::ClearInterval(int32_t aHandle) {
-  DebuggerNotificationDispatch(this, DebuggerNotificationType::ClearInterval);
-
   if (aHandle > 0) {
     mTimeoutManager->ClearTimeout(aHandle, Timeout::Reason::eTimeoutOrInterval);
   }
@@ -4020,20 +4004,6 @@ EventListenerManager* nsGlobalWindowInner::GetOrCreateListenerManager() {
 
 EventListenerManager* nsGlobalWindowInner::GetExistingListenerManager() const {
   return mListenerManager;
-}
-
-mozilla::dom::DebuggerNotificationManager*
-nsGlobalWindowInner::GetOrCreateDebuggerNotificationManager() {
-  if (!mDebuggerNotificationManager) {
-    mDebuggerNotificationManager = new DebuggerNotificationManager(this);
-  }
-
-  return mDebuggerNotificationManager;
-}
-
-mozilla::dom::DebuggerNotificationManager*
-nsGlobalWindowInner::GetExistingDebuggerNotificationManager() {
-  return mDebuggerNotificationManager;
 }
 
 //*****************************************************************************
@@ -5731,14 +5701,9 @@ int32_t nsGlobalWindowInner::SetTimeoutOrInterval(
   }
 
   if (inner != this) {
-    RefPtr<nsGlobalWindowInner> innerRef(inner);
-    return innerRef->SetTimeoutOrInterval(aCx, aFunction, aTimeout, aArguments,
-                                          aIsInterval, aError);
+    return inner->SetTimeoutOrInterval(aCx, aFunction, aTimeout, aArguments,
+                                       aIsInterval, aError);
   }
-
-  DebuggerNotificationDispatch(
-      this, aIsInterval ? DebuggerNotificationType::SetInterval
-                        : DebuggerNotificationType::SetTimeout);
 
   nsCOMPtr<nsIScriptTimeoutHandler> handler =
       NS_CreateJSTimeoutHandler(aCx, this, aFunction, aArguments, aError);
@@ -5764,14 +5729,9 @@ int32_t nsGlobalWindowInner::SetTimeoutOrInterval(JSContext* aCx,
   }
 
   if (inner != this) {
-    RefPtr<nsGlobalWindowInner> innerRef(inner);
-    return innerRef->SetTimeoutOrInterval(aCx, aHandler, aTimeout, aIsInterval,
-                                          aError);
+    return inner->SetTimeoutOrInterval(aCx, aHandler, aTimeout, aIsInterval,
+                                       aError);
   }
-
-  DebuggerNotificationDispatch(
-      this, aIsInterval ? DebuggerNotificationType::SetInterval
-                        : DebuggerNotificationType::SetTimeout);
 
   nsCOMPtr<nsIScriptTimeoutHandler> handler =
       NS_CreateJSTimeoutHandler(aCx, this, aHandler, aError);
@@ -5820,10 +5780,6 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
     reason = "setTimeout handler";
   }
 
-  auto timerNotificationType =
-      timeout->mIsInterval ? DebuggerNotificationType::SetIntervalCallback
-                           : DebuggerNotificationType::SetTimeoutCallback;
-
   bool abortIntervalHandler = false;
   nsCOMPtr<nsIScriptTimeoutHandler> handler(
       do_QueryInterface(timeout->mScriptHandler));
@@ -5857,8 +5813,6 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
             initiatingScript->AssociateWithScript(script);
           }
 
-          CallbackDebuggerNotificationGuard guard(this, timerNotificationType);
-
           rv = exec.ExecScript();
         }
       }
@@ -5871,13 +5825,7 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
       nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow*>(this));
       ErrorResult rv;
       JS::Rooted<JS::Value> ignoredVal(RootingCx());
-
-      {
-        CallbackDebuggerNotificationGuard guard(this, timerNotificationType);
-
-        callback->Call(me, handler->GetArgs(), &ignoredVal, rv, reason);
-      }
-
+      callback->Call(me, handler->GetArgs(), &ignoredVal, rv, reason);
       if (rv.IsUncatchableException()) {
         abortIntervalHandler = true;
       }
@@ -5888,9 +5836,6 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
     nsCOMPtr<nsITimeoutHandler> basicHandler(timeout->mScriptHandler);
     nsCOMPtr<nsISupports> kungFuDeathGrip(static_cast<nsIDOMWindow*>(this));
     mozilla::Unused << kungFuDeathGrip;
-
-    CallbackDebuggerNotificationGuard guard(this, timerNotificationType);
-
     basicHandler->Call();
   }
 

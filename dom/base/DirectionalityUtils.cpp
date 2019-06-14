@@ -224,7 +224,6 @@
 namespace mozilla {
 
 using mozilla::dom::Element;
-using mozilla::dom::HTMLSlotElement;
 using mozilla::dom::ShadowRoot;
 
 static nsIContent* GetParentOrHostOrSlot(
