@@ -703,14 +703,12 @@ nsNSSCertificate::GetSha256SubjectPublicKeyInfoDigest(
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetRawDER(uint32_t* aLength, uint8_t** aArray) {
+nsNSSCertificate::GetRawDER(nsTArray<uint8_t>& aArray) {
   if (mCert) {
-    *aArray = (uint8_t*)moz_xmalloc(mCert->derCert.len);
-    memcpy(*aArray, mCert->derCert.data, mCert->derCert.len);
-    *aLength = mCert->derCert.len;
+    aArray.SetLength(mCert->derCert.len);
+    memcpy(aArray.Elements(), mCert->derCert.data, mCert->derCert.len);
     return NS_OK;
   }
-  *aLength = 0;
   return NS_ERROR_FAILURE;
 }
 

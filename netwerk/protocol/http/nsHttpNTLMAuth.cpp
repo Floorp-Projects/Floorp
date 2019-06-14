@@ -28,6 +28,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -283,6 +284,7 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel* authChannel,
 
   void *inBuf, *outBuf;
   uint32_t inBufLen, outBufLen;
+  Maybe<nsTArray<uint8_t>> certArray;
 
   // initial challenge
   if (PL_strcasecmp(challenge, "NTLM") == 0) {
@@ -331,15 +333,14 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel* authChannel,
       rv = secInfo->GetServerCert(getter_AddRefs(cert));
       if (NS_FAILED(rv)) return rv;
 
-      uint32_t length;
-      uint8_t* certArray;
-      rv = cert->GetRawDER(&length, &certArray);
+      certArray.emplace();
+      rv = cert->GetRawDER(*certArray);
       if (NS_FAILED(rv)) return rv;
 
       // If there is a server certificate, we pass it along the
       // first time we call GetNextToken().
-      inBufLen = length;
-      inBuf = certArray;
+      inBufLen = certArray->Length();
+      inBuf = certArray->Elements();
     } else {
       // If there is no server certificate, we don't pass anything.
       inBufLen = 0;
@@ -387,7 +388,10 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel* authChannel,
     free(outBuf);
   }
 
-  if (inBuf) free(inBuf);
+  // inBuf needs to be freed if it's not pointing into certArray
+  if (inBuf && !certArray) {
+    free(inBuf);
+  }
 
   return rv;
 }

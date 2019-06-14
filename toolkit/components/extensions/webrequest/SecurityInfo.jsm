@@ -228,7 +228,7 @@ const SecurityInfo = {
       },
     };
     if (options.rawDER) {
-      certData.rawDER = cert.getRawDER({});
+      certData.rawDER = cert.getRawDER();
     }
     return certData;
   },

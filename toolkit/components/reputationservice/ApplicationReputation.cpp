@@ -1514,14 +1514,12 @@ nsresult PendingLookup::ParseCertificates(nsIArray* aSigArray) {
       nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(certSupports, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      uint8_t* data = nullptr;
-      uint32_t len = 0;
-      rv = cert->GetRawDER(&len, &data);
+      nsTArray<uint8_t> data;
+      rv = cert->GetRawDER(data);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Add this certificate to the protobuf to send remotely.
-      certChain->add_element()->set_certificate(data, len);
-      free(data);
+      certChain->add_element()->set_certificate(data.Elements(), data.Length());
 
       rv = chainElt->HasMoreElements(&hasMoreCerts);
       NS_ENSURE_SUCCESS(rv, rv);
