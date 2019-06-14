@@ -22,7 +22,8 @@ class ChannelMergerNodeEngine final : public AudioNodeEngine {
   void ProcessBlocksOnPorts(AudioNodeStream* aStream,
                             const OutputChunks& aInput, OutputChunks& aOutput,
                             bool* aFinished) override {
-    MOZ_ASSERT(aInput.Length() >= 1, "Should have one or more input ports");
+    MOZ_ASSERT(aInput.Length() == InputCount());
+    MOZ_ASSERT(aOutput.Length() == 1, "Should have only one output port");
 
     // Get the number of output channels, and allocate it
     size_t channelCount = InputCount();
