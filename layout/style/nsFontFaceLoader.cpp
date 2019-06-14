@@ -286,6 +286,11 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 nsresult nsFontFaceLoader::FontLoadComplete() {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (!mFontFaceSet) {
+    // We've been canceled
+    return NS_OK;
+  }
+
   // when new font loaded, need to reflow
   nsTArray<gfxUserFontSet*> fontSets;
   mUserFontEntry->GetUserFontSets(fontSets);
