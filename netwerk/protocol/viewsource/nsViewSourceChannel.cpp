@@ -1052,3 +1052,18 @@ void nsViewSourceChannel::SetIPv6Disabled() {
     mHttpChannelInternal->SetIPv6Disabled();
   }
 }
+
+bool nsViewSourceChannel::GetHasSandboxedAuxiliaryNavigations() {
+  if (mHttpChannelInternal) {
+    return mHttpChannelInternal->GetHasSandboxedAuxiliaryNavigations();
+  }
+  return false;
+}
+
+void nsViewSourceChannel::SetHasSandboxedAuxiliaryNavigations(
+    bool aHasSandboxedAuxiliaryNavigations) {
+  if (mHttpChannelInternal) {
+    mHttpChannelInternal->SetHasSandboxedAuxiliaryNavigations(
+        aHasSandboxedAuxiliaryNavigations);
+  }
+}

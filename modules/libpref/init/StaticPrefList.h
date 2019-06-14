@@ -923,6 +923,15 @@ VARCACHE_PREF(
   bool, false
 )
 
+// When this pref is enabled top level loads with a mismatched
+// Cross-Origin-Opener-Policy header will be loaded in a separate process.
+VARCACHE_PREF(
+  Live,
+  "browser.tabs.remote.useCrossOriginOpenerPolicy",
+  browser_tabs_remote_useCrossOriginOpenerPolicy,
+  bool, false
+)
+
 // When this pref is enabled, the browser will check no-cors responses that
 // have the Cross-Origin-Resource-Policy header and will fail the request if
 // the origin of the resource's loading document doesn't match the origin

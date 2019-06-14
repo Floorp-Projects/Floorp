@@ -2578,6 +2578,15 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
 
   rv = NS_OK;
   if (!mCanceled) {
+    ComputeCrossOriginOpenerPolicyMismatch();
+    if (mHasCrossOriginOpenerPolicyMismatch &&
+        GetHasSandboxedAuxiliaryNavigations()) {
+      // this navigates the doc's browsing context to a network error.
+      mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+      HandleAsyncAbort();
+      return NS_OK;
+    }
+
     // notify "http-on-may-change-process" observers
     gHttpHandler->OnMayChangeProcess(this);
 
@@ -7357,6 +7366,9 @@ nsresult nsHttpChannel::StartCrossProcessRedirect() {
   return rv;
 }
 
+// See https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e
+// This method runs steps 1-4 of the algorithm to compare
+// cross-origin-opener policies
 static bool CompareCrossOriginOpenerPolicies(
     nsILoadInfo::CrossOriginOpenerPolicy documentPolicy,
     nsIPrincipal* documentOrigin,
@@ -7394,6 +7406,8 @@ static bool CompareCrossOriginOpenerPolicies(
   return false;
 }
 
+// This method returns the cached result of running the Cross-Origin-Opener
+// policy compare algorithm by calling ComputeCrossOriginOpenerPolicyMismatch
 NS_IMETHODIMP
 nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
   MOZ_ASSERT(aMismatch);
@@ -7401,7 +7415,18 @@ nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  *aMismatch = false;
+  *aMismatch = mHasCrossOriginOpenerPolicyMismatch;
+  return NS_OK;
+}
+
+// This runs steps 1-5 of the algorithm when navigating a top level document.
+// See https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e
+nsresult nsHttpChannel::ComputeCrossOriginOpenerPolicyMismatch() {
+  mHasCrossOriginOpenerPolicyMismatch = false;
+  if (!StaticPrefs::browser_tabs_remote_useCrossOriginOpenerPolicy()) {
+    return NS_OK;
+  }
+
   // Only consider Cross-Origin-Opener-Policy for toplevel document loads.
   if (mLoadInfo->GetExternalContentPolicyType() !=
       nsIContentPolicy::TYPE_DOCUMENT) {
@@ -7465,17 +7490,17 @@ nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
 
   if (!(documentPolicy &
         nsILoadInfo::OPENER_POLICY_UNSAFE_ALLOW_OUTGOING_FLAG)) {
-    *aMismatch = true;
+    mHasCrossOriginOpenerPolicyMismatch = true;
     return NS_OK;
   }
 
   if (resultPolicy != nsILoadInfo::OPENER_POLICY_NULL) {
-    *aMismatch = true;
+    mHasCrossOriginOpenerPolicyMismatch = true;
     return NS_OK;
   }
 
   if (!ctx->Canonical()->GetCurrentWindowGlobal()->IsInitialDocument()) {
-    *aMismatch = true;
+    mHasCrossOriginOpenerPolicyMismatch = true;
     return NS_OK;
   }
 
@@ -7742,6 +7767,16 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
   rv = NS_OK;
   if (!mCanceled) {
     // notify "http-on-may-change-process" observers
+    ComputeCrossOriginOpenerPolicyMismatch();
+
+    if (mHasCrossOriginOpenerPolicyMismatch &&
+        GetHasSandboxedAuxiliaryNavigations()) {
+      // this navigates the doc's browsing context to a network error.
+      mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+      HandleAsyncAbort();
+      return NS_OK;
+    }
+
     gHttpHandler->OnMayChangeProcess(this);
 
     if (mRedirectContentProcessIdPromise) {

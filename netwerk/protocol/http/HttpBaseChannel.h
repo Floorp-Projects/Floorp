@@ -317,6 +317,13 @@ class HttpBaseChannel : public nsHashPropertyBag,
   virtual void SetIPv6Disabled(void) override;
   NS_IMETHOD GetCrossOriginOpenerPolicy(
       nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) override;
+  virtual bool GetHasSandboxedAuxiliaryNavigations() override {
+    return mHasSandboxedNavigations;
+  }
+  virtual void SetHasSandboxedAuxiliaryNavigations(
+      bool aHasSandboxedAuxiliaryNavigations) override {
+    mHasSandboxedNavigations = aHasSandboxedAuxiliaryNavigations;
+  }
 
   inline void CleanRedirectCacheChainIfNecessary() {
     mRedirectedCachekeys = nullptr;
@@ -730,6 +737,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // Defaults to true.  This is set to false when it is no longer possible
   // to upgrade the request to a secure channel.
   uint32_t mUpgradableToSecure : 1;
+
+  // Is true if the docshell has the SANDBOXED_AUXILIARY_NAVIGATION flag set.
+  uint32_t mHasSandboxedNavigations : 1;
 
   // An opaque flags for non-standard behavior of the TLS system.
   // It is unlikely this will need to be set outside of telemetry studies
