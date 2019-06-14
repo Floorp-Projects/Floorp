@@ -533,8 +533,9 @@ static inline uint32_t ProfileVersionForFeature(GLFeature feature,
   return (uint32_t)featureInfo.mOpenGLVersion;
 }
 
-bool IsFeaturePartOfProfileVersion(GLFeature feature, ContextProfile profile,
-                                   unsigned int version) {
+static bool IsFeaturePartOfProfileVersion(GLFeature feature,
+                                          ContextProfile profile,
+                                          unsigned int version) {
   unsigned int profileVersion = ProfileVersionForFeature(feature, profile);
 
   /**

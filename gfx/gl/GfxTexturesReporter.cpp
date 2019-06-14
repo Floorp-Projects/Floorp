@@ -19,7 +19,7 @@ Atomic<size_t> GfxTexturesReporter::sAmount(0);
 Atomic<size_t> GfxTexturesReporter::sPeakAmount(0);
 Atomic<size_t> GfxTexturesReporter::sTileWasteAmount(0);
 
-std::string FormatBytes(size_t amount) {
+static std::string FormatBytes(size_t amount) {
   std::stringstream stream;
   int depth = 0;
   double val = amount;
