@@ -217,7 +217,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   destroy: function() {
     dumpn("in ThreadActor.prototype.destroy");
     if (this._state == "paused") {
-      this.onResume();
+      this.doResume();
     }
 
     this._xhrBreakpoints = [];
@@ -847,14 +847,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * Handle attaching the various stepping hooks we need to attach when we
    * receive a resume request with a resumeLimit property.
    *
-   * @param Object request
-   *        The request packet received over the RDP.
+   * @param Object { rewind, resumeLimit }
+   *        The values received over the RDP.
    * @returns A promise that resolves to true once the hooks are attached, or is
    *          rejected with an error packet.
    */
-  _handleResumeLimit: async function(request) {
-    let steppingType = request.resumeLimit.type;
-    const rewinding = request.rewind;
+  _handleResumeLimit: async function({rewind, resumeLimit}) {
+    let steppingType = resumeLimit.type;
+    const rewinding = rewind;
     if (!["break", "step", "next", "finish", "warp"].includes(steppingType)) {
       return Promise.reject({
         error: "badParameterType",
@@ -945,7 +945,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   /**
    * Handle a protocol request to resume execution of the debuggee.
    */
-  onResume: function(request) {
+  onResume: async function({resumeLimit, rewind}) {
     if (this._state !== "paused") {
       return {
         error: "wrongState",
@@ -968,53 +968,67 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       };
     }
 
-    const rewinding = request && request.rewind;
-    if (rewinding && !this.dbg.replaying) {
+    if (rewind && !this.dbg.replaying) {
       return {
         error: "cantRewind",
         message: "Can't rewind a debuggee that is not replaying.",
       };
     }
 
-    let resumeLimitHandled;
-    if (request && request.resumeLimit) {
-      resumeLimitHandled = this._handleResumeLimit(request);
-    } else {
-      this._clearSteppingHooks();
-      resumeLimitHandled = Promise.resolve(true);
-    }
-
-    return resumeLimitHandled.then(() => {
-      this.maybePauseOnExceptions();
+    try {
+      if (resumeLimit) {
+        await this._handleResumeLimit({resumeLimit, rewind});
+      } else {
+        this._clearSteppingHooks();
+      }
 
       // When replaying execution in a separate process we need to explicitly
       // notify that process when to resume execution.
       if (this.dbg.replaying) {
-        if (request && request.resumeLimit && request.resumeLimit.type == "warp") {
-          this.dbg.replayTimeWarp(request.resumeLimit.target);
-        } else if (rewinding) {
+        if (resumeLimit && resumeLimit.type == "warp") {
+          this.dbg.replayTimeWarp(resumeLimit.target);
+        } else if (rewind) {
           this.dbg.replayResumeBackward();
         } else {
           this.dbg.replayResumeForward();
         }
       }
 
-      const packet = this._resumed();
-      this._popThreadPause();
-      // Tell anyone who cares of the resume (as of now, that's the xpcshell harness and
-      // devtools-startup.js when handling the --wait-for-jsdebugger flag)
-      if (Services.obs) {
-        Services.obs.notifyObservers(this, "devtools-thread-resumed");
-      }
-      return packet;
-    }, error => {
+      this.doResume();
+      return {};
+    } catch (error) {
       return error instanceof Error
-        ? { error: "unknownError",
+        ? {
+            error: "unknownError",
             message: DevToolsUtils.safeErrorString(error) }
         // It is a known error, and the promise was rejected with an error
         // packet.
         : error;
-    });
+    }
+  },
+
+  /**
+   * Only resume and notify necessary observers. This should be used in cases
+   * when we do not want to notify the front end of a resume, for example when
+   * we are shutting down.
+   */
+  doResume() {
+    this.maybePauseOnExceptions();
+    this._state = "running";
+
+    // Drop the actors in the pause actor pool.
+    this.conn.removeActorPool(this._pausePool);
+
+    this._pausePool = null;
+    this._pauseActor = null;
+    this._popThreadPause();
+    // Tell anyone who cares of the resume (as of now, that's the xpcshell harness and
+    // devtools-startup.js when handling the --wait-for-jsdebugger flag)
+    this.conn.sendActorEvent(this.actorID, "resumed");
+
+    if (Services.obs) {
+      Services.obs.notifyObservers(this, "devtools-thread-resumed");
+    }
   },
 
   /**
@@ -1278,18 +1292,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     return packet;
-  },
-
-  _resumed: function() {
-    this._state = "running";
-
-    // Drop the actors in the pause actor pool.
-    this.conn.removeActorPool(this._pausePool);
-
-    this._pausePool = null;
-    this._pauseActor = null;
-
-    return { from: this.actorID, type: "resumed" };
   },
 
   /**

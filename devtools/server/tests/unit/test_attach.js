@@ -13,7 +13,7 @@ const { BrowsingContextTargetFront } = require("devtools/shared/fronts/targets/b
 add_task(threadClientTest(({ threadClient, debuggee, client, targetFront }) => {
   ok(true, "Thread actor was able to attach");
   ok(threadClient instanceof ThreadClient, "Thread client is valid");
-  Assert.equal(threadClient.state, "attached", "Thread client is paused");
+  Assert.equal(threadClient.state, "attached", "Thread client is resumed");
   Assert.equal(String(debuggee), "[object Sandbox]", "Debuggee client is valid");
   ok(client instanceof DebuggerClient, "Client is valid");
   ok(targetFront instanceof BrowsingContextTargetFront, "TargetFront is valid");
