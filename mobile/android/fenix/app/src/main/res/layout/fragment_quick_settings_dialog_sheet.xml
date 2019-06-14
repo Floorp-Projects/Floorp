@@ -79,7 +79,7 @@
             android:gravity="top"
             android:paddingStart="48dp"
             android:text="@string/browser_menu_report_issue"
-            android:textColor="?accentBright"
+            android:textColor="?accentUsedOnDarkBackground"
             app:layout_constraintBottom_toTopOf="@id/line_divider"
             app:layout_constraintTop_toBottomOf="@id/tracking_protection_action" />
 

@@ -66,6 +66,8 @@
     <color name="disabled_private_theme">#66FBFBFE</color>
     <color name="scrimStart_private_theme">#F520123A</color>
     <color name="scrimEnd_private_theme">#F515141A</color>
+    <color name="snackbar_private_theme">@color/accent_bright_private_theme</color>
+    <color name="accent_on_dark_background_private_theme">@color/accent_high_contrast_private_theme</color>
 
     <!-- Normal theme colors for light mode -->
     <color name="primary_text_normal_theme">@color/primary_text_light_theme</color>
@@ -84,6 +86,8 @@
     <color name="disabled_normal_theme">@color/disabled_light_theme</color>
     <color name="scrimStart_normal_theme">@color/scrimStart_light_theme</color>
     <color name="scrimEnd_normal_theme">@color/scrimEnd_light_theme</color>
+    <color name="snackbar_normal_theme">@color/accent_light_theme</color>
+    <color name="accent_on_dark_background_normal_theme">@color/accent_bright_light_theme</color>
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>

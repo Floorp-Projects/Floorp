@@ -22,6 +22,8 @@
     <color name="scrimEnd_normal_theme">@color/scrimEnd_dark_theme</color>
     <color name="toggle_off_knob_normal_theme">@color/toggle_off_knob_dark_theme</color>
     <color name="toggle_off_track_normal_theme">@color/toggle_off_track_dark_theme</color>
+    <color name="snackbar_normal_theme">@color/accent_bright_dark_theme</color>
+    <color name="accent_on_dark_background_normal_theme">@color/accent_high_contrast_dark_theme</color>
 
     <!-- Collection icons-->
     <color name="collection_icon_color_violet">@color/collection_icon_color_violet_dark_theme</color>
