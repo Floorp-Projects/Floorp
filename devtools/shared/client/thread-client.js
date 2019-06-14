@@ -199,15 +199,6 @@ class ThreadClient extends FrontClassWithSpec(threadSpec) {
   }
 
   /**
-   * Detach from the thread actor.
-   */
-  async detach() {
-    const response = await super.detach();
-    this.client.unregisterClient(this);
-    return response;
-  }
-
-  /**
    * Request the loaded sources for the current thread.
    */
   getSources() {
@@ -226,6 +217,30 @@ class ThreadClient extends FrontClassWithSpec(threadSpec) {
    */
   getFrames(start, count) {
     return super.frames(start, count);
+  }
+  /**
+   * attach to the thread actor.
+   */
+  async attach(options) {
+    let response;
+    try {
+      const onPaused = this.once("paused");
+      response = await super.attach(options);
+      await onPaused;
+    } catch (e) {
+      throw new Error(e);
+    }
+    return response;
+  }
+
+  /**
+   * Detach from the thread actor.
+   */
+  async detach() {
+    const onDetached = this.once("detached");
+    await super.detach();
+    await onDetached;
+    await this.destroy();
   }
 
   /**
