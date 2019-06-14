@@ -40,6 +40,7 @@
   <string name="firstrun_customize_message">&firstrun_customize_message;</string>
   <string name="firstrun_customize_subtext">&firstrun_customize_subtext;</string>
   <string name="firstrun_sync_title">&firstrun_sync_title;</string>
+  <string name="firstrun_account_title">&firstrun_account_title;</string>
   <string name="firstrun_sync_message">&firstrun_sync_message2;</string>
   <string name="firstrun_sync_subtext">&firstrun_sync_subtext2;</string>
   <string name="newfirstrun_sync_subtext">&newfirstrun_sync_subtext;</string>
