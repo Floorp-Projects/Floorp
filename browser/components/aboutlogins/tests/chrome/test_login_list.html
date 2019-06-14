@@ -93,7 +93,7 @@ add_task(async function test_populated_list() {
   is(loginListItems.length, 3, "A blank login and the two stored logins should be displayed");
   ok(!loginListItems[0].hasAttribute("guid"), "first login-list-item should be the 'new' item");
   is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
-  is(loginListItems[1].shadowRoot.querySelector(".origin").textContent, TEST_LOGIN_1.origin,
+  is(loginListItems[1].shadowRoot.querySelector(".title").textContent, TEST_LOGIN_1.title,
      "login-list-item origin should match");
   is(loginListItems[1].shadowRoot.querySelector(".username").textContent, TEST_LOGIN_1.username,
      "login-list-item username should match");
@@ -161,7 +161,7 @@ add_task(async function test_login_modified() {
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 2, "Both logins should be displayed");
   is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
-  is(loginListItems[0].shadowRoot.querySelector(".origin").textContent, TEST_LOGIN_1.origin,
+  is(loginListItems[0].shadowRoot.querySelector(".title").textContent, TEST_LOGIN_1.title,
      "login-list-item origin should match");
   is(loginListItems[0].shadowRoot.querySelector(".username").textContent, modifiedLogin.username,
      "login-list-item username should have been updated");
@@ -178,7 +178,7 @@ add_task(async function test_login_added() {
   is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
   is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
   is(loginListItems[2].getAttribute("guid"), newLogin.guid, "login-list-item3 should have correct guid attribute");
-  is(loginListItems[2].shadowRoot.querySelector(".origin").textContent, newLogin.origin,
+  is(loginListItems[2].shadowRoot.querySelector(".title").textContent, newLogin.title,
      "login-list-item origin should match");
   is(loginListItems[2].shadowRoot.querySelector(".username").textContent, newLogin.username,
      "login-list-item username should have been updated");
