@@ -214,6 +214,7 @@ this.LoginHelper = {
       if (allowJS && uri.scheme == "javascript") {
         return "javascript:";
       }
+      // TODO: Bug 1559205 - Add support for moz-proxy
 
       // Build this manually instead of using prePath to avoid including the userPass portion.
       realm = uri.scheme + "://" + uri.displayHostPort;
