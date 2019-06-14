@@ -20,6 +20,8 @@ interface WindowGlobalParent {
   readonly attribute unsigned long long outerWindowId;
   readonly attribute unsigned long long contentParentId;
 
+  readonly attribute long osPid;
+
   // A WindowGlobalParent is the root in its process if it has no parent, or its
   // embedder is in a different process.
   readonly attribute boolean isProcessRoot;

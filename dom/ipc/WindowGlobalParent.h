@@ -94,6 +94,8 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
   uint64_t ContentParentId();
 
+  int32_t OsPid();
+
   bool IsCurrentGlobal();
 
   bool IsProcessRoot();
