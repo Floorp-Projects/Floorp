@@ -528,10 +528,10 @@ var PermissionPromptPrototype = {
           if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
             scope = SitePermissions.SCOPE_SESSION;
           }
-          SitePermissions.set(principal.URI,
-                              this.permissionKey,
-                              promptAction.action,
-                              scope);
+          SitePermissions.setForPrincipal(principal,
+                                          this.permissionKey,
+                                          promptAction.action,
+                                          scope);
         },
       };
       popupNotificationActions.push(action);
