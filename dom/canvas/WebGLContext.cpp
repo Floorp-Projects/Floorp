@@ -98,7 +98,8 @@ using namespace mozilla::layers;
 
 WebGLContextOptions::WebGLContextOptions() {
   // Set default alpha state based on preference.
-  if (StaticPrefs::WebGLDefaultNoAlpha()) alpha = false;
+  alpha = !StaticPrefs::WebGLDefaultNoAlpha();
+  antialias = StaticPrefs::WebGLDefaultAntialias();
 }
 
 bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
@@ -349,7 +350,6 @@ WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options,
   newOpts.stencil = attributes.mStencil;
   newOpts.depth = attributes.mDepth;
   newOpts.premultipliedAlpha = attributes.mPremultipliedAlpha;
-  newOpts.antialias = attributes.mAntialias;
   newOpts.preserveDrawingBuffer = attributes.mPreserveDrawingBuffer;
   newOpts.failIfMajorPerformanceCaveat =
       attributes.mFailIfMajorPerformanceCaveat;
@@ -358,13 +358,16 @@ WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options,
   if (attributes.mAlpha.WasPassed()) {
     newOpts.alpha = attributes.mAlpha.Value();
   }
+  if (attributes.mAntialias.WasPassed()) {
+    newOpts.antialias = attributes.mAntialias.Value();
+  }
 
   // Don't do antialiasing if we've disabled MSAA.
-  if (!StaticPrefs::MSAALevel()) {
+  if (!mMsaaSamples) {
     newOpts.antialias = false;
   }
 
-  if (!StaticPrefs::WebGLForceMSAA()) {
+  if (newOpts.antialias && !StaticPrefs::WebGLForceMSAA()) {
     const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
 
     nsCString blocklistId;
@@ -1272,7 +1275,7 @@ void WebGLContext::GetContextAttributes(
   result.mAlpha.Construct(mOptions.alpha);
   result.mDepth = mOptions.depth;
   result.mStencil = mOptions.stencil;
-  result.mAntialias = mOptions.antialias;
+  result.mAntialias.Construct(mOptions.antialias);
   result.mPremultipliedAlpha = mOptions.premultipliedAlpha;
   result.mPreserveDrawingBuffer = mOptions.preserveDrawingBuffer;
   result.mFailIfMajorPerformanceCaveat = mOptions.failIfMajorPerformanceCaveat;
