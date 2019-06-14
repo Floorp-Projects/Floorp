@@ -537,10 +537,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 HomeMenu.Item.Help -> {
                     invokePendingDeleteJobs()
                     (activity as HomeActivity).openToBrowserAndLoad(
-                        searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                            context!!,
-                            SupportUtils.SumoTopic.HELP
-                        ),
+                        searchTermOrURL = SupportUtils.HELP_URL,
                         newTab = true,
                         from = BrowserDirection.FromHome
                     )

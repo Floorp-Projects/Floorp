@@ -18,15 +18,16 @@ import java.util.Locale
 
 object SupportUtils {
     const val RATE_APP_URL = "market://details?id=" + BuildConfig.APPLICATION_ID
-    const val MOZILLA_MANIFESTO_URL = "https://www.mozilla.org/en-GB/about/manifesto/"
     const val FENIX_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
     val PRIVACY_NOTICE_URL: String
         get() = "https://www.mozilla.org/${getLanguageTag(Locale.getDefault())}/privacy/firefox/"
 
+    val HELP_URL: String
+        get() = "https://support.mozilla.org/${getLanguageTag(Locale.getDefault())}/products/firefox-preview"
+
     enum class SumoTopic(
         internal val topicStr: String
     ) {
-        HELP("firefox-android-help"),
         PRIVATE_BROWSING_MYTHS("common-myths-about-private-browsing"),
         YOUR_RIGHTS("your-rights")
     }
