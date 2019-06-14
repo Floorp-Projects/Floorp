@@ -2839,7 +2839,7 @@ void nsFrameLoader::DeactivateRemoteFrame(ErrorResult& aRv) {
     return;
   }
 
-  mBrowserParent->Deactivate();
+  mBrowserParent->Deactivate(false);
 }
 
 void nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType, float aX,
