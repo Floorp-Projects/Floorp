@@ -90,7 +90,7 @@ class MOZ_RAII AutoAssertReportedException {
       return;
     }
 
-    if (!cx_->helperThread()) {
+    if (!cx_->isHelperThreadContext()) {
       MOZ_ASSERT(cx_->isExceptionPending());
       return;
     }
@@ -566,7 +566,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     return nullptr;
   }
 
-  MOZ_ASSERT_IF(!cx->helperThread(), !cx->isExceptionPending());
+  MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
 
   return info.script;
 }
@@ -621,7 +621,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(ModuleInfo& info) {
     return nullptr;
   }
 
-  MOZ_ASSERT_IF(!cx->helperThread(), !cx->isExceptionPending());
+  MOZ_ASSERT_IF(!cx->isHelperThreadContext(), !cx->isExceptionPending());
   return module;
 }
 
@@ -717,7 +717,7 @@ ScriptSourceObject* frontend::CreateScriptSourceObject(
   //
   // Instead, we put off populating those SSO slots in off-thread compilations
   // until after we've merged compartments.
-  if (!cx->helperThread()) {
+  if (!cx->isHelperThreadContext()) {
     if (!ScriptSourceObject::initFromOptions(cx, sso, options)) {
       return nullptr;
     }

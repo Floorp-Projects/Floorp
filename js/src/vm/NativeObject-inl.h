@@ -778,7 +778,7 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
 
   // id was not found in obj. Try obj's resolve hook, if any.
   if (obj->getClass()->getResolve()) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     if (!allowGC) {
       return false;
     }
@@ -873,7 +873,7 @@ static MOZ_ALWAYS_INLINE bool LookupPropertyInline(
       break;
     }
     if (!proto->isNative()) {
-      MOZ_ASSERT(!cx->helperThread());
+      MOZ_ASSERT(!cx->isHelperThreadContext());
       if (!allowGC) {
         return false;
       }

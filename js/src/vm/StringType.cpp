@@ -711,7 +711,7 @@ JSFlatString* JSRope::flattenInternal(JSContext* maybecx) {
 
 JSFlatString* JSRope::flatten(JSContext* maybecx) {
   mozilla::Maybe<AutoGeckoProfilerEntry> entry;
-  if (maybecx && !maybecx->helperThread()) {
+  if (maybecx && !maybecx->isHelperThreadContext()) {
     entry.emplace(maybecx, "JSRope::flatten");
   }
 
@@ -2249,7 +2249,7 @@ JSString* js::ToStringSlow(
 
   Value v = arg;
   if (!v.isPrimitive()) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     if (!allowGC) {
       return nullptr;
     }
@@ -2272,7 +2272,7 @@ JSString* js::ToStringSlow(
   } else if (v.isNull()) {
     str = cx->names().null;
   } else if (v.isSymbol()) {
-    MOZ_ASSERT(!cx->helperThread());
+    MOZ_ASSERT(!cx->isHelperThreadContext());
     if (allowGC) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_SYMBOL_TO_STRING);

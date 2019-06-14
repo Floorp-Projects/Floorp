@@ -760,7 +760,7 @@ void ConstraintTypeSet::addType(const AutoSweepBase& sweep, JSContext* cx,
             InferSpewColorReset(), TypeString(type).get());
 
   /* Propagate the type to all constraints. */
-  if (!cx->helperThread()) {
+  if (!cx->isHelperThreadContext()) {
     TypeConstraint* constraint = constraintList(sweep);
     while (constraint) {
       constraint->newType(cx, this, type);
@@ -2053,7 +2053,7 @@ static void ObjectStateChange(const AutoSweepObjectGroup& sweep, JSContext* cx,
   }
 
   if (types) {
-    if (!cx->helperThread()) {
+    if (!cx->isHelperThreadContext()) {
       TypeConstraint* constraint = types->constraintList(sweep);
       while (constraint) {
         constraint->newObjectState(cx, group);
@@ -2973,7 +2973,7 @@ void ObjectGroup::markStateChange(const AutoSweepObjectGroup& sweep,
   AutoEnterAnalysis enter(cx);
   HeapTypeSet* types = maybeGetProperty(sweep, JSID_EMPTY);
   if (types) {
-    if (!cx->helperThread()) {
+    if (!cx->isHelperThreadContext()) {
       TypeConstraint* constraint = types->constraintList(sweep);
       while (constraint) {
         constraint->newObjectState(cx, this);
@@ -3120,7 +3120,7 @@ void ObjectGroup::clearNewScript(JSContext* cx,
 
   detachNewScript(/* writeBarrier = */ true, replacement);
 
-  if (!cx->helperThread()) {
+  if (!cx->isHelperThreadContext()) {
     bool found = newScript->rollbackPartiallyInitializedObjects(cx, this);
 
     // If we managed to rollback any partially initialized objects, then

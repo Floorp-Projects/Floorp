@@ -82,7 +82,7 @@ bool BinaryASTSupport::ensureBinTablesInitialized(JSContext* cx) {
 }
 
 bool BinaryASTSupport::ensureBinASTKindsInitialized(JSContext* cx) {
-  MOZ_ASSERT(!cx->helperThread());
+  MOZ_ASSERT(!cx->isHelperThreadContext());
   if (binASTKindMap_.empty()) {
     for (size_t i = 0; i < frontend::BINASTKIND_LIMIT; ++i) {
       const BinASTKind variant = static_cast<BinASTKind>(i);
@@ -100,7 +100,7 @@ bool BinaryASTSupport::ensureBinASTKindsInitialized(JSContext* cx) {
 }
 
 bool BinaryASTSupport::ensureBinASTVariantsInitialized(JSContext* cx) {
-  MOZ_ASSERT(!cx->helperThread());
+  MOZ_ASSERT(!cx->isHelperThreadContext());
   if (binASTVariantMap_.empty()) {
     for (size_t i = 0; i < frontend::BINASTVARIANT_LIMIT; ++i) {
       const BinASTVariant variant = static_cast<BinASTVariant>(i);
@@ -118,8 +118,8 @@ bool BinaryASTSupport::ensureBinASTVariantsInitialized(JSContext* cx) {
 
 JS::Result<const js::frontend::BinASTKind*> BinaryASTSupport::binASTKind(
     JSContext* cx, const CharSlice key) {
-  MOZ_ASSERT_IF(cx->helperThread(), !binASTKindMap_.empty());
-  if (!cx->helperThread()) {
+  MOZ_ASSERT_IF(cx->isHelperThreadContext(), !binASTKindMap_.empty());
+  if (!cx->isHelperThreadContext()) {
     // Initialize Lazily if on main thread.
     if (!ensureBinASTKindsInitialized(cx)) {
       return cx->alreadyReportedError();
@@ -136,8 +136,8 @@ JS::Result<const js::frontend::BinASTKind*> BinaryASTSupport::binASTKind(
 
 JS::Result<const js::frontend::BinASTVariant*> BinaryASTSupport::binASTVariant(
     JSContext* cx, const CharSlice key) {
-  MOZ_ASSERT_IF(cx->helperThread(), !binASTVariantMap_.empty());
-  if (!cx->helperThread()) {
+  MOZ_ASSERT_IF(cx->isHelperThreadContext(), !binASTVariantMap_.empty());
+  if (!cx->isHelperThreadContext()) {
     // Initialize lazily if on main thread.
     if (!ensureBinASTVariantsInitialized(cx)) {
       return cx->alreadyReportedError();

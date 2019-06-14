@@ -6999,7 +6999,7 @@ static JSFunction* NewAsmJSModuleFunction(JSContext* cx, JSFunction* origFun,
 // Top-level js::CompileAsmJS
 
 static bool NoExceptionPending(JSContext* cx) {
-  return cx->helperThread() || !cx->isExceptionPending();
+  return cx->isHelperThreadContext() || !cx->isExceptionPending();
 }
 
 static bool SuccessfulValidation(frontend::ParserBase& parser,
