@@ -125,6 +125,8 @@ class InactivePropertyHelper {
           "align-content",
           "align-items",
           "justify-content",
+          "place-content",
+          "place-items",
           "row-gap",
         ],
         when: () => !this.gridContainer && !this.flexContainer,
