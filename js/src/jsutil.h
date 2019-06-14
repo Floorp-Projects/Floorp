@@ -255,6 +255,10 @@ static MOZ_ALWAYS_INLINE void PodSet(T* aDst, const T& aSrc, size_t aNElem) {
  * pointer. These values should be odd, see the comment in IsThingPoisoned.
  *
  * Note: new patterns should also be added to the array in IsThingPoisoned!
+ *
+ * We try to keep our IRC bot, mrgiggles, up to date with these and other
+ * patterns:
+ * https://bitbucket.org/sfink/mrgiggles/src/default/plugins/knowledge/__init__.py
  */
 const uint8_t JS_FRESH_NURSERY_PATTERN = 0x2F;
 const uint8_t JS_SWEPT_NURSERY_PATTERN = 0x2B;
