@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bug 1553262</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+
+  const video = document.createElement('video')
+  const source = new AudioContext().createMediaElementSource(video)
+  const stream = canvas.captureStream()
+
+  const xhr = new XMLHttpRequest()
+
+  context.rect(256, -32768, 16, 16)
+  video.srcObject = stream
+  for (let i = 0; i < 16; i++) {
+    xhr.open('P', '', false)
+    xhr.send()
+  }
+
+  video.srcObject = stream
+  ok(true, "success")
+</script>
+</body>
+</html>
