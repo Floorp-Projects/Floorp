@@ -488,9 +488,9 @@ nsresult nsClipboardCommand::IsCommandEnabled(const char* aCommandName,
   RefPtr<dom::Document> doc = window->GetExtantDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  if (doc->IsHTMLOrXHTML()) {
+  if (doc->IsHTMLOrXHTML() && !nsContentUtils::IsChromeDoc(doc)) {
     // In HTML and XHTML documents, we always want the cut, copy and paste
-    // commands to be enabled.
+    // commands to be enabled, but if the document is chrome, let it control it.
     *outCmdEnabled = true;
   } else {
     // Cut isn't enabled in xul documents which use nsClipboardCommand
