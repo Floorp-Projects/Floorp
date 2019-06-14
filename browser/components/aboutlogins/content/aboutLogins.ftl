@@ -38,7 +38,6 @@ login-item =
   .copy-username-button = Copy
   .delete-button = Delete
   .edit-button = Edit
-  .field-required-symbol = *
   .modal-input-reveal-checkbox-hide = Hide password
   .modal-input-reveal-checkbox-show = Show password
   .new-login-title = Create New Login
