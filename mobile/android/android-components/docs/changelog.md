@@ -25,6 +25,16 @@ permalink: /changelog/
   * ui-progress
   * ui-doorhanger
 
+# 0.56.3
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.56.2...v0.56.3)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.56.3/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.56.3/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.56.3/buildSrc/src/main/java/Config.kt)
+
+
+* **service-firefox-accounts**
+  * Disabled periodic device event polling.
+
 # 0.56.2
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.56.1...v0.56.2)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.56.2/buildSrc/src/main/java/Dependencies.kt)
