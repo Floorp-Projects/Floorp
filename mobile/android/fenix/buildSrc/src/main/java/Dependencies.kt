@@ -30,7 +30,7 @@ private object Versions {
     const val androidx_transition = "1.1.0-rc02"
     const val google_material = "1.1.0-alpha07"
 
-    const val mozilla_android_components = "0.56.2"
+    const val mozilla_android_components = "0.56.4"
     // Note that android-components also depends on application-services,
     // and in fact is our main source of appservices-related functionality.
     // The version number below tracks the application-services version
