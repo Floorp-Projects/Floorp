@@ -53,7 +53,6 @@ export default class LoginItem extends ReflectedFluentElement {
       "copy-username-button",
       "delete-button",
       "edit-button",
-      "field-required-symbol",
       "modal-input-reveal-checkbox-hide",
       "modal-input-reveal-checkbox-show",
       "new-login-title",
@@ -86,13 +85,6 @@ export default class LoginItem extends ReflectedFluentElement {
         let copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
         let newAttrName = attrName.substr(0, attrName.indexOf("-")) + "-button-text";
         copyUsernameButton.setAttribute(newAttrName, this.getAttribute(attrName));
-        break;
-      }
-      case "field-required-symbol": {
-        for (let labelSelector of [".origin-label", ".password-label"]) {
-          let label = this.shadowRoot.querySelector(labelSelector);
-          label.setAttribute("field-required-symbol", this.getAttribute(attrName));
-        }
         break;
       }
       case "modal-input-reveal-checkbox-hide": {
