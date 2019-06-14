@@ -104,9 +104,9 @@ AsyncShutdownTimeout:
 
 AvailablePageFile:
   description: >
-    Windows-only, maximum amount of memory that can be committed.  This
-    annotation is populated with the contents of the MEMORYSTATUSEX's structure
-    ullAvailPageFile field.
+    Windows-only, available commit-space in bytes.  This annotation is computed
+    from the PERFORMANCE_INFORMATION structure by substracting the CommitTotal
+    field from the CommitLimit field.
   type: string
   ping: true
 
@@ -773,9 +773,9 @@ ThreadIdNameMapping:
 
 TotalPageFile:
   description: >
-    Windows-only, current committed memory limit. This annotation is
-    populated with the contents of the MEMORYSTATUSEX's structure
-    ullTotalPageFile field.
+    Windows-only, maximum amount of memory that can be committed.  This
+    annotation is populated with the contents of the PERFORMANCE_INFORMATION's
+    structure CommitLimit field.
   type: string
   ping: true
 
