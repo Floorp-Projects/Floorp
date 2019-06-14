@@ -205,7 +205,9 @@ class CollectionCreationUIView(
                 val drawable = view.context.getDrawable(R.drawable.ic_new)
                 drawable?.setTint(ContextCompat.getColor(view.context, R.color.photonWhite))
                 view.bottom_bar_icon_button.setImageDrawable(drawable)
-                view.bottom_bar_icon_button.setOnClickListener(null)
+                view.bottom_bar_icon_button.setOnClickListener {
+                    actionEmitter.onNext(CollectionCreationAction.AddNewCollection)
+                }
 
                 view.bottom_button_bar_layout.isClickable = true
                 view.bottom_button_bar_layout.setOnClickListener {
