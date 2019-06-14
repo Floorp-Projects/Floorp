@@ -799,11 +799,13 @@ async function addBreakpoint(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
   const bpCount = dbg.selectors.getBreakpointCount();
+  const onBreakpoint = waitForDispatch(dbg, "SET_BREAKPOINT");
   await dbg.actions.addBreakpoint(
     getContext(dbg),
     { sourceId, line, column },
     options
   );
+  await onBreakpoint;
   is(
     dbg.selectors.getBreakpointCount(),
     bpCount + 1,
