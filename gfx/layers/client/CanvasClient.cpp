@@ -365,8 +365,12 @@ static already_AddRefed<SharedSurfaceTextureClient> CloneSurface(
   gl::SharedSurface* destSurf = dest->Surf();
 
   destSurf->ProducerAcquire();
-  SharedSurface::ProdCopy(src, dest->Surf(), factory);
+  bool ret = SharedSurface::ProdCopy(src, dest->Surf(), factory);
   destSurf->ProducerRelease();
+
+  if (!ret) {
+    return nullptr;
+  }
 
   return dest.forget();
 }
