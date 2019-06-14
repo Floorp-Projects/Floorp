@@ -134,7 +134,8 @@ nsresult ChannelFromScriptURL(
     const Maybe<ServiceWorkerDescriptor>& aController, bool aIsMainScript,
     WorkerScriptType aWorkerScriptType,
     nsContentPolicyType aMainScriptContentPolicyType, nsLoadFlags aLoadFlags,
-    nsICookieSettings* aCookieSettings, nsIChannel** aChannel) {
+    nsICookieSettings* aCookieSettings, nsIReferrerInfo* aReferrerInfo,
+    nsIChannel** aChannel) {
   AssertIsOnMainThread();
 
   nsresult rv;
@@ -247,13 +248,13 @@ nsresult ChannelFromScriptURL(
     }
   }
 
-  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel)) {
-    mozilla::net::ReferrerPolicy referrerPolicy =
-        parentDoc ? parentDoc->GetReferrerPolicy() : mozilla::net::RP_Unset;
-    rv = nsContentUtils::SetFetchReferrerURIWithPolicy(
-        principal, parentDoc, httpChannel, referrerPolicy);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+  if (aReferrerInfo) {
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+    if (httpChannel) {
+      rv = httpChannel->SetReferrerInfo(aReferrerInfo);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
   }
 
@@ -989,11 +990,20 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
         return rv;
       }
 
-      rv = ChannelFromScriptURL(
-          principal, parentDoc, mWorkerPrivate, loadGroup, ios, secMan, url,
-          mClientInfo, mController, IsMainWorkerScript(), mWorkerScriptType,
-          mWorkerPrivate->ContentPolicyType(), loadFlags,
-          mWorkerPrivate->CookieSettings(), getter_AddRefs(channel));
+      nsCOMPtr<nsIReferrerInfo> referrerInfo =
+          ReferrerInfo::CreateForFetch(principal, nullptr);
+      if (parentWorker && !IsMainWorkerScript()) {
+        referrerInfo =
+            static_cast<ReferrerInfo*>(referrerInfo.get())
+                ->CloneWithNewPolicy(parentWorker->GetReferrerPolicy());
+      }
+
+      rv = ChannelFromScriptURL(principal, parentDoc, mWorkerPrivate, loadGroup,
+                                ios, secMan, url, mClientInfo, mController,
+                                IsMainWorkerScript(), mWorkerScriptType,
+                                mWorkerPrivate->ContentPolicyType(), loadFlags,
+                                mWorkerPrivate->CookieSettings(), referrerInfo,
+                                getter_AddRefs(channel));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1233,7 +1243,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
         }
       }
 
-      mWorkerPrivate->SetReferrerPolicyFromHeaderValue(tRPHeaderCValue);
+      mWorkerPrivate->UpdateReferrerInfoFromHeader(tRPHeaderCValue);
 
       WorkerPrivate* parent = mWorkerPrivate->GetParent();
       if (parent) {
@@ -1348,8 +1358,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
                                                   aCSPReportOnlyHeaderValue);
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 
-      mWorkerPrivate->SetReferrerPolicyFromHeaderValue(
-          aReferrerPolicyHeaderValue);
+      mWorkerPrivate->UpdateReferrerInfoFromHeader(aReferrerPolicyHeaderValue);
     }
 
     if (NS_SUCCEEDED(rv)) {
@@ -1877,12 +1886,18 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
     clientInfo.emplace(mClientInfo);
 
     nsCOMPtr<nsIChannel> channel;
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        ReferrerInfo::CreateForFetch(mLoadInfo.mLoadingPrincipal, nullptr);
+    mLoadInfo.mReferrerInfo =
+        static_cast<ReferrerInfo*>(referrerInfo.get())
+            ->CloneWithNewPolicy(mWorkerPrivate->GetReferrerPolicy());
+
     mResult = workerinternals::ChannelFromScriptURLMainThread(
         mLoadInfo.mLoadingPrincipal, parentDoc, mLoadInfo.mLoadGroup, url,
         clientInfo,
         // Nested workers are always dedicated.
         nsIContentPolicy::TYPE_INTERNAL_WORKER, mLoadInfo.mCookieSettings,
-        getter_AddRefs(channel));
+        mLoadInfo.mReferrerInfo, getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(mResult, true);
 
     mResult = mLoadInfo.SetPrincipalsAndCSPFromChannel(channel);
@@ -2240,7 +2255,8 @@ nsresult ChannelFromScriptURLMainThread(
     nsIPrincipal* aPrincipal, Document* aParentDoc, nsILoadGroup* aLoadGroup,
     nsIURI* aScriptURL, const Maybe<ClientInfo>& aClientInfo,
     nsContentPolicyType aMainScriptContentPolicyType,
-    nsICookieSettings* aCookieSettings, nsIChannel** aChannel) {
+    nsICookieSettings* aCookieSettings, nsIReferrerInfo* aReferrerInfo,
+    nsIChannel** aChannel) {
   AssertIsOnMainThread();
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService());
@@ -2252,7 +2268,7 @@ nsresult ChannelFromScriptURLMainThread(
       aPrincipal, aParentDoc, nullptr, aLoadGroup, ios, secMan, aScriptURL,
       aClientInfo, Maybe<ServiceWorkerDescriptor>(), true, WorkerScript,
       aMainScriptContentPolicyType, nsIRequest::LOAD_NORMAL, aCookieSettings,
-      aChannel);
+      aReferrerInfo, aChannel);
 }
 
 nsresult ChannelFromScriptURLWorkerThread(JSContext* aCx,

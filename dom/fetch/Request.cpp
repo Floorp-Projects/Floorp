@@ -178,7 +178,8 @@ already_AddRefed<URL> ParseURLFromWorker(const GlobalObject& aGlobal,
   worker->AssertIsOnWorkerThread();
 
   NS_ConvertUTF8toUTF16 baseURL(worker->GetLocationInfo().mHref);
-  RefPtr<URL> url = URL::WorkerConstructor(aGlobal, aInput, baseURL, aRv);
+  RefPtr<URL> url =
+      URL::Constructor(aGlobal.GetAsSupports(), aInput, baseURL, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
   }
@@ -428,7 +429,8 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     if (worker) {
       worker->AssertIsOnWorkerThread();
-      request->SetEnvironmentReferrerPolicy(worker->GetReferrerPolicy());
+      request->SetEnvironmentReferrerPolicy(
+          static_cast<net::ReferrerPolicy>(worker->GetReferrerPolicy()));
       principalInfo =
           MakeUnique<mozilla::ipc::PrincipalInfo>(worker->GetPrincipalInfo());
     }

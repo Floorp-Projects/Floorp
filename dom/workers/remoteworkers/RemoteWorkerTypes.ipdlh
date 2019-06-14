@@ -5,6 +5,7 @@
 include ClientIPCTypes;
 include PBackgroundSharedTypes;
 include URIParams;
+include DOMTypes;
 
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::StorageAccess from "mozilla/dom/ClientIPCUtils.h";
@@ -39,6 +40,8 @@ struct RemoteWorkerData
   bool isSecureContext;
 
   IPCClientInfo? clientInfo;
+
+  nsIReferrerInfo referrerInfo;
 
   StorageAccess storageAccess;
 

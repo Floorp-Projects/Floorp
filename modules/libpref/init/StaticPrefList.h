@@ -4862,6 +4862,13 @@ VARCACHE_PREF(
 
 VARCACHE_PREF(
   Live,
+  "layout.css.resizeobserver.enabled",
+   layout_css_resizeobserver_enabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
   "layout.css.scroll-behavior.damping-ratio",
   ScrollBehaviorDampingRatio,
   AtomicFloat, 1.0f
@@ -5222,19 +5229,6 @@ VARCACHE_PREF(
   Live,
   "layout.css.shadow-parts.enabled",
    layout_css_shadow_parts_enabled,
-  bool, PREF_VALUE
-)
-#undef PREF_VALUE
-
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE true
-#else
-# define PREF_VALUE false
-#endif
-VARCACHE_PREF(
-  Live,
-  "layout.css.resizeobserver.enabled",
-  layout_css_resizeobserver_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE

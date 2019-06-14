@@ -19,10 +19,11 @@ extern crate time;
 extern crate xpcom;
 extern crate storage_variant;
 extern crate style;
+extern crate tempfile;
 
 use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
 use crossbeam_utils::atomic::AtomicCell;
-use lmdb::EnvironmentFlags;
+use lmdb::{EnvironmentFlags, Error as LmdbError};
 use moz_task::{create_thread, is_main_thread, Task, TaskRunnable};
 use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NO_AGGREGATION,
@@ -30,12 +31,12 @@ use nserror::{
 };
 use nsstring::{nsACString, nsAString, nsCStr, nsCString, nsString};
 use rkv::error::StoreError;
-use rkv::{Rkv, SingleStore, StoreOptions, Value};
+use rkv::{migrate::Migrator, Rkv, SingleStore, StoreOptions, Value};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::fmt::Display;
-use std::fs::{create_dir_all, remove_file, File};
+use std::fs::{copy, create_dir_all, remove_file, File};
 use std::io::{BufRead, BufReader};
 use std::mem::size_of;
 use std::os::raw::c_char;
@@ -45,6 +46,7 @@ use std::str;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, SystemTime};
 use storage_variant::VariantType;
+use tempfile::tempdir;
 use thin_vec::ThinVec;
 use xpcom::interfaces::{
     nsICRLiteState, nsICertInfo, nsICertStorage, nsICertStorageCallback, nsIFile,
@@ -788,7 +790,18 @@ fn make_env(path: &Path) -> Result<Rkv, SecurityStateError> {
     let mut builder = Rkv::environment_builder();
     builder.set_max_dbs(2);
     builder.set_map_size(16777216); // 16MB
-    Rkv::from_env(path, builder).map_err(SecurityStateError::from)
+    match Rkv::from_env(path, builder) {
+        Ok(env) => Ok(env),
+        Err(StoreError::LmdbError(LmdbError::Invalid)) => {
+            let temp_env = tempdir()?;
+            let mut migrator = Migrator::new(&path)?;
+            migrator.migrate(temp_env.path())?;
+            copy(temp_env.path().join("data.mdb"), path.join("data.mdb"))?;
+            copy(temp_env.path().join("lock.mdb"), path.join("lock.mdb"))?;
+            Rkv::from_env(path, builder)
+        },
+        Err(err) => Err(err),
+    }.map_err(SecurityStateError::from)
 }
 
 fn unconditionally_remove_file(path: &Path) -> Result<(), SecurityStateError> {

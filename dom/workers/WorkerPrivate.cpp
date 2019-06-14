@@ -1323,7 +1323,7 @@ void WorkerPrivate::StoreCSPOnClient() {
   }
 }
 
-void WorkerPrivate::SetReferrerPolicyFromHeaderValue(
+void WorkerPrivate::UpdateReferrerInfoFromHeader(
     const nsACString& aReferrerPolicyHeaderValue) {
   NS_ConvertUTF8toUTF16 headerValue(aReferrerPolicyHeaderValue);
 
@@ -1337,7 +1337,9 @@ void WorkerPrivate::SetReferrerPolicyFromHeaderValue(
     return;
   }
 
-  SetReferrerPolicy(policy);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      static_cast<ReferrerInfo*>(GetReferrerInfo())->CloneWithNewPolicy(policy);
+  SetReferrerInfo(referrerInfo);
 }
 
 void WorkerPrivate::Traverse(nsCycleCollectionTraversalCallback& aCb) {
@@ -2518,6 +2520,8 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
         loadInfo.mWatchedByDevtools = docShell->GetWatchedByDevtools();
       }
 
+      loadInfo.mReferrerInfo =
+          ReferrerInfo::CreateForFetch(loadInfo.mLoadingPrincipal, document);
       loadInfo.mFromWindow = true;
       loadInfo.mWindowID = globalWindow->WindowID();
       loadInfo.mStorageAccess = StorageAllowedForWindow(globalWindow);
@@ -2592,7 +2596,7 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     rv = ChannelFromScriptURLMainThread(
         loadInfo.mLoadingPrincipal, document, loadInfo.mLoadGroup, url,
         clientInfo, ContentPolicyType(aWorkerType), loadInfo.mCookieSettings,
-        getter_AddRefs(loadInfo.mChannel));
+        loadInfo.mReferrerInfo, getter_AddRefs(loadInfo.mChannel));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = NS_GetFinalChannelURI(loadInfo.mChannel,

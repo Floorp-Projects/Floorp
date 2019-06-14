@@ -714,15 +714,17 @@ class WorkerPrivate : public RelativeTimeline {
     return *mLoadInfo.mCSPInfo;
   }
 
-  void SetReferrerPolicyFromHeaderValue(
+  void UpdateReferrerInfoFromHeader(
       const nsACString& aReferrerPolicyHeaderValue);
 
-  net::ReferrerPolicy GetReferrerPolicy() const {
-    return mLoadInfo.mReferrerPolicy;
+  nsIReferrerInfo* GetReferrerInfo() const { return mLoadInfo.mReferrerInfo; }
+
+  uint32_t GetReferrerPolicy() const {
+    return mLoadInfo.mReferrerInfo->GetReferrerPolicy();
   }
 
-  void SetReferrerPolicy(net::ReferrerPolicy aReferrerPolicy) {
-    mLoadInfo.mReferrerPolicy = aReferrerPolicy;
+  void SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
+    mLoadInfo.mReferrerInfo = aReferrerInfo;
   }
 
   bool IsEvalAllowed() const { return mLoadInfo.mEvalAllowed; }

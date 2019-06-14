@@ -49,4 +49,10 @@ interface nsIBrowserChild : nsISupports
    * loaded.
    */
   void beginSendingWebProgressEventsToParent();
+
+  /**
+   * Send a message from the BrowserChild to the BrowserParent that a
+   * nsIWebNavigation navigation finished in the child.
+   */
+  void notifyNavigationFinished();
 };

@@ -2738,7 +2738,7 @@ bool nsFrameLoader::TryRemoteBrowser() {
   // Check if we should report a browser-crashed error because the browser
   // failed to start.
   if (XRE_IsParentProcess() && mOwnerContent && mOwnerContent->IsXULElement()) {
-    MaybeNotifyCrashed(nullptr);
+    MaybeNotifyCrashed(nullptr, nullptr);
   }
 
   return false;
@@ -3430,9 +3430,9 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
     }
   }
 
-  bool tabContextUpdated = aTabContext->SetTabContext(
-      OwnerIsMozBrowserFrame(), chromeOuterWindowID, showFocusRings, attrs,
-      presentationURLStr);
+  bool tabContextUpdated =
+      aTabContext->SetTabContext(OwnerIsMozBrowserFrame(), chromeOuterWindowID,
+                                 showFocusRings, attrs, presentationURLStr);
   NS_ENSURE_STATE(tabContextUpdated);
 
   return NS_OK;
@@ -3491,11 +3491,15 @@ void nsFrameLoader::SkipBrowsingContextDetach() {
   docshell->SkipBrowsingContextDetach();
 }
 
-void nsFrameLoader::MaybeNotifyCrashed(mozilla::ipc::MessageChannel* aChannel) {
+void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,
+                                       mozilla::ipc::MessageChannel* aChannel) {
   if (mTabProcessCrashFired) {
     return;
   }
-  mTabProcessCrashFired = true;
+
+  if (mBrowsingContext == aBrowsingContext) {
+    mTabProcessCrashFired = true;
+  }
 
   // Fire the crashed observer notification.
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
@@ -3527,9 +3531,9 @@ void nsFrameLoader::MaybeNotifyCrashed(mozilla::ipc::MessageChannel* aChannel) {
   FrameCrashedEventInit init;
   init.mBubbles = true;
   init.mCancelable = true;
-  if (mBrowsingContext) {
-    init.mBrowsingContextId = mBrowsingContext->Id();
-    init.mIsTopFrame = !mBrowsingContext->GetParent();
+  if (aBrowsingContext) {
+    init.mBrowsingContextId = aBrowsingContext->Id();
+    init.mIsTopFrame = !aBrowsingContext->GetParent();
   }
 
   RefPtr<FrameCrashedEvent> event = FrameCrashedEvent::Constructor(
