@@ -124,6 +124,9 @@ add_task(async function test1b() {
   Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
 
   await new DNSListener("bar.example.com", "3.3.3.3");
+
+  Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+  Services.prefs.clearUserPref("network.dns.localDomains");
 });
 
 // verify that the name was put in cache - it works with bad DNS URI
@@ -534,4 +537,91 @@ add_task(async function count_cookies() {
   let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   Assert.equal(cm.countCookiesFromHost("example.com"), 0);
   Assert.equal(cm.countCookiesFromHost("foo.example.com."), 0);
+});
+
+add_task(async function test_connection_closed() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.excluded-domains", "");
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2.2.2.2`);
+  // bootstrap
+  Services.prefs.clearUserPref("network.dns.localDomains");
+  Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+
+  await new DNSListener("bar.example.com", "2.2.2.2");
+
+  // makes the TRR connection shut down.
+  let [, , inStatus] = await new DNSListener("closeme.com", undefined, false);
+  Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
+  await new DNSListener("bar2.example.com", "2.2.2.2");
+});
+
+add_task(async function test_connection_closed_no_bootstrap() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.excluded-domains", "localhost,local");
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=3.3.3.3`);
+  Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+
+  await new DNSListener("bar.example.com", "3.3.3.3");
+
+  // makes the TRR connection shut down.
+  let [, , inStatus] = await new DNSListener("closeme.com", undefined, false);
+  Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
+  await new DNSListener("bar2.example.com", "3.3.3.3");
+});
+
+add_task(async function test_connection_closed_no_bootstrap_localhost() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.excluded-domains", "localhost");
+  Services.prefs.setCharPref("network.trr.uri", `https://localhost:${h2Port}/doh?responseIP=3.3.3.3`);
+  Services.prefs.clearUserPref("network.dns.localDomains");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+
+  await new DNSListener("bar.example.com", "3.3.3.3");
+
+  // makes the TRR connection shut down.
+  let [, , inStatus] = await new DNSListener("closeme.com", undefined, false);
+  Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
+  await new DNSListener("bar2.example.com", "3.3.3.3");
+});
+
+add_task(async function test_connection_closed_no_bootstrap_no_excluded() {
+  // This test exists to document what happens when we're in TRR only mode
+  // and we don't set a bootstrap address. We use DNS to resolve the
+  // initial URI, but if the connection fails, we don't fallback to DNS
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.excluded-domains", "");
+  Services.prefs.setCharPref("network.trr.uri", `https://localhost:${h2Port}/doh?responseIP=3.3.3.3`);
+  Services.prefs.clearUserPref("network.dns.localDomains");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+
+  await new DNSListener("bar.example.com", "3.3.3.3");
+
+  // makes the TRR connection shut down.
+  let [, , inStatus] = await new DNSListener("closeme.com", undefined, false);
+  Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
+  [, , inStatus] = await new DNSListener("bar2.example.com", undefined, false);
+  Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
+});
+
+add_task(async function test_connection_closed_trr_first() {
+  // This test exists to document what happens when we're in TRR only mode
+  // and we don't set a bootstrap address. We use DNS to resolve the
+  // initial URI, but if the connection fails, we don't fallback to DNS
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref("network.trr.uri", `https://localhost:${h2Port}/doh?responseIP=9.9.9.9`);
+  Services.prefs.setCharPref("network.dns.localDomains", "closeme.com");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+
+  await new DNSListener("bar.example.com", "9.9.9.9");
+
+  // makes the TRR connection shut down. Should fallback to DNS
+  await new DNSListener("closeme.com", "127.0.0.1");
+  // TRR should be back up again
+  await new DNSListener("bar2.example.com", "9.9.9.9");
 });
