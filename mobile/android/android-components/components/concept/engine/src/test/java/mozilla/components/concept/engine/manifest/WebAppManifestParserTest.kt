@@ -4,6 +4,8 @@
 
 package mozilla.components.concept.engine.manifest
 
+import android.graphics.Color
+import android.graphics.Color.rgb
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -28,7 +30,7 @@ class WebAppManifestParserTest {
         assertEquals("HackerWeb", manifest.shortName)
         assertEquals(".", manifest.startUrl)
         assertEquals(WebAppManifest.DisplayMode.STANDALONE, manifest.display)
-        assertEquals(0xFFF, manifest.backgroundColor)
+        assertEquals(Color.WHITE, manifest.backgroundColor)
         assertEquals("A simply readable Hacker News app.", manifest.description)
         assertEquals(WebAppManifest.TextDirection.AUTO, manifest.dir)
         assertNull(manifest.lang)
@@ -93,13 +95,13 @@ class WebAppManifestParserTest {
         assertEquals("Maps", manifest.shortName)
         assertEquals("/maps/?source=pwa", manifest.startUrl)
         assertEquals(WebAppManifest.DisplayMode.STANDALONE, manifest.display)
-        assertEquals(0x3367D6, manifest.backgroundColor)
+        assertEquals(rgb(51, 103, 214), manifest.backgroundColor)
         assertNull(manifest.description)
         assertEquals(WebAppManifest.TextDirection.AUTO, manifest.dir)
         assertNull(manifest.lang)
         assertEquals(WebAppManifest.Orientation.ANY, manifest.orientation)
         assertEquals("/maps/", manifest.scope)
-        assertEquals(0x3367D6, manifest.themeColor)
+        assertEquals(rgb(51, 103, 214), manifest.themeColor)
 
         assertEquals(2, manifest.icons.size)
 
@@ -134,14 +136,14 @@ class WebAppManifestParserTest {
         assertEquals("Twitter", manifest.shortName)
         assertEquals("/", manifest.startUrl)
         assertEquals(WebAppManifest.DisplayMode.STANDALONE, manifest.display)
-        assertEquals(0xFFFFFF, manifest.backgroundColor)
+        assertEquals(Color.WHITE, manifest.backgroundColor)
         assertEquals("It's what's happening. From breaking news and entertainment, sports and politics, " +
             "to big events and everyday interests.", manifest.description)
         assertEquals(WebAppManifest.TextDirection.AUTO, manifest.dir)
         assertNull(manifest.lang)
         assertEquals(WebAppManifest.Orientation.ANY, manifest.orientation)
         assertEquals("/", manifest.scope)
-        assertEquals(0xFFFFFF, manifest.themeColor)
+        assertEquals(Color.WHITE, manifest.themeColor)
 
         assertEquals(2, manifest.icons.size)
 
@@ -222,13 +224,13 @@ class WebAppManifestParserTest {
         assertEquals("Racer3K", manifest.shortName)
         assertEquals("/racer/start.html", manifest.startUrl)
         assertEquals(WebAppManifest.DisplayMode.FULLSCREEN, manifest.display)
-        assertEquals(0xFF0000, manifest.backgroundColor)
+        assertEquals(Color.RED, manifest.backgroundColor)
         assertEquals("The ultimate futuristic racing game from the future!", manifest.description)
         assertEquals(WebAppManifest.TextDirection.LTR, manifest.dir)
         assertEquals("en", manifest.lang)
         assertEquals(WebAppManifest.Orientation.LANDSCAPE, manifest.orientation)
         assertEquals("/racer/", manifest.scope)
-        assertEquals(0xF0F8FF, manifest.themeColor)
+        assertEquals(rgb(240, 248, 255), manifest.themeColor)
 
         assertEquals(3, manifest.icons.size)
 

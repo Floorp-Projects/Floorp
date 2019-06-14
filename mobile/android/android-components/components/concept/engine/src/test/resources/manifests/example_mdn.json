@@ -3,7 +3,7 @@
   "short_name": "HackerWeb",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#fff",
+  "background_color": "#ffffff",
   "description": "A simply readable Hacker News app.",
   "icons": [{
     "src": "images/touch/homescreen48.png",

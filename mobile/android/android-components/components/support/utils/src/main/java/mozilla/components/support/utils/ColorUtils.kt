@@ -5,6 +5,7 @@
 package mozilla.components.support.utils
 
 import android.graphics.Color
+import androidx.annotation.ColorInt
 
 object ColorUtils {
 
@@ -13,7 +14,7 @@ object ColorUtils {
      */
     @JvmStatic
     @SuppressWarnings("MagicNumber")
-    fun getReadableTextColor(backgroundColor: Int): Int {
+    fun getReadableTextColor(@ColorInt backgroundColor: Int): Int {
         val greyValue = grayscaleFromRGB(backgroundColor)
         // 186 chosen rather than the seemingly obvious 128 because of gamma.
         return if (greyValue < 186) {
@@ -24,7 +25,7 @@ object ColorUtils {
     }
 
     @SuppressWarnings("MagicNumber")
-    private fun grayscaleFromRGB(color: Int): Int {
+    private fun grayscaleFromRGB(@ColorInt color: Int): Int {
         val red = Color.red(color)
         val green = Color.green(color)
         val blue = Color.blue(color)

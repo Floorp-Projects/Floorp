@@ -4,6 +4,8 @@
 
 package mozilla.components.concept.engine.manifest
 
+import androidx.annotation.ColorInt
+
 /**
  * The web app manifest provides information about an application (such as its name, author, icon, and description).
  *
@@ -46,14 +48,14 @@ data class WebAppManifest(
     val startUrl: String,
     val shortName: String? = null,
     val display: DisplayMode = DisplayMode.BROWSER,
-    val backgroundColor: Int? = null,
+    @ColorInt val backgroundColor: Int? = null,
     val description: String? = null,
     val icons: List<Icon> = emptyList(),
     val dir: TextDirection = TextDirection.AUTO,
     val lang: String? = null,
     val orientation: Orientation = Orientation.ANY,
     val scope: String? = null,
-    val themeColor: Int? = null
+    @ColorInt val themeColor: Int? = null
 ) {
     /**
      * Defines the developers’ preferred display mode for the website.

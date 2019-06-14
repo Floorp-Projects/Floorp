@@ -4,6 +4,8 @@
 
 package mozilla.components.concept.engine.manifest
 
+import android.graphics.Color
+import androidx.annotation.ColorInt
 import mozilla.components.support.ktx.android.org.json.asSequence
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONException
@@ -74,15 +76,15 @@ private fun getDisplayMode(json: JSONObject): WebAppManifest.DisplayMode {
     }
 }
 
-@Suppress("MagicNumber")
+@ColorInt
 private fun parseColor(color: String?): Int? {
     if (color == null || !color.startsWith("#")) {
         return null
     }
 
     return try {
-        Integer.parseInt(color.substring(1), 16)
-    } catch (e: NumberFormatException) {
+        Color.parseColor(color)
+    } catch (e: IllegalArgumentException) {
         null
     }
 }
