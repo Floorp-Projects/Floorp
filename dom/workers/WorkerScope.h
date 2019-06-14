@@ -73,6 +73,9 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
                                const int32_t aTimeout,
                                const Sequence<JS::Value>& aArguments,
                                bool aIsInterval, ErrorResult& aRv);
+  int32_t SetTimeoutOrInterval(JSContext* aCx, const nsAString& aHandler,
+                               const int32_t aTimeout, bool aIsInterval,
+                               ErrorResult& aRv);
 
  public:
   virtual JSObject* WrapObject(JSContext* aCx,

@@ -40,14 +40,37 @@ class TimeoutHandler : public nsITimeoutHandler {
 
   virtual ~TimeoutHandler() {}
 
+  // filename, line number and JS language version string of the
+  // caller of setTimeout()
+  nsCString mFileName;
+  uint32_t mLineNo;
+  uint32_t mColumn;
+
  private:
   TimeoutHandler(const TimeoutHandler&) = delete;
   TimeoutHandler& operator=(const TimeoutHandler&) = delete;
   TimeoutHandler& operator=(const TimeoutHandler&&) = delete;
+};
 
-  nsCString mFileName;
-  uint32_t mLineNo;
-  uint32_t mColumn;
+class ScriptTimeoutHandler : public TimeoutHandler {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ScriptTimeoutHandler, TimeoutHandler)
+
+  ScriptTimeoutHandler(JSContext* aCx, nsIGlobalObject* aGlobal,
+                       const nsAString& aExpression);
+
+  MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* /* unused */) override {
+    return false;
+  };
+
+ protected:
+  virtual ~ScriptTimeoutHandler() {}
+
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  // The expression to evaluate or function to call. If mFunction is non-null
+  // it should be used, else use mExpr.
+  nsString mExpr;
 };
 
 class CallbackTimeoutHandler final : public TimeoutHandler {

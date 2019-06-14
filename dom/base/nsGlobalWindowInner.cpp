@@ -18,6 +18,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
+#include "mozilla/dom/CSPEvalChecker.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/EventTarget.h"
@@ -28,6 +29,7 @@
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/IdleRequest.h"
 #include "mozilla/dom/Performance.h"
+#include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StorageNotifierService.h"
@@ -56,7 +58,6 @@
 #include "nsIPermission.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptTimeoutHandler.h"
 #include "nsITimeoutHandler.h"
 #include "nsIController.h"
 #include "nsISlowScriptDebug.h"
@@ -264,11 +265,6 @@
 
 #include "mozilla/net/CookieSettings.h"
 
-// Apple system headers seem to have a check() macro.  <sigh>
-#ifdef check
-class nsIScriptTimeoutHandler;
-#  undef check
-#endif  // check
 #include "AccessCheck.h"
 
 #ifdef ANDROID
@@ -5651,6 +5647,66 @@ nsIPrincipal* nsGlobalWindowInner::GetTopLevelStorageAreaPrincipal() {
 // nsGlobalWindowInner: Timeout Functions
 //*****************************************************************************
 
+class WindowScriptTimeoutHandler final : public ScriptTimeoutHandler {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WindowScriptTimeoutHandler,
+                                           ScriptTimeoutHandler)
+
+  WindowScriptTimeoutHandler(JSContext* aCx, nsIGlobalObject* aGlobal,
+                             const nsAString& aExpression)
+      : ScriptTimeoutHandler(aCx, aGlobal, aExpression),
+        mInitiatingScript(ScriptLoader::GetActiveScript(aCx)) {}
+
+  MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* aExecutionReason) override;
+
+ private:
+  virtual ~WindowScriptTimeoutHandler() {}
+
+  // Initiating script for use when evaluating mExpr on the main thread.
+  RefPtr<LoadedScript> mInitiatingScript;
+};
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowScriptTimeoutHandler,
+                                   ScriptTimeoutHandler, mInitiatingScript)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowScriptTimeoutHandler)
+NS_INTERFACE_MAP_END_INHERITING(ScriptTimeoutHandler)
+
+NS_IMPL_ADDREF_INHERITED(WindowScriptTimeoutHandler, ScriptTimeoutHandler)
+NS_IMPL_RELEASE_INHERITED(WindowScriptTimeoutHandler, ScriptTimeoutHandler)
+
+bool WindowScriptTimeoutHandler::Call(const char* aExecutionReason) {
+  // New script entry point required, due to the "Create a script" sub-step
+  // of
+  // http://www.whatwg.org/specs/web-apps/current-work/#timer-initialisation-steps
+  nsAutoMicroTask mt;
+  AutoEntryScript aes(mGlobal, aExecutionReason, true);
+  JS::CompileOptions options(aes.cx());
+  options.setFileAndLine(mFileName.get(), mLineNo);
+  options.setNoScriptRval(true);
+  JS::Rooted<JSObject*> global(aes.cx(), mGlobal->GetGlobalJSObject());
+  {
+    nsJSUtils::ExecutionContext exec(aes.cx(), global);
+    nsresult rv = exec.Compile(options, mExpr);
+
+    JS::Rooted<JSScript*> script(aes.cx(), exec.MaybeGetScript());
+    if (script) {
+      if (mInitiatingScript) {
+        mInitiatingScript->AssociateWithScript(script);
+      }
+
+      rv = exec.ExecScript();
+    }
+
+    if (rv == NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 nsGlobalWindowInner* nsGlobalWindowInner::InnerForSetTimeoutOrInterval(
     ErrorResult& aError) {
   nsGlobalWindowOuter* outer = GetOuterWindowInternal();
@@ -5745,11 +5801,21 @@ int32_t nsGlobalWindowInner::SetTimeoutOrInterval(JSContext* aCx,
                                        aError);
   }
 
-  nsCOMPtr<nsIScriptTimeoutHandler> handler =
-      NS_CreateJSTimeoutHandler(aCx, this, aHandler, aError);
-  if (!handler) {
+  if (!GetContextInternal() || !HasJSGlobal()) {
+    // This window was already closed, or never properly initialized,
+    // don't let a timer be scheduled on such a window.
+    aError.Throw(NS_ERROR_NOT_INITIALIZED);
     return 0;
   }
+
+  bool allowEval = false;
+  aError = CSPEvalChecker::CheckForWindow(aCx, this, aHandler, &allowEval);
+  if (NS_WARN_IF(aError.Failed()) || !allowEval) {
+    return 0;
+  }
+
+  nsCOMPtr<nsITimeoutHandler> handler =
+      new WindowScriptTimeoutHandler(aCx, this, aHandler);
 
   int32_t result;
   aError =
@@ -5792,47 +5858,8 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
     reason = "setTimeout handler";
   }
 
-  bool abortIntervalHandler = false;
-  if (nsCOMPtr<nsIScriptTimeoutHandler> handler =
-          do_QueryInterface(timeout->mScriptHandler)) {
-    // Evaluate the timeout expression.
-    const char* filename = nullptr;
-    uint32_t lineNo = 0, dummyColumn = 0;
-    handler->GetLocation(&filename, &lineNo, &dummyColumn);
-
-    // New script entry point required, due to the "Create a script" sub-step
-    // of
-    // http://www.whatwg.org/specs/web-apps/current-work/#timer-initialisation-steps
-    nsAutoMicroTask mt;
-    AutoEntryScript aes(this, reason, true);
-    JS::CompileOptions options(aes.cx());
-    options.setFileAndLine(filename, lineNo);
-    options.setNoScriptRval(true);
-    JS::Rooted<JSObject*> global(aes.cx(), GetGlobalJSObject());
-    nsresult rv;
-    {
-      nsJSUtils::ExecutionContext exec(aes.cx(), global);
-      rv = exec.Compile(options, handler->GetHandlerText());
-
-      JS::Rooted<JSScript*> script(aes.cx(), exec.MaybeGetScript());
-      if (script) {
-        LoadedScript* initiatingScript = handler->GetInitiatingScript();
-        if (initiatingScript) {
-          initiatingScript->AssociateWithScript(script);
-        }
-
-        rv = exec.ExecScript();
-      }
-    }
-
-    if (rv == NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
-      abortIntervalHandler = true;
-    }
-  } else {
-    nsCOMPtr<nsITimeoutHandler> basicHandler(timeout->mScriptHandler);
-    abortIntervalHandler = !basicHandler->Call(reason);
-  }
-
+  nsCOMPtr<nsITimeoutHandler> handler(timeout->mScriptHandler);
+  bool abortIntervalHandler = !handler->Call(reason);
   // If we received an uncatchable exception, do not schedule the timeout again.
   // This allows the slow script dialog to break easy DoS attacks like
   // setInterval(function() { while(1); }, 100);

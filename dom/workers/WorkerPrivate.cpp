@@ -48,7 +48,7 @@
 #include "nsIPermissionManager.h"
 #include "nsIRandomGenerator.h"
 #include "nsIScriptError.h"
-#include "nsIScriptTimeoutHandler.h"
+#include "nsITimeoutHandler.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsPrintfCString.h"
@@ -4308,39 +4308,10 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
       reason = "setTimeout handler";
     }
 
-    if (nsCOMPtr<nsIScriptTimeoutHandler> scriptHandler =
-            do_QueryInterface(info->mHandler)) {
-      nsAutoMicroTask mt;
-
-      AutoEntryScript aes(global, reason, false);
-
-      // Evaluate the timeout expression.
-      const nsAString& script = scriptHandler->GetHandlerText();
-
-      const char* filename = nullptr;
-      uint32_t lineNo = 0, dummyColumn = 0;
-      scriptHandler->GetLocation(&filename, &lineNo, &dummyColumn);
-
-      JS::CompileOptions options(aes.cx());
-      options.setFileAndLine(filename, lineNo).setNoScriptRval(true);
-
-      JS::Rooted<JS::Value> unused(aes.cx());
-
-      JS::SourceText<char16_t> srcBuf;
-      if (!srcBuf.init(aes.cx(), script.BeginReading(), script.Length(),
-                       JS::SourceOwnership::Borrowed) ||
-          !JS::Evaluate(aes.cx(), options, srcBuf, &unused)) {
-        if (!JS_IsExceptionPending(aCx)) {
-          retval = false;
-          break;
-        }
-      }
-    } else {
-      nsCOMPtr<nsITimeoutHandler> handler(info->mHandler);
-      if (!handler->Call(reason)) {
-        retval = false;
-        break;
-      }
+    nsCOMPtr<nsITimeoutHandler> handler(info->mHandler);
+    if (!handler->Call(reason)) {
+      retval = false;
+      break;
     }
 
     NS_ASSERTION(data->mRunningExpiredTimeouts, "Someone changed this!");
