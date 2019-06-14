@@ -20,7 +20,6 @@ loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socke
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "RootFront", "devtools/shared/fronts/root", true);
-loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client", true);
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);
 
@@ -217,47 +216,9 @@ DebuggerClient.prototype = {
 
     this.once("closed", deferred.resolve);
 
-    // Call each client's `detach` method by calling
-    // lastly registered ones first to give a chance
-    // to detach child clients first.
-    const clients = [...this._clients.values()];
-    this._clients.clear();
-    const detachClients = () => {
-      const client = clients.pop();
-      if (!client) {
-        // All clients detached.
-        cleanup();
-        return;
-      }
-      if (client.detach) {
-        client.detach().then(detachClients);
-        return;
-      }
-      detachClients();
-    };
-    detachClients();
+    cleanup();
 
     return deferred.promise;
-  },
-
-  /**
-   * Attach to a global-scoped thread actor for chrome debugging.
-   *
-   * @param string threadActor
-   *        The actor ID for the thread to attach.
-   * @param object options
-   *        Configuration options.
-   */
-  attachThread: async function(threadActor, options = {}) {
-    if (this._clients.has(threadActor)) {
-      const client = this._clients.get(threadActor);
-      return promise.resolve([{}, client]);
-    }
-
-    const threadClient = new ThreadClient(this, threadActor);
-    const response = await threadClient.attach(options);
-    this.registerClient(threadClient);
-    return [response, threadClient];
   },
 
   /**
