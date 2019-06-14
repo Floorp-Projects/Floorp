@@ -73,9 +73,9 @@ async function performTests() {
 
   expectedContextMenu = [
     "#editmenu-undo (editmenu-undo) [disabled]",
-    "#editmenu-cut (editmenu-cut) [disabled]",
-    "#editmenu-copy (editmenu-copy) [disabled]",
-    "#editmenu-paste (editmenu-paste)" + (isWindows() ? "" : " [disabled]"),
+    "#editmenu-cut (editmenu-cut)",
+    "#editmenu-copy (editmenu-copy)",
+    "#editmenu-paste (editmenu-paste)",
     "#editmenu-delete (editmenu-delete) [disabled]",
     "#editmenu-selectAll (editmenu-select-all) [disabled]",
   ];
@@ -88,9 +88,9 @@ async function performTests() {
 
   expectedContextMenu = [
     "#editmenu-undo (editmenu-undo) [disabled]",
-    "#editmenu-cut (editmenu-cut) [disabled]",
-    "#editmenu-copy (editmenu-copy) [disabled]",
-    "#editmenu-paste (editmenu-paste)" + (isWindows() ? "" : " [disabled]"),
+    "#editmenu-cut (editmenu-cut)",
+    "#editmenu-copy (editmenu-copy)",
+    "#editmenu-paste (editmenu-paste)",
     "#editmenu-delete (editmenu-delete) [disabled]",
     "#editmenu-selectAll (editmenu-select-all) [disabled]",
   ];
