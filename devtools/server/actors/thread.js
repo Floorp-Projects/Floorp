@@ -252,20 +252,25 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   // Request handlers
-  onAttach: function(request) {
+  onAttach: function({options}) {
     if (this.state === "exited") {
-      return { type: "exited" };
+      return {
+        error: "exited",
+        message: "threadActor has exited",
+      };
     }
 
     if (this.state !== "detached") {
-      return { error: "wrongState",
-               message: "Current state is " + this.state };
+      return {
+        error: "wrongState",
+        message: "Current state is " + this.state,
+      };
     }
 
     this._state = "attached";
     this._debuggerSourcesSeen = new WeakSet();
 
-    Object.assign(this._options, request.options || {});
+    Object.assign(this._options, options || {});
     this.sources.setOptions(this._options);
     this.sources.on("newSource", this.onNewSourceEvent);
 
@@ -277,10 +282,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       thread: this,
     });
 
-    if (request.options.breakpoints) {
-      for (const { location, options } of Object.values(request.options.breakpoints)) {
-        this.setBreakpoint(location, options);
-      }
+    if (options.breakpoints) {
+      this._setBreakpointsOnAttach(options.breakpoints);
     }
 
     this.dbg.addDebuggees();
@@ -301,24 +304,37 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // Put ourselves in the paused state.
       const packet = this._paused();
       if (!packet) {
-        return { error: "notAttached" };
+        return {
+          error: "notAttached",
+          message: "cannot attach, could not create pause packet",
+        };
       }
       packet.why = { type: "attached" };
 
       // Send the response to the attach request now (rather than
-      // returning it), because we're going to start a nested event loop
-      // here.
-      this.conn.send(packet);
+      // returning it), because we're going to start a nested event
+      // loop here.
+      this.conn.send({from: this.actorID});
+      this.conn.sendActorEvent(this.actorID, "paused", packet);
 
       // Start a nested event loop.
       this._pushThreadPause();
 
       // We already sent a response to this request, don't send one
-      // now.
+      // now
       return null;
     } catch (e) {
       reportError(e);
-      return { error: "notAttached", message: e.toString() };
+      return {
+        error: "notAttached",
+        message: e.toString(),
+      };
+    }
+  },
+
+  _setBreakpointsOnAttach(breakpoints) {
+    for (const { location, options } of Object.values(breakpoints)) {
+      this.setBreakpoint(location, options);
     }
   },
 
@@ -465,9 +481,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._debuggerSourcesSeen = null;
 
     dumpn("ThreadActor.prototype.onDetach: returning 'detached' packet");
-    return {
-      type: "detached",
-    };
+    this.conn.sendActorEvent(this.actorID, "detached");
+    return {};
   },
 
   onReconfigure: function(request) {
@@ -1157,7 +1172,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         };
         this.dbg.onEnterFrame = onEnterFrame;
 
-        return { type: "willInterrupt" };
+        this.conn.sendActorEvent(this.actorID, "willInterrupt");
+        return {};
       }
 
       if (this.dbg.replaying) {
