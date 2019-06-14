@@ -3333,10 +3333,9 @@ ScreenIntSize BrowserChild::GetInnerSize() {
 };
 
 nsRect BrowserChild::GetVisibleRect() {
-  bool isForceRendering = mIsTopLevel && mRenderLayers;
-  if (isForceRendering && !mEffectsInfo.IsVisible()) {
-    // We are forced to render even though we are not visible. In this case, we
-    // don't have an accurate visible rect, so we must be conservative.
+  if (mIsTopLevel) {
+    // We are conservative about visible rects for top-level browsers to avoid
+    // artifacts when resizing
     return nsRect(nsPoint(), CSSPixel::ToAppUnits(mUnscaledInnerSize));
   } else {
     return mEffectsInfo.mVisibleRect;
