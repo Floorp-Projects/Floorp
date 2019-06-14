@@ -29,11 +29,6 @@ function update(state: PendingBreakpointsState = {}, action: Action) {
       return setBreakpoint(state, action);
 
     case "REMOVE_BREAKPOINT":
-      if (action.status === "start") {
-        return removeBreakpoint(state, action);
-      }
-      return state;
-
     case "REMOVE_PENDING_BREAKPOINT":
       return removeBreakpoint(state, action);
   }

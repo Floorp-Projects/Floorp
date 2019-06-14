@@ -51,9 +51,7 @@ class WorkerTargetFront extends
       // that will be later used by Target.
       const connectResponse = await this.connect({});
       // Set the console actor ID on the form to expose it to Target.attachConsole
-      // Set the ThreadActor on the target form so it is accessible by getFront
       this.targetForm.consoleActor = connectResponse.consoleActor;
-      this.targetForm.contextActor = connectResponse.threadActor;
       this._threadActor = connectResponse.threadActor;
 
       return this.attachConsole();

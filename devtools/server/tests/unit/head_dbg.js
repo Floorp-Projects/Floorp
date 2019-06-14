@@ -392,12 +392,9 @@ async function attachTestTab(client, title) {
 // thread.
 async function attachTestThread(client, title, callback = () => {}) {
   const targetFront = await attachTestTab(client, title);
-  const threadClient = await targetFront.getFront("context");
-  const onPaused = threadClient.once("paused");
-  await targetFront.attachThread({
+  const [response, threadClient] = await targetFront.attachThread({
     autoBlackBox: true,
   });
-  const response = await onPaused;
   Assert.equal(threadClient.state, "paused", "Thread client is paused");
   Assert.ok("why" in response);
   Assert.equal(response.why.type, "attached");

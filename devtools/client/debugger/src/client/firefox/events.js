@@ -6,6 +6,7 @@
 
 import type {
   SourcePacket,
+  ResumedPacket,
   PausedPacket,
   ThreadClient,
   Actions,
@@ -73,7 +74,7 @@ async function paused(threadClient: ThreadClient, packet: PausedPacket) {
   }
 }
 
-function resumed(threadClient: ThreadClient) {
+function resumed(threadClient: ThreadClient, packet: ResumedPacket) {
   // NOTE: the client suppresses resumed events while interrupted
   // to prevent unintentional behavior.
   // see [client docs](../README.md#interrupted) for more information.
@@ -82,7 +83,7 @@ function resumed(threadClient: ThreadClient) {
     return;
   }
 
-  actions.resumed(threadClient.actorID);
+  actions.resumed(packet);
 }
 
 function newSource(threadClient: ThreadClient, { source }: SourcePacket) {

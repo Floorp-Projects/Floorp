@@ -129,6 +129,7 @@ async function testThrow(dbg) {
     {return: {type: "undefined"}},
     `completion type`
   );
+  await resume(threadClient);
 }
 
 function run_test() {
