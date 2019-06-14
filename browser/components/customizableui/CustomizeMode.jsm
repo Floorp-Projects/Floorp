@@ -313,7 +313,8 @@ CustomizeMode.prototype = {
       this._transitioning = true;
 
       let customizer = document.getElementById("customization-container");
-      customizer.parentNode.selectedPanel = customizer;
+      let browser = document.getElementById("browser");
+      browser.collapsed = true;
       customizer.hidden = false;
 
       this._wrapToolbarItemSync(CustomizableUI.AREA_TABSTRIP);
@@ -427,10 +428,10 @@ CustomizeMode.prototype = {
           unregisterGlobalTab();
         }
       }
-      let browser = document.getElementById("browser");
-      browser.parentNode.selectedPanel = browser;
       let customizer = document.getElementById("customization-container");
+      let browser = document.getElementById("browser");
       customizer.hidden = true;
+      browser.collapsed = false;
 
       window.gNavToolbox.removeEventListener("toolbarvisibilitychange", this);
 
