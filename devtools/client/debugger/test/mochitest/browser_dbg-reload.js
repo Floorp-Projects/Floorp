@@ -25,6 +25,7 @@ add_task(async function() {
   await selectSource(dbg, "sjs_code_reload");
   await addBreakpoint(dbg, "sjs_code_reload", 2);
 
+  await waitForRequestsToSettle(dbg);
   await reload(dbg, "sjs_code_reload.sjs");
   await waitForSelectedSource(dbg, "sjs_code_reload.sjs");
 
@@ -38,4 +39,5 @@ add_task(async function() {
 
   is(breakpointList.length, 1);
   is(breakpoint.location.line, 6);
+  await waitForRequestsToSettle(dbg);
 });

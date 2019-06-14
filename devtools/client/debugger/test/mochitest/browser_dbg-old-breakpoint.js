@@ -38,6 +38,7 @@ add_task(async function() {
 
   const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + "doc-scripts.html", "jsdebugger");
   const dbg = createDebuggerContext(toolbox);
+  const onBreakpoint = waitForDispatch(dbg, "SET_BREAKPOINT", 2);
 
   // Pending breakpoints are installed asynchronously, keep invoking the entry
   // function until the debugger pauses.
@@ -45,12 +46,11 @@ add_task(async function() {
     invokeInTab("main");
     return isPaused(dbg);
   });
+  await onBreakpoint;
 
   ok(true, "paused at unmapped breakpoint");
   await waitForState(dbg, state => dbg.selectors.getBreakpointCount(state) == 2);
   ok(true, "unmapped breakpoints shown in UI");
-  await waitForRequestsToSettle(dbg);
-  await toolbox.destroy();
 });
 
 // Test that if we show a breakpoint with an old generated location, it is

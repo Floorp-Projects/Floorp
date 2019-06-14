@@ -43,7 +43,9 @@ add_task(async function() {
   await dbg.toolbox._target.waitForRequestsToSettle();
   invokeInTab("startWorker");
   await waitForPaused(dbg, "scopes-worker.js");
+  const onRemoved = waitForDispatch(dbg, "REMOVE_BREAKPOINT");
   await removeBreakpoint(dbg, workerSource.id, 11);
+  await onRemoved;
 
   // We should be paused at the first line of simple-worker.js
   assertPausedAtSourceAndLine(dbg, workerSource.id, 11);
