@@ -198,6 +198,7 @@ raptor-unity-webgl-chromium:
     description: "Raptor Unity WebGL on Chromium"
     try-name: raptor-unity-webgl-chromium
     treeherder-symbol: Rap-Cr(ugl)
+    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
