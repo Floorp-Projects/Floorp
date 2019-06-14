@@ -43,7 +43,6 @@
 #include "VTuneProfiler.h"
 
 #include "js/TraceLoggerAPI.h"
-#include "js/ProfilingFrameIterator.h"
 #include "memory_hooks.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
@@ -655,17 +654,12 @@ class ActivePS {
 
   static uint32_t JSFlags(PSLockRef aLock) {
     uint32_t Flags = 0;
-    Flags |=
-        FeatureJS(aLock) ? uint32_t(JSInstrumentationFlags::StackSampling) : 0;
+    Flags |= FeatureJS(aLock) ? uint32_t(JSSamplingFlags::StackSampling) : 0;
     Flags |= FeatureTrackOptimizations(aLock)
-                 ? uint32_t(JSInstrumentationFlags::TrackOptimizations)
+                 ? uint32_t(JSSamplingFlags::TrackOptimizations)
                  : 0;
-    Flags |= FeatureJSTracer(aLock)
-                 ? uint32_t(JSInstrumentationFlags::TraceLogging)
-                 : 0;
-    Flags |= FeatureJSAllocations(aLock)
-                 ? uint32_t(JSInstrumentationFlags::Allocations)
-                 : 0;
+    Flags |=
+        FeatureJSTracer(aLock) ? uint32_t(JSSamplingFlags::TraceLogging) : 0;
     return Flags;
   }
 
@@ -4010,13 +4004,6 @@ void profiler_add_marker(const char* aMarkerName,
 // into the JS engine.
 void profiler_add_js_marker(const char* aMarkerName) {
   profiler_add_marker(aMarkerName, JS::ProfilingCategoryPair::JS, nullptr);
-}
-
-void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
-  profiler_add_marker(
-      "JS allocation", JS::ProfilingCategoryPair::JS,
-      MakeUnique<JsAllocationMarkerPayload>(TimeStamp::Now(), std::move(info),
-                                            profiler_get_backtrace()));
 }
 
 void profiler_add_network_marker(

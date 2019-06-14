@@ -227,7 +227,6 @@ class SavedStacks {
                                     Handle<SavedFrame::Lookup> lookup);
   SavedFrame* createFrameFromLookup(JSContext* cx,
                                     Handle<SavedFrame::Lookup> lookup);
-  void setSamplingProbability(double probability);
 
   // Cache for memoizing PCToLineNumber lookups.
 
