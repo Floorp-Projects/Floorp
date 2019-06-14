@@ -15,7 +15,6 @@
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/menu-button.js"></script>
-    <script type="module" src="chrome://browser/content/aboutlogins/components/modal-input.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://browser/content/aboutlogins/aboutLogins.css">
@@ -48,13 +47,13 @@
                                  copied-username-button,
                                  delete-button,
                                  edit-button,
-                                 modal-input-reveal-checkbox-hide,
-                                 modal-input-reveal-checkbox-show,
                                  new-login-title,
                                  open-site-button,
                                  origin-label,
                                  origin-placeholder,
+                                 password-hide-title,
                                  password-label,
+                                 password-show-title,
                                  save-changes-button,
                                  time-created,
                                  time-changed,
@@ -97,25 +96,27 @@
         <button class="delete-button alternate-button"></button>
       </div>
       <div class="detail-row">
-        <label>
+        <label class="detail-cell">
           <span class="origin-label field-label"></span>
-          <span class="origin-saved-value"></span>
           <input type="url" name="origin" required/>
         </label>
         <button class="open-site-button"></button>
       </div>
       <div class="detail-row">
-        <label>
+        <label class="detail-cell">
           <span class="username-label field-label"></span>
-          <modal-input name="username"/>
+          <input type="text" name="username"/>
         </label>
         <copy-to-clipboard-button class="copy-username-button"
                                   data-telemetry-object="username"></copy-to-clipboard-button>
       </div>
       <div class="detail-row">
-        <label>
+        <label class="detail-cell">
           <span class="password-label field-label"></span>
-          <modal-input type="password" name="password" required />
+          <div class="reveal-password-wrapper">
+            <input type="password" name="password" required/>
+            <input type="checkbox" class="reveal-password-checkbox"/>
+          </div>
         </label>
         <copy-to-clipboard-button class="copy-password-button"
                                   data-telemetry-object="password"></copy-to-clipboard-button>
@@ -141,14 +142,6 @@
       <ul class="menu" role="menu" aria-hidden="true">
         <li role="menuitem" class="menuitem"><button class="menuitem-button menuitem-preferences alternate-button"></button></li>
       </ul>
-    </template>
-
-    <template id="modal-input-template">
-      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
-      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/modal-input.css">
-      <span class="locked-value"></span>
-      <input type="text" class="unlocked-value"/>
-      <input type="checkbox" class="reveal-checkbox"/>
     </template>
 
     <template id="copy-to-clipboard-button-template">
