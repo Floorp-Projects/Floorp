@@ -2434,7 +2434,7 @@ raptor-tp6m-1-fennec64:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-1
+            - --test=raptor-tp6m-1-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2455,7 +2455,7 @@ raptor-tp6m-2-fennec64:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-2
+            - --test=raptor-tp6m-2-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2476,7 +2476,7 @@ raptor-tp6m-3-fennec64:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-3
+            - --test=raptor-tp6m-3-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2518,7 +2518,7 @@ raptor-tp6m-5-fennec64:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-5
+            - --test=raptor-tp6m-5-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2539,7 +2539,7 @@ raptor-tp6m-6-fennec64:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-6
+            - --test=raptor-tp6m-6-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2560,7 +2560,7 @@ raptor-tp6m-7-fennec64:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-7
+            - --test=raptor-tp6m-7-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2581,7 +2581,7 @@ raptor-tp6m-8-fennec64:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-8
+            - --test=raptor-tp6m-8-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2602,7 +2602,7 @@ raptor-tp6m-9-fennec64:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-9
+            - --test=raptor-tp6m-9-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2623,7 +2623,7 @@ raptor-tp6m-10-fennec64:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-10
+            - --test=raptor-tp6m-10-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2644,7 +2644,7 @@ raptor-tp6m-1-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-1
+            - --test=raptor-tp6m-cold-1-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2666,7 +2666,7 @@ raptor-tp6m-2-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-2
+            - --test=raptor-tp6m-cold-2-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2687,7 +2687,7 @@ raptor-tp6m-3-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-3
+            - --test=raptor-tp6m-cold-3-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2708,7 +2708,7 @@ raptor-tp6m-4-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-4
+            - --test=raptor-tp6m-cold-4-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2729,7 +2729,7 @@ raptor-tp6m-5-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-1
+            - --test=raptor-tp6m-cold-5-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2750,7 +2750,7 @@ raptor-tp6m-6-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-6
+            - --test=raptor-tp6m-cold-6-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2771,7 +2771,7 @@ raptor-tp6m-7-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-7
+            - --test=raptor-tp6m-cold-7-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2792,7 +2792,7 @@ raptor-tp6m-8-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-8
+            - --test=raptor-tp6m-cold-8-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2813,7 +2813,7 @@ raptor-tp6m-9-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-9
+            - --test=raptor-tp6m-cold-9-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2834,7 +2834,7 @@ raptor-tp6m-10-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-10
+            - --test=raptor-tp6m-cold-10-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2855,7 +2855,7 @@ raptor-tp6m-11-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-11
+            - --test=raptor-tp6m-cold-11-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2876,7 +2876,7 @@ raptor-tp6m-12-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-12
+            - --test=raptor-tp6m-cold-12-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2897,7 +2897,7 @@ raptor-tp6m-13-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-13
+            - --test=raptor-tp6m-cold-13-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
 
@@ -2918,6 +2918,6 @@ raptor-tp6m-14-fennec64-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-14
+            - --test=raptor-tp6m-cold-14-fennec64
             - --app=fennec
             - --binary=org.mozilla.firefox
