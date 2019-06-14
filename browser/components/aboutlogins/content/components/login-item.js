@@ -137,7 +137,7 @@ export default class LoginItem extends ReflectedFluentElement {
     let title = this.shadowRoot.querySelector(".title");
     title.textContent = this._login.title || title.getAttribute("new-login-title");
     this.shadowRoot.querySelector(".origin-saved-value").textContent = this._login.origin || "";
-    this.shadowRoot.querySelector("input[name='origin']").value = this._login.origin || "";
+    this.shadowRoot.querySelector("input[name='origin']").defaultValue = this._login.origin || "";
     this.shadowRoot.querySelector("modal-input[name='username']").setAttribute("value", this._login.username || "");
     this.shadowRoot.querySelector("modal-input[name='password']").setAttribute("value", this._login.password || "");
   }
@@ -224,6 +224,11 @@ export default class LoginItem extends ReflectedFluentElement {
 
   setLogin(login) {
     this._login = login;
+
+    let originInput =
+      this.resetValidation(this.shadowRoot.querySelector("input[name='origin']"), login.origin);
+    originInput.addEventListener("blur", this);
+
     this.toggleAttribute("isNewLogin", !login.guid);
     this.toggleEditing(!login.guid);
     this.render();
@@ -272,6 +277,20 @@ export default class LoginItem extends ReflectedFluentElement {
     this.shadowRoot.querySelectorAll("modal-input")
                    .forEach(el => el.toggleAttribute("editing", shouldEdit));
     this.toggleAttribute("editing", shouldEdit);
+  }
+
+  resetValidation(formElement, value) {
+    let wasRequired = formElement.hasAttribute("required");
+    let newFormElement = document.createElement(formElement.localName);
+    newFormElement.defaultValue = value || "";
+    newFormElement.className = formElement.className;
+    newFormElement.setAttribute("name", formElement.getAttribute("name"));
+    newFormElement.setAttribute("type", formElement.getAttribute("type"));
+    if (wasRequired) {
+      newFormElement.setAttribute("required", "");
+    }
+    formElement.replaceWith(newFormElement);
+    return newFormElement;
   }
 
   /**
