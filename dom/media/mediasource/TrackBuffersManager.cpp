@@ -447,7 +447,7 @@ void TrackBuffersManager::CompleteResetParserState() {
   }
 
   // 7. Remove all bytes from the input buffer.
-  mPendingInputBuffer = nullptr;
+  mPendingInputBuffer.reset();
   mInputBuffer.reset();
   if (mCurrentInputBuffer) {
     mCurrentInputBuffer->EvictAll();
@@ -787,8 +787,8 @@ void TrackBuffersManager::SegmentParserLoop() {
           if (mPendingInputBuffer) {
             // We now have a complete media segment header. We can resume
             // parsing the data.
-            AppendDataToCurrentInputBuffer(mPendingInputBuffer);
-            mPendingInputBuffer = nullptr;
+            AppendDataToCurrentInputBuffer(*mPendingInputBuffer);
+            mPendingInputBuffer.reset();
           }
           mNewMediaSegmentStarted = false;
         } else {
@@ -797,10 +797,12 @@ void TrackBuffersManager::SegmentParserLoop() {
           // 2. If the input buffer does not contain a complete media segment
           // header yet, then jump to the need more data step below.
           if (!mPendingInputBuffer) {
-            mPendingInputBuffer = new MediaByteBuffer();
+            mPendingInputBuffer = Some(MediaSpan(*mInputBuffer));
+          } else {
+            // Note we reset mInputBuffer below, so this won't end up appending
+            // the contents of mInputBuffer to itself.
+            mPendingInputBuffer->Append(*mInputBuffer);
           }
-          mPendingInputBuffer->AppendElements(mInputBuffer->Elements(),
-                                              mInputBuffer->Length());
 
           mInputBuffer.reset();
           NeedMoreData();
@@ -974,8 +976,7 @@ void TrackBuffersManager::OnDemuxerResetDone(const MediaResult& aResult) {
     // We had a partial media segment header stashed aside.
     // Reparse its content so we can continue parsing the current input buffer.
     int64_t start, end;
-    mParser->ParseStartAndEndTimestamps(MediaSpan(mPendingInputBuffer), start,
-                                        end);
+    mParser->ParseStartAndEndTimestamps(*mPendingInputBuffer, start, end);
     mProcessedInput += mPendingInputBuffer->Length();
   }
 
@@ -986,13 +987,6 @@ void TrackBuffersManager::AppendDataToCurrentInputBuffer(
     const MediaSpan& aData) {
   MOZ_ASSERT(mCurrentInputBuffer);
   mCurrentInputBuffer->AppendData(aData);
-  mInputDemuxer->NotifyDataArrived();
-}
-
-void TrackBuffersManager::AppendDataToCurrentInputBuffer(
-    MediaByteBuffer* aData) {
-  MOZ_ASSERT(mCurrentInputBuffer);
-  mCurrentInputBuffer->AppendData(MediaSpan(aData));
   mInputDemuxer->NotifyDataArrived();
 }
 
