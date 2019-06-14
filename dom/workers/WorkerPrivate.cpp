@@ -35,6 +35,7 @@
 #include "mozilla/dom/PerformanceStorageWorker.h"
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
+#include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/ThreadEventQueue.h"
@@ -48,7 +49,6 @@
 #include "nsIPermissionManager.h"
 #include "nsIRandomGenerator.h"
 #include "nsIScriptError.h"
-#include "nsITimeoutHandler.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsPrintfCString.h"
@@ -920,7 +920,7 @@ struct WorkerPrivate::TimeoutInfo {
     return mTargetTime < aOther.mTargetTime;
   }
 
-  nsCOMPtr<nsITimeoutHandler> mHandler;
+  RefPtr<TimeoutHandler> mHandler;
   mozilla::TimeStamp mTargetTime;
   mozilla::TimeDuration mInterval;
   int32_t mId;
@@ -4155,7 +4155,7 @@ void WorkerPrivate::ReportErrorToConsole(const char* aMessage,
   ReportErrorToConsoleRunnable::Report(wp, aMessage, aParams);
 }
 
-int32_t WorkerPrivate::SetTimeout(JSContext* aCx, nsITimeoutHandler* aHandler,
+int32_t WorkerPrivate::SetTimeout(JSContext* aCx, TimeoutHandler* aHandler,
                                   int32_t aTimeout, bool aIsInterval,
                                   ErrorResult& aRv) {
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
@@ -4308,7 +4308,7 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
       reason = "setTimeout handler";
     }
 
-    nsCOMPtr<nsITimeoutHandler> handler(info->mHandler);
+    RefPtr<TimeoutHandler> handler(info->mHandler);
     if (!handler->Call(reason)) {
       retval = false;
       break;

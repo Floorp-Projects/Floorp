@@ -58,7 +58,6 @@
 #include "nsIPermission.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
-#include "nsITimeoutHandler.h"
 #include "nsIController.h"
 #include "nsISlowScriptDebug.h"
 #include "nsWindowMemoryReporter.h"
@@ -495,7 +494,7 @@ class IdleRequestExecutor final : public nsIRunnable,
   // desirable. This is used if we've dispatched all idle callbacks
   // that are allowed to run in the current idle period, or if the
   // associated window is currently in the background.
-  nsCOMPtr<nsITimeoutHandler> mDelayedExecutorDispatcher;
+  RefPtr<TimeoutHandler> mDelayedExecutorDispatcher;
   // If not Nothing() then this value is the handle to the currently
   // scheduled delayed executor dispatcher. This is needed to be able
   // to cancel the timeout handler in case of the executor being
@@ -756,7 +755,7 @@ uint32_t nsGlobalWindowInner::RequestIdleCallback(
 
   if (aOptions.mTimeout.WasPassed()) {
     int32_t timeoutHandle;
-    nsCOMPtr<nsITimeoutHandler> handler(
+    RefPtr<TimeoutHandler> handler(
         new IdleRequestTimeoutHandler(aCx, request, this));
 
     nsresult rv = mTimeoutManager->SetTimeout(
@@ -5776,7 +5775,7 @@ int32_t nsGlobalWindowInner::SetTimeoutOrInterval(
     return 0;
   }
 
-  nsCOMPtr<nsITimeoutHandler> handler =
+  RefPtr<TimeoutHandler> handler =
       new CallbackTimeoutHandler(aCx, this, &aFunction, std::move(args));
 
   int32_t result;
@@ -5814,7 +5813,7 @@ int32_t nsGlobalWindowInner::SetTimeoutOrInterval(JSContext* aCx,
     return 0;
   }
 
-  nsCOMPtr<nsITimeoutHandler> handler =
+  RefPtr<TimeoutHandler> handler =
       new WindowScriptTimeoutHandler(aCx, this, aHandler);
 
   int32_t result;
@@ -5858,7 +5857,7 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
     reason = "setTimeout handler";
   }
 
-  nsCOMPtr<nsITimeoutHandler> handler(timeout->mScriptHandler);
+  RefPtr<TimeoutHandler> handler(timeout->mScriptHandler);
   bool abortIntervalHandler = !handler->Call(reason);
   // If we received an uncatchable exception, do not schedule the timeout again.
   // This allows the slow script dialog to break easy DoS attacks like

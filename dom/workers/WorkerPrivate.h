@@ -28,7 +28,6 @@
 #include "mozilla/ThreadBound.h"
 
 class nsIThreadInternal;
-class nsITimeoutHandler;
 
 namespace mozilla {
 class ThrottledEventQueue;
@@ -45,6 +44,7 @@ class MessagePort;
 class MessagePortIdentifier;
 class PerformanceStorage;
 class RemoteWorkerChild;
+class TimeoutHandler;
 class WorkerControlRunnable;
 class WorkerCSPEventListener;
 class WorkerDebugger;
@@ -250,8 +250,8 @@ class WorkerPrivate : public RelativeTimeline {
   static void ReportErrorToConsole(const char* aMessage,
                                    const nsTArray<nsString>& aParams);
 
-  int32_t SetTimeout(JSContext* aCx, nsITimeoutHandler* aHandler,
-                     int32_t aTimeout, bool aIsInterval, ErrorResult& aRv);
+  int32_t SetTimeout(JSContext* aCx, TimeoutHandler* aHandler, int32_t aTimeout,
+                     bool aIsInterval, ErrorResult& aRv);
 
   void ClearTimeout(int32_t aId);
 

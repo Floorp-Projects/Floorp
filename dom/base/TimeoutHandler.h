@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
-#include "nsITimeoutHandler.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
@@ -22,17 +21,20 @@ namespace dom {
 /**
  * Utility class for implementing nsITimeoutHandlers, designed to be subclassed.
  */
-class TimeoutHandler : public nsITimeoutHandler {
+class TimeoutHandler : public nsISupports {
  public:
   // TimeoutHandler doesn't actually contain cycles, but subclasses
   // probably will.
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(TimeoutHandler)
 
-  MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* /* unused */) override;
+  MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* /* unused */);
+  // Get the location of the script.
+  // Note: The memory pointed to by aFileName is owned by the
+  // nsITimeoutHandler and should not be freed by the caller.
   virtual void GetLocation(const char** aFileName, uint32_t* aLineNo,
-                           uint32_t* aColumn) override;
-  virtual void MarkForCC() override {}
+                           uint32_t* aColumn);
+  virtual void MarkForCC() {}
 
  protected:
   TimeoutHandler() : mFileName(""), mLineNo(0), mColumn(0) {}

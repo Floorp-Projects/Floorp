@@ -337,7 +337,7 @@ int32_t WorkerGlobalScope::SetTimeoutOrInterval(
     return 0;
   }
 
-  nsCOMPtr<nsITimeoutHandler> handler =
+  RefPtr<TimeoutHandler> handler =
       new CallbackTimeoutHandler(aCx, this, &aHandler, std::move(args));
 
   return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, aIsInterval, aRv);
@@ -357,7 +357,7 @@ int32_t WorkerGlobalScope::SetTimeoutOrInterval(JSContext* aCx,
     return 0;
   }
 
-  nsCOMPtr<nsITimeoutHandler> handler =
+  RefPtr<TimeoutHandler> handler =
       new WorkerScriptTimeoutHandler(aCx, this, aHandler);
 
   return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, aIsInterval, aRv);
