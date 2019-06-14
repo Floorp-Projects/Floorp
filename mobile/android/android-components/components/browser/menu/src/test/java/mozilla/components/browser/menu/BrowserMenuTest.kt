@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.menu
 
+import android.os.Build
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
@@ -28,6 +29,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Shadows
+import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDisplay
 
 @RunWith(AndroidJUnit4::class)
@@ -87,6 +89,26 @@ class BrowserMenuTest {
 
         val layoutManager = recyclerView.layoutManager as LinearLayoutManager
         assertTrue(layoutManager.stackFromEnd)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `endOfMenuAlwaysVisible will be forwarded to scrollOnceToTheBottom on devices with Android M and below`() {
+        val items = listOf(
+            SimpleBrowserMenuItem("Hello") {},
+            SimpleBrowserMenuItem("World") {})
+
+        val adapter = spy(BrowserMenuAdapter(testContext, items))
+        val menu = BrowserMenu(adapter)
+
+        val anchor = Button(testContext)
+        val popup = menu.show(anchor, endOfMenuAlwaysVisible = true)
+        val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
+
+        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+
+        assertFalse(layoutManager.stackFromEnd)
+        assertNotNull(menu.scrollOnceToTheBottomWasCalled)
     }
 
     @Test
