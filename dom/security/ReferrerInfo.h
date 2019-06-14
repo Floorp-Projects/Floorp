@@ -103,13 +103,6 @@ class ReferrerInfo : public nsIReferrerInfo {
   static bool HideOnionReferrerSource();
 
   /**
-   * Returns true if the given channel is suppressed by Referrer-Policy header
-   * and should set "null" to Origin header.
-   */
-  static bool ShouldSetNullOriginHeader(net::HttpBaseChannel* aChannel,
-                                        nsIURI* aOriginURI);
-
-  /**
    * Return default referrer policy which is controlled by user
    * prefs:
    * network.http.referer.defaultPolicy for regular mode
