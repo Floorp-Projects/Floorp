@@ -112,7 +112,12 @@ data class IconRequest(
              *
              * https://technet.microsoft.com/en-us/windows/dn255024(v=vs.60)
              */
-            MICROSOFT_TILE
+            MICROSOFT_TILE,
+
+            /**
+             * An icon found in Mozilla's "tippy top" list.
+             */
+            TIPPY_TOP
         }
     }
 }

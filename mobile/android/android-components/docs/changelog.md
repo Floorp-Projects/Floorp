@@ -23,6 +23,9 @@ permalink: /changelog/
 * **support-ktx**
   * Added `Context.isScreenReaderEnabled` extension to check if TalkBack service is enabled.
 
+* **browser-icons**
+  * The component now ships with the [tippy-top-sites](https://github.com/mozilla/tippy-top-sites) top 200 list for looking up icon resources.
+
 # 1.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.56.0...v1.0.0)

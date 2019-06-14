@@ -41,6 +41,11 @@ internal fun List<IconRequest.Resource>.toJSON(): JSONArray {
     val array = JSONArray()
 
     for (resource in this) {
+        if (resource.type == IconRequest.Resource.Type.TIPPY_TOP) {
+            // Ignore the URLs coming from the "tippy top" list.
+            continue
+        }
+
         val item = JSONObject()
 
         item.put("href", resource.url)
