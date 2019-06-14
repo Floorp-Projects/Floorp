@@ -406,12 +406,18 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+#if !defined(MOZ_WIDGET_ANDROID)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "apz.keyboard.enabled",
   APZKeyboardEnabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
@@ -536,7 +542,7 @@ VARCACHE_PREF(
   Once,
   "apz.pinch_lock.buffer_max_age",
   APZPinchLockBufferMaxAge,
-  int32_t, 50
+  int32_t, 50 // milliseconds
 )
 
 VARCACHE_PREF(
@@ -2223,12 +2229,19 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 50
 )
 
+// Enable external XR API integrations.
+#if defined(XP_WIN)
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "dom.vr.external.enabled",
   VRExternalEnabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
@@ -2258,12 +2271,21 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, 1000
 )
 
+// Oculus device
+#if defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
+// We are only enabling WebVR by default on 64-bit builds (Bug 1384459)
+#define PREF_VALUE true
+#else
+// On Android, this pref is irrelevant.
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "dom.vr.oculus.enabled",
   VROculusEnabled,
-  bool, true
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
@@ -2286,12 +2308,24 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, 10000
 )
 
+// OpenVR device
+#if !defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
+// We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
+#define PREF_VALUE false
+#elif defined(XP_WIN) || defined(XP_MACOSX)
+// We enable OpenVR by default for Windows and macOS.
+#define PREF_VALUE true
+#else
+// See Bug 1310663 (Linux).  On Android, this pref is irrelevant.
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "dom.vr.openvr.enabled",
   VROpenVREnabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Once,
@@ -2300,6 +2334,7 @@ VARCACHE_PREF(
   bool, true
 )
 
+// OSVR device
 VARCACHE_PREF(
   Once,
   "dom.vr.osvr.enabled",
@@ -2314,12 +2349,19 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// Enable a separate process for VR module.
+#if defined(XP_WIN)
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "dom.vr.process.enabled",
   VRProcessEnabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Once,
@@ -2357,6 +2399,8 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// Enable the VR Service, which interfaces with VR hardware in a separate
+// thread.
 VARCACHE_PREF(
   Once,
   "dom.vr.service.enabled",
@@ -3010,6 +3054,7 @@ VARCACHE_PREF(
 )
 
 
+// Whether to disable the automatic detection and use of direct2d.
 VARCACHE_PREF(
   Once,
   "gfx.direct2d.disabled",
@@ -3017,6 +3062,8 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Whether to attempt to enable Direct2D regardless of automatic detection or
+// blacklisting.
 VARCACHE_PREF(
   Once,
   "gfx.direct2d.force-enabled",
@@ -3319,12 +3366,33 @@ VARCACHE_PREF(
   int32_t, 10
 )
 
+// We expose two prefs: gfx.webrender.all and gfx.webrender.enabled.
+// The first enables WR+additional features, and the second just enables WR.
+// For developer convenience, building with --enable-webrender=true or just
+// --enable-webrender will set gfx.webrender.enabled to true by default.
+//
+// We also have a pref gfx.webrender.all.qualified which is not exposed via
+// about:config. That pref enables WR but only on qualified hardware. This is
+// the pref we'll eventually flip to deploy WebRender to the target population.
 VARCACHE_PREF(
   Once,
   "gfx.webrender.all",
   WebRenderAll,
   bool, false
 )
+
+#ifdef MOZ_ENABLE_WEBRENDER
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  Once,
+  "gfx.webrender.enabled",
+  WebRenderEnabledDoNotUseDirectly,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
@@ -3354,13 +3422,9 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
-VARCACHE_PREF(
-  Once,
-  "gfx.webrender.enabled",
-  WebRenderEnabledDoNotUseDirectly,
-  bool, false
-)
-
+// Also expose a pref to allow users to force-disable WR. This is exposed
+// on all channels because WR can be enabled on qualified hardware on all
+// channels.
 VARCACHE_PREF(
   Once,
   "gfx.webrender.force-disabled",
@@ -3522,11 +3586,14 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 6
 )
 
+// Whether we should recycle already displayed frames instead of discarding
+// them. This saves on the allocation itself, and may be able to reuse the
+// contents as well. Only applies if generating full frames.
 VARCACHE_PREF(
   Once,
   "image.animated.decode-on-demand.recycle",
   ImageAnimatedDecodeOnDemandRecycle,
-  bool, false
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -3550,6 +3617,7 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, 90*1024
 )
 
+// The maximum size, in bytes, of the decoded images we cache.
 VARCACHE_PREF(
   Once,
   "image.cache.size",
@@ -3557,6 +3625,8 @@ VARCACHE_PREF(
   int32_t, 5*1024*1024
 )
 
+// A weight, from 0-1000, to place on time when comparing to size.
+// Size is given a weight of 1000 - timeweight.
 VARCACHE_PREF(
   Once,
   "image.cache.timeweight",
@@ -3592,11 +3662,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// Chunk size for calls to the image decoders.
 VARCACHE_PREF(
   Once,
   "image.mem.decode_bytes_at_a_time",
   ImageMemDecodeBytesAtATime,
-  uint32_t, 200000
+  uint32_t, 16384
 )
 
 VARCACHE_PREF(
@@ -3606,11 +3677,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Discards inactive image frames of _animated_ images and re-decodes them on
+// demand from compressed data. Has no effect if image.mem.discardable is false.
 VARCACHE_PREF(
   Once,
   "image.mem.animated.discardable",
   ImageMemAnimatedDiscardable,
-  bool, false
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -3634,6 +3707,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// How much of the data in the surface cache is discarded when we get a memory
+// pressure notification, as a fraction. The discard factor is interpreted as a
+// reciprocal, so a discard factor of 1 means to discard everything in the
+// surface cache on memory pressure, a discard factor of 2 means to discard half
+// of the data, and so forth. The default should be a good balance for desktop
+// and laptop systems, where we never discard visible images.
 VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.discard_factor",
@@ -3641,13 +3720,16 @@ VARCACHE_PREF(
   uint32_t, 1
 )
 
+// Maximum size for the surface cache, in kilobytes.
 VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.max_size_kb",
   ImageMemSurfaceCacheMaxSizeKB,
-  uint32_t, 100 * 1024
+  uint32_t, 1024 * 1024
 )
 
+// Minimum timeout for expiring unused images from the surface cache, in
+// milliseconds. This controls how long we store cached temporary surfaces.
 VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.min_expiration_ms",
@@ -3655,11 +3737,15 @@ VARCACHE_PREF(
   uint32_t, 60*1000
 )
 
+// The surface cache's size, within the constraints of the maximum size set
+// above, is determined as a fraction of main memory size. The size factor is
+// interpreted as a reciprocal, so a size factor of 4 means to use no more than
+// 1/4 of main memory.  The default should be a good balance for most systems.
 VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.size_factor",
   ImageMemSurfaceCacheSizeFactor,
-  uint32_t, 64
+  uint32_t, 4
 )
 
 VARCACHE_PREF(
@@ -3669,13 +3755,16 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, -1
 )
 
+// How long in ms before we should start shutting down idle decoder threads.
 VARCACHE_PREF(
   Once,
   "image.multithreaded_decoding.idle_timeout",
   ImageMTDecodingIdleTimeout,
-  int32_t, -1
+  int32_t, 600000
 )
 
+// How many threads we'll use for multithreaded decoding. If < 0, will be
+// automatically determined based on the system's number of cores.
 VARCACHE_PREF(
   Once,
   "image.multithreaded_decoding.limit",
@@ -3793,6 +3882,7 @@ VARCACHE_PREF(
 // Prefs starting with "layers."
 //---------------------------------------------------------------------------
 
+// Whether to disable acceleration for all widgets.
 VARCACHE_PREF(
   Once,
   "layers.acceleration.disabled",
@@ -3822,12 +3912,24 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Whether to force acceleration on, ignoring blacklists.
+#ifdef ANDROID
+// bug 838603 -- on Android, accidentally blacklisting OpenGL layers
+// means a startup crash for everyone.
+// Temporarily force-enable GL compositing.  This is default-disabled
+// deep within the bowels of the widgetry system.  Remove me when GL
+// compositing isn't default disabled in widget/android.
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "layers.acceleration.force-enabled",
   LayersAccelerationForceEnabledDoNotUseDirectly,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
@@ -3836,13 +3938,15 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Whether we allow AMD switchable graphics.
 VARCACHE_PREF(
   Once,
   "layers.amd-switchable-gfx.enabled",
   LayersAMDSwitchableGfxEnabled,
-  bool, false
+  bool, true
 )
 
+// Whether to use async panning and zooming.
 VARCACHE_PREF(
   Once,
   "layers.async-pan-zoom.enabled",
@@ -3993,19 +4097,31 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+#if defined(XP_MACOSX) || defined (OS_OPENBSD)
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "layers.enable-tiles",
   LayersTilesEnabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
+#if defined(XP_WIN)
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "layers.enable-tiles-if-skia-pomtp",
   LayersTilesEnabledIfSkiaPOMTP,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
@@ -4056,19 +4172,33 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+#if defined(XP_WIN)
+#define PREF_VALUE true
+#elif defined(MOZ_WIDGET_GTK)
+#define PREF_VALUE false
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "layers.gpu-process.allow-software",
   GPUProcessAllowSoftware,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "layers.gpu-process.enabled",
   GPUProcessEnabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Once,
@@ -4134,12 +4264,18 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, -1
 )
 
+#if defined(XP_WIN)
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enabled",
   AdvancedLayersEnabledDoNotUseDirectly,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Once,
@@ -4183,12 +4319,20 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+#if defined(XP_WIN)
+// Both this and the master "enabled" pref must be on to use Advanced Layers
+// on Windows 7.
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-on-windows7",
   AdvancedLayersEnableOnWindows7,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Once,
@@ -4229,7 +4373,7 @@ VARCACHE_PREF(
   Once,
   "layers.omtp.paint-workers",
   LayersOMTPPaintWorkers,
-  int32_t, 1
+  int32_t, -1
 )
 
 VARCACHE_PREF(
@@ -4246,12 +4390,14 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, (uint32_t)0
 )
 
+#ifdef XP_WIN
 VARCACHE_PREF(
   Once,
   "layers.prefer-opengl",
   LayersPreferOpenGL,
   bool, false
 )
+#endif
 
 VARCACHE_PREF(
   Live,
@@ -4282,14 +4428,14 @@ VARCACHE_PREF(
   Once,
   "layers.tile-width",
   LayersTileWidth,
-  int32_t, 256
+  int32_t, 512
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tile-height",
   LayersTileHeight,
-  int32_t, 256
+  int32_t, 512
 )
 
 VARCACHE_PREF(
@@ -4320,6 +4466,11 @@ VARCACHE_PREF(
   uint32_t, (uint32_t)5000
 )
 
+// If this is set the tile size will only be treated as a suggestion.
+// On B2G we will round this to the stride of the underlying allocation.
+// On any platform we may later use the screen size and ignore
+// tile-width/tile-height entirely. Its recommended to turn this off
+// if you change the tile size.
 VARCACHE_PREF(
   Once,
   "layers.tiles.adjust",
@@ -4327,12 +4478,18 @@ VARCACHE_PREF(
   bool, true
 )
 
+#ifdef MOZ_WIDGET_ANDROID
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   Once,
   "layers.tiles.edge-padding",
   TileEdgePaddingEnabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
@@ -5684,7 +5841,6 @@ VARCACHE_PREF(
   MediaWmfVp9Enabled,
   bool, true
 )
-
 #endif // MOZ_WMF
 
 VARCACHE_PREF(
@@ -6894,11 +7050,14 @@ VARCACHE_PREF(
 // Prefs starting with "slider."
 //---------------------------------------------------------------------------
 
+// scrollbar snapping region
+// 0 - off
+// 1 and higher - slider thickness multiple
 VARCACHE_PREF(
   Once,
   "slider.snapMultiplier",
   SliderSnapMultiplier,
-  int32_t, 0
+  int32_t, 6
 )
 
 //---------------------------------------------------------------------------
