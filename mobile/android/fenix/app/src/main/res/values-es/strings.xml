@@ -326,7 +326,7 @@
     <!-- Text for the menu button to rename a collection -->
     <string name="collection_rename">Cambiar el nombre a la colección</string>
     <!-- Text for the button to open tabs of the selected collection -->
-    <string name="collection_open_tabs">Pestañas abiertas</string>
+    <string name="collection_open_tabs">Abrir pestañas</string>
     <!-- Text for the button to delete a single session -->
     <string name="session_item_delete">Eliminar</string>
     <!-- Text to tell the user how many more tabs this session has.
@@ -603,7 +603,7 @@
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Eliminar datos de navegación</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Abrir pestañas</string>
+    <string name="preferences_delete_browsing_data_tabs_title">Pestañas abiertas</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d pestañas</string>
     <!-- Title for the data and history items in Delete browsing data -->

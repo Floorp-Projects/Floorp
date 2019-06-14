@@ -78,7 +78,7 @@
     <!-- Button in the search view that lets a user search by using a shortcut -->
     <string name="search_shortcuts_button">Ярлыки</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-    <string name="search_shortcuts_engine_settings">Настройки поисковой системы</string>
+    <string name="search_shortcuts_engine_settings">Настройки поисковых систем</string>
     <!-- Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">Искать в</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -213,7 +213,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Включить синхронизацию</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Отсканируйте код сопряжения на Firefox для компьютеров</string>
+    <string name="preferences_sync_pair">Отсканируйте код сопряжения в компьютерном Firefox</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Войти</string>
     <!-- Preference for account creation -->
@@ -269,7 +269,7 @@
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Закладки</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
-    <string name="library_desktop_bookmarks_root">Закладки десктопа</string>
+    <string name="library_desktop_bookmarks_root">Закладки на компьютере</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">Меню закладок</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
@@ -618,7 +618,7 @@
         number of collections that will be deleted -->
     <string name="preferences_delete_browsing_data_collections_subtitle">%d коллекций</string>
     <!-- Text for the button to delete browsing data -->
-    <string name="preferences_delete_browsing_data_button">Удаление данных веб-сёрфинга</string>
+    <string name="preferences_delete_browsing_data_button">Удалить данные веб-сёрфинга</string>
 
     <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
     <string name="preferences_delete_browsing_data_prompt_message">Разрешить %s удалить ваши данные веб-сёрфинга?</string>
