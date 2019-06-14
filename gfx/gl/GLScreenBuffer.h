@@ -37,41 +37,6 @@ class SharedSurface;
 class ShSurfHandle;
 class SurfaceFactory;
 
-class DrawBuffer {
- public:
-  // Fallible!
-  // But it may return true with *out_buffer==nullptr if unneeded.
-  static bool Create(GLContext* const gl, const SurfaceCaps& caps,
-                     const GLFormats& formats, const gfx::IntSize& size,
-                     UniquePtr<DrawBuffer>* out_buffer);
-
- protected:
-  GLContext* const mGL;
-
- public:
-  const gfx::IntSize mSize;
-  const GLsizei mSamples;
-  const GLuint mFB;
-
- protected:
-  const GLuint mColorMSRB;
-  const GLuint mDepthRB;
-  const GLuint mStencilRB;
-
-  DrawBuffer(GLContext* gl, const gfx::IntSize& size, GLsizei samples,
-             GLuint fb, GLuint colorMSRB, GLuint depthRB, GLuint stencilRB)
-      : mGL(gl),
-        mSize(size),
-        mSamples(samples),
-        mFB(fb),
-        mColorMSRB(colorMSRB),
-        mDepthRB(depthRB),
-        mStencilRB(stencilRB) {}
-
- public:
-  virtual ~DrawBuffer();
-};
-
 class ReadBuffer {
  public:
   // Infallible, always non-null.
@@ -136,7 +101,6 @@ class GLScreenBuffer {
   RefPtr<layers::SharedSurfaceTextureClient> mBack;
   RefPtr<layers::SharedSurfaceTextureClient> mFront;
 
-  UniquePtr<DrawBuffer> mDraw;
   UniquePtr<ReadBuffer> mRead;
 
   bool mNeedsBlit;
@@ -174,19 +138,9 @@ class GLScreenBuffer {
 
   bool ShouldPreserveBuffer() const { return mCaps.preserve; }
 
-  GLuint DrawFB() const {
-    if (!mDraw) return ReadFB();
-
-    return mDraw->mFB;
-  }
+  GLuint DrawFB() const { return ReadFB(); }
 
   GLuint ReadFB() const { return mRead->mFB; }
-
-  GLsizei Samples() const {
-    if (!mDraw) return 0;
-
-    return mDraw->mSamples;
-  }
 
   uint32_t DepthBits() const;
 
@@ -194,7 +148,6 @@ class GLScreenBuffer {
 
   const gfx::IntSize& Size() const {
     MOZ_ASSERT(mRead);
-    MOZ_ASSERT(!mDraw || mDraw->mSize == mRead->Size());
     return mRead->Size();
   }
 
@@ -242,7 +195,6 @@ class GLScreenBuffer {
  protected:
   bool Attach(SharedSurface* surf, const gfx::IntSize& size);
 
-  bool CreateDraw(const gfx::IntSize& size, UniquePtr<DrawBuffer>* out_buffer);
   UniquePtr<ReadBuffer> CreateRead(SharedSurface* surf);
 
  public:

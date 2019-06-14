@@ -43,9 +43,6 @@ UniquePtr<GLScreenBuffer> GLScreenBuffer::Create(GLContext* gl,
                                                  const gfx::IntSize& size,
                                                  const SurfaceCaps& caps) {
   UniquePtr<GLScreenBuffer> ret;
-  if (caps.antialias && !gl->IsSupported(GLFeature::framebuffer_multisample)) {
-    return ret;
-  }
 
   layers::TextureFlags flags = layers::TextureFlags::ORIGIN_BOTTOM_LEFT;
   if (!caps.premultAlpha) {
@@ -155,7 +152,6 @@ GLScreenBuffer::GLScreenBuffer(GLContext* gl, const SurfaceCaps& caps,
 
 GLScreenBuffer::~GLScreenBuffer() {
   mFactory = nullptr;
-  mDraw = nullptr;
   mRead = nullptr;
 
   if (!mBack) return;
@@ -395,37 +391,6 @@ void GLScreenBuffer::RequireBlit() { mNeedsBlit = true; }
 void GLScreenBuffer::AssureBlitted() {
   if (!mNeedsBlit) return;
 
-  if (mDraw) {
-    GLuint drawFB = DrawFB();
-    GLuint readFB = ReadFB();
-
-    MOZ_ASSERT(drawFB != 0);
-    MOZ_ASSERT(drawFB != readFB);
-    MOZ_ASSERT(mGL->IsSupported(GLFeature::split_framebuffer));
-    MOZ_ASSERT(mDraw->mSize == mRead->Size());
-
-    ScopedBindFramebuffer boundFB(mGL);
-    ScopedGLState scissor(mGL, LOCAL_GL_SCISSOR_TEST, false);
-
-    BindReadFB_Internal(drawFB);
-    BindDrawFB_Internal(readFB);
-
-    if (mGL->IsSupported(GLFeature::framebuffer_blit)) {
-      const gfx::IntSize& srcSize = mDraw->mSize;
-      const gfx::IntSize& destSize = mRead->Size();
-
-      mGL->raw_fBlitFramebuffer(0, 0, srcSize.width, srcSize.height, 0, 0,
-                                destSize.width, destSize.height,
-                                LOCAL_GL_COLOR_BUFFER_BIT, LOCAL_GL_NEAREST);
-    } else if (mGL->IsExtensionSupported(
-                   GLContext::APPLE_framebuffer_multisample)) {
-      mGL->fResolveMultisampleFramebufferAPPLE();
-    } else {
-      MOZ_CRASH("GFX: No available blit methods.");
-    }
-    // Done!
-  }
-
   mNeedsBlit = false;
 }
 
@@ -449,33 +414,14 @@ bool GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size) {
     // Same size, same type, ready for reuse!
     mRead->Attach(surf);
   } else {
-    // Else something changed, so resize:
-    UniquePtr<DrawBuffer> draw;
-    bool drawOk = true;
-
-    /* Don't change out the draw buffer unless we resize. In the
-     * preserveDrawingBuffer:true case, prior contents of the buffer must
-     * be retained. If we're using a draw buffer, it's an MSAA buffer, so
-     * even if we copy the previous frame into the (single-sampled) read
-     * buffer, if we need to re-resolve from draw to read (as triggered by
-     * drawing), we'll need the old MSAA content to still be in the draw
-     * buffer.
-     */
-    if (!mDraw || size != Size())
-      drawOk = CreateDraw(size, &draw);  // Can be null.
-
     UniquePtr<ReadBuffer> read = CreateRead(surf);
-    bool readOk = !!read;
-
-    if (!drawOk || !readOk) {
+    if (!read) {
       surf->UnlockProd();
       if (readNeedsUnlock) {
         SharedSurf()->LockProd();
       }
       return false;
     }
-
-    if (draw) mDraw = std::move(draw);
 
     mRead = std::move(read);
   }
@@ -519,7 +465,7 @@ bool GLScreenBuffer::Swap(const gfx::IntSize& size) {
   mFront = mBack;
   mBack = newBack;
 
-  if (ShouldPreserveBuffer() && mFront && mBack && !mDraw) {
+  if (ShouldPreserveBuffer() && mFront && mBack) {
     auto src = mFront->Surf();
     auto dest = mBack->Surf();
 
@@ -575,15 +521,6 @@ bool GLScreenBuffer::Resize(const gfx::IntSize& size) {
   return true;
 }
 
-bool GLScreenBuffer::CreateDraw(const gfx::IntSize& size,
-                                UniquePtr<DrawBuffer>* out_buffer) {
-  GLContext* gl = mFactory->mGL;
-  const GLFormats& formats = mFactory->mFormats;
-  const SurfaceCaps& caps = mFactory->DrawCaps();
-
-  return DrawBuffer::Create(gl, caps, formats, size, out_buffer);
-}
-
 UniquePtr<ReadBuffer> GLScreenBuffer::CreateRead(SharedSurface* surf) {
   GLContext* gl = mFactory->mGL;
   const GLFormats& formats = mFactory->mFormats;
@@ -600,7 +537,7 @@ void GLScreenBuffer::SetDrawBuffer(GLenum mode) {
 
   mUserDrawBufferMode = mode;
 
-  GLuint fb = mDraw ? mDraw->mFB : mRead->mFB;
+  GLuint fb = mRead->mFB;
   GLenum internalMode;
 
   switch (mode) {
@@ -629,8 +566,7 @@ void GLScreenBuffer::SetReadBuffer(GLenum mode) {
 }
 
 bool GLScreenBuffer::IsDrawFramebufferDefault() const {
-  if (!mDraw) return IsReadFramebufferDefault();
-  return mDraw->mFB == 0;
+  return IsReadFramebufferDefault();
 }
 
 bool GLScreenBuffer::IsReadFramebufferDefault() const {
@@ -648,141 +584,37 @@ uint32_t GLScreenBuffer::DepthBits() const {
 ////////////////////////////////////////////////////////////////////////
 // Utils
 
-static void RenderbufferStorageBySamples(GLContext* aGL, GLsizei aSamples,
-                                         GLenum aInternalFormat,
-                                         const gfx::IntSize& aSize) {
-  if (aSamples) {
-    aGL->fRenderbufferStorageMultisample(LOCAL_GL_RENDERBUFFER, aSamples,
-                                         aInternalFormat, aSize.width,
-                                         aSize.height);
-  } else {
-    aGL->fRenderbufferStorage(LOCAL_GL_RENDERBUFFER, aInternalFormat,
-                              aSize.width, aSize.height);
-  }
-}
+static void CreateRenderbuffersForOffscreen(GLContext* const aGL,
+                                            const GLFormats& aFormats,
+                                            const gfx::IntSize& aSize,
+                                            GLuint* const aDepthRB,
+                                            GLuint* const aStencilRB) {
+  const auto fnCreateRenderbuffer = [&](const GLenum sizedFormat) {
+    GLuint rb = 0;
+    aGL->fGenRenderbuffers(1, &rb);
+    ScopedBindRenderbuffer autoRB(aGL, rb);
 
-static GLuint CreateRenderbuffer(GLContext* aGL, GLenum aFormat,
-                                 GLsizei aSamples, const gfx::IntSize& aSize) {
-  GLuint rb = 0;
-  aGL->fGenRenderbuffers(1, &rb);
-  ScopedBindRenderbuffer autoRB(aGL, rb);
-
-  RenderbufferStorageBySamples(aGL, aSamples, aFormat, aSize);
-
-  return rb;
-}
-
-static void CreateRenderbuffersForOffscreen(
-    GLContext* aGL, const GLFormats& aFormats, const gfx::IntSize& aSize,
-    bool aMultisample, GLuint* aColorMSRB, GLuint* aDepthRB,
-    GLuint* aStencilRB) {
-  GLsizei samples = aMultisample ? aFormats.samples : 0;
-  if (aColorMSRB) {
-    MOZ_ASSERT(aFormats.samples > 0);
-    MOZ_ASSERT(aFormats.color_rbFormat);
-
-    GLenum colorFormat = aFormats.color_rbFormat;
-    if (aGL->IsANGLE()) {
-      MOZ_ASSERT(colorFormat == LOCAL_GL_RGBA8);
-      colorFormat = LOCAL_GL_BGRA8_EXT;
-    }
-
-    *aColorMSRB = CreateRenderbuffer(aGL, colorFormat, samples, aSize);
-  }
+    aGL->fRenderbufferStorage(LOCAL_GL_RENDERBUFFER, sizedFormat, aSize.width,
+                              aSize.height);
+    return rb;
+  };
 
   if (aDepthRB && aStencilRB && aFormats.depthStencil) {
-    *aDepthRB = CreateRenderbuffer(aGL, aFormats.depthStencil, samples, aSize);
+    *aDepthRB = fnCreateRenderbuffer(aFormats.depthStencil);
     *aStencilRB = *aDepthRB;
   } else {
     if (aDepthRB) {
       MOZ_ASSERT(aFormats.depth);
 
-      *aDepthRB = CreateRenderbuffer(aGL, aFormats.depth, samples, aSize);
+      *aDepthRB = fnCreateRenderbuffer(aFormats.depth);
     }
 
     if (aStencilRB) {
       MOZ_ASSERT(aFormats.stencil);
 
-      *aStencilRB = CreateRenderbuffer(aGL, aFormats.stencil, samples, aSize);
+      *aStencilRB = fnCreateRenderbuffer(aFormats.stencil);
     }
   }
-}
-
-////////////////////////////////////////////////////////////////////////
-// DrawBuffer
-
-bool DrawBuffer::Create(GLContext* const gl, const SurfaceCaps& caps,
-                        const GLFormats& formats, const gfx::IntSize& size,
-                        UniquePtr<DrawBuffer>* out_buffer) {
-  MOZ_ASSERT(out_buffer);
-  *out_buffer = nullptr;
-
-  if (!caps.color) {
-    MOZ_ASSERT(!caps.alpha && !caps.depth && !caps.stencil);
-
-    // Nothing is needed.
-    return true;
-  }
-
-  if (caps.antialias) {
-    if (formats.samples == 0) return false;  // Can't create it.
-
-    MOZ_ASSERT(uint32_t(formats.samples) <= gl->MaxSamples());
-  }
-
-  GLuint colorMSRB = 0;
-  GLuint depthRB = 0;
-  GLuint stencilRB = 0;
-
-  GLuint* pColorMSRB = caps.antialias ? &colorMSRB : nullptr;
-  GLuint* pDepthRB = caps.depth ? &depthRB : nullptr;
-  GLuint* pStencilRB = caps.stencil ? &stencilRB : nullptr;
-
-  if (!formats.color_rbFormat) pColorMSRB = nullptr;
-
-  if (pDepthRB && pStencilRB) {
-    if (!formats.depth && !formats.depthStencil) pDepthRB = nullptr;
-
-    if (!formats.stencil && !formats.depthStencil) pStencilRB = nullptr;
-  } else {
-    if (!formats.depth) pDepthRB = nullptr;
-
-    if (!formats.stencil) pStencilRB = nullptr;
-  }
-
-  GLContext::LocalErrorScope localError(*gl);
-
-  CreateRenderbuffersForOffscreen(gl, formats, size, caps.antialias, pColorMSRB,
-                                  pDepthRB, pStencilRB);
-
-  GLuint fb = 0;
-  gl->fGenFramebuffers(1, &fb);
-  gl->AttachBuffersToFB(0, colorMSRB, depthRB, stencilRB, fb);
-
-  const GLsizei samples = formats.samples;
-  UniquePtr<DrawBuffer> ret(
-      new DrawBuffer(gl, size, samples, fb, colorMSRB, depthRB, stencilRB));
-
-  GLenum err = localError.GetError();
-  MOZ_ASSERT_IF(err != LOCAL_GL_NO_ERROR, err == LOCAL_GL_OUT_OF_MEMORY);
-  if (err || !gl->IsFramebufferComplete(fb)) return false;
-
-  *out_buffer = std::move(ret);
-  return true;
-}
-
-DrawBuffer::~DrawBuffer() {
-  if (!mGL->MakeCurrent()) return;
-
-  GLuint fb = mFB;
-  GLuint rbs[] = {
-      mColorMSRB, mDepthRB,
-      (mStencilRB != mDepthRB) ? mStencilRB
-                               : 0,  // Don't double-delete DEPTH_STENCIL RBs.
-  };
-
-  mGL->fDeleteFramebuffers(1, &fb);
-  mGL->fDeleteRenderbuffers(3, rbs);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -806,8 +638,8 @@ UniquePtr<ReadBuffer> ReadBuffer::Create(GLContext* gl, const SurfaceCaps& caps,
 
   GLContext::LocalErrorScope localError(*gl);
 
-  CreateRenderbuffersForOffscreen(gl, formats, surf->mSize, caps.antialias,
-                                  nullptr, pDepthRB, pStencilRB);
+  CreateRenderbuffersForOffscreen(gl, formats, surf->mSize, pDepthRB,
+                                  pStencilRB);
 
   GLuint colorTex = 0;
   GLuint colorRB = 0;
