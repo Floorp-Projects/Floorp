@@ -2,6 +2,12 @@ const DEFAULT_HW_ACCEL_PREF = Services.prefs.getDefaultBranch(null).getBoolPref(
 const DEFAULT_PROCESS_COUNT = Services.prefs.getDefaultBranch(null).getIntPref("dom.ipc.processCount");
 
 add_task(async function() {
+  // We must temporarily disable `Once` StaticPrefs check for the duration of
+  // this test (see bug 1556131). We must do so in a separate operation as
+  // pushPrefEnv doesn't set the preferences in the order one could expect.
+  await SpecialPowers.pushPrefEnv({set: [
+    ["preferences.force-disable.check.once.policy", true],
+  ]});
   await SpecialPowers.pushPrefEnv({set: [
     ["layers.acceleration.disabled", DEFAULT_HW_ACCEL_PREF],
     ["dom.ipc.processCount", DEFAULT_PROCESS_COUNT],

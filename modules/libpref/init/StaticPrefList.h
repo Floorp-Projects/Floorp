@@ -6795,6 +6795,16 @@ VARCACHE_PREF(
   preferences_check_once_policy,
   bool, false
 )
+
+// If set to true, StaticPrefs Once policy check will be skipped during
+// automation regression test. Use with care. This pref must be set back to
+// false as soon as specific test has completed.
+VARCACHE_PREF(
+  Live,
+  "preferences.force-disable.check.once.policy",
+  preferences_force_disable_check_once_policy,
+  bool, false
+)
 #endif
 
 //---------------------------------------------------------------------------
