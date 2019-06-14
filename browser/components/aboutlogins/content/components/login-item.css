@@ -73,11 +73,6 @@
   margin-bottom: 5px;
 }
 
-.origin-label::after,
-.password-label::after {
-  content: attr(field-required-symbol);
-}
-
 .meta-info {
   font-size: smaller;
 }
