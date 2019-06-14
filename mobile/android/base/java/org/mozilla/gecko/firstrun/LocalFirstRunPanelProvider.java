@@ -10,38 +10,38 @@ import android.content.res.Resources;
 import android.support.annotation.NonNull;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.OnboardingStringUtil;
+import org.mozilla.gecko.util.OnboardingResources;
 
 public class LocalFirstRunPanelProvider implements FirstRunPanelConfigProviderStrategy {
     public PanelConfig getPanelConfig(@NonNull Context context, PanelConfig.TYPE type, final boolean useLocalValues) {
         final Resources resources = context.getResources();
-        final OnboardingStringUtil onboardingStrings = OnboardingStringUtil.getInstance(context);
+        final OnboardingResources onboardingUtil = OnboardingResources.getInstance(context);
 
-        if (onboardingStrings.areStringsLocalized()) {
+        if (onboardingUtil.useNewOnboarding()) {
             switch (type) {
                 case WELCOME:
                     return new PanelConfig(type, useLocalValues, resources.getString(R.string.firstrun_panel_title_welcome),
-                            resources.getString(R.string.newfirstrun_urlbar_message),
-                            resources.getString(R.string.newfirstrun_urlbar_subtext),
+                            onboardingUtil.getWelcomeMessage(),
+                            onboardingUtil.getWelcomeSubtext(),
                             R.drawable.firstrun_welcome2);
                 case PRIVACY:
                 case LAST_PRIVACY:
                     return new PanelConfig(type, useLocalValues, resources.getString(R.string.firstrun_panel_title_privacy),
                             FirstrunPanel.NO_MESSAGE,
-                            resources.getString(R.string.newfirstrun_privacy_subtext),
+                            onboardingUtil.getPrivacySubtext(),
                             R.drawable.firstrun_private2);
                 case CUSTOMIZE:
                 case LAST_CUSTOMIZE:
                     throw new IllegalArgumentException("Onboarding will not show the addons screen anymore");
                 case SYNC:
-                    return new PanelConfig(type, useLocalValues, resources.getString(R.string.firstrun_sync_title),
+                    return new PanelConfig(type, useLocalValues, onboardingUtil.getSyncTitle(),
                             FirstrunPanel.NO_MESSAGE,
-                            resources.getString(R.string.newfirstrun_sync_subtext),
-                            R.drawable.firstrun_sync2);
+                            onboardingUtil.getSyncSubtext(),
+                            onboardingUtil.getSyncImageResId());
                 default:    // This will also be the case for "WELCOME"
                     return new PanelConfig(type, useLocalValues, resources.getString(R.string.firstrun_panel_title_welcome),
-                            resources.getString(R.string.newfirstrun_urlbar_message),
-                            resources.getString(R.string.newfirstrun_urlbar_subtext),
+                            onboardingUtil.getWelcomeMessage(),
+                            onboardingUtil.getWelcomeSubtext(),
                             R.drawable.firstrun_welcome2);
             }
 
