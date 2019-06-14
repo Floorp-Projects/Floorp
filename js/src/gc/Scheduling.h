@@ -779,8 +779,6 @@ class MemoryTracker {
       HashMap<ZoneAllocPolicy*, size_t, DefaultHasher<ZoneAllocPolicy*>,
               SystemAllocPolicy>;
 
-  bool allowMultipleAssociations(MemoryUse use) const;
-
   size_t getAndRemoveEntry(const Key& key, LockGuard<Mutex>& lock);
 
   Mutex mutex;

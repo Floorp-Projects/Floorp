@@ -903,7 +903,7 @@ bool js::StringHasRegExpMetaChars(JSLinearString* str) {
 /* RegExpShared */
 
 RegExpShared::RegExpShared(JSAtom* source, RegExpFlags flags)
-    : source(source), parenCount(0), flags(flags), canStringMatch(false) {}
+    : source(source), flags(flags), canStringMatch(false), parenCount(0) {}
 
 void RegExpShared::traceChildren(JSTracer* trc) {
   // Discard code to avoid holding onto ExecutablePools.
@@ -928,10 +928,7 @@ void RegExpShared::discardJitCode() {
 
 void RegExpShared::finalize(FreeOp* fop) {
   for (auto& comp : compilationArray) {
-    if (comp.byteCode) {
-      size_t length = comp.byteCodeLength();
-      fop->free_(this, comp.byteCode, length, MemoryUse::RegExpSharedBytecode);
-    }
+    fop->free_(comp.byteCode);
   }
   tables.~JitCodeTables();
 }
@@ -998,8 +995,6 @@ bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
   } else if (code.byteCode) {
     MOZ_ASSERT(tables.empty(), "RegExpInterpreter does not use data tables");
     compilation.byteCode = code.byteCode;
-    AddCellMemory(re, compilation.byteCodeLength(),
-                  MemoryUse::RegExpSharedBytecode);
   }
 
   return true;

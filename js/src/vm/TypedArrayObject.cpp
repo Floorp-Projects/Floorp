@@ -122,12 +122,10 @@ bool TypedArrayObject::ensureHasBuffer(JSContext* cx,
 
   // If the object is in the nursery, the buffer will be freed by the next
   // nursery GC. Free the data slot pointer if the object has no inline data.
-  size_t nbytes = JS_ROUNDUP(tarray->byteLength(), sizeof(Value));
   Nursery& nursery = cx->nursery();
   if (tarray->isTenured() && !tarray->hasInlineElements() &&
       !nursery.isInside(tarray->elements())) {
     js_free(tarray->elements());
-    RemoveCellMemory(tarray, nbytes, MemoryUse::TypedArrayElements);
   }
 
   tarray->setPrivate(buffer->dataPointer());
@@ -168,8 +166,7 @@ void TypedArrayObject::finalize(FreeOp* fop, JSObject* obj) {
 
   // Free the data slot pointer if it does not point into the old JSObject.
   if (!curObj->hasInlineElements()) {
-    size_t nbytes = JS_ROUNDUP(curObj->byteLength(), sizeof(Value));
-    fop->free_(obj, curObj->elements(), nbytes, MemoryUse::TypedArrayElements);
+    fop->free_(curObj->elements());
   }
 }
 
@@ -205,8 +202,6 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
   Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
   if (!nursery.isInside(buf)) {
     nursery.removeMallocedBuffer(buf);
-    size_t nbytes = JS_ROUNDUP(newObj->byteLength(), sizeof(Value));
-    AddCellMemory(newObj, nbytes, MemoryUse::TypedArrayElements);
     return 0;
   }
 
@@ -245,7 +240,7 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
           "Failed to allocate typed array elements while tenuring.");
     }
     MOZ_ASSERT(!nursery.isInside(data));
-    InitObjectPrivate(newObj, data, nbytes, MemoryUse::TypedArrayElements);
+    newObj->initPrivate(data);
   }
 
   mozilla::PodCopy(newObj->elements(), oldObj->elements(), nbytes);
@@ -517,11 +512,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 #endif
   }
 
-  static void initTypedArrayData(TypedArrayObject* tarray, void* buf,
-                                 size_t nbytes, gc::AllocKind allocKind) {
+  static void initTypedArrayData(TypedArrayObject* tarray, int32_t len,
+                                 void* buf, gc::AllocKind allocKind) {
     if (buf) {
-      InitObjectPrivate(tarray, buf, nbytes, MemoryUse::TypedArrayElements);
+      tarray->initPrivate(buf);
     } else {
+      size_t nbytes = len * BYTES_PER_ELEMENT;
 #ifdef DEBUG
       constexpr size_t dataOffset = TypedArrayObject::dataOffset();
       constexpr size_t offset = dataOffset + sizeof(HeapSlot);
@@ -575,7 +571,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       }
     }
 
-    initTypedArrayData(obj, buf, nbytes, allocKind);
+    initTypedArrayData(obj, len, buf, allocKind);
 
     return obj;
   }

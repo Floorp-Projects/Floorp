@@ -2857,7 +2857,7 @@ struct TraceListVisitor {
 
   void visitReference(ReferenceTypeDescr& descr, uint8_t* mem);
 
-  bool fillList(Vector<uint32_t>& entries);
+  bool fillList(Vector<int32_t>& entries);
 };
 
 }  // namespace
@@ -2889,12 +2889,10 @@ void TraceListVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem) {
   }
 }
 
-bool TraceListVisitor::fillList(Vector<uint32_t>& entries) {
-  return entries.append(stringOffsets.length()) &&
-         entries.append(objectOffsets.length()) &&
-         entries.append(valueOffsets.length()) &&
-         entries.appendAll(stringOffsets) && entries.appendAll(objectOffsets) &&
-         entries.appendAll(valueOffsets);
+bool TraceListVisitor::fillList(Vector<int32_t>& entries) {
+  return entries.appendAll(stringOffsets) && entries.append(-1) &&
+         entries.appendAll(objectOffsets) && entries.append(-1) &&
+         entries.appendAll(valueOffsets) && entries.append(-1);
 }
 
 static bool CreateTraceList(JSContext* cx, HandleTypeDescr descr) {
@@ -2909,7 +2907,7 @@ static bool CreateTraceList(JSContext* cx, HandleTypeDescr descr) {
   TraceListVisitor visitor;
   visitReferences(*descr, nullptr, visitor);
 
-  Vector<uint32_t> entries(cx);
+  Vector<int32_t> entries(cx);
   if (!visitor.fillList(entries)) {
     return false;
   }
@@ -2917,20 +2915,17 @@ static bool CreateTraceList(JSContext* cx, HandleTypeDescr descr) {
   // Trace lists aren't necessary for descriptors with no references.
   MOZ_ASSERT(entries.length() >= 3);
   if (entries.length() == 3) {
-    MOZ_ASSERT(entries[0] == 0 && entries[1] == 0 && entries[2] == 0);
     return true;
   }
 
-  uint32_t* list = cx->pod_malloc<uint32_t>(entries.length());
+  int32_t* list = cx->pod_malloc<int32_t>(entries.length());
   if (!list) {
     return false;
   }
 
   PodCopy(list, entries.begin(), entries.length());
 
-  size_t size = entries.length() * sizeof(uint32_t);
-  InitReservedSlot(descr, JS_DESCR_SLOT_TRACE_LIST, list, size,
-                   MemoryUse::TypeDescrTraceList);
+  descr->initReservedSlot(JS_DESCR_SLOT_TRACE_LIST, PrivateValue(list));
   return true;
 }
 
@@ -2938,8 +2933,6 @@ static bool CreateTraceList(JSContext* cx, HandleTypeDescr descr) {
 void TypeDescr::finalize(FreeOp* fop, JSObject* obj) {
   TypeDescr& descr = obj->as<TypeDescr>();
   if (descr.hasTraceList()) {
-    auto list = const_cast<uint32_t*>(descr.traceList());
-    size_t size = (3 + list[0] + list[1] + list[2]) * sizeof(uint32_t);
-    fop->free_(obj, list, size, MemoryUse::TypeDescrTraceList);
+    fop->free_(const_cast<int32_t*>(descr.traceList()));
   }
 }
