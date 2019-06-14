@@ -8,6 +8,7 @@ DevToolsModules(
     'connection-manager.js',
     'constants.js',
     'debugger-client.js',
+    'deprecated-thread-client.js',
     'environment-client.js',
     'event-source.js',
     'long-string-client.js',
