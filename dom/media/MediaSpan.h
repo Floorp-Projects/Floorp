@@ -64,6 +64,8 @@ class MediaSpan {
     return (*mBuffer)[mStart + aIndex];
   }
 
+  bool Append(const MediaSpan& aBuffer) { return Append(aBuffer.Buffer()); }
+
   bool Append(MediaByteBuffer* aBuffer) {
     if (!aBuffer) {
       return true;
