@@ -13,6 +13,7 @@
 #include "mozilla/TextUtils.h"
 
 #include <stdint.h>
+#include <utility>
 
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
@@ -395,6 +396,39 @@ bool js::intl::SharedIntlData::isUpperCaseFirst(JSContext* cx,
   return true;
 }
 
+void js::intl::DateTimePatternGeneratorDeleter::operator()(
+    UDateTimePatternGenerator* ptr) {
+  udatpg_close(ptr);
+}
+
+UDateTimePatternGenerator*
+js::intl::SharedIntlData::getDateTimePatternGenerator(JSContext* cx,
+                                                      const char* locale) {
+  // Return the cached instance if the requested locale matches the locale
+  // of the cached generator.
+  if (dateTimePatternGeneratorLocale &&
+      StringsAreEqual(dateTimePatternGeneratorLocale.get(), locale)) {
+    return dateTimePatternGenerator.get();
+  }
+
+  UErrorCode status = U_ZERO_ERROR;
+  UniqueUDateTimePatternGenerator gen(udatpg_open(IcuLocale(locale), &status));
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return nullptr;
+  }
+
+  JS::UniqueChars localeCopy = js::DuplicateString(cx, locale);
+  if (!localeCopy) {
+    return nullptr;
+  }
+
+  dateTimePatternGenerator = std::move(gen);
+  dateTimePatternGeneratorLocale = std::move(localeCopy);
+
+  return dateTimePatternGenerator.get();
+}
+
 void js::intl::SharedIntlData::destroyInstance() {
   availableTimeZones.clearAndCompact();
   ianaZonesTreatedAsLinksByICU.clearAndCompact();
@@ -418,5 +452,6 @@ size_t js::intl::SharedIntlData::sizeOfExcludingThis(
          ianaZonesTreatedAsLinksByICU.shallowSizeOfExcludingThis(mallocSizeOf) +
          ianaLinksCanonicalizedDifferentlyByICU.shallowSizeOfExcludingThis(
              mallocSizeOf) +
-         upperCaseFirstLocales.shallowSizeOfExcludingThis(mallocSizeOf);
+         upperCaseFirstLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
+         mallocSizeOf(dateTimePatternGeneratorLocale.get());
 }

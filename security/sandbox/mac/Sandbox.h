@@ -36,7 +36,6 @@ typedef struct _MacSandboxInfo {
   void AppendStartupParam(std::vector<std::string>& aParams) const;
   void AppendLoggingParam(std::vector<std::string>& aParams) const;
   void AppendAppPathParam(std::vector<std::string>& aParams) const;
-  void AppendPluginPathParam(std::vector<std::string>& aParams) const;
   void AppendLevelParam(std::vector<std::string>& aParams) const;
   void AppendAudioParam(std::vector<std::string>& aParams) const;
   void AppendWindowServerParam(std::vector<std::string>& aParams) const;
@@ -77,7 +76,6 @@ namespace mozilla {
 bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage);
 bool StartMacSandboxIfEnabled(MacSandboxType aSandboxType, int aArgc,
                               char** aArgv, std::string& aErrorMessage);
-bool IsMacSandboxStarted();
 #ifdef DEBUG
 void AssertMacSandboxEnabled();
 #endif /* DEBUG */

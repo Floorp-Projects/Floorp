@@ -25,14 +25,9 @@ class nsMacUtilsImpl final : public nsIMacUtils {
 
   nsMacUtilsImpl() {}
 
-  // Return the repo directory and the repo object directory respectively.
-  // These should only be used on Mac developer builds to determine the path
-  // to the repo or object directory.
-  static nsresult GetRepoDir(nsIFile** aRepoDir);
-  static nsresult GetObjDir(nsIFile** aObjDir);
-
 #if defined(MOZ_SANDBOX)
   static bool GetAppPath(nsCString& aAppPath);
+
 #  ifdef DEBUG
   static nsresult GetBloatLogDir(nsCString& aDirectoryPath);
   static nsresult GetDirectoryPath(const char* aPath,
@@ -58,8 +53,6 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   static StaticAutoPtr<nsCString> sCachedAppPath;
   // For thread safe setting/checking of sCachedAppPath
   static StaticMutex sCachedAppPathMutex;
-  // Utility method to call ClearOnShutdown() on the main thread
-  static nsresult ClearCachedAppPathOnShutdown();
 #endif
 
   enum TCSMStatus { TCSM_Unknown = 0, TCSM_Available, TCSM_Unavailable };
