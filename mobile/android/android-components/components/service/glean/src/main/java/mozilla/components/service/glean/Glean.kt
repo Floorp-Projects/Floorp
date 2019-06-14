@@ -125,7 +125,14 @@ open class GleanInternalAPI internal constructor () {
         // ping startup check should be performed before any other ping, since it relies
         // on being dispatched to the API context before any other metric.
         metricsPingScheduler = MetricsPingScheduler(applicationContext)
-        metricsPingScheduler.startupCheck()
+
+        // If Glean is being initialized from a test, then we want to skip running the
+        // startupCheck() as it can cause some intermittent test failures due to multi-
+        // threaded race conditions.
+        @Suppress("EXPERIMENTAL_API_USAGE")
+        if (!Dispatchers.API.testingMode) {
+            metricsPingScheduler.startupCheck()
+        }
 
         // At this point, all metrics and events can be recorded.
         ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
