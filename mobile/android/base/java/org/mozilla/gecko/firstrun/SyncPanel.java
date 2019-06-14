@@ -6,7 +6,6 @@
 package org.mozilla.gecko.firstrun;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +18,7 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
-import org.mozilla.gecko.util.OnboardingStringUtil;
+import org.mozilla.gecko.util.OnboardingResources;
 
 public class SyncPanel extends FirstrunPanel {
     @Override
@@ -35,9 +34,15 @@ public class SyncPanel extends FirstrunPanel {
             ((TextView) root.findViewById(R.id.firstrun_text)).setText(message);
             ((TextView) root.findViewById(R.id.firstrun_subtext)).setText(subtext);
 
-            if (OnboardingStringUtil.getInstance(getContext()).areStringsLocalized()) {
-                ((Button) root.findViewById(R.id.welcome_account)).setText(R.string.newfirstrun_signin_button);
+            final TextView messageView = root.findViewById(R.id.firstrun_text);
+            if (NO_MESSAGE.equals(message)) {
+                messageView.setVisibility(View.GONE);
+            } else {
+                messageView.setText(message);
             }
+
+            OnboardingResources onboardingUtil = OnboardingResources.getInstance(getContext());
+            ((Button) root.findViewById(R.id.welcome_account)).setText(onboardingUtil.getSyncButtonText());
         }
 
         root.findViewById(R.id.welcome_account).setOnClickListener(new View.OnClickListener() {
