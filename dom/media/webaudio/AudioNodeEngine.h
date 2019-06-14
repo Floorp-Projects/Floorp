@@ -324,8 +324,8 @@ class AudioNodeEngine {
    * of silence.
    */
   virtual void ProcessBlocksOnPorts(AudioNodeStream* aStream,
-                                    const OutputChunks& aInput,
-                                    OutputChunks& aOutput, bool* aFinished);
+                                    Span<const AudioBlock> aInput,
+                                    Span<AudioBlock> aOutput, bool* aFinished);
 
   // IsActive() returns true if the engine needs to continue processing an
   // unfinished stream even when it has silent or no input connections.  This
