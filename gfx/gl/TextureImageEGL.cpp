@@ -143,7 +143,8 @@ void TextureImageEGL::Resize(const gfx::IntSize& aSize) {
 bool TextureImageEGL::BindTexImage() {
   if (mBound && !ReleaseTexImage()) return false;
 
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = GLContextEGL::Cast(mGLContext);
+  const auto& egl = gle->mEgl;
   EGLBoolean success = egl->fBindTexImage(egl->Display(), (EGLSurface)mSurface,
                                           LOCAL_EGL_BACK_BUFFER);
 
@@ -156,7 +157,8 @@ bool TextureImageEGL::BindTexImage() {
 bool TextureImageEGL::ReleaseTexImage() {
   if (!mBound) return true;
 
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = GLContextEGL::Cast(mGLContext);
+  const auto& egl = gle->mEgl;
   EGLBoolean success = egl->fReleaseTexImage(
       egl->Display(), (EGLSurface)mSurface, LOCAL_EGL_BACK_BUFFER);
 
@@ -169,7 +171,8 @@ bool TextureImageEGL::ReleaseTexImage() {
 void TextureImageEGL::DestroyEGLSurface(void) {
   if (!mSurface) return;
 
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = GLContextEGL::Cast(mGLContext);
+  const auto& egl = gle->mEgl;
   egl->fDestroySurface(egl->Display(), mSurface);
   mSurface = nullptr;
 }

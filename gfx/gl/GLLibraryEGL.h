@@ -357,9 +357,9 @@ class GLLibraryEGL final {
 #undef AFTER_CALL
 #undef MOZ_FUNCTION_NAME
 
-  ////
+      ////
 
-  EGLDisplay Display() const {
+      EGLDisplay Display() const {
     MOZ_ASSERT(mInitialized);
     return mEGLDisplay;
   }

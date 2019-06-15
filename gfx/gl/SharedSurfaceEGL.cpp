@@ -20,7 +20,8 @@ namespace gl {
 UniquePtr<SharedSurface_EGLImage> SharedSurface_EGLImage::Create(
     GLContext* prodGL, const GLFormats& formats, const gfx::IntSize& size,
     bool hasAlpha, EGLContext context) {
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = GLContextEGL::Cast(prodGL);
+  const auto& egl = gle->mEgl;
   MOZ_ASSERT(egl);
   MOZ_ASSERT(context);
 
@@ -45,8 +46,8 @@ UniquePtr<SharedSurface_EGLImage> SharedSurface_EGLImage::Create(
     return ret;
   }
 
-  ret.reset(new SharedSurface_EGLImage(prodGL, egl, size, hasAlpha, formats,
-                                       prodTex, image));
+  ret.reset(new SharedSurface_EGLImage(prodGL, size, hasAlpha, formats, prodTex,
+                                       image));
   return ret;
 }
 
@@ -57,7 +58,7 @@ bool SharedSurface_EGLImage::HasExtensions(GLLibraryEGL* egl, GLContext* gl) {
           gl->IsExtensionSupported(GLContext::OES_EGL_image));
 }
 
-SharedSurface_EGLImage::SharedSurface_EGLImage(GLContext* gl, GLLibraryEGL* egl,
+SharedSurface_EGLImage::SharedSurface_EGLImage(GLContext* gl,
                                                const gfx::IntSize& size,
                                                bool hasAlpha,
                                                const GLFormats& formats,
@@ -68,19 +69,20 @@ SharedSurface_EGLImage::SharedSurface_EGLImage(GLContext* gl, GLLibraryEGL* egl,
           false)  // Can't recycle, as mSync changes never update TextureHost.
       ,
       mMutex("SharedSurface_EGLImage mutex"),
-      mEGL(egl),
       mFormats(formats),
       mProdTex(prodTex),
       mImage(image),
       mSync(0) {}
 
 SharedSurface_EGLImage::~SharedSurface_EGLImage() {
-  mEGL->fDestroyImage(Display(), mImage);
+  const auto& gle = GLContextEGL::Cast(mGL);
+  const auto& egl = gle->mEgl;
+  egl->fDestroyImage(egl->Display(), mImage);
 
   if (mSync) {
     // We can't call this unless we have the ext, but we will always have
     // the ext if we have something to destroy.
-    mEGL->fDestroySync(Display(), mSync);
+    egl->fDestroySync(egl->Display(), mSync);
     mSync = 0;
   }
 
@@ -91,18 +93,21 @@ SharedSurface_EGLImage::~SharedSurface_EGLImage() {
 }
 
 void SharedSurface_EGLImage::ProducerReleaseImpl() {
+  const auto& gle = GLContextEGL::Cast(mGL);
+  const auto& egl = gle->mEgl;
+
   MutexAutoLock lock(mMutex);
   mGL->MakeCurrent();
 
-  if (mEGL->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync) &&
+  if (egl->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync) &&
       mGL->IsExtensionSupported(GLContext::OES_EGL_sync)) {
     if (mSync) {
       MOZ_RELEASE_ASSERT(false, "GFX: Non-recycleable should not Fence twice.");
-      MOZ_ALWAYS_TRUE(mEGL->fDestroySync(Display(), mSync));
+      MOZ_ALWAYS_TRUE(egl->fDestroySync(egl->Display(), mSync));
       mSync = 0;
     }
 
-    mSync = mEGL->fCreateSync(Display(), LOCAL_EGL_SYNC_FENCE, nullptr);
+    mSync = egl->fCreateSync(egl->Display(), LOCAL_EGL_SYNC_FENCE, nullptr);
     if (mSync) {
       mGL->fFlush();
       return;
@@ -114,14 +119,14 @@ void SharedSurface_EGLImage::ProducerReleaseImpl() {
 }
 
 void SharedSurface_EGLImage::ProducerReadAcquireImpl() {
+  const auto& gle = GLContextEGL::Cast(mGL);
+  const auto& egl = gle->mEgl;
   // Wait on the fence, because presumably we're going to want to read this
   // surface
   if (mSync) {
-    mEGL->fClientWaitSync(Display(), mSync, 0, LOCAL_EGL_FOREVER);
+    egl->fClientWaitSync(egl->Display(), mSync, 0, LOCAL_EGL_FOREVER);
   }
 }
-
-EGLDisplay SharedSurface_EGLImage::Display() const { return mEGL->Display(); }
 
 bool SharedSurface_EGLImage::ToSurfaceDescriptor(
     layers::SurfaceDescriptor* const out_descriptor) {
@@ -132,9 +137,10 @@ bool SharedSurface_EGLImage::ToSurfaceDescriptor(
 
 bool SharedSurface_EGLImage::ReadbackBySharedHandle(
     gfx::DataSourceSurface* out_surface) {
+  const auto& gle = GLContextEGL::Cast(mGL);
+  const auto& egl = gle->mEgl;
   MOZ_ASSERT(out_surface);
   MOZ_ASSERT(NS_IsMainThread());
-  auto* egl = gl::GLLibraryEGL::Get();
   return egl->ReadbackEGLImage(mImage, out_surface);
 }
 
@@ -145,12 +151,13 @@ UniquePtr<SurfaceFactory_EGLImage> SurfaceFactory_EGLImage::Create(
     GLContext* prodGL, const SurfaceCaps& caps,
     const RefPtr<layers::LayersIPCChannel>& allocator,
     const layers::TextureFlags& flags) {
-  EGLContext context = GLContextEGL::Cast(prodGL)->mContext;
+  const auto& gle = GLContextEGL::Cast(prodGL);
+  const auto& egl = gle->mEgl;
+  const auto& context = gle->mContext;
 
   typedef SurfaceFactory_EGLImage ptrT;
   UniquePtr<ptrT> ret;
 
-  auto* egl = gl::GLLibraryEGL::Get();
   if (SharedSurface_EGLImage::HasExtensions(egl, prodGL)) {
     ret.reset(new ptrT(prodGL, caps, allocator, flags, context));
   }
@@ -171,9 +178,9 @@ UniquePtr<SharedSurface_SurfaceTexture> SharedSurface_SurfaceTexture::Create(
   UniquePtr<SharedSurface_SurfaceTexture> ret;
 
   AndroidNativeWindow window(surface);
-  GLContextEGL* egl = GLContextEGL::Cast(prodGL);
-  MOZ_ASSERT(egl);
-  EGLSurface eglSurface = egl->CreateCompatibleSurface(window.NativeWindow());
+  const auto& gle = GLContextEGL::Cast(prodGL);
+  MOZ_ASSERT(gle);
+  EGLSurface eglSurface = gle->CreateCompatibleSurface(window.NativeWindow());
   if (!eglSurface) {
     return ret;
   }

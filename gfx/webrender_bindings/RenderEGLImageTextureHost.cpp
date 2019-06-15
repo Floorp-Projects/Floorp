@@ -7,7 +7,7 @@
 #include "RenderEGLImageTextureHost.h"
 
 #include "mozilla/gfx/Logging.h"
-#include "GLContext.h"
+#include "GLContextEGL.h"
 #include "GLLibraryEGL.h"
 
 namespace mozilla {
@@ -57,7 +57,8 @@ wr::WrExternalImage RenderEGLImageTextureHost::Lock(
 
   EGLint status = LOCAL_EGL_CONDITION_SATISFIED;
   if (mSync) {
-    auto* egl = gl::GLLibraryEGL::Get();
+    const auto& gle = gl::GLContextEGL::Cast(mGL);
+    const auto& egl = gle->mEgl;
     MOZ_ASSERT(egl->IsExtensionSupported(gl::GLLibraryEGL::KHR_fence_sync));
     status = egl->fClientWaitSync(egl->Display(), mSync, 0, LOCAL_EGL_FOREVER);
     // We do not need to delete sync here. It is deleted by
