@@ -81,7 +81,7 @@ bool RenderCompositorEGL::BeginFrame() {
     // than where the surface was created.
     const auto* egl = gl::GLLibraryEGL::Get();
     // Make eglSwapBuffers() non-blocking on wayland.
-    egl->fSwapInterval(gl::EGL_DISPLAY(), 0);
+    egl->fSwapInterval(egl->Display(), 0);
   }
 #endif
 
