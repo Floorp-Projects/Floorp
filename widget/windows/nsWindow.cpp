@@ -594,7 +594,6 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mHideChrome = false;
   mFullscreenMode = false;
   mMousePresent = false;
-  mMouseInDraggableArea = false;
   mDestroyCalled = false;
   mIsEarlyBlankWindow = false;
   mHasTaskbarIconBeenCreated = false;
@@ -5312,10 +5311,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_MOUSEMOVE: {
-      LPARAM lParamScreen = lParamToScreen(lParam);
-      mMouseInDraggableArea = WithinDraggableRegion(GET_X_LPARAM(lParamScreen),
-                                                    GET_Y_LPARAM(lParamScreen));
-
       if (!mMousePresent && !sIsInMouseCapture) {
         // First MOUSEMOVE over the client area. Ask for MOUSELEAVE
         TRACKMOUSEEVENT mTrack;
@@ -5347,18 +5342,14 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       }
     } break;
 
-    case WM_NCMOUSEMOVE: {
-      LPARAM lParamClient = lParamToClient(lParam);
-      if (WithinDraggableRegion(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))) {
-        // If we noticed the mouse moving in our draggable region, forward the
-        // message as a normal WM_MOUSEMOVE.
-        SendMessage(mWnd, WM_MOUSEMOVE, 0, lParamClient);
-      } else if (mMousePresent && !sIsInMouseCapture) {
+    case WM_NCMOUSEMOVE:
+      // If we receive a mouse move event on non-client chrome, make sure and
+      // send an eMouseExitFromWidget event as well.
+      if (mMousePresent && !sIsInMouseCapture)
         // If we receive a mouse move event on non-client chrome, make sure and
         // send an eMouseExitFromWidget event as well.
         SendMessage(mWnd, WM_MOUSELEAVE, 0, 0);
-      }
-    } break;
+      break;
 
     case WM_LBUTTONDOWN: {
       result =
@@ -5378,7 +5369,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_MOUSELEAVE: {
       if (!mMousePresent) break;
-      if (mMouseInDraggableArea) break;
       mMousePresent = false;
 
       // Check if the mouse is over the fullscreen transition window, if so
@@ -6182,10 +6172,6 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
   }
 
   return testResult;
-}
-
-bool nsWindow::WithinDraggableRegion(int32_t screenX, int32_t screenY) {
-  return ClientMarginHitTestPoint(screenX, screenY) == HTCAPTION;
 }
 
 TimeStamp nsWindow::GetMessageTimeStamp(LONG aEventTime) const {
