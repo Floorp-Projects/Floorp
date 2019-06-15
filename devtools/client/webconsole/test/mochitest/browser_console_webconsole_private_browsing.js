@@ -26,6 +26,7 @@ const PRIVATE_TEST_URI = `data:text/html;charset=utf8,Test console in private wi
   </script>`;
 
 add_task(async function() {
+  await pushPref("devtools.browserconsole.contentMessages", true);
   await addTab(NON_PRIVATE_TEST_URI);
 
   const privateWindow = await openNewBrowserWindow({ private: true });

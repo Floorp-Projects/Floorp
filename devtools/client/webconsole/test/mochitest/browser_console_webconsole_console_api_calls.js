@@ -31,9 +31,6 @@ const TEST_URI = `data:text/html,<meta charset=utf8>console API calls<script>
 </script>`;
 
 add_task(async function() {
-  // Enable the checkbox
-  await pushPref("devtools.browserconsole.filterContentMessages", true);
-
   // Show the content messages
   await pushPref("devtools.browserconsole.contentMessages", true);
 
