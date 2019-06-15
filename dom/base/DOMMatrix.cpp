@@ -65,6 +65,23 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::Constructor(
   return rval.forget();
 }
 
+already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::ReadStructuredClone(
+    nsISupports* aParent, JSStructuredCloneReader* aReader) {
+  uint8_t is2D;
+
+  if (!JS_ReadBytes(aReader, &is2D, 1)) {
+    return nullptr;
+  }
+
+  RefPtr<DOMMatrixReadOnly> rval = new DOMMatrixReadOnly(aParent, is2D);
+
+  if (!ReadStructuredCloneElements(aReader, rval)) {
+    return nullptr;
+  };
+
+  return rval.forget();
+}
+
 already_AddRefed<DOMMatrix> DOMMatrixReadOnly::Translate(double aTx, double aTy,
                                                          double aTz) const {
   RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
@@ -356,6 +373,69 @@ void DOMMatrixReadOnly::Stringify(nsAString& aResult) {
   aResult = matrixStr;
 }
 
+// https://drafts.fxtf.org/geometry/#structured-serialization
+bool DOMMatrixReadOnly::WriteStructuredClone(
+    JSStructuredCloneWriter* aWriter) const {
+#define WriteFloatPair(f1, f2)                           \
+  JS_WriteUint32Pair(aWriter, BitwiseCast<uint32_t>(f1), \
+                     BitwiseCast<uint32_t>(f2))
+
+  const uint8_t is2D = Is2D();
+
+  if (!JS_WriteBytes(aWriter, &is2D, 1)) {
+    return false;
+  }
+
+  if (is2D == 1) {
+    return WriteFloatPair(mMatrix2D->_11, mMatrix2D->_12) &&
+           WriteFloatPair(mMatrix2D->_21, mMatrix2D->_22) &&
+           WriteFloatPair(mMatrix2D->_31, mMatrix2D->_32);
+  }
+
+  return WriteFloatPair(mMatrix3D->_11, mMatrix3D->_12) &&
+         WriteFloatPair(mMatrix3D->_13, mMatrix3D->_14) &&
+         WriteFloatPair(mMatrix3D->_21, mMatrix3D->_22) &&
+         WriteFloatPair(mMatrix3D->_23, mMatrix3D->_24) &&
+         WriteFloatPair(mMatrix3D->_31, mMatrix3D->_32) &&
+         WriteFloatPair(mMatrix3D->_33, mMatrix3D->_34) &&
+         WriteFloatPair(mMatrix3D->_41, mMatrix3D->_42) &&
+         WriteFloatPair(mMatrix3D->_43, mMatrix3D->_44);
+
+#undef WriteFloatPair
+}
+
+bool DOMMatrixReadOnly::ReadStructuredCloneElements(
+    JSStructuredCloneReader* aReader, DOMMatrixReadOnly* matrix) {
+  uint32_t high;
+  uint32_t low;
+
+#define ReadFloatPair(f1, f2)                     \
+  if (!JS_ReadUint32Pair(aReader, &high, &low)) { \
+    return false;                                 \
+  }                                               \
+  (*(f1) = BitwiseCast<float>(high));             \
+  (*(f2) = BitwiseCast<float>(low));
+
+  if (matrix->Is2D() == 1) {
+    ReadFloatPair(&(matrix->mMatrix2D->_11), &(matrix->mMatrix2D->_12));
+    ReadFloatPair(&(matrix->mMatrix2D->_21), &(matrix->mMatrix2D->_22));
+    ReadFloatPair(&(matrix->mMatrix2D->_31), &(matrix->mMatrix2D->_32));
+  } else {
+    ReadFloatPair(&(matrix->mMatrix3D->_11), &(matrix->mMatrix3D->_12));
+    ReadFloatPair(&(matrix->mMatrix3D->_13), &(matrix->mMatrix3D->_14));
+    ReadFloatPair(&(matrix->mMatrix3D->_21), &(matrix->mMatrix3D->_22));
+    ReadFloatPair(&(matrix->mMatrix3D->_23), &(matrix->mMatrix3D->_24));
+    ReadFloatPair(&(matrix->mMatrix3D->_31), &(matrix->mMatrix3D->_32));
+    ReadFloatPair(&(matrix->mMatrix3D->_33), &(matrix->mMatrix3D->_34));
+    ReadFloatPair(&(matrix->mMatrix3D->_41), &(matrix->mMatrix3D->_42));
+    ReadFloatPair(&(matrix->mMatrix3D->_43), &(matrix->mMatrix3D->_44));
+  }
+
+  return true;
+
+#undef ReadFloatPair
+}
+
 already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
                                                    ErrorResult& aRv) {
   RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
@@ -365,6 +445,11 @@ already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
 already_AddRefed<DOMMatrix> DOMMatrix::Constructor(
     const GlobalObject& aGlobal, const nsAString& aTransformList,
     ErrorResult& aRv) {
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!win) {
+    aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
+    return nullptr;
+  }
   RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
   obj = obj->SetMatrixValue(aTransformList, aRv);
   return obj.forget();
@@ -439,6 +524,23 @@ already_AddRefed<DOMMatrix> DOMMatrix::Constructor(
                   aRv);
 
   return obj.forget();
+}
+
+already_AddRefed<DOMMatrix> DOMMatrix::ReadStructuredClone(
+    nsISupports* aParent, JSStructuredCloneReader* aReader) {
+  uint8_t is2D;
+
+  if (!JS_ReadBytes(aReader, &is2D, 1)) {
+    return nullptr;
+  }
+
+  RefPtr<DOMMatrix> rval = new DOMMatrix(aParent, is2D);
+
+  if (!ReadStructuredCloneElements(aReader, rval)) {
+    return nullptr;
+  };
+
+  return rval.forget();
 }
 
 void DOMMatrixReadOnly::Ensure3DMatrix() {

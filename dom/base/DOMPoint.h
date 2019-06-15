@@ -7,6 +7,7 @@
 #ifndef MOZILLA_DOMPOINT_H_
 #define MOZILLA_DOMPOINT_H_
 
+#include "js/StructuredClone.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
 #include "nsCycleCollectionParticipant.h"
@@ -23,8 +24,8 @@ struct DOMPointInit;
 
 class DOMPointReadOnly : public nsWrapperCache {
  public:
-  DOMPointReadOnly(nsISupports* aParent, double aX, double aY, double aZ,
-                   double aW)
+  explicit DOMPointReadOnly(nsISupports* aParent, double aX = 0.0,
+                            double aY = 0.0, double aZ = 0.0, double aW = 1.0)
       : mParent(aParent), mX(aX), mY(aY), mZ(aZ), mW(aW) {}
 
   static already_AddRefed<DOMPointReadOnly> FromPoint(
@@ -44,6 +45,10 @@ class DOMPointReadOnly : public nsWrapperCache {
   nsISupports* GetParentObject() const { return mParent; }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
+
+  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
+
+  bool ReadStructuredClone(JSStructuredCloneReader* aReader);
 
  protected:
   virtual ~DOMPointReadOnly() {}
