@@ -363,6 +363,23 @@ partial namespace ChromeUtils {
   Promise<sequence<PerformanceInfoDictionary>> requestPerformanceMetrics();
 
   /**
+   * Set the collection of specific detailed performance timing information.
+   * Selecting 0 for the mask will end existing collection. All metrics that
+   * are chosen will be cleared after updating the mask.
+   *
+   * @param aCollectionMask A bitmask where each bit corresponds to a metric
+   *        to be collected as listed in PerfStats::Metric.
+   */
+  void setPerfStatsCollectionMask(unsigned long long aCollectionMask);
+
+  /**
+   * Collect results of detailed performance timing information.
+   * The output is a JSON string containing performance timings.
+   */
+  [Throws]
+  Promise<DOMString> collectPerfStats();
+
+  /**
   * Returns a Promise containing a sequence of I/O activities
   */
   [Throws]

@@ -508,6 +508,8 @@ BaselineScript* BaselineScript::New(
   offsetCursor += paddedTLEntriesSize;
 
   MOZ_ASSERT(offsetCursor == sizeof(BaselineScript) + allocBytes);
+  script->allocBytes_ = allocBytes;
+
   return script;
 }
 
