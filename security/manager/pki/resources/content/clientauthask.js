@@ -121,7 +121,7 @@ function setDetails() {
     detailLines.push(bundle.getFormattedString("clientAuthKeyUsages",
                                                [keyUsages]));
   }
-  let emailAddresses = cert.getEmailAddresses({});
+  let emailAddresses = cert.getEmailAddresses();
   if (emailAddresses.length > 0) {
     let joinedAddresses = emailAddresses.join(", ");
     detailLines.push(bundle.getFormattedString("clientAuthEmailAddresses",
