@@ -484,6 +484,7 @@ class nsWindow final : public nsWindowBase {
     return mTransparencyMode;
   }
   void UpdateGlass();
+  bool WithinDraggableRegion(int32_t clientX, int32_t clientY);
 
  protected:
 #endif  // MOZ_XUL
@@ -549,6 +550,7 @@ class nsWindow final : public nsWindowBase {
   bool mIsRTL;
   bool mFullscreenMode;
   bool mMousePresent;
+  bool mMouseInDraggableArea;
   bool mDestroyCalled;
   bool mOpeningAnimationSuppressed;
   bool mAlwaysOnTop;
@@ -662,6 +664,8 @@ class nsWindow final : public nsWindowBase {
   // Whether we we're created as a child window (aka ChildWindow) or not.
   bool mIsChildWindow : 1;
 
+  int32_t mCachedHitTestResult;
+
   // The point in time at which the last paint completed. We use this to avoid
   //  painting too rapidly in response to frequent input events.
   TimeStamp mLastPaintEndTime;
@@ -672,7 +676,6 @@ class nsWindow final : public nsWindowBase {
   // Caching for hit test results
   POINT mCachedHitTestPoint;
   TimeStamp mCachedHitTestTime;
-  int32_t mCachedHitTestResult;
 
   RefPtr<mozilla::widget::WinCompositorWidget> mBasicLayersSurface;
 
