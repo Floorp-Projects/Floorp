@@ -11,7 +11,8 @@ namespace mozilla {
 namespace gl {
 
 bool DoesEGLContextSupportSharingWithEGLImage(GLContext* gl) {
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = GLContextEGL::Cast(gl);
+  const auto& egl = gle->mEgl;
 
   return egl->HasKHRImageBase() && egl->HasKHRImageTexture2D() &&
          gl->IsExtensionSupported(GLContext::OES_EGL_image);
@@ -20,12 +21,11 @@ bool DoesEGLContextSupportSharingWithEGLImage(GLContext* gl) {
 EGLImage CreateEGLImage(GLContext* gl, GLuint tex) {
   MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl));
 
-  auto* egl = gl::GLLibraryEGL::Get();
-
+  const auto& gle = GLContextEGL::Cast(gl);
+  const auto& egl = gle->mEgl;
   EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
-  EGLContext eglContext = GLContextEGL::Cast(gl)->mContext;
   EGLImage image =
-      egl->fCreateImage(egl->Display(), eglContext, LOCAL_EGL_GL_TEXTURE_2D,
+      egl->fCreateImage(egl->Display(), gle->mContext, LOCAL_EGL_GL_TEXTURE_2D,
                         clientBuffer, nullptr);
   return image;
 }
@@ -37,12 +37,12 @@ EGLImage CreateEGLImage(GLContext* gl, GLuint tex) {
 EGLImageWrapper* EGLImageWrapper::Create(GLContext* gl, GLuint tex) {
   MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl));
 
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = GLContextEGL::Cast(gl);
+  const auto& egl = gle->mEgl;
   const auto& display = egl->Display();
-  EGLContext eglContext = GLContextEGL::Cast(gl)->mContext;
   EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
   EGLImage image = egl->fCreateImage(
-      display, eglContext, LOCAL_EGL_GL_TEXTURE_2D, clientBuffer, nullptr);
+      display, gle->mContext, LOCAL_EGL_GL_TEXTURE_2D, clientBuffer, nullptr);
   if (!image) {
 #ifdef DEBUG
     printf_stderr("Could not create EGL images: ERROR (0x%04x)\n",
