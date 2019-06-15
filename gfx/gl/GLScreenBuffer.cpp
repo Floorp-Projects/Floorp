@@ -477,9 +477,7 @@ bool GLScreenBuffer::Swap(const gfx::IntSize& size) {
     GLContext::LocalErrorScope errorScope(*mGL);
 #endif
 
-    if (!SharedSurface::ProdCopy(src, dest, mFactory.get())) {
-      ret = false;
-    }
+    SharedSurface::ProdCopy(src, dest, mFactory.get());
 
 #ifdef DEBUG
     MOZ_ASSERT(!errorScope.GetError());
@@ -498,7 +496,7 @@ bool GLScreenBuffer::Swap(const gfx::IntSize& size) {
     mFront->Surf()->ProducerRelease();
   }
 
-  return ret;
+  return true;
 }
 
 bool GLScreenBuffer::PublishFrame(const gfx::IntSize& size) {
@@ -517,7 +515,6 @@ bool GLScreenBuffer::Resize(const gfx::IntSize& size) {
   if (mBack) mBack->Surf()->ProducerRelease();
 
   mBack = newBack;
-  bool ret = true;
 
   mBack->Surf()->ProducerAcquire();
 
