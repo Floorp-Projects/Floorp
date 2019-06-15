@@ -187,7 +187,7 @@ NSSDialogs.prototype = {
       detailLines.push(this.formatString("clientAuthAsk.keyUsages",
                                          [keyUsages]));
     }
-    let emailAddresses = cert.getEmailAddresses({});
+    let emailAddresses = cert.getEmailAddresses();
     if (emailAddresses.length > 0) {
       let joinedAddresses = emailAddresses.join(", ");
       detailLines.push(this.formatString("clientAuthAsk.emailAddresses",
