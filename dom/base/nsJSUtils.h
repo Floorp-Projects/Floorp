@@ -16,6 +16,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "GeckoProfiler.h"
 #include "jsapi.h"
@@ -206,6 +207,12 @@ class nsJSUtils {
 
   static nsresult CompileModule(JSContext* aCx,
                                 JS::SourceText<char16_t>& aSrcBuf,
+                                JS::Handle<JSObject*> aEvaluationGlobal,
+                                JS::CompileOptions& aCompileOptions,
+                                JS::MutableHandle<JSObject*> aModule);
+
+  static nsresult CompileModule(JSContext* aCx,
+                                JS::SourceText<mozilla::Utf8Unit>& aSrcBuf,
                                 JS::Handle<JSObject*> aEvaluationGlobal,
                                 JS::CompileOptions& aCompileOptions,
                                 JS::MutableHandle<JSObject*> aModule);
