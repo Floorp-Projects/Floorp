@@ -23,6 +23,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PerfStats.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs.h"
@@ -4179,6 +4180,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
       AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause),
                                                 docShellId, docShellHistoryId);
 #endif
+      PerfStats::AutoMetricRecording<PerfStats::Metric::Styling> autoRecording;
 
       mPresContext->RestyleManager()->ProcessPendingRestyles();
     }
@@ -4205,6 +4207,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
       AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause),
                                                 docShellId, docShellHistoryId);
 #endif
+      PerfStats::AutoMetricRecording<PerfStats::Metric::Styling> autoRecording;
 
       mPresContext->RestyleManager()->ProcessPendingRestyles();
       // Clear mNeedStyleFlush here agagin to make this flag work properly for
@@ -9153,6 +9156,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
       "Reflow", LAYOUT_Reflow,
       uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A"));
 #endif
+  PerfStats::AutoMetricRecording<PerfStats::Metric::Reflowing> autoRecording;
 
   gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
   TimeStamp timeStart;

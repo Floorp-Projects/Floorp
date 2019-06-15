@@ -21,6 +21,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/PerfStats.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/StaticPrefs.h"
@@ -3875,6 +3876,8 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
   {
     AUTO_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_DisplayListBuilding);
     AUTO_PROFILER_TRACING("Paint", "DisplayList", GRAPHICS);
+    PerfStats::AutoMetricRecording<PerfStats::Metric::DisplayListBuilding>
+        autoRecording;
 
     PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::DisplayList);
     {

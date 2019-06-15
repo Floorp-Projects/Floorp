@@ -482,6 +482,9 @@ child:
     async PreferenceUpdate(Pref pref);
     async VarUpdate(GfxVarUpdate var);
 
+    async UpdatePerfStatsCollectionMask(uint64_t aMask);
+    async CollectPerfStatsJSON() returns (nsCString aStats);
+
     async DataStoragePut(nsString aFilename, DataStorageItem aItem);
     async DataStorageRemove(nsString aFilename, nsCString aKey, DataStorageType aType);
     async DataStorageClear(nsString aFilename);

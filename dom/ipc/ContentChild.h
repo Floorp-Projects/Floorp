@@ -341,6 +341,12 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& aPref);
   mozilla::ipc::IPCResult RecvVarUpdate(const GfxVarUpdate& pref);
 
+  mozilla::ipc::IPCResult RecvUpdatePerfStatsCollectionMask(
+      const uint64_t& aMask);
+
+  mozilla::ipc::IPCResult RecvCollectPerfStatsJSON(
+      CollectPerfStatsJSONResolver&& aResolver);
+
   mozilla::ipc::IPCResult RecvDataStoragePut(const nsString& aFilename,
                                              const DataStorageItem& aItem);
 
