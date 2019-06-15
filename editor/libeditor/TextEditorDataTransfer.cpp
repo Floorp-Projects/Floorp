@@ -443,10 +443,9 @@ nsresult TextEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
 }
 
 bool TextEditor::CanPaste(int32_t aClipboardType) const {
-  // Always enable the paste command when inside of a HTML or XHTML document,
-  // but if the document is chrome, let it control it.
+  // Always enable the paste command when inside of a HTML or XHTML document.
   RefPtr<Document> doc = GetDocument();
-  if (doc && doc->IsHTMLOrXHTML() && !nsContentUtils::IsChromeDoc(doc)) {
+  if (doc && doc->IsHTMLOrXHTML()) {
     return true;
   }
 
