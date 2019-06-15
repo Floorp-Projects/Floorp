@@ -289,8 +289,6 @@ pref("devtools.performance.new-panel-enabled", false);
 // Enable message grouping in the console, false by default
 pref("devtools.webconsole.groupWarningMessages", false);
 
-// Enable Content messages filtering in the browser console.
-pref("devtools.browserconsole.filterContentMessages", false);
 // Saved state of the Display content messages checkbox in the browser console.
 pref("devtools.browserconsole.contentMessages", false);
 
