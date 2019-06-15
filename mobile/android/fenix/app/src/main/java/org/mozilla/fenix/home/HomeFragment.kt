@@ -573,11 +573,10 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.TabsChange(listOf()))
 
         val deleteOperation: (suspend () -> Unit) = {
-            sessionManager.filteredSessions(isPrivate) { it.id == pendingSessionDeletion?.sessionId }.forEach {
+            sessionManager.sessions.filter { it.private == isPrivate }.forEach {
                 useCases.removeTab.invoke(it)
             }
         }
-
         deleteAllSessionsJob = deleteOperation
 
         allowUndo(
