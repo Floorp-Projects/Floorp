@@ -347,19 +347,22 @@ class MainThreadFetchRunnable : public Runnable {
   const Maybe<ServiceWorkerDescriptor> mController;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;
   RefPtr<InternalRequest> mRequest;
+  UniquePtr<SerializedStackHolder> mOriginStack;
 
  public:
   MainThreadFetchRunnable(WorkerFetchResolver* aResolver,
                           const ClientInfo& aClientInfo,
                           const Maybe<ServiceWorkerDescriptor>& aController,
                           nsICSPEventListener* aCSPEventListener,
-                          InternalRequest* aRequest)
+                          InternalRequest* aRequest,
+                          UniquePtr<SerializedStackHolder>&& aOriginStack)
       : Runnable("dom::MainThreadFetchRunnable"),
         mResolver(aResolver),
         mClientInfo(aClientInfo),
         mController(aController),
         mCSPEventListener(aCSPEventListener),
-        mRequest(aRequest) {
+        mRequest(aRequest),
+        mOriginStack(std::move(aOriginStack)) {
     MOZ_ASSERT(mResolver);
   }
 
@@ -399,6 +402,8 @@ class MainThreadFetchRunnable : public Runnable {
       fetch->SetController(mController);
       fetch->SetCSPEventListener(mCSPEventListener);
     }
+
+    fetch->SetOriginStack(std::move(mOriginStack));
 
     RefPtr<AbortSignalImpl> signalImpl =
         mResolver->GetAbortSignalForMainThread();
@@ -531,9 +536,14 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
       return nullptr;
     }
 
+    UniquePtr<SerializedStackHolder> stack;
+    if (worker->IsWatchedByDevtools()) {
+      stack = GetCurrentStackForNetMonitor(cx);
+    }
+
     RefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(
         resolver, clientInfo.ref(), worker->GetController(),
-        worker->CSPEventListener(), r);
+        worker->CSPEventListener(), r, std::move(stack));
     worker->DispatchToMainThread(run.forget());
   }
 
