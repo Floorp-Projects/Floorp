@@ -42,7 +42,8 @@ UniquePtr<SharedSurface_ANGLEShareHandle>
 SharedSurface_ANGLEShareHandle::Create(GLContext* gl, EGLConfig config,
                                        const gfx::IntSize& size,
                                        bool hasAlpha) {
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = GLContextEGL::Cast(gl);
+  const auto& egl = gle->mEgl;
   MOZ_ASSERT(egl);
   MOZ_ASSERT(egl->IsExtensionSupported(
       GLLibraryEGL::ANGLE_surface_d3d_texture_2d_share_handle));
@@ -306,13 +307,14 @@ SurfaceFactory_ANGLEShareHandle::Create(
     GLContext* gl, const SurfaceCaps& caps,
     const RefPtr<layers::LayersIPCChannel>& allocator,
     const layers::TextureFlags& flags) {
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = GLContextEGL::Cast(gl);
+  const auto& egl = gle->mEgl;
   if (!egl) return nullptr;
 
   auto ext = GLLibraryEGL::ANGLE_surface_d3d_texture_2d_share_handle;
   if (!egl->IsExtensionSupported(ext)) return nullptr;
 
-  EGLConfig config = GLContextEGL::Cast(gl)->mConfig;
+  const auto& config = gle->mConfig;
 
   typedef SurfaceFactory_ANGLEShareHandle ptrT;
   UniquePtr<ptrT> ret(new ptrT(gl, caps, allocator, flags, egl, config));

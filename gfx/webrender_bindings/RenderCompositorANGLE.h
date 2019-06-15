@@ -24,6 +24,9 @@ struct IDXGIFactory2;
 struct IDXGISwapChain;
 
 namespace mozilla {
+namespace gl {
+class GLLibraryEGL;
+}  // namespace gl
 
 namespace wr {
 
@@ -32,7 +35,8 @@ class RenderCompositorANGLE : public RenderCompositor {
   static UniquePtr<RenderCompositor> Create(
       RefPtr<widget::CompositorWidget>&& aWidget);
 
-  explicit RenderCompositorANGLE(RefPtr<widget::CompositorWidget>&& aWidget);
+  explicit RenderCompositorANGLE(RefPtr<widget::CompositorWidget>&& aWidget,
+                                 gl::GLLibraryEGL*);
   virtual ~RenderCompositorANGLE();
   bool Initialize();
 
@@ -64,6 +68,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool SutdownEGLLibraryIfNecessary();
   RefPtr<ID3D11Query> GetD3D11Query();
 
+  RefPtr<gl::GLLibraryEGL> mEgl;
   EGLConfig mEGLConfig;
   EGLSurface mEGLSurface;
 

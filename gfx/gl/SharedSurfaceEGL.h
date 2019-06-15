@@ -39,7 +39,6 @@ class SharedSurface_EGLImage : public SharedSurface {
 
  protected:
   mutable Mutex mMutex;
-  GLLibraryEGL* const mEGL;
   const GLFormats mFormats;
   GLuint mProdTex;
 
@@ -49,12 +48,10 @@ class SharedSurface_EGLImage : public SharedSurface {
  protected:
   EGLSync mSync;
 
-  SharedSurface_EGLImage(GLContext* gl, GLLibraryEGL* egl,
-                         const gfx::IntSize& size, bool hasAlpha,
+  SharedSurface_EGLImage(GLContext* gl, const gfx::IntSize& size, bool hasAlpha,
                          const GLFormats& formats, GLuint prodTex,
                          EGLImage image);
 
-  EGLDisplay Display() const;
   void UpdateProdTexture(const MutexAutoLock& curAutoLock);
 
  public:
