@@ -68,14 +68,10 @@ struct RegExpCompileData
 
 struct RegExpCode
 {
-    jit::JitCode* jitCode;
-    uint8_t* byteCode;
+    jit::JitCode* jitCode = nullptr;
+    uint8_t* byteCode = nullptr;
 
-    RegExpCode()
-      : jitCode(nullptr), byteCode(nullptr)
-    {}
-
-    bool empty() {
+    bool empty() const {
         return !jitCode && !byteCode;
     }
 
