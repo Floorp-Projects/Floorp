@@ -4946,6 +4946,13 @@ VARCACHE_PREF(
 
 VARCACHE_PREF(
   Live,
+  "layout.css.overflow-logical.enabled",
+  layout_css_overflow_logical_enabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
   "layout.css.paint-order.enabled",
   PaintOrderEnabled,
   RelaxedAtomicBool, false
