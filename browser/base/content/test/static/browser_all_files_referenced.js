@@ -169,6 +169,9 @@ var whitelist = [
    platforms: ["linux", "win"]},
   // Referenced by the webcompat system addon for localization
   {file: "resource://gre/localization/en-US/toolkit/about/aboutCompat.ftl"},
+
+  // Bug 1559554
+  {file: "chrome://browser/content/aboutlogins/aboutLoginsUtils.js"},
 ];
 
 if (!AppConstants.MOZ_NEW_NOTIFICATION_STORE) {
