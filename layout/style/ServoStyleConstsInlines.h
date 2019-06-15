@@ -228,7 +228,10 @@ inline bool StyleAtom::IsStatic() const { return !!(_0 & 1); }
 
 inline nsAtom* StyleAtom::AsAtom() const {
   if (IsStatic()) {
-    return const_cast<nsStaticAtom*>(&detail::gGkAtoms.mAtoms[_0 >> 1]);
+    auto* atom = reinterpret_cast<const nsStaticAtom*>(
+        reinterpret_cast<const uint8_t*>(&detail::gGkAtoms) + (_0 >> 1));
+    MOZ_ASSERT(atom->IsStatic());
+    return const_cast<nsStaticAtom*>(atom);
   }
   return reinterpret_cast<nsAtom*>(_0);
 }
