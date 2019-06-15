@@ -18,6 +18,10 @@
 #extension GL_OES_EGL_image_external_essl3 : require
 #endif
 
+#ifdef WR_FEATURE_ADVANCED_BLEND
+#extension GL_KHR_blend_equation_advanced : require
+#endif
+
 #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
 #ifdef GL_ES
 #extension GL_EXT_blend_func_extended : require
@@ -107,6 +111,10 @@
         #endif
     #else
         // Fragment shader outputs
+        #ifdef WR_FEATURE_ADVANCED_BLEND
+            layout(blend_support_all_equations) out;
+        #endif
+
         #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
             layout(location = 0, index = 0) out vec4 oFragColor;
             layout(location = 0, index = 1) out vec4 oFragBlend;
