@@ -7,7 +7,9 @@
 #include "ScriptLoadRequest.h"
 
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "nsContentUtils.h"
 #include "nsICacheInfoChannel.h"
@@ -170,7 +172,11 @@ void ScriptLoadRequest::SetUnknownDataType() {
 void ScriptLoadRequest::SetTextSource() {
   MOZ_ASSERT(IsUnknownDataType());
   mDataType = DataType::eTextSource;
-  mScriptData.emplace(VariantType<ScriptTextBuffer>());
+  if (StaticPrefs::dom_script_loader_external_scripts_utf8_parsing_enabled()) {
+    mScriptData.emplace(VariantType<ScriptTextBuffer<Utf8Unit>>());
+  } else {
+    mScriptData.emplace(VariantType<ScriptTextBuffer<char16_t>>());
+  }
 }
 
 void ScriptLoadRequest::SetBinASTSource() {
@@ -216,7 +222,7 @@ bool ScriptLoadRequest::ShouldAcceptBinASTEncoding() const {
 
 void ScriptLoadRequest::ClearScriptSource() {
   if (IsTextSource()) {
-    ScriptText().clearAndFree();
+    ClearScriptText();
   } else if (IsBinASTSource()) {
     ScriptBinASTData().clearAndFree();
   }

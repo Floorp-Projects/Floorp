@@ -538,11 +538,16 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
       rv = FillCompileOptionsForRequest(aes, aRequest, global, &options);
 
       if (NS_SUCCEEDED(rv)) {
-        auto srcBuf = GetScriptSource(cx, aRequest);
-        if (srcBuf) {
-          rv = nsJSUtils::CompileModule(cx, *srcBuf, global, options, &module);
-        } else {
-          rv = NS_ERROR_OUT_OF_MEMORY;
+        MaybeSourceText maybeSource;
+        rv = GetScriptSource(cx, aRequest, &maybeSource);
+        if (NS_SUCCEEDED(rv)) {
+          rv = maybeSource.constructed<SourceText<char16_t>>()
+                   ? nsJSUtils::CompileModule(
+                         cx, maybeSource.ref<SourceText<char16_t>>(), global,
+                         options, &module)
+                   : nsJSUtils::CompileModule(
+                         cx, maybeSource.ref<SourceText<Utf8Unit>>(), global,
+                         options, &module);
         }
       }
     }
@@ -2065,8 +2070,7 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   }
 
   if (aRequest->IsTextSource()) {
-    if (!JS::CanCompileOffThread(cx, options,
-                                 aRequest->ScriptText().length())) {
+    if (!JS::CanCompileOffThread(cx, options, aRequest->ScriptTextLength())) {
       return NS_OK;
     }
 #ifdef JS_BUILD_BINAST
@@ -2090,10 +2094,18 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsTextSource());
-    auto srcBuf = GetScriptSource(cx, aRequest);
-    if (!srcBuf || !JS::CompileOffThreadModule(cx, options, *srcBuf,
-                                               OffThreadScriptLoaderCallback,
-                                               static_cast<void*>(runnable))) {
+    MaybeSourceText maybeSource;
+    nsresult rv = GetScriptSource(cx, aRequest, &maybeSource);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (maybeSource.constructed<SourceText<char16_t>>()
+            ? !JS::CompileOffThreadModule(
+                  cx, options, maybeSource.ref<SourceText<char16_t>>(),
+                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable))
+            : !JS::CompileOffThreadModule(
+                  cx, options, maybeSource.ref<SourceText<Utf8Unit>>(),
+                  OffThreadScriptLoaderCallback,
+                  static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else if (aRequest->IsBytecode()) {
@@ -2114,10 +2126,18 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 #endif
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
-    auto srcBuf = GetScriptSource(cx, aRequest);
-    if (!srcBuf || !JS::CompileOffThread(cx, options, *srcBuf,
-                                         OffThreadScriptLoaderCallback,
-                                         static_cast<void*>(runnable))) {
+    MaybeSourceText maybeSource;
+    nsresult rv = GetScriptSource(cx, aRequest, &maybeSource);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (maybeSource.constructed<SourceText<char16_t>>()
+            ? !JS::CompileOffThread(
+                  cx, options, maybeSource.ref<SourceText<char16_t>>(),
+                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable))
+            : !JS::CompileOffThread(cx, options,
+                                    maybeSource.ref<SourceText<Utf8Unit>>(),
+                                    OffThreadScriptLoaderCallback,
+                                    static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -2157,11 +2177,9 @@ nsresult ScriptLoader::CompileOffThreadOrProcessRequest(
   return ProcessRequest(aRequest);
 }
 
-mozilla::Maybe<SourceText<char16_t>> ScriptLoader::GetScriptSource(
-    JSContext* aCx, ScriptLoadRequest* aRequest) {
-  // Return a SourceText<char16_t> object holding the script's source text.
-  // Ownership of the buffer is transferred to the resulting holder.
-
+nsresult ScriptLoader::GetScriptSource(JSContext* aCx,
+                                       ScriptLoadRequest* aRequest,
+                                       MaybeSourceText* aMaybeSource) {
   // If there's no script text, we try to get it from the element
   if (aRequest->mIsInline) {
     nsAutoString inlineData;
@@ -2171,32 +2189,53 @@ mozilla::Maybe<SourceText<char16_t>> ScriptLoader::GetScriptSource(
     JS::UniqueTwoByteChars chars(
         static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
     if (!chars) {
-      return Nothing();
+      return NS_ERROR_OUT_OF_MEMORY;
     }
 
     memcpy(chars.get(), inlineData.get(), nbytes);
 
     SourceText<char16_t> srcBuf;
     if (!srcBuf.init(aCx, std::move(chars), inlineData.Length())) {
-      return Nothing();
+      return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return Some(SourceText<char16_t>(std::move(srcBuf)));
+    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
+    return NS_OK;
   }
 
-  size_t length = aRequest->ScriptText().length();
-  JS::UniqueTwoByteChars chars(aRequest->ScriptText().extractOrCopyRawBuffer());
+  size_t length = aRequest->ScriptTextLength();
+  if (aRequest->IsUTF16Text()) {
+    JS::UniqueTwoByteChars chars;
+    chars.reset(aRequest->ScriptText<char16_t>().extractOrCopyRawBuffer());
+    if (!chars) {
+      JS_ReportOutOfMemory(aCx);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(aCx, std::move(chars), length)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(aRequest->IsUTF8Text());
+  UniquePtr<Utf8Unit[], JS::FreePolicy> chars;
+  chars.reset(aRequest->ScriptText<Utf8Unit>().extractOrCopyRawBuffer());
   if (!chars) {
     JS_ReportOutOfMemory(aCx);
-    return Nothing();
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  SourceText<char16_t> srcBuf;
+  SourceText<Utf8Unit> srcBuf;
   if (!srcBuf.init(aCx, std::move(chars), length)) {
-    return Nothing();
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return Some(SourceText<char16_t>(std::move(srcBuf)));
+  aMaybeSource->construct<SourceText<Utf8Unit>>(std::move(srcBuf));
+  return NS_OK;
 }
 
 nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
@@ -2753,12 +2792,16 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
                                        aRequest->ScriptBinASTData().length());
               } else {
                 MOZ_ASSERT(aRequest->IsTextSource());
-                auto srcBuf = GetScriptSource(cx, aRequest);
-
-                if (srcBuf) {
-                  rv = exec.Compile(options, *srcBuf);
-                } else {
-                  rv = NS_ERROR_OUT_OF_MEMORY;
+                MaybeSourceText maybeSource;
+                rv = GetScriptSource(cx, aRequest, &maybeSource);
+                if (NS_SUCCEEDED(rv)) {
+                  rv = maybeSource.constructed<SourceText<char16_t>>()
+                           ? exec.Compile(
+                                 options,
+                                 maybeSource.ref<SourceText<char16_t>>())
+                           : exec.Compile(
+                                 options,
+                                 maybeSource.ref<SourceText<Utf8Unit>>());
                 }
               }
             }
