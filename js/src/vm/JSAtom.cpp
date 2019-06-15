@@ -398,6 +398,7 @@ AtomsTable::getPartitionIndex(const AtomHasher::Lookup& lookup) {
 inline void AtomsTable::tracePinnedAtomsInSet(JSTracer* trc, AtomSet& atoms) {
   for (auto r = atoms.all(); !r.empty(); r.popFront()) {
     JSAtom* atom = r.front().unbarrieredGet();
+    MOZ_DIAGNOSTIC_ASSERT(atom);
     if (atom->isPinned()) {
       TraceRoot(trc, &atom, "interned_atom");
       MOZ_ASSERT(r.front().unbarrieredGet() == atom);
@@ -471,8 +472,12 @@ void AtomsTable::sweepAll(JSRuntime* rt) {
     AtomSet& atoms = partitions[i]->atoms;
     for (AtomSet::Enum e(atoms); !e.empty(); e.popFront()) {
       JSAtom* atom = e.front().unbarrieredGet();
+      MOZ_DIAGNOSTIC_ASSERT(atom);
       if (IsAboutToBeFinalizedUnbarriered(&atom)) {
+        MOZ_ASSERT(!atom->isPinned());
         e.removeFront();
+      } else {
+        MOZ_ASSERT(atom == e.front().unbarrieredGet());
       }
     }
   }
@@ -584,8 +589,12 @@ bool AtomsTable::sweepIncrementally(SweepIterator& atomsToSweep,
     }
 
     JSAtom* atom = atomsToSweep.front();
+    MOZ_DIAGNOSTIC_ASSERT(atom);
     if (IsAboutToBeFinalizedUnbarriered(&atom)) {
+      MOZ_ASSERT(!atom->isPinned());
       atomsToSweep.removeFront();
+    } else {
+      MOZ_ASSERT(atom == atomsToSweep.front());
     }
     atomsToSweep.popFront();
   }

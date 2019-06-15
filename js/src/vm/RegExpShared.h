@@ -46,6 +46,15 @@ enum RegExpRunStatus {
 };
 
 /*
+ * Layout of the reg exp bytecode header.
+ */
+struct RegExpByteCodeHeader
+{
+  uint32_t length;          // Number of instructions.
+  uint32_t numRegisters;    // Number of registers used.
+};
+
+/*
  * A RegExpShared is the compiled representation of a regexp. A RegExpShared is
  * potentially pointed to by multiple RegExpObjects. Additionally, C++ code may
  * have pointers to RegExpShareds on the stack. The RegExpShareds are kept in a
@@ -77,23 +86,27 @@ class RegExpShared : public gc::TenuredCell {
 
   struct RegExpCompilation {
     WeakHeapPtr<jit::JitCode*> jitCode;
-    uint8_t* byteCode;
-
-    RegExpCompilation() : byteCode(nullptr) {}
+    uint8_t* byteCode = nullptr;
 
     bool compiled(ForceByteCodeEnum force = DontForceByteCode) const {
       return byteCode || (force == DontForceByteCode && jitCode);
     }
+
+    size_t byteCodeLength() const {
+      MOZ_ASSERT(byteCode);
+      auto header = reinterpret_cast<RegExpByteCodeHeader*>(byteCode);
+      return header->length;
+    }
   };
+
+  RegExpCompilation compilationArray[4];
 
   /* Source to the RegExp, for lazy compilation. */
   GCPtr<JSAtom*> source;
 
+  uint32_t parenCount;
   JS::RegExpFlags flags;
   bool canStringMatch;
-  size_t parenCount;
-
-  RegExpCompilation compilationArray[4];
 
   static int CompilationIndex(CompilationMode mode, bool latin1) {
     switch (mode) {
