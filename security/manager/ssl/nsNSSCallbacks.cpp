@@ -30,7 +30,6 @@
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
-#include "nsNSSHelper.h"
 #include "nsNSSIOLayer.h"
 #include "nsNetUtil.h"
 #include "nsProtectedAuthThread.h"
@@ -1013,12 +1012,6 @@ static void AccumulateCipherSuite(Telemetry::HistogramID probe,
   Telemetry::Accumulate(probe, value);
 }
 
-void RebuildVerifiedCertificateInformationResults(
-    nsNSSSocketInfo* aInfoObject, const UniqueCERTCertificate& aCert,
-    UniqueCERTCertList& aBuiltChain,
-    const CertificateTransparencyInfo& aCertificateTransparencyInfo,
-    SECOidTag aEvOidPolicy, bool aSucceeded);
-
 // In the case of session resumption, the AuthCertificate hook has been bypassed
 // (because we've previously successfully connected to our peer). That being the
 // case, we unfortunately don't know what the verified certificate chain was, if
@@ -1085,36 +1078,26 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
       nullptr,  // pinning telemetry
       &certificateTransparencyInfo);
 
-  RebuildVerifiedCertificateInformationResults(infoObject, cert, builtChain,
-                                               certificateTransparencyInfo,
-                                               evOidPolicy, rv == Success);
-}
-
-void RebuildVerifiedCertificateInformationResults(
-    nsNSSSocketInfo* aInfoObject, const UniqueCERTCertificate& aCert,
-    UniqueCERTCertList& aBuiltChain,
-    const CertificateTransparencyInfo& aCertificateTransparencyInfo,
-    SECOidTag aEvOidPolicy, bool aSucceeded) {
-  if (!aSucceeded) {
+  if (rv != Success) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("HandshakeCallback: couldn't rebuild verified certificate info"));
   }
 
-  RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(aCert.get()));
-  if (aSucceeded && aEvOidPolicy != SEC_OID_UNKNOWN) {
-    aInfoObject->SetCertificateTransparencyInfo(aCertificateTransparencyInfo);
+  RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(cert.get()));
+  if (rv == Success && evOidPolicy != SEC_OID_UNKNOWN) {
+    infoObject->SetCertificateTransparencyInfo(certificateTransparencyInfo);
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("HandshakeCallback using NEW cert %p (is EV)", nssc.get()));
-    aInfoObject->SetServerCert(nssc, EVStatus::EV);
+    infoObject->SetServerCert(nssc, EVStatus::EV);
   } else {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("HandshakeCallback using NEW cert %p (is not EV)", nssc.get()));
-    aInfoObject->SetServerCert(nssc, EVStatus::NotEV);
+    infoObject->SetServerCert(nssc, EVStatus::NotEV);
   }
 
-  if (aSucceeded) {
-    aInfoObject->SetCertificateTransparencyInfo(aCertificateTransparencyInfo);
-    aInfoObject->SetSucceededCertChain(std::move(aBuiltChain));
+  if (rv == Success) {
+    infoObject->SetCertificateTransparencyInfo(certificateTransparencyInfo);
+    infoObject->SetSucceededCertChain(std::move(builtChain));
   }
 }
 
@@ -1169,10 +1152,6 @@ static nsresult IsCertificateDistrustImminent(nsIX509CertList* aCertList,
   }
   return NS_OK;
 }
-
-void CallAfterRebuildVerifiedCertificateInformation(
-    nsNSSSocketInfo* aInfoObject, uint32_t aCumulativeSecurityState,
-    PRBool aSiteSupportsSafeRenego);
 
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   SECStatus rv;
@@ -1314,42 +1293,48 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     RebuildVerifiedCertificateInformation(fd, infoObject);
   }
 
-  CallAfterRebuildVerifiedCertificateInformation(infoObject, state,
-                                                 siteSupportsSafeRenego);
-}
-
-void CallAfterRebuildVerifiedCertificateInformation(
-    nsNSSSocketInfo* aInfoObject, uint32_t aCumulativeSecurityState,
-    PRBool aSiteSupportsSafeRenego) {
-
   nsCOMPtr<nsIX509CertList> succeededCertChain;
   // This always returns NS_OK, but the list could be empty. This is a
   // best-effort check for now. Bug 731478 will reduce the incidence of empty
   // succeeded cert chains through better caching.
-  Unused << aInfoObject->GetSucceededCertChain(
+  Unused << infoObject->GetSucceededCertChain(
       getter_AddRefs(succeededCertChain));
   bool distrustImminent;
   nsresult srv =
       IsCertificateDistrustImminent(succeededCertChain, distrustImminent);
   if (NS_SUCCEEDED(srv) && distrustImminent) {
-    aCumulativeSecurityState |= nsIWebProgressListener::STATE_CERT_DISTRUST_IMMINENT;
+    state |= nsIWebProgressListener::STATE_CERT_DISTRUST_IMMINENT;
   }
 
   bool domainMismatch;
   bool untrusted;
   bool notValidAtThisTime;
   // These all return NS_OK, so don't even bother checking the return values.
-  Unused << aInfoObject->GetIsDomainMismatch(&domainMismatch);
-  Unused << aInfoObject->GetIsUntrusted(&untrusted);
-  Unused << aInfoObject->GetIsNotValidAtThisTime(&notValidAtThisTime);
+  Unused << infoObject->GetIsDomainMismatch(&domainMismatch);
+  Unused << infoObject->GetIsUntrusted(&untrusted);
+  Unused << infoObject->GetIsNotValidAtThisTime(&notValidAtThisTime);
   // If we're here, the TLS handshake has succeeded. Thus if any of these
   // booleans are true, the user has added an override for a certificate error.
   if (domainMismatch || untrusted || notValidAtThisTime) {
-    aCumulativeSecurityState |= nsIWebProgressListener::STATE_CERT_USER_OVERRIDDEN;
+    state |= nsIWebProgressListener::STATE_CERT_USER_OVERRIDDEN;
   }
 
-  aInfoObject->SetSecurityState(aCumulativeSecurityState);
+  infoObject->SetSecurityState(state);
 
-  aInfoObject->NoteTimeUntilReady();
-  aInfoObject->SetHandshakeCompleted();
+  // XXX Bug 883674: We shouldn't be formatting messages here in PSM; instead,
+  // we should set a flag on the channel that higher (UI) level code can check
+  // to log the warning. In particular, these warnings should go to the web
+  // console instead of to the error console. Also, the warning is not
+  // localized.
+  if (!siteSupportsSafeRenego) {
+    NS_ConvertASCIItoUTF16 msg(infoObject->GetHostName());
+    msg.AppendLiteral(" : server does not support RFC 5746, see CVE-2009-3555");
+
+    nsContentUtils::LogSimpleConsoleError(
+        msg, "SSL", !!infoObject->GetOriginAttributes().mPrivateBrowsingId,
+        true /* from chrome context */);
+  }
+
+  infoObject->NoteTimeUntilReady();
+  infoObject->SetHandshakeCompleted();
 }
