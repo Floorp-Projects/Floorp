@@ -1642,9 +1642,11 @@ static const char* textHtmlEditorFlavors[] = {kUnicodeMime,   kHTMLMime,
                                               kPNGImageMime,  kGIFImageMime};
 
 bool HTMLEditor::CanPaste(int32_t aClipboardType) const {
-  // Always enable the paste command when inside of a HTML or XHTML document.
+  // Always enable the paste command when inside of a HTML or XHTML document,
+  // but if the document is chrome, let it control it.
   Document* document = GetDocument();
-  if (document && document->IsHTMLOrXHTML()) {
+  if (document && document->IsHTMLOrXHTML() &&
+      !nsContentUtils::IsChromeDoc(document)) {
     return true;
   }
 

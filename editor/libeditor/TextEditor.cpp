@@ -1794,9 +1794,11 @@ bool TextEditor::CanCut() const {
     return false;
   }
 
-  // Cut is always enabled in HTML documents
+  // Cut is always enabled in HTML documents, but if the document is chrome,
+  // let it control it.
   Document* document = GetDocument();
-  if (document && document->IsHTMLOrXHTML()) {
+  if (document && document->IsHTMLOrXHTML() &&
+      !nsContentUtils::IsChromeDoc(document)) {
     return true;
   }
 
@@ -1823,9 +1825,11 @@ bool TextEditor::CanCopy() const {
     return false;
   }
 
-  // Copy is always enabled in HTML documents
+  // Copy is always enabled in HTML documents, but if the document is chrome,
+  // let it control it.
   Document* document = GetDocument();
-  if (document && document->IsHTMLOrXHTML()) {
+  if (document && document->IsHTMLOrXHTML() &&
+      !nsContentUtils::IsChromeDoc(document)) {
     return true;
   }
 
