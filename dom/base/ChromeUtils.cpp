@@ -15,6 +15,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/PerformanceMetricsCollector.h"
+#include "mozilla/PerfStats.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcInfo.h"
 #include "mozilla/RDDProcessManager.h"
@@ -863,6 +864,35 @@ already_AddRefed<Promise> ChromeUtils::RequestPerformanceMetrics(
 
   // sending back the promise instance
   return domPromise.forget();
+}
+
+void ChromeUtils::SetPerfStatsCollectionMask(GlobalObject& aGlobal,
+                                             uint64_t aMask) {
+  PerfStats::SetCollectionMask(static_cast<PerfStats::MetricMask>(aMask));
+}
+
+already_AddRefed<Promise> ChromeUtils::CollectPerfStats(GlobalObject& aGlobal,
+                                                        ErrorResult& aRv) {
+  // Creating a JS promise
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<PerfStats::PerfStatsPromise> extPromise =
+      PerfStats::CollectPerfStatsJSON();
+
+  extPromise->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [promise](const nsCString& aResult) {
+        promise->MaybeResolve(NS_ConvertUTF8toUTF16(aResult));
+      },
+      [promise](bool aValue) { promise->MaybeReject(NS_ERROR_FAILURE); });
+
+  return promise.forget();
 }
 
 constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;

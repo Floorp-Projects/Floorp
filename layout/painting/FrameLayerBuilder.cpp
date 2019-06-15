@@ -54,6 +54,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/layers/WebRenderUserData.h"
+#include "mozilla/PerfStats.h"
 #include "mozilla/Unused.h"
 #include "GeckoProfiler.h"
 #include "LayersLogging.h"
@@ -4476,6 +4477,8 @@ static void ProcessDisplayItemMarker(DisplayItemEntryType aMarker,
 void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
   AUTO_PROFILER_LABEL("ContainerState::ProcessDisplayItems",
                       GRAPHICS_LayerBuilding);
+  PerfStats::AutoMetricRecording<PerfStats::Metric::LayerBuilding>
+      autoRecording;
 
   nsPoint topLeft(0, 0);
 
