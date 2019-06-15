@@ -148,28 +148,14 @@ nsresult ScriptLoadHandler::DecodeRawData(const uint8_t* aData,
   return NS_OK;
 }
 
-bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
+bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
                                       const uint8_t* aData,
                                       uint32_t aDataLength, bool aEndOfStream) {
-  // Check if decoder has already been created.
-  if (mDecoder) {
-    return true;
-  }
+  MOZ_ASSERT(mDecoder == nullptr,
+             "can't have a decoder already if we're trying to set one");
 
-  nsAutoCString charset;
-  if (!EnsureDecoder(aLoader, aData, aDataLength, aEndOfStream, charset)) {
-    return false;
-  }
-  return true;
-}
-
-bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
-                                      const uint8_t* aData,
-                                      uint32_t aDataLength, bool aEndOfStream,
-                                      nsCString& oCharset) {
   // JavaScript modules are always UTF-8.
   if (mRequest->IsModuleRequest()) {
-    oCharset = "UTF-8";
     mDecoder = UTF_8_ENCODING->NewDecoderWithBOMRemoval();
     return true;
   }
@@ -187,7 +173,6 @@ bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
   Tie(encoding, bomLength) = Encoding::ForBOM(MakeSpan(aData, aDataLength));
   if (encoding) {
     mDecoder = encoding->NewDecoderWithBOMRemoval();
-    encoding->Name(oCharset);
     return true;
   }
 
@@ -204,7 +189,6 @@ bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
     if (NS_SUCCEEDED(channel->GetContentCharset(label)) &&
         (encoding = Encoding::ForLabel(label))) {
       mDecoder = encoding->NewDecoderWithoutBOMHandling();
-      encoding->Name(oCharset);
       return true;
     }
   }
@@ -226,7 +210,6 @@ bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
 
   if ((encoding = Encoding::ForLabel(hintCharset))) {
     mDecoder = encoding->NewDecoderWithoutBOMHandling();
-    encoding->Name(oCharset);
     return true;
   }
 
@@ -234,14 +217,12 @@ bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
   if (mScriptLoader->mDocument) {
     encoding = mScriptLoader->mDocument->GetDocumentCharacterSet();
     mDecoder = encoding->NewDecoderWithoutBOMHandling();
-    encoding->Name(oCharset);
     return true;
   }
 
   // Curiously, there are various callers that don't pass aDocument. The
   // fallback in the old code was ISO-8859-1, which behaved like
   // windows-1252.
-  oCharset = "windows-1252";
   mDecoder = WINDOWS_1252_ENCODING->NewDecoderWithoutBOMHandling();
   return true;
 }

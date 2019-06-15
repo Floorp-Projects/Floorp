@@ -40,15 +40,28 @@ class ScriptLoadHandler final : public nsIIncrementalStreamLoaderObserver {
                          bool aEndOfStream);
 
   /*
-   * Discover the charset by looking at the stream data, the script
-   * tag, and other indicators.  Returns true if charset has been
-   * discovered.
+   * Discover the charset by looking at the stream data, the script tag, and
+   * other indicators.  Returns true if charset has been discovered.
    */
   bool EnsureDecoder(nsIIncrementalStreamLoader* aLoader, const uint8_t* aData,
+                     uint32_t aDataLength, bool aEndOfStream) {
+    // Check if the decoder has already been created.
+    if (mDecoder) {
+      return true;
+    }
+
+    return TrySetDecoder(aLoader, aData, aDataLength, aEndOfStream);
+  }
+
+  /*
+   * Attempt to determine how script data will be decoded, when such
+   * determination hasn't already been made.  (If you don't know whether it's
+   * been made yet, use |EnsureDecoder| above instead.)  Return false if there
+   * isn't enough information yet to make the determination, or true if a
+   * determination was made.
+   */
+  bool TrySetDecoder(nsIIncrementalStreamLoader* aLoader, const uint8_t* aData,
                      uint32_t aDataLength, bool aEndOfStream);
-  bool EnsureDecoder(nsIIncrementalStreamLoader* aLoader, const uint8_t* aData,
-                     uint32_t aDataLength, bool aEndOfStream,
-                     nsCString& oCharset);
 
   /*
    * When streaming bytecode, we have the opportunity to fallback early if SRI
