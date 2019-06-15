@@ -54,7 +54,7 @@ class ShSurfHandle;
 
 class SharedSurface {
  public:
-  static bool ProdCopy(SharedSurface* src, SharedSurface* dest,
+  static void ProdCopy(SharedSurface* src, SharedSurface* dest,
                        SurfaceFactory* factory);
 
   const SharedSurfaceType mType;
