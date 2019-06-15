@@ -20,6 +20,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MemoryTelemetry.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/PerfStats.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
@@ -2425,6 +2426,18 @@ mozilla::ipc::IPCResult ContentChild::RecvPreferenceUpdate(const Pref& aPref) {
 
 mozilla::ipc::IPCResult ContentChild::RecvVarUpdate(const GfxVarUpdate& aVar) {
   gfx::gfxVars::ApplyUpdate(aVar);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvUpdatePerfStatsCollectionMask(
+    const uint64_t& aMask) {
+  PerfStats::SetCollectionMask(static_cast<PerfStats::MetricMask>(aMask));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvCollectPerfStatsJSON(
+    CollectPerfStatsJSONResolver&& aResolver) {
+  aResolver(PerfStats::CollectLocalPerfStatsJSON());
   return IPC_OK();
 }
 

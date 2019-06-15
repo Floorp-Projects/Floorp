@@ -230,6 +230,9 @@ struct IonScript {
   uint32_t constantTable_;
   uint32_t constantEntries_;
 
+  // The size of this allocation.
+  uint32_t allocBytes_ = 0;
+
   // Number of references from invalidation records.
   uint32_t invalidationCount_;
 
@@ -451,6 +454,8 @@ struct IonScript {
   bool isRecompiling() const { return recompiling_; }
 
   void clearRecompiling() { recompiling_ = false; }
+
+  size_t allocBytes() const { return allocBytes_; }
 
   enum ShouldIncreaseAge { IncreaseAge = true, KeepAge = false };
 

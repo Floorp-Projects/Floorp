@@ -95,6 +95,10 @@ parent:
                             FileDescriptor? DMDFile);
   async ShutdownVR();
 
+  // Functions supporting PerfStats data collection.
+  async UpdatePerfStatsCollectionMask(uint64_t aMask);
+  async CollectPerfStatsJSON() returns (nsCString aStats);
+
 child:
   // Sent when the GPU process has initialized devices. This occurs once, after
   // Init().
