@@ -593,7 +593,6 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
     private fun removeTabWithUndo(sessionId: String) {
         val sessionManager = requireComponents.core.sessionManager
-
         val deleteOperation: (suspend () -> Unit) = {
             sessionManager.findSessionById(sessionId)
                 ?.let { session ->
