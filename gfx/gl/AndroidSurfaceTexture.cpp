@@ -76,7 +76,8 @@ class SharedGL final {
     MutexAutoLock lock(sMutex);
 
     if (mTargetSurface != EGL_NO_SURFACE) {
-      GLLibraryEGL::Get()->fDestroySurface(EGL_DISPLAY(), mTargetSurface);
+      const auto& egl = *GLLibraryEGL::Get();
+      egl.fDestroySurface(egl.Display(), mTargetSurface);
     }
 
     // Destroy shared GL context when no one uses it.
@@ -124,9 +125,9 @@ class SharedGL final {
     if (!gl->IsCurrent()) {
       return true;
     }
-
-    return gl::GLLibraryEGL::Get()->fMakeCurrent(
-        EGL_DISPLAY(), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    const auto& egl = *gl::GLLibraryEGL::Get();
+    return egl.fMakeCurrent(
+        egl.Display(), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
   }
 
   static Mutex sMutex;
