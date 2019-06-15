@@ -159,7 +159,13 @@ class ScriptLoadRequest
   void SetBinASTSource();
   void SetBytecode();
 
+  // Use a vector backed by the JS allocator for script text so that contents
+  // can be transferred in constant time to the JS engine, not copied in linear
+  // time.
   using ScriptTextBuffer = Vector<char16_t, 0, JSMallocAllocPolicy>;
+
+  // BinAST data isn't transferred to the JS engine, so it doesn't need to use
+  // the JS allocator.
   using BinASTSourceBuffer = Vector<uint8_t>;
 
   const ScriptTextBuffer& ScriptText() const {
@@ -269,9 +275,7 @@ class ScriptLoadRequest
   // it is parsed, and planned to be saved in the bytecode cache.
   JS::Heap<JSScript*> mScript;
 
-  // Holds script source data for non-inline scripts. Don't use nsString so we
-  // can give ownership to jsapi. Holds either char16_t source text characters
-  // or BinAST encoded bytes depending on mSourceEncoding.
+  // Holds script source data for non-inline scripts.
   Maybe<Variant<ScriptTextBuffer, BinASTSourceBuffer>> mScriptData;
 
   // The length of script source text, set when reading completes. This is used
