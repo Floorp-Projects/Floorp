@@ -206,8 +206,29 @@ nsresult nsJSUtils::ExecutionContext::JoinCompile(
   return NS_OK;
 }
 
-nsresult nsJSUtils::ExecutionContext::Compile(
+static JSScript* CompileScript(
+    JSContext* aCx, JS::Handle<JS::StackGCVector<JSObject*>> aScopeChain,
     JS::CompileOptions& aCompileOptions, JS::SourceText<char16_t>& aSrcBuf) {
+  return aScopeChain.length() == 0
+             ? JS::Compile(aCx, aCompileOptions, aSrcBuf)
+             : JS::CompileForNonSyntacticScope(aCx, aCompileOptions, aSrcBuf);
+}
+
+static JSScript* CompileScript(
+    JSContext* aCx, JS::Handle<JS::StackGCVector<JSObject*>> aScopeChain,
+    JS::CompileOptions& aCompileOptions, JS::SourceText<Utf8Unit>& aSrcBuf) {
+  // Once the UTF-8 overloads don't inflate, we can get rid of these two
+  // |CompileScript| overloads and just call the JSAPI directly in the one
+  // caller.
+  return aScopeChain.length() == 0
+             ? JS::CompileDontInflate(aCx, aCompileOptions, aSrcBuf)
+             : JS::CompileForNonSyntacticScopeDontInflate(aCx, aCompileOptions,
+                                                          aSrcBuf);
+}
+
+template <typename Unit>
+nsresult nsJSUtils::ExecutionContext::InternalCompile(
+    JS::CompileOptions& aCompileOptions, JS::SourceText<Unit>& aSrcBuf) {
   if (mSkip) {
     return mRv;
   }
@@ -219,11 +240,7 @@ nsresult nsJSUtils::ExecutionContext::Compile(
 #endif
 
   MOZ_ASSERT(!mScript);
-  mScript =
-      mScopeChain.length() == 0
-          ? JS::Compile(mCx, aCompileOptions, aSrcBuf)
-          : JS::CompileForNonSyntacticScope(mCx, aCompileOptions, aSrcBuf);
-
+  mScript = CompileScript(mCx, mScopeChain, aCompileOptions, aSrcBuf);
   if (!mScript) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
@@ -237,6 +254,16 @@ nsresult nsJSUtils::ExecutionContext::Compile(
   }
 
   return NS_OK;
+}
+
+nsresult nsJSUtils::ExecutionContext::Compile(
+    JS::CompileOptions& aCompileOptions, JS::SourceText<char16_t>& aSrcBuf) {
+  return InternalCompile(aCompileOptions, aSrcBuf);
+}
+
+nsresult nsJSUtils::ExecutionContext::Compile(
+    JS::CompileOptions& aCompileOptions, JS::SourceText<Utf8Unit>& aSrcBuf) {
+  return InternalCompile(aCompileOptions, aSrcBuf);
 }
 
 nsresult nsJSUtils::ExecutionContext::Compile(
