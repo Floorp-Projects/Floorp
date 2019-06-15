@@ -104,6 +104,12 @@ class nsNSSSocketInfo final : public mozilla::psm::TransportSecurityInfo,
 
   void SetKEAKeyBits(uint32_t keaBits) { mKEAKeyBits = keaBits; }
 
+  void SetBypassAuthentication(bool val) {
+    if (!mHandshakeCompleted) {
+      mBypassAuthentication = val;
+    }
+  }
+
   void SetSSLVersionUsed(int16_t version) { mSSLVersionUsed = version; }
 
   void SetMACAlgorithmUsed(int16_t mac) { mMACAlgorithmUsed = mac; }
@@ -203,6 +209,7 @@ class nsNSSSocketInfo final : public mozilla::psm::TransportSecurityInfo,
   uint32_t mKEAKeyBits;
   int16_t mSSLVersionUsed;
   int16_t mMACAlgorithmUsed;
+  bool mBypassAuthentication;
 
   uint32_t mProviderFlags;
   uint32_t mProviderTlsFlags;

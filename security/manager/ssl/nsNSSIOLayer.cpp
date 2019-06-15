@@ -137,6 +137,7 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags,
       mKEAKeyBits(0),
       mSSLVersionUsed(nsISSLSocketControl::SSL_VERSION_UNKNOWN),
       mMACAlgorithmUsed(nsISSLSocketControl::SSL_MAC_UNKNOWN),
+      mBypassAuthentication(false),
       mProviderFlags(providerFlags),
       mProviderTlsFlags(providerTlsFlags),
       mSocketCreationTimestamp(TimeStamp::Now()),
@@ -210,6 +211,12 @@ nsNSSSocketInfo::SetClientCert(nsIX509Cert* aClientCert) {
 NS_IMETHODIMP
 nsNSSSocketInfo::GetClientCertSent(bool* arg) {
   *arg = mSentClientCert;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetBypassAuthentication(bool* arg) {
+  *arg = mBypassAuthentication;
   return NS_OK;
 }
 
@@ -506,6 +513,12 @@ nsNSSSocketInfo::TestJoinConnection(const nsACString& npnProtocol,
 
   // Make sure NPN has been completed and matches requested npnProtocol
   if (!mNPNCompleted || !mNegotiatedNPN.Equals(npnProtocol)) return NS_OK;
+
+  if (mBypassAuthentication) {
+    // An unauthenticated connection does not know whether or not it
+    // is acceptable for a particular hostname
+    return NS_OK;
+  }
 
   IsAcceptableForHost(hostname, _retval);  // sets _retval
   return NS_OK;
@@ -2278,7 +2291,11 @@ static PRFileDesc* nsSSLIOLayerImportFD(PRFileDesc* fd,
     SSL_GetClientAuthDataHook(
         sslSock, (SSLGetClientAuthData)nsNSS_SSLGetClientAuthData, infoObject);
   }
-
+  if (flags & nsISocketProvider::MITM_OK) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("[%p] nsSSLIOLayerImportFD: bypass authentication flag\n", fd));
+    infoObject->SetBypassAuthentication(true);
+  }
   if (SECSuccess !=
       SSL_AuthCertificateHook(sslSock, AuthCertificateHook, infoObject)) {
     MOZ_ASSERT_UNREACHABLE("Failed to configure AuthCertificateHook");
@@ -2447,6 +2464,9 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   }
   if (flags & nsISocketProvider::NO_PERMANENT_STORAGE) {
     peerId.AppendLiteral("private:");
+  }
+  if (flags & nsISocketProvider::MITM_OK) {
+    peerId.AppendLiteral("bypassAuth:");
   }
   if (flags & nsISocketProvider::BE_CONSERVATIVE) {
     peerId.AppendLiteral("beConservative:");
