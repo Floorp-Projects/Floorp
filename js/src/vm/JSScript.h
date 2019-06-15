@@ -2535,6 +2535,7 @@ class JSScript : public js::gc::TenuredCell {
   js::jit::IonScript* maybeIonScript() const { return ion; }
   js::jit::IonScript* const* addressOfIonScript() const { return &ion; }
   void setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript);
+  inline void clearIonScript();
 
   bool hasBaselineScript() const {
     bool res = baseline && baseline != BASELINE_DISABLED_SCRIPT;
@@ -2550,6 +2551,7 @@ class JSScript : public js::gc::TenuredCell {
   }
   inline void setBaselineScript(JSRuntime* rt,
                                 js::jit::BaselineScript* baselineScript);
+  inline void clearBaselineScript();
 
   void updateJitCodeRaw(JSRuntime* rt);
 
