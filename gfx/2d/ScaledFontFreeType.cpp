@@ -133,9 +133,6 @@ already_AddRefed<ScaledFont> UnscaledFontFreeType::CreateScaledFont(
   }
 
   int flags = FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
-  if (face->face_flags & FT_FACE_FLAG_TRICKY) {
-    flags &= ~FT_LOAD_NO_AUTOHINT;
-  }
   cairo_font_face_t* font = cairo_ft_font_face_create_for_ft_face(
       face, flags, coords.data(), aNumVariations);
   if (cairo_font_face_status(font) != CAIRO_STATUS_SUCCESS) {
