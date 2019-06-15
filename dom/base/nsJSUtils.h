@@ -109,6 +109,12 @@ class nsJSUtils {
     bool mScriptUsed;
 #endif
 
+   private:
+    // Compile a script contained in a SourceText.
+    template <typename Unit>
+    nsresult InternalCompile(JS::CompileOptions& aCompileOptions,
+                             JS::SourceText<Unit>& aSrcBuf);
+
    public:
     // Enter compartment in which the code would be executed.  The JSContext
     // must come from an AutoEntryScript.
@@ -153,6 +159,8 @@ class nsJSUtils {
     // Compile a script contained in a SourceText.
     nsresult Compile(JS::CompileOptions& aCompileOptions,
                      JS::SourceText<char16_t>& aSrcBuf);
+    nsresult Compile(JS::CompileOptions& aCompileOptions,
+                     JS::SourceText<mozilla::Utf8Unit>& aSrcBuf);
 
     // Compile a script contained in a string.
     nsresult Compile(JS::CompileOptions& aCompileOptions,
