@@ -9,8 +9,10 @@
 #include <algorithm>
 #include <iterator>
 
+#include "GLBlitHelper.h"
 #include "GLContext.h"
 #include "GLScreenBuffer.h"
+#include "MozFramebuffer.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "nsPrintfCString.h"
 #include "WebGLContext.h"
@@ -1259,6 +1261,7 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
   const webgl::FormatInfo* srcColorFormat;
   const webgl::FormatInfo* srcDepthFormat;
   const webgl::FormatInfo* srcStencilFormat;
+  gfx::IntSize srcSize;
 
   if (srcFB) {
     const auto& info = *srcFB->GetCompletenessInfo();
@@ -1278,11 +1281,13 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
     srcDepthFormat = fnGetFormat(srcFB->DepthAttachment(), &srcHasSamples);
     srcStencilFormat = fnGetFormat(srcFB->StencilAttachment(), &srcHasSamples);
     MOZ_ASSERT(!srcFB->DepthStencilAttachment().HasAttachment());
+    srcSize = {info.width, info.height};
   } else {
     srcHasSamples = false;  // Always false.
 
     GetBackbufferFormats(webgl, &srcColorFormat, &srcDepthFormat,
                          &srcStencilFormat);
+    srcSize = webgl->DrawingBufferSize();
   }
 
   ////
@@ -1293,6 +1298,8 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
   bool dstHasColor = false;
   bool colorFormatsMatch = true;
   bool colorTypesMatch = true;
+  bool colorSrgbMatches = true;
+  gfx::IntSize dstSize;
 
   const auto fnCheckColorFormat = [&](const webgl::FormatInfo* dstFormat) {
     MOZ_ASSERT(dstFormat->r || dstFormat->g || dstFormat->b || dstFormat->a);
@@ -1300,6 +1307,8 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
     colorFormatsMatch &= (dstFormat == srcColorFormat);
     colorTypesMatch &=
         srcColorFormat && (dstFormat->baseType == srcColorFormat->baseType);
+    colorSrgbMatches &=
+        srcColorFormat && (dstFormat->isSRGB == srcColorFormat->isSRGB);
   };
 
   if (dstFB) {
@@ -1313,6 +1322,9 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
     dstDepthFormat = fnGetFormat(dstFB->DepthAttachment(), &dstHasSamples);
     dstStencilFormat = fnGetFormat(dstFB->StencilAttachment(), &dstHasSamples);
     MOZ_ASSERT(!dstFB->DepthStencilAttachment().HasAttachment());
+
+    const auto& info = *dstFB->GetCompletenessInfo();
+    dstSize = {info.width, info.height};
   } else {
     dstHasSamples = webgl->Options().antialias;
 
@@ -1321,6 +1333,8 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
                          &dstStencilFormat);
 
     fnCheckColorFormat(dstColorFormat);
+
+    dstSize = webgl->DrawingBufferSize();
   }
 
   ////
@@ -1450,12 +1464,84 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
     return;
   }
 
-  ////
+  // -
 
   const auto& gl = webgl->gl;
   const ScopedDrawCallWrapper wrapper(*webgl);
   gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1,
                        mask, filter);
+
+  // -
+
+  if (mask & LOCAL_GL_COLOR_BUFFER_BIT && !colorSrgbMatches && !gl->IsGLES() &&
+      gl->Version() < 440) {
+    // Mostly for Mac.
+    // Remember, we have to filter in the *linear* format blit.
+
+    // src -Blit-> fbB -DrawBlit-> fbC -Blit-> dst
+
+    const auto fbB = gl::MozFramebuffer::Create(gl, {1, 1}, 0, false);
+    const auto fbC = gl::MozFramebuffer::Create(gl, {1, 1}, 0, false);
+
+    // -
+
+    auto sizeBC = srcSize;
+    GLenum formatC = LOCAL_GL_RGBA8;
+    if (srcColorFormat->isSRGB) {
+      // srgb -> linear
+    } else {
+      // linear -> srgb
+      sizeBC = dstSize;
+      formatC = LOCAL_GL_SRGB8_ALPHA8;
+    }
+
+    const auto fnSetTex = [&](const gl::MozFramebuffer& fb,
+                              const GLenum format) {
+      const gl::ScopedBindTexture bindTex(gl, fb.ColorTex());
+      gl->fTexStorage2D(LOCAL_GL_TEXTURE_2D, 1, format, sizeBC.width,
+                        sizeBC.height);
+    };
+    fnSetTex(*fbB, srcColorFormat->sizedFormat);
+    fnSetTex(*fbC, formatC);
+
+    // -
+
+    {
+      const gl::ScopedBindFramebuffer bindFb(gl);
+      gl->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, fbB->mFB);
+
+      if (srcColorFormat->isSRGB) {
+        // srgb -> linear
+        gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, srcX0, srcY0, srcX1,
+                             srcY1, LOCAL_GL_COLOR_BUFFER_BIT,
+                             LOCAL_GL_NEAREST);
+      } else {
+        // linear -> srgb
+        gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
+                             dstY1, LOCAL_GL_COLOR_BUFFER_BIT, filter);
+      }
+
+      const auto& blitHelper = *gl->BlitHelper();
+      gl->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, fbC->mFB);
+      blitHelper.DrawBlitTextureToFramebuffer(fbB->ColorTex(), sizeBC, sizeBC);
+    }
+
+    {
+      const gl::ScopedBindFramebuffer bindFb(gl);
+      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbC->mFB);
+
+      if (srcColorFormat->isSRGB) {
+        // srgb -> linear
+        gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
+                             dstY1, LOCAL_GL_COLOR_BUFFER_BIT, filter);
+      } else {
+        // linear -> srgb
+        gl->fBlitFramebuffer(dstX0, dstY0, dstX1, dstY1, dstX0, dstY0, dstX1,
+                             dstY1, LOCAL_GL_COLOR_BUFFER_BIT,
+                             LOCAL_GL_NEAREST);
+      }
+    }
+  }
 
   // -
   // glBlitFramebuffer ignores glColorMask!

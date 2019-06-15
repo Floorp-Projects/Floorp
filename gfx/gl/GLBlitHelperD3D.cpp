@@ -20,9 +20,9 @@
 namespace mozilla {
 namespace gl {
 
-static EGLStreamKHR StreamFromD3DTexture(ID3D11Texture2D* const texD3D,
+static EGLStreamKHR StreamFromD3DTexture(GLLibraryEGL* const egl,
+                                         ID3D11Texture2D* const texD3D,
                                          const EGLAttrib* const postAttribs) {
-  auto* egl = gl::GLLibraryEGL::Get();
   if (!egl->IsExtensionSupported(
           GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
       !egl->IsExtensionSupported(
@@ -85,7 +85,8 @@ class BindAnglePlanes final {
     MOZ_RELEASE_ASSERT(numPlanes >= 1 && numPlanes <= 3);
 
     const auto& gl = mParent.mGL;
-    auto* egl = gl::GLLibraryEGL::Get();
+    const auto& gle = GLContextEGL::Cast(gl);
+    const auto& egl = gle->mEgl;
     const auto& display = egl->Display();
 
     gl->fGenTextures(numPlanes, mTempTexs);
@@ -97,7 +98,7 @@ class BindAnglePlanes final {
       if (postAttribsList) {
         postAttribs = postAttribsList[i];
       }
-      mStreams[i] = StreamFromD3DTexture(texD3DList[i], postAttribs);
+      mStreams[i] = StreamFromD3DTexture(egl, texD3DList[i], postAttribs);
       mSuccess &= bool(mStreams[i]);
     }
 
@@ -121,7 +122,8 @@ class BindAnglePlanes final {
 
   ~BindAnglePlanes() {
     const auto& gl = mParent.mGL;
-    auto* egl = gl::GLLibraryEGL::Get();
+    const auto& gle = GLContextEGL::Cast(gl);
+    const auto& egl = gle->mEgl;
     const auto& display = egl->Display();
 
     if (mSuccess) {
@@ -150,7 +152,8 @@ ID3D11Device* GLBlitHelper::GetD3D11() const {
 
   if (!mGL->IsANGLE()) return nullptr;
 
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = GLContextEGL::Cast(mGL);
+  const auto& egl = gle->mEgl;
   EGLDeviceEXT deviceEGL = 0;
   MOZ_ALWAYS_TRUE(egl->fQueryDisplayAttribEXT(
       egl->Display(), LOCAL_EGL_DEVICE_EXT, (EGLAttrib*)&deviceEGL));

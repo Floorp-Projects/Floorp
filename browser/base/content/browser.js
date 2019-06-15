@@ -1946,6 +1946,10 @@ var gBrowserInit = {
         DownloadsCommon.initializeAllDataLinks();
         ChromeUtils.import("resource:///modules/DownloadsTaskbar.jsm", {})
           .DownloadsTaskbar.registerIndicator(window);
+        if (AppConstants.platform == "macosx") {
+          ChromeUtils.import("resource:///modules/DownloadsMacFinderProgress.jsm")
+            .DownloadsMacFinderProgress.register();
+        }
       } catch (ex) {
         Cu.reportError(ex);
       }

@@ -4436,6 +4436,28 @@ var gCSSProperties = {
     other_values: [ "auto", "scroll", "hidden", "-moz-hidden-unscrollable" ],
     invalid_values: []
   },
+  "overflow-inline": {
+    domProp: "overflowInline",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    // No applies_to_placeholder because we have a !important rule in forms.css.
+    prerequisites: { "display": "block", "overflow-block": "visible", "contain": "none" },
+    initial_values: [ "visible" ],
+    other_values: [ "auto", "scroll", "hidden", "-moz-hidden-unscrollable" ],
+    invalid_values: []
+  },
+  "overflow-block": {
+    domProp: "overflowBlock",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    // No applies_to_placeholder because we have a !important rule in forms.css.
+    prerequisites: { "display": "block", "overflow-inline": "visible", "contain": "none" },
+    initial_values: [ "visible" ],
+    other_values: [ "auto", "scroll", "hidden", "-moz-hidden-unscrollable" ],
+    invalid_values: []
+  },
   "padding": {
     domProp: "padding",
     inherited: false,
