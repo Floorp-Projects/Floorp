@@ -395,24 +395,18 @@ nsNSSCertificate::GetEmailAddress(nsAString& aEmailAddress) {
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetEmailAddresses(uint32_t* aLength, char16_t*** aAddresses) {
-  NS_ENSURE_ARG(aLength);
-  NS_ENSURE_ARG(aAddresses);
-
-  *aLength = 0;
-
+nsNSSCertificate::GetEmailAddresses(nsTArray<nsString>& aAddresses) {
+  uint32_t length = 0;
   for (const char* aAddr = CERT_GetFirstEmailAddress(mCert.get()); aAddr;
        aAddr = CERT_GetNextEmailAddress(mCert.get(), aAddr)) {
-    ++(*aLength);
+    ++(length);
   }
 
-  *aAddresses = (char16_t**)moz_xmalloc(sizeof(char16_t*) * (*aLength));
+  aAddresses.SetCapacity(length);
 
-  uint32_t iAddr = 0;
   for (const char* aAddr = CERT_GetFirstEmailAddress(mCert.get()); aAddr;
        aAddr = CERT_GetNextEmailAddress(mCert.get(), aAddr)) {
-    (*aAddresses)[iAddr] = ToNewUnicode(nsDependentCString(aAddr));
-    iAddr++;
+    CopyASCIItoUTF16(MakeStringSpan(aAddr), *aAddresses.AppendElement());
   }
 
   return NS_OK;

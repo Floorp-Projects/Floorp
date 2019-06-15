@@ -101,7 +101,7 @@ function testUTF8InField(field, replacementPrefix, certificateBytesToAlter) {
   notEqual(cert[field], null, `accessing nsIX509Cert.${field} shouldn't fail`);
   notEqual(cert.ASN1Structure, null,
            "accessing nsIX509Cert.ASN1Structure shouldn't assert");
-  notEqual(cert.getEmailAddresses({}), null,
+  notEqual(cert.getEmailAddresses(), null,
            "calling nsIX509Cert.getEmailAddresses() shouldn't assert");
   ok(!cert.containsEmailAddress("test@test.test"),
      "calling nsIX509Cert.containsEmailAddress() shouldn't assert");
