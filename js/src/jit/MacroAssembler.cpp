@@ -871,8 +871,9 @@ static void FindStartOfUninitializedAndUndefinedSlots(
   }
 }
 
-static void AllocateObjectBufferWithInit(JSContext* cx, TypedArrayObject* obj,
-                                         int32_t count) {
+static void AllocateAndInitTypedArrayBuffer(JSContext* cx,
+                                            TypedArrayObject* obj,
+                                            int32_t count) {
   AutoUnsafeCallWithABI unsafe;
 
   obj->initPrivate(nullptr);
@@ -895,7 +896,7 @@ static void AllocateObjectBufferWithInit(JSContext* cx, TypedArrayObject* obj,
   void* buf = cx->nursery().allocateZeroedBuffer(obj, nbytes,
                                                  js::ArrayBufferContentsArena);
   if (buf) {
-    obj->initPrivate(buf);
+    InitObjectPrivate(obj, buf, nbytes, MemoryUse::TypedArrayElements);
   }
 }
 
@@ -964,7 +965,7 @@ void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
     passABIArg(temp);
     passABIArg(obj);
     passABIArg(lengthReg);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void*, AllocateObjectBufferWithInit));
+    callWithABI(JS_FUNC_TO_DATA_PTR(void*, AllocateAndInitTypedArrayBuffer));
     PopRegsInMask(liveRegs);
 
     // Fail when data elements is set to NULL.

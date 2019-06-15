@@ -101,6 +101,7 @@
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/ProcessingInstruction.h"
+#include "mozilla/dom/PostMessageEvent.h"
 #include "nsDOMString.h"
 #include "nsNodeUtils.h"
 #include "nsLayoutUtils.h"  // for GetFrameForPoint
@@ -11087,6 +11088,7 @@ static void FireOrClearDelayedEvents(nsTArray<nsCOMPtr<Document>>& aDocuments,
                     aDocuments[i]->GetInnerWindow()->IsCurrentInnerWindow();
         presShell->FireOrClearDelayedEvents(fire);
       }
+      aDocuments[i]->FireOrClearPostMessageEvents(aFireEvents);
     }
   }
 }
@@ -11441,6 +11443,27 @@ void Document::AddSuspendedChannelEventQueue(net::ChannelEventQueue* aQueue) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(EventHandlingSuppressed());
   mSuspendedQueues.AppendElement(aQueue);
+}
+
+bool Document::SuspendPostMessageEvent(PostMessageEvent* aEvent) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (EventHandlingSuppressed() || !mSuspendedPostMessageEvents.IsEmpty()) {
+    mSuspendedPostMessageEvents.AppendElement(aEvent);
+    return true;
+  }
+  return false;
+}
+
+void Document::FireOrClearPostMessageEvents(bool aFireEvents) {
+  nsTArray<RefPtr<PostMessageEvent>> events;
+  events.SwapElements(mSuspendedPostMessageEvents);
+
+  if (aFireEvents) {
+    for (PostMessageEvent* event : events) {
+      event->Run();
+    }
+  }
 }
 
 static bool SetSuppressedEventListenerInSubDocument(Document* aDocument,

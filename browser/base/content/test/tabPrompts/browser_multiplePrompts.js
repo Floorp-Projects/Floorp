@@ -13,14 +13,14 @@ add_task(async function() {
   let contentScript = function(MAX_PROMPT) {
     var i = MAX_PROMPT;
     let fns = ["alert", "prompt", "confirm"];
-    window.addEventListener("message", function() {
+    function openDialog() {
       i--;
       if (i) {
-        window.postMessage("ping", "*");
+        SpecialPowers.Services.tm.dispatchToMainThread(openDialog);
       }
       window[fns[i % 3]](fns[i % 3] + " countdown #" + i);
-    });
-    window.postMessage("ping", "*");
+    }
+    SpecialPowers.Services.tm.dispatchToMainThread(openDialog);
   };
   let url = "data:text/html,<script>(" + encodeURIComponent(contentScript.toSource()) + ")(" + PROMPTCOUNT + ");</script>";
 

@@ -1,0 +1,19 @@
+<iframe id="iframe" src="doc-message-run-to-completion-frame.html"></iframe>
+<script>
+function test() {
+  var messageName = "test-message";
+
+  function handleMessage(event) {
+    // While paused here, the additional posted messages should not be delivered.
+    // The debugger should pause three times.
+    debugger;
+  }
+
+  window.addEventListener("message", handleMessage, true);
+  document.getElementById("iframe").contentWindow.addEventListener("message", handleMessage, true);
+
+  window.postMessage("first", "*");
+  document.getElementById("iframe").contentWindow.postMessage("second", "*");
+  window.postMessage("third", "*");
+}
+</script>
