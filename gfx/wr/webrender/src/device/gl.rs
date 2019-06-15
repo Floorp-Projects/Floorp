@@ -1313,8 +1313,12 @@ impl Device {
             ext_framebuffer_fetch &&
             ext_pixel_local_storage;
 
+        // KHR_blend_equation_advanced renders incorrectly on Adreno
+        // devices. This has only been confirmed up to Adreno 5xx, and has been
+        // fixed for Android 9, so this condition could be made more specific.
         let supports_advanced_blend_equation =
-            supports_extension(&extensions, "GL_KHR_blend_equation_advanced");
+            supports_extension(&extensions, "GL_KHR_blend_equation_advanced") &&
+            !renderer_name.starts_with("Adreno");
 
         // On Adreno GPUs PBO texture upload is only performed asynchronously
         // if the stride of the data in the PBO is a multiple of 256 bytes.
