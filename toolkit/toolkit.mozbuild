@@ -131,6 +131,7 @@ if CONFIG['MOZ_JPROF']:
 
 DIRS += [
     '/tools/code-coverage',
+    '/tools/performance',
     '/tools/power',
     '/tools/profiler',
 ]

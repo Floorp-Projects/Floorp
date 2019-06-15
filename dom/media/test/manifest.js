@@ -57,17 +57,10 @@ var gFrameCountTests = [
   { name:"av1.mp4", type:"video/mp4", totalFrameCount:24},
 ];
 
-if (SpecialPowers.Services.appinfo.name != "B2G") {
-  // We only run mochitests on b2g desktop and b2g emulator. The 3gp codecs
-  // aren't present on desktop, and the emulator codecs (which are different
-  // from the real device codecs) don't pass all of our tests, so we need
-  // to disable them.
-
-  gSmallTests = gSmallTests.concat([
-    { name:"sample.3gp", type:"video/3gpp", duration:4.933 },
-    { name:"sample.3g2", type:"video/3gpp2", duration:4.933 }
-  ]);
-}
+gSmallTests = gSmallTests.concat([
+  { name:"sample.3gp", type:"video/3gpp", duration:4.933 },
+  { name:"sample.3g2", type:"video/3gpp2", duration:4.933 }
+]);
 
 // Used by test_bug654550.html, for videoStats preference
 var gVideoTests = [
@@ -322,8 +315,9 @@ var gPlayTests = [
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN },
 ];
 
-if (!(manifestNavigator().userAgent.includes("Windows") &&
-      !manifestNavigator().userAgent.includes("x64"))) {
+const win32 = SpecialPowers.Services.appinfo.OS == "WINNT" &&
+              !SpecialPowers.Services.appinfo.is64Bit;
+if (!win32) {
   gPlayTests.push({ name: "av1.mp4", type:"video/mp4", duration:1.00 });
 }
 
@@ -489,7 +483,7 @@ function makeAbsolutePathConverter() {
 
       resolve((path, mustExist) => {
 	// android mochitest doesn't support file://
-	if (manifestNavigator().appVersion.includes("Android") || SpecialPowers.Services.appinfo.name == "B2G")
+	if (manifestNavigator().appVersion.includes("Android"))
 	  return path;
 
 	const { Ci, Cc } = SpecialPowers;
@@ -635,25 +629,12 @@ var gUnseekableTests = [
   { name:"bogus.duh", type:"bogus/duh"}
 ];
 
-function isWindows32() {
-    return navigator.userAgent.includes("Windows") &&
-        !navigator.userAgent.includes("Win64");
-}
-
-function isAndroid() {
-    return navigator.userAgent.includes("Android");
-}
-
 var androidVersion = -1; // non-Android platforms
 if (manifestNavigator().userAgent.includes("Mobile") ||
     manifestNavigator().userAgent.includes("Tablet")) {
-  // See nsSystemInfo.cpp, the getProperty('version') returns different value
-  // on each platforms, so we need to distinguish the android and B2G platform.
-  var versionString = manifestNavigator().userAgent.includes("Android") ?
-                      'version' : 'sdk_version';
   androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
                                 .getService(SpecialPowers.Ci.nsIPropertyBag2)
-                                .getProperty(versionString);
+                                .getProperty('version');
 }
 
 function getAndroidVersion() {
@@ -1870,11 +1851,6 @@ function mediaTestCleanup(callback) {
       A[i] = null;
     }
     SpecialPowers.exactGC(callback);
-}
-
-// B2G emulator and Android 2.3 are condidered slow platforms
-function isSlowPlatform() {
-  return SpecialPowers.Services.appinfo.name == "B2G" || getAndroidVersion() == 10;
 }
 
 async function dumpDebugInfoForToken(token) {

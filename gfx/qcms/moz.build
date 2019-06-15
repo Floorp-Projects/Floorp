@@ -24,6 +24,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 
 use_sse1 = False
 use_sse2 = False
+use_neon = False
 use_altivec = False
 if CONFIG['INTEL_ARCHITECTURE']:
     use_sse2 = True
@@ -32,6 +33,8 @@ if CONFIG['INTEL_ARCHITECTURE']:
             use_sse1 = True
     else:
         use_sse1 = True
+elif CONFIG['CPU_ARCH'] == 'aarch64' or CONFIG['BUILD_ARM_NEON']:
+    use_neon = True
 elif CONFIG['HAVE_ALTIVEC']:
     use_altivec = True
 
@@ -42,6 +45,10 @@ if use_sse1:
 if use_sse2:
     SOURCES += ['transform-sse2.cpp']
     SOURCES['transform-sse2.cpp'].flags += CONFIG['SSE2_FLAGS']
+
+if use_neon:
+    SOURCES += ['transform-neon.cpp']
+    SOURCES['transform-neon.cpp'].flags += CONFIG['NEON_FLAGS']
 
 if use_altivec:
     SOURCES += ['transform-altivec.cpp']

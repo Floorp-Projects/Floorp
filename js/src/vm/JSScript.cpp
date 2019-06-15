@@ -1344,9 +1344,13 @@ void JSScript::setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript) {
                 !baselineScript()->hasPendingIonBuilder());
   if (hasIonScript()) {
     js::jit::IonScript::writeBarrierPre(zone(), ion);
+    clearIonScript();
   }
   ion = ionScript;
   MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
+  if (hasIonScript()) {
+    AddCellMemory(this, ion->allocBytes(), js::MemoryUse::IonScript);
+  }
   updateJitCodeRaw(rt);
 }
 
