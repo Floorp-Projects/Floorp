@@ -383,6 +383,9 @@ FT2FontEntry* FT2FontEntry::CreateFontEntry(
     int flags = gfxPlatform::GetPlatform()->FontHintingEnabled()
                     ? FT_LOAD_DEFAULT
                     : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+    if (aFace->face_flags & FT_FACE_FLAG_TRICKY) {
+      flags &= ~FT_LOAD_NO_AUTOHINT;
+    }
     fe->mFontFace =
         cairo_ft_font_face_create_for_ft_face(aFace, flags, nullptr, 0);
     FTUserFontData* userFontData =
@@ -424,6 +427,9 @@ cairo_font_face_t* FT2FontEntry::CairoFontFace(const gfxFontStyle* aStyle) {
     int flags = gfxPlatform::GetPlatform()->FontHintingEnabled()
                     ? FT_LOAD_DEFAULT
                     : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+    if (FT_Face(face)->face_flags & FT_FACE_FLAG_TRICKY) {
+      flags &= ~FT_LOAD_NO_AUTOHINT;
+    }
     mFontFace = cairo_ft_font_face_create_for_ft_face(face, flags, nullptr, 0);
     auto userFontData =
         new FTUserFontData(face, face.FontData(), face.DataLength());
@@ -441,6 +447,9 @@ cairo_font_face_t* FT2FontEntry::CairoFontFace(const gfxFontStyle* aStyle) {
     int flags = gfxPlatform::GetPlatform()->FontHintingEnabled()
                     ? FT_LOAD_DEFAULT
                     : (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+    if (mFTFace->face_flags & FT_FACE_FLAG_TRICKY) {
+      flags &= ~FT_LOAD_NO_AUTOHINT;
+    }
     // Resolve variations from entry (descriptor) and style (property)
     AutoTArray<gfxFontVariation, 8> settings;
     GetVariationsForStyle(settings, aStyle ? *aStyle : gfxFontStyle());

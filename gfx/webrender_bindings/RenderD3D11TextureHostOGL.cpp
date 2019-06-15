@@ -61,7 +61,8 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
     return true;
   }
 
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = gl::GLContextEGL::Cast(mGL);
+  const auto& egl = gle->mEgl;
 
   // We use EGLStream to get the converted gl handle from d3d texture. The
   // NV_stream_consumer_gltexture_yuv and ANGLE_stream_producer_d3d_texture
@@ -223,7 +224,8 @@ void RenderDXGITextureHostOGL::DeleteTextureHandle() {
     mTextureHandle[i] = 0;
   }
 
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = gl::GLContextEGL::Cast(mGL);
+  const auto& egl = gle->mEgl;
   if (mSurface) {
     egl->fDestroySurface(egl->Display(), mSurface);
     mSurface = 0;
@@ -300,7 +302,8 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
     return true;
   }
 
-  auto* egl = gl::GLLibraryEGL::Get();
+  const auto& gle = gl::GLContextEGL::Cast(mGL);
+  const auto& egl = gle->mEgl;
 
   // The eglCreatePbufferFromClientBuffer doesn't support R8 format, so we
   // use EGLStream to get the converted gl handle from d3d R8 texture.
@@ -454,12 +457,13 @@ void RenderDXGIYCbCrTextureHostOGL::DeleteTextureHandle() {
   if (mGL && mGL->MakeCurrent()) {
     mGL->fDeleteTextures(3, mTextureHandles);
   }
+  const auto& gle = gl::GLContextEGL::Cast(mGL);
+  const auto& egl = gle->mEgl;
   for (int i = 0; i < 3; ++i) {
     mTextureHandles[i] = 0;
     mTextures[i] = nullptr;
     mKeyedMutexs[i] = nullptr;
 
-    auto* egl = gl::GLLibraryEGL::Get();
     if (mSurfaces[i]) {
       egl->fDestroySurface(egl->Display(), mSurfaces[i]);
       mSurfaces[i] = 0;

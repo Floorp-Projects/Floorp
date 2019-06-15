@@ -47,6 +47,7 @@ pub const IMAGE_BUFFER_KINDS: [ImageBufferKind; 4] = [
     ImageBufferKind::Texture2DArray,
 ];
 
+const ADVANCED_BLEND_FEATURE: &str = "ADVANCED_BLEND";
 const ALPHA_FEATURE: &str = "ALPHA_PASS";
 const DEBUG_OVERDRAW_FEATURE: &str = "DEBUG_OVERDRAW";
 const DITHERING_FEATURE: &str = "DITHERING";
@@ -258,6 +259,7 @@ impl LazilyCompiledShader {
 struct BrushShader {
     opaque: LazilyCompiledShader,
     alpha: LazilyCompiledShader,
+    advanced_blend: Option<LazilyCompiledShader>,
     dual_source: Option<LazilyCompiledShader>,
     debug_overdraw: LazilyCompiledShader,
 }
@@ -268,6 +270,7 @@ impl BrushShader {
         device: &mut Device,
         features: &[&'static str],
         precache_flags: ShaderPrecacheFlags,
+        advanced_blend: bool,
         dual_source: bool,
         use_pixel_local_storage: bool,
     ) -> Result<Self, ShaderError> {
@@ -292,6 +295,25 @@ impl BrushShader {
             device,
             precache_flags,
         )?;
+
+        let advanced_blend = if advanced_blend &&
+            device.get_capabilities().supports_advanced_blend_equation
+        {
+            let mut advanced_blend_features = alpha_features.to_vec();
+            advanced_blend_features.push(ADVANCED_BLEND_FEATURE);
+
+            let shader = LazilyCompiledShader::new(
+                ShaderKind::Brush,
+                name,
+                &advanced_blend_features,
+                device,
+                precache_flags,
+            )?;
+
+            Some(shader)
+        } else {
+            None
+        };
 
         // If using PLS, we disable all subpixel AA implicitly. Subpixel AA is always
         // disabled on mobile devices anyway, due to uncertainty over the subpixel
@@ -327,6 +349,7 @@ impl BrushShader {
         Ok(BrushShader {
             opaque,
             alpha,
+            advanced_blend,
             dual_source,
             debug_overdraw,
         })
@@ -341,8 +364,12 @@ impl BrushShader {
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
             BlendMode::SubpixelConstantTextColor(..) |
-            BlendMode::SubpixelWithBgColor |
-            BlendMode::Advanced(_) => &mut self.alpha,
+            BlendMode::SubpixelWithBgColor => &mut self.alpha,
+            BlendMode::Advanced(_) => {
+                self.advanced_blend
+                    .as_mut()
+                    .expect("bug: no advanced blend shader loaded")
+            }
             BlendMode::SubpixelDualSource => {
                 self.dual_source
                     .as_mut()
@@ -354,6 +381,9 @@ impl BrushShader {
     fn deinit(self, device: &mut Device) {
         self.opaque.deinit(device);
         self.alpha.deinit(device);
+        if let Some(advanced_blend) = self.advanced_blend {
+            advanced_blend.deinit(device);
+        }
         if let Some(dual_source) = self.dual_source {
             dual_source.deinit(device);
         }
@@ -534,7 +564,8 @@ impl Shaders {
             device,
             &[],
             options.precache_flags,
-            false,
+            false /* advanced blend */,
+            false /* dual source */,
             use_pixel_local_storage,
         )?;
 
@@ -543,7 +574,8 @@ impl Shaders {
             device,
             &[],
             options.precache_flags,
-            false,
+            false /* advanced blend */,
+            false /* dual source */,
             use_pixel_local_storage,
         )?;
 
@@ -552,7 +584,8 @@ impl Shaders {
             device,
             &[],
             options.precache_flags,
-            false,
+            false /* advanced blend */,
+            false /* dual source */,
             use_pixel_local_storage,
         )?;
 
@@ -565,7 +598,8 @@ impl Shaders {
                &[]
             },
             options.precache_flags,
-            false,
+            false /* advanced blend */,
+            false /* dual source */,
             use_pixel_local_storage,
         )?;
 
@@ -578,7 +612,8 @@ impl Shaders {
                &[]
             },
             options.precache_flags,
-            false,
+            false /* advanced blend */,
+            false /* dual source */,
             use_pixel_local_storage,
         )?;
 
@@ -720,6 +755,7 @@ impl Shaders {
                     device,
                     &image_features,
                     options.precache_flags,
+                    options.allow_advanced_blend_equation,
                     options.allow_dual_source_blending,
                     use_pixel_local_storage,
                 )?);
@@ -747,7 +783,8 @@ impl Shaders {
                     device,
                     &yuv_features,
                     options.precache_flags,
-                    false,
+                    false /* advanced blend */,
+                    false /* dual source */,
                     use_pixel_local_storage,
                 )?;
                 let index = Self::get_yuv_shader_index(

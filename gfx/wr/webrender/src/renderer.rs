@@ -1793,7 +1793,7 @@ impl Renderer {
             !device.get_capabilities().supports_pixel_local_storage;
         let ext_blend_equation_advanced =
             options.allow_advanced_blend_equation &&
-            device.supports_extension("GL_KHR_blend_equation_advanced");
+            device.get_capabilities().supports_advanced_blend_equation;
         let ext_blend_equation_advanced_coherent =
             device.supports_extension("GL_KHR_blend_equation_advanced_coherent");
 
