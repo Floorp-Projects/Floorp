@@ -2995,6 +2995,8 @@ exports.CSS_PROPERTIES = {
       "border-start-end-radius",
       "border-end-start-radius",
       "border-end-end-radius",
+      "overflow-inline",
+      "overflow-block",
       "margin-block-start",
       "margin-block-end",
       "margin-inline-start",
@@ -8492,6 +8494,42 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "overflow-block": {
+    "isInherited": false,
+    "subproperties": [
+      "overflow-block"
+    ],
+    "supports": [],
+    "values": [
+      "-moz-hidden-unscrollable",
+      "auto",
+      "hidden",
+      "inherit",
+      "initial",
+      "revert",
+      "scroll",
+      "unset",
+      "visible"
+    ]
+  },
+  "overflow-inline": {
+    "isInherited": false,
+    "subproperties": [
+      "overflow-inline"
+    ],
+    "supports": [],
+    "values": [
+      "-moz-hidden-unscrollable",
+      "auto",
+      "hidden",
+      "inherit",
+      "initial",
+      "revert",
+      "scroll",
+      "unset",
+      "visible"
+    ]
+  },
   "overflow-wrap": {
     "isInherited": true,
     "subproperties": [
@@ -10713,6 +10751,14 @@ exports.PREFERENCES = [
   [
     "overscroll-behavior-y",
     "layout.css.overscroll-behavior.enabled"
+  ],
+  [
+    "overflow-block",
+    "layout.css.overflow-logical.enabled"
+  ],
+  [
+    "overflow-inline",
+    "layout.css.overflow-logical.enabled"
   ],
   [
     "font-variation-settings",
