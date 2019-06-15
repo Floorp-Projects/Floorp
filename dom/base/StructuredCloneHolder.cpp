@@ -13,6 +13,14 @@
 #include "mozilla/dom/StructuredCloneBlob.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryBinding.h"
+#include "mozilla/dom/DOMMatrix.h"
+#include "mozilla/dom/DOMMatrixBinding.h"
+#include "mozilla/dom/DOMPoint.h"
+#include "mozilla/dom/DOMPointBinding.h"
+#include "mozilla/dom/DOMQuad.h"
+#include "mozilla/dom/DOMQuadBinding.h"
+#include "mozilla/dom/DOMRect.h"
+#include "mozilla/dom/DOMRectBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
@@ -122,13 +130,20 @@ void StructuredCloneCallbacksError(JSContext* aCx, uint32_t aErrorId) {
 
 void AssertTagValues() {
   static_assert(SCTAG_DOM_IMAGEDATA == 0xffff8007 &&
+                    SCTAG_DOM_DOMPOINT == 0xffff8008 &&
+                    SCTAG_DOM_DOMPOINT_READONLY == 0xffff8009 &&
                     SCTAG_DOM_WEBCRYPTO_KEY == 0xffff800a &&
                     SCTAG_DOM_NULL_PRINCIPAL == 0xffff800b &&
                     SCTAG_DOM_SYSTEM_PRINCIPAL == 0xffff800c &&
                     SCTAG_DOM_CONTENT_PRINCIPAL == 0xffff800d &&
-                    SCTAG_DOM_EXPANDED_PRINCIPAL == 0xffff8012 &&
+                    SCTAG_DOM_DOMQUAD == 0xffff800e &&
                     SCTAG_DOM_RTC_CERTIFICATE == 0xffff800f &&
+                    SCTAG_DOM_DOMRECT == 0xffff8010 &&
+                    SCTAG_DOM_DOMRECT_READONLY == 0xffff8011 &&
+                    SCTAG_DOM_EXPANDED_PRINCIPAL == 0xffff8012 &&
+                    SCTAG_DOM_DOMMATRIX == 0xffff8013 &&
                     SCTAG_DOM_URLSEARCHPARAMS == 0xffff8014 &&
+                    SCTAG_DOM_DOMMATRIX_READONLY == 0xffff8015 &&
                     SCTAG_DOM_STRUCTURED_CLONE_TESTER == 0xffff8018,
                 "Something has changed the sctag values. This is wrong!");
 }
@@ -338,7 +353,11 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
     return ReadStructuredCloneImageData(aCx, aReader);
   }
 
-  if (aTag == SCTAG_DOM_WEBCRYPTO_KEY || aTag == SCTAG_DOM_URLSEARCHPARAMS) {
+  if (aTag == SCTAG_DOM_WEBCRYPTO_KEY || aTag == SCTAG_DOM_URLSEARCHPARAMS ||
+      aTag == SCTAG_DOM_DOMPOINT || aTag == SCTAG_DOM_DOMPOINT_READONLY ||
+      aTag == SCTAG_DOM_DOMRECT || aTag == SCTAG_DOM_DOMRECT_READONLY ||
+      aTag == SCTAG_DOM_DOMQUAD || aTag == SCTAG_DOM_DOMMATRIX ||
+      aTag == SCTAG_DOM_DOMMATRIX_READONLY) {
     nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
     if (!global) {
       return nullptr;
@@ -360,6 +379,57 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
           result = nullptr;
         } else {
           result = usp->WrapObject(aCx, nullptr);
+        }
+      } else if (aTag == SCTAG_DOM_DOMPOINT) {
+        RefPtr<DOMPoint> domPoint = new DOMPoint(global);
+        if (!domPoint->ReadStructuredClone(aReader)) {
+          result = nullptr;
+        } else {
+          result = domPoint->WrapObject(aCx, nullptr);
+        }
+      } else if (aTag == SCTAG_DOM_DOMPOINT_READONLY) {
+        RefPtr<DOMPointReadOnly> domPoint = new DOMPointReadOnly(global);
+        if (!domPoint->ReadStructuredClone(aReader)) {
+          result = nullptr;
+        } else {
+          result = domPoint->WrapObject(aCx, nullptr);
+        }
+      } else if (aTag == SCTAG_DOM_DOMRECT) {
+        RefPtr<DOMRect> domRect = new DOMRect(global);
+        if (!domRect->ReadStructuredClone(aReader)) {
+          result = nullptr;
+        } else {
+          result = domRect->WrapObject(aCx, nullptr);
+        }
+      } else if (aTag == SCTAG_DOM_DOMRECT_READONLY) {
+        RefPtr<DOMRectReadOnly> domRect = new DOMRectReadOnly(global);
+        if (!domRect->ReadStructuredClone(aReader)) {
+          result = nullptr;
+        } else {
+          result = domRect->WrapObject(aCx, nullptr);
+        }
+      } else if (aTag == SCTAG_DOM_DOMQUAD) {
+        RefPtr<DOMQuad> domQuad = new DOMQuad(global);
+        if (!domQuad->ReadStructuredClone(aReader)) {
+          result = nullptr;
+        } else {
+          result = domQuad->WrapObject(aCx, nullptr);
+        }
+      } else if (aTag == SCTAG_DOM_DOMMATRIX) {
+        RefPtr<DOMMatrix> domMatrix =
+            DOMMatrix::ReadStructuredClone(global, aReader);
+        if (!domMatrix) {
+          result = nullptr;
+        } else {
+          result = domMatrix->WrapObject(aCx, nullptr);
+        }
+      } else if (aTag == SCTAG_DOM_DOMMATRIX_READONLY) {
+        RefPtr<DOMMatrixReadOnly> domMatrix =
+            DOMMatrixReadOnly::ReadStructuredClone(global, aReader);
+        if (!domMatrix) {
+          result = nullptr;
+        } else {
+          result = domMatrix->WrapObject(aCx, nullptr);
         }
       }
     }
@@ -469,6 +539,75 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
     }
   }
 #endif
+
+  // Handle DOMPoint cloning
+  // Should be done before DOMPointeReadOnly check
+  // because every DOMPoint is also a DOMPointReadOnly
+  {
+    DOMPoint* domPoint = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMPoint, &obj, domPoint))) {
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMPOINT, 0) &&
+             domPoint->WriteStructuredClone(aWriter);
+    }
+  }
+
+  // Handle DOMPointReadOnly cloning
+  {
+    DOMPointReadOnly* domPoint = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMPointReadOnly, &obj, domPoint))) {
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMPOINT_READONLY, 0) &&
+             domPoint->WriteStructuredClone(aWriter);
+    }
+  }
+
+  // Handle DOMRect cloning
+  // Should be done before DOMRecteReadOnly check
+  // because every DOMRect is also a DOMRectReadOnly
+  {
+    DOMRect* domRect = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMRect, &obj, domRect))) {
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMRECT, 0) &&
+             domRect->WriteStructuredClone(aWriter);
+    }
+  }
+
+  // Handle DOMRectReadOnly cloning
+  {
+    DOMRectReadOnly* domRect = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMRectReadOnly, &obj, domRect))) {
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMRECT_READONLY, 0) &&
+             domRect->WriteStructuredClone(aWriter);
+    }
+  }
+
+  // Handle DOMQuad cloning
+  {
+    DOMQuad* domQuad = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMQuad, &obj, domQuad))) {
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMQUAD, 0) &&
+             domQuad->WriteStructuredClone(aWriter);
+    }
+  }
+
+  // Handle DOMMatrix cloning
+  // Should be done before DOMMatrixeReadOnly check
+  // because every DOMMatrix is also a DOMMatrixReadOnly
+  {
+    DOMMatrix* domMatrix = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMMatrix, &obj, domMatrix))) {
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMMATRIX, 0) &&
+             domMatrix->WriteStructuredClone(aWriter);
+    }
+  }
+
+  // Handle DOMMatrixReadOnly cloning
+  {
+    DOMMatrixReadOnly* domMatrix = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMMatrixReadOnly, &obj, domMatrix))) {
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMMATRIX_READONLY, 0) &&
+             domMatrix->WriteStructuredClone(aWriter);
+    }
+  }
 
   // StructuredCloneTester - testing only
   {

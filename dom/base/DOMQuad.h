@@ -7,6 +7,7 @@
 #ifndef MOZILLA_DOMQUAD_H_
 #define MOZILLA_DOMQUAD_H_
 
+#include "js/StructuredClone.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
 #include "nsCycleCollectionParticipant.h"
@@ -58,6 +59,10 @@ class DOMQuad final : public nsWrapperCache {
   DOMPoint* Point(uint32_t aIndex) const { return mPoints[aIndex]; }
 
   void ToJSON(DOMQuadJSON& aInit);
+
+  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
+
+  bool ReadStructuredClone(JSStructuredCloneReader* aReader);
 
  protected:
   void GetHorizontalMinMax(double* aX1, double* aX2) const;
