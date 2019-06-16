@@ -728,7 +728,6 @@ this.DownloadHistoryList.prototype = {
   },
 
   // nsINavHistoryResultObserver
-  nodeAnnotationChanged() {},
   nodeIconChanged() {},
   nodeTitleChanged() {},
   nodeKeywordChanged() {},
