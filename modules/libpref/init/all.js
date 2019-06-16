@@ -2515,7 +2515,7 @@ pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 #if defined(DEBUG) && !defined(ANDROID)
-pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,cache-entry,config,debugging,devtools,downloads,home,networking,newtab,performance,plugins,profiles,preferences,restartrequired,serviceworkers,sessionrestore,support,sync-log,telemetry,url-classifier,welcomeback");
+pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,cache-entry,config,debugging,devtools,downloads,home,newtab,performance,plugins,profiles,preferences,restartrequired,serviceworkers,sessionrestore,support,sync-log,telemetry,url-classifier,welcomeback");
 // the following prefs are for testing purposes only.
 pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);
