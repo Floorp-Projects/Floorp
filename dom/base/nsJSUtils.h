@@ -16,6 +16,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "GeckoProfiler.h"
 #include "jsapi.h"
@@ -108,6 +109,12 @@ class nsJSUtils {
     bool mScriptUsed;
 #endif
 
+   private:
+    // Compile a script contained in a SourceText.
+    template <typename Unit>
+    nsresult InternalCompile(JS::CompileOptions& aCompileOptions,
+                             JS::SourceText<Unit>& aSrcBuf);
+
    public:
     // Enter compartment in which the code would be executed.  The JSContext
     // must come from an AutoEntryScript.
@@ -152,6 +159,8 @@ class nsJSUtils {
     // Compile a script contained in a SourceText.
     nsresult Compile(JS::CompileOptions& aCompileOptions,
                      JS::SourceText<char16_t>& aSrcBuf);
+    nsresult Compile(JS::CompileOptions& aCompileOptions,
+                     JS::SourceText<mozilla::Utf8Unit>& aSrcBuf);
 
     // Compile a script contained in a string.
     nsresult Compile(JS::CompileOptions& aCompileOptions,
@@ -206,6 +215,12 @@ class nsJSUtils {
 
   static nsresult CompileModule(JSContext* aCx,
                                 JS::SourceText<char16_t>& aSrcBuf,
+                                JS::Handle<JSObject*> aEvaluationGlobal,
+                                JS::CompileOptions& aCompileOptions,
+                                JS::MutableHandle<JSObject*> aModule);
+
+  static nsresult CompileModule(JSContext* aCx,
+                                JS::SourceText<mozilla::Utf8Unit>& aSrcBuf,
                                 JS::Handle<JSObject*> aEvaluationGlobal,
                                 JS::CompileOptions& aCompileOptions,
                                 JS::MutableHandle<JSObject*> aModule);

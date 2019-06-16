@@ -7,6 +7,7 @@
 #ifndef MOZILLA_DOMRECT_H_
 #define MOZILLA_DOMRECT_H_
 
+#include "js/StructuredClone.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
@@ -66,6 +67,10 @@ class DOMRectReadOnly : public nsISupports, public nsWrapperCache {
     double y = Y(), h = Height();
     return std::max(y, y + h);
   }
+
+  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
+
+  bool ReadStructuredClone(JSStructuredCloneReader* aReader);
 
  protected:
   nsCOMPtr<nsISupports> mParent;

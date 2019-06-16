@@ -42,6 +42,97 @@ ScriptLoadHandler::~ScriptLoadHandler() {}
 
 NS_IMPL_ISUPPORTS(ScriptLoadHandler, nsIIncrementalStreamLoaderObserver)
 
+template <typename Unit>
+struct RawDataDecoding;
+
+template <>
+struct RawDataDecoding<char16_t> {
+  static CheckedInt<size_t> MaxBufferLength(const UniquePtr<Decoder>& aDecoder,
+                                            uint32_t aDataLength) {
+    return aDecoder->MaxUTF16BufferLength(aDataLength);
+  }
+
+  static void PerformDecode(UniquePtr<Decoder>& aDecoder,
+                            Span<const uint8_t> aSrc, Span<char16_t> aDst,
+                            bool aEndOfStream, uint32_t* aResult, size_t* aRead,
+                            size_t* aWritten, bool* aHadErrors) {
+    Tie(*aResult, *aRead, *aWritten, *aHadErrors) =
+        aDecoder->DecodeToUTF16(aSrc, aDst, aEndOfStream);
+  }
+};
+
+template <>
+struct RawDataDecoding<Utf8Unit> {
+  static CheckedInt<size_t> MaxBufferLength(const UniquePtr<Decoder>& aDecoder,
+                                            uint32_t aDataLength) {
+    return aDecoder->MaxUTF8BufferLength(aDataLength);
+  }
+
+  static void PerformDecode(UniquePtr<Decoder>& aDecoder,
+                            Span<const uint8_t> aSrc, Span<Utf8Unit> aDst,
+                            bool aEndOfStream, uint32_t* aResult, size_t* aRead,
+                            size_t* aWritten, bool* aHadErrors) {
+    Tie(*aResult, *aRead, *aWritten, *aHadErrors) =
+        aDecoder->DecodeToUTF8(aSrc, AsWritableBytes(aDst), aEndOfStream);
+  }
+};
+
+template <typename Unit>
+nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
+                                                uint32_t aDataLength,
+                                                bool aEndOfStream) {
+  using Decoding = RawDataDecoding<Unit>;
+
+  CheckedInt<size_t> needed = Decoding::MaxBufferLength(mDecoder, aDataLength);
+  if (!needed.isValid()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Reference to the script source buffer which we will update.
+  ScriptLoadRequest::ScriptTextBuffer<Unit>& scriptText =
+      mRequest->ScriptText<Unit>();
+
+  uint32_t haveRead = scriptText.length();
+
+  CheckedInt<uint32_t> capacity = haveRead;
+  capacity += needed.value();
+
+  if (!capacity.isValid() || !scriptText.resize(capacity.value())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  uint32_t result;
+  size_t read;
+  size_t written;
+  bool hadErrors;
+  Decoding::PerformDecode(
+      mDecoder, MakeSpan(aData, aDataLength),
+      MakeSpan(scriptText.begin() + haveRead, needed.value()), aEndOfStream,
+      &result, &read, &written, &hadErrors);
+  MOZ_ASSERT(result == kInputEmpty);
+  MOZ_ASSERT(read == aDataLength);
+  MOZ_ASSERT(written <= needed.value());
+  Unused << hadErrors;
+
+  haveRead += written;
+  MOZ_ASSERT(haveRead <= capacity.value(),
+             "mDecoder produced more data than expected");
+  MOZ_ALWAYS_TRUE(scriptText.resize(haveRead));
+  mRequest->mScriptTextLength = scriptText.length();
+
+  return NS_OK;
+}
+
+nsresult ScriptLoadHandler::DecodeRawData(const uint8_t* aData,
+                                          uint32_t aDataLength,
+                                          bool aEndOfStream) {
+  if (mRequest->IsUTF16Text()) {
+    return DecodeRawDataHelper<char16_t>(aData, aDataLength, aEndOfStream);
+  }
+
+  return DecodeRawDataHelper<Utf8Unit>(aData, aDataLength, aEndOfStream);
+}
+
 NS_IMETHODIMP
 ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
                                      nsISupports* aContext,
@@ -107,69 +198,14 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
   return rv;
 }
 
-nsresult ScriptLoadHandler::DecodeRawData(const uint8_t* aData,
-                                          uint32_t aDataLength,
-                                          bool aEndOfStream) {
-  CheckedInt<size_t> needed = mDecoder->MaxUTF16BufferLength(aDataLength);
-  if (!needed.isValid()) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Reference to the script source buffer which we will update.
-  ScriptLoadRequest::ScriptTextBuffer& scriptText = mRequest->ScriptText();
-
-  uint32_t haveRead = scriptText.length();
-
-  CheckedInt<uint32_t> capacity = haveRead;
-  capacity += needed.value();
-
-  if (!capacity.isValid() || !scriptText.resize(capacity.value())) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  uint32_t result;
-  size_t read;
-  size_t written;
-  bool hadErrors;
-  Tie(result, read, written, hadErrors) = mDecoder->DecodeToUTF16(
-      MakeSpan(aData, aDataLength),
-      MakeSpan(scriptText.begin() + haveRead, needed.value()), aEndOfStream);
-  MOZ_ASSERT(result == kInputEmpty);
-  MOZ_ASSERT(read == aDataLength);
-  MOZ_ASSERT(written <= needed.value());
-  Unused << hadErrors;
-
-  haveRead += written;
-  MOZ_ASSERT(haveRead <= capacity.value(),
-             "mDecoder produced more data than expected");
-  MOZ_ALWAYS_TRUE(scriptText.resize(haveRead));
-  mRequest->mScriptTextLength = scriptText.length();
-
-  return NS_OK;
-}
-
-bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
+bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
                                       const uint8_t* aData,
                                       uint32_t aDataLength, bool aEndOfStream) {
-  // Check if decoder has already been created.
-  if (mDecoder) {
-    return true;
-  }
+  MOZ_ASSERT(mDecoder == nullptr,
+             "can't have a decoder already if we're trying to set one");
 
-  nsAutoCString charset;
-  if (!EnsureDecoder(aLoader, aData, aDataLength, aEndOfStream, charset)) {
-    return false;
-  }
-  return true;
-}
-
-bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
-                                      const uint8_t* aData,
-                                      uint32_t aDataLength, bool aEndOfStream,
-                                      nsCString& oCharset) {
   // JavaScript modules are always UTF-8.
   if (mRequest->IsModuleRequest()) {
-    oCharset = "UTF-8";
     mDecoder = UTF_8_ENCODING->NewDecoderWithBOMRemoval();
     return true;
   }
@@ -187,7 +223,6 @@ bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
   Tie(encoding, bomLength) = Encoding::ForBOM(MakeSpan(aData, aDataLength));
   if (encoding) {
     mDecoder = encoding->NewDecoderWithBOMRemoval();
-    encoding->Name(oCharset);
     return true;
   }
 
@@ -204,7 +239,6 @@ bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
     if (NS_SUCCEEDED(channel->GetContentCharset(label)) &&
         (encoding = Encoding::ForLabel(label))) {
       mDecoder = encoding->NewDecoderWithoutBOMHandling();
-      encoding->Name(oCharset);
       return true;
     }
   }
@@ -226,7 +260,6 @@ bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
 
   if ((encoding = Encoding::ForLabel(hintCharset))) {
     mDecoder = encoding->NewDecoderWithoutBOMHandling();
-    encoding->Name(oCharset);
     return true;
   }
 
@@ -234,14 +267,12 @@ bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
   if (mScriptLoader->mDocument) {
     encoding = mScriptLoader->mDocument->GetDocumentCharacterSet();
     mDecoder = encoding->NewDecoderWithoutBOMHandling();
-    encoding->Name(oCharset);
     return true;
   }
 
   // Curiously, there are various callers that don't pass aDocument. The
   // fallback in the old code was ISO-8859-1, which behaved like
   // windows-1252.
-  oCharset = "windows-1252";
   mDecoder = WINDOWS_1252_ENCODING->NewDecoderWithoutBOMHandling();
   return true;
 }
@@ -360,8 +391,8 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
       rv = DecodeRawData(aData, aDataLength, /* aEndOfStream = */ true);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      LOG(("ScriptLoadRequest (%p): Source length = %u", mRequest.get(),
-           unsigned(mRequest->ScriptText().length())));
+      LOG(("ScriptLoadRequest (%p): Source length in code units = %u",
+           mRequest.get(), unsigned(mRequest->ScriptTextLength())));
 
       // If SRI is required for this load, appending new bytes to the hash.
       if (mSRIDataVerifier && NS_SUCCEEDED(mSRIStatus)) {

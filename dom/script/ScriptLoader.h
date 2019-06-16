@@ -23,7 +23,7 @@
 #include "mozilla/dom/ScriptLoadRequest.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/dom/SRICheck.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/MaybeOneOf.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/StaticPrefs.h"
@@ -532,8 +532,14 @@ class ScriptLoader final : public nsISupports {
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
-  mozilla::Maybe<JS::SourceText<char16_t>> GetScriptSource(
-      JSContext* aCx, ScriptLoadRequest* aRequest);
+  using MaybeSourceText =
+      mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
+
+  // Get source text.  On success |aMaybeSource| will contain either UTF-8 or
+  // UTF-16 source; on failure it will remain in its initial state.
+  MOZ_MUST_USE nsresult GetScriptSource(JSContext* aCx,
+                                        ScriptLoadRequest* aRequest,
+                                        MaybeSourceText* aMaybeSource);
 
   void SetModuleFetchStarted(ModuleLoadRequest* aRequest);
   void SetModuleFetchFinishedAndResumeWaitingRequests(

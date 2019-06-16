@@ -37,6 +37,39 @@ JSObject* DOMPointReadOnly::WrapObject(JSContext* aCx,
   return DOMPointReadOnly_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+// https://drafts.fxtf.org/geometry/#structured-serialization
+bool DOMPointReadOnly::WriteStructuredClone(
+    JSStructuredCloneWriter* aWriter) const {
+#define WriteDouble(d)                                                       \
+  JS_WriteUint32Pair(aWriter, (BitwiseCast<uint64_t>(d) >> 32) & 0xffffffff, \
+                     BitwiseCast<uint64_t>(d) & 0xffffffff)
+
+  return WriteDouble(mX) && WriteDouble(mY) && WriteDouble(mZ) &&
+         WriteDouble(mW);
+
+#undef WriteDouble
+}
+
+bool DOMPointReadOnly::ReadStructuredClone(JSStructuredCloneReader* aReader) {
+  uint32_t high;
+  uint32_t low;
+
+#define ReadDouble(d)                             \
+  if (!JS_ReadUint32Pair(aReader, &high, &low)) { \
+    return false;                                 \
+  }                                               \
+  (*(d) = BitwiseCast<double>(static_cast<uint64_t>(high) << 32 | low))
+
+  ReadDouble(&mX);
+  ReadDouble(&mY);
+  ReadDouble(&mZ);
+  ReadDouble(&mW);
+
+  return true;
+
+#undef ReadDouble
+}
+
 already_AddRefed<DOMPoint> DOMPoint::FromPoint(const GlobalObject& aGlobal,
                                                const DOMPointInit& aParams) {
   RefPtr<DOMPoint> obj = new DOMPoint(aGlobal.GetAsSupports(), aParams.mX,
