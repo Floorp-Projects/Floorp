@@ -1324,8 +1324,10 @@ PT.Remove.prototype = {
         // we do need it for the possibility of undo().
         removedItems.push(await PlacesUtils.promiseBookmarksTree(guid));
       } catch (ex) {
-        throw new Error("Failed to get info for the specified item (guid: " +
-                          guid + "): " + ex);
+        if (!ex.becauseInvalidURL) {
+          throw new Error(`Failed to get info for the guid: ${guid}: ${ex}`);
+        }
+        removedItems.push({guid});
       }
     }
 
@@ -1334,16 +1336,19 @@ PT.Remove.prototype = {
         // We have to pass just the guids as although remove() accepts full
         // info items, promiseBookmarksTree returns dateAdded and lastModified
         // as PRTime rather than date types.
-        await PlacesUtils.bookmarks.remove(removedItems.map(info => {
-          return { guid: info.guid};
-        }));
+        await PlacesUtils.bookmarks.remove(
+          removedItems.map(info => ({ guid: info.guid })));
       }
     };
     await removeThem();
 
     this.undo = async function() {
       for (let info of removedItems) {
-        await createItemsFromBookmarksTree(info, true);
+        try {
+          await createItemsFromBookmarksTree(info, true);
+        } catch (ex) {
+          Cu.reportError(`Unable to undo removal of ${info.guid}`);
+        }
       }
     };
     this.redo = removeThem;

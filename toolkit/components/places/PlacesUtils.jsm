@@ -1631,7 +1631,13 @@ var PlacesUtils = {
         case PlacesUtils.bookmarks.TYPE_BOOKMARK:
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE;
           // If this throws due to an invalid url, the item will be skipped.
-          item.uri = NetUtil.newURI(aRow.getResultByName("url")).spec;
+          try {
+            item.uri = NetUtil.newURI(aRow.getResultByName("url")).spec;
+          } catch (ex) {
+            let error = new Error("Invalid bookmark URL");
+            error.becauseInvalidURL = true;
+            throw error;
+          }
           // Keywords are cached, so this should be decently fast.
           let entry = await PlacesUtils.keywords.fetch({ url: item.uri });
           if (entry) {
@@ -1736,7 +1742,8 @@ var PlacesUtils = {
                                                           enumerable: false,
                                                           configurable: false });
         } catch (ex) {
-          throw new Error("Failed to fetch the data for the root item " + ex);
+          Cu.reportError("Failed to fetch the data for the root item");
+          throw ex;
         }
       } else {
         try {
