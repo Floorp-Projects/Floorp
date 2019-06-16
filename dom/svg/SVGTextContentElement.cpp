@@ -191,9 +191,10 @@ float SVGTextContentElement::GetRotationOfChar(uint32_t charnum,
   return rotation;
 }
 
-int32_t SVGTextContentElement::GetCharNumAtPosition(nsISVGPoint& aPoint) {
+int32_t SVGTextContentElement::GetCharNumAtPosition(
+    const DOMPointInit& aPoint) {
   SVGTextFrame* textFrame = GetSVGTextFrame();
-  return textFrame ? textFrame->GetCharNumAtPosition(this, &aPoint) : -1;
+  return textFrame ? textFrame->GetCharNumAtPosition(this, aPoint) : -1;
 }
 
 }  // namespace dom
