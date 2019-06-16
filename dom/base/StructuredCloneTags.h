@@ -45,8 +45,8 @@ enum StructuredCloneTags {
   // IDB.
   SCTAG_DOM_IMAGEDATA,
 
-  EMPTY_SLOT_1,
-  EMPTY_SLOT_2,
+  SCTAG_DOM_DOMPOINT,
+  SCTAG_DOM_DOMPOINT_READONLY,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
@@ -65,7 +65,7 @@ enum StructuredCloneTags {
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  EMPTY_SLOT_3,
+  SCTAG_DOM_DOMQUAD,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
@@ -73,10 +73,10 @@ enum StructuredCloneTags {
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  EMPTY_SLOT_4,
+  SCTAG_DOM_DOMRECT,
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  EMPTY_SLOT_5,
+  SCTAG_DOM_DOMRECT_READONLY,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
@@ -84,7 +84,7 @@ enum StructuredCloneTags {
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  EMPTY_SLOT_6,
+  SCTAG_DOM_DOMMATRIX,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
@@ -92,7 +92,7 @@ enum StructuredCloneTags {
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  EMPTY_SLOT_7,
+  SCTAG_DOM_DOMMATRIX_READONLY,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
