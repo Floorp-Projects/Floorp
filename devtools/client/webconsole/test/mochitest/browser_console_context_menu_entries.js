@@ -9,6 +9,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-console.html";
 
 add_task(async function() {
+  await pushPref("devtools.browserconsole.contentMessages", true);
   // Enable net messages in the console for this test.
   await pushPref("devtools.browserconsole.filter.net", true);
   // This is required for testing the text input in the browser console:
