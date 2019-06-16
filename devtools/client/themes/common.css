@@ -310,7 +310,7 @@ checkbox:-moz-focusring {
 }
 
 .devtools-togglebutton {
-  padding: 0 4px;
+  padding: 1px 6px;
 }
 
 /* Remove system form border from devtools-button. */
@@ -421,8 +421,7 @@ checkbox:-moz-focusring {
   color: var(--theme-toolbarbutton-color);
 }
 
-.devtools-togglebutton:not([aria-pressed="true"]):hover,
-.devtools-togglebutton:hover:active {
+.devtools-togglebutton:not([aria-pressed="true"]):hover {
   background-color: var(--theme-toolbarbutton-hover-background);
 }
 
@@ -448,7 +447,18 @@ checkbox:-moz-focusring {
 }
 
 .devtools-togglebutton[aria-pressed="true"]:hover {
-  background: var(--theme-toolbarbutton-checked-hover-color);
+  background: var(--theme-toolbarbutton-checked-hover-background);
+  color: var(--theme-toolbarbutton-checked-hover-color);
+}
+
+.devtools-togglebutton:active,
+.devtools-togglebutton:hover:active {
+  background: var(--theme-toolbarbutton-active-background);
+  color: var(--theme-toolbarbutton-active-color);
+}
+
+.devtools-togglebutton::-moz-focus-inner {
+  border-color: transparent;
 }
 
 /* Icons */

@@ -35,6 +35,39 @@ already_AddRefed<DOMRectReadOnly> DOMRectReadOnly::Constructor(
   return obj.forget();
 }
 
+// https://drafts.fxtf.org/geometry/#structured-serialization
+bool DOMRectReadOnly::WriteStructuredClone(
+    JSStructuredCloneWriter* aWriter) const {
+#define WriteDouble(d)                                                       \
+  JS_WriteUint32Pair(aWriter, (BitwiseCast<uint64_t>(d) >> 32) & 0xffffffff, \
+                     BitwiseCast<uint64_t>(d) & 0xffffffff)
+
+  return WriteDouble(mX) && WriteDouble(mY) && WriteDouble(mWidth) &&
+         WriteDouble(mHeight);
+
+#undef WriteDouble
+}
+
+bool DOMRectReadOnly::ReadStructuredClone(JSStructuredCloneReader* aReader) {
+  uint32_t high;
+  uint32_t low;
+
+#define ReadDouble(d)                             \
+  if (!JS_ReadUint32Pair(aReader, &high, &low)) { \
+    return false;                                 \
+  }                                               \
+  (*(d) = BitwiseCast<double>(static_cast<uint64_t>(high) << 32 | low))
+
+  ReadDouble(&mX);
+  ReadDouble(&mY);
+  ReadDouble(&mWidth);
+  ReadDouble(&mHeight);
+
+  return true;
+
+#undef ReadDouble
+}
+
 // -----------------------------------------------------------------------------
 
 JSObject* DOMRect::WrapObject(JSContext* aCx,

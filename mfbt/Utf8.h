@@ -145,9 +145,11 @@ union Utf8Unit {
   //    compilers we really care about have implemented it.  Maybe someday we
   //    can change our implementation to it without too much trouble, if we're
   //    lucky...
-  char mValue;
+  char mValue = '\0';
 
  public:
+  Utf8Unit() = default;
+
   explicit constexpr Utf8Unit(char aUnit) : mValue(aUnit) {}
 
   explicit constexpr Utf8Unit(unsigned char aUnit)

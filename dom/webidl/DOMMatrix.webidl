@@ -4,14 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dev.w3.org/fxtf/geometry/
+ * https://drafts.fxtf.org/geometry/
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
 [Pref="layout.css.DOMMatrix.enabled",
- Constructor(optional (DOMString or sequence<unrestricted double>) init)]
+ Constructor(optional (DOMString or sequence<unrestricted double>) init),
+ Exposed=(Window,Worker)]
 interface DOMMatrixReadOnly {
     // These attributes are simple aliases for certain elements of the 4x4 matrix
     readonly attribute unrestricted double a;
@@ -77,7 +78,7 @@ interface DOMMatrixReadOnly {
     DOMPoint                   transformPoint(optional DOMPointInit point);
     [Throws] Float32Array      toFloat32Array();
     [Throws] Float64Array      toFloat64Array();
-                               stringifier;
+    [Exposed=Window]           stringifier;
     [Default] object           toJSON();
 };
 
@@ -87,7 +88,8 @@ interface DOMMatrixReadOnly {
  Constructor(DOMMatrixReadOnly other),
  Constructor(Float32Array array32),
  Constructor(Float64Array array64),
- Constructor(sequence<unrestricted double> numberSequence)]
+ Constructor(sequence<unrestricted double> numberSequence),
+ Exposed=(Window,Worker)]
 interface DOMMatrix : DOMMatrixReadOnly {
     // These attributes are simple aliases for certain elements of the 4x4 matrix
     inherit attribute unrestricted double a;
@@ -145,6 +147,6 @@ interface DOMMatrix : DOMMatrixReadOnly {
     DOMMatrix skewXSelf(unrestricted double sx);
     DOMMatrix skewYSelf(unrestricted double sy);
     DOMMatrix invertSelf();
-    [Throws] DOMMatrix setMatrixValue(DOMString transformList);
+    [Exposed=Window, Throws] DOMMatrix setMatrixValue(DOMString transformList);
 };
 
