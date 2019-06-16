@@ -780,6 +780,14 @@ nsThread::GetLastLongNonIdleTaskEnd(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
+nsThread::SetNameForWakeupTelemetry(const nsACString& aName) {
+#ifdef EARLY_BETA_OR_EARLIER
+  mNameForWakeupTelemetry = aName;
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsThread::AsyncShutdown() {
   LOG(("THRD(%p) async shutdown\n", this));
 
@@ -1137,7 +1145,9 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
           if (ms < 0) {
             ms = 0;
           }
-          const char* name = PR_GetThreadName(mThread);
+          const char* name = !mNameForWakeupTelemetry.IsEmpty()
+                                 ? mNameForWakeupTelemetry.get()
+                                 : PR_GetThreadName(mThread);
           if (!name) {
             name = IsMainThread() ? "MainThread" : "(nameless thread)";
           }
