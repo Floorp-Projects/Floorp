@@ -852,9 +852,8 @@ DefineTransaction.verifyInput = function(input,
   // If there's just a single required/optional property, we allow passing it
   // as is, so, for example, one could do PlacesTransactions.Remove(myGuid)
   // rather than PlacesTransactions.Remove({ guid: myGuid}).
-  // This shortcut isn't supported for "complex" properties - e.g. one cannot
-  // pass an annotation object this way (note there is no use case for this at
-  // the moment anyway).
+  // This shortcut isn't supported for "complex" properties, like objects (note
+  // there is no use case for this at the moment anyway).
   let isSinglePropertyInput = isPrimitive(input) ||
                               Array.isArray(input) ||
                               (input instanceof Ci.nsISupports);
@@ -1012,8 +1011,7 @@ PT.NewBookmark.prototype = Object.seal({
     await createItem();
 
     this.undo = async function() {
-      // Pick up the removed info so we have the accurate last-modified value,
-      // which could be affected by any annotation we set in createItem.
+      // Pick up the removed info so we have the accurate last-modified value.
       await PlacesUtils.bookmarks.remove(info);
       if (tags.length > 0) {
         PlacesUtils.tagging.untagURI(Services.io.newURI(url.href), tags);

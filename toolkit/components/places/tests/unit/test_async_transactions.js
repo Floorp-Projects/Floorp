@@ -908,7 +908,7 @@ add_task(async function test_add_and_remove_bookmarks_with_additional_info() {
   await ensureItemsRemoved(b2_info);
   ensureTags([TAG_1]);
 
-  // Check if Remove correctly restores tags and annotations.
+  // Check if Remove correctly restores tags.
   observer.reset();
   await PT.redo();
   ensureTags([TAG_1, TAG_2]);
