@@ -22,3 +22,9 @@ function createJSONRequest() {
   request.open("GET", "missing.json", true);
   request.send(null);
 }
+
+fetchThing();
+
+function fetchThing() {
+  fetch("missing.txt");
+}
