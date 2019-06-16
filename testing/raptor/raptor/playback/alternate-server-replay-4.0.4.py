@@ -99,7 +99,12 @@ class AlternateServerPlayback:
         """
         self.flowmap = {}
         for i in flows:
-            if i.response:
+            if i.type == 'websocket':
+                ctx.log.info(
+                    "Request is a WebSocketFlow. Removing from request list as WebSockets"
+                    " are dissabled "
+                )
+            elif i.response:
                 l = self.flowmap.setdefault(self._hash(i), [])
                 l.append(i)
             else:
