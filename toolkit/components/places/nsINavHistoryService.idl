@@ -411,18 +411,6 @@ interface nsINavHistoryResultObserver : nsISupports
                           in AUTF8String aNewKeyword);
 
   /**
-   * Called right after an annotation of aNode's has changed (set, altered, or
-   * unset).
-   *
-   * @param aNode
-   *        a result node
-   * @param aAnnoName
-   *        the name of the annotation that changed
-   */
-  void nodeAnnotationChanged(in nsINavHistoryResultNode aNode,
-                             in AUTF8String aAnnoName);
-
-  /**
    * Called right after aNode's dateAdded property has changed.
    *
    * @param aNode
