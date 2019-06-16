@@ -11170,6 +11170,8 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
         nsresult rv = NS_NewNamedThread(runnable->GetThreadName(),
                                         getter_AddRefs(newThread), runnable);
         if (NS_SUCCEEDED(rv)) {
+          newThread->SetNameForWakeupTelemetry(
+              NS_LITERAL_CSTRING("IndexedDB (all)"));
           MOZ_ASSERT(newThread);
 
           IDB_DEBUG_LOG(("ConnectionPool created thread %" PRIu32,

@@ -176,4 +176,6 @@ interface nsIThread : nsISerialEventTarget
    */
   [noscript] readonly attribute TimeStamp lastLongTaskEnd;
   [noscript] readonly attribute TimeStamp lastLongNonIdleTaskEnd;
+
+  [noscript] void setNameForWakeupTelemetry(in ACString name);
 };

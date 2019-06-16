@@ -446,6 +446,11 @@ LazyIdleThread::GetLastLongNonIdleTaskEnd(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
+LazyIdleThread::SetNameForWakeupTelemetry(const nsACString& aName) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 LazyIdleThread::AsyncShutdown() {
   ASSERT_OWNING_THREAD();
   return NS_ERROR_NOT_IMPLEMENTED;
