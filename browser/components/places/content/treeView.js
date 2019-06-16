@@ -861,8 +861,6 @@ PlacesTreeView.prototype = {
 
   nodeKeywordChanged(aNode, aNewKeyword) {},
 
-  nodeAnnotationChanged() {},
-
   nodeDateAddedChanged: function PTV_nodeDateAddedChanged(aNode, aNewValue) {
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_DATEADDED);
   },

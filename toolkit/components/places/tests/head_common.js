@@ -732,7 +732,6 @@ NavHistoryResultObserver.prototype = {
   batching() {},
   containerStateChanged() {},
   invalidateContainer() {},
-  nodeAnnotationChanged() {},
   nodeDateAddedChanged() {},
   nodeHistoryDetailsChanged() {},
   nodeIconChanged() {},

@@ -2652,12 +2652,7 @@ static FeatureState& WebRenderHardwareQualificationStatus(
               (deviceID >= 0x9830 && deviceID < 0x9870) ||
               (deviceID >= 0x9900 && deviceID < 0x9a00)) {
             // we have a desktop CAYMAN, SI, CIK, VI, or GFX9 device
-#ifndef EARLY_BETA_OR_EARLIER
-            featureWebRenderQualified.Disable(
-                FeatureStatus::BlockedReleaseChannelAMD,
-                "Release channel and AMD",
-                NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_AMD"));
-#endif  // !EARLY_BETA_OR_EARLIER
+            // so treat the device as qualified.
           } else {
             featureWebRenderQualified.Disable(
                 FeatureStatus::BlockedDeviceTooOld, "Device too old",

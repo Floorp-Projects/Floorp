@@ -852,9 +852,8 @@ DefineTransaction.verifyInput = function(input,
   // If there's just a single required/optional property, we allow passing it
   // as is, so, for example, one could do PlacesTransactions.Remove(myGuid)
   // rather than PlacesTransactions.Remove({ guid: myGuid}).
-  // This shortcut isn't supported for "complex" properties - e.g. one cannot
-  // pass an annotation object this way (note there is no use case for this at
-  // the moment anyway).
+  // This shortcut isn't supported for "complex" properties, like objects (note
+  // there is no use case for this at the moment anyway).
   let isSinglePropertyInput = isPrimitive(input) ||
                               Array.isArray(input) ||
                               (input instanceof Ci.nsISupports);
@@ -1012,8 +1011,7 @@ PT.NewBookmark.prototype = Object.seal({
     await createItem();
 
     this.undo = async function() {
-      // Pick up the removed info so we have the accurate last-modified value,
-      // which could be affected by any annotation we set in createItem.
+      // Pick up the removed info so we have the accurate last-modified value.
       await PlacesUtils.bookmarks.remove(info);
       if (tags.length > 0) {
         PlacesUtils.tagging.untagURI(Services.io.newURI(url.href), tags);
@@ -1326,8 +1324,10 @@ PT.Remove.prototype = {
         // we do need it for the possibility of undo().
         removedItems.push(await PlacesUtils.promiseBookmarksTree(guid));
       } catch (ex) {
-        throw new Error("Failed to get info for the specified item (guid: " +
-                          guid + "): " + ex);
+        if (!ex.becauseInvalidURL) {
+          throw new Error(`Failed to get info for the guid: ${guid}: ${ex}`);
+        }
+        removedItems.push({guid});
       }
     }
 
@@ -1336,16 +1336,19 @@ PT.Remove.prototype = {
         // We have to pass just the guids as although remove() accepts full
         // info items, promiseBookmarksTree returns dateAdded and lastModified
         // as PRTime rather than date types.
-        await PlacesUtils.bookmarks.remove(removedItems.map(info => {
-          return { guid: info.guid};
-        }));
+        await PlacesUtils.bookmarks.remove(
+          removedItems.map(info => ({ guid: info.guid })));
       }
     };
     await removeThem();
 
     this.undo = async function() {
       for (let info of removedItems) {
-        await createItemsFromBookmarksTree(info, true);
+        try {
+          await createItemsFromBookmarksTree(info, true);
+        } catch (ex) {
+          Cu.reportError(`Unable to undo removal of ${info.guid}`);
+        }
       }
     };
     this.redo = removeThem;
