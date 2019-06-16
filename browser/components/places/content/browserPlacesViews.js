@@ -439,8 +439,6 @@ PlacesViewBase.prototype = {
     elt.setAttribute("image", aPlacesNode.icon);
   },
 
-  nodeAnnotationChanged() {},
-
   nodeTitleChanged:
   function PVB_nodeTitleChanged(aPlacesNode, aNewTitle) {
     let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
@@ -1233,23 +1231,6 @@ PlacesToolbar.prototype = {
     PlacesViewBase.prototype.nodeMoved.apply(this, arguments);
   },
 
-  nodeAnnotationChanged:
-  function PT_nodeAnnotationChanged(aPlacesNode, aAnno) {
-    let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
-    // Nothing to do if it's a never-visible node.
-    if (!elt || elt == this._rootElt)
-      return;
-
-    // We're notified for the menupopup, not the containing toolbarbutton.
-    if (elt.localName == "menupopup")
-      elt = elt.parentNode;
-
-    if (elt.parentNode != this._rootElt) { // Node is on the toolbar.
-      // Node is in a submenu.
-      PlacesViewBase.prototype.nodeAnnotationChanged.apply(this, arguments);
-    }
-  },
-
   nodeTitleChanged: function PT_nodeTitleChanged(aPlacesNode, aNewTitle) {
     let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
 
@@ -1859,8 +1840,6 @@ PlacesPanelMenuView.prototype = {
     this._removeChild(elt);
     this._rootElt.insertBefore(elt, this._rootElt.children[aNewIndex]);
   },
-
-  nodeAnnotationChanged() {},
 
   nodeTitleChanged: function PAMV_nodeTitleChanged(aPlacesNode, aNewTitle) {
     let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
