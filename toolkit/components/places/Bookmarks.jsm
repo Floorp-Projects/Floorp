@@ -2652,7 +2652,7 @@ async function(db, folderGuids, options) {
        JOIN moz_bookmarks p ON p.id = b.parent
        LEFT JOIN moz_places h ON b.fk = h.id`, { folderGuid });
 
-    itemsRemoved = itemsRemoved.concat(rowsToItemsArray(rows));
+    itemsRemoved = itemsRemoved.concat(rowsToItemsArray(rows, true));
 
     await db.executeCached(
       `WITH RECURSIVE

@@ -1706,3 +1706,58 @@ add_task(async function test_renameTag() {
   ensureUndoState();
   await PlacesUtils.bookmarks.eraseEverything();
 });
+
+add_task(async function test_remove_invalid_url() {
+  let folderGuid = await PT.NewFolder({ title: "Test Folder",
+                                        parentGuid: menuGuid }).transact();
+
+  let guid = "invalid_____";
+  let folderedGuid = "invalid____2";
+  let url = "invalid-uri";
+  await PlacesUtils.withConnectionWrapper("test_bookmarks_remove", async db => {
+    await db.execute(`
+      INSERT INTO moz_places(url, url_hash, title, rev_host, guid)
+      VALUES (:url, hash(:url), 'Invalid URI', '.', GENERATE_GUID())
+    `, {url});
+    await db.execute(
+      `INSERT INTO moz_bookmarks (type, fk, parent, position, guid)
+        VALUES (:type,
+                (SELECT id FROM moz_places WHERE url = :url),
+                (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
+                (SELECT MAX(position) + 1 FROM moz_bookmarks WHERE parent = (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid)),
+                :guid)
+      `, {
+      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      url,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      guid,
+    });
+    await db.execute(
+      `INSERT INTO moz_bookmarks (type, fk, parent, position, guid)
+        VALUES (:type,
+                (SELECT id FROM moz_places WHERE url = :url),
+                (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
+                (SELECT MAX(position) + 1 FROM moz_bookmarks WHERE parent = (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid)),
+                :guid)
+      `, {
+      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      url,
+      parentGuid: folderGuid,
+      guid: folderedGuid,
+    });
+  });
+
+  let guids = [folderGuid, guid];
+  await PT.Remove(guids).transact();
+  await ensureNonExistent(...guids, folderedGuid);
+  // Shouldn't throw, should restore the folder but not the bookmarks.
+  await PT.undo();
+  await ensureNonExistent(guid, folderedGuid);
+  Assert.ok(await PlacesUtils.bookmarks.fetch(folderGuid),
+            "The folder should have been re-created");
+  await PT.redo();
+  await ensureNonExistent(guids, folderedGuid);
+  // Cleanup
+  await PT.clearTransactionsHistory();
+  observer.reset();
+});
