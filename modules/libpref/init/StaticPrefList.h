@@ -1291,6 +1291,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+VARCACHE_PREF(
+  Live,
+  "dom.element.transform-getters.enabled",
+  dom_element_transform_getters_enabled,
+  bool, false
+)
+
 // Is support for Performance.mozMemory enabled?
 VARCACHE_PREF(
   Live,
