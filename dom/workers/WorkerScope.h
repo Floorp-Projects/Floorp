@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/DebuggerNotificationManager.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "nsWeakReference.h"
@@ -60,6 +61,8 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   RefPtr<IDBFactory> mIndexedDB;
   RefPtr<cache::CacheStorage> mCacheStorage;
   nsCOMPtr<nsISerialEventTarget> mSerialEventTarget;
+  RefPtr<mozilla::dom::DebuggerNotificationManager>
+      mDebuggerNotificationManager;
 
   uint32_t mWindowInteractionsAllowed;
 
@@ -69,10 +72,12 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   explicit WorkerGlobalScope(WorkerPrivate* aWorkerPrivate);
   virtual ~WorkerGlobalScope();
 
+  MOZ_CAN_RUN_SCRIPT
   int32_t SetTimeoutOrInterval(JSContext* aCx, Function& aHandler,
                                const int32_t aTimeout,
                                const Sequence<JS::Value>& aArguments,
                                bool aIsInterval, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT
   int32_t SetTimeoutOrInterval(JSContext* aCx, const nsAString& aHandler,
                                const int32_t aTimeout, bool aIsInterval,
                                ErrorResult& aRv);
@@ -115,19 +120,25 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   void ImportScripts(JSContext* aCx, const Sequence<nsString>& aScriptURLs,
                      ErrorResult& aRv);
 
+  MOZ_CAN_RUN_SCRIPT
   int32_t SetTimeout(JSContext* aCx, Function& aHandler, const int32_t aTimeout,
                      const Sequence<JS::Value>& aArguments, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT
   int32_t SetTimeout(JSContext* aCx, const nsAString& aHandler,
                      const int32_t aTimeout,
                      const Sequence<JS::Value>& /* unused */, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT
   void ClearTimeout(int32_t aHandle);
+  MOZ_CAN_RUN_SCRIPT
   int32_t SetInterval(JSContext* aCx, Function& aHandler,
                       const int32_t aTimeout,
                       const Sequence<JS::Value>& aArguments, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT
   int32_t SetInterval(JSContext* aCx, const nsAString& aHandler,
                       const int32_t aTimeout,
                       const Sequence<JS::Value>& /* unused */,
                       ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT
   void ClearInterval(int32_t aHandle);
 
   void GetOrigin(nsAString& aOrigin) const;
@@ -190,6 +201,18 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   nsISerialEventTarget* EventTargetFor(TaskCategory aCategory) const override;
 
   AbstractThread* AbstractMainThreadFor(TaskCategory aCategory) override;
+
+  mozilla::dom::DebuggerNotificationManager*
+  GetOrCreateDebuggerNotificationManager() override;
+
+  mozilla::dom::DebuggerNotificationManager*
+  GetExistingDebuggerNotificationManager() override;
+
+  mozilla::Maybe<mozilla::dom::EventCallbackDebuggerNotificationType>
+  GetDebuggerNotificationType() const override {
+    return mozilla::Some(
+        mozilla::dom::EventCallbackDebuggerNotificationType::Global);
+  }
 
   Maybe<ClientInfo> GetClientInfo() const override;
 

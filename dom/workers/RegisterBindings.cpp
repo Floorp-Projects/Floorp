@@ -9,6 +9,7 @@
 #include "RuntimeService.h"
 
 #include "jsapi.h"
+#include "mozilla/dom/DebuggerNotificationObserverBinding.h"
 #include "mozilla/dom/RegisterWorkerBindings.h"
 #include "mozilla/dom/RegisterWorkerDebuggerBindings.h"
 #include "mozilla/OSFileConstants.h"
@@ -49,6 +50,10 @@ bool WorkerPrivate::RegisterDebuggerBindings(JSContext* aCx,
   }
 
   if (!ChromeUtils_Binding::GetConstructorObject(aCx)) {
+    return false;
+  }
+
+  if (!DebuggerNotificationObserver_Binding::GetConstructorObject(aCx)) {
     return false;
   }
 
