@@ -15,6 +15,9 @@ permalink: /changelog/
 * **lib-state**
   * A new component for maintaining application, screen or component state via a redux-style `Store`. This component provides the architectural foundation for the `browser-state` component (in development). 
 
+* **support-ktx**
+  * Added `Context.isScreenReaderEnabled` extension to check if TalkBack service is enabled.
+
 # 1.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.56.0...v1.0.0)

@@ -15,6 +15,7 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.hardware.camera2.CameraManager
 import android.os.Process
+import android.view.accessibility.AccessibilityManager
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.content.getSystemService
@@ -95,6 +96,14 @@ fun Context.share(text: String, subject: String = getString(R.string.mozac_suppo
         false
     }
 }
+
+/**
+ * Check if TalkBack service is enabled.
+ *
+ * (via https://stackoverflow.com/a/12362545/512580)
+ */
+inline val Context.isScreenReaderEnabled: Boolean
+    get() = (getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager).isTouchExplorationEnabled
 
 @VisibleForTesting
 internal var isMainProcess: Boolean? = null
