@@ -74,12 +74,6 @@ class IMEStateManager {
   }
 
   /**
-   * OnBrowserParentDestroying() is called when aBrowserParent is being
-   * destroyed.
-   */
-  static void OnBrowserParentDestroying(BrowserParent* aBrowserParent);
-
-  /**
    * Focus moved between browsers from aBlur to aFocus. (nullptr means the
    * chrome process.)
    */
@@ -90,6 +84,11 @@ class IMEStateManager {
    * Called when aWidget is being deleted.
    */
   static void WidgetDestroyed(nsIWidget* aWidget);
+
+  /**
+   * Called when a widget exists when the app is quitting
+   */
+  static void WidgetOnQuit(nsIWidget* aWidget);
 
   /**
    * GetWidgetForActiveInputContext() returns a widget which IMEStateManager
