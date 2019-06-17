@@ -77,6 +77,11 @@ class MozharnessRunner(MozbuildObject):
                 "config": desktop_unittest_config + [
                     "--mochitest-suite", "mochitest-devtools-chrome"]
             },
+            "mochitest-remote": {
+                "script": "desktop_unittest.py",
+                "config": desktop_unittest_config + [
+                    "--mochitest-suite", "mochitest-remote"]
+            },
             "crashtest": {
                 "script": "desktop_unittest.py",
                 "config": desktop_unittest_config + [

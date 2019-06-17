@@ -178,6 +178,7 @@ config = {
         "mochitest-devtools-chrome-chunked": ["--flavor=browser", "--subsuite=devtools", "--chunk-by-runtime"],
         "mochitest-devtools-chrome-coverage": ["--flavor=browser", "--subsuite=devtools", "--chunk-by-runtime", "--timeout=1200"],
         "mochitest-a11y": ["--flavor=a11y", "--disable-e10s"],
+        "mochitest-remote": ["--flavor=browser", "--subsuite=remote"],
     },
     # local reftest suites
     "all_reftest_suites": {

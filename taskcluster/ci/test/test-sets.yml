@@ -35,6 +35,7 @@ common-tests:
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
+    - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - reftest
@@ -250,6 +251,7 @@ windows-tests:
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
+    - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
@@ -274,6 +276,7 @@ windows-aarch64-tests:
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
+    - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
@@ -324,6 +327,7 @@ macosx1014-64-tests:
     - mochitest-devtools-webreplay
     - mochitest-gpu
     # - mochitest-media
+    - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     # - mochitest-webgl2-core
@@ -426,6 +430,9 @@ mochitest-headless:
 
 marionette-headless:
     - marionette-headless
+
+remote-tests:
+    - mochitest-remote
 
 android-hw-arm7-opt-unittests:
     - mochitest-media
