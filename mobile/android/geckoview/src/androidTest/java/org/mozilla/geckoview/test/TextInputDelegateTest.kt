@@ -83,6 +83,16 @@ class TextInputDelegateTest : BaseSessionTest() {
         mainSession.waitForJS("new Promise(r => window.setTimeout(r))")
     }
 
+    private fun setComposingText(ic: InputConnection, text: CharSequence, newCursorPosition: Int) {
+        val promise = mainSession.evaluateJS(
+                when (id) {
+                    "#designmode" -> "new Promise(r => $('$id').contentDocument.addEventListener('compositionupdate', r, { once: true }))"
+                    else -> "new Promise(r => $('$id').addEventListener('compositionupdate', r, { once: true }))"
+                })
+        ic.setComposingText(text, newCursorPosition)
+        promise.asJSPromise().value
+    }
+
     private fun pressKey(keyCode: Int) {
         // Create a Promise to listen to the key event, and wait on it below.
         val promise = mainSession.evaluateJS(
@@ -349,11 +359,11 @@ class TextInputDelegateTest : BaseSessionTest() {
         assertTextAndSelectionAt("Can delete empty text", ic, "foo", 3)
 
         // Test setComposingText
-        ic.setComposingText("foo", 1)
+        setComposingText(ic, "foo", 1)
         assertTextAndSelectionAt("Can start composition", ic, "foofoo", 6)
-        ic.setComposingText("", 1)
+        setComposingText(ic, "", 1)
         assertTextAndSelectionAt("Can set empty composition", ic, "foo", 3)
-        ic.setComposingText("bar", 1)
+        setComposingText(ic, "bar", 1)
         assertTextAndSelectionAt("Can update composition", ic, "foobar", 6)
 
         // Test finishComposingText
@@ -364,7 +374,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         ic.setComposingRegion(0, 3)
         assertTextAndSelectionAt("Can set composing region", ic, "foobar", 6)
 
-        ic.setComposingText("far", 1)
+        setComposingText(ic, "far", 1)
         assertTextAndSelectionAt("Can set composing region text", ic,
                                  "farbar", 3)
 
@@ -372,7 +382,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         assertTextAndSelectionAt("Can set existing composing region", ic,
                                  "farbar", 3)
 
-        ic.setComposingText("rab", 3)
+        setComposingText(ic, "rab", 3)
         assertTextAndSelectionAt("Can set new composing region text", ic,
                                  "frabar", 6, /* checkGecko */ false)
 
@@ -412,17 +422,20 @@ class TextInputDelegateTest : BaseSessionTest() {
         assertTextAndSelectionAt("Can clear text", ic, "", 0)
 
         // Bug 1133802, duplication when setting the same composing text more than once.
-        ic.setComposingText("foo", 1)
+        setComposingText(ic, "foo", 1)
         assertTextAndSelectionAt("Can set the composing text", ic, "foo", 3)
+        // Setting same text doesn't fire compositionupdate
         ic.setComposingText("foo", 1)
         assertTextAndSelectionAt("Can set the same composing text", ic,
                                  "foo", 3)
-        ic.setComposingText("bar", 1)
+        setComposingText(ic, "bar", 1)
         assertTextAndSelectionAt("Can set different composing text", ic,
                                  "bar", 3)
+        // Setting same text doesn't fire compositionupdate
         ic.setComposingText("bar", 1)
         assertTextAndSelectionAt("Can set the same composing text", ic,
                                  "bar", 3)
+        // Setting same text doesn't fire compositionupdate
         ic.setComposingText("bar", 1)
         assertTextAndSelectionAt("Can set the same composing text again", ic,
                                  "bar", 3)
@@ -466,10 +479,10 @@ class TextInputDelegateTest : BaseSessionTest() {
 
         // Bug 1490391 - Committing then setting composition can result in duplicates.
         ic.commitText("far", 1)
-        ic.setComposingText("bar", 1)
+        setComposingText(ic, "bar", 1)
         assertTextAndSelectionAt("Can commit then set composition", ic,
                                  "farbar", 6)
-        ic.setComposingText("baz", 1)
+        setComposingText(ic, "baz", 1)
         assertTextAndSelectionAt("Composition still exists after setting", ic,
                                  "farbaz", 6)
 
