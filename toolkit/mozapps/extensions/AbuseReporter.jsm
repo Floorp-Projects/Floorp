@@ -174,8 +174,6 @@ const AbuseReporter = {
     }
     data.addon_install_method = install_method;
 
-    // TODO: Add support for addon_signature "curated" in AbuseReport
-    // (Bug 1549290).
     switch (addon.signedState) {
       case AddonManager.SIGNEDSTATE_BROKEN:
         data.addon_signature = "broken";
@@ -200,6 +198,13 @@ const AbuseReporter = {
         break;
       default:
         data.addon_signature = `unknown: ${addon.signedState}`;
+    }
+
+    // Set "curated" as addon_signature on recommended addons
+    // (addon.isRecommended internally checks that the addon is also
+    // signed correctly).
+    if (addon.isRecommended) {
+      data.addon_signature = "curated";
     }
 
     data.client_id = await ClientID.getClientIdHash();
