@@ -1923,59 +1923,62 @@ uint64_t IndexedBufferBinding::ByteCount() const {
 ////////////////////////////////////////
 
 ScopedUnpackReset::ScopedUnpackReset(const WebGLContext* const webgl)
-    : ScopedGLWrapper<ScopedUnpackReset>(webgl->gl), mWebGL(webgl) {
+    : mWebGL(webgl) {
+  const auto& gl = mWebGL->gl;
   // clang-format off
-    if (mWebGL->mPixelStore_UnpackAlignment != 4) mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+  if (mWebGL->mPixelStore_UnpackAlignment != 4) gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 
-    if (mWebGL->IsWebGL2()) {
-        if (mWebGL->mPixelStore_UnpackRowLength   != 0) mGL->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH  , 0);
-        if (mWebGL->mPixelStore_UnpackImageHeight != 0) mGL->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, 0);
-        if (mWebGL->mPixelStore_UnpackSkipPixels  != 0) mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS , 0);
-        if (mWebGL->mPixelStore_UnpackSkipRows    != 0) mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS   , 0);
-        if (mWebGL->mPixelStore_UnpackSkipImages  != 0) mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES , 0);
+  if (mWebGL->IsWebGL2()) {
+    if (mWebGL->mPixelStore_UnpackRowLength   != 0) gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH  , 0);
+    if (mWebGL->mPixelStore_UnpackImageHeight != 0) gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, 0);
+    if (mWebGL->mPixelStore_UnpackSkipPixels  != 0) gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS , 0);
+    if (mWebGL->mPixelStore_UnpackSkipRows    != 0) gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS   , 0);
+    if (mWebGL->mPixelStore_UnpackSkipImages  != 0) gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES , 0);
 
-        if (mWebGL->mBoundPixelUnpackBuffer) mGL->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
-    }
+    if (mWebGL->mBoundPixelUnpackBuffer) gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+  }
   // clang-format on
 }
 
-void ScopedUnpackReset::UnwrapImpl() {
+ScopedUnpackReset::~ScopedUnpackReset() {
+  const auto& gl = mWebGL->gl;
   // clang-format off
-    mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mWebGL->mPixelStore_UnpackAlignment);
+  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mWebGL->mPixelStore_UnpackAlignment);
 
-    if (mWebGL->IsWebGL2()) {
-        mGL->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH  , mWebGL->mPixelStore_UnpackRowLength  );
-        mGL->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, mWebGL->mPixelStore_UnpackImageHeight);
-        mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS , mWebGL->mPixelStore_UnpackSkipPixels );
-        mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS   , mWebGL->mPixelStore_UnpackSkipRows   );
-        mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES , mWebGL->mPixelStore_UnpackSkipImages );
+  if (mWebGL->IsWebGL2()) {
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH  , mWebGL->mPixelStore_UnpackRowLength  );
+    gl->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, mWebGL->mPixelStore_UnpackImageHeight);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS , mWebGL->mPixelStore_UnpackSkipPixels );
+    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS   , mWebGL->mPixelStore_UnpackSkipRows   );
+    gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES , mWebGL->mPixelStore_UnpackSkipImages );
 
-        GLuint pbo = 0;
-        if (mWebGL->mBoundPixelUnpackBuffer) {
-            pbo = mWebGL->mBoundPixelUnpackBuffer->mGLName;
-        }
-
-        mGL->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, pbo);
+    GLuint pbo = 0;
+    if (mWebGL->mBoundPixelUnpackBuffer) {
+        pbo = mWebGL->mBoundPixelUnpackBuffer->mGLName;
     }
+
+    gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, pbo);
+  }
   // clang-format on
 }
 
 ////////////////////
 
-void ScopedFBRebinder::UnwrapImpl() {
+ScopedFBRebinder::~ScopedFBRebinder() {
   const auto fnName = [&](WebGLFramebuffer* fb) {
     return fb ? fb->mGLName : 0;
   };
 
+  const auto& gl = mWebGL->gl;
   if (mWebGL->IsWebGL2()) {
-    mGL->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER,
-                          fnName(mWebGL->mBoundDrawFramebuffer));
-    mGL->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER,
-                          fnName(mWebGL->mBoundReadFramebuffer));
+    gl->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER,
+                         fnName(mWebGL->mBoundDrawFramebuffer));
+    gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER,
+                         fnName(mWebGL->mBoundReadFramebuffer));
   } else {
     MOZ_ASSERT(mWebGL->mBoundDrawFramebuffer == mWebGL->mBoundReadFramebuffer);
-    mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER,
-                          fnName(mWebGL->mBoundDrawFramebuffer));
+    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER,
+                         fnName(mWebGL->mBoundDrawFramebuffer));
   }
 }
 
@@ -1992,17 +1995,15 @@ static GLenum TargetIfLazy(GLenum target) {
   }
 }
 
-ScopedLazyBind::ScopedLazyBind(gl::GLContext* gl, GLenum target,
+ScopedLazyBind::ScopedLazyBind(gl::GLContext* const gl, const GLenum target,
                                const WebGLBuffer* buf)
-    : ScopedGLWrapper<ScopedLazyBind>(gl),
-      mTarget(buf ? TargetIfLazy(target) : 0),
-      mBuf(buf) {
+    : mGL(gl), mTarget(buf ? TargetIfLazy(target) : 0), mBuf(buf) {
   if (mTarget) {
     mGL->fBindBuffer(mTarget, mBuf->mGLName);
   }
 }
 
-void ScopedLazyBind::UnwrapImpl() {
+ScopedLazyBind::~ScopedLazyBind() {
   if (mTarget) {
     mGL->fBindBuffer(mTarget, 0);
   }
