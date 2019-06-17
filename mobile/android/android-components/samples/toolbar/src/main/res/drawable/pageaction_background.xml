@@ -7,7 +7,7 @@
     android:color="@color/photonGrey90">
 
     <item android:id="@android:id/mask">
-        <shape xmlns:android="http://schemas.android.com/apk/res/android">
+        <shape>
             <corners android:radius="4dp" />
             <solid android:color="#ffffff"/>
         </shape>
