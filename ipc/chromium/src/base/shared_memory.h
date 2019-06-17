@@ -18,6 +18,7 @@
 
 #include "base/basictypes.h"
 #include "base/process.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 namespace base {
 
@@ -57,6 +58,9 @@ class SharedMemory {
   // invalid value; NULL for a HANDLE and -1 for a file descriptor)
   static bool IsHandleValid(const SharedMemoryHandle& handle);
 
+  // IsHandleValid applied to this object's handle.
+  bool IsValid() const;
+
   // Return invalid handle (see comment above for exact definition).
   static SharedMemoryHandle NULLHandle();
 
@@ -89,10 +93,19 @@ class SharedMemory {
   // Mapped via Map().  Returns NULL if it is not mapped.
   void* memory() const { return memory_; }
 
-  // Get access to the underlying OS handle for this segment.
-  // Use of this handle for anything other than an opaque
-  // identifier is not portable.
-  SharedMemoryHandle handle() const;
+  // Extracts the underlying file handle; similar to
+  // GiveToProcess(GetCurrentProcId(), ...) but returns a RAII type.
+  // Like GiveToProcess, this unmaps the memory as a side-effect.
+  mozilla::UniqueFileHandle TakeHandle();
+
+#ifdef OS_WIN
+  // Used only in gfx/ipc/SharedDIBWin.cpp; should be removable once
+  // NPAPI goes away.
+  HANDLE GetHandle() {
+    freezeable_ = false;
+    return mapped_file_;
+  }
+#endif
 
   // Closes the open shared memory segment.
   // It is safe to call Close repeatedly.
