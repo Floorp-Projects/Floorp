@@ -147,6 +147,7 @@ $card-header-in-hero-line-height: 20;
 
         font-size: 13px;
         color: $grey-50;
+        -webkit-line-clamp: 1;
         margin-bottom: 0;
       }
     }
