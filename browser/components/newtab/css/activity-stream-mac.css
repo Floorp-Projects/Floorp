@@ -1959,6 +1959,7 @@ main {
     .ds-column-11 .ds-card-grid.ds-card-grid-divisible-by-4 .title,
     .ds-column-12 .ds-card-grid.ds-card-grid-divisible-by-4 .title {
       font-size: 15px;
+      -webkit-line-clamp: 3;
       line-height: 20px; }
   .ds-card-grid.empty {
     grid-template-columns: auto; }
@@ -1972,6 +1973,7 @@ main {
     margin: 8px 0; }
   .ds-hero .excerpt {
     font-size: 14px;
+    -webkit-line-clamp: 3;
     line-height: 20px;
     color: #0C0C0D;
     margin: 0 0 10px; }
@@ -2039,6 +2041,7 @@ main {
       justify-content: space-between; }
       .ds-hero .wrapper .meta header {
         font-size: 22px;
+        -webkit-line-clamp: 4;
         line-height: 28px;
         color: #0C0C0D;
         margin-bottom: 0; }
@@ -2054,6 +2057,7 @@ main {
       .ds-hero .wrapper .meta .source {
         font-size: 13px;
         color: #737373;
+        -webkit-line-clamp: 1;
         margin-bottom: 0; }
         [lwt-newtab-brighttext] .ds-hero .wrapper .meta .source {
           color: #B1B1B3; }
@@ -2155,6 +2159,7 @@ main {
         .ds-column-11 .ds-hero .wrapper .meta header,
         .ds-column-12 .ds-hero .wrapper .meta header {
           font-size: 22px;
+          -webkit-line-clamp: 3;
           line-height: 28px; }
         .ds-column-9 .ds-hero .wrapper .meta .source,
         .ds-column-10 .ds-hero .wrapper .meta .source,
@@ -2189,6 +2194,7 @@ main {
       .ds-column-11 .ds-hero .cards .ds-card .title,
       .ds-column-12 .ds-hero .cards .ds-card .title {
         font-size: 14px;
+        -webkit-line-clamp: 3;
         line-height: 20px; }
         [lwt-newtab-brighttext] .ds-column-9 .ds-hero .cards .ds-card .title, [lwt-newtab-brighttext]
         .ds-column-10 .ds-hero .cards .ds-card .title, [lwt-newtab-brighttext]
@@ -2216,6 +2222,7 @@ main {
     position: relative; }
   .ds-list:not(.ds-list-full-width) .ds-list-item-title {
     font-size: 14px;
+    -webkit-line-clamp: 3;
     line-height: 20px; }
   .ds-list:not(.ds-list-full-width) .ds-list-image {
     min-width: 80px;
@@ -2328,6 +2335,7 @@ main {
 
 .ds-list-full-width .ds-list-item-title {
   font-size: 17px;
+  -webkit-line-clamp: 3;
   line-height: 24px; }
 
 .ds-list-full-width .ds-list-image {
@@ -2353,6 +2361,7 @@ main {
     height: 100%; }
   .ds-list-item .ds-list-item-excerpt {
     font-size: 14px;
+    -webkit-line-clamp: 2;
     line-height: 20px;
     color: #737373;
     margin: 4px 0 8px; }
@@ -2365,10 +2374,10 @@ main {
   .ds-list-item .ds-list-item-info,
   .ds-list-item .ds-list-item-context {
     font-size: 14px;
+    -webkit-line-clamp: 1;
     line-height: 20px;
     color: #737373;
-    font-size: 13px;
-    -webkit-line-clamp: 1; }
+    font-size: 13px; }
     [lwt-newtab-brighttext] .ds-list-item .ds-list-item-info, [lwt-newtab-brighttext]
     .ds-list-item .ds-list-item-context {
       color: #B1B1B3; }
@@ -2646,12 +2655,15 @@ main {
       margin: 0 0 12px; }
     .ds-card .meta .title {
       font-size: 17px;
+      -webkit-line-clamp: 3;
       line-height: 24px;
       font-weight: 600; }
     .ds-card .meta .excerpt {
       font-size: 14px;
+      -webkit-line-clamp: 3;
       line-height: 20px; }
     .ds-card .meta .source {
+      -webkit-line-clamp: 1;
       margin-bottom: 2px; }
     .ds-card .meta .context,
     .ds-card .meta .source {

@@ -105,6 +105,7 @@ $excerpt-line-height: 20;
     }
 
     .source {
+      -webkit-line-clamp: 1;
       margin-bottom: 2px;
     }
 
