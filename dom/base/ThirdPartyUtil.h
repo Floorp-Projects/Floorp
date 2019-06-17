@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 
 class nsIURI;
+class nsPIDOMWindowOuter;
 
 class ThirdPartyUtil final : public mozIThirdPartyUtil {
  public:
@@ -36,15 +37,7 @@ class ThirdPartyUtil final : public mozIThirdPartyUtil {
   nsresult IsThirdPartyInternal(const nsCString& aFirstDomain,
                                 nsIURI* aSecondURI, bool* aResult);
 
-  nsCString GetBaseDomainFromWindow(nsPIDOMWindowOuter* aWindow) {
-    mozilla::dom::Document* doc = aWindow ? aWindow->GetExtantDoc() : nullptr;
-
-    if (!doc) {
-      return EmptyCString();
-    }
-
-    return doc->GetBaseDomain();
-  }
+  nsCString GetBaseDomainFromWindow(nsPIDOMWindowOuter* aWindow);
 
   RefPtr<nsEffectiveTLDService> mTLDService;
 };
