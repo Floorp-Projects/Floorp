@@ -23,6 +23,7 @@
   skin/classic/mozapps/extensions/alerticon-info-positive.svg (../../shared/extensions/alerticon-info-positive.svg)
   skin/classic/mozapps/extensions/alerticon-info-negative.svg (../../shared/extensions/alerticon-info-negative.svg)
   skin/classic/mozapps/extensions/category-legacy.svg        (../../shared/extensions/category-legacy.svg)
+  skin/classic/mozapps/extensions/recommended.svg            (../../shared/extensions/recommended.svg)
 #ifndef ANDROID
   skin/classic/mozapps/extensions/rating-star.svg            (../../shared/extensions/rating-star.svg)
 #endif
