@@ -414,6 +414,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   void Shutdown();
 
+  void QuitIME();
+
 #if defined(XP_WIN)
   uint64_t CreateScrollCaptureContainer() override;
 #endif
@@ -691,6 +693,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   bool mUpdateCursor;
   bool mUseAttachedEvents;
   bool mIMEHasFocus;
+  bool mIMEHasQuit;
   bool mIsFullyOccluded;
   static nsIRollupListener* gRollupListener;
 
