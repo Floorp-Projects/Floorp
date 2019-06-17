@@ -186,8 +186,7 @@ nsresult SVGScriptElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   nsresult rv = SVGScriptElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // FIXME(emilio, bug 1555949): Should be IsInComposedDoc().
-  if (IsInUncomposedDoc()) {
+  if (IsInComposedDoc()) {
     MaybeProcessScript();
   }
 
