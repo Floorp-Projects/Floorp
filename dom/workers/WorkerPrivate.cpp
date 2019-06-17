@@ -17,6 +17,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
+#include "mozilla/dom/CallbackDebuggerNotification.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/ClientState.h"
@@ -4309,6 +4310,12 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
     }
 
     RefPtr<TimeoutHandler> handler(info->mHandler);
+
+    RefPtr<WorkerGlobalScope> scope(this->GlobalScope());
+    CallbackDebuggerNotificationGuard guard(
+        scope, info->mIsInterval
+                   ? DebuggerNotificationType::SetIntervalCallback
+                   : DebuggerNotificationType::SetTimeoutCallback);
     if (!handler->Call(reason)) {
       retval = false;
       break;
