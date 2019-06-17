@@ -449,7 +449,7 @@ async function waitUntilApzStable() {
 // not guarantee the subsequent paint; this function does that job.
 async function forceLayerTreeToCompositor() {
   // Modify a style property to force a layout flush
-  document.body.style.left = "1px";
+  document.body.style.boxSizing = "border-box";
   var utils = SpecialPowers.getDOMWindowUtils(window);
   if (!utils.isMozAfterPaintPending) {
     dump("Forcing a paint since none was pending already...\n");
