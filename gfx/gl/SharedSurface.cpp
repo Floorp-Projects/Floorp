@@ -13,6 +13,7 @@
 #include "nsThreadUtils.h"
 #include "ScopedGLHelpers.h"
 #include "SharedSurfaceGL.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/TextureForwarder.h"
@@ -23,7 +24,7 @@ namespace mozilla {
 namespace gl {
 
 /*static*/
-void SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
+bool SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
                              SurfaceFactory* factory) {
   GLContext* gl = src->mGL;
 
@@ -39,10 +40,14 @@ void SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
     UniquePtr<SharedSurface_Basic> tempSurf;
     tempSurf = SharedSurface_Basic::Create(gl, factory->mFormats, src->mSize,
                                            factory->mCaps.alpha);
+    if (!tempSurf) {
+      gfxCriticalNote << "Failed to allocate SharedSurface_Basic.";
+      return false;
+    }
 
     ProdCopy(src, tempSurf.get(), factory);
     ProdCopy(tempSurf.get(), dest, factory);
-    return;
+    return true;
   }
 
   if (src->mAttachType == AttachmentType::Screen) {
@@ -81,7 +86,7 @@ void SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
 
     if (origNeedsRelock) origLocked->LockProd();
 
-    return;
+    return true;
   }
 
   if (dest->mAttachType == AttachmentType::Screen) {
@@ -120,7 +125,7 @@ void SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
 
     if (origNeedsRelock) origLocked->LockProd();
 
-    return;
+    return true;
   }
 
   // Alright, done with cases involving Screen types.
@@ -137,7 +142,7 @@ void SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
       gl->BlitHelper()->BlitTextureToTexture(
           srcTex, destTex, src->mSize, dest->mSize, srcTarget, destTarget);
 
-      return;
+      return true;
     }
 
     if (dest->mAttachType == AttachmentType::GLRenderbuffer) {
@@ -147,7 +152,7 @@ void SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
       gl->BlitHelper()->BlitTextureToFramebuffer(srcTex, src->mSize,
                                                  dest->mSize, srcTarget);
 
-      return;
+      return true;
     }
 
     MOZ_CRASH("GFX: Unhandled dest->mAttachType 3.");
@@ -165,7 +170,7 @@ void SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
       gl->BlitHelper()->BlitFramebufferToTexture(destTex, src->mSize,
                                                  dest->mSize, destTarget);
 
-      return;
+      return true;
     }
 
     if (dest->mAttachType == AttachmentType::GLRenderbuffer) {
@@ -175,7 +180,7 @@ void SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
       gl->BlitHelper()->BlitFramebufferToFramebuffer(
           srcWrapper.FB(), destWrapper.FB(), src->mSize, dest->mSize);
 
-      return;
+      return true;
     }
 
     MOZ_CRASH("GFX: Unhandled dest->mAttachType 4.");
