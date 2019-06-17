@@ -852,6 +852,24 @@ nsresult nsToolkitProfileService::Init() {
     currentProfile = new nsToolkitProfile(name, rootDir, localDir, true);
     NS_ENSURE_TRUE(currentProfile, NS_ERROR_OUT_OF_MEMORY);
 
+    // If a user has modified the ini file path it may make for a valid profile
+    // path but not match what we would have serialised and so may not match
+    // the path in the install section. Re-serialise it to get it in the
+    // expected form again.
+    bool nowRelative;
+    nsCString descriptor;
+    GetProfileDescriptor(currentProfile, descriptor, &nowRelative);
+
+    if (isRelative != nowRelative || !descriptor.Equals(filePath)) {
+      mProfileDB.SetString(profileID.get(), "IsRelative",
+                           nowRelative ? "1" : "0");
+      mProfileDB.SetString(profileID.get(), "Path", descriptor.get());
+
+      // Should we flush now? It costs some startup time and we will fix it on
+      // the next startup anyway. If something else causes a flush then it will
+      // be fixed in the ini file then.
+    }
+
     rv = mProfileDB.GetString(profileID.get(), "Default", buffer);
     if (NS_SUCCEEDED(rv) && buffer.EqualsLiteral("1")) {
       mNormalDefault = currentProfile;
@@ -859,7 +877,7 @@ nsresult nsToolkitProfileService::Init() {
 
     // Is this the default profile for this install?
     if (mUseDedicatedProfile && !mDedicatedProfile &&
-        installProfilePath.Equals(filePath)) {
+        installProfilePath.Equals(descriptor)) {
       // Found a profile for this install.
       mDedicatedProfile = currentProfile;
     }
