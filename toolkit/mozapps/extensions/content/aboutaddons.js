@@ -1728,6 +1728,10 @@ class AddonCard extends HTMLElement {
       });
     }
 
+    // Show the recommended badge if needed.
+    card.querySelector(".addon-badge-recommended")
+      .hidden = !addon.isRecommended;
+
     // Update description.
     card.querySelector(".addon-description").textContent = addon.description;
 
