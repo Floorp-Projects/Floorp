@@ -18,40 +18,10 @@ class GLContext;
 bool IsContextCurrent(GLContext* gl);
 #endif
 
-// RAII via CRTP!
-template <class Derived>
-struct ScopedGLWrapper {
- private:
-  bool mIsUnwrapped;
-
- protected:
-  GLContext* const mGL;
-
-  explicit ScopedGLWrapper(GLContext* gl) : mIsUnwrapped(false), mGL(gl) {
-    MOZ_ASSERT(&ScopedGLWrapper<Derived>::Unwrap == &Derived::Unwrap);
-    MOZ_ASSERT(&Derived::UnwrapImpl);
-  }
-
-  virtual ~ScopedGLWrapper() {
-    if (!mIsUnwrapped) Unwrap();
-  }
-
- public:
-  void Unwrap() {
-    MOZ_ASSERT(!mIsUnwrapped);
-
-    Derived* derived = static_cast<Derived*>(this);
-    derived->UnwrapImpl();
-
-    mIsUnwrapped = true;
-  }
-};
-
 // Wraps glEnable/Disable.
-struct ScopedGLState : public ScopedGLWrapper<ScopedGLState> {
-  friend struct ScopedGLWrapper<ScopedGLState>;
-
- protected:
+struct ScopedGLState final {
+ private:
+  GLContext* const mGL;
   const GLenum mCapability;
   bool mOldState;
 
@@ -61,106 +31,88 @@ struct ScopedGLState : public ScopedGLWrapper<ScopedGLState> {
   // variant that doesn't change state; simply records existing state to be
   // restored by the destructor
   ScopedGLState(GLContext* aGL, GLenum aCapability);
-
- protected:
-  void UnwrapImpl();
+  ~ScopedGLState();
 };
 
 // Saves and restores with GetUserBoundFB and BindUserFB.
-struct ScopedBindFramebuffer : public ScopedGLWrapper<ScopedBindFramebuffer> {
-  friend struct ScopedGLWrapper<ScopedBindFramebuffer>;
-
- protected:
+struct ScopedBindFramebuffer final {
+ private:
+  GLContext* const mGL;
   GLuint mOldReadFB;
   GLuint mOldDrawFB;
 
- private:
   void Init();
 
  public:
   explicit ScopedBindFramebuffer(GLContext* aGL);
   ScopedBindFramebuffer(GLContext* aGL, GLuint aNewFB);
-
- protected:
-  void UnwrapImpl();
+  ~ScopedBindFramebuffer();
 };
 
-struct ScopedBindTextureUnit : public ScopedGLWrapper<ScopedBindTextureUnit> {
-  friend struct ScopedGLWrapper<ScopedBindTextureUnit>;
-
- protected:
+struct ScopedBindTextureUnit final {
+ private:
+  GLContext* const mGL;
   GLenum mOldTexUnit;
 
  public:
   ScopedBindTextureUnit(GLContext* aGL, GLenum aTexUnit);
-
- protected:
-  void UnwrapImpl();
+  ~ScopedBindTextureUnit();
 };
 
-struct ScopedTexture : public ScopedGLWrapper<ScopedTexture> {
-  friend struct ScopedGLWrapper<ScopedTexture>;
-
- protected:
+struct ScopedTexture final {
+ private:
+  GLContext* const mGL;
   GLuint mTexture;
 
  public:
   explicit ScopedTexture(GLContext* aGL);
+  ~ScopedTexture();
 
   GLuint Texture() const { return mTexture; }
   operator GLuint() const { return mTexture; }
-
- protected:
-  void UnwrapImpl();
 };
 
-struct ScopedFramebuffer : public ScopedGLWrapper<ScopedFramebuffer> {
-  friend struct ScopedGLWrapper<ScopedFramebuffer>;
-
- protected:
+struct ScopedFramebuffer final {
+ private:
+  GLContext* const mGL;
   GLuint mFB;
 
  public:
   explicit ScopedFramebuffer(GLContext* aGL);
-  const auto& FB() const { return mFB; }
+  ~ScopedFramebuffer();
 
- protected:
-  void UnwrapImpl();
+  const auto& FB() const { return mFB; }
+  operator GLuint() const { return mFB; }
 };
 
-struct ScopedRenderbuffer : public ScopedGLWrapper<ScopedRenderbuffer> {
-  friend struct ScopedGLWrapper<ScopedRenderbuffer>;
-
- protected:
+struct ScopedRenderbuffer final {
+ private:
+  GLContext* const mGL;
   GLuint mRB;
 
  public:
   explicit ScopedRenderbuffer(GLContext* aGL);
-  GLuint RB() { return mRB; }
+  ~ScopedRenderbuffer();
 
- protected:
-  void UnwrapImpl();
+  GLuint RB() { return mRB; }
+  operator GLuint() const { return mRB; }
 };
 
-struct ScopedBindTexture : public ScopedGLWrapper<ScopedBindTexture> {
-  friend struct ScopedGLWrapper<ScopedBindTexture>;
-
- protected:
+struct ScopedBindTexture final {
+ private:
+  GLContext* const mGL;
   const GLenum mTarget;
   const GLuint mOldTex;
 
  public:
   ScopedBindTexture(GLContext* aGL, GLuint aNewTex,
                     GLenum aTarget = LOCAL_GL_TEXTURE_2D);
-
- protected:
-  void UnwrapImpl();
+  ~ScopedBindTexture();
 };
 
-struct ScopedBindRenderbuffer : public ScopedGLWrapper<ScopedBindRenderbuffer> {
-  friend struct ScopedGLWrapper<ScopedBindRenderbuffer>;
-
- protected:
+struct ScopedBindRenderbuffer final {
+ private:
+  GLContext* const mGL;
   GLuint mOldRB;
 
  private:
@@ -168,24 +120,20 @@ struct ScopedBindRenderbuffer : public ScopedGLWrapper<ScopedBindRenderbuffer> {
 
  public:
   explicit ScopedBindRenderbuffer(GLContext* aGL);
-
   ScopedBindRenderbuffer(GLContext* aGL, GLuint aNewRB);
-
- protected:
-  void UnwrapImpl();
+  ~ScopedBindRenderbuffer();
 };
 
-struct ScopedFramebufferForTexture
-    : public ScopedGLWrapper<ScopedFramebufferForTexture> {
-  friend struct ScopedGLWrapper<ScopedFramebufferForTexture>;
-
- protected:
+struct ScopedFramebufferForTexture final {
+ private:
+  GLContext* const mGL;
   bool mComplete;  // True if the framebuffer we create is complete.
   GLuint mFB;
 
  public:
   ScopedFramebufferForTexture(GLContext* aGL, GLuint aTexture,
                               GLenum aTarget = LOCAL_GL_TEXTURE_2D);
+  ~ScopedFramebufferForTexture();
 
   bool IsComplete() const { return mComplete; }
 
@@ -193,64 +141,51 @@ struct ScopedFramebufferForTexture
     MOZ_GL_ASSERT(mGL, IsComplete());
     return mFB;
   }
-
- protected:
-  void UnwrapImpl();
 };
 
-struct ScopedFramebufferForRenderbuffer
-    : public ScopedGLWrapper<ScopedFramebufferForRenderbuffer> {
-  friend struct ScopedGLWrapper<ScopedFramebufferForRenderbuffer>;
-
- protected:
+struct ScopedFramebufferForRenderbuffer final {
+ private:
+  GLContext* const mGL;
   bool mComplete;  // True if the framebuffer we create is complete.
   GLuint mFB;
 
  public:
   ScopedFramebufferForRenderbuffer(GLContext* aGL, GLuint aRB);
+  ~ScopedFramebufferForRenderbuffer();
 
   bool IsComplete() const { return mComplete; }
-
-  GLuint FB() const { return mFB; }
-
- protected:
-  void UnwrapImpl();
+  GLuint FB() const {
+    MOZ_GL_ASSERT(mGL, IsComplete());
+    return mFB;
+  }
 };
 
-struct ScopedViewportRect : public ScopedGLWrapper<ScopedViewportRect> {
-  friend struct ScopedGLWrapper<ScopedViewportRect>;
-
- protected:
+struct ScopedViewportRect final {
+ private:
+  GLContext* const mGL;
   GLint mSavedViewportRect[4];
 
  public:
   ScopedViewportRect(GLContext* aGL, GLint x, GLint y, GLsizei width,
                      GLsizei height);
-
- protected:
-  void UnwrapImpl();
+  ~ScopedViewportRect();
 };
 
-struct ScopedScissorRect : public ScopedGLWrapper<ScopedScissorRect> {
-  friend struct ScopedGLWrapper<ScopedScissorRect>;
-
- protected:
+struct ScopedScissorRect final {
+ private:
+  GLContext* const mGL;
   GLint mSavedScissorRect[4];
 
  public:
   ScopedScissorRect(GLContext* aGL, GLint x, GLint y, GLsizei width,
                     GLsizei height);
   explicit ScopedScissorRect(GLContext* aGL);
-
- protected:
-  void UnwrapImpl();
+  ~ScopedScissorRect();
 };
 
-struct ScopedVertexAttribPointer
-    : public ScopedGLWrapper<ScopedVertexAttribPointer> {
-  friend struct ScopedGLWrapper<ScopedVertexAttribPointer>;
-
- protected:
+struct ScopedVertexAttribPointer final {
+ private:
+  GLContext* const mGL;
   GLuint mAttribIndex;
   GLint mAttribEnabled;
   GLint mAttribSize;
@@ -267,16 +202,15 @@ struct ScopedVertexAttribPointer
                             GLsizei stride, GLuint buffer,
                             const GLvoid* pointer);
   explicit ScopedVertexAttribPointer(GLContext* aGL, GLuint index);
+  ~ScopedVertexAttribPointer();
 
- protected:
+ private:
   void WrapImpl(GLuint index);
-  void UnwrapImpl();
 };
 
-struct ScopedPackState : public ScopedGLWrapper<ScopedPackState> {
-  friend struct ScopedGLWrapper<ScopedPackState>;
-
- protected:
+struct ScopedPackState final {
+ private:
+  GLContext* const mGL;
   GLint mAlignment;
 
   GLuint mPixelBuffer;
@@ -286,18 +220,15 @@ struct ScopedPackState : public ScopedGLWrapper<ScopedPackState> {
 
  public:
   explicit ScopedPackState(GLContext* gl);
+  ~ScopedPackState();
 
   // Returns whether the stride was handled successfully.
   bool SetForWidthAndStrideRGBA(GLsizei aWidth, GLsizei aStride);
-
- protected:
-  void UnwrapImpl();
 };
 
-struct ResetUnpackState : public ScopedGLWrapper<ResetUnpackState> {
-  friend struct ScopedGLWrapper<ResetUnpackState>;
-
- protected:
+struct ResetUnpackState final {
+ private:
+  GLContext* const mGL;
   GLuint mAlignment;
 
   GLuint mPBO;
@@ -309,23 +240,18 @@ struct ResetUnpackState : public ScopedGLWrapper<ResetUnpackState> {
 
  public:
   explicit ResetUnpackState(GLContext* gl);
-
- protected:
-  void UnwrapImpl();
+  ~ResetUnpackState();
 };
 
-struct ScopedBindPBO final : public ScopedGLWrapper<ScopedBindPBO> {
-  friend struct ScopedGLWrapper<ScopedBindPBO>;
-
- protected:
+struct ScopedBindPBO final {
+ private:
+  GLContext* const mGL;
   const GLenum mTarget;
   const GLuint mPBO;
 
  public:
   ScopedBindPBO(GLContext* gl, GLenum target);
-
- protected:
-  void UnwrapImpl();
+  ~ScopedBindPBO();
 };
 
 } /* namespace gl */

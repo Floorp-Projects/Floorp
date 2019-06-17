@@ -2095,44 +2095,33 @@ bool ValidateTexImageTarget(WebGLContext* webgl, uint8_t funcDims,
                             TexImageTarget* const out_texImageTarget,
                             WebGLTexture** const out_tex);
 
-class ScopedUnpackReset final : public gl::ScopedGLWrapper<ScopedUnpackReset> {
-  friend struct gl::ScopedGLWrapper<ScopedUnpackReset>;
-
+class ScopedUnpackReset final {
  private:
   const WebGLContext* const mWebGL;
 
  public:
   explicit ScopedUnpackReset(const WebGLContext* webgl);
-
- private:
-  void UnwrapImpl();
+  ~ScopedUnpackReset();
 };
 
-class ScopedFBRebinder final : public gl::ScopedGLWrapper<ScopedFBRebinder> {
-  friend struct gl::ScopedGLWrapper<ScopedFBRebinder>;
-
+class ScopedFBRebinder final {
  private:
   const WebGLContext* const mWebGL;
 
  public:
-  explicit ScopedFBRebinder(const WebGLContext* const webgl)
-      : ScopedGLWrapper<ScopedFBRebinder>(webgl->gl), mWebGL(webgl) {}
-
- private:
-  void UnwrapImpl();
+  explicit ScopedFBRebinder(const WebGLContext* const webgl) : mWebGL(webgl) {}
+  ~ScopedFBRebinder();
 };
 
-class ScopedLazyBind final : public gl::ScopedGLWrapper<ScopedLazyBind> {
-  friend struct gl::ScopedGLWrapper<ScopedLazyBind>;
-
+class ScopedLazyBind final {
+ private:
+  gl::GLContext* const mGL;
   const GLenum mTarget;
   const WebGLBuffer* const mBuf;
 
  public:
   ScopedLazyBind(gl::GLContext* gl, GLenum target, const WebGLBuffer* buf);
-
- private:
-  void UnwrapImpl();
+  ~ScopedLazyBind();
 };
 
 ////
