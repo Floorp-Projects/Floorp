@@ -6,6 +6,7 @@ const {Localization} = ChromeUtils.import("resource://gre/modules/Localization.j
 const {FxAccountsConfig} = ChromeUtils.import("resource://gre/modules/FxAccountsConfig.jsm");
 const {AttributionCode} = ChromeUtils.import("resource:///modules/AttributionCode.jsm");
 const {AddonRepository} = ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 async function getAddonInfo() {
   try {
@@ -223,7 +224,10 @@ const ONBOARDING_MESSAGES = async () => ([
       icon: "tracking",
       primary_button: {
         label: {string_id: "onboarding-tracking-protection-button2"},
-        action: {
+        action: Services.locale.appLocaleAsLangTag.substr(0, 2) === "en" ? {
+          type: "OPEN_URL",
+          data: {args: "https://mzl.la/ETPdefault", where: "tabshifted"},
+        } : {
           type: "OPEN_PREFERENCES_PAGE",
           data: {category: "privacy-trackingprotection"},
         },
@@ -343,7 +347,7 @@ const ONBOARDING_MESSAGES = async () => ([
         label: {string_id: "onboarding-send-tabs-button"},
         action: {
           type: "OPEN_URL",
-          data: {args: "https://support.mozilla.org/kb/send-tab-firefox-desktop-mobile", where: "tabshifted"},
+          data: {args: "https://support.mozilla.org/kb/send-tab-firefox-desktop-other-devices", where: "tabshifted"},
         },
       },
     },
