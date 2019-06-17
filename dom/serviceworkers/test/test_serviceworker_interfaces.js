@@ -105,8 +105,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Directory",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "DOMError",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "DOMException",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "DOMMatrix",
