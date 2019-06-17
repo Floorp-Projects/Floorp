@@ -26,7 +26,7 @@ from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
     code_coverage_config_options
 )
-from mozharness.mozilla.testing.errors import HarnessErrorList
+from mozharness.mozilla.testing.errors import WptHarnessErrorList
 
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.base.log import INFO
@@ -342,7 +342,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         parser = StructuredOutputParser(config=self.config,
                                         log_obj=self.log_obj,
                                         log_compact=True,
-                                        error_list=BaseErrorList + HarnessErrorList,
+                                        error_list=BaseErrorList + WptHarnessErrorList,
                                         allow_crashes=True)
 
         env = {'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir']}
