@@ -304,8 +304,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "DocumentType", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "DOMError", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "DOMException", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "DOMImplementation", insecureContext: true},
