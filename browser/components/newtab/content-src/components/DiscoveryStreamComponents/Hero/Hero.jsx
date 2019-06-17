@@ -1,6 +1,5 @@
 import {DSCard, PlaceholderDSCard} from "../DSCard/DSCard.jsx";
 import {actionCreators as ac} from "common/Actions.jsm";
-import {clampTotalLines} from "content-src/lib/clamp-total-lines";
 import {DSEmptyState} from "../DSEmptyState/DSEmptyState.jsx";
 import {DSImage} from "../DSImage/DSImage.jsx";
 import {DSLinkMenu} from "../DSLinkMenu/DSLinkMenu";
@@ -77,15 +76,13 @@ export class Hero extends React.PureComponent {
               <DSImage extraClassNames="img" source={heroRec.image_src} rawSource={heroRec.raw_image_src} />
             </div>
             <div className="meta">
-              <div className="header-and-excerpt"
-                data-total-lines="7"
-                ref={clampTotalLines}>
+              <div className="header-and-excerpt">
                 {heroRec.context ? (
                   <p className="context">{heroRec.context}</p>
                 ) : (
-                  <p className="source clamp" data-clamp="1">{heroRec.domain}</p>
+                  <p className="source clamp">{heroRec.domain}</p>
                 )}
-                <header className="clamp" data-clamp="4">{heroRec.title}</header>
+                <header className="clamp">{heroRec.title}</header>
                 <p className="excerpt clamp">{heroRec.excerpt}</p>
               </div>
             </div>
