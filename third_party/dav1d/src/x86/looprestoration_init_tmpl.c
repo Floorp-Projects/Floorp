@@ -28,7 +28,6 @@
 #include "src/cpu.h"
 #include "src/looprestoration.h"
 
-#include "common/attributes.h"
 #include "common/intops.h"
 #include "src/tables.h"
 
@@ -211,7 +210,7 @@ DEF_LR_FILTERS(avx2)
 # endif
 #endif
 
-void bitfn(dav1d_loop_restoration_dsp_init_x86)(Dav1dLoopRestorationDSPContext *const c) {
+COLD void bitfn(dav1d_loop_restoration_dsp_init_x86)(Dav1dLoopRestorationDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;

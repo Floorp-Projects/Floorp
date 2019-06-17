@@ -1112,7 +1112,7 @@ L(\type\()_8tap_v_tbl):
         vmovl_u8        q3,  d6,  q4,  d8,  q8,  d16, q9, d18
         mul_mla_8_2     q12, q13, q12, q13, q14, q15, q1,  q2,  q3,  q4,  q8,  q9
         shift_store_4   \type, \d_strd, q12, d24, d25, q13, d26, d27
-        b               48b
+        bgt             48b
 0:
         vpop            {q4}
         pop             {r4-r11,pc}
@@ -1145,7 +1145,7 @@ L(\type\()_8tap_v_tbl):
 0:
         pop             {r4-r11,pc}
 
-880:    // 8x8, 8x16, 8x32 v
+880:    // 8x6, 8x8, 8x16, 8x32 v
 1680:   // 16x8, 16x16, ...
 320:    // 32x8, 32x16, ...
 640:
@@ -1178,12 +1178,17 @@ L(\type\()_8tap_v_tbl):
         mul_mla_8_1     q3,  q4,  q3,  q4,  q8,  q9,  q10, q11, q12, q13, q14
         shift_store_8   \type, \d_strd, q3,  d6,  q4,  d8
         ble             9f
-        subs            \h,  \h,  #4
-        load_reg        \sr2, \src, \s_strd, d30, d2,  d4,  d6
-        vmovl_u8        q15, d30, q1,  d2,  q2,  d4,  q3,  d6
+        subs            \h,  \h,  #2
+        load_reg        \sr2, \src, \s_strd, d30, d2
+        vmovl_u8        q15, d30, q1,  d2
         mul_mla_8_1     q8,  q9,  q8,  q9,  q10, q11, q12, q13, q14, q15, q1
+        shift_store_8   \type, \d_strd, q8,  d16, q9,  d18
+        ble             9f
+        subs            \h,  \h,  #2
+        load_reg        \sr2, \src, \s_strd, d4,  d6
+        vmovl_u8        q2,  d4,  q3,  d6
         mul_mla_8_1     q10, q11, q10, q11, q12, q13, q14, q15, q1,  q2,  q3
-        shift_store_8   \type, \d_strd, q8,  d16, q9,  d18, q10, d20, q11, d22
+        shift_store_8   \type, \d_strd, q10, d20, q11, d22
         ble             9f
         subs            \h,  \h,  #4
         load_reg        \sr2, \src, \s_strd, d8,  d16, d18, d20
