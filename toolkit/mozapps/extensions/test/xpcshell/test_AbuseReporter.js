@@ -439,3 +439,56 @@ add_task(async function test_truncated_string_properties() {
 
   await extension.unload();
 });
+
+add_task(async function test_report_recommended() {
+  const NON_RECOMMENDED_ADDON_ID = "non-recommended-addon@mochi.test";
+  const RECOMMENDED_ADDON_ID = "recommended-addon@mochi.test";
+
+  const now = Date.now();
+  const not_before = new Date(now - 3600000).toISOString();
+  const not_after = new Date(now + 3600000).toISOString();
+
+  const {extension: nonRecommended} = await installTestExtension({
+    manifest: {
+      name: "Fake non recommended addon",
+      applications: {gecko: {id: NON_RECOMMENDED_ADDON_ID}},
+    },
+  });
+
+  const {extension: recommended} = await installTestExtension({
+    manifest: {
+      name: "Fake recommended addon",
+      applications: {gecko: {id: RECOMMENDED_ADDON_ID}},
+    },
+    files: {
+      "mozilla-recommendation.json": {
+        addon_id: RECOMMENDED_ADDON_ID,
+        states: ["recommended"],
+        validity: {not_before, not_after},
+      },
+    },
+  });
+
+  // Override the test api server request handler, to be able to
+  // intercept the properties actually submitted.
+  let reportSubmitted;
+  apiRequestHandler = ({data, request, response}) => {
+    reportSubmitted = JSON.parse(data);
+    handleSubmitRequest({request, response});
+  };
+
+  async function checkReportedSignature(addonId, expectedAddonSignature) {
+    await clearAbuseReportState();
+    const report = await AbuseReporter.createAbuseReport(
+      addonId, REPORT_OPTIONS);
+    await report.submit({message: "fake-message", reason: "fake-reason"});
+    equal(reportSubmitted.addon_signature, expectedAddonSignature,
+      `Got the expected addon_signature for ${addonId}`);
+  }
+
+  await checkReportedSignature(NON_RECOMMENDED_ADDON_ID, "signed");
+  await checkReportedSignature(RECOMMENDED_ADDON_ID, "curated");
+
+  await nonRecommended.unload();
+  await recommended.unload();
+});
