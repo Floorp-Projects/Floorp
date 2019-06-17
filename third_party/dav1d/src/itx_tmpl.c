@@ -193,7 +193,7 @@ static void inv_txfm_add_wht_wht_4x4_c(pixel *dst, const ptrdiff_t stride,
     memset(coeff, 0, sizeof(*coeff) * 4 * 4);
 }
 
-void bitfn(dav1d_itx_dsp_init)(Dav1dInvTxfmDSPContext *const c) {
+COLD void bitfn(dav1d_itx_dsp_init)(Dav1dInvTxfmDSPContext *const c) {
 #define assign_itx_all_fn64(w, h, pfx) \
     c->itxfm_add[pfx##TX_##w##X##h][DCT_DCT  ] = \
         inv_txfm_add_dct_dct_##w##x##h##_c
