@@ -3368,11 +3368,15 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       link.href = file;
       link.rel = "localization";
     });
+    await this.componentWillUpdate(this.props);
+  } // Get the fxa data if we don't have it yet from mount or update
 
-    if (this.props.fxaEndpoint && !this.fxaMetricsInitialized) {
+
+  async componentWillUpdate(props) {
+    if (props.fxaEndpoint && !this.fxaMetricsInitialized) {
       try {
         this.fxaMetricsInitialized = true;
-        const url = new URL(`${this.props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
+        const url = new URL(`${props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
         this.addUtmParams(url);
         const response = await fetch(url, {
           credentials: "omit"
@@ -3390,7 +3394,7 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
             flowBeginTime
           });
         } else {
-          this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
+          props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
             type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT,
             data: {
               event: "FXA_METRICS_FETCH_ERROR",
@@ -3399,7 +3403,7 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
           }));
         }
       } catch (error) {
-        this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
+        props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
           type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT,
           data: {
             event: "FXA_METRICS_ERROR"
