@@ -12,6 +12,13 @@ namespace mozilla {
 namespace ipc {
 
 void SharedMemory::SystemProtect(char* aAddr, size_t aSize, int aRights) {
+  if (!SystemProtectFallible(aAddr, aSize, aRights)) {
+    MOZ_CRASH("can't VirtualProtect()");
+  }
+}
+
+bool SharedMemory::SystemProtectFallible(char* aAddr, size_t aSize,
+                                         int aRights) {
   DWORD flags;
   if ((aRights & RightsRead) && (aRights & RightsWrite))
     flags = PAGE_READWRITE;
@@ -21,8 +28,7 @@ void SharedMemory::SystemProtect(char* aAddr, size_t aSize, int aRights) {
     flags = PAGE_NOACCESS;
 
   DWORD oldflags;
-  if (!VirtualProtect(aAddr, aSize, flags, &oldflags))
-    MOZ_CRASH("can't VirtualProtect()");
+  return VirtualProtect(aAddr, aSize, flags, &oldflags);
 }
 
 size_t SharedMemory::SystemPageSize() {
