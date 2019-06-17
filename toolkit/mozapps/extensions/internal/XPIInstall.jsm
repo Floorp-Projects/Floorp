@@ -533,6 +533,36 @@ async function loadManifestFromWebManifest(aPackage) {
   return addon;
 }
 
+async function readRecommendationStates(aPackage, aAddonID) {
+  let recommendationData;
+  try {
+    recommendationData = JSON.parse(await aPackage.readString("mozilla-recommendation.json"));
+  } catch (e) {
+    if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
+      logger.warn("Failed to parse recommendation", e);
+    }
+  }
+
+  if (recommendationData) {
+    let {addon_id, states, validity} = recommendationData;
+
+    if (addon_id === aAddonID && Array.isArray(states) && validity) {
+      let validNotAfter = Date.parse(validity.not_after);
+      let validNotBefore = Date.parse(validity.not_before);
+      if (validNotAfter && validNotBefore) {
+        return {
+          validNotAfter,
+          validNotBefore,
+          states,
+        };
+      }
+    }
+    logger.warn(`Invalid recommendation for ${aAddonID}: ${JSON.stringify(recommendationData)}`);
+  }
+
+  return null;
+}
+
 function defineSyncGUID(aAddon) {
   // Define .syncGUID as a lazy property which is also settable
   Object.defineProperty(aAddon, "syncGUID", {
@@ -600,6 +630,10 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
     if (!addon.id && aLocation.isTemporary) {
       addon.id = generateTemporaryInstallID(aPackage.file);
     }
+  }
+
+  if (addon.type === "extension") {
+    addon.recommendationState = await readRecommendationStates(aPackage, addon.id);
   }
 
   addon.propagateDisabledState(aOldAddon);
