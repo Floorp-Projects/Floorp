@@ -632,7 +632,7 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
     }
   }
 
-  if (addon.type === "extension") {
+  if (addon.type === "extension" && !addon.location.isBuiltin) {
     addon.recommendationState = await readRecommendationStates(aPackage, addon.id);
   }
 
