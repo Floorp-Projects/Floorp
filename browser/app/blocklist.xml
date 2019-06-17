@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1560417609081" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1560502059138" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2324,10 +2324,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="202fbae4-e904-430a-a244-63b0fb04385f" id="/^((de\.firefoxextension12345@asdf\.pl)|(deex1@de\.com)|(esex1@ese\.com)|(estrellach@protonmail\.com)|(fifi312@protonmail\.com)|(finex1@fin\.com)|(firefoxextension123@asdf\.pl)|(firefoxextension1234@asdf\.pl)|(firefoxextension12345@asdf\.pl)|(firefoxextension123456@asdf\.pl)|(frexff1@frexff1\.com)|(frexff2@frexff2\.com)|(frexff3@frexff3\.com)|(ind@niepodam\.pl)|(jacob4311@protonmail\.com)|(javonnu144@protonmail\.com)|(keellon33-ff@protonmail\.com)|(keellon33@protonmail\.com)|(masetoo4113@protonmail\.com)|(mikecosenti11@protonmail\.com)|(paigecho@protonmail\.com)|(salooo12@protonmail\.com)|(swex1@swe\.com)|(swex2@swe\.com)|(swex3@swe\.com)|(willburpoor@protonmail\.com)|(williamhibburn@protonmail\.com)|)$/">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="96b2e7d5-d4e4-425e-b275-086dc7ccd6ad" id="/^((firefox@browser-security\.de)|(firefox@smarttube\.io)|({0fde9597-0508-47ff-ad8a-793fa059c4e7})|(info@browser-privacy\.com)|({d3b98a68-fd64-4763-8b66-e15e47ef000a})|({36ea170d-2586-45fb-9f48-5f6b6fd59da7})|(youtubemp3converter@yttools\.io)|(simplysearch@dirtylittlehelpers\.com)|(extreme@smarttube\.io)|(selfdestructingcookies@dirtylittlehelpers\.com)|({27a1b6d8-c6c9-4ddd-bf20-3afa0ccf5040})|({2e9cae8b-ee3f-4762-a39e-b53d31dffd37})|(adblock@smarttube\.io)|({a659bdfa-dbbe-4e58-baf8-70a6975e47d0})|({f9455ec1-203a-4fe8-95b6-f6c54a9e56af})|({8c85526d-1be9-4b96-9462-aa48a811f4cf})|(mail@quick-buttons\.de)|(youtubeadblocker@yttools\.io)|(extension@browser-safety\.org)|(contact@web-security\.com)|(videodownloader@dirtylittlehelpers\.com)|(googlenotrack@dirtylittlehelpers\.com)|(develop@quick-amz\.com))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -3202,6 +3198,14 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="5bcce386-ce8e-4e59-838d-a02d35de154b" id="/^((\{50c31b2c-af26-4238-bbbc-f11218d19682\})|(\{7c244b9b-4058-4362-9c3f-6f553c75d051\})|(\{bc90f38a-c295-45c4-a09f-7038ed6139a7\})|(\{d55311d8-83ce-4320-b30f-a7acac9224ac\})|(\{39d2838c-8b0d-453d-b685-71b2af4f3ff5\})|(\{95fdb905-de6c-4499-b7f2-372910a44405\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="202fbae4-e904-430a-a244-63b0fb04385f" id="/^((de\.firefoxextension12345@asdf\.pl)|(deex1@de\.com)|(esex1@ese\.com)|(estrellach@protonmail\.com)|(fifi312@protonmail\.com)|(finex1@fin\.com)|(firefoxextension123@asdf\.pl)|(firefoxextension1234@asdf\.pl)|(firefoxextension12345@asdf\.pl)|(firefoxextension123456@asdf\.pl)|(frexff1@frexff1\.com)|(frexff2@frexff2\.com)|(frexff3@frexff3\.com)|(ind@niepodam\.pl)|(jacob4311@protonmail\.com)|(javonnu144@protonmail\.com)|(keellon33-ff@protonmail\.com)|(keellon33@protonmail\.com)|(masetoo4113@protonmail\.com)|(mikecosenti11@protonmail\.com)|(paigecho@protonmail\.com)|(salooo12@protonmail\.com)|(swex1@swe\.com)|(swex2@swe\.com)|(swex3@swe\.com)|(willburpoor@protonmail\.com)|(williamhibburn@protonmail\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="436f1b52-16b8-4c70-b67d-ad6c39f6bd39" id="/^((\{c5ab9361-f8d8-454a-b268-a4b355b37a83\})|(\{f7bbdf7b-7f4e-4319-b9c6-ba62f38e1d5c\})|(\{97154c2a-2a3d-4ddb-814d-5451e3c35103\})|(\{1665bb10-e8d5-44ea-8cd3-531b6ebfaef9\})|(\{f3b474a6-b76c-4a9e-ae57-df0a3992d8f1\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
