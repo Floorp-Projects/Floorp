@@ -2591,7 +2591,6 @@ static FeatureState& WebRenderHardwareQualificationStatus(
                 FeatureStatus::BlockedDeviceTooOld, "Device too old",
                 NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
           }
-#ifdef EARLY_BETA_OR_EARLIER
         } else if (adapterVendorID == u"0x1002") {  // AMD
           // AMD deviceIDs are not very well ordered. This
           // condition is based off the information in gpu-db
@@ -2604,12 +2603,12 @@ static FeatureState& WebRenderHardwareQualificationStatus(
               (deviceID >= 0x9830 && deviceID < 0x9870) ||
               (deviceID >= 0x9900 && deviceID < 0x9a00)) {
             // we have a desktop CAYMAN, SI, CIK, VI, or GFX9 device
+            // so treat the device as qualified.
           } else {
             featureWebRenderQualified.Disable(
                 FeatureStatus::BlockedDeviceTooOld, "Device too old",
                 NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
           }
-#endif
 #ifdef NIGHTLY_BUILD
         } else if (adapterVendorID == u"0x8086") {  // Intel
           const uint16_t supportedDevices[] = {
