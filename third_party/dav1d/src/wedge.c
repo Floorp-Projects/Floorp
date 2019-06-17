@@ -155,7 +155,7 @@ static void copy2d(uint8_t *dst, const uint8_t *src,
     }
 }
 
-static void init_chroma(uint8_t *chroma, const uint8_t *luma,
+static COLD void init_chroma(uint8_t *chroma, const uint8_t *luma,
                         const int sign, const int w, const int h, const int ss_ver)
 {
     for (int y = 0; y < h; y += 1 + ss_ver) {
@@ -169,12 +169,12 @@ static void init_chroma(uint8_t *chroma, const uint8_t *luma,
     }
 }
 
-static void fill2d_16x2(uint8_t *dst, const int w, const int h,
-                        const enum BlockSize bs,
-                        const uint8_t (*const master)[64 * 64],
-                        const wedge_code_type *const cb,
-                        uint8_t *masks_444, uint8_t *masks_422,
-                        uint8_t *masks_420, const unsigned signs)
+static COLD void fill2d_16x2(uint8_t *dst, const int w, const int h,
+                             const enum BlockSize bs,
+                             const uint8_t (*const master)[64 * 64],
+                             const wedge_code_type *const cb,
+                             uint8_t *masks_444, uint8_t *masks_422,
+                             uint8_t *masks_420, const unsigned signs)
 {
     uint8_t *ptr = dst;
     for (int n = 0; n < 16; n++) {
@@ -222,7 +222,7 @@ static void fill2d_16x2(uint8_t *dst, const int w, const int h,
     }
 }
 
-void dav1d_init_wedge_masks(void) {
+COLD void dav1d_init_wedge_masks(void) {
     // This function is guaranteed to be called only once
 
     enum WedgeMasterLineType {
@@ -304,10 +304,10 @@ const uint8_t *dav1d_ii_masks[N_BS_SIZES][3][N_INTER_INTRA_PRED_MODES] = {
 #undef set
 #undef set1
 
-static void build_nondc_ii_masks(uint8_t *const mask_v,
-                                 uint8_t *const mask_h,
-                                 uint8_t *const mask_sm,
-                                 const int w, const int h, const int step)
+static COLD void build_nondc_ii_masks(uint8_t *const mask_v,
+                                      uint8_t *const mask_h,
+                                      uint8_t *const mask_sm,
+                                      const int w, const int h, const int step)
 {
     static const uint8_t ii_weights_1d[] = {
         60, 52, 45, 39, 34, 30, 26, 22, 19, 17, 15, 13, 11, 10,  8,  7,
@@ -323,7 +323,7 @@ static void build_nondc_ii_masks(uint8_t *const mask_v,
     }
 }
 
-void dav1d_init_interintra_masks(void) {
+COLD void dav1d_init_interintra_masks(void) {
     // This function is guaranteed to be called only once
 
     memset(ii_dc_mask, 32, 32 * 32);

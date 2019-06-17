@@ -36,6 +36,10 @@ option('fuzzing_engine',
     value: 'none',
     description: 'Select the fuzzing engine')
 
+option('fuzzer_ldflags',
+    type: 'string',
+    description: 'Extra LDFLAGS used during linking of fuzzing binaries')
+
 option('stack_alignment',
     type: 'integer',
     value: 0)

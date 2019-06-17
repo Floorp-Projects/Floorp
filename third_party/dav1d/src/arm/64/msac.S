@@ -192,7 +192,7 @@ function msac_decode_symbol_adapt4_neon, export=1
         sub_n           v4,  v5,  v4,  v5,  v0,  v1,  \sz, \n     // (32768 - cdf[i]) or (-1 - cdf[i])
         dup             v6.8h,    w4                              // -rate
 
-        sub             w3,  w3,  w3, lsr #5                      // count + (count >= 32)
+        sub             w3,  w3,  w3, lsr #5                      // count - (count >= 32)
         sub_n           v0,  v1,  v0,  v1,  v2,  v3,  \sz, \n     // cdf + (i >= val ? 1 : 0)
         sshl_n          v4,  v5,  v4,  v5,  v6,  v6,  \sz, \n     // ({32768,-1} - cdf[i]) >> rate
         add             w3,  w3,  #1                              // count + (count < 32)
@@ -215,6 +215,7 @@ L(renorm):
         eor             w5,  w5,  #16          // d = clz(rng) ^ 16
         mvn             x7,  x7                // ~dif
         add             x7,  x7,  x3, lsl #48  // ~dif + (v << 48)
+L(renorm2):
         lsl             w4,  w4,  w5           // rng << d
         subs            w6,  w6,  w5           // cnt -= d
         lsl             x7,  x7,  x5           // (~dif + (v << 48)) << d
@@ -277,4 +278,87 @@ endfunc
 function msac_decode_symbol_adapt16_neon, export=1
         decode_update   .8h, .16b, 16
         b               L(renorm)
+endfunc
+
+function msac_decode_bool_equi_neon, export=1
+        ldp             w5,  w6,  [x0, #RNG]   // + CNT
+        sub             sp,  sp,  #48
+        ldr             x7,  [x0, #DIF]
+        bic             w4,  w5,  #0xff        // r &= 0xff00
+        add             w4,  w4,  #8
+        subs            x8,  x7,  x4, lsl #47  // dif - vw
+        lsr             w4,  w4,  #1           // v
+        sub             w5,  w5,  w4           // r - v
+        cset            w15, lo
+        csel            w4,  w5,  w4,  hs      // if (ret) v = r - v;
+        csel            x7,  x8,  x7,  hs      // if (ret) dif = dif - vw;
+
+        clz             w5,  w4                // clz(rng)
+        mvn             x7,  x7                // ~dif
+        eor             w5,  w5,  #16          // d = clz(rng) ^ 16
+        b               L(renorm2)
+endfunc
+
+function msac_decode_bool_neon, export=1
+        ldp             w5,  w6,  [x0, #RNG]   // + CNT
+        sub             sp,  sp,  #48
+        ldr             x7,  [x0, #DIF]
+        lsr             w4,  w5,  #8           // r >> 8
+        bic             w1,  w1,  #0x3f        // f &= ~63
+        mul             w4,  w4,  w1
+        lsr             w4,  w4,  #7
+        add             w4,  w4,  #4           // v
+        subs            x8,  x7,  x4, lsl #48  // dif - vw
+        sub             w5,  w5,  w4           // r - v
+        cset            w15, lo
+        csel            w4,  w5,  w4,  hs      // if (ret) v = r - v;
+        csel            x7,  x8,  x7,  hs      // if (ret) dif = dif - vw;
+
+        clz             w5,  w4                // clz(rng)
+        mvn             x7,  x7                // ~dif
+        eor             w5,  w5,  #16          // d = clz(rng) ^ 16
+        b               L(renorm2)
+endfunc
+
+function msac_decode_bool_adapt_neon, export=1
+        ldr             w9,  [x1]              // cdf[0-1]
+        ldp             w5,  w6,  [x0, #RNG]   // + CNT
+        sub             sp,  sp,  #48
+        ldr             x7,  [x0, #DIF]
+        lsr             w4,  w5,  #8           // r >> 8
+        and             w2,  w9,  #0xffc0      // f &= ~63
+        mul             w4,  w4,  w2
+        lsr             w4,  w4,  #7
+        add             w4,  w4,  #4           // v
+        subs            x8,  x7,  x4, lsl #48  // dif - vw
+        sub             w5,  w5,  w4           // r - v
+        cset            w15, lo
+        csel            w4,  w5,  w4,  hs      // if (ret) v = r - v;
+        csel            x7,  x8,  x7,  hs      // if (ret) dif = dif - vw;
+
+        ldr             w10, [x0, #ALLOW_UPDATE_CDF]
+
+        clz             w5,  w4                // clz(rng)
+        mvn             x7,  x7                // ~dif
+        eor             w5,  w5,  #16          // d = clz(rng) ^ 16
+
+        cbz             w10, L(renorm2)
+
+        lsr             w2,  w9,  #16          // count = cdf[1]
+        and             w9,  w9,  #0xffff      // cdf[0]
+
+        sub             w3,  w2,  w2, lsr #5   // count - (count >= 32)
+        lsr             w2,  w2,  #4           // count >> 4
+        add             w10, w3,  #1           // count + (count < 32)
+        add             w2,  w2,  #4           // rate = (count >> 4) | 4
+
+        sub             w9,  w9,  w15          // cdf[0] -= bit
+        sub             w11, w9,  w15, lsl #15 // {cdf[0], cdf[0] - 32769}
+        asr             w11, w11, w2           // {cdf[0], cdf[0] - 32769} >> rate
+        sub             w9,  w9,  w11          // cdf[0]
+
+        strh            w9,  [x1]
+        strh            w10, [x1, #2]
+
+        b               L(renorm2)
 endfunc

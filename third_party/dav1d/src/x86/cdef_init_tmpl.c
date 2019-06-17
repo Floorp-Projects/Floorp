@@ -44,7 +44,7 @@ decl_cdef_dir_fn(dav1d_cdef_dir_avx2);
 decl_cdef_dir_fn(dav1d_cdef_dir_sse4);
 decl_cdef_dir_fn(dav1d_cdef_dir_ssse3);
 
-void bitfn(dav1d_cdef_dsp_init_x86)(Dav1dCdefDSPContext *const c) {
+COLD void bitfn(dav1d_cdef_dsp_init_x86)(Dav1dCdefDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;

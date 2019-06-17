@@ -73,6 +73,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
 
     EXPORTS.dav1d += [
         '../../../third_party/dav1d/src/x86/cpu.h',
+        '../../../third_party/dav1d/src/x86/msac.h',
     ]
 
     # ASM source files
@@ -86,7 +87,6 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
             '../../../third_party/dav1d/src/x86/loopfilter.asm',
             '../../../third_party/dav1d/src/x86/looprestoration.asm',
             '../../../third_party/dav1d/src/x86/mc.asm',
-            '../../../third_party/dav1d/src/x86/msac.asm',
         ]
 
     SOURCES += [
@@ -96,6 +96,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         '../../../third_party/dav1d/src/x86/itx_ssse3.asm',
         '../../../third_party/dav1d/src/x86/looprestoration_ssse3.asm',
         '../../../third_party/dav1d/src/x86/mc_ssse3.asm',
+        '../../../third_party/dav1d/src/x86/msac.asm',
     ]
 
     # BITDEPTH
@@ -142,6 +143,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     ]
     EXPORTS += [
         '../../../third_party/dav1d/src/arm/cpu.h',
+        '../../../third_party/dav1d/src/arm/msac.h',
     ]
 
     # BITDEPTH c file

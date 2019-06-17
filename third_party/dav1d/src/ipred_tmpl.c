@@ -725,7 +725,7 @@ static void pal_pred_c(pixel *dst, const ptrdiff_t stride,
     }
 }
 
-void bitfn(dav1d_intra_pred_dsp_init)(Dav1dIntraPredDSPContext *const c) {
+COLD void bitfn(dav1d_intra_pred_dsp_init)(Dav1dIntraPredDSPContext *const c) {
     c->intra_pred[DC_PRED      ] = ipred_dc_c;
     c->intra_pred[DC_128_PRED  ] = ipred_dc_128_c;
     c->intra_pred[TOP_DC_PRED  ] = ipred_dc_top_c;
