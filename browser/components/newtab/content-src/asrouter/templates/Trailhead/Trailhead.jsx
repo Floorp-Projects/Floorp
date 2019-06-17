@@ -57,20 +57,25 @@ export class _Trailhead extends React.PureComponent {
       link.rel = "localization";
     });
 
-    if (this.props.fxaEndpoint && !this.fxaMetricsInitialized) {
+    await this.componentWillUpdate(this.props);
+  }
+
+  // Get the fxa data if we don't have it yet from mount or update
+  async componentWillUpdate(props) {
+    if (props.fxaEndpoint && !this.fxaMetricsInitialized) {
       try {
         this.fxaMetricsInitialized = true;
-        const url = new URL(`${this.props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
+        const url = new URL(`${props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
         this.addUtmParams(url);
         const response = await fetch(url, {credentials: "omit"});
         if (response.status === 200) {
           const {deviceId, flowId, flowBeginTime} = await response.json();
           this.setState({deviceId, flowId, flowBeginTime});
         } else {
-          this.props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_FETCH_ERROR", value: response.status}}));
+          props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_FETCH_ERROR", value: response.status}}));
         }
       } catch (error) {
-        this.props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_ERROR"}}));
+        props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_ERROR"}}));
       }
     }
   }
