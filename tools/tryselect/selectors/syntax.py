@@ -272,6 +272,7 @@ class AutoTry(object):
                             'mochitest-devtools-chrome-e10s-1'],
         'crashtest': ['crashtest', 'crashtest-e10s'],
         'reftest': ['reftest', 'reftest-e10s'],
+        'remote': ['mochitest-remote'],
         'web-platform-tests': ['web-platform-tests-1'],
     }
 

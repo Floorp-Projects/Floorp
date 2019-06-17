@@ -506,3 +506,13 @@ mochitest-webgl2-deqp:
     mozharness:
         mochitest-flavor: plain
         chunked: true
+
+mochitest-remote:
+    description: "Mochitest for the remote agent (/remote folder)"
+    suite:
+        name: mochitest-remote
+    treeherder-symbol: M(remote)
+    loopback-video: true
+    max-run-time: 5400
+    mozharness:
+        mochitest-flavor: browser
