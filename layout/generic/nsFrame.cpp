@@ -126,6 +126,7 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
+class nsImageFrame;
 
 const mozilla::LayoutFrameType nsIFrame::sLayoutFrameTypes[
 #define FRAME_ID(...) 1 +
@@ -5148,10 +5149,11 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
     }
   }
 
-  // Use frame edge for grid, flex and tables, but not replaced frames like
-  // images.
-  bool useFrameEdge = !aFrame->StyleDisplay()->IsInlineInsideStyle() &&
-                      !aFrame->IsFrameOfType(nsIFrame::eReplaced);
+  // Use frame edge for grid, flex, table, and non-editable image frames.
+  const bool useFrameEdge =
+      aFrame->IsFlexOrGridContainer() || aFrame->IsTableFrame() ||
+      (static_cast<nsImageFrame*>(do_QueryFrame(aFrame)) &&
+       !aFrame->GetContent()->IsEditable());
   return FrameTarget(aFrame, useFrameEdge, false);
 }
 
