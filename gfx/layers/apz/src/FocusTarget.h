@@ -13,6 +13,7 @@
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ViewID
 #include "mozilla/webrender/WebRenderTypes.h"    // for RenderRoot
 #include "mozilla/Variant.h"                     // for Variant
+#include "mozilla/Maybe.h"                       // for Maybe
 
 namespace mozilla {
 
@@ -30,9 +31,9 @@ class FocusTarget final {
  public:
   struct ScrollTargets {
     ScrollableLayerGuid::ViewID mHorizontal;
-    wr::RenderRoot mHorizontalRenderRoot;
+    Maybe<wr::RenderRoot> mHorizontalRenderRoot;
     ScrollableLayerGuid::ViewID mVertical;
-    wr::RenderRoot mVerticalRenderRoot;
+    Maybe<wr::RenderRoot> mVerticalRenderRoot;
 
     bool operator==(const ScrollTargets& aRhs) const {
       bool ret =
