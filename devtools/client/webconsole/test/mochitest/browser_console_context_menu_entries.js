@@ -72,31 +72,31 @@ async function performTests() {
 
   menuPopup = await openContextMenu(hud, hud.jsterm.node || hud.jsterm.inputNode);
 
-  expectedContextMenu = [
-    "#editmenu-undo (editmenu-undo) [disabled]",
-    "#editmenu-cut (editmenu-cut)",
-    "#editmenu-copy (editmenu-copy)",
-    "#editmenu-paste (editmenu-paste)",
-    "#editmenu-delete (editmenu-delete) [disabled]",
-    "#editmenu-selectAll (editmenu-select-all) [disabled]",
-  ];
-  is(getL10NContextMenu(menuPopup).join("\n"), expectedContextMenu.join("\n"),
-    "The context menu has the correct edit menu items");
+  let actualEntries = getL10NContextMenu(menuPopup);
+  is(actualEntries.length, 6, "The context menu has the right number of entries.");
+  is(actualEntries[0], "#editmenu-undo (editmenu-undo) [disabled]");
+  is(actualEntries[1], "#editmenu-cut (editmenu-cut) [disabled]");
+  is(actualEntries[2], "#editmenu-copy (editmenu-copy) [disabled]");
+  // Paste may or may not be enabled depending on what ran before this.
+  // If emptyClipboard is fixed (666254) we could assert if it's enabled/disabled.
+  ok(actualEntries[3].startsWith("#editmenu-paste (editmenu-paste)"));
+  is(actualEntries[4], "#editmenu-delete (editmenu-delete) [disabled]");
+  is(actualEntries[5], "#editmenu-selectAll (editmenu-select-all) [disabled]");
 
   const node = hud.jsterm.inputNode || hud.jsterm.node;
   const inputContainer = node.closest(".jsterm-input-container");
   await openContextMenu(hud, inputContainer);
 
-  expectedContextMenu = [
-    "#editmenu-undo (editmenu-undo) [disabled]",
-    "#editmenu-cut (editmenu-cut)",
-    "#editmenu-copy (editmenu-copy)",
-    "#editmenu-paste (editmenu-paste)",
-    "#editmenu-delete (editmenu-delete) [disabled]",
-    "#editmenu-selectAll (editmenu-select-all) [disabled]",
-  ];
-  is(getL10NContextMenu(menuPopup).join("\n"), expectedContextMenu.join("\n"),
-    "The context menu has the required elements");
+  actualEntries = getL10NContextMenu(menuPopup);
+  is(actualEntries.length, 6, "The context menu has the right number of entries.");
+  is(actualEntries[0], "#editmenu-undo (editmenu-undo) [disabled]");
+  is(actualEntries[1], "#editmenu-cut (editmenu-cut) [disabled]");
+  is(actualEntries[2], "#editmenu-copy (editmenu-copy) [disabled]");
+  // Paste may or may not be enabled depending on what ran before this.
+  // If emptyClipboard is fixed (666254) we could assert if it's enabled/disabled.
+  ok(actualEntries[3].startsWith("#editmenu-paste (editmenu-paste)"));
+  is(actualEntries[4], "#editmenu-delete (editmenu-delete) [disabled]");
+  is(actualEntries[5], "#editmenu-selectAll (editmenu-select-all) [disabled]");
 
   await hideContextMenu(hud);
   // Close the browser console.
