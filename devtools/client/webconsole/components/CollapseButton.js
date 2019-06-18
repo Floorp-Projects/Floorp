@@ -23,6 +23,11 @@ function CollapseButton(props) {
     "aria-label": title,
     className: "arrow collapse-button",
     onClick,
+    onMouseDown: (e) => {
+      // prevent focus from moving to the disclosure if clicked,
+      // which is annoying if on the input
+      e.preventDefault();
+    },
     title: title,
   });
 }

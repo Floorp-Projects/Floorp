@@ -107,6 +107,9 @@ class Message extends Component {
   }
 
   toggleMessage(e) {
+    // Don't bubble up to the main App component, which  redirects focus to input,
+    // making difficult for screen reader users to review output
+    e.stopPropagation();
     const { open, dispatch, messageId, onToggle } = this.props;
 
     // If defined on props, we let the onToggle() method handle the toggling,
