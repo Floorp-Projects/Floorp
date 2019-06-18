@@ -150,7 +150,7 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvStartAutoscroll(
   // sending the child process's layers id).
 
   mUpdater->RunOnControllerThread(
-      UpdaterQueueSelector(mWrRootId),
+      UpdaterQueueSelector(mWrRootId.mLayersId, aGuid.mRenderRoot),
       NewRunnableMethod<SLGuidAndRenderRoot, ScreenPoint>(
           "layers::IAPZCTreeManager::StartAutoscroll", mTreeManager,
           &IAPZCTreeManager::StartAutoscroll, aGuid, aAnchorLocation));
@@ -163,7 +163,7 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvStopAutoscroll(
   // See RecvStartAutoscroll() for why we don't check the layers id.
 
   mUpdater->RunOnControllerThread(
-      UpdaterQueueSelector(mWrRootId),
+      UpdaterQueueSelector(mWrRootId.mLayersId, aGuid.mRenderRoot),
       NewRunnableMethod<SLGuidAndRenderRoot>(
           "layers::IAPZCTreeManager::StopAutoscroll", mTreeManager,
           &IAPZCTreeManager::StopAutoscroll, aGuid));
