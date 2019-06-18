@@ -238,6 +238,10 @@ export default class LoginItem extends ReflectedFluentElement {
     }
   }
 
+  /**
+   * @param {login} login The login that should be displayed. The login object is
+   *                      a plain JS object representation of nsILoginInfo/nsILoginMetaInfo.
+   */
   setLogin(login) {
     this._login = login;
 
@@ -253,6 +257,13 @@ export default class LoginItem extends ReflectedFluentElement {
     this.render();
   }
 
+  /**
+   * Updates the view if the login argument matches the login currently
+   * displayed.
+   *
+   * @param {login} login The login that was added to storage. The login object is
+   *                      a plain JS object representation of nsILoginInfo/nsILoginMetaInfo.
+   */
   loginAdded(login) {
     if (this._login.guid ||
         !window.AboutLoginsUtils.doLoginsMatch(login, this._loginFromForm())) {
@@ -264,6 +275,13 @@ export default class LoginItem extends ReflectedFluentElement {
     this.render();
   }
 
+  /**
+   * Updates the view if the login argument matches the login currently
+   * displayed.
+   *
+   * @param {login} login The login that was modified in storage. The login object is
+   *                      a plain JS object representation of nsILoginInfo/nsILoginMetaInfo.
+   */
   loginModified(login) {
     if (this._login.guid != login.guid) {
       return;
@@ -274,6 +292,13 @@ export default class LoginItem extends ReflectedFluentElement {
     this.render();
   }
 
+  /**
+   * Clears the displayed login if the argument matches the currently
+   * displayed login.
+   *
+   * @param {login} login The login that was removed from storage. The login object is
+   *                      a plain JS object representation of nsILoginInfo/nsILoginMetaInfo.
+   */
   loginRemoved(login) {
     if (login.guid != this._login.guid) {
       return;
@@ -284,6 +309,12 @@ export default class LoginItem extends ReflectedFluentElement {
     this.render();
   }
 
+  /**
+   * Toggles the login-item view from editing to non-editing mode.
+   *
+   * @param {boolean} force When true puts the form in 'edit' mode, otherwise
+   *                        puts the form in read-only mode.
+   */
   toggleEditing(force) {
     let shouldEdit = force !== undefined ? force : !this.hasAttribute("editing");
 
