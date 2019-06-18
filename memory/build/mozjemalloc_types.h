@@ -56,11 +56,14 @@ typedef MALLOC_USABLE_SIZE_CONST_PTR void* usable_ptr_t;
 
 typedef size_t arena_id_t;
 
+#define ARENA_FLAG_RANDOMIZE_SMALL 1
+
 typedef struct arena_params_s {
   size_t mMaxDirty;
+  uint32_t mFlags;
 
 #ifdef __cplusplus
-  arena_params_s() : mMaxDirty(0) {}
+  arena_params_s() : mMaxDirty(0), mFlags(0) {}
 #endif
 } arena_params_t;
 
