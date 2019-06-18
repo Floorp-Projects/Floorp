@@ -140,6 +140,7 @@
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/XorShift128PlusRNG.h"
 #include "mozilla/fallible.h"
 #include "rb.h"
 #include "Mutex.h"
@@ -908,6 +909,14 @@ struct arena_t {
   // a single spare inadequate.
   arena_chunk_t* mSpare;
 
+  // A per-arena opt-in to randomize the offset of small allocations
+  bool mRandomizeSmallAllocations;
+
+  // A pseudorandom number generator. Initially null, it gets initialized
+  // on first use to avoid recursive malloc initialization (e.g. on OSX
+  // arc4random allocates memory).
+  mozilla::non_crypto::XorShift128PlusRNG* mPRNG;
+
  public:
   // Current count of pages within unused runs that are potentially
   // dirty, and for which madvise(... MADV_FREE) has not been called.  By
@@ -968,6 +977,10 @@ struct arena_t {
                    size_t aNewSize, bool dirty);
 
   arena_run_t* GetNonFullBinRun(arena_bin_t* aBin);
+
+  inline uint8_t FindFreeBitInMask(uint32_t aMask, uint32_t& aRng);
+
+  inline void* ArenaRunRegAlloc(arena_run_t* aRun, arena_bin_t* aBin);
 
   inline void* MallocSmall(size_t aSize, bool aZero);
 
@@ -2026,52 +2039,66 @@ static inline arena_t* choose_arena(size_t size) {
   return ret;
 }
 
-static inline void* arena_run_reg_alloc(arena_run_t* run, arena_bin_t* bin) {
+inline uint8_t arena_t::FindFreeBitInMask(uint32_t aMask, uint32_t& aRng) {
+  if (mPRNG != nullptr) {
+    if (aRng == UINT_MAX) {
+      aRng = mPRNG->next() % 32;
+    }
+    uint8_t bitIndex;
+    // RotateRight asserts when provided bad input.
+    aMask = aRng ? RotateRight(aMask, aRng)
+                 : aMask;  // Rotate the mask a random number of slots
+    bitIndex = CountTrailingZeroes32(aMask);
+    return (bitIndex + aRng) % 32;
+  }
+  return CountTrailingZeroes32(aMask);
+}
+
+inline void* arena_t::ArenaRunRegAlloc(arena_run_t* aRun, arena_bin_t* aBin) {
   void* ret;
   unsigned i, mask, bit, regind;
+  uint32_t rndPos = UINT_MAX;
 
-  MOZ_DIAGNOSTIC_ASSERT(run->mMagic == ARENA_RUN_MAGIC);
-  MOZ_ASSERT(run->mRegionsMinElement < bin->mRunNumRegionsMask);
+  MOZ_DIAGNOSTIC_ASSERT(aRun->mMagic == ARENA_RUN_MAGIC);
+  MOZ_ASSERT(aRun->mRegionsMinElement < aBin->mRunNumRegionsMask);
 
-  // Move the first check outside the loop, so that run->mRegionsMinElement can
+  // Move the first check outside the loop, so that aRun->mRegionsMinElement can
   // be updated unconditionally, without the possibility of updating it
   // multiple times.
-  i = run->mRegionsMinElement;
-  mask = run->mRegionsMask[i];
+  i = aRun->mRegionsMinElement;
+  mask = aRun->mRegionsMask[i];
   if (mask != 0) {
-    // Usable allocation found.
-    bit = CountTrailingZeroes32(mask);
+    bit = FindFreeBitInMask(mask, rndPos);
 
     regind = ((i << (LOG2(sizeof(int)) + 3)) + bit);
-    MOZ_ASSERT(regind < bin->mRunNumRegions);
-    ret = (void*)(((uintptr_t)run) + bin->mRunFirstRegionOffset +
-                  (bin->mSizeClass * regind));
+    MOZ_ASSERT(regind < aBin->mRunNumRegions);
+    ret = (void*)(((uintptr_t)aRun) + aBin->mRunFirstRegionOffset +
+                  (aBin->mSizeClass * regind));
 
     // Clear bit.
     mask ^= (1U << bit);
-    run->mRegionsMask[i] = mask;
+    aRun->mRegionsMask[i] = mask;
 
     return ret;
   }
 
-  for (i++; i < bin->mRunNumRegionsMask; i++) {
-    mask = run->mRegionsMask[i];
+  for (i++; i < aBin->mRunNumRegionsMask; i++) {
+    mask = aRun->mRegionsMask[i];
     if (mask != 0) {
-      // Usable allocation found.
-      bit = CountTrailingZeroes32(mask);
+      bit = FindFreeBitInMask(mask, rndPos);
 
       regind = ((i << (LOG2(sizeof(int)) + 3)) + bit);
-      MOZ_ASSERT(regind < bin->mRunNumRegions);
-      ret = (void*)(((uintptr_t)run) + bin->mRunFirstRegionOffset +
-                    (bin->mSizeClass * regind));
+      MOZ_ASSERT(regind < aBin->mRunNumRegions);
+      ret = (void*)(((uintptr_t)aRun) + aBin->mRunFirstRegionOffset +
+                    (aBin->mSizeClass * regind));
 
       // Clear bit.
       mask ^= (1U << bit);
-      run->mRegionsMask[i] = mask;
+      aRun->mRegionsMask[i] = mask;
 
       // Make a note that nothing before this element
       // contains a free region.
-      run->mRegionsMinElement = i;  // Low payoff: + (mask == 0);
+      aRun->mRegionsMinElement = i;  // Low payoff: + (mask == 0);
 
       return ret;
     }
@@ -2758,6 +2785,27 @@ void* arena_t::MallocSmall(size_t aSize, bool aZero) {
   MOZ_DIAGNOSTIC_ASSERT(aSize == bin->mSizeClass);
 
   {
+    // Before we lock, we determine if we need to randomize the allocation
+    // because if we do, we need to create the PRNG which might require
+    // allocating memory (arc4random on OSX for example) and we need to
+    // avoid the deadlock
+    if (MOZ_UNLIKELY(mRandomizeSmallAllocations && mPRNG == nullptr)) {
+      // This is frustrating. Because the code backing RandomUint64 (arc4random
+      // for example) may allocate memory, and because
+      // mRandomizeSmallAllocations is true and we haven't yet initilized mPRNG,
+      // we would re-enter this same case and cause a deadlock inside e.g.
+      // arc4random.  So we temporarily disable mRandomizeSmallAllocations to
+      // skip this case and then re-enable it
+      mRandomizeSmallAllocations = false;
+      mozilla::Maybe<uint64_t> prngState1 = mozilla::RandomUint64();
+      mozilla::Maybe<uint64_t> prngState2 = mozilla::RandomUint64();
+      void* backing =
+          base_alloc(sizeof(mozilla::non_crypto::XorShift128PlusRNG));
+      mPRNG = new (backing) mozilla::non_crypto::XorShift128PlusRNG(
+          prngState1.valueOr(0), prngState2.valueOr(0));
+      mRandomizeSmallAllocations = true;
+    }
+
     MutexAutoLock lock(mLock);
     run = bin->mCurrentRun;
     if (MOZ_UNLIKELY(!run || run->mNumFree == 0)) {
@@ -2768,7 +2816,7 @@ void* arena_t::MallocSmall(size_t aSize, bool aZero) {
     }
     MOZ_DIAGNOSTIC_ASSERT(run->mMagic == ARENA_RUN_MAGIC);
     MOZ_DIAGNOSTIC_ASSERT(run->mNumFree > 0);
-    ret = arena_run_reg_alloc(run, bin);
+    ret = ArenaRunRegAlloc(run, bin);
     MOZ_DIAGNOSTIC_ASSERT(ret);
     run->mNumFree--;
     if (!ret) {
@@ -3417,6 +3465,10 @@ arena_t::arena_t(arena_params_t* aParams) {
   mSpare = nullptr;
 
   mNumDirty = 0;
+
+  mRandomizeSmallAllocations =
+      aParams && aParams->mFlags & ARENA_FLAG_RANDOMIZE_SMALL;
+  mPRNG = nullptr;
 
   // The default maximum amount of dirty pages allowed on arenas is a fraction
   // of opt_dirty_max.
