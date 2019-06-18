@@ -606,7 +606,7 @@ static inline size_t ExtraStringCount(size_t propertyCount, size_t guardCount) {
 
 static inline size_t AllocationSize(size_t propertyCount, size_t guardCount) {
   return sizeof(NativeIterator) +
-      ExtraStringCount(propertyCount, guardCount) * sizeof(GCPtrFlatString);
+         ExtraStringCount(propertyCount, guardCount) * sizeof(GCPtrFlatString);
 }
 
 static PropertyIteratorObject* CreatePropertyIterator(

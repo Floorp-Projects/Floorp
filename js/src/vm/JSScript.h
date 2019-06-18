@@ -2661,6 +2661,7 @@ class JSScript : public js::gc::TenuredCell {
   js::jit::JitScript* jitScript() { return jitScript_; }
 
   void maybeReleaseJitScript();
+  void releaseJitScript();
 
   inline js::GlobalObject& global() const;
   inline bool hasGlobal(const js::GlobalObject* global) const;
