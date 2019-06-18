@@ -120,6 +120,10 @@ class SpecialPowersChild extends SpecialPowersAPI {
           errorHandler(aMessage.data);
         }
         break;
+
+      case "Spawn":
+        let {task, args, caller} = aMessage.data;
+        return this._spawnTask(task, args, caller);
     }
 
     return true;
