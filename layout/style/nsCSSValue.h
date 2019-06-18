@@ -95,63 +95,6 @@ mozilla::URLExtraData* Servo_CssUrlData_GetExtraData(const RawServoCssUrlData*);
 bool Servo_CssUrlData_IsLocalRef(const RawServoCssUrlData* url);
 }
 
-namespace mozilla {
-namespace css {
-
-struct GridNamedArea {
-  nsString mName;
-  uint32_t mColumnStart;
-  uint32_t mColumnEnd;
-  uint32_t mRowStart;
-  uint32_t mRowEnd;
-};
-
-struct GridTemplateAreasValue final {
-  // Parsed value
-  nsTArray<GridNamedArea> mNamedAreas;
-
-  // Original <string> values. Length gives the number of rows,
-  // content makes serialization easier.
-  nsTArray<nsString> mTemplates;
-
-  // How many columns grid-template-areas contributes to the explicit grid.
-  // http://dev.w3.org/csswg/css-grid/#explicit-grid
-  uint32_t mNColumns;
-
-  // How many rows grid-template-areas contributes to the explicit grid.
-  // http://dev.w3.org/csswg/css-grid/#explicit-grid
-  uint32_t NRows() const { return mTemplates.Length(); }
-
-  GridTemplateAreasValue()
-      : mNColumns(0)
-  // Default constructors for mNamedAreas and mTemplates: empty arrays.
-  {}
-
-  bool operator==(const GridTemplateAreasValue& aOther) const {
-    return mTemplates == aOther.mTemplates;
-  }
-
-  bool operator!=(const GridTemplateAreasValue& aOther) const {
-    return !(*this == aOther);
-  }
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GridTemplateAreasValue)
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
- private:
-  // Private destructor to make sure this isn't used as a stack variable
-  // or member variable.
-  ~GridTemplateAreasValue() {}
-
-  GridTemplateAreasValue(const GridTemplateAreasValue& aOther) = delete;
-  GridTemplateAreasValue& operator=(const GridTemplateAreasValue& aOther) =
-      delete;
-};
-
-}  // namespace css
-}  // namespace mozilla
-
 enum nsCSSUnit : uint32_t {
   eCSSUnit_Null = 0,  // (n/a) null unit, value is not specified
 

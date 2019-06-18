@@ -8,14 +8,17 @@
 #define mozilla_dom_GridDimension_h
 
 #include "nsWrapperCache.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
+struct ComputedGridLineInfo;
 struct ComputedGridTrackInfo;
 
 namespace dom {
 
 class Grid;
+class GridArea;
 class GridLines;
 class GridTracks;
 

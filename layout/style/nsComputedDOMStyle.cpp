@@ -1245,13 +1245,14 @@ void nsComputedDOMStyle::SetValueToURLValue(const StyleComputedUrl* aURL,
 }
 
 void nsComputedDOMStyle::AppendGridLineNames(
-    nsString& aResult, const nsTArray<nsString>& aLineNames) {
+    nsString& aResult, const nsTArray<nsCString>& aLineNames) {
   uint32_t numLines = aLineNames.Length();
   if (numLines == 0) {
     return;
   }
   for (uint32_t i = 0;;) {
-    nsStyleUtil::AppendEscapedCSSIdent(aLineNames[i], aResult);
+    nsStyleUtil::AppendEscapedCSSIdent(NS_ConvertUTF8toUTF16(aLineNames[i]),
+                                       aResult);
     if (++i == numLines) {
       break;
     }
@@ -1260,7 +1261,7 @@ void nsComputedDOMStyle::AppendGridLineNames(
 }
 
 void nsComputedDOMStyle::AppendGridLineNames(
-    nsDOMCSSValueList* aValueList, const nsTArray<nsString>& aLineNames,
+    nsDOMCSSValueList* aValueList, const nsTArray<nsCString>& aLineNames,
     bool aSuppressEmptyList) {
   if (aLineNames.IsEmpty() && aSuppressEmptyList) {
     return;
@@ -1275,8 +1276,8 @@ void nsComputedDOMStyle::AppendGridLineNames(
 }
 
 void nsComputedDOMStyle::AppendGridLineNames(
-    nsDOMCSSValueList* aValueList, const nsTArray<nsString>& aLineNames1,
-    const nsTArray<nsString>& aLineNames2) {
+    nsDOMCSSValueList* aValueList, const nsTArray<nsCString>& aLineNames1,
+    const nsTArray<nsCString>& aLineNames2) {
   if (aLineNames1.IsEmpty() && aLineNames2.IsEmpty()) {
     return;
   }
@@ -1481,7 +1482,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
       for (int32_t i = 0;; i++) {
         if (aTrackList.HasRepeatAuto()) {
           if (i == aTrackList.mRepeatAutoIndex) {
-            const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[i];
+            const nsTArray<nsCString>& lineNames = aTrackList.mLineNameLists[i];
             if (i == endOfRepeat) {
               // All auto-fit tracks are empty, but we report them anyway.
               AppendGridLineNames(valueList, lineNames,
@@ -1501,7 +1502,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
             // Before appending the last line, finish off any removed auto-fits.
             AppendRemovedAutoFits(LinesPrecede);
 
-            const nsTArray<nsString>& lineNames =
+            const nsTArray<nsCString>& lineNames =
                 aTrackList.mLineNameLists[aTrackList.mRepeatAutoIndex + 1];
             AppendGridLineNames(
                 valueList, aTrackList.mRepeatAutoLineNameListAfter, lineNames);
@@ -1512,11 +1513,11 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
             AppendRemovedAutoFits(LinesFollow);
           } else {
             uint32_t j = i > endOfRepeat ? i - offsetToLastRepeat : i;
-            const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[j];
+            const nsTArray<nsCString>& lineNames = aTrackList.mLineNameLists[j];
             AppendGridLineNames(valueList, lineNames);
           }
         } else {
-          const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[i];
+          const nsTArray<nsCString>& lineNames = aTrackList.mLineNameLists[i];
           AppendGridLineNames(valueList, lineNames);
         }
         if (uint32_t(i) == numExplicitTracks) {
@@ -1539,7 +1540,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     // We don't have a frame.  So, we'll just return a serialization of
     // the tracks from the style (without resolved sizes).
     for (uint32_t i = 0;; i++) {
-      const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[i];
+      const nsTArray<nsCString>& lineNames = aTrackList.mLineNameLists[i];
       if (!lineNames.IsEmpty()) {
         AppendGridLineNames(valueList, lineNames);
       }
@@ -1640,7 +1641,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridLine(
   if (!aGridLine.mLineName.IsEmpty()) {
     RefPtr<nsROCSSPrimitiveValue> lineName = new nsROCSSPrimitiveValue;
     nsString escapedLineName;
-    nsStyleUtil::AppendEscapedCSSIdent(aGridLine.mLineName, escapedLineName);
+    nsStyleUtil::AppendEscapedCSSIdent(
+        NS_ConvertUTF8toUTF16(aGridLine.mLineName), escapedLineName);
     lineName->SetString(escapedLineName);
     valueList->AppendCSSValue(lineName.forget());
   }

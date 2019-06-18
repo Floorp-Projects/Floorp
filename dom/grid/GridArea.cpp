@@ -19,9 +19,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GridArea)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-GridArea::GridArea(Grid* aParent, const nsString& aName, GridDeclaration aType,
-                   uint32_t aRowStart, uint32_t aRowEnd, uint32_t aColumnStart,
-                   uint32_t aColumnEnd)
+GridArea::GridArea(Grid* aParent, const nsDependentCSubstring& aName,
+                   GridDeclaration aType, uint32_t aRowStart, uint32_t aRowEnd,
+                   uint32_t aColumnStart, uint32_t aColumnEnd)
     : mParent(aParent),
       mName(aName),
       mType(aType),
@@ -37,7 +37,11 @@ JSObject* GridArea::WrapObject(JSContext* aCx,
   return GridArea_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void GridArea::GetName(nsString& aName) const { aName = mName; }
+void GridArea::GetName(nsCString& aName) const { aName = mName; }
+
+void GridArea::GetName(nsString& aName) const {
+  aName = NS_ConvertUTF8toUTF16(mName);
+}
 
 GridDeclaration GridArea::Type() const { return mType; }
 

@@ -1258,6 +1258,11 @@ void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* aArray,
   aArray->SetLength(aLength);
 }
 
+void Gecko_ResizeTArrayForCStrings(nsTArray<nsCString>* aArray,
+                                  uint32_t aLength) {
+  aArray->SetLength(aLength);
+}
+
 void Gecko_SetStyleGridTemplate(UniquePtr<nsStyleGridTemplate>* aGridTemplate,
                                 nsStyleGridTemplate* aValue) {
   aGridTemplate->reset(aValue);
@@ -1281,19 +1286,6 @@ void Gecko_CopyStyleGridTemplateValues(
     *aGridTemplate = nullptr;
   }
 }
-
-GridTemplateAreasValue* Gecko_NewGridTemplateAreasValue(uint32_t aAreas,
-                                                        uint32_t aTemplates,
-                                                        uint32_t aColumns) {
-  RefPtr<GridTemplateAreasValue> value = new GridTemplateAreasValue;
-  value->mNamedAreas.SetLength(aAreas);
-  value->mTemplates.SetLength(aTemplates);
-  value->mNColumns = aColumns;
-  return value.forget().take();
-}
-
-NS_IMPL_THREADSAFE_FFI_REFCOUNTING(GridTemplateAreasValue,
-                                   GridTemplateAreasValue);
 
 void Gecko_ClearAndResizeStyleContents(nsStyleContent* aContent,
                                        uint32_t aHowMany) {
