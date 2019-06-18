@@ -143,13 +143,14 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   nsHttpTransaction* QueryHttpTransaction() override { return this; }
 
-  Http2PushedStream* GetPushedStream() { return mPushedStream; }
-  Http2PushedStream* TakePushedStream() {
-    Http2PushedStream* r = mPushedStream;
-    mPushedStream = nullptr;
-    return r;
+  already_AddRefed<Http2PushedStreamWrapper> GetPushedStream() {
+    return do_AddRef(mPushedStream);
   }
-  void SetPushedStream(Http2PushedStream* push) { mPushedStream = push; }
+  already_AddRefed<Http2PushedStreamWrapper> TakePushedStream() {
+    return mPushedStream.forget();
+  }
+
+  void SetPushedStream(Http2PushedStreamWrapper* push) { mPushedStream = push; }
   uint32_t InitialRwin() const { return mInitialRwin; };
   bool ChannelPipeFull() { return mWaitingOnPipeOut; }
 
@@ -303,7 +304,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // so far been skipped.
   uint32_t mInvalidResponseBytesRead;
 
-  Http2PushedStream* mPushedStream;
+  RefPtr<Http2PushedStreamWrapper> mPushedStream;
   uint32_t mInitialRwin;
 
   nsHttpChunkedDecoder* mChunkedDecoder;
