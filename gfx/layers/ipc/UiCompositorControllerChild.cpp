@@ -183,14 +183,16 @@ void UiCompositorControllerChild::Destroy() {
     return;
   }
 
-  if (mIsOpen) {
-    // Close the underlying IPC channel.
-
+  if (mWidget) {
     // Dispatch mWidget to main thread to prevent it from being destructed by
     // the ui thread.
     RefPtr<nsIWidget> widget = mWidget.forget();
     NS_ReleaseOnMainThreadSystemGroup("UiCompositorControllerChild::mWidget",
                                       widget.forget());
+  }
+
+  if (mIsOpen) {
+    // Close the underlying IPC channel.
     PUiCompositorControllerChild::Close();
     mIsOpen = false;
   }
