@@ -808,14 +808,6 @@ impl TileCacheInstance {
             // The primitive dependency updates will determine if it is opaque again.
             tile.is_opaque = false;
 
-            // Content has changed if any images have changed
-            for image_key in tile.descriptor.image_keys.items() {
-                if frame_state.resource_cache.is_image_dirty(*image_key) {
-                    tile.is_same_content = false;
-                    break;
-                }
-            }
-
             // Content has changed if any opacity bindings changed.
             for binding in tile.descriptor.opacity_bindings.items() {
                 if let OpacityBinding::Binding(id) = binding {
@@ -1145,6 +1137,17 @@ impl TileCacheInstance {
                         )
                 };
                 tile.descriptor.transforms.push(transform.into());
+            }
+
+            // Content has changed if any images have changed.
+            // NOTE: This invalidation must be done after the request_resources
+            //       calls for primitives during visibility update, or the
+            //       is_image_dirty check may be incorrect.
+            for image_key in tile.descriptor.image_keys.items() {
+                if resource_cache.is_image_dirty(*image_key) {
+                    tile.is_same_content = false;
+                    break;
+                }
             }
 
             // Invalidate if the backing texture was evicted.
