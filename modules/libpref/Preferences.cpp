@@ -5395,8 +5395,9 @@ static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
 static Atomic<bool> sOncePrefRead(false);
 static StaticMutex sOncePrefMutex;
 
-/* static */ void StaticPrefs::MaybeInitOncePrefs() {
-  if (!XRE_IsParentProcess() || sOncePrefRead) {
+/* static */
+void StaticPrefs::MaybeInitOncePrefs() {
+  if (MOZ_LIKELY(sOncePrefRead)) {
     // `Once` StaticPrefs have already been initialized to their default value.
     return;
   }
@@ -5676,6 +5677,10 @@ void StaticPrefs::InitStaticPrefsFromShared() {
 #include "mozilla/StaticPrefList.h"
 #undef PREF
 #undef VARCACHE_PREF
+  // `Once` StaticPrefs have been set to their value in the step above and
+  // outside the parent process they are immutable. So we set sOncePrefRead
+  // so that we can directly skip any lazy initializations.
+  sOncePrefRead = true;
 }
 
 }  // namespace mozilla
