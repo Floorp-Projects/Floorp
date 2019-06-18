@@ -17,43 +17,18 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 XPCOMUtils.defineLazyGetter(this, "gPipNSSBundle", function() {
   return Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
 });
-XPCOMUtils.defineLazyPreferenceGetter(this, "mitmErrorPageEnabled",
-  "browser.security.newcerterrorpage.mitm.enabled");
-XPCOMUtils.defineLazyPreferenceGetter(this, "mitmPrimingEnabled",
-  "security.certerrors.mitm.priming.enabled");
 XPCOMUtils.defineLazyGetter(this, "gNSSErrorsBundle", function() {
   return Services.strings.createBundle("chrome://pipnss/locale/nsserrors.properties");
 });
 
-
 const SEC_ERROR_BASE          = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
-const MOZILLA_PKIX_ERROR_BASE = Ci.nsINSSErrorsService.MOZILLA_PKIX_ERROR_BASE;
-
-const SEC_ERROR_EXPIRED_CERTIFICATE                = SEC_ERROR_BASE + 11;
-const SEC_ERROR_UNKNOWN_ISSUER                     = SEC_ERROR_BASE + 13;
-const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE         = SEC_ERROR_BASE + 30;
 const SEC_ERROR_REUSED_ISSUER_AND_SERIAL           = SEC_ERROR_BASE + 138;
-const SEC_ERROR_OCSP_INVALID_SIGNING_CERT          = SEC_ERROR_BASE + 144;
-const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
-const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
-const MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED = MOZILLA_PKIX_ERROR_BASE + 13;
-const MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT          = MOZILLA_PKIX_ERROR_BASE + 14;
-const MOZILLA_PKIX_ERROR_MITM_DETECTED             = MOZILLA_PKIX_ERROR_BASE + 15;
-
 
 const SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;
-const SSL_ERROR_BAD_CERT_DOMAIN = SSL_ERROR_BASE + 12;
 const SSL_ERROR_SSL_DISABLED  = SSL_ERROR_BASE + 20;
 const SSL_ERROR_SSL2_DISABLED  = SSL_ERROR_BASE + 14;
 
-const PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS = "services.settings.clock_skew_seconds";
-const PREF_SERVICES_SETTINGS_LAST_FETCHED       = "services.settings.last_update_seconds";
-
 const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
-
-let formatter = new Services.intl.DateTimeFormat(undefined, {
-  dateStyle: "long",
-});
 
 function getSerializedSecurityInfo(docShell) {
   let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
@@ -84,287 +59,6 @@ class NetErrorChild extends ActorChild {
       cssClass: searchParams.get("s"),
       error: searchParams.get("e"),
     };
-  }
-
-  _getCertValidityRange(docShell) {
-    let {securityInfo} = docShell.failedChannel;
-    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-    let notBefore = 0;
-    let notAfter = Number.MAX_SAFE_INTEGER;
-    for (let cert of securityInfo.failedCertChain.getEnumerator()) {
-      notBefore = Math.max(notBefore, cert.validity.notBefore);
-      notAfter = Math.min(notAfter, cert.validity.notAfter);
-    }
-    // nsIX509Cert reports in PR_Date terms, which uses microseconds. Convert:
-    notBefore /= 1000;
-    notAfter /= 1000;
-    return {notBefore, notAfter};
-  }
-
-  // eslint-disable-next-line complexity
-  onCertErrorDetails(msg, docShell) {
-    let doc = docShell.document;
-
-    // This function centers the error container after its content updates.
-    // It is currently duplicated in aboutNetError.js to avoid having to do
-    // async communication to the page that would result in flicker.
-    // TODO(johannh): Get rid of this duplication.
-    function updateContainerPosition() {
-      let textContainer = doc.getElementById("text-container");
-      // Using the vh CSS property our margin adapts nicely to window size changes.
-      // Unfortunately, this doesn't work correctly in iframes, which is why we need
-      // to manually compute the height there.
-      if (doc.ownerGlobal.parent == doc.ownerGlobal) {
-        textContainer.style.marginTop = `calc(50vh - ${textContainer.clientHeight / 2}px)`;
-      } else {
-        let offset = (doc.documentElement.clientHeight / 2) - (textContainer.clientHeight / 2);
-        if (offset > 0) {
-          textContainer.style.marginTop = `${offset}px`;
-        }
-      }
-    }
-
-    // Check if the connection is being man-in-the-middled. When the parent
-    // detects an intercepted connection, the page may be reloaded with a new
-    // error code (MOZILLA_PKIX_ERROR_MITM_DETECTED).
-    if (mitmPrimingEnabled && msg.data.code == SEC_ERROR_UNKNOWN_ISSUER &&
-        // Only do this check for top-level failures.
-        doc.ownerGlobal.top === doc.ownerGlobal) {
-      this.mm.sendAsyncMessage("Browser:PrimeMitm");
-    }
-
-    let div = doc.getElementById("certificateErrorText");
-    div.textContent = msg.data.info;
-    let learnMoreLink = doc.getElementById("learnMoreLink");
-    let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-    learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
-    let errWhatToDo = doc.getElementById("es_nssBadCert_" + msg.data.codeString);
-    let es = doc.getElementById("errorWhatToDoText");
-    let errWhatToDoTitle = doc.getElementById("edd_nssBadCert");
-    let est = doc.getElementById("errorWhatToDoTitleText");
-    let searchParams = new URLSearchParams(doc.documentURI.split("?")[1]);
-    let error = searchParams.get("e");
-
-    if (error == "sslv3Used") {
-      learnMoreLink.setAttribute("href", baseURL + "sslv3-error-messages");
-    }
-
-    if (error == "nssFailure2") {
-      let shortDesc = doc.getElementById("errorShortDescText").textContent;
-      // nssFailure2 also gets us other non-overrideable errors. Choose
-      // a "learn more" link based on description:
-      if (shortDesc.includes("MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE")) {
-        learnMoreLink.setAttribute("href", baseURL + "certificate-pinning-reports");
-      }
-    }
-
-    // This is set to true later if the user's system clock is at fault for this error.
-    let clockSkew = false;
-
-    doc.body.setAttribute("code", msg.data.codeString);
-
-    // Need to do this here (which is not exactly at load but a few ticks later),
-    // because this is the first time we have access to the error code.
-    this.recordLoadEvent(doc);
-
-    switch (msg.data.code) {
-      case SSL_ERROR_BAD_CERT_DOMAIN:
-      case SEC_ERROR_OCSP_INVALID_SIGNING_CERT:
-      case SEC_ERROR_UNKNOWN_ISSUER:
-        if (es) {
-          // eslint-disable-next-line no-unsanitized/property
-          es.innerHTML = errWhatToDo.innerHTML;
-        }
-        if (est) {
-          // eslint-disable-next-line no-unsanitized/property
-          est.innerHTML = errWhatToDoTitle.innerHTML;
-        }
-        updateContainerPosition();
-        break;
-
-      // This error code currently only exists for the Symantec distrust
-      // in Firefox 63, so we add copy explaining that to the user.
-      // In case of future distrusts of that scale we might need to add
-      // additional parameters that allow us to identify the affected party
-      // without replicating the complex logic from certverifier code.
-      case MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
-        let description = gPipNSSBundle.formatStringFromName(
-          "certErrorSymantecDistrustDescription1", [doc.location.hostname]);
-        let descriptionContainer = doc.getElementById("errorShortDescText2");
-        descriptionContainer.textContent = description;
-
-        let adminDescription = doc.createElement("p");
-        adminDescription.textContent =
-          gPipNSSBundle.GetStringFromName("certErrorSymantecDistrustAdministrator");
-        descriptionContainer.append(adminDescription);
-
-        learnMoreLink.href = baseURL + "symantec-warning";
-
-        updateContainerPosition();
-        break;
-      case MOZILLA_PKIX_ERROR_MITM_DETECTED:
-        if (mitmErrorPageEnabled) {
-          let autoEnabledEnterpriseRoots =
-            Services.prefs.getBoolPref("security.enterprise_roots.auto-enabled", false);
-          if (mitmPrimingEnabled && autoEnabledEnterpriseRoots) {
-            // If we automatically tried to import enterprise root certs but it didn't
-            // fix the MITM, reset the pref.
-            this.mm.sendAsyncMessage("Browser:ResetEnterpriseRootsPref");
-          }
-
-          // We don't actually know what the MitM is called (since we don't
-          // maintain a list), so we'll try and display the common name of the
-          // root issuer to the user. In the worst case they are as clueless as
-          // before, in the best case this gives them an actionable hint.
-          // This may be revised in the future.
-          let {securityInfo} = docShell.failedChannel;
-          securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-          let mitmName = null;
-          for (let cert of securityInfo.failedCertChain.getEnumerator()) {
-            mitmName = cert.issuerCommonName;
-          }
-          for (let span of doc.querySelectorAll(".mitm-name")) {
-            span.textContent = mitmName;
-          }
-
-          learnMoreLink.href = baseURL + "security-error";
-
-          let title = doc.getElementById("et_mitm");
-          let desc = doc.getElementById("ed_mitm");
-          doc.querySelector(".title-text").textContent = title.textContent;
-          // eslint-disable-next-line no-unsanitized/property
-          doc.getElementById("errorShortDescText").innerHTML = desc.innerHTML;
-
-          // eslint-disable-next-line no-unsanitized/property
-          es.innerHTML = errWhatToDo.innerHTML;
-          // eslint-disable-next-line no-unsanitized/property
-          est.innerHTML = errWhatToDoTitle.innerHTML;
-
-          updateContainerPosition();
-          break;
-        }
-        // If the condition is false, fall through...
-      case MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT:
-        learnMoreLink.href = baseURL + "security-error";
-        break;
-
-      // In case the certificate expired we make sure the system clock
-      // matches the remote-settings service (blocklist via Kinto) ping time
-      // and is not before the build date.
-      case SEC_ERROR_EXPIRED_CERTIFICATE:
-      case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-      case MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE:
-      case MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE:
-
-        learnMoreLink.href = baseURL + "time-errors";
-        // We check against the remote-settings server time first if available, because that allows us
-        // to give the user an approximation of what the correct time is.
-        let difference = Services.prefs.getIntPref(PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS, 0);
-        let lastFetched = Services.prefs.getIntPref(PREF_SERVICES_SETTINGS_LAST_FETCHED, 0) * 1000;
-
-        let now = Date.now();
-        let certRange = this._getCertValidityRange(docShell);
-
-        let approximateDate = now - difference * 1000;
-        // If the difference is more than a day, we last fetched the date in the last 5 days,
-        // and adjusting the date per the interval would make the cert valid, warn the user:
-        if (Math.abs(difference) > 60 * 60 * 24 && (now - lastFetched) <= 60 * 60 * 24 * 5 &&
-            certRange.notBefore < approximateDate && certRange.notAfter > approximateDate) {
-          clockSkew = true;
-
-        // If there is no clock skew with Kinto servers, check against the build date.
-        // (The Kinto ping could have happened when the time was still right, or not at all)
-        } else {
-          let appBuildID = Services.appinfo.appBuildID;
-
-          let year = parseInt(appBuildID.substr(0, 4), 10);
-          let month = parseInt(appBuildID.substr(4, 2), 10) - 1;
-          let day = parseInt(appBuildID.substr(6, 2), 10);
-
-          let buildDate = new Date(year, month, day);
-          let systemDate = new Date();
-
-          // We don't check the notBefore of the cert with the build date,
-          // as it is of course almost certain that it is now later than the build date,
-          // so we shouldn't exclude the possibility that the cert has become valid
-          // since the build date.
-          if (buildDate > systemDate && new Date(certRange.notAfter) > buildDate) {
-            clockSkew = true;
-          }
-        }
-
-        let systemDate = formatter.format(new Date());
-        doc.getElementById("wrongSystemTime_systemDate1").textContent = systemDate;
-        if (clockSkew) {
-          doc.body.classList.add("illustrated", "clockSkewError");
-          let clockErrTitle = doc.getElementById("et_clockSkewError");
-          let clockErrDesc = doc.getElementById("ed_clockSkewError");
-          // eslint-disable-next-line no-unsanitized/property
-          doc.querySelector(".title-text").textContent = clockErrTitle.textContent;
-          let desc = doc.getElementById("errorShortDescText");
-          doc.getElementById("errorShortDesc").style.display = "block";
-          doc.getElementById("certificateErrorReporting").style.display = "none";
-          if (desc) {
-            // eslint-disable-next-line no-unsanitized/property
-            desc.innerHTML = clockErrDesc.innerHTML;
-          }
-          let errorPageContainer = doc.getElementById("errorPageContainer");
-          let textContainer = doc.getElementById("text-container");
-          errorPageContainer.style.backgroundPosition = `left top calc(50vh - ${textContainer.clientHeight / 2}px)`;
-        } else {
-          let targetElems = doc.querySelectorAll("#wrongSystemTime_systemDate2");
-          for (let elem of targetElems) {
-            elem.textContent = systemDate;
-          }
-
-          let errDesc = doc.getElementById("ed_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE");
-          let sd = doc.getElementById("errorShortDescText");
-          // eslint-disable-next-line no-unsanitized/property
-          sd.innerHTML = errDesc.innerHTML;
-
-          let span = sd.querySelector(".hostname");
-          span.textContent = doc.location.hostname;
-
-          // The secondary description mentions expired certificates explicitly
-          // and should only be shown if the certificate has actually expired
-          // instead of being not yet valid.
-          if (msg.data.code == SEC_ERROR_EXPIRED_CERTIFICATE) {
-            let {cssClass} = this.getParams(doc);
-            let stsSuffix = cssClass == "badStsCert" ? "_sts" : "";
-            let errDesc2 = doc.getElementById(
-              `ed2_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE${stsSuffix}`);
-            let sd2 = doc.getElementById("errorShortDescText2");
-            // eslint-disable-next-line no-unsanitized/property
-            sd2.innerHTML = errDesc2.innerHTML;
-          }
-
-          if (es) {
-            // eslint-disable-next-line no-unsanitized/property
-            es.innerHTML = errWhatToDo.innerHTML;
-          }
-          if (est) {
-            // eslint-disable-next-line no-unsanitized/property
-            est.textContent = errWhatToDoTitle.textContent;
-            est.style.fontWeight = "bold";
-          }
-          updateContainerPosition();
-        }
-        break;
-    }
-
-    // Add slightly more alarming UI unless there are indicators that
-    // show that the error is harmless or can not be skipped anyway.
-    let {cssClass} = this.getParams(doc);
-    // Don't alarm users when they can't continue to the website anyway...
-    if (cssClass != "badStsCert" &&
-        // Errors in iframes can't be skipped either...
-        doc.ownerGlobal.parent == doc.ownerGlobal &&
-        // Also don't bother if it's just the user's clock being off...
-        !clockSkew &&
-        // Symantec distrust is likely harmless as well.
-        msg.data.code != MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED) {
-      doc.body.classList.add("caution");
-    }
   }
 
   handleEvent(aEvent) {
@@ -405,7 +99,10 @@ class NetErrorChild extends ActorChild {
         return;
       }
 
-      this.onCertErrorDetails(msg, frameDocShell);
+      let data = msg.data;
+      let win = frameDocShell.document.ownerGlobal;
+      let event = Cu.cloneInto({ detail: data }, win);
+      win.dispatchEvent(new win.CustomEvent("ShowCertErrorDetails", event));
     }
   }
 
@@ -545,16 +242,6 @@ class NetErrorChild extends ActorChild {
   getCSSClass(doc) {
     let searchParams = new URL(doc.documentURI).searchParams;
     return searchParams.get("s");
-  }
-
-  recordLoadEvent(doc) {
-    let cssClass = this.getCSSClass(doc);
-    // Telemetry values for events are max. 80 bytes.
-    let errorCode = doc.body.getAttribute("code").substring(0, 40);
-    Services.telemetry.recordEvent("security.ui.certerror", "load", "aboutcerterror", errorCode, {
-      "has_sts": (cssClass == "badStsCert").toString(),
-      "is_frame": (doc.ownerGlobal.parent != doc.ownerGlobal).toString(),
-    });
   }
 
   recordClick(element) {

@@ -1052,7 +1052,7 @@ security.ui.certerror:
       - rtestard@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
-    record_in_processes: ["content"]
+    record_in_processes: ["main", "content"]
     products:
       - firefox
     extra_keys:

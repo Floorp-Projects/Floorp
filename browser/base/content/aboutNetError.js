@@ -1,5 +1,7 @@
 /* eslint-env mozilla/frame-script */
 
+const formatter = new Intl.DateTimeFormat("default");
+
 // The following parameters are parsed from the error URL:
 //   e - the error code
 //   s - custom CSS class to allow alternate styling/favicons
@@ -361,10 +363,248 @@ function initPageCertError() {
     }
   }, true, true);
 
+  let failedCertInfo = document.getFailedCertSecurityInfo();
+  RPMSendAsyncMessage("RecordCertErrorLoad", {
+    // Telemetry values for events are max. 80 bytes.
+    errorCode: failedCertInfo.errorCodeString.substring(0, 40),
+    has_sts: getCSSClass() == "badStsCert",
+    is_frame:  window.parent != window,
+  });
+  window.addEventListener("ShowCertErrorDetails", setCertErrorDetails);
+  setTechnicalDetailsOnCertError();
+
   let event = new CustomEvent("AboutNetErrorLoad", {bubbles: true});
   document.getElementById("advancedButton").dispatchEvent(event);
+}
 
-  setTechnicalDetailsOnCertError();
+function setCertErrorDetails(event) {
+  // Check if the connection is being man-in-the-middled. When the parent
+  // detects an intercepted connection, the page may be reloaded with a new
+  // error code (MOZILLA_PKIX_ERROR_MITM_DETECTED).
+  let failedCertInfo = document.getFailedCertSecurityInfo();
+  let mitmPrimingEnabled = RPMGetBoolPref("security.certerrors.mitm.priming.enabled");
+  if (mitmPrimingEnabled &&
+      failedCertInfo.errorCodeString == "SEC_ERROR_UNKNOWN_ISSUER" &&
+      // Only do this check for top-level failures.
+      window.parent == window) {
+    RPMSendAsyncMessage("Browser:PrimeMitm");
+  }
+
+  let div = document.getElementById("certificateErrorText");
+  div.textContent = event.detail.info;
+  let learnMoreLink = document.getElementById("learnMoreLink");
+  let baseURL = RPMGetFormatURLPref("app.support.baseURL");
+  learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
+  let errWhatToDo = document.getElementById("es_nssBadCert_" + failedCertInfo.errorCodeString);
+  let es = document.getElementById("errorWhatToDoText");
+  let errWhatToDoTitle = document.getElementById("edd_nssBadCert");
+  let est = document.getElementById("errorWhatToDoTitleText");
+  let error = getErrorCode();
+
+  if (error == "sslv3Used") {
+    learnMoreLink.setAttribute("href", baseURL + "sslv3-error-messages");
+  }
+
+  if (error == "nssFailure2") {
+    let shortDesc = document.getElementById("errorShortDescText").textContent;
+    // nssFailure2 also gets us other non-overrideable errors. Choose
+    // a "learn more" link based on description:
+    if (shortDesc.includes("MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE")) {
+      learnMoreLink.setAttribute("href", baseURL + "certificate-pinning-reports");
+    }
+  }
+
+  // This is set to true later if the user's system clock is at fault for this error.
+  let clockSkew = false;
+  document.body.setAttribute("code", failedCertInfo.errorCodeString);
+
+  let desc;
+  switch (failedCertInfo.errorCodeString) {
+    case "SSL_ERROR_BAD_CERT_DOMAIN":
+    case "SEC_ERROR_OCSP_INVALID_SIGNING_CERT":
+    case "SEC_ERROR_UNKNOWN_ISSUER":
+      if (es) {
+        // eslint-disable-next-line no-unsanitized/property
+        es.innerHTML = errWhatToDo.innerHTML;
+      }
+      if (est) {
+        // eslint-disable-next-line no-unsanitized/property
+        est.innerHTML = errWhatToDoTitle.innerHTML;
+      }
+      updateContainerPosition();
+      break;
+
+    // This error code currently only exists for the Symantec distrust
+    // in Firefox 63, so we add copy explaining that to the user.
+    // In case of future distrusts of that scale we might need to add
+    // additional parameters that allow us to identify the affected party
+    // without replicating the complex logic from certverifier code.
+    case "MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED":
+      desc = document.getElementById("errorShortDescText2");
+      let hostname = document.location.hostname;
+      document.l10n.setAttributes(desc, "cert-error-symantec-distrust-description", {
+        hostname,
+      });
+
+      let adminDesc = document.createElement("p");
+      document.l10n.setAttributes(adminDesc, "cert-error-symantec-distrust-admin");
+
+      learnMoreLink.href = baseURL + "symantec-warning";
+      updateContainerPosition();
+      break;
+
+    case "MOZILLA_PKIX_ERROR_MITM_DETECTED":
+      let autoEnabledEnterpriseRoots = RPMGetBoolPref("security.enterprise_roots.auto-enabled");
+      if (mitmPrimingEnabled && autoEnabledEnterpriseRoots) {
+        RPMSendAsyncMessage("Browser:ResetEnterpriseRootsPref");
+      }
+
+      // We don't actually know what the MitM is called (since we don't
+      // maintain a list), so we'll try and display the common name of the
+      // root issuer to the user. In the worst case they are as clueless as
+      // before, in the best case this gives them an actionable hint.
+      // This may be revised in the future.
+      let names = document.querySelectorAll(".mitm-name");
+      for (let span of names) {
+        span.textContent = failedCertInfo.issuerCommonName;
+      }
+
+      learnMoreLink.href = baseURL + "security-error";
+
+      let title = document.getElementById("et_mitm");
+      desc = document.getElementById("ed_mitm");
+      document.querySelector(".title-text").textContent = title.textContent;
+      // eslint-disable-next-line no-unsanitized/property
+      document.getElementById("errorShortDescText").innerHTML = desc.innerHTML;
+
+      // eslint-disable-next-line no-unsanitized/property
+      es.innerHTML = errWhatToDo.innerHTML;
+      // eslint-disable-next-line no-unsanitized/property
+      est.innerHTML = errWhatToDoTitle.innerHTML;
+
+      updateContainerPosition();
+      break;
+
+    case "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT":
+      learnMoreLink.href = baseURL + "security-error";
+      break;
+
+    // In case the certificate expired we make sure the system clock
+    // matches the remote-settings service (blocklist via Kinto) ping time
+    // and is not before the build date.
+    case "SEC_ERROR_EXPIRED_CERTIFICATE":
+    case "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE":
+    case "MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE":
+    case "MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE":
+      learnMoreLink.href = baseURL + "time-errors";
+      // We check against the remote-settings server time first if available, because that allows us
+      // to give the user an approximation of what the correct time is.
+      let difference = event.detail.clockSkewDifference;
+      let lastFetched = event.detail.settingsLastFetched * 1000;
+
+      let now = Date.now();
+      let certRange = {
+        notBefore: failedCertInfo.certValidityRangeNotBefore,
+        notAfter: failedCertInfo.certValidityRangeNotAfter,
+      };
+      let approximateDate = now - difference * 1000;
+      // If the difference is more than a day, we last fetched the date in the last 5 days,
+      // and adjusting the date per the interval would make the cert valid, warn the user:
+      if (Math.abs(difference) > 60 * 60 * 24 && (now - lastFetched) <= 60 * 60 * 24 * 5 &&
+          certRange.notBefore < approximateDate && certRange.notAfter > approximateDate) {
+        clockSkew = true;
+      // If there is no clock skew with Kinto servers, check against the build date.
+      // (The Kinto ping could have happened when the time was still right, or not at all)
+      } else {
+        let appBuildID = event.detail.appBuildID;
+        let year = parseInt(appBuildID.substr(0, 4), 10);
+        let month = parseInt(appBuildID.substr(4, 2), 10) - 1;
+        let day = parseInt(appBuildID.substr(6, 2), 10);
+
+        let buildDate = new Date(year, month, day);
+        let systemDate = new Date();
+
+        // We don't check the notBefore of the cert with the build date,
+        // as it is of course almost certain that it is now later than the build date,
+        // so we shouldn't exclude the possibility that the cert has become valid
+        // since the build date.
+        if (buildDate > systemDate && new Date(certRange.notAfter) > buildDate) {
+          clockSkew = true;
+        }
+      }
+
+      let systemDate = formatter.format(new Date());
+      document.getElementById("wrongSystemTime_systemDate1").textContent = systemDate;
+      if (clockSkew) {
+        document.body.classList.add("illustrated", "clockSkewError");
+        let clockErrTitle = document.getElementById("et_clockSkewError");
+        let clockErrDesc = document.getElementById("ed_clockSkewError");
+        // eslint-disable-next-line no-unsanitized/property
+        document.querySelector(".title-text").textContent = clockErrTitle.textContent;
+        desc = document.getElementById("errorShortDescText");
+        document.getElementById("errorShortDesc").style.display = "block";
+        document.getElementById("certificateErrorReporting").style.display = "none";
+        if (desc) {
+          // eslint-disable-next-line no-unsanitized/property
+          desc.innerHTML = clockErrDesc.innerHTML;
+        }
+        let errorPageContainer = document.getElementById("errorPageContainer");
+        let textContainer = document.getElementById("text-container");
+        errorPageContainer.style.backgroundPosition = `left top calc(50vh - ${textContainer.clientHeight / 2}px)`;
+      } else {
+        let targetElems = document.querySelectorAll("#wrongSystemTime_systemDate2");
+        for (let elem of targetElems) {
+          elem.textContent = systemDate;
+        }
+
+        let errDesc = document.getElementById("ed_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE");
+        let sd = document.getElementById("errorShortDescText");
+        // eslint-disable-next-line no-unsanitized/property
+        sd.innerHTML = errDesc.innerHTML;
+
+        let span = sd.querySelector(".hostname");
+        span.textContent = document.location.hostname;
+
+        // The secondary description mentions expired certificates explicitly
+        // and should only be shown if the certificate has actually expired
+        // instead of being not yet valid.
+        if (failedCertInfo.errorCodeString == "SEC_ERROR_EXPIRED_CERTIFICATE") {
+          let cssClass = getCSSClass();
+          let stsSuffix = cssClass == "badStsCert" ? "_sts" : "";
+          let errDesc2 = document.getElementById(
+            `ed2_nssBadCert_SEC_ERROR_EXPIRED_CERTIFICATE${stsSuffix}`);
+          let sd2 = document.getElementById("errorShortDescText2");
+          // eslint-disable-next-line no-unsanitized/property
+          sd2.innerHTML = errDesc2.innerHTML;
+        }
+
+        if (es) {
+          // eslint-disable-next-line no-unsanitized/property
+          es.innerHTML = errWhatToDo.innerHTML;
+        }
+        if (est) {
+          // eslint-disable-next-line no-unsanitized/property
+           est.textContent = errWhatToDoTitle.textContent;
+           est.style.fontWeight = "bold";
+        }
+        updateContainerPosition();
+      }
+      break;
+  }
+
+  // Add slightly more alarming UI unless there are indicators that
+  // show that the error is harmless or can not be skipped anyway.
+  let cssClass = getCSSClass();
+  // Don't alarm users when they can't continue to the website anyway...
+  if (cssClass != "badStsCert" &&
+      // Errors in iframes can't be skipped either...
+      window.parent == window &&
+      // Also don't bother if it's just the user's clock being off...
+      !clockSkew &&
+      // Symantec distrust is likely harmless as well.
+      failedCertInfo.erroCodeString != "MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED") {
+    document.body.classList.add("caution");
+  }
 }
 
 function setTechnicalDetailsOnCertError() {
@@ -530,7 +770,6 @@ function setTechnicalDetailsOnCertError() {
   if (failedCertInfo.isNotValidAtThisTime) {
     let notBefore = failedCertInfo.validNotBefore;
     let notAfter = failedCertInfo.validNotAfter;
-    let formatter = new Intl.DateTimeFormat("default");
     args = {
       hostname: hostString,
     };
