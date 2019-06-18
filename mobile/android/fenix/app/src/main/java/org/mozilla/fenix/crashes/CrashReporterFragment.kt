@@ -68,7 +68,7 @@ class CrashReporterFragment : Fragment() {
 
     private fun submitReportIfNecessary(crash: Crash) {
         var didSubmitCrashReport = false
-        if (Settings.getInstance(context!!).isCrashReportingEnabled) {
+        if (Settings.getInstance(context!!).isCrashReportingEnabled && send_crash_checkbox.isChecked) {
             requireComponents.analytics.crashReporter.submitReport(crash)
             didSubmitCrashReport = true
         }
