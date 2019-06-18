@@ -503,13 +503,12 @@ function add_connection_test(aHost, aExpectedResult,
 }
 
 function _getBinaryUtil(binaryUtilName) {
-  let utilBin = Services.dirsvc.get("CurProcD", Ci.nsIFile);
-  // On macOS, CurProcD is .../Contents/Resources, and most binary utilities
-  // are located there, but certutil is in .../Contents/MacOS, so we have to
-  // change the path accordingly.
-  if (Services.appinfo.OS === "Darwin" && binaryUtilName === "certutil") {
-    utilBin = utilBin.parent;
-    utilBin.append("MacOS");
+  let utilBin = Services.dirsvc.get("GreD", Ci.nsIFile);
+  // On macOS, GreD is .../Contents/Resources, and most binary utilities
+  // are located there, but certutil is in GreBinD (or .../Contents/MacOS),
+  // so we have to change the path accordingly.
+  if (binaryUtilName === "certutil") {
+    utilBin = Services.dirsvc.get("GreBinD", Ci.nsIFile);
   }
   utilBin.append(binaryUtilName + mozinfo.bin_suffix);
   // If we're testing locally, the above works. If not, the server executable
