@@ -331,8 +331,6 @@ pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 // Enable the new Address Bar code.
 pref("browser.urlbar.quantumbar", true);
 
-pref("browser.urlbar.openViewOnFocus", false);
-
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
