@@ -37,36 +37,13 @@ function utilsFor(win) {
 }
 
 /**
- * like win.top, but goes through mozbrowsers and mozapps iframes.
- *
- * @param {DOMWindow} win
- * @return {DOMWindow}
- */
-function getTopWindow(win) {
-  const docShell = win.docShell;
-
-  if (!docShell.isMozBrowser) {
-    return win.top;
-  }
-
-  const topDocShell =
-    docShell.getSameTypeRootTreeItemIgnoreBrowserBoundaries();
-
-  return topDocShell
-          ? topDocShell.contentViewer.DOMDocument.defaultView
-          : null;
-}
-
-exports.getTopWindow = getTopWindow;
-
-/**
  * Returns `true` is the window given is a top level window.
  * like win.top === win, but goes through mozbrowsers and mozapps iframes.
  *
  * @param {DOMWindow} win
  * @return {Boolean}
  */
-const isTopWindow = win => win && getTopWindow(win) === win;
+const isTopWindow = win => win && win.top === win;
 exports.isTopWindow = isTopWindow;
 
 /**
@@ -81,7 +58,7 @@ function isWindowIncluded(boundaryWindow, win) {
     return true;
   }
 
-  const parent = getParentWindow(win);
+  const parent = win.parent;
 
   if (!parent || parent === win) {
     return false;
@@ -90,33 +67,6 @@ function isWindowIncluded(boundaryWindow, win) {
   return isWindowIncluded(boundaryWindow, parent);
 }
 exports.isWindowIncluded = isWindowIncluded;
-
-/**
- * like win.parent, but goes through mozbrowsers and mozapps iframes.
- *
- * @param {DOMWindow} win
- * @return {DOMWindow}
- */
-function getParentWindow(win) {
-  if (isTopWindow(win)) {
-    return null;
-  }
-
-  const docShell = win.docShell;
-
-  if (!docShell.isMozBrowser) {
-    return win.parent;
-  }
-
-  const parentDocShell =
-    docShell.getSameTypeParentIgnoreBrowserBoundaries();
-
-  return parentDocShell
-          ? parentDocShell.contentViewer.DOMDocument.defaultView
-          : null;
-}
-
-exports.getParentWindow = getParentWindow;
 
 /**
  * like win.frameElement, but goes through mozbrowsers and mozapps iframes.
@@ -150,7 +100,7 @@ function getFrameOffsets(boundaryWindow, node) {
   const scale = getCurrentZoom(node);
 
   if (boundaryWindow === null) {
-    boundaryWindow = getTopWindow(frameWin);
+    boundaryWindow = frameWin.top;
   } else if (typeof boundaryWindow === "undefined") {
     throw new Error("No boundaryWindow given. Use null for the default one.");
   }
@@ -171,7 +121,7 @@ function getFrameOffsets(boundaryWindow, node) {
     xOffset += frameRect.left + offsetLeft;
     yOffset += frameRect.top + offsetTop;
 
-    frameWin = getParentWindow(frameWin);
+    frameWin = frameWin.parent;
   }
 
   return [xOffset * scale, yOffset * scale];
@@ -285,7 +235,7 @@ function getRect(boundaryWindow, node, contentWindow) {
   const clientRect = node.getBoundingClientRect();
 
   if (boundaryWindow === null) {
-    boundaryWindow = getTopWindow(frameWin);
+    boundaryWindow = frameWin.top;
   } else if (typeof boundaryWindow === "undefined") {
     throw new Error("No boundaryWindow given. Use null for the default one.");
   }
@@ -316,7 +266,7 @@ function getRect(boundaryWindow, node, contentWindow) {
     rect.top += frameRect.top + offsetTop;
     rect.left += frameRect.left + offsetLeft;
 
-    frameWin = getParentWindow(frameWin);
+    frameWin = frameWin.parent;
   }
 
   return rect;
