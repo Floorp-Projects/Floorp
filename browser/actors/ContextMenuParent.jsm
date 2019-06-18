@@ -18,6 +18,18 @@ class ContextMenuParent extends JSWindowActorParent {
     if (!win.openContextMenu) {
       let topBrowser = browser.ownerGlobal.docShell.chromeEventHandler;
       win = topBrowser.ownerGlobal;
+
+      // If this context menu happens to be for a tabbed browser window,
+      // we need to check to see if we're in Responsive Design Mode. This is
+      // because we need to convince nsContextMenu to use the top-level browser
+      // for the tab, rather than the mozbrowser iframe actually showing the
+      // web content. This is a workaround until we can get bug 1559456 fixed.
+      if (win.gBrowser) {
+        let tab = win.gBrowser.getTabForBrowser(browser);
+        if (tab && tab.isResponsiveDesignMode) {
+          browser = topBrowser;
+        }
+      }
     }
 
     win.openContextMenu(message, browser, this);
