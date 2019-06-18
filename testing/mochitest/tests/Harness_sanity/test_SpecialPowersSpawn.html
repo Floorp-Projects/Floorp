@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers.spawn</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe id="iframe"></iframe>
+
+<script>
+/* eslint-disable prettier/prettier */
+/* globals SpecialPowers, content */
+
+  add_task(async function() {
+    let frame = document.getElementById("iframe");
+    frame.src = "https://example.com/tests/testing/mochitest/tests/Harness_sanity/file_spawn.html";
+
+    await new Promise(resolve => {
+      frame.addEventListener("load", resolve, {once: true});
+    });
+
+    let result = await SpecialPowers.spawn(frame, ["#span"], selector => {
+      let elem = content.document.querySelector(selector);
+      return elem.textContent;
+    });
+
+    is(result, "Hello there.", "Got correct element text");
+  });
+</script>
+</body>
+</html>

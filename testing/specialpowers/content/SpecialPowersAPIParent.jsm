@@ -613,6 +613,13 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         return undefined;
       }
 
+      case "Spawn": {
+        let {browsingContext, task, args, caller} = aMessage.data;
+
+        let spParent = browsingContext.currentWindowGlobal.getActor("SpecialPowers");
+        return spParent.sendQuery("Spawn", {task, args, caller});
+      }
+
       case "SPRemoveAllServiceWorkers": {
         return ServiceWorkerCleanUp.removeAll();
       }
