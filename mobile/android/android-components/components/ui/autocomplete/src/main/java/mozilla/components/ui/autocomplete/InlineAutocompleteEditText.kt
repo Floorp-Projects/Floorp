@@ -28,7 +28,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputConnectionWrapper
 import android.view.inputmethod.InputMethodManager
-import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatEditText
 
@@ -47,6 +46,7 @@ typealias TextFormatter = (String) -> String
  * Aids in testing functionality which relies on some aspects of InlineAutocompleteEditText.
  */
 interface AutocompleteView {
+
     /**
      * Current text.
      */
@@ -126,8 +126,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
     // The previous autocomplete result returned to us
     var autocompleteResult: AutocompleteResult? = null
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        public set
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE) set
 
     // Length of the user-typed portion of the result
     private var autoCompletePrefixLength: Int = 0
@@ -162,6 +161,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
     private val inputMethodManger get() = context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager?
 
+    @SuppressWarnings("ReturnCount")
     private val onKeyPreIme = fun (_: View, keyCode: Int, event: KeyEvent): Boolean {
         // We only want to process one event per tap
         if (event.action != KeyEvent.ACTION_DOWN) {
@@ -208,7 +208,8 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         val text = text
         val start = text.getSpanStart(AUTOCOMPLETE_SPAN)
 
-        if (settingAutoComplete || start < 0 || start == selStart && start == selEnd) {
+        val nothingSelected = start == selStart && start == selEnd
+        if (settingAutoComplete || nothingSelected || start < 0) {
             // Do not commit autocomplete text if there is no autocomplete text
             // or if selection is still at start of autocomplete text
             return
@@ -263,7 +264,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         }
     }
 
-    override fun setText(text: CharSequence?, type: TextView.BufferType) {
+    override fun setText(text: CharSequence?, type: BufferType) {
         val textString = text?.toString() ?: ""
         super.setText(textString, type)
 
@@ -276,7 +277,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
         // Disable the edit text if necessary in order to stop auto completion
         isEnabled = shouldAutoComplete
-        setText(text, TextView.BufferType.EDITABLE)
+        setText(text, BufferType.EDITABLE)
         isEnabled = previousEnabledState
     }
 
@@ -398,7 +399,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
      *
      * @param result the [AutocompleteResult] to apply
      */
-    @Suppress("ComplexMethod", "ReturnCount")
+    @Suppress("ComplexMethod", "ReturnCount", "LongMethod")
     override fun applyAutocompleteResult(result: AutocompleteResult) {
         // If discardAutoCompleteResult is true, we temporarily disabled
         // autocomplete (due to backspacing, etc.) and we should bail early.
@@ -517,6 +518,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
      *
      * Also turns off text prediction for private mode tabs.
      */
+    @SuppressWarnings("ComplexMethod")
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
         val ic = super.onCreateInputConnection(outAttrs) ?: return null
 
@@ -590,6 +592,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     private inner class TextChangeListener : TextWatcher {
         private var textLengthBeforeChange: Int = 0
 
+        @SuppressWarnings("LongMethod")
         override fun afterTextChanged(editable: Editable) {
             if (!isEnabled || settingAutoComplete) {
                 return
@@ -665,7 +668,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
     @Suppress("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        return if (android.os.Build.VERSION.SDK_INT == Build.VERSION_CODES.M &&
+        return if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M &&
                 event.actionMasked == MotionEvent.ACTION_UP) {
             // Android 6 occasionally throws a NullPointerException inside Editor.onTouchEvent()
             // for ACTION_UP when attempting to display (uninitialised) text handles. The Editor

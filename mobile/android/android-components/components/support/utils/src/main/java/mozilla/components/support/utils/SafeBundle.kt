@@ -17,6 +17,7 @@ import mozilla.components.support.base.log.logger.Logger
  */
 class SafeBundle(private val bundle: Bundle) {
 
+    @SuppressWarnings("TooGenericExceptionCaught")
     fun getString(name: String): String? {
         return try {
             bundle.getString(name)
@@ -29,6 +30,7 @@ class SafeBundle(private val bundle: Bundle) {
         }
     }
 
+    @SuppressWarnings("TooGenericExceptionCaught")
     fun <T : Parcelable> getParcelable(name: String): T? {
         return try {
             bundle.getParcelable(name)

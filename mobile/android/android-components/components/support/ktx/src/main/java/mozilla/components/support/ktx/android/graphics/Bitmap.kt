@@ -18,10 +18,12 @@ import java.io.ByteArrayOutputStream
  */
 fun Bitmap.toDataUri(): String {
     val stream = ByteArrayOutputStream()
-    compress(Bitmap.CompressFormat.PNG, 100, stream)
+    compress(Bitmap.CompressFormat.PNG, BITMAP_COMPRESSION_QUALITY, stream)
     val encodedImage = Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT)
-    return "data:image/png;base64," + encodedImage
+    return "data:image/png;base64,$encodedImage"
 }
+
+private const val BITMAP_COMPRESSION_QUALITY = 100
 
 /**
  * Returns a new bitmap that is the receiver Bitmap with four rounded corners;

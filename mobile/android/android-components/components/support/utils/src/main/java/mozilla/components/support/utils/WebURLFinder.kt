@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:SuppressWarnings("MaxLineLength")
+
 package mozilla.components.support.utils
 
 import android.webkit.URLUtil
@@ -63,6 +65,7 @@ class WebURLFinder {
 
     private fun firstWebURLWithoutScheme(): String? = candidates.firstOrNull()
 
+    @SuppressWarnings("LargeClass")
     companion object {
         /**
          * Regular expression to match all IANA top-level domains.
@@ -339,6 +342,7 @@ class WebURLFinder {
          * @param string to check.
          * @return `true` if `string` is a Web URL.
          */
+        @SuppressWarnings("TooGenericExceptionCaught")
         fun isWebURL(string: String): Boolean {
             try {
                 URI(string)

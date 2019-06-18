@@ -7,10 +7,12 @@ package mozilla.components.support.utils
 import android.graphics.Color
 
 object ColorUtils {
+
     /**
      * Get text color (white or black) that is readable on top of the provided background color.
      */
     @JvmStatic
+    @SuppressWarnings("MagicNumber")
     fun getReadableTextColor(backgroundColor: Int): Int {
         val greyValue = grayscaleFromRGB(backgroundColor)
         // 186 chosen rather than the seemingly obvious 128 because of gamma.
@@ -21,6 +23,7 @@ object ColorUtils {
         }
     }
 
+    @SuppressWarnings("MagicNumber")
     private fun grayscaleFromRGB(color: Int): Int {
         val red = Color.red(color)
         val green = Color.green(color)
