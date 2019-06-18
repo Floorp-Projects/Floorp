@@ -254,7 +254,7 @@ static int cdef_find_dir_c(const pixel *img, const ptrdiff_t stride,
     return best_dir;
 }
 
-void bitfn(dav1d_cdef_dsp_init)(Dav1dCdefDSPContext *const c) {
+COLD void bitfn(dav1d_cdef_dsp_init)(Dav1dCdefDSPContext *const c) {
     c->dir = cdef_find_dir_c;
     c->fb[0] = cdef_filter_block_8x8_c;
     c->fb[1] = cdef_filter_block_4x8_c;

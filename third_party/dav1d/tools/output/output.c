@@ -95,6 +95,8 @@ int output_open(MuxerContext **const c_out,
             fprintf(stderr, "Failed to find muxer named \"%s\"\n", name);
             return DAV1D_ERR(ENOPROTOOPT);
         }
+    } else if (!strcmp(filename, "/dev/null")) {
+        impl = muxers[0];
     } else {
         const char *ext = find_extension(filename);
         if (!ext) {

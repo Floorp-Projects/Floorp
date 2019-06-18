@@ -33,17 +33,19 @@
 #include <stdlib.h>
 #include <windows.h>
 
+#include "common/attributes.h"
+
 #include "src/thread.h"
 
-static unsigned __stdcall thread_entrypoint(void *const data) {
+static COLD unsigned __stdcall thread_entrypoint(void *const data) {
     pthread_t *const t = data;
     t->arg = t->func(t->arg);
     return 0;
 }
 
-int dav1d_pthread_create(pthread_t *const thread,
-                         const pthread_attr_t *const attr,
-                         void *(*const func)(void*), void *const arg)
+COLD int dav1d_pthread_create(pthread_t *const thread,
+                              const pthread_attr_t *const attr,
+                              void *(*const func)(void*), void *const arg)
 {
     const unsigned stack_size = attr ? attr->stack_size : 0;
     thread->func = func;
@@ -53,7 +55,7 @@ int dav1d_pthread_create(pthread_t *const thread,
     return !thread->h;
 }
 
-int dav1d_pthread_join(pthread_t *const thread, void **const res) {
+COLD int dav1d_pthread_join(pthread_t *const thread, void **const res) {
     if (WaitForSingleObject(thread->h, INFINITE))
         return 1;
 
@@ -63,8 +65,8 @@ int dav1d_pthread_join(pthread_t *const thread, void **const res) {
     return !CloseHandle(thread->h);
 }
 
-int dav1d_pthread_once(pthread_once_t *const once_control,
-                       void (*const init_routine)(void))
+COLD int dav1d_pthread_once(pthread_once_t *const once_control,
+                            void (*const init_routine)(void))
 {
     BOOL pending = FALSE;
 
