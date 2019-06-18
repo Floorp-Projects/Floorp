@@ -64,8 +64,6 @@ typedef struct Dav1dSettings {
     int apply_grain;
     int operating_point; ///< select an operating point for scalable AV1 bitstreams (0 - 31)
     int all_layers; ///< output all spatial layers of a scalable AV1 biststream
-    unsigned frame_size_limit; ///< maximum frame size, in pixels (0 = unlimited)
-    uint8_t reserved[32]; ///< reserved for future use
     Dav1dPicAllocator allocator;
     Dav1dLogger logger;
 } Dav1dSettings;

@@ -635,8 +635,10 @@ static void mask_c(pixel *dst, const ptrdiff_t dst_stride,
 }
 
 #define blend_px(a, b, m) (((a * (64 - m) + b * m) + 32) >> 6)
-static void blend_c(pixel *dst, const ptrdiff_t dst_stride, const pixel *tmp,
-                    const int w, int h, const uint8_t *mask)
+static NOINLINE void
+blend_internal_c(pixel *dst, const ptrdiff_t dst_stride, const pixel *tmp,
+                 const int w, int h, const uint8_t *mask,
+                 const ptrdiff_t mask_stride)
 {
     do {
         for (int x = 0; x < w; x++) {
@@ -644,28 +646,26 @@ static void blend_c(pixel *dst, const ptrdiff_t dst_stride, const pixel *tmp,
         }
         dst += PXSTRIDE(dst_stride);
         tmp += w;
-        mask += w;
+        mask += mask_stride;
     } while (--h);
 }
 
-static void blend_v_c(pixel *dst, const ptrdiff_t dst_stride, const pixel *tmp,
-                      const int w, int h)
+static void blend_c(pixel *dst, const ptrdiff_t dst_stride, const pixel *tmp,
+                    const int w, const int h, const uint8_t *mask)
 {
-    const uint8_t *const mask = &dav1d_obmc_masks[w];
-    do {
-        for (int x = 0; x < (w * 3) >> 2; x++) {
-            dst[x] = blend_px(dst[x], tmp[x], mask[x]);
-        }
-        dst += PXSTRIDE(dst_stride);
-        tmp += w;
-    } while (--h);
+    blend_internal_c(dst, dst_stride, tmp, w, h, mask, w);
+}
+
+static void blend_v_c(pixel *dst, const ptrdiff_t dst_stride, const pixel *tmp,
+                      const int w, const int h)
+{
+    blend_internal_c(dst, dst_stride, tmp, w, h, &dav1d_obmc_masks[w], 0);
 }
 
 static void blend_h_c(pixel *dst, const ptrdiff_t dst_stride, const pixel *tmp,
                       const int w, int h)
 {
     const uint8_t *mask = &dav1d_obmc_masks[h];
-    h = (h * 3) >> 2;
     do {
         const int m = *mask++;
         for (int x = 0; x < w; x++) {
@@ -912,7 +912,7 @@ static void resize_c(pixel *dst, const ptrdiff_t dst_stride,
     } while (--h);
 }
 
-COLD void bitfn(dav1d_mc_dsp_init)(Dav1dMCDSPContext *const c) {
+void bitfn(dav1d_mc_dsp_init)(Dav1dMCDSPContext *const c) {
 #define init_mc_fns(type, name) do { \
     c->mc        [type] = put_##name##_c; \
     c->mc_scaled [type] = put_##name##_scaled_c; \

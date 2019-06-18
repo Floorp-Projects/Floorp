@@ -41,21 +41,6 @@ static const char *const filter_names[] = {
 
 static const char *const mxy_names[] = { "0", "h", "v", "hv" };
 
-static int mc_h_next(const int h) {
-    switch (h) {
-    case 4:
-    case 8:
-    case 16:
-        return (h * 3) >> 1;
-    case 6:
-    case 12:
-    case 24:
-        return (h & (h - 1)) * 2;
-    default:
-        return h * 2;
-    }
-}
-
 static void check_mc(Dav1dMCDSPContext *const c) {
     ALIGN_STK_32(pixel, src_buf, 135 * 135,);
     ALIGN_STK_32(pixel, c_dst,   128 * 128,);
@@ -74,9 +59,9 @@ static void check_mc(Dav1dMCDSPContext *const c) {
                 if (check_func(c->mc[filter], "mc_%s_w%d_%s_%dbpc",
                     filter_names[filter], w, mxy_names[mxy], BITDEPTH))
                 {
-                    const int h_min = w <= 32 ? 2 : w / 4;
-                    const int h_max = imax(imin(w * 4, 128), 32);
-                    for (int h = h_min; h <= h_max; h = mc_h_next(h)) {
+                    const int min = w <= 32 ? 2 : w / 4;
+                    const int max = imax(imin(w * 4, 128), 32);
+                    for (int h = min; h <= max; h <<= 1) {
                         const int mx = (mxy & 1) ? rnd() % 15 + 1 : 0;
                         const int my = (mxy & 2) ? rnd() % 15 + 1 : 0;
 #if BITDEPTH == 16
@@ -433,8 +418,8 @@ static void check_warp8x8(Dav1dMCDSPContext *const c) {
                  HIGHBD_DECL_SUFFIX);
 
     if (check_func(c->warp8x8, "warp_8x8_%dbpc", BITDEPTH)) {
-        const int mx = (rnd() & 0x1fff) - 0xa00;
-        const int my = (rnd() & 0x1fff) - 0xa00;
+        const int mx = (rnd() & 0x1fff) - 0x800;
+        const int my = (rnd() & 0x1fff) - 0x800;
 #if BITDEPTH == 16
         const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
 #else
@@ -442,7 +427,7 @@ static void check_warp8x8(Dav1dMCDSPContext *const c) {
 #endif
 
         for (int i = 0; i < 4; i++)
-            abcd[i] = (rnd() & 0x1fff) - 0xa00;
+            abcd[i] = (rnd() & 0x1fff) - 0x800;
 
         for (int i = 0; i < 15 * 15; i++)
             src_buf[i] = rnd() & bitdepth_max;
@@ -459,8 +444,8 @@ static void check_warp8x8(Dav1dMCDSPContext *const c) {
 
 static void check_warp8x8t(Dav1dMCDSPContext *const c) {
     ALIGN_STK_32(pixel, src_buf, 15 * 15,);
-    ALIGN_STK_32(int16_t, c_tmp,  8 *  8,);
-    ALIGN_STK_32(int16_t, a_tmp,  8 *  8,);
+    ALIGN_STK_32(int16_t, c_tmp,    8 *  8,);
+    ALIGN_STK_32(int16_t, a_tmp,    8 *  8,);
     int16_t abcd[4];
     const pixel *src = src_buf + 15 * 3 + 3;
     const ptrdiff_t src_stride = 15 * sizeof(pixel);
@@ -470,8 +455,8 @@ static void check_warp8x8t(Dav1dMCDSPContext *const c) {
                  HIGHBD_DECL_SUFFIX);
 
     if (check_func(c->warp8x8t, "warp_8x8t_%dbpc", BITDEPTH)) {
-        const int mx = (rnd() & 0x1fff) - 0xa00;
-        const int my = (rnd() & 0x1fff) - 0xa00;
+        const int mx = (rnd() & 0x1fff) - 0x800;
+        const int my = (rnd() & 0x1fff) - 0x800;
 #if BITDEPTH == 16
         const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
 #else
@@ -479,7 +464,7 @@ static void check_warp8x8t(Dav1dMCDSPContext *const c) {
 #endif
 
         for (int i = 0; i < 4; i++)
-            abcd[i] = (rnd() & 0x1fff) - 0xa00;
+            abcd[i] = (rnd() & 0x1fff) - 0x800;
 
         for (int i = 0; i < 15 * 15; i++)
             src_buf[i] = rnd() & bitdepth_max;

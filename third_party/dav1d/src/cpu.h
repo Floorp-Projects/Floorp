@@ -30,8 +30,6 @@
 
 #include "config.h"
 
-#include "common/attributes.h"
-
 #include "dav1d/common.h"
 
 #if ARCH_AARCH64 || ARCH_ARM

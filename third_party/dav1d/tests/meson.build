@@ -98,17 +98,13 @@ endif
 dav1d_fuzzer_sources =  files('libfuzzer/dav1d_fuzzer.c')
 fuzzer_ldflags = []
 
-if get_option('fuzzer_ldflags') != ''
-    fuzzer_ldflags += [get_option('fuzzer_ldflags')]
-endif
-
 if fuzzing_engine == 'none'
     dav1d_fuzzer_sources += files('libfuzzer/main.c')
 elif fuzzing_engine == 'libfuzzer'
     fuzzer_ldflags += ['-fsanitize=fuzzer']
 elif fuzzing_engine == 'oss-fuzz'
     # libFuzzingEngine needs libc++
-    fuzzer_ldflags += ['-lc++']
+    fuzzer_ldflags += ['-fsanitize=fuzzer', '-lFuzzingEngine', '-lc++']
 endif
 
 dav1d_fuzzer = executable('dav1d_fuzzer',

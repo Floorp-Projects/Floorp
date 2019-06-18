@@ -112,11 +112,13 @@ static void init_mode_node(EdgeBranch *const nwc,
                            const int top_has_right,
                            const int left_has_bottom)
 {
+    int n;
+
     init_edges(&nwc->node, bl,
                (top_has_right ? ALL_FL(TOP_HAS_RIGHT) : 0) |
                (left_has_bottom ? ALL_FL(LEFT_HAS_BOTTOM) : 0));
     if (bl == BL_16X16) {
-        for (int n = 0; n < 4; n++) {
+        for (n = 0; n < 4; n++) {
             EdgeTip *const nt = mem->nt++;
             nwc->split[n] = &nt->node;
             init_edges(&nt->node, bl + 1,
@@ -126,7 +128,7 @@ static void init_mode_node(EdgeBranch *const nwc,
                         ALL_FL(LEFT_HAS_BOTTOM)));
         }
     } else {
-        for (int n = 0; n < 4; n++) {
+        for (n = 0; n < 4; n++) {
             EdgeBranch *const nwc_child = mem->nwc[bl]++;
             nwc->split[n] = &nwc_child->node;
             init_mode_node(nwc_child, bl + 1, mem,
@@ -141,12 +143,12 @@ void dav1d_init_mode_tree(EdgeNode *const root_node, EdgeTip *const nt,
 {
     EdgeBranch *const root = (EdgeBranch *) root_node;
     struct ModeSelMem mem;
-    mem.nt = nt;
 
     if (allow_sb128) {
         mem.nwc[BL_128X128] = &root[1];
         mem.nwc[BL_64X64] = &root[1 + 4];
         mem.nwc[BL_32X32] = &root[1 + 4 + 16];
+        mem.nt = nt;
         init_mode_node(root, BL_128X128, &mem, 1, 0);
         assert(mem.nwc[BL_128X128] == &root[1 + 4]);
         assert(mem.nwc[BL_64X64] == &root[1 + 4 + 16]);
@@ -156,6 +158,7 @@ void dav1d_init_mode_tree(EdgeNode *const root_node, EdgeTip *const nt,
         mem.nwc[BL_128X128] = NULL;
         mem.nwc[BL_64X64] = &root[1];
         mem.nwc[BL_32X32] = &root[1 + 4];
+        mem.nt = nt;
         init_mode_node(root, BL_64X64, &mem, 1, 0);
         assert(mem.nwc[BL_64X64] == &root[1 + 4]);
         assert(mem.nwc[BL_32X32] == &root[1 + 4 + 16]);

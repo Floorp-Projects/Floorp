@@ -46,17 +46,17 @@
 #include "src/wedge.h"
 #include "src/film_grain.h"
 
-static COLD void init_internal(void) {
+static void init_internal(void) {
     dav1d_init_wedge_masks();
     dav1d_init_interintra_masks();
     dav1d_init_qm_tables();
 }
 
-COLD const char *dav1d_version(void) {
+const char *dav1d_version(void) {
     return DAV1D_VERSION;
 }
 
-COLD void dav1d_default_settings(Dav1dSettings *const s) {
+void dav1d_default_settings(Dav1dSettings *const s) {
     s->n_frame_threads = 1;
     s->n_tile_threads = 1;
     s->apply_grain = 1;
@@ -67,12 +67,13 @@ COLD void dav1d_default_settings(Dav1dSettings *const s) {
     s->logger.callback = dav1d_log_default_callback;
     s->operating_point = 0;
     s->all_layers = 1; // just until the tests are adjusted
-    s->frame_size_limit = 0;
 }
 
 static void close_internal(Dav1dContext **const c_out, int flush);
 
-COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
+int dav1d_open(Dav1dContext **const c_out,
+               const Dav1dSettings *const s)
+{
     static pthread_once_t initted = PTHREAD_ONCE_INIT;
     pthread_once(&initted, init_internal);
 
@@ -91,7 +92,7 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
 
     pthread_attr_t thread_attr;
     if (pthread_attr_init(&thread_attr)) return DAV1D_ERR(ENOMEM);
-    pthread_attr_setstacksize(&thread_attr, 1024 * 1024);
+    pthread_attr_setstacksize(&thread_attr, 512 * 1024);
 
     Dav1dContext *const c = *c_out = dav1d_alloc_aligned(sizeof(*c), 32);
     if (!c) goto error;
@@ -102,19 +103,6 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
     c->apply_grain = s->apply_grain;
     c->operating_point = s->operating_point;
     c->all_layers = s->all_layers;
-    c->frame_size_limit = s->frame_size_limit;
-
-    /* On 32-bit systems extremely large frame sizes can cause overflows in
-     * dav1d_decode_frame() malloc size calculations. Prevent that from occuring
-     * by enforcing a maximum frame size limit, chosen to roughly correspond to
-     * the largest size possible to decode without exhausting virtual memory. */
-    if (sizeof(size_t) < 8 && s->frame_size_limit - 1 >= 8192 * 8192) {
-        c->frame_size_limit = 8192 * 8192;
-        if (s->frame_size_limit)
-            dav1d_log(c, "Frame size limit reduced from %u to %u.\n",
-                      s->frame_size_limit, c->frame_size_limit);
-    }
-
     c->frame_thread.flush = &c->frame_thread.flush_mem;
     atomic_init(c->frame_thread.flush, 0);
     c->n_fc = s->n_frame_threads;
@@ -444,12 +432,12 @@ void dav1d_flush(Dav1dContext *const c) {
     c->frame_thread.next = 0;
 }
 
-COLD void dav1d_close(Dav1dContext **const c_out) {
+void dav1d_close(Dav1dContext **const c_out) {
     validate_input(c_out != NULL);
     close_internal(c_out, 1);
 }
 
-static COLD void close_internal(Dav1dContext **const c_out, int flush) {
+static void close_internal(Dav1dContext **const c_out, int flush) {
     Dav1dContext *const c = *c_out;
     if (!c) return;
 

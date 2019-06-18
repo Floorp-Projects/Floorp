@@ -99,12 +99,17 @@ bytefn(dav1d_prepare_intra_edges)(const int x, const int have_left,
     case VERT_LEFT_PRED: {
         *angle = av1_mode_to_angle_map[mode - VERT_PRED] + 3 * *angle;
 
-        if (*angle <= 90)
-            mode = *angle < 90 && have_top ? Z1_PRED : VERT_PRED;
-        else if (*angle < 180)
+        if (*angle < 90) {
+            mode = have_top ? Z1_PRED : VERT_PRED;
+        } else if (*angle == 90) {
+            mode = VERT_PRED;
+        } else if (*angle < 180) {
             mode = Z2_PRED;
-        else
-            mode = *angle > 180 && have_left ? Z3_PRED : HOR_PRED;
+        } else if (*angle == 180) {
+            mode = HOR_PRED;
+        } else {
+            mode = have_left ? Z3_PRED : HOR_PRED;
+        }
         break;
     }
     case DC_PRED:
@@ -191,14 +196,14 @@ bytefn(dav1d_prepare_intra_edges)(const int x, const int have_left,
     }
 
     if (av1_intra_prediction_edges[mode].needs_topleft) {
-        if (have_left)
+        if (have_left) {
             *topleft_out = have_top ? dst_top[-1] : dst[-1];
-        else
+        } else {
             *topleft_out = have_top ? *dst_top : (1 << bitdepth) >> 1;
-
+        }
         if (mode == Z2_PRED && tw + th >= 6 && filter_edge)
-            *topleft_out = ((topleft_out[-1] + topleft_out[1]) * 5 +
-                            topleft_out[0] * 6 + 8) >> 4;
+            *topleft_out = (topleft_out[-1] * 5 + topleft_out[0] * 6 +
+                            topleft_out[1] * 5 + 8) >> 4;
     }
 
     return mode;

@@ -1306,15 +1306,6 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
             goto error;
         }
 
-        if (c->frame_size_limit && (int64_t)c->frame_hdr->width[1] *
-            c->frame_hdr->height > c->frame_size_limit)
-        {
-            dav1d_log(c, "Frame size %dx%d exceeds limit %u\n", c->frame_hdr->width[1],
-                      c->frame_hdr->height, c->frame_size_limit);
-            c->frame_hdr = NULL;
-            return DAV1D_ERR(ERANGE);
-        }
-
         // This is the frame header at the start of a frame OBU.
         // There's no trailing bit at the end to skip, but we do need
         // to align to the next byte.
@@ -1427,7 +1418,6 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         default:
             // print a warning but don't fail for unknown types
             dav1d_log(c, "Unknown Metadata OBU type %d\n", meta_type);
-            break;
         }
 
         break;
@@ -1437,9 +1427,8 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         // ignore OBUs we don't care about
         break;
     default:
-        // print a warning but don't fail for unknown types
         dav1d_log(c, "Unknown OBU type %d of size %u\n", type, len);
-        break;
+        return DAV1D_ERR(EINVAL);
     }
 
     if (c->seq_hdr && c->frame_hdr) {

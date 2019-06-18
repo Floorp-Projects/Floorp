@@ -28,43 +28,43 @@
 
 # libdav1d source files
 libdav1d_sources = files(
-    'cdf.c',
+    'picture.c',
     'cpu.c',
     'data.c',
-    'decode.c',
-    'dequant_tables.c',
+    'ref.c',
+    'log.c',
     'getbits.c',
+    'obu.c',
+    'decode.c',
+    'cdf.c',
+    'msac.c',
+    'tables.c',
+    'scan.c',
+    'dequant_tables.c',
     'intra_edge.c',
     'lf_mask.c',
-    'log.c',
-    'msac.c',
-    'obu.c',
-    'picture.c',
-    'qm.c',
-    'ref.c',
     'ref_mvs.c',
-    'scan.c',
-    'tables.c',
     'warpmv.c',
     'wedge.c',
+    'qm.c',
 )
 
 # libdav1d bitdepth source files
 # These files are compiled for each bitdepth with
 # `BITDEPTH` defined to the currently built bitdepth.
 libdav1d_tmpl_sources = files(
-    'cdef_apply_tmpl.c',
-    'cdef_tmpl.c',
-    'film_grain_tmpl.c',
     'ipred_prepare_tmpl.c',
     'ipred_tmpl.c',
     'itx_tmpl.c',
     'lf_apply_tmpl.c',
     'loopfilter_tmpl.c',
-    'looprestoration_tmpl.c',
-    'lr_apply_tmpl.c',
     'mc_tmpl.c',
+    'cdef_apply_tmpl.c',
+    'cdef_tmpl.c',
+    'lr_apply_tmpl.c',
+    'looprestoration_tmpl.c',
     'recon_tmpl.c',
+    'film_grain_tmpl.c',
 )
 
 # libdav1d entrypoint source files
@@ -128,15 +128,15 @@ if is_asm_enabled
         if dav1d_bitdepths.contains('8')
             libdav1d_sources_asm += files(
                 'x86/cdef.asm',
+                'x86/cdef_sse.asm',
                 'x86/ipred.asm',
+                'x86/ipred_ssse3.asm',
                 'x86/itx.asm',
+                'x86/itx_ssse3.asm',
                 'x86/loopfilter.asm',
                 'x86/looprestoration.asm',
-                'x86/mc.asm',
-                'x86/cdef_sse.asm',
-                'x86/ipred_ssse3.asm',
-                'x86/itx_ssse3.asm',
                 'x86/looprestoration_ssse3.asm',
+                'x86/mc.asm',
                 'x86/mc_ssse3.asm',
             )
         endif
