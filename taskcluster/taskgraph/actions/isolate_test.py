@@ -91,6 +91,7 @@ def create_isolate_failure_tasks(task_definition, failures, level):
     new_task_definition = copy.deepcopy(task_definition)
     th_dict = new_task_definition['extra']['treeherder']
     th_dict['groupSymbol'] = th_dict['groupSymbol'] + '-I'
+    th_dict['tier'] = 3
 
     logger.info('Cloning original task')
     create_task_from_def(new_task_id, new_task_definition, level)
@@ -103,6 +104,7 @@ def create_isolate_failure_tasks(task_definition, failures, level):
             th_dict = new_task_definition['extra']['treeherder']
             th_dict['groupSymbol'] = th_dict['groupSymbol'] + '-I'
             th_dict['symbol'] = th_dict['symbol'] + failure_group_suffix
+            th_dict['tier'] = 3
             suite = new_task_definition['extra']['suite']
             if '-chunked' in suite:
                 suite = suite[:suite.index('-chunked')]
