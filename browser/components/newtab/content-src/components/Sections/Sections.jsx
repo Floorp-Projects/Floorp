@@ -226,6 +226,7 @@ export class Section extends React.PureComponent {
         showPrefName={(pref && pref.feed) || id}
         privacyNoticeURL={privacyNoticeURL}
         Prefs={this.props.Prefs}
+        isFixed={this.props.isFixed}
         isFirst={isFirst}
         isLast={isLast}
         learnMore={learnMore}

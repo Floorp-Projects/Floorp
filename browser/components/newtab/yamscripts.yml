@@ -63,6 +63,7 @@ scripts:
 
 # lint: Run eslint and sass-lint
   lint:
+    eslint-check: eslint --print-config . | eslint-config-prettier-check
     eslint: eslint --ext=.js,.jsm,.jsx .
     sasslint: sass-lint -v -q
 

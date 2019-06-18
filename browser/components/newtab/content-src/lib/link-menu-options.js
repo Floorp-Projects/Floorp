@@ -72,7 +72,11 @@ export const LinkMenuOptions = {
     impression: ac.ImpressionStats({
       source: eventSource,
       block: 0,
-      tiles: [{id: site.guid, pos: index}],
+      tiles: [{
+        id: site.guid,
+        pos: index,
+        ...(site.shim && site.shim.delete ? {shim: site.shim.delete} : {}),
+      }],
     }),
     userEvent: "BLOCK",
   }),
@@ -183,7 +187,11 @@ export const LinkMenuOptions = {
     impression: ac.ImpressionStats({
       source: eventSource,
       pocket: 0,
-      tiles: [{id: site.guid, pos: index}],
+      tiles: [{
+        id: site.guid,
+        pos: index,
+        ...(site.shim && site.shim.save ? {shim: site.shim.save} : {}),
+      }],
     }),
     userEvent: "SAVE_TO_POCKET",
   }),

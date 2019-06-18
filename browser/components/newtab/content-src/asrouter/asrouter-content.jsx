@@ -298,7 +298,7 @@ export class ASRouterUISurface extends React.PureComponent {
     } else if (message.template === "return_to_amo_overlay") {
       global.document.body.classList.add("amo");
       return (
-        <LocalizationProvider messages={generateBundles({"amo_html": message.content.text})}>
+        <LocalizationProvider bundles={generateBundles({"amo_html": message.content.text})}>
           <ReturnToAMO
             {...message}
             UISurface="NEWTAB_OVERLAY"

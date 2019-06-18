@@ -4,6 +4,7 @@ import {CollapsibleSection} from "content-src/components/CollapsibleSection/Coll
 import {connect} from "react-redux";
 import {DSMessage} from "content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage";
 import {Hero} from "content-src/components/DiscoveryStreamComponents/Hero/Hero";
+import {Highlights} from "content-src/components/DiscoveryStreamComponents/Highlights/Highlights";
 import {HorizontalRule} from "content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule";
 import {List} from "content-src/components/DiscoveryStreamComponents/List/List";
 import {Navigation} from "content-src/components/DiscoveryStreamComponents/Navigation/Navigation";
@@ -89,6 +90,8 @@ export class _DiscoveryStreamBase extends React.PureComponent {
 
   renderComponent(component, embedWidth) {
     switch (component.type) {
+      case "Highlights":
+        return (<Highlights />);
       case "TopSites":
         return (<TopSites header={component.header} />);
       case "Message":
@@ -245,6 +248,10 @@ export class _DiscoveryStreamBase extends React.PureComponent {
           title={message.header.title}>
           {this.renderLayout(layoutRender)}
         </CollapsibleSection>}
+        {this.renderLayout([{
+          width: 12,
+          components: [{type: "Highlights"}],
+        }])}
       </React.Fragment>
     );
   }

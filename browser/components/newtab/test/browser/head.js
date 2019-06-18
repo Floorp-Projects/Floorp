@@ -12,7 +12,8 @@ function pushPrefs(...prefs) {
   return SpecialPowers.pushPrefEnv({set: prefs});
 }
 
-async function setDefaultTopSites() { // eslint-disable-line no-unused-vars
+// eslint-disable-next-line no-unused-vars
+async function setDefaultTopSites() {
   // The pref for TopSites is empty by default.
   await pushPrefs(["browser.newtabpage.activity-stream.default.sites",
     "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://twitter.com/"]);
@@ -22,7 +23,8 @@ async function setDefaultTopSites() { // eslint-disable-line no-unused-vars
   await pushPrefs(["browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", true]);
 }
 
-async function clearHistoryAndBookmarks() { // eslint-disable-line no-unused-vars
+// eslint-disable-next-line no-unused-vars
+async function clearHistoryAndBookmarks() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
   QueryCache.expireAll();
@@ -53,7 +55,8 @@ function refreshHighlightsFeed() {
  * Helper to populate the Highlights section with bookmark cards.
  * @param count Number of items to add.
  */
-async function addHighlightsBookmarks(count) { // eslint-disable-line no-unused-vars
+// eslint-disable-next-line no-unused-vars
+async function addHighlightsBookmarks(count) {
   const bookmarks = new Array(count).fill(null).map((entry, i) => ({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "foo",
@@ -107,7 +110,8 @@ function addContentHelpers() {
  *                       an arg from "before" and returns a result to "after"
  *     after  {Function} Optional. Runs after and with the result of "test"
  */
-function test_newtab(testInfo) { // eslint-disable-line no-unused-vars
+// eslint-disable-next-line no-unused-vars
+function test_newtab(testInfo) {
   // Extract any test parts or default to just the single content task
   let {before, test: contentTask, after} = testInfo;
   if (!before) {

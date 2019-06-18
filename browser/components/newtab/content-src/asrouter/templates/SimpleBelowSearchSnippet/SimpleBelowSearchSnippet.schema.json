@@ -29,6 +29,11 @@
       "type": "string",
       "description": "Snippet icon. Dark theme variant. 64x64px. SVG or PNG preferred."
     },
+    "icon_alt_text": {
+      "type": "string",
+      "description": "Alt text describing icon for screen readers",
+      "default": ""
+    },
     "block_button_text": {
       "type": "string",
       "description": "Tooltip text used for dismiss button.",
