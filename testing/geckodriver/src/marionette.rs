@@ -1278,7 +1278,7 @@ impl MarionetteConnection {
                 _ => panic!("Expected one byte got more"),
             };
             match byte {
-                '0'...'9' => {
+                '0'..='9' => {
                     bytes = bytes * 10;
                     bytes += byte as usize - '0' as usize;
                 }

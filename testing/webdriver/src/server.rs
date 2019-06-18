@@ -176,7 +176,7 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
     type ResBody = Body;
 
     type Error = hyper::Error;
-    type Future = Box<future::Future<Item = Response<Self::ResBody>, Error = hyper::Error> + Send>;
+    type Future = Box<dyn future::Future<Item = Response<Self::ResBody>, Error = hyper::Error> + Send>;
 
     fn call(&mut self, req: Request<Self::ReqBody>) -> Self::Future {
         let uri = req.uri().clone();
