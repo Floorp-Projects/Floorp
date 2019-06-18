@@ -249,11 +249,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (!sDriverInfo->Length()) {
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
-        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll), GfxDriverInfo::allDevices,
-        nsIGfxInfo::FEATURE_WEBGL_MSAA, nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION,
-        "FEATURE_FAILURE_MAC_ATI_NO_MSAA");
-    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(RadeonX1000),
         nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
@@ -285,17 +280,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
 
   // Don't evaluate special cases when we're evaluating the downloaded blocklist.
   if (!aDriverInfo.Length()) {
-    if (aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
-      // Blacklist all ATI cards on OSX, except for
-      // 0x6760 and 0x9488
-      if (mAdapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorATI),
-                                  nsCaseInsensitiveStringComparator()) &&
-          (mAdapterDeviceID.LowerCaseEqualsLiteral("0x6760") ||
-           mAdapterDeviceID.LowerCaseEqualsLiteral("0x9488"))) {
-        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
-        return NS_OK;
-      }
-    } else if (aFeature == nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION) {
+    if (aFeature == nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION) {
       // See bug 1249659
       switch (os) {
         case OperatingSystem::OSX10_5:
