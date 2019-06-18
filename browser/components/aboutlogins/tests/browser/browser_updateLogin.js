@@ -34,12 +34,12 @@ add_task(async function test_login_item() {
   let browser = gBrowser.selectedBrowser;
   await ContentTask.spawn(browser, LoginHelper.loginToVanillaObject(TEST_LOGIN1), async (login) => {
     let loginList = content.document.querySelector("login-list");
-    let loginListItem = Cu.waiveXrays(loginList.shadowRoot.querySelector("login-list-item[guid]"));
+    let loginListItem = Cu.waiveXrays(loginList.shadowRoot.querySelector("login-list-item[data-guid]"));
     loginListItem.click();
 
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let loginItemPopulated = await ContentTaskUtils.waitForCondition(() => {
-      return loginItem._login.guid == loginListItem.getAttribute("guid") &&
+      return loginItem._login.guid == loginListItem.dataset.guid &&
              loginItem._login.guid == login.guid;
     }, "Waiting for login item to get populated");
     ok(loginItemPopulated, "The login item should get populated");
@@ -67,7 +67,7 @@ add_task(async function test_login_item() {
     usernameInput.value += "-saveme";
     passwordInput.value += "-saveme";
 
-    ok(loginItem.hasAttribute("editing"), "LoginItem should be in 'edit' mode");
+    ok(loginItem.dataset.editing, "LoginItem should be in 'edit' mode");
 
     let saveChangesButton = loginItem.shadowRoot.querySelector(".save-changes-button");
     saveChangesButton.click();
@@ -80,12 +80,12 @@ add_task(async function test_login_item() {
              loginListItem._login.password == passwordInput.value;
     }, "Waiting for corresponding login in login list to update");
 
-    ok(!loginItem.hasAttribute("editing"), "LoginItem should not be in 'edit' mode after saving");
+    ok(!loginItem.dataset.editing, "LoginItem should not be in 'edit' mode after saving");
 
     editButton.click();
     await Promise.resolve();
 
-    ok(loginItem.hasAttribute("editing"), "LoginItem should be in 'edit' mode");
+    ok(loginItem.dataset.editing, "LoginItem should be in 'edit' mode");
     let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
     deleteButton.click();
 
@@ -94,6 +94,6 @@ add_task(async function test_login_item() {
       return !loginListItem;
     }, "Waiting for login to be removed from list");
 
-    ok(!loginItem.hasAttribute("editing"), "LoginItem should not be in 'edit' mode after deleting");
+    ok(!loginItem.dataset.editing, "LoginItem should not be in 'edit' mode after deleting");
   });
 });

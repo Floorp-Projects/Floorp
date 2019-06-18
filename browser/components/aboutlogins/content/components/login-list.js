@@ -82,11 +82,11 @@ export default class LoginList extends ReflectedFluentElement {
     }
 
     for (let listItem of this.shadowRoot.querySelectorAll("login-list-item")) {
-      if (!listItem.hasAttribute("guid")) {
+      if (!listItem.dataset.guid) {
         // Don't hide the 'New Login' item if it is present.
         continue;
       }
-      if (matchingLoginGuids.includes(listItem.getAttribute("guid"))) {
+      if (matchingLoginGuids.includes(listItem.dataset.guid)) {
         if (listItem.hidden) {
           listItem.hidden = false;
         }

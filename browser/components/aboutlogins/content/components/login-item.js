@@ -248,7 +248,11 @@ export default class LoginItem extends ReflectedFluentElement {
     let form = this.shadowRoot.querySelector("form");
     form.reset();
 
-    this.toggleAttribute("isNewLogin", !login.guid);
+    if (login.guid) {
+      delete this.dataset.isNewLogin;
+    } else {
+      this.dataset.isNewLogin = true;
+    }
     this.toggleEditing(!login.guid);
 
     let revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
@@ -316,10 +320,10 @@ export default class LoginItem extends ReflectedFluentElement {
    *                        puts the form in read-only mode.
    */
   toggleEditing(force) {
-    let shouldEdit = force !== undefined ? force : !this.hasAttribute("editing");
+    let shouldEdit = force !== undefined ? force : !this.dataset.editing;
 
     if (!shouldEdit) {
-      this.removeAttribute("isNewLogin");
+      delete this.dataset.isNewLogin;
     }
 
     if (shouldEdit) {
@@ -331,12 +335,16 @@ export default class LoginItem extends ReflectedFluentElement {
         (this._login.password || "").length + "ch";
     }
 
-    this.shadowRoot.querySelector(".delete-button").disabled = this.hasAttribute("isNewLogin");
+    this.shadowRoot.querySelector(".delete-button").disabled = this.dataset.isNewLogin;
     this.shadowRoot.querySelector(".edit-button").disabled = shouldEdit;
-    this.shadowRoot.querySelector("input[name='origin']").readOnly = !this.hasAttribute("isNewLogin");
+    this.shadowRoot.querySelector("input[name='origin']").readOnly = !this.dataset.isNewLogin;
     this.shadowRoot.querySelector("input[name='username']").readOnly = !shouldEdit;
     this.shadowRoot.querySelector("input[name='password']").readOnly = !shouldEdit;
-    this.toggleAttribute("editing", shouldEdit);
+    if (shouldEdit) {
+      this.dataset.editing = true;
+    } else {
+      delete this.dataset.editing;
+    }
   }
 
   updatePasswordRevealState() {
@@ -363,7 +371,7 @@ export default class LoginItem extends ReflectedFluentElement {
    */
   _isFormValid({reportErrors} = {}) {
     let fields = [this.shadowRoot.querySelector("input[name='password']")];
-    if (this.hasAttribute("isNewLogin")) {
+    if (this.dataset.isNewLogin) {
       fields.push(this.shadowRoot.querySelector("input[name='origin']"));
     }
     let valid = true;
