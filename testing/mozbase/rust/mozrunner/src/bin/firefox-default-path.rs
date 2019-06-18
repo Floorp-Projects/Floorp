@@ -8,7 +8,7 @@ fn main() {
         .map(|x| (x.to_string_lossy().into_owned(), 0))
         .unwrap_or(("Firefox binary not found".to_owned(), 1));
 
-    let mut writer: Box<Write> = match code {
+    let mut writer: Box<dyn Write> = match code {
         0 => Box::new(std::io::stdout()),
         _ => Box::new(std::io::stderr())
     };
