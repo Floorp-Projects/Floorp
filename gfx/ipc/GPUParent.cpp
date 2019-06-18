@@ -107,6 +107,10 @@ bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
     ProcessChild::QuickExit();
   }
 
+  if (NS_FAILED(NS_InitMinimalXPCOM())) {
+    return false;
+  }
+
   // Init crash reporter support.
   CrashReporterClient::InitSingleton(this);
 
@@ -119,10 +123,6 @@ bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
 #if defined(XP_WIN)
   DeviceManagerDx::Init();
 #endif
-
-  if (NS_FAILED(NS_InitMinimalXPCOM())) {
-    return false;
-  }
 
   CompositorThreadHolder::Start();
   APZThreadUtils::SetControllerThread(MessageLoop::current());
