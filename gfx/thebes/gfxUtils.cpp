@@ -1511,7 +1511,7 @@ wr::RenderRoot gfxUtils::RecursivelyGetRenderRootForFrame(
   }
 
   for (const nsIFrame* current = aFrame; current;
-       current = current->GetParent()) {
+       current = nsLayoutUtils::GetCrossDocParentFrame(current)) {
     auto renderRoot = gfxUtils::GetRenderRootForFrame(current);
     if (renderRoot) {
       return *renderRoot;
