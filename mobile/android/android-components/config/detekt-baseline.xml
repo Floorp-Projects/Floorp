@@ -1,6 +1,218 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
   <Blacklist timestamp="1521663963552"></Blacklist>
-  <Whitelist timestamp="1522961299960">
+  <Whitelist timestamp="1561988617766">
+    <ID>LargeClass:BrowserFragment.kt$BrowserFragment : FragmentBackHandler</ID>
+    <ID>LargeClass:BrowserToolbar.kt$BrowserToolbar : ViewGroupToolbar</ID>
+    <ID>LargeClass:ContextMenuCandidate.kt$ContextMenuCandidate$Companion</ID>
+    <ID>LargeClass:CustomTabsToolbarFeature.kt$CustomTabsToolbarFeature : LifecycleAwareFeatureBackHandler</ID>
+    <ID>LargeClass:EventsStorageEngine.kt$EventsStorageEngine : StorageEngine</ID>
+    <ID>LargeClass:ExperimentEvaluator.kt$ExperimentEvaluator</ID>
+    <ID>LargeClass:Experiments.kt$ExperimentsInternalAPI</ID>
+    <ID>LargeClass:FxaAccountManager.kt$FxaAccountManager : CloseableObservable</ID>
+    <ID>LargeClass:GeckoPromptDelegate.kt$GeckoPromptDelegate : PromptDelegate</ID>
+    <ID>LargeClass:Lexer.kt$Lexer</ID>
+    <ID>LargeClass:MainActivity.kt$MainActivity : AppCompatActivityOnLoginCompleteListenerCoroutineScope</ID>
+    <ID>LargeClass:PromptFeature.kt$PromptFeature : LifecycleAwareFeaturePermissionsFeature</ID>
+    <ID>LargeClass:Session.kt$Session : Observable</ID>
+    <ID>LargeClass:SystemEngineSession.kt$SystemEngineSession : EngineSession</ID>
+    <ID>LargeClass:SystemEngineView.kt$SystemEngineView : FrameLayoutEngineViewOnLongClickListener</ID>
+    <ID>LargeClass:SystemEngineView.kt$SystemEngineView$&lt;no name provided&gt; : WebChromeClient</ID>
+    <ID>LargeClass:SystemEngineView.kt$SystemEngineView$&lt;no name provided&gt; : WebViewClient</ID>
+    <ID>LongMethod:Activity.kt$ fun Activity.applyOrientation(manifest: WebAppManifest)</ID>
+    <ID>LongMethod:AndroidDownloadManager.kt$AndroidDownloadManager$ @RequiresPermission(allOf = [INTERNET, WRITE_EXTERNAL_STORAGE]) override fun download( download: Download, refererUrl: String, cookie: String ): Long</ID>
+    <ID>LongMethod:AndroidIconDecoder.kt$AndroidIconDecoder$override fun decode(data: ByteArray, desiredSize: DesiredSize): Bitmap?</ID>
+    <ID>LongMethod:AppLinksFeature.kt$AppLinksFeature$@SuppressLint("MissingPermission") @VisibleForTesting internal fun handleRedirect(redirect: AppLinkRedirect, session: Session)</ID>
+    <ID>LongMethod:AppLinksUseCases.kt$AppLinksUseCases.GetAppLinkRedirect$operator fun invoke(url: String): AppLinkRedirect</ID>
+    <ID>LongMethod:AppLinksUseCases.kt$AppLinksUseCases.GetAppLinkRedirect$private fun createBrowsableIntents(url: String): List&lt;Intent&gt;</ID>
+    <ID>LongMethod:AssetsSearchEngineProvider.kt$AssetsSearchEngineProvider$ override suspend fun loadSearchEngines(context: Context): SearchEngineList</ID>
+    <ID>LongMethod:AssetsSearchEngineProvider.kt$AssetsSearchEngineProvider$private suspend fun loadSearchEnginesFromList( context: Context, searchEngineIdentifiers: List&lt;String&gt; ): List&lt;SearchEngine&gt;</ID>
+    <ID>LongMethod:AstNode.kt$AstNode$@Suppress("ComplexMethod") // Yes, this method is long and complex. We should split AstNode into multiple types. private fun toString(level: Int): String</ID>
+    <ID>LongMethod:AuthenticationDialogFragment.kt$AuthenticationDialogFragment.Companion$ @Suppress("LongParameterList") fun newInstance( sessionId: String, title: String, message: String, username: String, password: String, onlyShowPassword: Boolean ): AuthenticationDialogFragment</ID>
+    <ID>LongMethod:AutoSave.kt$AutoSave$ @Synchronized internal fun triggerSave(delaySave: Boolean = true): Job</ID>
+    <ID>LongMethod:BrowserMenu.kt$@VisibleForTesting internal fun PopupWindow.displayPopup( containerView: View, anchor: View, preferredOrientation: BrowserMenu.Orientation )</ID>
+    <ID>LongMethod:BrowserMenu.kt$BrowserMenu$ @SuppressLint("InflateParams") fun show( anchor: View, orientation: Orientation = DOWN, endOfMenuAlwaysVisible: Boolean = false, onDismiss: () -&gt; Unit = {} ): PopupWindow</ID>
+    <ID>LongMethod:BrowserMenuItemToolbar.kt$BrowserMenuItemToolbar$override fun bind(menu: BrowserMenu, view: View)</ID>
+    <ID>LongMethod:Browsers.kt$Browsers$private fun findKnownBrowsers( packageManager: PackageManager, browsers: MutableMap&lt;String, ActivityInfo&gt;, uri: Uri )</ID>
+    <ID>LongMethod:ByteArray.kt$ @Suppress("ComplexMethod", "NestedBlockDepth") internal fun ByteArray.binarySearch(labels: List&lt;ByteArray&gt;, labelIndex: Int): String?</ID>
+    <ID>LongMethod:ByteArray.kt$fun ByteArray.toBitmap( offset: Int, length: Int, opts: BitmapFactory.Options? = null ): Bitmap?</ID>
+    <ID>LongMethod:Connection.kt$Connection$// These are implemented as default methods on `Connection` instead of // `RustPlacesConnection` to make testing easier. @Suppress("ComplexMethod", "NestedBlockDepth") fun assembleHistoryPing(ping: SyncTelemetryPing)</ID>
+    <ID>LongMethod:Connection.kt$Connection$// This function is almost identical to `recordHistoryPing`, with additional // reporting for validation problems. Unfortunately, since the // `BookmarksSync` and `HistorySync` metrics are two separate objects, we // can't factor this out into a generic function. @Suppress("ComplexMethod", "NestedBlockDepth") fun assembleBookmarksPing(ping: SyncTelemetryPing)</ID>
+    <ID>LongMethod:ContentStateReducer.kt$ContentStateReducer$ fun reduce(state: BrowserState, action: ContentAction): BrowserState</ID>
+    <ID>LongMethod:ContentStateReducer.kt$private fun updateContentState( state: BrowserState, tabId: String, update: (ContentState) -&gt; ContentState ): BrowserState</ID>
+    <ID>LongMethod:ContextMenuCandidate.kt$ContextMenuCandidate.Companion$ fun createOpenImageInNewTabCandidate( context: Context, tabsUseCases: TabsUseCases, snackBarParentView: View, snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate() )</ID>
+    <ID>LongMethod:ContextMenuCandidate.kt$ContextMenuCandidate.Companion$ fun createOpenInNewTabCandidate( context: Context, tabsUseCases: TabsUseCases, snackBarParentView: View, snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate() )</ID>
+    <ID>LongMethod:ContextMenuCandidate.kt$ContextMenuCandidate.Companion$ fun createOpenInPrivateTabCandidate( context: Context, tabsUseCases: TabsUseCases, snackBarParentView: View, snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate() )</ID>
+    <ID>LongMethod:CrashActivity.kt$CrashActivity$@Suppress("TooGenericExceptionThrown") override fun onClick(view: View)</ID>
+    <ID>LongMethod:CustomTabConfig.kt$CustomTabConfig.Companion$ @Suppress("ComplexMethod") fun createFromIntent(intent: SafeIntent, displayMetrics: DisplayMetrics? = null): CustomTabConfig</ID>
+    <ID>LongMethod:CustomTabsToolbarFeature.kt$CustomTabsToolbarFeature$@VisibleForTesting internal fun addMenuItems( session: Session, menuItems: List&lt;CustomTabMenuItem&gt;, index: Int )</ID>
+    <ID>LongMethod:CustomTabsToolbarFeature.kt$CustomTabsToolbarFeature$@VisibleForTesting internal fun initialize(session: Session): Boolean</ID>
+    <ID>LongMethod:DefaultIconGenerator.kt$DefaultIconGenerator$@Suppress("MagicNumber") override fun generate(context: Context, request: IconRequest): Icon</ID>
+    <ID>LongMethod:DefaultSuggestionViewHolder.kt$DefaultSuggestionViewHolder.Chips$override fun bind(suggestion: AwesomeBar.Suggestion, selectionListener: () -&gt; Unit)</ID>
+    <ID>LongMethod:DisplayToolbar.kt$DisplayToolbar$// We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations @Suppress("ComplexMethod") override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int)</ID>
+    <ID>LongMethod:DisplayToolbar.kt$DisplayToolbar$// We measure the views manually to avoid overhead by using complex ViewGroup implementations override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int)</ID>
+    <ID>LongMethod:DomainAutoCompleteProvider.kt$DomainAutoCompleteProvider$ fun initialize( context: Context, useShippedDomains: Boolean = true, useCustomDomains: Boolean = false, loadDomainsFromDisk: Boolean = true )</ID>
+    <ID>LongMethod:DomainMatcher.kt$@SuppressWarnings("ReturnCount") private fun basicMatch(query: String, urls: Sequence&lt;String&gt;): String?</ID>
+    <ID>LongMethod:EngineVersion.kt$EngineVersion.Companion$ @Suppress("MagicNumber", "ReturnCount") fun parse(version: String): EngineVersion?</ID>
+    <ID>LongMethod:ErrorPages.kt$ErrorPages$ fun createErrorPage( context: Context, errorType: ErrorType, uri: String? = null, @RawRes htmlResource: Int = R.raw.error_pages, @RawRes cssResource: Int = R.raw.error_style ): String</ID>
+    <ID>LongMethod:ErrorRecording.kt$ErrorRecording$ @VisibleForTesting(otherwise = VisibleForTesting.NONE) internal fun testGetNumRecordedErrors( metricData: CommonMetricData, errorType: ErrorType, pingName: String? = null ): Int</ID>
+    <ID>LongMethod:ErrorRecording.kt$ErrorRecording$ internal fun recordError( metricData: CommonMetricData, errorType: ErrorType, message: String, logger: Logger )</ID>
+    <ID>LongMethod:EventsStorageEngine.kt$EventsStorageEngine$ @Synchronized fun getSnapshot(storeName: String, clearStore: Boolean): List&lt;RecordedEventData&gt;?</ID>
+    <ID>LongMethod:EventsStorageEngine.kt$EventsStorageEngine$ fun &lt;ExtraKeysEnum : Enum&lt;ExtraKeysEnum&gt;&gt; record( metricData: EventMetricType&lt;ExtraKeysEnum&gt;, monotonicElapsedMs: Long, extra: Map&lt;String, String&gt;? = null )</ID>
+    <ID>LongMethod:ExperimentEvaluator.kt$ExperimentEvaluator$ internal fun evaluate( context: Context, experimentDescriptor: ExperimentDescriptor, experiments: List&lt;Experiment&gt;, userBucket: Int = getUserBucket(context) ): ActiveExperiment?</ID>
+    <ID>LongMethod:ExperimentEvaluator.kt$ExperimentEvaluator$private fun matches(context: Context, experiment: Experiment): Boolean</ID>
+    <ID>LongMethod:Experiments.kt$ExperimentsInternalAPI$ fun initialize( applicationContext: Context, configuration: Configuration = Configuration() )</ID>
+    <ID>LongMethod:ExperimentsDebugActivity.kt$ExperimentsDebugActivity$@Suppress("ComplexMethod") override fun onCreate(savedInstanceState: Bundle?)</ID>
+    <ID>LongMethod:ExperimentsStorageEngine.kt$ExperimentsStorageEngine$ fun setExperimentActive( experimentId: String, branch: String, extra: Map&lt;String, String&gt;? = null )</ID>
+    <ID>LongMethod:FindInPageBar.kt$FindInPageBar$private fun createStyling( context: Context, attrs: AttributeSet?, defStyleAttr: Int ): FindInPageBarStyling</ID>
+    <ID>LongMethod:FlowLayout.kt$FlowLayout$override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int)</ID>
+    <ID>LongMethod:FlowLayout.kt$FlowLayout$override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int)</ID>
+    <ID>LongMethod:FxaAccountManager.kt$FxaAccountManager$ @Suppress("ComplexMethod", "ReturnCount", "ThrowsCount") private suspend fun stateActions(forState: AccountState, via: Event): Event?</ID>
+    <ID>LongMethod:FxaAccountManager.kt$FxaAccountManager.Companion$ internal fun nextState(state: AccountState, event: Event): AccountState?</ID>
+    <ID>LongMethod:FxaDeviceManager.kt$PollingDeviceManager$fun refreshDevicesAsync(): Deferred&lt;Boolean&gt;</ID>
+    <ID>LongMethod:GVVersionVerifierPlugin.kt$GVVersionVerifierPlugin$override fun apply(project: Project)</ID>
+    <ID>LongMethod:GeckoEngineSession.kt$GeckoEngineSession$ override fun toggleDesktopMode(enable: Boolean, reload: Boolean)</ID>
+    <ID>LongMethod:GeckoEngineSession.kt$GeckoEngineSession$@Suppress("ComplexMethod") fun handleLongClick(elementSrc: String?, elementType: Int, uri: String? = null): HitResult?</ID>
+    <ID>LongMethod:GeckoEngineSession.kt$GeckoEngineSession$private fun createGeckoSession()</ID>
+    <ID>LongMethod:GeckoEngineSession.kt$GeckoEngineSession.&lt;no name provided&gt;$@SuppressWarnings("ReturnCount") override fun onVisited( session: GeckoSession, url: String, lastVisitedURL: String?, flags: Int ): GeckoResult&lt;Boolean&gt;?</ID>
+    <ID>LongMethod:GeckoEngineSession.kt$GeckoEngineSession.&lt;no name provided&gt;$override fun onLoadRequest( session: GeckoSession, request: NavigationDelegate.LoadRequest ): GeckoResult&lt;AllowOrDeny&gt;</ID>
+    <ID>LongMethod:GeckoEngineSession.kt$GeckoEngineSession.Companion$ @Suppress("ComplexMethod") internal fun geckoErrorToErrorType(@WebRequestError.Error errorCode: Int)</ID>
+    <ID>LongMethod:GeckoEngineSession.kt$GeckoEngineSession.Companion$ @Suppress("ComplexMethod") internal fun geckoErrorToErrorType(errorCode: Int)</ID>
+    <ID>LongMethod:GeckoPermissionRequest.kt$GeckoPermissionRequest.Media.Companion$@Suppress("ComplexMethod", "SwitchIntDef") fun mapPermission(mediaSource: MediaSource): Permission</ID>
+    <ID>LongMethod:GeckoPromptDelegate.kt$GeckoPromptDelegate$@Suppress("LongParameterList") private fun notifyDatePromptRequest( title: String, initialDateString: String, minDateString: String?, maxDateString: String?, onClear: () -&gt; Unit, format: String, geckoCallback: TextCallback )</ID>
+    <ID>LongMethod:GeckoPromptDelegate.kt$GeckoPromptDelegate$override fun onAuthPrompt( session: GeckoSession, title: String?, message: String?, options: AuthOptions, geckoCallback: AuthCallback )</ID>
+    <ID>LongMethod:GeckoPromptDelegate.kt$GeckoPromptDelegate$override fun onButtonPrompt( session: GeckoSession, title: String?, message: String?, buttonTitles: Array&lt;out String?&gt;?, callback: ButtonCallback )</ID>
+    <ID>LongMethod:GeckoPromptDelegate.kt$GeckoPromptDelegate$override fun onChoicePrompt( session: GeckoSession, title: String?, msg: String?, type: Int, geckoChoices: Array&lt;out GeckoChoice&gt;, callback: ChoiceCallback )</ID>
+    <ID>LongMethod:GeckoPromptDelegate.kt$GeckoPromptDelegate$override fun onDateTimePrompt( session: GeckoSession, title: String?, type: Int, value: String?, minDate: String?, maxDate: String?, geckoCallback: TextCallback )</ID>
+    <ID>LongMethod:GeckoPromptDelegate.kt$GeckoPromptDelegate$override fun onFilePrompt( session: GeckoSession, title: String?, selectionType: Int, mimeTypes: Array&lt;out String&gt;?, callback: FileCallback )</ID>
+    <ID>LongMethod:GeckoPromptDelegate.kt$GeckoPromptDelegate$override fun onTextPrompt( session: GeckoSession, title: String?, inputLabel: String?, inputValue: String?, callback: TextCallback )</ID>
+    <ID>LongMethod:GeckoViewFetchClient.kt$GeckoViewFetchClient$@Throws(IOException::class) @Suppress("ComplexMethod") override fun fetch(request: Request): Response</ID>
+    <ID>LongMethod:GeckoViewFetchClient.kt$GeckoViewFetchClient$@Throws(IOException::class) override fun fetch(request: Request): Response</ID>
+    <ID>LongMethod:GenericStorageEngine.kt$GenericStorageEngine$ @Suppress("TooGenericExceptionCaught", "ComplexMethod") open fun deserializeLifetime(lifetime: Lifetime): SharedPreferences</ID>
+    <ID>LongMethod:GenericStorageEngine.kt$GenericStorageEngine$ @Synchronized protected fun recordMetric( metricData: CommonMetricData, value: MetricType, extraSerializationData: Any? = null, combine: MetricsCombiner&lt;MetricType&gt; )</ID>
+    <ID>LongMethod:GitHubClient.kt$GitHubClient$@Suppress("TooGenericExceptionCaught") private fun httpPOST(urlString: String, json: String, vararg headers: Pair&lt;String, String&gt;): Pair&lt;Boolean, String&gt;</ID>
+    <ID>LongMethod:GitHubPlugin.kt$GitHubPlugin$@Suppress("TooGenericExceptionThrown", "LongParameterList") private fun createPullRequest( title: String, body: String, branchName: String, baseBranch: String, owner: String, repoName: String, user: String )</ID>
+    <ID>LongMethod:GitHubPlugin.kt$GitHubPlugin$override fun apply(project: Project)</ID>
+    <ID>LongMethod:Glean.kt$GleanInternalAPI$ @Suppress("EXPERIMENTAL_API_USAGE") internal fun sendPings(pings: List&lt;PingType&gt;)</ID>
+    <ID>LongMethod:Glean.kt$GleanInternalAPI$ fun initialize( applicationContext: Context, configuration: Configuration = Configuration() )</ID>
+    <ID>LongMethod:Glean.kt$GleanInternalAPI$ private fun fixLegacyPingInfoMetrics()</ID>
+    <ID>LongMethod:Glean.kt$GleanInternalAPI$ private fun initializeCoreMetrics(applicationContext: Context)</ID>
+    <ID>LongMethod:GleanDebugActivity.kt$GleanDebugActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
+    <ID>LongMethod:HttpIconLoader.kt$HttpIconLoader$override fun load(context: Context, request: IconRequest, resource: IconRequest.Resource): IconLoader.Result</ID>
+    <ID>LongMethod:HttpPingUploader.kt$HttpPingUploader$@Throws(IOException::class) internal fun performUpload(client: Client, request: Request): Boolean</ID>
+    <ID>LongMethod:HttpPingUploader.kt$HttpPingUploader$@VisibleForTesting(otherwise = PRIVATE) internal fun buildRequest(path: String, data: String, config: Configuration): Request</ID>
+    <ID>LongMethod:HttpURLConnectionClient.kt$private fun createBody(connection: HttpURLConnection, contentType: String?): Response.Body</ID>
+    <ID>LongMethod:ICOIconDecoderTest.kt$ICOIconDecoderTest$@Test fun testIconSizesOfGolemFavicon()</ID>
+    <ID>LongMethod:ICOIconDecoderTest.kt$ICOIconDecoderTest$@Test fun testIconSizesOfMicrosoftFavicon()</ID>
+    <ID>LongMethod:IconDirectoryEntry.kt$ @Suppress("MagicNumber", "ReturnCount", "ComplexMethod", "NestedBlockDepth", "ComplexCondition") internal fun decodeDirectoryEntries(data: ByteArray, maxSize: Int): List&lt;IconDirectoryEntry&gt;</ID>
+    <ID>LongMethod:IconDirectoryEntry.kt$@Suppress("MagicNumber") internal fun createIconDirectoryEntry( data: ByteArray, entryOffset: Int, directoryIndex: Int ): IconDirectoryEntry?</ID>
+    <ID>LongMethod:InMemoryHistoryStorage.kt$InMemoryHistoryStorage$override fun getSuggestions(query: String, limit: Int): List&lt;SearchResult&gt;</ID>
+    <ID>LongMethod:InMemoryHistoryStorage.kt$InMemoryHistoryStorage$override suspend fun getDetailedVisits( start: Long, end: Long, excludeTypes: List&lt;VisitType&gt; ): List&lt;VisitInfo&gt;</ID>
+    <ID>LongMethod:JSONExperimentParser.kt$JSONExperimentParser$ fun fromJson(jsonObject: JSONObject): Experiment</ID>
+    <ID>LongMethod:JSONExperimentParser.kt$JSONExperimentParser$ fun toJson(experiment: Experiment): JSONObject</ID>
+    <ID>LongMethod:Jexl.kt$Jexl$ fun evaluateBooleanExpression( expression: String, context: JexlContext = JexlContext(), defaultValue: Boolean? = null ): Boolean</ID>
+    <ID>LongMethod:KintoClient.kt$KintoClient$@Suppress("TooGenericExceptionCaught", "ThrowsCount") internal fun fetch(url: String): String</ID>
+    <ID>LongMethod:KintoExperimentSource.kt$KintoExperimentSource$private fun mergeExperimentsFromDiff(experimentsDiff: String, snapshot: ExperimentsSnapshot): ExperimentsSnapshot</ID>
+    <ID>LongMethod:LabeledMetricType.kt$LabeledMetricType$ @Suppress("ReturnCount") private fun getFinalDynamicLabel(label: String): String</ID>
+    <ID>LongMethod:LegacySessionManager.kt$LegacySessionManager$ @Suppress("ComplexMethod") private fun recalculateSelectionIndex( indexToRemove: Int, selectParentIfExists: Boolean, private: Boolean, parentId: String? ): Boolean</ID>
+    <ID>LongMethod:LegacySessionManager.kt$LegacySessionManager$ fun createSnapshot(): SessionManager.Snapshot</ID>
+    <ID>LongMethod:LegacySessionManager.kt$LegacySessionManager$ fun remove( session: Session = selectedSessionOrThrow, selectParentIfExists: Boolean = false )</ID>
+    <ID>LongMethod:LegacySessionManager.kt$LegacySessionManager$ fun restore(snapshot: SessionManager.Snapshot, updateSelection: Boolean = true)</ID>
+    <ID>LongMethod:LegacySessionManager.kt$LegacySessionManager$@Suppress("LongParameterList", "ComplexMethod") private fun addInternal( session: Session, selected: Boolean = false, engineSession: EngineSession? = null, engineSessionState: EngineSessionState? = null, parent: Session? = null, viaRestore: Boolean = false )</ID>
+    <ID>LongMethod:Lexer.kt$Lexer$ @Suppress("ComplexMethod") @Throws(LexerException::class) fun tokenize(raw: String): List&lt;Token&gt;</ID>
+    <ID>LongMethod:Lexer.kt$Lexer$@Suppress("ComplexMethod") private fun readDigit(input: LexerInput, negate: Boolean): Token</ID>
+    <ID>LongMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
+    <ID>LongMethod:MainActivity.kt$MainActivity.&lt;no name provided&gt;$override fun onIdle()</ID>
+    <ID>LongMethod:MainActivity.kt$MainActivity.&lt;no name provided&gt;$override fun onLoggedOut()</ID>
+    <ID>LongMethod:Map.kt$private fun &lt;V&gt; Bundle.put(key: String, value: V)</ID>
+    <ID>LongMethod:MediaStateMachine.kt$MediaSessionObserver$@Suppress("ReturnCount") private fun determineNewState(): MediaState</ID>
+    <ID>LongMethod:MetricsPingScheduler.kt$MetricsPingScheduler$ @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE) internal fun getMillisecondsUntilDueTime( sendTheNextCalendarDay: Boolean, now: Calendar, dueHourOfTheDay: Int = DUE_HOUR_OF_THE_DAY ): Long</ID>
+    <ID>LongMethod:MetricsPingScheduler.kt$MetricsPingScheduler$ fun startupCheck()</ID>
+    <ID>LongMethod:MultiButtonDialogFragment.kt$MultiButtonDialogFragment.Companion$@Suppress("LongParameterList") fun newInstance( sessionId: String, title: String, message: String, hasShownManyDialogs: Boolean, positiveButton: String = "", negativeButton: String = "", neutralButton: String = "" ): MultiButtonDialogFragment</ID>
+    <ID>LongMethod:NestedGeckoView.kt$NestedGeckoView$@SuppressLint("ClickableViewAccessibility") override fun onTouchEvent(ev: MotionEvent): Boolean</ID>
+    <ID>LongMethod:NestedWebView.kt$NestedWebView$@SuppressLint("ClickableViewAccessibility") override fun onTouchEvent(ev: MotionEvent): Boolean</ID>
+    <ID>LongMethod:OkHttpClient.kt$private fun OkHttpClient.rebuildFor(request: Request, context: Context?): OkHttpClient</ID>
+    <ID>LongMethod:OnDeviceBrowserIconsTest.kt$OnDeviceBrowserIconsTest$@Test fun dataUriLoad()</ID>
+    <ID>LongMethod:OnDeviceSitePermissionsStorageTest.kt$OnDeviceSitePermissionsStorageTest$@Test fun migrate1to2()</ID>
+    <ID>LongMethod:Parser.kt$Parser$@Suppress("ComplexMethod", "ThrowsCount") private fun parseToken(token: Token): State?</ID>
+    <ID>LongMethod:PingStorageEngine.kt$PingStorageEngine$ private fun processFile( file: File, processingCallback: (String, String, Configuration) -&gt; Boolean ): Boolean</ID>
+    <ID>LongMethod:PromptFeature.kt$PromptFeature$ @Suppress("UNCHECKED_CAST", "ComplexMethod") internal fun onConfirm(sessionId: String, value: Any? = null)</ID>
+    <ID>LongMethod:PromptFeature.kt$PromptFeature$@Suppress("ComplexMethod") @VisibleForTesting(otherwise = PRIVATE) internal fun handleDialogsRequest( promptRequest: PromptRequest, session: Session )</ID>
+    <ID>LongMethod:Providers.kt$BaseDomainAutocompleteProvider$ override fun getAutocompleteSuggestion(query: String): DomainAutocompleteResult?</ID>
+    <ID>LongMethod:PublicSuffixListData.kt$PublicSuffixListData$@Suppress("ReturnCount") fun getPublicSuffixOffset(domain: String): PublicSuffixOffset?</ID>
+    <ID>LongMethod:PublicSuffixListPlugin.kt$PublicSuffixListPlugin$private fun fetchPublicSuffixList(): PublicSuffixListData</ID>
+    <ID>LongMethod:QrFragment.kt$QrFragment$ @Suppress("ComplexMethod") internal fun createCameraPreviewSession()</ID>
+    <ID>LongMethod:QrFragment.kt$QrFragment$ @Suppress("ComplexMethod", "MagicNumber") internal fun setUpCameraOutputs(width: Int, height: Int)</ID>
+    <ID>LongMethod:QrFragment.kt$QrFragment$ @Suppress("MagicNumber") private fun configureTransform(viewWidth: Int, viewHeight: Int)</ID>
+    <ID>LongMethod:QrFragment.kt$QrFragment$ @SuppressLint("MissingPermission") @Suppress("ThrowsCount") internal fun openCamera(width: Int, height: Int)</ID>
+    <ID>LongMethod:QrFragment.kt$QrFragment.&lt;no name provided&gt;$override fun onImageAvailable(reader: ImageReader)</ID>
+    <ID>LongMethod:QrFragment.kt$QrFragment.Companion$ @Suppress("LongParameterList") internal fun chooseOptimalSize( choices: Array&lt;Size&gt;, textureViewWidth: Int, textureViewHeight: Int, maxWidth: Int, maxHeight: Int, aspectRatio: Size ): Size</ID>
+    <ID>LongMethod:ReaderViewControlsBar.kt$ReaderViewControlsBar$@Suppress("ComplexMethod") private fun bindViews()</ID>
+    <ID>LongMethod:ResizingProcessor.kt$ResizingProcessor$override fun process( context: Context, request: IconRequest, resource: IconRequest.Resource?, icon: Icon, desiredSize: DesiredSize ): Icon?</ID>
+    <ID>LongMethod:SearchEngineParser.kt$SearchEngineParser$@Throws(XmlPullParserException::class, IOException::class) private fun readSearchPlugin(parser: XmlPullParser, builder: SearchEngineBuilder)</ID>
+    <ID>LongMethod:SearchSuggestionProvider.kt$SearchSuggestionProvider$private fun createMultipleSuggestions(text: String, result: List&lt;String&gt;?): List&lt;AwesomeBar.Suggestion&gt;</ID>
+    <ID>LongMethod:SearchSuggestionProvider.kt$SearchSuggestionProvider$private fun createSingleSearchSuggestion(text: String, result: List&lt;String&gt;?): List&lt;AwesomeBar.Suggestion&gt;</ID>
+    <ID>LongMethod:SessionManager.kt$SessionManager$ fun add( session: Session, selected: Boolean = false, engineSession: EngineSession? = null, parent: Session? = null )</ID>
+    <ID>LongMethod:SessionManager.kt$SessionManager$ fun restore(snapshot: Snapshot, updateSelection: Boolean = true)</ID>
+    <ID>LongMethod:SessionSuggestionProvider.kt$SessionSuggestionProvider$override suspend fun onInputChanged(text: String): List&lt;AwesomeBar.Suggestion&gt;</ID>
+    <ID>LongMethod:SharedIds.kt$SharedIds$ @Synchronized fun getIdForTag(context: Context, tag: String): Int</ID>
+    <ID>LongMethod:SignatureVerifier.kt$SignatureVerifier$ private fun getX5U(url: String): PublicKey</ID>
+    <ID>LongMethod:SignatureVerifier.kt$SignatureVerifier$ private fun signatureToASN1(signatureBytes: ByteArray): ByteArray</ID>
+    <ID>LongMethod:SimpleDownloadDialogFragment.kt$SimpleDownloadDialogFragment$override fun onCreateDialog(savedInstanceState: Bundle?): Dialog</ID>
+    <ID>LongMethod:SimpleRedirectDialogFragment.kt$SimpleRedirectDialogFragment$override fun onCreateDialog(savedInstanceState: Bundle?): Dialog</ID>
+    <ID>LongMethod:SitePermissionsDialogFragment.kt$SitePermissionsDialogFragment$@SuppressLint("InflateParams") private fun createContainer(): View</ID>
+    <ID>LongMethod:SitePermissionsDialogFragment.kt$SitePermissionsDialogFragment.Companion$@Suppress("LongParameterList") fun newInstance( sessionId: String, title: String, titleIcon: Int, feature: SitePermissionsFeature, shouldShowDoNotAskAgainCheckBox: Boolean, shouldSelectDoNotAskAgainCheckBox: Boolean = false, isNotificationRequest: Boolean = false ): SitePermissionsDialogFragment</ID>
+    <ID>LongMethod:SitePermissionsFeature.kt$SitePermissionsFeature$@Suppress("LongParameterList") @SuppressLint("VisibleForTests") private fun createSinglePermissionPrompt( context: Context, sessionId: String, host: String, @StringRes titleId: Int, @DrawableRes iconId: Int, showDoNotAskAgainCheckBox: Boolean, shouldSelectRememberChoice: Boolean, isNotificationRequest: Boolean = false ): SitePermissionsDialogFragment</ID>
+    <ID>LongMethod:SitePermissionsFeature.kt$SitePermissionsFeature$@Synchronized internal fun storeSitePermissions( session: Session, request: PermissionRequest, permissions: List&lt;Permission&gt; = request.permissions, status: SitePermissions.Status )</ID>
+    <ID>LongMethod:SitePermissionsFeature.kt$SitePermissionsFeature$private fun createPrompt( permissionRequest: PermissionRequest, session: Session ): SitePermissionsDialogFragment</ID>
+    <ID>LongMethod:SitePermissionsFeature.kt$SitePermissionsFeature$private fun handlingSingleContentPermissions( sessionId: String, permission: Permission, host: String ): SitePermissionsDialogFragment</ID>
+    <ID>LongMethod:SitePermissionsFeature.kt$SitePermissionsFeature$private fun updateSitePermissionsStatus( status: SitePermissions.Status, permission: Permission, sitePermissions: SitePermissions ): SitePermissions</ID>
+    <ID>LongMethod:SitePermissionsFeature.kt$private fun isPermissionGranted( permission: Permission, permissionFromStorage: SitePermissions ): Boolean</ID>
+    <ID>LongMethod:SnapshotSerializer.kt$@Throws(JSONException::class) @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE) internal fun deserializeSession(json: JSONObject, restoreId: Boolean): Session</ID>
+    <ID>LongMethod:StorageSync.kt$StorageSync$private suspend fun syncStore( store: SyncableStore, storeName: String, auth: AuthInfo ): StoreSyncStatus</ID>
+    <ID>LongMethod:StorageUtils.kt$StorageUtils$// Borrowed from https://gist.github.com/ademar111190/34d3de41308389a0d0d8 fun levenshteinDistance(a: String, b: String): Int</ID>
+    <ID>LongMethod:StringListsStorageEngine.kt$StringListsStorageEngineImplementation$ fun add( metricData: CommonMetricData, value: String )</ID>
+    <ID>LongMethod:StringListsStorageEngine.kt$StringListsStorageEngineImplementation$ fun set( metricData: CommonMetricData, value: List&lt;String&gt; )</ID>
+    <ID>LongMethod:SystemEngineSession.kt$SystemEngineSession$ @Suppress("TooGenericExceptionCaught") override fun clearData(data: BrowsingData, host: String?, onSuccess: () -&gt; Unit, onError: (Throwable) -&gt; Unit)</ID>
+    <ID>LongMethod:SystemEngineSession.kt$SystemEngineSession$private fun initSettings(webView: WebView, s: WebSettings)</ID>
+    <ID>LongMethod:SystemEngineView.kt$SystemEngineView$internal fun handleLongClick(type: Int, extra: String): Boolean</ID>
+    <ID>LongMethod:SystemEngineView.kt$SystemEngineView.&lt;no name provided&gt;$@Suppress("ReturnCount", "NestedBlockDepth") override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse?</ID>
+    <ID>LongMethod:SystemEngineView.kt$SystemEngineView.&lt;no name provided&gt;$override fun onJsAlert(view: WebView, url: String?, message: String?, result: JsResult): Boolean</ID>
+    <ID>LongMethod:SystemEngineView.kt$SystemEngineView.&lt;no name provided&gt;$override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult): Boolean</ID>
+    <ID>LongMethod:SystemEngineView.kt$SystemEngineView.&lt;no name provided&gt;$override fun onJsPrompt( view: WebView?, url: String?, message: String?, defaultValue: String?, result: JsPromptResult ): Boolean</ID>
+    <ID>LongMethod:SystemEngineView.kt$SystemEngineView.&lt;no name provided&gt;$override fun onReceivedHttpAuthRequest(view: WebView, handler: HttpAuthHandler, host: String, realm: String)</ID>
+    <ID>LongMethod:SystemEngineView.kt$SystemEngineView.&lt;no name provided&gt;$override fun onShowFileChooser( webView: WebView?, filePathCallback: ValueCallback&lt;Array&lt;Uri&gt;&gt;?, fileChooserParams: FileChooserParams? ): Boolean</ID>
+    <ID>LongMethod:TabCollectionStorageTest.kt$TabCollectionStorageTest$@Test @Suppress("ComplexMethod") fun testGettingCollectionsWithLimit()</ID>
+    <ID>LongMethod:TabCollectionStorageTest.kt$TabCollectionStorageTest$@Test fun testAddingTabsToExistingCollection()</ID>
+    <ID>LongMethod:TabCollectionStorageTest.kt$TabCollectionStorageTest$@Test fun testCreatingCollectionAndRestoringState()</ID>
+    <ID>LongMethod:TabCollectionStorageTest.kt$TabCollectionStorageTest$@Test fun testGettingTabCollectionCount()</ID>
+    <ID>LongMethod:TabDaoTest.kt$TabDaoTest$@Test fun testAddingTabsToCollection()</ID>
+    <ID>LongMethod:TabDaoTest.kt$TabDaoTest$@Test fun testRemovingTabFromCollection()</ID>
+    <ID>LongMethod:TabListReducer.kt$TabListReducer$ fun reduce(state: BrowserState, action: TabListAction): BrowserState</ID>
+    <ID>LongMethod:TabViewHolder.kt$TabViewHolder$ fun bind(session: Session, isSelected: Boolean, observable: Observable&lt;TabsTray.Observer&gt;)</ID>
+    <ID>LongMethod:TabsTrayFragment.kt$TabsTrayFragment$override fun onViewCreated(view: View, savedInstanceState: Bundle?)</ID>
+    <ID>LongMethod:TelemetryClient.kt$TelemetryClient$@Suppress("MagicNumber", "ReturnCount") fun uploadPing(configuration: TelemetryConfiguration, path: String, serializedPing: String): Boolean</ID>
+    <ID>LongMethod:TimePickerDialogFragment.kt$TimePickerDialogFragment$override fun onCreateDialog(savedInstanceState: Bundle?): Dialog</ID>
+    <ID>LongMethod:TimePickerDialogFragment.kt$TimePickerDialogFragment.Companion$ @Suppress("LongParameterList") fun newInstance( sessionId: String, initialDate: Date, minDate: Date?, maxDate: Date?, selectionType: Int = SELECTION_TYPE_DATE ): TimePickerDialogFragment</ID>
+    <ID>LongMethod:TimespanMetricType.kt$TimespanMetricType$ fun stop()</ID>
+    <ID>LongMethod:TimespansStorageEngine.kt$TimespansStorageEngineImplementation$override fun deserializeSingleMetric(metricName: String, value: Any?): Long?</ID>
+    <ID>LongMethod:TimingDistributionsStorageEngine.kt$TimingDistributionData$ private fun getBuckets(): List&lt;Long&gt;</ID>
+    <ID>LongMethod:TimingDistributionsStorageEngine.kt$TimingDistributionData.Companion$ @Suppress("ReturnCount", "ComplexMethod") internal fun fromJsonString(json: String): TimingDistributionData?</ID>
+    <ID>LongMethod:TimingDistributionsStorageEngine.kt$TimingDistributionsStorageEngineImplementation$ @Synchronized fun accumulate( metricData: CommonMetricData, sample: Long, timeUnit: TimeUnit )</ID>
+    <ID>LongMethod:TimingManager.kt$TimingManager$ fun start(metricData: CommonMetricData): GleanTimerId?</ID>
+    <ID>LongMethod:ToolbarActivity.kt$ToolbarActivity$ private fun setupFocusPhoneToolbar()</ID>
+    <ID>LongMethod:ToolbarActivity.kt$ToolbarActivity$ private fun setupFocusTabletToolbar()</ID>
+    <ID>LongMethod:ToolbarActivity.kt$ToolbarActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
+    <ID>LongMethod:Types.kt$BaseGleanSyncPing.Companion$fun fromEngineInfo(uid: String, info: EngineInfo): BaseGleanSyncPing</ID>
+    <ID>LongMethod:UrlMatcher.kt$UrlMatcher$ @Suppress("ReturnCount", "ComplexMethod") fun matches(resourceURI: Uri, pageURI: Uri): Boolean</ID>
+    <ID>LongMethod:UrlMatcher.kt$UrlMatcher.Companion$@Suppress("ThrowsCount", "ComplexMethod", "NestedBlockDepth") private fun extractCategories(reader: JsonReader, categoryMap: MutableMap&lt;String, Trie&gt;, override: Boolean)</ID>
+    <ID>LongMethod:UrlMatcher.kt$UrlMatcher.Companion$private fun extractSite(reader: JsonReader, callback: (String, String) -&gt; Unit)</ID>
+    <ID>LongMethod:Utils.kt$ @Suppress("ReturnCount") internal fun List&lt;Pair&lt;Int, Int&gt;&gt;.findBestSize(targetSize: Int, maxSize: Int, maxScaleFactor: Float): Pair&lt;Int, Int&gt;?</ID>
+    <ID>LongMethod:Utils.kt$ fun &lt;T&gt; handleFxaExceptions( logger: Logger, operation: String, block: () -&gt; T, postHandleAuthErrorBlock: (e: FxaUnauthorizedException) -&gt; T, handleErrorBlock: (e: FxaException) -&gt; T ): T</ID>
+    <ID>LongMethod:VersionString.kt$VersionString$@Suppress("ComplexMethod") override fun compareTo(other: VersionString): Int</ID>
+    <ID>LongMethod:View.kt$ShowKeyboard$override fun run()</ID>
+    <ID>LongMethod:WebAppManifestParser.kt$WebAppManifestParser$ fun parse(json: JSONObject): Result</ID>
+    <ID>LongMethod:WhiteList.kt$WhiteList.Companion$ @Suppress("NestedBlockDepth") fun fromJson(reader: JsonReader): WhiteList</ID>
+    <ID>LongMethod:WorkManagerSyncDispatcher.kt$WorkManagerSyncWorker$@Suppress("ReturnCount", "ComplexMethod") override suspend fun doWork(): Result</ID>
   </Whitelist>
 </SmellBaseline>
