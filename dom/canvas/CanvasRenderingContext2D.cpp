@@ -1227,7 +1227,7 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   }
 
   if (mTarget) {
-    return true;
+    return mTarget != sErrorTarget;
   }
 
   // Check that the dimensions are sane
@@ -1666,9 +1666,16 @@ CanvasRenderingContext2D::GetInputStream(const char* aMimeType,
 
 already_AddRefed<mozilla::gfx::SourceSurface>
 CanvasRenderingContext2D::GetSurfaceSnapshot(gfxAlphaType* aOutAlphaType) {
+  if (aOutAlphaType) {
+    *aOutAlphaType = (mOpaque ? gfxAlphaType::Opaque : gfxAlphaType::Premult);
+  }
+
   if (!mBufferProvider) {
     if (!EnsureTarget()) {
-      return nullptr;
+      MOZ_ASSERT(
+          mTarget == sErrorTarget,
+          "On EnsureTarget failure mTarget should be set to sErrorTarget.");
+      return mTarget->Snapshot();
     }
   }
 
@@ -1679,10 +1686,6 @@ CanvasRenderingContext2D::GetSurfaceSnapshot(gfxAlphaType* aOutAlphaType) {
 
   RefPtr<DataSourceSurface> dataSurface = snapshot->GetDataSurface();
   mBufferProvider->ReturnSnapshot(snapshot.forget());
-
-  if (aOutAlphaType) {
-    *aOutAlphaType = (mOpaque ? gfxAlphaType::Opaque : gfxAlphaType::Premult);
-  }
 
   return dataSurface.forget();
 }
@@ -4937,7 +4940,7 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
 
   if (!mBufferProvider) {
     if (!EnsureTarget()) {
-      return NS_ERROR_OUT_OF_MEMORY;
+      return NS_ERROR_FAILURE;
     }
   }
 
