@@ -1,4 +1,5 @@
 import {DSCard, PlaceholderDSCard} from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
+import {actionCreators as ac} from "common/Actions.jsm";
 import {DSEmptyState} from "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState";
 import {Hero} from "content-src/components/DiscoveryStreamComponents/Hero/Hero";
 import {List} from "content-src/components/DiscoveryStreamComponents/List/List";
@@ -91,6 +92,43 @@ describe("<Hero>", () => {
       const wrapper = shallow(<Hero {...DEFAULT_PROPS} items={2} />);
 
       assert.equal(wrapper.find(List).prop("items"), 1);
+    });
+  });
+
+  describe("onLinkClick", () => {
+    let dispatch;
+    let sandbox;
+    let wrapper;
+    const heroProps = {
+      data: {recommendations: [{url: 1, id: "foo-id", pos: 1}]},
+      type: "foo",
+      items: 1,
+    };
+
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      dispatch = sandbox.stub();
+      wrapper = shallow(<Hero dispatch={dispatch} {...heroProps} />);
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it("should call dispatch with the correct events", () => {
+      wrapper.instance().onLinkClick();
+
+      assert.calledTwice(dispatch);
+      assert.calledWith(dispatch, ac.UserEvent({
+        event: "CLICK",
+        source: "FOO",
+        action_position: 1,
+      }));
+      assert.calledWith(dispatch, ac.ImpressionStats({
+        click: 0,
+        source: "FOO",
+        tiles: [{id: "foo-id", pos: 1}],
+      }));
     });
   });
 });

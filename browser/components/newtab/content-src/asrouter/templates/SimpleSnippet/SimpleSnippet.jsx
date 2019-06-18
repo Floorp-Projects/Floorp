@@ -6,7 +6,7 @@ import {safeURI} from "../../template-utils";
 import {SnippetBase} from "../../components/SnippetBase/SnippetBase";
 
 const DEFAULT_ICON_PATH = "chrome://branding/content/icon64.png";
-// Alt text if available; in the future this should come from the server. See bug 1551711
+// Alt text placeholder in case the prop from the server isn't available
 const ICON_ALT_TEXT = "";
 
 export class SimpleSnippet extends React.PureComponent {
@@ -131,8 +131,8 @@ export class SimpleSnippet extends React.PureComponent {
     return (<SnippetBase {...props} className={className} textStyle={this.props.textStyle}>
       {sectionHeader}
       <ConditionalWrapper condition={sectionHeader} wrap={this.wrapSnippetContent}>
-        <img src={safeURI(props.content.icon) || DEFAULT_ICON_PATH} className="icon icon-light-theme" alt={ICON_ALT_TEXT} />
-        <img src={safeURI(props.content.icon_dark_theme || props.content.icon) || DEFAULT_ICON_PATH} className="icon icon-dark-theme" alt={ICON_ALT_TEXT} />
+        <img src={safeURI(props.content.icon) || DEFAULT_ICON_PATH} className="icon icon-light-theme" alt={props.content.icon_alt_text || ICON_ALT_TEXT} />
+        <img src={safeURI(props.content.icon_dark_theme || props.content.icon) || DEFAULT_ICON_PATH} className="icon icon-dark-theme" alt={props.content.icon_alt_text || ICON_ALT_TEXT} />
         <div>
           {this.renderTitle()} <p className="body">{this.renderText()}</p>
           {this.props.extraContent}

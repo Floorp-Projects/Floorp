@@ -9,6 +9,7 @@ export class _DSLinkMenu extends React.PureComponent {
       activeCard: null,
       showContextMenu: false,
     };
+    this.windowObj = this.props.windowObj || window; // Added to support unit tests
     this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
     this.onMenuUpdate = this.onMenuUpdate.bind(this);
     this.onMenuShow = this.onMenuShow.bind(this);
@@ -33,7 +34,7 @@ export class _DSLinkMenu extends React.PureComponent {
 
   onMenuShow() {
     const dsLinkMenuHostDiv = this.contextMenuButtonRef.current.parentElement;
-    if (window.scrollMaxX > 0) {
+    if (this.windowObj.scrollMaxX > 0) {
       dsLinkMenuHostDiv.parentElement.classList.add("last-item");
     }
     dsLinkMenuHostDiv.parentElement.classList.add("active");
@@ -72,6 +73,7 @@ export class _DSLinkMenu extends React.PureComponent {
             url: this.props.url,
             guid: this.props.id,
             pocket_id: this.props.pocket_id,
+            shim: this.props.shim,
             bookmarkGuid: this.props.bookmarkGuid,
           }} />
       }

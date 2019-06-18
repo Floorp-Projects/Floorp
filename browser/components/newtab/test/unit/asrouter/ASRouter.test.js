@@ -1377,10 +1377,12 @@ describe("ASRouter", () => {
           // Add provider
           const providers = [...state.providers, provider];
           // Add fooMessageImpressions
-          const messageImpressions = Object.assign({}, state.messageImpressions); // eslint-disable-line no-shadow
+          // eslint-disable-next-line no-shadow
+          const messageImpressions = Object.assign({}, state.messageImpressions);
           messageImpressions.foo = fooMessageImpressions;
           // Add barProviderImpressions
-          const providerImpressions = Object.assign({}, state.providerImpressions); // eslint-disable-line no-shadow
+          // eslint-disable-next-line no-shadow
+          const providerImpressions = Object.assign({}, state.providerImpressions);
           providerImpressions.bar = barProviderImpressions;
           return {providers, messageImpressions, providerImpressions};
         });

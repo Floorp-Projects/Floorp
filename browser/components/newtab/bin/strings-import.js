@@ -39,7 +39,8 @@ const transvision = {};
 async function cherryPickString(locale) {
   const getTransvision = async string => {
     if (!transvision[string]) {
-      const response = await fetch(`https://transvision.mozfr.org/api/v1/entity/gecko_strings/?id=${string}`); // eslint-disable-line fetch-options/no-fetch-credentials
+      // eslint-disable-next-line fetch-options/no-fetch-credentials
+      const response = await fetch(`https://transvision.mozfr.org/api/v1/entity/gecko_strings/?id=${string}`);
       transvision[string] = response.ok ? await response.json() : {};
     }
     return transvision[string];

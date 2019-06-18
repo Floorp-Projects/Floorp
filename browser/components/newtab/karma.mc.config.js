@@ -75,10 +75,10 @@ module.exports = function(config) {
               branches: 84,
             },
             "content-src/components/DiscoveryStreamComponents/**/*.jsx": {
-              statements: 65.2,
-              lines: 65.2,
-              functions: 50,
-              branches: 50,
+              statements: 90.48,
+              lines: 90.48,
+              functions: 85.71,
+              branches: 68.75,
             },
             "content-src/asrouter/**/*.jsx": {
               statements: 57,

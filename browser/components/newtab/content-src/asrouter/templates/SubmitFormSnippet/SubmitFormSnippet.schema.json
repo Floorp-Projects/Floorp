@@ -59,6 +59,11 @@
       "type": "string",
       "description": "Snippet icon. Dark theme variant. 64x64px. SVG or PNG preferred."
     },
+    "scene1_icon_alt_text": {
+      "type": "string",
+      "description": "Alt text describing scene1 icon for screen readers",
+      "default": ""
+    },
     "scene1_title_icon": {
       "type": "string",
       "description": "Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."
@@ -66,6 +71,11 @@
     "scene1_title_icon_dark_theme": {
       "type": "string",
       "description": "Small icon that shows up before the title / text. Dark theme variant. 16x16px. SVG or PNG preferred. Grayscale."
+    },
+    "scene1_title_icon_alt_text": {
+      "type": "string",
+      "description": "Alt text describing scene1 title icon for screen readers",
+      "default": ""
     },
     "form_action": {
       "type": "string",
@@ -114,6 +124,11 @@
     "scene2_icon_dark_theme": {
       "type": "string",
       "description": "(send to device) Image to display above the form. Dark theme variant. 98x98px. SVG or PNG preferred."
+    },
+    "scene2_icon_alt_text": {
+      "type": "string",
+      "description": "Alt text describing scene2 icon for screen readers",
+      "default": ""
     },
     "scene2_newsletter": {
       "type": "string",

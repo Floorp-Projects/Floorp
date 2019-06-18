@@ -1,4 +1,5 @@
 import {_List as List, ListItem, PlaceholderListItem} from "content-src/components/DiscoveryStreamComponents/List/List";
+import {actionCreators as ac} from "common/Actions.jsm";
 import {DSEmptyState} from "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState";
 import {DSLinkMenu} from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
 import {GlobalOverrider} from "test/unit/utils";
@@ -143,6 +144,40 @@ describe("<ListItem> presentation component", () => {
 
     const contextEl = wrapper.find("span.ds-list-item-context");
     assert.lengthOf(contextEl, 1);
+  });
+
+  describe("onLinkClick", () => {
+    let dispatch;
+    let sandbox;
+    let wrapper;
+
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      dispatch = sandbox.stub();
+      wrapper = shallow(<ListItem dispatch={dispatch} {...ValidListItemProps} />);
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it("should call dispatch with the correct events", () => {
+      wrapper.setProps({id: "foo-id", pos: 1, type: "foo"});
+
+      wrapper.instance().onLinkClick();
+
+      assert.calledTwice(dispatch);
+      assert.calledWith(dispatch, ac.UserEvent({
+        event: "CLICK",
+        source: "FOO",
+        action_position: 1,
+      }));
+      assert.calledWith(dispatch, ac.ImpressionStats({
+        click: 0,
+        source: "FOO",
+        tiles: [{id: "foo-id", pos: 1}],
+      }));
+    });
   });
 });
 

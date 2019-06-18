@@ -32,7 +32,7 @@ export class ListItem extends React.PureComponent {
         tiles: [{
           id: this.props.id,
           pos: this.props.pos,
-          ...(this.props.shim ? {shim: this.props.shim} : {}),
+          ...(this.props.shim && this.props.shim.click ? {shim: this.props.shim.click} : {}),
         }],
       }));
     }
@@ -67,7 +67,7 @@ export class ListItem extends React.PureComponent {
             rows={[{
               id: this.props.id,
               pos: this.props.pos,
-              ...(this.props.shim ? {shim: this.props.shim} : {}),
+              ...(this.props.shim && this.props.shim.impression ? {shim: this.props.shim.impression} : {}),
             }]}
             dispatch={this.props.dispatch}
             source={this.props.type} />
@@ -82,6 +82,7 @@ export class ListItem extends React.PureComponent {
           source={this.props.source}
           type={this.props.type}
           pocket_id={this.props.pocket_id}
+          shim={this.props.shim}
           bookmarkGuid={this.props.bookmarkGuid} />}
       </li>
     );
