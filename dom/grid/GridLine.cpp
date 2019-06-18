@@ -32,7 +32,13 @@ GridLine::GridLine(GridLines* aParent)
 
 GridLine::~GridLine() {}
 
-void GridLine::GetNames(nsTArray<nsString>& aNames) const { aNames = mNames; }
+void GridLine::GetNames(nsTArray<nsCString>& aNames) const { aNames = mNames; }
+void GridLine::GetNames(nsTArray<nsString>& aNames) const {
+  aNames.SetCapacity(mNames.Length());
+  for (auto& name : mNames) {
+    aNames.AppendElement(NS_ConvertUTF8toUTF16(name));
+  }
+}
 
 JSObject* GridLine::WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) {
@@ -49,7 +55,7 @@ uint32_t GridLine::Number() const { return mNumber; }
 
 int32_t GridLine::NegativeNumber() const { return mNegativeNumber; }
 
-void GridLine::SetLineValues(const nsTArray<nsString>& aNames, double aStart,
+void GridLine::SetLineValues(const nsTArray<nsCString>& aNames, double aStart,
                              double aBreadth, uint32_t aNumber,
                              int32_t aNegativeNumber, GridDeclaration aType) {
   mNames = aNames;
@@ -60,7 +66,7 @@ void GridLine::SetLineValues(const nsTArray<nsString>& aNames, double aStart,
   mType = aType;
 }
 
-void GridLine::SetLineNames(const nsTArray<nsString>& aNames) {
+void GridLine::SetLineNames(const nsTArray<nsCString>& aNames) {
   mNames = aNames;
 }
 

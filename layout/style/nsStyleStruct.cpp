@@ -1296,6 +1296,7 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mFlexGrow(0.0f),
       mFlexShrink(1.0f),
       mZIndex(StyleZIndex::Auto()),
+      mGridTemplateAreas(StyleGridTemplateAreas::None()),
       mColumnGap(NonNegativeLengthPercentageOrNormal::Normal()),
       mRowGap(NonNegativeLengthPercentageOrNormal::Normal()) {
   MOZ_COUNT_CTOR(nsStylePosition);
@@ -1305,7 +1306,6 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
 
   // Other members get their default constructors
   // which initialize them to representations of their respective initial value.
-  // mGridTemplateAreas: nullptr for 'none'
   // mGridTemplate{Rows,Columns}: false and empty arrays for 'none'
   // mGrid{Column,Row}{Start,End}: false/0/empty values for 'auto'
 }

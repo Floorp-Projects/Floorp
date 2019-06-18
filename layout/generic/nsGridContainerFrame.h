@@ -67,18 +67,18 @@ struct ComputedGridTrackInfo {
 };
 
 struct ComputedGridLineInfo {
-  explicit ComputedGridLineInfo(nsTArray<nsTArray<nsString>>&& aNames,
-                                const nsTArray<nsString>& aNamesBefore,
-                                const nsTArray<nsString>& aNamesAfter,
-                                nsTArray<nsString>&& aNamesFollowingRepeat)
+  explicit ComputedGridLineInfo(nsTArray<nsTArray<nsCString>>&& aNames,
+                                const nsTArray<nsCString>& aNamesBefore,
+                                const nsTArray<nsCString>& aNamesAfter,
+                                nsTArray<nsCString>&& aNamesFollowingRepeat)
       : mNames(aNames),
         mNamesBefore(aNamesBefore),
         mNamesAfter(aNamesAfter),
         mNamesFollowingRepeat(aNamesFollowingRepeat) {}
-  nsTArray<nsTArray<nsString>> mNames;
-  nsTArray<nsString> mNamesBefore;
-  nsTArray<nsString> mNamesAfter;
-  nsTArray<nsString> mNamesFollowingRepeat;
+  nsTArray<nsTArray<nsCString>> mNames;
+  nsTArray<nsCString> mNamesBefore;
+  nsTArray<nsCString> mNamesAfter;
+  nsTArray<nsCString> mNamesFollowingRepeat;
 };
 }  // namespace mozilla
 
@@ -90,6 +90,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
   using ComputedGridLineInfo = mozilla::ComputedGridLineInfo;
   using LogicalAxis = mozilla::LogicalAxis;
   using BaselineSharingGroup = mozilla::BaselineSharingGroup;
+  using NamedArea = mozilla::StyleNamedArea;
 
   template <typename T>
   using PerBaseline = mozilla::EnumeratedArray<BaselineSharingGroup,
@@ -201,16 +202,14 @@ class nsGridContainerFrame final : public nsContainerFrame {
     return info;
   }
 
-  typedef nsBaseHashtable<nsStringHashKey, mozilla::css::GridNamedArea,
-                          mozilla::css::GridNamedArea>
-      ImplicitNamedAreas;
+  using ImplicitNamedAreas = nsBaseHashtable<nsCStringHashKey, NamedArea, NamedArea>;
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ImplicitNamedAreasProperty,
                                       ImplicitNamedAreas)
   ImplicitNamedAreas* GetImplicitNamedAreas() const {
     return GetProperty(ImplicitNamedAreasProperty());
   }
 
-  typedef nsTArray<mozilla::css::GridNamedArea> ExplicitNamedAreas;
+  using ExplicitNamedAreas = mozilla::StyleOwnedSlice<NamedArea>;
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ExplicitNamedAreasProperty,
                                       ExplicitNamedAreas)
   ExplicitNamedAreas* GetExplicitNamedAreas() const {
@@ -283,7 +282,6 @@ class nsGridContainerFrame final : public nsContainerFrame {
   typedef mozilla::ReverseCSSOrderAwareFrameIterator
       ReverseCSSOrderAwareFrameIterator;
   typedef mozilla::WritingMode WritingMode;
-  typedef mozilla::css::GridNamedArea GridNamedArea;
   typedef mozilla::layout::AutoFrameListPtr AutoFrameListPtr;
   typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
   struct Grid;
@@ -317,7 +315,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
    */
   void InitImplicitNamedAreas(const nsStylePosition* aStyle);
   void AddImplicitNamedAreas(
-      const nsTArray<nsTArray<nsString>>& aLineNameLists);
+      const nsTArray<nsTArray<nsCString>>& aLineNameLists);
 
   void NormalizeChildLists();
 

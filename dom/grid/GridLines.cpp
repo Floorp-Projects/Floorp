@@ -9,6 +9,7 @@
 #include "GridDimension.h"
 #include "GridLine.h"
 #include "mozilla/dom/GridBinding.h"
+#include "mozilla/dom/GridArea.h"
 #include "nsGridContainerFrame.h"
 
 namespace mozilla {
@@ -47,15 +48,15 @@ GridLine* GridLines::IndexedGetter(uint32_t aIndex, bool& aFound) {
   return mLines[aIndex];
 }
 
-static void AddLineNameIfNotPresent(nsTArray<nsString>& aLineNames,
-                                    const nsString& aName) {
+static void AddLineNameIfNotPresent(nsTArray<nsCString>& aLineNames,
+                                    const nsCString& aName) {
   if (!aLineNames.Contains(aName)) {
     aLineNames.AppendElement(aName);
   }
 }
 
-static void AddLineNamesIfNotPresent(nsTArray<nsString>& aLineNames,
-                                     const nsTArray<nsString>& aNames) {
+static void AddLineNamesIfNotPresent(nsTArray<nsCString>& aLineNames,
+                                     const nsTArray<nsCString>& aNames) {
   for (const auto& name : aNames) {
     AddLineNameIfNotPresent(aLineNames, name);
   }
@@ -116,10 +117,10 @@ void GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
       // problem. We do the work here since this is only run when
       // requested by devtools, and slowness here will not affect
       // normal browsing.
-      const nsTArray<nsString>& possiblyDuplicateLineNames(
-          aLineInfo->mNames.SafeElementAt(i, nsTArray<nsString>()));
+      const nsTArray<nsCString>& possiblyDuplicateLineNames(
+          aLineInfo->mNames.SafeElementAt(i, nsTArray<nsCString>()));
 
-      nsTArray<nsString> lineNames;
+      nsTArray<nsCString> lineNames;
       AddLineNamesIfNotPresent(lineNames, possiblyDuplicateLineNames);
 
       // Add in names from grid areas where this line is used as a boundary.
@@ -133,7 +134,7 @@ void GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
         }
 
         bool haveNameToAdd = false;
-        nsAutoString nameToAdd;
+        nsAutoCString nameToAdd;
         area->GetName(nameToAdd);
         if (aIsRow) {
           if (area->RowStart() == line1Index) {
@@ -249,10 +250,10 @@ void GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
         }
 
         // Get the "-start" and "-end" line names of the grid area.
-        nsAutoString startLineName;
+        nsAutoCString startLineName;
         area->GetName(startLineName);
         startLineName.AppendLiteral("-start");
-        nsAutoString endLineName;
+        nsAutoCString endLineName;
         area->GetName(endLineName);
         endLineName.AppendLiteral("-end");
 
@@ -262,12 +263,12 @@ void GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
         RefPtr<GridLine> dummyLine = new GridLine(this);
         RefPtr<GridLine> areaStartLine =
             startIndex > -1 ? mLines[startIndex] : dummyLine;
-        nsTArray<nsString> startLineNames;
+        nsTArray<nsCString> startLineNames;
         areaStartLine->GetNames(startLineNames);
 
         RefPtr<GridLine> areaEndLine =
             endIndex > -1 ? mLines[endIndex] : dummyLine;
-        nsTArray<nsString> endLineNames;
+        nsTArray<nsCString> endLineNames;
         areaEndLine->GetNames(endLineNames);
 
         if (startLineNames.Contains(endLineName) ||
@@ -292,7 +293,7 @@ uint32_t GridLines::AppendRemovedAutoFits(
     const ComputedGridTrackInfo* aTrackInfo,
     const ComputedGridLineInfo* aLineInfo, nscoord aLastTrackEdge,
     uint32_t& aRepeatIndex, uint32_t aNumRepeatTracks,
-    uint32_t aNumLeadingTracks, nsTArray<nsString>& aLineNames) {
+    uint32_t aNumLeadingTracks, nsTArray<nsCString>& aLineNames) {
   // Check to see if lineNames contains ALL of the before line names.
   bool alreadyHasBeforeLineNames = true;
   for (const auto& beforeName : aLineInfo->mNamesBefore) {
@@ -303,7 +304,7 @@ uint32_t GridLines::AppendRemovedAutoFits(
   }
 
   bool extractedExplicitLineNames = false;
-  nsTArray<nsString> explicitLineNames;
+  nsTArray<nsCString> explicitLineNames;
   uint32_t linesAdded = 0;
   while (aRepeatIndex < aNumRepeatTracks &&
          aTrackInfo->mRemovedRepeatTracks[aRepeatIndex]) {

@@ -162,15 +162,3 @@ void nsCSSValue::SetFloatValue(float aValue, nsCSSUnit aUnit) {
     MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
   }
 }
-
-size_t mozilla::css::GridTemplateAreasValue::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
-  // Only measure it if it's unshared, to avoid double-counting.
-  size_t n = 0;
-  if (mRefCnt <= 1) {
-    n += aMallocSizeOf(this);
-    n += mNamedAreas.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    n += mTemplates.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  }
-  return n;
-}

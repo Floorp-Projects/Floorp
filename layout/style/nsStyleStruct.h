@@ -950,7 +950,7 @@ struct nsStyleGridLine {
   // XXXmats we could optimize memory size here
   bool mHasSpan;
   int32_t mInteger;    // 0 means not provided
-  nsString mLineName;  // Empty string means not provided.
+  nsCString mLineName;  // Empty string means not provided.
 
   // These are the limits that we choose to clamp grid line numbers to.
   // http://dev.w3.org/csswg/css-grid/#overlarge-grids
@@ -1027,11 +1027,11 @@ struct nsStyleGridLine {
 // When mIsSubgrid is true, mRepeatAutoLineNameListBefore contains the line
 // names and mRepeatAutoLineNameListAfter is empty.
 struct nsStyleGridTemplate {
-  nsTArray<nsTArray<nsString>> mLineNameLists;
+  nsTArray<nsTArray<nsCString>> mLineNameLists;
   nsTArray<nsStyleCoord> mMinTrackSizingFunctions;
   nsTArray<nsStyleCoord> mMaxTrackSizingFunctions;
-  nsTArray<nsString> mRepeatAutoLineNameListBefore;
-  nsTArray<nsString> mRepeatAutoLineNameListAfter;
+  nsTArray<nsCString> mRepeatAutoLineNameListBefore;
+  nsTArray<nsCString> mRepeatAutoLineNameListAfter;
   int16_t mRepeatAutoIndex;  // -1 or the track index for an auto-fill/fit track
   bool mIsAutoFill : 1;
   bool mIsSubgrid : 1;
@@ -1143,8 +1143,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   mozilla::UniquePtr<nsStyleGridTemplate> mGridTemplateColumns;
   mozilla::UniquePtr<nsStyleGridTemplate> mGridTemplateRows;
 
-  // nullptr for 'none'
-  RefPtr<mozilla::css::GridTemplateAreasValue> mGridTemplateAreas;
+  mozilla::StyleGridTemplateAreas mGridTemplateAreas;
 
   nsStyleGridLine mGridColumnStart;
   nsStyleGridLine mGridColumnEnd;

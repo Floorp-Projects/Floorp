@@ -1168,7 +1168,7 @@ pub unsafe extern "C" fn Servo_Property_GetCSSValuesForProperty(
 
     let result = result.as_mut().unwrap();
     let len = extras.len() + values.len();
-    bindings::Gecko_ResizeTArrayForStrings(result as *mut _ as *mut nsTArray<nsString>, len as u32);
+    bindings::Gecko_ResizeTArrayForStrings(result, len as u32);
 
     for (src, dest) in extras.iter().chain(values.iter()).zip(result.iter_mut()) {
         dest.write_str(src).unwrap();
@@ -6616,4 +6616,9 @@ pub unsafe extern "C" fn Servo_StyleArcSlice_EmptyPtr() -> *mut c_void {
 #[no_mangle]
 pub unsafe extern "C" fn Servo_LoadData_GetLazy(source: &url::LoadDataSource) -> *const url::LoadData {
     source.get()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_MakeOwnedStr(out: &mut style::OwnedStr, in_: &nsACString) {
+    *out = in_.to_string().into()
 }

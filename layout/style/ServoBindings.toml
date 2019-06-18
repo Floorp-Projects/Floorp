@@ -510,6 +510,7 @@ cbindgen-types = [
     { gecko = "StyleGenericFilter", servo = "values::generics::effects::Filter" },
     { gecko = "StyleGenericGradient", servo = "values::generics::image::Gradient" },
     { gecko = "StyleLineDirection", servo = "values::computed::image::LineDirection" },
+    { gecko = "StyleGridTemplateAreas", servo = "values::computed::position::GridTemplateAreas" },
 ]
 
 mapped-generic-types = [

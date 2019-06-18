@@ -34,16 +34,17 @@ Grid::Grid(nsISupports* aParent, nsGridContainerFrame* aFrame)
 
   // Add implicit areas first. Track the names that we add here, because
   // we will ignore future explicit areas with the same name.
-  nsTHashtable<nsStringHashKey> namesSeen;
+  nsTHashtable<nsCStringHashKey> namesSeen;
   nsGridContainerFrame::ImplicitNamedAreas* implicitAreas =
       aFrame->GetImplicitNamedAreas();
   if (implicitAreas) {
     for (auto iter = implicitAreas->Iter(); !iter.Done(); iter.Next()) {
       auto& areaInfo = iter.Data();
-      namesSeen.PutEntry(areaInfo.mName);
+      namesSeen.PutEntry(areaInfo.name.AsString());
       GridArea* area = new GridArea(
-          this, areaInfo.mName, GridDeclaration::Implicit, areaInfo.mRowStart,
-          areaInfo.mRowEnd, areaInfo.mColumnStart, areaInfo.mColumnEnd);
+          this, areaInfo.name.AsString(), GridDeclaration::Implicit,
+          areaInfo.rows.start, areaInfo.rows.end, areaInfo.columns.start,
+          areaInfo.columns.end);
       mAreas.AppendElement(area);
     }
   }
@@ -51,14 +52,13 @@ Grid::Grid(nsISupports* aParent, nsGridContainerFrame* aFrame)
   // Add explicit areas next, as long as they don't have the same name
   // as the implicit areas, because the implicit values override what was
   // initially available in the explicit areas.
-  nsGridContainerFrame::ExplicitNamedAreas* explicitAreas =
-      aFrame->GetExplicitNamedAreas();
-  if (explicitAreas) {
-    for (auto& areaInfo : *explicitAreas) {
-      if (!namesSeen.Contains(areaInfo.mName)) {
+  if (auto* explicitAreas = aFrame->GetExplicitNamedAreas()) {
+    for (auto& areaInfo : explicitAreas->AsSpan()) {
+      if (!namesSeen.Contains(areaInfo.name.AsString())) {
         GridArea* area = new GridArea(
-            this, areaInfo.mName, GridDeclaration::Explicit, areaInfo.mRowStart,
-            areaInfo.mRowEnd, areaInfo.mColumnStart, areaInfo.mColumnEnd);
+            this, areaInfo.name.AsString(), GridDeclaration::Explicit,
+            areaInfo.rows.start, areaInfo.rows.end, areaInfo.columns.start,
+            areaInfo.columns.end);
         mAreas.AppendElement(area);
       }
     }
