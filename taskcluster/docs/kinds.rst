@@ -367,10 +367,13 @@ Publishes signed langpacks to archive.mozilla.org
 release-update-verify
 ---------------------
 Verifies the contents and package of release update MARs.
-
 release-secondary-update-verify
 -------------------------------
 Verifies the contents and package of release update MARs.
+
+release-update-verify-next
+--------------------------
+Verifies the contents and package of release and updare MARs from the previous ESR release.
 
 release-update-verify-config
 ----------------------------
@@ -379,6 +382,10 @@ Creates configs for release-update-verify tasks
 release-secondary-update-verify-config
 --------------------------------------
 Creates configs for release-secondary-update-verify tasks
+
+release-update-verify-config-next
+---------------------------------
+Creates configs for release-update-verify-next tasks
 
 release-updates-builder
 -----------------------
