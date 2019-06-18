@@ -320,8 +320,6 @@ class gfxUtils {
       const mozilla::dom::Element* aElement);
   static mozilla::wr::RenderRoot RecursivelyGetRenderRootForFrame(
       const nsIFrame* aFrame);
-  static mozilla::wr::RenderRoot RecursivelyGetRenderRootForElement(
-      const mozilla::dom::Element* aElement);
 };
 
 namespace mozilla {
