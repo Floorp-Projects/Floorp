@@ -25,6 +25,11 @@ ChromeUtils.defineModuleGetter(this, "UpdateUtils",
  */
 let RPMAccessManager = {
   accessMap: {
+    "about:certerror": {
+      "getFormatURLPref": ["app.support.baseURL"],
+      "getBoolPref": ["security.certerrors.mitm.priming.enabled",
+                      "security.enterprise_roots.auto-enabled"],
+    },
     "about:privatebrowsing": {
       // "sendAsyncMessage": handled within AboutPrivateBrowsingHandler.jsm
       "getFormatURLPref": ["app.support.baseURL"],
@@ -41,7 +46,11 @@ let RPMAccessManager = {
     if (!aPrincipal || !aPrincipal.URI) {
       return false;
     }
+
     let uri = aPrincipal.URI.asciiSpec;
+    if (uri.startsWith("about:certerror")) {
+      uri = "about:certerror";
+    }
 
     // check if there is an entry for that requestying URI in the accessMap;
     // if not, deny access.
