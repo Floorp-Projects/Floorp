@@ -103,7 +103,18 @@ class StaticPrefs {
   static cpp_type sVarCache_##id;                               \
                                                                 \
  public:                                                        \
-  static StripAtomic<cpp_type> id();                            \
+  static StripAtomic<cpp_type> id() {                           \
+    if (UpdatePolicy::policy != UpdatePolicy::Once) {           \
+      MOZ_DIAGNOSTIC_ASSERT(                                    \
+          UpdatePolicy::policy == UpdatePolicy::Skip ||         \
+              IsAtomic<cpp_type>::value || NS_IsMainThread(),   \
+          "Non-atomic static pref '" str                        \
+          "' being accessed on background thread by getter");   \
+      return sVarCache_##id;                                    \
+    }                                                           \
+    MaybeInitOncePrefs();                                       \
+    return sVarCache_##id;                                      \
+  }                                                             \
   static void Set##id(StripAtomic<cpp_type> aValue);            \
   static const char* Get##id##PrefName() { return str; }        \
   static StripAtomic<cpp_type> Get##id##PrefDefault() { return default_value; }
