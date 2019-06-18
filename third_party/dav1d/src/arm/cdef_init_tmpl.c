@@ -24,6 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "common/attributes.h"
 #include "src/cpu.h"
 #include "src/cdef.h"
 
@@ -71,7 +72,7 @@ DEFINE_FILTER(4, 4, 8)
 #endif
 
 
-COLD void bitfn(dav1d_cdef_dsp_init_arm)(Dav1dCdefDSPContext *const c) {
+void bitfn(dav1d_cdef_dsp_init_arm)(Dav1dCdefDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;

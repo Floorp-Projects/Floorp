@@ -98,7 +98,7 @@ decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x16_ssse3);
 decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x32_ssse3);
 decl_itx_fn(dav1d_inv_txfm_add_dct_dct_64x64_ssse3);
 
-COLD void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c) {
+void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c) {
 #define assign_itx_fn(pfx, w, h, type, type_enum, ext) \
     c->itxfm_add[pfx##TX_##w##X##h][type_enum] = \
         dav1d_inv_txfm_add_##type##_##w##x##h##_##ext

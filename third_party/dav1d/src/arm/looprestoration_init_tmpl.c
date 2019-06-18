@@ -27,6 +27,8 @@
 
 #include "src/cpu.h"
 #include "src/looprestoration.h"
+
+#include "common/attributes.h"
 #include "src/tables.h"
 
 #if BITDEPTH == 8
@@ -256,7 +258,7 @@ static void sgr_filter_neon(pixel *const dst, const ptrdiff_t dst_stride,
 #endif // ARCH_AARCH64
 #endif // BITDEPTH == 8
 
-COLD void bitfn(dav1d_loop_restoration_dsp_init_arm)(Dav1dLoopRestorationDSPContext *const c) {
+void bitfn(dav1d_loop_restoration_dsp_init_arm)(Dav1dLoopRestorationDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;

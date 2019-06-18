@@ -861,7 +861,7 @@ const int8_t ALIGN(dav1d_filter_intra_taps[5][64], 16) = {
     }
 };
 
-const uint8_t dav1d_obmc_masks[64] = {
+const uint8_t ALIGN(dav1d_obmc_masks[64], 32) = {
     /* Unused */
      0,  0,
     /* 2 */

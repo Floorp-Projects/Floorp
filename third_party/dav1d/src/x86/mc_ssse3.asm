@@ -44,8 +44,8 @@ obmc_masks: db  0,  0,  0,  0
             db 33, 31, 35, 29, 36, 28, 38, 26, 40, 24, 41, 23, 43, 21, 44, 20
             db 45, 19, 47, 17, 48, 16, 50, 14, 51, 13, 52, 12, 53, 11, 55,  9
             db 56,  8, 57,  7, 58,  6, 59,  5, 60,  4, 60,  4, 61,  3, 62,  2
+            db 64,  0, 64,  0, 64,  0, 64,  0, 64,  0, 64,  0, 64,  0, 64,  0
 
-blend_shuf:     db 0,  1,  0,  1,  0,  1,  0,  1,  2,  3,  2,  3,  2,  3,  2,  3
 subpel_h_shuf4: db 0,  1,  2,  3,  1,  2,  3,  4,  8,  9, 10, 11,  9, 10, 11, 12
                 db 2,  3,  4,  5,  3,  4,  5,  6, 10, 11, 12, 13, 11, 12, 13, 14
 subpel_h_shufA: db 0,  1,  2,  3,  1,  2,  3,  4,  2,  3,  4,  5,  3,  4,  5,  6
@@ -53,6 +53,7 @@ subpel_h_shufB: db 4,  5,  6,  7,  5,  6,  7,  8,  6,  7,  8,  9,  7,  8,  9, 10
 subpel_h_shufC: db 8,  9, 10, 11,  9, 10, 11, 12, 10, 11, 12, 13, 11, 12, 13, 14
 bilin_h_shuf4:  db 1,  0,  2,  1,  3,  2,  4,  3,  9,  8, 10,  9, 11, 10, 12, 11
 bilin_h_shuf8:  db 1,  0,  2,  1,  3,  2,  4,  3,  5,  4,  6,  5,  7,  6,  8,  7
+blend_shuf:     db 0,  1,  0,  1,  0,  1,  0,  1,  2,  3,  2,  3,  2,  3,  2,  3
 
 pb_64:   times 16 db 64
 pw_8:    times 8 dw 8
@@ -3772,7 +3773,7 @@ cglobal blend, 3, 7, 7, dst, ds, tmp, w, h, mask
     jg .w32
     RET
 
-cglobal blend_v, 3, 6, 6, dst, ds, tmp, w, h, mask
+cglobal blend_v, 3, 6, 8, dst, ds, tmp, w, h, mask
 %define base r5-blend_v_ssse3_table
     LEA                  r5, blend_v_ssse3_table
     tzcnt                wd, wm
@@ -3832,7 +3833,8 @@ cglobal blend_v, 3, 6, 6, dst, ds, tmp, w, h, mask
     mova                 m2, [tmpq]; b
     BLEND_64M            m1, m2, m3, m3
     movq       [dstq+dsq*0], m0
-    movhps     [dstq+dsq*1], m0
+    punpckhqdq           m0, m0
+    movq       [dstq+dsq*1], m0
     add                tmpq, 16
     lea                dstq, [dstq+dsq*2]
     sub                  hd, 2
@@ -3853,31 +3855,24 @@ cglobal blend_v, 3, 6, 6, dst, ds, tmp, w, h, mask
     jg .w16_loop
     RET
 .w32:
-%if WIN64
-    mova            [rsp+8], xmm6
-%endif
-    mova                 m3, [maskq+64] ; obmc_masks_32[0] (64-m[0])
-    mova                 m4, [maskq+80] ; obmc_masks_32[1] (64-m[1])
-    mova                 m6, [maskq+96] ; obmc_masks_32[2] (64-m[2])
+    mova                 m3, [maskq+64 ] ; obmc_masks_32[0] (64-m[0])
+    mova                 m4, [maskq+80 ] ; obmc_masks_32[1] (64-m[1])
+    mova                 m6, [maskq+96 ] ; obmc_masks_32[2] (64-m[2])
+    mova                 m7, [maskq+112] ; obmc_masks_32[3] (64-m[3])
     ; 16 mask blend is provided for 64 pixels
 .w32_loop:
     mova                 m1, [dstq+16*0] ; a
     mova                 m2, [tmpq+16*0] ; b
     BLEND_64M            m1, m2, m3, m4
-    movq                 m1, [dstq+16*1] ; a
-    punpcklbw            m1, [tmpq+16*1] ; b
-    pmaddubsw            m1, m6
-    pmulhrsw             m1, m5
-    packuswb             m1, m1
     mova        [dstq+16*0], m0
-    movq        [dstq+16*1], m1
+    mova                 m1, [dstq+16*1] ; a
+    mova                 m2, [tmpq+16*1] ; b
+    BLEND_64M            m1, m2, m6, m7
+    mova        [dstq+16*1], m0
     add                tmpq, 32
     add                dstq, dsq
     dec                  hd
     jg .w32_loop
-%if WIN64
-    mova               xmm6, [rsp+8]
-%endif
     RET
 
 cglobal blend_h, 3, 7, 6, dst, ds, tmp, w, h, mask
@@ -3895,10 +3890,7 @@ cglobal blend_h, 3, 7, 6, dst, ds, tmp, w, h, mask
     movsxd               wq, dword [t0+wq*4]
     mova                 m5, [base+pw_512]
     add                  wq, t0
-    lea               maskq, [base+obmc_masks+hq*2]
-    lea                  hd, [hq*3]
-    shr                  hd, 2 ; h * 3/4
-    lea               maskq, [maskq+hq*2]
+    lea               maskq, [base+obmc_masks+hq*4]
     neg                  hq
     jmp                  wq
 .w2:

@@ -23,14 +23,14 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '0.3.1',
+    version: '0.3.0',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
                       'b_ndebug=if-release'],
     meson_version: '>= 0.47.0')
 
-dav1d_soname_version       = '2.0.0'
+dav1d_soname_version   = '1.1.0'
 dav1d_api_version_array    = dav1d_soname_version.split('.')
 dav1d_api_version_major    = dav1d_api_version_array[0]
 dav1d_api_version_minor    = dav1d_api_version_array[1]
@@ -81,8 +81,6 @@ cdata.set10('CONFIG_LOG', get_option('logging'))
 # Arguments in test_args will be used even on feature tests
 test_args = []
 
-optional_arguments = []
-
 # Define _POSIX_C_SOURCE to POSIX.1–2001 (IEEE Std 1003.1-2001)
 test_args  += '-D_POSIX_C_SOURCE=200112L'
 add_project_arguments('-D_POSIX_C_SOURCE=200112L', language: 'c')
@@ -98,12 +96,10 @@ if host_machine.system() == 'windows'
         cdata.set('fseeko', '_fseeki64')
         cdata.set('ftello', '_ftelli64')
     endif
+endif
 
-    if (host_machine.cpu_family() == 'x86_64' and cc.get_id() == 'gcc')
-        optional_arguments += '-mcmodel=small'
-    endif
-
-    # On Windows, we use a compatibility layer to emulate pthread
+# On Windows, we use a compatibility layer to emulate pthread
+if host_machine.system() == 'windows'
     thread_dependency = []
     thread_compat_dep = declare_dependency(sources : files('src/win32/thread.c'))
 else
@@ -180,23 +176,16 @@ endif
 # Compiler flags that should be set
 # But when the compiler does not supports them
 # it is not an error and silently tolerated
-if cc.get_id() != 'msvc'
-    optional_arguments += [
-      '-Wundef',
-      '-Werror=vla',
-      '-Wno-maybe-uninitialized',
-      '-Wno-missing-field-initializers',
-      '-Wno-unused-parameter',
-      '-Werror=missing-prototypes',
-      '-Wshorten-64-to-32',
-    ]
-    if host_machine.cpu_family() == 'x86'
-        optional_arguments += [
-          '-msse2',
-          '-mfpmath=sse',
-        ]
-    endif
-else
+optional_arguments = [
+  '-Wundef',
+  '-Werror=vla',
+  '-Wno-maybe-uninitialized',
+  '-Wno-missing-field-initializers',
+  '-Wno-unused-parameter',
+  '-Werror=missing-prototypes',
+  '-Wshorten-64-to-32',
+]
+if cc.get_id() == 'msvc'
     optional_arguments += [
       '-wd4028', # parameter different from declaration
       '-wd4996'  # use of POSIX functions
@@ -339,11 +328,6 @@ if is_asm_enabled and host_machine.cpu_family().startswith('x86')
     # check NASM version
     if nasm.found()
         nasm_r = run_command(nasm, '-v')
-
-        if nasm_r.returncode() != 0
-            error('failed running nasm to obtain its version')
-        endif
-
         out = nasm_r.stdout().strip().split()
         if out[1].to_lower() == 'version'
             if out[2].version_compare('<2.13.02')
