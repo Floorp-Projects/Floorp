@@ -128,7 +128,7 @@ class AwesomeBarUIView(
                     components.core.icons
                 )
 
-            if (Settings.getInstance(container.context).showSearchSuggestions()) {
+            if (Settings.getInstance(container.context).showSearchSuggestions) {
                 val searchDrawable = getDrawable(R.drawable.ic_search)
                 searchDrawable?.setColorFilter(
                     ContextCompat.getColor(
@@ -171,7 +171,7 @@ class AwesomeBarUIView(
     }
 
     private fun showSuggestionProviders() {
-        if (Settings.getInstance(container.context).showSearchSuggestions()) {
+        if (Settings.getInstance(container.context).showSearchSuggestions) {
             view.addProviders(searchSuggestionProvider!!)
         }
 
@@ -187,7 +187,7 @@ class AwesomeBarUIView(
     }
 
     private fun showSearchSuggestionProvider() {
-        if (Settings.getInstance(container.context).showSearchSuggestions()) {
+        if (Settings.getInstance(container.context).showSearchSuggestions) {
             view.addProviders(searchSuggestionProvider!!)
         }
     }

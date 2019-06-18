@@ -6,8 +6,8 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.Settings
 
@@ -23,7 +23,10 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         (activity as AppCompatActivity).supportActionBar?.show()
 
         val searchSuggestionsPreference =
-            findPreference<Preference>(getString(R.string.pref_key_show_search_suggestions))
+            findPreference<SwitchPreference>(getString(R.string.pref_key_show_search_suggestions))?.apply {
+                isChecked = Settings.getInstance(context).showSearchSuggestions
+            }
+
         searchSuggestionsPreference?.setOnPreferenceChangeListener { preference, newValue ->
             Settings.getInstance(preference.context).preferences.edit().putBoolean(preference.key, newValue as Boolean)
                 .apply()
@@ -31,7 +34,10 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         }
 
         val showVisitedSitesBookmarks =
-            findPreference<Preference>(getString(R.string.pref_key_show_visited_sites_bookmarks))
+            findPreference<SwitchPreference>(getString(R.string.pref_key_show_visited_sites_bookmarks))?.apply {
+                isChecked = Settings.getInstance(context).shouldShowVisitedSitesBookmarks
+            }
+
         showVisitedSitesBookmarks?.setOnPreferenceChangeListener { preference, newValue ->
             Settings.getInstance(preference.context).preferences.edit().putBoolean(preference.key, newValue as Boolean)
                 .apply()

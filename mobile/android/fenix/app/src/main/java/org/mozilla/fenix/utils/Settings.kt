@@ -168,10 +168,10 @@ class Settings private constructor(context: Context) {
             .apply()
     }
 
-    fun showSearchSuggestions(): Boolean = preferences.getBoolean(
-        appContext.getPreferenceKey(R.string.pref_key_show_search_suggestions),
-        true
-    )
+    val showSearchSuggestions: Boolean
+        get() = preferences.getBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_show_search_suggestions), true
+        )
 
     fun setSitePermissionsPhoneFeatureCameraAction(action: SitePermissionsRules.Action) {
         preferences.edit()
