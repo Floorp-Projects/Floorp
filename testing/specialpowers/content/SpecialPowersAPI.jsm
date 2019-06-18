@@ -1438,6 +1438,67 @@ class SpecialPowersAPI extends JSWindowActorChild {
     return obj;
   }
 
+  /**
+   * Runs a task in the context of the given frame, and returns a
+   * promise which resolves to the return value of that task.
+   *
+   * The given frame may be in-process or out-of-process. Either way,
+   * the task will run asynchronously, in a sandbox with access to the
+   * frame's content window via its `content` global. Any arguments
+   * passed will be copied via structured clone, as will its return
+   * value.
+   *
+   * @param {FrameLoaderOwner} frame
+   *        The frame in which to run the task. This may be any element
+   *        which implements the FrameLoaderOwner nterface, including
+   *        HTML <iframe> elements and XUL <browser> elements.
+   * @param {Array<any>} args
+   *        An array of arguments to pass to the task. All arguments
+   *        must be structured clone compatible, and will be cloned
+   *        before being passed to the task.
+   * @param {function} task
+   *        The function to run in the context of the frame. The
+   *        function will be stringified and re-evaluated in the context
+   *        of the frame's content window. It may return any structured
+   *        clone compatible value, or a Promise which resolves to the
+   *        same, which will be returned to the caller.
+   *
+   * @returns {Promise<any>}
+   *        A promise which resolves to the return value of the task, or
+   *        which rejects if the task raises an exception. As this is
+   *        being written, the rejection value will always be undefined
+   *        in the cases where the task throws an error, though that may
+   *        change in the future.
+   */
+  spawn(frame, args, task) {
+    let {caller} = Components.stack;
+    return this.sendQuery("Spawn", {
+      browsingContext: frame.browsingContext,
+      args,
+      task: String(task),
+      caller: {
+        filename: caller.filename,
+        lineNumber: caller.lineNumber,
+      },
+    });
+  }
+
+  _spawnTask(task, args, caller) {
+    let sb = Cu.Sandbox(Cu.getGlobalForObject({}),
+                        {wantGlobalProperties: ["ChromeUtils"]});
+
+    sb.SpecialPowers = this;
+    Object.defineProperty(sb, "content", {
+      get: () => { return this.contentWindow; },
+      enumerable: true,
+    });
+
+    let func = Cu.evalInSandbox(`(${task})`, sb, undefined,
+                                caller.filename, caller.lineNumber);
+
+    return func(...args);
+  }
+
   getFocusedElementForWindow(targetWindow, aDeep) {
     var outParam = {};
     Services.focus.getFocusedElementForWindow(targetWindow, aDeep, outParam);
