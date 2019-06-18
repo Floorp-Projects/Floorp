@@ -45,13 +45,13 @@ add_task(async function test_login_item() {
   });
   await ContentTask.spawn(browser, gLogins, async (logins) => {
     let loginList = content.document.querySelector("login-list");
-    let loginListItem = loginList.shadowRoot.querySelector("login-list-item[guid]");
+    let loginListItem = loginList.shadowRoot.querySelector("login-list-item[data-guid]");
     info("Clicking on the first login");
     loginListItem.click();
 
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let loginItemPopulated = await ContentTaskUtils.waitForCondition(() => {
-      return loginItem._login.guid == loginListItem.getAttribute("guid");
+      return loginItem._login.guid == loginListItem.dataset.guid;
     }, "Waiting for login item to get populated");
     ok(loginItemPopulated, "The login item should get populated");
 

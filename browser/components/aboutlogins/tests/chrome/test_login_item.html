@@ -75,8 +75,8 @@ add_task(async function test_set_login() {
   gLoginItem.setLogin(TEST_LOGIN_1);
   await asyncElementRendered();
 
-  ok(!gLoginItem.hasAttribute("editing"), "loginItem should not be in 'edit' mode");
-  ok(!gLoginItem.hasAttribute("isNewLogin"), "loginItem should not be in 'isNewLogin' mode");
+  ok(!gLoginItem.dataset.editing, "loginItem should not be in 'edit' mode");
+  ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, TEST_LOGIN_1.origin, "origin should be populated");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be populated");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be populated");
@@ -90,9 +90,9 @@ add_task(async function test_edit_login() {
   gLoginItem.shadowRoot.querySelector(".edit-button").click();
   await asyncElementRendered();
 
-  ok(gLoginItem.hasAttribute("editing"), "loginItem should be in 'edit' mode");
+  ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
   ok(isHidden(gLoginItem.shadowRoot.querySelector(".edit-button")), "edit button should be hidden in 'edit' mode");
-  ok(!gLoginItem.hasAttribute("isNewLogin"), "loginItem should not be in 'isNewLogin' mode");
+  ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
   let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
   ok(!deleteButton.disabled, "Delete button should be enabled when editing a login");
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, TEST_LOGIN_1.origin, "origin should be populated");
@@ -124,13 +124,13 @@ add_task(async function test_edit_login_cancel() {
     gLoginItem.setLogin(login);
     gLoginItem.shadowRoot.querySelector(".edit-button").click();
 
-    ok(gLoginItem.hasAttribute("editing"), "loginItem should be in 'edit' mode");
-    is(gLoginItem.hasAttribute("isNewLogin"), isNewLogin,
+    ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
+    is(!!gLoginItem.dataset.isNewLogin, isNewLogin,
        "loginItem should " + (isNewLogin ? "" : "not ") + "be in 'isNewLogin' mode");
 
     gLoginItem.shadowRoot.querySelector(".cancel-button").click();
-    ok(!gLoginItem.hasAttribute("editing"), "loginItem should not be in 'edit' mode");
-    ok(!gLoginItem.hasAttribute("isNewLogin"), "loginItem should not be in 'isNewLogin' mode");
+    ok(!gLoginItem.dataset.editing, "loginItem should not be in 'edit' mode");
+    ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
   }
 });
 
@@ -150,9 +150,9 @@ add_task(async function test_set_login_empty() {
   gLoginItem.setLogin({});
   await asyncElementRendered();
 
-  ok(gLoginItem.hasAttribute("editing"), "loginItem should be in 'edit' mode");
+  ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
   ok(isHidden(gLoginItem.shadowRoot.querySelector(".edit-button")), "edit button should be hidden in 'edit' mode");
-  ok(gLoginItem.hasAttribute("isNewLogin"), "loginItem should be in 'isNewLogin' mode");
+  ok(gLoginItem.dataset.isNewLogin, "loginItem should be in 'isNewLogin' mode");
   let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
   ok(deleteButton.disabled, "Delete button should be disabled when creating a login");
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, "", "origin should be empty");

@@ -40,7 +40,7 @@ add_task(async function test_telemetry_events() {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginList = content.document.querySelector("login-list");
-    let loginListItem = loginList.shadowRoot.querySelector("login-list-item[guid]");
+    let loginListItem = loginList.shadowRoot.querySelector("login-list-item[data-guid]");
     loginListItem.click();
   });
   await waitForTelemetryEventCount(1);
@@ -104,7 +104,7 @@ add_task(async function test_telemetry_events() {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginList = content.document.querySelector("login-list");
-    let loginListItem = loginList.shadowRoot.querySelector("login-list-item[guid]");
+    let loginListItem = loginList.shadowRoot.querySelector("login-list-item[data-guid]");
     loginListItem.click();
   });
   await waitForTelemetryEventCount(9);
