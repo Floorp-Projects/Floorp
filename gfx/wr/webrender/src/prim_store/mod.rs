@@ -245,10 +245,6 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             }
         }
     }
-
-    pub fn get_conservative_local_bounds(&self) -> Option<TypedRect<f32, F>> {
-        self.unmap(&self.bounds)
-    }
 }
 
 /// For external images, it's not possible to know the
@@ -2222,7 +2218,8 @@ impl PrimitiveStore {
 
                 self.request_resources_for_prim(
                     prim_instance,
-                    &map_local_to_surface,
+                    clipped_world_rect,
+                    frame_context,
                     frame_state,
                 );
             }
@@ -2307,7 +2304,8 @@ impl PrimitiveStore {
     fn request_resources_for_prim(
         &mut self,
         prim_instance: &mut PrimitiveInstance,
-        map_local_to_surface: &SpaceMapper<LayoutPixel, PicturePixel>,
+        prim_world_rect: WorldRect,
+        frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
     ) {
         match prim_instance.kind {
@@ -2358,9 +2356,17 @@ impl PrimitiveStore {
                             .intersection(&prim_rect).unwrap();
                         image_instance.tight_local_clip_rect = tight_clip_rect;
 
+                        let map_local_to_world = SpaceMapper::new_with_target(
+                            ROOT_SPATIAL_NODE_INDEX,
+                            prim_instance.spatial_node_index,
+                            frame_context.global_screen_world_rect,
+                            frame_context.clip_scroll_tree,
+                        );
+
                         let visible_rect = compute_conservative_visible_rect(
                             &tight_clip_rect,
-                            map_local_to_surface,
+                            prim_world_rect,
+                            &map_local_to_world,
                         );
 
                         let base_edge_flags = edge_flags_for_tile_spacing(&image_data.tile_spacing);
@@ -3085,14 +3091,22 @@ impl PrimitiveStore {
                         prim_data.common.prim_size,
                     );
 
+                    let map_local_to_world = SpaceMapper::new_with_target(
+                        ROOT_SPATIAL_NODE_INDEX,
+                        prim_instance.spatial_node_index,
+                        frame_context.global_screen_world_rect,
+                        frame_context.clip_scroll_tree,
+                    );
+
                     gradient.visible_tiles_range = decompose_repeated_primitive(
                         &prim_info.combined_local_clip_rect,
                         &prim_rect,
+                        prim_info.clipped_world_rect,
                         &prim_data.stretch_size,
                         &prim_data.tile_spacing,
                         frame_state,
                         &mut scratch.gradient_tiles,
-                        &pic_state.map_local_to_pic,
+                        &map_local_to_world,
                         &mut |_, mut request| {
                             request.push([
                                 prim_data.start_point.x,
@@ -3131,14 +3145,22 @@ impl PrimitiveStore {
                         prim_data.common.prim_size,
                     );
 
+                    let map_local_to_world = SpaceMapper::new_with_target(
+                        ROOT_SPATIAL_NODE_INDEX,
+                        prim_instance.spatial_node_index,
+                        frame_context.global_screen_world_rect,
+                        frame_context.clip_scroll_tree,
+                    );
+
                     *visible_tiles_range = decompose_repeated_primitive(
                         &prim_info.combined_local_clip_rect,
                         &prim_rect,
+                        prim_info.clipped_world_rect,
                         &prim_data.stretch_size,
                         &prim_data.tile_spacing,
                         frame_state,
                         &mut scratch.gradient_tiles,
-                        &pic_state.map_local_to_pic,
+                        &map_local_to_world,
                         &mut |_, mut request| {
                             request.push([
                                 prim_data.center.x,
@@ -3244,11 +3266,12 @@ fn write_segment<F>(
 fn decompose_repeated_primitive(
     combined_local_clip_rect: &LayoutRect,
     prim_local_rect: &LayoutRect,
+    prim_world_rect: WorldRect,
     stretch_size: &LayoutSize,
     tile_spacing: &LayoutSize,
     frame_state: &mut FrameBuildingState,
     gradient_tiles: &mut GradientTileStorage,
-    map_local_to_pic: &SpaceMapper<LayoutPixel, PicturePixel>,
+    map_local_to_world: &SpaceMapper<LayoutPixel, WorldPixel>,
     callback: &mut dyn FnMut(&LayoutRect, GpuDataRequest),
 ) -> GradientTileRange {
     let mut visible_tiles = Vec::new();
@@ -3261,7 +3284,8 @@ fn decompose_repeated_primitive(
 
     let visible_rect = compute_conservative_visible_rect(
         &tight_clip_rect,
-        map_local_to_pic,
+        prim_world_rect,
+        map_local_to_world,
     );
     let stride = *stretch_size + *tile_spacing;
 
@@ -3298,9 +3322,10 @@ fn decompose_repeated_primitive(
 
 fn compute_conservative_visible_rect(
     local_clip_rect: &LayoutRect,
-    map_local_to_pic: &SpaceMapper<LayoutPixel, PicturePixel>,
+    world_culling_rect: WorldRect,
+    map_local_to_world: &SpaceMapper<LayoutPixel, WorldPixel>,
 ) -> LayoutRect {
-    if let Some(local_bounds) = map_local_to_pic.get_conservative_local_bounds() {
+    if let Some(local_bounds) = map_local_to_world.unmap(&world_culling_rect) {
         return local_clip_rect.intersection(&local_bounds).unwrap_or_else(LayoutRect::zero)
     }
 

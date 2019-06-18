@@ -479,7 +479,11 @@ pub struct ResourceCache {
     blob_image_rasterizer_consumed_epoch: BlobImageRasterizerEpoch,
     /// A log of the last three frames worth of deleted image keys kept
     /// for debugging purposes.
-    deleted_blob_keys: VecDeque<Vec<BlobImageKey>>
+    deleted_blob_keys: VecDeque<Vec<BlobImageKey>>,
+    /// A set of the image keys that have been requested, and require
+    /// updates to the texture cache. Images in this category trigger
+    /// invalidations for picture caching tiles.
+    dirty_image_keys: FastHashSet<ImageKey>,
 }
 
 impl ResourceCache {
@@ -508,6 +512,7 @@ impl ResourceCache {
             blob_image_rasterizer_consumed_epoch: BlobImageRasterizerEpoch(0),
             // We want to keep three frames worth of delete blob keys
             deleted_blob_keys: vec![Vec::new(), Vec::new(), Vec::new()].into(),
+            dirty_image_keys: FastHashSet::default(),
         }
     }
 
@@ -987,25 +992,7 @@ impl ResourceCache {
         &self,
         image_key: ImageKey,
     ) -> bool {
-        match self.cached_images.try_get(&image_key) {
-            Some(ImageResult::UntiledAuto(ref info)) => {
-                !info.dirty_rect.is_empty()
-            }
-            Some(ImageResult::Multi(ref entries)) => {
-                for (_, entry) in &entries.resources {
-                    if !entry.dirty_rect.is_empty() {
-                        return true;
-                    }
-                }
-                false
-            }
-            Some(ImageResult::Err(..)) => {
-                false
-            }
-            None => {
-                true
-            }
-        }
+        self.dirty_image_keys.contains(&image_key)
     }
 
     pub fn request_image(
@@ -1108,6 +1095,10 @@ impl ResourceCache {
         if !self.pending_image_requests.insert(request) {
             return
         }
+
+        // By this point, we know that the image request is considered dirty, and will
+        // require a texture cache modification.
+        self.dirty_image_keys.insert(request.key);
 
         if template.data.is_blob() {
             let request: BlobImageRequest = request.into();
@@ -1774,6 +1765,7 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::QueryResources);
         self.state = State::Idle;
         self.texture_cache.end_frame(texture_cache_profile);
+        self.dirty_image_keys.clear();
     }
 
     pub fn set_debug_flags(&mut self, flags: DebugFlags) {
