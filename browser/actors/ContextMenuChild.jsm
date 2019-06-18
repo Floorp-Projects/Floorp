@@ -594,7 +594,6 @@ class ContextMenuChild extends JSWindowActorChild {
     // actually want the contextmenu events to reach the parent - we'll dispatch
     // a new contextmenu event after the async message has reached the parent
     // instead.
-    aEvent.preventDefault();
     aEvent.stopPropagation();
 
     this.sendAsyncMessage("contextmenu", data);
