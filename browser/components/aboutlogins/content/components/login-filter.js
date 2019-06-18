@@ -25,7 +25,7 @@ export default class LoginFilter extends ReflectedFluentElement {
   handleEvent(event) {
     switch (event.type) {
       case "input": {
-        this.dispatchFilterEvent(event.originalTarget.value);
+        this._dispatchFilterEvent(event.originalTarget.value);
         break;
       }
     }
@@ -45,7 +45,7 @@ export default class LoginFilter extends ReflectedFluentElement {
 
   set value(val) {
     this._input.value = val;
-    this.dispatchFilterEvent(val);
+    this._dispatchFilterEvent(val);
   }
 
   handleSpecialCaseFluentString(attrName) {
@@ -58,7 +58,7 @@ export default class LoginFilter extends ReflectedFluentElement {
     return true;
   }
 
-  dispatchFilterEvent(value) {
+  _dispatchFilterEvent(value) {
     this.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
       bubbles: true,
       composed: true,

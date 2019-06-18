@@ -68,37 +68,37 @@ export default class MenuButton extends ReflectedFluentElement {
           document.dispatchEvent(new CustomEvent(eventName, {
             bubbles: true,
           }));
-          this.hideMenu();
+          this._hideMenu();
           break;
         }
-        this.toggleMenu();
+        this._toggleMenu();
         break;
       }
     }
   }
 
-  /**
-   * Toggles the visibility of the menu.
-   */
-  toggleMenu() {
-    let wasHidden = this._menu.hidden;
-    if (wasHidden) {
-      this.showMenu();
-    } else {
-      this.hideMenu();
-    }
-  }
-
-  hideMenu() {
+  _hideMenu() {
     this._menu.hidden = true;
     document.documentElement.removeEventListener("click", this, true);
   }
 
-  showMenu() {
+  _showMenu() {
     this._menu.hidden = false;
 
     // Add a catch-all event listener to close the menu.
     document.documentElement.addEventListener("click", this, true);
+  }
+
+  /**
+   * Toggles the visibility of the menu.
+   */
+  _toggleMenu() {
+    let wasHidden = this._menu.hidden;
+    if (wasHidden) {
+      this._showMenu();
+    } else {
+      this._hideMenu();
+    }
   }
 }
 customElements.define("menu-button", MenuButton);
