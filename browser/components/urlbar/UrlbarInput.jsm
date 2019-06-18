@@ -97,6 +97,7 @@ class UrlbarInput {
     this._resultForCurrentValue = null;
     this._suppressStartQuery = false;
     this._untrimmedValue = "";
+    this._openViewOnFocus = false;
 
     // This exists only for tests.
     this._enableAutofillPlaceholder = true;
@@ -178,9 +179,6 @@ class UrlbarInput {
 
     this.editor.QueryInterface(Ci.nsIPlaintextEditor).newlineHandling =
       Ci.nsIPlaintextEditor.eNewlinesStripSurroundingWhitespace;
-
-    this._setOpenViewOnFocus();
-    Services.prefs.addObserver("browser.urlbar.openViewOnFocus", this);
   }
 
   /**
@@ -212,8 +210,6 @@ class UrlbarInput {
     if (Object.getOwnPropertyDescriptor(this, "valueFormatter").get) {
       this.valueFormatter.uninit();
     }
-
-    Services.prefs.removeObserver("browser.urlbar.openViewOnFocus", this);
 
     delete this.document;
     delete this.window;
@@ -299,14 +295,6 @@ class UrlbarInput {
     } catch (ex) {}
 
     return uri;
-  }
-
-  observe(subject, topic, data) {
-    switch (data) {
-      case "browser.urlbar.openViewOnFocus":
-        this._setOpenViewOnFocus();
-        break;
-    }
   }
 
   /**
@@ -733,12 +721,12 @@ class UrlbarInput {
     return this._openViewOnFocus;
   }
 
-  // Private methods below.
-
-  _setOpenViewOnFocus() {
-    this._openViewOnFocus = UrlbarPrefs.get("openViewOnFocus");
-    this.toggleAttribute("hidedropmarker", this._openViewOnFocus);
+  set openViewOnFocus(val) {
+    this._openViewOnFocus = val;
+    this.toggleAttribute("hidedropmarker", val);
   }
+
+  // Private methods below.
 
   _setValue(val, allowTrim) {
     this._untrimmedValue = val;
