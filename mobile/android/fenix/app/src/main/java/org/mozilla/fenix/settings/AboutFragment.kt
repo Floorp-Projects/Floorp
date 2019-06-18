@@ -6,12 +6,12 @@ package org.mozilla.fenix.settings
 
 import android.content.pm.PackageManager
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.pm.PackageInfoCompat
+import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_about.*
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
