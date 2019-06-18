@@ -416,6 +416,7 @@ void Gecko_EnsureTArrayCapacity(void* array, size_t capacity, size_t elem_size);
 void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
 
 void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* array, uint32_t length);
+void Gecko_ResizeTArrayForCStrings(nsTArray<nsCString>* array, uint32_t length);
 
 void Gecko_SetStyleGridTemplate(
     mozilla::UniquePtr<nsStyleGridTemplate>* grid_template,
@@ -427,12 +428,6 @@ nsStyleGridTemplate* Gecko_CreateStyleGridTemplate(uint32_t track_sizes,
 void Gecko_CopyStyleGridTemplateValues(
     mozilla::UniquePtr<nsStyleGridTemplate>* grid_template,
     const nsStyleGridTemplate* other);
-
-mozilla::css::GridTemplateAreasValue* Gecko_NewGridTemplateAreasValue(
-    uint32_t areas, uint32_t templates, uint32_t columns);
-
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::GridTemplateAreasValue,
-                                   GridTemplateAreasValue);
 
 // Clear the mContents, mCounterIncrements, mCounterResets, or mCounterSets
 // field in nsStyleContent. This is needed to run the destructors, otherwise

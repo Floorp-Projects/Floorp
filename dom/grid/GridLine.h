@@ -28,6 +28,7 @@ class GridLine : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GridLine)
 
+  void GetNames(nsTArray<nsCString>& aNames) const;
   void GetNames(nsTArray<nsString>& aNames) const;
 
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -40,15 +41,15 @@ class GridLine : public nsISupports, public nsWrapperCache {
   uint32_t Number() const;
   int32_t NegativeNumber() const;
 
-  void SetLineValues(const nsTArray<nsString>& aNames, double aStart,
+  void SetLineValues(const nsTArray<nsCString>& aNames, double aStart,
                      double aBreadth, uint32_t aNumber, int32_t aNegativeNumber,
                      GridDeclaration aType);
 
-  void SetLineNames(const nsTArray<nsString>& aNames);
+  void SetLineNames(const nsTArray<nsCString>& aNames);
 
  protected:
   RefPtr<GridLines> mParent;
-  nsTArray<nsString> mNames;
+  nsTArray<nsCString> mNames;
   double mStart;
   double mBreadth;
   GridDeclaration mType;
