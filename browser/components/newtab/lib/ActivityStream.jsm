@@ -145,7 +145,7 @@ const PREFS_CONFIG = new Map([
   }],
   ["section.highlights.rows", {
     title: "Number of rows of Highlights to display",
-    value: 2,
+    value: 1,
   }],
   ["section.topstories.rows", {
     title: "Number of rows of Top Stories to display",
@@ -246,6 +246,10 @@ const PREFS_CONFIG = new Map([
     title: "Track spoc impressions",
     skipBroadcast: true,
     value: "{}",
+  }],
+  ["discoverystream.endpointSpocsClear", {
+    title: "Endpoint for when a user opts-out of sponsored content to delete the user's data from the ad server.",
+    value: "",
   }],
   ["discoverystream.rec.impressions", {
     title: "Track rec impressions",

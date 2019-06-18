@@ -13,7 +13,7 @@ window.gActivityStreamStrings = {
   "type_label_downloaded": "Yuli-d",
   "menu_action_bookmark": "Creḍ asebter-agi",
   "menu_action_remove_bookmark": "Kkes tacreṭ-agi",
-  "menu_action_open_new_window": "Ldei deg usfaylu amaynut",
+  "menu_action_open_new_window": "Ldi deg usfaylu amaynut",
   "menu_action_open_private_window": "Ldi deg usfaylu uslig amaynut",
   "menu_action_dismiss": "Kkes",
   "menu_action_delete": "Kkes seg umazray",

@@ -28,7 +28,7 @@ export class Hero extends React.PureComponent {
         tiles: [{
           id: this.heroRec.id,
           pos: this.heroRec.pos,
-          ...(this.heroRec.shim ? {shim: this.heroRec.shim} : {}),
+          ...(this.heroRec.shim && this.heroRec.shim.click ? {shim: this.heroRec.shim.click} : {}),
         }],
       }));
     }
@@ -96,7 +96,7 @@ export class Hero extends React.PureComponent {
               rows={[{
                 id: heroRec.id,
                 pos: heroRec.pos,
-                ...(heroRec.shim ? {shim: heroRec.shim} : {}),
+                ...(heroRec.shim && heroRec.shim.impression ? {shim: heroRec.shim.impression} : {}),
               }]}
               dispatch={this.props.dispatch}
               source={this.props.type} />
@@ -111,6 +111,7 @@ export class Hero extends React.PureComponent {
             source={heroRec.domain}
             type={this.props.type}
             pocket_id={heroRec.pocket_id}
+            shim={heroRec.shim}
             bookmarkGuid={heroRec.bookmarkGuid} />
         </div>
       );

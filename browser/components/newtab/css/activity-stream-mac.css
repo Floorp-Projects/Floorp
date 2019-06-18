@@ -2226,6 +2226,28 @@ main {
   .ds-hero.empty {
     grid-template-columns: auto; }
 
+.ds-highlights .section {
+  margin: 0 -25px; }
+  .ds-highlights .section .section-list {
+    grid-gap: var(--gridRowGap);
+    grid-template-columns: repeat(4, 1fr); }
+    .ds-highlights .section .section-list .card-outer {
+      height: 175px; }
+      .ds-highlights .section .section-list .card-outer .card-host-name {
+        font-size: 13px;
+        line-height: 20px;
+        margin-bottom: 2px;
+        padding-bottom: 0;
+        text-transform: unset; }
+      .ds-highlights .section .section-list .card-outer .card-title {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+        max-height: 20px; }
+
+.ds-highlights .hide-for-narrow {
+  display: block; }
+
 .ds-hr {
   border: 0;
   border-top: 1px solid #D7D7DB;

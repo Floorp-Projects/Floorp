@@ -214,8 +214,9 @@ this.RecipeExecutor = class RecipeExecutor {
       return null;
     }
 
+    if (
     // eslint-disable-next-line eqeqeq
-    if (((config.op === "==") && (item[config.field] == rhs)) ||
+      ((config.op === "==") && (item[config.field] == rhs)) ||
         // eslint-disable-next-line eqeqeq
         ((config.op === "!=") && (item[config.field] != rhs)) ||
         ((config.op === "<") && (item[config.field] < rhs)) ||

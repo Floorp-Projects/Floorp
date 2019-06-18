@@ -5,7 +5,7 @@ import {safeURI} from "../../template-utils";
 import {SimpleSnippet} from "../SimpleSnippet/SimpleSnippet";
 import {SnippetBase} from "../../components/SnippetBase/SnippetBase";
 
-// Alt text if available; in the future this should come from the server. See bug 1551711
+// Alt text placeholder in case the prop from the server isn't available
 const ICON_ALT_TEXT = "";
 
 export class SubmitFormSnippet extends React.PureComponent {
@@ -66,7 +66,8 @@ export class SubmitFormSnippet extends React.PureComponent {
       }
       this.props.sendUserActionTelemetry({event: "CLICK_BUTTON", value: "subscribe-success", id: "NEWTAB_FOOTER_BAR_CONTENT"});
     } else {
-      console.error("There was a problem submitting the form", json || "[No JSON response]"); // eslint-disable-line no-console
+      // eslint-disable-next-line no-console
+      console.error("There was a problem submitting the form", json || "[No JSON response]");
       this.setState({signupSuccess: false, signupSubmitted: true});
       this.props.sendUserActionTelemetry({event: "CLICK_BUTTON", value: "subscribe-error", id: "NEWTAB_FOOTER_BAR_CONTENT"});
     }
@@ -168,8 +169,8 @@ export class SubmitFormSnippet extends React.PureComponent {
     return (<SnippetBase {...this.props} className={containerClass} footerDismiss={true}>
         {content.scene2_icon ?
           <div className="scene2Icon">
-            <img src={safeURI(content.scene2_icon)} className="icon-light-theme" alt={ICON_ALT_TEXT} />
-            <img src={safeURI(content.scene2_icon_dark_theme || content.scene2_icon)} className="icon-dark-theme" alt={ICON_ALT_TEXT} />
+            <img src={safeURI(content.scene2_icon)} className="icon-light-theme" alt={content.scene2_icon_alt_text || ICON_ALT_TEXT} />
+            <img src={safeURI(content.scene2_icon_dark_theme || content.scene2_icon)} className="icon-dark-theme" alt={content.scene2_icon_alt_text || ICON_ALT_TEXT} />
           </div> : null}
         <div className="message">
           <p>

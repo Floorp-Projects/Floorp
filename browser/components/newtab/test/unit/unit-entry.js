@@ -7,7 +7,8 @@ enzyme.configure({adapter: new Adapter()});
 
 // Cause React warnings to make tests that trigger them fail
 const origConsoleError = console.error; // eslint-disable-line no-console
-console.error = function(msg, ...args) { // eslint-disable-line no-console
+ // eslint-disable-next-line no-console
+console.error = function(msg, ...args) {
   // eslint-disable-next-line no-console
   origConsoleError.apply(console, [msg, ...args]);
 

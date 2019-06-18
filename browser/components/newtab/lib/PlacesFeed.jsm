@@ -90,7 +90,8 @@ class BookmarksObserver extends Observer {
    * @param  {str} uri
    * @param  {str} guid      The unique id of the bookmark
    */
-  onItemRemoved(id, folderId, index, type, uri, guid, parentGuid, source) { // eslint-disable-line max-params
+  // eslint-disable-next-line max-params
+  onItemRemoved(id, folderId, index, type, uri, guid, parentGuid, source) {
     if (type === PlacesUtils.bookmarks.TYPE_BOOKMARK &&
         source !== PlacesUtils.bookmarks.SOURCES.IMPORT &&
         source !== PlacesUtils.bookmarks.SOURCES.RESTORE &&

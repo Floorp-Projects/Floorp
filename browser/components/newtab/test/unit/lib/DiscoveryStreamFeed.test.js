@@ -14,7 +14,8 @@ const ONE_WEEK = 7 * 24 * 60 * 60 * 1000; // 1 week
 
 const FAKE_UUID = "{foo-123-foo}";
 
-describe("DiscoveryStreamFeed", () => { // eslint-disable-line max-statements
+// eslint-disable-next-line max-statements
+describe("DiscoveryStreamFeed", () => {
   let DiscoveryStreamFeed;
   let feed;
   let sandbox;
@@ -63,7 +64,6 @@ describe("DiscoveryStreamFeed", () => { // eslint-disable-line max-statements
       DiscoveryStreamFeed,
     } = injector({
       "lib/UserDomainAffinityProvider.jsm": {UserDomainAffinityProvider: FakeUserDomainAffinityProvider},
-      "lib/TelemetryFeed.jsm": {PREF_IMPRESSION_ID: "fake-pref-impression-id"},
     }));
 
     globals = new GlobalOverrider();
@@ -567,6 +567,36 @@ describe("DiscoveryStreamFeed", () => { // eslint-disable-line max-statements
       Object.defineProperty(feed, "config", {get: () => ({show_spocs: true})});
 
       assert.isTrue(feed.showSpocs);
+    });
+  });
+
+  describe("#clearSpocs", () => {
+    it("should not fail with no endpoint", async () => {
+      sandbox.stub(feed.store, "getState").returns({
+        Prefs: {
+          values: {"discoverystream.endpointSpocsClear": null},
+        },
+      });
+      sandbox.stub(feed, "fetchFromEndpoint").resolves(null);
+
+      await feed.clearSpocs();
+
+      assert.notCalled(feed.fetchFromEndpoint);
+    });
+    it("should call DELETE with endpoint", async () => {
+      sandbox.stub(feed.store, "getState").returns({
+        Prefs: {
+          values: {"discoverystream.endpointSpocsClear": "https://spocs/user"},
+        },
+      });
+      sandbox.stub(feed, "fetchFromEndpoint").resolves(null);
+      feed._impressionId = "1234";
+
+      await feed.clearSpocs();
+
+      assert.equal(feed.fetchFromEndpoint.firstCall.args[0], "https://spocs/user");
+      assert.equal(feed.fetchFromEndpoint.firstCall.args[1].method, "DELETE");
+      assert.equal(feed.fetchFromEndpoint.firstCall.args[1].body, "{\"pocket_id\":\"1234\"}");
     });
   });
 
@@ -1367,6 +1397,20 @@ describe("DiscoveryStreamFeed", () => { // eslint-disable-line max-statements
       await feed.onAction({type: at.PREF_CHANGED, data: {name: "showSponsored"}});
 
       assert.calledOnce(feed.loadSpocs);
+    });
+    it("should call clearSpocs when sponsored content is turned off", async () => {
+      sandbox.stub(feed, "clearSpocs").returns(Promise.resolve());
+
+      await feed.onAction({type: at.PREF_CHANGED, data: {name: "showSponsored", value: false}});
+
+      assert.calledOnce(feed.clearSpocs);
+    });
+    it("should call clearSpocs when top stories is turned off", async () => {
+      sandbox.stub(feed, "clearSpocs").returns(Promise.resolve());
+
+      await feed.onAction({type: at.PREF_CHANGED, data: {name: "feeds.section.topstories", value: false}});
+
+      assert.calledOnce(feed.clearSpocs);
     });
   });
 

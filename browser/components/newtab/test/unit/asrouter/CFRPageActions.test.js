@@ -488,7 +488,8 @@ describe("CFRPageActions", () => {
       });
       it("should set the secondary action correctly", async () => {
         await pageAction._showPopupOnClick();
-        const [secondaryAction] = global.PopupNotifications.show.firstCall.args[5]; // eslint-disable-line prefer-destructuring
+        // eslint-disable-next-line prefer-destructuring
+        const [secondaryAction] = global.PopupNotifications.show.firstCall.args[5];
 
         assert.deepEqual(secondaryAction.label, {value: "Secondary Button", attributes: {accesskey: "s"}});
         sandbox.spy(pageAction, "hideAddressBarNotifier");
@@ -511,7 +512,8 @@ describe("CFRPageActions", () => {
       });
       it("should send right telemetry for BLOCK secondary action", async () => {
         await pageAction._showPopupOnClick();
-        const blockAction = global.PopupNotifications.show.firstCall.args[5][1]; // eslint-disable-line prefer-destructuring
+        // eslint-disable-next-line prefer-destructuring
+        const blockAction = global.PopupNotifications.show.firstCall.args[5][1];
 
         assert.deepEqual(blockAction.label, {value: "Secondary Button 2", attributes: {accesskey: "a"}});
         sandbox.spy(pageAction, "hideAddressBarNotifier");
@@ -536,7 +538,8 @@ describe("CFRPageActions", () => {
       });
       it("should send right telemetry for MANAGE secondary action", async () => {
         await pageAction._showPopupOnClick();
-        const manageAction = global.PopupNotifications.show.firstCall.args[5][2]; // eslint-disable-line prefer-destructuring
+        // eslint-disable-next-line prefer-destructuring
+        const manageAction = global.PopupNotifications.show.firstCall.args[5][2];
 
         assert.deepEqual(manageAction.label, {value: "Secondary Button 3", attributes: {accesskey: "g"}});
         sandbox.spy(pageAction, "hideAddressBarNotifier");
