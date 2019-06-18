@@ -111,7 +111,7 @@ export default class LoginItem extends ReflectedFluentElement {
       }
       case "password-hide-title":
       case "password-show-title": {
-        this.updatePasswordRevealState();
+        this._updatePasswordRevealState();
         break;
       }
       case "username-placeholder": {
@@ -136,7 +136,7 @@ export default class LoginItem extends ReflectedFluentElement {
     this._originInput.defaultValue = this._login.origin || "";
     this._usernameInput.defaultValue = this._login.username || "";
     this._passwordInput.defaultValue = this._login.password || "";
-    this.updatePasswordRevealState();
+    this._updatePasswordRevealState();
   }
 
   handleEvent(event) {
@@ -159,7 +159,7 @@ export default class LoginItem extends ReflectedFluentElement {
       case "click": {
         let classList = event.target.classList;
         if (classList.contains("reveal-password-checkbox")) {
-          this.updatePasswordRevealState();
+          this._updatePasswordRevealState();
 
           let method = this._revealCheckbox.checked ? "show" : "hide";
           recordTelemetryEvent({object: "password", method});
@@ -174,7 +174,7 @@ export default class LoginItem extends ReflectedFluentElement {
           } else {
             // TODO, should select the first login if it exists
             // or show the no-logins view otherwise
-            this.toggleEditing();
+            this._toggleEditing();
             this.render();
           }
 
@@ -194,7 +194,7 @@ export default class LoginItem extends ReflectedFluentElement {
           return;
         }
         if (classList.contains("edit-button")) {
-          this.toggleEditing();
+          this._toggleEditing();
 
           recordTelemetryEvent({object: "existing_login", method: "edit"});
           return;
@@ -249,7 +249,7 @@ export default class LoginItem extends ReflectedFluentElement {
     } else {
       this.dataset.isNewLogin = true;
     }
-    this.toggleEditing(!login.guid);
+    this._toggleEditing(!login.guid);
 
     this._revealCheckbox.checked = false;
 
@@ -269,7 +269,7 @@ export default class LoginItem extends ReflectedFluentElement {
       return;
     }
 
-    this.toggleEditing(false);
+    this._toggleEditing(false);
     this._login = login;
     this.render();
   }
@@ -286,7 +286,7 @@ export default class LoginItem extends ReflectedFluentElement {
       return;
     }
 
-    this.toggleEditing(false);
+    this._toggleEditing(false);
     this._login = login;
     this.render();
   }
@@ -303,53 +303,9 @@ export default class LoginItem extends ReflectedFluentElement {
       return;
     }
 
-    this.toggleEditing(false);
+    this._toggleEditing(false);
     this._login = {};
     this.render();
-  }
-
-  /**
-   * Toggles the login-item view from editing to non-editing mode.
-   *
-   * @param {boolean} force When true puts the form in 'edit' mode, otherwise
-   *                        puts the form in read-only mode.
-   */
-  toggleEditing(force) {
-    let shouldEdit = force !== undefined ? force : !this.dataset.editing;
-
-    if (!shouldEdit) {
-      delete this.dataset.isNewLogin;
-    }
-
-    if (shouldEdit) {
-      this._passwordInput.style.removeProperty("width");
-    } else {
-      // Need to set a shorter width than -moz-available so the reveal checkbox
-      // will still appear next to the password.
-      this._passwordInput.style.width = (this._login.password || "").length + "ch";
-    }
-
-    this._deleteButton.disabled = this.dataset.isNewLogin;
-    this._editButton.disabled = shouldEdit;
-    this._originInput.readOnly = !this.dataset.isNewLogin;
-    this._usernameInput.readOnly = !shouldEdit;
-    this._passwordInput.readOnly = !shouldEdit;
-    if (shouldEdit) {
-      this.dataset.editing = true;
-    } else {
-      delete this.dataset.editing;
-    }
-  }
-
-  updatePasswordRevealState() {
-    let labelAttr = this._revealCheckbox.checked ? "password-show-title"
-                                                 : "password-hide-title";
-    this._revealCheckbox.setAttribute("aria-label", this.getAttribute(labelAttr));
-    this._revealCheckbox.setAttribute("title", this.getAttribute(labelAttr));
-
-    let {checked} = this._revealCheckbox;
-    let inputType = checked ? "type" : "password";
-    this._passwordInput.setAttribute("type", inputType);
   }
 
   /**
@@ -383,6 +339,50 @@ export default class LoginItem extends ReflectedFluentElement {
       password: this._passwordInput.value.trim(),
       origin: this._originInput.value.trim(),
     };
+  }
+
+  /**
+   * Toggles the login-item view from editing to non-editing mode.
+   *
+   * @param {boolean} force When true puts the form in 'edit' mode, otherwise
+   *                        puts the form in read-only mode.
+   */
+  _toggleEditing(force) {
+    let shouldEdit = force !== undefined ? force : !this.dataset.editing;
+
+    if (!shouldEdit) {
+      delete this.dataset.isNewLogin;
+    }
+
+    if (shouldEdit) {
+      this._passwordInput.style.removeProperty("width");
+    } else {
+      // Need to set a shorter width than -moz-available so the reveal checkbox
+      // will still appear next to the password.
+      this._passwordInput.style.width = (this._login.password || "").length + "ch";
+    }
+
+    this._deleteButton.disabled = this.dataset.isNewLogin;
+    this._editButton.disabled = shouldEdit;
+    this._originInput.readOnly = !this.dataset.isNewLogin;
+    this._usernameInput.readOnly = !shouldEdit;
+    this._passwordInput.readOnly = !shouldEdit;
+    if (shouldEdit) {
+      this.dataset.editing = true;
+    } else {
+      delete this.dataset.editing;
+    }
+  }
+
+  _updatePasswordRevealState() {
+    let labelAttr = this._revealCheckbox.checked ? "password-show-title"
+                                                 : "password-hide-title";
+    this._revealCheckbox.setAttribute("aria-label", this.getAttribute(labelAttr));
+    this._revealCheckbox.setAttribute("title", this.getAttribute(labelAttr));
+
+    let {checked} = this._revealCheckbox;
+    let inputType = checked ? "type" : "password";
+    this._passwordInput.setAttribute("type", inputType);
   }
 }
 customElements.define("login-item", LoginItem);
