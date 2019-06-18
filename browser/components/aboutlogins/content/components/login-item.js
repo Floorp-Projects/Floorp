@@ -159,7 +159,8 @@ export default class LoginItem extends ReflectedFluentElement {
         break;
       }
       case "click": {
-        if (event.target.classList.contains("reveal-password-checkbox")) {
+        let classList = event.target.classList;
+        if (classList.contains("reveal-password-checkbox")) {
           this.updatePasswordRevealState();
 
           let revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
@@ -170,7 +171,7 @@ export default class LoginItem extends ReflectedFluentElement {
 
         // Prevent form submit behavior on the following buttons.
         event.preventDefault();
-        if (event.target.classList.contains("cancel-button")) {
+        if (classList.contains("cancel-button")) {
           if (this._login.guid) {
             this.setLogin(this._login);
           } else {
@@ -186,7 +187,7 @@ export default class LoginItem extends ReflectedFluentElement {
           });
           return;
         }
-        if (event.target.classList.contains("delete-button")) {
+        if (classList.contains("delete-button")) {
           document.dispatchEvent(new CustomEvent("AboutLoginsDeleteLogin", {
             bubbles: true,
             detail: this._login,
@@ -195,13 +196,13 @@ export default class LoginItem extends ReflectedFluentElement {
           recordTelemetryEvent({object: "existing_login", method: "delete"});
           return;
         }
-        if (event.target.classList.contains("edit-button")) {
+        if (classList.contains("edit-button")) {
           this.toggleEditing();
 
           recordTelemetryEvent({object: "existing_login", method: "edit"});
           return;
         }
-        if (event.target.classList.contains("open-site-button")) {
+        if (classList.contains("open-site-button")) {
           document.dispatchEvent(new CustomEvent("AboutLoginsOpenSite", {
             bubbles: true,
             detail: this._login,
@@ -210,7 +211,7 @@ export default class LoginItem extends ReflectedFluentElement {
           recordTelemetryEvent({object: "existing_login", method: "open_site"});
           return;
         }
-        if (event.target.classList.contains("save-changes-button")) {
+        if (classList.contains("save-changes-button")) {
           if (!this._isFormValid({reportErrors: true})) {
             return;
           }
