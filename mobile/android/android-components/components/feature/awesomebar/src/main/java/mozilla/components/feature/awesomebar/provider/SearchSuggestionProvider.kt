@@ -92,7 +92,7 @@ class SearchSuggestionProvider(
             list.add(0, text)
         }
 
-        list.take(limit).forEachIndexed { index, item ->
+        list.distinct().take(limit).forEachIndexed { index, item ->
             suggestions.add(AwesomeBar.Suggestion(
                 provider = this,
                 // We always use the same ID for the entered text so that this suggestion gets replaced "in place".

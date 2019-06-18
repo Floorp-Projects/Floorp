@@ -33,6 +33,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 private const val GOOGLE_MOCK_RESPONSE = "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]"
+private const val GOOGLE_MOCK_RESPONSE_WITH_DUPLICATES = "[\"firefox\",[\"firefox\",\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]"
 
 @RunWith(AndroidJUnit4::class)
 class SearchSuggestionProviderTest {
@@ -404,5 +405,55 @@ class SearchSuggestionProviderTest {
     @Test(expected = IllegalArgumentException::class)
     fun `Constructor throws if limit is less than 1`() {
         SearchSuggestionProvider(mock(), mock(), mock(), limit = 0)
+    }
+
+    @Test
+    fun `Provider returns distinct multiple suggestions`() {
+        runBlocking {
+            val server = MockWebServer()
+            server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE_WITH_DUPLICATES))
+            server.start()
+
+            val searchEngine: SearchEngine = mock()
+            doReturn(server.url("/").toString())
+                    .`when`(searchEngine).buildSuggestionsURL("fire")
+            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
+            doReturn("google").`when`(searchEngine).name
+
+            val searchEngineManager: SearchEngineManager = mock()
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
+
+            val useCase = spy(SearchUseCases(
+                    testContext,
+                    searchEngineManager,
+                    SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
+            ).defaultSearch)
+            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+
+            val provider = SearchSuggestionProvider(
+                    searchEngine,
+                    useCase,
+                    HttpURLConnectionClient(),
+                    mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
+            )
+
+            try {
+                val suggestions = provider.onInputChanged("fire")
+                assertEquals(11, suggestions.size)
+                assertEquals("fire", suggestions[0].title)
+                assertEquals("firefox", suggestions[1].title)
+                assertEquals("firefox for mac", suggestions[2].title)
+                assertEquals("firefox quantum", suggestions[3].title)
+                assertEquals("firefox update", suggestions[4].title)
+                assertEquals("firefox esr", suggestions[5].title)
+                assertEquals("firefox focus", suggestions[6].title)
+                assertEquals("firefox addons", suggestions[7].title)
+                assertEquals("firefox extensions", suggestions[8].title)
+                assertEquals("firefox nightly", suggestions[9].title)
+                assertEquals("firefox clear cache", suggestions[10].title)
+            } finally {
+                server.shutdown()
+            }
+        }
     }
 }
