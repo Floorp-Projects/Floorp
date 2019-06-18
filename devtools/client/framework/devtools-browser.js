@@ -151,8 +151,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     // Style the splitter between the toolbox and page content.  This used to
     // set the attribute on the browser's root node but that regressed tpaint:
     // bug 1331449.
-    win.document.getElementById("browser-bottombox")
-       .setAttribute("devtoolstheme", devtoolsTheme);
     win.document.getElementById("appcontent")
        .setAttribute("devtoolstheme", devtoolsTheme);
   },
