@@ -1521,23 +1521,6 @@ wr::RenderRoot gfxUtils::RecursivelyGetRenderRootForFrame(
   return wr::RenderRoot::Default;
 }
 
-wr::RenderRoot gfxUtils::RecursivelyGetRenderRootForElement(
-    const dom::Element* aElement) {
-  if (!gfxVars::UseWebRender() || !StaticPrefs::WebRenderSplitRenderRoots()) {
-    return wr::RenderRoot::Default;
-  }
-
-  for (const dom::Element* current = aElement; current;
-       current = current->GetParentElement()) {
-    auto renderRoot = gfxUtils::GetRenderRootForElement(current);
-    if (renderRoot) {
-      return *renderRoot;
-    }
-  }
-
-  return wr::RenderRoot::Default;
-}
-
 FILE* gfxUtils::sDumpPaintFile = stderr;
 
 namespace mozilla {
