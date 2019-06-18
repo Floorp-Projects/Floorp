@@ -6,6 +6,10 @@ import {recordTelemetryEvent} from "../aboutLoginsUtils.js";
 import ReflectedFluentElement from "./reflected-fluent-element.js";
 
 export default class CopyToClipboardButton extends ReflectedFluentElement {
+  /**
+   * The number of milliseconds to display the "Copied" success message
+   * before reverting to the normal "Copy" button.
+   */
   static get BUTTON_RESET_TIMEOUT() {
     return 5000;
   }
@@ -67,6 +71,10 @@ export default class CopyToClipboardButton extends ReflectedFluentElement {
     }
   }
 
+  /**
+   * @param {Element} val A reference to the input element whose value will
+   *                      be placed on the clipboard.
+   */
   set relatedInput(val) {
     this._relatedInput = val;
   }

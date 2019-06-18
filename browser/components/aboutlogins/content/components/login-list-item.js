@@ -54,6 +54,12 @@ export default class LoginListItem extends HTMLElement {
     }
   }
 
+  /**
+   * Updates the cached login object with new values.
+   *
+   * @param {login} login The login object to display. The login object is
+   *                      a plain JS object representation of nsILoginInfo/nsILoginMetaInfo.
+   */
   update(login) {
     this._login = login;
     this.render();

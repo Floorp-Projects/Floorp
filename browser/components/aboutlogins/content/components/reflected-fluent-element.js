@@ -7,8 +7,10 @@ export default class ReflectedFluentElement extends HTMLElement {
     return this.constructor.reflectedFluentIDs.includes(attr.name);
   }
 
-  /* This function should be called to apply any localized strings that Fluent
-     may have applied to the element before the custom element was defined. */
+  /*
+   * Called to apply any localized strings that Fluent may have applied
+   * to the element before the custom element was defined.
+   */
   reflectFluentStrings() {
     for (let reflectedFluentID of this.constructor.reflectedFluentIDs) {
       if (this.hasAttribute(reflectedFluentID)) {
@@ -26,8 +28,10 @@ export default class ReflectedFluentElement extends HTMLElement {
     }
   }
 
-  /* Fluent doesn't handle localizing into Shadow DOM yet so strings
-     need to get reflected in to their targeted element. */
+  /*
+   * Fluent doesn't handle localizing into Shadow DOM yet so strings
+   * need to get reflected in to their targeted element.
+   */
   attributeChangedCallback(attr, oldValue, newValue) {
     if (!this.shadowRoot) {
       return;

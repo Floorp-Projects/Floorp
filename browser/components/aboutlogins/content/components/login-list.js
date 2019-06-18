@@ -66,6 +66,10 @@ export default class LoginList extends ReflectedFluentElement {
     document.l10n.setAttributes(this, "login-list", {count: visibleLoginCount});
   }
 
+  /**
+   * Filters the displayed logins in the list to only those matching the
+   * cached filter value.
+   */
   _applyFilter() {
     let matchingLoginGuids;
     if (this._filter) {
@@ -150,16 +154,26 @@ export default class LoginList extends ReflectedFluentElement {
     return true;
   }
 
+  /**
+   * @param {login[]} logins An array of logins used for displaying in the list.
+   */
   setLogins(logins) {
     this._logins = logins;
     this.render();
   }
 
+  /**
+   * @param {login} login A login that was added to storage.
+   */
   loginAdded(login) {
     this._logins.push(login);
     this.render();
   }
 
+  /**
+   * @param {login} login A login that was modified in storage. The related login-list-item
+   *                       will get updated.
+   */
   loginModified(login) {
     for (let i = 0; i < this._logins.length; i++) {
       if (this._logins[i].guid == login.guid) {
@@ -170,6 +184,11 @@ export default class LoginList extends ReflectedFluentElement {
     this.render();
   }
 
+  /**
+   * @param {login} login A login that was removed from storage. The related login-list-item
+   *                      will get removed. The login object is a plain JS object
+   *                      representation of nsILoginInfo/nsILoginMetaInfo.
+   */
   loginRemoved(login) {
     this._logins = this._logins.filter(l => l.guid != login.guid);
     this.render();
