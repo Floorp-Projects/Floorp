@@ -7,6 +7,10 @@ export default class ReflectedFluentElement extends HTMLElement {
     return this.constructor.reflectedFluentIDs.includes(attr.name);
   }
 
+  connectedCallback() {
+    this.reflectFluentStrings();
+  }
+
   /*
    * Called to apply any localized strings that Fluent may have applied
    * to the element before the custom element was defined.

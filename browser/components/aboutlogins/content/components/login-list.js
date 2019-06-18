@@ -29,7 +29,7 @@ export default class LoginList extends ReflectedFluentElement {
     this.attachShadow({mode: "open"})
         .appendChild(loginListTemplate.content.cloneNode(true));
 
-    this.reflectFluentStrings();
+    this._list = this.shadowRoot.querySelector("ol");
 
     this.render();
 
@@ -37,11 +37,12 @@ export default class LoginList extends ReflectedFluentElement {
                    .addEventListener("change", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
+
+    super.connectedCallback();
   }
 
   render() {
-    let list = this.shadowRoot.querySelector("ol");
-    list.textContent = "";
+    this._list.textContent = "";
 
     if (!this._logins.length) {
       document.l10n.setAttributes(this, "login-list", {count: 0});
@@ -50,7 +51,7 @@ export default class LoginList extends ReflectedFluentElement {
 
     if (!this._selectedGuid) {
       this._blankLoginListItem.classList.add("selected");
-      list.append(this._blankLoginListItem);
+      this._list.append(this._blankLoginListItem);
     }
 
     for (let login of this._logins) {
@@ -59,7 +60,7 @@ export default class LoginList extends ReflectedFluentElement {
       if (login.guid == this._selectedGuid) {
         listItem.classList.add("selected");
       }
-      list.append(listItem);
+      this._list.append(listItem);
     }
 
     let visibleLoginCount = this._applyFilter();
@@ -81,7 +82,7 @@ export default class LoginList extends ReflectedFluentElement {
       matchingLoginGuids = this._logins.map(login => login.guid);
     }
 
-    for (let listItem of this.shadowRoot.querySelectorAll("login-list-item")) {
+    for (let listItem of this._list.querySelectorAll("login-list-item")) {
       if (!listItem.dataset.guid) {
         // Don't hide the 'New Login' item if it is present.
         continue;
