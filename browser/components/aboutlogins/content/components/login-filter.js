@@ -15,9 +15,11 @@ export default class LoginFilter extends ReflectedFluentElement {
     this.attachShadow({mode: "open"})
         .appendChild(loginFilterTemplate.content.cloneNode(true));
 
-    this.reflectFluentStrings();
+    this._input = this.shadowRoot.querySelector("input");
 
     this.addEventListener("input", this);
+
+    super.connectedCallback();
   }
 
   handleEvent(event) {
@@ -38,20 +40,21 @@ export default class LoginFilter extends ReflectedFluentElement {
   }
 
   get value() {
-    return this.shadowRoot.querySelector("input").value;
+    return this._input.value;
   }
 
   set value(val) {
-    this.shadowRoot.querySelector("input").value = val;
+    this._input.value = val;
     this.dispatchFilterEvent(val);
   }
 
   handleSpecialCaseFluentString(attrName) {
-    if (attrName != "placeholder") {
+    if (!this.shadowRoot ||
+        attrName != "placeholder") {
       return false;
     }
 
-    this.shadowRoot.querySelector("input").placeholder = this.getAttribute(attrName);
+    this._input.placeholder = this.getAttribute(attrName);
     return true;
   }
 
