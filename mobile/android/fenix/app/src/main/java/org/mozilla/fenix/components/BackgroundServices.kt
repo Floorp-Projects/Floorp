@@ -22,6 +22,7 @@ import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.manager.DeviceTuple
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.R
 import org.mozilla.fenix.isInExperiment
@@ -77,11 +78,20 @@ class BackgroundServices(
         }
     }
 
+    // NB: flipping this flag back and worth is currently not well supported and may need hand-holding.
+    // Consult with the android-components peers before changing.
+    // See https://github.com/mozilla/application-services/issues/1308
+    private val deviceCapabilities = if (BuildConfig.SEND_TAB_ENABLED) {
+        listOf(DeviceCapability.SEND_TAB)
+    } else {
+        emptyList()
+    }
+
     val accountManager = FxaAccountManager(
         context,
         config,
         scopes,
-        DeviceTuple(context.getString(R.string.app_name), DeviceType.MOBILE, listOf(DeviceCapability.SEND_TAB)),
+        DeviceTuple(context.getString(R.string.app_name), DeviceType.MOBILE, deviceCapabilities),
         syncManager
     ).also {
         it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), true)

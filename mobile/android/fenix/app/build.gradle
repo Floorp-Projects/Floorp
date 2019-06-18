@@ -258,7 +258,9 @@ android.applicationVariants.all { variant ->
 // -------------------------------------------------------------------------------------------------
 // Feature build flags
 // -------------------------------------------------------------------------------------------------
-    buildConfigField 'Boolean', 'SEND_TAB_ENABLED', (true).toString()
+    // NB: flipping SEND_TAB_ENABLED flag back and worth is currently not well supported and may need hand-holding.
+    // Consult with the android-components peers before changing.
+    buildConfigField 'Boolean', 'SEND_TAB_ENABLED', (buildType == "nightly" || isDebug).toString()
     buildConfigField 'Boolean', 'PULL_TO_REFRESH_ENABLED', (false).toString()
 }
 
