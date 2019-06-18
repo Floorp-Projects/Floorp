@@ -78,7 +78,7 @@ class UiCompositorControllerChild final
   Maybe<int32_t> mMaxToolbarHeight;
   Maybe<uint32_t> mDefaultClearColor;
   Maybe<bool> mLayerUpdateEnabled;
-  nsBaseWidget* mWidget;
+  RefPtr<nsBaseWidget> mWidget;
   // Should only be set when compositor is in process.
   RefPtr<UiCompositorControllerParent> mParent;
 };
