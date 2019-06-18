@@ -27,6 +27,7 @@
 
 #include "config.h"
 
+#include <assert.h>
 #include <limits.h>
 
 #include "common/intops.h"
@@ -67,7 +68,7 @@ static inline void ctx_norm(MsacContext *s, ec_win dif, unsigned rng) {
         ctx_refill(s);
 }
 
-unsigned dav1d_msac_decode_bool_equi_c(MsacContext *const s) {
+unsigned dav1d_msac_decode_bool_equi(MsacContext *const s) {
     ec_win vw, dif = s->dif;
     unsigned ret, v, r = s->rng;
     assert((dif >> (EC_WIN_SIZE - 16)) < r);
@@ -85,7 +86,7 @@ unsigned dav1d_msac_decode_bool_equi_c(MsacContext *const s) {
 /* Decode a single binary value.
  * f: The probability that the bit is one
  * Return: The value decoded (0 or 1). */
-unsigned dav1d_msac_decode_bool_c(MsacContext *const s, const unsigned f) {
+unsigned dav1d_msac_decode_bool(MsacContext *const s, const unsigned f) {
     ec_win vw, dif = s->dif;
     unsigned ret, v, r = s->rng;
     assert((dif >> (EC_WIN_SIZE - 16)) < r);
@@ -96,6 +97,13 @@ unsigned dav1d_msac_decode_bool_c(MsacContext *const s, const unsigned f) {
     v   += ret*(r - 2*v);
     ctx_norm(s, dif, v);
     return !ret;
+}
+
+unsigned dav1d_msac_decode_bools(MsacContext *const s, unsigned n) {
+    unsigned v = 0;
+    while (n--)
+        v = (v << 1) | dav1d_msac_decode_bool_equi(s);
+    return v;
 }
 
 int dav1d_msac_decode_subexp(MsacContext *const s, const int ref,
@@ -112,6 +120,15 @@ int dav1d_msac_decode_subexp(MsacContext *const s, const int ref,
     const unsigned v = dav1d_msac_decode_bools(s, b) + a;
     return ref * 2 <= n ? inv_recenter(ref, v) :
                           n - 1 - inv_recenter(n - 1 - ref, v);
+}
+
+int dav1d_msac_decode_uniform(MsacContext *const s, const unsigned n) {
+    assert(n > 0);
+    const int l = ulog2(n) + 1;
+    assert(l > 1);
+    const unsigned m = (1 << l) - n;
+    const unsigned v = dav1d_msac_decode_bools(s, l - 1);
+    return v < m ? v : (v << 1) - m + dav1d_msac_decode_bool_equi(s);
 }
 
 /* Decodes a symbol given an inverse cumulative distribution function (CDF)
@@ -155,8 +172,8 @@ unsigned dav1d_msac_decode_symbol_adapt_c(MsacContext *const s,
     return val;
 }
 
-unsigned dav1d_msac_decode_bool_adapt_c(MsacContext *const s,
-                                        uint16_t *const cdf)
+unsigned dav1d_msac_decode_bool_adapt(MsacContext *const s,
+                                      uint16_t *const cdf)
 {
     const unsigned bit = dav1d_msac_decode_bool(s, *cdf);
 
@@ -164,10 +181,11 @@ unsigned dav1d_msac_decode_bool_adapt_c(MsacContext *const s,
         // update_cdf() specialized for boolean CDFs
         const unsigned count = cdf[1];
         const int rate = (count >> 4) | 4;
-        if (bit)
+        if (bit) {
             cdf[0] += (32768 - cdf[0]) >> rate;
-        else
+        } else {
             cdf[0] -= cdf[0] >> rate;
+        }
         cdf[1] = count + (count < 32);
     }
 

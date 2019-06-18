@@ -573,7 +573,7 @@ static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
     }
 }
 
-COLD void bitfn(dav1d_loop_restoration_dsp_init)(Dav1dLoopRestorationDSPContext *const c) {
+void bitfn(dav1d_loop_restoration_dsp_init)(Dav1dLoopRestorationDSPContext *const c) {
     c->wiener = wiener_c;
     c->selfguided = selfguided_c;
 

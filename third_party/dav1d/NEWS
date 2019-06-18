@@ -1,22 +1,3 @@
-Changes for 0.4.0 'Cheetah':
-----------------------------
-
- - Fix playback with unknown OBUs
- - Add an option to limit the maximum frame size
- - SSE2 and ARM64 optimizations for MSAC
- - Improve speed on 32bits systems
- - Optimization in obmc blend
-
-
-Changes for 0.3.1 'Sailfish':
-------------------------------
-
- - Fix a buffer overflow in frame-threading mode on SSSE3 CPUs
- - Reduce binary size, notably on Windows
- - SSSE3 optimizations for ipred_filter
- - ARM optimizations for MSAC
-
-
 Changes for 0.3.0 'Sailfish':
 ------------------------------
 

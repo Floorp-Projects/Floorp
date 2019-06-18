@@ -33,7 +33,7 @@ decl_loopfilter_sb_fn(dav1d_lpf_v_sb_y_avx2);
 decl_loopfilter_sb_fn(dav1d_lpf_h_sb_uv_avx2);
 decl_loopfilter_sb_fn(dav1d_lpf_v_sb_uv_avx2);
 
-COLD void bitfn(dav1d_loop_filter_dsp_init_x86)(Dav1dLoopFilterDSPContext *const c) {
+void bitfn(dav1d_loop_filter_dsp_init_x86)(Dav1dLoopFilterDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;

@@ -30,19 +30,14 @@
 
 #include <assert.h>
 #include <errno.h>
-#include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
 #ifdef HAVE_IO_H
 # include <io.h>
-#endif
-#ifdef _WIN32
-# include <windows.h>
 #endif
 
 #include "dav1d/dav1d.h"
@@ -53,70 +48,18 @@
 
 #include "dav1d_cli_parse.h"
 
-static uint64_t get_time_nanos(void) {
-#ifdef _WIN32
-    LARGE_INTEGER frequency;
-    QueryPerformanceFrequency(&frequency);
-    LARGE_INTEGER t;
-    QueryPerformanceCounter(&t);
-    return 1000000000 * t.QuadPart / frequency.QuadPart;
-#else
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return 1000000000ULL * ts.tv_sec + ts.tv_nsec;
-#endif
-}
-
-static void sleep_nanos(uint64_t d) {
-#ifdef _WIN32
-    Sleep((unsigned)(d / 1000000));
-#else
-    const struct timespec ts = {
-        .tv_sec = (time_t)(d / 1000000000),
-        .tv_nsec = d % 1000000000,
-    };
-    nanosleep(&ts, NULL);
-#endif
-}
-
-static void synchronize(const int realtime, const unsigned cache,
-                        const unsigned n_out, const uint64_t nspf,
-                        const uint64_t tfirst, uint64_t *const elapsed,
-                        FILE *const frametimes)
+static void print_stats(const int istty, const unsigned n,
+                        const unsigned num)
 {
-    const uint64_t tcurr = get_time_nanos();
-    const uint64_t last = *elapsed;
-    *elapsed = tcurr - tfirst;
-    if (realtime) {
-        const uint64_t deadline = nspf * n_out;
-        if (*elapsed < deadline) {
-            const uint64_t remaining = deadline - *elapsed;
-            if (remaining > nspf * cache) sleep_nanos(remaining - nspf * cache);
-            *elapsed = deadline;
-        }
-    }
-    if (frametimes) {
-        const uint64_t frametime = *elapsed - last;
-        fprintf(frametimes, "%" PRIu64 "\n", frametime);
-        fflush(frametimes);
-    }
-}
+    const char *pre_string = istty ? "\r" : "";
+    const char *post_string = istty ? "" : "\n";
 
-static void print_stats(const int istty, const unsigned n, const unsigned num,
-                        const uint64_t elapsed, const double i_fps)
-{
-    if (istty) fputs("\r", stderr);
-    const double d_fps = 1e9 * n / elapsed;
-    const double speed = d_fps / i_fps;
-    if (num == 0xFFFFFFFF) {
-        fprintf(stderr, "Decoded %u frames", n);
+    if (num == 0xFFFFFFFFU) {
+        fprintf(stderr, "%sDecoded %u frames%s", pre_string, n, post_string);
     } else {
-        fprintf(stderr, "Decoded %u/%u frames (%.1lf%%)", n, num,
-                100.0 * n / num);
+        fprintf(stderr, "%sDecoded %u/%u frames (%.1lf%%)%s",
+                pre_string, n, num, 100.0 * n / num, post_string);
     }
-    if (i_fps)
-        fprintf(stderr, " - %.2lf/%.2lf fps (%.2lfx)", d_fps, i_fps, speed);
-    if (!istty) fputs("\n", stderr);
 }
 
 int main(const int argc, char *const *const argv) {
@@ -130,9 +73,6 @@ int main(const int argc, char *const *const argv) {
     Dav1dContext *c;
     Dav1dData data;
     unsigned n_out = 0, total, fps[2];
-    uint64_t nspf, tfirst, elapsed;
-    double i_fps;
-    FILE *frametimes = NULL;
     const char *version = dav1d_version();
 
     if (strcmp(version, DAV1D_VERSION)) {
@@ -186,23 +126,6 @@ int main(const int argc, char *const *const argv) {
     if ((res = dav1d_open(&c, &lib_settings)))
         return res;
 
-    if (cli_settings.frametimes)
-        frametimes = fopen(cli_settings.frametimes, "w");
-
-    if (cli_settings.realtime != REALTIME_CUSTOM) {
-        if (fps[1] == 0) {
-            i_fps = 0;
-            nspf = 0;
-        } else {
-            i_fps = (double)fps[0] / fps[1];
-            nspf = 1000000000ULL * fps[1] / fps[0];
-        }
-    } else {
-        i_fps = cli_settings.realtime_fps;
-        nspf = (uint64_t)(1000000000.0 / cli_settings.realtime_fps);
-    }
-    tfirst = get_time_nanos();
-
     do {
         memset(&p, 0, sizeof(p));
         if ((res = dav1d_send_data(c, &data)) < 0) {
@@ -226,19 +149,14 @@ int main(const int argc, char *const *const argv) {
                                        cli_settings.outputfile,
                                        &p.p, fps)) < 0)
                 {
-                    if (frametimes) fclose(frametimes);
                     return res;
                 }
             }
             if ((res = output_write(out, &p)) < 0)
                 break;
             n_out++;
-            if (nspf) {
-                synchronize(cli_settings.realtime, cli_settings.realtime_cache,
-                            n_out, nspf, tfirst, &elapsed, frametimes);
-            }
             if (!cli_settings.quiet)
-                print_stats(istty, n_out, total, elapsed, i_fps);
+                print_stats(istty, n_out, total);
         }
 
         if (cli_settings.limit && n_out == cli_settings.limit)
@@ -263,23 +181,16 @@ int main(const int argc, char *const *const argv) {
                                        cli_settings.outputfile,
                                        &p.p, fps)) < 0)
                 {
-                    if (frametimes) fclose(frametimes);
                     return res;
                 }
             }
             if ((res = output_write(out, &p)) < 0)
                 break;
             n_out++;
-            if (nspf) {
-                synchronize(cli_settings.realtime, cli_settings.realtime_cache,
-                            n_out, nspf, tfirst, &elapsed, frametimes);
-            }
             if (!cli_settings.quiet)
-                print_stats(istty, n_out, total, elapsed, i_fps);
+                print_stats(istty, n_out, total);
         }
     }
-
-    if (frametimes) fclose(frametimes);
 
     input_close(in);
     if (out) {

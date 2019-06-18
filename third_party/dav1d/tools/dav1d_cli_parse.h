@@ -35,17 +35,9 @@ typedef struct {
     const char *inputfile;
     const char *demuxer;
     const char *muxer;
-    const char *frametimes;
     const char *verify;
     unsigned limit, skip;
     int quiet;
-    enum {
-        REALTIME_DISABLE = 0,
-        REALTIME_INPUT,
-        REALTIME_CUSTOM,
-    } realtime;
-    double realtime_fps;
-    unsigned realtime_cache;
 } CLISettings;
 
 void parse(const int argc, char *const *const argv,

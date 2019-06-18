@@ -1,5 +1,3 @@
-![dav1d logo](dav1d_logo.png)
-
 # dav1d
 
 **dav1d** is a new **AV1** cross-platform **d**ecoder, open-source, and focused on speed and correctness.

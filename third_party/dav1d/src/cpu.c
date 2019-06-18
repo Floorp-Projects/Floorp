@@ -32,7 +32,7 @@
 
 static unsigned flags_mask = -1;
 
-COLD unsigned dav1d_get_cpu_flags(void) {
+unsigned dav1d_get_cpu_flags(void) {
     static unsigned flags;
     static uint8_t checked = 0;
 
@@ -49,6 +49,6 @@ COLD unsigned dav1d_get_cpu_flags(void) {
     return flags & flags_mask;
 }
 
-COLD void dav1d_set_cpu_flags_mask(const unsigned mask) {
+void dav1d_set_cpu_flags_mask(const unsigned mask) {
     flags_mask = mask;
 }
