@@ -67,38 +67,6 @@ export default class LoginList extends ReflectedFluentElement {
     document.l10n.setAttributes(this, "login-list", {count: visibleLoginCount});
   }
 
-  /**
-   * Filters the displayed logins in the list to only those matching the
-   * cached filter value.
-   */
-  _applyFilter() {
-    let matchingLoginGuids;
-    if (this._filter) {
-      matchingLoginGuids = this._logins.filter(login => {
-        return login.origin.toLocaleLowerCase().includes(this._filter) ||
-               login.username.toLocaleLowerCase().includes(this._filter);
-      }).map(login => login.guid);
-    } else {
-      matchingLoginGuids = this._logins.map(login => login.guid);
-    }
-
-    for (let listItem of this._list.querySelectorAll("login-list-item")) {
-      if (!listItem.dataset.guid) {
-        // Don't hide the 'New Login' item if it is present.
-        continue;
-      }
-      if (matchingLoginGuids.includes(listItem.dataset.guid)) {
-        if (listItem.hidden) {
-          listItem.hidden = false;
-        }
-      } else if (!listItem.hidden) {
-        listItem.hidden = true;
-      }
-    }
-
-    return matchingLoginGuids.length;
-  }
-
   handleEvent(event) {
     switch (event.type) {
       case "change": {
@@ -193,6 +161,38 @@ export default class LoginList extends ReflectedFluentElement {
   loginRemoved(login) {
     this._logins = this._logins.filter(l => l.guid != login.guid);
     this.render();
+  }
+
+  /**
+   * Filters the displayed logins in the list to only those matching the
+   * cached filter value.
+   */
+  _applyFilter() {
+    let matchingLoginGuids;
+    if (this._filter) {
+      matchingLoginGuids = this._logins.filter(login => {
+        return login.origin.toLocaleLowerCase().includes(this._filter) ||
+               login.username.toLocaleLowerCase().includes(this._filter);
+      }).map(login => login.guid);
+    } else {
+      matchingLoginGuids = this._logins.map(login => login.guid);
+    }
+
+    for (let listItem of this._list.querySelectorAll("login-list-item")) {
+      if (!listItem.dataset.guid) {
+        // Don't hide the 'New Login' item if it is present.
+        continue;
+      }
+      if (matchingLoginGuids.includes(listItem.dataset.guid)) {
+        if (listItem.hidden) {
+          listItem.hidden = false;
+        }
+      } else if (!listItem.hidden) {
+        listItem.hidden = true;
+      }
+    }
+
+    return matchingLoginGuids.length;
   }
 }
 customElements.define("login-list", LoginList);
