@@ -29,12 +29,14 @@
 
 #include <stdint.h>
 
+#include "common/attributes.h"
+
 #include "src/x86/cpu.h"
 
 void dav1d_cpu_cpuid(uint32_t *info, int leaf);
 uint64_t dav1d_cpu_xgetbv(int xcr);
 
-unsigned dav1d_get_cpu_flags_x86(void) {
+COLD unsigned dav1d_get_cpu_flags_x86(void) {
     uint32_t info[4] = {0}, n_ids;
     unsigned flags = 0;
 

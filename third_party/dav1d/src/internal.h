@@ -127,6 +127,7 @@ struct Dav1dContext {
     int operating_point;
     unsigned operating_point_idc;
     int all_layers;
+    unsigned frame_size_limit;
     int drain;
 
     Dav1dLogger logger;

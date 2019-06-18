@@ -37,6 +37,7 @@
         .fpu neon
         .eabi_attribute 10, 0           // suppress Tag_FP_arch
         .eabi_attribute 12, 0           // suppress Tag_Advanced_SIMD_arch
+        .section .note.GNU-stack,"",%progbits // Mark stack as non-executable
 #endif
 
 #ifdef _WIN32
