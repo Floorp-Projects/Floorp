@@ -1,6 +1,6 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
- * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2019, VideoLAN and dav1d authors
+ * Copyright © 2019, Two Orioles, LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,30 +25,26 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DAV1D_CLI_PARSE_H
-#define DAV1D_CLI_PARSE_H
+#ifndef DAV1D_SRC_ARM_MSAC_H
+#define DAV1D_SRC_ARM_MSAC_H
 
-#include "dav1d/dav1d.h"
+unsigned dav1d_msac_decode_symbol_adapt4_neon(MsacContext *s, uint16_t *cdf,
+                                              size_t n_symbols);
+unsigned dav1d_msac_decode_symbol_adapt8_neon(MsacContext *s, uint16_t *cdf,
+                                              size_t n_symbols);
+unsigned dav1d_msac_decode_symbol_adapt16_neon(MsacContext *s, uint16_t *cdf,
+                                               size_t n_symbols);
+unsigned dav1d_msac_decode_bool_adapt_neon(MsacContext *s, uint16_t *cdf);
+unsigned dav1d_msac_decode_bool_equi_neon(MsacContext *s);
+unsigned dav1d_msac_decode_bool_neon(MsacContext *s, unsigned f);
 
-typedef struct {
-    const char *outputfile;
-    const char *inputfile;
-    const char *demuxer;
-    const char *muxer;
-    const char *frametimes;
-    const char *verify;
-    unsigned limit, skip;
-    int quiet;
-    enum {
-        REALTIME_DISABLE = 0,
-        REALTIME_INPUT,
-        REALTIME_CUSTOM,
-    } realtime;
-    double realtime_fps;
-    unsigned realtime_cache;
-} CLISettings;
+#if ARCH_AARCH64
+#define dav1d_msac_decode_symbol_adapt4  dav1d_msac_decode_symbol_adapt4_neon
+#define dav1d_msac_decode_symbol_adapt8  dav1d_msac_decode_symbol_adapt8_neon
+#define dav1d_msac_decode_symbol_adapt16 dav1d_msac_decode_symbol_adapt16_neon
+#define dav1d_msac_decode_bool_adapt     dav1d_msac_decode_bool_adapt_neon
+#define dav1d_msac_decode_bool_equi      dav1d_msac_decode_bool_equi_neon
+#define dav1d_msac_decode_bool           dav1d_msac_decode_bool_neon
+#endif
 
-void parse(const int argc, char *const *const argv,
-           CLISettings *const cli_settings, Dav1dSettings *const lib_settings);
-
-#endif /* DAV1D_CLI_PARSE_H */
+#endif /* DAV1D_SRC_ARM_MSAC_H */

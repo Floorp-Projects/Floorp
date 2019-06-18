@@ -36,14 +36,14 @@
 #include "src/internal.h"
 #include "src/log.h"
 
-void dav1d_log_default_callback(void *const cookie,
-                                const char *const format, va_list ap)
+COLD void dav1d_log_default_callback(void *const cookie,
+                                     const char *const format, va_list ap)
 {
     vfprintf(stderr, format, ap);
 }
 
 #if CONFIG_LOG
-void dav1d_log(Dav1dContext *const c, const char *const format, ...) {
+COLD void dav1d_log(Dav1dContext *const c, const char *const format, ...) {
     validate_input(c != NULL);
 
     if (!c->logger.callback)

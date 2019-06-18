@@ -34,10 +34,12 @@
 
 #ifdef __GNUC__
 #define ATTR_ALIAS __attribute__((may_alias))
-#define ATTR_FORMAT_PRINTF(fmt, attr) __attribute__((__format__(__printf__, fmt, attr)));
+#define ATTR_FORMAT_PRINTF(fmt, attr) __attribute__((__format__(__printf__, fmt, attr)))
+#define COLD __attribute__((cold))
 #else
 #define ATTR_ALIAS
 #define ATTR_FORMAT_PRINTF(fmt, attr)
+#define COLD
 #endif
 
 #if ARCH_X86_64

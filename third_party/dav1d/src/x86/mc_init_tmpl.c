@@ -93,7 +93,7 @@ decl_warp8x8t_fn(dav1d_warp_affine_8x8t_avx2);
 decl_emu_edge_fn(dav1d_emu_edge_avx2);
 decl_emu_edge_fn(dav1d_emu_edge_ssse3);
 
-void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
+COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
 #define init_mc_fn(type, name, suffix) \
     c->mc[type] = dav1d_put_##name##_##suffix
 #define init_mct_fn(type, name, suffix) \

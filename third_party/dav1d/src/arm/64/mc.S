@@ -1119,7 +1119,7 @@ L(\type\()_8tap_v):
         uxtl_b          v18, v19, v20, v21
         mul_mla_8_2     v1,  v2,  v24, v25, v26, v27, v16, v17, v18, v19, v20, v21
         shift_store_4   \type, \d_strd, v1, v2
-        b               48b
+        b.gt            48b
 0:
         ret
 
@@ -1151,7 +1151,7 @@ L(\type\()_8tap_v):
 0:
         ret
 
-880:    // 8x8, 8x16, 8x32 v
+880:    // 8x6, 8x8, 8x16, 8x32 v
 1680:   // 16x8, 16x16, ...
 320:    // 32x8, 32x16, ...
 640:
@@ -1183,12 +1183,17 @@ L(\type\()_8tap_v):
         mul_mla_8_1     v3,  v4,  v18, v19, v20, v21, v22, v23, v24, v25, v26
         shift_store_8   \type, \d_strd, v3, v4
         b.le            9f
-        subs            \h,  \h,  #4
-        load_8b         \sr2, \src, \s_strd, v27, v16, v17, v18
-        uxtl_b          v27, v16, v17, v18
+        subs            \h,  \h,  #2
+        load_8b         \sr2, \src, \s_strd, v27, v16
+        uxtl_b          v27, v16
         mul_mla_8_1     v1,  v2,  v20, v21, v22, v23, v24, v25, v26, v27, v16
+        shift_store_8   \type, \d_strd, v1, v2
+        b.le            9f
+        subs            \h,  \h,  #2
+        load_8b         \sr2, \src, \s_strd, v17, v18
+        uxtl_b          v17, v18
         mul_mla_8_1     v3,  v4,  v22, v23, v24, v25, v26, v27, v16, v17, v18
-        shift_store_8   \type, \d_strd, v1, v2, v3, v4
+        shift_store_8   \type, \d_strd, v3, v4
         b.le            9f
         subs            \h,  \h,  #4
         load_8b         \sr2, \src, \s_strd, v19, v20, v21, v22

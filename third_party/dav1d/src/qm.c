@@ -29,6 +29,8 @@
 
 #include <string.h>
 
+#include "common/attributes.h"
+
 #include "src/qm.h"
 
 static const uint8_t qm_tbl_4x4_t[][2][10] = {
@@ -3104,7 +3106,7 @@ static void untriangle(uint8_t *dst, const uint8_t *src, const int sz) {
     }
 }
 
-void dav1d_init_qm_tables(void) {
+COLD void dav1d_init_qm_tables(void) {
     // This function is guaranteed to be called only once
 
     for (int i = 0; i < 15; i++)
