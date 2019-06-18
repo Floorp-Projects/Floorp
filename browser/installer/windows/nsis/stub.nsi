@@ -1902,7 +1902,13 @@ Function LaunchHelpPage
 FunctionEnd
 
 Function OpenManualDownloadURL
-  ExecShell "open" "${URLManualDownload}${URLManualDownloadAppend}"
+  ClearErrors
+  ReadINIStr $0 "${PARTNER_INI}" "DownloadURL" "FallbackPage"
+  ${IfNot} ${Errors}
+    ExecShell "open" "$0"
+  ${Else}
+    ExecShell "open" "${URLManualDownload}${URLManualDownloadAppend}"
+  ${EndIf}
 FunctionEnd
 
 Function ShouldPromptForProfileCleanup
