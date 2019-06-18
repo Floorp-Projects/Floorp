@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_tracking_protection.view.*
 import org.jetbrains.anko.dimen
@@ -15,7 +16,7 @@ import org.mozilla.fenix.utils.Settings
 class OnboardingTrackingProtectionViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
 
     init {
-        val icon = view.context.getDrawable(R.drawable.ic_onboarding_tracking_protection)
+        val icon = AppCompatResources.getDrawable(view.context, R.drawable.ic_onboarding_tracking_protection)
         val size = view.context.dimen(R.dimen.onboarding_header_icon_height_width)
         icon?.setBounds(0, 0, size, size)
 

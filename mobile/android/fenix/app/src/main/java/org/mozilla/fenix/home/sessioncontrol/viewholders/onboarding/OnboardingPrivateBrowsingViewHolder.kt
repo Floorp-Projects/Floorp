@@ -10,6 +10,7 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ImageSpan
 import android.view.View
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_private_browsing.view.*
 import org.mozilla.fenix.R
@@ -17,7 +18,7 @@ import org.mozilla.fenix.R
 class OnboardingPrivateBrowsingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     init {
-        val iconDrawable = view.context.getDrawable(R.drawable.ic_private_browsing)!!
+        val iconDrawable = AppCompatResources.getDrawable(view.context, R.drawable.ic_private_browsing)!!
         iconDrawable.setBounds(0, 0, view.description_text.lineHeight, view.description_text.lineHeight)
 
         val icon = object : ImageSpan(iconDrawable) {

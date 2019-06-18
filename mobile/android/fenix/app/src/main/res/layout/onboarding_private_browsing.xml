@@ -9,11 +9,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
     <ImageView
+        android:importantForAccessibility="no"
         android:id="@+id/private_browsing_icon"
         android:layout_width="30dp"
         android:layout_height="0dp"
         app:layout_constraintDimensionRatio="H,1:1"
-        android:src="@drawable/ic_onboarding_private_browsing"
+        app:srcCompat="@drawable/ic_onboarding_private_browsing"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
     <TextView

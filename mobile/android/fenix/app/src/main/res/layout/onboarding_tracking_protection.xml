@@ -13,7 +13,7 @@
         android:id="@+id/header_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:drawableStart="@drawable/ic_onboarding_tracking_protection"
+        app:drawableStartCompat="@drawable/ic_onboarding_tracking_protection"
         android:drawablePadding="12dp"
         android:text="@string/onboarding_tracking_protection_header"
         android:textAppearance="@style/HeaderTextStyle"

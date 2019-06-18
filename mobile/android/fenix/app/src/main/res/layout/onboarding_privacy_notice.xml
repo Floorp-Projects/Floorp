@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/onboarding_card"
     style="@style/OnboardingCardLight"
     android:layout_width="match_parent"
@@ -11,7 +12,7 @@
     android:orientation="vertical">
     <TextView
         android:id="@+id/header_text"
-        android:drawableStart="@drawable/ic_onboarding_privacy_notice"
+        app:drawableStartCompat="@drawable/ic_onboarding_privacy_notice"
         android:drawablePadding="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -8,11 +8,7 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-  <path
-      android:pathData="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm0-18a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 7c0.6 0 1 0.4 1 1v4a1 1 0 0 1-2 0v-4c0-0.6 0.4-1 1-1zm0-4a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"
-      android:strokeWidth="1"
-      android:fillType="evenOdd"
-      android:strokeColor="#00000000">
+  <path android:pathData="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm0-18a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 7c0.6 0 1 0.4 1 1v4a1 1 0 0 1-2 0v-4c0-0.6 0.4-1 1-1zm0-4a1 1 0 1 1 0 2 1 1 0 0 1 0-2z">
     <aapt:attr name="android:fillColor">
       <gradient 
           android:startY="3.2727787"
@@ -20,8 +16,8 @@
           android:endY="15.679591"
           android:endX="6.9187684"
           android:type="linear">
-        <item android:offset="0" android:color="#FF6A11CB"/>
-        <item android:offset="1" android:color="#FF2575FC"/>
+        <item android:offset="0" android:color="#6A11CB"/>
+        <item android:offset="1" android:color="#2575FC"/>
       </gradient>
     </aapt:attr>
   </path>
