@@ -40,9 +40,10 @@ static size_t NumTypeSets(JSScript* script) {
 }
 
 JitScript::JitScript(JSScript* script, uint32_t typeSetOffset,
-                     uint32_t bytecodeTypeMapOffset)
+                     uint32_t bytecodeTypeMapOffset, uint32_t allocBytes)
     : typeSetOffset_(typeSetOffset),
-      bytecodeTypeMapOffset_(bytecodeTypeMapOffset) {
+      bytecodeTypeMapOffset_(bytecodeTypeMapOffset),
+      allocBytes_(allocBytes) {
   setTypesGeneration(script->zone()->types.generation);
 
   uint8_t* base = reinterpret_cast<uint8_t*>(this);
@@ -98,8 +99,8 @@ bool JSScript::createJitScript(JSContext* cx) {
   uint32_t typeSetOffset = sizeof(JitScript) + numICEntries() * sizeof(ICEntry);
   uint32_t bytecodeTypeMapOffset =
       typeSetOffset + numTypeSets * sizeof(StackTypeSet);
-  UniquePtr<JitScript> jitScript(
-      new (raw) JitScript(this, typeSetOffset, bytecodeTypeMapOffset));
+  UniquePtr<JitScript> jitScript(new (raw) JitScript(
+      this, typeSetOffset, bytecodeTypeMapOffset, allocSize.value()));
 
   // Sanity check the length computations.
   MOZ_ASSERT(jitScript->numICEntries() == numICEntries());
@@ -116,6 +117,7 @@ bool JSScript::createJitScript(JSContext* cx) {
   MOZ_ASSERT(!jitScript_);
   prepareForDestruction.release();
   jitScript_ = jitScript.release();
+  AddCellMemory(this, allocSize.value(), MemoryUse::JitScript);
 
   // We have a JitScript so we can set the script's jitCodeRaw_ pointer to the
   // Baseline Interpreter code.
@@ -150,7 +152,13 @@ void JSScript::maybeReleaseJitScript() {
     return;
   }
 
+  releaseJitScript();
+}
+
+void JSScript::releaseJitScript() {
   MOZ_ASSERT(!hasIonScript());
+
+  RemoveCellMemory(this, jitScript_->allocBytes(), MemoryUse::JitScript);
 
   JitScript::Destroy(zone(), jitScript_);
   jitScript_ = nullptr;
