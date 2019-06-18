@@ -17,5 +17,6 @@ the icon was loaded. The [IconProcessor](./index.md) has the option to rewrite a
 
 | Name | Summary |
 |---|---|
+| [ColorProcessor](../-color-processor/index.md) | `class ColorProcessor : `[`IconProcessor`](./index.md)<br>[IconProcessor](./index.md) implementation to extract the dominant color from the icon. |
 | [DiskIconProcessor](../-disk-icon-processor/index.md) | `class DiskIconProcessor : `[`IconProcessor`](./index.md)<br>[IconProcessor](./index.md) implementation that saves icons in the disk cache. |
 | [MemoryIconProcessor](../-memory-icon-processor/index.md) | `class MemoryIconProcessor : `[`IconProcessor`](./index.md)<br>An [IconProcessor](./index.md) implementation that saves icons in the in-memory cache. |

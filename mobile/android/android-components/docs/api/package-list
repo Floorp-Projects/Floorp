@@ -5,7 +5,7 @@ $dokka.location:mozilla.components.browser.engine.gecko$launchGeckoResult(kotlin
 $dokka.location:mozilla.components.browser.engine.system.matcher$reverse(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reverse.md
 $dokka.location:mozilla.components.browser.engine.system.matcher$reversible(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reversible.md
 $dokka.location:mozilla.components.browser.session.ext$readSnapshot(android.util.AtomicFile, mozilla.components.concept.engine.Engine, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/read-snapshot.md
-$dokka.location:mozilla.components.browser.session.ext$readSnapshotItem(android.util.AtomicFile, mozilla.components.concept.engine.Engine, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/read-snapshot-item.md
+$dokka.location:mozilla.components.browser.session.ext$readSnapshotItem(android.util.AtomicFile, mozilla.components.concept.engine.Engine, kotlin.Boolean, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/read-snapshot-item.md
 $dokka.location:mozilla.components.browser.session.ext$writeSnapshot(android.util.AtomicFile, mozilla.components.browser.session.SessionManager.Snapshot, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/write-snapshot.md
 $dokka.location:mozilla.components.browser.session.ext$writeSnapshotItem(android.util.AtomicFile, mozilla.components.browser.session.SessionManager.Snapshot.Item, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/write-snapshot-item.md
 $dokka.location:mozilla.components.feature.pwa.ext$applyOrientation(android.app.Activity, mozilla.components.concept.engine.manifest.WebAppManifest)mozilla.components.feature.pwa.ext/android.app.-activity/apply-orientation.md
@@ -149,6 +149,7 @@ mozilla.components.concept.engine.mediaquery
 mozilla.components.concept.engine.permission
 mozilla.components.concept.engine.prompt
 mozilla.components.concept.engine.request
+mozilla.components.concept.engine.utils
 mozilla.components.concept.engine.webextension
 mozilla.components.concept.engine.window
 mozilla.components.concept.fetch

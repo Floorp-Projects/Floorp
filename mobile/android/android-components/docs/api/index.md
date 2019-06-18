@@ -62,6 +62,7 @@
 | [mozilla.components.concept.engine.permission](mozilla.components.concept.engine.permission/index.md) |  |
 | [mozilla.components.concept.engine.prompt](mozilla.components.concept.engine.prompt/index.md) |  |
 | [mozilla.components.concept.engine.request](mozilla.components.concept.engine.request/index.md) |  |
+| [mozilla.components.concept.engine.utils](mozilla.components.concept.engine.utils/index.md) |  |
 | [mozilla.components.concept.engine.webextension](mozilla.components.concept.engine.webextension/index.md) |  |
 | [mozilla.components.concept.engine.window](mozilla.components.concept.engine.window/index.md) |  |
 | [mozilla.components.concept.fetch](mozilla.components.concept.fetch/index.md) |  |
