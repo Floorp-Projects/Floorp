@@ -33,30 +33,26 @@ def get_failures(task_id):
     determined, nothing is returned.
     """
     re_test = re.compile(r'"test": "([^"]+)"')
-    re_reftest = re.compile(r'^(?:https?|file)://.*reftest/tests/([^ ]+) .*')
-    re_httptest = re.compile(r'^(?:https?)://[^:]+:/tests/([^ ]+) .*')
-    re_xpcshell_ini = re.compile(r'^xpcshell-.*\.ini:')
-    re_slashes = re.compile(r'\\')
     re_bad_test = re.compile(r'(Last test finished|'
                              r'Main app process exited normally|'
                              r'[(]SimpleTest/TestRunner.js[)]|'
-                             'remoteautomation.py|'
-                             'unknown test url|'
-                             'https?://localhost:\d+/\d+/\d+/.*[.]html)')
+                             r'remoteautomation.py|'
+                             r'unknown test url|'
+                             r'https?://localhost:\d+/\d+/\d+/.*[.]html)')
+    re_extract_tests = [
+        re.compile(r'(?:^[^:]+:)?(?:https?|file):[^ ]+/reftest/tests/([^ ]+)'),
+        re.compile(r'(?:^[^:]+:)?(?:https?|file):[^:]+:[0-9]+/tests/([^ ]+)'),
+        re.compile(r'xpcshell-[^ ]+\.ini:(.*)'),
+    ]
 
     def munge_test_path(test_path):
-        test_path = re_slashes.sub('/', test_path)
         if re_bad_test.search(test_path):
             return None
-        m = re_reftest.match(test_path)
-        if m:
-            test_path = m.group(1)
-        else:
-            m = re_httptest.match(test_path)
+        for r in re_extract_tests:
+            m = r.match(test_path)
             if m:
                 test_path = m.group(1)
-            else:
-                test_path = re_xpcshell_ini.sub('', test_path)
+                break
         return test_path
 
     dirs = set()
@@ -89,6 +85,8 @@ def create_isolate_failure_tasks(task_definition, failures, level):
 
     """
     # redo the original task...
+    logger.info("create_isolate_failure_tasks: task_definition: {},"
+                "failures: {}".format(task_definition, failures))
     new_task_id = slugid()
     new_task_definition = copy.deepcopy(task_definition)
     th_dict = new_task_definition['extra']['treeherder']
@@ -113,6 +111,8 @@ def create_isolate_failure_tasks(task_definition, failures, level):
             env_dict = new_task_definition['payload']['env']
             if 'MOZHARNESS_TEST_PATHS' not in env_dict:
                 env_dict['MOZHARNESS_TEST_PATHS'] = {}
+            if 'windows' in th_dict['machine']['platform']:
+                failure_path = '\\'.join(failure_path.split('/'))
             env_dict['MOZHARNESS_TEST_PATHS'] = json.dumps({suite: [failure_path]})
             logger.info('Creating task for {}'.format(failure_path))
             create_task_from_def(new_task_id, new_task_definition, level)
