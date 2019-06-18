@@ -578,7 +578,7 @@ class TaskBuilder(object):
                         "test_packages_url": "{}/{}/artifacts/public/build/target.test_packages.json".format(_DEFAULT_TASK_URL, mozharness_task_id),
                         "installer_url": apk_url,
                     }),
-                    "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-beta",
+                    "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/releases/mozilla-beta",
                     "GECKO_HEAD_REV": gecko_revision,
                     "MOZ_AUTOMATION": "1",
                     "MOZ_HIDE_RESULTS_TABLE": "1",
@@ -598,7 +598,7 @@ class TaskBuilder(object):
                 },
                 "mounts": [{
                     "content": {
-                        "url": "https://hg.mozilla.org/mozilla-beta/raw-file/{}/taskcluster/scripts/tester/test-linux.sh".format(gecko_revision),
+                        "url": "https://hg.mozilla.org/releases/mozilla-beta/raw-file/{}/taskcluster/scripts/tester/test-linux.sh".format(gecko_revision),
                     },
                     "file": "test-linux.sh",
                 }]
