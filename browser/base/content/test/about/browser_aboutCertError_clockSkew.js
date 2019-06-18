@@ -40,9 +40,7 @@ add_task(async function checkWrongSystemTimeWarning() {
   // Pretend that we recently updated our kinto clock skew pref
   Services.prefs.setIntPref(PREF_SERVICES_SETTINGS_LAST_FETCHED, Math.floor(Date.now() / 1000));
 
-  let formatter = new Services.intl.DateTimeFormat(undefined, {
-    dateStyle: "long",
-  });
+  let formatter = new Intl.DateTimeFormat("default");
 
   // For this test, we want to trick Firefox into believing that
   // the local system time (as returned by Date.now()) is wrong.

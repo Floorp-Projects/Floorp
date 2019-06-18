@@ -64,7 +64,7 @@ add_task(async function checkTelemetryClickEvents() {
 
       let loadEvents = await TestUtils.waitForCondition(() => {
         let events = Services.telemetry.snapshotEvents(
-          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true).content;
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true).parent;
         if (events && events.length) {
           events = events.filter(e => e[1] == "security.ui.certerror" && e[2] == "load");
           if (events.length == 1 && events[0][5].is_frame == useFrame.toString()) {
