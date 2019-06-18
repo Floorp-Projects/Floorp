@@ -18,6 +18,7 @@ const INTERMEDIATES_BUCKET_PREF          = "security.remote_settings.intermediat
 const INTERMEDIATES_CHECKED_SECONDS_PREF = "security.remote_settings.intermediates.checked";
 const INTERMEDIATES_COLLECTION_PREF      = "security.remote_settings.intermediates.collection";
 const INTERMEDIATES_DL_PER_POLL_PREF     = "security.remote_settings.intermediates.downloads_per_poll";
+const INTERMEDIATES_DL_PARALLEL_REQUESTS = "security.remote_settings.intermediates.parallel_downloads";
 const INTERMEDIATES_ENABLED_PREF         = "security.remote_settings.intermediates.enabled";
 const INTERMEDIATES_SIGNER_PREF          = "security.remote_settings.intermediates.signer";
 const LOGLEVEL_PREF                      = "browser.policies.loglevel";
@@ -334,6 +335,7 @@ class IntermediatePreloads {
 
     // Download attachments that are awaiting download, up to a max.
     const maxDownloadsPerRun = Services.prefs.getIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
+    const parallelDownloads = Services.prefs.getIntPref(INTERMEDIATES_DL_PARALLEL_REQUESTS, 8);
 
     // Bug 1519256: Move this to a separate method that's on a separate timer
     // with a higher frequency (so we can attempt to download outstanding
@@ -356,24 +358,34 @@ class IntermediatePreloads {
     const col = await this.client.openCollection();
     // If we don't have prior data, make it so we re-load everything.
     if (!hasPriorCertData) {
-      let { data: toUpdate } = await col.list();
-      let promises = [];
-      toUpdate.forEach((record) => {
-        record.cert_import_complete = false;
-        promises.push(col.update(record));
+      const { data: current } = await col.list({ order: "" }); // no sort needed.
+      const toReset = current.filter(record => record.cert_import_complete);
+      await col.db.execute(transaction => {
+        toReset.forEach((record) => {
+          transaction.update({ ...record, cert_import_complete: false });
+        });
       });
-      await Promise.all(promises);
     }
-    const { data: current } = await col.list();
+    const { data: current } = await col.list({ order: "" }); // no sort needed.
     const waiting = current.filter(record => !record.cert_import_complete);
 
     log.debug(`There are ${waiting.length} intermediates awaiting download.`);
+    if (waiting.length == 0) {
+      // Nothing to do.
+      Services.obs.notifyObservers(null, "remote-security-settings:intermediates-updated", "success");
+      return;
+    }
 
     TelemetryStopwatch.start(INTERMEDIATES_UPDATE_MS_TELEMETRY);
 
     let toDownload = waiting.slice(0, maxDownloadsPerRun);
-    let recordsCertsAndSubjects = await Promise.all(
-      toDownload.map(record => this.maybeDownloadAttachment(record)));
+    let recordsCertsAndSubjects = [];
+    for (let i = 0; i < toDownload.length; i += parallelDownloads) {
+      const chunk = toDownload.slice(i, i + parallelDownloads);
+      const downloaded = await Promise.all(chunk.map(record => this.maybeDownloadAttachment(record)));
+      recordsCertsAndSubjects = recordsCertsAndSubjects.concat(downloaded);
+    }
+
     let certInfos = [];
     let recordsToUpdate = [];
     for (let {record, cert, subject} of recordsCertsAndSubjects) {
@@ -391,10 +403,11 @@ class IntermediatePreloads {
         .add("failedToUpdateDB");
       return;
     }
-    await Promise.all(recordsToUpdate.map((record) => {
-      record.cert_import_complete = true;
-      return col.update(record);
-    }));
+    await col.db.execute(transaction => {
+      recordsToUpdate.forEach((record) => {
+        transaction.update({ ...record, cert_import_complete: true });
+      });
+    });
     const { data: finalCurrent } = await col.list();
     const finalWaiting = finalCurrent.filter(record => !record.cert_import_complete);
     const countPreloaded = finalCurrent.length - finalWaiting.length;
