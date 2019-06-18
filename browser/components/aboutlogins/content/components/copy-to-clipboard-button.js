@@ -29,7 +29,10 @@ export default class CopyToClipboardButton extends ReflectedFluentElement {
     this.attachShadow({mode: "open"})
         .appendChild(CopyToClipboardButtonTemplate.content.cloneNode(true));
 
-    this.shadowRoot.querySelector(".copy-button").addEventListener("click", this);
+    this._copyButton = this.shadowRoot.querySelector(".copy-button");
+    this._copyButton.addEventListener("click", this);
+
+    super.connectedCallback();
   }
 
   static get reflectedFluentIDs() {
@@ -52,19 +55,18 @@ export default class CopyToClipboardButton extends ReflectedFluentElement {
   }
 
   handleEvent(event) {
-    let copyButton = this.shadowRoot.querySelector(".copy-button");
-    if (event.type != "click" || event.currentTarget != copyButton) {
+    if (event.type != "click" || event.currentTarget != this._copyButton) {
       return;
     }
 
-    copyButton.disabled = true;
+    this._copyButton.disabled = true;
     navigator.clipboard.writeText(this._relatedInput.value).then(() => {
       this.dataset.copied = true;
       setTimeout(() => {
-        copyButton.disabled = false;
+        this._copyButton.disabled = false;
         delete this.dataset.copied;
       }, CopyToClipboardButton.BUTTON_RESET_TIMEOUT);
-    }, () => copyButton.disabled = false);
+    }, () => this._copyButton.disabled = false);
 
     if (this.dataset.telemetryObject) {
       recordTelemetryEvent({object: this.dataset.telemetryObject, method: "copy"});
