@@ -55,6 +55,12 @@
         }
       }
     ],
+    "properties": {
+      "openViewOnFocus": {
+        "$ref": "types.Setting",
+        "description": "Enables or disables the open-view-on-focus mode."
+      }
+    },
     "events": [
       {
         "name": "onQueryReady",

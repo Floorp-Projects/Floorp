@@ -1,7 +1,20 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+});
+
+var {ExtensionPreferencesManager} = ChromeUtils.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
+var {getSettingsAPI} = ExtensionPreferencesManager;
+
+ExtensionPreferencesManager.addSetting("openViewOnFocus", {
+  prefNames: [
+    "browser.urlbar.openViewOnFocus",
+  ],
+  setCallback(value) {
+    return {[this.prefNames[0]]: value};
+  },
 });
 
 this.urlbar = class extends ExtensionAPI {
@@ -23,6 +36,12 @@ this.urlbar = class extends ExtensionAPI {
             UrlbarProvidersManager.removeExtensionListener(name, "queryready");
           };
         }).api(),
+
+        openViewOnFocus: getSettingsAPI(
+          context.extension.id, "openViewOnFocus",
+          () => {
+            return UrlbarPrefs.get("openViewOnFocus");
+          }),
       },
     };
   }
