@@ -97,37 +97,39 @@
         <button class="edit-button alternate-button"></button>
         <button class="delete-button alternate-button"></button>
       </div>
-      <div class="detail-row">
-        <label class="detail-cell">
-          <span class="origin-label field-label"></span>
-          <input type="url" name="origin" required/>
-        </label>
-        <button class="open-site-button"></button>
-      </div>
-      <div class="detail-row">
-        <label class="detail-cell">
-          <span class="username-label field-label"></span>
-          <input type="text" name="username"/>
-        </label>
-        <copy-to-clipboard-button class="copy-username-button"
-                                  data-telemetry-object="username"></copy-to-clipboard-button>
-      </div>
-      <div class="detail-row">
-        <label class="detail-cell">
-          <span class="password-label field-label"></span>
-          <div class="reveal-password-wrapper">
-            <input type="password" name="password" required/>
-            <input type="checkbox" class="reveal-password-checkbox"/>
-          </div>
-        </label>
-        <copy-to-clipboard-button class="copy-password-button"
-                                  data-telemetry-object="password"></copy-to-clipboard-button>
-      </div>
-      <p class="time-created meta-info"></p>
-      <p class="time-changed meta-info"></p>
-      <p class="time-used meta-info"></p>
-      <button class="save-changes-button"></button>
-      <button class="cancel-button"></button>
+      <form>
+        <div class="detail-row">
+          <label class="detail-cell">
+            <span class="origin-label field-label"></span>
+            <input type="url" name="origin" required/>
+          </label>
+          <button class="open-site-button"></button>
+        </div>
+        <div class="detail-row">
+          <label class="detail-cell">
+            <span class="username-label field-label"></span>
+            <input type="text" name="username"/>
+          </label>
+          <copy-to-clipboard-button class="copy-username-button"
+                                    data-telemetry-object="username"></copy-to-clipboard-button>
+        </div>
+        <div class="detail-row">
+          <label class="detail-cell">
+            <span class="password-label field-label"></span>
+            <div class="reveal-password-wrapper">
+              <input type="password" name="password" required/>
+              <input type="checkbox" class="reveal-password-checkbox"/>
+            </div>
+          </label>
+          <copy-to-clipboard-button class="copy-password-button"
+                                    data-telemetry-object="password"></copy-to-clipboard-button>
+        </div>
+        <p class="time-created meta-info"></p>
+        <p class="time-changed meta-info"></p>
+        <p class="time-used meta-info"></p>
+        <button class="save-changes-button"></button>
+        <button class="cancel-button"></button>
+      </form>
     </template>
 
     <template id="login-filter-template">

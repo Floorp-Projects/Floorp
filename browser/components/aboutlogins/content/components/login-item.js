@@ -159,6 +159,17 @@ export default class LoginItem extends ReflectedFluentElement {
         break;
       }
       case "click": {
+        if (event.target.classList.contains("reveal-password-checkbox")) {
+          this.updatePasswordRevealState();
+
+          let revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
+          let method = revealCheckbox.checked ? "show" : "hide";
+          recordTelemetryEvent({object: "password", method});
+          return;
+        }
+
+        // Prevent form submit behavior on the following buttons.
+        event.preventDefault();
         if (event.target.classList.contains("cancel-button")) {
           if (this._login.guid) {
             this.setLogin(this._login);
@@ -199,14 +210,6 @@ export default class LoginItem extends ReflectedFluentElement {
           recordTelemetryEvent({object: "existing_login", method: "open_site"});
           return;
         }
-        if (event.target.classList.contains("reveal-password-checkbox")) {
-          this.updatePasswordRevealState();
-
-          let revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
-          let method = revealCheckbox.checked ? "show" : "hide";
-          recordTelemetryEvent({object: "password", method});
-          return;
-        }
         if (event.target.classList.contains("save-changes-button")) {
           if (!this._isFormValid({reportErrors: true})) {
             return;
@@ -237,18 +240,8 @@ export default class LoginItem extends ReflectedFluentElement {
   setLogin(login) {
     this._login = login;
 
-    let originInput =
-      this.resetValidation(this.shadowRoot.querySelector("input[name='origin']"), login.origin);
-    originInput.addEventListener("blur", this);
-    let usernameInput =
-      this.resetValidation(this.shadowRoot.querySelector("input[name='username']"), login.username);
-    let passwordInput =
-      this.resetValidation(this.shadowRoot.querySelector("input[name='password']"), login.password);
-
-    let copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
-    let copyPasswordButton = this.shadowRoot.querySelector(".copy-password-button");
-    copyUsernameButton.relatedInput = usernameInput;
-    copyPasswordButton.relatedInput = passwordInput;
+    let form = this.shadowRoot.querySelector("form");
+    form.reset();
 
     this.toggleAttribute("isNewLogin", !login.guid);
     this.toggleEditing(!login.guid);
@@ -312,23 +305,6 @@ export default class LoginItem extends ReflectedFluentElement {
     this.shadowRoot.querySelector("input[name='username']").readOnly = !shouldEdit;
     this.shadowRoot.querySelector("input[name='password']").readOnly = !shouldEdit;
     this.toggleAttribute("editing", shouldEdit);
-  }
-
-  resetValidation(formElement, value) {
-    let wasRequired = formElement.required;
-    let newFormElement = document.createElement(formElement.localName);
-    if (value) {
-      newFormElement.defaultValue = value;
-    }
-    newFormElement.className = formElement.className;
-    newFormElement.placeholder = formElement.placeholder;
-    newFormElement.setAttribute("name", formElement.getAttribute("name"));
-    newFormElement.setAttribute("type", formElement.getAttribute("type"));
-    if (wasRequired) {
-      newFormElement.required = true;
-    }
-    formElement.replaceWith(newFormElement);
-    return newFormElement;
   }
 
   updatePasswordRevealState() {
