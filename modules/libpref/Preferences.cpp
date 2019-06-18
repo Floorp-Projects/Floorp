@@ -5439,18 +5439,6 @@ static StaticMutex sOncePrefMutex;
 #define PREF(name, cpp_type, value)
 #define VARCACHE_PREF(policy, name, id, cpp_type, default_value)               \
   cpp_type StaticPrefs::sVarCache_##id(default_value);                         \
-  StripAtomic<cpp_type> StaticPrefs::id() {                                    \
-    if (UpdatePolicy::policy != UpdatePolicy::Once) {                          \
-      MOZ_DIAGNOSTIC_ASSERT(                                                   \
-          UpdatePolicy::policy == UpdatePolicy::Skip ||                        \
-              IsAtomic<cpp_type>::value || NS_IsMainThread(),                  \
-          "Non-atomic static pref '" name                                      \
-          "' being accessed on background thread by getter");                  \
-      return sVarCache_##id;                                                   \
-    }                                                                          \
-    MaybeInitOncePrefs();                                                      \
-    return sVarCache_##id;                                                     \
-  }                                                                            \
   void StaticPrefs::Set##id(StripAtomic<cpp_type> aValue) {                    \
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread() && XRE_IsParentProcess(),          \
                           "pref '" name "' being set outside parent process"); \
