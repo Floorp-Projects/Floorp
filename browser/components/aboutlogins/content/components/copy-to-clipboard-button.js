@@ -59,10 +59,10 @@ export default class CopyToClipboardButton extends ReflectedFluentElement {
 
     copyButton.disabled = true;
     navigator.clipboard.writeText(this._relatedInput.value).then(() => {
-      this.setAttribute("copied", "");
+      this.dataset.copied = true;
       setTimeout(() => {
         copyButton.disabled = false;
-        this.removeAttribute("copied");
+        delete this.dataset.copied;
       }, CopyToClipboardButton.BUTTON_RESET_TIMEOUT);
     }, () => copyButton.disabled = false);
 

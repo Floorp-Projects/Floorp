@@ -78,8 +78,8 @@ add_task(async function test_empty_login_username_in_list() {
   gLoginList.setLogins([TEST_LOGIN_3]);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 2, "A blank login and the one stored login should be displayed");
-  ok(!loginListItems[0].hasAttribute("guid"), "first login-list-item should be the 'new' item");
-  is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_3.guid, "login-list-item should have correct guid attribute");
+  ok(!loginListItems[0].dataset.guid, "first login-list-item should be the 'new' item");
+  is(loginListItems[1].dataset.guid, TEST_LOGIN_3.guid, "login-list-item should have correct guid attribute");
 
   loginListItems[1].setAttribute("missing-username", "(no username)");
   loginListItems[1].render();
@@ -91,8 +91,8 @@ add_task(async function test_populated_list() {
   gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2]);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 3, "A blank login and the two stored logins should be displayed");
-  ok(!loginListItems[0].hasAttribute("guid"), "first login-list-item should be the 'new' item");
-  is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
+  ok(!loginListItems[0].dataset.guid, "first login-list-item should be the 'new' item");
+  is(loginListItems[1].dataset.guid, TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
   is(loginListItems[1].shadowRoot.querySelector(".title").textContent, TEST_LOGIN_1.title,
      "login-list-item origin should match");
   is(loginListItems[1].shadowRoot.querySelector(".username").textContent, TEST_LOGIN_1.username,
@@ -160,7 +160,7 @@ add_task(async function test_login_modified() {
   await asyncElementRendered();
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 2, "Both logins should be displayed");
-  is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
+  is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
   is(loginListItems[0].shadowRoot.querySelector(".title").textContent, TEST_LOGIN_1.title,
      "login-list-item origin should match");
   is(loginListItems[0].shadowRoot.querySelector(".username").textContent, modifiedLogin.username,
@@ -175,9 +175,9 @@ add_task(async function test_login_added() {
   await asyncElementRendered();
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 3, "New login should be added to the list");
-  is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
-  is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
-  is(loginListItems[2].getAttribute("guid"), newLogin.guid, "login-list-item3 should have correct guid attribute");
+  is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
+  is(loginListItems[1].dataset.guid, TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
+  is(loginListItems[2].dataset.guid, newLogin.guid, "login-list-item3 should have correct guid attribute");
   is(loginListItems[2].shadowRoot.querySelector(".title").textContent, newLogin.title,
      "login-list-item origin should match");
   is(loginListItems[2].shadowRoot.querySelector(".username").textContent, newLogin.username,
@@ -189,8 +189,8 @@ add_task(async function test_login_removed() {
   await asyncElementRendered();
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 2, "New login should be removed from the list");
-  is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
-  is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
+  is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
+  is(loginListItems[1].dataset.guid, TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
 });
 
 add_task(async function test_login_added_filtered() {
@@ -208,9 +208,9 @@ add_task(async function test_login_added_filtered() {
   await asyncElementRendered();
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 3, "New login should be added to the list");
-  is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
-  is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
-  is(loginListItems[2].getAttribute("guid"), newLogin.guid, "login-list-item3 should have correct guid attribute");
+  is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
+  is(loginListItems[1].dataset.guid, TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
+  is(loginListItems[2].dataset.guid, newLogin.guid, "login-list-item3 should have correct guid attribute");
   ok(!loginListItems[0].hidden, "login-list-item1 should be visible");
   ok(loginListItems[1].hidden, "login-list-item2 should be hidden");
   ok(loginListItems[2].hidden, "login-list-item3 should be hidden");

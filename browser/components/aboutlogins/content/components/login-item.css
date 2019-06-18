@@ -10,20 +10,20 @@
   --reveal-checkbox-opacity-active: 1;
 }
 
-:host([editing]) .edit-button,
-:host([isNewLogin]) .delete-button,
-:host([isNewLogin]) .origin-saved-value,
-:host([isNewLogin]) copy-to-clipboard-button,
-:host([isNewLogin]) .open-site-button,
-:host([isNewLogin]) .meta-info,
-:host(:not([editing])) .cancel-button,
-:host(:not([editing])) .save-changes-button {
+:host([data-editing]) .edit-button,
+:host([data-is-new-login]) .delete-button,
+:host([data-is-new-login]) .origin-saved-value,
+:host([data-is-new-login]) copy-to-clipboard-button,
+:host([data-is-new-login]) .open-site-button,
+:host([data-is-new-login]) .meta-info,
+:host(:not([data-editing])) .cancel-button,
+:host(:not([data-editing])) .save-changes-button {
   display: none;
 }
 
-:host(:not([editing])) input[type="password"],
-:host(:not([editing])) input[type="text"],
-:host(:not([editing])) input[type="url"] {
+:host(:not([data-editing])) input[type="password"],
+:host(:not([data-editing])) input[type="text"],
+:host(:not([data-editing])) input[type="url"] {
   all: unset;
   display: inline-block;
   width: -moz-available;

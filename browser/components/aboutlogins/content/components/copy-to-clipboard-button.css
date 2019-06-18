@@ -14,16 +14,16 @@
 }
 }
 
-:host(:not([copied])) .copied-button-text,
-:host([copied]) .copy-button-text {
+:host(:not([data-copied])) .copied-button-text,
+:host([data-copied]) .copy-button-text {
   display: none;
 }
 
-:host([copied]) {
+:host([data-copied]) {
   color: var(--success-color);
 }
 
-:host([copied]) button {
+:host([data-copied]) button {
   background-color: transparent;
   opacity: 1; /* override common.css fading out disabled buttons */
 }

@@ -29,13 +29,13 @@ export default class LoginListItem extends HTMLElement {
     let username = this.shadowRoot.querySelector(".username");
 
     if (!this._login.guid) {
-      this.removeAttribute("guid");
+      delete this.dataset.guid;
       title.textContent = this.getAttribute("new-login-title");
       username.textContent = this.getAttribute("new-login-subtitle");
       return;
     }
 
-    this.setAttribute("guid", this._login.guid);
+    this.dataset.guid = this._login.guid;
     title.textContent = this._login.title;
     username.textContent = this._login.username.trim() || this.getAttribute("missing-username");
   }

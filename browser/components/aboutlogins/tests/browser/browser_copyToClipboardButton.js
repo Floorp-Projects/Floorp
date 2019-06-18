@@ -50,8 +50,8 @@ add_task(async function test() {
       await ContentTask.spawn(browser, testObj, async function(aTestObj) {
         let loginItem = content.document.querySelector("login-item");
         let copyButton = loginItem.shadowRoot.querySelector(aTestObj.copyButtonSelector);
-        ok(copyButton.hasAttribute("copied"), "Success message should be shown");
-        await ContentTaskUtils.waitForCondition(() => !copyButton.hasAttribute("copied"),
+        ok(copyButton.dataset.copied, "Success message should be shown");
+        await ContentTaskUtils.waitForCondition(() => !copyButton.dataset.copied,
           "'copied' attribute should be removed after a timeout");
       });
     }
