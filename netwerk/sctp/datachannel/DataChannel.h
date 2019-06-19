@@ -419,12 +419,6 @@ class DataChannel {
         mBufferedThreshold(0),  // default from spec
         mBufferedAmount(0),
         mMainThreadEventTarget(connection->GetNeckoTarget()) {
-    if (!ordered) {
-      mFlags |= DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED;
-    }
-    if (negotiated) {
-      mFlags |= DATA_CHANNEL_FLAGS_EXTERNAL_NEGOTIATED;
-    }
     NS_ASSERTION(mConnection, "NULL connection");
   }
 
