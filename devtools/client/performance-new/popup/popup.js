@@ -32,6 +32,7 @@ const features = [
   "stackwalk",
   "tasktracer",
   "jstracer",
+  "jsallocations",
   "trackopts",
 ];
 const threadPrefix = "perf-settings-thread-checkbox-";
@@ -257,6 +258,7 @@ function calculateOverhead(state) {
   const overheadFromSeqStyle = state.seqstyle ? 0.05 : 0;
   const overheadFromTaskTracer = state.tasktracer ? 0.05 : 0;
   const overheadFromJSTracer = state.jstracer ? 0.05 : 0;
+  const overheadFromJSAllocations = state.jsallocations ? 0.05 : 0;
   return clamp(
     overheadFromSampling +
       overheadFromBuffersize +
@@ -265,7 +267,8 @@ function calculateOverhead(state) {
       overheadFromJavaScrpt +
       overheadFromSeqStyle +
       overheadFromTaskTracer +
-      overheadFromJSTracer,
+      overheadFromJSTracer +
+      overheadFromJSAllocations,
     0,
     1
   );
