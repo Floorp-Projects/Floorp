@@ -98,6 +98,11 @@ class JS_PUBLIC_API TransitiveCompileOptions {
    */
   bool mutedErrors_ = false;
 
+  // Either the Realm configuration or specialized VM operating modes may
+  // disallow syntax-parse (and the LazyScript data type) altogether. These
+  // conditions are checked in the CompileOptions constructor.
+  bool forceFullParse_ = false;
+
   const char* filename_ = nullptr;
   const char* introducerFilename_ = nullptr;
   const char16_t* sourceMapURL_ = nullptr;
@@ -140,6 +145,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // Read-only accessors for non-POD options. The proper way to set these
   // depends on the derived type.
   bool mutedErrors() const { return mutedErrors_; }
+  bool forceFullParse() const { return forceFullParse_; }
   const char* filename() const { return filename_; }
   const char* introducerFilename() const { return introducerFilename_; }
   const char16_t* sourceMapURL() const { return sourceMapURL_; }
