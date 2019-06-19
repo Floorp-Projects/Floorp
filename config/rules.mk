@@ -438,7 +438,7 @@ endif
 
 ##############################################
 ifneq (1,$(NO_PROFILE_GUIDED_OPTIMIZE))
-ifdef MOZ_PROFILE_USE
+ifdef MOZ_1TIER_PGO
 ifeq ($(OS_ARCH)_$(GNU_CC), WINNT_)
 # When building with PGO, we have to make sure to re-link
 # in the MOZ_PROFILE_USE phase if we linked in the
