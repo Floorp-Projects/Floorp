@@ -27,11 +27,8 @@ class LegacySHistory final : public nsSHistory {
   virtual ~LegacySHistory() {}
 
  public:
-  LegacySHistory(mozilla::dom::BrowsingContext* aRootBC,
-                 const nsID& aDocShellID)
-      : nsSHistory(aRootBC, aDocShellID) {
-    mIsRemote = true;
-  }
+  LegacySHistory(mozilla::dom::CanonicalBrowsingContext* aRootBC,
+                 const nsID& aDocShellID);
 };
 
 /**
