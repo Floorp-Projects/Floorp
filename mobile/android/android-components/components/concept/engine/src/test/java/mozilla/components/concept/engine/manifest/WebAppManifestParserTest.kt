@@ -188,6 +188,29 @@ class WebAppManifestParserTest {
     }
 
     @Test
+    fun `Parsing manifest with no name`() {
+        val json = loadManifest("minimal_short_name.json")
+        val result = WebAppManifestParser().parse(json)
+        assertTrue(result is WebAppManifestParser.Result.Success)
+        val manifest = (result as WebAppManifestParser.Result.Success).manifest
+
+        assertNotNull(manifest)
+        assertEquals("Minimal with Short Name", manifest.name)
+        assertEquals("Minimal with Short Name", manifest.shortName)
+        assertEquals("/", manifest.startUrl)
+        assertEquals(WebAppManifest.DisplayMode.BROWSER, manifest.display)
+        assertNull(manifest.backgroundColor)
+        assertNull(manifest.description)
+        assertEquals(WebAppManifest.TextDirection.AUTO, manifest.dir)
+        assertNull(manifest.lang)
+        assertEquals(WebAppManifest.Orientation.ANY, manifest.orientation)
+        assertNull(manifest.scope)
+        assertNull(manifest.themeColor)
+
+        assertEquals(0, manifest.icons.size)
+    }
+
+    @Test
     fun `Parsing typical manifest from W3 spec`() {
         val json = loadManifest("spec_typical.json")
         val result = WebAppManifestParser().parse(json)
@@ -240,6 +263,14 @@ class WebAppManifestParserTest {
     @Test
     fun `Parsing invalid JSON`() {
         val json = loadManifest("invalid_json.json")
+        val result = WebAppManifestParser().parse(json)
+
+        assertTrue(result is WebAppManifestParser.Result.Failure)
+    }
+
+    @Test
+    fun `Parsing invalid JSON missing name fields`() {
+        val json = loadManifest("invalid_missing_name.json")
         val result = WebAppManifestParser().parse(json)
 
         assertTrue(result is WebAppManifestParser.Result.Failure)

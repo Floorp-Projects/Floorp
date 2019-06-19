@@ -5,6 +5,7 @@
 package mozilla.components.concept.engine.manifest
 
 import mozilla.components.support.ktx.android.org.json.asSequence
+import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -37,9 +38,13 @@ class WebAppManifestParser {
      */
     fun parse(json: JSONObject): Result {
         return try {
+            val shortName = json.tryGetString("short_name")
+            val name = json.tryGetString("name") ?: shortName
+                ?: return Result.Failure(JSONException("Missing manifest name"))
+
             Result.Success(WebAppManifest(
-                name = json.getString("name"),
-                shortName = json.optString("short_name", null),
+                name = name,
+                shortName = shortName,
                 startUrl = json.getString("start_url"),
                 display = getDisplayMode(json),
                 backgroundColor = parseColor(json.optString("background_color", null)),
