@@ -423,6 +423,17 @@ pwmgr:
     release_channel_collection: opt-out
     record_in_processes: [content]
 
+  autocomplete_field:
+    objects: ["generatedpassword"]
+    methods: ["autocomplete_field"]
+    description: >
+      Sent the first time each unique generated password is used to fill a login field - i.e. the user selects it from from the autocomplete dropdown on a password input
+    bug_numbers: [1548878]
+    notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "sfoster@mozilla.com"]
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
+    expiry_version: never
+
 fxa_avatar_menu:
   click:
     objects: [
