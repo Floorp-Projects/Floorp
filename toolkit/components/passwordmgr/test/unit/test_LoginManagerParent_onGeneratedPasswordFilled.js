@@ -39,7 +39,7 @@ add_task(async function test_onGeneratedPasswordFilled() {
   notEqual(password1, null, "Check password was returned");
   equal(password1.length, 15, "Check password length");
   equal(LMP._generatedPasswordsByPrincipalOrigin.size, 1, "1 added to cache");
-  equal(LMP._generatedPasswordsByPrincipalOrigin.get("https://www.example.com^userContextId=6").value,
+  equal(LMP._generatedPasswordsByPrincipalOrigin.get("https://www.example.com^userContextId=6"),
         password1, "Cache key and value");
 
   let storageChangedPromised = TestUtils.topicObserved("passwordmgr-storage-changed",
