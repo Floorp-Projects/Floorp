@@ -156,15 +156,25 @@ class UrlbarInput {
     this.eventBufferer = new UrlbarEventBufferer(this);
 
     this._inputFieldEvents = [
-      "blur", "focus", "input", "keydown", "keyup", "mouseover", "paste",
-      "scrollend", "select", "overflow", "underflow", "dragstart", "dragover",
-      "drop", "compositionstart", "compositionend",
+      "compositionstart", "compositionend",
+      "dragover", "dragstart", "drop",
+      "focus", "blur",
+      "input",
+      "keydown", "keyup",
+      "mousedown", "mouseover",
+      "overflow", "underflow",
+      "paste",
+      "scrollend",
+      "select",
     ];
     for (let name of this._inputFieldEvents) {
       this.inputField.addEventListener(name, this);
     }
 
+    // This is needed for the dropmarker. Once we remove that (i.e. make
+    // openViewOnFocus = true the default), this won't be needed anymore.
     this.addEventListener("mousedown", this);
+
     this.view.panel.addEventListener("popupshowing", this);
     this.view.panel.addEventListener("popuphidden", this);
 
@@ -1290,10 +1300,6 @@ class UrlbarInput {
     if (this.getAttribute("pageproxystate") != "valid") {
       this.window.UpdatePopupNotificationsVisibility();
     }
-
-    if (this.openViewOnFocus) {
-      this.startQuery();
-    }
   }
 
   _on_mouseover(event) {
@@ -1301,19 +1307,23 @@ class UrlbarInput {
   }
 
   _on_mousedown(event) {
-    if ((event.target == this.inputField ||
-         // Can be removed after bug 1513337:
-         event.originalTarget.classList.contains("anonymous-div")) &&
-        event.button == 0 &&
-        event.detail == 2 &&
-        UrlbarPrefs.get("doubleClickSelectsAll")) {
-      this.editor.selectAll();
-      event.preventDefault();
+    // We only care about left clicks here.
+    if (event.button != 0) {
       return;
     }
 
-    if (event.originalTarget.classList.contains("urlbar-history-dropmarker") &&
-        event.button == 0) {
+    if (event.currentTarget == this.inputField) {
+      if (event.detail == 2 &&
+          UrlbarPrefs.get("doubleClickSelectsAll")) {
+        this.editor.selectAll();
+        event.preventDefault();
+      } else if (this.openViewOnFocus && !this.view.isOpen) {
+        this.startQuery();
+      }
+      return;
+    }
+
+    if (event.originalTarget.classList.contains("urlbar-history-dropmarker")) {
       if (this.view.isOpen) {
         this.view.close();
       } else {
@@ -1460,9 +1470,6 @@ class UrlbarInput {
   _on_TabSelect(event) {
     this._resetSearchState();
     this.controller.viewContextChanged();
-    if (this.focused && this.openViewOnFocus) {
-      this.startQuery();
-    }
   }
 
   _on_keydown(event) {
