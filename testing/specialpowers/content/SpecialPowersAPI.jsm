@@ -1448,18 +1448,19 @@ class SpecialPowersAPI extends JSWindowActorChild {
    * passed will be copied via structured clone, as will its return
    * value.
    *
-   * @param {FrameLoaderOwner} frame
-   *        The frame in which to run the task. This may be any element
-   *        which implements the FrameLoaderOwner nterface, including
-   *        HTML <iframe> elements and XUL <browser> elements.
+   * @param {BrowsingContext or FrameLoaderOwner or WindowProxy} target
+   *        The target in which to run the task. This may be any element
+   *        which implements the FrameLoaderOwner interface (including
+   *        HTML <iframe> elements and XUL <browser> elements) or a
+   *        WindowProxy (either in-process or remote).
    * @param {Array<any>} args
    *        An array of arguments to pass to the task. All arguments
    *        must be structured clone compatible, and will be cloned
    *        before being passed to the task.
    * @param {function} task
-   *        The function to run in the context of the frame. The
+   *        The function to run in the context of the target. The
    *        function will be stringified and re-evaluated in the context
-   *        of the frame's content window. It may return any structured
+   *        of the target's content window. It may return any structured
    *        clone compatible value, or a Promise which resolves to the
    *        same, which will be returned to the caller.
    *
@@ -1470,10 +1471,19 @@ class SpecialPowersAPI extends JSWindowActorChild {
    *        in the cases where the task throws an error, though that may
    *        change in the future.
    */
-  spawn(frame, args, task) {
+  spawn(target, args, task) {
+    let browsingContext;
+    if (BrowsingContext.isInstance(target)) {
+      browsingContext = target;
+    } else if (Element.isInstance(target)) {
+      browsingContext = target.browsingContext;
+    } else {
+      browsingContext = BrowsingContext.getFromWindow(target);
+    }
+
     let {caller} = Components.stack;
     return this.sendQuery("Spawn", {
-      browsingContext: frame.browsingContext,
+      browsingContext,
       args,
       task: String(task),
       caller: {
