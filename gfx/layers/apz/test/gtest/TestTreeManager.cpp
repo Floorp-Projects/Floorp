@@ -15,7 +15,7 @@ TEST_F(APZCTreeManagerTester, ScrollablePaintedLayers) {
   // both layers have the same scrollId
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID);
   SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID);
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
 
   TestAsyncPanZoomController* nullAPZC = nullptr;
   // so they should have the same APZC
@@ -27,14 +27,14 @@ TEST_F(APZCTreeManagerTester, ScrollablePaintedLayers) {
   // Change the scrollId of layers[1], and verify the APZC changes
   SetScrollableFrameMetrics(layers[1],
                             ScrollableLayerGuid::START_SCROLL_ID + 1);
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
   EXPECT_NE(ApzcOf(layers[1]), ApzcOf(layers[2]));
 
   // Change the scrollId of layers[2] to match that of layers[1], ensure we get
   // the same APZC for both again
   SetScrollableFrameMetrics(layers[2],
                             ScrollableLayerGuid::START_SCROLL_ID + 1);
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
   EXPECT_EQ(ApzcOf(layers[1]), ApzcOf(layers[2]));
 }
 
@@ -42,7 +42,7 @@ TEST_F(APZCTreeManagerTester, Bug1068268) {
   CreatePotentiallyLeakingTree();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
 
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
   RefPtr<HitTestingTreeNode> root = manager->GetRootNode();
   RefPtr<HitTestingTreeNode> node2 = root->GetFirstChild()->GetFirstChild();
   RefPtr<HitTestingTreeNode> node5 = root->GetLastChild()->GetLastChild();
@@ -63,7 +63,7 @@ TEST_F(APZCTreeManagerTester, Bug1068268) {
 TEST_F(APZCTreeManagerTester, Bug1194876) {
   CreateBug1194876Tree();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
 
   uint64_t blockId;
   nsTArray<ScrollableLayerGuid> targets;
@@ -103,7 +103,7 @@ TEST_F(APZCTreeManagerTester, Bug1198900) {
   // crash.
   CreateSimpleDTCScrollingLayer();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
 
   ScreenPoint origin(100, 50);
   ScrollWheelInput swi(MillisecondsSinceStartup(mcc->Time()), mcc->Time(), 0,
@@ -124,7 +124,7 @@ TEST_F(APZCTreeManagerTester, Bug1551582) {
   // bounds of 200x200, leading to a scroll range of (0,0,300,300).
   CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
 
   // Simulate the main thread scrolling to the end of the scroll range.
   ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
@@ -132,7 +132,7 @@ TEST_F(APZCTreeManagerTester, Bug1551582) {
     aMetrics.SetScrollGeneration(1);
     aMetrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
   });
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
 
   // Sanity check.
   RefPtr<TestAsyncPanZoomController> apzc = ApzcOf(root);
@@ -145,7 +145,7 @@ TEST_F(APZCTreeManagerTester, Bug1551582) {
   ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
     aMetrics.SetScrollableRect(CSSRect(0, 0, 400, 400));
   });
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
 
   // Check that APZ has clamped the scroll offset to (200,200) for us.
   compositedScrollOffset = apzc->GetCompositedScrollOffset();
@@ -156,7 +156,7 @@ TEST_F(APZCTreeManagerTester, Bug1557424) {
   // bounds of 200x200, leading to a scroll range of (0,0,300,300).
   CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
 
   // Simulate the main thread scrolling to the end of the scroll range.
   ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
@@ -164,7 +164,7 @@ TEST_F(APZCTreeManagerTester, Bug1557424) {
     aMetrics.SetScrollGeneration(1);
     aMetrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
   });
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
 
   // Sanity check.
   RefPtr<TestAsyncPanZoomController> apzc = ApzcOf(root);
@@ -177,7 +177,7 @@ TEST_F(APZCTreeManagerTester, Bug1557424) {
   ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
     aMetrics.SetCompositionBounds(ParentLayerRect(0, 0, 300, 300));
   });
-  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
 
   // Check that APZ has clamped the scroll offset to (200,200) for us.
   compositedScrollOffset = apzc->GetCompositedScrollOffset();
