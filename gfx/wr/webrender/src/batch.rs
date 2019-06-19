@@ -157,7 +157,6 @@ impl AlphaBatchList {
     pub fn set_params_and_get_batch(
         &mut self,
         key: BatchKey,
-        features: BatchFeatures,
         // The bounding box of everything at this Z plane. We expect potentially
         // multiple primitive segments coming with the same `z_id`.
         z_bounding_rect: &PictureRect,
@@ -227,10 +226,7 @@ impl AlphaBatchList {
             assert_eq!(self.item_rects[self.current_batch_index].last(), Some(z_bounding_rect));
         }
 
-        let batch = &mut self.batches[self.current_batch_index];
-        batch.features |= features;
-
-        &mut batch.instances
+        &mut self.batches[self.current_batch_index].instances
     }
 }
 
@@ -254,7 +250,6 @@ impl OpaqueBatchList {
     pub fn set_params_and_get_batch(
         &mut self,
         key: BatchKey,
-        features: BatchFeatures,
         // The bounding box of everything at the current Z, whatever it is. We expect potentially
         // multiple primitive segments produced by a primitive, which we allow to check
         // `current_batch_index` instead of iterating the batches.
@@ -294,10 +289,7 @@ impl OpaqueBatchList {
             self.current_batch_index = selected_batch_index.unwrap();
         }
 
-        let batch = &mut self.batches[self.current_batch_index];
-        batch.features |= features;
-
-        &mut batch.instances
+        &mut self.batches[self.current_batch_index].instances
     }
 
     fn finalize(&mut self) {
@@ -318,25 +310,6 @@ impl OpaqueBatchList {
 pub struct PrimitiveBatch {
     pub key: BatchKey,
     pub instances: Vec<PrimitiveInstanceData>,
-    pub features: BatchFeatures,
-}
-
-bitflags! {
-    /// Features of the batch that, if not requested, may allow a fast-path.
-    ///
-    /// Rather than breaking batches when primitives request different features,
-    /// we always request the minimum amount of features to satisfy all items in
-    /// the batch.
-    /// The goal is to let the renderer be optionally select more specialized
-    /// versions of a shader if the batch doesn't require code certain code paths.
-    /// Not all shaders necessarily implement all of these features.
-    #[cfg_attr(feature = "capture", derive(Serialize))]
-    #[cfg_attr(feature = "replay", derive(Deserialize))]
-    pub struct BatchFeatures: u8 {
-        const ALPHA_PASS = 1 << 0;
-        const ANTIALIASING = 1 << 1;
-        const REPETITION = 1 << 2;
-    }
 }
 
 impl PrimitiveBatch {
@@ -344,7 +317,6 @@ impl PrimitiveBatch {
         PrimitiveBatch {
             key,
             instances: Vec::new(),
-            features: BatchFeatures::empty(),
         }
     }
 }
@@ -482,26 +454,24 @@ impl AlphaBatchBuilder {
     pub fn push_single_instance(
         &mut self,
         key: BatchKey,
-        features: BatchFeatures,
         bounding_rect: &PictureRect,
         z_id: ZBufferId,
         instance: PrimitiveInstanceData,
     ) {
-        self.set_params_and_get_batch(key, features, bounding_rect, z_id)
+        self.set_params_and_get_batch(key, bounding_rect, z_id)
             .push(instance);
     }
 
     pub fn set_params_and_get_batch(
         &mut self,
         key: BatchKey,
-        features: BatchFeatures,
         bounding_rect: &PictureRect,
         z_id: ZBufferId,
     ) -> &mut Vec<PrimitiveInstanceData> {
         match key.blend_mode {
             BlendMode::None => {
                 self.opaque_batch_list
-                    .set_params_and_get_batch(key, features, bounding_rect)
+                    .set_params_and_get_batch(key, bounding_rect)
             }
             BlendMode::Alpha |
             BlendMode::PremultipliedAlpha |
@@ -511,7 +481,7 @@ impl AlphaBatchBuilder {
             BlendMode::SubpixelDualSource |
             BlendMode::Advanced(_) => {
                 self.alpha_batch_list
-                    .set_params_and_get_batch(key, features, bounding_rect, z_id)
+                    .set_params_and_get_batch(key, bounding_rect, z_id)
             }
         }
     }
@@ -543,7 +513,6 @@ impl BatchBuilder {
     fn add_brush_instance_to_batches(
         &mut self,
         batch_key: BatchKey,
-        features: BatchFeatures,
         bounding_rect: &PictureRect,
         z_id: ZBufferId,
         segment_index: i32,
@@ -570,7 +539,6 @@ impl BatchBuilder {
 
                 batcher.push_single_instance(
                     batch_key,
-                    features,
                     bounding_rect,
                     z_id,
                     PrimitiveInstanceData::from(instance),
@@ -594,7 +562,6 @@ impl BatchBuilder {
 
                 batcher.push_single_instance(
                     batch_key,
-                    BatchFeatures::empty(),
                     bounding_rect,
                     z_id,
                     PrimitiveInstanceData::from(SplitCompositeInstance {
@@ -687,15 +654,6 @@ impl BatchBuilder {
             prim_common_data.prim_size,
         );
 
-        let mut batch_features = BatchFeatures::empty();
-        if prim_common_data.may_need_repetition {
-            batch_features |= BatchFeatures::REPETITION;
-        }
-
-        if transform_kind != TransformedRectKind::AxisAligned {
-            batch_features |= BatchFeatures::ANTIALIASING;
-        }
-
         let snap_offsets = prim_info.snap_offsets;
         let prim_vis_mask = prim_info.visibility_mask;
 
@@ -747,7 +705,6 @@ impl BatchBuilder {
 
                 self.add_brush_instance_to_batches(
                     batch_key,
-                    batch_features,
                     bounding_rect,
                     z_id,
                     INVALID_SEGMENT_INDEX,
@@ -824,7 +781,6 @@ impl BatchBuilder {
                     &batch_params,
                     specified_blend_mode,
                     non_segmented_blend_mode,
-                    batch_features,
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
@@ -951,7 +907,6 @@ impl BatchBuilder {
                                 let render_task_address = batcher.render_task_address;
                                 let batch = batcher.alpha_batch_list.set_params_and_get_batch(
                                     key,
-                                    BatchFeatures::empty(),
                                     bounding_rect,
                                     z_id,
                                 );
@@ -1046,7 +1001,6 @@ impl BatchBuilder {
 
                 self.add_brush_instance_to_batches(
                     batch_key,
-                    batch_features,
                     bounding_rect,
                     z_id,
                     INVALID_SEGMENT_INDEX,
@@ -1223,7 +1177,6 @@ impl BatchBuilder {
                                         &batch_params,
                                         blend_mode,
                                         blend_mode,
-                                        batch_features,
                                         prim_header_index,
                                         bounding_rect,
                                         transform_kind,
@@ -1260,7 +1213,6 @@ impl BatchBuilder {
 
                                         self.add_brush_instance_to_batches(
                                             key,
-                                            batch_features,
                                             bounding_rect,
                                             z_id,
                                             INVALID_SEGMENT_INDEX,
@@ -1332,7 +1284,6 @@ impl BatchBuilder {
 
                                             self.add_brush_instance_to_batches(
                                                 shadow_key,
-                                                batch_features,
                                                 bounding_rect,
                                                 z_id,
                                                 INVALID_SEGMENT_INDEX,
@@ -1355,7 +1306,6 @@ impl BatchBuilder {
 
                                         self.add_brush_instance_to_batches(
                                             content_key,
-                                            batch_features,
                                             bounding_rect,
                                             z_id_content,
                                             INVALID_SEGMENT_INDEX,
@@ -1436,7 +1386,6 @@ impl BatchBuilder {
 
                                         self.add_brush_instance_to_batches(
                                             key,
-                                            batch_features,
                                             bounding_rect,
                                             z_id,
                                             INVALID_SEGMENT_INDEX,
@@ -1483,7 +1432,6 @@ impl BatchBuilder {
 
                                 self.add_brush_instance_to_batches(
                                     key,
-                                    batch_features,
                                     bounding_rect,
                                     z_id,
                                     INVALID_SEGMENT_INDEX,
@@ -1516,7 +1464,6 @@ impl BatchBuilder {
 
                                 self.add_brush_instance_to_batches(
                                     key,
-                                    batch_features,
                                     bounding_rect,
                                     z_id,
                                     INVALID_SEGMENT_INDEX,
@@ -1559,7 +1506,6 @@ impl BatchBuilder {
 
                                 self.add_brush_instance_to_batches(
                                     key,
-                                    batch_features,
                                     bounding_rect,
                                     z_id,
                                     INVALID_SEGMENT_INDEX,
@@ -1629,7 +1575,6 @@ impl BatchBuilder {
                                     &batch_params,
                                     specified_blend_mode,
                                     non_segmented_blend_mode,
-                                    batch_features,
                                     prim_header_index,
                                     bounding_rect,
                                     transform_kind,
@@ -1719,7 +1664,6 @@ impl BatchBuilder {
                     &batch_params,
                     specified_blend_mode,
                     non_segmented_blend_mode,
-                    batch_features,
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
@@ -1782,7 +1726,6 @@ impl BatchBuilder {
                     &batch_params,
                     specified_blend_mode,
                     non_segmented_blend_mode,
-                    batch_features,
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
@@ -1891,7 +1834,6 @@ impl BatchBuilder {
                     &batch_params,
                     specified_blend_mode,
                     non_segmented_blend_mode,
-                    batch_features,
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
@@ -1997,7 +1939,6 @@ impl BatchBuilder {
                         &batch_params,
                         specified_blend_mode,
                         non_segmented_blend_mode,
-                        batch_features,
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
@@ -2054,7 +1995,6 @@ impl BatchBuilder {
                                 };
                                 self.add_brush_instance_to_batches(
                                     batch_key,
-                                    batch_features,
                                     bounding_rect,
                                     z_id,
                                     i as i32,
@@ -2132,7 +2072,6 @@ impl BatchBuilder {
 
                     self.add_brush_instance_to_batches(
                         batch_key,
-                        batch_features,
                         bounding_rect,
                         z_id,
                         INVALID_SEGMENT_INDEX,
@@ -2176,7 +2115,6 @@ impl BatchBuilder {
                         &batch_params,
                         specified_blend_mode,
                         non_segmented_blend_mode,
-                        batch_features,
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
@@ -2263,7 +2201,6 @@ impl BatchBuilder {
                         &batch_params,
                         specified_blend_mode,
                         non_segmented_blend_mode,
-                        batch_features,
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
@@ -2308,7 +2245,6 @@ impl BatchBuilder {
         batch_kind: BrushBatchKind,
         prim_header_index: PrimitiveHeaderIndex,
         alpha_blend_mode: BlendMode,
-        features: BatchFeatures,
         bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
         render_tasks: &RenderTaskGraph,
@@ -2345,7 +2281,6 @@ impl BatchBuilder {
 
         self.add_brush_instance_to_batches(
             batch_key,
-            features,
             bounding_rect,
             z_id,
             segment_index,
@@ -2366,7 +2301,6 @@ impl BatchBuilder {
         params: &BrushBatchParameters,
         alpha_blend_mode: BlendMode,
         non_segmented_blend_mode: BlendMode,
-        features: BatchFeatures,
         prim_header_index: PrimitiveHeaderIndex,
         bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
@@ -2393,7 +2327,6 @@ impl BatchBuilder {
                         params.batch_kind,
                         prim_header_index,
                         alpha_blend_mode,
-                        features,
                         bounding_rect,
                         transform_kind,
                         render_tasks,
@@ -2419,7 +2352,6 @@ impl BatchBuilder {
                         params.batch_kind,
                         prim_header_index,
                         alpha_blend_mode,
-                        features,
                         bounding_rect,
                         transform_kind,
                         render_tasks,
@@ -2445,7 +2377,6 @@ impl BatchBuilder {
                 ).unwrap_or(OPAQUE_TASK_ADDRESS);
                 self.add_brush_instance_to_batches(
                     batch_key,
-                    features,
                     bounding_rect,
                     z_id,
                     INVALID_SEGMENT_INDEX,
@@ -2506,7 +2437,6 @@ impl BatchBuilder {
 
             self.add_brush_instance_to_batches(
                 key,
-                BatchFeatures::empty(),
                 bounding_rect,
                 z_id,
                 INVALID_SEGMENT_INDEX,
