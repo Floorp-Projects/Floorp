@@ -37,7 +37,6 @@
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/EnvironmentMap.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/RecordReplay.h"
 #include "mozilla/RDDProcessHost.h"
@@ -103,11 +102,6 @@ static bool ShouldHaveDirectoryService() {
   return GeckoProcessType_Default == XRE_GetProcessType();
 }
 
-StaticAutoPtr<mozilla::LinkedList<GeckoChildProcessHost>>
-    GeckoChildProcessHost::sGeckoChildProcessHosts;
-
-StaticMutex GeckoChildProcessHost::sMutex;
-
 GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
                                              bool aIsFileContent)
     : mProcessType(aProcessType),
@@ -128,11 +122,6 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
 #endif
       mDestroying(false) {
   MOZ_COUNT_CTOR(GeckoChildProcessHost);
-  StaticMutexAutoLock lock(sMutex);
-  if (!sGeckoChildProcessHosts) {
-    sGeckoChildProcessHosts = new mozilla::LinkedList<GeckoChildProcessHost>();
-  }
-  sGeckoChildProcessHosts->insertBack(this);
 }
 
 GeckoChildProcessHost::~GeckoChildProcessHost()
@@ -179,19 +168,8 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 #endif
 }
 
-void GeckoChildProcessHost::RemoveFromProcessList() {
-  StaticMutexAutoLock lock(sMutex);
-  if (!sGeckoChildProcessHosts) {
-    return;
-  }
-  LinkedListElement<GeckoChildProcessHost>::removeFrom(
-      *sGeckoChildProcessHosts);
-}
-
 void GeckoChildProcessHost::Destroy() {
   MOZ_RELEASE_ASSERT(!mDestroying);
-  // We can remove from the list before it's really destroyed
-  RemoveFromProcessList();
   RefPtr<HandlePromise> whenReady = mHandlePromise;
 
   if (!whenReady) {
@@ -1481,13 +1459,3 @@ bool GeckoChildProcessHost::StartMacSandbox(int aArgc, char** aArgv,
 }
 
 #endif /* XP_MACOSX && MOZ_SANDBOX */
-
-/* static */
-void GeckoChildProcessHost::GetAll(const GeckoProcessCallback& aCallback) {
-  StaticMutexAutoLock lock(sMutex);
-  for (GeckoChildProcessHost* gp = sGeckoChildProcessHosts->getFirst(); gp;
-       gp = static_cast<mozilla::LinkedListElement<GeckoChildProcessHost>*>(gp)
-                ->getNext()) {
-    aCallback(gp);
-  }
-}
