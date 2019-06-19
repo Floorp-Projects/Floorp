@@ -331,6 +331,8 @@ pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 // Enable the new Address Bar code.
 pref("browser.urlbar.quantumbar", true);
 
+pref("browser.urlbar.openViewOnFocus", false);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
@@ -1319,11 +1321,7 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", tru
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 #endif
 
-#ifdef NIGHTLY_BUILD
 pref("trailhead.firstrun.branches", "join-privacy");
-#else
-pref("trailhead.firstrun.branches", "control");
-#endif
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
