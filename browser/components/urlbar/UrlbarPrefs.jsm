@@ -100,6 +100,8 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // should be opened in new tabs by default.
   ["openintab", false],
 
+  ["openViewOnFocus", false],
+
   // Whether the quantum bar is enabled.
   ["quantumbar", false],
 
