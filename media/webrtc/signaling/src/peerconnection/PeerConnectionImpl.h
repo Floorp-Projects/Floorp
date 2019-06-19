@@ -15,7 +15,6 @@
 #include "mozilla/RefPtr.h"
 #include "nsAutoPtr.h"
 #include "IPeerConnection.h"
-#include "sigslot.h"
 #include "nsComponentManagerUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIUUIDGenerator.h"
@@ -55,6 +54,7 @@ class AFakePCObserver;
 class nsDOMDataChannel;
 
 namespace mozilla {
+struct CandidateInfo;
 class DataChannel;
 class DtlsIdentity;
 class MediaPipeline;
@@ -164,8 +164,7 @@ typedef MozPromise<UniquePtr<RTCStatsQuery>, nsresult, true>
 class PeerConnectionImpl final
     : public nsISupports,
       public mozilla::DataChannelConnection::DataConnectionListener,
-      public dom::PrincipalChangeObserver<dom::MediaStreamTrack>,
-      public sigslot::has_slots<> {
+      public dom::PrincipalChangeObserver<dom::MediaStreamTrack> {
   struct Internal;  // Avoid exposing c includes to bindings
 
  public:
@@ -207,6 +206,8 @@ class PeerConnectionImpl final
   // ICE events
   void IceConnectionStateChange(dom::RTCIceConnectionState state);
   void IceGatheringStateChange(dom::RTCIceGatheringState state);
+  void OnCandidateFound(const std::string& aTransportId,
+                        const CandidateInfo& aCandidateInfo);
   void UpdateDefaultCandidate(const std::string& defaultAddr,
                               uint16_t defaultPort,
                               const std::string& defaultRtcpAddr,
@@ -218,7 +219,6 @@ class PeerConnectionImpl final
 
   // Get the main thread
   nsCOMPtr<nsIThread> GetMainThread() {
-    PC_AUTO_ENTER_API_CALL_NO_CHECK();
     return mThread;
   }
 
@@ -432,9 +432,7 @@ class PeerConnectionImpl final
   NS_IMETHODIMP IceGatheringState(mozilla::dom::RTCIceGatheringState* aState);
 
   mozilla::dom::RTCIceGatheringState IceGatheringState() {
-    mozilla::dom::RTCIceGatheringState state;
-    IceGatheringState(&state);
-    return state;
+    return mIceGatheringState;
   }
 
   NS_IMETHODIMP Close();
