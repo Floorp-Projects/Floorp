@@ -1,5 +1,12 @@
 # This list automatically picks up exclusions from .eslintignore
 
+# These files are disabled due to parsing errors when using Prettier.
+# Bug 1560186
+*.html
+*.xhtml
+*.xul
+*.xml
+
 # Ignore all top-level directories for now.
 accessible/**
 browser/**
