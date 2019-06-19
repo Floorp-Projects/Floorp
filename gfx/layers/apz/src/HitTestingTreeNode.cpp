@@ -317,18 +317,13 @@ const CSSTransformMatrix& HitTestingTreeNode::GetTransform() const {
   return mTransform;
 }
 
-LayerToScreenMatrix4x4 HitTestingTreeNode::GetTransformToGecko() const {
+LayerToScreenMatrix4x4 HitTestingTreeNode::GetCSSTransformToRoot() const {
   if (mParent) {
     LayerToParentLayerMatrix4x4 thisToParent =
         mTransform * AsyncTransformMatrix();
-    if (mApzc) {
-      thisToParent = thisToParent *
-          ViewAs<ParentLayerToParentLayerMatrix4x4>(
-              mApzc->GetTransformToLastDispatchedPaint());
-    }
     ParentLayerToScreenMatrix4x4 parentToRoot =
         ViewAs<ParentLayerToScreenMatrix4x4>(
-            mParent->GetTransformToGecko(),
+            mParent->GetCSSTransformToRoot(),
             PixelCastJustification::MovingDownToChildren);
     return thisToParent * parentToRoot;
   }

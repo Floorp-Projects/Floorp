@@ -47,7 +47,7 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
                                                            root, mcc);
-    manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -70,7 +70,7 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
                                                            root, mcc);
-    manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -111,7 +111,7 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
                                                            root, mcc);
-    manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -136,7 +136,7 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
                                                            root, mcc);
-    manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
   }
 
   void CreateBug1117712LayerTree() {
@@ -178,7 +178,7 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
                                                            root, mcc);
-    manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
   }
 };
 
@@ -265,7 +265,7 @@ TEST_F(APZEventRegionsTester, Obscuration) {
   CreateObscuringLayerTree();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
 
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
 
   RefPtr<TestAsyncPanZoomController> parent = ApzcOf(layers[1]);
   TestAsyncPanZoomController* child = ApzcOf(layers[2]);

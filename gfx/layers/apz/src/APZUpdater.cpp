@@ -177,13 +177,13 @@ void APZUpdater::UpdateFocusState(LayersId aRootLayerTreeId,
                          aOriginatingWrRootId.mLayersId, aFocusTarget));
 }
 
-void APZUpdater::UpdateHitTestingTree(Layer* aRoot,
+void APZUpdater::UpdateHitTestingTree(LayersId aRootLayerTreeId, Layer* aRoot,
                                       bool aIsFirstPaint,
                                       LayersId aOriginatingWrRootId,
                                       uint32_t aPaintSequenceNumber) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnUpdaterThread();
-  mApz->UpdateHitTestingTree(aRoot, aIsFirstPaint,
+  mApz->UpdateHitTestingTree(aRootLayerTreeId, aRoot, aIsFirstPaint,
                              aOriginatingWrRootId, aPaintSequenceNumber);
 }
 
@@ -216,6 +216,7 @@ void APZUpdater::UpdateScrollDataAndTreeState(
                              return;
                            }
                            self->mApz->UpdateHitTestingTree(
+                               aRootLayerTreeId.mLayersId,
                                WebRenderScrollDataWrapper(
                                    *self, aRootLayerTreeId, &(root->second)),
                                aScrollData.IsFirstPaint(), aOriginatingWrRootId,
@@ -240,6 +241,7 @@ void APZUpdater::UpdateScrollOffsets(WRRootId aRootLayerTreeId,
                              return;
                            }
                            self->mApz->UpdateHitTestingTree(
+                               aRootLayerTreeId.mLayersId,
                                WebRenderScrollDataWrapper(
                                    *self, aRootLayerTreeId, &(root->second)),
                                /*isFirstPaint*/ false, aOriginatingWrRootId,
