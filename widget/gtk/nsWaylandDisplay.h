@@ -17,7 +17,7 @@
 
 #include <drm/drm_fourcc.h>
 #include <xf86drm.h>
-#include <gbm.h>
+#include "mozilla/widget/gbm.h"
 #include "mozilla/widget/linux-dmabuf-unstable-v1-client-protocol.h"
 
 namespace mozilla {
