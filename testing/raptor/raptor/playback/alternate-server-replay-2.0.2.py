@@ -90,7 +90,11 @@ class ServerPlayback:
                 if os.path.exists(proto):
                     ctx.log.info("Loading proto info from %s" % proto)
                     with open(proto) as f:
-                        _PROTO.update(json.loads(f.read()))
+                        p = json.loads(f.read()).get('http_protocol')
+
+                        if p is not None:
+                            _PROTO.update(p)
+
         self.options = None
         self.replayfiles = replayfiles
         self.flowmap = {}
