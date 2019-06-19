@@ -10,7 +10,12 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
-SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false]]},
+SpecialPowers.pushPrefEnv({
+    "set": [
+      ["media.ogg.enabled", false],
+      ["media.encoder.webm.enabled", false],
+    ],
+  },
   function () {
     var ac = new window.AudioContext();
     var dest = ac.createMediaStreamDestination();
