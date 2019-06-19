@@ -15,6 +15,7 @@
 #include "SVGEllipseElement.h"
 #include "SVGGeometryProperty.h"
 #include "SVGRectElement.h"
+#include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
@@ -114,6 +115,18 @@ already_AddRefed<Path> SVGGeometryElement::GetOrBuildPathForMeasuring() {
   return GetOrBuildPath(drawTarget, fillRule);
 }
 
+// This helper is currently identical to GetOrBuildPathForMeasuring.
+// We keep it a separate method because for length measuring purpose,
+// fillRule isn't really needed. Derived class (e.g. SVGPathElement)
+// may override GetOrBuildPathForMeasuring() to ignore fillRule. And
+// GetOrBuildPathForMeasuring() itself may be modified in the future.
+already_AddRefed<Path> SVGGeometryElement::GetOrBuildPathForHitTest() {
+  RefPtr<DrawTarget> drawTarget =
+      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+  FillRule fillRule = mCachedPath ? mCachedPath->GetFillRule() : GetFillRule();
+  return GetOrBuildPath(drawTarget, fillRule);
+}
+
 bool SVGGeometryElement::IsGeometryChangedViaCSS(
     ComputedStyle const& aNewStyle, ComputedStyle const& aOldStyle) const {
   if (IsSVGElement(nsGkAtoms::rect)) {
@@ -151,6 +164,54 @@ FillRule SVGGeometryElement::GetFillRule() {
   }
 
   return fillRule;
+}
+
+static Point GetPointFrom(const DOMPointInit& aPoint) {
+  return Point(aPoint.mX, aPoint.mY);
+}
+
+bool SVGGeometryElement::IsPointInFill(const DOMPointInit& aPoint) {
+  auto point = GetPointFrom(aPoint);
+
+  RefPtr<Path> path = GetOrBuildPathForHitTest();
+  if (!path) {
+    return false;
+  }
+
+  return path->ContainsPoint(point, {});
+}
+
+bool SVGGeometryElement::IsPointInStroke(const DOMPointInit& aPoint) {
+  auto point = GetPointFrom(aPoint);
+
+  RefPtr<Path> path = GetOrBuildPathForHitTest();
+  if (!path) {
+    return false;
+  }
+
+  bool res = false;
+  SVGGeometryProperty::DoForComputedStyle(this, [&](const ComputedStyle* s) {
+    // Per spec, we should take vector-effect into account.
+    if (s->StyleSVGReset()->HasNonScalingStroke()) {
+      auto mat = SVGContentUtils::GetCTM(this, true);
+      if (mat.HasNonTranslation()) {
+        // We have non-scaling-stroke as well as a non-translation transform.
+        // We should transform the path first then apply the stroke on the
+        // transformed path to preserve the stroke-width.
+        RefPtr<PathBuilder> builder = path->TransformedCopyToBuilder(mat);
+
+        path = builder->Finish();
+        point = mat.TransformPoint(point);
+      }
+    }
+
+    SVGContentUtils::AutoStrokeOptions strokeOptions;
+    SVGContentUtils::GetStrokeOptions(&strokeOptions, this, s, nullptr);
+
+    res = path->StrokeContainsPoint(strokeOptions, point, {});
+  });
+
+  return res;
 }
 
 float SVGGeometryElement::GetTotalLength() {
