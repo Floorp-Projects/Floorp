@@ -17,6 +17,7 @@ class Target extends Domain {
     super(session);
 
     this.onTargetCreated = this.onTargetCreated.bind(this);
+    this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
   }
 
   getBrowserContexts() {
@@ -29,8 +30,10 @@ class Target extends Domain {
     const { targets } = this.session.target;
     if (discover) {
       targets.on("connect", this.onTargetCreated);
+      targets.on("disconnect", this.onTargetDestroyed);
     } else {
       targets.off("connect", this.onTargetCreated);
+      targets.off("disconnect", this.onTargetDestroyed);
     }
     for (const target of targets) {
       this.onTargetCreated("connect", target);
@@ -47,8 +50,14 @@ class Target extends Domain {
     });
   }
 
+  onTargetDestroyed(eventName, target) {
+    this.emit("Target.targetDestroyed", {
+      targetId: target.id,
+    });
+  }
+
   async createTarget() {
-    const {targets} = this.session.target;
+    const { targets } = this.session.target;
     const onTarget = targets.once("connect");
     const tab = TabManager.addTab();
     const target = await onTarget;
