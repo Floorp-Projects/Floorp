@@ -258,112 +258,11 @@ class JS_PUBLIC_API OwningCompileOptions final : public ReadOnlyCompileOptions {
   /** Set this to a copy of |rhs|.  Return false on OOM. */
   bool copy(JSContext* cx, const ReadOnlyCompileOptions& rhs);
 
-  /* These setters make copies of their string arguments and are fallible. */
-  MOZ_MUST_USE bool setFile(JSContext* cx, const char* f);
-  MOZ_MUST_USE bool setFileAndLine(JSContext* cx, const char* f, unsigned l);
-  MOZ_MUST_USE bool setSourceMapURL(JSContext* cx, const char16_t* s);
-  MOZ_MUST_USE bool setIntroducerFilename(JSContext* cx, const char* s);
-
-  /* These setters are infallible, and can be chained. */
-
-  OwningCompileOptions& setLine(unsigned l) {
-    lineno = l;
-    return *this;
-  }
-
-  OwningCompileOptions& setElement(JSObject* e) {
-    elementRoot = e;
-    return *this;
-  }
-
-  OwningCompileOptions& setElementAttributeName(JSString* p) {
-    elementAttributeNameRoot = p;
-    return *this;
-  }
-
-  OwningCompileOptions& setIntroductionScript(JSScript* s) {
-    introductionScriptRoot = s;
-    return *this;
-  }
-
-  OwningCompileOptions& setScriptOrModule(JSScript* s) {
-    scriptOrModuleRoot = s;
-    return *this;
-  }
-
-  OwningCompileOptions& setMutedErrors(bool mute) {
-    mutedErrors_ = mute;
-    return *this;
-  }
-
-  OwningCompileOptions& setColumn(unsigned c) {
-    column = c;
-    return *this;
-  }
-
-  OwningCompileOptions& setScriptSourceOffset(unsigned o) {
-    scriptSourceOffset = o;
-    return *this;
-  }
-
-  OwningCompileOptions& setIsRunOnce(bool once) {
-    isRunOnce = once;
-    return *this;
-  }
-
-  OwningCompileOptions& setNoScriptRval(bool nsr) {
-    noScriptRval = nsr;
-    return *this;
-  }
-
-  OwningCompileOptions& setSelfHostingMode(bool shm) {
-    selfHostingMode = shm;
-    return *this;
-  }
-
-  OwningCompileOptions& setCanLazilyParse(bool clp) {
-    canLazilyParse = clp;
-    return *this;
-  }
-
-  OwningCompileOptions& setAllowSyntaxParser(bool clp) {
-    allowSyntaxParser = clp;
-    return *this;
-  }
-
-  OwningCompileOptions& setSourceIsLazy(bool l) {
-    sourceIsLazy = l;
-    return *this;
-  }
-
-  OwningCompileOptions& setNonSyntacticScope(bool n) {
-    nonSyntacticScope = n;
-    return *this;
-  }
-
-  OwningCompileOptions& setIntroductionType(const char* t) {
-    introductionType = t;
-    return *this;
-  }
-
-  bool setIntroductionInfo(JSContext* cx, const char* introducerFn,
-                           const char* intro, unsigned line, JSScript* script,
-                           uint32_t offset) {
-    if (!setIntroducerFilename(cx, introducerFn)) {
-      return false;
-    }
-
-    introductionType = intro;
-    introductionLineno = line;
-    introductionScriptRoot = script;
-    introductionOffset = offset;
-    hasIntroductionInfo = true;
-    return true;
-  }
-
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
  private:
+  void release();
+
   void operator=(const CompileOptions& rhs) = delete;
 };
 
