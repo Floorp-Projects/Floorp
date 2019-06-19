@@ -116,9 +116,9 @@ interface PeerConnectionImpl  {
   readonly attribute DOMString currentRemoteDescription;
   readonly attribute DOMString pendingRemoteDescription;
 
-  readonly attribute PCImplIceConnectionState iceConnectionState;
-  readonly attribute PCImplIceGatheringState iceGatheringState;
-  readonly attribute PCImplSignalingState signalingState;
+  readonly attribute RTCIceConnectionState iceConnectionState;
+  readonly attribute RTCIceGatheringState iceGatheringState;
+  readonly attribute RTCSignalingState signalingState;
   attribute DOMString id;
 
   [SetterThrows]

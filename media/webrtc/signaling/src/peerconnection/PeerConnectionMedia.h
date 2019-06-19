@@ -131,9 +131,9 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                                const std::string& aAlpn);
 
   // ICE state signals
-  sigslot::signal1<mozilla::dom::PCImplIceGatheringState>
+  sigslot::signal1<mozilla::dom::RTCIceGatheringState>
       SignalIceGatheringStateChange;
-  sigslot::signal1<mozilla::dom::PCImplIceConnectionState>
+  sigslot::signal1<mozilla::dom::RTCIceConnectionState>
       SignalIceConnectionStateChange;
   // This passes a candidate:... attribute, transport id, and ufrag
   // end-of-candidates is signaled with the empty string
@@ -201,13 +201,13 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void ConnectSignals();
 
   // ICE events
-  void IceGatheringStateChange_s(dom::PCImplIceGatheringState aState);
-  void IceConnectionStateChange_s(dom::PCImplIceConnectionState aState);
+  void IceGatheringStateChange_s(dom::RTCIceGatheringState aState);
+  void IceConnectionStateChange_s(dom::RTCIceConnectionState aState);
   void OnCandidateFound_s(const std::string& aTransportId,
                           const CandidateInfo& aCandidateInfo);
 
-  void IceGatheringStateChange_m(dom::PCImplIceGatheringState aState);
-  void IceConnectionStateChange_m(dom::PCImplIceConnectionState aState);
+  void IceGatheringStateChange_m(dom::RTCIceGatheringState aState);
+  void IceConnectionStateChange_m(dom::RTCIceConnectionState aState);
   void OnCandidateFound_m(const std::string& aTransportId,
                           const CandidateInfo& aCandidateInfo);
 
