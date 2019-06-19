@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::batch::{BatchKey, BatchKind, BrushBatchKind};
+use crate::batch::{BatchKey, BatchKind, BrushBatchKind, BatchFeatures};
 use crate::device::{Device, Program, ShaderError};
 use euclid::{Transform3D};
 use crate::glyph_rasterizer::GlyphFormat;
@@ -516,6 +516,7 @@ pub struct Shaders {
     // Brush shaders
     brush_solid: BrushShader,
     brush_image: Vec<Option<BrushShader>>,
+    brush_fast_image: Vec<Option<BrushShader>>,
     brush_blend: BrushShader,
     brush_mix_blend: BrushShader,
     brush_yuv_image: Vec<Option<BrushShader>>,
@@ -740,26 +741,45 @@ impl Shaders {
         // All image configuration.
         let mut image_features = Vec::new();
         let mut brush_image = Vec::new();
+        let mut brush_fast_image = Vec::new();
         // PrimitiveShader is not clonable. Use push() to initialize the vec.
         for _ in 0 .. IMAGE_BUFFER_KINDS.len() {
             brush_image.push(None);
+            brush_fast_image.push(None);
         }
         for buffer_kind in 0 .. IMAGE_BUFFER_KINDS.len() {
-            if IMAGE_BUFFER_KINDS[buffer_kind].has_platform_support(&gl_type) {
-                let feature_string = IMAGE_BUFFER_KINDS[buffer_kind].get_feature_string();
-                if feature_string != "" {
-                    image_features.push(feature_string);
-                }
-                brush_image[buffer_kind] = Some(BrushShader::new(
-                    "brush_image",
-                    device,
-                    &image_features,
-                    options.precache_flags,
-                    options.allow_advanced_blend_equation,
-                    options.allow_dual_source_blending,
-                    use_pixel_local_storage,
-                )?);
+            if !IMAGE_BUFFER_KINDS[buffer_kind].has_platform_support(&gl_type) {
+                continue;
             }
+
+            let feature_string = IMAGE_BUFFER_KINDS[buffer_kind].get_feature_string();
+            if feature_string != "" {
+                image_features.push(feature_string);
+            }
+
+            brush_fast_image[buffer_kind] = Some(BrushShader::new(
+                "brush_image",
+                device,
+                &image_features,
+                options.precache_flags,
+                options.allow_advanced_blend_equation,
+                options.allow_dual_source_blending,
+                use_pixel_local_storage,
+            )?);
+
+            image_features.push("REPETITION");
+            image_features.push("ANTIALIASING");
+
+            brush_image[buffer_kind] = Some(BrushShader::new(
+                "brush_image",
+                device,
+                &image_features,
+                options.precache_flags,
+                options.allow_advanced_blend_equation,
+                options.allow_dual_source_blending,
+                use_pixel_local_storage,
+            )?);
+
             image_features.clear();
         }
 
@@ -838,6 +858,7 @@ impl Shaders {
             cs_scale_rgba8,
             brush_solid,
             brush_image,
+            brush_fast_image,
             brush_blend,
             brush_mix_blend,
             brush_yuv_image,
@@ -859,7 +880,7 @@ impl Shaders {
         (buffer_kind as usize)
     }
 
-    pub fn get(&mut self, key: &BatchKey, debug_flags: DebugFlags) -> &mut LazilyCompiledShader {
+    pub fn get(&mut self, key: &BatchKey, features: BatchFeatures, debug_flags: DebugFlags) -> &mut LazilyCompiledShader {
         match key.kind {
             BatchKind::SplitComposite => {
                 &mut self.ps_split_composite
@@ -870,9 +891,18 @@ impl Shaders {
                         &mut self.brush_solid
                     }
                     BrushBatchKind::Image(image_buffer_kind) => {
-                        self.brush_image[image_buffer_kind as usize]
-                            .as_mut()
-                            .expect("Unsupported image shader kind")
+                        if features.contains(BatchFeatures::ANTIALIASING) ||
+                            features.contains(BatchFeatures::REPETITION) ||
+                            !features.contains(BatchFeatures::ALPHA_PASS) {
+
+                            self.brush_image[image_buffer_kind as usize]
+                                .as_mut()
+                                .expect("Unsupported image shader kind")
+                        } else {
+                            self.brush_fast_image[image_buffer_kind as usize]
+                                .as_mut()
+                                .expect("Unsupported image shader kind")
+                        }
                     }
                     BrushBatchKind::Blend => {
                         &mut self.brush_blend
@@ -925,6 +955,11 @@ impl Shaders {
         self.ps_text_run.deinit(device);
         self.ps_text_run_dual_source.deinit(device);
         for shader in self.brush_image {
+            if let Some(shader) = shader {
+                shader.deinit(device);
+            }
+        }
+        for shader in self.brush_fast_image {
             if let Some(shader) = shader {
                 shader.deinit(device);
             }
