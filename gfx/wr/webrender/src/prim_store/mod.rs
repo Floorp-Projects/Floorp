@@ -650,7 +650,6 @@ impl From<PrimitiveKeyKind> for PrimitiveTemplateKind {
 #[derive(MallocSizeOf)]
 pub struct PrimTemplateCommonData {
     pub is_backface_visible: bool,
-    pub may_need_repetition: bool,
     pub prim_size: LayoutSize,
     pub opacity: PrimitiveOpacity,
     /// The GPU cache handle for a primitive template. Since this structure
@@ -664,7 +663,6 @@ impl PrimTemplateCommonData {
     pub fn with_key_common(common: PrimKeyCommonData) -> Self {
         PrimTemplateCommonData {
             is_backface_visible: common.is_backface_visible,
-            may_need_repetition: true,
             prim_size: common.prim_size.into(),
             gpu_cache_handle: GpuCacheHandle::new(),
             opacity: PrimitiveOpacity::translucent(),
@@ -2336,7 +2334,6 @@ impl PrimitiveStore {
 
                 match image_properties {
                     Some(ImageProperties { tiling: None, .. }) => {
-
                         frame_state.resource_cache.request_image(
                             request,
                             frame_state.gpu_cache,
@@ -2375,10 +2372,6 @@ impl PrimitiveStore {
                         let base_edge_flags = edge_flags_for_tile_spacing(&image_data.tile_spacing);
 
                         let stride = image_data.stretch_size + image_data.tile_spacing;
-
-                        // We are performing the decomposition on the CPU here, no need to
-                        // have it in the shader.
-                        common_data.may_need_repetition = false;
 
                         let repetitions = crate::image::repetitions(
                             &prim_rect,
@@ -2826,8 +2819,6 @@ impl PrimitiveStore {
                 let prim_data = &mut data_stores.text_run[*data_handle];
                 let run = &mut self.text_runs[*run_index];
 
-                prim_data.common.may_need_repetition = false;
-
                 // The transform only makes sense for screen space rasterization
                 let relative_transform = frame_context
                     .clip_scroll_tree
@@ -2860,8 +2851,6 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::Clear { data_handle, .. } => {
                 let prim_data = &mut data_stores.prim[*data_handle];
 
-                prim_data.common.may_need_repetition = false;
-
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
                 prim_data.update(frame_state);
@@ -2870,8 +2859,6 @@ impl PrimitiveStore {
                 let prim_data = &mut data_stores.normal_border[*data_handle];
                 let common_data = &mut prim_data.common;
                 let border_data = &mut prim_data.kind;
-
-                common_data.may_need_repetition = false;
 
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
@@ -2943,8 +2930,6 @@ impl PrimitiveStore {
             }
             PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
                 let prim_data = &mut data_stores.image_border[*data_handle];
-                // TODO: get access to the ninepatch and to check whwther we need support
-                // for repetitions in the shader.
 
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
@@ -2952,7 +2937,6 @@ impl PrimitiveStore {
             }
             PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, opacity_binding_index, .. } => {
                 let prim_data = &mut data_stores.prim[*data_handle];
-                prim_data.common.may_need_repetition = false;
 
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
@@ -2979,8 +2963,6 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::YuvImage { data_handle, segment_instance_index, .. } => {
                 let yuv_image_data = &mut data_stores.yuv_image[*data_handle];
 
-                yuv_image_data.common.may_need_repetition = false;
-
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
                 yuv_image_data.kind.update(&mut yuv_image_data.common, frame_state);
@@ -2999,12 +2981,6 @@ impl PrimitiveStore {
                 let prim_data = &mut data_stores.image[*data_handle];
                 let common_data = &mut prim_data.common;
                 let image_data = &mut prim_data.kind;
-
-                if image_data.stretch_size.width >= common_data.prim_size.width &&
-                    image_data.stretch_size.height >= common_data.prim_size.height {
-
-                    common_data.may_need_repetition = false;
-                }
 
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
@@ -3035,12 +3011,6 @@ impl PrimitiveStore {
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
                 prim_data.update(frame_state);
-
-                if prim_data.stretch_size.width >= prim_data.common.prim_size.width &&
-                    prim_data.stretch_size.height >= prim_data.common.prim_size.height {
-
-                    prim_data.common.may_need_repetition = false;
-                }
 
                 if prim_data.supports_caching {
                     let gradient_size = (prim_data.end_point - prim_data.start_point).to_size();
@@ -3115,10 +3085,6 @@ impl PrimitiveStore {
                 }
 
                 if prim_data.tile_spacing != LayoutSize::zero() {
-                    // We are performing the decomposition on the CPU here, no need to
-                    // have it in the shader.
-                    prim_data.common.may_need_repetition = false;
-
                     let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
                     let prim_rect = LayoutRect::new(
                         prim_instance.prim_origin,
@@ -3168,14 +3134,6 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::RadialGradient { data_handle, ref mut visible_tiles_range, .. } => {
                 let prim_data = &mut data_stores.radial_grad[*data_handle];
 
-                if prim_data.stretch_size.width >= prim_data.common.prim_size.width &&
-                    prim_data.stretch_size.height >= prim_data.common.prim_size.height {
-
-                    // We are performing the decomposition on the CPU here, no need to
-                    // have it in the shader.
-                    prim_data.common.may_need_repetition = false;
-                }
-
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
                 prim_data.update(frame_state);
@@ -3193,8 +3151,6 @@ impl PrimitiveStore {
                         frame_context.global_screen_world_rect,
                         frame_context.clip_scroll_tree,
                     );
-
-                    prim_data.common.may_need_repetition = false;
 
                     *visible_tiles_range = decompose_repeated_primitive(
                         &prim_info.combined_local_clip_rect,
@@ -3229,12 +3185,9 @@ impl PrimitiveStore {
                 // TODO(gw): Consider whether it's worth doing segment building
                 //           for gradient primitives.
             }
-            PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, data_handle, .. } => {
+            PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, .. } => {
                 let pic = &mut self.pictures[pic_index.0];
                 let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
-
-                data_stores.picture[*data_handle].common.may_need_repetition = false;
-
                 if pic.prepare_for_render(
                     frame_context,
                     frame_state,
