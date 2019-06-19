@@ -7,4 +7,5 @@ DevToolsModules(
     'requests.js',
     'timing-markers.js',
     'ui.js',
+    'web-sockets.js',
 )
