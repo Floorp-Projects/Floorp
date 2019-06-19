@@ -239,6 +239,9 @@ class nsContentUtils {
     return ThreadsafeIsSystemCaller(aCx) || IsFuzzingEnabled();
   }
 
+  static bool IsCallerChromeOrElementTransformGettersEnabled(JSContext* aCx,
+                                                             JSObject*);
+
   // The APIs for checking whether the caller is system (in the sense of system
   // principal) should only be used when the JSContext is known to accurately
   // represent the caller.  In practice, that means you should only use them in

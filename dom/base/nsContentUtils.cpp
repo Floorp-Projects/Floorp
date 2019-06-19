@@ -1950,6 +1950,13 @@ bool nsContentUtils::IsFuzzingEnabled() {
 #endif
 
 /* static */
+bool nsContentUtils::IsCallerChromeOrElementTransformGettersEnabled(
+    JSContext* aCx, JSObject*) {
+  return ThreadsafeIsSystemCaller(aCx) ||
+         StaticPrefs::dom_element_transform_getters_enabled();
+}
+
+/* static */
 bool nsContentUtils::ShouldResistFingerprinting() {
   return StaticPrefs::privacy_resistFingerprinting();
 }
