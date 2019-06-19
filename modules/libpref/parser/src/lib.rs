@@ -629,9 +629,9 @@ impl<'t> Parser<'t> {
         for _ in 0..ndigits {
             value = value << 4;
             match self.get_char() {
-                c @ b'0'...b'9' => value += (c - b'0') as u16,
-                c @ b'A'...b'F' => value += (c - b'A') as u16 + 10,
-                c @ b'a'...b'f' => value += (c - b'a') as u16 + 10,
+                c @ b'0' ..= b'9' => value += (c - b'0') as u16,
+                c @ b'A' ..= b'F' => value += (c - b'A') as u16 + 10,
+                c @ b'a' ..= b'f' => value += (c - b'a') as u16 + 10,
                 _ => {
                     self.unget_char();
                     return None;
