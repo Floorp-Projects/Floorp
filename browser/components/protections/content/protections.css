@@ -1,12 +1,94 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-.under-construction {
-    background-image: url("chrome://browser/content/illustrations/under-construction.svg");
-    background-repeat: no-repeat;
-    background-position: center;
-    min-height: 300px;
-    min-width: 300px;
-    /* Move the image down a bit - should be slightly higher than halfway down the page */
-    margin-top: -10%;
+ :root {
+   --card-box-shadow: 0 1px 4px 0 rgba(12,12,13,0.1), 0 1px 0 0 rgba(0,0,0,0.05);
+   --card-background:  #FFF;
+   --clickable-text-hover: hsla(0,0%,70%,.2);
+   --clickable-text-active: hsla(0,0%,70%,.3);
+   --card-divider: rgba(12,12,13,0.1) 1px solid;
+   --report-background: #FAFAFC;
+   --card-padding: 22px;
+ }
+
+body {
+  background-color: var(--report-background);
+  font: message-box;
+  margin-top: 82px;
+}
+
+#report-title {
+  font-size: 20px;
+  font-weight: 300;
+  margin-bottom: 22px;
+}
+
+#report-content {
+  width: 763px;
+  margin: 0 auto;
+}
+
+.etp-card .icon {
+  width: 60px;
+  height: 60px;
+  background: url("chrome://browser/skin/controlcenter/tracking-protection.svg") no-repeat center/cover;
+  grid-column: 1;
+  margin: 0 auto;
+}
+
+.report-card {
+  display: grid;
+  grid-template-columns: 100%;
+  grid-template-rows: 20% auto;
+  border-radius: 3px;
+  background-color: var(--card-background);
+  box-shadow: var(--card-box-shadow);
+}
+
+.report-card .card-header {
+  display: grid;
+  grid-template-columns: 1fr 7fr;
+  padding: var(--card-padding);
+  grid-gap: var(--card-padding);
+}
+
+.report-card .card-title {
+  font-size: 16px;
+  line-height: 22px;
+  margin: 0;
+  cursor: default;
+}
+
+.report-card .content {
+  margin-bottom: 24px;
+  margin-top: 5px;
+  font-size: 14px;
+  cursor: default;
+}
+
+#protection-details {
+  background: url("chrome://browser/skin/settings.svg") no-repeat 3px 3px;
+  padding: 4px 4px 4px 24px;
+  font-size: 12px;
+  display: inline;
+  cursor: default;
+}
+
+#protection-details:hover {
+  background-color: var(--clickable-text-hover);
+}
+
+#protection-details:hover:active {
+  background-color: var(--clickable-text-active);
+}
+
+#protection-details span {
+  font-weight: bold;
+}
+
+.card-body {
+  border-top: var(--card-divider);
+  grid-column: span 2;
+  grid-row: 2;
+  margin-bottom: 24px;
 }
