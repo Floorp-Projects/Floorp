@@ -944,7 +944,7 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
   uint32_t FindNamedLine(nsAtom* aName, int32_t* aNth, uint32_t aFromIndex,
                          const nsTArray<uint32_t>& aImplicitLines) const {
     MOZ_ASSERT(aName);
-    MOZ_ASSERT(aName != nsGkAtoms::_empty);
+    MOZ_ASSERT(!aName->IsEmpty());
     MOZ_ASSERT(aNth && *aNth != 0);
     if (*aNth > 0) {
       return FindLine(aName, aNth, aFromIndex, aImplicitLines);
@@ -3385,7 +3385,7 @@ int32_t nsGridContainerFrame::Grid::ResolveLine(
     const nsStylePosition* aStyle) {
   MOZ_ASSERT(!aLine.IsAuto());
   int32_t line = 0;
-  if (aLine.mLineName == nsGkAtoms::_empty) {
+  if (aLine.mLineName->IsEmpty()) {
     MOZ_ASSERT(aNth != 0, "css-grid 9.2: <integer> must not be zero.");
     line = int32_t(aFromIndex) + aNth;
   } else {
@@ -3460,7 +3460,7 @@ nsGridContainerFrame::Grid::ResolveLineRangeHelper(
   if (aStart.mHasSpan) {
     if (aEnd.mHasSpan || aEnd.IsAuto()) {
       // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
-      if (aStart.mLineName == nsGkAtoms::_empty) {
+      if (aStart.mLineName->IsEmpty()) {
         // span <integer> / span *
         // span <integer> / auto
         return LinePair(kAutoLine, aStart.mInteger);
@@ -3494,7 +3494,7 @@ nsGridContainerFrame::Grid::ResolveLineRangeHelper(
       return LinePair(start, 1);  // XXX subgrid explicit size instead of 1?
     }
     if (aEnd.mHasSpan) {
-      if (aEnd.mLineName == nsGkAtoms::_empty) {
+      if (aEnd.mLineName->IsEmpty()) {
         // auto / span <integer>
         MOZ_ASSERT(aEnd.mInteger != 0);
         return LinePair(start, aEnd.mInteger);
@@ -3520,7 +3520,7 @@ nsGridContainerFrame::Grid::ResolveLineRangeHelper(
   int32_t nth = aEnd.mInteger == 0 ? 1 : aEnd.mInteger;
   if (aEnd.mHasSpan) {
     if (MOZ_UNLIKELY(start < 0)) {
-      if (aEnd.mLineName == nsGkAtoms::_empty) {
+      if (aEnd.mLineName->IsEmpty()) {
         return LinePair(start, start + nth);
       }
       from = 0;

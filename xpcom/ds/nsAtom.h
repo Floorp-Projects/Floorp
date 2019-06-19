@@ -75,6 +75,13 @@ class nsAtom {
   // unchanged.
   bool IsAsciiLowercase() const { return mIsAsciiLowercase; }
 
+  // This function returns true if this is the empty atom. This is exactly
+  // equivalent to `this == nsGkAtoms::_empty`, but it's a bit less foot-gunny,
+  // since we also have `nsGkAtoms::empty`.
+  //
+  // Defined in nsGkAtoms.h
+  inline bool IsEmpty() const;
+
   // We can't use NS_INLINE_DECL_THREADSAFE_REFCOUNTING because the refcounting
   // of this type is special.
   inline MozExternalRefCountType AddRef();
