@@ -9,6 +9,8 @@
 
 <iframe id="iframe"></iframe>
 
+<span id="hello">World.</span>
+
 <script>
 /* eslint-disable prettier/prettier */
 /* globals SpecialPowers, content */
@@ -26,7 +28,31 @@
       return elem.textContent;
     });
 
-    is(result, "Hello there.", "Got correct element text");
+    is(result, "Hello there.", "Got correct element text from frame");
+
+    result = await SpecialPowers.spawn(frame, ["#hello"], selector => {
+      return SpecialPowers.spawn(content.parent, [selector], selector => {
+        let elem = content.document.querySelector(selector);
+        return elem.textContent;
+      });
+    });
+
+    is(result, "World.", "Got correct element text from frame's window.parent");
+
+    result = await SpecialPowers.spawn(frame.contentWindow, ["#span"], selector => {
+      let elem = content.document.querySelector(selector);
+      return elem.textContent;
+    });
+
+    is(result, "Hello there.", "Got correct element text from window proxy");
+
+    result = await SpecialPowers.spawn(SpecialPowers.getPrivilegedProps(frame, "browsingContext"),
+                                       ["#span"], selector => {
+      let elem = content.document.querySelector(selector);
+      return elem.textContent;
+    });
+
+    is(result, "Hello there.", "Got correct element text from browsing context");
   });
 </script>
 </body>
