@@ -99,8 +99,6 @@ typedef struct Timecard Timecard;
   NS_IMETHODIMP func(__VA_ARGS__, resulttype** result);                \
   already_AddRefed<resulttype> func(__VA_ARGS__, rv)
 
-struct MediaStreamTable;
-
 namespace mozilla {
 
 using mozilla::DtlsIdentity;
