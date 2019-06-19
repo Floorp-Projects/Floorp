@@ -212,7 +212,12 @@ def write_test_settings_json(args, test_details, oskey):
     if test_details['type'] == "scenario":
         test_settings['raptor-options']['scenario_time'] = test_details['scenario_time']
 
-    settings_file = os.path.join(tests_dir, test_details['name'] + '.json')
+    jsons_dir = os.path.join(tests_dir, 'json')
+
+    if not os.path.exists(jsons_dir):
+        os.mkdir(os.path.join(tests_dir, 'json'))
+
+    settings_file = os.path.join(jsons_dir, test_details['name'] + '.json')
     try:
         with open(settings_file, 'w') as out_file:
             json.dump(test_settings, out_file, indent=4, ensure_ascii=False)

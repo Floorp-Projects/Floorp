@@ -116,9 +116,9 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
             head, tail = os.path.split(self.path)
 
             if tail.startswith('raptor') and tail.endswith('.json'):
-                LOG.info('reading test settings from ' + tail)
+                LOG.info('reading test settings from json/' + tail)
                 try:
-                    with open(tail) as json_settings:
+                    with open("json/{}".format(tail)) as json_settings:
                         self.send_header('Access-Control-Allow-Origin', '*')
                         self.send_header('Content-type', 'application/json')
                         self.end_headers()
