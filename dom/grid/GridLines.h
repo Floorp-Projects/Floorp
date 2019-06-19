@@ -11,6 +11,8 @@
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
+class nsAtom;
+
 namespace mozilla {
 
 struct ComputedGridTrackInfo;
@@ -51,7 +53,7 @@ class GridLines : public nsISupports, public nsWrapperCache {
                                  nscoord aLastTrackEdge, uint32_t& aRepeatIndex,
                                  uint32_t aNumRepeatTracks,
                                  uint32_t aNumLeadingTracks,
-                                 nsTArray<nsCString>& aLineNames);
+                                 nsTArray<RefPtr<nsAtom>>& aLineNames);
 
   RefPtr<GridDimension> mParent;
   nsTArray<RefPtr<GridLine>> mLines;

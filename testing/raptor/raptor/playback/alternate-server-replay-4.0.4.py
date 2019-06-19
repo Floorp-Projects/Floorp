@@ -126,7 +126,13 @@ class AlternateServerPlayback:
             if os.path.exists(proto):
                 ctx.log.info("Loading proto info from %s" % proto)
                 with open(proto) as f:
-                    _PROTO.update(json.loads(f.read()))
+                    recording_info = json.loads(f.read())
+                ctx.log.info(
+                    "Replaying file {} recorded on {}".format(
+                        os.path.basename(path), recording_info["recording_date"]
+                    )
+                )
+                _PROTO.update(recording_info["http_protocol"])
 
     def _hash(self, flow):
         """

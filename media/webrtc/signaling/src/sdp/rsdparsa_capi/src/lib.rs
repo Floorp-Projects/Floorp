@@ -185,7 +185,7 @@ pub unsafe extern "C" fn sdp_add_media_section(session: *mut SdpSession,
     match addr_type {
       // enum AddrType { kAddrTypeNone, kIPv4, kIPv6 };
       // kAddrTypeNone is explicitly not covered as it is an 'invalid' flag
-      1...2 => (),
+      1 | 2 => (),
       _ => {
           return NS_ERROR_INVALID_ARG;
       }
