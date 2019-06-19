@@ -361,6 +361,11 @@ class StadiaControllerRemapper final : public GamepadRemapper {
 
 class Dualshock4Remapper final : public GamepadRemapper {
  public:
+  Dualshock4Remapper() {
+    mLastTouches.SetLength(TOUCH_EVENT_COUNT);
+    mLastTouchId.SetLength(TOUCH_EVENT_COUNT);
+  }
+
   virtual uint32_t GetAxisCount() const override { return AXIS_INDEX_COUNT; }
 
   virtual uint32_t GetButtonCount() const override {
@@ -403,45 +408,43 @@ class Dualshock4Remapper final : public GamepadRemapper {
     touches.SetLength(TOUCH_EVENT_COUNT);
     uint8_t* rawData = (uint8_t*)aInput;
 
+    const uint32_t kTouchDimensionX = 1920;
+    const uint32_t kTouchDimensionY = 942;
     bool touch0Pressed = (((rawData[35] & 0xff) >> 7) == 0);
     bool touch1Pressed = (((rawData[39] & 0xff) >> 7) == 0);
 
-    if (!touch0Pressed && !touch1Pressed) {
-      return;
-    }
-
-    if ((touch0Pressed && (rawData[35] & 0xff) < mLastTouch0Id) ||
-        (touch1Pressed && (rawData[39] & 0xff) < mLastTouch1Id)) {
+    if ((touch0Pressed && (rawData[35] & 0xff) < mLastTouchId[0]) ||
+        (touch1Pressed && (rawData[39] & 0xff) < mLastTouchId[1])) {
       mTouchIdBase += 128;
     }
 
-    const uint32_t kTouchDimensionX = 1920;
-    const uint32_t kTouchDimensionY = 942;
-
-    touches[0].touchId = mTouchIdBase + (rawData[35] & 0x7f);
-    touches[0].surfaceId = 0;
-    touches[0].position[0] = NormalizeTouch(
-        ((rawData[37] & 0xf) << 8) | rawData[36], 0, (kTouchDimensionX - 1));
-    touches[0].position[1] =
-        NormalizeTouch(rawData[38] << 4 | ((rawData[37] & 0xf0) >> 4), 0,
-                       (kTouchDimensionY - 1));
-    touches[0].surfaceDimensions[0] = kTouchDimensionX;
-    touches[0].surfaceDimensions[1] = kTouchDimensionY;
-    touches[0].isSurfaceDimensionsValid = true;
-    mLastTouch0Id = rawData[35] & 0x7f;
-
-    touches[1].touchId = mTouchIdBase + (rawData[39] & 0x7f);
-    touches[1].surfaceId = 0;
-    touches[1].position[0] =
-        NormalizeTouch((((rawData[41] & 0xf) << 8) | rawData[40]) + 1, 0,
-                       (kTouchDimensionX - 1));
-    touches[1].position[1] =
-        NormalizeTouch(rawData[42] << 4 | ((rawData[41] & 0xf0) >> 4), 0,
-                       (kTouchDimensionY - 1));
-    touches[1].surfaceDimensions[0] = kTouchDimensionX;
-    touches[1].surfaceDimensions[1] = kTouchDimensionY;
-    touches[1].isSurfaceDimensionsValid = true;
-    mLastTouch1Id = rawData[39] & 0x7f;
+    if (touch0Pressed) {
+      touches[0].touchId = mTouchIdBase + (rawData[35] & 0x7f);
+      touches[0].surfaceId = 0;
+      touches[0].position[0] = NormalizeTouch(
+          ((rawData[37] & 0xf) << 8) | rawData[36], 0, (kTouchDimensionX - 1));
+      touches[0].position[1] =
+          NormalizeTouch(rawData[38] << 4 | ((rawData[37] & 0xf0) >> 4), 0,
+                         (kTouchDimensionY - 1));
+      touches[0].surfaceDimensions[0] = kTouchDimensionX;
+      touches[0].surfaceDimensions[1] = kTouchDimensionY;
+      touches[0].isSurfaceDimensionsValid = true;
+      mLastTouchId[0] = rawData[35] & 0x7f;
+    }
+    if (touch1Pressed) {
+      touches[1].touchId = mTouchIdBase + (rawData[39] & 0x7f);
+      touches[1].surfaceId = 0;
+      touches[1].position[0] =
+          NormalizeTouch((((rawData[41] & 0xf) << 8) | rawData[40]) + 1, 0,
+                         (kTouchDimensionX - 1));
+      touches[1].position[1] =
+          NormalizeTouch(rawData[42] << 4 | ((rawData[41] & 0xf0) >> 4), 0,
+                         (kTouchDimensionY - 1));
+      touches[1].surfaceDimensions[0] = kTouchDimensionX;
+      touches[1].surfaceDimensions[1] = kTouchDimensionY;
+      touches[1].isSurfaceDimensionsValid = true;
+      mLastTouchId[1] = rawData[39] & 0x7f;
+    }
 
     RefPtr<GamepadPlatformService> service =
         GamepadPlatformService::GetParentService();
@@ -449,8 +452,15 @@ class Dualshock4Remapper final : public GamepadRemapper {
       return;
     }
 
-    service->NewMultiTouchEvent(aIndex, 0, touches[0]);
-    service->NewMultiTouchEvent(aIndex, 1, touches[1]);
+    // Avoid to send duplicate untouched events to the gamepad service.
+    if ((mLastTouches[0] != touch0Pressed) || touch0Pressed) {
+      service->NewMultiTouchEvent(aIndex, 0, touches[0]);
+    }
+    if ((mLastTouches[1] != touch1Pressed) || touch1Pressed) {
+      service->NewMultiTouchEvent(aIndex, 1, touches[1]);
+    }
+    mLastTouches[0] = touch0Pressed;
+    mLastTouches[1] = touch1Pressed;
   }
 
   virtual void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
@@ -537,8 +547,8 @@ class Dualshock4Remapper final : public GamepadRemapper {
   static const uint32_t LIGHT_INDICATOR_COUNT = 1;
   static const uint32_t TOUCH_EVENT_COUNT = 2;
 
-  unsigned long mLastTouch0Id = 0;
-  unsigned long mLastTouch1Id = 0;
+  nsTArray<unsigned long> mLastTouchId;
+  nsTArray<bool> mLastTouches;
   unsigned long mTouchIdBase = 0;
 };
 
