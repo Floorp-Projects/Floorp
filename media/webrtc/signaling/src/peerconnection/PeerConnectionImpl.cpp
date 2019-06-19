@@ -513,15 +513,6 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return res;
   }
 
-  // Connect ICE slots.
-  mMedia->SignalIceGatheringStateChange.connect(
-      this, &PeerConnectionImpl::IceGatheringStateChange);
-  mMedia->SignalUpdateDefaultCandidate.connect(
-      this, &PeerConnectionImpl::UpdateDefaultCandidate);
-  mMedia->SignalIceConnectionStateChange.connect(
-      this, &PeerConnectionImpl::IceConnectionStateChange);
-  mMedia->SignalCandidate.connect(this, &PeerConnectionImpl::CandidateReady);
-
   PeerConnectionCtx::GetInstance()->mPeerConnections[mHandle] = this;
 
   return NS_OK;
@@ -2413,26 +2404,13 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
   SendLocalIceCandidateToContent(level, mid, candidate, ufrag);
 }
 
-static void SendLocalIceCandidateToContentImpl(
-    const RefPtr<PeerConnectionObserver>& aPCObserver, uint16_t level,
-    const std::string& mid, const std::string& candidate,
-    const std::string& ufrag) {
-  JSErrorResult rv;
-  aPCObserver->OnIceCandidate(level, ObString(mid.c_str()),
-                              ObString(candidate.c_str()),
-                              ObString(ufrag.c_str()), rv);
-}
-
 void PeerConnectionImpl::SendLocalIceCandidateToContent(
     uint16_t level, const std::string& mid, const std::string& candidate,
     const std::string& ufrag) {
-  // We dispatch this because OnSetLocalDescriptionSuccess does a setTimeout(0)
-  // to unwind the stack, but the event handlers don't. We need to ensure that
-  // the candidates do not skip ahead of the callback.
-  NS_DispatchToMainThread(
-      WrapRunnableNM(&SendLocalIceCandidateToContentImpl, mPCObserver, level,
-                     mid, candidate, ufrag),
-      NS_DISPATCH_NORMAL);
+  JSErrorResult rv;
+  mPCObserver->OnIceCandidate(level, ObString(mid.c_str()),
+                              ObString(candidate.c_str()),
+                              ObString(ufrag.c_str()), rv);
 }
 
 static bool isDone(RTCIceConnectionState state) {
@@ -2516,11 +2494,26 @@ void PeerConnectionImpl::IceConnectionStateChange(
   mPCObserver->OnStateChange(PCObserverStateType::IceConnectionState, rv);
 }
 
+void PeerConnectionImpl::OnCandidateFound(const std::string& aTransportId,
+                                          const CandidateInfo& aCandidateInfo) {
+  if (!aCandidateInfo.mDefaultHostRtp.empty()) {
+    UpdateDefaultCandidate(aCandidateInfo.mDefaultHostRtp,
+                           aCandidateInfo.mDefaultPortRtp,
+                           aCandidateInfo.mDefaultHostRtcp,
+                           aCandidateInfo.mDefaultPortRtcp, aTransportId);
+  }
+  CandidateReady(aCandidateInfo.mCandidate, aTransportId,
+                 aCandidateInfo.mUfrag);
+}
+
 void PeerConnectionImpl::IceGatheringStateChange(
     dom::RTCIceGatheringState state) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
-  CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
+  CSFLogDebug(LOGTAG, "%s %d", __FUNCTION__, static_cast<int>(state));
+  if (mIceGatheringState == state) {
+    return;
+  }
 
   mIceGatheringState = state;
 
@@ -2540,16 +2533,8 @@ void PeerConnectionImpl::IceGatheringStateChange(
       MOZ_ASSERT_UNREACHABLE("Unexpected mIceGatheringState!");
   }
 
-  WrappableJSErrorResult rv;
-  mThread->Dispatch(
-      WrapRunnable(mPCObserver, &PeerConnectionObserver::OnStateChange,
-                   PCObserverStateType::IceGatheringState, rv,
-                   static_cast<JS::Realm*>(nullptr)),
-      NS_DISPATCH_NORMAL);
-
-  if (mIceGatheringState == RTCIceGatheringState::Complete) {
-    SendLocalIceCandidateToContent(0, "", "", "");
-  }
+  JSErrorResult rv;
+  mPCObserver->OnStateChange(PCObserverStateType::IceGatheringState, rv);
 }
 
 void PeerConnectionImpl::UpdateDefaultCandidate(

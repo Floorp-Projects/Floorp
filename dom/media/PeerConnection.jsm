@@ -1587,6 +1587,10 @@ class RTCPeerConnection {
     this._iceGatheringState = state;
     _globalPCList.notifyLifecycleObservers(this, "icegatheringstatechange");
     this.dispatchEvent(new this._win.Event("icegatheringstatechange"));
+    if (this.iceGatheringState === "complete") {
+      this.dispatchEvent(new this._win.RTCPeerConnectionIceEvent(
+        "icecandidate", { candidate: null }));
+    }
   }
 
   changeIceConnectionState(state) {
@@ -1785,8 +1789,6 @@ class PeerConnectionObserver {
         this._dompc._iceGatheredRelayCandidates = true;
       }
       candidate = new win.RTCIceCandidate({ candidate, sdpMid, sdpMLineIndex, usernameFragment });
-    } else {
-      candidate = null;
     }
     this.dispatchEvent(new win.RTCPeerConnectionIceEvent("icecandidate",
                                                          { candidate }));
