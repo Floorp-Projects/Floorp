@@ -328,7 +328,6 @@ function ModuleInstantiate()
     // Step 8
     return undefined;
 }
-_SetCanonicalName(ModuleInstantiate, "ModuleInstantiate");
 
 // 15.2.1.16.4.1 InnerModuleInstantiation(module, stack, index)
 function InnerModuleInstantiation(module, stack, index)
@@ -552,7 +551,6 @@ function ModuleEvaluate()
 
     return undefined;
 }
-_SetCanonicalName(ModuleEvaluate, "ModuleEvaluate");
 
 // 15.2.1.16.5.1 InnerModuleEvaluation(module, stack, index)
 function InnerModuleEvaluation(module, stack, index)

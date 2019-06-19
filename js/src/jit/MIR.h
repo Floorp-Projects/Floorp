@@ -2669,6 +2669,7 @@ class WrappedFunction : public TempObject {
   bool isConstructor_ : 1;
   bool isClassConstructor_ : 1;
   bool isSelfHostedBuiltin_ : 1;
+  bool isExtended_ : 1;
 
  public:
   explicit WrappedFunction(JSFunction* fun);
@@ -2683,6 +2684,7 @@ class WrappedFunction : public TempObject {
   bool isConstructor() const { return isConstructor_; }
   bool isClassConstructor() const { return isClassConstructor_; }
   bool isSelfHostedBuiltin() const { return isSelfHostedBuiltin_; }
+  bool isExtended() const { return isExtended_; }
 
   // fun->native() and fun->jitInfo() can safely be called off-thread: these
   // fields never change.
