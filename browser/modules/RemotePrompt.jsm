@@ -17,10 +17,14 @@ var RemotePrompt = {
   receiveMessage(message) {
     switch (message.name) {
       case "Prompt:Open":
-        if (message.data.uri) {
-          this.openModalWindow(message.data, message.target);
-        } else {
+        const COMMON_DIALOG = "chrome://global/content/commonDialog.xul";
+        const SELECT_DIALOG = "chrome://global/content/selectDialog.xul";
+
+        if (message.data.tabPrompt) {
           this.openTabPrompt(message.data, message.target);
+        } else {
+          let uri = (message.data.promptType == "select") ? SELECT_DIALOG : COMMON_DIALOG;
+          this.openModalWindow(uri, message.data, message.target);
         }
         break;
     }
@@ -85,13 +89,13 @@ var RemotePrompt = {
     }
   },
 
-  openModalWindow(args, browser) {
+  openModalWindow(uri, args, browser) {
     let window = browser.ownerGlobal;
     try {
       PromptUtils.fireDialogEvent(window, "DOMWillOpenModalDialog", browser);
       let bag = PromptUtils.objectToPropBag(args);
 
-      Services.ww.openWindow(window, args.uri, "_blank",
+      Services.ww.openWindow(window, uri, "_blank",
                              "centerscreen,chrome,modal,titlebar", bag);
 
       PromptUtils.propBagToObject(bag, args);
