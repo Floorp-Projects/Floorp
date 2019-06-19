@@ -507,7 +507,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * subtrees scrolled by the aAncestor (i.e. descendants of aAncestor) will be
    * sent.
    */
-  void CollectTransformsForChromeMainThread(
+  void SendSubtreeTransformsToChromeMainThread(
       const AsyncPanZoomController* aAncestor);
 
   /**
