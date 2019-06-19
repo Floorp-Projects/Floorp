@@ -413,8 +413,8 @@ addon-permissions-list > .addon-detail-row:first-of-type {
 }
 
 .deck-tab-group {
-  border-bottom: 1px solid var(--grey-90-a20);
-  border-top: 1px solid var(--grey-90-a20);
+  border-bottom: 1px solid var(--in-content-box-border-color);
+  border-top: 1px solid var(--in-content-box-border-color);
   margin-top: 8px;
   /* Pull the buttons flush with the side of the card */
   margin-inline: calc(var(--card-padding) * -1);
