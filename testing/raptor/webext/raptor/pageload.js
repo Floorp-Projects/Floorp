@@ -52,6 +52,10 @@ var getLoadTime = false;
 var startMeasure = "fetchStart";
 
 function raptorContentHandler() {
+  raptorLog("pageloadjs raptorContentHandler!");
+  // let the main raptor runner know that we (pageloadjs) is ready!
+  sendPageloadReady();
+
   // retrieve test settings from local ext storage
   if (typeof(browser) !== "undefined") {
     // firefox, returns promise
@@ -66,20 +70,30 @@ function raptorContentHandler() {
   }
 }
 
+function sendPageloadReady() {
+  // send message to runnerjs indicating pageloadjs is ready to start getting measures
+  raptorLog("sending pageloadjs-ready message to runnerjs");
+  chrome.runtime.sendMessage({"type": "pageloadjs-ready"}, function(response) {
+    if (response !== undefined) {
+      raptorLog(`${response.text}`);
+    }
+  });
+}
+
 function setup(settings) {
   if (settings.type != TEST_PAGE_LOAD) {
     return;
   }
 
   if (settings.measure == undefined) {
-    console.log("abort: 'measure' key not found in test settings");
+    raptorLog("abort: 'measure' key not found in test settings");
     return;
   }
 
   if (settings.measure.fnbpaint !== undefined) {
     getFNBPaint = settings.measure.fnbpaint;
     if (getFNBPaint) {
-      console.log("will be measuring fnbpaint");
+      raptorLog("will be measuring fnbpaint");
       measureFNBPaint();
     }
   }
@@ -87,7 +101,7 @@ function setup(settings) {
   if (settings.measure.dcf !== undefined) {
     getDCF = settings.measure.dcf;
     if (getDCF) {
-      console.log("will be measuring dcf");
+      raptorLog("will be measuring dcf");
       measureDCF();
     }
   }
@@ -95,7 +109,7 @@ function setup(settings) {
   if (settings.measure.fcp !== undefined) {
     getFCP = settings.measure.fcp;
     if (getFCP) {
-      console.log("will be measuring first-contentful-paint");
+      raptorLog("will be measuring first-contentful-paint");
       measureFCP();
     }
   }
@@ -104,7 +118,7 @@ function setup(settings) {
     if (settings.measure.hero.length !== 0) {
       getHero = true;
       heroesToCapture = settings.measure.hero;
-      console.log(`hero elements to measure: ${heroesToCapture}`);
+      raptorLog(`hero elements to measure: ${heroesToCapture}`);
       measureHero();
     }
   }
@@ -112,7 +126,7 @@ function setup(settings) {
   if (settings.measure.ttfi !== undefined) {
     getTTFI = settings.measure.ttfi;
     if (getTTFI) {
-      console.log("will be measuring ttfi");
+      raptorLog("will be measuring ttfi");
       measureTTFI();
     }
   }
@@ -120,7 +134,7 @@ function setup(settings) {
   if (settings.measure.loadtime !== undefined) {
     getLoadTime = settings.measure.loadtime;
     if (getLoadTime) {
-      console.log("will be measuring loadtime");
+      raptorLog("will be measuring loadtime");
       measureLoadTime();
     }
   }
@@ -130,7 +144,7 @@ function measureHero() {
   var obs = null;
 
   var heroElementsFound = window.document.querySelectorAll("[elementtiming]");
-  console.log(`found ${heroElementsFound.length} hero elements in the page`);
+  raptorLog(`found ${heroElementsFound.length} hero elements in the page`);
 
   if (heroElementsFound) {
     function callbackHero(entries, observer) {
@@ -139,7 +153,7 @@ function measureHero() {
         // mark the time now as when hero element received
         perfData.mark(heroFound);
         var resultType = `hero:${heroFound}`;
-        console.log(`found ${resultType}`);
+        raptorLog(`found ${resultType}`);
         // calculcate result: performance.timing.fetchStart - time when we got hero element
         perfData.measure(name = resultType,
                          startMark = startMeasure,
@@ -162,10 +176,10 @@ function measureHero() {
           obs.observe(el);
       });
     } catch (err) {
-      console.log(err);
+      raptorLog(err);
     }
   } else {
-      console.log("couldn't find hero element");
+      raptorLog("couldn't find hero element");
   }
 }
 
@@ -173,21 +187,21 @@ function measureFNBPaint() {
   var x = window.performance.timing.timeToNonBlankPaint;
 
   if (typeof(x) == "undefined") {
-    console.log("ERROR: timeToNonBlankPaint is undefined; ensure the pref is enabled");
+    raptorLog("ERROR: timeToNonBlankPaint is undefined; ensure the pref is enabled");
     return;
   }
   if (x > 0) {
-    console.log("got fnbpaint");
+    raptorLog("got fnbpaint");
     gRetryCounter = 0;
     var startTime = perfData.timing.fetchStart;
     sendResult("fnbpaint", x - startTime);
   } else {
     gRetryCounter += 1;
     if (gRetryCounter <= 10) {
-      console.log(`\nfnbpaint is not yet available (0), retry number ${gRetryCounter}...\n`);
+      raptorLog(`fnbpaint is not yet available, retry number ${gRetryCounter}...`);
       window.setTimeout(measureFNBPaint, 100);
     } else {
-      console.log(`\nunable to get a value for fnbpaint after ${gRetryCounter} retries\n`);
+      raptorLog(`unable to get a value for fnbpaint after ${gRetryCounter} retries`);
     }
   }
 }
@@ -196,21 +210,21 @@ function measureDCF() {
   var x = window.performance.timing.timeToDOMContentFlushed;
 
   if (typeof(x) == "undefined") {
-    console.log("ERROR: domContentFlushed is undefined; ensure the pref is enabled");
+    raptorLog("ERROR: domContentFlushed is undefined; ensure the pref is enabled");
     return;
   }
   if (x > 0) {
-    console.log(`got domContentFlushed: ${x}`);
+    raptorLog(`got domContentFlushed: ${x}`);
     gRetryCounter = 0;
     var startTime = perfData.timing.fetchStart;
     sendResult("dcf", x - startTime);
   } else {
     gRetryCounter += 1;
     if (gRetryCounter <= 10) {
-      console.log(`\dcf is not yet available (0), retry number ${gRetryCounter}...\n`);
+      raptorLog(`dcf is not yet available (0), retry number ${gRetryCounter}...`);
       window.setTimeout(measureDCF, 100);
     } else {
-      console.log(`\nunable to get a value for dcf after ${gRetryCounter} retries\n`);
+      raptorLog(`unable to get a value for dcf after ${gRetryCounter} retries`);
     }
   }
 }
@@ -219,11 +233,11 @@ function measureTTFI() {
   var x = window.performance.timing.timeToFirstInteractive;
 
   if (typeof(x) == "undefined") {
-    console.log("ERROR: timeToFirstInteractive is undefined; ensure the pref is enabled");
+    raptorLog("ERROR: timeToFirstInteractive is undefined; ensure the pref is enabled");
     return;
   }
   if (x > 0) {
-    console.log(`got timeToFirstInteractive: ${x}`);
+    raptorLog(`got timeToFirstInteractive: ${x}`);
     gRetryCounter = 0;
     var startTime = perfData.timing.fetchStart;
     sendResult("ttfi", x - startTime);
@@ -236,11 +250,11 @@ function measureTTFI() {
     // times out at 30 seconds).  Some pages will never get 5 seconds
     // without a busy period!
     if (gRetryCounter <= 25 * (1000 / 200)) {
-      console.log(`TTFI is not yet available (0), retry number ${gRetryCounter}...\n`);
+      raptorLog(`TTFI is not yet available (0), retry number ${gRetryCounter}...`);
       window.setTimeout(measureTTFI, 200);
     } else {
       // unable to get a value for TTFI - negative value will be filtered out later
-      console.log("TTFI was not available for this pageload");
+      raptorLog("TTFI was not available for this pageload");
       sendResult("ttfi", -1);
     }
   }
@@ -267,7 +281,7 @@ function measureFCP() {
   }
 
   if (result > 0) {
-    console.log("got time to first-contentful-paint");
+    raptorLog("got time to first-contentful-paint");
     if (typeof(browser) !== "undefined") {
       // Firefox returns a timestamp, not the actual measurement in MS; need to calculate result
       var startTime = perfData.timing.fetchStart;
@@ -279,10 +293,10 @@ function measureFCP() {
   } else {
     gRetryCounter += 1;
     if (gRetryCounter <= 10) {
-      console.log(`\ntime to first-contentful-paint is not yet available (0), retry number ${gRetryCounter}...\n`);
+      raptorLog(`time to first-contentful-paint is not yet available (0), retry number ${gRetryCounter}...`);
       window.setTimeout(measureFCP, 100);
     } else {
-      console.log(`\nunable to get a value for time-to-fcp after ${gRetryCounter} retries\n`);
+      raptorLog(`unable to get a value for time-to-fcp after ${gRetryCounter} retries`);
     }
   }
 }
@@ -291,33 +305,37 @@ function measureLoadTime() {
   var x = window.performance.timing.loadEventStart;
 
   if (typeof(x) == "undefined") {
-    console.log("ERROR: loadEventStart is undefined");
+    raptorLog("ERROR: loadEventStart is undefined");
     return;
   }
   if (x > 0) {
-    console.log(`got loadEventStart: ${x}`);
+    raptorLog(`got loadEventStart: ${x}`);
     gRetryCounter = 0;
     var startTime = perfData.timing.fetchStart;
     sendResult("loadtime", x - startTime);
   } else {
     gRetryCounter += 1;
     if (gRetryCounter <= 40 * (1000 / 200)) {
-      console.log(`\nloadEventStart is not yet available (0), retry number ${gRetryCounter}...\n`);
+      raptorLog(`loadEventStart is not yet available (0), retry number ${gRetryCounter}...`);
       window.setTimeout(measureLoadTime, 100);
     } else {
-      console.log(`\nunable to get a value for loadEventStart after ${gRetryCounter} retries\n`);
+      raptorLog(`unable to get a value for loadEventStart after ${gRetryCounter} retries`);
     }
   }
 }
 
 function sendResult(_type, _value) {
   // send result back to background runner script
-  console.log(`sending result back to runner: ${_type} ${_value}`);
+  raptorLog(`sending result back to runner: ${_type} ${_value}`);
   chrome.runtime.sendMessage({"type": _type, "value": _value}, function(response) {
     if (response !== undefined) {
-      console.log(response.text);
+      raptorLog(response.text);
     }
   });
+}
+
+function raptorLog(logText) {
+  console.log(`[raptor-pageloadjs] ${logText}`);
 }
 
 if (window.addEventListener) {
