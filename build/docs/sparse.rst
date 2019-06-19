@@ -100,7 +100,7 @@ use. e.g.::
    run:
        using: run-command
        command: <command>
-       sparse-profile: tasgraph
+       sparse-profile: taskgraph
 
 This automagically results in ``run-task`` and ``hg robustcheckout``
 using the sparse profile defined in ``build/sparse-profiles/<value>``.
