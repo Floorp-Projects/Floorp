@@ -29,10 +29,11 @@
     "mocha": "6.1.4"
   },
   "peerDependencies": {
-    "eslint": "^5.0.1",
     "eslint-config-prettier": "^4.2.0",
-    "eslint-plugin-prettier": "^3.0.1",
+    "eslint-plugin-fetch-options": "^0.0.5",
     "eslint-plugin-no-unsanitized": "^3.0.0",
+    "eslint-plugin-prettier": "^3.0.1",
+    "eslint": "^5.0.1",
     "prettier": "^1.17.0"
   },
   "engines": {
