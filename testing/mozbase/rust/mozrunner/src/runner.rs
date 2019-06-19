@@ -106,10 +106,10 @@ impl Error for RunnerError {
         }
     }
 
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&dyn Error> {
         Some(match *self {
-            RunnerError::Io(ref err) => err as &Error,
-            RunnerError::PrefReader(ref err) => err as &Error,
+            RunnerError::Io(ref err) => err as &dyn Error,
+            RunnerError::PrefReader(ref err) => err as &dyn Error,
         })
     }
 }
