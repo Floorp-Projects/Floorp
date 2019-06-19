@@ -1213,12 +1213,7 @@ impl TileCacheInstance {
 
                 // Ensure that this texture is allocated.
                 if !resource_cache.texture_cache.is_allocated(&tile.handle) {
-                    let tile_size = DeviceIntSize::new(
-                        TILE_SIZE_WIDTH,
-                        TILE_SIZE_HEIGHT,
-                    );
                     resource_cache.texture_cache.update_picture_cache(
-                        tile_size,
                         &mut tile.handle,
                         gpu_cache,
                     );
