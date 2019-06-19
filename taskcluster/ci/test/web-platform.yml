@@ -121,9 +121,7 @@ web-platform-tests-reftests:
             default: built-projects
     tier:
         by-test-platform:
-            android.*-x86_64/opt: 3
-            android.*-x86_64/debug: 3
-            android.*x86(?!x86_64)/opt: 2
+            android.*: 2
             linux64-asan/opt: 2
             windows10-aarch64.*: 2
             default: default
