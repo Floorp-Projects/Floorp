@@ -4921,6 +4921,24 @@ var XULBrowserWindow = {
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags, aIsSimulated) {
     var location = aLocationURI ? aLocationURI.spec : "";
 
+    let pageTooltip = document.getElementById("aHTMLTooltip");
+    let tooltipNode = pageTooltip.triggerNode;
+    if (tooltipNode) {
+      // Optimise for the common case
+      if (aWebProgress.isTopLevel) {
+        pageTooltip.hidePopup();
+      } else {
+        for (let tooltipWindow = tooltipNode.ownerGlobal;
+             tooltipWindow != tooltipWindow.parent;
+             tooltipWindow = tooltipWindow.parent) {
+          if (tooltipWindow == aWebProgress.DOMWindow) {
+            pageTooltip.hidePopup();
+            break;
+          }
+        }
+      }
+    }
+
     this.hideOverLinkImmediately = true;
     this.setOverLink("", null);
     this.hideOverLinkImmediately = false;
@@ -4931,12 +4949,6 @@ var XULBrowserWindow = {
     // Do not update urlbar if there was a subframe navigation
 
     if (aWebProgress.isTopLevel) {
-      let pageTooltip = document.getElementById("aHTMLTooltip");
-      if (pageTooltip.state != "closed") {
-        // TODO: this misses cases where a subframe navigates.
-        pageTooltip.hidePopup();
-      }
-
       if ((location == "about:blank" && checkEmptyPageOrigin()) ||
           location == "") { // Second condition is for new tabs, otherwise
                              // reload function is enabled until tab is refreshed.
