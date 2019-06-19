@@ -48,6 +48,10 @@ class ExecutionContext {
     return this._remoteObjects.has(id);
   }
 
+  getRemoteObject(id) {
+    return this._remoteObjects.get(id);
+  }
+
   releaseObject(id) {
     return this._remoteObjects.delete(id);
   }
@@ -165,6 +169,49 @@ class ExecutionContext {
 
     return {
       result: this._toRemoteObject(result),
+    };
+  }
+
+  getProperties({ objectId, ownProperties }) {
+    let obj = this.getRemoteObject(objectId);
+    if (!obj) {
+      throw new Error("Cannot find object with id = " + objectId);
+    }
+    const result = [];
+    const serializeObject = (obj, isOwn) => {
+      for (const propertyName of obj.getOwnPropertyNames()) {
+        const descriptor = obj.getOwnPropertyDescriptor(propertyName);
+        result.push({
+          name: propertyName,
+
+          configurable: descriptor.configurable,
+          enumerable: descriptor.enumerable,
+          writable: descriptor.writable,
+          value: this._toRemoteObject(descriptor.value),
+          get: descriptor.get ? this._toRemoteObject(descriptor.get) : undefined,
+          set: descriptor.set ? this._toRemoteObject(descriptor.set) : undefined,
+
+          isOwn,
+        });
+      }
+    };
+
+    // When `ownProperties` is set to true, we only iterate over own properties.
+    // Otherwise, we also iterate over propreties inherited from the prototype chain.
+    serializeObject(obj, true);
+
+    if (!ownProperties) {
+      while (true) {
+        obj = obj.proto;
+        if (!obj) {
+          break;
+        }
+        serializeObject(obj, false);
+      }
+    }
+
+    return {
+      result,
     };
   }
 
