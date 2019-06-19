@@ -23,8 +23,12 @@ if CONFIG['MOZ_ENABLE_SIGNMAR']:
     USE_LIBS += [
         'mar',
         'signmar',
-        'verifymar',
     ]
+
+    if CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
+        USE_LIBS += [
+            'verifymar',
+        ]
 
 for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
     DEFINES[var] = '"%s"' % CONFIG[var]
