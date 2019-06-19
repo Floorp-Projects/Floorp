@@ -2724,8 +2724,9 @@ double BigInt::numberValue(BigInt* x) {
   size_t length = x->digitLength();
   MOZ_ASSERT(length != 0);
 
-  // Fast path for the likely-common case of up to a uint64_t of magnitude
-  // that doesn't exceed integral precision in IEEE-754.
+  // Fast path for the likely-common case of up to a uint64_t of magnitude not
+  // exceeding integral precision in IEEE-754.  (Note that we *depend* on this
+  // optimization being performed further down.)
   if (length <= 64 / DigitBits) {
     uint64_t magnitude = x->digit(0);
     if (DigitBits == 32 && length > 1) {
@@ -2758,62 +2759,165 @@ double BigInt::numberValue(BigInt* x) {
   const uint8_t msdIgnoredBits = msdLeadingZeroes + 1;
   const uint8_t msdIncludedBits = DigitBits - msdIgnoredBits;
 
-  uint8_t bitsFilled = msdIncludedBits;
+  // We compute the final mantissa of the result, shifted upward to the top of
+  // the `uint64_t` space -- plus an extra bit to detect potential rounding.
+  constexpr uint8_t BitsNeededForShiftedMantissa = SignificandWidth + 1;
 
-  // Shift `msd`'s contributed bits upward to remove high-order zeroes and
-  // the highest set bit (which is implicit in IEEE-754 integral values so
-  // must be removed) and to add low-order zeroes.
+  // Shift `msd`'s contributed bits upward to remove high-order zeroes and the
+  // highest set bit (which is implicit in IEEE-754 integral values so must be
+  // removed) and to add low-order zeroes.  (Lower-order garbage bits are
+  // discarded when `shiftedMantissa` is converted to a real mantissa.)
   uint64_t shiftedMantissa =
       msdIncludedBits == 0 ? 0 : uint64_t(msd) << (64 - msdIncludedBits);
 
-  // Add in bits from the next one or two digits if `msd` didn't contain all
-  // bits necessary to define the result.  (The extra bit allows us to
-  // properly round an inexact overall result.)  Any lower bits that are
-  // uselessly set will be shifted away when `shiftedMantissa` is converted to
-  // a real mantissa.
-  if (bitsFilled < SignificandWidth + 1) {
+  // If the extra bit is set, correctly rounding the result may require
+  // examining all lower-order bits.  Also compute 1) the index of the Digit
+  // storing the extra bit, and 2) whether bits beneath the extra bit in that
+  // Digit are nonzero so we can round if needed.
+  size_t digitContainingExtraBit;
+  Digit bitsBeneathExtraBitInDigitContainingExtraBit;
+
+  // Add shifted bits to `shiftedMantissa` until we have a complete mantissa and
+  // an extra bit.
+  if (msdIncludedBits >= BitsNeededForShiftedMantissa) {
+    //       DigitBits=64 (necessarily for msdIncludedBits ≥ SignificandWidth+1;
+    //            |        C++ compiler range analysis ought eliminate this
+    //            |        check on 32-bit)
+    //   _________|__________
+    //  /                    |
+    //        msdIncludedBits
+    //      ________|________
+    //     /                 |
+    // [001···················|
+    //  \_/\_____________/\__|
+    //   |            |    |
+    // msdIgnoredBits |   bits below the extra bit (may be no bits)
+    //      BitsNeededForShiftedMantissa=SignificandWidth+1
+    digitContainingExtraBit = length - 1;
+
+    const uint8_t countOfBitsInDigitBelowExtraBit =
+        DigitBits - BitsNeededForShiftedMantissa - msdIgnoredBits;
+    bitsBeneathExtraBitInDigitContainingExtraBit =
+        msd & ((Digit(1) << countOfBitsInDigitBelowExtraBit) - 1);
+  } else {
     MOZ_ASSERT(length >= 2,
                "single-Digit numbers with this few bits should have been "
                "handled by the fast-path above");
 
     Digit second = x->digit(length - 2);
-    if (DigitBits == 32) {
-      shiftedMantissa |= uint64_t(second) << msdIgnoredBits;
-      bitsFilled += DigitBits;
+    if (DigitBits == 64) {
+      shiftedMantissa |= second >> msdIncludedBits;
 
-      // Add in bits from another digit, if any, if we still have unfilled
-      // significand bits.
-      if (bitsFilled < SignificandWidth + 1 && length >= 3) {
+      digitContainingExtraBit = length - 2;
+
+      //  msdIncludedBits + DigitBits
+      //      ________|_________
+      //     /                  |
+      //             DigitBits=64
+      // msdIncludedBits    |
+      //      __|___   _____|___
+      //     /      \ /         |
+      // [001········|···········|
+      //  \_/\_____________/\___|
+      //   |            |     |
+      // msdIgnoredBits | bits below the extra bit (always more than one)
+      //                |
+      //      BitsNeededForShiftedMantissa=SignificandWidth+1
+      const uint8_t countOfBitsInSecondDigitBelowExtraBit =
+          (msdIncludedBits + DigitBits) - BitsNeededForShiftedMantissa;
+
+      bitsBeneathExtraBitInDigitContainingExtraBit =
+          second << (DigitBits - countOfBitsInSecondDigitBelowExtraBit);
+    } else {
+      shiftedMantissa |= uint64_t(second) << msdIgnoredBits;
+
+      if (msdIncludedBits + DigitBits >= BitsNeededForShiftedMantissa) {
+        digitContainingExtraBit = length - 2;
+
+        //  msdIncludedBits + DigitBits
+        //      ______|________
+        //     /               |
+        //             DigitBits=32
+        // msdIncludedBits |
+        //      _|_   _____|___
+        //     /   \ /         |
+        // [001·····|···········|
+        //     \___________/\__|
+        //          |        |
+        //          |      bits below the extra bit (may be no bits)
+        //      BitsNeededForShiftedMantissa=SignificandWidth+1
+        const uint8_t countOfBitsInSecondDigitBelowExtraBit =
+            (msdIncludedBits + DigitBits) - BitsNeededForShiftedMantissa;
+
+        bitsBeneathExtraBitInDigitContainingExtraBit =
+            second & ((Digit(1) << countOfBitsInSecondDigitBelowExtraBit) - 1);
+      } else {
+        MOZ_ASSERT(length >= 3,
+                   "we must have at least three digits here, because "
+                   "`msdIncludedBits + 32 < BitsNeededForShiftedMantissa` "
+                   "guarantees `x < 2**53` -- and therefore the "
+                   "MaxIntegralPrecisionDouble optimization above will have "
+                   "handled two-digit cases");
+
         Digit third = x->digit(length - 3);
         shiftedMantissa |= uint64_t(third) >> msdIncludedBits;
-        // The second and third 32-bit digits contributed 64 bits total, filling
-        // well beyond the mantissa.
-        bitsFilled = 64;
+
+        digitContainingExtraBit = length - 3;
+
+        //    msdIncludedBits + DigitBits + DigitBits
+        //      ____________|______________
+        //     /                           |
+        //             DigitBits=32
+        // msdIncludedBits |     DigitBits=32
+        //      _|_   _____|___   ____|____
+        //     /   \ /         \ /         |
+        // [001·····|···········|···········|
+        //     \____________________/\_____|
+        //               |               |
+        //               |      bits below the extra bit
+        //      BitsNeededForShiftedMantissa=SignificandWidth+1
+        static_assert(2 * DigitBits > BitsNeededForShiftedMantissa,
+                      "two 32-bit digits should more than fill a mantissa");
+        const uint8_t countOfBitsInThirdDigitBelowExtraBit =
+            msdIncludedBits + 2 * DigitBits - BitsNeededForShiftedMantissa;
+
+        // Shift out the mantissa bits and the extra bit.
+        bitsBeneathExtraBitInDigitContainingExtraBit =
+            third << (DigitBits - countOfBitsInThirdDigitBelowExtraBit);
       }
-    } else {
-      shiftedMantissa |= second >> msdIncludedBits;
-      // A full 64-bit digit's worth of bits (some from the most significant
-      // digit, the rest from the next) fills well beyond the mantissa.
-      bitsFilled = 64;
     }
   }
 
-  // Round the overall result, if necessary.  (It's possible we don't need to
-  // round -- the number might not have enough bits to round.)
-  if (bitsFilled >= SignificandWidth + 1) {
-    constexpr uint64_t LeastSignificantBit = uint64_t(1)
-                                             << (64 - SignificandWidth);
-    constexpr uint64_t ExtraBit = LeastSignificantBit >> 1;
+  constexpr uint64_t LeastSignificantBit = uint64_t(1)
+                                           << (64 - SignificandWidth);
+  constexpr uint64_t ExtraBit = LeastSignificantBit >> 1;
 
-    // When the first bit outside the significand is set, the overall value
-    // is rounded: downward (i.e. no change to the bits) if the least
-    // significant bit in the significand is zero, upward if it instead is
-    // one.
-    if ((shiftedMantissa & ExtraBit) &&
-        (shiftedMantissa & LeastSignificantBit)) {
-      // We're rounding upward: add to the significand bits.  If they
-      // overflow, the exponent must also be increased.  If *that*
-      // overflows, return the appropriate infinity.
+  // The extra bit must be set for rounding to change the mantissa.
+  if ((shiftedMantissa & ExtraBit) != 0) {
+    bool shouldRoundUp;
+    if (shiftedMantissa & LeastSignificantBit) {
+      // If the lowest mantissa bit is set, it doesn't matter what lower bits
+      // are: nearest-even rounds up regardless.
+      shouldRoundUp = true;
+    } else {
+      // If the lowest mantissa bit is unset, *all* lower bits are relevant.
+      // All-zero bits below the extra bit situates `x` halfway between two
+      // values, and the nearest *even* value lies downward.  But if any bit
+      // below the extra bit is set, `x` is closer to the rounded-up value.
+      shouldRoundUp = bitsBeneathExtraBitInDigitContainingExtraBit != 0;
+      if (!shouldRoundUp) {
+        while (digitContainingExtraBit-- > 0) {
+          if (x->digit(digitContainingExtraBit) != 0) {
+            shouldRoundUp = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (shouldRoundUp) {
+      // Add one to the significand bits.  If they overflow, the exponent must
+      // also be increased.  If *that* overflows, return the correct infinity.
       uint64_t before = shiftedMantissa;
       shiftedMantissa += ExtraBit;
       if (shiftedMantissa < before) {
