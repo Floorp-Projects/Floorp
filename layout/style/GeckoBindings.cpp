@@ -1258,8 +1258,7 @@ void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* aArray,
   aArray->SetLength(aLength);
 }
 
-void Gecko_ResizeTArrayForCStrings(nsTArray<nsCString>* aArray,
-                                  uint32_t aLength) {
+void Gecko_ResizeAtomArray(nsTArray<RefPtr<nsAtom>>* aArray, uint32_t aLength) {
   aArray->SetLength(aLength);
 }
 
