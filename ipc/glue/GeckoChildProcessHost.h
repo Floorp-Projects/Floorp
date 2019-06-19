@@ -14,7 +14,6 @@
 
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/StaticPtr.h"
@@ -38,8 +37,7 @@ typedef _MacSandboxInfo MacSandboxInfo;
 namespace mozilla {
 namespace ipc {
 
-class GeckoChildProcessHost : public ChildProcessHost,
-                              public LinkedListElement<GeckoChildProcessHost> {
+class GeckoChildProcessHost : public ChildProcessHost {
  protected:
   typedef mozilla::Monitor Monitor;
   typedef std::vector<std::string> StringVector;
@@ -155,15 +153,10 @@ class GeckoChildProcessHost : public ChildProcessHost,
     return MacSandboxType_Utility;
   };
 #endif
-  typedef std::function<void(GeckoChildProcessHost*)> GeckoProcessCallback;
-
-  // Iterates over all instances and calls aCallback with each one of them.
-  // This method will lock any addition/removal of new processes
-  // so you need to make sure the callback is as fast as possible.
-  static void GetAll(const GeckoProcessCallback& aCallback);
 
  protected:
   ~GeckoChildProcessHost();
+
   GeckoProcessType mProcessType;
   bool mIsFileContent;
   Monitor mMonitor;
@@ -248,9 +241,6 @@ class GeckoChildProcessHost : public ChildProcessHost,
   // with launching the sub-process.
   void GetChildLogName(const char* origLogName, nsACString& buffer);
 
-  // Removes the instance from sGeckoChildProcessHosts
-  void RemoveFromProcessList();
-
   // In between launching the subprocess and handing off its IPC
   // channel, there's a small window of time in which *we* might still
   // be the channel listener, and receive messages.  That's bad
@@ -268,9 +258,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
   mozilla::Atomic<bool> mDestroying;
 
   static uint32_t sNextUniqueID;
-  static StaticAutoPtr<LinkedList<GeckoChildProcessHost>>
-      sGeckoChildProcessHosts;
-  static StaticMutex sMutex;
+
 #if defined(MOZ_WIDGET_ANDROID)
   void LaunchAndroidService(
       const char* type, const std::vector<std::string>& argv,
