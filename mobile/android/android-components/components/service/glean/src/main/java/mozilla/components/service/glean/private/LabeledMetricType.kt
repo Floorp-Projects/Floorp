@@ -60,6 +60,11 @@ data class LabeledMetricType<T>(
 
     private val seenLabels: MutableSet<String> = mutableSetOf()
 
+    // TimespanMetricType holds a state now (the private `timerId`), which must be preserved
+    // when looking up the labels. Each time we request a label for a timespan, we cache the
+    // generated type in this map.
+    private val seenTimespans: MutableMap<String, TimespanMetricType> = mutableMapOf()
+
     /**
      * Handles the label in the case where labels are predefined.
      *
@@ -188,6 +193,20 @@ data class LabeledMetricType<T>(
             getFinalDynamicLabel(label)
         }
 
-        return getMetricWithNewName("$name/$actualLabel")
+        val newMetricName = "$name/$actualLabel"
+        if (subMetric is TimespanMetricType) {
+            // If this is a timespan, try to look it up from the cache.
+            // If it's there, return it. If it isn't, create a new TimespanMetricType
+            // and add it to the cache then return it.
+            // This needs to be synchronized as access to the map is not thread safe.
+            synchronized(this) {
+                @Suppress("UNCHECKED_CAST")
+                return seenTimespans.getOrPut(newMetricName) {
+                    getMetricWithNewName(newMetricName) as TimespanMetricType
+                } as T
+            }
+        }
+
+        return getMetricWithNewName(newMetricName)
     }
 }

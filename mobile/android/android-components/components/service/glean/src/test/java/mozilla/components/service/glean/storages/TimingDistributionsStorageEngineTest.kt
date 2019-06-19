@@ -196,9 +196,9 @@ class TimingDistributionsStorageEngineTest {
 
         // Attempt to accumulate a negative sample
         TimingManager.getElapsedNanos = { 0 }
-        metric.start(this)
+        val timerId = metric.start()
         TimingManager.getElapsedNanos = { -1 }
-        metric.stopAndAccumulate(this)
+        metric.stopAndAccumulate(timerId)
         // Check that nothing was recorded.
         assertFalse("Timing distributions must not accumulate negative values",
             metric.testHasValue())
@@ -223,9 +223,9 @@ class TimingDistributionsStorageEngineTest {
 
         // Attempt to accumulate an overflow sample
         TimingManager.getElapsedNanos = { 0 }
-        metric.start(this)
+        val timerId = metric.start()
         TimingManager.getElapsedNanos = { (TimingDistributionData.DEFAULT_RANGE_MAX + 100) * 1000000 }
-        metric.stopAndAccumulate(this)
+        metric.stopAndAccumulate(timerId)
 
         // Check that timing distribution was recorded.
         assertTrue("Accumulating overflow values records data",
@@ -263,9 +263,9 @@ class TimingDistributionsStorageEngineTest {
 
         // Accumulate a sample to force the lazy loading of `buckets` to occur
         TimingManager.getElapsedNanos = { 0 }
-        metric.start(this)
+        val timerId = metric.start()
         TimingManager.getElapsedNanos = { 1 }
-        metric.stopAndAccumulate(this)
+        metric.stopAndAccumulate(timerId)
 
         // Check that timing distribution was recorded.
         assertTrue("Accumulating values records data", metric.testHasValue())
@@ -299,9 +299,9 @@ class TimingDistributionsStorageEngineTest {
         // Attempt to accumulate a sample to force metric to be stored
         for (i in listOf(1L, 10L, 100L, 1000L, 10000L)) {
             TimingManager.getElapsedNanos = { 0 }
-            metric.start(this)
+            val timerId = metric.start()
             TimingManager.getElapsedNanos = { i * 1000000 } // Convert ms to ns
-            metric.stopAndAccumulate(this)
+            metric.stopAndAccumulate(timerId)
         }
 
         // Check that timing distribution was recorded.

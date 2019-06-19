@@ -85,11 +85,11 @@ class TimespansStorageEngineTest {
 
         // Return 0 the first time we get the time
         TimingManager.getElapsedNanos = { 0 }
-        metric.start(this)
+        metric.start()
 
         // Return the expected time when we stop the timer.
         TimingManager.getElapsedNanos = { expectedTimespanNanos }
-        metric.stopAndSum(this)
+        metric.stop()
 
         assertTrue(metric.testHasValue())
 
@@ -99,7 +99,7 @@ class TimespansStorageEngineTest {
     }
 
     @Test
-    fun `multiple elapsed times must be correctly accumulated`() {
+    fun `timespan only records a single timespan`() {
         val expectedChunkNanos: Long = 37
 
         val metric = TimespanMetricType(
@@ -113,20 +113,23 @@ class TimespansStorageEngineTest {
 
         // Record the time for the first chunk.
         TimingManager.getElapsedNanos = { 0 }
-        metric.start(this)
+        metric.start()
         TimingManager.getElapsedNanos = { expectedChunkNanos }
-        metric.stopAndSum(this)
+        metric.stop()
 
         // Record the time for the second chunk of time.
-        metric.start(this)
+        metric.start()
         TimingManager.getElapsedNanos = { expectedChunkNanos * 2 }
-        metric.stopAndSum(this)
+        metric.stop()
 
         assertTrue(metric.testHasValue())
 
         val snapshot = TimespansStorageEngine.getSnapshotWithTimeUnit(storeName = "store1", clearStore = false)
         assertEquals(1, snapshot!!.size)
-        assertEquals(Pair("nanosecond", expectedChunkNanos * 2), snapshot["telemetry.single_elapsed_test"])
+        assertEquals(
+            "TimespanMetricType must only record one timespan",
+            Pair("nanosecond", expectedChunkNanos), snapshot["telemetry.single_elapsed_test"]
+        )
     }
 
     @Test
@@ -154,54 +157,14 @@ class TimespansStorageEngineTest {
 
             // Record the timespan in the provided resolution.
             TimingManager.getElapsedNanos = { 0 }
-            metric.start(this)
+            metric.start()
             TimingManager.getElapsedNanos = { expectedLengthInNanos }
-            metric.stopAndSum(this)
+            metric.stop()
             assertTrue(metric.testHasValue())
 
             val snapshot = TimespansStorageEngine.getSnapshotWithTimeUnit(storeName = "store1", clearStore = true)
             assertEquals(1, snapshot!!.size)
             assertEquals(Pair(res.name.toLowerCase(), expectedTimespan), snapshot["telemetry.resolution_test"])
         }
-    }
-
-    @Test
-    fun `accumulated short-lived timespans should not be discarded`() {
-        // We'll attempt to accumulate 10 timespans with a sub-second duration.
-        val steps = 10
-        val expectedTimespanSeconds: Long = 1
-        val timespanFraction: Long = AndroidTimeUnit.SECONDS.toNanos(expectedTimespanSeconds) / steps
-
-        val metric = TimespanMetricType(
-            false,
-            "telemetry",
-            Lifetime.Ping,
-            "many_short_lived_test",
-            listOf("store1"),
-            timeUnit = TimeUnit.Second
-        )
-
-        // Accumulate enough timespans with a duration lower than the
-        // expected resolution. Their sum should still be >= than our
-        // resolution, and thus be reported.
-        for (i in 0..steps) {
-            val timespanStart: Long = i * timespanFraction
-            TimingManager.getElapsedNanos = { timespanStart }
-            metric.start(this)
-
-            val timespanEnd: Long = timespanStart + timespanFraction
-            TimingManager.getElapsedNanos = { timespanEnd }
-            metric.stopAndSum(this)
-        }
-
-        assertTrue(metric.testHasValue())
-        // Since the sum of the short-lived timespans is >= our resolution, we
-        // expect the accumulated value to be in the snapshot.
-        val snapshot = TimespansStorageEngine.getSnapshotWithTimeUnit(storeName = "store1", clearStore = true)
-        assertEquals(1, snapshot!!.size)
-        assertEquals(
-            Pair("second", expectedTimespanSeconds),
-            snapshot["telemetry.many_short_lived_test"]
-        )
     }
 }

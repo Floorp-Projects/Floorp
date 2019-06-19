@@ -33,7 +33,7 @@ class GleanApplication : Application() {
         // not be activated before this, so it's important to do this early.
         Experiments.initialize(applicationContext)
 
-        Test.testTimespan.start(applicationContext)
+        Test.testTimespan.start()
 
         Custom.counter.add()
 

@@ -34,8 +34,8 @@ class TimespanMetricTypeTest {
         )
 
         // Record a timespan.
-        metric.start(this)
-        metric.stopAndSum(this)
+        metric.start()
+        metric.stop()
 
         // Check that data was properly recorded.
         assertTrue(metric.testHasValue())
@@ -55,11 +55,11 @@ class TimespanMetricTypeTest {
         )
 
         // Record a timespan.
-        metric.start(this)
-        metric.stopAndSum(this)
+        metric.start()
+        metric.stop()
 
         // Let's also call cancel() to make sure it's a no-op.
-        metric.cancel(this)
+        metric.cancel()
 
         // Check that data was not recorded.
         assertFalse("The API should not record a counter if metric is disabled",
@@ -79,9 +79,9 @@ class TimespanMetricTypeTest {
         )
 
         // Record a timespan.
-        metric.start(this)
-        metric.cancel(this)
-        metric.stopAndSum(this)
+        metric.start()
+        metric.cancel()
+        metric.stop()
 
         // Check that data was not recorded.
         assertFalse("The API should not record a counter if metric is cancelled",
@@ -115,8 +115,8 @@ class TimespanMetricTypeTest {
         )
 
         // Record a timespan.
-        metric.start(this)
-        metric.stopAndSum(this)
+        metric.start()
+        metric.stop()
 
         // Check that data was properly recorded in the second ping.
         assertTrue(metric.testHasValue("store2"))
@@ -136,9 +136,9 @@ class TimespanMetricTypeTest {
         )
 
         // Record a timespan.
-        metric.start(this)
-        metric.start(this)
-        metric.stopAndSum(this)
+        metric.start()
+        metric.start()
+        metric.stop()
 
         // Check that data was properly recorded in the second ping.
         assertTrue(metric.testHasValue("store2"))
@@ -161,9 +161,9 @@ class TimespanMetricTypeTest {
 
         // This should have no effect
         TimingManager.getElapsedNanos = { 0 }
-        metric.start(this)
+        metric.start()
         TimingManager.getElapsedNanos = { 50 }
-        metric.stopAndSum(this)
+        metric.stop()
 
         metric.setRawNanos(timespanNanos)
         assertEquals(timespanNanos, metric.testGetValue())
@@ -186,9 +186,9 @@ class TimespanMetricTypeTest {
         assertEquals(timespanNanos, metric.testGetValue())
 
         TimingManager.getElapsedNanos = { 0 }
-        metric.start(this)
+        metric.start()
         TimingManager.getElapsedNanos = { 50 }
-        metric.stopAndSum(this)
+        metric.stop()
         val value = metric.testGetValue()
         assertTrue(timespanNanos < value)
     }

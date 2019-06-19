@@ -13,7 +13,12 @@ import mozilla.components.support.base.log.logger.Logger
 import java.util.WeakHashMap
 
 /**
- * A class to record timing intervals associated with a given arbitrary object.
+ * An opaque type that represents a Glean timer identifier.
+ */
+typealias GleanTimerId = Long
+
+/**
+ * A class to record timing intervals associated with a given arbitrary [GleanTimerId].
  *
  * A timings are recorded and returned in nanoseconds.
  */
@@ -21,12 +26,17 @@ internal object TimingManager {
     private val logger = Logger("glean/TimingManager")
 
     /**
+     * A monotonically increasing counter that represents a timer id.
+     */
+    private var timerIdCounter: GleanTimerId = 0L
+
+    /**
      * A map that stores the start times of running timers.
      *
      * A [WeakHashMap] is used so that we don't unintentionally leak memory
      * by keeping references to otherwise destroyed objects around.
      */
-    val uncommittedStartTimes = mutableMapOf<String, WeakHashMap<Any, Long>>()
+    private val uncommittedStartTimes = mutableMapOf<String, MutableMap<GleanTimerId, Long>>()
 
     /**
      * Helper function used for getting the elapsed time, since the process
@@ -38,44 +48,51 @@ internal object TimingManager {
     internal var getElapsedNanos = { SystemClock.elapsedRealtimeNanos() }
 
     /**
-     * Start tracking time associated with the provided object. This records an
+     * Start tracking time associated with the provided [GleanTimerId]. This records an
      * error if it’s already tracking time (i.e. start was already called with
      * no corresponding [stop]): in that case, the original start time will be
      * preserved.
      *
      * @param metricData The metric managing the timing. Used for error reporting.
-     * @param timerId The object to associate with this timing.
+     * @return a [GleanTimerId] representing the id to associate with this timing.
      */
-    public fun start(metricData: CommonMetricData, timerId: Any) {
+    fun start(metricData: CommonMetricData): GleanTimerId? {
         val startTime = getElapsedNanos()
 
+        var timerId: GleanTimerId
+
         synchronized(this) {
+            timerId = timerIdCounter
+            timerIdCounter += 1
+
             val metricName = metricData.identifier
             uncommittedStartTimes[metricName]?.let { metricTimings ->
                 if (timerId in metricTimings) {
                     recordError(
                         metricData,
                         ErrorRecording.ErrorType.InvalidValue,
-                        "Timespan already started",
+                        "Timing operation already started",
                         logger
                     )
-                    return
+                    return null
                 }
             }
 
-            uncommittedStartTimes.getOrPut(metricName, { WeakHashMap<Any, Long>() })[timerId] = startTime
+            uncommittedStartTimes.getOrPut(metricName, { mutableMapOf() })[timerId] = startTime
         }
+
+        return timerId
     }
 
     /**
-     * Stop tracking time for the associated object. This will record
+     * Stop tracking time for the associated [GleanTimerId]. This will record
      * an error if no [start] was called.
      *
      * @param metricData The metric managing the timing. Used for error reporting.
-     * @param timerId The object to associate with this timing.
+     * @param timerId The id to associate with this timing.
      * @return The length of the timespan, in nanoseconds, or null if called on a stopped timer.
      */
-    public fun stop(metricData: CommonMetricData, timerId: Any): Long? {
+    fun stop(metricData: CommonMetricData, timerId: GleanTimerId): Long? {
         val stopTime = getElapsedNanos()
 
         return synchronized(this) {
@@ -97,9 +114,9 @@ internal object TimingManager {
     /**
      * Abort a previous [start] call. No error is recorded if no [start] was called.
      *
-     * @param timerId The object to associate with this timing.
+     * @param timerId The id to associate with this timing.
      */
-    public fun cancel(metricData: CommonMetricData, timerId: Any) {
+    fun cancel(metricData: CommonMetricData, timerId: GleanTimerId) {
         synchronized(this) {
             val metricName = metricData.identifier
             uncommittedStartTimes[metricName]?.remove(timerId)
@@ -112,6 +129,6 @@ internal object TimingManager {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     internal fun testResetTimeSource() {
-        TimingManager.getElapsedNanos = { SystemClock.elapsedRealtimeNanos() }
+        getElapsedNanos = { SystemClock.elapsedRealtimeNanos() }
     }
 }

@@ -342,10 +342,10 @@ class LabeledMetricTypeTest {
             subMetric = timespanMetric
         )
 
-        labeledTimespanMetric["label1"].start(this)
-        labeledTimespanMetric["label1"].stopAndSum(this)
-        labeledTimespanMetric["label2"].start(this)
-        labeledTimespanMetric["label2"].stopAndSum(this)
+        labeledTimespanMetric["label1"].start()
+        labeledTimespanMetric["label1"].stop()
+        labeledTimespanMetric["label2"].start()
+        labeledTimespanMetric["label2"].stop()
 
         assertTrue(labeledTimespanMetric["label1"].testHasValue())
 

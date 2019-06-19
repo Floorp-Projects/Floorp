@@ -48,9 +48,9 @@ class TimingDistributionMetricTypeTest {
         // Accumulate a few values
         for (i in 1L..3L) {
             TimingManager.getElapsedNanos = { 0 }
-            metric.start(this)
+            val timerId = metric.start()
             TimingManager.getElapsedNanos = { i * 1000000 } // ms to ns
-            metric.stopAndAccumulate(this)
+            metric.stopAndAccumulate(timerId)
         }
 
         // Check that data was properly recorded.
@@ -81,9 +81,9 @@ class TimingDistributionMetricTypeTest {
 
         // Attempt to store the timespan using set
         TimingManager.getElapsedNanos = { 0 }
-        metric.start(this)
+        val timerId = metric.start()
         TimingManager.getElapsedNanos = { 1 }
-        metric.stopAndAccumulate(this)
+        metric.stopAndAccumulate(timerId)
 
         // Check that nothing was recorded.
         assertFalse("TimingDistributions without a lifetime should not record data.",
@@ -119,9 +119,9 @@ class TimingDistributionMetricTypeTest {
         // Accumulate a few values
         for (i in 1L..3L) {
             TimingManager.getElapsedNanos = { 0 }
-            metric.start(this)
+            val timerId = metric.start()
             TimingManager.getElapsedNanos = { i * 1000000 } // ms to ns
-            metric.stopAndAccumulate(this)
+            metric.stopAndAccumulate(timerId)
         }
 
         // Check that data was properly recorded in the second ping.
