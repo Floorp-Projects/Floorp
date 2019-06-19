@@ -27,7 +27,7 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
     SetScrollHandoff(layers[1], root);
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
                                                            root, mcc);
-    manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
     rootApzc->GetFrameMetrics().SetIsRootContent(
         true);  // make root APZC zoomable
@@ -53,7 +53,7 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
     // No ScopedLayerTreeRegistration as that just needs to be done once per
     // test and this is the second layer tree for a particular test.
     MOZ_ASSERT(registration);
-    manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -88,7 +88,7 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
     SetScrollHandoff(layers[4], layers[3]);
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
                                                            root, mcc);
-    manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
   }
 
   // Creates a layer tree with a parent layer that is only scrollable
@@ -107,7 +107,7 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
     SetScrollHandoff(layers[1], root);
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
                                                            root, mcc);
-    manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -128,7 +128,7 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
     SetScrollHandoff(layers[1], root);
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
                                                            root, mcc);
-    manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
     rootApzc->GetScrollMetadata().SetHasScrollgrab(true);
   }
