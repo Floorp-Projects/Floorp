@@ -118,7 +118,7 @@ async function testThrow(dbg) {
   packet = await stepOut(threadClient);
   deepEqual(
     getPauseLocation(packet),
-    { line: 24, column: 0 },
+    { line: 23, column: 0 },
     `stepOut location in doThrow`
   );
 
