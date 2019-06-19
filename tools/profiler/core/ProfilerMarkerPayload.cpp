@@ -296,3 +296,28 @@ void LongTaskMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                     aUniqueStacks);
   aWriter.StringProperty("category", "LongTask");
 }
+
+void JsAllocationMarkerPayload::StreamPayload(
+    SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime,
+    UniqueStacks& aUniqueStacks) {
+  StreamCommonProps("JS allocation", aWriter, aProcessStartTime, aUniqueStacks);
+
+  if (mClassName) {
+    aWriter.StringProperty("className", mClassName.get());
+  }
+  if (mScriptFilename) {
+    aWriter.StringProperty("scriptFilename", mScriptFilename.get());
+  }
+  if (mTypeName) {
+    aWriter.StringProperty("typeName",
+                           NS_ConvertUTF16toUTF8(mTypeName.get()).get());
+  }
+  if (mDescriptiveTypeName) {
+    aWriter.StringProperty(
+        "descriptiveTypeName",
+        NS_ConvertUTF16toUTF8(mDescriptiveTypeName.get()).get());
+  }
+  aWriter.StringProperty("coarseType", mCoarseType);
+  aWriter.IntProperty("size", mSize);
+  aWriter.BoolProperty("inNursery", mInNursery);
+}
