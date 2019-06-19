@@ -67,6 +67,12 @@ class Target extends Domain {
     return {targetId: target.id};
   }
 
+  closeTarget({ targetId }) {
+    const { targets } = this.session.target;
+    const target = targets.getById(targetId);
+    target.window.gBrowser.removeTab(target.tab);
+  }
+
   attachToTarget({ targetId }) {
     const { targets } = this.session.target;
     const target = targets.getById(targetId);
