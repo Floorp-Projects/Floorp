@@ -53,17 +53,19 @@ function SetForEach(callbackfn, thisArg = undefined) {
     }
 }
 
-function SetValues() {
+// Uncloned functions with `$` prefix are allocated as extended function
+// to store the original name in `_SetCanonicalName`.
+function $SetValues() {
     return callFunction(std_Set_iterator, this);
 }
-_SetCanonicalName(SetValues, "values");
+_SetCanonicalName($SetValues, "values");
 
 // ES6 final draft 23.2.2.2.
-function SetSpecies() {
+function $SetSpecies() {
     // Step 1.
     return this;
 }
-_SetCanonicalName(SetSpecies, "get [Symbol.species]");
+_SetCanonicalName($SetSpecies, "get [Symbol.species]");
 
 
 var setIteratorTemp = { setIterationResult: null };

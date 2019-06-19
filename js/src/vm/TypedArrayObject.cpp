@@ -1894,8 +1894,8 @@ bool TypedArrayObject::set(JSContext* cx, unsigned argc, Value* vp) {
     JS_SELF_HOSTED_FN("sort", "TypedArraySort", 1, 0),
     JS_SELF_HOSTED_FN("entries", "TypedArrayEntries", 0, 0),
     JS_SELF_HOSTED_FN("keys", "TypedArrayKeys", 0, 0),
-    JS_SELF_HOSTED_FN("values", "TypedArrayValues", 0, 0),
-    JS_SELF_HOSTED_SYM_FN(iterator, "TypedArrayValues", 0, 0),
+    JS_SELF_HOSTED_FN("values", "$TypedArrayValues", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "$TypedArrayValues", 0, 0),
     JS_SELF_HOSTED_FN("includes", "TypedArrayIncludes", 2, 0),
     JS_SELF_HOSTED_FN("toString", "ArrayToString", 0, 0),
     JS_SELF_HOSTED_FN("toLocaleString", "TypedArrayToLocaleString", 2, 0),
@@ -1906,7 +1906,7 @@ bool TypedArrayObject::set(JSContext* cx, unsigned argc, Value* vp) {
     JS_SELF_HOSTED_FN("of", "TypedArrayStaticOf", 0, 0), JS_FS_END};
 
 /* static */ const JSPropertySpec TypedArrayObject::staticProperties[] = {
-    JS_SELF_HOSTED_SYM_GET(species, "TypedArraySpecies", 0), JS_PS_END};
+    JS_SELF_HOSTED_SYM_GET(species, "$TypedArraySpecies", 0), JS_PS_END};
 
 static JSObject* CreateSharedTypedArrayPrototype(JSContext* cx,
                                                  JSProtoKey key) {

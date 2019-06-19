@@ -1220,7 +1220,7 @@ bool JSFunction::isDerivedClassConstructor() {
     // There is only one plausible lazy self-hosted derived
     // constructor.
     if (isSelfHostedBuiltin()) {
-      JSAtom* name = GetSelfHostedFunctionName(this);
+      JSAtom* name = GetClonedSelfHostedFunctionName(this);
 
       // This function is called from places without access to a
       // JSContext. Trace some plumbing to get what we want.
@@ -1685,7 +1685,7 @@ bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
 
   /* Lazily cloned self-hosted script. */
   MOZ_ASSERT(fun->isSelfHostedBuiltin());
-  RootedAtom funAtom(cx, GetSelfHostedFunctionName(fun));
+  RootedAtom funAtom(cx, GetClonedSelfHostedFunctionName(fun));
   if (!funAtom) {
     return false;
   }
@@ -1749,7 +1749,7 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
   } else {
     MOZ_ASSERT(isSelfHostedBuiltin());
     MOZ_ASSERT(isExtended());
-    MOZ_ASSERT(GetSelfHostedFunctionName(this));
+    MOZ_ASSERT(GetClonedSelfHostedFunctionName(this));
   }
 
   realm->scheduleDelazificationForDebugger();

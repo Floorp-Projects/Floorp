@@ -2302,7 +2302,12 @@ static bool IsRegExpHoistableCall(CompileRuntime* runtime, MCall* call,
     if (!fun->isSelfHostedBuiltin()) {
       return false;
     }
-    name = GetSelfHostedFunctionName(fun->rawJSFunction());
+
+    // Avoid accessing `JSFunction.flags_` via `JSFunction::isExtended`.
+    if (!fun->isExtended()) {
+      return false;
+    }
+    name = GetClonedSelfHostedFunctionNameOffMainThread(fun->rawJSFunction());
   } else {
     MDefinition* funDef = call->getFunction();
     if (funDef->isDebugCheckSelfHosted()) {
