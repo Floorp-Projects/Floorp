@@ -114,7 +114,8 @@ enum class ZealMode {
   _(TypedArrayElements)                    \
   _(TypeDescrTraceList)                    \
   _(NativeIterator)                        \
-  _(JitScript)
+  _(JitScript)                             \
+  _(ObjectGroupAddendum)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
