@@ -1330,11 +1330,7 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", tru
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 #endif
 
-#ifdef NIGHTLY_BUILD
 pref("trailhead.firstrun.branches", "join-privacy");
-#else
-pref("trailhead.firstrun.branches", "control");
-#endif
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
