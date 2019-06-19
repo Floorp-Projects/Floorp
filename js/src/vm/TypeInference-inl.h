@@ -282,6 +282,12 @@ static inline const char* TypeIdString(jsid id) {
 // complex ways which can't be understood statically.
 class TypeNewScript {
  private:
+  // Variable-length list of TypeNewScriptInitializer pointers.
+  struct InitializerList {
+    size_t length;
+    TypeNewScriptInitializer entries[1];
+  };
+
   // Scripted function which this information was computed for.
   HeapPtr<JSFunction*> function_ = {};
 
@@ -303,7 +309,7 @@ class TypeNewScript {
   // shape. Property assignments in inner frames are preceded by a series of
   // SETPROP_FRAME entries specifying the stack down to the frame containing
   // the write.
-  TypeNewScriptInitializer* initializerList = nullptr;
+  InitializerList* initializerList = nullptr;
 
   // If there are additional properties found by the acquired properties
   // analysis which were not found by the definite properties analysis, this
@@ -356,9 +362,13 @@ class TypeNewScript {
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
+  size_t gcMallocBytes() const;
+
   static size_t offsetOfPreliminaryObjects() {
     return offsetof(TypeNewScript, preliminaryObjects);
   }
+
+  static size_t sizeOfInitializerList(size_t length);
 };
 
 inline bool ObjectGroup::hasUnanalyzedPreliminaryObjects() {
