@@ -598,7 +598,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
     mRootNode->Dump("  ");
   }
 #endif
-  CollectTransformsForChromeMainThread();
+  CollectTransformsForChromeMainThread(nullptr);
 }
 
 void APZCTreeManager::UpdateFocusState(LayersId aRootLayerTreeId,
@@ -3257,25 +3257,39 @@ bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,
   return true;
 }
 
-void APZCTreeManager::CollectTransformsForChromeMainThread() {
+void APZCTreeManager::CollectTransformsForChromeMainThread(
+    const AsyncPanZoomController* aAncestor) {
   RefPtr<GeckoContentController> controller =
       GetContentController(mRootLayersId);
   if (!controller) {
     return;
   }
   nsTArray<MatrixMessage> messages;
+  bool underAncestor = (aAncestor == nullptr);
   {
     RecursiveMutexAutoLock lock(mTreeLock);
     // This formulation duplicates matrix multiplications closer
     // to the root of the tree. For now, aiming for separation
     // of concerns rather than minimum number of multiplications.
     ForEachNode<ReverseIterator>(
-        mRootNode.get(), [&messages](HitTestingTreeNode* aNode) {
+        mRootNode.get(), [&](HitTestingTreeNode* aNode) {
+          bool atAncestor = (aAncestor && aNode->GetApzc() == aAncestor);
+          MOZ_ASSERT(!(underAncestor && atAncestor));
+          underAncestor |= atAncestor;
+          if (!underAncestor) {
+            return;
+          }
           LayersId layersId = aNode->GetLayersId();
           HitTestingTreeNode* parent = aNode->GetParent();
           if (!parent || layersId != parent->GetLayersId()) {
             messages.AppendElement(
                 MatrixMessage(aNode->GetCSSTransformToRoot(), layersId));
+          }
+        }, [&](HitTestingTreeNode* aNode) {
+          bool atAncestor = (aAncestor && aNode->GetApzc() == aAncestor);
+          if (atAncestor) {
+            MOZ_ASSERT(underAncestor);
+            underAncestor = false;
           }
         });
   }

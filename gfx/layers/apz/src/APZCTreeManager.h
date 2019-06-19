@@ -502,9 +502,13 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   /**
    * Iterates over the hit testing tree, collects LayersIds and associated
    * transforms from layer coordinate space to root coordinate space, and
-   * sends these over to the main thread of the chrome process.
+   * sends these over to the main thread of the chrome process. If the provided
+   * |aAncestor| argument is non-null, then only the transforms for layer
+   * subtrees scrolled by the aAncestor (i.e. descendants of aAncestor) will be
+   * sent.
    */
-  void CollectTransformsForChromeMainThread();
+  void CollectTransformsForChromeMainThread(
+      const AsyncPanZoomController* aAncestor);
 
   /**
    * Compute the updated shadow transform for a scroll thumb layer that
