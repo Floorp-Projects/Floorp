@@ -17,9 +17,9 @@ class Grid;
 
 class GridArea : public nsISupports, public nsWrapperCache {
  public:
-  explicit GridArea(Grid* aParent, const nsDependentCSubstring& aName,
-                    GridDeclaration aType, uint32_t aRowStart, uint32_t aRowEnd,
-                    uint32_t aColumnStart, uint32_t aColumnEnd);
+  explicit GridArea(Grid* aParent, nsAtom* aName, GridDeclaration aType,
+                    uint32_t aRowStart, uint32_t aRowEnd, uint32_t aColumnStart,
+                    uint32_t aColumnEnd);
 
  protected:
   virtual ~GridArea();
@@ -32,7 +32,6 @@ class GridArea : public nsISupports, public nsWrapperCache {
                                JS::Handle<JSObject*> aGivenProto) override;
   Grid* GetParentObject() { return mParent; }
 
-  void GetName(nsCString& aName) const;
   void GetName(nsString& aName) const;
   GridDeclaration Type() const;
   uint32_t RowStart() const;
@@ -42,7 +41,7 @@ class GridArea : public nsISupports, public nsWrapperCache {
 
  protected:
   RefPtr<Grid> mParent;
-  const nsCString mName;
+  const RefPtr<nsAtom> mName;
   const GridDeclaration mType;
   const uint32_t mRowStart;
   const uint32_t mRowEnd;

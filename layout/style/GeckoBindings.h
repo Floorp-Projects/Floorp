@@ -416,7 +416,7 @@ void Gecko_EnsureTArrayCapacity(void* array, size_t capacity, size_t elem_size);
 void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
 
 void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* array, uint32_t length);
-void Gecko_ResizeTArrayForCStrings(nsTArray<nsCString>* array, uint32_t length);
+void Gecko_ResizeAtomArray(nsTArray<RefPtr<nsAtom>>* array, uint32_t length);
 
 void Gecko_SetStyleGridTemplate(
     mozilla::UniquePtr<nsStyleGridTemplate>* grid_template,

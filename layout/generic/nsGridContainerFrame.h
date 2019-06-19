@@ -11,9 +11,8 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/HashTable.h"
 #include "nsContainerFrame.h"
-#include "nsHashKeys.h"
-#include "nsTHashtable.h"
 
 namespace mozilla {
 class PresShell;
@@ -67,18 +66,19 @@ struct ComputedGridTrackInfo {
 };
 
 struct ComputedGridLineInfo {
-  explicit ComputedGridLineInfo(nsTArray<nsTArray<nsCString>>&& aNames,
-                                const nsTArray<nsCString>& aNamesBefore,
-                                const nsTArray<nsCString>& aNamesAfter,
-                                nsTArray<nsCString>&& aNamesFollowingRepeat)
+  explicit ComputedGridLineInfo(
+      nsTArray<nsTArray<RefPtr<nsAtom>>>&& aNames,
+      const nsTArray<RefPtr<nsAtom>>& aNamesBefore,
+      const nsTArray<RefPtr<nsAtom>>& aNamesAfter,
+      nsTArray<RefPtr<nsAtom>>&& aNamesFollowingRepeat)
       : mNames(aNames),
         mNamesBefore(aNamesBefore),
         mNamesAfter(aNamesAfter),
         mNamesFollowingRepeat(aNamesFollowingRepeat) {}
-  nsTArray<nsTArray<nsCString>> mNames;
-  nsTArray<nsCString> mNamesBefore;
-  nsTArray<nsCString> mNamesAfter;
-  nsTArray<nsCString> mNamesFollowingRepeat;
+  nsTArray<nsTArray<RefPtr<nsAtom>>> mNames;
+  nsTArray<RefPtr<nsAtom>> mNamesBefore;
+  nsTArray<RefPtr<nsAtom>> mNamesAfter;
+  nsTArray<RefPtr<nsAtom>> mNamesFollowingRepeat;
 };
 }  // namespace mozilla
 
@@ -202,7 +202,21 @@ class nsGridContainerFrame final : public nsContainerFrame {
     return info;
   }
 
-  using ImplicitNamedAreas = nsBaseHashtable<nsCStringHashKey, NamedArea, NamedArea>;
+  struct AtomKey {
+    RefPtr<nsAtom> mKey;
+
+    explicit AtomKey(nsAtom* aAtom) : mKey(aAtom) {}
+
+    using Lookup = nsAtom*;
+
+    static mozilla::HashNumber hash(const Lookup& aKey) { return aKey->hash(); }
+
+    static bool match(const AtomKey& aFirst, const Lookup& aSecond) {
+      return aFirst.mKey == aSecond;
+    }
+  };
+
+  using ImplicitNamedAreas = mozilla::HashMap<AtomKey, NamedArea, AtomKey>;
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ImplicitNamedAreasProperty,
                                       ImplicitNamedAreas)
   ImplicitNamedAreas* GetImplicitNamedAreas() const {
@@ -315,7 +329,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
    */
   void InitImplicitNamedAreas(const nsStylePosition* aStyle);
   void AddImplicitNamedAreas(
-      const nsTArray<nsTArray<nsCString>>& aLineNameLists);
+      const nsTArray<nsTArray<RefPtr<nsAtom>>>& aLineNameLists);
 
   void NormalizeChildLists();
 

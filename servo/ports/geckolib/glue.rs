@@ -6617,8 +6617,3 @@ pub unsafe extern "C" fn Servo_StyleArcSlice_EmptyPtr() -> *mut c_void {
 pub unsafe extern "C" fn Servo_LoadData_GetLazy(source: &url::LoadDataSource) -> *const url::LoadData {
     source.get()
 }
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_MakeOwnedStr(out: &mut style::OwnedStr, in_: &nsACString) {
-    *out = in_.to_string().into()
-}
