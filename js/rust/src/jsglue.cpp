@@ -420,15 +420,26 @@ const void* GetSecurityWrapper() {
   return &js::CrossCompartmentSecurityWrapper::singleton;
 }
 
-JS::ReadOnlyCompileOptions* NewCompileOptions(JSContext* aCx, const char* aFile,
-                                              unsigned aLine) {
-  JS::OwningCompileOptions* opts = new JS::OwningCompileOptions(aCx);
-  opts->setFileAndLine(aCx, aFile, aLine);
-  return opts;
-}
-
 void DeleteCompileOptions(JS::ReadOnlyCompileOptions* aOpts) {
   delete static_cast<JS::OwningCompileOptions*>(aOpts);
+}
+
+JS::ReadOnlyCompileOptions* NewCompileOptions(JSContext* aCx, const char* aFile,
+                                              unsigned aLine) {
+  JS::CompileOptions opts(aCx);
+  opts.setFileAndLine(aFile, aLine);
+
+  JS::OwningCompileOptions* owned = new JS::OwningCompileOptions(aCx);
+  if (!owned) {
+    return nullptr;
+  }
+
+  if (!owned->copy(aCx, opts)) {
+    DeleteCompileOptions(owned);
+    return nullptr;
+  }
+
+  return owned;
 }
 
 JSObject* NewProxyObject(JSContext* aCx, const void* aHandler,
