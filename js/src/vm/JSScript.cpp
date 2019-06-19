@@ -2300,7 +2300,7 @@ bool ScriptSource::assignSource(JSContext* cx,
   MOZ_ASSERT(data.is<Missing>(),
              "source assignment should only occur on fresh ScriptSources");
 
-  if (cx->realm()->behaviors().discardSource()) {
+  if (options.discardSource) {
     return true;
   }
 
