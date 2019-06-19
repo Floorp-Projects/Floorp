@@ -147,11 +147,11 @@ interface Element : Node {
   [CEReactions, Throws]
   Attr? setAttributeNodeNS(Attr newAttr);
 
-  [ChromeOnly]
+  [Func="nsContentUtils::IsCallerChromeOrElementTransformGettersEnabled"]
   DOMMatrixReadOnly getTransformToAncestor(Element ancestor);
-  [ChromeOnly]
+  [Func="nsContentUtils::IsCallerChromeOrElementTransformGettersEnabled"]
   DOMMatrixReadOnly getTransformToParent();
-  [ChromeOnly]
+  [Func="nsContentUtils::IsCallerChromeOrElementTransformGettersEnabled"]
   DOMMatrixReadOnly getTransformToViewport();
 };
 
