@@ -107,12 +107,7 @@ add_task(async function testContentBlockingMessage() {
   ]);
 
   info("Reload the page and wait for it to be ready");
-  const onDomContentLoaded = BrowserTestUtils.waitForContentEvent(
-    hud.target.tab.linkedBrowser, "DOMContentLoaded", true);
-  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
-    content.location.reload();
-  });
-  await onDomContentLoaded;
+  await reloadPage();
 
   // Also wait for the navigation message to be displayed.
   await waitFor(() => findMessage(hud, "Navigated to"));
