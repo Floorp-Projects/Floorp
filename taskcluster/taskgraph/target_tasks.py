@@ -307,6 +307,12 @@ def target_tasks_mozilla_esr68(full_task_graph, parameters, graph_config):
         if not standard_filter(task, parameters):
             return False
 
+        platform = task.attributes.get('test_platform')
+
+        # Don't run QuantumRender tests on esr68.
+        if platform and '-qr/' in platform:
+            return False
+
         # Unlike esr60, we do want all kinds of fennec builds on esr68.
 
         return True
