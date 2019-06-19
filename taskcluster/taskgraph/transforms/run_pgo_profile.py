@@ -24,6 +24,8 @@ def run_profile_data(config, jobs):
             artifact = 'target.apk'
         elif 'macosx64' in build_platform:
             artifact = 'target.dmg'
+        elif 'win' in build_platform:
+            artifact = 'target.zip'
         else:
             artifact = 'target.tar.bz2'
         job.setdefault('fetches', {})[instr] = [artifact]
