@@ -25,6 +25,18 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
 else:
     DEFINES['MAR_NSS'] = True
     LOCAL_INCLUDES += ['../sign']
+    USE_LIBS += [
+        'nspr',
+        'nss',
+        'signmar',
+    ]
+    # Ideally, this would be '-Wl,-rpath=$ORIGIN', but the build system
+    # doesn't do the right escaping yet. Even more ideally, this would
+    # be LDFLAGS, but the build system doesn't propagate those like USE_LIBS
+    # and OS_LIBS. Bug #1041943.
+    OS_LIBS += [
+        '-Wl,-rpath=\\$$ORIGIN',
+    ]
 
 LOCAL_INCLUDES += [
     '../src',

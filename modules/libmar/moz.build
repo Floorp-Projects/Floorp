@@ -10,10 +10,10 @@ with Files('**'):
 DIRS += ['src']
 
 if CONFIG['MOZ_ENABLE_SIGNMAR']:
-    DIRS += ['sign', 'verify']
+    DIRS += ['sign']
     TEST_DIRS += ['tests']
-elif CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
-    DIRS += ['verify']
+    if CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
+        DIRS += ['verify']
 
 # If we are building ./sign and ./verify then ./tool must come after it
 DIRS += ['tool']
