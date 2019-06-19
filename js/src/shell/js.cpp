@@ -5174,7 +5174,6 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  bool allowSyntaxParser = true;
   frontend::ParseGoal goal = frontend::ParseGoal::Script;
 
   if (args.length() >= 2) {
@@ -5185,22 +5184,6 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     RootedObject objOptions(cx, &args[1].toObject());
-
-    RootedValue optionAllowSyntaxParser(cx);
-    if (!JS_GetProperty(cx, objOptions, "allowSyntaxParser",
-                        &optionAllowSyntaxParser)) {
-      return false;
-    }
-
-    if (optionAllowSyntaxParser.isBoolean()) {
-      allowSyntaxParser = optionAllowSyntaxParser.toBoolean();
-    } else if (!optionAllowSyntaxParser.isUndefined()) {
-      const char* typeName = InformalValueTypeName(optionAllowSyntaxParser);
-      JS_ReportErrorASCII(
-          cx, "option `allowSyntaxParser` should be a boolean, got %s",
-          typeName);
-      return false;
-    }
 
     RootedValue optionModule(cx);
     if (!JS_GetProperty(cx, objOptions, "module", &optionModule)) {
@@ -5233,9 +5216,7 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
   const char16_t* chars = stableChars.twoByteRange().begin().get();
 
   CompileOptions options(cx);
-  options.setIntroductionType("js shell parse")
-      .setFileAndLine("<string>", 1)
-      .setAllowSyntaxParser(allowSyntaxParser);
+  options.setIntroductionType("js shell parse").setFileAndLine("<string>", 1);
   if (goal == frontend::ParseGoal::Module) {
     // See frontend::CompileModule.
     options.maybeMakeStrictMode(true);

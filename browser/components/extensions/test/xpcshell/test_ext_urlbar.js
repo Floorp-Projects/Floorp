@@ -1,9 +1,20 @@
 "use strict";
 
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarController: "resource:///modules/UrlbarController.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
+});
+
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+
+add_task(async function startup() {
+  await AddonTestUtils.promiseStartupManager();
 });
 
 add_task(async function test_urlbar_without_urlbar_permission() {
@@ -178,4 +189,32 @@ add_task(async function test_registerProvider() {
   // Sanity check the providers.
   Assert.deepEqual(UrlbarProvidersManager.providers, providers,
                    "Should return to the default providers");
+});
+
+add_task(async function test_setOpenViewOnFocus() {
+  let getPrefValue = () => UrlbarPrefs.get("openViewOnFocus");
+
+  Assert.equal(getPrefValue(), false,
+               "Open-view-on-focus mode should be disabled by default");
+
+  let ext = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["urlbar"],
+    },
+    isPrivileged: true,
+    incognitoOverride: "spanning",
+    useAddonManager: "temporary",
+    background() {
+      browser.urlbar.openViewOnFocus.set({value: true});
+    },
+  });
+  await ext.startup();
+
+  Assert.equal(getPrefValue(), true,
+               "Successfully enabled the open-view-on-focus mode");
+
+  await ext.unload();
+
+  Assert.equal(getPrefValue(), false,
+               "Open-view-on-focus mode should be reset after unloading the add-on");
 });
