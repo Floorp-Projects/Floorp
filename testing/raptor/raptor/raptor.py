@@ -393,7 +393,8 @@ class Raptor(object):
                     recording_date = json.loads(f.read()).get('recording_date')
 
                     if recording_date is not None:
-                        LOG.info('Playback recording date: {} '.format(recording_date.split(' ')[0]))
+                        LOG.info('Playback recording date: {} '.
+                                 format(recording_date.split(' ')[0]))
                     else:
                         LOG.info('Playback recording date not available')
             else:
