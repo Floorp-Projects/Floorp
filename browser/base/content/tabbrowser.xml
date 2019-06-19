@@ -944,13 +944,13 @@
                 {left: lastTabRect.left, right: lastTabRect.right},
                 selectedTab,
               ];
-            }).then(([tabUsed, scrollRect, tabRect, selectedRect]) => {
+            }).then(([tabToScrollIntoView, scrollRect, tabRect, selectedRect]) => {
               // First off, remove the promise so we can re-enter if necessary.
               delete this._backgroundTabScrollPromise;
               // Then, if the layout info isn't for the last-scrolled-to-tab, re-run
               // the code above to get layout info for *that* tab, and don't do
               // anything here, as we really just want to run this for the last-opened tab.
-              if (this._lastTabToScrollIntoView != tabUsed) {
+              if (this._lastTabToScrollIntoView != tabToScrollIntoView) {
                 this._notifyBackgroundTab(this._lastTabToScrollIntoView);
                 return;
               }
@@ -964,7 +964,7 @@
                 if (!selectedRect ||
                     Math.max(tabRect.right - selectedRect.left, selectedRect.right - tabRect.left) <=
                       scrollRect.width) {
-                  this.arrowScrollbox.ensureElementIsVisible(aTab);
+                  this.arrowScrollbox.ensureElementIsVisible(tabToScrollIntoView);
                   return;
                 }
 
