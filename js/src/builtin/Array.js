@@ -789,10 +789,12 @@ function ArrayIteratorNext() {
     return result;
 }
 
-function ArrayValues() {
+// Uncloned functions with `$` prefix are allocated as extended function
+// to store the original name in `_SetCanonicalName`.
+function $ArrayValues() {
     return CreateArrayIterator(this, ITEM_KIND_VALUE);
 }
-_SetCanonicalName(ArrayValues, "values");
+_SetCanonicalName($ArrayValues, "values");
 
 function ArrayEntries() {
     return CreateArrayIterator(this, ITEM_KIND_KEY_AND_VALUE);
@@ -973,11 +975,11 @@ function ArrayToLocaleString(locales, options) {
 }
 
 // ES 2016 draft Mar 25, 2016 22.1.2.5.
-function ArraySpecies() {
+function $ArraySpecies() {
     // Step 1.
     return this;
 }
-_SetCanonicalName(ArraySpecies, "get [Symbol.species]");
+_SetCanonicalName($ArraySpecies, "get [Symbol.species]");
 
 // ES 2016 draft Mar 25, 2016 9.4.2.3.
 function ArraySpeciesCreate(originalArray, length) {
