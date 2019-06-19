@@ -34,6 +34,7 @@ const actionTypes = {
   UPDATE_REQUEST: "UPDATE_REQUEST",
   WATERFALL_RESIZE: "WATERFALL_RESIZE",
   SET_COLUMNS_WIDTH: "SET_COLUMNS_WIDTH",
+  WS_ADD_FRAME: "WS_ADD_FRAME",
 };
 
 // Descriptions for what this frontend is currently doing.
@@ -154,11 +155,13 @@ const UPDATE_PROPS = [
   "isThirdPartyTrackingResource",
   "referrerPolicy",
   "blockedReason",
+  "channelId",
 ];
 
 const PANELS = {
   COOKIES: "cookies",
   HEADERS: "headers",
+  WEBSOCKETS: "webSockets",
   PARAMS: "params",
   RESPONSE: "response",
   CACHE: "cache",
