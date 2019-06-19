@@ -19,15 +19,15 @@
   MACRO(apply, apply, "apply")                                                 \
   MACRO(args, args, "args")                                                    \
   MACRO(arguments, arguments, "arguments")                                     \
-  MACRO(ArrayBufferSpecies, ArrayBufferSpecies, "ArrayBufferSpecies")          \
+  MACRO(ArrayBufferSpecies, ArrayBufferSpecies, "$ArrayBufferSpecies")         \
   MACRO(ArrayIterator, ArrayIterator, "Array Iterator")                        \
   MACRO(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext")             \
   MACRO(ArraySort, ArraySort, "ArraySort")                                     \
-  MACRO(ArraySpecies, ArraySpecies, "ArraySpecies")                            \
+  MACRO(ArraySpecies, ArraySpecies, "$ArraySpecies")                           \
   MACRO(ArraySpeciesCreate, ArraySpeciesCreate, "ArraySpeciesCreate")          \
   MACRO(ArrayToLocaleString, ArrayToLocaleString, "ArrayToLocaleString")       \
   MACRO(ArrayType, ArrayType, "ArrayType")                                     \
-  MACRO(ArrayValues, ArrayValues, "ArrayValues")                               \
+  MACRO(ArrayValues, ArrayValues, "$ArrayValues")                              \
   MACRO(as, as, "as")                                                          \
   MACRO(Async, Async, "Async")                                                 \
   MACRO(AsyncFromSyncIterator, AsyncFromSyncIterator,                          \
@@ -344,7 +344,7 @@
   MACRO(raw, raw, "raw")                                                       \
   MACRO(reason, reason, "reason")                                              \
   MACRO(RegExpBuiltinExec, RegExpBuiltinExec, "RegExpBuiltinExec")             \
-  MACRO(RegExpFlagsGetter, RegExpFlagsGetter, "RegExpFlagsGetter")             \
+  MACRO(RegExpFlagsGetter, RegExpFlagsGetter, "$RegExpFlagsGetter")            \
   MACRO(RegExpMatcher, RegExpMatcher, "RegExpMatcher")                         \
   MACRO(RegExpSearcher, RegExpSearcher, "RegExpSearcher")                      \
   MACRO(RegExpStringIterator, RegExpStringIterator, "RegExp String Iterator")  \

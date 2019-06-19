@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ES6 draft rev34 (2015/02/20) 21.2.5.3 get RegExp.prototype.flags
-function RegExpFlagsGetter() {
+// Uncloned functions with `$` prefix are allocated as extended function
+// to store the original name in `_SetCanonicalName`.
+function $RegExpFlagsGetter() {
     // Steps 1-2.
     var R = this;
     if (!IsObject(R))
@@ -35,10 +37,10 @@ function RegExpFlagsGetter() {
     // Step 19.
     return result;
 }
-_SetCanonicalName(RegExpFlagsGetter, "get flags");
+_SetCanonicalName($RegExpFlagsGetter, "get flags");
 
 // ES 2017 draft 40edb3a95a475c1b251141ac681b8793129d9a6d 21.2.5.14.
-function RegExpToString()
+function $RegExpToString()
 {
     // Step 1.
     var R = this;
@@ -56,7 +58,7 @@ function RegExpToString()
     // Steps 5-6.
     return "/" + pattern + "/" + flags;
 }
-_SetCanonicalName(RegExpToString, "toString");
+_SetCanonicalName($RegExpToString, "toString");
 
 // ES 2016 draft Mar 25, 2016 21.2.5.2.3.
 function AdvanceStringIndex(S, index) {
@@ -1070,11 +1072,11 @@ function RegExpTest(string) {
 }
 
 // ES 2016 draft Mar 25, 2016 21.2.4.2.
-function RegExpSpecies() {
+function $RegExpSpecies() {
     // Step 1.
     return this;
 }
-_SetCanonicalName(RegExpSpecies, "get [Symbol.species]");
+_SetCanonicalName($RegExpSpecies, "get [Symbol.species]");
 
 function IsRegExpMatchAllOptimizable(rx, C) {
     if (!IsRegExpObject(rx))

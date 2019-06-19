@@ -414,11 +414,11 @@ const JSFunctionSpec MapObject::methods[] = {
     JS_SELF_HOSTED_FN("forEach", "MapForEach", 2, 0),
     // MapEntries only exists to preseve the equal identity of
     // entries and @@iterator.
-    JS_SELF_HOSTED_FN("entries", "MapEntries", 0, 0),
-    JS_SELF_HOSTED_SYM_FN(iterator, "MapEntries", 0, 0), JS_FS_END};
+    JS_SELF_HOSTED_FN("entries", "$MapEntries", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "$MapEntries", 0, 0), JS_FS_END};
 
 const JSPropertySpec MapObject::staticProperties[] = {
-    JS_SELF_HOSTED_SYM_GET(species, "MapSpecies", 0), JS_PS_END};
+    JS_SELF_HOSTED_SYM_GET(species, "$MapSpecies", 0), JS_PS_END};
 
 template <class Range>
 static void TraceKey(Range& r, const HashableValue& key, JSTracer* trc) {
@@ -1158,12 +1158,12 @@ const JSFunctionSpec SetObject::methods[] = {
     JS_SELF_HOSTED_FN("forEach", "SetForEach", 2, 0),
     // SetValues only exists to preseve the equal identity of
     // values, keys and @@iterator.
-    JS_SELF_HOSTED_FN("values", "SetValues", 0, 0),
-    JS_SELF_HOSTED_FN("keys", "SetValues", 0, 0),
-    JS_SELF_HOSTED_SYM_FN(iterator, "SetValues", 0, 0), JS_FS_END};
+    JS_SELF_HOSTED_FN("values", "$SetValues", 0, 0),
+    JS_SELF_HOSTED_FN("keys", "$SetValues", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "$SetValues", 0, 0), JS_FS_END};
 
 const JSPropertySpec SetObject::staticProperties[] = {
-    JS_SELF_HOSTED_SYM_GET(species, "SetSpecies", 0), JS_PS_END};
+    JS_SELF_HOSTED_SYM_GET(species, "$SetSpecies", 0), JS_PS_END};
 
 bool SetObject::keys(JSContext* cx, HandleObject obj,
                      JS::MutableHandle<GCVector<JS::Value>> keys) {

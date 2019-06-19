@@ -791,13 +791,15 @@ function dateTimeFormatFormatToBind(date) {
  *
  * Spec: ECMAScript Internationalization API Specification, 12.4.3.
  */
-function Intl_DateTimeFormat_format_get() {
+// Uncloned functions with `$` prefix are allocated as extended function
+// to store the original name in `_SetCanonicalName`.
+function $Intl_DateTimeFormat_format_get() {
     // Steps 1-3.
     var thisArg = UnwrapDateTimeFormat(this);
     var dtf = thisArg;
     if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
         return callFunction(CallDateTimeFormatMethodIfWrapped, thisArg,
-                            "Intl_DateTimeFormat_format_get");
+                            "$Intl_DateTimeFormat_format_get");
     }
 
     var internals = getDateTimeFormatInternals(dtf);
@@ -814,7 +816,7 @@ function Intl_DateTimeFormat_format_get() {
     // Step 5.
     return internals.boundFormat;
 }
-_SetCanonicalName(Intl_DateTimeFormat_format_get, "get format");
+_SetCanonicalName($Intl_DateTimeFormat_format_get, "get format");
 
 /**
  * Intl.DateTimeFormat.prototype.formatToParts ( date )

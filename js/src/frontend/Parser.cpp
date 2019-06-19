@@ -50,6 +50,7 @@
 #include "vm/JSScript.h"
 #include "vm/ModuleBuilder.h"  // js::ModuleBuilder
 #include "vm/RegExpObject.h"
+#include "vm/SelfHosting.h"
 #include "vm/StringType.h"
 #include "wasm/AsmJS.h"
 
@@ -1961,6 +1962,10 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
 
   gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
   JSFunction::Flags flags;
+  bool isExtendedUnclonedSelfHostedFunctionName =
+      isSelfHosting && atom && IsExtendedUnclonedSelfHostedFunctionName(atom);
+  MOZ_ASSERT_IF(isExtendedUnclonedSelfHostedFunctionName, !inFunctionBox);
+
   switch (kind) {
     case FunctionSyntaxKind::Expression:
       flags = (generatorKind == GeneratorKind::NotGenerator &&
@@ -1991,7 +1996,7 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
       break;
     default:
       MOZ_ASSERT(kind == FunctionSyntaxKind::Statement);
-      if (isSelfHosting && !inFunctionBox) {
+      if (isExtendedUnclonedSelfHostedFunctionName) {
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       }
       flags = (generatorKind == GeneratorKind::NotGenerator &&

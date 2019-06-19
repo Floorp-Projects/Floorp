@@ -63,10 +63,12 @@ function MapForEach(callbackfn, thisArg = undefined) {
     }
 }
 
-function MapEntries() {
+// Uncloned functions with `$` prefix are allocated as extended function
+// to store the original name in `_SetCanonicalName`.
+function $MapEntries() {
     return callFunction(std_Map_iterator, this);
 }
-_SetCanonicalName(MapEntries, "entries");
+_SetCanonicalName($MapEntries, "entries");
 
 var iteratorTemp = { mapIterationResultPair: null };
 
@@ -121,8 +123,8 @@ function MapIteratorNext() {
 }
 
 // ES6 final draft 23.1.2.2.
-function MapSpecies() {
+function $MapSpecies() {
     // Step 1.
     return this;
 }
-_SetCanonicalName(MapSpecies, "get [Symbol.species]");
+_SetCanonicalName($MapSpecies, "get [Symbol.species]");

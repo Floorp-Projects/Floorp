@@ -771,7 +771,7 @@ bool js::regexp_unicode(JSContext* cx, unsigned argc, JS::Value* vp) {
 }
 
 const JSPropertySpec js::regexp_properties[] = {
-    JS_SELF_HOSTED_GET("flags", "RegExpFlagsGetter", 0),
+    JS_SELF_HOSTED_GET("flags", "$RegExpFlagsGetter", 0),
     JS_PSG("global", regexp_global, 0),
     JS_PSG("ignoreCase", regexp_ignoreCase, 0),
     JS_PSG("multiline", regexp_multiline, 0),
@@ -781,8 +781,8 @@ const JSPropertySpec js::regexp_properties[] = {
     JS_PS_END};
 
 const JSFunctionSpec js::regexp_methods[] = {
-    JS_SELF_HOSTED_FN(js_toSource_str, "RegExpToString", 0, 0),
-    JS_SELF_HOSTED_FN(js_toString_str, "RegExpToString", 0, 0),
+    JS_SELF_HOSTED_FN(js_toSource_str, "$RegExpToString", 0, 0),
+    JS_SELF_HOSTED_FN(js_toString_str, "$RegExpToString", 0, 0),
     JS_FN("compile", regexp_compile, 2, 0),
     JS_SELF_HOSTED_FN("exec", "RegExp_prototype_Exec", 1, 0),
     JS_SELF_HOSTED_FN("test", "RegExpTest", 1, 0),
@@ -890,7 +890,7 @@ const JSPropertySpec js::regexp_static_props[] = {
     JS_PSG("$+", static_lastParen_getter, JSPROP_PERMANENT),
     JS_PSG("$`", static_leftContext_getter, JSPROP_PERMANENT),
     JS_PSG("$'", static_rightContext_getter, JSPROP_PERMANENT),
-    JS_SELF_HOSTED_SYM_GET(species, "RegExpSpecies", 0),
+    JS_SELF_HOSTED_SYM_GET(species, "$RegExpSpecies", 0),
     JS_PS_END};
 
 template <typename CharT>

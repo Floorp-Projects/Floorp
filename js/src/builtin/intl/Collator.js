@@ -348,13 +348,15 @@ function collatorCompareToBind(x, y) {
  *
  * Spec: ECMAScript Internationalization API Specification, 10.3.3.
  */
-function Intl_Collator_compare_get() {
+// Uncloned functions with `$` prefix are allocated as extended function
+// to store the original name in `_SetCanonicalName`.
+function $Intl_Collator_compare_get() {
     // Step 1.
     var collator = this;
 
     // Steps 2-3.
     if (!IsObject(collator) || (collator = GuardToCollator(collator)) === null)
-        return callFunction(CallCollatorMethodIfWrapped, this, "Intl_Collator_compare_get");
+        return callFunction(CallCollatorMethodIfWrapped, this, "$Intl_Collator_compare_get");
 
     var internals = getCollatorInternals(collator);
 
@@ -370,7 +372,7 @@ function Intl_Collator_compare_get() {
     // Step 5.
     return internals.boundCompare;
 }
-_SetCanonicalName(Intl_Collator_compare_get, "get compare");
+_SetCanonicalName($Intl_Collator_compare_get, "get compare");
 
 /**
  * Returns the resolved options for a Collator object.

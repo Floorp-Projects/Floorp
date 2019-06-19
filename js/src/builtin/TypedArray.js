@@ -1445,7 +1445,10 @@ function TypedArraySubarray(begin, end) {
 }
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.30 %TypedArray%.prototype.values()
-function TypedArrayValues() {
+//
+// Uncloned functions with `$` prefix are allocated as extended function
+// to store the original name in `_SetCanonicalName`.
+function $TypedArrayValues() {
     // Step 1.
     var O = this;
 
@@ -1455,7 +1458,7 @@ function TypedArrayValues() {
     // Step 7.
     return CreateArrayIterator(O, ITEM_KIND_VALUE);
 }
-_SetCanonicalName(TypedArrayValues, "values");
+_SetCanonicalName($TypedArrayValues, "values");
 
 // Proposed for ES7:
 // https://github.com/tc39/Array.prototype.includes/blob/7c023c19a0/spec.md
@@ -1551,7 +1554,7 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
         // constructor is a built-in TypedArray constructor.
         if (!mapping && IsTypedArrayConstructor(C) && IsObject(source)) {
             // The source is a TypedArray using the default iterator.
-            if (usingIterator === TypedArrayValues && IsTypedArray(source) &&
+            if (usingIterator === $TypedArrayValues && IsTypedArray(source) &&
                 ArrayIteratorPrototypeOptimizable())
             {
                 // Step 7.a.
@@ -1574,7 +1577,7 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
             }
 
             // The source is a packed array using the default iterator.
-            if (usingIterator === ArrayValues && IsPackedArray(source) &&
+            if (usingIterator === $ArrayValues && IsPackedArray(source) &&
                 ArrayIteratorPrototypeOptimizable())
             {
                 // Steps 7.b-c.
@@ -1674,11 +1677,11 @@ function TypedArrayStaticOf(/*...items*/) {
 }
 
 // ES 2016 draft Mar 25, 2016 22.2.2.4.
-function TypedArraySpecies() {
+function $TypedArraySpecies() {
     // Step 1.
     return this;
 }
-_SetCanonicalName(TypedArraySpecies, "get [Symbol.species]");
+_SetCanonicalName($TypedArraySpecies, "get [Symbol.species]");
 
 // ES2018 draft rev 0525bb33861c7f4e9850f8a222c89642947c4b9c
 // 22.2.2.1.1 Runtime Semantics: IterableToList( items, method )
@@ -1806,18 +1809,18 @@ function IsDetachedBufferThis() {
 }
 
 // ES 2016 draft Mar 25, 2016 24.1.3.3.
-function ArrayBufferSpecies() {
+function $ArrayBufferSpecies() {
     // Step 1.
     return this;
 }
-_SetCanonicalName(ArrayBufferSpecies, "get [Symbol.species]");
+_SetCanonicalName($ArrayBufferSpecies, "get [Symbol.species]");
 
 // Shared memory and atomics proposal (30 Oct 2016)
-function SharedArrayBufferSpecies() {
+function $SharedArrayBufferSpecies() {
     // Step 1.
     return this;
 }
-_SetCanonicalName(SharedArrayBufferSpecies, "get [Symbol.species]");
+_SetCanonicalName($SharedArrayBufferSpecies, "get [Symbol.species]");
 
 // Shared memory and atomics proposal 6.2.1.5.3 (30 Oct 2016)
 // http://tc39.github.io/ecmascript_sharedmem/shmem.html
