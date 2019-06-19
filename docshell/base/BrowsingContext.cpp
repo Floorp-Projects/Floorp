@@ -85,6 +85,12 @@ already_AddRefed<BrowsingContext> BrowsingContext::Get(uint64_t aId) {
   return do_AddRef(sBrowsingContexts->Get(aId));
 }
 
+/* static */
+already_AddRefed<BrowsingContext> BrowsingContext::GetFromWindow(
+    WindowProxyHolder& aProxy) {
+  return do_AddRef(aProxy.get());
+}
+
 CanonicalBrowsingContext* BrowsingContext::Canonical() {
   return CanonicalBrowsingContext::Cast(this);
 }

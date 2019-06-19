@@ -105,6 +105,13 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
     return Get(aId);
   }
 
+  static already_AddRefed<BrowsingContext> GetFromWindow(
+      WindowProxyHolder& aProxy);
+  static already_AddRefed<BrowsingContext> GetFromWindow(
+      GlobalObject&, WindowProxyHolder& aProxy) {
+    return GetFromWindow(aProxy);
+  }
+
   // Create a brand-new BrowsingContext object.
   static already_AddRefed<BrowsingContext> Create(BrowsingContext* aParent,
                                                   BrowsingContext* aOpener,
