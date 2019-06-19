@@ -96,7 +96,7 @@ void PeerConnectionMedia::StunAddrsHandler::OnStunAddrsAvailable(
     // If parent process returns 0 STUN addresses, change ICE connection
     // state to failed.
     if (!pcm_->mStunAddrs.Length()) {
-      pcm_->SignalIceConnectionStateChange(dom::RTCIceConnectionState::Failed);
+      pcm_->IceConnectionStateChange_m(dom::RTCIceConnectionState::Failed);
     }
 
     pcm_ = nullptr;
@@ -505,6 +505,7 @@ void PeerConnectionMedia::SelfDestruct() {
       mSTSThread,
       WrapRunnable(this, &PeerConnectionMedia::ShutdownMediaTransport_s),
       NS_DISPATCH_NORMAL);
+  mParent = nullptr;
 
   CSFLogDebug(LOGTAG, "%s: Media shut down", __FUNCTION__);
 }
@@ -677,41 +678,36 @@ void PeerConnectionMedia::OnCandidateFound_s(
 void PeerConnectionMedia::IceGatheringStateChange_m(
     dom::RTCIceGatheringState aState) {
   ASSERT_ON_THREAD(mMainThread);
-  SignalIceGatheringStateChange(aState);
+  if (mParent) {
+    mParent->IceGatheringStateChange(aState);
+  }
 }
 
 void PeerConnectionMedia::IceConnectionStateChange_m(
     dom::RTCIceConnectionState aState) {
   ASSERT_ON_THREAD(mMainThread);
-  SignalIceConnectionStateChange(aState);
+  if (mParent) {
+    mParent->IceConnectionStateChange(aState);
+  }
 }
 
 void PeerConnectionMedia::OnCandidateFound_m(
     const std::string& aTransportId, const CandidateInfo& aCandidateInfo) {
   ASSERT_ON_THREAD(mMainThread);
-  if (!aCandidateInfo.mDefaultHostRtp.empty()) {
-    SignalUpdateDefaultCandidate(aCandidateInfo.mDefaultHostRtp,
-                                 aCandidateInfo.mDefaultPortRtp,
-                                 aCandidateInfo.mDefaultHostRtcp,
-                                 aCandidateInfo.mDefaultPortRtcp, aTransportId);
+  if (mParent) {
+    mParent->OnCandidateFound(aTransportId, aCandidateInfo);
   }
-  SignalCandidate(aCandidateInfo.mCandidate, aTransportId,
-                  aCandidateInfo.mUfrag);
 }
 
 void PeerConnectionMedia::AlpnNegotiated_s(const std::string& aAlpn) {
   GetMainThread()->Dispatch(
-      WrapRunnableNM(&PeerConnectionMedia::AlpnNegotiated_m, mParentHandle,
-                     aAlpn),
+      WrapRunnable(this, &PeerConnectionMedia::AlpnNegotiated_m, aAlpn),
       NS_DISPATCH_NORMAL);
 }
 
-void PeerConnectionMedia::AlpnNegotiated_m(const std::string& aParentHandle,
-                                           const std::string& aAlpn) {
-  PeerConnectionWrapper pcWrapper(aParentHandle);
-  PeerConnectionImpl* pc = pcWrapper.impl();
-  if (pc) {
-    pc->OnAlpnNegotiated(aAlpn);
+void PeerConnectionMedia::AlpnNegotiated_m(const std::string& aAlpn) {
+  if (mParent) {
+    mParent->OnAlpnNegotiated(aAlpn);
   }
 }
 
