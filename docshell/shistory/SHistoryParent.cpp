@@ -12,6 +12,13 @@
 namespace mozilla {
 namespace dom {
 
+LegacySHistory::LegacySHistory(CanonicalBrowsingContext* aRootBC,
+                               const nsID& aDocShellID)
+    : nsSHistory(aRootBC, aDocShellID) {
+  mIsRemote = true;
+  aRootBC->SetSessionHistory(this);
+}
+
 static void FillInLoadResult(PContentParent* aManager, nsresult aRv,
                              const nsSHistory::LoadEntryResult& aLoadResult,
                              LoadSHEntryResult* aResult) {
