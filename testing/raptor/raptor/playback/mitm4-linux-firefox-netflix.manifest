@@ -1,8 +1,8 @@
 [
     {
-    "size": 87375104,
+    "size": 63313140,
     "visibility": "public",
-    "digest": "b281ee5f9ca3c7b8fba30b29714f752880ae8d92aaa97fab70edb5dfb69742882276b7df332de6a76fb7b6d9aebc50185bddbcc080a9d531e5f08e92b1a2c593",
+    "digest": "24236b7cb2b6f5656fa87173b887801dd3ee1a6dd43d9cabf055735813aaf3975ac1daf743f3dd281c4d0f93fa32900377b17f3711e38b32d90f7271b3f118c1",
     "algorithm": "sha512",
     "filename": "mitm4-linux-firefox-netflix.zip",
     "unpack": true
