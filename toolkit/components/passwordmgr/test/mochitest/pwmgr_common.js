@@ -239,17 +239,6 @@ function promiseFormsProcessed(expectedCount = 1) {
   });
 }
 
-function getTelemetryEvents(options) {
-  return new Promise(resolve => {
-    PWMGR_COMMON_PARENT.addMessageListener("getTelemetryEvents", function gotResult(events) {
-      info("CONTENT: getTelemetryEvents gotResult: " + JSON.stringify(events));
-      PWMGR_COMMON_PARENT.removeMessageListener("getTelemetryEvents", gotResult);
-      resolve(events);
-    });
-    PWMGR_COMMON_PARENT.sendAsyncMessage("getTelemetryEvents", options);
-  });
-}
-
 function loadRecipes(recipes) {
   info("Loading recipes");
   return new Promise(resolve => {
