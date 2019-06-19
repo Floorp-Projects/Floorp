@@ -2192,7 +2192,7 @@ impl ResourceCache {
                 self.texture_cache = TextureCache::new(
                     self.texture_cache.max_texture_size(),
                     self.texture_cache.max_texture_layers(),
-                    self.texture_cache.picture_tile_size(),
+                    &self.texture_cache.picture_tile_sizes(),
                     DeviceIntSize::zero(),
                 );
             }
