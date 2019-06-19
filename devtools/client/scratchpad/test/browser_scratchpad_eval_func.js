@@ -25,18 +25,10 @@ function reportErrorAndQuit(error) {
 function runTests(sw) {
   const sp = sw.Scratchpad;
 
-  /* eslint-disable brace-style */
-  const foo =
-    "" +
-    function main() {
-      console.log(1);
-    };
-  const bar =
-    "var bar = " +
-    (() => {
-      console.log(2);
-    });
-  /* eslint-enable brace-style */
+  // prettier-ignore
+  const foo = "" + function main() { console.log(1); };
+  // prettier-ignore
+  const bar = "var bar = " + (() => { console.log(2); });
 
   const fullText = foo + "\n" + "\n" + bar + "\n";
 
