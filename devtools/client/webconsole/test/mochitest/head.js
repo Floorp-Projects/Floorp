@@ -1376,3 +1376,17 @@ async function checkMessageStack(hud, text, frameLines) {
        `Found line ${frameLines[i]} for frame #${i}`);
   }
 }
+
+/**
+ * Reload the content page.
+ * @returns {Promise} A promise that will return when the page is fully loaded (i.e., the
+ *                    `load` event was fired).
+ */
+function reloadPage() {
+  const onLoad = BrowserTestUtils.waitForContentEvent(
+    gBrowser.selectedBrowser, "load", true);
+  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+    content.location.reload();
+  });
+  return onLoad;
+}
