@@ -1707,6 +1707,7 @@ JS_PUBLIC_API void JS_FireOnNewGlobalObject(JSContext* cx,
   cx->check(global);
   Rooted<js::GlobalObject*> globalObject(cx, &global->as<GlobalObject>());
   Debugger::onNewGlobalObject(cx, globalObject);
+  cx->runtime()->ensureRealmIsRecordingAllocations(globalObject);
 }
 
 JS_PUBLIC_API JSObject* JS_NewObject(JSContext* cx, const JSClass* jsclasp) {
