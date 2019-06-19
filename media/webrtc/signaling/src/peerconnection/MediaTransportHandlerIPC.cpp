@@ -333,8 +333,7 @@ mozilla::ipc::IPCResult MediaTransportChild::RecvOnAlpnNegotiated(
 mozilla::ipc::IPCResult MediaTransportChild::RecvOnGatheringStateChange(
     const int& state) {
   MOZ_ASSERT(GetMainThreadEventTarget()->IsOnCurrentThread());
-  mUser->OnGatheringStateChange(
-      static_cast<dom::PCImplIceGatheringState>(state));
+  mUser->OnGatheringStateChange(static_cast<dom::RTCIceGatheringState>(state));
   return ipc::IPCResult::Ok();
 }
 
@@ -342,7 +341,7 @@ mozilla::ipc::IPCResult MediaTransportChild::RecvOnConnectionStateChange(
     const int& state) {
   MOZ_ASSERT(GetMainThreadEventTarget()->IsOnCurrentThread());
   mUser->OnConnectionStateChange(
-      static_cast<dom::PCImplIceConnectionState>(state));
+      static_cast<dom::RTCIceConnectionState>(state));
   return ipc::IPCResult::Ok();
 }
 

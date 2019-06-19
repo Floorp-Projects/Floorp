@@ -96,8 +96,7 @@ void PeerConnectionMedia::StunAddrsHandler::OnStunAddrsAvailable(
     // If parent process returns 0 STUN addresses, change ICE connection
     // state to failed.
     if (!pcm_->mStunAddrs.Length()) {
-      pcm_->SignalIceConnectionStateChange(
-          dom::PCImplIceConnectionState::Failed);
+      pcm_->SignalIceConnectionStateChange(dom::RTCIceConnectionState::Failed);
     }
 
     pcm_ = nullptr;
@@ -630,7 +629,7 @@ nsresult PeerConnectionMedia::AddRIDFilter(MediaStreamTrack& aRecvTrack,
 }
 
 void PeerConnectionMedia::IceGatheringStateChange_s(
-    dom::PCImplIceGatheringState aState) {
+    dom::RTCIceGatheringState aState) {
   ASSERT_ON_THREAD(mSTSThread);
 
   // ShutdownMediaTransport_s has not run yet because it unhooks this function
@@ -644,7 +643,7 @@ void PeerConnectionMedia::IceGatheringStateChange_s(
 }
 
 void PeerConnectionMedia::IceConnectionStateChange_s(
-    dom::PCImplIceConnectionState aState) {
+    dom::RTCIceConnectionState aState) {
   ASSERT_ON_THREAD(mSTSThread);
   // ShutdownMediaTransport_s has not run yet because it unhooks this function
   // from its signal, which means that SelfDestruct_m has not been dispatched
@@ -676,13 +675,13 @@ void PeerConnectionMedia::OnCandidateFound_s(
 }
 
 void PeerConnectionMedia::IceGatheringStateChange_m(
-    dom::PCImplIceGatheringState aState) {
+    dom::RTCIceGatheringState aState) {
   ASSERT_ON_THREAD(mMainThread);
   SignalIceGatheringStateChange(aState);
 }
 
 void PeerConnectionMedia::IceConnectionStateChange_m(
-    dom::PCImplIceConnectionState aState) {
+    dom::RTCIceConnectionState aState) {
   ASSERT_ON_THREAD(mMainThread);
   SignalIceConnectionStateChange(aState);
 }
