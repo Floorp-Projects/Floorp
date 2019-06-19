@@ -46,6 +46,9 @@ const RECLAIM_THRESHOLD_BYTES: usize = 5 * 1024 * 1024;
 enum EntryDetails {
     Standalone,
     Picture {
+        // Index in the picture_textures array
+        texture_index: usize,
+        // Slice in the texture array
         layer_index: usize,
     },
     Cache {
@@ -60,7 +63,7 @@ impl EntryDetails {
     fn describe(&self) -> (LayerIndex, DeviceIntPoint) {
         match *self {
             EntryDetails::Standalone => (0, DeviceIntPoint::zero()),
-            EntryDetails::Picture { layer_index } => (layer_index, DeviceIntPoint::zero()),
+            EntryDetails::Picture { layer_index, .. } => (layer_index, DeviceIntPoint::zero()),
             EntryDetails::Cache { origin, layer_index } => (layer_index, origin),
         }
     }
@@ -477,7 +480,7 @@ pub struct TextureCache {
     shared_textures: SharedTextures,
 
     /// A single texture array for picture caching.
-    picture_texture: Option<WholeTextureArray>,
+    picture_textures: Vec<WholeTextureArray>,
 
     /// Maximum texture size supported by hardware.
     max_texture_size: i32,
@@ -526,7 +529,7 @@ impl TextureCache {
     pub fn new(
         max_texture_size: i32,
         mut max_texture_layers: usize,
-        picture_tile_size: Option<DeviceIntSize>,
+        picture_tile_sizes: &[DeviceIntSize],
         initial_size: DeviceIntSize,
     ) -> Self {
         if cfg!(target_os = "macos") {
@@ -556,36 +559,41 @@ impl TextureCache {
         }
 
         let mut pending_updates = TextureUpdateList::new();
-        let picture_texture = if let Some(tile_size) = picture_tile_size {
+        let mut picture_textures = Vec::new();
+        let mut next_texture_id = 1;
+
+        for tile_size in picture_tile_sizes {
+            // TODO(gw): The way initial size is used here may allocate a lot of memory once
+            //           we are using multiple slice sizes. Do some measurements once we
+            //           have multiple slices here and adjust the calculations as required.
             let picture_texture = WholeTextureArray {
-                size: tile_size,
+                size: *tile_size,
                 filter: TextureFilter::Nearest,
                 format: PICTURE_TILE_FORMAT,
-                texture_id: CacheTextureId(1),
+                texture_id: CacheTextureId(next_texture_id),
                 slices: {
                     let num_x = (initial_size.width + tile_size.width - 1) / tile_size.width;
                     let num_y = (initial_size.height + tile_size.height - 1) / tile_size.height;
-                    let count = (num_x * num_y).max(1) as usize;
+                    let count = (num_x * num_y).max(1).min(16) as usize;
                     info!("Initializing picture texture with {}x{} slices", num_x, num_y);
                     vec![WholeTextureSlice { uv_rect_handle: None }; count]
                 },
                 has_depth: true,
             };
+            next_texture_id += 1;
             pending_updates.push_alloc(picture_texture.texture_id, picture_texture.to_info());
-            Some(picture_texture)
-        } else {
-            None
-        };
+            picture_textures.push(picture_texture);
+        }
 
         TextureCache {
             shared_textures: SharedTextures::new(),
-            picture_texture,
+            picture_textures,
             reached_reclaim_threshold: None,
             entries: FreeList::new(),
             max_texture_size,
             max_texture_layers,
             debug_flags: DebugFlags::empty(),
-            next_id: CacheTextureId(2),
+            next_id: CacheTextureId(next_texture_id),
             pending_updates,
             now: FrameStamp::INVALID,
             per_doc_data: FastHashMap::default(),
@@ -599,7 +607,7 @@ impl TextureCache {
     /// directly from unit test code.
     #[cfg(test)]
     pub fn new_for_testing(max_texture_size: i32, max_texture_layers: usize) -> Self {
-        let mut cache = Self::new(max_texture_size, max_texture_layers, None, DeviceIntSize::zero());
+        let mut cache = Self::new(max_texture_size, max_texture_layers, &[], DeviceIntSize::zero());
         let mut now = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
         now.advance();
         cache.begin_frame(now);
@@ -638,7 +646,7 @@ impl TextureCache {
 
     fn clear_picture(&mut self) {
         self.clear_kind(EntryKind::Picture);
-        if let Some(ref mut picture_texture) = self.picture_texture {
+        for picture_texture in &mut self.picture_textures {
             if let Some(texture_id) = picture_texture.reset(PICTURE_TEXTURE_ADD_SLICES) {
                 self.pending_updates.push_reset(texture_id, picture_texture.to_info());
             }
@@ -766,10 +774,15 @@ impl TextureCache {
         self.shared_textures.array_rgba8_nearest
             .update_profile(&mut texture_cache_profile.pages_rgba8_nearest);
 
-        if let Some(ref picture_texture) = self.picture_texture {
-            picture_texture
-                .update_profile(&mut texture_cache_profile.pages_picture);
+        // For now, this profile counter just accumulates the slices and bytes
+        // from all picture cache texture arrays.
+        let mut picture_slices = 0;
+        let mut picture_bytes = 0;
+        for picture_texture in &self.picture_textures {
+            picture_slices += picture_texture.slices.len();
+            picture_bytes += picture_texture.size_in_bytes();
         }
+        texture_cache_profile.pages_picture.set(picture_slices, picture_bytes);
 
         self.unset_doc_data();
         self.now = FrameStamp::INVALID;
@@ -813,8 +826,8 @@ impl TextureCache {
     }
 
     #[cfg(feature = "replay")]
-    pub fn picture_tile_size(&self) -> Option<DeviceIntSize> {
-        self.picture_texture.as_ref().map(|pt| pt.size)
+    pub fn picture_tile_sizes(&self) -> Vec<DeviceIntSize> {
+        self.picture_textures.iter().map(|pt| pt.size).collect()
     }
 
     pub fn pending_updates(&mut self) -> TextureUpdateList {
@@ -1025,10 +1038,8 @@ impl TextureCache {
     // Free a cache entry from the standalone list or shared cache.
     fn free(&mut self, entry: &CacheEntry) {
         match entry.details {
-            EntryDetails::Picture { layer_index } => {
-                let picture_texture = self.picture_texture
-                    .as_mut()
-                    .expect("Picture caching is expecte to be ON");
+            EntryDetails::Picture { texture_index, layer_index } => {
+                let picture_texture = &mut self.picture_textures[texture_index];
                 picture_texture.slices[layer_index].uv_rect_handle = None;
                 if self.debug_flags.contains(
                     DebugFlags::TEXTURE_CACHE_DBG |
@@ -1295,16 +1306,20 @@ impl TextureCache {
     // Update the data stored by a given texture cache handle for picture caching specifically.
     pub fn update_picture_cache(
         &mut self,
+        tile_size: DeviceIntSize,
         handle: &mut TextureCacheHandle,
         gpu_cache: &mut GpuCache,
     ) {
         debug_assert!(self.now.is_valid());
+        debug_assert!(tile_size.width > 0 && tile_size.height > 0);
 
         if self.entries.get_opt(handle).is_none() {
             let cache_entry = {
-                let picture_texture = self.picture_texture
-                    .as_mut()
-                    .expect("Picture caching is expecte to be ON");
+                let texture_index = self.picture_textures
+                    .iter()
+                    .position(|texture| { texture.size == tile_size })
+                    .expect("Picture caching is expected to be ON");
+                let picture_texture = &mut self.picture_textures[texture_index];
                 let layer_index = match picture_texture.find_free() {
                     Some(index) => index,
                     None => {
@@ -1314,7 +1329,11 @@ impl TextureCache {
                         index
                     },
                 };
-                picture_texture.occupy(layer_index, self.now)
+                picture_texture.occupy(
+                    texture_index,
+                    layer_index,
+                    self.now,
+                )
             };
             self.upsert_entry(cache_entry, handle)
         }
@@ -1634,10 +1653,6 @@ impl WholeTextureArray {
         self.slices.len() * (self.size.width * self.size.height) as usize * bpp
     }
 
-    fn update_profile(&self, counter: &mut ResourceProfileCounter) {
-        counter.set(self.slices.len(), self.size_in_bytes());
-    }
-
     /// Find an free slice.
     fn find_free(&self) -> Option<LayerIndex> {
         self.slices.iter().position(|slice| slice.uv_rect_handle.is_none())
@@ -1655,13 +1670,19 @@ impl WholeTextureArray {
     }
 
     fn cache_entry_impl(
-        &self, layer_index: usize, now: FrameStamp, uv_rect_handle: GpuCacheHandle, texture_id: CacheTextureId,
+        &self,
+        texture_index: usize,
+        layer_index: usize,
+        now: FrameStamp,
+        uv_rect_handle: GpuCacheHandle,
+        texture_id: CacheTextureId,
     ) -> CacheEntry {
         CacheEntry {
             size: self.size,
             user_data: [0.0; 3],
             last_access: now,
             details: EntryDetails::Picture {
+                texture_index,
                 layer_index,
             },
             uv_rect_handle,
@@ -1675,11 +1696,22 @@ impl WholeTextureArray {
     }
 
     /// Occupy a specified slice by a cache entry.
-    fn occupy(&mut self, layer_index: usize, now: FrameStamp) -> CacheEntry {
+    fn occupy(
+        &mut self,
+        texture_index: usize,
+        layer_index: usize,
+        now: FrameStamp,
+    ) -> CacheEntry {
         let uv_rect_handle = GpuCacheHandle::new();
         assert!(self.slices[layer_index].uv_rect_handle.is_none());
         self.slices[layer_index].uv_rect_handle = Some(uv_rect_handle);
-        self.cache_entry_impl(layer_index, now, uv_rect_handle, self.texture_id)
+        self.cache_entry_impl(
+            texture_index,
+            layer_index,
+            now,
+            uv_rect_handle,
+            self.texture_id,
+        )
     }
 
     /// Reset the texture array to the specified number of slices, if it's larger.
