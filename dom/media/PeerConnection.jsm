@@ -1580,15 +1580,7 @@ class RTCPeerConnection {
     if (this._closed) {
       return "closed";
     }
-    return {
-      "SignalingInvalid":            "",
-      "SignalingStable":             "stable",
-      "SignalingHaveLocalOffer":     "have-local-offer",
-      "SignalingHaveRemoteOffer":    "have-remote-offer",
-      "SignalingHaveLocalPranswer":  "have-local-pranswer",
-      "SignalingHaveRemotePranswer": "have-remote-pranswer",
-      "SignalingClosed":             "closed",
-    }[this._impl.signalingState];
+    return this._impl.signalingState;
   }
 
   changeIceGatheringState(state) {

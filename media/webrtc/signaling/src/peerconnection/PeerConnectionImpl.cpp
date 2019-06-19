@@ -294,9 +294,9 @@ bool IsPrivateBrowsing(nsPIDOMWindowInner* aWindow) {
 PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
     : mTimeCard(MOZ_LOG_TEST(logModuleInfo, LogLevel::Error) ? create_timecard()
                                                              : nullptr),
-      mSignalingState(PCImplSignalingState::SignalingStable),
-      mIceConnectionState(PCImplIceConnectionState::New),
-      mIceGatheringState(PCImplIceGatheringState::New),
+      mSignalingState(RTCSignalingState::Stable),
+      mIceConnectionState(RTCIceConnectionState::New),
+      mIceGatheringState(RTCIceGatheringState::New),
       mWindow(nullptr),
       mCertificate(nullptr),
       mSTSThread(nullptr),
@@ -1015,7 +1015,7 @@ already_AddRefed<TransceiverImpl> PeerConnectionImpl::CreateTransceiverImpl(
 }
 
 bool PeerConnectionImpl::CheckNegotiationNeeded(ErrorResult& rv) {
-  MOZ_ASSERT(mSignalingState == PCImplSignalingState::SignalingStable);
+  MOZ_ASSERT(mSignalingState == RTCSignalingState::Stable);
   return mJsepSession->CheckNegotiationNeeded();
 }
 
@@ -1521,7 +1521,7 @@ PeerConnectionImpl::AddIceCandidate(
   // we won't record them as trickle candidates. Is this what we want?
   if (!mIceStartTime.IsNull()) {
     TimeDuration timeDelta = TimeStamp::Now() - mIceStartTime;
-    if (mIceConnectionState == PCImplIceConnectionState::Failed) {
+    if (mIceConnectionState == RTCIceConnectionState::Failed) {
       Telemetry::Accumulate(Telemetry::WEBRTC_ICE_LATE_TRICKLE_ARRIVAL_TIME,
                             timeDelta.ToMilliseconds());
     } else {
@@ -1542,8 +1542,7 @@ PeerConnectionImpl::AddIceCandidate(
     // We do not bother PCMedia about this before offer/answer concludes.
     // Once offer/answer concludes, PCMedia will extract these candidates from
     // the remote SDP.
-    if (mSignalingState == PCImplSignalingState::SignalingStable &&
-        !transportId.empty()) {
+    if (mSignalingState == RTCSignalingState::Stable && !transportId.empty()) {
       mMedia->AddIceCandidate(aCandidate, transportId, aUfrag);
       mRawTrickledCandidates.push_back(aCandidate);
     }
@@ -2036,7 +2035,7 @@ void PeerConnectionImpl::GetPendingRemoteDescription(nsAString& aSDP) {
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::SignalingState(PCImplSignalingState* aState) {
+PeerConnectionImpl::SignalingState(RTCSignalingState* aState) {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aState);
 
@@ -2045,7 +2044,7 @@ PeerConnectionImpl::SignalingState(PCImplSignalingState* aState) {
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::IceConnectionState(PCImplIceConnectionState* aState) {
+PeerConnectionImpl::IceConnectionState(RTCIceConnectionState* aState) {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aState);
 
@@ -2054,7 +2053,7 @@ PeerConnectionImpl::IceConnectionState(PCImplIceConnectionState* aState) {
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::IceGatheringState(PCImplIceGatheringState* aState) {
+PeerConnectionImpl::IceGatheringState(RTCIceGatheringState* aState) {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aState);
 
@@ -2065,7 +2064,7 @@ PeerConnectionImpl::IceGatheringState(PCImplIceGatheringState* aState) {
 nsresult PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(mTrickle || !assert_ice_ready ||
-             (mIceGatheringState == PCImplIceGatheringState::Complete));
+             (mIceGatheringState == RTCIceGatheringState::Complete));
 
   if (IsClosed()) {
     CSFLogError(LOGTAG, "%s: called API while closed", __FUNCTION__);
@@ -2083,7 +2082,7 @@ PeerConnectionImpl::Close() {
   CSFLogDebug(LOGTAG, "%s: for %s", __FUNCTION__, mHandle.c_str());
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  SetSignalingState_m(PCImplSignalingState::SignalingClosed);
+  SetSignalingState_m(RTCSignalingState::Closed);
 
   return NS_OK;
 }
@@ -2235,17 +2234,16 @@ void PeerConnectionImpl::ShutdownMedia() {
   mMedia.forget().take()->SelfDestruct();
 }
 
-void PeerConnectionImpl::SetSignalingState_m(
-    PCImplSignalingState aSignalingState, bool rollback) {
+void PeerConnectionImpl::SetSignalingState_m(RTCSignalingState aSignalingState,
+                                             bool rollback) {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  if (mSignalingState == PCImplSignalingState::SignalingClosed) {
+  if (mSignalingState == RTCSignalingState::Closed) {
     return;
   }
 
-  if (aSignalingState == PCImplSignalingState::SignalingHaveLocalOffer ||
-      (aSignalingState == PCImplSignalingState::SignalingStable &&
-       mSignalingState == PCImplSignalingState::SignalingHaveRemoteOffer &&
-       !rollback)) {
+  if (aSignalingState == RTCSignalingState::Have_local_offer ||
+      (aSignalingState == RTCSignalingState::Stable &&
+       mSignalingState == RTCSignalingState::Have_remote_offer && !rollback)) {
     mMedia->EnsureTransports(*mJsepSession);
   }
 
@@ -2255,7 +2253,7 @@ void PeerConnectionImpl::SetSignalingState_m(
 
   mSignalingState = aSignalingState;
 
-  if (mSignalingState == PCImplSignalingState::SignalingStable) {
+  if (mSignalingState == RTCSignalingState::Stable) {
     // If we're rolling back a local offer, we might need to remove some
     // transports, and stomp some MediaPipeline setup, but nothing further
     // needs to be done.
@@ -2290,7 +2288,7 @@ void PeerConnectionImpl::SetSignalingState_m(
     }
   }
 
-  if (mSignalingState == PCImplSignalingState::SignalingClosed) {
+  if (mSignalingState == RTCSignalingState::Closed) {
     CloseInt();
     // Uncount this connection as active on the inner window upon close.
     if (mWindow && mActiveOnWindow) {
@@ -2306,26 +2304,26 @@ void PeerConnectionImpl::SetSignalingState_m(
 void PeerConnectionImpl::UpdateSignalingState(bool rollback) {
   mozilla::JsepSignalingState state = mJsepSession->GetState();
 
-  PCImplSignalingState newState;
+  RTCSignalingState newState;
 
   switch (state) {
     case kJsepStateStable:
-      newState = PCImplSignalingState::SignalingStable;
+      newState = RTCSignalingState::Stable;
       break;
     case kJsepStateHaveLocalOffer:
-      newState = PCImplSignalingState::SignalingHaveLocalOffer;
+      newState = RTCSignalingState::Have_local_offer;
       break;
     case kJsepStateHaveRemoteOffer:
-      newState = PCImplSignalingState::SignalingHaveRemoteOffer;
+      newState = RTCSignalingState::Have_remote_offer;
       break;
     case kJsepStateHaveLocalPranswer:
-      newState = PCImplSignalingState::SignalingHaveLocalPranswer;
+      newState = RTCSignalingState::Have_local_pranswer;
       break;
     case kJsepStateHaveRemotePranswer:
-      newState = PCImplSignalingState::SignalingHaveRemotePranswer;
+      newState = RTCSignalingState::Have_remote_pranswer;
       break;
     case kJsepStateClosed:
-      newState = PCImplSignalingState::SignalingClosed;
+      newState = RTCSignalingState::Closed;
       break;
     default:
       MOZ_CRASH();
@@ -2335,7 +2333,7 @@ void PeerConnectionImpl::UpdateSignalingState(bool rollback) {
 }
 
 bool PeerConnectionImpl::IsClosed() const {
-  return mSignalingState == PCImplSignalingState::SignalingClosed;
+  return mSignalingState == RTCSignalingState::Closed;
 }
 
 bool PeerConnectionImpl::HasMedia() const { return mMedia; }
@@ -2437,22 +2435,22 @@ void PeerConnectionImpl::SendLocalIceCandidateToContent(
       NS_DISPATCH_NORMAL);
 }
 
-static bool isDone(PCImplIceConnectionState state) {
-  return state != PCImplIceConnectionState::Checking &&
-         state != PCImplIceConnectionState::New;
+static bool isDone(RTCIceConnectionState state) {
+  return state != RTCIceConnectionState::Checking &&
+         state != RTCIceConnectionState::New;
 }
 
-static bool isSucceeded(PCImplIceConnectionState state) {
-  return state == PCImplIceConnectionState::Connected ||
-         state == PCImplIceConnectionState::Completed;
+static bool isSucceeded(RTCIceConnectionState state) {
+  return state == RTCIceConnectionState::Connected ||
+         state == RTCIceConnectionState::Completed;
 }
 
-static bool isFailed(PCImplIceConnectionState state) {
-  return state == PCImplIceConnectionState::Failed;
+static bool isFailed(RTCIceConnectionState state) {
+  return state == RTCIceConnectionState::Failed;
 }
 
 void PeerConnectionImpl::IceConnectionStateChange(
-    dom::PCImplIceConnectionState domState) {
+    dom::RTCIceConnectionState domState) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
   CSFLogDebug(LOGTAG, "%s: %d", __FUNCTION__, static_cast<int>(domState));
@@ -2479,7 +2477,7 @@ void PeerConnectionImpl::IceConnectionStateChange(
 
   // Uncount this connection as active on the inner window upon close.
   if (mWindow && mActiveOnWindow &&
-      mIceConnectionState == PCImplIceConnectionState::Closed) {
+      mIceConnectionState == RTCIceConnectionState::Closed) {
     mWindow->RemovePeerConnection();
     mActiveOnWindow = false;
   }
@@ -2487,27 +2485,27 @@ void PeerConnectionImpl::IceConnectionStateChange(
   // Would be nice if we had a means of converting one of these dom enums
   // to a string that wasn't almost as much text as this switch statement...
   switch (mIceConnectionState) {
-    case PCImplIceConnectionState::New:
+    case RTCIceConnectionState::New:
       STAMP_TIMECARD(mTimeCard, "Ice state: new");
       break;
-    case PCImplIceConnectionState::Checking:
+    case RTCIceConnectionState::Checking:
       // For telemetry
       mIceStartTime = TimeStamp::Now();
       STAMP_TIMECARD(mTimeCard, "Ice state: checking");
       break;
-    case PCImplIceConnectionState::Connected:
+    case RTCIceConnectionState::Connected:
       STAMP_TIMECARD(mTimeCard, "Ice state: connected");
       break;
-    case PCImplIceConnectionState::Completed:
+    case RTCIceConnectionState::Completed:
       STAMP_TIMECARD(mTimeCard, "Ice state: completed");
       break;
-    case PCImplIceConnectionState::Failed:
+    case RTCIceConnectionState::Failed:
       STAMP_TIMECARD(mTimeCard, "Ice state: failed");
       break;
-    case PCImplIceConnectionState::Disconnected:
+    case RTCIceConnectionState::Disconnected:
       STAMP_TIMECARD(mTimeCard, "Ice state: disconnected");
       break;
-    case PCImplIceConnectionState::Closed:
+    case RTCIceConnectionState::Closed:
       STAMP_TIMECARD(mTimeCard, "Ice state: closed");
       break;
     default:
@@ -2519,7 +2517,7 @@ void PeerConnectionImpl::IceConnectionStateChange(
 }
 
 void PeerConnectionImpl::IceGatheringStateChange(
-    dom::PCImplIceGatheringState state) {
+    dom::RTCIceGatheringState state) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
   CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
@@ -2529,13 +2527,13 @@ void PeerConnectionImpl::IceGatheringStateChange(
   // Would be nice if we had a means of converting one of these dom enums
   // to a string that wasn't almost as much text as this switch statement...
   switch (mIceGatheringState) {
-    case PCImplIceGatheringState::New:
+    case RTCIceGatheringState::New:
       STAMP_TIMECARD(mTimeCard, "Ice gathering state: new");
       break;
-    case PCImplIceGatheringState::Gathering:
+    case RTCIceGatheringState::Gathering:
       STAMP_TIMECARD(mTimeCard, "Ice gathering state: gathering");
       break;
-    case PCImplIceGatheringState::Complete:
+    case RTCIceGatheringState::Complete:
       STAMP_TIMECARD(mTimeCard, "Ice gathering state: complete");
       break;
     default:
@@ -2549,7 +2547,7 @@ void PeerConnectionImpl::IceGatheringStateChange(
                    static_cast<JS::Realm*>(nullptr)),
       NS_DISPATCH_NORMAL);
 
-  if (mIceGatheringState == PCImplIceGatheringState::Complete) {
+  if (mIceGatheringState == RTCIceGatheringState::Complete) {
     SendLocalIceCandidateToContent(0, "", "", "");
   }
 }

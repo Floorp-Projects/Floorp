@@ -640,7 +640,7 @@ void MediaTransportHandlerSTS::StartIceGathering(
   // If there are no streams, we're probably in a situation where we've rolled
   // back while still waiting for our proxy configuration to come back. Make
   // sure content knows that the rollback has stuck wrt gathering.
-  OnGatheringStateChange(dom::PCImplIceGatheringState::Complete);
+  OnGatheringStateChange(dom::RTCIceGatheringState::Complete);
 }
 
 void MediaTransportHandlerSTS::StartIceChecks(
@@ -885,7 +885,7 @@ void MediaTransportHandler::OnAlpnNegotiated(const std::string& aAlpn) {
 }
 
 void MediaTransportHandler::OnGatheringStateChange(
-    dom::PCImplIceGatheringState aState) {
+    dom::RTCIceGatheringState aState) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
         WrapRunnable(RefPtr<MediaTransportHandler>(this),
@@ -898,7 +898,7 @@ void MediaTransportHandler::OnGatheringStateChange(
 }
 
 void MediaTransportHandler::OnConnectionStateChange(
-    dom::PCImplIceConnectionState aState) {
+    dom::RTCIceConnectionState aState) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
         WrapRunnable(RefPtr<MediaTransportHandler>(this),
@@ -1261,15 +1261,15 @@ RefPtr<TransportFlow> MediaTransportHandlerSTS::CreateTransportFlow(
   return flow;
 }
 
-static mozilla::dom::PCImplIceGatheringState toDomIceGatheringState(
+static mozilla::dom::RTCIceGatheringState toDomIceGatheringState(
     NrIceCtx::GatheringState aState) {
   switch (aState) {
     case NrIceCtx::ICE_CTX_GATHER_INIT:
-      return dom::PCImplIceGatheringState::New;
+      return dom::RTCIceGatheringState::New;
     case NrIceCtx::ICE_CTX_GATHER_STARTED:
-      return dom::PCImplIceGatheringState::Gathering;
+      return dom::RTCIceGatheringState::Gathering;
     case NrIceCtx::ICE_CTX_GATHER_COMPLETE:
-      return dom::PCImplIceGatheringState::Complete;
+      return dom::RTCIceGatheringState::Complete;
   }
   MOZ_CRASH();
 }
@@ -1279,23 +1279,23 @@ void MediaTransportHandlerSTS::OnGatheringStateChange(
   OnGatheringStateChange(toDomIceGatheringState(aState));
 }
 
-static mozilla::dom::PCImplIceConnectionState toDomIceConnectionState(
+static mozilla::dom::RTCIceConnectionState toDomIceConnectionState(
     NrIceCtx::ConnectionState aState) {
   switch (aState) {
     case NrIceCtx::ICE_CTX_INIT:
-      return dom::PCImplIceConnectionState::New;
+      return dom::RTCIceConnectionState::New;
     case NrIceCtx::ICE_CTX_CHECKING:
-      return dom::PCImplIceConnectionState::Checking;
+      return dom::RTCIceConnectionState::Checking;
     case NrIceCtx::ICE_CTX_CONNECTED:
-      return dom::PCImplIceConnectionState::Connected;
+      return dom::RTCIceConnectionState::Connected;
     case NrIceCtx::ICE_CTX_COMPLETED:
-      return dom::PCImplIceConnectionState::Completed;
+      return dom::RTCIceConnectionState::Completed;
     case NrIceCtx::ICE_CTX_FAILED:
-      return dom::PCImplIceConnectionState::Failed;
+      return dom::RTCIceConnectionState::Failed;
     case NrIceCtx::ICE_CTX_DISCONNECTED:
-      return dom::PCImplIceConnectionState::Disconnected;
+      return dom::RTCIceConnectionState::Disconnected;
     case NrIceCtx::ICE_CTX_CLOSED:
-      return dom::PCImplIceConnectionState::Closed;
+      return dom::RTCIceConnectionState::Closed;
   }
   MOZ_CRASH();
 }
