@@ -6,6 +6,401 @@
 
 "use strict";
 
+function generalEvent(groupID, eventType) {
+  return {
+    id: `event.${groupID}.${eventType}`,
+    type: "event",
+    name: eventType,
+    message: `DOM '${eventType}' event`,
+    eventType,
+    filter: "general",
+  };
+}
+function nodeEvent(groupID, eventType) {
+  return {
+    ...generalEvent(groupID, eventType),
+    filter: "node",
+  };
+}
+function mediaNodeEvent(groupID, eventType) {
+  return {
+    ...generalEvent(groupID, eventType),
+    filter: "media",
+  };
+}
+function globalEvent(groupID, eventType) {
+  return {
+    ...generalEvent(groupID, eventType),
+    message: `Global '${eventType}' event`,
+    filter: "global",
+  };
+}
+function xhrEvent(groupID, eventType) {
+  return {
+    ...generalEvent(groupID, eventType),
+    message: `XHR '${eventType}' event`,
+    filter: "xhr",
+  };
+}
+function workerEvent(eventType) {
+  return {
+    ...generalEvent("worker", eventType),
+    message: `Worker '${eventType}' event`,
+    filter: "worker",
+  };
+}
+
+function timerEvent(type, operation, name, notificationType) {
+  return {
+    id: `timer.${type}.${operation}`,
+    type: "simple",
+    name,
+    message: name,
+    notificationType,
+  };
+}
+
+function animationEvent(operation, name, notificationType) {
+  return {
+    id: `animationframe.${operation}`,
+    type: "simple",
+    name,
+    message: name,
+    notificationType,
+  };
+}
+
+const AVAILABLE_BREAKPOINTS = [
+  {
+    name: "Animation",
+    items: [
+      animationEvent(
+        "request",
+        "Request Animation Frame",
+        "requestAnimationFrame"
+      ),
+      animationEvent(
+        "cancel",
+        "Cancel Animation Frame",
+        "cancelAnimationFrame"
+      ),
+      animationEvent(
+        "fire",
+        "Animation Frame fired",
+        "requestAnimationFrameCallback"
+      ),
+    ],
+  },
+  {
+    name: "Clipboard",
+    items: [
+      generalEvent("clipboard", "copy"),
+      generalEvent("clipboard", "cut"),
+      generalEvent("clipboard", "paste"),
+      generalEvent("clipboard", "beforecopy"),
+      generalEvent("clipboard", "beforecut"),
+      generalEvent("clipboard", "beforepaste"),
+    ],
+  },
+  {
+    name: "Control",
+    items: [
+      generalEvent("control", "resize"),
+      generalEvent("control", "scroll"),
+      generalEvent("control", "zoom"),
+      generalEvent("control", "focus"),
+      generalEvent("control", "blur"),
+      generalEvent("control", "select"),
+      generalEvent("control", "change"),
+      generalEvent("control", "submit"),
+      generalEvent("control", "reset"),
+    ],
+  },
+  {
+    name: "DOM Mutation",
+    items: [
+      // Deprecated DOM events.
+      nodeEvent("dom-mutation", "DOMActivate"),
+      nodeEvent("dom-mutation", "DOMFocusIn"),
+      nodeEvent("dom-mutation", "DOMFocusOut"),
+
+      // Standard DOM mutation events.
+      nodeEvent("dom-mutation", "DOMAttrModified"),
+      nodeEvent("dom-mutation", "DOMCharacterDataModified"),
+      nodeEvent("dom-mutation", "DOMNodeInserted"),
+      nodeEvent("dom-mutation", "DOMNodeInsertedIntoDocument"),
+      nodeEvent("dom-mutation", "DOMNodeRemoved"),
+      nodeEvent("dom-mutation", "DOMNodeRemovedIntoDocument"),
+      nodeEvent("dom-mutation", "DOMSubtreeModified"),
+
+      // DOM load events.
+      nodeEvent("dom-mutation", "DOMContentLoaded"),
+    ],
+  },
+  {
+    name: "Device",
+    items: [
+      globalEvent("device", "deviceorientation"),
+      globalEvent("device", "devicemotion"),
+    ],
+  },
+  {
+    name: "Drag and Drop",
+    items: [
+      generalEvent("drag-and-drop", "drag"),
+      generalEvent("drag-and-drop", "dragstart"),
+      generalEvent("drag-and-drop", "dragend"),
+      generalEvent("drag-and-drop", "dragenter"),
+      generalEvent("drag-and-drop", "dragover"),
+      generalEvent("drag-and-drop", "dragleave"),
+      generalEvent("drag-and-drop", "drop"),
+    ],
+  },
+  {
+    name: "Keyboard",
+    items: [
+      generalEvent("keyboard", "keydown"),
+      generalEvent("keyboard", "keyup"),
+      generalEvent("keyboard", "keypress"),
+      generalEvent("keyboard", "input"),
+    ],
+  },
+  {
+    name: "Load",
+    items: [
+      globalEvent("load", "load"),
+      globalEvent("load", "beforeunload"),
+      globalEvent("load", "unload"),
+      globalEvent("load", "abort"),
+      globalEvent("load", "error"),
+      globalEvent("load", "hashchange"),
+      globalEvent("load", "popstate"),
+    ],
+  },
+  {
+    name: "Media",
+    items: [
+      mediaNodeEvent("media", "play"),
+      mediaNodeEvent("media", "pause"),
+      mediaNodeEvent("media", "playing"),
+      mediaNodeEvent("media", "canplay"),
+      mediaNodeEvent("media", "canplaythrough"),
+      mediaNodeEvent("media", "seeking"),
+      mediaNodeEvent("media", "seeked"),
+      mediaNodeEvent("media", "timeupdate"),
+      mediaNodeEvent("media", "ended"),
+      mediaNodeEvent("media", "ratechange"),
+      mediaNodeEvent("media", "durationchange"),
+      mediaNodeEvent("media", "volumechange"),
+      mediaNodeEvent("media", "loadstart"),
+      mediaNodeEvent("media", "progress"),
+      mediaNodeEvent("media", "suspend"),
+      mediaNodeEvent("media", "abort"),
+      mediaNodeEvent("media", "error"),
+      mediaNodeEvent("media", "emptied"),
+      mediaNodeEvent("media", "stalled"),
+      mediaNodeEvent("media", "loadedmetadata"),
+      mediaNodeEvent("media", "loadeddata"),
+      mediaNodeEvent("media", "waiting"),
+    ],
+  },
+  {
+    name: "Mouse",
+    items: [
+      generalEvent("mouse", "auxclick"),
+      generalEvent("mouse", "click"),
+      generalEvent("mouse", "dblclick"),
+      generalEvent("mouse", "mousedown"),
+      generalEvent("mouse", "mouseup"),
+      generalEvent("mouse", "mouseover"),
+      generalEvent("mouse", "mousemove"),
+      generalEvent("mouse", "mouseout"),
+      generalEvent("mouse", "mouseenter"),
+      generalEvent("mouse", "mouseleave"),
+      generalEvent("mouse", "mousewheel"),
+      generalEvent("mouse", "wheel"),
+      generalEvent("mouse", "contextmenu"),
+    ],
+  },
+  {
+    name: "Pointer",
+    items: [
+      generalEvent("pointer", "pointerover"),
+      generalEvent("pointer", "pointerout"),
+      generalEvent("pointer", "pointerenter"),
+      generalEvent("pointer", "pointerleave"),
+      generalEvent("pointer", "pointerdown"),
+      generalEvent("pointer", "pointerup"),
+      generalEvent("pointer", "pointermove"),
+      generalEvent("pointer", "pointercancel"),
+      generalEvent("pointer", "gotpointercapture"),
+      generalEvent("pointer", "lostpointercapture"),
+    ],
+  },
+  {
+    name: "Timer",
+    items: [
+      timerEvent("timeout", "set", "setTimeout", "setTimeout"),
+      timerEvent("timeout", "clear", "clearTimeout", "clearTimeout"),
+      timerEvent("timeout", "fire", "setTimeout fired", "setTimeoutCallback"),
+      timerEvent("interval", "set", "setInterval", "setInterval"),
+      timerEvent("interval", "clear", "clearInterval", "clearInterval"),
+      timerEvent(
+        "interval",
+        "fire",
+        "setInterval fired",
+        "setIntervalCallback"
+      ),
+    ],
+  },
+  {
+    name: "Touch",
+    items: [
+      generalEvent("touch", "touchstart"),
+      generalEvent("touch", "touchmove"),
+      generalEvent("touch", "touchend"),
+      generalEvent("touch", "touchcancel"),
+    ],
+  },
+  {
+    name: "Worker",
+    items: [
+      workerEvent("message"),
+      workerEvent("messageerror"),
+    ],
+  },
+  {
+    name: "XHR",
+    items: [
+      xhrEvent("xhr", "readystatechange"),
+      xhrEvent("xhr", "load"),
+      xhrEvent("xhr", "loadstart"),
+      xhrEvent("xhr", "loadend"),
+      xhrEvent("xhr", "abort"),
+      xhrEvent("xhr", "error"),
+      xhrEvent("xhr", "progress"),
+      xhrEvent("xhr", "timeout"),
+    ],
+  },
+];
+
+const FLAT_EVENTS = [];
+for (const category of AVAILABLE_BREAKPOINTS) {
+  for (const event of category.items) {
+    FLAT_EVENTS.push(event);
+  }
+}
+const EVENTS_BY_ID = {};
+for (const event of FLAT_EVENTS) {
+  if (EVENTS_BY_ID[event.id]) {
+    throw new Error("Duplicate event ID detected: " + event.id);
+  }
+  EVENTS_BY_ID[event.id] = event;
+}
+
+const SIMPLE_EVENTS = {};
+const DOM_EVENTS = {};
+for (const eventBP of FLAT_EVENTS) {
+  if (eventBP.type === "simple") {
+    const { notificationType } = eventBP;
+    if (SIMPLE_EVENTS[notificationType]) {
+      throw new Error("Duplicate simple event");
+    }
+    SIMPLE_EVENTS[notificationType] = eventBP.id;
+  } else if (eventBP.type === "event") {
+    const { eventType, filter } = eventBP;
+
+    let targetTypes;
+    if (filter === "global") {
+      targetTypes = ["global"];
+    } else if (filter === "xhr") {
+      targetTypes = ["xhr"];
+    } else if (filter === "worker") {
+      targetTypes = ["worker"];
+    } else if (filter === "general") {
+      targetTypes = ["global", "node"];
+    } else if (filter === "node" || filter === "media") {
+      targetTypes = ["node"];
+    } else {
+      throw new Error("Unexpected filter type");
+    }
+
+    for (const targetType of targetTypes) {
+      let byEventType = DOM_EVENTS[targetType];
+      if (!byEventType) {
+        byEventType = {};
+        DOM_EVENTS[targetType] = byEventType;
+      }
+
+      if (byEventType[eventType]) {
+        throw new Error("Duplicate dom event: " + eventType);
+      }
+      byEventType[eventType] = eventBP.id;
+    }
+  } else {
+    throw new Error("Unknown type: " + eventBP.type);
+  }
+}
+
+exports.eventBreakpointForNotification = eventBreakpointForNotification;
+function eventBreakpointForNotification(dbg, notification) {
+  const notificationType = notification.type;
+
+  if (notification.type === "domEvent") {
+    const domEventNotification = DOM_EVENTS[notification.targetType];
+    if (!domEventNotification) {
+      return null;
+    }
+
+    // The 'event' value is a cross-compartment wrapper for the DOM Event object.
+    // While we could use that directly in the main thread as an Xray wrapper,
+    // when debugging workers we can't, because it is an opaque wrapper.
+    // To make things work, we have to always interact with the Event object via
+    // the Debugger.Object interface.
+    const evt = dbg
+      .makeGlobalObjectReference(notification.global)
+      .makeDebuggeeValue(notification.event);
+
+    const eventType = evt.getProperty("type").return;
+    const id = domEventNotification[eventType];
+    if (!id) {
+      return null;
+    }
+    const eventBreakpoint = EVENTS_BY_ID[id];
+
+    if (eventBreakpoint.filter === "media") {
+      const currentTarget = evt.getProperty("currentTarget").return;
+      if (!currentTarget) {
+        return null;
+      }
+
+      const nodeType = currentTarget.getProperty("nodeType").return;
+      const namespaceURI = currentTarget.getProperty("namespaceURI").return;
+      if (
+        nodeType !== 1 /* ELEMENT_NODE */ ||
+        namespaceURI !== "http://www.w3.org/1999/xhtml"
+      ) {
+        return null;
+      }
+
+      const nodeName =
+        currentTarget.getProperty("nodeName").return.toLowerCase();
+      if (nodeName !== "audio" && nodeName !== "video") {
+        return null;
+      }
+    }
+
+    return id;
+  }
+
+  return SIMPLE_EVENTS[notificationType] || null;
+}
+
+exports.makeEventBreakpointMessage = makeEventBreakpointMessage;
+function makeEventBreakpointMessage(id) {
+  return EVENTS_BY_ID[id].message;
+}
+
 exports.getAvailableEventBreakpoints = getAvailableEventBreakpoints;
 function getAvailableEventBreakpoints() {
   const available = [];
@@ -14,196 +409,9 @@ function getAvailableEventBreakpoints() {
       name,
       events: items.map(item => ({
         id: item.id,
-        name: item.eventType,
+        name: item.name,
       })),
     });
   }
   return available;
 }
-
-function event(groupID, name, filter = "content") {
-  return {
-    id: `${groupID}.event.${name}`,
-    type: "event",
-    eventType: name,
-    filter,
-  };
-}
-
-const AVAILABLE_BREAKPOINTS = [
-  {
-    name: "Clipboard",
-    items: [
-      event("clipboard", "copy"),
-      event("clipboard", "cut"),
-      event("clipboard", "paste"),
-      event("clipboard", "beforecopy"),
-      event("clipboard", "beforecut"),
-      event("clipboard", "beforepaste"),
-    ],
-  },
-  {
-    name: "Control",
-    items: [
-      event("control", "resize"),
-      event("control", "scroll"),
-      event("control", "zoom"),
-      event("control", "focus"),
-      event("control", "blur"),
-      event("control", "select"),
-      event("control", "change"),
-      event("control", "submit"),
-      event("control", "reset"),
-    ],
-  },
-  {
-    name: "DOM Mutation",
-    items: [
-      // Deprecated DOM events.
-      event("dom-mutation", "DOMActivate"),
-      event("dom-mutation", "DOMFocusIn"),
-      event("dom-mutation", "DOMFocusOut"),
-
-      // Standard DOM mutation events.
-      event("dom-mutation", "DOMAttrModified"),
-      event("dom-mutation", "DOMCharacterDataModified"),
-      event("dom-mutation", "DOMNodeInserted"),
-      event("dom-mutation", "DOMNodeInsertedIntoDocument"),
-      event("dom-mutation", "DOMNodeRemoved"),
-      event("dom-mutation", "DOMNodeRemovedIntoDocument"),
-      event("dom-mutation", "DOMSubtreeModified"),
-
-      // DOM load events.
-      event("dom-mutation", "DOMContentLoaded"),
-    ],
-  },
-  {
-    name: "Device",
-    items: [
-      event("device", "deviceorientation"),
-      event("device", "devicemotion"),
-    ],
-  },
-  {
-    name: "Drag and Drop",
-    items: [
-      event("drag-and-drop", "drag"),
-      event("drag-and-drop", "dragstart"),
-      event("drag-and-drop", "dragend"),
-      event("drag-and-drop", "dragenter"),
-      event("drag-and-drop", "dragover"),
-      event("drag-and-drop", "dragleave"),
-      event("drag-and-drop", "drop"),
-    ],
-  },
-  {
-    name: "Keyboard",
-    items: [
-      event("keyboard", "keydown"),
-      event("keyboard", "keyup"),
-      event("keyboard", "keypress"),
-      event("keyboard", "input"),
-    ],
-  },
-  {
-    name: "Load",
-    items: [
-      event("load", "load", "global"),
-      event("load", "beforeunload", "global"),
-      event("load", "unload", "global"),
-      event("load", "abort", "global"),
-      event("load", "error", "global"),
-      event("load", "hashchange", "global"),
-      event("load", "popstate", "global"),
-    ],
-  },
-  {
-    name: "Media",
-    items: [
-      event("media", "play", "media"),
-      event("media", "pause", "media"),
-      event("media", "playing", "media"),
-      event("media", "canplay", "media"),
-      event("media", "canplaythrough", "media"),
-      event("media", "seeking", "media"),
-      event("media", "seeked", "media"),
-      event("media", "timeupdate", "media"),
-      event("media", "ended", "media"),
-      event("media", "ratechange", "media"),
-      event("media", "durationchange", "media"),
-      event("media", "volumechange", "media"),
-      event("media", "loadstart", "media"),
-      event("media", "progress", "media"),
-      event("media", "suspend", "media"),
-      event("media", "abort", "media"),
-      event("media", "error", "media"),
-      event("media", "emptied", "media"),
-      event("media", "stalled", "media"),
-      event("media", "loadedmetadata", "media"),
-      event("media", "loadeddata", "media"),
-      event("media", "waiting", "media"),
-    ],
-  },
-  {
-    name: "Mouse",
-    items: [
-      event("mouse", "auxclick"),
-      event("mouse", "click"),
-      event("mouse", "dblclick"),
-      event("mouse", "mousedown"),
-      event("mouse", "mouseup"),
-      event("mouse", "mouseover"),
-      event("mouse", "mousemove"),
-      event("mouse", "mouseout"),
-      event("mouse", "mouseenter"),
-      event("mouse", "mouseleave"),
-      event("mouse", "mousewheel"),
-      event("mouse", "wheel"),
-      event("mouse", "contextmenu"),
-    ],
-  },
-  {
-    name: "Pointer",
-    items: [
-      event("pointer", "pointerover"),
-      event("pointer", "pointerout"),
-      event("pointer", "pointerenter"),
-      event("pointer", "pointerleave"),
-      event("pointer", "pointerdown"),
-      event("pointer", "pointerup"),
-      event("pointer", "pointermove"),
-      event("pointer", "pointercancel"),
-      event("pointer", "gotpointercapture"),
-      event("pointer", "lostpointercapture"),
-    ],
-  },
-  {
-    name: "Touch",
-    items: [
-      event("touch", "touchstart"),
-      event("touch", "touchmove"),
-      event("touch", "touchend"),
-      event("touch", "touchcancel"),
-    ],
-  },
-  {
-    name: "Worker",
-    items: [
-      event("worker", "message", "global"),
-      event("worker", "messageerror", "global"),
-    ],
-  },
-  {
-    name: "XHR",
-    items: [
-      event("xhr", "readystatechange", "xhr"),
-      event("xhr", "load", "xhr"),
-      event("xhr", "loadstart", "xhr"),
-      event("xhr", "loadend", "xhr"),
-      event("xhr", "abort", "xhr"),
-      event("xhr", "error", "xhr"),
-      event("xhr", "progress", "xhr"),
-      event("xhr", "timeout", "xhr"),
-    ],
-  },
-];

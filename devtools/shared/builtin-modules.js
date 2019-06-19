@@ -23,6 +23,7 @@ const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 // Steal various globals only available in JSM scope (and not Sandbox one)
 const {
   console,
+  DebuggerNotificationObserver,
   DOMPoint,
   DOMQuad,
   DOMRect,
@@ -229,6 +230,7 @@ function lazyRequireGetter(obj, property, module, destructure) {
 // List of pseudo modules exposed to all devtools modules.
 exports.modules = {
   ChromeUtils,
+  DebuggerNotificationObserver,
   HeapSnapshot,
   promise,
   // Expose "chrome" Promise, which aren't related to any document
