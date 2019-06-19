@@ -191,15 +191,29 @@ class Raptor(object):
         raise NotImplementedError()
 
     def wait_for_test_finish(self, test, timeout):
+        # this is a 'back-stop' i.e. if for some reason Raptor doesn't finish for some
+        # serious problem; i.e. the test was unable to send a 'page-timeout' to the control
+        # server, etc. Therefore since this is a 'back-stop' we want to be generous here;
+        # we don't want this timeout occurring unless abosultely necessary
+
         # convert timeout to seconds and account for page cycles
         timeout = int(timeout / 1000) * int(test.get('page_cycles', 1))
         # account for the pause the raptor webext runner takes after browser startup
         # and the time an exception is propagated through the framework
         timeout += (int(self.post_startup_delay / 1000) + 10)
 
+        # for page-load tests we don't start the page-timeout timer until the pageload.js content
+        # is successfully injected and invoked; which differs per site being tested; therefore we
+        # need to be generous here - let's add 10 seconds extra per page-cycle
+        if test.get('type') == "pageload":
+            timeout += (10 * int(test.get('page_cycles', 1)))
+
         # if geckoProfile enabled, give browser more time for profiling
         if self.config['gecko_profile'] is True:
             timeout += 5 * 60
+
+        # we also need to give time for results processing, not just page/browser cycles!
+        timeout += 60
 
         elapsed_time = 0
         while not self.control_server._finished:
