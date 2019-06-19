@@ -13,6 +13,7 @@
 #include "mozilla/CORSMode.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
+#include "nsID.h"
 
 namespace mozilla {
 namespace dom {
@@ -37,9 +38,11 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(MediaStreamAudioSourceNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(MediaStreamAudioSourceNode, AudioNode)
 
-MediaStreamAudioSourceNode::MediaStreamAudioSourceNode(AudioContext* aContext)
+MediaStreamAudioSourceNode::MediaStreamAudioSourceNode(
+    AudioContext* aContext, TrackChangeBehavior aBehavior)
     : AudioNode(aContext, 2, ChannelCountMode::Max,
-                ChannelInterpretation::Speakers) {}
+                ChannelInterpretation::Speakers),
+      mBehavior(aBehavior) {}
 
 /* static */
 already_AddRefed<MediaStreamAudioSourceNode> MediaStreamAudioSourceNode::Create(
@@ -63,7 +66,7 @@ already_AddRefed<MediaStreamAudioSourceNode> MediaStreamAudioSourceNode::Create(
   }
 
   RefPtr<MediaStreamAudioSourceNode> node =
-      new MediaStreamAudioSourceNode(&aAudioContext);
+      new MediaStreamAudioSourceNode(&aAudioContext, LockOnTrackPicked);
 
   node->Init(aOptions.mMediaStream, aRv);
   if (aRv.Failed()) {
@@ -96,7 +99,7 @@ void MediaStreamAudioSourceNode::Init(DOMMediaStream* aMediaStream,
   if (mInputStream->Active()) {
     NotifyActive();
   }
-  AttachToFirstTrack(mInputStream);
+  AttachToRightTrack(mInputStream, aRv);
 }
 
 void MediaStreamAudioSourceNode::Destroy() {
@@ -137,14 +140,35 @@ void MediaStreamAudioSourceNode::DetachFromTrack() {
   }
 }
 
-void MediaStreamAudioSourceNode::AttachToFirstTrack(
-    const RefPtr<DOMMediaStream>& aMediaStream) {
+static int AudioTrackCompare(const RefPtr<AudioStreamTrack>& aLhs,
+                             const RefPtr<AudioStreamTrack>& aRhs) {
+  nsAutoStringN<NSID_LENGTH> IDLhs;
+  nsAutoStringN<NSID_LENGTH> IDRhs;
+  aLhs->GetId(IDLhs);
+  aRhs->GetId(IDRhs);
+  return NS_ConvertUTF16toUTF8(IDLhs).Compare(
+      NS_ConvertUTF16toUTF8(IDRhs).get());
+}
+
+void MediaStreamAudioSourceNode::AttachToRightTrack(
+    const RefPtr<DOMMediaStream>& aMediaStream, ErrorResult& aRv) {
   nsTArray<RefPtr<AudioStreamTrack>> tracks;
   aMediaStream->GetAudioTracks(tracks);
 
+  if (tracks.IsEmpty() && mBehavior == LockOnTrackPicked) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  // Sort the track to have a stable order, on their ID by lexicographic
+  // ordering on sequences of code unit values.
+  tracks.Sort(AudioTrackCompare);
+
   for (const RefPtr<AudioStreamTrack>& track : tracks) {
-    if (track->Ended()) {
-      continue;
+    if (mBehavior == FollowChanges) {
+      if (track->Ended()) {
+        continue;
+      }
     }
 
     AttachToTrack(track);
@@ -158,6 +182,9 @@ void MediaStreamAudioSourceNode::AttachToFirstTrack(
 
 void MediaStreamAudioSourceNode::NotifyTrackAdded(
     const RefPtr<MediaStreamTrack>& aTrack) {
+  if (mBehavior != FollowChanges) {
+    return;
+  }
   if (mInputTrack) {
     return;
   }
@@ -171,12 +198,14 @@ void MediaStreamAudioSourceNode::NotifyTrackAdded(
 
 void MediaStreamAudioSourceNode::NotifyTrackRemoved(
     const RefPtr<MediaStreamTrack>& aTrack) {
-  if (aTrack != mInputTrack) {
-    return;
-  }
+  if (mBehavior == FollowChanges) {
+    if (aTrack != mInputTrack) {
+      return;
+    }
 
-  DetachFromTrack();
-  AttachToFirstTrack(mInputStream);
+    DetachFromTrack();
+    AttachToRightTrack(mInputStream, IgnoreErrors());
+  }
 }
 
 void MediaStreamAudioSourceNode::NotifyActive() {
