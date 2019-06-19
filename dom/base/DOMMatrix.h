@@ -16,7 +16,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/gfx/Matrix.h"  // for Matrix4x4
+#include "mozilla/gfx/Matrix.h"  // for Matrix4x4Double
 
 namespace mozilla {
 namespace dom {
@@ -30,20 +30,20 @@ struct DOMPointInit;
 class DOMMatrixReadOnly : public nsWrapperCache {
  public:
   explicit DOMMatrixReadOnly(nsISupports* aParent)
-      : mParent(aParent), mMatrix2D(new gfx::Matrix()) {}
+      : mParent(aParent), mMatrix2D(new gfx::MatrixDouble()) {}
 
   DOMMatrixReadOnly(nsISupports* aParent, const DOMMatrixReadOnly& other)
       : mParent(aParent) {
     if (other.mMatrix2D) {
-      mMatrix2D = new gfx::Matrix(*other.mMatrix2D);
+      mMatrix2D = new gfx::MatrixDouble(*other.mMatrix2D);
     } else {
-      mMatrix3D = new gfx::Matrix4x4(*other.mMatrix3D);
+      mMatrix3D = new gfx::Matrix4x4Double(*other.mMatrix3D);
     }
   }
 
   DOMMatrixReadOnly(nsISupports* aParent, const gfx::Matrix4x4& aMatrix)
       : mParent(aParent) {
-    mMatrix3D = new gfx::Matrix4x4(aMatrix);
+    mMatrix3D = new gfx::Matrix4x4Double(aMatrix);
   }
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMMatrixReadOnly)
@@ -190,8 +190,8 @@ class DOMMatrixReadOnly : public nsWrapperCache {
 
  protected:
   nsCOMPtr<nsISupports> mParent;
-  nsAutoPtr<gfx::Matrix> mMatrix2D;
-  nsAutoPtr<gfx::Matrix4x4> mMatrix3D;
+  nsAutoPtr<gfx::MatrixDouble> mMatrix2D;
+  nsAutoPtr<gfx::Matrix4x4Double> mMatrix3D;
 
   virtual ~DOMMatrixReadOnly() {}
 
@@ -201,9 +201,9 @@ class DOMMatrixReadOnly : public nsWrapperCache {
 
   DOMMatrixReadOnly(nsISupports* aParent, bool is2D) : mParent(aParent) {
     if (is2D) {
-      mMatrix2D = new gfx::Matrix();
+      mMatrix2D = new gfx::MatrixDouble();
     } else {
-      mMatrix3D = new gfx::Matrix4x4();
+      mMatrix3D = new gfx::Matrix4x4Double();
     }
   }
 
