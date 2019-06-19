@@ -1047,35 +1047,22 @@ void nsHttpHandler::InitUserAgentComponents() {
                             static_cast<int>(minorVersion));
 #  elif defined(XP_UNIX)
   struct utsname name;
-
   int ret = uname(&name);
   if (ret >= 0) {
     nsAutoCString buf;
     buf = (char*)name.sysname;
-
-    if (strcmp(name.machine, "x86_64") == 0 &&
-        sizeof(void*) == sizeof(int32_t)) {
-      // We're running 32-bit code on x86_64. Make this browser
-      // look like it's running on i686 hardware, but append "
-      // (x86_64)" to the end of the oscpu identifier to be able
-      // to differentiate this from someone running 64-bit code
-      // on x86_64..
-
-      buf += " i686 on x86_64";
-    } else {
-      buf += ' ';
+    buf += ' ';
 
 #    ifdef AIX
-      // AIX uname returns machine specific info in the uname.machine
-      // field and does not return the cpu type like other platforms.
-      // We use the AIX version and release numbers instead.
-      buf += (char*)name.version;
-      buf += '.';
-      buf += (char*)name.release;
+    // AIX uname returns machine specific info in the uname.machine
+    // field and does not return the cpu type like other platforms.
+    // We use the AIX version and release numbers instead.
+    buf += (char*)name.version;
+    buf += '.';
+    buf += (char*)name.release;
 #    else
-      buf += (char*)name.machine;
+    buf += (char*)name.machine;
 #    endif
-    }
 
     mOscpu.Assign(buf);
   }
