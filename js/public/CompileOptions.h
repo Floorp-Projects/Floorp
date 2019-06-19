@@ -112,6 +112,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   AsmJSOption asmJSOption = AsmJSOption::Disabled;
   bool throwOnAsmJSValidationFailureOption = false;
   bool forceAsync = false;
+  bool discardSource = false;
   bool sourceIsLazy = false;
   bool allowHTMLComments = true;
   bool hideScriptFromDebugger = false;

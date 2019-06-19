@@ -3468,6 +3468,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   asmJSOption = rhs.asmJSOption;
   throwOnAsmJSValidationFailureOption = rhs.throwOnAsmJSValidationFailureOption;
   forceAsync = rhs.forceAsync;
+  discardSource = rhs.discardSource;
   sourceIsLazy = rhs.sourceIsLazy;
   introductionType = rhs.introductionType;
   introductionLineno = rhs.introductionLineno;
@@ -3560,6 +3561,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       scriptOrModuleRoot(cx) {
   strictOption = cx->options().strictMode();
   extraWarningsOption = cx->realm()->behaviors().extraWarnings(cx);
+  discardSource = cx->realm()->behaviors().discardSource();
   werrorOption = cx->options().werror();
   if (!cx->options().asmJS()) {
     asmJSOption = AsmJSOption::Disabled;
