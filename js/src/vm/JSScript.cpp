@@ -4657,15 +4657,17 @@ void JSScript::destroyDebugScript(FreeOp* fop) {
   if (hasDebugScript()) {
 #ifdef DEBUG
     for (jsbytecode* pc = code(); pc < codeEnd(); pc++) {
-      if (BreakpointSite* site = getBreakpointSite(pc)) {
-        /* Breakpoints are swept before finalization. */
-        MOZ_ASSERT(site->firstBreakpoint() == nullptr);
-        MOZ_ASSERT(getBreakpointSite(pc) == nullptr);
-      }
+      MOZ_ASSERT(!getBreakpointSite(pc));
     }
 #endif
-    fop->free_(releaseDebugScript());
+    freeDebugScript(fop);
   }
+}
+
+void JSScript::freeDebugScript(FreeOp* fop) {
+  MOZ_ASSERT(hasDebugScript());
+  fop->free_(this, releaseDebugScript(), DebugScript::allocSize(length()),
+             MemoryUse::ScriptDebugScript);
 }
 
 DebugScript* JSScript::getOrCreateDebugScript(JSContext* cx) {
@@ -4673,8 +4675,7 @@ DebugScript* JSScript::getOrCreateDebugScript(JSContext* cx) {
     return debugScript();
   }
 
-  size_t nbytes =
-      offsetof(DebugScript, breakpoints) + length() * sizeof(BreakpointSite*);
+  size_t nbytes = DebugScript::allocSize(length());
   UniqueDebugScript debug(
       reinterpret_cast<DebugScript*>(cx->pod_calloc<uint8_t>(nbytes)));
   if (!debug) {
@@ -4699,6 +4700,7 @@ DebugScript* JSScript::getOrCreateDebugScript(JSContext* cx) {
 
   setFlag(MutableFlags::HasDebugScript);  // safe to set this;  we can't fail
                                           // after this point
+  AddCellMemory(this, nbytes, MemoryUse::ScriptDebugScript);
 
   /*
    * Ensure that any Interpret() instances running on this script have
@@ -4744,7 +4746,7 @@ void JSScript::decrementGeneratorObserverCount(js::FreeOp* fop) {
   debug->generatorObserverCount--;
 
   if (!debug->needed()) {
-    fop->free_(releaseDebugScript());
+    destroyDebugScript(fop);
   }
 }
 
@@ -4783,7 +4785,7 @@ void JSScript::decrementStepperCount(FreeOp* fop) {
     }
 
     if (!debug->needed()) {
-      fop->free_(releaseDebugScript());
+      freeDebugScript(fop);
     }
   }
 }
@@ -4805,6 +4807,7 @@ BreakpointSite* JSScript::getOrCreateBreakpointSite(JSContext* cx,
       return nullptr;
     }
     debug->numSites++;
+    AddCellMemory(this, sizeof(JSBreakpointSite), MemoryUse::BreakpointSite);
   }
 
   return site;
@@ -4815,12 +4818,14 @@ void JSScript::destroyBreakpointSite(FreeOp* fop, jsbytecode* pc) {
   BreakpointSite*& site = debug->breakpoints[pcToOffset(pc)];
   MOZ_ASSERT(site);
 
+  RemoveCellMemory(this, sizeof(JSBreakpointSite), MemoryUse::BreakpointSite);
+
   fop->delete_(site);
   site = nullptr;
 
   debug->numSites--;
   if (!debug->needed()) {
-    fop->free_(releaseDebugScript());
+    freeDebugScript(fop);
   }
 }
 
