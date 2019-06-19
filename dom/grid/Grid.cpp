@@ -34,17 +34,17 @@ Grid::Grid(nsISupports* aParent, nsGridContainerFrame* aFrame)
 
   // Add implicit areas first. Track the names that we add here, because
   // we will ignore future explicit areas with the same name.
-  nsTHashtable<nsCStringHashKey> namesSeen;
+  nsTHashtable<nsRefPtrHashKey<nsAtom>> namesSeen;
   nsGridContainerFrame::ImplicitNamedAreas* implicitAreas =
       aFrame->GetImplicitNamedAreas();
   if (implicitAreas) {
-    for (auto iter = implicitAreas->Iter(); !iter.Done(); iter.Next()) {
-      auto& areaInfo = iter.Data();
-      namesSeen.PutEntry(areaInfo.name.AsString());
-      GridArea* area = new GridArea(
-          this, areaInfo.name.AsString(), GridDeclaration::Implicit,
-          areaInfo.rows.start, areaInfo.rows.end, areaInfo.columns.start,
-          areaInfo.columns.end);
+    for (auto iter = implicitAreas->iter(); !iter.done(); iter.next()) {
+      auto& areaInfo = iter.get().value();
+      namesSeen.PutEntry(areaInfo.name.AsAtom());
+      GridArea* area =
+          new GridArea(this, areaInfo.name.AsAtom(), GridDeclaration::Implicit,
+                       areaInfo.rows.start, areaInfo.rows.end,
+                       areaInfo.columns.start, areaInfo.columns.end);
       mAreas.AppendElement(area);
     }
   }
@@ -54,9 +54,9 @@ Grid::Grid(nsISupports* aParent, nsGridContainerFrame* aFrame)
   // initially available in the explicit areas.
   if (auto* explicitAreas = aFrame->GetExplicitNamedAreas()) {
     for (auto& areaInfo : explicitAreas->AsSpan()) {
-      if (!namesSeen.Contains(areaInfo.name.AsString())) {
+      if (!namesSeen.Contains(areaInfo.name.AsAtom())) {
         GridArea* area = new GridArea(
-            this, areaInfo.name.AsString(), GridDeclaration::Explicit,
+            this, areaInfo.name.AsAtom(), GridDeclaration::Explicit,
             areaInfo.rows.start, areaInfo.rows.end, areaInfo.columns.start,
             areaInfo.columns.end);
         mAreas.AppendElement(area);
