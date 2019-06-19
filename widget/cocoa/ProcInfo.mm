@@ -20,7 +20,7 @@
 namespace mozilla {
 
 RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const ProcType& type,
-                                    mach_port_t aChildTask) {
+                                    ipc::GeckoChildProcessHost* childProcess) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
 
@@ -32,7 +32,12 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const 
     return promise;
   }
 
-  auto ResolveGetProcinfo = [holder = std::move(holder), pid, type, childId, aChildTask]() {
+  mach_port_t task = MACH_PORT_NULL;
+  if (childProcess && childProcess->GetChildTask() != MACH_PORT_NULL) {
+    task = childProcess->GetChildTask();
+  }
+
+  auto ResolveGetProcinfo = [holder = std::move(holder), pid, type, childId, task]() {
     ProcInfo info;
     info.pid = pid;
     info.childId = childId;
@@ -61,10 +66,10 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const 
     // Now getting threads info
     mach_port_t selectedTask;
     // If we did not get a task from a child process, we use mach_task_self()
-    if (aChildTask == MACH_PORT_NULL) {
+    if (task == MACH_PORT_NULL) {
       selectedTask = mach_task_self();
     } else {
-      selectedTask = aChildTask;
+      selectedTask = task;
     }
     // task_threads() gives us a snapshot of the process threads
     // but those threads can go away. All the code below makes
