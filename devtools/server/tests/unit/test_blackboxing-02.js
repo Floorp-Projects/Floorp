@@ -41,39 +41,34 @@ function test_black_box() {
     gThreadClient.resume().then(test_black_box_breakpoint);
   });
 
-  /* eslint-disable no-multi-spaces, no-undef */
+  /* eslint-disable no-undef */
+  // prettier-ignore
   Cu.evalInSandbox(
-    "" +
-      function doStuff(k) {
-        // line 1
-        const arg = 15; // line 2 - Break here
-        k(arg); // line 3
-      }, // line 4
+    "" + function doStuff(k) { // line 1
+      const arg = 15;            // line 2 - Break here
+      k(arg);                  // line 3
+    },                         // line 4
     gDebuggee,
     "1.8",
     BLACK_BOXED_URL,
     1
   );
-
+  // prettier-ignore
   Cu.evalInSandbox(
-    "" +
-    function runTest() {
-      // line 1
-      doStuff(
-        // line 2
-        function(n) {
-          // line 3
-          debugger; // line 5
-        } // line 6
-      ); // line 7
-    } + // line 8
-      "\n debugger;", // line 9
+    "" + function runTest() { // line 1
+      doStuff(                // line 2
+        function(n) {        // line 3
+          debugger;           // line 5
+        }                     // line 6
+      );                      // line 7
+    }                         // line 8
+    + "\n debugger;",         // line 9
     gDebuggee,
     "1.8",
     SOURCE_URL,
     1
   );
-  /* eslint-enable no-multi-spaces, no-undef */
+  /* eslint-enable no-undef */
 }
 
 function test_black_box_breakpoint() {

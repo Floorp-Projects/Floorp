@@ -41,32 +41,27 @@ function test_black_box() {
   });
 
   /* eslint-disable no-multi-spaces, no-undef */
+  // prettier-ignore
   Cu.evalInSandbox(
-    "" +
-      function doStuff(k) {
-        // line 1
-        debugger; // line 2 - Break here
-        k(100); // line 3
-      }, // line 4
+    "" + function doStuff(k) { // line 1
+      debugger;                // line 2 - Break here
+      k(100);                  // line 3
+    },                         // line 4
     gDebuggee,
     "1.8",
     BLACK_BOXED_URL,
     1
   );
-
+  // prettier-ignore
   Cu.evalInSandbox(
-    "" +
-    function runTest() {
-      // line 1
-      doStuff(
-        // line 2
-        function(n) {
-          // line 3
-          Math.abs(n); // line 4 - Break here
-        } // line 5
-      ); // line 6
-    } + // line 7
-      "\n debugger;", // line 8
+    "" + function runTest() { // line 1
+      doStuff(                // line 2
+        function(n) {        // line 3
+          Math.abs(n);        // line 4 - Break here
+        }                     // line 5
+      );                      // line 6
+    }                         // line 7
+    + "\n debugger;",         // line 8
     gDebuggee,
     "1.8",
     SOURCE_URL,
