@@ -20,7 +20,8 @@
 // said values are exposed to things like telemetry as well, so please
 // do not reorder lines in this file.
 //
-// Please add new process types at the end of this list.
+// Please add new process types at the end of this list
+// and update widget/ProcInfo.h
 GECKO_PROCESS_TYPE(Default, "default", Parent, Self)
 GECKO_PROCESS_TYPE(Plugin, "plugin", Plugin, PluginContainer)
 GECKO_PROCESS_TYPE(Content, "tab", Content, Self)
