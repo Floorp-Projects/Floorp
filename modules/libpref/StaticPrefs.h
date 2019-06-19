@@ -115,9 +115,9 @@ class StaticPrefs {
  private:
   friend class Preferences;
   static void InitAll(bool aIsStartup);
-  static void InitOncePrefs();
-  static void InitOncePrefsFromShared();
   static void MaybeInitOncePrefs();
+  static void InitOncePrefs();
+  static void InitStaticPrefsFromShared();
   static void RegisterOncePrefs(SharedPrefMapBuilder& aBuilder);
 };
 
