@@ -415,7 +415,6 @@ already_AddRefed<gfx::DrawTarget> WindowBackBufferShm::Lock() {
       BUFFER_BPP * mWidth, GetSurfaceFormat());
 }
 
-#ifdef HAVE_LIBDRM
 WindowBackBufferDMABuf::WindowBackBufferDMABuf(
     nsWaylandDisplay* aWaylandDisplay, int aWidth, int aHeight)
     : WindowBackBuffer(aWaylandDisplay) {
@@ -478,7 +477,6 @@ void WindowBackBufferDMABuf::Detach(wl_buffer* aBuffer) {
 }
 
 void WindowBackBufferDMABuf::Clear() { mDMAbufSurface.Clear(); }
-#endif
 
 static void frame_callback_handler(void* data, struct wl_callback* callback,
                                    uint32_t time) {
@@ -534,12 +532,10 @@ WindowSurfaceWayland::~WindowSurfaceWayland() {
 
 bool WindowSurfaceWayland::UseDMABufBackend() {
   if (!mUseDMABufInitialized) {
-#ifdef HAVE_LIBDRM
     if (WaylandDMABufSurface::IsAvailable()) {
       mUseDMABuf = nsWaylandDisplay::IsDMABufEnabled();
       LOGWAYLAND(("%s DMABuf state %d\n", __PRETTY_FUNCTION__, mUseDMABuf));
     }
-#endif
     mUseDMABufInitialized = true;
   }
   return mUseDMABuf;
@@ -547,7 +543,6 @@ bool WindowSurfaceWayland::UseDMABufBackend() {
 
 WindowBackBuffer* WindowSurfaceWayland::CreateWaylandBuffer(int aWidth,
                                                             int aHeight) {
-#ifdef HAVE_LIBDRM
   if (UseDMABufBackend()) {
     static bool sDMABufBufferCreated = false;
     WindowBackBuffer* buffer =
@@ -567,7 +562,6 @@ WindowBackBuffer* WindowSurfaceWayland::CreateWaylandBuffer(int aWidth,
       mUseDMABuf = false;
     }
   }
-#endif
 
   return new WindowBackBufferShm(mWaylandDisplay, aWidth, aHeight);
 }
