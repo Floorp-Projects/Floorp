@@ -770,7 +770,7 @@ var AddonTestUtils = {
           item.last_modified = Date.now();
         }
       }
-      await blocklistObj.ensureInitialized();
+      blocklistObj.ensureInitialized();
       let collection = await blocklistObj._client.openCollection();
       await collection.clear();
       await collection.loadDump(newData);
