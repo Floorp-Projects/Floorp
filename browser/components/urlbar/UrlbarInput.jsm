@@ -49,6 +49,7 @@ class UrlbarInput {
 
     this.window = this.textbox.ownerGlobal;
     this.document = this.window.document;
+    this.window.addEventListener("unload", this);
 
     // Create the panel to contain results.
     // In the future this may be moved to the view, so it can customize
@@ -97,7 +98,6 @@ class UrlbarInput {
     this._resultForCurrentValue = null;
     this._suppressStartQuery = false;
     this._untrimmedValue = "";
-    this._openViewOnFocus = false;
 
     // This exists only for tests.
     this._enableAutofillPlaceholder = true;
@@ -121,7 +121,7 @@ class UrlbarInput {
       Object.defineProperty(this, property, {
         enumerable: true,
         get() {
-          return this.textbox[property];
+          return this.textbox && this.textbox[property];
         },
       });
     }
@@ -130,7 +130,7 @@ class UrlbarInput {
       Object.defineProperty(this, property, {
         enumerable: true,
         get() {
-          return this.textbox[property];
+          return this.textbox && this.textbox[property];
         },
         set(val) {
           return this.textbox[property] = val;
@@ -179,12 +179,16 @@ class UrlbarInput {
 
     this.editor.QueryInterface(Ci.nsIPlaintextEditor).newlineHandling =
       Ci.nsIPlaintextEditor.eNewlinesStripSurroundingWhitespace;
+
+    this._setOpenViewOnFocus();
+    Services.prefs.addObserver("browser.urlbar.openViewOnFocus", this);
   }
 
   /**
    * Uninitializes this input object, detaching it from the inputField.
    */
   uninit() {
+    this.window.removeEventListener("unload", this);
     for (let name of this._inputFieldEvents) {
       this.inputField.removeEventListener(name, this);
     }
@@ -210,6 +214,8 @@ class UrlbarInput {
     if (Object.getOwnPropertyDescriptor(this, "valueFormatter").get) {
       this.valueFormatter.uninit();
     }
+
+    Services.prefs.removeObserver("browser.urlbar.openViewOnFocus", this);
 
     delete this.document;
     delete this.window;
@@ -295,6 +301,14 @@ class UrlbarInput {
     } catch (ex) {}
 
     return uri;
+  }
+
+  observe(subject, topic, data) {
+    switch (data) {
+      case "browser.urlbar.openViewOnFocus":
+        this._setOpenViewOnFocus();
+        break;
+    }
   }
 
   /**
@@ -721,12 +735,15 @@ class UrlbarInput {
     return this._openViewOnFocus;
   }
 
-  set openViewOnFocus(val) {
-    this._openViewOnFocus = val;
-    this.toggleAttribute("hidedropmarker", val);
-  }
-
   // Private methods below.
+
+  _setOpenViewOnFocus() {
+    // FIXME: Not using UrlbarPrefs because its pref observer may run after
+    // this call, so we'd get the previous openViewOnFocus value here. This
+    // can be cleaned up after bug 1560013.
+    this._openViewOnFocus = Services.prefs.getBoolPref("browser.urlbar.openViewOnFocus");
+    this.toggleAttribute("hidedropmarker", this._openViewOnFocus);
+  }
 
   _setValue(val, allowTrim) {
     this._untrimmedValue = val;
@@ -1550,6 +1567,12 @@ class UrlbarInput {
       this.window.gBrowser.userTypedValue = null;
       this.window.URLBarSetURI(null, true);
     }
+  }
+
+  _on_unload() {
+    // FIXME: This is needed because uninit calls removePrefObserver. We can
+    // remove this once UrlbarPrefs has support for listeners. (bug 1560013)
+    this.uninit();
   }
 }
 
