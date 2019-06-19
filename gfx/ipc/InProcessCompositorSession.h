@@ -34,13 +34,12 @@ class InProcessCompositorSession final : public CompositorSession {
   void NotifySessionLost();
 
  private:
-  InProcessCompositorSession(widget::CompositorWidget* aWidget,
-                             nsBaseWidget* baseWidget,
+  InProcessCompositorSession(nsBaseWidget* aWidget,
+                             widget::CompositorWidget* aCompositorWidget,
                              CompositorBridgeChild* aChild,
                              CompositorBridgeParent* aParent);
 
  private:
-  nsBaseWidget* mWidget;
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
   RefPtr<CompositorWidget> mCompositorWidget;
 };
