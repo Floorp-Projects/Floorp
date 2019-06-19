@@ -189,7 +189,7 @@ class WebAppManifestParserTest {
         assertEquals(0, manifest.icons.size)
     }
 
-     @Test
+    @Test
     fun `Parsing manifest with no name`() {
         val json = loadManifest("minimal_short_name.json")
         val result = WebAppManifestParser().parse(json)

@@ -19,7 +19,7 @@ class ActivityKtTest {
             val activity: Activity = mock()
             activity.applyOrientation(
                 WebAppManifest(
-                    name = "Test Manifst",
+                    name = "Test Manifest",
                     startUrl = "/",
                     orientation = orientation
                 )
@@ -33,7 +33,7 @@ class ActivityKtTest {
         run {
             val activity: Activity = mock()
             activity.applyOrientation(WebAppManifest(
-                name = "Test Manifst",
+                name = "Test Manifest",
                 startUrl = "/",
                 orientation = WebAppManifest.Orientation.ANY))
             verify(activity).requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
@@ -42,7 +42,7 @@ class ActivityKtTest {
         run {
             val activity: Activity = mock()
             activity.applyOrientation(WebAppManifest(
-                name = "Test Manifst",
+                name = "Test Manifest",
                 startUrl = "/",
                 orientation = WebAppManifest.Orientation.PORTRAIT))
             verify(activity).requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
@@ -51,7 +51,7 @@ class ActivityKtTest {
         run {
             val activity: Activity = mock()
             activity.applyOrientation(WebAppManifest(
-                name = "Test Manifst",
+                name = "Test Manifest",
                 startUrl = "/",
                 orientation = WebAppManifest.Orientation.LANDSCAPE))
             verify(activity).requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE

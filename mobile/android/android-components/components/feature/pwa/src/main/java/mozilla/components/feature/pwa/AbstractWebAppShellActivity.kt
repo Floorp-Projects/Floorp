@@ -43,7 +43,9 @@ abstract class AbstractWebAppShellActivity : AppCompatActivity(), CoroutineScope
             applyConfiguration(manifest)
             renderSession(startUrl)
 
-            manifest?.asTaskDescription()?.let { setTaskDescription(it) }
+            if (manifest != null) {
+                setTaskDescription(manifest.asTaskDescription(null))
+            }
         }
     }
 

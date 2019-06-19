@@ -68,12 +68,10 @@ class WebAppManifestParser {
      * Parses the provided JSON and returns a [WebAppManifest] (wrapped in [Result.Success] if parsing was successful.
      * Otherwise [Result.Failure].
      */
-    fun parse(json: String): Result {
-        return try {
-            parse(JSONObject(json))
-        } catch (e: JSONException) {
-            Result.Failure(e)
-        }
+    fun parse(json: String) = try {
+        parse(JSONObject(json))
+    } catch (e: JSONException) {
+        Result.Failure(e)
     }
 
     fun serialize(manifest: WebAppManifest) = JSONObject().apply {

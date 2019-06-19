@@ -78,7 +78,7 @@ class WebAppLauncherActivity : AppCompatActivity(), CoroutineScope by MainScope(
     internal fun launchWebAppShell(startUrl: Uri) {
         val intent = Intent(AbstractWebAppShellActivity.INTENT_ACTION).apply {
             data = startUrl
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
             `package` = packageName
         }
 

@@ -20,7 +20,7 @@ class WebAppManifestKtTest {
         val taskDescription = WebAppManifest(
             name = "Demo",
             startUrl = "https://example.com"
-        ).asTaskDescription()
+        ).asTaskDescription(null)
         assertEquals("Demo", taskDescription.label)
         assertNull(taskDescription.icon)
         assertEquals(0, taskDescription.primaryColor)
@@ -32,7 +32,7 @@ class WebAppManifestKtTest {
             name = "My App",
             startUrl = "https://example.com",
             themeColor = rgb(255, 0, 255)
-        ).asTaskDescription()
+        ).asTaskDescription(null)
         assertEquals("My App", taskDescription.label)
         assertNull(taskDescription.icon)
         assertEquals(rgb(255, 0, 255), taskDescription.primaryColor)

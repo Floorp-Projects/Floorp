@@ -38,14 +38,10 @@ import kotlin.reflect.jvm.javaField
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class WebAppShortcutManagerTest {
-    @Mock
-    lateinit var context: Context
-    @Mock
-    lateinit var packageManager: PackageManager
-    @Mock
-    lateinit var shortcutManager: ShortcutManager
-    @Mock
-    internal lateinit var storage: ManifestStorage
+    @Mock lateinit var context: Context
+    @Mock lateinit var packageManager: PackageManager
+    @Mock lateinit var shortcutManager: ShortcutManager
+    @Mock internal lateinit var storage: ManifestStorage
 
     @Before
     fun setup() {

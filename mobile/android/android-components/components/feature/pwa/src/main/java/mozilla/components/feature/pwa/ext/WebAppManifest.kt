@@ -5,6 +5,7 @@
 package mozilla.components.feature.pwa.ext
 
 import android.app.ActivityManager.TaskDescription
+import android.graphics.Bitmap
 import mozilla.components.concept.engine.manifest.WebAppManifest
 
 /**
@@ -14,5 +15,5 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
  * Instead we use the deprecated constructor.
  */
 @Suppress("Deprecation")
-fun WebAppManifest.asTaskDescription() =
-    TaskDescription(name, null, themeColor ?: 0)
+fun WebAppManifest.asTaskDescription(icon: Bitmap?) =
+    TaskDescription(name, icon, themeColor ?: 0)
