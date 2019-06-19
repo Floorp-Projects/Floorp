@@ -1485,7 +1485,7 @@ set_config('MOZ_PROFILE_USE',
            depends_if('--enable-profile-use')(lambda _: True))
 
 
-@depends('--with-pgo-profile-path', '--enable-profile-use', 'LLVM_PROFDATA')
+@depends('--with-pgo-profile-path', '--enable-profile-use', llvm_profdata)
 @imports('os')
 def pgo_profile_path(path, pgo_use, profdata):
     if not path:
