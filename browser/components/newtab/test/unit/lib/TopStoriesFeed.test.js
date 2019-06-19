@@ -98,11 +98,14 @@ describe("Top Stories Feed", () => {
     });
     it("should bind parseOptions to SectionsManager.onceInitialized when discovery stream is true", () => {
       instance.discoveryStreamEnabled = false;
-      instance.onAction({type: at.PREFS_INITIAL_VALUES, data: {"discoverystream.config": JSON.stringify({enabled: true})}});
+      instance.store.getState = () => ({Prefs: {values: {"discoverystream.config": JSON.stringify({enabled: true})}}});
+      instance.onAction({type: at.INIT, data: {}});
+
       assert.calledOnce(sectionsManagerStub.onceInitialized);
     });
     it("should bind parseOptions to SectionsManager.onceInitialized when discovery stream is false", () => {
-      instance.onAction({type: at.PREFS_INITIAL_VALUES, data: {"discoverystream.config": JSON.stringify({enabled: false})}});
+      instance.store.getState = () => ({Prefs: {values: {"discoverystream.config": JSON.stringify({enabled: false})}}});
+      instance.onAction({type: at.INIT, data: {}});
       assert.calledOnce(sectionsManagerStub.onceInitialized);
     });
     it("Should initialize properties once while lazy loading if not initialized earlier", () => {
@@ -137,9 +140,10 @@ describe("Top Stories Feed", () => {
     it("should handle limited actions when discoverystream is enabled", async () => {
       sinon.spy(instance, "handleDisabled");
       sinon.stub(instance, "getPocketState");
-      instance.onAction({type: at.PREFS_INITIAL_VALUES, data: {"discoverystream.config": JSON.stringify({enabled: true})}});
-      assert.calledOnce(instance.handleDisabled);
+      instance.store.getState = () => ({Prefs: {values: {"discoverystream.config": JSON.stringify({enabled: true})}}});
+      instance.onAction({type: at.INIT, data: {}});
 
+      assert.calledOnce(instance.handleDisabled);
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.notCalled(instance.getPocketState);
     });
@@ -147,7 +151,8 @@ describe("Top Stories Feed", () => {
       instance.discoveryStreamEnabled = false;
       sinon.spy(instance, "handleDisabled");
       sinon.stub(instance, "getPocketState");
-      instance.onAction({type: at.PREFS_INITIAL_VALUES, data: {"discoverystream.config": JSON.stringify({enabled: false})}});
+      instance.store.getState = () => ({Prefs: {values: {"discoverystream.config": JSON.stringify({enabled: false})}}});
+      instance.onAction({type: at.INIT, data: {}});
       assert.notCalled(instance.handleDisabled);
 
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
@@ -193,7 +198,7 @@ describe("Top Stories Feed", () => {
       assert.instanceOf(instance, TopStoriesFeed);
     });
     it("should bind parseOptions to SectionsManager.onceInitialized", () => {
-      instance.onAction({type: at.PREFS_INITIAL_VALUES, data: {}});
+      instance.onAction({type: at.INIT, data: {}});
       assert.calledOnce(sectionsManagerStub.onceInitialized);
     });
     it("should initialize endpoints based on options", async () => {
@@ -203,13 +208,13 @@ describe("Top Stories Feed", () => {
       assert.equal("https://somedomain.org/topics?key=test-api-key", instance.topics_endpoint);
     });
     it("should enable its section", () => {
-      instance.onAction({type: at.PREFS_INITIAL_VALUES, data: {}});
+      instance.onAction({type: at.INIT, data: {}});
       assert.calledOnce(sectionsManagerStub.enableSection);
       assert.calledWith(sectionsManagerStub.enableSection, SECTION_ID);
     });
     it("init should fire onInit", () => {
       instance.onInit = sinon.spy();
-      instance.onAction({type: at.PREFS_INITIAL_VALUES, data: {}});
+      instance.onAction({type: at.INIT, data: {}});
       assert.calledOnce(instance.onInit);
     });
     it("should fetch stories on init", async () => {
