@@ -193,7 +193,6 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
 
   bool nonSyntacticScope = false;
   bool noScriptRval = false;
-  bool allowSyntaxParser = true;
 
  private:
   friend class CompileOptions;
@@ -402,11 +401,6 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
 
   CompileOptions& setCanLazilyParse(bool clp) {
     canLazilyParse = clp;
-    return *this;
-  }
-
-  CompileOptions& setAllowSyntaxParser(bool clp) {
-    allowSyntaxParser = clp;
     return *this;
   }
 
