@@ -991,7 +991,24 @@ nsresult nsChildView::SynthesizeNativeMouseScrollEvent(
     return NS_ERROR_FAILURE;
   }
 
-  CGEventPost(kCGHIDEventTap, cgEvent);
+  // On macOS 10.14 and up CGEventPost won't work because of changes in macOS
+  // to improve security. This code makes an NSEvent corresponding to the
+  // wheel event and dispatches it directly to the scrollWheel handler. Some
+  // fiddling is needed with the coordinates in order to simulate what macOS
+  // would do; this code adapted from the Chromium equivalent function at
+  // https://chromium.googlesource.com/chromium/src.git/+/62.0.3178.1/ui/events/test/cocoa_test_event_utils.mm#38
+  CGPoint location = CGEventGetLocation(cgEvent);
+  location.y += NSMinY([[mView window] frame]);
+  location.x -= NSMinX([[mView window] frame]);
+  CGEventSetLocation(cgEvent, location);
+
+  uint64_t kNanosPerSec = 1000000000L;
+  CGEventSetTimestamp(cgEvent, [[NSProcessInfo processInfo] systemUptime] * kNanosPerSec);
+
+  NSEvent* event = [NSEvent eventWithCGEvent:cgEvent];
+  [event setValue:[mView window] forKey:@"_window"];
+  [mView scrollWheel:event];
+
   CFRelease(cgEvent);
   return NS_OK;
 
