@@ -950,7 +950,7 @@ struct nsStyleGridLine {
   // XXXmats we could optimize memory size here
   bool mHasSpan;
   int32_t mInteger;    // 0 means not provided
-  nsCString mLineName;  // Empty string means not provided.
+  RefPtr<nsAtom> mLineName;  // Empty string means not provided.
 
   // These are the limits that we choose to clamp grid line numbers to.
   // http://dev.w3.org/csswg/css-grid/#overlarge-grids
@@ -959,10 +959,7 @@ struct nsStyleGridLine {
   static const int32_t kMaxLine = 10000;
 
   nsStyleGridLine()
-      : mHasSpan(false),
-        mInteger(0)
-  // mLineName get its default constructor, the empty string
-  {}
+      : mHasSpan(false), mInteger(0), mLineName(nsGkAtoms::_empty) {}
 
   nsStyleGridLine(const nsStyleGridLine& aOther) { (*this) = aOther; }
 
@@ -978,7 +975,7 @@ struct nsStyleGridLine {
   }
 
   bool IsAuto() const {
-    bool haveInitialValues = mInteger == 0 && mLineName.IsEmpty();
+    bool haveInitialValues = mInteger == 0 && mLineName == nsGkAtoms::_empty;
     MOZ_ASSERT(!(haveInitialValues && mHasSpan),
                "should not have 'span' when other components are "
                "at their initial values");
@@ -1027,11 +1024,11 @@ struct nsStyleGridLine {
 // When mIsSubgrid is true, mRepeatAutoLineNameListBefore contains the line
 // names and mRepeatAutoLineNameListAfter is empty.
 struct nsStyleGridTemplate {
-  nsTArray<nsTArray<nsCString>> mLineNameLists;
+  nsTArray<nsTArray<RefPtr<nsAtom>>> mLineNameLists;
   nsTArray<nsStyleCoord> mMinTrackSizingFunctions;
   nsTArray<nsStyleCoord> mMaxTrackSizingFunctions;
-  nsTArray<nsCString> mRepeatAutoLineNameListBefore;
-  nsTArray<nsCString> mRepeatAutoLineNameListAfter;
+  nsTArray<RefPtr<nsAtom>> mRepeatAutoLineNameListBefore;
+  nsTArray<RefPtr<nsAtom>> mRepeatAutoLineNameListAfter;
   int16_t mRepeatAutoIndex;  // -1 or the track index for an auto-fill/fit track
   bool mIsAutoFill : 1;
   bool mIsSubgrid : 1;

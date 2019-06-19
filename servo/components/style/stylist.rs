@@ -651,7 +651,7 @@ impl Stylist {
         guards: &StylesheetGuards,
         pseudo: &PseudoElement,
         parent: Option<&ComputedValues>,
-        font_metrics: &FontMetricsProvider,
+        font_metrics: &dyn FontMetricsProvider,
     ) -> Arc<ComputedValues>
     where
         E: TElement,
@@ -679,7 +679,7 @@ impl Stylist {
         guards: &StylesheetGuards,
         pseudo: &PseudoElement,
         parent: Option<&ComputedValues>,
-        font_metrics: &FontMetricsProvider,
+        font_metrics: &dyn FontMetricsProvider,
         rules: StrongRuleNode,
     ) -> Arc<ComputedValues>
     where
@@ -774,8 +774,8 @@ impl Stylist {
         rule_inclusion: RuleInclusion,
         parent_style: &ComputedValues,
         is_probe: bool,
-        font_metrics: &FontMetricsProvider,
-        matching_fn: Option<&Fn(&PseudoElement) -> bool>,
+        font_metrics: &dyn FontMetricsProvider,
+        matching_fn: Option<&dyn Fn(&PseudoElement) -> bool>,
     ) -> Option<Arc<ComputedValues>>
     where
         E: TElement,
@@ -810,7 +810,7 @@ impl Stylist {
         pseudo: &PseudoElement,
         guards: &StylesheetGuards,
         parent_style: Option<&ComputedValues>,
-        font_metrics: &FontMetricsProvider,
+        font_metrics: &dyn FontMetricsProvider,
         element: Option<E>,
     ) -> Arc<ComputedValues>
     where
@@ -863,7 +863,7 @@ impl Stylist {
         parent_style: Option<&ComputedValues>,
         parent_style_ignoring_first_line: Option<&ComputedValues>,
         layout_parent_style: Option<&ComputedValues>,
-        font_metrics: &FontMetricsProvider,
+        font_metrics: &dyn FontMetricsProvider,
         rule_cache: Option<&RuleCache>,
         rule_cache_conditions: &mut RuleCacheConditions,
     ) -> Arc<ComputedValues>
@@ -920,7 +920,7 @@ impl Stylist {
         pseudo: &PseudoElement,
         is_probe: bool,
         rule_inclusion: RuleInclusion,
-        matching_fn: Option<&Fn(&PseudoElement) -> bool>,
+        matching_fn: Option<&dyn Fn(&PseudoElement) -> bool>,
     ) -> Option<CascadeInputs>
     where
         E: TElement,

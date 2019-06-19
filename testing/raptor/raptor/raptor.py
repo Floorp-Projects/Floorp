@@ -60,7 +60,6 @@ from results import RaptorResultsHandler
 from utils import view_gecko_profile
 from cpu import generate_android_cpu_profile
 
-
 LOG = RaptorLogger(component='raptor-main')
 
 
@@ -321,14 +320,8 @@ class Raptor(object):
     def get_proxy_command_for_mitm(self, test, version):
         # Generate Mitmproxy playback args
         script = os.path.join(here, "playback", "alternate-server-replay-{}.py".format(version))
-        recordings = test.get("playback_recordings")
-        if recordings:
-            recording_paths = []
-            proxy_dir = self.playback.mozproxy_dir
-            for recording in recordings.split():
-                if not recording:
-                    continue
-                recording_paths.append(os.path.join(proxy_dir, recording))
+
+        recording_paths = self.get_recording_paths(test)
 
         # this part is platform-specific
         if mozinfo.os == "win":
@@ -374,6 +367,38 @@ class Raptor(object):
 
         # let's start it!
         self.playback.start()
+
+        self.log_recording_dates(test)
+
+    def get_recording_paths(self, test):
+        recordings = test.get("playback_recordings")
+
+        if recordings:
+            recording_paths = []
+            proxy_dir = self.playback.mozproxy_dir
+
+            for recording in recordings.split():
+                if not recording:
+                    continue
+                recording_paths.append(os.path.join(proxy_dir, recording))
+
+            return recording_paths
+
+    def log_recording_dates(self, test):
+        for r in self.get_recording_paths(test):
+            json_path = '{}.json'.format(r.split('.')[0])
+
+            if os.path.exists(json_path):
+                with open(json_path) as f:
+                    recording_date = json.loads(f.read()).get('recording_date')
+
+                    if recording_date is not None:
+                        LOG.info('Playback recording date: {} '.
+                                 format(recording_date.split(' ')[0]))
+                    else:
+                        LOG.info('Playback recording date not available')
+            else:
+                LOG.info('Playback recording information not available')
 
     def delete_proxy_settings_from_profile(self):
         # Must delete the proxy settings from the profile if running

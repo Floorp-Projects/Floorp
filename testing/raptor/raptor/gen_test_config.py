@@ -23,7 +23,7 @@ function getTestConfig() {
     return {"browser": "%s",
             "cs_port": "%d",
             "test_name": "%s",
-            "test_settings_url": "http://%s:%d/%s.json",
+            "test_settings_url": "http://%s:%d/json/%s.json",
             "post_startup_delay": "%s",
             "benchmark_port": "%d",
             "host": "%s",

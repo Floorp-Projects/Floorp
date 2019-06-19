@@ -242,6 +242,19 @@ inline StyleAtom::~StyleAtom() {
   }
 }
 
+inline StyleAtom::StyleAtom(already_AddRefed<nsAtom> aAtom) {
+  nsAtom* atom = aAtom.take();
+  if (atom->IsStatic()) {
+    ptrdiff_t offset = reinterpret_cast<const uint8_t*>(atom->AsStatic()) -
+        reinterpret_cast<const uint8_t*>(&detail::gGkAtoms);
+    _0 = (offset << 1) | 1;
+  } else {
+    _0 = reinterpret_cast<uintptr_t>(atom);
+  }
+  MOZ_ASSERT(IsStatic() == atom->IsStatic());
+  MOZ_ASSERT(AsAtom() == atom);
+}
+
 inline StyleAtom::StyleAtom(const StyleAtom& aOther) : _0(aOther._0) {
   if (!IsStatic()) {
     reinterpret_cast<nsAtom*>(_0)->AddRef();

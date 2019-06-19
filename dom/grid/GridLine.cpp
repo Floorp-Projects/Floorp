@@ -32,11 +32,10 @@ GridLine::GridLine(GridLines* aParent)
 
 GridLine::~GridLine() {}
 
-void GridLine::GetNames(nsTArray<nsCString>& aNames) const { aNames = mNames; }
 void GridLine::GetNames(nsTArray<nsString>& aNames) const {
   aNames.SetCapacity(mNames.Length());
   for (auto& name : mNames) {
-    aNames.AppendElement(NS_ConvertUTF8toUTF16(name));
+    aNames.AppendElement(nsDependentAtomString(name));
   }
 }
 
@@ -55,8 +54,8 @@ uint32_t GridLine::Number() const { return mNumber; }
 
 int32_t GridLine::NegativeNumber() const { return mNegativeNumber; }
 
-void GridLine::SetLineValues(const nsTArray<nsCString>& aNames, double aStart,
-                             double aBreadth, uint32_t aNumber,
+void GridLine::SetLineValues(const nsTArray<RefPtr<nsAtom>>& aNames,
+                             double aStart, double aBreadth, uint32_t aNumber,
                              int32_t aNegativeNumber, GridDeclaration aType) {
   mNames = aNames;
   mStart = aStart;
@@ -66,7 +65,7 @@ void GridLine::SetLineValues(const nsTArray<nsCString>& aNames, double aStart,
   mType = aType;
 }
 
-void GridLine::SetLineNames(const nsTArray<nsCString>& aNames) {
+void GridLine::SetLineNames(const nsTArray<RefPtr<nsAtom>>& aNames) {
   mNames = aNames;
 }
 
