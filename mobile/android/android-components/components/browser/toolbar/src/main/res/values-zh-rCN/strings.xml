@@ -4,5 +4,5 @@
     <string name="mozac_browser_toolbar_menu_button">菜单</string>
     <string name="mozac_clear_button_description">清除</string>
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
-    <string name="mozac_browser_toolbar_progress_loading">正在加载</string>
+    <string name="mozac_browser_toolbar_progress_loading">载入中</string>
 </resources>

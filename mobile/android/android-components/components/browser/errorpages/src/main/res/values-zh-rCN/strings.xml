@@ -51,13 +51,14 @@
     <string name="mozac_browser_errorpages_net_timeout_title">连接超时</string>
     <!-- The error message shown when a website took long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-      <p>网站没有响应连接请求，浏览器停止了等待。</p>
+      <p>指定的网站一直没有回应，浏览器停止了等待。</p>
       <ul>
-        <li>该服务器是否过载或者暂时不可用？请稍后重试。</li>
-        <li>您是否也无法浏览其他网站？请检查您计算机的网络连接。</li>
-        <li>>您的计算机或网络是否被防火墙或代理服务器保护？不正确的设置可能会干扰网络浏览。</li>
-        <li>仍然不行？请联系您的网络管理员或者互联网服务提供商以寻求协助。</li>
-		</ul>
+        <li>该网站可能目前访问人数过多？请稍后重试。</li>
+        <li>您是否也无法浏览其他网站？请检查您网络连接。</li>
+        <li>电脑有开防火墙或代理服务器？请确定这些设置是否正确。</li>
+        <li>仍然不行？请联系您的网络管理员或者电信运营商以寻求协助。</li>
+      </ul>
+    
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->

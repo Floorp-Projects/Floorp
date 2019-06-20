@@ -35,7 +35,7 @@
 
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
     <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
-    <string name="mozac_feature_prompts_content_description_input_label">文本输入字段的标签</string>
+    <string name="mozac_feature_prompts_content_description_input_label">文本输入栏的标签</string>
 
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">选择颜色</string>
@@ -46,6 +46,4 @@
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">拒绝</string>
 
-    <!-- Text of the title of a dialog when a page is requesting to open a new window. -->
-    <string name="mozac_feature_prompts_popup_dialog_title">要阻止此站点打开此弹出式窗口吗？</string>
-</resources>
+    </resources>
