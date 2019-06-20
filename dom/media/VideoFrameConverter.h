@@ -309,13 +309,15 @@ class VideoFrameConverter {
     rtc::scoped_refptr<webrtc::I420Buffer> buffer =
         mBufferPool.CreateBuffer(aSize.width, aSize.height);
     if (!buffer) {
-      MOZ_DIAGNOSTIC_ASSERT(false,
-                            "Buffers not leaving scope except for "
-                            "reconfig, should never leak");
+      MOZ_DIAGNOSTIC_ASSERT(++mFramesDropped <= 100, "Buffers must be leaking");
       MOZ_LOG(gVideoFrameConverterLog, LogLevel::Warning,
               ("Creating a buffer failed"));
       return;
     }
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    mFramesDropped = 0;
+#endif
 
     nsresult rv =
         ConvertToI420(aImage, buffer->MutableDataY(), buffer->StrideY(),
@@ -349,6 +351,9 @@ class VideoFrameConverter {
   TimeStamp mLastFrameQueuedForProcessing;
   UniquePtr<webrtc::VideoFrame> mLastFrameConverted;
   bool mEnabled;
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  size_t mFramesDropped = 0;
+#endif
   nsTArray<RefPtr<VideoConverterListener>> mListeners;
 };
 

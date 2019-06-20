@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for async-scrolling an OOPIF and ensuring hit-testing still works</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(runAsyncContinuation(test))
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestDone);
+
+
+let code_for_oopif_to_run = function() {
+  document.addEventListener("click", function(e) {
+    dump(`OOPIF got click at ${e.clientX},${e.clientY}\n`);
+    let result = { x: e.clientX, y: e.clientY };
+    FissionTestHelper.fireEventInEmbedder("OOPIF:ClickData", result);
+  });
+  dump("OOPIF registered click listener\n");
+  return true;
+};
+
+async function clickOnIframe(x, y) {
+  let iframePromise = promiseOneEvent("OOPIF:ClickData", null);
+  synthesizeNativeClick(document.body, x, y, function() {
+    dump("Finished synthesizing click, waiting for OOPIF message...\n");
+  });
+  let iframeResponse = await iframePromise;
+  dump("OOPIF response: " + JSON.stringify(iframeResponse.data) + "\n");
+  return iframeResponse.data;
+}
+
+function failsafe() {
+  // Catch and fail faster on the case where the click ends up not going to
+  // the iframe like it should. Otherwise the test hangs until timeout which
+  // is more painful.
+  document.addEventListener("click", function(e) {
+    dump(`${location.href} got click at ${e.clientX},${e.clientY}\n`);
+    ok(false, "The OOPIF hosting page should not have gotten the click");
+    setTimeout(FissionTestHelper.subtestDone, 0);
+  }, {once: true});
+}
+
+// The actual test
+
+async function* test() {
+  ok(SpecialPowers.getBoolPref("apz.paint_skipping.enabled"),
+     "paint-skipping is expected to be enabled for this test to be meaningful");
+
+  let iframeElement = document.getElementById("testframe");
+
+  let iframeResponse = await FissionTestHelper.sendToOopif(iframeElement, code_for_oopif_to_run.toSource() + "()");
+  dump("OOPIF response: " + JSON.stringify(iframeResponse) + "\n");
+  ok(iframeResponse, "code_for_oopif_to_run successfully installed");
+
+  is(window.scrollY, 0, "window is at 0 scroll position");
+
+  // hit-test into the iframe before scrolling
+  let oldClickPoint = await clickOnIframe(50, 250);
+
+  // do an APZ scroll and wait for the main-thread to get the repaint request,
+  // and queue up a paint-skip scroll notification back to APZ.
+  await promiseMoveMouseAndScrollWheelOver(document.body, 10, 10);
+
+  // The wheel scroll might have started an APZ animation, so run that to the end
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  for (var i = 0; i < 60; i++) {
+    utils.advanceTimeAndRefresh(16);
+  }
+  utils.restoreNormalRefresh();
+  // Let the repaint requests get processed
+  await promiseApzRepaintsFlushed();
+  await promiseAllPaintsDone();
+
+  ok(window.scrollY > 5, "window has scrolled by " + window.scrollY + " pixels");
+
+  // hit-test into the iframe after scrolling. The coordinates here are the
+  // same relative to the body as before, but get computed to be different
+  // relative to the window/screen.
+  let newClickPoint = await clickOnIframe(50, 250);
+
+  is(newClickPoint.x, oldClickPoint.x, "x-coord of old and new match");
+  is(newClickPoint.y, oldClickPoint.y, "y-coord of old and new match");
+}
+
+  </script>
+</head>
+<body onload="failsafe()">
+<iframe style="margin-top: 200px" id="testframe"></iframe>
+<div style="height: 5000px">tall div to make the page scrollable</div>
+</body>
+</html>
