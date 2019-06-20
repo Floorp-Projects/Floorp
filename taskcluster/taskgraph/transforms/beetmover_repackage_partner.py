@@ -164,7 +164,7 @@ def split_public_and_private(config, jobs):
 
 def generate_upstream_artifacts(job, build_task_ref, repackage_task_ref,
                                 repackage_signing_task_ref, platform, repack_id,
-                                partner_path):
+                                partner_path, repack_stub_installer=False):
 
     upstream_artifacts = []
     artifact_prefix = get_artifact_prefix(job)
@@ -208,6 +208,20 @@ def generate_upstream_artifacts(job, build_task_ref, repackage_task_ref,
             "paths": ["{}/{}/target.installer.exe.asc".format(artifact_prefix, repack_id)],
             "locale": partner_path,
         })
+        if platform.startswith('win32') and repack_stub_installer:
+            upstream_artifacts.append({
+                "taskId": {"task-reference": repackage_signing_task_ref},
+                "taskType": "repackage",
+                "paths": ["{}/{}/target.stub-installer.exe".format(artifact_prefix, repack_id)],
+                "locale": partner_path,
+            })
+            upstream_artifacts.append({
+                "taskId": {"task-reference": repackage_signing_task_ref},
+                "taskType": "repackage",
+                "paths": ["{}/{}/target.stub-installer.exe.asc".format(
+                    artifact_prefix, repack_id)],
+                "locale": partner_path,
+            })
 
     if not upstream_artifacts:
         raise Exception("Couldn't find any upstream artifacts.")
@@ -221,6 +235,8 @@ def make_task_worker(config, jobs):
         platform = job["attributes"]["build_platform"]
         repack_id = job["extra"]["repack_id"]
         partner, subpartner, locale = job['extra']['repack_id'].split('/')
+        partner_config = get_partner_config_by_kind(config, config.kind)
+        repack_stub_installer = partner_config[partner][subpartner].get('repack_stub_installer')
         build_task = None
         repackage_task = None
         repackage_signing_task = None
@@ -268,7 +284,7 @@ def make_task_worker(config, jobs):
             'upstream-artifacts': generate_upstream_artifacts(
                 job, build_task_ref, repackage_task_ref,
                 repackage_signing_task_ref, platform, repack_id,
-                partner_path
+                partner_path, repack_stub_installer
             ),
             'partner-public': partner_public,
         }
