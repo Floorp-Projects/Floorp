@@ -116,6 +116,16 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
     forceTiering = false;
   }
 
+#ifdef ENABLE_WASM_CRANELIFT
+  if (!baseline && !ion && !cranelift) {
+    if (cx->options().wasmCranelift() && !CraneliftCanCompile()) {
+      // We're forcing to use Cranelift on a platform that doesn't support it.
+      JS_ReportErrorASCII(cx, "cranelift isn't supported on this platform");
+      return nullptr;
+    }
+  }
+#endif
+
   // HasCompilerSupport() should prevent failure here.
   MOZ_RELEASE_ASSERT(baseline || ion || cranelift);
 

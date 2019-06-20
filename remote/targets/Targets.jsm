@@ -52,8 +52,13 @@ class Targets {
 
   clear() {
     for (const target of this) {
-      this.disconnect(target.browser);
+      // The main process target doesn't have a `browser` and so would fail here.
+      // Ignore it here, and instead destroy it individually right after this.
+      if (target != this.mainProcessTarget) {
+        this.disconnect(target.browser);
+      }
     }
+    this._targets.clear();
     if (this.mainProcessTarget) {
       this.mainProcessTarget.disconnect();
       this.mainProcessTarget = null;
@@ -80,6 +85,7 @@ class Targets {
   getMainProcessTarget() {
     if (!this.mainProcessTarget) {
       this.mainProcessTarget = new MainProcessTarget(this);
+      this._targets.set(this.mainProcessTarget.id, this.mainProcessTarget);
       this.emit("connect", this.mainProcessTarget);
     }
     return this.mainProcessTarget;

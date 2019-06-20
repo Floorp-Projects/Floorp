@@ -12,7 +12,7 @@
                 <use xlink:href="#path-1"></use>
             </mask>
             <g id="Shape" fill-rule="nonzero"></g>
-            <g id="Color-/-Photon-/-Primary---Grey-90-80%" mask="url(#mask-2)" fill="#0C0C0D" fill-opacity="0.8" fill-rule="evenodd">
+            <g id="Color-/-Photon-/-Primary---Grey-90-80%" mask="url(#mask-2)" fill="context-fill #0C0C0D" fill-opacity="0.8" fill-rule="evenodd">
                 <rect id="Rectangle" x="0" y="0" width="16" height="16"></rect>
             </g>
         </g>

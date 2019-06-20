@@ -10,3 +10,8 @@ user_pref("geckoview.console.enabled", true);
 
 // required to prevent non-local access to push.services.mozilla.com
 user_pref("dom.push.connection.enabled", false);
+
+// get the console logging out of the webext into the stdout
+user_pref("browser.dom.window.dump.enabled", true);
+user_pref("devtools.console.stdout.chrome", true);
+user_pref("devtools.console.stdout.content", true);
