@@ -20,14 +20,31 @@ add_task(async function() {
   const {Target} = client;
   ok("Target" in client, "Target domain is available");
 
-  const targetCreatedForAlreadyOpenedTab = Target.targetCreated();
+  const onTargetsCreated = new Promise(resolve => {
+    let gotTabTarget = false, gotMainTarget = false;
+    const unsubscribe = Target.targetCreated(event => {
+      if (event.targetInfo.type == "page" &&
+        event.targetInfo.url == gBrowser.selectedBrowser.currentURI.spec) {
+        info("Got the current tab target");
+        gotTabTarget = true;
+      }
+      if (event.targetInfo.type == "browser") {
+        info("Got the browser target");
+        gotMainTarget = true;
+      }
+      if (gotTabTarget && gotMainTarget) {
+        unsubscribe();
+        resolve();
+      }
+    });
+  });
 
   // Instruct the server to fire Target.targetCreated events
   Target.setDiscoverTargets({ discover: true });
 
   // Calling `setDiscoverTargets` will dispatch `targetCreated` event for all
-  // already opened tabs
-  await targetCreatedForAlreadyOpenedTab;
+  // already opened tabs and the browser target.
+  await onTargetsCreated;
 
   // Create a new target so that the test runs against a fresh new tab
   const targetCreated = Target.targetCreated();
