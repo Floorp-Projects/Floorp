@@ -32,6 +32,7 @@ window._gBrowser = {
     window.addEventListener("occlusionstatechange", this);
     window.addEventListener("framefocusrequested", this);
 
+    this.tabContainer.init();
     this._setupInitialBrowserAndTab();
 
     if (Services.prefs.getBoolPref("browser.display.use_system_colors")) {
@@ -67,6 +68,7 @@ window._gBrowser = {
       "toolkit.cosmeticAnimations.enabled");
 
     this._setupEventListeners();
+    this._initialized = true;
   },
 
   ownerGlobal: window,
@@ -76,6 +78,8 @@ window._gBrowser = {
   closingTabsEnum: { ALL: 0, OTHER: 1, TO_END: 2, MULTI_SELECTED: 3 },
 
   _visibleTabs: null,
+
+  _tabs: null,
 
   _lastRelatedTabMap: new WeakMap(),
 
@@ -205,7 +209,10 @@ window._gBrowser = {
   },
 
   get tabs() {
-    return this.tabContainer.allTabs;
+    if (!this._tabs) {
+      this._tabs = this.tabContainer.allTabs;
+    }
+    return this._tabs;
   },
 
   get tabbox() {
@@ -218,19 +225,16 @@ window._gBrowser = {
     return this.tabpanels = document.getElementById("tabbrowser-tabpanels");
   },
 
-  get addEventListener() {
-    delete this.addEventListener;
-    return this.addEventListener = this.tabpanels.addEventListener.bind(this.tabpanels);
+  addEventListener(...args) {
+    this.tabpanels.addEventListener(...args);
   },
 
-  get removeEventListener() {
-    delete this.removeEventListener;
-    return this.removeEventListener = this.tabpanels.removeEventListener.bind(this.tabpanels);
+  removeEventListener(...args) {
+    this.tabpanels.removeEventListener(...args);
   },
 
-  get dispatchEvent() {
-    delete this.dispatchEvent;
-    return this.dispatchEvent = this.tabpanels.dispatchEvent.bind(this.tabpanels);
+  dispatchEvent(...args) {
+    return this.tabpanels.dispatchEvent(...args);
   },
 
   get visibleTabs() {
@@ -492,6 +496,11 @@ window._gBrowser = {
 
   get userTypedValue() {
     return this.selectedBrowser.userTypedValue;
+  },
+
+  _invalidateCachedTabs() {
+    this._tabs = null;
+    this._visibleTabs = null;
   },
 
   _setFindbarData() {
@@ -2366,9 +2375,6 @@ window._gBrowser = {
       }, 0, this.tabContainer);
     }
 
-    // invalidate cache
-    this._visibleTabs = null;
-
     let usingPreloadedContent = false;
     let b;
 
@@ -2416,6 +2422,7 @@ window._gBrowser = {
       }
 
       let tabAfter = this.tabs[index] || null;
+      this._invalidateCachedTabs();
       this.tabContainer.insertBefore(t, tabAfter);
       if (tabAfter) {
         this._updateTabsAfterInsert();
@@ -2959,7 +2966,7 @@ window._gBrowser = {
 
     aTab.closing = true;
     this._removingTabs.push(aTab);
-    this._visibleTabs = null; // invalidate cache
+    this._invalidateCachedTabs();
 
     // Invalidate hovered tab state tracking for this closing tab.
     if (this.tabContainer._hoveredTab == aTab)
@@ -3085,6 +3092,7 @@ window._gBrowser = {
 
     // Remove the tab ...
     aTab.remove();
+    this._invalidateCachedTabs();
 
     // Update hashiddentabs if this tab was hidden.
     if (aTab.hidden)
@@ -3538,7 +3546,7 @@ window._gBrowser = {
   showTab(aTab) {
     if (aTab.hidden) {
       aTab.removeAttribute("hidden");
-      this._visibleTabs = null; // invalidate cache
+      this._invalidateCachedTabs();
 
       this.tabContainer._updateCloseButtons();
       this.tabContainer._updateHiddenTabsStatus();
@@ -3556,7 +3564,7 @@ window._gBrowser = {
     if (!aTab.hidden && !aTab.pinned && !aTab.selected &&
         !aTab.closing && !aTab._sharingState) {
       aTab.setAttribute("hidden", "true");
-      this._visibleTabs = null; // invalidate cache
+      this._invalidateCachedTabs();
 
       this.tabContainer._updateCloseButtons();
       this.tabContainer._updateHiddenTabsStatus();
@@ -3723,10 +3731,9 @@ window._gBrowser = {
 
     aIndex = aIndex < aTab._tPos ? aIndex : aIndex + 1;
 
-    // invalidate cache
-    this._visibleTabs = null;
-
-    this.tabContainer.insertBefore(aTab, this.tabs[aIndex] || null);
+    let neighbor = this.tabs[aIndex] || null;
+    this._invalidateCachedTabs();
+    this.tabContainer.insertBefore(aTab, neighbor);
     this._updateTabsAfterInsert();
 
     if (wasFocused)
@@ -3889,7 +3896,7 @@ window._gBrowser = {
       return;
     }
 
-    const tabs = this._visibleTabs;
+    const tabs = this.visibleTabs;
     const indexOfTab1 = tabs.indexOf(aTab1);
     const indexOfTab2 = tabs.indexOf(aTab2);
 
@@ -4450,6 +4457,7 @@ window._gBrowser = {
   },
 
   destroy() {
+    this.tabContainer.destroy();
     Services.obs.removeObserver(this, "contextual-identity-updated");
 
     for (let tab of this.tabs) {

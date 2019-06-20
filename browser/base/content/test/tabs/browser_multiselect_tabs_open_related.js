@@ -21,8 +21,7 @@ add_task(async function test() {
 
   let metaKeyEvent = AppConstants.platform == "macosx" ? {metaKey: true} : {ctrlKey: true};
 
-  let tabs = document.getElementById("tabbrowser-tabs");
-  let newTabButton = document.getAnonymousElementByAttribute(tabs, "anonid", "tabs-newtab-button");
+  let newTabButton = gBrowser.tabContainer.newTabButton;
   let promiseTabOpened = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
   EventUtils.synthesizeMouseAtCenter(newTabButton, metaKeyEvent);
   let openEvent = await promiseTabOpened;
