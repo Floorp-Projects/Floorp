@@ -11,9 +11,10 @@ const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm"
 
 class Browser extends Domain {
   getVersion() {
+    const { isHeadless } = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
     return {
       protocolVersion: "1",
-      product: "Firefox",
+      product: (isHeadless ? "Headless " : "") + "Firefox",
       revision: "1",
       userAgent: "Firefox",
       jsVersion: "1.8.5",
