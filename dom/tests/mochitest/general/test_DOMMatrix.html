@@ -462,7 +462,7 @@ function testCreateMatrix3D()
   // Should be initialised to identity
   cmpMatrix(m, [1, 0, 0, 1, 0, 0],
             "DOMMatrix should produce identity matrix");
-  is(m.is2D, true, "should not produce 3d matrix");
+  is(m.is2D, false, "should produce 3d matrix");
 
   m = new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]);
 
