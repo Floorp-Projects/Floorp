@@ -20,7 +20,7 @@ namespace dom {
 class DOMSVGAnimatedTransformList;
 class SVGGraphicsElement;
 class SVGMatrix;
-class SVGIRect;
+class SVGRect;
 struct SVGBoundingBoxOptions;
 
 class SVGTransformableElement : public SVGElement {
@@ -36,8 +36,8 @@ class SVGTransformableElement : public SVGElement {
   SVGElement* GetNearestViewportElement();
   SVGElement* GetFarthestViewportElement();
   MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<SVGIRect> GetBBox(const SVGBoundingBoxOptions& aOptions,
-                                     ErrorResult& rv);
+  already_AddRefed<SVGRect> GetBBox(const SVGBoundingBoxOptions& aOptions,
+                                    ErrorResult& rv);
   already_AddRefed<SVGMatrix> GetCTM();
   already_AddRefed<SVGMatrix> GetScreenCTM();
   already_AddRefed<SVGMatrix> GetTransformToElement(
