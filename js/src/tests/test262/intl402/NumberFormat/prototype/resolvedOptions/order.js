@@ -22,6 +22,8 @@ const expected = [
   "currency",
   "currencyDisplay",
   "minimumIntegerDigits",
+  "minimumFractionDigits",
+  "maximumFractionDigits",
   "minimumSignificantDigits",
   "maximumSignificantDigits",
   "useGrouping",

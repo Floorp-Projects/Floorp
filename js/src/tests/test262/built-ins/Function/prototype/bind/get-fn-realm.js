@@ -7,22 +7,19 @@ description: >
     The realm of a bound function exotic object is the realm of its target
     function
 info: |
-    7.3.22 GetFunctionRealm ( obj )
-
     [...]
     2. If obj has a [[Realm]] internal slot, then
-       a. Return obj.[[Realm]].
+       a, Return obj's [[Realm]] internal slot.
     3. If obj is a Bound Function exotic object, then
-       a. Let target be obj.[[BoundTargetFunction]].
+       a. Let target be obj's [[BoundTargetFunction]] internal slot.
        b. Return ? GetFunctionRealm(target).
 features: [cross-realm]
 ---*/
 
 var other = $262.createRealm().global;
 var C = new other.Function();
-C.prototype = null;
-var B = C.bind();
+var B = Function.prototype.bind.call(C);
 
-assert.sameValue(Object.getPrototypeOf(new B()), other.Object.prototype);
+assert.sameValue(Object.getPrototypeOf(new B()), C.prototype);
 
 reportCompare(0, 0);

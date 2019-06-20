@@ -20,11 +20,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Date.prototype.toJSON, 'name', {
-  value: 'toJSON',
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+assert.sameValue(Date.prototype.toJSON.name, "toJSON");
+
+verifyNotEnumerable(Date.prototype.toJSON, "name");
+verifyNotWritable(Date.prototype.toJSON, "name");
+verifyConfigurable(Date.prototype.toJSON, "name");
 
 reportCompare(0, 0);

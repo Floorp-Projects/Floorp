@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError module
+// |reftest| error:ReferenceError module
 // Copyright (C) 2018 André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -18,12 +18,12 @@ info: |
 
     AssignmentExpression : LeftHandSideExpression = AssignmentExpression
 
-    It is an early Syntax Error if LeftHandSideExpression is neither an ObjectLiteral nor an
-    ArrayLiteral and AssignmentTargetType of LeftHandSideExpression is invalid or strict.
+    It is an early Reference Error if LeftHandSideExpression is neither an ObjectLiteral nor an
+    ArrayLiteral and AssignmentTargetType of LeftHandSideExpression is invalid.
 flags: [module]
 negative:
   phase: parse
-  type: SyntaxError
+  type: ReferenceError
 features: [import.meta]
 ---*/
 

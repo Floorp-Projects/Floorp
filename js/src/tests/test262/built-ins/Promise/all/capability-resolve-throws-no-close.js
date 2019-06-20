@@ -45,13 +45,11 @@ info: |
 features: [Symbol.iterator]
 ---*/
 
-var nextCount = 0;
 var returnCount = 0;
 var iter = {};
 iter[Symbol.iterator] = function() {
   return {
     next: function() {
-      nextCount += 1;
       return {
         done: true
       };
@@ -70,11 +68,8 @@ var P = function(executor) {
   });
 };
 
-P.resolve = Promise.resolve;
-
 Promise.all.call(P, iter);
 
-assert.sameValue(nextCount, 1);
 assert.sameValue(returnCount, 0);
 
 reportCompare(0, 0);

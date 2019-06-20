@@ -41,16 +41,10 @@ flags: [module]
 ---*/
 
 assert.throws(ReferenceError, function() {
-  typeof B;
+  typeof y;
 }, 'binding is created but not initialized');
 
-import { B, results } from './instn-iee-bndng-let_FIXTURE.js';
-export let A;
-
-assert.sameValue(results.length, 4);
-assert.sameValue(results[0], 'ReferenceError');
-assert.sameValue(results[1], 'undefined');
-assert.sameValue(results[2], 'ReferenceError');
-assert.sameValue(results[3], 'undefined');
+import { y } from './instn-iee-bndng-let_FIXTURE.js';
+export let x;
 
 reportCompare(0, 0);
