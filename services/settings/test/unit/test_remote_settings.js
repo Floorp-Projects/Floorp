@@ -135,10 +135,17 @@ add_task(async function test_get_loads_default_records_from_a_local_dump_when_da
     return;
   }
 
+  let eventData;
+  clientWithDump.on("sync", ({ data }) => eventData = data);
+
   // When collection has a dump in services/settings/dumps/{bucket}/{collection}.json
   const data = await clientWithDump.get();
   notEqual(data.length, 0);
   // No synchronization happened (responses are not mocked).
+
+  // But a sync event was sent to notify about created records.
+  equal(eventData.created.length, data.length);
+  equal(eventData.current.length, data.length);
 });
 add_task(clear_state);
 

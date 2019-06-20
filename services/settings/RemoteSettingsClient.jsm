@@ -213,6 +213,7 @@ class RemoteSettingsClient extends EventEmitter {
       syncIfEmpty = true,
     } = options;
     let { verifySignature = false } = options;
+    let imported = 0;
 
     if (syncIfEmpty && !(await Utils.hasLocalData(this))) {
       try {
@@ -221,7 +222,7 @@ class RemoteSettingsClient extends EventEmitter {
         if (await Utils.hasLocalDump(this.bucketName, this.collectionName)) {
           // Since there is a JSON dump, load it as default data.
           console.debug(`${this.identifier} Local DB is empty, load JSON dump`);
-          await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
+          imported = await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
         } else {
           // There is no JSON dump, force a synchronization from the server.
           console.debug(`${this.identifier} Local DB is empty, pull data from server`);
@@ -258,7 +259,15 @@ class RemoteSettingsClient extends EventEmitter {
     }
 
     // Filter the records based on `this.filterFunc` results.
-    return this._filterEntries(data);
+    const filtered = await this._filterEntries(data);
+
+    if (imported > 0 && filtered.length > 0) {
+      // If we loaded the dump, we must let listeners know, by emitting a "sync" event.
+      const syncResult = { current: filtered, created: filtered, updated: [], deleted: [] };
+      await this.emit("sync", { data: syncResult });
+    }
+
+    return filtered;
   }
 
   /**
