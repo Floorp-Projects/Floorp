@@ -1158,6 +1158,13 @@ LayoutDeviceIntRect PuppetWidget::GetScreenBounds() {
   return LayoutDeviceIntRect(WidgetToScreenOffset(), mBounds.Size());
 }
 
+LayoutDeviceIntSize PuppetWidget::GetCompositionSize() {
+  if (!mBrowserChild) {
+    return nsBaseWidget::GetCompositionSize();
+  }
+  return mBrowserChild->GetVisibleRect().Size();
+}
+
 uint32_t PuppetWidget::GetMaxTouchPoints() const {
   uint32_t maxTouchPoints = 0;
   if (mBrowserChild) {

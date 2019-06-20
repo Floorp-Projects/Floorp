@@ -13,13 +13,12 @@ namespace mozilla {
 namespace layers {
 
 InProcessCompositorSession::InProcessCompositorSession(
-    widget::CompositorWidget* aWidget, nsBaseWidget* baseWidget,
+    nsBaseWidget* aWidget, widget::CompositorWidget* aCompositorWidget,
     CompositorBridgeChild* aChild, CompositorBridgeParent* aParent)
-    : CompositorSession(aWidget->AsDelegate(), aChild,
+    : CompositorSession(aWidget, aCompositorWidget->AsDelegate(), aChild,
                         aParent->RootLayerTreeId()),
-      mWidget(baseWidget),
       mCompositorBridgeParent(aParent),
-      mCompositorWidget(aWidget) {
+      mCompositorWidget(aCompositorWidget) {
   GPUProcessManager::Get()->RegisterInProcessSession(this);
 }
 
@@ -45,7 +44,7 @@ RefPtr<InProcessCompositorSession> InProcessCompositorSession::Create(
           aLayerManager, aNamespace);
   MOZ_ASSERT(child);
 
-  return new InProcessCompositorSession(widget, aWidget, child, parent);
+  return new InProcessCompositorSession(aWidget, widget, child, parent);
 }
 
 void InProcessCompositorSession::NotifySessionLost() {

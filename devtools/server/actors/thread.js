@@ -6,6 +6,7 @@
 
 "use strict";
 
+const DebuggerNotificationObserver = require("DebuggerNotificationObserver");
 const Services = require("Services");
 const { Cr, Ci } = require("chrome");
 const { ActorPool } = require("devtools/server/actors/common");
@@ -16,6 +17,8 @@ const { assert, dumpn } = DevToolsUtils;
 const { threadSpec } = require("devtools/shared/specs/thread");
 const {
   getAvailableEventBreakpoints,
+  eventBreakpointForNotification,
+  makeEventBreakpointMessage,
 } = require("devtools/server/actors/utils/event-breakpoints");
 
 loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
@@ -61,7 +64,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._scripts = null;
     this._xhrBreakpoints = [];
     this._observingNetwork = false;
-    this._eventBreakpoints = [];
+    this._activeEventBreakpoints = new Set();
+    this._activeEventPause = null;
 
     this._priorPause = null;
 
@@ -94,6 +98,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.objectGrip = this.objectGrip.bind(this);
     this.pauseObjectGrip = this.pauseObjectGrip.bind(this);
     this._onOpeningRequest = this._onOpeningRequest.bind(this);
+    this._onNewDebuggee = this._onNewDebuggee.bind(this);
+    this._eventBreakpointListener = this._eventBreakpointListener.bind(this);
+
+    this._debuggerNotificationObserver = new DebuggerNotificationObserver();
 
     if (Services.obs) {
       // Set a wrappedJSObject property so |this| can be sent via the observer svc
@@ -112,6 +120,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this._dbg.uncaughtExceptionHook = this.uncaughtExceptionHook;
       this._dbg.onDebuggerStatement = this.onDebuggerStatement;
       this._dbg.onNewScript = this.onNewScript;
+      this._dbg.onNewDebuggee = this._onNewDebuggee;
       if (this._dbg.replaying) {
         this._dbg.replayingOnForcedPause = this.replayingOnForcedPause.bind(this);
         const sendProgress = throttle((recording, executionPoint) => {
@@ -223,6 +232,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._xhrBreakpoints = [];
     this._updateNetworkObserver();
 
+    this._activeEventBreakpoints = new Set();
+    this._debuggerNotificationObserver.removeListener(
+      this._eventBreakpointListener);
+
+    for (const global of this.dbg.getDebuggees()) {
+      try {
+        this._debuggerNotificationObserver.disconnect(global);
+      } catch (e) { }
+    }
+
     this.sources.off("newSource", this.onNewSourceEvent);
     this.clearDebuggees();
     this.conn.removeActorPool(this._threadLifetimePool);
@@ -284,6 +303,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     if (options.breakpoints) {
       this._setBreakpointsOnAttach(options.breakpoints);
+    }
+    if (options.eventBreakpoints) {
+      this.setActiveEventBreakpoints(options.eventBreakpoints);
     }
 
     this.dbg.addDebuggees();
@@ -400,10 +422,24 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return getAvailableEventBreakpoints();
   },
   getActiveEventBreakpoints: function() {
-    return this._eventBreakpoints;
+    return Array.from(this._activeEventBreakpoints);
   },
   setActiveEventBreakpoints: function(ids) {
-    this._eventBreakpoints = ids;
+    this._activeEventBreakpoints = new Set(ids);
+
+    if (this._activeEventBreakpoints.size === 0) {
+      this._debuggerNotificationObserver.removeListener(
+        this._eventBreakpointListener);
+    } else {
+      this._debuggerNotificationObserver.addListener(
+        this._eventBreakpointListener);
+    }
+  },
+
+  _onNewDebuggee(global) {
+    try {
+      this._debuggerNotificationObserver.connect(global);
+    } catch (e) { }
   },
 
   _updateNetworkObserver() {
@@ -513,6 +549,81 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return {};
   },
 
+  _eventBreakpointListener(notification) {
+    if (this._state === "paused" || this._state === "detached") {
+      return;
+    }
+
+    const eventBreakpoint =
+      eventBreakpointForNotification(this.dbg, notification);
+
+    if (!this._activeEventBreakpoints.has(eventBreakpoint)) {
+      return;
+    }
+
+    if (notification.phase === "pre" && !this._activeEventPause) {
+      this._activeEventPause = this._captureDebuggerHooks();
+
+      this.dbg.onEnterFrame =
+        this._makeEventBreakpointEnterFrame(eventBreakpoint);
+    } else if (notification.phase === "post" && this._activeEventPause) {
+      this._restoreDebuggerHooks(this._activeEventPause);
+      this._activeEventPause = null;
+    } else if (!notification.phase && !this._activeEventPause) {
+      const frame = this.dbg.getNewestFrame();
+      if (frame) {
+        const { sourceActor } = this.sources.getFrameLocation(frame);
+        const url = sourceActor.url;
+        if (this.sources.isBlackBoxed(url)) {
+          return;
+        }
+
+        this._pauseAndRespondEventBreakpoint(frame, eventBreakpoint);
+      }
+    }
+  },
+
+  _makeEventBreakpointEnterFrame(eventBreakpoint) {
+    return frame => {
+      const { sourceActor } = this.sources.getFrameLocation(frame);
+      const url = sourceActor.url;
+      if (this.sources.isBlackBoxed(url)) {
+        return undefined;
+      }
+
+      this._restoreDebuggerHooks(this._activeEventPause);
+      this._activeEventPause = null;
+
+      return this._pauseAndRespondEventBreakpoint(frame, eventBreakpoint);
+    };
+  },
+
+  _pauseAndRespondEventBreakpoint(frame, eventBreakpoint) {
+    if (this.skipBreakpoints) {
+      return undefined;
+    }
+
+    return this._pauseAndRespond(frame, {
+      type: "eventBreakpoint",
+      breakpoint: eventBreakpoint,
+      message: makeEventBreakpointMessage(eventBreakpoint),
+    });
+  },
+
+  _captureDebuggerHooks() {
+    return {
+      onEnterFrame: this.dbg.onEnterFrame,
+      onStep: this.dbg.onStep,
+      onPop: this.dbg.onPop,
+    };
+  },
+
+  _restoreDebuggerHooks(hooks) {
+    this.dbg.onEnterFrame = hooks.onEnterFrame;
+    this.dbg.onStep = hooks.onStep;
+    this.dbg.onPop = hooks.onPop;
+  },
+
   /**
    * Pause the debuggee, by entering a nested event loop, and return a 'paused'
    * packet to the client.
@@ -575,7 +686,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this._parentClosed ? null : undefined;
   },
 
-  _makeOnEnterFrame: function({ thread, pauseAndRespond }) {
+  _makeOnEnterFrame: function({ pauseAndRespond }) {
     return frame => {
       const { sourceActor } = this.sources.getFrameLocation(frame);
 
@@ -590,13 +701,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       }
 
       // Continue forward until we get to a valid step target.
-      const { onStep, onPop } = thread._makeSteppingHooks(
+      const { onStep, onPop } = this._makeSteppingHooks(
         null, "next", false, null
       );
 
-      if (thread.dbg.replaying) {
+      if (this.dbg.replaying) {
         const offsets =
-          thread._findReplayingStepOffsets(null, frame,
+          this._findReplayingStepOffsets(null, frame,
                                            /* rewinding = */ false);
         frame.setReplayingOnStep(onStep, offsets);
       } else {
@@ -608,7 +719,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     };
   },
 
-  _makeOnPop: function({ thread, pauseAndRespond, startLocation, steppingType }) {
+  _makeOnPop: function({ pauseAndRespond, startLocation, steppingType }) {
+    const thread = this;
     const result = function(completion) {
       // onPop is called with 'this' set to the current frame.
       const location = thread.sources.getFrameLocation(this);
@@ -728,8 +840,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return script.getOffsetMetadata(offset).isStepStart;
   },
 
-  _makeOnStep: function({ thread, pauseAndRespond, startFrame,
+  _makeOnStep: function({ pauseAndRespond, startFrame,
                           startLocation, steppingType, completion, rewinding }) {
+    const thread = this;
     return function() {
       // onStep is called with 'this' set to the current frame.
 
@@ -828,7 +941,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         { type: "resumeLimit" },
         onPacket
       ),
-      thread: this,
       startFrame: this.youngestFrame,
       startLocation: startLocation,
       steppingType: steppingType,

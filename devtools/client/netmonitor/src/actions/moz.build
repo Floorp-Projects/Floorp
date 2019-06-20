@@ -11,4 +11,5 @@ DevToolsModules(
     'sort.js',
     'timing-markers.js',
     'ui.js',
+    'web-sockets.js',
 )

@@ -255,6 +255,11 @@ class RenderThread final {
   /// Can be called from any thread.
   void SimulateDeviceReset();
 
+  /// Can only be called from the render thread.
+  void HandleWebRenderError(WebRenderError aError);
+  /// Can only be called from the render thread.
+  bool IsHandlingWebRenderError();
+
   size_t RendererCount();
 
   void SetCompositionRecorderForWindow(
@@ -314,6 +319,7 @@ class RenderThread final {
   bool mHasShutdown;
 
   bool mHandlingDeviceReset;
+  bool mHandlingWebRenderError;
 };
 
 }  // namespace wr

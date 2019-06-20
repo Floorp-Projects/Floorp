@@ -2188,7 +2188,7 @@ class BigIntBox : public TraceListNode {
 
 class ObjectBox : public TraceListNode {
  protected:
-  friend struct CGObjectList;
+  friend struct GCThingList;
   ObjectBox* emitLink;
 
   ObjectBox(JSFunction* function, TraceListNode* link);

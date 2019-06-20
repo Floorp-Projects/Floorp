@@ -44,6 +44,7 @@ const UnsolicitedPauses = {
   breakpoint: "breakpoint",
   DOMEvent: "DOMEvent",
   watchpoint: "watchpoint",
+  eventBreakpoint: "eventBreakpoint",
   exception: "exception",
   replayForcedPause: "replayForcedPause",
 };

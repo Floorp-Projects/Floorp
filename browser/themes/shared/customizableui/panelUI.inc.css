@@ -1122,7 +1122,7 @@ panelview .toolbarbutton-1,
   transform: translateY(1px);
 }
 
-#main-window:not([customizing]) .subviewbutton-nav[disabled=true]::after {
+:root:not([customizing]) .subviewbutton-nav[disabled=true]::after {
   opacity: 0.4;
 }
 
