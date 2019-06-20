@@ -5,3 +5,4 @@
 toolkit.jar:
   content/global/aboutPerformance.xhtml               (content/aboutPerformance.xhtml)
   content/global/aboutPerformance.js                  (content/aboutPerformance.js)
+  content/global/aboutPerformance.css                 (content/aboutPerformance.css)

@@ -73,7 +73,7 @@ int profiler_current_process_id() { return getpid(); }
 
 int profiler_current_thread_id() {
   // glibc doesn't provide a wrapper for gettid().
-#if defined(__GLIBC__)
+#if defined(__linux__) || !defined(__BIONIC__)
   return static_cast<int>(static_cast<pid_t>(syscall(SYS_gettid)));
 #else
   return static_cast<int>(gettid());

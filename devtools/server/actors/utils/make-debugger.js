@@ -64,15 +64,23 @@ module.exports = function makeDebugger({ findDebuggees, shouldAddNewGlobalAsDebu
   dbg.allowUnobservedAsmJS = true;
   dbg.uncaughtExceptionHook = reportDebuggerHookException;
 
+  function onNewDebuggee(global) {
+    if (dbg.onNewDebuggee) {
+      dbg.onNewDebuggee(global);
+    }
+  }
+
   dbg.onNewGlobalObject = function(global) {
     if (shouldAddNewGlobalAsDebuggee(global)) {
       safeAddDebuggee(this, global);
+      onNewDebuggee(global);
     }
   };
 
   dbg.addDebuggees = function() {
     for (const global of findDebuggees(this)) {
       safeAddDebuggee(this, global);
+      onNewDebuggee(global);
     }
   };
 

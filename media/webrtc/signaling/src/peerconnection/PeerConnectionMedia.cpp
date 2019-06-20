@@ -96,8 +96,7 @@ void PeerConnectionMedia::StunAddrsHandler::OnStunAddrsAvailable(
     // If parent process returns 0 STUN addresses, change ICE connection
     // state to failed.
     if (!pcm_->mStunAddrs.Length()) {
-      pcm_->SignalIceConnectionStateChange(
-          dom::PCImplIceConnectionState::Failed);
+      pcm_->IceConnectionStateChange_m(dom::RTCIceConnectionState::Failed);
     }
 
     pcm_ = nullptr;
@@ -217,15 +216,11 @@ nsresult PeerConnectionMedia::Init() {
 void PeerConnectionMedia::EnsureTransports(const JsepSession& aSession) {
   for (const auto& transceiver : aSession.GetTransceivers()) {
     if (transceiver->HasOwnTransport()) {
-      RUN_ON_THREAD(
-          GetSTSThread(),
-          WrapRunnable(mTransportHandler,
-                       &MediaTransportHandler::EnsureProvisionalTransport,
-                       transceiver->mTransport.mTransportId,
-                       transceiver->mTransport.mLocalUfrag,
-                       transceiver->mTransport.mLocalPwd,
-                       transceiver->mTransport.mComponents),
-          NS_DISPATCH_NORMAL);
+      mTransportHandler->EnsureProvisionalTransport(
+          transceiver->mTransport.mTransportId,
+          transceiver->mTransport.mLocalUfrag,
+          transceiver->mTransport.mLocalPwd,
+          transceiver->mTransport.mComponents);
     }
   }
 
@@ -242,11 +237,7 @@ nsresult PeerConnectionMedia::UpdateTransports(const JsepSession& aSession,
     }
   }
 
-  RUN_ON_THREAD(GetSTSThread(),
-                WrapRunnable(mTransportHandler,
-                             &MediaTransportHandler::RemoveTransportsExcept,
-                             finalTransports),
-                NS_DISPATCH_NORMAL);
+  mTransportHandler->RemoveTransportsExcept(finalTransports);
 
   for (const auto& transceiverImpl : mTransceivers) {
     transceiverImpl->UpdateTransport();
@@ -300,16 +291,11 @@ void PeerConnectionMedia::UpdateTransport(const JsepTransceiver& aTransceiver,
     digests.emplace_back(ss.str(), fingerprint.fingerprint);
   }
 
-  RUN_ON_THREAD(
-      GetSTSThread(),
-      WrapRunnable(
-          mTransportHandler, &MediaTransportHandler::ActivateTransport,
-          transport.mTransportId, transport.mLocalUfrag, transport.mLocalPwd,
-          components, ufrag, pwd, keyDer, certDer,
-          mParent->Identity()->auth_type(),
-          transport.mDtls->GetRole() == JsepDtlsTransport::kJsepDtlsClient,
-          digests, mParent->PrivacyRequested()),
-      NS_DISPATCH_NORMAL);
+  mTransportHandler->ActivateTransport(
+      transport.mTransportId, transport.mLocalUfrag, transport.mLocalPwd,
+      components, ufrag, pwd, keyDer, certDer, mParent->Identity()->auth_type(),
+      transport.mDtls->GetRole() == JsepDtlsTransport::kJsepDtlsClient, digests,
+      mParent->PrivacyRequested());
 
   for (auto& candidate : candidates) {
     AddIceCandidate("candidate:" + candidate, transport.mTransportId, ufrag);
@@ -345,34 +331,23 @@ nsresult PeerConnectionMedia::UpdateMediaPipelines() {
 }
 
 void PeerConnectionMedia::StartIceChecks(const JsepSession& aSession) {
-  nsCOMPtr<nsIRunnable> runnable(WrapRunnable(
-      RefPtr<PeerConnectionMedia>(this), &PeerConnectionMedia::StartIceChecks_s,
-      aSession.IsIceControlling(), aSession.IsOfferer(),
-      aSession.RemoteIsIceLite(),
-      // Copy, just in case API changes to return a ref
-      std::vector<std::string>(aSession.GetIceOptions())));
-
-  PerformOrEnqueueIceCtxOperation(runnable);
-}
-
-void PeerConnectionMedia::StartIceChecks_s(
-    bool aIsControlling, bool aIsOfferer, bool aIsIceLite,
-    const std::vector<std::string>& aIceOptionsList) {
-  CSFLogDebug(LOGTAG, "Starting ICE Checking");
-
   std::vector<std::string> attributes;
-  if (aIsIceLite) {
+  if (aSession.RemoteIsIceLite()) {
     attributes.push_back("ice-lite");
   }
 
-  if (!aIceOptionsList.empty()) {
+  if (!aSession.GetIceOptions().empty()) {
     attributes.push_back("ice-options:");
-    for (const auto& option : aIceOptionsList) {
+    for (const auto& option : aSession.GetIceOptions()) {
       attributes.back() += option + ' ';
     }
   }
 
-  mTransportHandler->StartIceChecks(aIsControlling, aIsOfferer, attributes);
+  nsCOMPtr<nsIRunnable> runnable(WrapRunnable(
+      mTransportHandler, &MediaTransportHandler::StartIceChecks,
+      aSession.IsIceControlling(), aSession.IsOfferer(), attributes));
+
+  PerformOrEnqueueIceCtxOperation(runnable);
 }
 
 bool PeerConnectionMedia::GetPrefDefaultAddressOnly() const {
@@ -402,19 +377,11 @@ void PeerConnectionMedia::AddIceCandidate(const std::string& aCandidate,
                                           const std::string& aTransportId,
                                           const std::string& aUfrag) {
   MOZ_ASSERT(!aTransportId.empty());
-  RUN_ON_THREAD(
-      GetSTSThread(),
-      WrapRunnable(mTransportHandler, &MediaTransportHandler::AddIceCandidate,
-                   aTransportId, aCandidate, aUfrag),
-      NS_DISPATCH_NORMAL);
+  mTransportHandler->AddIceCandidate(aTransportId, aCandidate, aUfrag);
 }
 
 void PeerConnectionMedia::UpdateNetworkState(bool online) {
-  RUN_ON_THREAD(
-      GetSTSThread(),
-      WrapRunnable(mTransportHandler,
-                   &MediaTransportHandler::UpdateNetworkState, online),
-      NS_DISPATCH_NORMAL);
+  mTransportHandler->UpdateNetworkState(online);
 }
 
 void PeerConnectionMedia::FlushIceCtxOperationQueueIfReady() {
@@ -422,7 +389,7 @@ void PeerConnectionMedia::FlushIceCtxOperationQueueIfReady() {
 
   if (IsIceCtxReady()) {
     for (auto& mQueuedIceCtxOperation : mQueuedIceCtxOperations) {
-      GetSTSThread()->Dispatch(mQueuedIceCtxOperation, NS_DISPATCH_NORMAL);
+      mQueuedIceCtxOperation->Run();
     }
     mQueuedIceCtxOperations.clear();
   }
@@ -433,7 +400,7 @@ void PeerConnectionMedia::PerformOrEnqueueIceCtxOperation(
   ASSERT_ON_THREAD(mMainThread);
 
   if (IsIceCtxReady()) {
-    GetSTSThread()->Dispatch(runnable, NS_DISPATCH_NORMAL);
+    runnable->Run();
   } else {
     mQueuedIceCtxOperations.push_back(runnable);
   }
@@ -446,12 +413,12 @@ void PeerConnectionMedia::GatherIfReady() {
   mQueuedIceCtxOperations.clear();
   nsCOMPtr<nsIRunnable> runnable(WrapRunnable(
       RefPtr<PeerConnectionMedia>(this),
-      &PeerConnectionMedia::EnsureIceGathering_s, GetPrefDefaultAddressOnly()));
+      &PeerConnectionMedia::EnsureIceGathering, GetPrefDefaultAddressOnly()));
 
   PerformOrEnqueueIceCtxOperation(runnable);
 }
 
-void PeerConnectionMedia::EnsureIceGathering_s(bool aDefaultRouteOnly) {
+void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly) {
   if (mProxyConfig) {
     // Note that this could check if PrivacyRequested() is set on the PC and
     // remove "webrtc" from the ALPN list.  But that would only work if the PC
@@ -506,6 +473,7 @@ void PeerConnectionMedia::SelfDestruct() {
       mSTSThread,
       WrapRunnable(this, &PeerConnectionMedia::ShutdownMediaTransport_s),
       NS_DISPATCH_NORMAL);
+  mParent = nullptr;
 
   CSFLogDebug(LOGTAG, "%s: Media shut down", __FUNCTION__);
 }
@@ -630,7 +598,7 @@ nsresult PeerConnectionMedia::AddRIDFilter(MediaStreamTrack& aRecvTrack,
 }
 
 void PeerConnectionMedia::IceGatheringStateChange_s(
-    dom::PCImplIceGatheringState aState) {
+    dom::RTCIceGatheringState aState) {
   ASSERT_ON_THREAD(mSTSThread);
 
   // ShutdownMediaTransport_s has not run yet because it unhooks this function
@@ -644,7 +612,7 @@ void PeerConnectionMedia::IceGatheringStateChange_s(
 }
 
 void PeerConnectionMedia::IceConnectionStateChange_s(
-    dom::PCImplIceConnectionState aState) {
+    dom::RTCIceConnectionState aState) {
   ASSERT_ON_THREAD(mSTSThread);
   // ShutdownMediaTransport_s has not run yet because it unhooks this function
   // from its signal, which means that SelfDestruct_m has not been dispatched
@@ -676,43 +644,38 @@ void PeerConnectionMedia::OnCandidateFound_s(
 }
 
 void PeerConnectionMedia::IceGatheringStateChange_m(
-    dom::PCImplIceGatheringState aState) {
+    dom::RTCIceGatheringState aState) {
   ASSERT_ON_THREAD(mMainThread);
-  SignalIceGatheringStateChange(aState);
+  if (mParent) {
+    mParent->IceGatheringStateChange(aState);
+  }
 }
 
 void PeerConnectionMedia::IceConnectionStateChange_m(
-    dom::PCImplIceConnectionState aState) {
+    dom::RTCIceConnectionState aState) {
   ASSERT_ON_THREAD(mMainThread);
-  SignalIceConnectionStateChange(aState);
+  if (mParent) {
+    mParent->IceConnectionStateChange(aState);
+  }
 }
 
 void PeerConnectionMedia::OnCandidateFound_m(
     const std::string& aTransportId, const CandidateInfo& aCandidateInfo) {
   ASSERT_ON_THREAD(mMainThread);
-  if (!aCandidateInfo.mDefaultHostRtp.empty()) {
-    SignalUpdateDefaultCandidate(aCandidateInfo.mDefaultHostRtp,
-                                 aCandidateInfo.mDefaultPortRtp,
-                                 aCandidateInfo.mDefaultHostRtcp,
-                                 aCandidateInfo.mDefaultPortRtcp, aTransportId);
+  if (mParent) {
+    mParent->OnCandidateFound(aTransportId, aCandidateInfo);
   }
-  SignalCandidate(aCandidateInfo.mCandidate, aTransportId,
-                  aCandidateInfo.mUfrag);
 }
 
 void PeerConnectionMedia::AlpnNegotiated_s(const std::string& aAlpn) {
   GetMainThread()->Dispatch(
-      WrapRunnableNM(&PeerConnectionMedia::AlpnNegotiated_m, mParentHandle,
-                     aAlpn),
+      WrapRunnable(this, &PeerConnectionMedia::AlpnNegotiated_m, aAlpn),
       NS_DISPATCH_NORMAL);
 }
 
-void PeerConnectionMedia::AlpnNegotiated_m(const std::string& aParentHandle,
-                                           const std::string& aAlpn) {
-  PeerConnectionWrapper pcWrapper(aParentHandle);
-  PeerConnectionImpl* pc = pcWrapper.impl();
-  if (pc) {
-    pc->OnAlpnNegotiated(aAlpn);
+void PeerConnectionMedia::AlpnNegotiated_m(const std::string& aAlpn) {
+  if (mParent) {
+    mParent->OnAlpnNegotiated(aAlpn);
   }
 }
 

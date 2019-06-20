@@ -2431,7 +2431,7 @@ class MethodDefiner(PropertyDefiner):
             self.regular.append({
                 "name": "@@iterator",
                 "methodInfo": False,
-                "selfHostedName": "ArrayValues",
+                "selfHostedName": "$ArrayValues",
                 "length": 0,
                 "flags": "0", # Not enumerable, per spec.
                 "condition": MemberCondition()
@@ -2457,7 +2457,7 @@ class MethodDefiner(PropertyDefiner):
             self.regular.append({
                 "name": "values",
                 "methodInfo": False,
-                "selfHostedName": "ArrayValues",
+                "selfHostedName": "$ArrayValues",
                 "length": 0,
                 "flags": "JSPROP_ENUMERATE",
                 "condition": PropertyDefiner.getControllingCondition(m,

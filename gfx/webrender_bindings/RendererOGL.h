@@ -104,8 +104,6 @@ class RendererOGL {
   gl::GLContext* gl() const;
 
  protected:
-  void NotifyWebRenderError(WebRenderError aError);
-
   RefPtr<RenderThread> mThread;
   UniquePtr<RenderCompositor> mCompositor;
   wr::Renderer* mRenderer;

@@ -388,6 +388,11 @@ this.GfxBlocklistRS = {
     }
   },
 
+  sync() {
+    this._ensureInitialized();
+    return this._client.sync();
+  },
+
   async checkForEntries() {
     this._ensureInitialized();
     if (!gBlocklistEnabled) {
@@ -564,7 +569,12 @@ this.PluginBlocklistRS = {
     return entry;
   },
 
-  async ensureInitialized() {
+  sync() {
+    this.ensureInitialized();
+    return this._client.sync();
+  },
+
+  ensureInitialized() {
     if (!gBlocklistEnabled || this._initialized) {
       return;
     }
@@ -587,7 +597,7 @@ this.PluginBlocklistRS = {
 
   async _onUpdate() {
     let oldEntries = this._entries || [];
-    await this.ensureInitialized();
+    this.ensureInitialized();
     await this._updateEntries();
     const pluginHost = Cc["@mozilla.org/plugin/host;1"].
                          getService(Ci.nsIPluginHost);
@@ -883,7 +893,7 @@ this.PluginBlocklistRS = {
  */
 this.ExtensionBlocklistRS = {
   async _ensureEntries() {
-    await this.ensureInitialized();
+    this.ensureInitialized();
     if (!this._entries && gBlocklistEnabled) {
       await this._updateEntries();
     }
@@ -940,7 +950,12 @@ this.ExtensionBlocklistRS = {
     return entry;
   },
 
-  async ensureInitialized() {
+  sync() {
+    this.ensureInitialized();
+    return this._client.sync();
+  },
+
+  ensureInitialized() {
     if (!gBlocklistEnabled || this._initialized) {
       return;
     }
@@ -2528,6 +2543,12 @@ let BlocklistRS = {
     // when the timer fires and subsequently gets enabled. That seems OK.
   },
 
+  forceUpdate() {
+    for (let blocklist of [GfxBlocklistRS, ExtensionBlocklistRS, PluginBlocklistRS]) {
+      blocklist.sync().catch(Cu.reportError);
+    }
+  },
+
   loadBlocklistAsync() {
     // Need to ensure we notify gfx of new stuff.
     GfxBlocklistRS.checkForEntries();
@@ -2599,9 +2620,23 @@ let Blocklist = {
     return this._impl.isLoaded;
   },
 
-  onUpdateImplementation() {
+  onUpdateImplementation(shouldCheckForUpdates = false) {
     this._impl = this.useXML ? BlocklistXML : BlocklistRS;
     this._impl._init();
+    if (shouldCheckForUpdates) {
+      if (this.useXML) {
+        // In theory, we should be able to use the "last update" pref to figure out
+        // when we last fetched updates and avoid fetching it if we switched
+        // this on and off within a day. However, the pref is updated by the
+        // update timer code, but the request is made in our code - and a request is
+        // not made if we're not using the XML blocklist, despite the pref being
+        // updated. In other words, the pref being updated is no guarantee that we
+        // actually updated the list that day. So just unconditionally update it:
+        this._impl.notify();
+      } else {
+        this._impl.forceUpdate();
+      }
+    }
   },
 
   shutdown() {
@@ -2650,6 +2685,6 @@ let Blocklist = {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   Blocklist, "useXML", "extensions.blocklist.useXML", true,
-  () => Blocklist.onUpdateImplementation());
+  () => Blocklist.onUpdateImplementation(true));
 
 Blocklist._init();

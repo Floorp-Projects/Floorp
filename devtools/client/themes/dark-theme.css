@@ -71,7 +71,7 @@ body {
 .variable-or-property .token-number,
 .variable-or-property[return] > .title > .name,
 .variable-or-property[scope] > .title > .name {
-  color: #6B89FF;
+  color: #709AFF;
 }
 
 .CodeMirror-Tern-completion-number:before {
@@ -124,7 +124,7 @@ body {
 .cm-s-mozilla .cm-string-2,
 .variable-or-property .token-string,
 .CodeMirror-Tern-farg {
-  color: #6B89FF;
+  color: #709AFF;
 }
 
 .CodeMirror-Tern-completion-string:before,

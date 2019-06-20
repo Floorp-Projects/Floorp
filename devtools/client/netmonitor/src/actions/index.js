@@ -11,6 +11,7 @@ const selection = require("./selection");
 const sort = require("./sort");
 const timingMarkers = require("./timing-markers");
 const ui = require("./ui");
+const webSockets = require("./web-sockets");
 
 Object.assign(exports,
   batching,
@@ -19,5 +20,6 @@ Object.assign(exports,
   selection,
   sort,
   timingMarkers,
-  ui
+  ui,
+  webSockets,
 );

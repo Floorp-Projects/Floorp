@@ -247,6 +247,8 @@ struct Symbol {
  */
 class JS_FRIEND_API GCCellPtr {
  public:
+  GCCellPtr() : GCCellPtr(nullptr) {}
+
   // Construction from a void* and trace kind.
   GCCellPtr(void* gcthing, JS::TraceKind traceKind)
       : ptr(checkedCast(gcthing, traceKind)) {}
