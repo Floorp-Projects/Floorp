@@ -213,7 +213,6 @@ class RemoteSettingsClient extends EventEmitter {
       syncIfEmpty = true,
     } = options;
     let { verifySignature = false } = options;
-    let imported = 0;
 
     if (syncIfEmpty && !(await Utils.hasLocalData(this))) {
       try {
@@ -222,7 +221,7 @@ class RemoteSettingsClient extends EventEmitter {
         if (await Utils.hasLocalDump(this.bucketName, this.collectionName)) {
           // Since there is a JSON dump, load it as default data.
           console.debug(`${this.identifier} Local DB is empty, load JSON dump`);
-          imported = await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
+          await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
         } else {
           // There is no JSON dump, force a synchronization from the server.
           console.debug(`${this.identifier} Local DB is empty, pull data from server`);
@@ -259,15 +258,7 @@ class RemoteSettingsClient extends EventEmitter {
     }
 
     // Filter the records based on `this.filterFunc` results.
-    const filtered = await this._filterEntries(data);
-
-    if (imported > 0 && filtered.length > 0) {
-      // If we loaded the dump, we must let listeners know, by emitting a "sync" event.
-      const syncResult = { current: filtered, created: filtered, updated: [], deleted: [] };
-      await this.emit("sync", { data: syncResult });
-    }
-
-    return filtered;
+    return this._filterEntries(data);
   }
 
   /**
@@ -334,6 +325,32 @@ class RemoteSettingsClient extends EventEmitter {
         }
       }
 
+      // If the data is up to date, there's no need to sync. We still need
+      // to record the fact that a check happened.
+      if (expectedTimestamp <= collectionLastModified) {
+        console.debug(`${this.identifier} local data is up-to-date`);
+        // If the data is up-to-date but don't have metadata (records loaded from dump),
+        // we fetch them and validate the signature immediately.
+        if (this.verifySignature && ObjectUtils.isEmpty(await kintoCollection.metadata())) {
+          console.debug(`${this.identifier} verify signature of local data`);
+          let allData = importedFromDump;
+          if (importedFromDump.length == 0) {
+            // If dump was imported at some other point (eg. `.get()`), list local DB.
+            ({ data: allData } = await kintoCollection.list({ order: "" }));
+          }
+          const localRecords = allData.map(r => kintoCollection.cleanLocalFields(r));
+          const metadata = await kintoCollection.pullMetadata(this.httpClient());
+          if (this.verifySignature) {
+            await this._validateCollectionSignature([],
+                                                    collectionLastModified,
+                                                    metadata,
+                                                    { localRecords });
+          }
+        }
+        reportStatus = UptakeTelemetry.STATUS.UP_TO_DATE;
+        return;
+      }
+
       // If signature verification is enabled, then add a synchronization hook
       // for incoming changes that validates the signature.
       if (this.verifySignature) {
@@ -356,48 +373,16 @@ class RemoteSettingsClient extends EventEmitter {
 
       let syncResult;
       try {
-        // Is local timestamp up to date with the server?
-        if (expectedTimestamp <= collectionLastModified) {
-          console.debug(`${this.identifier} local data is up-to-date`);
-          reportStatus = UptakeTelemetry.STATUS.UP_TO_DATE;
-
-          // If the data is up-to-date but don't have metadata (records loaded from dump),
-          // we fetch them and validate the signature immediately.
-          if (this.verifySignature && ObjectUtils.isEmpty(await kintoCollection.metadata())) {
-            console.debug(`${this.identifier} pull collection metadata`);
-            const metadata = await kintoCollection.pullMetadata(this.httpClient());
-            // We don't bother validating the signature if the dump was just loaded. We do
-            // if the dump was loaded at some other point (eg. from .get()).
-            if (this.verifySignature && importedFromDump.length == 0) {
-              console.debug(`${this.identifier} verify signature of local data`);
-              const { data: allData } = await kintoCollection.list({ order: "" });
-              const localRecords = allData.map(r => kintoCollection.cleanLocalFields(r));
-              await this._validateCollectionSignature([],
-                                                      collectionLastModified,
-                                                      metadata,
-                                                      { localRecords });
-            }
-          }
-
-          // Since the data is up-to-date, if we didn't load any dump then we're done here.
-          if (importedFromDump.length == 0) {
-            return;
-          }
-          // Otherwise we want to continue with sending the sync event to notify about the created records.
-          syncResult = { current: importedFromDump, created: importedFromDump, updated: [], deleted: [] };
-        } else {
-          // Local data is outdated.
-          // Fetch changes from server, and make sure we overwrite local data.
-          const strategy = Kinto.syncStrategy.SERVER_WINS;
-          syncResult = await kintoCollection.sync({ remote: gServerURL, strategy, expectedTimestamp });
-          if (!syncResult.ok) {
-            // With SERVER_WINS, there cannot be any conflicts, but don't silent it anyway.
-            throw new Error("Synced failed");
-          }
-          // The records imported from the dump should be considered as "created" for the
-          // listeners.
-          syncResult.created = importedFromDump.concat(syncResult.created);
+        // Fetch changes from server, and make sure we overwrite local data.
+        const strategy = Kinto.syncStrategy.SERVER_WINS;
+        syncResult = await kintoCollection.sync({ remote: gServerURL, strategy, expectedTimestamp });
+        if (!syncResult.ok) {
+          // With SERVER_WINS, there cannot be any conflicts, but don't silent it anyway.
+          throw new Error("Synced failed");
         }
+        // The records imported from the dump should be considered as "created" for the
+        // listeners.
+        syncResult.created = importedFromDump.concat(syncResult.created);
       } catch (e) {
         if (e instanceof RemoteSettingsClient.InvalidSignatureError) {
           // Signature verification failed during synchronization.

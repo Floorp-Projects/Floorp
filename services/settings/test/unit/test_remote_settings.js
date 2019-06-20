@@ -102,28 +102,6 @@ add_task(async function test_records_from_dump_are_listed_as_created_in_event() 
 });
 add_task(clear_state);
 
-add_task(async function test_sync_event_is_sent_even_if_up_to_date() {
-  if (IS_ANDROID) {
-    // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
-    return;
-  }
-  const startHistogram = getUptakeTelemetrySnapshot(clientWithDump.identifier);
-  let received;
-  clientWithDump.on("sync", ({ data }) => received = data);
-  // Use a timestamp inferior to latest record in dump.
-  const timestamp = 1000000000000; // Sun Sep 09 2001
-
-  await clientWithDump.maybeSync(timestamp);
-
-  ok(received.current.length > 0, "Dump records are listed as created");
-  equal(received.current.length, received.created.length);
-
-  const endHistogram = getUptakeTelemetrySnapshot(clientWithDump.identifier);
-  const expectedIncrements = { [UptakeTelemetry.STATUS.UP_TO_DATE]: 1 };
-  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
-});
-add_task(clear_state);
-
 add_task(async function test_records_can_have_local_fields() {
   const c = RemoteSettings("with-local-fields", { localFields: [ "accepted" ]});
   c.verifySignature = false;
@@ -157,17 +135,10 @@ add_task(async function test_get_loads_default_records_from_a_local_dump_when_da
     return;
   }
 
-  let eventData;
-  clientWithDump.on("sync", ({ data }) => eventData = data);
-
   // When collection has a dump in services/settings/dumps/{bucket}/{collection}.json
   const data = await clientWithDump.get();
   notEqual(data.length, 0);
   // No synchronization happened (responses are not mocked).
-
-  // But a sync event was sent to notify about created records.
-  equal(eventData.created.length, data.length);
-  equal(eventData.current.length, data.length);
 });
 add_task(clear_state);
 
