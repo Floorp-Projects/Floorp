@@ -20,7 +20,7 @@
 #include <sys/time.h>
 #include <dlfcn.h>
 
-#include <gbm.h>
+#include "mozilla/widget/gbm.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
