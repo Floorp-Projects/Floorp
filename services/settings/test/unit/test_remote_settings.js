@@ -102,6 +102,28 @@ add_task(async function test_records_from_dump_are_listed_as_created_in_event() 
 });
 add_task(clear_state);
 
+add_task(async function test_sync_event_is_sent_even_if_up_to_date() {
+  if (IS_ANDROID) {
+    // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
+    return;
+  }
+  const startHistogram = getUptakeTelemetrySnapshot(clientWithDump.identifier);
+  let received;
+  clientWithDump.on("sync", ({ data }) => received = data);
+  // Use a timestamp inferior to latest record in dump.
+  const timestamp = 1000000000000; // Sun Sep 09 2001
+
+  await clientWithDump.maybeSync(timestamp);
+
+  ok(received.current.length > 0, "Dump records are listed as created");
+  equal(received.current.length, received.created.length);
+
+  const endHistogram = getUptakeTelemetrySnapshot(clientWithDump.identifier);
+  const expectedIncrements = { [UptakeTelemetry.STATUS.UP_TO_DATE]: 1 };
+  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+});
+add_task(clear_state);
+
 add_task(async function test_records_can_have_local_fields() {
   const c = RemoteSettings("with-local-fields", { localFields: [ "accepted" ]});
   c.verifySignature = false;
