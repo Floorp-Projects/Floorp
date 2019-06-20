@@ -118,7 +118,7 @@ class WebAppLauncherActivityTest {
         verify(activity).startActivity(captor.capture())
 
         assertEquals(AbstractWebAppShellActivity.INTENT_ACTION, captor.value.action)
-        assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, captor.value.flags)
+        assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK, captor.value.flags)
         assertEquals("test", captor.value.`package`)
     }
 }

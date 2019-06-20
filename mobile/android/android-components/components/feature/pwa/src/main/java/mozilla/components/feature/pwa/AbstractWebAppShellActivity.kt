@@ -13,6 +13,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.ext.applyOrientation
+import mozilla.components.feature.pwa.ext.asTaskDescription
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 
 /**
@@ -51,6 +52,8 @@ abstract class AbstractWebAppShellActivity : AppCompatActivity() {
         }
 
         applyOrientation(manifest)
+
+        setTaskDescription(manifest.asTaskDescription())
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

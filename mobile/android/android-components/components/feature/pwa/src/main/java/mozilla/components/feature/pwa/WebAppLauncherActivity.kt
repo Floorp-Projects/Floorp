@@ -62,7 +62,7 @@ class WebAppLauncherActivity : AppCompatActivity() {
     internal fun launchWebAppShell() {
         val intent = Intent()
         intent.action = AbstractWebAppShellActivity.INTENT_ACTION
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
         intent.`package` = packageName
 
         try {
