@@ -60,7 +60,7 @@ var ContentDOMReference = {
     }
 
     let identifier = JSON.parse(data);
-    this.revoke(identifier);
+    this._revoke(identifier);
   },
 
   /**
@@ -123,27 +123,19 @@ var ContentDOMReference = {
 
   /**
    * Removes an identifier from the registry so that subsequent attempts
-   * to resolve it will result in null. This is generally a good idea to avoid
-   * identifiers lying around taking up space (identifiers don't keep the
-   * DOM element alive, but the weak pointers themselves consume memory, and
-   * that's what we reclaim when revoking).
+   * to resolve it will result in null. This is done automatically when the
+   * target node is GCed.
    *
    * @param {ElementIdentifier} The identifier to revoke, issued by ContentDOMReference.get for
    * a DOM element.
    */
-  revoke(identifier) {
+  _revoke(identifier) {
     let browsingContext = BrowsingContext.get(identifier.browsingContextId);
     let {id} = identifier;
 
     let mappings = gRegistry.get(browsingContext);
     if (!mappings) {
       return;
-    }
-
-    let element = this._resolveIDToElement(browsingContext, id);
-    if (element) {
-      mappings.elementToID.delete(element);
-      finalizerRoots.delete(element);
     }
 
     mappings.IDToElement.delete(id);
