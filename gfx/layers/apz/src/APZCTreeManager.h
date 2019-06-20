@@ -183,11 +183,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    *
    * This must be called on the updater thread as it walks the layer tree.
    *
-   * @param aRootLayerTreeId The layer tree ID of the root layer corresponding
-   *                         to this APZCTreeManager
    * @param aRoot The root of the (full) layer tree
-   * @param aFirstPaintLayersId The layers id of the subtree to which
-   *                            aIsFirstPaint applies.
+   * @param aOriginatingLayersId The layers id of the subtree that triggered
+   *                             this repaint, and to which aIsFirstPaint applies.
    * @param aIsFirstPaint True if the layers update that this is called in
    *                      response to included a first-paint. If this is true,
    *                      the part of the tree that is affected by the
@@ -198,7 +196,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    *                             process' layer subtree has its own sequence
    *                             numbers.
    */
-  void UpdateHitTestingTree(LayersId aRootLayerTreeId, Layer* aRoot,
+  void UpdateHitTestingTree(Layer* aRoot,
                             bool aIsFirstPaint, LayersId aOriginatingLayersId,
                             uint32_t aPaintSequenceNumber);
 
@@ -208,8 +206,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * tree. This version is used when WebRender is enabled because we don't have
    * shadow layers in that scenario.
    */
-  void UpdateHitTestingTree(LayersId aRootLayerTreeId,
-                            const WebRenderScrollDataWrapper& aScrollWrapper,
+  void UpdateHitTestingTree(const WebRenderScrollDataWrapper& aScrollWrapper,
                             bool aIsFirstPaint, WRRootId aOriginatingWrRootId,
                             uint32_t aPaintSequenceNumber);
 
@@ -507,7 +504,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * transforms from layer coordinate space to root coordinate space, and
    * sends these over to the main thread of the chrome process.
    */
-  void CollectTransformsForChromeMainThread(LayersId aRootLayerTreeId);
+  void CollectTransformsForChromeMainThread();
 
   /**
    * Compute the updated shadow transform for a scroll thumb layer that
@@ -641,8 +638,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
   /* Helpers */
   template <class ScrollNode>
-  void UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
-                                const ScrollNode& aRoot, bool aIsFirstPaint,
+  void UpdateHitTestingTreeImpl(const ScrollNode& aRoot, bool aIsFirstPaint,
                                 WRRootId aOriginatingWrRootId,
                                 uint32_t aPaintSequenceNumber);
 

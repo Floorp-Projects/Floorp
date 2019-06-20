@@ -852,7 +852,7 @@ void CompositorBridgeParent::NotifyShadowTreeTransaction(
                                     WRRootId::NonWebRender(aId), aFocusTarget);
       if (aHitTestUpdate) {
         mApzUpdater->UpdateHitTestingTree(
-            mRootLayerTreeID, mLayerManager->GetRoot(), aIsFirstPaint, aId,
+            mLayerManager->GetRoot(), aIsFirstPaint, aId,
             aPaintSequenceNumber);
       }
     }
@@ -1247,7 +1247,7 @@ void CompositorBridgeParent::ShadowLayersUpdated(
     if (aHitTestUpdate) {
       AutoResolveRefLayers resolve(mCompositionManager);
 
-      mApzUpdater->UpdateHitTestingTree(mRootLayerTreeID, root,
+      mApzUpdater->UpdateHitTestingTree(root,
                                         aInfo.isFirstPaint(), mRootLayerTreeID,
                                         aInfo.paintSequenceNumber());
     }
