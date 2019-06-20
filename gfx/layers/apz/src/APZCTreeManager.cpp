@@ -359,8 +359,7 @@ void APZCTreeManager::SetAllowedTouchBehavior(
 
 template <class ScrollNode>
 void  // ScrollNode is a LayerMetricsWrapper or a WebRenderScrollDataWrapper
-APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
-                                          const ScrollNode& aRoot,
+APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
                                           bool aIsFirstPaint,
                                           WRRootId aOriginatingWrRootId,
                                           uint32_t aPaintSequenceNumber) {
@@ -378,7 +377,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
     testData->StartNewPaint(aPaintSequenceNumber);
   }
 
-  TreeBuildingState state(aRootLayerTreeId, aIsFirstPaint, aOriginatingWrRootId,
+  TreeBuildingState state(mRootLayersId, aIsFirstPaint, aOriginatingWrRootId,
                           testData, aPaintSequenceNumber);
 
   // We do this business with collecting the entire tree into an array because
@@ -410,7 +409,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
     std::stack<AncestorTransform> ancestorTransforms;
     HitTestingTreeNode* parent = nullptr;
     HitTestingTreeNode* next = nullptr;
-    LayersId layersId = aRootLayerTreeId;
+    LayersId layersId = mRootLayersId;
     wr::RenderRoot renderRoot = wr::RenderRoot::Default;
     ancestorTransforms.push(AncestorTransform());
     state.mParentHasPerspective.push(false);
@@ -599,7 +598,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
     mRootNode->Dump("  ");
   }
 #endif
-  CollectTransformsForChromeMainThread(aRootLayerTreeId);
+  CollectTransformsForChromeMainThread();
 }
 
 void APZCTreeManager::UpdateFocusState(LayersId aRootLayerTreeId,
@@ -614,25 +613,24 @@ void APZCTreeManager::UpdateFocusState(LayersId aRootLayerTreeId,
   mFocusState.Update(aRootLayerTreeId, aOriginatingLayersId, aFocusTarget);
 }
 
-void APZCTreeManager::UpdateHitTestingTree(LayersId aRootLayerTreeId,
-                                           Layer* aRoot, bool aIsFirstPaint,
+void APZCTreeManager::UpdateHitTestingTree(Layer* aRoot, bool aIsFirstPaint,
                                            LayersId aOriginatingLayersId,
                                            uint32_t aPaintSequenceNumber) {
   AssertOnUpdaterThread();
 
   LayerMetricsWrapper root(aRoot);
-  UpdateHitTestingTreeImpl(aRootLayerTreeId, root, aIsFirstPaint,
+  UpdateHitTestingTreeImpl(root, aIsFirstPaint,
                            WRRootId::NonWebRender(aOriginatingLayersId),
                            aPaintSequenceNumber);
 }
 
 void APZCTreeManager::UpdateHitTestingTree(
-    LayersId aRootLayerTreeId, const WebRenderScrollDataWrapper& aScrollWrapper,
+    const WebRenderScrollDataWrapper& aScrollWrapper,
     bool aIsFirstPaint, WRRootId aOriginatingWrRootId,
     uint32_t aPaintSequenceNumber) {
   AssertOnUpdaterThread();
 
-  UpdateHitTestingTreeImpl(aRootLayerTreeId, aScrollWrapper, aIsFirstPaint,
+  UpdateHitTestingTreeImpl(aScrollWrapper, aIsFirstPaint,
                            aOriginatingWrRootId, aPaintSequenceNumber);
 }
 
@@ -3259,10 +3257,9 @@ bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,
   return true;
 }
 
-void APZCTreeManager::CollectTransformsForChromeMainThread(
-    LayersId aRootLayerTreeId) {
+void APZCTreeManager::CollectTransformsForChromeMainThread() {
   RefPtr<GeckoContentController> controller =
-      GetContentController(aRootLayerTreeId);
+      GetContentController(mRootLayersId);
   if (!controller) {
     return;
   }
