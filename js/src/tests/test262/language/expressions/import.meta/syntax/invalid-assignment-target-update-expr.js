@@ -1,4 +1,4 @@
-// |reftest| error:ReferenceError module
+// |reftest| error:SyntaxError module
 // Copyright (C) 2018 André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -20,11 +20,11 @@ info: |
       LeftHandSideExpression++
       LeftHandSideExpression--
 
-    It is an early Reference Error if AssignmentTargetType of LeftHandSideExpression is invalid.
+    It is an early Syntax Error if AssignmentTargetType of LeftHandSideExpression is invalid or strict.
 flags: [module]
 negative:
   phase: parse
-  type: ReferenceError
+  type: SyntaxError
 features: [import.meta]
 ---*/
 

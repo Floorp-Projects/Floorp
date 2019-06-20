@@ -1,7 +1,5 @@
-commit e227f54d01d29629d1f889118e8d3442c8640625
-Author: Leo Balter <leonardo.balter@gmail.com>
-Date:   Wed Mar 6 12:39:58 2019 -0500
+commit df1a1c75b785192a6ee9ab46a862cb83aaed037a
+Author: Alexey Shvayka <shvaikalesh@gmail.com>
+Date:   Wed Jun 19 23:39:21 2019 +0300
 
-    Fix assertions previously not reached before
-    
-    Fix #2049
+    Remove trailing spaces from YAML blocks (#2201)
