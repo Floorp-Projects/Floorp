@@ -68,3 +68,9 @@ Value type that represents the state of a browser session. Changes can be observ
 | [hashCode](hash-code.md) | `fun hashCode(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [isCustomTabSession](is-custom-tab-session.md) | `fun isCustomTabSession(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not this session is used for a Custom Tab. |
 | [toString](to-string.md) | `fun toString(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [isInstallable](../../mozilla.components.feature.pwa.ext/is-installable.md) | `fun `[`Session`](./index.md)`.isInstallable(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks if the current session represents an installable web app. |
