@@ -1483,6 +1483,9 @@ Maybe<wr::RenderRoot> gfxUtils::GetRenderRootForFrame(const nsIFrame* aFrame) {
   if (!aFrame->GetContent()) {
     return Nothing();
   }
+  if (!aFrame->GetContent()->IsElement()) {
+    return Nothing();
+  }
   return gfxUtils::GetRenderRootForElement(aFrame->GetContent()->AsElement());
 }
 
