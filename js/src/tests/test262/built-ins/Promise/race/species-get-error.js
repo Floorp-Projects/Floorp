@@ -17,13 +17,10 @@ function C(executor) {
   executor(function() {}, function() {});
 }
 Object.defineProperty(C, Symbol.species, {
-  get() {
-    throw new Test262Error("Getter for Symbol.species called");
+  get: function() {
+    $ERROR("Getter for Symbol.species called");
   }
 });
-C.resolve = function() {
-  throw new Test262Error();
-};
 
 Promise.race.call(C, []);
 

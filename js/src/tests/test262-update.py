@@ -33,15 +33,9 @@ UNSUPPORTED_FEATURES = set([
     "Intl.Locale",
     "global",
     "export-star-as-namespace-from-module",
-    "Intl.DateTimeFormat-quarter",
-    "Intl.DateTimeFormat-fractionalSecondDigits",
-    "Intl.DateTimeFormat-datetimestyle",
-    "Intl.DateTimeFormat-dayPeriod",
-    "Intl.DateTimeFormat-formatRange",
     "Intl.ListFormat",
     "Intl.Segmenter",
     "Intl.NumberFormat-unified",
-    "Promise.allSettled",
 ])
 FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",

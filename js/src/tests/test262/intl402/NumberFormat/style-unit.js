@@ -21,7 +21,7 @@ const validOptions = [
 ];
 
 for (const [validOption, expected] of validOptions) {
-  const nf = new Intl.NumberFormat([], {"style": validOption, "unit": "gigabit"});
+  const nf = new Intl.NumberFormat([], {"style": validOption, "unit": "generic"});
   const resolvedOptions = nf.resolvedOptions();
   assert.sameValue(resolvedOptions.style, expected);
 }

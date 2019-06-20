@@ -41,24 +41,18 @@ flags: [module]
 ---*/
 
 assert.sameValue(
-  B(),
+  f2(),
   77,
   'binding is initialized to function value prior to module evaluation'
 );
 
 assert.throws(TypeError, function() {
-  B = null;
+  f2 = null;
 }, 'binding rejects assignment');
 
-assert.sameValue(B(), 77, 'binding value is immutable');
+assert.sameValue(f2(), 77, 'binding value is immutable');
 
-import { B, results } from './instn-iee-bndng-fun_FIXTURE.js';
-export function A() { return 77; }
-
-assert.sameValue(results.length, 4);
-assert.sameValue(results[0], 'ReferenceError');
-assert.sameValue(results[1], 'undefined');
-assert.sameValue(results[2], 'ReferenceError');
-assert.sameValue(results[3], 'undefined');
+import { f2 } from './instn-iee-bndng-fun_FIXTURE.js';
+export function f() { return 77; }
 
 reportCompare(0, 0);

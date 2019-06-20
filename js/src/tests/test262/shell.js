@@ -170,7 +170,7 @@ function verifyProperty(obj, name, desc, options) {
   var failures = [];
 
   if (Object.prototype.hasOwnProperty.call(desc, 'value')) {
-    if (!isSameValue(desc.value, originalDesc.value)) {
+    if (desc.value !== originalDesc.value) {
       failures.push("descriptor value should be " + desc.value);
     }
   }
@@ -236,11 +236,10 @@ function isEnumerable(obj, name) {
     Object.prototype.propertyIsEnumerable.call(obj, name);
 }
 
-function isSameValue(a, b) {
-  if (a === 0 && b === 0) return 1 / a === 1 / b;
-  if (a !== a && b !== b) return true;
+function isEqualTo(obj, name, expectedValue) {
+  var actualValue = obj[name];
 
-  return a === b;
+  return assert._isSameValue(actualValue, expectedValue);
 }
 
 function isWritable(obj, name, verifyProp, value) {
@@ -257,7 +256,7 @@ function isWritable(obj, name, verifyProp, value) {
     }
   }
 
-  writeSucceeded = isSameValue(obj[verifyProp || name], newValue);
+  writeSucceeded = isEqualTo(obj, verifyProp || name, newValue);
 
   // Revert the change only if it was successful (in other cases, reverting
   // is unnecessary and may trigger exceptions for certain property
@@ -274,7 +273,7 @@ function isWritable(obj, name, verifyProp, value) {
 }
 
 function verifyEqualTo(obj, name, value) {
-  if (!isSameValue(obj[name], value)) {
+  if (!isEqualTo(obj, name, value)) {
     $ERROR("Expected obj[" + String(name) + "] to equal " + value +
            ", actually " + obj[name]);
   }

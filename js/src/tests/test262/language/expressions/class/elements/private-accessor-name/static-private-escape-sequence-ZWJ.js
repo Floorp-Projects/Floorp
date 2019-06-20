@@ -1,10 +1,10 @@
-// |reftest| skip -- class-static-methods-private is not supported
+// |reftest| skip -- class-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/accessor-names/private-escape-sequence-ZWJ.case
 // - src/accessor-names/private/cls-private-expr-static.template
 /*---
 description: Private IdentifierName - ZWJ (Class expression, static private method)
-features: [class-static-methods-private]
+features: [class-methods-private]
 flags: [generated]
 info: |
     ClassElement :
