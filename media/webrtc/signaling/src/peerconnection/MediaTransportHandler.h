@@ -10,7 +10,7 @@
 #include "sigslot.h"
 #include "transportlayer.h"  // Need the State enum
 #include "dtlsidentity.h"    // For DtlsDigest
-#include "mozilla/dom/PeerConnectionImplEnumsBinding.h"
+#include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
 #include "nricectx.h"               // Need some enums
 #include "nsDOMNavigationTiming.h"  // DOMHighResTimeStamp
@@ -120,8 +120,8 @@ class MediaTransportHandler {
 
   sigslot::signal2<const std::string&, const CandidateInfo&> SignalCandidate;
   sigslot::signal1<const std::string&> SignalAlpnNegotiated;
-  sigslot::signal1<dom::PCImplIceGatheringState> SignalGatheringStateChange;
-  sigslot::signal1<dom::PCImplIceConnectionState> SignalConnectionStateChange;
+  sigslot::signal1<dom::RTCIceGatheringState> SignalGatheringStateChange;
+  sigslot::signal1<dom::RTCIceConnectionState> SignalConnectionStateChange;
 
   sigslot::signal2<const std::string&, MediaPacket&> SignalPacketReceived;
   sigslot::signal2<const std::string&, MediaPacket&> SignalEncryptedSending;
@@ -137,8 +137,8 @@ class MediaTransportHandler {
   void OnCandidate(const std::string& aTransportId,
                    const CandidateInfo& aCandidateInfo);
   void OnAlpnNegotiated(const std::string& aAlpn);
-  void OnGatheringStateChange(dom::PCImplIceGatheringState aState);
-  void OnConnectionStateChange(dom::PCImplIceConnectionState aState);
+  void OnGatheringStateChange(dom::RTCIceGatheringState aState);
+  void OnConnectionStateChange(dom::RTCIceConnectionState aState);
   void OnPacketReceived(const std::string& aTransportId, MediaPacket& aPacket);
   void OnEncryptedSending(const std::string& aTransportId,
                           MediaPacket& aPacket);

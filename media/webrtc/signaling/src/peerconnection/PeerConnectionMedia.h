@@ -127,22 +127,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   nsPIDOMWindowInner* GetWindow() const;
 
   void AlpnNegotiated_s(const std::string& aAlpn);
-  static void AlpnNegotiated_m(const std::string& aParentHandle,
-                               const std::string& aAlpn);
-
-  // ICE state signals
-  sigslot::signal1<mozilla::dom::PCImplIceGatheringState>
-      SignalIceGatheringStateChange;
-  sigslot::signal1<mozilla::dom::PCImplIceConnectionState>
-      SignalIceConnectionStateChange;
-  // This passes a candidate:... attribute, transport id, and ufrag
-  // end-of-candidates is signaled with the empty string
-  sigslot::signal3<const std::string&, const std::string&, const std::string&>
-      SignalCandidate;
-  // This passes address, port, transport id of the default candidate.
-  sigslot::signal5<const std::string&, uint16_t, const std::string&, uint16_t,
-                   const std::string&>
-      SignalUpdateDefaultCandidate;
+  void AlpnNegotiated_m(const std::string& aAlpn);
 
   // TODO: Move to PeerConnectionImpl
   RefPtr<WebRtcCallWrapper> mCall;
@@ -192,22 +177,20 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void GatherIfReady();
   void FlushIceCtxOperationQueueIfReady();
   void PerformOrEnqueueIceCtxOperation(nsIRunnable* runnable);
-  void EnsureIceGathering_s(bool aDefaultRouteOnly);
-  void StartIceChecks_s(bool aIsControlling, bool aIsOfferer, bool aIsIceLite,
-                        const std::vector<std::string>& aIceOptionsList);
+  void EnsureIceGathering(bool aDefaultRouteOnly);
 
   bool GetPrefDefaultAddressOnly() const;
 
   void ConnectSignals();
 
   // ICE events
-  void IceGatheringStateChange_s(dom::PCImplIceGatheringState aState);
-  void IceConnectionStateChange_s(dom::PCImplIceConnectionState aState);
+  void IceGatheringStateChange_s(dom::RTCIceGatheringState aState);
+  void IceConnectionStateChange_s(dom::RTCIceConnectionState aState);
   void OnCandidateFound_s(const std::string& aTransportId,
                           const CandidateInfo& aCandidateInfo);
 
-  void IceGatheringStateChange_m(dom::PCImplIceGatheringState aState);
-  void IceConnectionStateChange_m(dom::PCImplIceConnectionState aState);
+  void IceGatheringStateChange_m(dom::RTCIceGatheringState aState);
+  void IceConnectionStateChange_m(dom::RTCIceConnectionState aState);
   void OnCandidateFound_m(const std::string& aTransportId,
                           const CandidateInfo& aCandidateInfo);
 

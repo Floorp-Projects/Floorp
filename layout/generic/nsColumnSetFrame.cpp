@@ -311,11 +311,6 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
     colBSize = aReflowInput.ComputedBSize();
   } else if (aReflowInput.ComputedMaxBSize() != NS_UNCONSTRAINEDSIZE) {
     colBSize = std::min(colBSize, aReflowInput.ComputedMaxBSize());
-  } else if (StaticPrefs::layout_css_column_span_enabled() &&
-             aReflowInput.mCBReflowInput->ComputedMaxBSize() !=
-                 NS_UNCONSTRAINEDSIZE) {
-    colBSize =
-        std::min(colBSize, aReflowInput.mCBReflowInput->ComputedMaxBSize());
   }
 
   nscoord colGap =
@@ -1064,6 +1059,8 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     }
 
     if (aConfig.mKnownInfeasibleBSize >= availableContentBSize) {
+      // There's no feasible block-size to fit our contents. We may need to
+      // reflow one more time after this loop.
       break;
     }
 
@@ -1124,7 +1121,29 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     if (aConfig.mKnownInfeasibleBSize >= availableContentBSize) {
       aConfig.mColMaxBSize = availableContentBSize;
       if (mLastBalanceBSize == availableContentBSize) {
-        skip = true;
+        if (StaticPrefs::layout_css_column_span_enabled() &&
+            aUnboundedLastColumn &&
+            !aReflowInput.mCBReflowInput->mFrame->HasAnyStateBits(
+                NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
+          // If we are end up here, we have a constrained available content
+          // block size and cannot fit all the content during the very first
+          // balancing iteration. We may need to give up balancing and reflow
+          // again.
+          //
+          // Note that we do this only for the top-level column container
+          // because we don't want a nested column container to create overflow
+          // columns immediately if its content doesn't fit, and change its
+          // completeness from incomplete to complete. That is because 1) the
+          // top-level one might do column balancing, and it can enlarge the
+          // available block-size so that the nested one could fit its content
+          // in next balancing iteration; or 2) the top-level container is
+          // filling columns sequentially, and may have more inline-size to
+          // create more column boxes for the nested column containers'
+          // next-in-flow frames.
+          aConfig = ChooseColumnStrategy(aReflowInput, true);
+        } else {
+          skip = true;
+        }
       }
     } else {
       aConfig.mColMaxBSize = aConfig.mKnownFeasibleBSize;

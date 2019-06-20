@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const {
   Component,
   createFactory,
@@ -17,6 +18,7 @@ const Tabbar = createFactory(require("devtools/client/shared/components/tabs/Tab
 const TabPanel = createFactory(require("devtools/client/shared/components/tabs/Tabs").TabPanel);
 const CookiesPanel = createFactory(require("./CookiesPanel"));
 const HeadersPanel = createFactory(require("./HeadersPanel"));
+const WebSocketsPanel = createFactory(require("./WebSocketsPanel"));
 const ParamsPanel = createFactory(require("./ParamsPanel"));
 const CachePanel = createFactory(require("./CachePanel"));
 const ResponsePanel = createFactory(require("./ResponsePanel"));
@@ -28,6 +30,7 @@ const COLLAPSE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");
 const CACHE_TITLE = L10N.getStr("netmonitor.tab.cache");
 const COOKIES_TITLE = L10N.getStr("netmonitor.tab.cookies");
 const HEADERS_TITLE = L10N.getStr("netmonitor.tab.headers");
+const WEBSOCKETS_TITLE = L10N.getStr("netmonitor.tab.webSockets");
 const PARAMS_TITLE = L10N.getStr("netmonitor.tab.params");
 const RESPONSE_TITLE = L10N.getStr("netmonitor.tab.response");
 const SECURITY_TITLE = L10N.getStr("netmonitor.tab.security");
@@ -87,6 +90,11 @@ class TabboxPanel extends Component {
       return null;
     }
 
+    const channelId = request.channelId;
+    const showWebSocketsPanel =
+      request.cause.type === "websocket" &&
+      Services.prefs.getBoolPref(
+        "devtools.netmonitor.features.webSockets");
     return (
       Tabbar({
         activeTabId,
@@ -111,6 +119,14 @@ class TabboxPanel extends Component {
             connector,
             openLink,
             request,
+          }),
+        ),
+        showWebSocketsPanel && TabPanel({
+          id: PANELS.WEBSOCKETS,
+          title: WEBSOCKETS_TITLE,
+        },
+          WebSocketsPanel({
+            channelId,
           }),
         ),
         TabPanel({

@@ -216,6 +216,8 @@ class SVGGeometryElement : public SVGGeometryElementBase {
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedNumber> PathLength();
+  bool IsPointInFill(const DOMPointInit& aPoint);
+  bool IsPointInStroke(const DOMPointInit& aPoint);
   float GetTotalLength();
   already_AddRefed<nsISVGPoint> GetPointAtLength(float distance,
                                                  ErrorResult& rv);
@@ -227,6 +229,9 @@ class SVGGeometryElement : public SVGGeometryElementBase {
   SVGAnimatedNumber mPathLength;
   static NumberInfo sNumberInfo;
   mutable RefPtr<Path> mCachedPath;
+
+ private:
+  already_AddRefed<Path> GetOrBuildPathForHitTest();
 };
 
 }  // namespace dom

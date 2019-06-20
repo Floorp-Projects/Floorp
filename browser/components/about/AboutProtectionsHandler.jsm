@@ -11,7 +11,7 @@ const {RemotePages} = ChromeUtils.import("resource://gre/modules/remotepagemanag
 var AboutProtectionsHandler = {
   _inited: false,
   _topics: [
-    "ArrivedOnPage",
+    "openContentBlockingPreferences",
   ],
 
   init() {
@@ -33,11 +33,11 @@ var AboutProtectionsHandler = {
   },
 
   receiveMessage(aMessage) {
+    let win = aMessage.target.browser.ownerGlobal;
     switch (aMessage.name) {
-      case "ArrivedOnPage": {
-        // Successfully recieved a message
+      case "openContentBlockingPreferences":
+        win.openPreferences("privacy-trackingprotection", {origin: "about-protections"});
         break;
-      }
     }
   },
 };

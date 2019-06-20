@@ -175,6 +175,11 @@ class MachBrowsertime(MachCommandBase):
         if not setup_helper.check_node_executables_valid():
             return 1
 
+        if 'GECKODRIVER_BASE_URL' not in os.environ:
+            # Use custom `geckodriver` with pre-release Android support.
+            url = 'https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/'
+            os.environ['GECKODRIVER_BASE_URL'] = url
+
         self.log(
             logging.INFO,
             'browsertime',

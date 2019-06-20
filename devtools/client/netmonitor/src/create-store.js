@@ -27,6 +27,7 @@ const { Requests } = require("./reducers/requests");
 const { Sort } = require("./reducers/sort");
 const { TimingMarkers } = require("./reducers/timing-markers");
 const { UI, Columns, ColumnsData } = require("./reducers/ui");
+const { WebSockets } = require("./reducers/web-sockets");
 
 /**
  * Configure state and middleware for the Network monitor tool.
@@ -44,6 +45,7 @@ function configureStore(connector, telemetry) {
       columns: getColumnState(),
       columnsData: getColumnsData(),
     }),
+    webSockets: new WebSockets(),
   };
 
   // Prepare middleware.

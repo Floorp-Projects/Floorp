@@ -82,6 +82,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeMenuServiceX)
 #include "nsMacDockSupport.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacDockSupport)
 
+#include "nsMacFinderProgress.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacFinderProgress)
+
 #include "nsMacSharingService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacSharingService)
 
@@ -123,6 +126,7 @@ NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_SYSTEMALERTSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NATIVEMENUSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_MACDOCKSUPPORT_CID);
+NS_DEFINE_NAMED_CID(NS_MACFINDERPROGRESS_CID);
 NS_DEFINE_NAMED_CID(NS_MACSHARINGSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_MACWEBAPPUTILS_CID);
 NS_DEFINE_NAMED_CID(NS_STANDALONENATIVEMENU_CID);
@@ -153,6 +157,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     {&kNS_SYSTEMALERTSSERVICE_CID, false, NULL, OSXNotificationCenterConstructor},
     {&kNS_NATIVEMENUSERVICE_CID, false, NULL, nsNativeMenuServiceXConstructor},
     {&kNS_MACDOCKSUPPORT_CID, false, NULL, nsMacDockSupportConstructor},
+    {&kNS_MACFINDERPROGRESS_CID, false, NULL, nsMacFinderProgressConstructor},
     {&kNS_MACSHARINGSERVICE_CID, false, NULL, nsMacSharingServiceConstructor},
     {&kNS_MACWEBAPPUTILS_CID, false, NULL, nsMacWebAppUtilsConstructor},
     {&kNS_STANDALONENATIVEMENU_CID, false, NULL, nsStandaloneNativeMenuConstructor},
@@ -182,6 +187,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     {"@mozilla.org/system-alerts-service;1", &kNS_SYSTEMALERTSSERVICE_CID},
     {"@mozilla.org/widget/nativemenuservice;1", &kNS_NATIVEMENUSERVICE_CID},
     {"@mozilla.org/widget/macdocksupport;1", &kNS_MACDOCKSUPPORT_CID},
+    {"@mozilla.org/widget/macfinderprogress;1", &kNS_MACFINDERPROGRESS_CID},
     {"@mozilla.org/widget/macsharingservice;1", &kNS_MACSHARINGSERVICE_CID},
     {"@mozilla.org/widget/mac-web-app-utils;1", &kNS_MACWEBAPPUTILS_CID},
     {"@mozilla.org/widget/standalonenativemenu;1", &kNS_STANDALONENATIVEMENU_CID},
