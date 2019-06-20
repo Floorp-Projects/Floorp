@@ -126,10 +126,6 @@ panelview[mainview] > .panel-header {
   transition: height var(--panelui-subview-transition-duration);
 }
 
-#tabbrowser-tabs {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabs");
-}
-
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
   #tabbrowser-tabs {
     /* Without this, the tabs container width extends beyond the window width */
@@ -203,13 +199,13 @@ panelview[mainview] > .panel-header {
 }
 %endif
 
-#tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] {
+#tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
   position: fixed !important;
   display: block; /* position:fixed already does this (bug 579776), but let's be explicit */
 }
 
-#tabbrowser-tabs[movingtab] > .tabbrowser-tab[selected],
-#tabbrowser-tabs[movingtab] > .tabbrowser-tab[multiselected] {
+#tabbrowser-tabs[movingtab] > .tabbrowser-arrowscrollbox > .tabbrowser-tab[selected],
+#tabbrowser-tabs[movingtab] > .tabbrowser-arrowscrollbox > .tabbrowser-tab[multiselected] {
   position: relative;
   z-index: 2;
   pointer-events: none; /* avoid blocking dragover events on scroll buttons */
