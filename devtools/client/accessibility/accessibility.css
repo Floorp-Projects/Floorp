@@ -310,7 +310,7 @@ body {
   min-width: 50%;
 }
 
-.treeTable:focus {
+.treeTable:focus, .treeTable tbody:focus {
   outline: 0;
 }
 
