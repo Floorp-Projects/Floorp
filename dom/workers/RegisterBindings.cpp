@@ -35,10 +35,6 @@ bool WorkerPrivate::RegisterBindings(JSContext* aCx,
     }
   }
 
-  if (!JS_DefineProfilingFunctions(aCx, aGlobal)) {
-    return false;
-  }
-
   return true;
 }
 
