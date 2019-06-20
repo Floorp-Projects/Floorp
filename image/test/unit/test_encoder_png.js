@@ -350,6 +350,7 @@ function makeDataURLFromAsync(encoder, mimetype, expected) {
 
 /* Convert data (an array of integers) to a Base64 string. */
 const toBase64Table =
+  // eslint-disable-next-line no-useless-concat
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" + "0123456789+/";
 const base64Pad = "=";
 function toBase64(data) {
