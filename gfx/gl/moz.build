@@ -27,7 +27,6 @@ EXPORTS += [
     'AndroidNativeWindow.h',
     'AndroidSurfaceTexture.h',
     'DecomposeIntoNoRepeatTriangles.h',
-    'EGLUtils.h',
     'ForceDiscreteGPUHelperCGL.h',
     'GfxTexturesReporter.h',
     'GLBlitHelper.h',
@@ -119,7 +118,6 @@ if CONFIG['MOZ_WAYLAND']:
 UNIFIED_SOURCES += [
     'AndroidSurfaceTexture.cpp',
     'DecomposeIntoNoRepeatTriangles.cpp',
-    'EGLUtils.cpp',
     'GfxTexturesReporter.cpp',
     'GLBlitHelper.cpp',
     'GLContext.cpp',
