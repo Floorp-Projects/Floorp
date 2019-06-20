@@ -20,7 +20,7 @@
 #include <sys/time.h>
 #include <dlfcn.h>
 
-#include "mozilla/widget/gbm.h"
+#include <gbm.h>
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -122,6 +122,7 @@ bool WaylandDMABufSurface::Create(int aWidth, int aHeight, bool aHasAlpha) {
     return false;
   }
 
+#ifdef HAVE_GBM_MODIFIERS
   if (nsGbmLib::IsModifierAvailable() && mGmbFormat->mModifiersCount > 0) {
     mGbmBufferObject = nsGbmLib::CreateWithModifiers(
         display->GetGbmDevice(), mWidth, mHeight, mGmbFormat->mFormat,
@@ -130,6 +131,7 @@ bool WaylandDMABufSurface::Create(int aWidth, int aHeight, bool aHasAlpha) {
       mBufferModifier = nsGbmLib::GetModifier(mGbmBufferObject);
     }
   }
+#endif
 
   if (!mGbmBufferObject) {
     mGbmBufferObject =
@@ -141,6 +143,7 @@ bool WaylandDMABufSurface::Create(int aWidth, int aHeight, bool aHasAlpha) {
     return false;
   }
 
+#ifdef HAVE_GBM_MODIFIERS
   if (nsGbmLib::IsModifierAvailable() && display->GetGbmDeviceFd() != -1) {
     mBufferPlaneCount = nsGbmLib::GetPlaneCount(mGbmBufferObject);
     for (int i = 0; i < mBufferPlaneCount; i++) {
@@ -154,7 +157,9 @@ bool WaylandDMABufSurface::Create(int aWidth, int aHeight, bool aHasAlpha) {
       mStrides[i] = nsGbmLib::GetStrideForPlane(mGbmBufferObject, i);
       mOffsets[i] = nsGbmLib::GetOffset(mGbmBufferObject, i);
     }
-  } else {
+  } else
+#endif
+  {
     mBufferPlaneCount = 1;
     mStrides[0] = nsGbmLib::GetStride(mGbmBufferObject);
     mDmabufFds[0] = nsGbmLib::GetFd(mGbmBufferObject);

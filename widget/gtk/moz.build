@@ -99,11 +99,17 @@ if CONFIG['MOZ_WAYLAND']:
     UNIFIED_SOURCES += [
         'nsClipboardWayland.cpp',
         'nsWaylandDisplay.cpp',
-        'WaylandDMABufSurface.cpp',
         'WindowSurfaceWayland.cpp',
     ]
     EXPORTS.mozilla.widget += [
         'nsWaylandDisplay.h',
+    ]
+
+if CONFIG['MOZ_WAYLAND'] and CONFIG['HAVE_LIBDRM']:
+    SOURCES += [
+        'WaylandDMABufSurface.cpp',
+    ]
+    EXPORTS.mozilla.widget += [
         'WaylandDMABufSurface.h',
     ]
 
