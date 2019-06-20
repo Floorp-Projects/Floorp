@@ -18,44 +18,20 @@
 using namespace js;
 using namespace js::frontend;
 
-void CGBigIntList::finish(mozilla::Span<GCPtrBigInt> array) {
-  MOZ_ASSERT(length() == array.size());
+bool GCThingList::append(ObjectBox* objbox, uint32_t* index) {
+  // Append the object to the vector and return the index in *index. Also add
+  // the ObjectBox to the |lastbox| linked list for finishInnerFunctions below.
 
-  for (unsigned i = 0; i < length(); i++) {
-    array[i].init(vector[i]);
-  }
-}
-
-/*
- * Find the index of the given object for code generator.
- *
- * Since the emitter refers to each parsed object only once, for the index we
- * use the number of already indexed objects. We also add the object to a list
- * to convert the list to a fixed-size array when we complete code generation,
- * see js::CGObjectList::finish below.
- */
-unsigned CGObjectList::add(ObjectBox* objbox) {
   MOZ_ASSERT(objbox->isObjectBox());
   MOZ_ASSERT(!objbox->emitLink);
   objbox->emitLink = lastbox;
   lastbox = objbox;
-  return length++;
+
+  *index = vector.length();
+  return vector.append(JS::GCCellPtr(objbox->object()));
 }
 
-void CGObjectList::finish(mozilla::Span<GCPtrObject> array) {
-  MOZ_ASSERT(length <= INDEX_LIMIT);
-  MOZ_ASSERT(length == array.size());
-
-  ObjectBox* objbox = lastbox;
-  for (GCPtrObject& obj : mozilla::Reversed(array)) {
-    MOZ_ASSERT(obj == nullptr);
-    MOZ_ASSERT(objbox->object()->isTenured());
-    obj.init(objbox->object());
-    objbox = objbox->emitLink;
-  }
-}
-
-void CGObjectList::finishInnerFunctions() {
+void GCThingList::finishInnerFunctions() {
   ObjectBox* objbox = lastbox;
   while (objbox) {
     if (objbox->isFunctionBox()) {
@@ -65,12 +41,12 @@ void CGObjectList::finishInnerFunctions() {
   }
 }
 
-void CGScopeList::finish(mozilla::Span<GCPtrScope> array) {
+void GCThingList::finish(mozilla::Span<JS::GCCellPtr> array) {
   MOZ_ASSERT(length() <= INDEX_LIMIT);
   MOZ_ASSERT(length() == array.size());
 
   for (uint32_t i = 0; i < length(); i++) {
-    array[i].init(vector[i]);
+    array[i] = vector[i].get().get();
   }
 }
 
@@ -170,8 +146,6 @@ void BytecodeSection::updateDepth(BytecodeOffset target) {
 }
 
 PerScriptData::PerScriptData(JSContext* cx)
-    : scopeList_(cx),
-      bigIntList_(cx),
-      atomIndices_(cx->frontendCollectionPool()) {}
+    : gcThingList_(cx), atomIndices_(cx->frontendCollectionPool()) {}
 
 bool PerScriptData::init(JSContext* cx) { return atomIndices_.acquire(cx); }
