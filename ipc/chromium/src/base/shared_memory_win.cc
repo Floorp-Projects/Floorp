@@ -95,6 +95,8 @@ bool SharedMemory::IsHandleValid(const SharedMemoryHandle& handle) {
   return handle != NULL;
 }
 
+bool SharedMemory::IsValid() const { return mapped_file_ != NULL; }
+
 // static
 SharedMemoryHandle SharedMemory::NULLHandle() { return NULL; }
 
@@ -184,6 +186,11 @@ void SharedMemory::Close(bool unmap_view) {
   }
 }
 
-SharedMemoryHandle SharedMemory::handle() const { return mapped_file_; }
+mozilla::UniqueFileHandle SharedMemory::TakeHandle() {
+  mozilla::UniqueFileHandle fh(mapped_file_);
+  mapped_file_ = NULL;
+  Unmap();
+  return fh;
+}
 
 }  // namespace base
