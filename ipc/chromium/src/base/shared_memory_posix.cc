@@ -290,29 +290,28 @@ bool SharedMemory::Freeze() {
 
 bool SharedMemory::Map(size_t bytes, void* fixed_address) {
   if (mapped_file_ == -1) return false;
+  DCHECK(!memory_);
 
   // Don't use MAP_FIXED when a fixed_address was specified, since that can
   // replace pages that are alread mapped at that address.
-  memory_ =
+  void* mem =
       mmap(fixed_address, bytes, PROT_READ | (read_only_ ? 0 : PROT_WRITE),
            MAP_SHARED, mapped_file_, 0);
 
-  bool mmap_succeeded = memory_ != MAP_FAILED;
-
-  DCHECK(mmap_succeeded) << "Call to mmap failed, errno=" << errno;
-
-  if (mmap_succeeded) {
-    if (fixed_address && memory_ != fixed_address) {
-      bool munmap_succeeded = munmap(memory_, bytes) == 0;
-      DCHECK(munmap_succeeded) << "Call to munmap failed, errno=" << errno;
-      memory_ = NULL;
-      return false;
-    }
-
-    mapped_size_ = bytes;
+  if (mem == MAP_FAILED) {
+    CHROMIUM_LOG(WARNING) << "Call to mmap failed: " << strerror(errno);
+    return false;
   }
 
-  return mmap_succeeded;
+  if (fixed_address && mem != fixed_address) {
+    bool munmap_succeeded = munmap(mem, bytes) == 0;
+    DCHECK(munmap_succeeded) << "Call to munmap failed, errno=" << errno;
+    return false;
+  }
+
+  memory_ = mem;
+  mapped_size_ = bytes;
+  return true;
 }
 
 bool SharedMemory::Unmap() {
