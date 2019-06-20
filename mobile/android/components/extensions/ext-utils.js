@@ -783,8 +783,8 @@ class WindowManager extends WindowManagerBase {
   }
 }
 
+// eslint-disable-next-line mozilla/balanced-listeners
 extensions.on("startup", (type, extension) => {
-  // eslint-disable-line mozilla/balanced-listeners
   defineLazyGetter(extension, "tabManager", () => new TabManager(extension));
   defineLazyGetter(
     extension,
