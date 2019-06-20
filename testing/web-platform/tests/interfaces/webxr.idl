@@ -32,13 +32,11 @@ enum XREnvironmentBlendMode {
   // Attributes
   readonly attribute XREnvironmentBlendMode environmentBlendMode;
   [SameObject] readonly attribute XRRenderState renderState;
-  [SameObject] readonly attribute XRSpace viewerSpace;
+  [SameObject] readonly attribute XRInputSourceArray inputSources;
 
   // Methods
   void updateRenderState(optional XRRenderStateInit state);
   Promise<XRReferenceSpace> requestReferenceSpace(XRReferenceSpaceType type);
-
-  FrozenArray<XRInputSource> getInputSources();
 
   long requestAnimationFrame(XRFrameRequestCallback callback);
   void cancelAnimationFrame(long handle);
@@ -77,7 +75,7 @@ callback XRFrameRequestCallback = void (DOMHighResTimeStamp time, XRFrame frame)
   [SameObject] readonly attribute XRSession session;
 
   XRViewerPose? getViewerPose(XRReferenceSpace referenceSpace);
-  XRPose? getPose(XRSpace sourceSpace, XRSpace destinationSpace);
+  XRPose? getPose(XRSpace space, XRSpace baseSpace);
 };
 
 [SecureContext, Exposed=Window] interface XRSpace : EventTarget {
@@ -85,11 +83,10 @@ callback XRFrameRequestCallback = void (DOMHighResTimeStamp time, XRFrame frame)
 };
 
 enum XRReferenceSpaceType {
-  "identity",
-  "position-disabled",
-  "eye-level",
-  "floor-level",
-  "bounded",
+  "viewer",
+  "local",
+  "local-floor",
+  "bounded-floor",
   "unbounded"
 };
 
@@ -106,6 +103,7 @@ interface XRBoundedReferenceSpace : XRReferenceSpace {
 };
 
 enum XREye {
+  "none",
   "left",
   "right"
 };
@@ -128,7 +126,7 @@ enum XREye {
 interface XRRigidTransform {
   [SameObject] readonly attribute DOMPointReadOnly position;
   [SameObject] readonly attribute DOMPointReadOnly orientation;
-  [SameObject] readonly attribute Float32Array matrix;
+  readonly attribute Float32Array matrix;
   [SameObject] readonly attribute XRRigidTransform inverse;
 };
 
@@ -138,7 +136,7 @@ interface XRRigidTransform {
 interface XRRay {
   [SameObject] readonly attribute DOMPointReadOnly origin;
   [SameObject] readonly attribute DOMPointReadOnly direction;
-  [SameObject] readonly attribute Float32Array matrix;
+  readonly attribute Float32Array matrix;
 };
 
 [SecureContext, Exposed=Window] interface XRPose {
@@ -169,6 +167,13 @@ interface XRInputSource {
   [SameObject] readonly attribute XRSpace targetRaySpace;
   [SameObject] readonly attribute XRSpace? gripSpace;
   [SameObject] readonly attribute Gamepad? gamepad;
+};
+
+[SecureContext, Exposed=Window]
+interface XRInputSourceArray {
+  iterable<XRInputSource>;
+  readonly attribute unsigned long length;
+  getter XRInputSource(unsigned long index);
 };
 
 enum GamepadMappingType {
@@ -207,7 +212,6 @@ interface XRWebGLLayer : XRLayer {
 
   // Methods
   XRViewport? getViewport(XRView view);
-  void requestViewportScaling(double viewportScaleFactor);
 
   // Static Methods
   static double getNativeFramebufferScaleFactor(XRSession session);
@@ -245,6 +249,20 @@ dictionary XRInputSourceEventInit : EventInit {
   required XRFrame frame;
   required XRInputSource inputSource;
   long? buttonIndex = null;
+};
+
+[SecureContext, Exposed=Window, Constructor(DOMString type, XRInputSourcesChangeEventInit eventInitDict)]
+interface XRInputSourcesChangeEvent : Event {
+  [SameObject] readonly attribute XRSession session;
+  [SameObject] readonly attribute FrozenArray<XRInputSource> added;
+  [SameObject] readonly attribute FrozenArray<XRInputSource> removed;
+};
+
+dictionary XRInputSourcesChangeEventInit : EventInit {
+  required XRSession session;
+  required FrozenArray<XRInputSource> added;
+  required FrozenArray<XRInputSource> removed;
+
 };
 
 [SecureContext, Exposed=Window, Constructor(DOMString type, XRReferenceSpaceEventInit eventInitDict)]

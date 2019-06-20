@@ -62,7 +62,6 @@ EXPORTS.mozilla.dom += [
     'SVGGradientElement.h',
     'SVGGraphicsElement.h',
     'SVGImageElement.h',
-    'SVGIRect.h',
     'SVGLineElement.h',
     'SVGMarkerElement.h',
     'SVGMaskElement.h',

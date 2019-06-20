@@ -76,6 +76,8 @@ SET TIMEOUT: docs/*
 WEB-PLATFORM.TEST:README.md
 WEB-PLATFORM.TEST:*/README.md
 WEB-PLATFORM.TEST:docs/*
+INDENT TABS:docs/*
+CR AT EOL:docs/*
 
 ## Helper scripts ##
 
@@ -98,8 +100,8 @@ CR AT EOL: WebIDL/valid/idl/documentation-dos.widl
 CR AT EOL: cors/resources/cors-headers.asis
 CR AT EOL: html/semantics/forms/the-textarea-element/multiline-placeholder-cr.html
 CR AT EOL: html/semantics/forms/the-textarea-element/multiline-placeholder-crlf.html
-CR AT EOL: html/input/the-placeholder-attribute/multiline-cr.html
-CR AT EOL: html/input/the-placeholder-attribute/multiline-crlf.html
+CR AT EOL: html/semantics/forms/the-input-element/multiline-placeholder-cr.html
+CR AT EOL: html/semantics/forms/the-input-element/multiline-placeholder-crlf.html
 CR AT EOL: webvtt/parsing/file-parsing/tests/support/newlines.vtt
 
 # Intentional use of tabs
@@ -318,6 +320,7 @@ SET TIMEOUT: resources/test/tests/functional/api-tests-1.html
 SET TIMEOUT: resources/test/tests/functional/worker.js
 SET TIMEOUT: resources/test/tests/functional/worker-uncaught-allow.js
 SET TIMEOUT: resources/test/tests/unit/exceptional-cases.html
+SET TIMEOUT: resources/test/tests/unit/exceptional-cases-timeouts.html
 SET TIMEOUT: resources/testharness.js
 
 # setTimeout use in reftests
@@ -390,6 +393,7 @@ SUPPORT-WRONG-DIR: css/vendor-imports/mozilla/mozilla-central-reftests/sync-test
 SUPPORT-WRONG-DIR: css/vendor-imports/mozilla/mozilla-central-reftests/masking/blank.html
 SUPPORT-WRONG-DIR: css/WOFF2/testcaseindex.xht
 NON-EXISTENT-REF: css/css-masking/clip-path-svg-content/clip-path-clip-rule-008.svg
+NON-EXISTENT-REF: css/CSS2/normal-flow/blocks-017.xht
 
 
 ## Whitespace rules that we can't enforce yet
@@ -667,6 +671,8 @@ CSS-COLLIDING-REF-NAME: css/vendor-imports/mozilla/mozilla-central-reftests/cont
 CSS-COLLIDING-SUPPORT-NAME: css/css-backgrounds/support/red.png
 CSS-COLLIDING-REF-NAME: css/css-contain/reference/contain-size-fieldset-001-ref.html
 CSS-COLLIDING-REF-NAME: css/vendor-imports/mozilla/mozilla-central-reftests/contain/contain-size-fieldset-001-ref.html
+CSS-COLLIDING-REF-NAME: css/css-contain/reference/contain-size-fieldset-002-ref.html
+CSS-COLLIDING-REF-NAME: css/vendor-imports/mozilla/mozilla-central-reftests/contain/contain-size-fieldset-002-ref.html
 CSS-COLLIDING-SUPPORT-NAME: css/compositing/mix-blend-mode/support/red.png
 CSS-COLLIDING-SUPPORT-NAME: css/compositing/background-blending/support/red.png
 CSS-COLLIDING-SUPPORT-NAME: css/CSS2/normal-flow/support/replaced-min-max-3.png
