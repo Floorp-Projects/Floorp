@@ -40,25 +40,25 @@ class NamedDeckButton extends HTMLElement {
         border: none;
         border-top: 2px solid transparent;
         border-bottom: 2px solid transparent;
-        background: white;
+        background: var(--in-content-box-background);
         font-size: 14px;
         line-height: 20px;
         padding: 4px 16px;
-        color: var(--grey-90);
+        color: var(--in-content-text-color);
       }
 
       button:hover {
-        background-color: var(--grey-90-a10);
-        border-top-color: var(--grey-90-a20);
+        background-color: var(--in-content-box-background-hover);
+        border-top-color: var(--in-content-box-border-color);
       }
 
       button:hover:active {
-        background-color: var(--grey-90-a20);
+        background-color: var(--in-content-box-background-active);
       }
 
       :host([selected]) button {
-        border-top-color: var(--blue-60);
-        color: var(--blue-60);
+        border-top-color: var(--in-content-border-highlight);
+        color: var(--in-content-category-text-selected);
       }
     `;
     this.shadowRoot.appendChild(style);
