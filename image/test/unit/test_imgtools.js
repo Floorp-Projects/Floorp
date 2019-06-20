@@ -367,6 +367,7 @@ function run_test() {
     /* ========== 12 ========== */
     testnum++;
     testdesc =
+      // eslint-disable-next-line no-useless-concat
       "test encoding a scaled ICO with format options " + "(format=bmp;bpp=32)";
 
     // we'll reuse the container from the previous test
@@ -416,6 +417,7 @@ function run_test() {
     /* ========== 14 ========== */
     testnum++;
     testdesc =
+      // eslint-disable-next-line no-useless-concat
       "test encoding a scaled ICO with format options " + "(format=bmp;bpp=24)";
 
     // we'll reuse the container from the previous test
