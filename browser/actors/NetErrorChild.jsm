@@ -704,6 +704,10 @@ class NetErrorChild extends ActorChild {
           id.textContent = msg;
         }
       }
+
+      let learnMoreLink = win.document.getElementById("learnMoreLink");
+      let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+      learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
     }
 
     let automatic = Services.prefs.getBoolPref("security.ssl.errorReporting.automatic");
