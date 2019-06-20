@@ -8,6 +8,7 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 
+import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
@@ -95,11 +96,12 @@ public class SuggestedSitePreparer implements Preparer {
             return;
         }
 
-        if (!initialised) {
+        // A locale change could mean different suggested top sites that needs to be loaded.
+        if (!initialised || BrowserLocaleManager.getInstance().systemLocaleDidChange()) {
             initialised = initialise(request.getContext());
 
             if (!initialised) {
-                // Early return: if we were unable to load suggested sites metdata, we won't be able
+                // Early return: if we were unable to load suggested sites metadata, we won't be able
                 // to provide sites (but we'll still try again next time).
                 return;
             }
