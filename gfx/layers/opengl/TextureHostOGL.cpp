@@ -6,7 +6,6 @@
 
 #include "TextureHostOGL.h"
 
-#include "EGLUtils.h"
 #include "GLContext.h"     // for GLContext, etc
 #include "GLLibraryEGL.h"  // for GLLibraryEGL
 #include "GLUploadHelpers.h"
@@ -711,8 +710,17 @@ void EGLImageTextureSource::BindTexture(GLenum aTextureUnit,
     return;
   }
 
-  MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl),
+#ifdef DEBUG
+  const bool supportsEglImage = [&]() {
+    const auto& gle = GLContextEGL::Cast(gl);
+    const auto& egl = gle->mEgl;
+
+    return egl->HasKHRImageBase() && egl->HasKHRImageTexture2D() &&
+           gl->IsExtensionSupported(GLContext::OES_EGL_image);
+  }();
+  MOZ_ASSERT(supportsEglImage,
              "EGLImage not supported or disabled in runtime");
+#endif
 
   GLuint tex = mCompositor->GetTemporaryTexture(mTextureTarget, aTextureUnit);
 
