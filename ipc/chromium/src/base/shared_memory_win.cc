@@ -59,6 +59,7 @@ SharedMemory::SharedMemory()
       mapped_file_(NULL),
       memory_(NULL),
       read_only_(false),
+      freezeable_(false),
       max_size_(0) {}
 
 SharedMemory::SharedMemory(SharedMemory&& other) {
@@ -70,6 +71,7 @@ SharedMemory::SharedMemory(SharedMemory&& other) {
   memory_ = other.memory_;
   read_only_ = other.read_only_;
   max_size_ = other.max_size_;
+  freezeable_ = other.freezeable_;
   external_section_ = other.external_section_;
 
   other.mapped_file_ = nullptr;
@@ -85,6 +87,7 @@ bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
   DCHECK(mapped_file_ == NULL);
 
   external_section_ = true;
+  freezeable_ = false;  // just in case
   mapped_file_ = handle;
   read_only_ = read_only;
   return true;
@@ -100,7 +103,7 @@ bool SharedMemory::IsValid() const { return mapped_file_ != NULL; }
 // static
 SharedMemoryHandle SharedMemory::NULLHandle() { return NULL; }
 
-bool SharedMemory::Create(size_t size) {
+bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
   DCHECK(mapped_file_ == NULL);
   read_only_ = false;
   mapped_file_ = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
@@ -108,6 +111,23 @@ bool SharedMemory::Create(size_t size) {
   if (!mapped_file_) return false;
 
   max_size_ = size;
+  freezeable_ = freezeable;
+  return true;
+}
+
+bool SharedMemory::Freeze() {
+  DCHECK(!read_only_);
+  CHECK(freezeable_);
+  Unmap();
+
+  if (!::DuplicateHandle(GetCurrentProcess(), mapped_file_, GetCurrentProcess(),
+                         &mapped_file_, GENERIC_READ | FILE_MAP_READ, false,
+                         DUPLICATE_CLOSE_SOURCE)) {
+    return false;
+  }
+
+  read_only_ = true;
+  freezeable_ = false;
   return true;
 }
 
@@ -148,6 +168,7 @@ void* SharedMemory::FindFreeAddressSpace(size_t size) {
 bool SharedMemory::ShareToProcessCommon(ProcessId processId,
                                         SharedMemoryHandle* new_handle,
                                         bool close_self) {
+  freezeable_ = false;
   *new_handle = 0;
   DWORD access = FILE_MAP_READ | SECTION_QUERY;
   DWORD options = 0;
