@@ -2300,13 +2300,14 @@ nsNavHistory::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   else if (strcmp(aTopic, TOPIC_IDLE_DAILY) == 0) {
-    (void)FixAndDecayFrecency();
+    (void)DecayFrecency();
   }
 
   return NS_OK;
 }
 
-nsresult nsNavHistory::FixAndDecayFrecency() {
+NS_IMETHODIMP
+nsNavHistory::DecayFrecency() {
   float decayRate =
       Preferences::GetFloat(PREF_FREC_DECAY_RATE, PREF_FREC_DECAY_RATE_DEF);
   if (decayRate > 1.0f) {
