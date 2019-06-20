@@ -66,11 +66,6 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
 
     cmd_args = [binary,
                 os.path.join(module_path, "node_modules", "eslint", "bin", "eslint.js"),
-                # Enable the HTML plugin.
-                # We can't currently enable this in the global config file
-                # because it has bad interactions with the SublimeText
-                # ESLint plugin (bug 1229874).
-                '--plugin', 'html',
                 # This keeps ext as a single argument.
                 '--ext', '[{}]'.format(','.join(config['extensions'])),
                 '--format', 'json',
