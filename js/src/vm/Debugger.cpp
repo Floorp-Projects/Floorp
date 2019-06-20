@@ -6459,29 +6459,30 @@ static bool DebuggerScript_getChildScripts(JSContext* cx, unsigned argc,
   if (!result) {
     return false;
   }
-  if (script->hasObjects()) {
-    // script->savedCallerFun indicates that this is a direct eval script
-    // and the calling function is stored as script->objects()->vector[0].
-    // It is not really a child script of this script, so skip it using
-    // innerObjectsStart().
-    RootedFunction fun(cx);
-    RootedScript funScript(cx);
-    RootedObject s(cx);
-    for (const GCPtrObject& obj : script->objects()) {
-      if (obj->is<JSFunction>()) {
-        fun = &obj->as<JSFunction>();
-        // The inner function could be an asm.js native.
-        if (!IsInterpretedNonSelfHostedFunction(fun)) {
-          continue;
-        }
-        funScript = GetOrCreateFunctionScript(cx, fun);
-        if (!funScript) {
-          return false;
-        }
-        s = dbg->wrapScript(cx, funScript);
-        if (!s || !NewbornArrayPush(cx, result, ObjectValue(*s))) {
-          return false;
-        }
+
+  // Wrap and append scripts for the inner functions in script->gcthings().
+  RootedFunction fun(cx);
+  RootedScript funScript(cx);
+  RootedObject s(cx);
+  for (JS::GCCellPtr gcThing : script->gcthings()) {
+    if (!gcThing.is<JSObject>()) {
+      continue;
+    }
+
+    JSObject* obj = &gcThing.as<JSObject>();
+    if (obj->is<JSFunction>()) {
+      fun = &obj->as<JSFunction>();
+      // The inner function could be an asm.js native.
+      if (!IsInterpretedNonSelfHostedFunction(fun)) {
+        continue;
+      }
+      funScript = GetOrCreateFunctionScript(cx, fun);
+      if (!funScript) {
+        return false;
+      }
+      s = dbg->wrapScript(cx, funScript);
+      if (!s || !NewbornArrayPush(cx, result, ObjectValue(*s))) {
+        return false;
       }
     }
   }

@@ -342,8 +342,7 @@ bool EmitterScope::internScope(BytecodeEmitter* bce, ScopeCreator createScope) {
     return false;
   }
   hasEnvironment_ = scope->hasEnvironment();
-  scopeIndex_ = bce->perScriptData().scopeList().length();
-  return bce->perScriptData().scopeList().append(scope);
+  return bce->perScriptData().gcThingList().append(scope, &scopeIndex_);
 }
 
 template <typename ScopeCreator>
@@ -351,7 +350,7 @@ bool EmitterScope::internBodyScope(BytecodeEmitter* bce,
                                    ScopeCreator createScope) {
   MOZ_ASSERT(bce->bodyScopeIndex == UINT32_MAX,
              "There can be only one body scope");
-  bce->bodyScopeIndex = bce->perScriptData().scopeList().length();
+  bce->bodyScopeIndex = bce->perScriptData().gcThingList().length();
   return internScope(bce, createScope);
 }
 
@@ -1071,7 +1070,7 @@ bool EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal) {
 }
 
 Scope* EmitterScope::scope(const BytecodeEmitter* bce) const {
-  return bce->perScriptData().scopeList().vector[index()];
+  return bce->perScriptData().gcThingList().getScope(index());
 }
 
 NameLocation EmitterScope::lookup(BytecodeEmitter* bce, JSAtom* name) {
