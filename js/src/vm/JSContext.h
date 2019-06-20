@@ -158,9 +158,6 @@ struct JSContext : public JS::RootingContext,
   js::UnprotectedData<JSRuntime*> runtime_;
   js::WriteOnceData<js::ContextKind> kind_;
 
-  // The thread on which this context is running if this is not the main thread.
-  js::ThreadData<js::HelperThread*> helperThread_;
-
   friend class js::gc::AutoSuppressNurseryCellAlloc;
   js::ThreadData<size_t> nurserySuppressions_;
 
@@ -332,9 +329,6 @@ struct JSContext : public JS::RootingContext,
   inline void setRealmForJitExceptionHandler(JS::Realm* realm);
 
   inline void leaveRealm(JS::Realm* oldRealm);
-
-  void setHelperThread(js::HelperThread* helperThread);
-  js::HelperThread* helperThread() const { return helperThread_; }
 
   void setParseTask(js::ParseTask* parseTask) { parseTask_ = parseTask; }
   js::ParseTask* parseTask() const { return parseTask_; }
