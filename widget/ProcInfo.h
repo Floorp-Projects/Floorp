@@ -24,16 +24,14 @@ enum class ProcType {
   Extension,
   PrivilegedAbout,
   WebLargeAllocation,
-  // the rest matches GeckoProcessTypes.h
-  Browser,  // Default is named Browser here
-  Plugin,
-  IPDLUnitTest,
-  GMPlugin,
-  GPU,
-  VR,
-  RDD,
+  // GPU process (only on Windows)
+  Gpu,
+  // RDD process (Windows and macOS)
+  Rdd,
+  // Socket process
   Socket,
-  RemoteSandboxBroker,
+  // Main process
+  Browser,
   // Unknown type of process
   Unknown
 };
@@ -78,14 +76,9 @@ typedef MozPromise<ProcInfo, nsresult, true> ProcInfoPromise;
  * Depending on the platform, this call can be quite expensive and the
  * promise may return after several ms.
  */
-#ifdef XP_MACOSX
-RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& type,
-                                    mach_port_t aChildTask = MACH_PORT_NULL);
-#else
-RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& type);
-#endif
+RefPtr<ProcInfoPromise> GetProcInfo(
+    base::ProcessId pid, int32_t childId, const ProcType& type,
+    ipc::GeckoChildProcessHost* childProcess = nullptr);
 
 }  // namespace mozilla
 #endif  // ProcInfo_h
