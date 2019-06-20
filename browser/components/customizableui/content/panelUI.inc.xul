@@ -236,7 +236,7 @@
                        oncommand="PanelUI._onBannerItemSelected(event)"
                        wrap="true"
                        hidden="true"/>
-        <toolbaritem id="appMenu-fxa-container" class="toolbaritem-combined-buttons sync-ui-item">
+        <toolbaritem id="appMenu-fxa-container" class="sync-ui-item">
           <hbox id="appMenu-fxa-status"
                 flex="1"
                 defaultlabel="&fxaSignIn.label;"
