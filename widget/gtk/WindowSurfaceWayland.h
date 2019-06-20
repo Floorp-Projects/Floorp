@@ -10,7 +10,9 @@
 #include <prthread.h>
 #include "mozilla/gfx/Types.h"
 #include "nsWaylandDisplay.h"
-#include "WaylandDMABufSurface.h"
+#ifdef HAVE_LIBDRM
+#  include "WaylandDMABufSurface.h"
+#endif
 
 #define BACK_BUFFER_NUM 2
 
@@ -119,6 +121,7 @@ class WindowBackBufferShm : public WindowBackBuffer {
   bool mIsLocked;
 };
 
+#ifdef HAVE_LIBDRM
 class WindowBackBufferDMABuf : public WindowBackBuffer {
  public:
   WindowBackBufferDMABuf(nsWaylandDisplay* aWaylandDisplay, int aWidth,
@@ -145,6 +148,7 @@ class WindowBackBufferDMABuf : public WindowBackBuffer {
  private:
   WaylandDMABufSurface mDMAbufSurface;
 };
+#endif
 
 class WindowImageSurface {
  public:
