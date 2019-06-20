@@ -130,11 +130,26 @@ impl SecurityState {
         // If opening initially fails, try to remove and recreate the database.
         // Consumers will repopulate the database as necessary if this happens.
         // (See bug 1546361.)
-        let env = make_env(store_path.as_path()).or_else(|_| {
+        let mut env = make_env(store_path.as_path()).or_else(|_| {
             remove_db(store_path.as_path())?;
             make_env(store_path.as_path())
         })?;
-        let store = env.open_single("cert_storage", StoreOptions::create())?;
+
+        // It's possible that immediately writing data to a newly-created store
+        // triggers the crasher bug 1538541, which only occurs in this crate
+        // when we call SecurityState::migrate below.  To try to work around
+        // that issue, we close and reopen the environment here if we have to
+        // create the store because it doesn't already exist.
+        let store = match env.open_single("cert_storage", StoreOptions::default()) {
+            Ok(store) => Ok(store),
+            Err(StoreError::LmdbError(lmdb::Error::NotFound)) => {
+                env.open_single("cert_storage", StoreOptions::create())?;
+                drop(env);
+                env = make_env(store_path.as_path())?;
+                env.open_single("cert_storage", StoreOptions::default())
+            }
+            Err(err) => Err(err),
+        }?;
 
         // if the profile has a revocations.txt, migrate it and remove the file
         let mut revocations_path = self.profile_path.clone();
@@ -227,7 +242,7 @@ impl SecurityState {
         drop(self.env_and_store.take());
 
         let env = make_env(store_path.as_path())?;
-        let store = env.open_single("cert_storage", StoreOptions::create())?;
+        let store = env.open_single("cert_storage", StoreOptions::default())?;
         self.env_and_store.replace(EnvAndStore { env, store });
         Ok(())
     }
