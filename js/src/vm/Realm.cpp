@@ -660,10 +660,12 @@ void Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj) {
 
 static bool AddInnerLazyFunctionsFromScript(
     JSScript* script, MutableHandleObjectVector lazyFunctions) {
-  if (!script->hasObjects()) {
-    return true;
-  }
-  for (JSObject* obj : script->objects()) {
+  for (JS::GCCellPtr gcThing : script->gcthings()) {
+    if (!gcThing.is<JSObject>()) {
+      continue;
+    }
+
+    JSObject* obj = &gcThing.as<JSObject>();
     if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpretedLazy()) {
       if (!lazyFunctions.append(obj)) {
         return false;

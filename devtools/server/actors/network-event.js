@@ -68,6 +68,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       isThirdPartyTrackingResource: this._isThirdPartyTrackingResource,
       referrerPolicy: this._referrerPolicy,
       blockedReason: this._blockedReason,
+      channelId: this._channelId,
     };
   },
 

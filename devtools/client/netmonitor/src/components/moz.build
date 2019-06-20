@@ -47,4 +47,5 @@ DevToolsModules(
     'TabboxPanel.js',
     'TimingsPanel.js',
     'Toolbar.js',
+    'WebSocketsPanel.js',
 )

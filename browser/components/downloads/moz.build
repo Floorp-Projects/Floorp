@@ -18,5 +18,10 @@ EXTRA_JS_MODULES += [
     'DownloadsViewUI.jsm',
 ]
 
+toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
+
+if toolkit == 'cocoa':
+    EXTRA_JS_MODULES += ['DownloadsMacFinderProgress.jsm']
+
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Downloads Panel')

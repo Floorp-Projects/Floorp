@@ -13,6 +13,7 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/StaticPtr.h"
@@ -28,6 +29,7 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "GLLibraryEGL.h"
+#  include "GeneratedJNIWrappers.h"
 #endif
 
 using namespace mozilla;
@@ -46,7 +48,8 @@ RenderThread::RenderThread(base::Thread* aThread)
       mWindowInfos("RenderThread.mWindowInfos"),
       mRenderTextureMapLock("RenderThread.mRenderTextureMapLock"),
       mHasShutdown(false),
-      mHandlingDeviceReset(false) {}
+      mHandlingDeviceReset(false),
+      mHandlingWebRenderError(false) {}
 
 RenderThread::~RenderThread() {
   MOZ_ASSERT(mRenderTexturesDeferred.empty());
@@ -806,6 +809,34 @@ void RenderThread::SimulateDeviceReset() {
     // them.
     HandleDeviceReset("SimulateDeviceReset", /* aNotify */ false);
   }
+}
+
+static void DoNotifyWebRenderError(WebRenderError aError) {
+  layers::CompositorManagerParent::NotifyWebRenderError(aError);
+}
+
+void RenderThread::HandleWebRenderError(WebRenderError aError) {
+  if (mHandlingWebRenderError) {
+    return;
+  }
+
+  layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
+      "DoNotifyWebRenderErrorRunnable", &DoNotifyWebRenderError, aError));
+  {
+    MutexAutoLock lock(mRenderTextureMapLock);
+    mRenderTexturesDeferred.clear();
+    for (const auto& entry : mRenderTextures) {
+      entry.second->ClearCachedResources();
+    }
+  }
+  mHandlingWebRenderError = true;
+  // WebRender is going to be disabled by
+  // GPUProcessManager::NotifyWebRenderError()
+}
+
+bool RenderThread::IsHandlingWebRenderError() {
+  MOZ_ASSERT(IsInRenderThread());
+  return mHandlingWebRenderError;
 }
 
 gl::GLContext* RenderThread::SharedGL() {

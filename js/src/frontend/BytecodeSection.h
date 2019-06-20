@@ -8,6 +8,7 @@
 #define frontend_BytecodeSection_h
 
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE, MOZ_STACK_CLASS
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 #include "mozilla/Span.h"        // mozilla::Span
 
 #include <stddef.h>  // ptrdiff_t, size_t
@@ -37,37 +38,45 @@ namespace frontend {
 
 class ObjectBox;
 
-class CGBigIntList {
-  JS::Rooted<BigIntVector> vector;
+struct MOZ_STACK_CLASS GCThingList {
+  JS::RootedVector<StackGCCellPtr> vector;
 
- public:
-  explicit CGBigIntList(JSContext* cx) : vector(cx, BigIntVector(cx)) {}
-  MOZ_MUST_USE bool append(js::BigInt* bi) { return vector.append(bi); }
-  size_t length() const { return vector.length(); }
-  void finish(mozilla::Span<GCPtrBigInt> array);
-};
-
-struct CGObjectList {
-  // Number of emitted so far objects.
-  uint32_t length;
   // Last emitted object.
-  ObjectBox* lastbox;
+  ObjectBox* lastbox = nullptr;
 
-  CGObjectList() : length(0), lastbox(nullptr) {}
+  // Index of the first scope in the vector.
+  mozilla::Maybe<uint32_t> firstScopeIndex;
 
-  unsigned add(ObjectBox* objbox);
-  void finish(mozilla::Span<GCPtrObject> array);
-  void finishInnerFunctions();
-};
+  explicit GCThingList(JSContext* cx) : vector(cx) {}
 
-struct MOZ_STACK_CLASS CGScopeList {
-  JS::Rooted<GCVector<Scope*>> vector;
+  MOZ_MUST_USE bool append(Scope* scope, uint32_t* index) {
+    *index = vector.length();
+    if (!vector.append(JS::GCCellPtr(scope))) {
+      return false;
+    }
+    if (!firstScopeIndex) {
+      firstScopeIndex.emplace(*index);
+    }
+    return true;
+  }
+  MOZ_MUST_USE bool append(BigInt* bi, uint32_t* index) {
+    *index = vector.length();
+    return vector.append(JS::GCCellPtr(bi));
+  }
+  MOZ_MUST_USE bool append(ObjectBox* obj, uint32_t* index);
 
-  explicit CGScopeList(JSContext* cx) : vector(cx, GCVector<Scope*>(cx)) {}
-
-  bool append(Scope* scope) { return vector.append(scope); }
   uint32_t length() const { return vector.length(); }
-  void finish(mozilla::Span<GCPtrScope> array);
+  void finish(mozilla::Span<JS::GCCellPtr> array);
+  void finishInnerFunctions();
+
+  Scope* getScope(size_t index) const {
+    return &vector[index].get().get().as<Scope>();
+  }
+
+  Scope* firstScope() const {
+    MOZ_ASSERT(firstScopeIndex.isSome());
+    return getScope(*firstScopeIndex);
+  }
 };
 
 struct CGTryNoteList {
@@ -325,35 +334,15 @@ class PerScriptData {
 
   MOZ_MUST_USE bool init(JSContext* cx);
 
-  // ---- Scope ----
-
-  CGScopeList& scopeList() { return scopeList_; }
-  const CGScopeList& scopeList() const { return scopeList_; }
-
-  // ---- Literals ----
-
-  CGBigIntList& bigIntList() { return bigIntList_; }
-  const CGBigIntList& bigIntList() const { return bigIntList_; }
-
-  CGObjectList& objectList() { return objectList_; }
-  const CGObjectList& objectList() const { return objectList_; }
+  GCThingList& gcThingList() { return gcThingList_; }
+  const GCThingList& gcThingList() const { return gcThingList_; }
 
   PooledMapPtr<AtomIndexMap>& atomIndices() { return atomIndices_; }
   const PooledMapPtr<AtomIndexMap>& atomIndices() const { return atomIndices_; }
 
  private:
-  // ---- Scope ----
-
-  // List of emitted scopes.
-  CGScopeList scopeList_;
-
-  // ---- Literals ----
-
-  // List of bigints used by script.
-  CGBigIntList bigIntList_;
-
-  // List of emitted objects.
-  CGObjectList objectList_;
+  // List of emitted scopes/objects/bigints.
+  GCThingList gcThingList_;
 
   // Map from atom to index.
   PooledMapPtr<AtomIndexMap> atomIndices_;

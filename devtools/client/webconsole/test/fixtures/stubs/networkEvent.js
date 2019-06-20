@@ -265,6 +265,7 @@ stubPackets.set(`GET request`, {
   "private": false,
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "no-referrer-when-downgrade",
+  "channelId": 22673132355586,
   "from": "server1.conn0.child1/consoleActor2"
 });
 
@@ -315,6 +316,7 @@ stubPackets.set(`XHR GET request`, {
   "private": false,
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "no-referrer-when-downgrade",
+  "channelId": 22673132355587,
   "from": "server1.conn1.child1/consoleActor2"
 });
 
@@ -365,6 +367,7 @@ stubPackets.set(`XHR POST request`, {
   "private": false,
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "no-referrer-when-downgrade",
+  "channelId": 22673132355588,
   "from": "server1.conn2.child1/consoleActor2"
 });
 

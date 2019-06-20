@@ -3279,8 +3279,13 @@ static MOZ_MUST_USE bool DisassembleScript(JSContext* cx, HandleScript script,
     return false;
   }
 
-  if (recursive && script->hasObjects()) {
-    for (JSObject* obj : script->objects()) {
+  if (recursive) {
+    for (JS::GCCellPtr gcThing : script->gcthings()) {
+      if (!gcThing.is<JSObject>()) {
+        continue;
+      }
+
+      JSObject* obj = &gcThing.as<JSObject>();
       if (obj->is<JSFunction>()) {
         if (!sp->put("\n")) {
           return false;

@@ -368,9 +368,7 @@ export type ThreadClient = {
   request: (payload: Object) => Promise<*>,
   url: string,
   setActiveEventBreakpoints: (string[]) => void,
-  getAvailableEventBreakpoints: () => Promise<{|
-    value: EventListenerCategoryList,
-  |}>,
+  getAvailableEventBreakpoints: () => Promise<EventListenerCategoryList>,
   skipBreakpoints: boolean => Promise<{| skip: boolean |}>,
 };
 

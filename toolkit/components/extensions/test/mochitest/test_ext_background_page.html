@@ -18,8 +18,6 @@
 add_task(async function testAlertNotShownInBackgroundWindow() {
   let extension = ExtensionTestUtils.loadExtension({
     background: function() {
-      browser.test.log("background script executed");
-
       alert("I am an alert in the background.");
 
       browser.test.notifyPass("alertCalled");
