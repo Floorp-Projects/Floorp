@@ -36,8 +36,7 @@
           "tasktracer",
           "threads",
           "trackopts",
-          "jstracer",
-          "jsallocations"
+          "jstracer"
         ]
       },
       {
