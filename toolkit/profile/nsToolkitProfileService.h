@@ -105,6 +105,7 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   nsresult MaybeMakeDefaultDedicatedProfile(nsIToolkitProfile* aProfile,
                                             bool* aResult);
   bool IsSnapEnvironment();
+  bool UseLegacyProfiles();
   nsresult CreateDefaultProfile(nsIToolkitProfile** aResult);
   void SetNormalDefault(nsIToolkitProfile* aProfile);
 

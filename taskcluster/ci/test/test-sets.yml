@@ -326,7 +326,7 @@ macosx1014-64-tests:
     - mochitest-devtools-chrome
     - mochitest-devtools-webreplay
     - mochitest-gpu
-    # - mochitest-media
+    - mochitest-media
     - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
