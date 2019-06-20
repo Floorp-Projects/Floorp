@@ -79,6 +79,7 @@ class FirefoxDataProvider {
       isThirdPartyTrackingResource,
       referrerPolicy,
       blockedReason,
+      channelId,
     } = data;
 
     // Insert blocked reason in the payload queue as well, as we'll need it later
@@ -106,6 +107,7 @@ class FirefoxDataProvider {
         isThirdPartyTrackingResource,
         referrerPolicy,
         blockedReason,
+        channelId,
       }, true);
     }
 
@@ -343,6 +345,7 @@ class FirefoxDataProvider {
       isThirdPartyTrackingResource,
       referrerPolicy,
       blockedReason,
+      channelId,
     } = networkInfo;
 
     await this.addRequest(actor, {
@@ -356,6 +359,7 @@ class FirefoxDataProvider {
       isThirdPartyTrackingResource,
       referrerPolicy,
       blockedReason,
+      channelId,
     });
 
     this.emit(EVENTS.NETWORK_EVENT, actor);
@@ -426,11 +430,6 @@ class FirefoxDataProvider {
    * @param {string} extensions
    */
   async onWebSocketOpened(httpChannelId, effectiveURI, protocols, extensions) {
-    console.log("FirefoxDataProvider onWebSocketOpened: " +
-      " httpChannelId: " + httpChannelId +
-      " effectiveURI: " + effectiveURI +
-      " protocols: " + protocols +
-      " extensions: " + extensions);
   }
 
   /**
@@ -441,10 +440,6 @@ class FirefoxDataProvider {
    * @param {string} reason
    */
   async onWebSocketClosed(wasClean, code, reason) {
-    console.log("FirefoxDataProvider onWebSocketClosed: " +
-      " wasClean: " + wasClean +
-      " code: " + code +
-      " reason: " + reason);
   }
 
   /**
@@ -454,11 +449,7 @@ class FirefoxDataProvider {
    * @param {object} data websocket frame information
    */
   async onFrameSent(httpChannelId, data) {
-    await this.getLongString(data.payload).then(payload => {
-      console.log("FirefoxDataProvider onFrameSent: " +
-      " httpChannelId: " + httpChannelId +
-      " onFrameSent: " + payload);
-    });
+    this.addFrame(httpChannelId, data);
   }
 
   /**
@@ -468,11 +459,20 @@ class FirefoxDataProvider {
    * @param {object} data websocket frame information
    */
   async onFrameReceived(httpChannelId, data) {
-    await this.getLongString(data.payload).then(payload => {
-      console.log("FirefoxDataProvider onFrameReceived: " +
-      " httpChannelId: " + httpChannelId +
-      " onFrameSent: " + payload);
-    });
+    this.addFrame(httpChannelId, data);
+  }
+
+  /**
+   * Add a new WebSocket frame to application state.
+   *
+   * @param {number} httpChannelId the channel ID
+   * @param {object} data websocket frame information
+   */
+  async addFrame(httpChannelId, data) {
+    if (this.actionsEnabled && this.actions.addFrame) {
+      await this.actions.addFrame(httpChannelId, data);
+    }
+    // TODO: Emit an event for test here
   }
 
   /**

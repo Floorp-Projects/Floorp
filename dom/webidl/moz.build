@@ -965,7 +965,6 @@ WEBIDL_FILES = [
 if CONFIG['MOZ_WEBRTC']:
     WEBIDL_FILES += [
         'PeerConnectionImpl.webidl',
-        'PeerConnectionImplEnums.webidl',
         'PeerConnectionObserver.webidl',
         'PeerConnectionObserverEnums.webidl',
         'RTCCertificate.webidl',

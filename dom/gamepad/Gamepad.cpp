@@ -70,6 +70,9 @@ Gamepad::Gamepad(nsISupports* aParent, const nsAString& aID, uint32_t aIndex,
     mTouchEvents.AppendElement(new GamepadTouch(mParent));
   }
 
+  // Mapping touchId(0) to touchIdHash(0) by default.
+  mTouchIdHash.Put(0, mTouchIdHashValue);
+  ++mTouchIdHashValue;
   UpdateTimestamp();
 }
 

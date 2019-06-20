@@ -7,8 +7,6 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src chrome: blob:">
-    <link rel="stylesheet" media="screen, projection" type="text/css"
-          href="chrome://global/skin/in-content/info-pages.css" title="infop">
     <link rel="stylesheet" type="text/css"
           href="chrome://browser/content/protections.css">
     <link rel="icon" href="chrome://global/skin/icons/warning.svg">
@@ -17,6 +15,26 @@
   </head>
 
   <body>
-    <div class="under-construction"><div/>
+    <div id="report-content">
+      <h2 id="report-title">Privacy Protections</h2>
+      <div class="report-card etp-card">
+        <div class="card-header">
+          <div class="icon"></div>
+          <div class="wrapper">
+            <h3 class="card-title">
+              Enhanced Tracking Protection
+            </h3>
+            <p class="content">
+              Trackers follow you around online to collect information about your browsing habits and interests. Firefox blocks many of these trackers and other malicious scripts.
+            </p>
+            <p id="protection-details">
+              Protection Level is set to <span>Standard</span>
+            </p>
+          </div>
+        </div>
+        <div class="card-body">
+        </div>
+      </div>
+    </div>
   </body>
 </html>

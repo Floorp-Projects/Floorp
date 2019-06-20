@@ -940,8 +940,8 @@ void nsHttpHandler::BuildUserAgent() {
 }
 
 #ifdef XP_WIN
-#  define WNT_BASE "Windows NT %ld.%ld"
-#  define W64_PREFIX "; Win64"
+#  define OSCPU_WINDOWS "Windows NT %ld.%ld"
+#  define OSCPU_WIN64 OSCPU_WINDOWS "; Win64; x64"
 #endif
 
 void nsHttpHandler::InitUserAgentComponents() {
@@ -1017,18 +1017,18 @@ void nsHttpHandler::InitUserAgentComponents() {
 #    pragma warning(disable : 4996)
   if (GetVersionEx(&info)) {
 #    pragma warning(pop)
+
     const char* format;
-#    if defined _M_IA64
-    format = WNT_BASE W64_PREFIX "; IA64";
-#    elif defined _M_X64 || defined _M_AMD64
-    format = WNT_BASE W64_PREFIX "; x64";
+#    if defined _M_X64 || defined _M_AMD64
+    format = OSCPU_WIN64;
 #    else
     BOOL isWow64 = FALSE;
     if (!IsWow64Process(GetCurrentProcess(), &isWow64)) {
       isWow64 = FALSE;
     }
-    format = isWow64 ? WNT_BASE "; WOW64" : WNT_BASE;
+    format = isWow64 ? OSCPU_WIN64 : OSCPU_WINDOWS;
 #    endif
+
     SmprintfPointer buf =
         mozilla::Smprintf(format, info.dwMajorVersion, info.dwMinorVersion);
     if (buf) {
@@ -1047,35 +1047,22 @@ void nsHttpHandler::InitUserAgentComponents() {
                             static_cast<int>(minorVersion));
 #  elif defined(XP_UNIX)
   struct utsname name;
-
   int ret = uname(&name);
   if (ret >= 0) {
     nsAutoCString buf;
     buf = (char*)name.sysname;
-
-    if (strcmp(name.machine, "x86_64") == 0 &&
-        sizeof(void*) == sizeof(int32_t)) {
-      // We're running 32-bit code on x86_64. Make this browser
-      // look like it's running on i686 hardware, but append "
-      // (x86_64)" to the end of the oscpu identifier to be able
-      // to differentiate this from someone running 64-bit code
-      // on x86_64..
-
-      buf += " i686 on x86_64";
-    } else {
-      buf += ' ';
+    buf += ' ';
 
 #    ifdef AIX
-      // AIX uname returns machine specific info in the uname.machine
-      // field and does not return the cpu type like other platforms.
-      // We use the AIX version and release numbers instead.
-      buf += (char*)name.version;
-      buf += '.';
-      buf += (char*)name.release;
+    // AIX uname returns machine specific info in the uname.machine
+    // field and does not return the cpu type like other platforms.
+    // We use the AIX version and release numbers instead.
+    buf += (char*)name.version;
+    buf += '.';
+    buf += (char*)name.release;
 #    else
-      buf += (char*)name.machine;
+    buf += (char*)name.machine;
 #    endif
-    }
 
     mOscpu.Assign(buf);
   }

@@ -448,20 +448,26 @@ bool Http2Session::AddStream(nsAHttpTransaction* aHttpTransaction,
 
   if (mClosed || mShouldGoAway) {
     nsHttpTransaction* trans = aHttpTransaction->QueryHttpTransaction();
-    if (trans && !trans->GetPushedStream()) {
-      LOG3(
-          ("Http2Session::AddStream %p atrans=%p trans=%p session unusable - "
-           "resched.\n",
-           this, aHttpTransaction, trans));
-      aHttpTransaction->SetConnection(nullptr);
-      nsresult rv = gHttpHandler->InitiateTransaction(trans, trans->Priority());
-      if (NS_FAILED(rv)) {
+    if (trans) {
+      RefPtr<Http2PushedStreamWrapper> pushedStreamWrapper;
+      pushedStreamWrapper = trans->GetPushedStream();
+      if (!pushedStreamWrapper || !pushedStreamWrapper->GetStream()) {
         LOG3(
-            ("Http2Session::AddStream %p atrans=%p trans=%p failed to initiate "
-             "transaction (%08x).\n",
-             this, aHttpTransaction, trans, static_cast<uint32_t>(rv)));
+            ("Http2Session::AddStream %p atrans=%p trans=%p session unusable - "
+             "resched.\n",
+             this, aHttpTransaction, trans));
+        aHttpTransaction->SetConnection(nullptr);
+        nsresult rv =
+            gHttpHandler->InitiateTransaction(trans, trans->Priority());
+        if (NS_FAILED(rv)) {
+          LOG3(
+              ("Http2Session::AddStream %p atrans=%p trans=%p failed to "
+               "initiate "
+               "transaction (%08x).\n",
+               this, aHttpTransaction, trans, static_cast<uint32_t>(rv)));
+        }
+        return true;
       }
-      return true;
     }
   }
 
