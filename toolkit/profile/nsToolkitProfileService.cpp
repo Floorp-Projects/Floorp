@@ -382,7 +382,7 @@ nsToolkitProfileService::nsToolkitProfileService()
       mIsFirstRun(true),
       mUseDevEditionProfile(false),
 #ifdef MOZ_DEDICATED_PROFILES
-      mUseDedicatedProfile(!IsSnapEnvironment()),
+      mUseDedicatedProfile(!IsSnapEnvironment() && !UseLegacyProfiles()),
 #else
       mUseDedicatedProfile(false),
 #endif
@@ -1750,6 +1750,17 @@ nsToolkitProfileService::CreateProfile(nsIFile* aRootDir,
  */
 bool nsToolkitProfileService::IsSnapEnvironment() {
   return !!PR_GetEnv("SNAP_NAME");
+}
+
+/**
+ * In some situations dedicated profile support does not work well. This
+ * includes a handful of linux distributions which always install different
+ * application versions to different locations, some application sandboxing
+ * systems as well as enterprise deployments. This environment variable provides
+ * a way to opt out of dedicated profiles for these cases.
+ */
+bool nsToolkitProfileService::UseLegacyProfiles() {
+  return !!PR_GetEnv("MOZ_LEGACY_PROFILES");
 }
 
 struct FindInstallsClosure {
