@@ -673,8 +673,6 @@ define(function(require, exports, module) {
           dom.tbody({
             role: "presentation",
             tabIndex: -1,
-            // Prevent mouse down defaul action so that tbody never gets focused.
-            onMouseDown: event => event.preventDefault(),
           }, rows)
         )
       );
