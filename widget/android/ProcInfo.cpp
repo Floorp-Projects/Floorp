@@ -10,7 +10,8 @@
 namespace mozilla {
 
 RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& type) {
+                                    const ProcType& type,
+                                    ipc::GeckoChildProcessHost* childProcess) {
   // Not implemented on Android.
   return nullptr;
 }
