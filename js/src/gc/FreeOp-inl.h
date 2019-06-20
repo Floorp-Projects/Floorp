@@ -10,6 +10,7 @@
 #include "gc/FreeOp.h"
 
 #include "gc/ZoneAllocator.h"
+#include "js/RefCounted.h"
 
 namespace js {
 
@@ -39,6 +40,14 @@ inline void FreeOp::freeLater(void* p) {
   AutoEnterOOMUnsafeRegion oomUnsafe;
   if (!freeLaterList.append(p)) {
     oomUnsafe.crash("FreeOp::freeLater");
+  }
+}
+
+template <class T>
+inline void FreeOp::release(gc::Cell* cell, T* p, size_t nbytes, MemoryUse use) {
+  if (p) {
+    RemoveCellMemory(cell, nbytes, use);
+    p->Release();
   }
 }
 
