@@ -371,6 +371,19 @@ var UrlbarUtils = {
     }
     return pasteData;
   },
+
+  async addToInputHistory(url, input) {
+    await PlacesUtils.withConnectionWrapper("addToInputHistory", db => {
+      // use_count will asymptotically approach the max of 10.
+      return db.executeCached(`
+        INSERT OR REPLACE INTO moz_inputhistory
+        SELECT h.id, IFNULL(i.input, :input), IFNULL(i.use_count, 0) * .9 + 1
+        FROM moz_places h
+        LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = :input
+        WHERE url_hash = hash(:url) AND url = :url
+      `, {url, input});
+    });
+  },
 };
 
 XPCOMUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {

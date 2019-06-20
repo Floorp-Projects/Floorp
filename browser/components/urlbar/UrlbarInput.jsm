@@ -500,6 +500,13 @@ class UrlbarInput {
     if (!url) {
       throw new Error(`Invalid url for result ${JSON.stringify(result)}`);
     }
+
+    if (!this.isPrivate && !result.heuristic) {
+      // This should not interrupt the load anyway.
+      UrlbarUtils.addToInputHistory(url, this._lastSearchString)
+                 .catch(Cu.reportError);
+    }
+
     this._loadURL(url, where, openParams, {
       source: result.source,
       type: result.type,
