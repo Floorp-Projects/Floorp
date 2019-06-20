@@ -1,0 +1,104 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "EGLUtils.h"
+
+#include "GLContextEGL.h"
+#include "GLLibraryEGL.h"
+
+namespace mozilla {
+namespace gl {
+
+bool DoesEGLContextSupportSharingWithEGLImage(GLContext* gl) {
+  const auto& gle = GLContextEGL::Cast(gl);
+  const auto& egl = gle->mEgl;
+
+  return egl->HasKHRImageBase() && egl->HasKHRImageTexture2D() &&
+         gl->IsExtensionSupported(GLContext::OES_EGL_image);
+}
+
+EGLImage CreateEGLImage(GLContext* gl, GLuint tex) {
+  MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl));
+
+  const auto& gle = GLContextEGL::Cast(gl);
+  const auto& egl = gle->mEgl;
+  EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
+  EGLImage image =
+      egl->fCreateImage(egl->Display(), gle->mContext, LOCAL_EGL_GL_TEXTURE_2D,
+                        clientBuffer, nullptr);
+  return image;
+}
+
+////////////////////////////////////////////////////////////////////////
+// EGLImageWrapper
+
+/*static*/
+EGLImageWrapper* EGLImageWrapper::Create(GLContext* gl, GLuint tex) {
+  MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl));
+
+  const auto& gle = GLContextEGL::Cast(gl);
+  const auto& egl = gle->mEgl;
+  const auto& display = egl->Display();
+  EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
+  EGLImage image = egl->fCreateImage(
+      display, gle->mContext, LOCAL_EGL_GL_TEXTURE_2D, clientBuffer, nullptr);
+  if (!image) {
+#ifdef DEBUG
+    printf_stderr("Could not create EGL images: ERROR (0x%04x)\n",
+                  egl->fGetError());
+#endif
+    return nullptr;
+  }
+
+  return new EGLImageWrapper(egl, display, image);
+}
+
+EGLImageWrapper::EGLImageWrapper(GLLibraryEGL* library, EGLDisplay display,
+                                 EGLImage image)
+    : mLibrary(library), mDisplay(display), mImage(image), mSync(0) {
+  MOZ_ASSERT(mImage);
+}
+
+EGLImageWrapper::~EGLImageWrapper() {
+  mLibrary->fDestroyImage(mDisplay, mImage);
+}
+
+bool EGLImageWrapper::FenceSync(GLContext* gl) {
+  MOZ_ASSERT(!mSync);
+
+  if (mLibrary->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync)) {
+    mSync = mLibrary->fCreateSync(mDisplay, LOCAL_EGL_SYNC_FENCE, nullptr);
+    // We need to flush to make sure the sync object enters the command stream;
+    // we can't use EGL_SYNC_FLUSH_COMMANDS_BIT at wait time, because the wait
+    // happens on a different thread/context.
+    gl->fFlush();
+  }
+
+  if (!mSync) {
+    // we failed to create one, so just do a finish
+    gl->fFinish();
+  }
+
+  return true;
+}
+
+bool EGLImageWrapper::ClientWaitSync() {
+  if (!mSync) {
+    // if we have no sync object, then we did a Finish() earlier
+    return true;
+  }
+
+  // wait at most 1 second; this should really be never/rarely hit
+  const uint64_t ns_per_ms = 1000 * 1000;
+  EGLTime timeout = 1000 * ns_per_ms;
+
+  EGLint result = mLibrary->fClientWaitSync(mDisplay, mSync, 0, timeout);
+  mLibrary->fDestroySync(mDisplay, mSync);
+  mSync = nullptr;
+
+  return result == LOCAL_EGL_CONDITION_SATISFIED;
+}
+
+}  // namespace gl
+}  // namespace mozilla
