@@ -153,13 +153,14 @@ public class GeckoApplication extends Application
             return;
         }
 
-        // Restarting, so let Restarter kill us.
+        // Actually restarting the Processs / Application.
         final Context context = GeckoAppShell.getApplicationContext();
-        final Intent intent = new Intent();
-        intent.setClass(context, Restarter.class)
-              .putExtra("pid", Process.myPid())
-              .putExtra(Intent.EXTRA_INTENT, restartIntent);
-        context.startService(intent);
+        final Intent intent = new Intent()
+                .setClassName(context, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS)
+                .putExtra("didRestart", true)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        context.startActivity(intent);
+        Process.killProcess(Process.myPid());
     }
 
     /**
