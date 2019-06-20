@@ -51,6 +51,7 @@ class Core(private val context: Context) {
 
         val runtimeSettings = builder
             .crashHandler(CrashHandlerService::class.java)
+            .useContentProcessHint(true)
             .build()
 
         if (!Settings.getInstance(context).shouldUseAutoSize) {
