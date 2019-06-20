@@ -15,6 +15,7 @@
 
 #include "frontend/BytecodeOffset.h"  // BytecodeOffset
 #include "frontend/EmitterScope.h"    // EmitterScope
+#include "frontend/NameOpEmitter.h"   // NameOpEmitter
 #include "frontend/TDZCheckCache.h"   // TDZCheckCache
 #include "js/RootingAPI.h"            // JS::Handle, JS::Rooted
 #include "vm/BytecodeUtil.h"          // JSOp
@@ -501,6 +502,23 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //
 //     ce.emitEnd(ClassEmitter::Kind::Expression);
 //
+//   `class X extends Y { field0 = expr0; ... }`
+//     ClassEmitter ce(this);
+//     ce.emitScope(scopeBindings);
+//     emit(Y);
+//     ce.emitDerivedClass(atom_of_X, nullptr, false);
+//
+//     ce.prepareForFieldInitializers(fields.length());
+//     for (auto field : fields) {
+//       emit(field.expr_method());
+//       ce.emitStoreFieldInitializer();
+//     }
+//     ce.emitFieldInitializersEnd();
+//
+//     emit(function_for_constructor);
+//     ce.emitInitConstructor(/* needsHomeObject = */ false);
+//     ce.emitEnd(ClassEmitter::Kind::Expression);
+//
 //   `m() {}` in class
 //     // after emitInitConstructor/emitInitDefaultConstructor
 //     ce.prepareForPropValue(Some(offset_of_m));
@@ -628,6 +646,21 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   //                                     |
   //     +-------------------------------+
   //     |
+  //     | prepareForFieldInitializers  +-------------------+
+  //     +----------------------------->| FieldInitializers |-+
+  //     |                              +-------------------+ |
+  //     |                                                    |
+  //     |  +-------------------------------------------------+
+  //     |  |
+  //     |  | (expr emitStoreFieldInitializer)*
+  //     |  |
+  //     |  |
+  //     |  | emitFieldInitializersEnd  +----------------------+
+  //     |  +-------------------------->| FieldInitializersEnd |-+
+  //     |                              +----------------------+ |
+  //     |                                                       |
+  //     |<------------------------------------------------------+
+  //     |
   //     |
   //     |   emitInitConstructor           +-----------------+
   //     +-+--------------------------->+->| InitConstructor |-+
@@ -653,15 +686,25 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
     // After calling emitInitConstructor or emitInitDefaultConstructor.
     InitConstructor,
 
+    // After calling prepareForFieldInitializers
+    // and 0 or more calls to emitFieldInitializersEnd.
+    FieldInitializers,
+
+    // After calling emitFieldInitializersEnd.
+    FieldInitializersEnd,
+
     // After calling emitEnd.
     End,
   };
   ClassState classState_ = ClassState::Start;
+  size_t numFields_ = 0;
 #endif
 
   JS::Rooted<JSAtom*> name_;
   JS::Rooted<JSAtom*> nameForAnonymousClass_;
   bool hasNameOnStack_ = false;
+  mozilla::Maybe<NameOpEmitter> initializersAssignment_;
+  size_t fieldIndex_ = 0;
 
  public:
   explicit ClassEmitter(BytecodeEmitter* bce);
@@ -697,6 +740,10 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   MOZ_MUST_USE bool emitInitDefaultConstructor(
       const mozilla::Maybe<uint32_t>& classStart,
       const mozilla::Maybe<uint32_t>& classEnd);
+
+  MOZ_MUST_USE bool prepareForFieldInitializers(size_t numFields);
+  MOZ_MUST_USE bool emitStoreFieldInitializer();
+  MOZ_MUST_USE bool emitFieldInitializersEnd();
 
   MOZ_MUST_USE bool emitEnd(Kind kind);
 
