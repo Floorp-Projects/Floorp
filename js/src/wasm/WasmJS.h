@@ -20,6 +20,7 @@
 #define wasm_js_h
 
 #include "gc/Policy.h"
+#include "gc/ZoneAllocator.h"
 #include "vm/NativeObject.h"
 #include "wasm/WasmTypes.h"
 
@@ -225,7 +226,7 @@ class WasmInstanceObject : public NativeObject {
   // objects on demand (instead up-front for all table elements) while
   // correctly preserving observable function object identity.
   using ExportMap = GCHashMap<uint32_t, HeapPtr<JSFunction*>,
-                              DefaultHasher<uint32_t>, SystemAllocPolicy>;
+                              DefaultHasher<uint32_t>, ZoneAllocPolicy>;
   ExportMap& exports() const;
 
   // WeakScopeMap maps from function index to js::Scope. This maps is weak
@@ -233,7 +234,7 @@ class WasmInstanceObject : public NativeObject {
   // during debugging.
   using ScopeMap =
       JS::WeakCache<GCHashMap<uint32_t, WeakHeapPtr<WasmFunctionScope*>,
-                              DefaultHasher<uint32_t>, SystemAllocPolicy>>;
+                              DefaultHasher<uint32_t>, ZoneAllocPolicy>>;
   ScopeMap& scopes() const;
 
  public:
@@ -275,7 +276,8 @@ class WasmInstanceObject : public NativeObject {
   static WasmFunctionScope* getFunctionScope(
       JSContext* cx, HandleWasmInstanceObject instanceObj, uint32_t funcIndex);
 
-  WasmGlobalObjectVector& indirectGlobals() const;
+  using GlobalObjectVector = GCVector<WasmGlobalObject*, 0, ZoneAllocPolicy>;
+  GlobalObjectVector& indirectGlobals() const;
 };
 
 // The class of WebAssembly.Memory. A WasmMemoryObject references an ArrayBuffer
@@ -295,7 +297,7 @@ class WasmMemoryObject : public NativeObject {
   using InstanceSet =
       JS::WeakCache<GCHashSet<WeakHeapPtrWasmInstanceObject,
                               MovableCellHasher<WeakHeapPtrWasmInstanceObject>,
-                              SystemAllocPolicy>>;
+                              ZoneAllocPolicy>>;
   bool hasObservers() const;
   InstanceSet& observers() const;
   InstanceSet* getOrCreateObservers(JSContext* cx);

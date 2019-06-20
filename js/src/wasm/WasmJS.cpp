@@ -1223,11 +1223,12 @@ bool WasmInstanceObject::isNewborn() const {
 
 /* static */
 void WasmInstanceObject::finalize(FreeOp* fop, JSObject* obj) {
-  fop->delete_(&obj->as<WasmInstanceObject>().exports());
-  fop->delete_(&obj->as<WasmInstanceObject>().scopes());
-  fop->delete_(&obj->as<WasmInstanceObject>().indirectGlobals());
-  if (!obj->as<WasmInstanceObject>().isNewborn()) {
-    fop->delete_(&obj->as<WasmInstanceObject>().instance());
+  WasmInstanceObject& instance = obj->as<WasmInstanceObject>();
+  fop->delete_(obj, &instance.exports(), MemoryUse::WasmInstanceExports);
+  fop->delete_(obj, &instance.scopes(), MemoryUse::WasmInstanceScopes);
+  fop->delete_(obj, &instance.indirectGlobals(), MemoryUse::WasmInstanceGlobals);
+  if (!instance.isNewborn()) {
+    fop->delete_(obj, &instance.instance(), MemoryUse::WasmInstanceInstance);
   }
 }
 
@@ -1251,13 +1252,13 @@ WasmInstanceObject* WasmInstanceObject::create(
     const ValVector& globalImportValues,
     const WasmGlobalObjectVector& globalObjs, HandleObject proto,
     UniqueDebugState maybeDebug) {
-  UniquePtr<ExportMap> exports = js::MakeUnique<ExportMap>();
+  UniquePtr<ExportMap> exports = js::MakeUnique<ExportMap>(cx->zone());
   if (!exports) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  UniquePtr<ScopeMap> scopes = js::MakeUnique<ScopeMap>(cx->zone());
+  UniquePtr<ScopeMap> scopes = js::MakeUnique<ScopeMap>(cx->zone(), cx->zone());
   if (!scopes) {
     ReportOutOfMemory(cx);
     return nullptr;
@@ -1271,8 +1272,8 @@ WasmInstanceObject* WasmInstanceObject::create(
     }
   }
 
-  Rooted<UniquePtr<WasmGlobalObjectVector>> indirectGlobalObjs(
-      cx, js::MakeUnique<WasmGlobalObjectVector>());
+  Rooted<UniquePtr<GlobalObjectVector>> indirectGlobalObjs(
+      cx, js::MakeUnique<GlobalObjectVector>(cx->zone()));
   if (!indirectGlobalObjs || !indirectGlobalObjs->resize(indirectGlobals)) {
     ReportOutOfMemory(cx);
     return nullptr;
@@ -1297,10 +1298,15 @@ WasmInstanceObject* WasmInstanceObject::create(
   MOZ_ASSERT(obj->isTenured(), "assumed by WasmTableObject write barriers");
 
   // Finalization assumes these slots are always initialized:
-  obj->initReservedSlot(EXPORTS_SLOT, PrivateValue(exports.release()));
-  obj->initReservedSlot(SCOPES_SLOT, PrivateValue(scopes.release()));
-  obj->initReservedSlot(GLOBALS_SLOT,
-                        PrivateValue(indirectGlobalObjs.release()));
+  InitReservedSlot(obj, EXPORTS_SLOT, exports.release(),
+                   MemoryUse::WasmInstanceExports);
+
+  InitReservedSlot(obj, SCOPES_SLOT, scopes.release(),
+                   MemoryUse::WasmInstanceScopes);
+
+  InitReservedSlot(obj, GLOBALS_SLOT, indirectGlobalObjs.release(),
+                   MemoryUse::WasmInstanceGlobals);
+
   obj->initReservedSlot(INSTANCE_SCOPE_SLOT, UndefinedValue());
 
   // The INSTANCE_SLOT may not be initialized if Instance allocation fails,
@@ -1316,7 +1322,8 @@ WasmInstanceObject* WasmInstanceObject::create(
     return nullptr;
   }
 
-  obj->initReservedSlot(INSTANCE_SLOT, PrivateValue(instance));
+  InitReservedSlot(obj, INSTANCE_SLOT, instance,
+                   MemoryUse::WasmInstanceInstance);
   MOZ_ASSERT(!obj->isNewborn());
 
   if (!instance->init(cx, dataSegments, elemSegments)) {
@@ -1404,8 +1411,9 @@ WasmInstanceObject::ScopeMap& WasmInstanceObject::scopes() const {
   return *(ScopeMap*)getReservedSlot(SCOPES_SLOT).toPrivate();
 }
 
-WasmGlobalObjectVector& WasmInstanceObject::indirectGlobals() const {
-  return *(WasmGlobalObjectVector*)getReservedSlot(GLOBALS_SLOT).toPrivate();
+WasmInstanceObject::GlobalObjectVector& WasmInstanceObject::indirectGlobals()
+    const {
+  return *(GlobalObjectVector*)getReservedSlot(GLOBALS_SLOT).toPrivate();
 }
 
 static bool WasmCall(JSContext* cx, unsigned argc, Value* vp) {
@@ -1606,7 +1614,7 @@ const Class WasmMemoryObject::class_ = {
 void WasmMemoryObject::finalize(FreeOp* fop, JSObject* obj) {
   WasmMemoryObject& memory = obj->as<WasmMemoryObject>();
   if (memory.hasObservers()) {
-    fop->delete_(&memory.observers());
+    fop->delete_(obj, &memory.observers(), MemoryUse::WasmMemoryObservers);
   }
 }
 
@@ -1789,13 +1797,14 @@ WasmMemoryObject::InstanceSet& WasmMemoryObject::observers() const {
 WasmMemoryObject::InstanceSet* WasmMemoryObject::getOrCreateObservers(
     JSContext* cx) {
   if (!hasObservers()) {
-    auto observers = MakeUnique<InstanceSet>(cx->zone());
+    auto observers = MakeUnique<InstanceSet>(cx->zone(), cx->zone());
     if (!observers) {
       ReportOutOfMemory(cx);
       return nullptr;
     }
 
-    setReservedSlot(OBSERVERS_SLOT, PrivateValue(observers.release()));
+    InitReservedSlot(this, OBSERVERS_SLOT, observers.release(),
+                     MemoryUse::WasmMemoryObservers);
   }
 
   return &observers();
@@ -2352,7 +2361,7 @@ void WasmGlobalObject::trace(JSTracer* trc, JSObject* obj) {
 void WasmGlobalObject::finalize(FreeOp* fop, JSObject* obj) {
   WasmGlobalObject* global = reinterpret_cast<WasmGlobalObject*>(obj);
   if (!global->isNewborn()) {
-    fop->delete_(global->cell());
+    fop->delete_(obj, global->cell(), MemoryUse::WasmGlobalCell);
   }
 }
 
@@ -2416,7 +2425,7 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
   obj->initReservedSlot(TYPE_SLOT,
                         Int32Value(int32_t(val.type().bitsUnsafe())));
   obj->initReservedSlot(MUTABLE_SLOT, JS::BooleanValue(isMutable));
-  obj->initReservedSlot(CELL_SLOT, PrivateValue(cell));
+  InitReservedSlot(obj, CELL_SLOT, cell, MemoryUse::WasmGlobalCell);
 
   MOZ_ASSERT(!obj->isNewborn());
 
@@ -3405,7 +3414,9 @@ class ResolveResponseClosure : public NativeObject {
   static const ClassOps classOps_;
 
   static void finalize(FreeOp* fop, JSObject* obj) {
-    obj->as<ResolveResponseClosure>().compileArgs().Release();
+    auto& closure = obj->as<ResolveResponseClosure>();
+    fop->release(obj, &closure.compileArgs(),
+                 MemoryUse::WasmResolveResponseClosure);
   }
 
  public:
@@ -3424,7 +3435,8 @@ class ResolveResponseClosure : public NativeObject {
     }
 
     args.AddRef();
-    obj->setReservedSlot(COMPILE_ARGS_SLOT, PrivateValue((void*)&args));
+    InitReservedSlot(obj, COMPILE_ARGS_SLOT, const_cast<CompileArgs*>(&args),
+                     MemoryUse::WasmResolveResponseClosure);
     obj->setReservedSlot(PROMISE_OBJ_SLOT, ObjectValue(*promise));
     obj->setReservedSlot(INSTANTIATE_SLOT, BooleanValue(instantiate));
     obj->setReservedSlot(IMPORT_OBJ_SLOT, ObjectOrNullValue(importObj));
