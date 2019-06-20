@@ -16,6 +16,8 @@ add_task(async function() {
 
   const {threadClient, tab, toolbox, target} = dbg;
 
+  await threadClient.interrupt();
+
   // Rewind to the beginning of the recording.
   await rewindToLine(threadClient, undefined);
 

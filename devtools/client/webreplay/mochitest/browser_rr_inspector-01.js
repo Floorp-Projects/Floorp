@@ -23,6 +23,8 @@ add_task(async function() {
     { waitForRecording: true }
   );
   const {threadClient, tab, toolbox} = dbg;
+
+  await threadClient.interrupt();
   await threadClient.resume();
 
   const {inspector} = await openInspector();
