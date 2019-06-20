@@ -905,16 +905,6 @@ notification[value="translation"] {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
-/**
- * This next rule is a hack to disable subpixel anti-aliasing on all
- * labels during the customize mode transition. Subpixel anti-aliasing
- * on Windows with Direct2D layers acceleration is particularly slow to
- * paint, so this hack is how we sidestep that performance bottleneck.
- */
-#main-window:-moz-any([customize-entering],[customize-exiting]) label {
-  transform: perspective(0.01px);
-}
-
 /* End customization mode */
 
 /* Prevent window controls from overlapping the nav bar's shadow on the tab
