@@ -8093,6 +8093,13 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
           //          [stack] HOMEOBJ HERITAGE? ARRAY LAMBDA
           return false;
         }
+        if (initializer->funbox()->needsHomeObject()) {
+          MOZ_ASSERT(initializer->funbox()->function()->allowSuperProperty());
+          if (!ce.emitFieldInitializerHomeObject()) {
+            //          [stack] CTOR OBJ ARRAY LAMBDA
+            return false;
+          }
+        }
         if (!ce.emitStoreFieldInitializer()) {
           //          [stack] HOMEOBJ HERITAGE? ARRAY
           return false;
