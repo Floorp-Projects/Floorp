@@ -74,6 +74,8 @@ struct AutoResolving;
 
 struct HelperThread;
 
+struct ParseTask;
+
 class InternalJobQueue : public JS::JobQueue {
  public:
   explicit InternalJobQueue(JSContext* cx)
@@ -176,6 +178,8 @@ struct JSContext : public JS::RootingContext,
   js::ThreadData<js::gc::FreeLists*> atomsZoneFreeLists_;
 
   js::ThreadData<js::FreeOp> defaultFreeOp_;
+
+  js::ParseTask* parseTask_;
 
  public:
   // This is used by helper threads to change the runtime their context is
@@ -331,6 +335,9 @@ struct JSContext : public JS::RootingContext,
 
   void setHelperThread(js::HelperThread* helperThread);
   js::HelperThread* helperThread() const { return helperThread_; }
+
+  void setParseTask(js::ParseTask* parseTask) { parseTask_ = parseTask; }
+  js::ParseTask* parseTask() const { return parseTask_; }
 
   bool isNurseryAllocSuppressed() const { return nurserySuppressions_; }
 
