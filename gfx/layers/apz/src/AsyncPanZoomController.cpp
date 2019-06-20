@@ -3916,6 +3916,14 @@ void AsyncPanZoomController::RequestContentRepaint(
   controller->RequestContentRepaint(request);
   mExpectedGeckoMetrics = aFrameMetrics;
   mLastPaintRequestMetrics = request;
+
+  // We're holding the APZC lock here, so redispatch this so we can get
+  // the tree lock without the APZC lock.
+  controller->DispatchToRepaintThread(
+      NewRunnableMethod(
+          "layers::APZCTreeManager::CollectTransformsForChromeMainThread",
+          GetApzcTreeManager(),
+          &APZCTreeManager::CollectTransformsForChromeMainThread));
 }
 
 bool AsyncPanZoomController::UpdateAnimation(
