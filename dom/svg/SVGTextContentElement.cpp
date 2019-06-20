@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGTextContentElementBinding.h"
-#include "mozilla/dom/SVGIRect.h"
+#include "mozilla/dom/SVGRect.h"
 #include "nsBidiUtils.h"
 #include "nsISVGPoint.h"
 #include "nsTextFragment.h"
@@ -163,7 +163,7 @@ already_AddRefed<nsISVGPoint> SVGTextContentElement::GetEndPositionOfChar(
   return point.forget();
 }
 
-already_AddRefed<SVGIRect> SVGTextContentElement::GetExtentOfChar(
+already_AddRefed<SVGRect> SVGTextContentElement::GetExtentOfChar(
     uint32_t charnum, ErrorResult& rv) {
   SVGTextFrame* textFrame = GetSVGTextFrame();
 
@@ -172,7 +172,7 @@ already_AddRefed<SVGIRect> SVGTextContentElement::GetExtentOfChar(
     return nullptr;
   }
 
-  RefPtr<SVGIRect> rect;
+  RefPtr<SVGRect> rect;
   rv = textFrame->GetExtentOfChar(this, charnum, getter_AddRefs(rect));
   return rect.forget();
 }

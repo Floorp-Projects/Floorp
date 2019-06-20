@@ -121,15 +121,21 @@ TestPassed = [
     {'regex': re.compile('''(TEST-INFO|TEST-KNOWN-FAIL|TEST-PASS|INFO \| )'''), 'level': INFO},
 ]
 
-HarnessErrorList = [
+BaseHarnessErrorList = [
     {'substr': 'TEST-UNEXPECTED', 'level': ERROR, },
     {'substr': 'PROCESS-CRASH', 'level': ERROR, },
-    {'substr': 'A content process crashed', 'level': ERROR, },
     {'regex': re.compile('''ERROR: (Address|Leak)Sanitizer'''), 'level': ERROR, },
     {'regex': re.compile('''thread '([^']+)' panicked'''), 'level': ERROR, },
     {'substr': 'pure virtual method called', 'level': ERROR, },
     {'substr': 'Pure virtual function called!', 'level': ERROR, },
 ]
+
+HarnessErrorList = BaseHarnessErrorList + [
+    {'substr': 'A content process crashed', 'level': ERROR, },
+]
+
+# wpt can have expected crashes so we can't always turn treeherder orange in those cases
+WptHarnessErrorList = BaseHarnessErrorList
 
 LogcatErrorList = [
     {'substr': 'Fatal signal 11 (SIGSEGV)', 'level': ERROR,
