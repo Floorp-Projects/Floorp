@@ -589,7 +589,7 @@
 
     <!-- Sample text for accessiblity font size -->
     <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. 
-中文字型測試：像東電子馬到舉聽如成，「到輕們化、灣歷不北我汽」第止同；可筆帶形進世城去同就止？少技來的保，術熱主話角源一念經歡行假展傳、對斷者說觀那業化活大唱的。</string>
+中文字型測試：「永東國酬，愛鬱。靈鷹袋！」</string>
     <!-- Summary for Accessiblity Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">放大或縮小網站上的文字</string>
     <!-- Title for Accessiblity Text Size Scaling Preference -->
@@ -665,7 +665,7 @@
     <string name="onboarding_private_browsing_header">上網變得私密</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">當您看到 %s 的圖示時，只要一點即可進入隱私瀏覽模式。</string>
+    <string name="onboarding_private_browsing_description">看到 %s 圖示時，只要一點即可進入隱私瀏覽模式。</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">您的隱私權</string>
     <!-- text for the privacy notice onboarding card description

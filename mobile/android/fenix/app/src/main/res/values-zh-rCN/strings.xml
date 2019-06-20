@@ -7,7 +7,7 @@
     <string name="content_description_menu">更多选项</string>
 
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_private_browsing_button">启用隐私浏览模式</string>
+    <string name="content_description_private_browsing_button">启动隐私浏览模式</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">禁用隐私浏览模式</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -20,12 +20,12 @@
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">您已进入隐私浏览状态</string>
+    <string name="private_browsing_title">您已进入隐私浏览模式</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s 在您关闭所有隐私浏览状态时，将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站或电信运营商匿名，但还是可以更简单地让使用此设备的人无法得知您在网上的活动。\n\n隐私浏览功能的常见误解</string>
+    <string name="private_browsing_explanation">%1$s 在您关闭所有隐私浏览会话后，将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站或电信运营商匿名，但还是可以更简单地让使用此设备的人无法得知您在网上的活动。\n\n隐私浏览功能的常见误解</string>
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">删除浏览状态</string>
+    <string name="private_browsing_delete_session">删除浏览会话</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -111,7 +111,7 @@
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">密码</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">信用卡和地址</string>
+    <string name="preferences_credit_cards_addresses">信用卡和邮政地址</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">设为默认浏览器</string>
     <!-- Preference category for advanced settings -->
@@ -127,7 +127,7 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">主题</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">使用您的 Firefox 账户同步书签、历史记录及更多</string>
+    <string name="preferences_sign_in_description">使用您的 Firefox 账户同步书签、历史记录等数据</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox 账户</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -161,13 +161,13 @@
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">正在同步…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
-    <string name="sync_failed_summary">同步失败。最后同步：%s</string>
+    <string name="sync_failed_summary">同步失败。上次成功：％s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_failed_never_synced_summary">同步失败。最后同步：从未</string>
+    <string name="sync_failed_never_synced_summary">同步失败。上次同步：从未</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
-    <string name="sync_last_synced_summary">最后同步：%s</string>
+    <string name="sync_last_synced_summary">上次同步: %s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_never_synced_summary">最后同步：从未</string>
+    <string name="sync_never_synced_summary">上次同步: 从未</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -513,7 +513,7 @@
     <string name="create_collection_select_all">全选</string>
 
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
-    <string name="create_collection_deselect_all">取消全选</string>
+    <string name="create_collection_deselect_all">全不选</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">选取要保存的标签页</string>
 
@@ -667,7 +667,7 @@
     <string name="onboarding_tracking_protection_header">保护自己</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s 可拦截在网络世界中尾随您的跟踪器。</string>
+    <string name="onboarding_tracking_protection_description">%s 可拦截在在网络上跟踪您的广告追踪器。</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">私密浏览</string>
     <!-- text for the private browsing onboarding card description
@@ -677,12 +677,12 @@
     <string name="onboarding_privacy_notice_header">您的隐私权</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">我们将 %s 设计成让您可以控制要在网络上分享哪些内容、以及与我们分享哪些内容。</string>
+    <string name="onboarding_privacy_notice_description">我们设计 %s 的重要目标是让您可以控制要在网上晒出哪些内容、告诉我们哪些信息。</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">阅读我们的隐私声明</string>
 
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">开始浏览</string>
+    <string name="onboarding_finish">开始上网</string>
 
     <!-- Onboarding theme -->
     <!-- Automatic theme setting (will follow device setting) -->

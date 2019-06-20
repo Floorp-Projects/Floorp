@@ -174,7 +174,7 @@
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Вкладки с других устройств</string>
     <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="fxa_received_tab_channel_description">Уведомления во вкладках, полученных с других устройств Firefox.</string>
+    <string name="fxa_received_tab_channel_description">Уведомления о вкладках, полученных с других устройств Firefox.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Полученная вкладка</string>
     <!-- When multiple tabs have been received -->
