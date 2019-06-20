@@ -14,14 +14,26 @@ add_task(async function() {
 
   info("Setup Target domain");
   const { Target } = client;
-  const targetCreated = Target.targetCreated();
+
+  // Wait for all Target.targetCreated event. One for each tab, plus the one
+  // for the main process target.
+  const targetsCreated = new Promise(resolve => {
+    let targets = 0;
+    const unsubscribe = Target.targetCreated(event => {
+      if (++targets >= gBrowser.tabs.length + 1) {
+        unsubscribe();
+        resolve();
+      }
+    });
+  });
   Target.setDiscoverTargets({ discover: true });
-  await targetCreated;
+  await targetsCreated;
 
   info("Create a new tab and wait for the target to be created");
   const otherTargetCreated = Target.targetCreated();
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
   const {targetInfo} = await otherTargetCreated;
+  is(targetInfo.type, "page");
 
   const onTabClose = BrowserTestUtils.waitForEvent(tab, "TabClose");
   const targetDestroyed = Target.targetDestroyed();
