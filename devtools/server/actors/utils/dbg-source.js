@@ -60,8 +60,8 @@ function getSourceLineOffsets(source) {
 
     // Calculate the end codepoint offset.
     let end = offset;
+    // eslint-disable-next-line no-unused-vars
     for (const c of line) {
-      // eslint-disable-line no-unused-vars
       end++;
     }
     const textEnd = end;
