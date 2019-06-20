@@ -30,18 +30,14 @@ class BrowserAction extends EventEmitter {
 
     this.tabManager = extension.tabManager;
 
-    this.tabContext.on(
-      "tab-selected", // eslint-disable-line mozilla/balanced-listeners
-      (evt, tabId) => {
-        this.onTabSelected(tabId);
-      }
-    );
-    this.tabContext.on(
-      "tab-closed", // eslint-disable-line mozilla/balanced-listeners
-      (evt, tabId) => {
-        this.onTabClosed(tabId);
-      }
-    );
+    // eslint-disable-next-line mozilla/balanced-listeners
+    this.tabContext.on("tab-selected", (evt, tabId) => {
+      this.onTabSelected(tabId);
+    });
+    // eslint-disable-next-line mozilla/balanced-listeners
+    this.tabContext.on("tab-closed", (evt, tabId) => {
+      this.onTabClosed(tabId);
+    });
 
     BrowserActions.register(this);
   }
