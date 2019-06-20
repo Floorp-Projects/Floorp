@@ -1355,7 +1355,7 @@ void DataChannelConnection::HandleOpenRequestMessage(
   bool ordered = !(req->channel_type & 0x80);
 
   if ((channel = FindChannelByStream(stream))) {
-    if (!(channel->mFlags & DATA_CHANNEL_FLAGS_EXTERNAL_NEGOTIATED)) {
+    if (!channel->mNegotiated) {
       LOG(
           ("ERROR: HandleOpenRequestMessage: channel for pre-existing stream "
            "%u that was not externally negotiated. JS is lying to us, or "
@@ -1562,8 +1562,7 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
          "closing",
          data_length));
     // Only unblock if unordered
-    if ((channel->mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED) &&
-        (flags & MSG_EOR)) {
+    if (!channel->mOrdered && (flags & MSG_EOR)) {
       channel->mFlags &= ~DATA_CHANNEL_FLAGS_CLOSING_TOO_LARGE;
     }
   }
@@ -2398,21 +2397,19 @@ already_AddRefed<DataChannel> DataChannelConnection::OpenFinish(
 #ifdef TEST_QUEUED_DATA
   // It's painful to write a test for this...
   channel->AnnounceOpen();
-  channel->mFlags |= DATA_CHANNEL_FLAGS_READY;
   SendDataMsgInternalOrBuffer(channel, "Help me!", 8,
                               DATA_CHANNEL_PPID_DOMSTRING);
 #endif
 
-  if (channel->mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED) {
+  if (!channel->mOrdered) {
     // Don't send unordered until this gets cleared
     channel->mFlags |= DATA_CHANNEL_FLAGS_WAITING_ACK;
   }
 
-  if (!(channel->mFlags & DATA_CHANNEL_FLAGS_EXTERNAL_NEGOTIATED)) {
-    int error = SendOpenRequestMessage(
-        channel->mLabel, channel->mProtocol, stream,
-        !!(channel->mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED),
-        channel->mPrPolicy, channel->mPrValue);
+  if (!channel->mNegotiated) {
+    int error = SendOpenRequestMessage(channel->mLabel, channel->mProtocol,
+                                       stream, !channel->mOrdered,
+                                       channel->mPrPolicy, channel->mPrValue);
     if (error) {
       LOG(("SendOpenRequest failed, error = %d", error));
       if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
@@ -2430,7 +2427,6 @@ already_AddRefed<DataChannel> DataChannelConnection::OpenFinish(
   }
 
   // Either externally negotiated or we sent Open
-  channel->mFlags |= DATA_CHANNEL_FLAGS_READY;
   // FIX?  Move into DOMDataChannel?  I don't think we can send it yet here
   channel->AnnounceOpen();
 
@@ -2614,12 +2610,12 @@ int DataChannelConnection::SendDataMsgInternalOrBuffer(DataChannel& channel,
   info.sendv_sndinfo.snd_flags = SCTP_EOR;
   info.sendv_sndinfo.snd_ppid = htonl(ppid);
 
+  MutexAutoLock lock(mLock);  // Need to protect mFlags... :(
   // Unordered?
   // To avoid problems where an in-order OPEN is lost and an
   // out-of-order data message "beats" it, require data to be in-order
   // until we get an ACK.
-  if ((channel.mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED) &&
-      !(channel.mFlags & DATA_CHANNEL_FLAGS_WAITING_ACK)) {
+  if (!channel.mOrdered && !(channel.mFlags & DATA_CHANNEL_FLAGS_WAITING_ACK)) {
     info.sendv_sndinfo.snd_flags |= SCTP_UNORDERED;
   }
 
@@ -2632,7 +2628,6 @@ int DataChannelConnection::SendDataMsgInternalOrBuffer(DataChannel& channel,
 
   // Create message instance and send
   OutgoingMsg msg(info, data, len);
-  MutexAutoLock lock(mLock);
   bool buffered;
   size_t written = 0;
   mDeferSend = true;
