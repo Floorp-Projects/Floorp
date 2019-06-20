@@ -73,6 +73,7 @@ static const char kMappedFileUnsafePrefix[] = "/dev/";
 static const char kDeletedSuffix[] = " (deleted)";
 static const char kReservedFlags[] = " ---p";
 static const char kMozillaIpcPrefix[] = "org.mozilla.ipc.";
+static const char kChromiumPrefix[] = "org.chromium.";
 
 inline static bool IsMappedFileOpenUnsafe(
     const google_breakpad::MappingInfo& mapping) {
@@ -574,7 +575,8 @@ bool LinuxDumper::ReadAuxv() {
 }
 
 bool LinuxDumper::IsIPCSharedMemorySegment(const char* name) {
-  if (my_strstr(name, kMozillaIpcPrefix) &&
+  if ((my_strstr(name, kMozillaIpcPrefix) ||
+       my_strstr(name, kChromiumPrefix)) &&
       my_strstr(name, kDeletedSuffix)) {
     return true;
   }
