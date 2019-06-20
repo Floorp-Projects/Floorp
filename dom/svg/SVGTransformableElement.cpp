@@ -156,7 +156,7 @@ SVGElement* SVGTransformableElement::GetFarthestViewportElement() {
   return SVGContentUtils::GetOuterSVGElement(this);
 }
 
-already_AddRefed<SVGIRect> SVGTransformableElement::GetBBox(
+already_AddRefed<SVGRect> SVGTransformableElement::GetBBox(
     const SVGBoundingBoxOptions& aOptions, ErrorResult& rv) {
   nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);
 
@@ -199,14 +199,14 @@ already_AddRefed<SVGIRect> SVGTransformableElement::GetBBox(
     rec.x += float(text->GetPosition().x) / AppUnitsPerCSSPixel();
     rec.y += float(text->GetPosition().y) / AppUnitsPerCSSPixel();
 
-    return NS_NewSVGRect(this, ToRect(rec));
+    return do_AddRef(new SVGRect(this, ToRect(rec)));
   }
 
   if (!NS_SVGNewGetBBoxEnabled()) {
-    return NS_NewSVGRect(
+    return do_AddRef(new SVGRect(
         this, ToRect(nsSVGUtils::GetBBox(
                   frame, nsSVGUtils::eBBoxIncludeFillGeometry |
-                             nsSVGUtils::eUseUserSpaceOfUseElement)));
+                             nsSVGUtils::eUseUserSpaceOfUseElement))));
   }
   uint32_t flags = 0;
   if (aOptions.mFill) {
@@ -222,14 +222,15 @@ already_AddRefed<SVGIRect> SVGTransformableElement::GetBBox(
     flags |= nsSVGUtils::eBBoxIncludeClipped;
   }
   if (flags == 0) {
-    return NS_NewSVGRect(this, 0, 0, 0, 0);
+    return do_AddRef(new SVGRect(this, gfx::Rect()));
   }
   if (flags == nsSVGUtils::eBBoxIncludeMarkers ||
       flags == nsSVGUtils::eBBoxIncludeClipped) {
     flags |= nsSVGUtils::eBBoxIncludeFill;
   }
   flags |= nsSVGUtils::eUseUserSpaceOfUseElement;
-  return NS_NewSVGRect(this, ToRect(nsSVGUtils::GetBBox(frame, flags)));
+  return do_AddRef(
+      new SVGRect(this, ToRect(nsSVGUtils::GetBBox(frame, flags))));
 }
 
 already_AddRefed<SVGMatrix> SVGTransformableElement::GetCTM() {

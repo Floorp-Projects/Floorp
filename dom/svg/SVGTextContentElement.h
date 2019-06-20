@@ -20,7 +20,7 @@ class nsISVGPoint;
 namespace dom {
 
 struct DOMPointInit;
-class SVGIRect;
+class SVGRect;
 
 typedef SVGGraphicsElement SVGTextContentElementBase;
 
@@ -46,7 +46,7 @@ class SVGTextContentElement : public SVGTextContentElementBase {
   already_AddRefed<nsISVGPoint> GetEndPositionOfChar(uint32_t charnum,
                                                      ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<SVGIRect> GetExtentOfChar(uint32_t charnum, ErrorResult& rv);
+  already_AddRefed<SVGRect> GetExtentOfChar(uint32_t charnum, ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT float GetRotationOfChar(uint32_t charnum, ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT int32_t GetCharNumAtPosition(const DOMPointInit& aPoint);
 

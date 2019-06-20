@@ -15,13 +15,13 @@
 #include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SVGAnimatedRect.h"
-#include "mozilla/dom/SVGIRect.h"
 
 namespace mozilla {
 
 class SMILValue;
 
 namespace dom {
+class SVGRect;
 class SVGAnimationElement;
 class SVGElement;
 }  // namespace dom
@@ -80,11 +80,9 @@ class SVGAnimatedViewBox {
   already_AddRefed<mozilla::dom::SVGAnimatedRect> ToSVGAnimatedRect(
       SVGElement* aSVGElement);
 
-  already_AddRefed<mozilla::dom::SVGIRect> ToDOMBaseVal(
-      SVGElement* aSVGElement);
+  already_AddRefed<dom::SVGRect> ToDOMBaseVal(SVGElement* aSVGElement);
 
-  already_AddRefed<mozilla::dom::SVGIRect> ToDOMAnimVal(
-      SVGElement* aSVGElement);
+  already_AddRefed<dom::SVGRect> ToDOMAnimVal(SVGElement* aSVGElement);
 
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
@@ -94,89 +92,6 @@ class SVGAnimatedViewBox {
   bool mHasBaseVal;
 
  public:
-  struct DOMBaseVal final : public mozilla::dom::SVGIRect {
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMBaseVal)
-
-    DOMBaseVal(SVGAnimatedViewBox* aVal, SVGElement* aSVGElement)
-        : mozilla::dom::SVGIRect(), mVal(aVal), mSVGElement(aSVGElement) {}
-
-    SVGAnimatedViewBox* mVal;  // kept alive because it belongs to content
-    RefPtr<SVGElement> mSVGElement;
-
-    float X() const final { return mVal->GetBaseValue().x; }
-
-    float Y() const final { return mVal->GetBaseValue().y; }
-
-    float Width() const final { return mVal->GetBaseValue().width; }
-
-    float Height() const final { return mVal->GetBaseValue().height; }
-
-    void SetX(float aX, mozilla::ErrorResult& aRv) final;
-    void SetY(float aY, mozilla::ErrorResult& aRv) final;
-    void SetWidth(float aWidth, mozilla::ErrorResult& aRv) final;
-    void SetHeight(float aHeight, mozilla::ErrorResult& aRv) final;
-
-    virtual nsIContent* GetParentObject() const override { return mSVGElement; }
-
-   private:
-    virtual ~DOMBaseVal();
-  };
-
-  struct DOMAnimVal final : public mozilla::dom::SVGIRect {
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimVal)
-
-    DOMAnimVal(SVGAnimatedViewBox* aVal, SVGElement* aSVGElement)
-        : mozilla::dom::SVGIRect(), mVal(aVal), mSVGElement(aSVGElement) {}
-
-    SVGAnimatedViewBox* mVal;  // kept alive because it belongs to content
-    RefPtr<SVGElement> mSVGElement;
-
-    // Script may have modified animation parameters or timeline -- DOM getters
-    // need to flush any resample requests to reflect these modifications.
-    float X() const final {
-      mSVGElement->FlushAnimations();
-      return mVal->GetAnimValue().x;
-    }
-
-    float Y() const final {
-      mSVGElement->FlushAnimations();
-      return mVal->GetAnimValue().y;
-    }
-
-    float Width() const final {
-      mSVGElement->FlushAnimations();
-      return mVal->GetAnimValue().width;
-    }
-
-    float Height() const final {
-      mSVGElement->FlushAnimations();
-      return mVal->GetAnimValue().height;
-    }
-
-    void SetX(float aX, mozilla::ErrorResult& aRv) final {
-      aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-    }
-
-    void SetY(float aY, mozilla::ErrorResult& aRv) final {
-      aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-    }
-
-    void SetWidth(float aWidth, mozilla::ErrorResult& aRv) final {
-      aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-    }
-
-    void SetHeight(float aHeight, mozilla::ErrorResult& aRv) final {
-      aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-    }
-
-    virtual nsIContent* GetParentObject() const override { return mSVGElement; }
-
-   private:
-    virtual ~DOMAnimVal();
-  };
-
   struct SMILViewBox : public SMILAttr {
    public:
     SMILViewBox(SVGAnimatedViewBox* aVal, SVGElement* aSVGElement)
