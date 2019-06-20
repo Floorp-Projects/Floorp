@@ -414,7 +414,6 @@ class DataChannel {
         mNegotiated(negotiated),
         mOrdered(ordered),
         mFlags(0),
-        mId(0),
         mIsRecvBinary(false),
         mBufferedThreshold(0),  // default from spec
         mBufferedAmount(0),
@@ -520,7 +519,6 @@ class DataChannel {
   const bool mNegotiated;
   const bool mOrdered;
   uint32_t mFlags;
-  uint32_t mId;
   bool mIsRecvBinary;
   size_t mBufferedThreshold;
   // Read/written on main only. Decremented via message-passing, because the

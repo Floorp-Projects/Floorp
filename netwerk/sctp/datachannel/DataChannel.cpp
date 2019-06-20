@@ -1218,6 +1218,7 @@ bool DataChannelConnection::SendDeferredMessages() {
 
   // This may block while something is modifying channels, but should not block
   // for IO
+  ASSERT_WEBRTC(!NS_IsMainThread());
   mLock.AssertCurrentThreadOwns();
 
   LOG(("SendDeferredMessages called, pending type: %d", mPendingType));
@@ -1320,6 +1321,7 @@ void DataChannelConnection::HandleOpenRequestMessage(
   uint32_t prValue;
   uint16_t prPolicy;
 
+  ASSERT_WEBRTC(!NS_IsMainThread());
   mLock.AssertCurrentThreadOwns();
 
   const size_t requiredLength = (sizeof(*req) - 1) + ntohs(req->label_length) +
@@ -2097,6 +2099,7 @@ void DataChannelConnection::HandleStreamResetEvent(
 
 void DataChannelConnection::HandleStreamChangeEvent(
     const struct sctp_stream_change_event* strchg) {
+  ASSERT_WEBRTC(!NS_IsMainThread());
   if (strchg->strchange_flags == SCTP_STREAM_CHANGE_DENIED) {
     LOG(("*** Failed increasing number of streams from %zu (%u/%u)",
          mNegotiatedIdLimit, strchg->strchange_instrms,
@@ -2247,6 +2250,7 @@ already_AddRefed<DataChannel> DataChannelConnection::Open(
     const nsACString& label, const nsACString& protocol, Type type,
     bool inOrder, uint32_t prValue, DataChannelListener* aListener,
     nsISupports* aContext, bool aExternalNegotiated, uint16_t aStream) {
+  ASSERT_WEBRTC(NS_IsMainThread());
   if (!aExternalNegotiated) {
     if (mAllocateEven.isSome()) {
       aStream = FindFreeStream();
