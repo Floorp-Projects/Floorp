@@ -864,6 +864,10 @@ class ImmutableTenuredPtr {
   const T* address() { return &value; }
 };
 
+#if MOZ_IS_GCC
+template struct JS_PUBLIC_API MovableCellHasher<JSObject*>;
+#endif
+
 template <typename T>
 struct MovableCellHasher<PreBarriered<T>> {
   using Key = PreBarriered<T>;
