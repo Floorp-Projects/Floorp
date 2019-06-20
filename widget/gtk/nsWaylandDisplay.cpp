@@ -13,8 +13,10 @@ namespace widget {
 #define GBMLIB_NAME "libgbm.so.1"
 #define DRMLIB_NAME "libdrm.so.2"
 
+#ifdef HAVE_LIBDRM
 bool nsWaylandDisplay::mIsDMABufEnabled;
 bool nsWaylandDisplay::mIsDMABufPrefLoaded;
+#endif
 
 // nsWaylandDisplay needs to be created for each calling thread(main thread,
 // compositor thread and render thread)
@@ -114,6 +116,7 @@ void nsWaylandDisplay::SetPrimarySelectionDeviceManager(
   mPrimarySelectionDeviceManager = aPrimarySelectionDeviceManager;
 }
 
+#ifdef HAVE_LIBDRM
 void nsWaylandDisplay::SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf) {
   mDmabuf = aDmabuf;
 }
@@ -163,6 +166,7 @@ static void dmabuf_format(void* data,
 
 static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
     dmabuf_format, dmabuf_modifiers};
+#endif
 
 static void global_registry_handler(void* data, wl_registry* registry,
                                     uint32_t id, const char* interface,
@@ -201,12 +205,15 @@ static void global_registry_handler(void* data, wl_registry* registry,
     wl_proxy_set_queue((struct wl_proxy*)subcompositor,
                        display->GetEventQueue());
     display->SetSubcompositor(subcompositor);
-  } else if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
+  }
+#ifdef HAVE_LIBDRM
+  else if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
     auto dmabuf = static_cast<zwp_linux_dmabuf_v1*>(
         wl_registry_bind(registry, id, &zwp_linux_dmabuf_v1_interface, 3));
     display->SetDmabuf(dmabuf);
     zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, data);
   }
+#endif
 }
 
 static void global_registry_remover(void* data, wl_registry* registry,
@@ -224,6 +231,7 @@ bool nsWaylandDisplay::Matches(wl_display* aDisplay) {
   return mThreadId == PR_GetCurrentThread() && aDisplay == mDisplay;
 }
 
+#ifdef HAVE_LIBDRM
 bool nsWaylandDisplay::ConfigureGbm() {
   if (!nsGbmLib::IsAvailable()) {
     return false;
@@ -271,6 +279,7 @@ int nsWaylandDisplay::GetGbmDeviceFd() {
   }
   return mGbmFd;
 }
+#endif
 
 nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
     : mDispatcherThreadLoop(nullptr),
@@ -282,22 +291,28 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
       mSeat(nullptr),
       mShm(nullptr),
       mPrimarySelectionDeviceManager(nullptr),
-      mRegistry(nullptr),
+      mRegistry(nullptr)
+#ifdef HAVE_LIBDRM
+      ,
       mGbmDevice(nullptr),
       mGbmFd(-1),
       mXRGBFormat({false, false, -1, nullptr, 0}),
       mARGBFormat({false, false, -1, nullptr, 0}),
       mGdmConfigured(false),
-      mExplicitSync(false) {
+      mExplicitSync(false)
+#endif
+{
   mRegistry = wl_display_get_registry(mDisplay);
   wl_registry_add_listener(mRegistry, &registry_listener, this);
 
   if (NS_IsMainThread()) {
+#ifdef HAVE_LIBDRM
     if (!mIsDMABufPrefLoaded) {
       mIsDMABufPrefLoaded = true;
       mIsDMABufEnabled =
           Preferences::GetBool("widget.wayland_dmabuf_backend.enabled", false);
     }
+#endif
     // Use default event queue in main thread operated by Gtk+.
     mEventQueue = nullptr;
     wl_display_roundtrip(mDisplay);
@@ -326,6 +341,7 @@ nsWaylandDisplay::~nsWaylandDisplay() {
   }
 }
 
+#ifdef HAVE_LIBDRM
 void* nsGbmLib::sGbmLibHandle = nullptr;
 void* nsGbmLib::sXf86DrmLibHandle = nullptr;
 bool nsGbmLib::sLibLoaded = false;
@@ -406,6 +422,7 @@ bool nsGbmLib::Load() {
 
   return sGbmLibHandle;
 }
+#endif
 
 }  // namespace widget
 }  // namespace mozilla
