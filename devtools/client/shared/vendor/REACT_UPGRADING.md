@@ -17,7 +17,7 @@ You should start by upgrading our prop-types library to match the latest version
 ```bash
 git clone https://github.com/facebook/react.git
 cd react
-git checkout v16.8.6 # or the version you are targetting
+git checkout v16.4.1 # or the version you are targetting
 ```
 
 ## Preparing to Build
