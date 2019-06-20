@@ -49,11 +49,6 @@ source = `class C {
 assertErrorMessage(() => Function(source), SyntaxError, /./);
 
 source = `class C {
-    x = super.a;
-}`;
-assertErrorMessage(() => Function(source), SyntaxError, /./);
-
-source = `class C {
     x = super();
 }`;
 assertErrorMessage(() => Function(source), SyntaxError, /./);

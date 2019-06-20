@@ -26,7 +26,6 @@ void SharedContext::computeAllowSyntax(Scope* scope) {
       allowSuperProperty_ = fun->allowSuperProperty();
       allowSuperCall_ = fun->isDerivedClassConstructor();
       if (funScope->isFieldInitializer() == IsFieldInitializer::Yes) {
-        allowSuperProperty_ = false;
         allowSuperCall_ = false;
         allowArguments_ = false;
       }
@@ -243,7 +242,7 @@ void FunctionBox::initFieldInitializer(ParseContext* enclosing, JSFunction* fun,
                                        HasHeritage hasHeritage) {
   this->initWithEnclosingParseContext(enclosing, fun,
                                       FunctionSyntaxKind::Expression);
-  allowSuperProperty_ = false;
+  allowSuperProperty_ = true;
   allowSuperCall_ = false;
   allowArguments_ = false;
   needsThisTDZChecks_ = hasHeritage == HasHeritage::Yes;

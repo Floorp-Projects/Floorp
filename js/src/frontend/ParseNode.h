@@ -586,7 +586,10 @@ enum class FunctionSyntaxKind {
   Statement,
 
   Arrow,
+
+  // Method of a class or object. Field initializers also desugar to methods.
   Method,
+
   ClassConstructor,
   DerivedClassConstructor,
   Getter,
