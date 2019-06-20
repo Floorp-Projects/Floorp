@@ -25,7 +25,7 @@ class MainProcessTarget extends Target {
   constructor(targets) {
     super(targets, Session);
 
-    this.type = "main-process";
+    this.type = "browser";
     this.id = UUIDGen.generateUUID().toString().slice(1, -1);
 
     // Define the HTTP path to query this target
