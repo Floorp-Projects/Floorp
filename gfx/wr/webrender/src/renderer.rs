@@ -44,7 +44,7 @@ use api::channel;
 use api::units::*;
 pub use api::DebugFlags;
 use api::channel::{MsgSender, PayloadReceiverHelperMethods};
-use crate::batch::{AlphaBatchContainer, BatchKind, BatchTextures, BrushBatchKind, ClipBatchList};
+use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use crate::debug_colors;
@@ -3465,7 +3465,7 @@ impl Renderer {
                     }
 
                     self.shaders.borrow_mut()
-                        .get(&batch.key, self.debug_flags)
+                        .get(&batch.key, batch.features, self.debug_flags)
                         .bind(
                             &mut self.device, projection,
                             &mut self.renderer_errors,
@@ -3514,7 +3514,7 @@ impl Renderer {
                 }
 
                 self.shaders.borrow_mut()
-                    .get(&batch.key, self.debug_flags)
+                    .get(&batch.key, batch.features | BatchFeatures::ALPHA_PASS, self.debug_flags)
                     .bind(
                         &mut self.device, projection,
                         &mut self.renderer_errors,
