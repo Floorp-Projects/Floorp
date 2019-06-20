@@ -15,12 +15,10 @@
 #include "base/task.h"          // for NewRunnableMethod, etc
 #include "mozilla/StaticMutex.h"
 
-#ifdef HAVE_LIBDRM
-#  include <drm/drm_fourcc.h>
-#  include <xf86drm.h>
-#  include <gbm.h>
-#  include "mozilla/widget/linux-dmabuf-unstable-v1-client-protocol.h"
-#endif
+#include <drm/drm_fourcc.h>
+#include <xf86drm.h>
+#include <gbm.h>
+#include "mozilla/widget/linux-dmabuf-unstable-v1-client-protocol.h"
 
 namespace mozilla {
 namespace widget {
@@ -65,7 +63,6 @@ class nsWaylandDisplay {
 
   void Shutdown();
 
-#ifdef HAVE_LIBDRM
   void SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf);
   zwp_linux_dmabuf_v1* GetDmabuf() { return mDmabuf; };
   gbm_device* GetGbmDevice();
@@ -76,12 +73,9 @@ class nsWaylandDisplay {
   void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
                          uint32_t mModifierLo);
   static bool IsDMABufEnabled() { return mIsDMABufEnabled; };
-#endif
 
  private:
-#ifdef HAVE_LIBDRM
   bool ConfigureGbm();
-#endif
 
   MessageLoop* mDispatcherThreadLoop;
   PRThread* mThreadId;
@@ -93,7 +87,6 @@ class nsWaylandDisplay {
   wl_shm* mShm;
   gtk_primary_selection_device_manager* mPrimarySelectionDeviceManager;
   wl_registry* mRegistry;
-#ifdef HAVE_LIBDRM
   zwp_linux_dmabuf_v1* mDmabuf;
   gbm_device* mGbmDevice;
   int mGbmFd;
@@ -103,14 +96,12 @@ class nsWaylandDisplay {
   bool mExplicitSync;
   static bool mIsDMABufEnabled;
   static bool mIsDMABufPrefLoaded;
-#endif
 };
 
 void WaylandDispatchDisplays();
 void WaylandDisplayShutdown();
 nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay = nullptr);
 
-#ifdef HAVE_LIBDRM
 typedef struct gbm_device* (*CreateDeviceFunc)(int);
 typedef struct gbm_bo* (*CreateFunc)(struct gbm_device*, uint32_t, uint32_t,
                                      uint32_t, uint32_t);
@@ -199,7 +190,6 @@ class nsGbmLib {
   static void* sXf86DrmLibHandle;
   static bool sLibLoaded;
 };
-#endif
 
 }  // namespace widget
 }  // namespace mozilla
