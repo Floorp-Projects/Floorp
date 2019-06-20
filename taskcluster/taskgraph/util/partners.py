@@ -234,12 +234,12 @@ def parse_config(data):
     data is contents of the file, in "foo=bar\nbaz=buzz" style. We do some translation on
     locales and platforms data, otherwise passthrough
     """
-    ALLOWED_KEYS = ('locales', 'upload_to_candidates', 'platforms')
+    ALLOWED_KEYS = ('locales', 'upload_to_candidates', 'repack_stub_installer', 'platforms')
     config = {'platforms': []}
     for l in data.splitlines():
         if '=' in l:
             l = str(l)
-            key, value = l.split('=', 2)
+            key, value = l.split('=', 1)
             value = value.strip('\'"').rstrip('\'"')
             if key in TC_PLATFORM_PER_FTP.keys():
                 if value.lower() == 'true':
