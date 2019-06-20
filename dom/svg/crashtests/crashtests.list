@@ -94,3 +94,4 @@ skip-if(Android) load 1507961-1.html  # times out on Android due to the test siz
 load 1531578-1.html
 load test_nested_svg.html
 load 1555795.html
+load 1560179.html
