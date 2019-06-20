@@ -46,6 +46,7 @@ class Target extends Domain {
         browserContextId: target.id,
         targetId: target.id,
         type: target.type,
+        url: target.url,
       },
     });
   }
