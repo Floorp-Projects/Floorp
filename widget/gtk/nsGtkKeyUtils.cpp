@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
+#include <dlfcn.h>
 #ifdef MOZ_WIDGET_GTK
 #  include <gdk/gdkkeysyms-compat.h>
 #endif
