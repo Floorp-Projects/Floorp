@@ -7,17 +7,16 @@
 #ifndef dom_ipc_MemMapSnapshot_h
 #define dom_ipc_MemMapSnapshot_h
 
+#include "mozilla/AutoMemMap.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Result.h"
-#include "base/shared_memory.h"
+#ifdef XP_WIN
+#  include "mozilla/ipc/FileDescriptor.h"
+#endif
 
 namespace mozilla {
-namespace loader {
-class AutoMemMap;
-}
-
 namespace ipc {
 
 /**
@@ -36,15 +35,25 @@ class MOZ_RAII MemMapSnapshot {
   Result<Ok, nsresult> Init(size_t aSize);
   Result<Ok, nsresult> Finalize(loader::AutoMemMap& aMap);
 
-  template <typename T>
+  template <typename T = void>
   RangedPtr<T> Get() {
     MOZ_ASSERT(mInitialized);
-    return {static_cast<T*>(mMem.memory()), mMem.max_size() / sizeof(T)};
+    return mMem.get<T>();
   }
 
  private:
-  base::SharedMemory mMem;
+  Result<Ok, nsresult> Create(size_t aSize);
+  Result<Ok, nsresult> Freeze(loader::AutoMemMap& aMem);
+
+  loader::AutoMemMap mMem;
+
   bool mInitialized = false;
+
+#ifdef XP_WIN
+  Maybe<FileDescriptor> mFile;
+#else
+  nsCString mPath;
+#endif
 };
 
 }  // namespace ipc

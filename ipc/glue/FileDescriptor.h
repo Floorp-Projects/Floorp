@@ -9,11 +9,15 @@
 
 #include "base/basictypes.h"
 #include "base/process.h"
+#include "mozilla/UniquePtr.h"
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 
-#ifdef XP_UNIX
+#ifdef XP_WIN
+// Need the HANDLE typedef.
+#  include <winnt.h>
+#  include <cstdint>
+#else
 #  include "base/file_descriptor_posix.h"
 #endif
 
@@ -36,14 +40,31 @@ class FileDescriptor {
  public:
   typedef base::ProcessId ProcessId;
 
-  using UniquePlatformHandle = mozilla::UniqueFileHandle;
-  using PlatformHandleType = UniquePlatformHandle::ElementType;
-
 #ifdef XP_WIN
-  typedef PlatformHandleType PickleType;
+  typedef HANDLE PlatformHandleType;
+  typedef HANDLE PickleType;
 #else
+  typedef int PlatformHandleType;
   typedef base::FileDescriptor PickleType;
 #endif
+
+  struct PlatformHandleHelper {
+    MOZ_IMPLICIT PlatformHandleHelper(PlatformHandleType aHandle);
+    MOZ_IMPLICIT PlatformHandleHelper(std::nullptr_t);
+    bool operator!=(std::nullptr_t) const;
+    operator PlatformHandleType() const;
+#ifdef XP_WIN
+    operator std::intptr_t() const;
+#endif
+   private:
+    PlatformHandleType mHandle;
+  };
+  struct PlatformHandleDeleter {
+    typedef PlatformHandleHelper pointer;
+    void operator()(PlatformHandleHelper aHelper);
+  };
+  typedef UniquePtr<PlatformHandleType, PlatformHandleDeleter>
+      UniquePlatformHandle;
 
   // This should only ever be created by IPDL.
   struct IPDLPrivate {};
@@ -59,8 +80,6 @@ class FileDescriptor {
   // This constructor will duplicate a new handle.
   // The caller still have to close aHandle.
   explicit FileDescriptor(PlatformHandleType aHandle);
-
-  explicit FileDescriptor(UniquePlatformHandle&& aHandle);
 
   // This constructor WILL NOT duplicate the handle.
   // FileDescriptor takes the ownership from IPC message.
@@ -85,17 +104,23 @@ class FileDescriptor {
   // handle.
   UniquePlatformHandle ClonePlatformHandle() const;
 
-  // Extracts the underlying handle and makes this object an invalid handle.
-  // (Compare UniquePtr::release.)
-  UniquePlatformHandle TakePlatformHandle();
-
   // Only used in nsTArray.
   bool operator==(const FileDescriptor& aOther) const;
 
  private:
-  static UniqueFileHandle Clone(PlatformHandleType aHandle);
+  friend struct PlatformHandleTrait;
 
-  UniquePlatformHandle mHandle;
+  void Assign(const FileDescriptor& aOther);
+
+  void Close();
+
+  static bool IsValid(PlatformHandleType aHandle);
+
+  static PlatformHandleType Clone(PlatformHandleType aHandle);
+
+  static void Close(PlatformHandleType aHandle);
+
+  PlatformHandleType mHandle;
 };
 
 template <>
