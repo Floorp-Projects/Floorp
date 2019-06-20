@@ -26,10 +26,8 @@ add_task(async function() {
   await BrowserTestUtils.waitForCondition(() => tab._fullyOpen);
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
-  let newTabButtonRect =
-    document.getAnonymousElementByAttribute(gBrowser.tabContainer,
-                                            "anonid", "tabs-newtab-button")
-            .getBoundingClientRect();
+  let newTabButtonRect = gBrowser.tabContainer.newTabButton
+                                 .getBoundingClientRect();
   let inRange = (val, min, max) => min <= val && val <= max;
 
   // Add a reflow observer and open a new tab.

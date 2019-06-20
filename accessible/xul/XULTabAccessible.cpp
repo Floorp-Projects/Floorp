@@ -87,7 +87,9 @@ Relation XULTabAccessible::RelationByType(RelationType aType) const {
   if (aType != RelationType::LABEL_FOR) return rel;
 
   // Expose 'LABEL_FOR' relation on tab accessible for tabpanel accessible.
-  nsIContent* parent = mContent->GetParent();
+  ErrorResult rv;
+  nsIContent* parent =
+      mContent->AsElement()->Closest(NS_LITERAL_STRING("tabs"), rv);
   if (!parent) return rel;
 
   nsCOMPtr<nsIDOMXULRelatedElement> tabsElm =
