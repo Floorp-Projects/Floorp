@@ -3921,9 +3921,9 @@ void AsyncPanZoomController::RequestContentRepaint(
   // the tree lock without the APZC lock.
   controller->DispatchToRepaintThread(
       NewRunnableMethod<AsyncPanZoomController*>(
-          "layers::APZCTreeManager::CollectTransformsForChromeMainThread",
+          "layers::APZCTreeManager::SendSubtreeTransformsToChromeMainThread",
           GetApzcTreeManager(),
-          &APZCTreeManager::CollectTransformsForChromeMainThread,
+          &APZCTreeManager::SendSubtreeTransformsToChromeMainThread,
           this));
 }
 
