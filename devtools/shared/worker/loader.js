@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* global worker */
+/* global worker, DebuggerNotificationObserver */
 
 // A CommonJS module loader that is designed to run inside a worker debugger.
 // We can't simply use the SDK module loader, because it relies heavily on
@@ -576,6 +576,7 @@ this.worker = new WorkerDebuggerLoader({
     "chrome": chrome,
     "xpcInspector": xpcInspector,
     "ChromeUtils": ChromeUtils,
+    "DebuggerNotificationObserver": DebuggerNotificationObserver,
   },
   paths: {
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠

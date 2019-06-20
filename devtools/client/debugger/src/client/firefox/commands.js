@@ -35,7 +35,10 @@ import type {
   SourcesPacket,
 } from "./types";
 
-import type { EventListenerCategoryList } from "../../actions/types";
+import type {
+  EventListenerCategoryList,
+  EventListenerActiveList,
+} from "../../actions/types";
 
 let workerClients: Object;
 let threadClient: ThreadClient;
@@ -43,6 +46,7 @@ let tabTarget: TabTarget;
 let debuggerClient: DebuggerClient;
 let sourceActors: { [ActorId]: SourceId };
 let breakpoints: { [string]: Object };
+let eventBreakpoints: ?EventListenerActiveList;
 let supportsWasm: boolean;
 
 let shouldWaitForWorkers = false;
@@ -363,6 +367,8 @@ function interrupt(thread: string): Promise<*> {
 }
 
 async function setEventListenerBreakpoints(ids: string[]) {
+  eventBreakpoints = ids;
+
   await threadClient.setActiveEventBreakpoints(ids);
   await forEachWorkerThread(thread => thread.setActiveEventBreakpoints(ids));
 }
@@ -371,8 +377,7 @@ async function setEventListenerBreakpoints(ids: string[]) {
 async function getEventListenerBreakpointTypes(): Promise<
   EventListenerCategoryList
 > {
-  const { value } = await threadClient.getAvailableEventBreakpoints();
-  return value;
+  return threadClient.getAvailableEventBreakpoints();
 }
 
 function pauseGrip(thread: string, func: Function): ObjectClient {
@@ -406,6 +411,7 @@ async function fetchWorkers(): Promise<Worker[]> {
   if (features.windowlessWorkers) {
     const options = {
       breakpoints,
+      eventBreakpoints,
       observeAsmJS: true,
     };
 

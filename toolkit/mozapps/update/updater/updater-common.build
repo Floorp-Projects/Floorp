@@ -39,13 +39,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'crypt32',
         'advapi32',
     ]
-elif CONFIG['OS_ARCH'] == 'Linux' and CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
-    USE_LIBS += [
-        'nss',
-        'signmar',
-    ]
-    OS_LIBS += CONFIG['NSPR_LIBS']
-    LDFLAGS += ['-Wl,-rpath=$ORIGIN']
 
 USE_LIBS += [
     'bspatch',

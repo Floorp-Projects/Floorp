@@ -24,7 +24,7 @@ async function updateBreakpoints(dispatch, client, newEvents: string[]) {
     active: newEvents,
   };
 
-  client.setEventListenerBreakpoints(newEvents);
+  await client.setEventListenerBreakpoints(newEvents);
 }
 
 async function updateExpanded(dispatch, newExpanded: string[]) {
@@ -46,7 +46,7 @@ export function addEventListenerBreakpoints(eventsToAdd: string[]) {
 
     const newEvents = uniq([...eventsToAdd, ...activeListenerBreakpoints]);
 
-    updateBreakpoints(dispatch, client, newEvents);
+    await updateBreakpoints(dispatch, client, newEvents);
   };
 }
 
@@ -59,7 +59,7 @@ export function removeEventListenerBreakpoints(eventsToRemove: string[]) {
       event => !eventsToRemove.includes(event)
     );
 
-    updateBreakpoints(dispatch, client, newEvents);
+    await updateBreakpoints(dispatch, client, newEvents);
   };
 }
 

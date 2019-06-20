@@ -129,11 +129,19 @@ class JSFunction : public js::NativeObject {
                 "FunctionKind doesn't fit into flags_");
 
  private:
-  uint16_t
-      nargs_;      /* number of formal arguments
-                      (including defaults and the rest parameter unlike f.length) */
-  uint16_t flags_; /* bitfield composed of the above Flags enum, as well as the
-                      kind */
+  /*
+   * number of formal arguments
+   * (including defaults and the rest parameter unlike f.length)
+   */
+  uint16_t nargs_;
+
+  /*
+   * Bitfield composed of the above Flags enum, as well as the kind.
+   *
+   * If any of these flags needs to be accessed in off-thread JIT
+   * compilation, copy it to js::jit::WrappedFunction.
+   */
+  uint16_t flags_;
   union U {
     class {
       friend class JSFunction;
@@ -820,6 +828,20 @@ class JSFunction : public js::NativeObject {
   inline void setExtendedSlot(size_t which, const js::Value& val);
   inline const js::Value& getExtendedSlot(size_t which) const;
 
+  /*
+   * Same as `toExtended` and `getExtendedSlot`, but `this` is guaranteed to be
+   * an extended function.
+   *
+   * This function is supposed to be used off-thread, especially the JIT
+   * compilation thread, that cannot access JSFunction.flags_, because of
+   * a race condition.
+   *
+   * See Also: WrappedFunction.isExtended_
+   */
+  inline js::FunctionExtended* toExtendedOffMainThread();
+  inline const js::FunctionExtended* toExtendedOffMainThread() const;
+  inline const js::Value& getExtendedSlotOffMainThread(size_t which) const;
+
   /* Constructs a new type for the function if necessary. */
   static bool setTypeForScriptedFunction(JSContext* cx, js::HandleFunction fun,
                                          bool singleton = false);
@@ -1008,6 +1030,14 @@ inline const js::FunctionExtended* JSFunction::toExtended() const {
   return static_cast<const js::FunctionExtended*>(this);
 }
 
+inline js::FunctionExtended* JSFunction::toExtendedOffMainThread() {
+  return static_cast<js::FunctionExtended*>(this);
+}
+
+inline const js::FunctionExtended* JSFunction::toExtendedOffMainThread() const {
+  return static_cast<const js::FunctionExtended*>(this);
+}
+
 inline void JSFunction::initializeExtended() {
   MOZ_ASSERT(isExtended());
 
@@ -1031,6 +1061,13 @@ inline void JSFunction::setExtendedSlot(size_t which, const js::Value& val) {
 inline const js::Value& JSFunction::getExtendedSlot(size_t which) const {
   MOZ_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
   return toExtended()->extendedSlots[which];
+}
+
+inline const js::Value& JSFunction::getExtendedSlotOffMainThread(
+    size_t which) const {
+  MOZ_ASSERT(which <
+             mozilla::ArrayLength(toExtendedOffMainThread()->extendedSlots));
+  return toExtendedOffMainThread()->extendedSlots[which];
 }
 
 namespace js {

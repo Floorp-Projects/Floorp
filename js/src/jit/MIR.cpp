@@ -1523,7 +1523,8 @@ WrappedFunction::WrappedFunction(JSFunction* fun)
       isNativeWithJitEntry_(fun->isNativeWithJitEntry()),
       isConstructor_(fun->isConstructor()),
       isClassConstructor_(fun->isClassConstructor()),
-      isSelfHostedBuiltin_(fun->isSelfHostedBuiltin()) {}
+      isSelfHostedBuiltin_(fun->isSelfHostedBuiltin()),
+      isExtended_(fun->isExtended()) {}
 
 MCall* MCall::New(TempAllocator& alloc, JSFunction* target, size_t maxArgc,
                   size_t numActualArgs, bool construct, bool ignoresReturnValue,

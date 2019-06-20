@@ -55,7 +55,13 @@ RenderCompositorEGL::RenderCompositorEGL(
     RefPtr<widget::CompositorWidget> aWidget)
     : RenderCompositor(std::move(aWidget)), mEGLSurface(EGL_NO_SURFACE) {}
 
-RenderCompositorEGL::~RenderCompositorEGL() { DestroyEGLSurface(); }
+RenderCompositorEGL::~RenderCompositorEGL() {
+#ifdef MOZ_WIDGET_ANDROID
+  java::GeckoSurfaceTexture::DestroyUnused((int64_t)gl());
+  java::GeckoSurfaceTexture::DetachAllFromGLContext((int64_t)gl());
+#endif
+  DestroyEGLSurface();
+}
 
 bool RenderCompositorEGL::BeginFrame() {
 #ifdef MOZ_WAYLAND

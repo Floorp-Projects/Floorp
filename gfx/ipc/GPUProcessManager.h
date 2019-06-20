@@ -210,6 +210,8 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   void RebuildRemoteSessions();
   void RebuildInProcessSessions();
 
+  void NotifyDisablingWebRender();
+
   void FallbackToSoftware(const char* aMessage);
 
  private:

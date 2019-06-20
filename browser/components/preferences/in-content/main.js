@@ -107,7 +107,6 @@ Preferences.addAll([
   { id: "browser.tabs.loadInBackground", type: "bool", inverted: true },
   { id: "browser.tabs.warnOnClose", type: "bool" },
   { id: "browser.tabs.warnOnOpen", type: "bool" },
-  { id: "browser.sessionstore.restore_on_demand", type: "bool" },
   { id: "browser.ctrlTab.recentlyUsedOrder", type: "bool" },
 
   // CFR

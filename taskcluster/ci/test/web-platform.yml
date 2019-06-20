@@ -58,7 +58,6 @@ web-platform-tests:
     e10s: true
     run-on-projects:
         by-test-platform:
-            android.*: ['mozilla-central', 'try']
             windows10-aarch64/opt: ['try', 'mozilla-central']
             .*-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
@@ -116,14 +115,11 @@ web-platform-tests-reftests:
     e10s: true
     run-on-projects:
         by-test-platform:
-            android.*: ['mozilla-central', 'try']
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     tier:
         by-test-platform:
-            android.*-x86_64/opt: 3
-            android.*-x86_64/debug: 3
-            android.*x86(?!x86_64)/opt: 2
+            android.*: 2
             linux64-asan/opt: 2
             windows10-aarch64.*: 2
             default: default
@@ -167,7 +163,6 @@ web-platform-tests-wdspec:
     run-on-projects:
         by-test-platform:
             windows10-aarch64/opt: ['try', 'mozilla-central']
-            android.*: ['mozilla-central', 'try']
             .*-qr/.*: ['release', 'try']
             default: built-projects
     tier:

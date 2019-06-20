@@ -2913,12 +2913,14 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
     // the functions them visited in the opposite order when popping
     // elements from the stack of remaining scripts, such that the
     // functions are more-less listed with increasing line numbers.
-    if (!script->hasObjects()) {
-      continue;
-    }
-    auto objects = script->objects();
-    for (JSObject* obj : mozilla::Reversed(objects)) {
+    auto gcthings = script->gcthings();
+    for (JS::GCCellPtr gcThing : mozilla::Reversed(gcthings)) {
+      if (!gcThing.is<JSObject>()) {
+        continue;
+      }
+
       // Only continue on JSFunction objects.
+      JSObject* obj = &gcThing.as<JSObject>();
       if (!obj->is<JSFunction>()) {
         continue;
       }

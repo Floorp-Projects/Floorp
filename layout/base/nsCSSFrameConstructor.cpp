@@ -10698,6 +10698,10 @@ nsContainerFrame* nsCSSFrameConstructor::BeginBuildingColumns(
   nsBlockFrame* columnSetWrapper = NS_NewColumnSetWrapperFrame(
       mPresShell, aComputedStyle, nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
   InitAndRestoreFrame(aState, aContent, aParentFrame, columnSetWrapper);
+  if (aParentFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR) &&
+      !ShouldSuppressColumnSpanDescendants(aParentFrame)) {
+    columnSetWrapper->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
+  }
 
   RefPtr<ComputedStyle> columnSetStyle =
       mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(

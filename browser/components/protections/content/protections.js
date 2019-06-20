@@ -5,5 +5,8 @@
 /* eslint-env mozilla/frame-script */
 
 document.addEventListener("DOMContentLoaded", (e) => {
-  RPMSendAsyncMessage("ArrivedOnPage");
+  let protectionDetails = document.getElementById("protection-details");
+  protectionDetails.addEventListener("click", () => {
+    RPMSendAsyncMessage("openContentBlockingPreferences");
+  });
 });

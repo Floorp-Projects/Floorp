@@ -24,8 +24,7 @@ RemoteCompositorSession::RemoteCompositorSession(
     nsBaseWidget* aWidget, CompositorBridgeChild* aChild,
     CompositorWidgetDelegate* aWidgetDelegate, APZCTreeManagerChild* aAPZ,
     const LayersId& aRootLayerTreeId)
-    : CompositorSession(aWidgetDelegate, aChild, aRootLayerTreeId),
-      mWidget(aWidget),
+    : CompositorSession(aWidget, aWidgetDelegate, aChild, aRootLayerTreeId),
       mAPZ(aAPZ) {
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
   GPUProcessManager::Get()->RegisterRemoteProcessSession(this);

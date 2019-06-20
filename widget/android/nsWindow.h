@@ -220,6 +220,8 @@ class nsWindow final : public nsBaseWidget {
     return nullptr;
   }
 
+  void NotifyDisablingWebRender();
+
   //
   // nsIWidget
   //
@@ -345,6 +347,7 @@ class nsWindow final : public nsBaseWidget {
   nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 
   bool mIsFullScreen;
+  bool mIsDisablingWebRender;
 
   bool UseExternalCompositingSurface() const override { return true; }
 

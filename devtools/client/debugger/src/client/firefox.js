@@ -48,7 +48,11 @@ export async function onConnect(connection: any, actions: Object) {
   });
 
   // Retrieve possible event listener breakpoints
-  actions.getEventListenerBreakpointTypes();
+  actions.getEventListenerBreakpointTypes().catch(e => console.error(e));
+
+  // Initialize the event breakpoints on the thread up front so that
+  // they are active once attached.
+  actions.addEventListenerBreakpoints([]).catch(e => console.error(e));
 
   // In Firefox, we need to initially request all of the sources. This
   // usually fires off individual `newSource` notifications as the

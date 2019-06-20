@@ -75,6 +75,10 @@ function getCleanedPacket(key, packet) {
       res.actor = existingPacket.actor;
     }
 
+    if (res.channelId) {
+      res.channelId = existingPacket.channelId;
+    }
+
     if (res.message) {
       // Clean timeStamp on the message prop.
       res.message.timeStamp = existingPacket.message.timeStamp;
