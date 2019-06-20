@@ -376,7 +376,6 @@ MarkupContainer.prototype = {
 
       line.appendChild(closingTag.cloneNode(true));
 
-      flashElementOff(line);
       this.closeTagLine = line;
     }
     this.elt.appendChild(this.closeTagLine);
@@ -654,13 +653,19 @@ MarkupContainer.prototype = {
    */
   flashMutation: function() {
     if (!this.selected) {
-      flashElementOn(this.tagState, { foregroundElt: this.editor.elt });
+      flashElementOn(this.tagState, {
+        foregroundElt: this.editor.elt,
+        backgroundClass: "theme-bg-yellow-contrast",
+      });
       if (this._flashMutationTimer) {
         clearTimeout(this._flashMutationTimer);
         this._flashMutationTimer = null;
       }
       this._flashMutationTimer = setTimeout(() => {
-        flashElementOff(this.tagState, { foregroundElt: this.editor.elt });
+        flashElementOff(this.tagState, {
+          foregroundElt: this.editor.elt,
+          backgroundClass: "theme-bg-yellow-contrast",
+        });
       }, this.markup.CONTAINER_FLASHING_DURATION);
     }
   },
