@@ -4035,7 +4035,7 @@ nsresult SVGTextFrame::GetEndPositionOfChar(nsIContent* aContent,
  * text content element.
  */
 nsresult SVGTextFrame::GetExtentOfChar(nsIContent* aContent, uint32_t aCharNum,
-                                       SVGIRect** aResult) {
+                                       SVGRect** aResult) {
   nsIFrame* kid = PrincipalChildList().FirstChild();
   if (NS_SUBTREE_DIRTY(kid)) {
     // We're never reflowed if we're under a non-SVG element that is
@@ -4088,7 +4088,7 @@ nsresult SVGTextFrame::GetExtentOfChar(nsIContent* aContent, uint32_t aCharNum,
   // Transform the glyph's rect into user space.
   gfxRect r = m.TransformBounds(glyphRect);
 
-  RefPtr<SVGRect> rect = new SVGRect(aContent, r.x, r.y, r.width, r.height);
+  RefPtr<SVGRect> rect = new SVGRect(aContent, ToRect(r));
   rect.forget(aResult);
   return NS_OK;
 }
