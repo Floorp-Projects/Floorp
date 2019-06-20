@@ -265,11 +265,6 @@
             </intent-filter>
         </receiver>
 
-        <service android:name="org.mozilla.gecko.Restarter"
-                 android:exported="false"
-                 android:process="@MANGLED_ANDROID_PACKAGE_NAME@.Restarter">
-        </service>
-
         <service android:name="org.mozilla.gecko.media.MediaControlService"
                  android:exported="false"
                  android:stopWithTask="true">
