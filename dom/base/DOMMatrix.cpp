@@ -42,9 +42,9 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::Constructor(
     const GlobalObject& aGlobal,
     const Optional<StringOrUnrestrictedDoubleSequence>& aArg,
     ErrorResult& aRv) {
-  RefPtr<DOMMatrixReadOnly> rval =
-      new DOMMatrixReadOnly(aGlobal.GetAsSupports());
   if (!aArg.WasPassed()) {
+    RefPtr<DOMMatrixReadOnly> rval =
+        new DOMMatrixReadOnly(aGlobal.GetAsSupports());
     return rval.forget();
   }
 
@@ -56,12 +56,18 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::Constructor(
       aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
       return nullptr;
     }
+    RefPtr<DOMMatrixReadOnly> rval =
+        new DOMMatrixReadOnly(aGlobal.GetAsSupports());
     rval->SetMatrixValue(arg.GetAsString(), aRv);
-  } else {
-    const auto& sequence = arg.GetAsUnrestrictedDoubleSequence();
-    SetDataInMatrix(rval, sequence.Elements(), sequence.Length(), aRv);
+    return rval.forget();
   }
 
+  const auto& sequence = arg.GetAsUnrestrictedDoubleSequence();
+  const int length = sequence.Length();
+  const bool is2D = length == 6;
+  RefPtr<DOMMatrixReadOnly> rval =
+      new DOMMatrixReadOnly(aGlobal.GetAsSupports(), is2D);
+  SetDataInMatrix(rval, sequence.Elements(), length, aRv);
   return rval.forget();
 }
 
@@ -509,9 +515,12 @@ static void SetDataInMatrix(DOMMatrixReadOnly* aMatrix, const T* aData,
 already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
                                                    const Float32Array& aArray32,
                                                    ErrorResult& aRv) {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
   aArray32.ComputeLengthAndData();
-  SetDataInMatrix(obj, aArray32.Data(), aArray32.Length(), aRv);
+
+  const int length = aArray32.Length();
+  const bool is2D = length == 6;
+  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(), is2D);
+  SetDataInMatrix(obj, aArray32.Data(), length, aRv);
 
   return obj.forget();
 }
@@ -519,9 +528,12 @@ already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
 already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
                                                    const Float64Array& aArray64,
                                                    ErrorResult& aRv) {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
   aArray64.ComputeLengthAndData();
-  SetDataInMatrix(obj, aArray64.Data(), aArray64.Length(), aRv);
+
+  const int length = aArray64.Length();
+  const bool is2D = length == 6;
+  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(), is2D);
+  SetDataInMatrix(obj, aArray64.Data(), length, aRv);
 
   return obj.forget();
 }
@@ -529,9 +541,10 @@ already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
 already_AddRefed<DOMMatrix> DOMMatrix::Constructor(
     const GlobalObject& aGlobal, const Sequence<double>& aNumberSequence,
     ErrorResult& aRv) {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
-  SetDataInMatrix(obj, aNumberSequence.Elements(), aNumberSequence.Length(),
-                  aRv);
+  const int length = aNumberSequence.Length();
+  const bool is2D = length == 6;
+  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(), is2D);
+  SetDataInMatrix(obj, aNumberSequence.Elements(), length, aRv);
 
   return obj.forget();
 }
@@ -770,7 +783,9 @@ DOMMatrixReadOnly* DOMMatrixReadOnly::SetMatrixValue(
 
   if (!contains3dTransform) {
     mMatrix3D = nullptr;
-    mMatrix2D = new gfx::MatrixDouble();
+    if (!mMatrix2D) {
+      mMatrix2D = new gfx::MatrixDouble();
+    }
 
     SetA(transform._11);
     SetB(transform._12);
