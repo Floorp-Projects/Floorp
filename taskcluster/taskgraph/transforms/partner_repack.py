@@ -94,6 +94,9 @@ def add_command_arguments(config, tasks):
             'task-reference': ' '.join(['<{}>'.format(dep) for dep in task['dependencies']])
         }
 
+        # Forward the release type for bouncer product construction
+        task['worker']['env']['RELEASE_TYPE'] = config.params['release_type']
+
         yield task
 
 
