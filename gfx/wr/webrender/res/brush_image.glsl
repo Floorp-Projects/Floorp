@@ -210,9 +210,8 @@ void brush_vs(
 
 #ifdef WR_FRAGMENT_SHADER
 
-Fragment brush_fs() {
+vec2 compute_repeated_uvs(float perspective_divisor) {
     vec2 uv_size = vUvBounds.zw - vUvBounds.xy;
-    float perspective_divisor = mix(gl_FragCoord.w, 1.0, vLayerAndPerspective.y);
 
 #ifdef WR_FEATURE_ALPHA_PASS
     // This prevents the uv on the top and left parts of the primitive that was inflated
@@ -233,8 +232,19 @@ Fragment brush_fs() {
         repeated_uv.y = vUvBounds.w;
     }
 #else
-    // Handle horizontal and vertical repetitions.
     vec2 repeated_uv = mod(vUv * perspective_divisor, uv_size) + vUvBounds.xy;
+#endif
+
+    return repeated_uv;
+}
+
+Fragment brush_fs() {
+    float perspective_divisor = mix(gl_FragCoord.w, 1.0, vLayerAndPerspective.y);
+
+#ifdef WR_FEATURE_REPETITION
+    vec2 repeated_uv = compute_repeated_uvs(perspective_divisor);
+#else
+    vec2 repeated_uv = vUv * perspective_divisor + vUvBounds.xy;
 #endif
 
     // Clamp the uvs to avoid sampling artifacts.
@@ -245,7 +255,11 @@ Fragment brush_fs() {
     Fragment frag;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    float alpha = init_transform_fs(vLocalPos);
+    #ifdef WR_FEATURE_ANTIALIASING
+        float alpha = init_transform_fs(vLocalPos);
+    #else
+        float alpha = 1.0;
+    #endif
     texel.rgb = texel.rgb * vMaskSwizzle.x + texel.aaa * vMaskSwizzle.y;
 
     vec4 alpha_mask = texel * alpha;

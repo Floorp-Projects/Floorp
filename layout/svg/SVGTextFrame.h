@@ -35,7 +35,7 @@ class TextRenderedRunIterator;
 
 namespace dom {
 struct DOMPointInit;
-class SVGIRect;
+class SVGRect;
 class SVGGeometryElement;
 }  // namespace dom
 
@@ -247,7 +247,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
   nsresult GetEndPositionOfChar(nsIContent* aContent, uint32_t aCharNum,
                                 mozilla::nsISVGPoint** aResult);
   nsresult GetExtentOfChar(nsIContent* aContent, uint32_t aCharNum,
-                           mozilla::dom::SVGIRect** aResult);
+                           mozilla::dom::SVGRect** aResult);
   nsresult GetRotationOfChar(nsIContent* aContent, uint32_t aCharNum,
                              float* aResult);
 

@@ -38,14 +38,18 @@ class FlexItemSizingOutline extends PureComponent {
     );
   }
 
-  renderFinalOutline(mainFinalSize, mainMaxSize, mainMinSize, isClamped) {
-    return (
-      dom.div({ className: "flex-outline-final" + (isClamped ? " clamped" : "") })
-    );
+  renderFinalOutline(isClamped) {
+    return dom.div({ className: "flex-outline-final" + (isClamped ? " clamped" : "") });
   }
 
   renderPoint(className, label = className) {
-    return dom.div({ className: `flex-outline-point ${className}`, "data-label": label });
+    return (
+      dom.div({
+        key: className,
+        className: `flex-outline-point ${className}`,
+        "data-label": label,
+      })
+    );
   }
 
   render() {
@@ -145,7 +149,7 @@ class FlexItemSizingOutline extends PureComponent {
         dom.div(
           {
             className: `flex-outline ${mainAxisDirection}` +
-                                (mainDeltaSize > 0 ? " growing" : " shrinking"),
+                       (mainDeltaSize > 0 ? " growing" : " shrinking"),
             style: {
               gridTemplateColumns,
             },
@@ -155,8 +159,7 @@ class FlexItemSizingOutline extends PureComponent {
           showMax ? this.renderPoint("max") : null,
           this.renderBasisOutline(mainBaseSize),
           this.renderDeltaOutline(mainDeltaSize),
-          this.renderFinalOutline(mainFinalSize, mainMaxSize, mainMinSize,
-                                  clampState !== "unclamped")
+          this.renderFinalOutline(clampState !== "unclamped")
         )
       )
     );

@@ -100,7 +100,6 @@ def write_hosts_file(config, device):
 
 
 class FennecBrowser(FirefoxBrowser):
-    used_ports = set()
     init_timeout = 300
     shutdown_timeout = 60
 
@@ -127,8 +126,7 @@ class FennecBrowser(FirefoxBrowser):
 
     def start(self, **kwargs):
         if self.marionette_port is None:
-            self.marionette_port = get_free_port(2828, exclude=self.used_ports)
-            self.used_ports.add(self.marionette_port)
+            self.marionette_port = get_free_port()
 
         env = {}
         env["MOZ_CRASHREPORTER"] = "1"
