@@ -1,10 +1,10 @@
-// |reftest| skip -- class-methods-private is not supported
+// |reftest| skip -- class-static-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/accessor-names/private-name-common.case
 // - src/accessor-names/private/cls-private-expr-static.template
 /*---
 description: Private IdentifierName - common (Class expression, static private method)
-features: [class-methods-private]
+features: [class-static-methods-private]
 flags: [generated]
 info: |
     ClassElement :
