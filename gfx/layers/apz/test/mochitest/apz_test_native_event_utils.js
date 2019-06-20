@@ -399,6 +399,15 @@ function moveMouseAndScrollWheelOver(target, dx, dy, testDriver, waitForScroll =
   });
 }
 
+// Same as moveMouseAndScrollWheelOver, but returns a promise instead of taking
+// a callback function. Eventually we should convert all these callback-taking
+// functions into promise-producing functions but for now this is a stopgap.
+function promiseMoveMouseAndScrollWheelOver(target, dx, dy, waitForScroll = true) {
+  return new Promise(resolve => {
+    moveMouseAndScrollWheelOver(target, dx, dy, resolve, waitForScroll);
+  });
+}
+
 // Synthesizes events to drag |element|'s vertical scrollbar by the distance
 // specified, synthesizing a mousemove for each increment as specified.
 // Returns false if the element doesn't have a vertical scrollbar. Otherwise,

@@ -10,12 +10,13 @@ add_task(async function test_main() {
   // Each of these URLs will get opened in a new top-level browser window that
   // is fission-enabled.
   var test_urls = [
-    httpURL("helper_fission_basic.html", null),
+    httpURL("helper_fission_basic.html"),
     // add additional tests here
   ];
   if (isWebRender) {
     test_urls = test_urls.concat([
-      httpURL("helper_fission_transforms.html", null),
+      httpURL("helper_fission_transforms.html"),
+      httpURL("helper_fission_scroll_oopif.html"),
       // add additional WebRender-specific tests here
     ]);
   }

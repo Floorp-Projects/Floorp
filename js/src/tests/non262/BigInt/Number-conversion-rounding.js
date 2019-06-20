@@ -3,6 +3,64 @@
 // https://creativecommons.org/licenses/publicdomain/
 
 /**
+ * Edge-case behavior at Number.MAX_VALUE and beyond til overflow to Infinity.
+ */
+function maxMagnitudeTests(isNegative)
+{
+  var sign = isNegative ? -1 : +1;
+  var signBigInt = isNegative ? -1n : 1n;
+
+  const MAX_VALUE = isNegative ? -Number.MAX_VALUE : +Number.MAX_VALUE;
+
+  // 2**971+2**972+...+2**1022+2**1023
+  var maxMagnitudeNumber = 0;
+  for (let i = 971; i < 1024; i++)
+    maxMagnitudeNumber += 2**i;
+  maxMagnitudeNumber *= sign;
+  assertEq(maxMagnitudeNumber, MAX_VALUE);
+
+  // 2**971+2**972+...+2**1022+2**1023
+  var maxMagnitudeNumberAsBigInt = 0n;
+  for (let i = 971n; i < 1024n; i++)
+    maxMagnitudeNumberAsBigInt += 2n**i;
+  maxMagnitudeNumberAsBigInt *= signBigInt;
+  var expectedMaxMagnitude = isNegative
+                           ? -(2n**1024n) + 2n**971n
+                           : 2n**1024n - 2n**971n;
+  assertEq(maxMagnitudeNumberAsBigInt, expectedMaxMagnitude);
+
+  // Initial sanity tests.
+  assertEq(BigInt(maxMagnitudeNumber), maxMagnitudeNumberAsBigInt);
+  assertEq(maxMagnitudeNumber, Number(maxMagnitudeNumberAsBigInt));
+
+  // Test conversion of BigInt values above Number.MAX_VALUE.
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 1n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 2n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 3n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 4n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 5n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 6n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 7n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 8n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 9n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 2n**20n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 2n**400n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 2n**800n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 2n**900n), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 2n**969n), MAX_VALUE);
+
+  // For conversion purposes, rounding for values above Number.MAX_VALUE do
+  // rounding with respect to Number.MAX_VALUE and 2**1024 (which is treated as
+  // the "even" value -- so if the value to convert lies halfway between those two
+  // values, 2**1024 is selected).  But if 2**1024 is the value that *would* have
+  // been chosen by this process, Infinity is substituted.
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * (2n**970n - 1n)), MAX_VALUE);
+  assertEq(Number(maxMagnitudeNumberAsBigInt + signBigInt * 2n**970n), sign * Infinity);
+}
+maxMagnitudeTests(false);
+maxMagnitudeTests(true);
+
+/**
  * Simple single-Digit on x64, double-Digit on x86 tests.
  */
 
