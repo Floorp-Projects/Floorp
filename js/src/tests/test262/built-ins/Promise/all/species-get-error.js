@@ -16,8 +16,6 @@ features: [Symbol.species]
 function C(executor) {
   executor(function() {}, function() {});
 }
-
-C.resolve = function() {};
 Object.defineProperty(C, Symbol.species, {
   get: function() {
     $ERROR("Getter for Symbol.species called");

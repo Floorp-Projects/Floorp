@@ -3,8 +3,9 @@
 
 /*---
 description: >
-  Error retrieving the constructor's `resolve` method before iterator being used.
+  Error retrieving the constructor's `resolve` method (closing iterator)
 esid: sec-performpromiseall
+es6id: 25.4.4.1
 info: |
     11. Let result be PerformPromiseAll(iteratorRecord, C, promiseCapability).
     12. If result is an abrupt completion,
@@ -12,29 +13,23 @@ info: |
            IteratorClose(iterator, result).
         b. IfAbruptRejectPromise(result, promiseCapability).
 
-    ...
+    [...]
 
-    Runtime Semantics: PerformPromiseAll
+    25.4.4.1.1 Runtime Semantics: PerformPromiseAll
 
-    ...
-    1. Let promiseResolve be ? Get(constructor, `"resolve"`).
-    ...
-    1. Repeat,
-      1. Let next be IteratorStep(iteratorRecord).
-      ...
-      1. Let nextPromise be ? Call(promiseResolve, constructor, < nextValue >).
+    [...]
+    6. Repeat
+        [...]
+        i. Let nextPromise be Invoke(constructor, "resolve", «nextValue»).
+        j. ReturnIfAbrupt(nextPromise ).
 features: [Symbol.iterator]
 ---*/
 
 var iter = {};
-
 var returnCount = 0;
-var nextCount = 0;
-
 iter[Symbol.iterator] = function() {
   return {
     next: function() {
-      nextCount += 1;
       return {
         done: false
       };
@@ -46,14 +41,13 @@ iter[Symbol.iterator] = function() {
   };
 };
 Object.defineProperty(Promise, 'resolve', {
-  get() {
+  get: function() {
     throw new Test262Error();
   }
 });
 
 Promise.all(iter);
 
-assert.sameValue(nextCount, 0);
-assert.sameValue(returnCount, 0);
+assert.sameValue(returnCount, 1);
 
 reportCompare(0, 0);

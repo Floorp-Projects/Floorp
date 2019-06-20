@@ -2,7 +2,6 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-esid: sec-string.prototype.tostring
 es6id: 21.1.3.23
 description: >
   String.prototype.toString.name is "toString".
@@ -20,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(String.prototype.toString, 'name', {
-  value: 'toString',
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+assert.sameValue(String.prototype.toString.name, "toString");
+
+verifyNotEnumerable(String.prototype.toString, "name");
+verifyNotWritable(String.prototype.toString, "name");
+verifyConfigurable(String.prototype.toString, "name");
 
 reportCompare(0, 0);

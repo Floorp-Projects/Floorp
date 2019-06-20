@@ -1,17 +1,17 @@
-// |reftest| error:SyntaxError
+// |reftest| error:ReferenceError
 // Copyright 2009 the Sputnik authors.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-esid: sec-assignment-operators-static-semantics-early-errors
 info: |
-    It is an early Syntax Error if LeftHandSideExpression is neither an
-    ObjectLiteral nor an ArrayLiteral and AssignmentTargetType of
-    LeftHandSideExpression is invalid or strict.
+    It is an early Reference Error if LeftHandSideExpression is neither an
+    ObjectLiteral nor an ArrayLiteral and IsValidSimpleAssignmentTarget of
+    LeftHandSideExpression is false.
+es6id: 12.14.1
 description: Assignment with non-simple target
 negative:
   phase: parse
-  type: SyntaxError
+  type: ReferenceError
 ---*/
 
 $DONOTEVALUATE();

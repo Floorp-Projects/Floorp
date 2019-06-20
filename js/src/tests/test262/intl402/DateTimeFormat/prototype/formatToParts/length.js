@@ -5,11 +5,11 @@
 description: Intl.DateTimeFormat.prototype.formatToParts.length. 
 includes: [propertyHelper.js]
 ---*/
-verifyProperty(Intl.DateTimeFormat.prototype.formatToParts, 'length', {
-  value: 1,
-  enumerable: false,
-  writable: false,
-  configurable: true,
-});
+
+assert.sameValue(Intl.DateTimeFormat.prototype.formatToParts.length, 1);
+
+verifyNotEnumerable(Intl.DateTimeFormat.prototype.formatToParts, "length");
+verifyNotWritable(Intl.DateTimeFormat.prototype.formatToParts, "length");
+verifyConfigurable(Intl.DateTimeFormat.prototype.formatToParts, "length");
 
 reportCompare(0, 0);

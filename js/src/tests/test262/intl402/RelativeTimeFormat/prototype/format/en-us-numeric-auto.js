@@ -50,12 +50,6 @@ const exceptions = {
     "0": "today",
     "1": "tomorrow",
   },
-  "hour": {
-    '0': 'this hour'
-  },
-  "minute": {
-    '0': 'this minute'
-  },
   "second": {
     "-1": "1 second ago",
     "0": "now",

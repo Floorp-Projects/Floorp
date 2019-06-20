@@ -5,11 +5,13 @@
 description: Intl.DateTimeFormat.prototype.formatToParts.name value and descriptor. 
 includes: [propertyHelper.js]
 ---*/
-verifyProperty(Intl.DateTimeFormat.prototype.formatToParts, 'name', {
-  value: 'formatToParts',
-  enumerable: false,
-  writable: false,
-  configurable: true,
-});
+
+assert.sameValue(Intl.DateTimeFormat.prototype.formatToParts.name, 'formatToParts',
+  'The value of `Intl.DateTimeFormat.prototype.formatToParts.name` is `"formatToParts"`'
+);
+
+verifyNotEnumerable(Intl.DateTimeFormat.prototype.formatToParts, 'name');
+verifyNotWritable(Intl.DateTimeFormat.prototype.formatToParts, 'name');
+verifyConfigurable(Intl.DateTimeFormat.prototype.formatToParts, 'name');
 
 reportCompare(0, 0);

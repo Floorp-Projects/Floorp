@@ -7,13 +7,9 @@ esid: sec-Intl.ListFormat
 description: Checks handling of valid values for the style option to the ListFormat constructor.
 info: |
     InitializeListFormat (listFormat, locales, options)
-    InitializeListFormat (listFormat, locales, options)
-    12. Let type be ? GetOption(options, "type", "string", « "conjunction",
-        "disjunction", "unit" », "conjunction").
-    13. Set listFormat.[[Type]] to type.
-    14. Let style be ? GetOption(options, "style", "string", « "long", "short",
-        "narrow" », "long").
-    15. Set listFormat.[[Style]] to style.
+    9. Let s be ? GetOption(options, "style", "string", «"long", "short", "narrow"», "long").
+    10. Set listFormat.[[Style]] to s.
+    14. If style is "narrow" and type is not "unit", throw a RangeError exception.
 features: [Intl.ListFormat]
 ---*/
 
@@ -21,10 +17,7 @@ const validOptions = [
   [undefined, "long"],
   ["long", "long"],
   ["short", "short"],
-  ["narrow", "narrow"],
   [{ toString() { return "short"; } }, "short"],
-  [{ toString() { return "long"; } }, "long"],
-  [{ toString() { return "narrow"; } }, "narrow"],
 ];
 
 for (const [validOption, expected] of validOptions) {
@@ -32,5 +25,13 @@ for (const [validOption, expected] of validOptions) {
   const resolvedOptions = lf.resolvedOptions();
   assert.sameValue(resolvedOptions.style, expected);
 }
+
+const lf = new Intl.ListFormat([], {"style": "narrow", "type": "unit"});
+const resolvedOptions = lf.resolvedOptions();
+assert.sameValue(resolvedOptions.style, "narrow");
+
+assert.throws(RangeError, () => lf = new Intl.ListFormat([], {"style": "narrow"}));
+assert.throws(RangeError, () => lf = new Intl.ListFormat([], {"style": "narrow", "type": "conjuction"}));
+assert.throws(RangeError, () => lf = new Intl.ListFormat([], {"style": "narrow", "type": "disjuction"}));
 
 reportCompare(0, 0);
