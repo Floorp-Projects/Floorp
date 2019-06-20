@@ -428,6 +428,13 @@ struct MOZ_RAII AutoSetContextRuntime {
   ~AutoSetContextRuntime() { TlsContext.get()->setRuntime(nullptr); }
 };
 
+struct MOZ_RAII AutoSetContextParse {
+  explicit AutoSetContextParse(ParseTask* task) {
+    TlsContext.get()->setParseTask(task);
+  }
+  ~AutoSetContextParse() { TlsContext.get()->setParseTask(nullptr); }
+};
+
 static const JSClass parseTaskGlobalClass = {"internal-parse-task-global",
                                              JSCLASS_GLOBAL_FLAGS,
                                              &JS::DefaultGlobalClassOps};
@@ -494,6 +501,7 @@ void ParseTask::runTask() {
   JSRuntime* runtime = parseGlobal->runtimeFromAnyThread();
 
   AutoSetContextRuntime ascr(runtime);
+  AutoSetContextParse parsetask(this);
 
   Zone* zone = parseGlobal->zoneFromAnyThread();
   zone->setHelperThreadOwnerContext(cx);
