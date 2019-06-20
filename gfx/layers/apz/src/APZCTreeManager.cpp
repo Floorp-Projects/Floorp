@@ -598,7 +598,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
     mRootNode->Dump("  ");
   }
 #endif
-  CollectTransformsForChromeMainThread(nullptr);
+  SendSubtreeTransformsToChromeMainThread(nullptr);
 }
 
 void APZCTreeManager::UpdateFocusState(LayersId aRootLayerTreeId,
@@ -3257,7 +3257,7 @@ bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,
   return true;
 }
 
-void APZCTreeManager::CollectTransformsForChromeMainThread(
+void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
     const AsyncPanZoomController* aAncestor) {
   RefPtr<GeckoContentController> controller =
       GetContentController(mRootLayersId);
@@ -3283,7 +3283,7 @@ void APZCTreeManager::CollectTransformsForChromeMainThread(
           HitTestingTreeNode* parent = aNode->GetParent();
           if (!parent || layersId != parent->GetLayersId()) {
             messages.AppendElement(
-                MatrixMessage(aNode->GetCSSTransformToRoot(), layersId));
+                MatrixMessage(aNode->GetTransformToGecko(), layersId));
           }
         }, [&](HitTestingTreeNode* aNode) {
           bool atAncestor = (aAncestor && aNode->GetApzc() == aAncestor);
