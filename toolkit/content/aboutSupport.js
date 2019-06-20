@@ -605,7 +605,7 @@ var snapshotFormatters = {
 
     if (featureLog.fallbacks.length) {
       for (let fallback of featureLog.fallbacks) {
-        addRow("workarounds", fallback.name, [new Text(fallback.message)]);
+        addRow("workarounds", "#" + fallback.name, [new Text(fallback.message)]);
       }
     } else {
       $("graphics-workarounds-tbody").style.display = "none";
