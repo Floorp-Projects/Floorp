@@ -498,6 +498,8 @@ InternalPrompt.prototype = {
     }
 
     // (eslint-disable: see bug 1177904)
+    /* eslint-disable no-undef */
+
     let ok = false;
     if (aUser) {
       ok = this.nsIPrompt_promptUsernameAndPassword(
@@ -508,10 +510,11 @@ InternalPrompt.prototype = {
         checkMsg,
         check
       );
-    } // eslint-disable-line no-undef
-    else {
+    } else {
       ok = this.nsIPrompt_promptPassword(aTitle, aText, aPass, checkMsg, check);
-    } // eslint-disable-line no-undef
+    }
+
+    /* eslint-enable no-undef */
 
     if (ok && canSave && check.value) {
       PromptUtils.savePassword(hostname, realm, aUser, aPass);
