@@ -55,14 +55,22 @@ const ShellService = {
 
 ShellService.register();
 
-let gIsSnap = false;
+let gIsLegacy = false;
 
 function simulateSnapEnvironment() {
   let env = Cc["@mozilla.org/process/environment;1"].
           getService(Ci.nsIEnvironment);
   env.set("SNAP_NAME", "foo");
 
-  gIsSnap = true;
+  gIsLegacy = true;
+}
+
+function enableLegacyProfiles() {
+  let env = Cc["@mozilla.org/process/environment;1"].
+          getService(Ci.nsIEnvironment);
+  env.set("MOZ_LEGACY_PROFILES", "1");
+
+  gIsLegacy = true;
 }
 
 function getProfileService() {
@@ -398,7 +406,7 @@ function checkProfileService(profileData = readProfilesIni(), verifyBackup = tru
   let defaultPath = (profileData.installs && hash in profileData.installs) ?
                     profileData.installs[hash].default : null;
   let dedicatedProfile = null;
-  let snapProfile = null;
+  let legacyProfile = null;
 
   for (let i = 0; i < serviceProfiles.length; i++) {
     let serviceProfile = serviceProfiles[i];
@@ -416,15 +424,15 @@ function checkProfileService(profileData = readProfilesIni(), verifyBackup = tru
 
     if (AppConstants.MOZ_DEV_EDITION) {
       if (expectedProfile.name == PROFILE_DEFAULT) {
-        snapProfile = serviceProfile;
+        legacyProfile = serviceProfile;
       }
     } else if (expectedProfile.default) {
-      snapProfile = serviceProfile;
+      legacyProfile = serviceProfile;
     }
   }
 
-  if (gIsSnap) {
-    Assert.equal(service.defaultProfile, snapProfile, "Should have seen the right profile selected.");
+  if (gIsLegacy) {
+    Assert.equal(service.defaultProfile, legacyProfile, "Should have seen the right profile selected.");
   } else {
     Assert.equal(service.defaultProfile, dedicatedProfile, "Should have seen the right profile selected.");
   }
