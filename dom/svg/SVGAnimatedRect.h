@@ -9,14 +9,20 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/SVGElement.h"
-#include "mozilla/dom/SVGRectBinding.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+
 class SVGAnimatedViewBox;
+
 namespace dom {
+
+class SVGRect;
+
+// Despite the name of this class appearing to be generic,
+// SVGAnimatedRect is only used for viewBox attributes.
 
 class SVGAnimatedRect final : public nsWrapperCache {
  public:
@@ -30,9 +36,9 @@ class SVGAnimatedRect final : public nsWrapperCache {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  already_AddRefed<SVGIRect> GetBaseVal();
+  already_AddRefed<SVGRect> GetBaseVal();
 
-  already_AddRefed<SVGIRect> GetAnimVal();
+  already_AddRefed<SVGRect> GetAnimVal();
 
  private:
   virtual ~SVGAnimatedRect();

@@ -333,6 +333,32 @@ class Opera(BrowserSetup):
                 raise WptrunError("Unable to locate or install operadriver binary")
 
 
+class EdgeChromium(BrowserSetup):
+    name = "MicrosoftEdge"
+    browser_cls = browser.EdgeChromium
+
+    def setup_kwargs(self, kwargs):
+        if kwargs["webdriver_binary"] is None:
+            webdriver_binary = self.browser.find_webdriver()
+
+            if webdriver_binary is None:
+                install = self.prompt_install("msedgedriver")
+
+                if install:
+                    logger.info("Downloading msedgedriver")
+                    webdriver_binary = self.browser.install_webdriver(dest=self.venv.bin_path)
+            else:
+                logger.info("Using webdriver binary %s" % webdriver_binary)
+
+            if webdriver_binary:
+                kwargs["webdriver_binary"] = webdriver_binary
+            else:
+                raise WptrunError("Unable to locate or install msedgedriver binary")
+        if kwargs["browser_channel"] == "dev":
+            logger.info("Automatically turning on experimental features for Edge Dev")
+            kwargs["binary_args"].append("--enable-experimental-web-platform-features")
+
+
 class Edge(BrowserSetup):
     name = "edge"
     browser_cls = browser.Edge
@@ -471,6 +497,7 @@ product_setup = {
     "firefox": Firefox,
     "chrome": Chrome,
     "chrome_android": ChromeAndroid,
+    "edgechromium": EdgeChromium,
     "edge": Edge,
     "edge_webdriver": EdgeWebDriver,
     "ie": InternetExplorer,
@@ -552,7 +579,8 @@ def setup_wptrunner(venv, prompt=True, install_browser=False, **kwargs):
             kwargs["browser_channel"] = channel
         else:
             logger.info("Valid channels for %s not known; using argument unmodified" % kwargs["product"])
-    del kwargs["channel"]
+            kwargs["browser_channel"] = kwargs["channel"]
+        del kwargs["channel"]
 
     if install_browser:
         logger.info("Installing browser")
