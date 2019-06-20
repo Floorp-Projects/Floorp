@@ -7364,7 +7364,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   }
 
   // Create the function object.
-  RootedFunction fun(cx_, newFunction(nullptr, FunctionSyntaxKind::Expression,
+  RootedFunction fun(cx_, newFunction(nullptr, FunctionSyntaxKind::Method,
                                       GeneratorKind::NotGenerator,
                                       FunctionAsyncKind::SyncFunction));
   if (!fun) {
@@ -7373,7 +7373,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
 
   // Create the top-level field initializer node.
   FunctionNodeType funNode =
-      handler_.newFunction(FunctionSyntaxKind::Expression, firstTokenPos);
+      handler_.newFunction(FunctionSyntaxKind::Method, firstTokenPos);
   if (!funNode) {
     return null();
   }
@@ -7534,6 +7534,10 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   }
 
   handler_.setFunctionBody(funNode, initializerBody);
+
+  if (pc_->superScopeNeedsHomeObject()) {
+    funbox->setNeedsHomeObject();
+  }
 
   if (!finishFunction(/* isStandaloneFunction = */ false,
                       IsFieldInitializer::Yes)) {
