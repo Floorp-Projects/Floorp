@@ -13,7 +13,6 @@ SOURCES += [
 ]
 
 EXPORTS.mozilla.widget += [
-    'gbm.h',
     'gtk-primary-selection-client-protocol.h',
     'linux-dmabuf-unstable-v1-client-protocol.h',
 ]
