@@ -9,7 +9,7 @@ import traceback
 import mozprocess
 
 
-__all__ = ["SeleniumServer", "ChromeDriverServer", "OperaDriverServer",
+__all__ = ["SeleniumServer", "ChromeDriverServer", "EdgeChromiumDriverServer", "OperaDriverServer",
            "GeckoDriverServer", "InternetExplorerDriverServer", "EdgeDriverServer",
            "ServoDriverServer", "WebKitDriverServer", "WebDriverServer"]
 
@@ -18,7 +18,6 @@ class WebDriverServer(object):
     __metaclass__ = abc.ABCMeta
 
     default_base_path = "/"
-    _used_ports = set()
 
     def __init__(self, logger, binary, host="127.0.0.1", port=None,
                  base_path="", env=None, args=None):
@@ -106,14 +105,8 @@ class WebDriverServer(object):
     @property
     def port(self):
         if self._port is None:
-            self._port = self._find_next_free_port()
+            self._port = get_free_port()
         return self._port
-
-    @staticmethod
-    def _find_next_free_port():
-        port = get_free_port(4444, exclude=WebDriverServer._used_ports)
-        WebDriverServer._used_ports.add(port)
-        return port
 
 
 class SeleniumServer(WebDriverServer):
@@ -125,6 +118,17 @@ class SeleniumServer(WebDriverServer):
 
 class ChromeDriverServer(WebDriverServer):
     def __init__(self, logger, binary="chromedriver", port=None,
+                 base_path="", args=None):
+        WebDriverServer.__init__(
+            self, logger, binary, port=port, base_path=base_path, args=args)
+
+    def make_command(self):
+        return [self.binary,
+                cmd_arg("port", str(self.port)),
+                cmd_arg("url-base", self.base_path) if self.base_path else ""] + self._args
+
+class EdgeChromiumDriverServer(WebDriverServer):
+    def __init__(self, logger, binary="msedgedriver", port=None,
                  base_path="", args=None):
         WebDriverServer.__init__(
             self, logger, binary, port=port, base_path=base_path, args=args)
@@ -221,24 +225,16 @@ def cmd_arg(name, value=None):
     return rv
 
 
-def get_free_port(start_port, exclude=None):
-    """Get the first port number after start_port (inclusive) that is
-    not currently bound.
-
-    :param start_port: Integer port number at which to start testing.
-    :param exclude: Set of port numbers to skip"""
-    port = start_port
+def get_free_port():
+    """Get a random unbound port"""
     while True:
-        if exclude and port in exclude:
-            port += 1
-            continue
         s = socket.socket()
         try:
-            s.bind(("127.0.0.1", port))
+            s.bind(("127.0.0.1", 0))
         except socket.error:
-            port += 1
+            continue
         else:
-            return port
+            return s.getsockname()[1]
         finally:
             s.close()
 

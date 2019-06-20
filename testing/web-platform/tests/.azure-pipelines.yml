@@ -138,6 +138,74 @@ jobs:
     parameters:
       directory: tools/wpt/
 
+- job: tools_unittest_win
+  displayName: 'tools/ unittests (Windows)'
+  dependsOn: decision
+  condition: dependencies.decision.outputs['test_jobs.tools_unittest']
+  pool:
+    vmImage: 'windows-2019'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '2.7.x'
+  - template: tools/ci/azure/checkout.yml
+  - template: tools/ci/azure/tox_pytest.yml
+    parameters:
+      directory: tools/
+      toxenv: py27
+
+- job: tools_unittest_win_py3
+  displayName: 'tools/ unittests (Windows Python 3)'
+  dependsOn: decision
+  condition: dependencies.decision.outputs['test_jobs.tools_unittest']
+  pool:
+    vmImage: 'windows-2019'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.6.x'
+  - template: tools/ci/azure/checkout.yml
+  - template: tools/ci/azure/tox_pytest.yml
+    parameters:
+      directory: tools/
+      toxenv: py36
+
+- job: wptrunner_unittest_win
+  displayName: 'tools/wptrunner/ unittests (Windows)'
+  dependsOn: decision
+  condition: dependencies.decision.outputs['test_jobs.wptrunner_unittest']
+  pool:
+    vmImage: 'windows-2019'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '2.7.x'
+  - template: tools/ci/azure/checkout.yml
+  - template: tools/ci/azure/tox_pytest.yml
+    parameters:
+      directory: tools/wptrunner/
+
+- job: wpt_integration_win
+  displayName: 'tools/wpt/ tests (Windows)'
+  dependsOn: decision
+  condition: dependencies.decision.outputs['test_jobs.wpt_integration']
+  pool:
+    vmImage: 'windows-2019'
+  steps:
+  # full checkout required
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '2.7.x'
+  # currently just using the outdated Chrome/Firefox on the VM rather than
+  # figuring out how to install Chrome Dev channel on Windows
+  # - template: tools/ci/azure/install_chrome.yml
+  # - template: tools/ci/azure/install_firefox.yml
+  - template: tools/ci/azure/update_hosts.yml
+  - template: tools/ci/azure/update_manifest.yml
+  - template: tools/ci/azure/tox_pytest.yml
+    parameters:
+      directory: tools/wpt/
+
 - job: infrastructure_win10
   displayName: 'infrastructure/ tests (Windows 10)'
   # This job is only triggered manually until it has been shown to be robust.
@@ -152,10 +220,11 @@ jobs:
     parameters:
       packages: virtualenv
   - template: tools/ci/azure/install_certs.yml
+  - template: tools/ci/azure/install_edge.yml
   - template: tools/ci/azure/update_hosts.yml
   - template: tools/ci/azure/update_manifest.yml
-  - script: python ./wpt run --yes --no-manifest-update --install-fonts --manifest MANIFEST.json --metadata infrastructure/metadata/ --webdriver-arg=--verbose --log-tbpl $(Build.ArtifactStagingDirectory)/edge.tbpl.log --log-tbpl-level info edge_webdriver infrastructure/
-    displayName: 'Run tests (Edge)'
+  - script: python ./wpt run --yes --no-manifest-update --install-fonts --manifest MANIFEST.json --metadata infrastructure/metadata/ --log-tbpl $(Build.ArtifactStagingDirectory)/edge.tbpl.log --log-tbpl-level info --channel dev edgechromium infrastructure/
+    displayName: 'Run tests (Edge Dev)'
   - task: PublishBuildArtifacts@1
     displayName: 'Publish results'
     inputs:
@@ -184,10 +253,11 @@ jobs:
     parameters:
       packages: virtualenv
   - template: tools/ci/azure/install_certs.yml
+  - template: tools/ci/azure/install_edge.yml
   - template: tools/ci/azure/update_hosts.yml
   - template: tools/ci/azure/update_manifest.yml
-  - script: python ./wpt run --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --install-fonts --webdriver-arg=--verbose --test-types reftest testharness --this-chunk $(System.JobPositionInPhase) --total-chunks $(System.TotalJobsInPhase) --chunk-type hash --log-tbpl - --log-tbpl-level info --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt edge_webdriver
-    displayName: 'Run tests'
+  - script: python ./wpt run --yes --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --install-fonts --this-chunk $(System.JobPositionInPhase) --total-chunks $(System.TotalJobsInPhase) --chunk-type hash --log-tbpl - --log-tbpl-level info --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt --channel dev edgechromium
+    displayName: 'Run tests (Edge Dev)'
   - task: PublishBuildArtifacts@1
     displayName: 'Publish results'
     inputs:
@@ -200,7 +270,9 @@ jobs:
 
 - job: results_safari
   displayName: 'all tests (Safari)'
-  condition: eq(variables['Build.Reason'], 'Schedule')
+  condition: |
+    or(eq(variables['Build.Reason'], 'Schedule'),
+       and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_safari']))
   strategy:
     parallel: 4 # chosen to make runtime ~2h
   timeoutInMinutes: 360

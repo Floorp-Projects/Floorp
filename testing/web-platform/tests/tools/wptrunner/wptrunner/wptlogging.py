@@ -3,6 +3,7 @@ import logging
 from mozlog import commandline, stdadapter, set_default_logger
 from mozlog.structuredlog import StructuredLogger
 
+
 def setup(args, defaults):
     logger = args.pop('log', None)
     if logger:

@@ -270,8 +270,8 @@ already_AddRefed<SVGMatrix> SVGSVGElement::CreateSVGMatrix() {
   return do_AddRef(new SVGMatrix());
 }
 
-already_AddRefed<SVGIRect> SVGSVGElement::CreateSVGRect() {
-  return NS_NewSVGRect(this);
+already_AddRefed<SVGRect> SVGSVGElement::CreateSVGRect() {
+  return do_AddRef(new SVGRect(this));
 }
 
 already_AddRefed<DOMSVGTransform> SVGSVGElement::CreateSVGTransform() {

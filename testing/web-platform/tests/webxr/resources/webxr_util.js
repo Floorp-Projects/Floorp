@@ -51,11 +51,14 @@ function xr_session_promise_test(
                         navigator.xr.requestSession(sessionMode)
                             .then((session) => {
                               testSession = session;
+                              session.mode = sessionMode;
+                              let glLayer = new XRWebGLLayer(session, gl, {
+                                compositionDisabled: session.mode == 'inline'
+                              });
                               // Session must have a baseLayer or frame requests
                               // will be ignored.
                               session.updateRenderState({
-                                  baseLayer: new XRWebGLLayer(session, gl),
-                                  outputContext: getOutputContext()
+                                  baseLayer: glLayer
                               });
                               resolve(func(session, testDeviceController, t));
                             })
@@ -75,15 +78,6 @@ function xr_session_promise_test(
                 XRTest.simulateDeviceDisconnection();
               }),
       properties);
-}
-
-// A utility function to create an output context as required by non-immersive
-// sessions.
-// https://immersive-web.github.io/webxr/#xrsessioncreationoptions-interface
-function getOutputContext() {
-  let outputCanvas = document.createElement('canvas');
-  document.body.appendChild(outputCanvas);
-  return outputCanvas.getContext('xrpresent');
 }
 
 // This functions calls a callback with each API object as specified

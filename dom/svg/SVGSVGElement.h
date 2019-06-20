@@ -25,7 +25,7 @@ class DOMSVGAngle;
 class DOMSVGLength;
 class DOMSVGNumber;
 class SVGMatrix;
-class SVGIRect;
+class SVGRect;
 class SVGSVGElement;
 
 // Stores svgView arguments of SVG fragment identifiers.
@@ -137,7 +137,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
   already_AddRefed<DOMSVGAngle> CreateSVGAngle();
   already_AddRefed<nsISVGPoint> CreateSVGPoint();
   already_AddRefed<SVGMatrix> CreateSVGMatrix();
-  already_AddRefed<SVGIRect> CreateSVGRect();
+  already_AddRefed<SVGRect> CreateSVGRect();
   already_AddRefed<DOMSVGTransform> CreateSVGTransform();
   already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(
       SVGMatrix& matrix);
