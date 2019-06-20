@@ -7,8 +7,8 @@
 #include "SVGAnimatedRect.h"
 #include "mozilla/dom/SVGAnimatedRectBinding.h"
 #include "mozilla/dom/SVGElement.h"
+#include "mozilla/dom/SVGRect.h"
 #include "SVGAnimatedViewBox.h"
-#include "SVGIRect.h"
 
 namespace mozilla {
 namespace dom {
@@ -26,11 +26,11 @@ SVGAnimatedRect::~SVGAnimatedRect() {
   SVGAnimatedViewBox::sSVGAnimatedRectTearoffTable.RemoveTearoff(mVal);
 }
 
-already_AddRefed<SVGIRect> SVGAnimatedRect::GetBaseVal() {
+already_AddRefed<SVGRect> SVGAnimatedRect::GetBaseVal() {
   return mVal->ToDOMBaseVal(mSVGElement);
 }
 
-already_AddRefed<SVGIRect> SVGAnimatedRect::GetAnimVal() {
+already_AddRefed<SVGRect> SVGAnimatedRect::GetAnimVal() {
   return mVal->ToDOMAnimVal(mSVGElement);
 }
 
