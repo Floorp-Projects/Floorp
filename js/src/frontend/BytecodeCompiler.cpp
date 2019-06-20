@@ -95,7 +95,7 @@ class MOZ_RAII AutoAssertReportedException {
       return;
     }
 
-    ParseTask* task = cx_->helperThread()->parseTask();
+    ParseTask* task = cx_->parseTask();
     MOZ_ASSERT(task->outOfMemory || task->overRecursed ||
                !task->errors.empty());
   }
