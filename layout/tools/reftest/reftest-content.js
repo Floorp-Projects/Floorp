@@ -524,7 +524,11 @@ function FlushRendering(aFlushMode) {
         }
 
         for (var i = 0; i < win.frames.length; ++i) {
-            flushWindow(win.frames[i]);
+            try {
+                flushWindow(win.frames[i]);
+            } catch (e) {
+                Cu.reportError(e);
+            }
         }
     }
 
