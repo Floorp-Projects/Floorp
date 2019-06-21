@@ -13,6 +13,7 @@
 #include "nsISupportsImpl.h"
 #include "prthread.h"
 #include "Tracing.h"
+#include "audio_thread_priority.h"
 
 namespace mozilla {
 
@@ -91,6 +92,10 @@ bool GraphRunner::OneIteration(GraphTime aStateEnd) {
 
 void GraphRunner::Run() {
   PR_SetCurrentThreadName("GraphRunner");
+
+  atp_handle* handle =
+      atp_promote_current_thread_to_real_time(0, mGraph->GraphRate());
+
   MonitorAutoLock lock(mMonitor);
   while (true) {
     while (mThreadState == ThreadState::Wait) {
@@ -104,6 +109,10 @@ void GraphRunner::Run() {
     // Signal that mStillProcessing was updated
     mThreadState = ThreadState::Wait;
     mMonitor.Notify();
+  }
+
+  if (handle) {
+    atp_demote_current_thread_from_real_time(handle);
   }
 
   dom::WorkletThread::DeleteCycleCollectedJSContext();

@@ -89,6 +89,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'dom_media'
 
 EXPORTS += [
+    '../../third_party/rust/audio_thread_priority/audio_thread_priority.h',
     'ADTSDecoder.h',
     'ADTSDemuxer.h',
     'AsyncLogger.h',
