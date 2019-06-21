@@ -18,7 +18,6 @@ browser.jar:
   content/browser/aboutlogins/components/reflected-fluent-element.js  (content/components/reflected-fluent-element.js)
   content/browser/aboutlogins/icons/delete.svg  (content/icons/delete.svg)
   content/browser/aboutlogins/icons/edit.svg    (content/icons/edit.svg)
-  content/browser/aboutlogins/icons/feedback.svg  (content/icons/feedback.svg)
   content/browser/aboutlogins/icons/hide-password.svg (content/icons/hide-password.svg)
   content/browser/aboutlogins/icons/show-password.svg (content/icons/show-password.svg)
   content/browser/aboutlogins/aboutLogins.css   (content/aboutLogins.css)
