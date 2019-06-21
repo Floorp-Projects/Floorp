@@ -12,6 +12,7 @@
     <script defer="defer" src="chrome://global/content/certviewer/components/info-group.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/dummy-info.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/handshake-section.js"></script>
+    <script defer="defer" src="chrome://global/content/certviewer/components/certificate-tab.js"></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://global/content/certviewer/certviewer.css">
     <title>about:certificate</title>
@@ -37,6 +38,10 @@
       <span class="info-group-title"></span>
       <span class="info-group-title-hr"></span>
     </template>
-
+    
+    <template id="certificate-tab-template">
+      <link rel="stylesheet" href="chrome://global/content/certviewer/components/certificate-tab.css">
+      <span class="tab"></span>
+    </template>
   </body>
 </html>
