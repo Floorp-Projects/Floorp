@@ -1593,6 +1593,30 @@ bool DrawTargetSkia::CanCreateSimilarDrawTarget(const IntSize& aSize,
   return size_t(std::max(aSize.width, aSize.height)) < GetMaxSurfaceSize();
 }
 
+RefPtr<DrawTarget> DrawTargetSkia::CreateClippedDrawTarget(
+    const Rect& aBounds, SurfaceFormat aFormat) {
+  SkIRect clipBounds;
+
+  RefPtr<DrawTarget> result;
+  // Doing this save()/restore() dance is wasteful
+  mCanvas->save();
+  if (!aBounds.IsEmpty()) {
+    mCanvas->clipRect(RectToSkRect(aBounds), SkClipOp::kIntersect, true);
+  }
+  if (mCanvas->getDeviceClipBounds(&clipBounds)) {
+    RefPtr<DrawTarget> dt = CreateSimilarDrawTarget(
+        IntSize(clipBounds.width(), clipBounds.height()), aFormat);
+    result = gfx::Factory::CreateOffsetDrawTarget(
+        dt, IntPoint(clipBounds.x(), clipBounds.y()));
+    result->SetTransform(mTransform);
+  } else {
+    // Everything is clipped but we still want some kind of surface
+    result = CreateSimilarDrawTarget(IntSize(1, 1), aFormat);
+  }
+  mCanvas->restore();
+  return result;
+}
+
 already_AddRefed<SourceSurface>
 DrawTargetSkia::OptimizeSourceSurfaceForUnknownAlpha(
     SourceSurface* aSurface) const {
