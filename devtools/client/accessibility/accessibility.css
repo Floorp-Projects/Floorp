@@ -310,7 +310,7 @@ body {
   min-width: 50%;
 }
 
-.treeTable:focus {
+.treeTable:focus, .treeTable tbody:focus {
   outline: 0;
 }
 
@@ -418,7 +418,7 @@ body {
   -moz-outline-radius: 2px;
 }
 
-.treeTable:focus .treeRow.selected .badges .badge {
+.treeTable:focus-within .treeRow.selected .badges .badge {
   background-color: var(--badge-active-background-color);
   border-color: var(--accessible-active-border-color);
   color: var(--theme-selection-color);

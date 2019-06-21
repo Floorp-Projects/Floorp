@@ -1077,6 +1077,14 @@ def target_is_solaris(target):
 set_define('XP_SOLARIS', target_is_solaris)
 
 
+@depends(target)
+def target_is_sparc(target):
+    if target.cpu == 'sparc64':
+        return True
+
+set_define('SPARC64', target_is_sparc)
+
+
 @depends('--enable-project', '--with-external-source-dir',
          check_build_environment, '--help')
 @imports(_from='os.path', _import='exists')

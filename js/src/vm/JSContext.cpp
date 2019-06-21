@@ -1002,9 +1002,9 @@ JS_FRIEND_API const JSErrorFormatString* js::GetErrorMessage(
 }
 
 void JSContext::recoverFromOutOfMemory() {
-  if (helperThread()) {
+  if (isHelperThreadContext()) {
     // Keep in sync with addPendingOutOfMemory.
-    if (ParseTask* task = helperThread()->parseTask()) {
+    if (ParseTask* task = parseTask()) {
       task->outOfMemory = false;
     }
   } else {
@@ -1197,9 +1197,9 @@ JS::OOM JSContext::reportedOOM;
 
 mozilla::GenericErrorResult<OOM&> JSContext::alreadyReportedOOM() {
 #ifdef DEBUG
-  if (helperThread()) {
+  if (isHelperThreadContext()) {
     // Keep in sync with addPendingOutOfMemory.
-    if (ParseTask* task = helperThread()->parseTask()) {
+    if (ParseTask* task = parseTask()) {
       MOZ_ASSERT(task->outOfMemory);
     }
   } else {
@@ -1221,7 +1221,6 @@ mozilla::GenericErrorResult<JS::Error&> JSContext::alreadyReportedError() {
 JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     : runtime_(runtime),
       kind_(ContextKind::HelperThread),
-      helperThread_(nullptr),
       options_(options),
       freeLists_(nullptr),
       defaultFreeOp_(runtime, true),

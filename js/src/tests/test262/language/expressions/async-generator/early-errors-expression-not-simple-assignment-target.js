@@ -1,4 +1,4 @@
-// |reftest| error:ReferenceError
+// |reftest| error:SyntaxError
 // Copyright 2017 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -9,7 +9,7 @@ description: >
   Async generator function expressions are not a simple assignment target.
 negative:
   phase: parse
-  type: ReferenceError
+  type: SyntaxError
 features: [async-iteration]
 ---*/
 

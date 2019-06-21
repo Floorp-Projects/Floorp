@@ -1,11 +1,11 @@
-// |reftest| skip-if((function(){try{eval('c=class{x;}');return(false);}catch{return(true);}})()) -- class-fields-public is not enabled unconditionally
+// |reftest| skip -- class-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/eval-err-contains-supercall-1.case
 // - src/class-elements/initializer-eval-super-call/cls-decl-private-fields-indirect-eval.template
 /*---
 description: error if `super()['x']` in StatementList of eval (indirect eval)
 esid: sec-performeval-rules-in-initializer
-features: [class, class-fields-public]
+features: [class, class-fields-public, class-fields-private]
 flags: [generated]
 info: |
     Additional Early Error Rules for Eval Inside Initializer
