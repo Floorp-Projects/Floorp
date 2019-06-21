@@ -47,12 +47,7 @@ function run_test() {
 
     scheme: "http",
 
-    QueryInterface: function authprompt_qi(iid) {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsIAuthPrompt))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt"]),
 
     prompt: function ap1_prompt(title, text, realm, save, defaultText, result) {
       this.called |= CALLED_PROMPT;
@@ -102,7 +97,7 @@ function run_test() {
   // Also have to make up a channel
   var uri = NetUtil.newURI("http://" + host)
   var chan = NetUtil.newChannel({
-    uri: uri,
+    uri,
     loadUsingSystemPrincipal: true
   });
 

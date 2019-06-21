@@ -1,4 +1,4 @@
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var prefs;
 var h2Port;
@@ -68,7 +68,7 @@ var test_answer_addr="127.0.0.1";
 
 // check that we do lookup by type fine
 var listenerEsni = {
-  onLookupByTypeComplete: function(inRequest, inRecord, inStatus) {
+  onLookupByTypeComplete(inRequest, inRecord, inStatus) {
     if (inRequest == listen) {
       Assert.ok(!inStatus);
       var answer = inRecord.getRecordsAsOneString();
@@ -77,18 +77,12 @@ var listenerEsni = {
       run_dns_tests();
     }
   },
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIDNSListener) ||
-      aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"])
 };
 
 // check that we do lookup for A record is fine
 var listenerAddr = {
-  onLookupComplete: function(inRequest, inRecord, inStatus) {
+  onLookupComplete(inRequest, inRecord, inStatus) {
     if (inRequest == listen) {
       Assert.ok(!inStatus);
       var answer = inRecord.getNextAddrAsString();
@@ -97,13 +91,7 @@ var listenerAddr = {
       run_dns_tests();
     }
   },
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIDNSListener) ||
-      aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"])
 };
 
 function testEsniRequest()

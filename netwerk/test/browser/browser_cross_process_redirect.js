@@ -122,13 +122,13 @@ add_task(async function() {
   await ContentTask.spawn(browser2, null, async function(arg) {
     function ChannelListener(childListener) { this.childListener = childListener; }
     ChannelListener.prototype = {
-      onStartRequest: function(aRequest) {
+      onStartRequest(aRequest) {
         info("onStartRequest");
         let channel = aRequest.QueryInterface(Ci.nsIChannel);
         Assert.equal(channel.URI.spec, this.childListener.URI, "Make sure the channel has the proper URI");
         Assert.equal(channel.originalURI.spec, this.childListener.originalURI, "Make sure the originalURI is correct");
       },
-      onStopRequest: function(aRequest, aStatusCode) {
+      onStopRequest(aRequest, aStatusCode) {
         info("onStopRequest");
         Assert.equal(aStatusCode, Cr.NS_OK, "Check the status code");
         Assert.equal(this.gotData, true, "Check that the channel received data");
@@ -137,31 +137,29 @@ add_task(async function() {
         }
         this.childListener.resolve();
       },
-      onDataAvailable: function(aRequest, aContext, aInputStream,
-                                aOffset, aCount) {
+      onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount) {
         this.gotData = true;
         info("onDataAvailable");
       },
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener,
-                                              Ci.nsIRequestObserver])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener,Ci.nsIRequestObserver])
     };
 
     function ChildListener(uri, originalURI, resolve) { this.URI = uri; this.originalURI = originalURI; this.resolve = resolve;}
     ChildListener.prototype = {
       // nsIChildProcessChannelListener
-      onChannelReady: function(aChildChannel, aIdentifier) {
+      onChannelReady(aChildChannel, aIdentifier) {
         Assert.equal(aIdentifier, 42, "Check the status code");
         info("onChannelReady");
         aChildChannel.completeRedirectSetup(new ChannelListener(this), null);
       },
       // nsIFactory
-      createInstance: function(aOuter, aIID) {
+      createInstance(aOuter, aIID) {
         if (aOuter) {
           throw Cr.NS_ERROR_NO_AGGREGATION;
         }
         return this.QueryInterface(aIID);
       },
-      lockFactory: function() {},
+      lockFactory() {},
       // nsISupports
       QueryInterface: ChromeUtils.generateQI([Ci.nsIChildProcessChannelListener, Ci.nsIFactory]),
       classID: Components.ID("{a6c142a9-eb38-4a09-a940-b71cdad479e1}")

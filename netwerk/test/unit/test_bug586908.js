@@ -6,16 +6,11 @@ var httpserv = null;
 const CID = Components.ID("{5645d2c1-d6d8-4091-b117-fe7ee4027db7}");
 XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
   return {
-    QueryInterface: function (iid) {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsISystemProxySettings))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsISystemProxySettings"]),
 
     mainThreadOnly: true,
     PACURI: "http://localhost:" + httpserv.identity.primaryPort + "/redirect",
-    getProxyForURI: function(aURI) {
+    getProxyForURI(aURI) {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     }
   };

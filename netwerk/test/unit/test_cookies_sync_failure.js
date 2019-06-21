@@ -104,7 +104,7 @@ function* do_run_test() {
   yield;
 
   finish_test();
-  return;
+  
 }
 
 const garbage = "hello thar!";

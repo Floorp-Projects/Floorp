@@ -33,7 +33,7 @@ obs.prototype = {
       info("channel.URI " + channel.URI);
       info("channel.URI.spec " + channel.URI.spec);
       channel.visitRequestHeaders({
-        visitHeader: function(aHeader, aValue) {
+        visitHeader(aHeader, aValue) {
           info(aHeader + ": " + aValue);
         }});
     } catch (err) {

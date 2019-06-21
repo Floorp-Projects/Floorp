@@ -40,12 +40,7 @@ AuthPrompt1.prototype = {
 
   expectedRealm: "secret",
 
-  QueryInterface: function authprompt_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIAuthPrompt))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt"]),
 
   prompt: function ap1_prompt(title, text, realm, save, defaultText, result) {
     do_throw("unexpected prompt call");
@@ -62,10 +57,8 @@ AuthPrompt1.prototype = {
       if (!text.includes(this.expectedRealm)) {
         do_throw("Text must indicate the realm");
       }
-    } else {
-      if (text.includes(this.expectedRealm)) {
-        do_throw("There should not be realm for cross origin");
-      }
+    } else if (text.includes(this.expectedRealm)) {
+      do_throw("There should not be realm for cross origin");
     }
     if (!text.includes("localhost"))
       do_throw("Text must indicate the hostname");
@@ -112,12 +105,7 @@ AuthPrompt2.prototype = {
 
   expectedRealm: "secret",
 
-  QueryInterface: function authprompt2_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIAuthPrompt2))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt2"]),
 
   promptAuth:
     function ap2_promptAuth(channel, level, authInfo)
@@ -196,12 +184,7 @@ function Requestor(flags, versions) {
 }
 
 Requestor.prototype = {
-  QueryInterface: function requestor_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIInterfaceRequestor))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor"]),
 
   getInterface: function requestor_gi(iid) {
     if (this.versions & 1 &&
@@ -229,13 +212,7 @@ Requestor.prototype = {
 function RealmTestRequestor() {}
 
 RealmTestRequestor.prototype = {
-  QueryInterface: function realmtest_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIInterfaceRequestor) ||
-        iid.equals(Ci.nsIAuthPrompt2))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor", "nsIAuthPrompt2"]),
 
   getInterface: function realmtest_interface(iid) {
     if (iid.equals(Ci.nsIAuthPrompt2))

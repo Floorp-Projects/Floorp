@@ -45,9 +45,7 @@ function run_test()
       if (lineNo == test.lines.length) {
         if (more) err(test.file, lineNo, "There should be no more data after the last line");
       }
-      else {
-        if (!more) err(test.file, lineNo, "There should be more data after this line");
-      }
+      else if (!more) err(test.file, lineNo, "There should be more data after this line");
       if (line.value != check)
         err(test.file, lineNo, "Wrong value, got '"+line.value+"' expected '"+check+"'");
       dump("ok \""+test.file+"\" line "+lineNo+" (length "+line.value.length+"): '"+line.value+"'\n");

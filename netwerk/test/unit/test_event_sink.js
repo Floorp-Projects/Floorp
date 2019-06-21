@@ -17,13 +17,7 @@ const categoryName = "net-channel-event-sinks";
  * itself when asked for nsIChannelEventSink.
  */
 var eventsink = {
-  QueryInterface: function eventsink_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIFactory) ||
-        iid.equals(Ci.nsIChannelEventSink))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIChannelEventSink"]),
   createInstance: function eventsink_ci(outer, iid) {
     if (outer)
       throw Cr.NS_ERROR_NO_AGGREGATION;

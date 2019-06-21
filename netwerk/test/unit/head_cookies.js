@@ -57,7 +57,7 @@ function _observer(generator, topic) {
 }
 
 _observer.prototype = {
-  observe: function (subject, topic, data) {
+  observe (subject, topic, data) {
     Assert.equal(this.topic, topic);
 
     Services.obs.removeObserver(this, this.topic);
@@ -388,7 +388,7 @@ function CookieDatabaseConnection(file, schema)
 
 CookieDatabaseConnection.prototype =
 {
-  insertCookie: function(cookie)
+  insertCookie(cookie)
   {
     if (!(cookie instanceof Cookie))
       do_throw("not a cookie");
@@ -451,7 +451,7 @@ CookieDatabaseConnection.prototype =
     do_execute_stmt(this.stmtInsert);
   },
 
-  deleteCookie: function(cookie)
+  deleteCookie(cookie)
   {
     if (!(cookie instanceof Cookie))
       do_throw("not a cookie");
@@ -477,7 +477,7 @@ CookieDatabaseConnection.prototype =
     do_execute_stmt(this.stmtDelete);
   },
 
-  updateCookie: function(cookie)
+  updateCookie(cookie)
   {
     if (!(cookie instanceof Cookie))
       do_throw("not a cookie");
@@ -507,7 +507,7 @@ CookieDatabaseConnection.prototype =
     do_execute_stmt(this.stmtUpdate);
   },
 
-  close: function()
+  close()
   {
     this.stmtInsert.finalize();
     this.stmtDelete.finalize();

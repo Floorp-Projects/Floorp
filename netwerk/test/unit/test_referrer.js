@@ -7,7 +7,7 @@ function getTestReferrer(server_uri, referer_uri, isPrivate=false) {
   let referrer = NetUtil.newURI(referer_uri);
   let principal = Services.scriptSecurityManager.createCodebasePrincipal(referrer, {privateBrowsingId: isPrivate ? 1 : 0});
   var chan = NetUtil.newChannel({
-    uri: uri,
+    uri,
     loadingPrincipal: principal,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
     securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,

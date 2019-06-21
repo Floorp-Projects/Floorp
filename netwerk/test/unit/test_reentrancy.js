@@ -24,15 +24,9 @@ var listener = {
   _done_onData: false,
   _test: 0,
 
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
 
-  onStartRequest: function(request) {
+  onStartRequest(request) {
     switch(this._test) {
       case 0:
         request.suspend();
@@ -54,13 +48,13 @@ var listener = {
     this._done_onStart = true;
   },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable(request, stream, offset, count) {
     Assert.ok(this._done_onStart);
     read_stream(stream, count);
     this._done_onData = true;
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest(request, status) {
     Assert.ok(this._done_onData);
     this._reset();
     if (this._test <= MAX_TESTS)
@@ -69,7 +63,7 @@ var listener = {
       httpserver.stop(do_test_finished);      
   },
 
-  _reset: function() {
+  _reset() {
     this._done_onStart = false;
     this._done_onData = false;
     this._test++;

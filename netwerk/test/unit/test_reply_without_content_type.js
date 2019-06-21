@@ -84,7 +84,3 @@ function checkRequest(request, data, context) {
   run_next_test();
   if (dbg) { print("============== checkRequest: out"); }
 }
-
-function run_test() {
-  run_next_test();
-}

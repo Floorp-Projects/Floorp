@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpServer = null;
 
 // needs to be rooted
-var cacheFlushObserver = cacheFlushObserver = { observe: function() {
+var cacheFlushObserver = cacheFlushObserver = { observe() {
   cacheFlushObserver = null;
   readServerContentAgain();
 }};

@@ -4,15 +4,9 @@ var server;
 const BUGID = "263127";
 
 var listener = {
-  QueryInterface: function(iid) {
-    if (!iid.equals(nsIDownloadObserver) &&
-        !iid.equals(nsISupports))
-      throw Cr.NS_ERROR_NO_INTERFACE;
+  QueryInterface: ChromeUtils.generateQI(["nsIDownloadObserver"]),
 
-    return this;
-  },
-
-  onDownloadComplete: function(downloader, request, ctxt, status, file) {
+  onDownloadComplete(downloader, request, ctxt, status, file) {
     do_test_pending();
     server.stop(do_test_finished);
 

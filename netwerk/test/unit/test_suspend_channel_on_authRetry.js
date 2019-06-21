@@ -30,12 +30,7 @@ AuthPrompt.prototype = {
   user: "guest",
   pass: "guest",
 
-  QueryInterface: function authprompt_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIAuthPrompt))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt"]),
 
   prompt: function ap1_prompt(title, text, realm, save, defaultText, result) {
     do_throw("unexpected prompt call");
@@ -71,14 +66,9 @@ requestListenerObserver.prototype = {
   resumeOnBeforeConnect: false,
   gotOnModifyRequest: false,
   resumeOnModifyRequest: false,
-  QueryInterface: function queryinterface(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIObserver))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic === "http-on-before-connect" &&
         subject instanceof Ci.nsIHttpChannel) {
       if (this.suspendOnBeforeConnect) {
@@ -109,12 +99,7 @@ requestListenerObserver.prototype = {
 function Requestor() {};
 
 Requestor.prototype = {
-  QueryInterface: function requestor_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIInterfaceRequestor))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor"]),
 
   getInterface: function requestor_gi(iid) {
     if (iid.equals(Ci.nsIAuthPrompt)) {

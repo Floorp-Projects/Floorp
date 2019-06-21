@@ -18,25 +18,19 @@ function make_channel(url) {
 }
 
 var listener_proto = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
 
-  onStartRequest: function(request) {
+  onStartRequest(request) {
     Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType,
 		this.contentType);
     request.cancel(Cr.NS_BINDING_ABORTED);
   },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable(request, stream, offset, count) {
     do_throw("Unexpected onDataAvailable");
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_BINDING_ABORTED);
     this.termination_func();
   }  

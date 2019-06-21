@@ -132,7 +132,7 @@ function run_test()
   ];
 
   update.addObserver({
-    updateStateChanged: function(update, state)
+    updateStateChanged(update, state)
     {
       Assert.equal(state, expectedStates.shift());
 
@@ -140,7 +140,7 @@ function run_test()
           finish_test(customDir);
     },
 
-    applicationCacheAvailable: function(appCache)
+    applicationCacheAvailable(appCache)
     {
     }
   });

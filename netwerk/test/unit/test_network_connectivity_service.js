@@ -84,7 +84,7 @@ add_task(async function testDNS() {
   // event.
   Services.prefs.setCharPref("network.connectivity-service.DNSv4.domain", "example.org");
   Services.prefs.setCharPref("network.connectivity-service.DNSv6.domain", kDNSv6Domain);
-  Services.obs.notifyObservers(null, "network:captive-portal-connectivity", null);
+  Services.obs.notifyObservers(null, "network:captive-portal-connectivity");
   // This will cause the state to go to UNKNOWN for a bit, until the check is completed.
   equal(ncs.DNSv4, Ci.nsINetworkConnectivityService.UNKNOWN, "Check DNSv4 support (expect UNKNOWN)");
   equal(ncs.DNSv6, Ci.nsINetworkConnectivityService.UNKNOWN, "Check DNSv6 support (expect UNKNOWN)");
@@ -118,7 +118,7 @@ add_task(async function testDNS() {
   // check that the CPS status is NOT_AVAILABLE when the endpoint is down.
   await new Promise(resolve => httpserver.stop(resolve));
   await new Promise(resolve => httpserverv6.stop(resolve));
-  Services.obs.notifyObservers(null, "network:captive-portal-connectivity", null);
+  Services.obs.notifyObservers(null, "network:captive-portal-connectivity");
   await promiseObserverNotification("network:connectivity-service:ip-checks-complete");
 
   equal(ncs.IPv4, Ci.nsINetworkConnectivityService.NOT_AVAILABLE, "Check IPv4 support (expect NOT_AVAILABLE)");

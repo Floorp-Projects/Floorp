@@ -26,12 +26,7 @@ AuthPrompt2.prototype = {
   hostCred : { user: "host", pass: "guest",
       realmExpected: "extern", flags : 0 },
 
-  QueryInterface: function authprompt2_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIAuthPrompt2))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt2"]),
 
   promptAuth:
     function ap2_promptAuth(channel, encryptionLevel, authInfo)
@@ -111,12 +106,7 @@ function Cancelable(onCancelFunc) {
   this.onCancelFunc = onCancelFunc;
 }
 Cancelable.prototype = {
-  QueryInterface: function cancelable_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsICancelable))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsICancelable"]),
   cancel: function cancel() {
     try {
       this.onCancelFunc();
@@ -129,12 +119,7 @@ function Requestor(proxyFlags, hostFlags) {
   this.hostFlags = hostFlags;
 }
 Requestor.prototype = {
-  QueryInterface: function requestor_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIInterfaceRequestor))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor"]),
 
   getInterface: function requestor_gi(iid) {
     if (iid.equals(Ci.nsIAuthPrompt)) {

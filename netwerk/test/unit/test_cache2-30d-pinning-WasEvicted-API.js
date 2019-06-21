@@ -66,7 +66,7 @@ function run_test()
 
   var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
   os.addObserver({
-    observe: function(subject, topic, data)
+    observe(subject, topic, data)
     {
       // (3)
 
