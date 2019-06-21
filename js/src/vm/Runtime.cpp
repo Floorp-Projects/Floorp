@@ -71,6 +71,8 @@ Atomic<size_t> JSRuntime::liveRuntimesCount;
 Atomic<JS::LargeAllocationFailureCallback> js::OnLargeAllocationFailure;
 
 namespace js {
+void (*HelperThreadTaskCallback)(js::RunnableTask*);
+
 bool gCanUseExtraThreads = true;
 }  // namespace js
 
