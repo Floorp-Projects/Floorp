@@ -128,8 +128,13 @@ async function checkEventsForNode(test, inspector, testActor) {
     EventUtils.synthesizeMouse(header, 2, 2, {}, type.ownerGlobal);
     await tooltip.once("event-tooltip-ready");
 
-    is(header.classList.contains("content-expanded"), true,
-        "We are in expanded state and icon changed");
+    is(header.classList.contains("content-expanded") &&
+      contentBox.hasAttribute("open"), true,
+      "We are in expanded state and icon changed");
+
+    is(tooltip.panel.querySelectorAll(".event-header.content-expanded").length === 1 &&
+       tooltip.panel.querySelectorAll(".event-tooltip-content-box[open]").length === 1,
+       true, "Only one event box is expanded at a time");
 
     const editor = tooltip.eventTooltip._eventEditors.get(contentBox).editor;
     const tidiedHandler = beautify.js(expected[i].handler, {
