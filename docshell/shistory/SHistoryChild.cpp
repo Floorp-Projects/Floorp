@@ -341,22 +341,6 @@ SHistoryChild::RemoveFrameEntries(nsISHEntry* aEntry) {
 
 NS_IMETHODIMP
 SHistoryChild::Reload(uint32_t aReloadFlags) {
-  bool canNavigate = true;
-  nsAutoTObserverArray<nsWeakPtr, 2>::EndLimitedIterator iter(mListeners);
-  while (iter.HasMore()) {
-    nsCOMPtr<nsISHistoryListener> listener = do_QueryReferent(iter.GetNext());
-    if (listener) {
-      bool canceled = false;
-      listener->OnHistoryReload(&canceled);
-      if (canceled) {
-        canNavigate = false;
-      }
-    }
-  }
-  if (!canNavigate) {
-    return NS_OK;
-  }
-
   LoadSHEntryResult loadResult;
   if (!SendReload(aReloadFlags, &loadResult)) {
     return NS_ERROR_FAILURE;
