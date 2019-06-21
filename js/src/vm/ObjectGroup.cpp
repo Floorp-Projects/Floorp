@@ -48,14 +48,16 @@ ObjectGroup::ObjectGroup(const Class* clasp, TaggedProto proto,
 }
 
 void ObjectGroup::finalize(FreeOp* fop) {
-  if (newScriptDontCheckGeneration()) {
-    newScriptDontCheckGeneration()->clear();
+  if (auto newScript = newScriptDontCheckGeneration()) {
+    newScript->clear();
+    fop->delete_(this, newScript, newScript->gcMallocBytes(),
+                 MemoryUse::ObjectGroupAddendum);
   }
-  fop->delete_(newScriptDontCheckGeneration());
   if (maybePreliminaryObjectsDontCheckGeneration()) {
     maybePreliminaryObjectsDontCheckGeneration()->clear();
   }
-  fop->delete_(maybePreliminaryObjectsDontCheckGeneration());
+  fop->delete_(this, maybePreliminaryObjectsDontCheckGeneration(),
+               MemoryUse::ObjectGroupAddendum);
 }
 
 void ObjectGroup::setProtoUnchecked(TaggedProto proto) {
@@ -78,10 +80,26 @@ size_t ObjectGroup::sizeOfExcludingThis(
   return n;
 }
 
+static inline size_t AddendumAllocSize(ObjectGroup::AddendumKind kind,
+                                       void* addendum) {
+  if (kind == ObjectGroup::Addendum_NewScript) {
+    auto newScript = static_cast<TypeNewScript*>(addendum);
+    return newScript->gcMallocBytes();
+  }
+  if (kind == ObjectGroup::Addendum_PreliminaryObjects) {
+    return sizeof(PreliminaryObjectArrayWithTemplate);
+  }
+  // Other addendum kinds point to GC memory tracked elsewhere.
+  return 0;
+}
+
 void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
                               bool writeBarrier /* = true */) {
   MOZ_ASSERT(!needsSweep());
   MOZ_ASSERT(kind <= (OBJECT_FLAG_ADDENDUM_MASK >> OBJECT_FLAG_ADDENDUM_SHIFT));
+
+  RemoveCellMemory(this, AddendumAllocSize(addendumKind(), addendum_),
+                   MemoryUse::ObjectGroupAddendum);
 
   if (writeBarrier) {
     // Manually trigger barriers if we are clearing new script or
@@ -105,6 +123,9 @@ void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
   flags_ &= ~OBJECT_FLAG_ADDENDUM_MASK;
   flags_ |= kind << OBJECT_FLAG_ADDENDUM_SHIFT;
   addendum_ = addendum;
+
+  AddCellMemory(this, AddendumAllocSize(kind, addendum),
+                MemoryUse::ObjectGroupAddendum);
 }
 
 /* static */
