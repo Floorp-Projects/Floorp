@@ -401,7 +401,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._traversal = RecursiveMakeTraversal()
         self._compile_graph = OrderedDefaultDict(set)
-        self._rust_dirs = set()
+        self._rust_targets = set()
 
         self._no_skip = {
             'export': set(),
@@ -632,17 +632,17 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, RustProgram):
             self._process_rust_program(obj, backend_file)
-            self._rust_dirs.add(obj.relobjdir)
             # Hook the program into the compile graph.
             build_target = self._build_target_for_obj(obj)
             self._compile_graph[build_target]
+            self._rust_targets.add(build_target)
 
         elif isinstance(obj, HostRustProgram):
             self._process_host_rust_program(obj, backend_file)
-            self._rust_dirs.add(obj.relobjdir)
             # Hook the program into the compile graph.
             build_target = self._build_target_for_obj(obj)
             self._compile_graph[build_target]
+            self._rust_targets.add(build_target)
 
         elif isinstance(obj, RustTests):
             self._process_rust_tests(obj, backend_file)
@@ -680,13 +680,13 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, RustLibrary):
             self.backend_input_files.add(obj.cargo_file)
             self._process_rust_library(obj, backend_file)
-            self._rust_dirs.add(obj.relobjdir)
             # No need to call _process_linked_libraries, because Rust
             # libraries are self-contained objects at this point.
 
             # Hook the library into the compile graph.
             build_target = self._build_target_for_obj(obj)
             self._compile_graph[build_target]
+            self._rust_targets.add(build_target)
 
         elif isinstance(obj, SharedLibrary):
             self._process_shared_library(obj, backend_file)
@@ -820,10 +820,12 @@ class RecursiveMakeBackend(CommonBackend):
             # Directories containing rust compilations don't generally depend
             # on other directories in the tree, so putting them first here will
             # start them earlier in the build.
-            rule.add_dependencies(
-                chain((r for r in roots if mozpath.dirname(r) in self._rust_dirs),
-                      (r for r in roots if mozpath.dirname(r) not in self._rust_dirs))
-                )
+            rust_roots = [r for r in roots if r in self._rust_targets]
+            if category == 'compile' and rust_roots:
+                rust_rule = root_deps_mk.create_rule(['recurse_rust'])
+                rust_rule.add_dependencies(rust_roots)
+
+            rule.add_dependencies(chain(rust_roots, roots))
             for target, deps in sorted(graph.items()):
                 if deps:
                     rule = root_deps_mk.create_rule([target])

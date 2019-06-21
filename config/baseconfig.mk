@@ -42,7 +42,7 @@ endif # WINNT
 ifndef INCLUDED_AUTOCONF_MK
 default::
 else
-TIERS := $(if $(MOZ_ARTIFACT_BUILDS),artifact )$(if $(MOZ_EME_WIN32_ARTIFACT),win32-artifact )$(if $(MOZ_ANDROID_FAT_AAR_ARCHITECTURES),android-fat-aar-artifact )pre-export export $(if $(COMPILE_ENVIRONMENT),compile )misc libs tools$(if $(filter check recurse_check,$(MAKECMDGOALS)), check)
+TIERS := $(if $(MOZ_ARTIFACT_BUILDS),artifact )$(if $(MOZ_EME_WIN32_ARTIFACT),win32-artifact )$(if $(MOZ_ANDROID_FAT_AAR_ARCHITECTURES),android-fat-aar-artifact )pre-export export $(if $(COMPILE_ENVIRONMENT),$(if $(MOZ_RUST_TIER),rust )compile )misc libs tools$(if $(filter check recurse_check,$(MAKECMDGOALS)), check)
 endif
 
 # These defines are used to support the twin-topsrcdir model for comm-central.
