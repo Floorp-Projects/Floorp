@@ -244,7 +244,7 @@ function downloadAndParseChromeCerts(filename, certNameToSKD, certSKDToName) {
           state = IN_PUB_KEY;
         } else {
           throw new Error(
-            "ERROR: couldn't parse Chrome certificate file " + "line: " + line
+            "ERROR: couldn't parse Chrome certificate file line: " + line
           );
         }
         break;
