@@ -13,6 +13,7 @@ const FAKE_SESSION_TOKEN =
 // https://wiki.mozilla.org/Identity/AttachedServices/KeyServerProtocol#.2Faccount.2Fkeys
 var ACCOUNT_KEYS = {
   keyFetch: h(
+    // eslint-disable-next-line no-useless-concat
     "8081828384858687 88898a8b8c8d8e8f" + "9091929394959697 98999a9b9c9d9e9f"
   ),
 
@@ -26,10 +27,12 @@ var ACCOUNT_KEYS = {
   ),
 
   kA: h(
+    // eslint-disable-next-line no-useless-concat
     "2021222324252627 28292a2b2c2d2e2f" + "3031323334353637 38393a3b3c3d3e3f"
   ),
 
   wrapKB: h(
+    // eslint-disable-next-line no-useless-concat
     "4041424344454647 48494a4b4c4d4e4f" + "5051525354555657 58595a5b5c5d5e5f"
   ),
 };

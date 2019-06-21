@@ -1143,7 +1143,7 @@ Sync11Service.prototype = {
         this.status.sync = METARECORD_DOWNLOAD_FAIL;
         this.errorHandler.checkServerError(this.recordManager.response);
         this._log.warn(
-          "Unknown error while downloading metadata record. " + "Aborting sync."
+          "Unknown error while downloading metadata record. Aborting sync."
         );
         return false;
       }

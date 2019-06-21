@@ -643,7 +643,7 @@ AddonsStore.prototype = {
 
     if (!result) {
       this._log.debug(
-        addon.id + " not syncable: add-on not found in add-on " + "repository."
+        addon.id + " not syncable: add-on not found in add-on repository."
       );
       return false;
     }
