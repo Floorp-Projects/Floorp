@@ -1022,7 +1022,13 @@ public abstract class GeckoApp extends GeckoActivity
         // no need to touch that here.
         if (BrowserLocaleManager.getInstance().systemLocaleDidChange()) {
             Log.i(LOGTAG, "System locale changed. Restarting.");
+
+            mIsAbortingAppLaunch = true;
+
+            // Call finish() asap so that other classes would know BrowserApp isFinishing()
             finishAndShutdown(/* restart */ true);
+            super.onCreate(savedInstanceState);
+
             return;
         }
 
@@ -2119,6 +2125,12 @@ public abstract class GeckoApp extends GeckoActivity
             // This build does not support the Android version of the device:
             // We did not initialize anything, so skip cleaning up.
             super.onDestroy();
+
+            if (mShutdownOnDestroy) {
+                GeckoApplication.shutdown(!mRestartOnShutdown ? null : new Intent(
+                        Intent.ACTION_MAIN, /* uri */ null, getApplicationContext(), getClass()));
+            }
+
             return;
         }
 
