@@ -926,16 +926,16 @@ nsresult Classifier::ScanStoreDir(nsIFile* aDirectory,
     rv = file->GetNativeLeafName(leafName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Check both V2 and V4 prefix files
-    if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".pset"))) {
-      aTables.AppendElement(
-          Substring(leafName, 0, leafName.Length() - strlen(".pset")));
-    } else if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".vlpset"))) {
+    // The extension of V2 and V4 prefix files is .vlpset
+    // We still check .pset here for legacy load.
+    if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".vlpset"))) {
       aTables.AppendElement(
           Substring(leafName, 0, leafName.Length() - strlen(".vlpset")));
+    } else if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".pset"))) {
+      aTables.AppendElement(
+          Substring(leafName, 0, leafName.Length() - strlen(".pset")));
     }
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -1274,9 +1274,6 @@ nsresult Classifier::UpdateHashStore(TableUpdateArray& aUpdates,
   rv = lookupCacheV2->Build(store.AddPrefixes(), store.AddCompletes());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_BUILD_PREFIX_FAILURE);
 
-#if defined(DEBUG)
-  lookupCacheV2->DumpCompletions();
-#endif
   rv = lookupCacheV2->WriteFile();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_FAIL_TO_WRITE_DISK);
 
