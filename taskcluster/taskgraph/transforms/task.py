@@ -30,6 +30,7 @@ from taskgraph.util.schema import (
     OptimizationSchema,
     taskref_or_string,
 )
+from taskgraph.util.partners import get_partners_to_be_published
 from taskgraph.util.scriptworker import (
     BALROG_ACTIONS,
     get_release_config,
@@ -997,12 +998,14 @@ def build_beetmover_payload(config, task, task_def):
 def build_beetmover_push_to_release_payload(config, task, task_def):
     worker = task['worker']
     release_config = get_release_config(config)
+    partners = ['{}/{}'.format(p, s) for p, s, _ in get_partners_to_be_published(config)]
 
     task_def['payload'] = {
         'maxRunTime': worker['max-run-time'],
         'product': worker['product'],
         'version': release_config['version'],
         'build_number': release_config['build_number'],
+        'partners': partners,
     }
 
 
