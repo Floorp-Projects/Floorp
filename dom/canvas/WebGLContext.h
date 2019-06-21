@@ -6,6 +6,7 @@
 #ifndef WEBGLCONTEXT_H_
 #define WEBGLCONTEXT_H_
 
+#include <memory>
 #include <stdarg.h>
 
 #include "GLContextTypes.h"
@@ -1507,7 +1508,8 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
 
   mutable GLenum mWebGLError;
 
-  webgl::ShaderValidator* CreateShaderValidator(GLenum shaderType) const;
+  std::unique_ptr<webgl::ShaderValidator> CreateShaderValidator(
+      GLenum shaderType) const;
 
   // some GL constants
   uint32_t mGLMaxTextureUnits = 0;
