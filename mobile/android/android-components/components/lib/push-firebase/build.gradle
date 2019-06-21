@@ -27,7 +27,6 @@ dependencies {
     implementation project(':concept-push')
     implementation Dependencies.firebase_core
     implementation Dependencies.firebase_messaging
-    implementation Dependencies.mozilla_push
 
     testImplementation project(':support-test')
 
