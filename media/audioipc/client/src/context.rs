@@ -4,6 +4,7 @@
 // accompanying file LICENSE for details
 
 use assert_not_in_callback;
+use audio_thread_priority::promote_current_thread_to_real_time;
 use audioipc::codec::LengthDelimitedCodec;
 use audioipc::platformhandle_passing::{framed_with_platformhandles, FramedWithPlatformHandles};
 use audioipc::{core, rpc};
@@ -13,7 +14,7 @@ use cubeb_backend::{
     Stream, StreamParams, StreamParamsRef,
 };
 use futures::Future;
-use futures_cpupool::{self, CpuPool};
+use futures_cpupool::CpuPool;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::sync::mpsc;
@@ -21,7 +22,12 @@ use std::thread;
 use std::{fmt, io, mem, ptr};
 use stream;
 use tokio_core::reactor::{Handle, Remote};
-use {ClientStream, CPUPOOL_INIT_PARAMS, G_SERVER_FD};
+use {ClientStream, CpuPoolInitParams, CPUPOOL_INIT_PARAMS, G_SERVER_FD};
+cfg_if! {
+    if #[cfg(target_os = "linux")] {
+        use {G_THREAD_POOL};
+    }
+}
 
 struct CubebClient;
 
@@ -79,6 +85,50 @@ fn open_server_stream() -> Result<audioipc::MessageStream> {
     }
 }
 
+fn register_thread(callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>) {
+    match promote_current_thread_to_real_time(0, 48000) {
+        Ok(_) => {
+            debug!("Audio thread promoted to real-time.");
+        }
+        Err(_) => {
+            error!("Could not promote thread to real-time.");
+        }
+    }
+    if let Some(func) = callback {
+        let thr = thread::current();
+        let name = CString::new(thr.name().unwrap()).unwrap();
+        func(name.as_ptr());
+    }
+}
+
+fn create_thread_pool(init_params: CpuPoolInitParams) -> CpuPool {
+    futures_cpupool::Builder::new()
+        .name_prefix("AudioIPC")
+        .after_start(move || register_thread(init_params.thread_create_callback))
+        .pool_size(init_params.pool_size)
+        .stack_size(init_params.stack_size)
+        .create()
+}
+
+cfg_if! {
+    if #[cfg(target_os = "linux")] {
+        fn get_thread_pool(init_params: CpuPoolInitParams) -> CpuPool {
+            let mut guard = G_THREAD_POOL.lock().unwrap();
+            if guard.is_some() {
+                // Sandbox is on, and the thread pool was created earlier, before the lockdown.
+                guard.take().unwrap()
+            } else {
+                // Sandbox is off, let's create the pool now, promoting the threads will work.
+                create_thread_pool(init_params)
+            }
+        }
+    } else {
+        fn get_thread_pool(init_params: CpuPoolInitParams) -> CpuPool {
+            create_thread_pool(init_params)
+        }
+    }
+}
+
 impl ContextOps for ClientContext {
     fn init(_context_name: Option<&CStr>) -> Result<Context> {
         fn bind_and_send_client(
@@ -100,20 +150,10 @@ impl ContextOps for ClientContext {
 
         let params = CPUPOOL_INIT_PARAMS.with(|p| p.replace(None).unwrap());
 
-        let thread_create_callback = params.thread_create_callback;
-
-        let register_thread = move || {
-            if let Some(func) = thread_create_callback {
-                let thr = thread::current();
-                let name = CString::new(thr.name().unwrap()).unwrap();
-                func(name.as_ptr());
-            }
-        };
-
         let core = t!(core::spawn_thread("AudioIPC Client RPC", move || {
             let handle = core::handle();
 
-            register_thread();
+            register_thread(params.thread_create_callback);
 
             open_server_stream()
                 .ok()
@@ -129,22 +169,17 @@ impl ContextOps for ClientContext {
 
         let rpc = t!(rx_rpc.recv());
 
-        let cpupool = futures_cpupool::Builder::new()
-            .name_prefix("AudioIPC")
-            .after_start(register_thread)
-            .pool_size(params.pool_size)
-            .stack_size(params.stack_size)
-            .create();
-
         // Don't let errors bubble from here.  Later calls against this context
         // will return errors the caller expects to handle.
         let _ = send_recv!(rpc, ClientConnect(std::process::id()) => ClientConnected);
+
+        let pool = get_thread_pool(params);
 
         let ctx = Box::new(ClientContext {
             _ops: &CLIENT_OPS as *const _,
             rpc: rpc,
             core: core,
-            cpu_pool: cpupool,
+            cpu_pool: pool,
         });
         Ok(unsafe { Context::from_ptr(Box::into_raw(ctx) as *mut _) })
     }

@@ -117,12 +117,14 @@ dependencies = [
 name = "audioipc-client"
 version = "0.4.0"
 dependencies = [
+ "audio_thread_priority 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "audioipc 0.2.4",
  "cfg-if 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "cubeb-backend 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "foreign-types 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-cpupool 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio-core 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
