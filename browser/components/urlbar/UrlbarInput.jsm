@@ -1325,7 +1325,7 @@ class UrlbarInput {
         this.editor.selectAll();
         event.preventDefault();
       } else if (this.openViewOnFocus && !this.view.isOpen) {
-        this.startQuery();
+        this.startQuery({ allowAutofill: false });
       }
       return;
     }
@@ -1334,7 +1334,7 @@ class UrlbarInput {
       if (this.view.isOpen) {
         this.view.close();
       } else {
-        this.startQuery();
+        this.startQuery({ allowAutofill: false });
       }
     }
   }
