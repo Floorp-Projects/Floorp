@@ -47,7 +47,7 @@ pub(crate) fn get_database() -> XULStoreResult<Database> {
     let xulstore_dir = get_xulstore_dir()?;
     let xulstore_path = xulstore_dir.as_path();
 
-    let mut env = match Rkv::new(xulstore_path) {
+    let env = match Rkv::new(xulstore_path) {
         Ok(env) => Ok(env),
         Err(StoreError::LmdbError(LmdbError::Invalid)) => {
             let temp_env = tempdir()?;
@@ -66,21 +66,7 @@ pub(crate) fn get_database() -> XULStoreResult<Database> {
         Err(err) => Err(err),
     }?;
 
-    // It's possible that immediately writing data to a newly-created store
-    // triggers the crasher bug 1538541, which only occurs in this crate
-    // when we call maybe_migrate_data below.  To try to work around that issue,
-    // we close and reopen the environment here if we have to create the store
-    // because it doesn't already exist.
-    let store = match env.open_single("db", StoreOptions::default()) {
-        Ok(store) => Ok(store),
-        Err(StoreError::LmdbError(lmdb::Error::NotFound)) => {
-            env.open_single("db", StoreOptions::create())?;
-            drop(env);
-            env = Rkv::new(xulstore_path)?;
-            env.open_single("db", StoreOptions::default())
-        }
-        Err(err) => Err(err),
-    }?;
+    let store = env.open_single("db", StoreOptions::create())?;
 
     Ok(Database::new(env, store))
 }
