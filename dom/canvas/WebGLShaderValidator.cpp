@@ -139,7 +139,7 @@ static ShShaderOutput ShaderOutput(gl::GLContext* gl) {
   return SH_GLSL_COMPATIBILITY_OUTPUT;
 }
 
-webgl::ShaderValidator* WebGLContext::CreateShaderValidator(
+std::unique_ptr<webgl::ShaderValidator> WebGLContext::CreateShaderValidator(
     GLenum shaderType) const {
   const auto spec = (IsWebGL2() ? SH_WEBGL2_SPEC : SH_WEBGL_SPEC);
   const auto outputLanguage = ShaderOutput(gl);
@@ -212,27 +212,46 @@ webgl::ShaderValidator* WebGLContext::CreateShaderValidator(
 namespace webgl {
 
 /*static*/
-ShaderValidator* ShaderValidator::Create(GLenum shaderType, ShShaderSpec spec,
-                                         ShShaderOutput outputLanguage,
-                                         const ShBuiltInResources& resources,
-                                         ShCompileOptions compileOptions) {
+std::unique_ptr<ShaderValidator> ShaderValidator::Create(
+    GLenum shaderType, ShShaderSpec spec, ShShaderOutput outputLanguage,
+    const ShBuiltInResources& resources, ShCompileOptions compileOptions) {
   ShHandle handle =
       sh::ConstructCompiler(shaderType, spec, outputLanguage, &resources);
   MOZ_RELEASE_ASSERT(handle);
   if (!handle) return nullptr;
 
-  return new ShaderValidator(handle, compileOptions,
-                             resources.MaxVaryingVectors);
+  return std::unique_ptr<ShaderValidator>(
+      new ShaderValidator(handle, compileOptions, resources.MaxVaryingVectors));
 }
 
 ShaderValidator::~ShaderValidator() { sh::Destruct(mHandle); }
 
-bool ShaderValidator::ValidateAndTranslate(const char* source) {
-  MOZ_ASSERT(!mHasRun);
-  mHasRun = true;
+std::unique_ptr<const ShaderValidatorResults>
+ShaderValidator::ValidateAndTranslate(const char* const source) const {
+  auto ret = std::make_unique<ShaderValidatorResults>();
 
-  const char* const parts[] = {source};
-  return sh::Compile(mHandle, parts, ArrayLength(parts), mCompileOptions);
+  const std::array<const char*, 1> parts = {source};
+  ret->mValid =
+      sh::Compile(mHandle, parts.data(), parts.size(), mCompileOptions);
+
+  ret->mInfoLog = sh::GetInfoLog(mHandle);
+
+  if (ret->mValid) {
+    ret->mObjectCode = sh::GetObjectCode(mHandle);
+    ret->mShaderVersion = sh::GetShaderVersion(mHandle);
+    ret->mVertexShaderNumViews = sh::GetVertexShaderNumViews(mHandle);
+
+    ret->mAttributes = *sh::GetAttributes(mHandle);
+    ret->mInterfaceBlocks = *sh::GetInterfaceBlocks(mHandle);
+    ret->mOutputVariables = *sh::GetOutputVariables(mHandle);
+    ret->mUniforms = *sh::GetUniforms(mHandle);
+    ret->mVaryings = *sh::GetVaryings(mHandle);
+
+    ret->mMaxVaryingVectors = mMaxVaryingVectors;
+  }
+
+  sh::ClearResults(mHandle);
+  return ret;
 }
 
 template <size_t N>
@@ -240,91 +259,58 @@ static bool StartsWith(const std::string& haystack, const char (&needle)[N]) {
   return haystack.compare(0, N - 1, needle) == 0;
 }
 
-bool ShaderValidator::CanLinkTo(const ShaderValidator* prev,
-                                nsCString* const out_log) const {
-  if (!prev) {
-    nsPrintfCString error("Passed in NULL prev ShaderValidator.");
-    *out_log = error;
-    return false;
-  }
+bool ShaderValidatorResults::CanLinkTo(const ShaderValidatorResults& vert,
+                                       nsCString* const out_log) const {
+  MOZ_ASSERT(mValid);
+  MOZ_ASSERT(vert.mValid);
 
-  const auto shaderVersion = sh::GetShaderVersion(mHandle);
-  if (sh::GetShaderVersion(prev->mHandle) != shaderVersion) {
+  if (vert.mShaderVersion != mShaderVersion) {
     nsPrintfCString error(
         "Vertex shader version %d does not match"
         " fragment shader version %d.",
-        sh::GetShaderVersion(prev->mHandle), sh::GetShaderVersion(mHandle));
+        vert.mShaderVersion, mShaderVersion);
     *out_log = error;
     return false;
   }
 
-  {
-    const std::vector<sh::Uniform>* vertPtr = sh::GetUniforms(prev->mHandle);
-    const std::vector<sh::Uniform>* fragPtr = sh::GetUniforms(mHandle);
-    if (!vertPtr || !fragPtr) {
-      nsPrintfCString error("Could not create uniform list.");
-      *out_log = error;
-      return false;
-    }
+  for (const auto& itrFrag : mUniforms) {
+    for (const auto& itrVert : vert.mUniforms) {
+      if (itrVert.name != itrFrag.name) continue;
 
-    for (auto itrFrag = fragPtr->begin(); itrFrag != fragPtr->end();
-         ++itrFrag) {
-      for (auto itrVert = vertPtr->begin(); itrVert != vertPtr->end();
-           ++itrVert) {
-        if (itrVert->name != itrFrag->name) continue;
-
-        if (!itrVert->isSameUniformAtLinkTime(*itrFrag)) {
-          nsPrintfCString error(
-              "Uniform `%s` is not linkable between"
-              " attached shaders.",
-              itrFrag->name.c_str());
-          *out_log = error;
-          return false;
-        }
-
-        break;
+      if (!itrVert.isSameUniformAtLinkTime(itrFrag)) {
+        nsPrintfCString error(
+            "Uniform `%s` is not linkable between"
+            " attached shaders.",
+            itrFrag.name.c_str());
+        *out_log = error;
+        return false;
       }
-    }
-  }
-  {
-    const auto vertVars = sh::GetInterfaceBlocks(prev->mHandle);
-    const auto fragVars = sh::GetInterfaceBlocks(mHandle);
-    if (!vertVars || !fragVars) {
-      nsPrintfCString error("Could not create uniform block list.");
-      *out_log = error;
-      return false;
-    }
 
-    for (const auto& fragVar : *fragVars) {
-      for (const auto& vertVar : *vertVars) {
-        if (vertVar.name != fragVar.name) continue;
-
-        if (!vertVar.isSameInterfaceBlockAtLinkTime(fragVar)) {
-          nsPrintfCString error(
-              "Interface block `%s` is not linkable between"
-              " attached shaders.",
-              fragVar.name.c_str());
-          *out_log = error;
-          return false;
-        }
-
-        break;
-      }
+      break;
     }
   }
 
-  const auto& vertVaryings = sh::GetVaryings(prev->mHandle);
-  const auto& fragVaryings = sh::GetVaryings(mHandle);
-  if (!vertVaryings || !fragVaryings) {
-    nsPrintfCString error("Could not create varying list.");
-    *out_log = error;
-    return false;
+  for (const auto& fragVar : mInterfaceBlocks) {
+    for (const auto& vertVar : vert.mInterfaceBlocks) {
+      if (vertVar.name != fragVar.name) continue;
+
+      if (!vertVar.isSameInterfaceBlockAtLinkTime(fragVar)) {
+        nsPrintfCString error(
+            "Interface block `%s` is not linkable between"
+            " attached shaders.",
+            fragVar.name.c_str());
+        *out_log = error;
+        return false;
+      }
+
+      break;
+    }
   }
 
   {
     std::vector<sh::ShaderVariable> staticUseVaryingList;
 
-    for (const auto& fragVarying : *fragVaryings) {
+    for (const auto& fragVarying : mVaryings) {
       static const char prefix[] = "gl_";
       if (StartsWith(fragVarying.name, prefix)) {
         if (fragVarying.staticUse) {
@@ -336,10 +322,10 @@ bool ShaderValidator::CanLinkTo(const ShaderValidator* prev,
       bool definedInVertShader = false;
       bool staticVertUse = false;
 
-      for (const auto& vertVarying : *vertVaryings) {
+      for (const auto& vertVarying : vert.mVaryings) {
         if (vertVarying.name != fragVarying.name) continue;
 
-        if (!vertVarying.isSameVaryingAtLinkTime(fragVarying, shaderVersion)) {
+        if (!vertVarying.isSameVaryingAtLinkTime(fragVarying, mShaderVersion)) {
           nsPrintfCString error(
               "Varying `%s`is not linkable between"
               " attached shaders.",
@@ -377,14 +363,14 @@ bool ShaderValidator::CanLinkTo(const ShaderValidator* prev,
     }
   }
 
-  if (shaderVersion == 100) {
+  if (mShaderVersion == 100) {
     // Enforce ESSL1 invariant linking rules.
     bool isInvariant_Position = false;
     bool isInvariant_PointSize = false;
     bool isInvariant_FragCoord = false;
     bool isInvariant_PointCoord = false;
 
-    for (const auto& varying : *vertVaryings) {
+    for (const auto& varying : vert.mVaryings) {
       if (varying.name == "gl_Position") {
         isInvariant_Position = varying.isInvariant;
       } else if (varying.name == "gl_PointSize") {
@@ -392,7 +378,7 @@ bool ShaderValidator::CanLinkTo(const ShaderValidator* prev,
       }
     }
 
-    for (const auto& varying : *fragVaryings) {
+    for (const auto& varying : mVaryings) {
       if (varying.name == "gl_FragCoord") {
         isInvariant_FragCoord = varying.isInvariant;
       } else if (varying.name == "gl_PointCoord") {
@@ -428,13 +414,12 @@ bool ShaderValidator::CanLinkTo(const ShaderValidator* prev,
 }
 
 // This must handle names like "foo.bar[0]".
-bool ShaderValidator::FindUniformByMappedName(const std::string& mappedName,
-                                              std::string* const out_userName,
-                                              bool* const out_isArray) const {
-  const std::vector<sh::Uniform>& uniforms = *sh::GetUniforms(mHandle);
-  for (auto itr = uniforms.begin(); itr != uniforms.end(); ++itr) {
+bool ShaderValidatorResults::FindUniformByMappedName(
+    const std::string& mappedName, std::string* const out_userName,
+    bool* const out_isArray) const {
+  for (const auto& cur : mUniforms) {
     const sh::ShaderVariable* found;
-    if (!itr->findInfoByMappedName(mappedName, &found, out_userName)) continue;
+    if (!cur.findInfoByMappedName(mappedName, &found, out_userName)) continue;
 
     *out_isArray = found->isArray();
     return true;
@@ -442,9 +427,7 @@ bool ShaderValidator::FindUniformByMappedName(const std::string& mappedName,
 
   const size_t dotPos = mappedName.find(".");
 
-  const std::vector<sh::InterfaceBlock>& interfaces =
-      *sh::GetInterfaceBlocks(mHandle);
-  for (const auto& interface : interfaces) {
+  for (const auto& interface : mInterfaceBlocks) {
     std::string mappedFieldName;
     const bool hasInstanceName = !interface.instanceName.empty();
 
@@ -481,6 +464,31 @@ bool ShaderValidator::FindUniformByMappedName(const std::string& mappedName,
   }
 
   return false;
+}
+
+size_t ShaderValidatorResults::SizeOfIncludingThis(
+    const MallocSizeOf fnSizeOf) const {
+  auto ret = fnSizeOf(this);
+  ret += mInfoLog.size();
+  ret += mObjectCode.size();
+
+  for (const auto& cur : mAttributes) {
+    ret += fnSizeOf(&cur);
+  }
+  for (const auto& cur : mInterfaceBlocks) {
+    ret += fnSizeOf(&cur);
+  }
+  for (const auto& cur : mOutputVariables) {
+    ret += fnSizeOf(&cur);
+  }
+  for (const auto& cur : mUniforms) {
+    ret += fnSizeOf(&cur);
+  }
+  for (const auto& cur : mVaryings) {
+    ret += fnSizeOf(&cur);
+  }
+
+  return ret;
 }
 
 }  // namespace webgl
