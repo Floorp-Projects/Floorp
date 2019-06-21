@@ -116,7 +116,7 @@ void GeckoProfilerRuntime::enable(bool enabled) {
    * but not jitcode for scripts with active frames on the stack.  These scripts
    * need to have their profiler state toggled so they behave properly.
    */
-  jit::ToggleBaselineProfiling(rt, enabled);
+  jit::ToggleBaselineProfiling(cx, enabled);
 
   // Update lastProfilingFrame to point to the top-most JS jit-frame currently
   // on stack.

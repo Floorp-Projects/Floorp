@@ -1049,17 +1049,22 @@ void jit::AddSizeOfBaselineData(JSScript* script,
   }
 }
 
-void jit::ToggleBaselineProfiling(JSRuntime* runtime, bool enable) {
-  JitRuntime* jrt = runtime->jitRuntime();
+void jit::ToggleBaselineProfiling(JSContext* cx, bool enable) {
+  JitRuntime* jrt = cx->runtime()->jitRuntime();
   if (!jrt) {
     return;
   }
 
   jrt->baselineInterpreter().toggleProfilerInstrumentation(enable);
 
-  for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
+  for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
     for (auto script = zone->cellIter<JSScript>(); !script.done();
          script.next()) {
+      if (enable) {
+        if (JitScript* jitScript = script->jitScript()) {
+          jitScript->ensureProfileString(cx, script);
+        }
+      }
       if (!script->hasBaselineScript()) {
         continue;
       }
