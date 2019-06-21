@@ -27,7 +27,13 @@ class LineHeight extends PureComponent {
   }
 
   render() {
-    const value = parseFloat(this.props.value);
+    // When the initial value of "line-height" is "normal", the parsed value
+    // is not a number (NaN). Guard by setting the default value to 1.2.
+    // This will be the starting point for changing the value by dragging the slider.
+    // @see https://searchfox.org/mozilla-central/rev/1133b6716d9a8131c09754f3f29288484896b8b6/layout/generic/ReflowInput.cpp#2786
+    const isKeywordValue = this.props.value === "normal";
+    const value = isKeywordValue ? 1.2 : parseFloat(this.props.value);
+
     // When values for line-height are be unitless, getUnitFromValue() returns null.
     // In that case, set the unit to an empty string for special treatment in conversion.
     const unit = getUnitFromValue(this.props.value) || "";
@@ -70,9 +76,14 @@ class LineHeight extends PureComponent {
       name: "line-height",
       onChange: this.props.onChange,
       step: getStepForUnit(unit),
+      // Show the value input and unit only when the value is not a keyword.
+      showInput: !isKeywordValue,
+      showUnit: !isKeywordValue,
       unit,
       unitOptions: ["", "em", "%", "px"],
       value,
+      // Show the value as a read-only label if it's a keyword.
+      valueLabel: isKeywordValue ? this.props.value : null,
     });
   }
 }
