@@ -422,6 +422,11 @@ release-partner-repack-beetmover
 --------------------------------
 Moves the partner repacks to S3 buckets.
 
+release-partner-repack-bouncer-sub
+----------------------------------
+Sets up bouncer products for partners.
+
+
 release-early-tagging
 ---------------------
 Utilises treescript to perform tagging that should happen near the start of a release.

@@ -234,7 +234,8 @@ def parse_config(data):
     data is contents of the file, in "foo=bar\nbaz=buzz" style. We do some translation on
     locales and platforms data, otherwise passthrough
     """
-    ALLOWED_KEYS = ('locales', 'upload_to_candidates', 'repack_stub_installer', 'platforms')
+    ALLOWED_KEYS = ('locales', 'platforms', 'upload_to_candidates', 'repack_stub_installer',
+                    'publish_to_releases')
     config = {'platforms': []}
     for l in data.splitlines():
         if '=' in l:
@@ -403,3 +404,14 @@ def get_partner_url_config(parameters, graph_config):
     resolve_keyed_by(partner_url_config, 'release-partner-repack', 'partner manifest url',
                      **substitutions)
     return partner_url_config
+
+
+def get_partners_to_be_published(config):
+    # hardcoded kind because release-bouncer-aliases doesn't match otherwise
+    partner_config = get_partner_config_by_kind(config, 'release-partner-repack')
+    partners = []
+    for partner, subconfigs in partner_config.items():
+        for sub_config_name, sub_config in subconfigs.items():
+            if sub_config.get("publish_to_releases"):
+                partners.append((partner, sub_config_name, sub_config['platforms']))
+    return partners
