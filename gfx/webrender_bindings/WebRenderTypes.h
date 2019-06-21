@@ -77,16 +77,22 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(
         // traditionally part of the "chrome," but are assigned a renderroot of
         // RenderRoot::Content because they occupy screen space in the "content"
         // area of the browser (visually situated below the "chrome" area).
-        Content));
+        Content,
+
+        // Currently used for the pointerlock and fullscreen warnings. This is
+        // intended to overlay both the Content and Default render roots when
+        // we need a piece of UI that straddles their border.
+        Popover));
 
 typedef EnumSet<RenderRoot, uint8_t> RenderRootSet;
 
 // For simple iteration of all render roots
 const Array<RenderRoot, kRenderRootCount> kRenderRoots(RenderRoot::Default,
-                                                       RenderRoot::Content);
+                                                       RenderRoot::Content,
+                                                       RenderRoot::Popover);
 
 const Array<RenderRoot, kRenderRootCount - 1> kNonDefaultRenderRoots(
-    RenderRoot::Content);
+    RenderRoot::Content, RenderRoot::Popover);
 
 template <typename T>
 class RenderRootArray : public Array<T, kRenderRootCount> {
