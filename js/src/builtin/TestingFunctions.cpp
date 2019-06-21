@@ -2586,8 +2586,11 @@ static bool ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp) {
     for (uint32_t i = 0; i < nframes; i++) {
       const char* frameKindStr = nullptr;
       switch (frames[i].kind) {
+        case JS::ProfilingFrameIterator::Frame_BaselineInterpreter:
+          frameKindStr = "baseline-interpreter";
+          break;
         case JS::ProfilingFrameIterator::Frame_Baseline:
-          frameKindStr = "baseline";
+          frameKindStr = "baseline-jit";
           break;
         case JS::ProfilingFrameIterator::Frame_Ion:
           frameKindStr = "ion";
