@@ -916,6 +916,14 @@ window[chromehidden~="toolbar"] toolbar:not(#nav-bar):not(#TabsToolbar):not(#pri
   background: black;
 }
 
+html|*#fullscreen-and-pointerlock-wrapper {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  pointer-events: none;
+}
+
 html|*.pointerlockfswarning {
   position: fixed;
   z-index: 2147483647 !important;

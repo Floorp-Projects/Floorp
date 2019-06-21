@@ -935,10 +935,8 @@ class nsDisplayListBuilder {
     nsRect clientRect(nsPoint(),
                       mozilla::LayoutDevicePixel::ToAppUnits(aClientSize, 1));
     cutout.OrWith(clientRect);
-    for (auto renderRoot : mozilla::wr::kRenderRoots) {
-      cutout.SubWith(mozilla::LayoutDevicePixel::ToAppUnits(
-          mRenderRootRects[renderRoot], 1));
-    }
+    cutout.SubWith(mozilla::LayoutDevicePixel::ToAppUnits(
+        mRenderRootRects[mozilla::wr::RenderRoot::Content], 1));
 
     mRenderRootRects[mozilla::wr::RenderRoot::Default] =
         mozilla::LayoutDevicePixel::FromAppUnits(cutout.GetBounds(), 1);

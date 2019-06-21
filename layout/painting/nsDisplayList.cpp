@@ -3828,6 +3828,11 @@ bool nsDisplaySolidColor::CreateWebRenderCommands(
   // intersects multiple render roots
   if (aBuilder.GetRenderRoot() == wr::RenderRoot::Default) {
     for (auto renderRoot : wr::kRenderRoots) {
+      // Skip the popover render root, as it's intended to overlay the others
+      // and be at least partially transparent.
+      if (renderRoot == wr::RenderRoot::Popover) {
+        continue;
+      }
       if (aBuilder.HasSubBuilder(renderRoot)) {
         LayoutDeviceRect renderRootRect =
             aDisplayListBuilder->GetRenderRootRect(renderRoot);
@@ -7066,6 +7071,9 @@ bool nsDisplayRenderRoot::CreateWebRenderCommands(
 
 void nsDisplayRenderRoot::ExpandDisplayListBuilderRenderRootRect(
     nsDisplayListBuilder* aBuilder) {
+  if (mFrame->GetRect().IsEmpty()) {
+    return;
+  }
   mozilla::LayoutDeviceRect rect = mozilla::LayoutDeviceRect::FromAppUnits(
       mFrame->GetRectRelativeToSelf() + ToReferenceFrame(),
       mFrame->PresContext()->AppUnitsPerDevPixel());

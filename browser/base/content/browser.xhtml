@@ -1338,35 +1338,10 @@
 #include ../../components/customizableui/content/customizeMode.inc.xul
   ]]></box>
 
-  <html:div id="fullscreen-warning" class="pointerlockfswarning" hidden="true" renderroot="content">
-    <html:div class="pointerlockfswarning-domain-text">
-      &fullscreenWarning.beforeDomain.label;
-      <html:span class="pointerlockfswarning-domain"/>
-      &fullscreenWarning.afterDomain.label;
-    </html:div>
-    <html:div class="pointerlockfswarning-generic-text">
-      &fullscreenWarning.generic.label;
-    </html:div>
-    <html:button id="fullscreen-exit-button"
-                 onclick="FullScreen.exitDomFullScreen();">
-#ifdef XP_MACOSX
-            &exitDOMFullscreenMac.button;
-#else
-            &exitDOMFullscreen.button;
-#endif
-    </html:button>
-  </html:div>
-
-  <html:div id="pointerlock-warning" class="pointerlockfswarning" hidden="true" renderroot="content">
-    <html:div class="pointerlockfswarning-domain-text">
-      &pointerlockWarning.beforeDomain.label;
-      <html:span class="pointerlockfswarning-domain"/>
-      &pointerlockWarning.afterDomain.label;
-    </html:div>
-    <html:div class="pointerlockfswarning-generic-text">
-      &pointerlockWarning.generic.label;
-    </html:div>
-  </html:div>
+# Everything that needs to straddle the line between chrome and content, without being
+# its own widget-level window, needs to go in here, and set the renderroot="popover"
+# attribute, or it will fail to render properly in WebRender.
+#include popovers.inc
 
   <vbox id="browser-bottombox" layer="true" renderroot="content">
     <!-- gNotificationBox will be added here lazily. -->
