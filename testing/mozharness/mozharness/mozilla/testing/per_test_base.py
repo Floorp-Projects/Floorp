@@ -141,6 +141,7 @@ class SingleTestMixin(FetchesMixin):
                 #   <full-suite> is a unique id for the suite, matching desktop mozharness configs
                 ('mochitest-browser-chrome', 'devtools'): 'mochitest-devtools-chrome',
                 ('mochitest-browser-chrome', 'devtools-webreplay'): 'mochitest-devtools-chrome-webreplay', # noqa
+                ('mochitest-browser-chrome', 'remote'): 'mochitest-remote',
                 ('mochitest-browser-chrome', 'screenshots'): 'mochitest-browser-chrome-screenshots',  # noqa
                 ('mochitest-plain', 'media'): 'mochitest-media',
                 # below should be on test-verify-gpu job
