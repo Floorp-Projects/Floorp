@@ -6,6 +6,23 @@
 
 "use strict";
 
+let gElements = {};
+
 document.addEventListener("DOMContentLoaded", (e) => {
   RPMSendAsyncMessage("getCertificate");
+  gElements.certificateSection = document.querySelector("certificate-section");
 });
+
+const updateSelectedItem = (() => {
+  let state;
+  return selectedItem => {
+    if (selectedItem) {
+      if (state !== selectedItem) {
+        state = selectedItem;
+        gElements.certificateSection.updateCertificateSource(selectedItem);
+        gElements.certificateSection.updateSelectedTab(selectedItem);
+      }
+    }
+    return state;
+  };
+})();
