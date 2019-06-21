@@ -1,7 +1,7 @@
-/** @license React v16.4.1
+/** @license React v16.8.6
  * react-dom-server.browser.production.min.js
  *
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,18 +13,19 @@
 }(this, (function (React) { 'use strict';
 
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Use invariant() to assert state which your program assumes to be true.
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * Provide sprintf-style format (only %s is supported) and arguments
+ * to provide information about what broke and what you were
+ * expecting.
  *
+ * The invariant message will be stripped in production, but the invariant
+ * will remain to ensure logic does not differ in production.
  */
-
-
 
 function invariant(condition, format, a, b, c, d, e, f) {
   if (!condition) {
-    var error;
+    var error = void 0;
     if (format === undefined) {
       error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
     } else {
@@ -41,10 +42,8 @@ function invariant(condition, format, a, b, c, d, e, f) {
   }
 }
 
-var invariant_1 = invariant;
-
 // Relying on the `invariant()` implementation lets us
-// have preserve the format and params in the www builds.
+// preserve the format and params in the www builds.
 /**
  * WARNING: DO NOT manually require this module.
  * This is a replacement for `invariant(...)` used by the error code system
@@ -57,9 +56,9 @@ function reactProdInvariant(code) {
   for (var argIdx = 0; argIdx < argCount; argIdx++) {
     url += '&args[]=' + encodeURIComponent(arguments[argIdx + 1]);
   }
-  // Rename it so that our build transform doesn't atttempt
+  // Rename it so that our build transform doesn't attempt
   // to replace this invariant() call with reactProdInvariant().
-  var i = invariant_1;
+  var i = invariant;
   i(false,
   // The error code is intentionally part of the message (and
   // not the format argument) so that we could deduplicate
@@ -69,126 +68,96 @@ function reactProdInvariant(code) {
 
 // TODO: this is special because it gets imported during build.
 
-var ReactVersion = '16.4.1';
+var ReactVersion = '16.8.6';
 
 var ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 var _assign = ReactInternals.assign;
 
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * 
+ * Similar to invariant but only logs a warning if the condition is not met.
+ * This can be used to log issues in development environments in critical
+ * paths. Removing the logging code for production environments will keep the
+ * same logic and follow the same code paths.
  */
 
-function makeEmptyFunction(arg) {
-  return function () {
-    return arg;
-  };
+// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+var hasSymbol = typeof Symbol === 'function' && Symbol.for;
+
+
+var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for('react.portal') : 0xeaca;
+var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for('react.fragment') : 0xeacb;
+var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for('react.strict_mode') : 0xeacc;
+var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for('react.profiler') : 0xead2;
+var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for('react.provider') : 0xeacd;
+var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace;
+
+var REACT_CONCURRENT_MODE_TYPE = hasSymbol ? Symbol.for('react.concurrent_mode') : 0xeacf;
+var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for('react.forward_ref') : 0xead0;
+var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for('react.suspense') : 0xead1;
+var REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
+var REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
+
+var Resolved = 1;
+
+
+function refineResolvedLazyComponent(lazyComponent) {
+  return lazyComponent._status === Resolved ? lazyComponent._result : null;
 }
 
-/**
- * This function accepts and discards inputs; it has no side effects. This is
- * primarily useful idiomatically for overridable function endpoints which
- * always need to be callable, since JS lacks a null-call idiom ala Cocoa.
- */
-var emptyFunction = function emptyFunction() {};
-
-emptyFunction.thatReturns = makeEmptyFunction;
-emptyFunction.thatReturnsFalse = makeEmptyFunction(false);
-emptyFunction.thatReturnsTrue = makeEmptyFunction(true);
-emptyFunction.thatReturnsNull = makeEmptyFunction(null);
-emptyFunction.thatReturnsThis = function () {
-  return this;
-};
-emptyFunction.thatReturnsArgument = function (arg) {
-  return arg;
-};
-
-var emptyFunction_1 = emptyFunction;
-
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-
-
-var emptyObject = {};
-
-var emptyObject_1 = emptyObject;
-
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @typechecks
- */
-
-var _uppercasePattern = /([A-Z])/g;
-
-/**
- * Hyphenates a camelcased string, for example:
- *
- *   > hyphenate('backgroundColor')
- *   < "background-color"
- *
- * For CSS style names, use `hyphenateStyleName` instead which works properly
- * with all vendor prefixes, including `ms`.
- *
- * @param {string} string
- * @return {string}
- */
-function hyphenate(string) {
-  return string.replace(_uppercasePattern, '-$1').toLowerCase();
+function getWrappedName(outerType, innerType, wrapperName) {
+  var functionName = innerType.displayName || innerType.name || '';
+  return outerType.displayName || (functionName !== '' ? wrapperName + '(' + functionName + ')' : wrapperName);
 }
 
-var hyphenate_1 = hyphenate;
-
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @typechecks
- */
-
-
-
-
-
-var msPattern = /^ms-/;
-
-/**
- * Hyphenates a camelcased CSS property name, for example:
- *
- *   > hyphenateStyleName('backgroundColor')
- *   < "background-color"
- *   > hyphenateStyleName('MozTransition')
- *   < "-moz-transition"
- *   > hyphenateStyleName('msTransition')
- *   < "-ms-transition"
- *
- * As Modernizr suggests (http://modernizr.com/docs/#prefixed), an `ms` prefix
- * is converted to `-ms-`.
- *
- * @param {string} string
- * @return {string}
- */
-function hyphenateStyleName(string) {
-  return hyphenate_1(string).replace(msPattern, '-ms-');
+function getComponentName(type) {
+  if (type == null) {
+    // Host root, text node or just invalid type.
+    return null;
+  }
+  if (typeof type === 'function') {
+    return type.displayName || type.name || null;
+  }
+  if (typeof type === 'string') {
+    return type;
+  }
+  switch (type) {
+    case REACT_CONCURRENT_MODE_TYPE:
+      return 'ConcurrentMode';
+    case REACT_FRAGMENT_TYPE:
+      return 'Fragment';
+    case REACT_PORTAL_TYPE:
+      return 'Portal';
+    case REACT_PROFILER_TYPE:
+      return 'Profiler';
+    case REACT_STRICT_MODE_TYPE:
+      return 'StrictMode';
+    case REACT_SUSPENSE_TYPE:
+      return 'Suspense';
+  }
+  if (typeof type === 'object') {
+    switch (type.$$typeof) {
+      case REACT_CONTEXT_TYPE:
+        return 'Context.Consumer';
+      case REACT_PROVIDER_TYPE:
+        return 'Context.Provider';
+      case REACT_FORWARD_REF_TYPE:
+        return getWrappedName(type, type.render, 'ForwardRef');
+      case REACT_MEMO_TYPE:
+        return getComponentName(type.type);
+      case REACT_LAZY_TYPE:
+        {
+          var thenable = type;
+          var resolvedThenable = refineResolvedLazyComponent(thenable);
+          if (resolvedThenable) {
+            return getComponentName(resolvedThenable);
+          }
+        }
+    }
+  }
+  return null;
 }
-
-var hyphenateStyleName_1 = hyphenateStyleName;
 
 /**
  * Forked from fbjs/warning:
@@ -204,60 +173,16 @@ var hyphenateStyleName_1 = hyphenateStyleName;
  * same logic and follow the same code paths.
  */
 
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * 
- * @typechecks static-only
- */
+var ReactSharedInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-
-
-/**
- * Memoizes the return value of a function that accepts one string argument.
- */
-
-function memoizeStringOnly(callback) {
-  var cache = {};
-  return function (string) {
-    if (!cache.hasOwnProperty(string)) {
-      cache[string] = callback.call(this, string);
-    }
-    return cache[string];
+// Prevent newer renderers from RTE when used with older react package versions.
+// Current owner and dispatcher used to share the same ref,
+// but PR #14548 split them out to better support the react-debug-tools package.
+if (!ReactSharedInternals.hasOwnProperty('ReactCurrentDispatcher')) {
+  ReactSharedInternals.ReactCurrentDispatcher = {
+    current: null
   };
 }
-
-var memoizeStringOnly_1 = memoizeStringOnly;
-
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-var ReactInternals$1 = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-
-var ReactCurrentOwner = ReactInternals$1.ReactCurrentOwner;
-
-// Exports ReactDOM.createRoot
-
-
-// Experimental error-boundary API that can recover from errors within a single
-// render phase
-
-// Suspense
 
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 
@@ -275,27 +200,112 @@ var ReactCurrentOwner = ReactInternals$1.ReactCurrentOwner;
 // Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
 
 
-// Warn about legacy context API
-
-
 // Gather advanced timing metrics for Profiler subtrees.
+
+
+// Trace which interactions trigger each commit.
+
+
+// Only used in www builds.
+var enableSuspenseServerRenderer = false; // TODO: false? Here it might just be false.
+
+// Only used in www builds.
 
 
 // Only used in www builds.
 
-// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var hasSymbol = typeof Symbol === 'function' && Symbol.for;
+
+// React Fire: prevent the value and checked attributes from syncing
+// with their related DOM properties
 
 
-var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for('react.portal') : 0xeaca;
-var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for('react.fragment') : 0xeacb;
-var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for('react.strict_mode') : 0xeacc;
-var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for('react.profiler') : 0xead2;
-var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for('react.provider') : 0xeacd;
-var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace;
-var REACT_ASYNC_MODE_TYPE = hasSymbol ? Symbol.for('react.async_mode') : 0xeacf;
-var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for('react.forward_ref') : 0xead0;
+// These APIs will no longer be "unstable" in the upcoming 16.7 release,
+// Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
+
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+var emptyObject = {};
+function maskContext(type, context) {
+  var contextTypes = type.contextTypes;
+  if (!contextTypes) {
+    return emptyObject;
+  }
+  var maskedContext = {};
+  for (var contextName in contextTypes) {
+    maskedContext[contextName] = context[contextName];
+  }
+  return maskedContext;
+}
+
+function validateContextBounds(context, threadID) {
+  // If we don't have enough slots in this context to store this threadID,
+  // fill it in without leaving any holes to ensure that the VM optimizes
+  // this as non-holey index properties.
+  // (Note: If `react` package is < 16.6, _threadCount is undefined.)
+  for (var i = context._threadCount | 0; i <= threadID; i++) {
+    // We assume that this is the same as the defaultValue which might not be
+    // true if we're rendering inside a secondary renderer but they are
+    // secondary because these use cases are very rare.
+    context[i] = context._currentValue2;
+    context._threadCount = i + 1;
+  }
+}
+
+function processContext(type, context, threadID) {
+  var contextType = type.contextType;
+  if (typeof contextType === 'object' && contextType !== null) {
+    validateContextBounds(contextType, threadID);
+    return contextType[threadID];
+  } else {
+    var maskedContext = maskContext(type, context);
+    return maskedContext;
+  }
+}
+
+// Allocates a new index for each request. Tries to stay as compact as possible so that these
+// indices can be used to reference a tightly packaged array. As opposed to being used in a Map.
+// The first allocated index is 1.
+
+var nextAvailableThreadIDs = new Uint16Array(16);
+for (var i = 0; i < 15; i++) {
+  nextAvailableThreadIDs[i] = i + 1;
+}
+nextAvailableThreadIDs[15] = 0;
+
+function growThreadCountAndReturnNextAvailable() {
+  var oldArray = nextAvailableThreadIDs;
+  var oldSize = oldArray.length;
+  var newSize = oldSize * 2;
+  !(newSize <= 0x10000) ? reactProdInvariant('304') : void 0;
+  var newArray = new Uint16Array(newSize);
+  newArray.set(oldArray);
+  nextAvailableThreadIDs = newArray;
+  nextAvailableThreadIDs[0] = oldSize + 1;
+  for (var _i = oldSize; _i < newSize - 1; _i++) {
+    nextAvailableThreadIDs[_i] = _i + 1;
+  }
+  nextAvailableThreadIDs[newSize - 1] = 0;
+  return oldSize;
+}
+
+function allocThreadID() {
+  var nextID = nextAvailableThreadIDs[0];
+  if (nextID === 0) {
+    return growThreadCountAndReturnNextAvailable();
+  }
+  nextAvailableThreadIDs[0] = nextAvailableThreadIDs[nextID];
+  return nextID;
+}
+
+function freeThreadID(id) {
+  nextAvailableThreadIDs[id] = nextAvailableThreadIDs[0];
+  nextAvailableThreadIDs[0] = id;
+}
 
 // A reserved attribute.
 // It is handled by React separately and shouldn't be written to the DOM.
@@ -339,14 +349,15 @@ var ATTRIBUTE_NAME_CHAR = ATTRIBUTE_NAME_START_CHAR + '\\-.0-9\\u00B7\\u0300-\\u
 var ROOT_ATTRIBUTE_NAME = 'data-reactroot';
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp('^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
+var hasOwnProperty$1 = Object.prototype.hasOwnProperty;
 var illegalAttributeNameCache = {};
 var validatedAttributeNameCache = {};
 
 function isAttributeNameSafe(attributeName) {
-  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (hasOwnProperty$1.call(validatedAttributeNameCache, attributeName)) {
     return true;
   }
-  if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (hasOwnProperty$1.call(illegalAttributeNameCache, attributeName)) {
     return false;
   }
   if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
@@ -478,7 +489,7 @@ var properties = {};
 // In React, we let users pass `true` and `false` even though technically
 // these aren't boolean attributes (they are coerced to strings).
 // Since these are SVG attributes, their attribute names are case-sensitive.
-['autoReverse', 'externalResourcesRequired', 'preserveAlpha'].forEach(function (name) {
+['autoReverse', 'externalResourcesRequired', 'focusable', 'preserveAlpha'].forEach(function (name) {
   properties[name] = new PropertyInfoRecord(name, BOOLEANISH_STRING, false, // mustUseProperty
   name, // attributeName
   null);
@@ -505,7 +516,7 @@ var properties = {};
 // disabled with `removeAttribute`. We have special logic for handling this.
 'multiple', 'muted', 'selected'].forEach(function (name) {
   properties[name] = new PropertyInfoRecord(name, BOOLEAN, true, // mustUseProperty
-  name.toLowerCase(), // attributeName
+  name, // attributeName
   null);
 } // attributeNamespace
 );
@@ -514,7 +525,7 @@ var properties = {};
 // booleans, but can also accept a string value.
 ['capture', 'download'].forEach(function (name) {
   properties[name] = new PropertyInfoRecord(name, OVERLOADED_BOOLEAN, false, // mustUseProperty
-  name.toLowerCase(), // attributeName
+  name, // attributeName
   null);
 } // attributeNamespace
 );
@@ -522,7 +533,7 @@ var properties = {};
 // These are HTML attributes that must be positive numbers.
 ['cols', 'rows', 'size', 'span'].forEach(function (name) {
   properties[name] = new PropertyInfoRecord(name, POSITIVE_NUMERIC, false, // mustUseProperty
-  name.toLowerCase(), // attributeName
+  name, // attributeName
   null);
 } // attributeNamespace
 );
@@ -566,12 +577,15 @@ var capitalize = function (token) {
   attributeName, 'http://www.w3.org/XML/1998/namespace');
 });
 
-// Special case: this attribute exists both in HTML and SVG.
-// Its "tabindex" attribute name is case-sensitive in SVG so we can't just use
-// its React `tabIndex` name, like we do for attributes that exist only in HTML.
-properties.tabIndex = new PropertyInfoRecord('tabIndex', STRING, false, // mustUseProperty
-'tabindex', // attributeName
-null);
+// These attribute exists both in HTML and SVG.
+// The attribute name is case-sensitive in SVG so we can't just use
+// the React name like we do for attributes that exist only in HTML.
+['tabIndex', 'crossOrigin'].forEach(function (attributeName) {
+  properties[attributeName] = new PropertyInfoRecord(attributeName, STRING, false, // mustUseProperty
+  attributeName.toLowerCase(), // attributeName
+  null);
+} // attributeNamespace
+);
 
 // code copied and modified from escape-html
 /**
@@ -599,7 +613,7 @@ function escapeHtml(string) {
 
   var escape = void 0;
   var html = '';
-  var index = 0;
+  var index = void 0;
   var lastIndex = 0;
 
   for (index = match.index; index < str.length; index++) {
@@ -706,9 +720,10 @@ function createMarkupForProperty(name, value) {
     } else {
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
     }
-  } else {
+  } else if (isAttributeNameSafe(name)) {
     return name + '=' + quoteAttributeValueForBrowser(value);
   }
+  return '';
 }
 
 /**
@@ -724,6 +739,293 @@ function createMarkupForCustomAttribute(name, value) {
   }
   return name + '=' + quoteAttributeValueForBrowser(value);
 }
+
+/**
+ * inlined Object.is polyfill to avoid requiring consumers ship their own
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
+ */
+function is(x, y) {
+  return x === y && (x !== 0 || 1 / x === 1 / y) || x !== x && y !== y // eslint-disable-line no-self-compare
+  ;
+}
+
+var currentlyRenderingComponent = null;
+var firstWorkInProgressHook = null;
+var workInProgressHook = null;
+// Whether the work-in-progress hook is a re-rendered hook
+var isReRender = false;
+// Whether an update was scheduled during the currently executing render pass.
+var didScheduleRenderPhaseUpdate = false;
+// Lazily created map of render-phase updates
+var renderPhaseUpdates = null;
+// Counter to prevent infinite loops.
+var numberOfReRenders = 0;
+var RE_RENDER_LIMIT = 25;
+
+function resolveCurrentlyRenderingComponent() {
+  !(currentlyRenderingComponent !== null) ? reactProdInvariant('321') : void 0;
+  return currentlyRenderingComponent;
+}
+
+function areHookInputsEqual(nextDeps, prevDeps) {
+  if (prevDeps === null) {
+    return false;
+  }
+
+  for (var i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+    if (is(nextDeps[i], prevDeps[i])) {
+      continue;
+    }
+    return false;
+  }
+  return true;
+}
+
+function createHook() {
+  if (numberOfReRenders > 0) {
+    reactProdInvariant('312');
+  }
+  return {
+    memoizedState: null,
+    queue: null,
+    next: null
+  };
+}
+
+function createWorkInProgressHook() {
+  if (workInProgressHook === null) {
+    // This is the first hook in the list
+    if (firstWorkInProgressHook === null) {
+      isReRender = false;
+      firstWorkInProgressHook = workInProgressHook = createHook();
+    } else {
+      // There's already a work-in-progress. Reuse it.
+      isReRender = true;
+      workInProgressHook = firstWorkInProgressHook;
+    }
+  } else {
+    if (workInProgressHook.next === null) {
+      isReRender = false;
+      // Append to the end of the list
+      workInProgressHook = workInProgressHook.next = createHook();
+    } else {
+      // There's already a work-in-progress. Reuse it.
+      isReRender = true;
+      workInProgressHook = workInProgressHook.next;
+    }
+  }
+  return workInProgressHook;
+}
+
+function prepareToUseHooks(componentIdentity) {
+  currentlyRenderingComponent = componentIdentity;
+  
+
+  // The following should have already been reset
+  // didScheduleRenderPhaseUpdate = false;
+  // firstWorkInProgressHook = null;
+  // numberOfReRenders = 0;
+  // renderPhaseUpdates = null;
+  // workInProgressHook = null;
+}
+
+function finishHooks(Component, props, children, refOrContext) {
+  // This must be called after every function component to prevent hooks from
+  // being used in classes.
+
+  while (didScheduleRenderPhaseUpdate) {
+    // Updates were scheduled during the render phase. They are stored in
+    // the `renderPhaseUpdates` map. Call the component again, reusing the
+    // work-in-progress hooks and applying the additional updates on top. Keep
+    // restarting until no more updates are scheduled.
+    didScheduleRenderPhaseUpdate = false;
+    numberOfReRenders += 1;
+
+    // Start over from the beginning of the list
+    workInProgressHook = null;
+
+    children = Component(props, refOrContext);
+  }
+  currentlyRenderingComponent = null;
+  firstWorkInProgressHook = null;
+  numberOfReRenders = 0;
+  renderPhaseUpdates = null;
+  workInProgressHook = null;
+  return children;
+}
+
+function readContext(context, observedBits) {
+  var threadID = currentThreadID;
+  validateContextBounds(context, threadID);
+  return context[threadID];
+}
+
+function useContext(context, observedBits) {
+  resolveCurrentlyRenderingComponent();
+  var threadID = currentThreadID;
+  validateContextBounds(context, threadID);
+  return context[threadID];
+}
+
+function basicStateReducer(state, action) {
+  return typeof action === 'function' ? action(state) : action;
+}
+
+function useState(initialState) {
+  return useReducer(basicStateReducer,
+  // useReducer has a special case to support lazy useState initializers
+  initialState);
+}
+
+function useReducer(reducer, initialArg, init) {
+  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+  workInProgressHook = createWorkInProgressHook();
+  if (isReRender) {
+    // This is a re-render. Apply the new render phase updates to the previous
+    var _queue = workInProgressHook.queue;
+    var _dispatch = _queue.dispatch;
+    if (renderPhaseUpdates !== null) {
+      // Render phase updates are stored in a map of queue -> linked list
+      var firstRenderPhaseUpdate = renderPhaseUpdates.get(_queue);
+      if (firstRenderPhaseUpdate !== undefined) {
+        renderPhaseUpdates.delete(_queue);
+        var newState = workInProgressHook.memoizedState;
+        var update = firstRenderPhaseUpdate;
+        do {
+          // Process this render phase update. We don't have to check the
+          // priority because it will always be the same as the current
+          // render's.
+          var _action = update.action;
+          newState = reducer(newState, _action);
+          update = update.next;
+        } while (update !== null);
+
+        workInProgressHook.memoizedState = newState;
+
+        return [newState, _dispatch];
+      }
+    }
+    return [workInProgressHook.memoizedState, _dispatch];
+  } else {
+    var initialState = void 0;
+    if (reducer === basicStateReducer) {
+      // Special case for `useState`.
+      initialState = typeof initialArg === 'function' ? initialArg() : initialArg;
+    } else {
+      initialState = init !== undefined ? init(initialArg) : initialArg;
+    }
+    workInProgressHook.memoizedState = initialState;
+    var _queue2 = workInProgressHook.queue = {
+      last: null,
+      dispatch: null
+    };
+    var _dispatch2 = _queue2.dispatch = dispatchAction.bind(null, currentlyRenderingComponent, _queue2);
+    return [workInProgressHook.memoizedState, _dispatch2];
+  }
+}
+
+function useMemo(nextCreate, deps) {
+  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+  workInProgressHook = createWorkInProgressHook();
+
+  var nextDeps = deps === undefined ? null : deps;
+
+  if (workInProgressHook !== null) {
+    var prevState = workInProgressHook.memoizedState;
+    if (prevState !== null) {
+      if (nextDeps !== null) {
+        var prevDeps = prevState[1];
+        if (areHookInputsEqual(nextDeps, prevDeps)) {
+          return prevState[0];
+        }
+      }
+    }
+  }
+
+  var nextValue = nextCreate();
+  workInProgressHook.memoizedState = [nextValue, nextDeps];
+  return nextValue;
+}
+
+function useRef(initialValue) {
+  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+  workInProgressHook = createWorkInProgressHook();
+  var previousRef = workInProgressHook.memoizedState;
+  if (previousRef === null) {
+    var ref = { current: initialValue };
+    workInProgressHook.memoizedState = ref;
+    return ref;
+  } else {
+    return previousRef;
+  }
+}
+
+function useLayoutEffect(create, inputs) {
+  
+}
+
+function dispatchAction(componentIdentity, queue, action) {
+  !(numberOfReRenders < RE_RENDER_LIMIT) ? reactProdInvariant('301') : void 0;
+
+  if (componentIdentity === currentlyRenderingComponent) {
+    // This is a render phase update. Stash it in a lazily-created map of
+    // queue -> linked list of updates. After this render pass, we'll restart
+    // and apply the stashed updates on top of the work-in-progress hook.
+    didScheduleRenderPhaseUpdate = true;
+    var update = {
+      action: action,
+      next: null
+    };
+    if (renderPhaseUpdates === null) {
+      renderPhaseUpdates = new Map();
+    }
+    var firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
+    if (firstRenderPhaseUpdate === undefined) {
+      renderPhaseUpdates.set(queue, update);
+    } else {
+      // Append the update to the end of the list.
+      var lastRenderPhaseUpdate = firstRenderPhaseUpdate;
+      while (lastRenderPhaseUpdate.next !== null) {
+        lastRenderPhaseUpdate = lastRenderPhaseUpdate.next;
+      }
+      lastRenderPhaseUpdate.next = update;
+    }
+  } else {
+    // This means an update has happened after the function component has
+    // returned. On the server this is a no-op. In React Fiber, the update
+    // would be scheduled for a future render.
+  }
+}
+
+function useCallback(callback, deps) {
+  // Callbacks are passed as they are in the server environment.
+  return callback;
+}
+
+function noop() {}
+
+var currentThreadID = 0;
+
+function setCurrentThreadID(threadID) {
+  currentThreadID = threadID;
+}
+
+var Dispatcher = {
+  readContext: readContext,
+  useContext: useContext,
+  useMemo: useMemo,
+  useReducer: useReducer,
+  useRef: useRef,
+  useState: useState,
+  useLayoutEffect: useLayoutEffect,
+  useCallback: useCallback,
+  // useImperativeHandle is not run in the server environment
+  useImperativeHandle: noop,
+  // Effects are not run in the server environment.
+  useEffect: noop,
+  // Debugging effect
+  useDebugValue: noop
+};
 
 var HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
 var MATH_NAMESPACE = 'http://www.w3.org/1998/Math/MathML';
@@ -789,21 +1091,23 @@ var voidElementTags = _assign({
   menuitem: true
 }, omittedCloseTags);
 
+// TODO: We can remove this if we add invariantWithStack()
+// or add stack by default to invariants where possible.
 var HTML = '__html';
 
-function assertValidProps(tag, props, getStack) {
+function assertValidProps(tag, props) {
   if (!props) {
     return;
   }
   // Note the use of `==` which checks for null or undefined.
   if (voidElementTags[tag]) {
-    !(props.children == null && props.dangerouslySetInnerHTML == null) ? reactProdInvariant('137', tag, getStack()) : void 0;
+    !(props.children == null && props.dangerouslySetInnerHTML == null) ? reactProdInvariant('137', tag, '') : void 0;
   }
   if (props.dangerouslySetInnerHTML != null) {
     !(props.children == null) ? reactProdInvariant('60') : void 0;
     !(typeof props.dangerouslySetInnerHTML === 'object' && HTML in props.dangerouslySetInnerHTML) ? reactProdInvariant('61') : void 0;
   }
-  !(props.style == null || typeof props.style === 'object') ? reactProdInvariant('62', getStack()) : void 0;
+  !(props.style == null || typeof props.style === 'object') ? reactProdInvariant('62', '') : void 0;
 }
 
 /**
@@ -825,6 +1129,7 @@ var isUnitlessNumber = {
   flexShrink: true,
   flexNegative: true,
   flexOrder: true,
+  gridArea: true,
   gridRow: true,
   gridRowEnd: true,
   gridRowSpan: true,
@@ -911,6 +1216,26 @@ function dangerousStyleValue(name, value, isCustomProperty) {
   return ('' + value).trim();
 }
 
+var uppercasePattern = /([A-Z])/g;
+var msPattern = /^ms-/;
+
+/**
+ * Hyphenates a camelcased CSS property name, for example:
+ *
+ *   > hyphenateStyleName('backgroundColor')
+ *   < "background-color"
+ *   > hyphenateStyleName('MozTransition')
+ *   < "-moz-transition"
+ *   > hyphenateStyleName('msTransition')
+ *   < "-ms-transition"
+ *
+ * As Modernizr suggests (http://modernizr.com/docs/#prefixed), an `ms` prefix
+ * is converted to `-ms-`.
+ */
+function hyphenateStyleName(name) {
+  return name.replace(uppercasePattern, '-$1').toLowerCase().replace(msPattern, '-ms-');
+}
+
 function isCustomComponent(tagName, props) {
   if (tagName.indexOf('-') === -1) {
     return typeof props.is === 'string';
@@ -933,15 +1258,6 @@ function isCustomComponent(tagName, props) {
       return true;
   }
 }
-
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @typechecks
- */
 
 /**
  * Registers plugins so that they can extract and dispatch events.
@@ -1010,18 +1326,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var toArray = React.Children.toArray;
 
-var getStackAddendum = emptyFunction_1.thatReturns('');
-var describeStackFrame = emptyFunction_1.thatReturns('');
-
+var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 var newlineEatingTags = {
   listing: true,
   pre: true,
   textarea: true
 };
-
-function getComponentName(type) {
-  return typeof type === 'string' ? type : typeof type === 'function' ? type.displayName || type.name : null;
-}
 
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
@@ -1035,9 +1345,15 @@ function validateDangerousTag(tag) {
   }
 }
 
-var processStyleName = memoizeStringOnly_1(function (styleName) {
-  return hyphenateStyleName_1(styleName);
-});
+var styleNameCache = {};
+var processStyleName = function (styleName) {
+  if (styleNameCache.hasOwnProperty(styleName)) {
+    return styleNameCache[styleName];
+  }
+  var result = hyphenateStyleName(styleName);
+  styleNameCache[styleName] = result;
+  return result;
+};
 
 function createMarkupForStyles(styles) {
   var serialized = '';
@@ -1094,6 +1410,9 @@ function flattenTopLevelChildren(children) {
 }
 
 function flattenOptionChildren(children) {
+  if (children === undefined || children === null) {
+    return children;
+  }
   var content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
@@ -1101,32 +1420,13 @@ function flattenOptionChildren(children) {
     if (child == null) {
       return;
     }
-    if (typeof child === 'string' || typeof child === 'number') {
-      content += child;
-    } else {
-      
-    }
+    content += child;
+    
   });
   return content;
 }
 
-function maskContext(type, context) {
-  var contextTypes = type.contextTypes;
-  if (!contextTypes) {
-    return emptyObject_1;
-  }
-  var maskedContext = {};
-  for (var contextName in contextTypes) {
-    maskedContext[contextName] = context[contextName];
-  }
-  return maskedContext;
-}
-
-function processContext(type, context) {
-  var maskedContext = maskContext(type, context);
-  return maskedContext;
-}
-
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 var STYLE = 'style';
 var RESERVED_PROPS = {
   children: null,
@@ -1139,7 +1439,7 @@ function createOpenTagMarkup(tagVerbatim, tagLowercase, props, namespace, makeSt
   var ret = '<' + tagVerbatim;
 
   for (var propKey in props) {
-    if (!props.hasOwnProperty(propKey)) {
+    if (!hasOwnProperty.call(props, propKey)) {
       continue;
     }
     var propValue = props[propKey];
@@ -1180,7 +1480,7 @@ function validateRenderResult(child, type) {
   }
 }
 
-function resolve(child, context) {
+function resolve(child, context, threadID) {
   while (React.isValidElement(child)) {
     // Safe because we just checked it's an element.
     var element = child;
@@ -1193,7 +1493,7 @@ function resolve(child, context) {
 
   // Extra closure so queue and replace can be captured properly
   function processChild(element, Component) {
-    var publicContext = processContext(Component, context);
+    var publicContext = processContext(Component, context, threadID);
 
     var queue = [];
     var replace = false;
@@ -1230,7 +1530,11 @@ function resolve(child, context) {
         }
       }
     } else {
+      var componentIdentity = {};
+      prepareToUseHooks(componentIdentity);
       inst = Component(element.props, publicContext, updater);
+      inst = finishHooks(Component, element.props, inst, publicContext);
+
       if (inst == null || inst.render == null) {
         child = inst;
         validateRenderResult(child, Component);
@@ -1312,6 +1616,7 @@ function resolve(child, context) {
 var ReactDOMServerRenderer = function () {
   // DEV-only
 
+  // TODO: type this more strictly:
   function ReactDOMServerRenderer(children, makeStaticMarkup) {
     _classCallCheck(this, ReactDOMServerRenderer);
 
@@ -1324,14 +1629,16 @@ var ReactDOMServerRenderer = function () {
       domNamespace: Namespaces.html,
       children: flatChildren,
       childIndex: 0,
-      context: emptyObject_1,
+      context: emptyObject,
       footer: ''
     };
+    this.threadID = allocThreadID();
     this.stack = [topFrame];
     this.exhausted = false;
     this.currentSelectValue = null;
     this.previousWasTextNode = false;
     this.makeStaticMarkup = makeStaticMarkup;
+    this.suspenseDepth = 0;
 
     // Context (new API)
     this.contextIndex = -1;
@@ -1339,6 +1646,14 @@ var ReactDOMServerRenderer = function () {
     this.contextValueStack = [];
     
   }
+
+  ReactDOMServerRenderer.prototype.destroy = function destroy() {
+    if (!this.exhausted) {
+      this.exhausted = true;
+      this.clearProviders();
+      freeThreadID(this.threadID);
+    }
+  };
 
   /**
    * Note: We use just two stacks regardless of how many context providers you have.
@@ -1350,18 +1665,17 @@ var ReactDOMServerRenderer = function () {
    * https://github.com/facebook/react/pull/12985#issuecomment-396301248
    */
 
-  // TODO: type this more strictly:
-
-
   ReactDOMServerRenderer.prototype.pushProvider = function pushProvider(provider) {
     var index = ++this.contextIndex;
     var context = provider.type._context;
-    var previousValue = context._currentValue;
+    var threadID = this.threadID;
+    validateContextBounds(context, threadID);
+    var previousValue = context[threadID];
 
     // Remember which value to restore this context to on our way up.
     this.contextStack[index] = context;
     this.contextValueStack[index] = previousValue;
-    context._currentValue = provider.props.value;
+    context[threadID] = provider.props.value;
   };
 
   ReactDOMServerRenderer.prototype.popProvider = function popProvider(provider) {
@@ -1377,7 +1691,18 @@ var ReactDOMServerRenderer = function () {
     this.contextIndex--;
 
     // Restore to the previous value we stored as we were walking down.
-    context._currentValue = previousValue;
+    // We've already verified that this context has been expanded to accommodate
+    // this thread id, so we don't need to do it again.
+    context[this.threadID] = previousValue;
+  };
+
+  ReactDOMServerRenderer.prototype.clearProviders = function clearProviders() {
+    // Restore any remaining providers on the stack to previous values
+    for (var index = this.contextIndex; index >= 0; index--) {
+      var _context = this.contextStack[index];
+      var previousValue = this.contextValueStack[index];
+      _context[this.threadID] = previousValue;
+    }
   };
 
   ReactDOMServerRenderer.prototype.read = function read(bytes) {
@@ -1385,33 +1710,78 @@ var ReactDOMServerRenderer = function () {
       return null;
     }
 
-    var out = '';
-    while (out.length < bytes) {
-      if (this.stack.length === 0) {
-        this.exhausted = true;
-        break;
-      }
-      var frame = this.stack[this.stack.length - 1];
-      if (frame.childIndex >= frame.children.length) {
-        var _footer = frame.footer;
-        out += _footer;
-        if (_footer !== '') {
-          this.previousWasTextNode = false;
+    var prevThreadID = currentThreadID;
+    setCurrentThreadID(this.threadID);
+    var prevDispatcher = ReactCurrentDispatcher.current;
+    ReactCurrentDispatcher.current = Dispatcher;
+    try {
+      // Markup generated within <Suspense> ends up buffered until we know
+      // nothing in that boundary suspended
+      var out = [''];
+      var suspended = false;
+      while (out[0].length < bytes) {
+        if (this.stack.length === 0) {
+          this.exhausted = true;
+          freeThreadID(this.threadID);
+          break;
         }
-        this.stack.pop();
-        if (frame.type === 'select') {
-          this.currentSelectValue = null;
-        } else if (frame.type != null && frame.type.type != null && frame.type.type.$$typeof === REACT_PROVIDER_TYPE) {
-          var provider = frame.type;
-          this.popProvider(provider);
+        var frame = this.stack[this.stack.length - 1];
+        if (suspended || frame.childIndex >= frame.children.length) {
+          var _footer = frame.footer;
+          if (_footer !== '') {
+            this.previousWasTextNode = false;
+          }
+          this.stack.pop();
+          if (frame.type === 'select') {
+            this.currentSelectValue = null;
+          } else if (frame.type != null && frame.type.type != null && frame.type.type.$$typeof === REACT_PROVIDER_TYPE) {
+            var provider = frame.type;
+            this.popProvider(provider);
+          } else if (frame.type === REACT_SUSPENSE_TYPE) {
+            this.suspenseDepth--;
+            var buffered = out.pop();
+
+            if (suspended) {
+              suspended = false;
+              // If rendering was suspended at this boundary, render the fallbackFrame
+              var _fallbackFrame = frame.fallbackFrame;
+              !_fallbackFrame ? reactProdInvariant('303') : void 0;
+              this.stack.push(_fallbackFrame);
+              // Skip flushing output since we're switching to the fallback
+              continue;
+            } else {
+              out[this.suspenseDepth] += buffered;
+            }
+          }
+
+          // Flush output
+          out[this.suspenseDepth] += _footer;
+          continue;
         }
-        continue;
+        var child = frame.children[frame.childIndex++];
+
+        var outBuffer = '';
+        try {
+          outBuffer += this.render(child, frame.context, frame.domNamespace);
+        } catch (err) {
+          if (enableSuspenseServerRenderer && typeof err.then === 'function') {
+            suspended = true;
+          } else {
+            throw err;
+          }
+        } finally {
+          
+        }
+        if (out.length <= this.suspenseDepth) {
+          out.push('');
+        }
+        out[this.suspenseDepth] += outBuffer;
       }
-      var child = frame.children[frame.childIndex++];
-      out += this.render(child, frame.context, frame.domNamespace);
-      
+      return out[0];
+    } finally {
+      ReactCurrentDispatcher.current = prevDispatcher;
+      setCurrentThreadID(prevThreadID);
     }
-    return out;
   };
 
   ReactDOMServerRenderer.prototype.render = function render(child, context, parentNamespace) {
@@ -1431,7 +1801,7 @@ var ReactDOMServerRenderer = function () {
     } else {
       var nextChild = void 0;
 
-      var _resolve = resolve(child, context);
+      var _resolve = resolve(child, context, this.threadID);
 
       nextChild = _resolve.child;
       context = _resolve.context;
@@ -1468,7 +1838,7 @@ var ReactDOMServerRenderer = function () {
 
       switch (elementType) {
         case REACT_STRICT_MODE_TYPE:
-        case REACT_ASYNC_MODE_TYPE:
+        case REACT_CONCURRENT_MODE_TYPE:
         case REACT_PROFILER_TYPE:
         case REACT_FRAGMENT_TYPE:
           {
@@ -1484,6 +1854,51 @@ var ReactDOMServerRenderer = function () {
             this.stack.push(_frame);
             return '';
           }
+        case REACT_SUSPENSE_TYPE:
+          {
+            if (enableSuspenseServerRenderer) {
+              var fallback = nextChild.props.fallback;
+              if (fallback === undefined) {
+                // If there is no fallback, then this just behaves as a fragment.
+                var _nextChildren3 = toArray(nextChild.props.children);
+                var _frame3 = {
+                  type: null,
+                  domNamespace: parentNamespace,
+                  children: _nextChildren3,
+                  childIndex: 0,
+                  context: context,
+                  footer: ''
+                };
+                this.stack.push(_frame3);
+                return '';
+              }
+              var fallbackChildren = toArray(fallback);
+              var _nextChildren2 = toArray(nextChild.props.children);
+              var _fallbackFrame2 = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: fallbackChildren,
+                childIndex: 0,
+                context: context,
+                footer: '',
+                out: ''
+              };
+              var _frame2 = {
+                fallbackFrame: _fallbackFrame2,
+                type: REACT_SUSPENSE_TYPE,
+                domNamespace: parentNamespace,
+                children: _nextChildren2,
+                childIndex: 0,
+                context: context,
+                footer: '<!--/$-->'
+              };
+              this.stack.push(_frame2);
+              this.suspenseDepth++;
+              return '<!--$-->';
+            } else {
+              reactProdInvariant('294');
+            }
+          }
         // eslint-disable-next-line-no-fallthrough
         default:
           break;
@@ -1493,45 +1908,14 @@ var ReactDOMServerRenderer = function () {
           case REACT_FORWARD_REF_TYPE:
             {
               var element = nextChild;
-              var _nextChildren2 = toArray(elementType.render(element.props, element.ref));
-              var _frame2 = {
-                type: null,
-                domNamespace: parentNamespace,
-                children: _nextChildren2,
-                childIndex: 0,
-                context: context,
-                footer: ''
-              };
-              this.stack.push(_frame2);
-              return '';
-            }
-          case REACT_PROVIDER_TYPE:
-            {
-              var provider = nextChild;
-              var nextProps = provider.props;
-              var _nextChildren3 = toArray(nextProps.children);
-              var _frame3 = {
-                type: provider,
-                domNamespace: parentNamespace,
-                children: _nextChildren3,
-                childIndex: 0,
-                context: context,
-                footer: ''
-              };
-              this.pushProvider(provider);
-
-              this.stack.push(_frame3);
-              return '';
-            }
-          case REACT_CONTEXT_TYPE:
-            {
-              var consumer = nextChild;
-              var _nextProps = consumer.props;
-              var nextValue = consumer.type._currentValue;
-
-              var _nextChildren4 = toArray(_nextProps.children(nextValue));
+              var _nextChildren4 = void 0;
+              var componentIdentity = {};
+              prepareToUseHooks(componentIdentity);
+              _nextChildren4 = elementType.render(element.props, element.ref);
+              _nextChildren4 = finishHooks(elementType.render, element.props, _nextChildren4, element.ref);
+              _nextChildren4 = toArray(_nextChildren4);
               var _frame4 = {
-                type: nextChild,
+                type: null,
                 domNamespace: parentNamespace,
                 children: _nextChildren4,
                 childIndex: 0,
@@ -1541,8 +1925,68 @@ var ReactDOMServerRenderer = function () {
               this.stack.push(_frame4);
               return '';
             }
-          default:
-            break;
+          case REACT_MEMO_TYPE:
+            {
+              var _element = nextChild;
+              var _nextChildren5 = [React.createElement(elementType.type, _assign({ ref: _element.ref }, _element.props))];
+              var _frame5 = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: _nextChildren5,
+                childIndex: 0,
+                context: context,
+                footer: ''
+              };
+              this.stack.push(_frame5);
+              return '';
+            }
+          case REACT_PROVIDER_TYPE:
+            {
+              var provider = nextChild;
+              var nextProps = provider.props;
+              var _nextChildren6 = toArray(nextProps.children);
+              var _frame6 = {
+                type: provider,
+                domNamespace: parentNamespace,
+                children: _nextChildren6,
+                childIndex: 0,
+                context: context,
+                footer: ''
+              };
+              this.pushProvider(provider);
+
+              this.stack.push(_frame6);
+              return '';
+            }
+          case REACT_CONTEXT_TYPE:
+            {
+              var reactContext = nextChild.type;
+              // The logic below for Context differs depending on PROD or DEV mode. In
+              // DEV mode, we create a separate object for Context.Consumer that acts
+              // like a proxy to Context. This proxy object adds unnecessary code in PROD
+              // so we use the old behaviour (Context.Consumer references Context) to
+              // reduce size and overhead. The separate object references context via
+              // a property called "_context", which also gives us the ability to check
+              // in DEV mode if this property exists or not and warn if it does not.
+              var _nextProps = nextChild.props;
+              var threadID = this.threadID;
+              validateContextBounds(reactContext, threadID);
+              var nextValue = reactContext[threadID];
+
+              var _nextChildren7 = toArray(_nextProps.children(nextValue));
+              var _frame7 = {
+                type: nextChild,
+                domNamespace: parentNamespace,
+                children: _nextChildren7,
+                childIndex: 0,
+                context: context,
+                footer: ''
+              };
+              this.stack.push(_frame7);
+              return '';
+            }
+          case REACT_LAZY_TYPE:
+            reactProdInvariant('295');
         }
       }
 
@@ -1635,7 +2079,7 @@ var ReactDOMServerRenderer = function () {
       }
     }
 
-    assertValidProps(tag, props, getStackAddendum);
+    assertValidProps(tag, props);
 
     var out = createOpenTagMarkup(element.type, tag, props, namespace, this.makeStaticMarkup, this.stack.length === 1);
     var footer = '';
@@ -1689,8 +2133,12 @@ var ReactDOMServerRenderer = function () {
  */
 function renderToString(element) {
   var renderer = new ReactDOMServerRenderer(element, false);
-  var markup = renderer.read(Infinity);
-  return markup;
+  try {
+    var markup = renderer.read(Infinity);
+    return markup;
+  } finally {
+    renderer.destroy();
+  }
 }
 
 /**
@@ -1700,8 +2148,12 @@ function renderToString(element) {
  */
 function renderToStaticMarkup(element) {
   var renderer = new ReactDOMServerRenderer(element, true);
-  var markup = renderer.read(Infinity);
-  return markup;
+  try {
+    var markup = renderer.read(Infinity);
+    return markup;
+  } finally {
+    renderer.destroy();
+  }
 }
 
 function renderToNodeStream() {
@@ -1729,7 +2181,7 @@ var ReactDOMServer = ( ReactDOMServerBrowser$1 && ReactDOMServerBrowser ) || Rea
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest
-var server_browser = ReactDOMServer.default ? ReactDOMServer.default : ReactDOMServer;
+var server_browser = ReactDOMServer.default || ReactDOMServer;
 
 return server_browser;
 
