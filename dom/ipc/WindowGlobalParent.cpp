@@ -27,6 +27,8 @@
 #include "nsGlobalWindowInner.h"
 #include "nsQueryObject.h"
 #include "nsFrameLoaderOwner.h"
+#include "nsSerializationHelper.h"
+#include "nsITransportSecurityInfo.h"
 
 #include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/JSWindowActorParent.h"
@@ -316,6 +318,45 @@ already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(
 
   SendChangeFrameRemoteness(aBc, PromiseFlatString(aRemoteType),
                             aPendingSwitchId, resolve, reject);
+  return promise.forget();
+}
+
+already_AddRefed<Promise> WindowGlobalParent::GetSecurityInfo(
+    ErrorResult& aRv) {
+  RefPtr<BrowserParent> browserParent = GetBrowserParent();
+  if (NS_WARN_IF(!browserParent)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsIGlobalObject* global = xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  SendGetSecurityInfo(
+      [promise](Maybe<nsCString>&& aResult) {
+        if (aResult) {
+          nsCOMPtr<nsISupports> infoObj;
+          nsresult rv =
+              NS_DeserializeObject(aResult.value(), getter_AddRefs(infoObj));
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            promise->MaybeReject(NS_ERROR_FAILURE);
+          }
+          nsCOMPtr<nsITransportSecurityInfo> info = do_QueryInterface(infoObj);
+          if (!info) {
+            promise->MaybeReject(NS_ERROR_FAILURE);
+          }
+          promise->MaybeResolve(info);
+        } else {
+          promise->MaybeResolveWithUndefined();
+        }
+      },
+      [promise](ResponseRejectReason&& aReason) {
+        promise->MaybeReject(NS_ERROR_FAILURE);
+      });
+
   return promise.forget();
 }
 
