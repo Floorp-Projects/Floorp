@@ -1822,8 +1822,8 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
 }
 
 nsEventStatus AsyncPanZoomController::HandleEndOfPan() {
-  MOZ_ASSERT(GetCurrentTouchBlock());
-  GetCurrentTouchBlock()->GetOverscrollHandoffChain()->FlushRepaints();
+  MOZ_ASSERT(GetCurrentTouchBlock() || GetCurrentPanGestureBlock());
+  GetCurrentInputBlock()->GetOverscrollHandoffChain()->FlushRepaints();
   ParentLayerPoint flingVelocity = GetVelocityVector();
 
   // Clear our velocities; if DispatchFling() gives the fling to us,
@@ -1845,7 +1845,7 @@ nsEventStatus AsyncPanZoomController::HandleEndOfPan() {
   if (flingVelocity.Length() < StaticPrefs::APZFlingMinVelocityThreshold()) {
     // Relieve overscroll now if needed, since we will not transition to a fling
     // animation and then an overscroll animation, and relieve it then.
-    GetCurrentTouchBlock()
+    GetCurrentInputBlock()
         ->GetOverscrollHandoffChain()
         ->SnapBackOverscrolledApzc(this);
     return nsEventStatus_eConsumeNoDefault;
@@ -1856,8 +1856,8 @@ nsEventStatus AsyncPanZoomController::HandleEndOfPan() {
   // which nulls out mTreeManager, could be called concurrently.
   if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
     const FlingHandoffState handoffState{
-        flingVelocity, GetCurrentTouchBlock()->GetOverscrollHandoffChain(),
-        false /* not handoff */, GetCurrentTouchBlock()->GetScrolledApzc()};
+        flingVelocity, GetCurrentInputBlock()->GetOverscrollHandoffChain(),
+        false /* not handoff */, GetCurrentInputBlock()->GetScrolledApzc()};
     treeManagerLocal->DispatchFling(this, handoffState);
   }
   return nsEventStatus_eConsumeNoDefault;
@@ -2556,6 +2556,35 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
   ScreenPoint physicalPanDisplacement = aEvent.mPanDisplacement;
   ParentLayerPoint logicalPanDisplacement =
       aEvent.UserMultipliedLocalPanDisplacement();
+  if (aEvent.mDeltaType == PanGestureInput::PANDELTA_PAGE) {
+    // Pan events with page units are used by Gtk, so this replicates Gtk:
+    // https://gitlab.gnome.org/GNOME/gtk/blob/c734c7e9188b56f56c3a504abee05fa40c5475ac/gtk/gtkrange.c#L3065-3073
+    CSSSize pageScrollSize;
+    CSSToParentLayerScale2D zoom;
+    {
+      // Grab the lock to access the frame metrics.
+      RecursiveMutexAutoLock lock(mRecursiveMutex);
+      pageScrollSize = mScrollMetadata.GetPageScrollAmount() /
+                       Metrics().GetDevPixelsPerCSSPixel();
+      zoom = Metrics().GetZoom();
+    }
+    // scrollUnit* is in units of "ParentLayer pixels per page proportion"...
+    auto scrollUnitWidth = std::min(std::pow(pageScrollSize.width, 2.0 / 3.0),
+                                    pageScrollSize.width / 2.0) *
+                           zoom.xScale;
+    auto scrollUnitHeight = std::min(std::pow(pageScrollSize.height, 2.0 / 3.0),
+                                     pageScrollSize.height / 2.0) *
+                            zoom.yScale;
+    // ... and pan displacements are in units of "page proportion count"
+    // here, so the products of them and scrollUnit* are in ParentLayer pixels
+    ParentLayerPoint physicalPanDisplacementPL(
+        physicalPanDisplacement.x * scrollUnitWidth,
+        physicalPanDisplacement.y * scrollUnitHeight);
+    physicalPanDisplacement = ToScreenCoordinates(physicalPanDisplacementPL,
+        aEvent.mLocalPanStartPoint);
+    logicalPanDisplacement.x *= scrollUnitWidth;
+    logicalPanDisplacement.y *= scrollUnitHeight;
+  }
 
   MOZ_ASSERT(GetCurrentPanGestureBlock());
   AdjustDeltaForAllowedScrollDirections(
@@ -2608,6 +2637,12 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
 
   mX.EndTouch(aEvent.mTime);
   mY.EndTouch(aEvent.mTime);
+
+  // Use HandleEndOfPan for fling on platforms that don't
+  // emit momentum events (Gtk).
+  if (aEvent.mSimulateMomentum) {
+    return HandleEndOfPan();
+  }
 
   // Drop any velocity on axes where we don't have room to scroll anyways
   // (in this APZC, or an APZC further in the handoff chain).
