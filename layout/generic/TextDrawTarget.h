@@ -573,12 +573,6 @@ class TextDrawTarget : public DrawTarget {
     return false;
   }
 
-  virtual RefPtr<DrawTarget> CreateClippedDrawTarget(
-      const Rect& aBounds, SurfaceFormat aFormat) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return nullptr;
-  }
-
   already_AddRefed<PathBuilder> CreatePathBuilder(
       FillRule aFillRule) const override {
     MOZ_CRASH("TextDrawTarget: Method shouldn't be called");

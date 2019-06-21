@@ -54,17 +54,25 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
   }
 
   gfxRect maskArea = GetMaskArea(aParams.maskedFrame);
-  if (maskArea.IsEmpty()) {
-    return nullptr;
-  }
   gfxContext* context = aParams.ctx;
   // Get the clip extents in device space:
   // Minimizing the mask surface extents (using both the current clip extents
   // and maskArea) is important for performance.
-  //
-  gfxRect maskSurfaceRectDouble = aParams.toUserSpace.TransformBounds(maskArea);
-  Rect maskSurfaceRect = ToRect(maskSurfaceRectDouble);
+  context->Save();
+  nsSVGUtils::SetClipRect(context, aParams.toUserSpace, maskArea);
+  gfxRect maskSurfaceRect = context->GetClipExtents(gfxContext::eDeviceSpace);
   maskSurfaceRect.RoundOut();
+  context->Restore();
+
+  bool resultOverflows;
+  IntSize maskSurfaceSize = nsSVGUtils::ConvertToSurfaceSize(
+      maskSurfaceRect.Size(), &resultOverflows);
+
+  if (resultOverflows || maskSurfaceSize.IsEmpty()) {
+    // Return value other then ImgDrawResult::SUCCESS, so the caller can skip
+    // painting the masked frame(aParams.maskedFrame).
+    return nullptr;
+  }
 
   uint8_t maskType;
   if (aParams.maskMode == StyleMaskMode::MatchSource) {
@@ -78,19 +86,27 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
   RefPtr<DrawTarget> maskDT;
   if (maskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
     maskDT = context->GetDrawTarget()->CreateClippedDrawTarget(
-        maskSurfaceRect, SurfaceFormat::B8G8R8A8);
+        maskSurfaceSize,
+        Matrix::Translation(maskSurfaceRect.x, maskSurfaceRect.y),
+        SurfaceFormat::B8G8R8A8);
   } else {
     maskDT = context->GetDrawTarget()->CreateClippedDrawTarget(
-        maskSurfaceRect, SurfaceFormat::A8);
+        maskSurfaceSize,
+        Matrix::Translation(maskSurfaceRect.x, maskSurfaceRect.y),
+        SurfaceFormat::A8);
   }
 
   if (!maskDT || !maskDT->IsValid()) {
     return nullptr;
   }
 
-  RefPtr<gfxContext> tmpCtx =
-      gfxContext::CreatePreservingTransformOrNull(maskDT);
+  Matrix maskSurfaceMatrix =
+      context->CurrentMatrix() *
+      ToMatrix(gfxMatrix::Translation(-maskSurfaceRect.TopLeft()));
+
+  RefPtr<gfxContext> tmpCtx = gfxContext::CreateOrNull(maskDT);
   MOZ_ASSERT(tmpCtx);  // already checked the draw target above
+  tmpCtx->SetMatrix(maskSurfaceMatrix);
 
   mMatrixForChildren =
       GetMaskTransform(aParams.maskedFrame) * aParams.toUserSpace;
@@ -122,7 +138,8 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
     }
     surface = maskSnapshot.forget();
   } else {
-    maskDT->FillRect(maskSurfaceRect,
+    maskDT->SetTransform(Matrix());
+    maskDT->FillRect(Rect(0, 0, maskSurfaceSize.width, maskSurfaceSize.height),
                      ColorPattern(Color(1.0f, 1.0f, 1.0f, aParams.opacity)),
                      DrawOptions(1, CompositionOp::OP_IN));
     RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
@@ -132,6 +149,12 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
     surface = maskSnapshot.forget();
   }
 
+  // Moz2D transforms in the opposite direction to Thebes
+  if (!maskSurfaceMatrix.Invert()) {
+    return nullptr;
+  }
+
+  *aParams.maskTransform = maskSurfaceMatrix;
   return surface.forget();
 }
 

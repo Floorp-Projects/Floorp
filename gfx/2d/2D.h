@@ -589,15 +589,23 @@ class PathSink : public RefCounted<PathSink> {
   virtual void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
                    float aEndAngle, bool aAntiClockwise = false) = 0;
 
-  virtual Point CurrentPoint() const { return mCurrentPoint; }
+  virtual Point CurrentPoint() const {
+    return mCurrentPoint;
+  }
 
-  virtual Point BeginPoint() const { return mBeginPoint; }
+  virtual Point BeginPoint() const {
+    return mBeginPoint;
+  }
 
-  virtual void SetCurrentPoint(const Point& aPoint) { mCurrentPoint = aPoint; }
+  virtual void SetCurrentPoint(const Point& aPoint) {
+    mCurrentPoint = aPoint;
+  }
 
-  virtual void SetBeginPoint(const Point& aPoint) { mBeginPoint = aPoint; }
+  virtual void SetBeginPoint(const Point& aPoint) {
+    mBeginPoint = aPoint;
+  }
 
- protected:
+protected:
   /** Point the current subpath is at - or where the next subpath will start
    * if there is no active subpath.
    */
@@ -1358,12 +1366,14 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
   }
 
   /**
-   * Create a similar DrawTarget in the same space as this DrawTarget whose
-   * device size may be clipped based on the active clips intersected with
-   * aBounds (if it is not empty).
+   * Create a similar DrawTarget whose requested size may be clipped based
+   * on this DrawTarget's rect transformed to the new target's space.
    */
-  virtual RefPtr<DrawTarget> CreateClippedDrawTarget(const Rect& aBounds,
-                                                     SurfaceFormat aFormat) = 0;
+  virtual RefPtr<DrawTarget> CreateClippedDrawTarget(
+      const IntSize& aMaxSize, const Matrix& aTransform,
+      SurfaceFormat aFormat) const {
+    return CreateSimilarDrawTarget(aMaxSize, aFormat);
+  }
 
   /**
    * Create a similar draw target, but if the draw target is not backed by a

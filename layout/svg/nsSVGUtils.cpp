@@ -709,13 +709,8 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
       StyleMaskMode maskMode =
           aFrame->StyleSVGReset()->mMask.mLayers[0].mMaskMode;
       nsSVGMaskFrame::MaskParams params(&aContext, aFrame, aTransform,
-                                        maskUsage.opacity, maskMode,
-                                        aImgParams);
-      // We want the mask to be untransformed so use the inverse of the current
-      // transform as the maskTransform to compensate.
-      maskTransform = aContext.CurrentMatrix();
-      maskTransform.Invert();
-
+                                        maskUsage.opacity, &maskTransform,
+                                        maskMode, aImgParams);
       maskSurface = maskFrame->GetMaskForMaskedFrame(params);
 
       if (!maskSurface) {
@@ -727,14 +722,13 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     }
 
     if (maskUsage.shouldGenerateClipMaskLayer) {
+      Matrix clippedMaskTransform;
       RefPtr<SourceSurface> clipMaskSurface = clipPathFrame->GetClipMask(
-          aContext, aFrame, aTransform, maskSurface, maskTransform);
+          aContext, aFrame, aTransform, &clippedMaskTransform, maskSurface,
+          maskTransform);
       if (clipMaskSurface) {
-        // We want the mask to be untransformed so use the inverse of the
-        // current transform as the maskTransform to compensate.
-        maskTransform = aContext.CurrentMatrix();
-        maskTransform.Invert();
         maskSurface = clipMaskSurface;
+        maskTransform = clippedMaskTransform;
       } else {
         // Either entire surface is clipped out, or gfx buffer allocation
         // failure in nsSVGClipPathFrame::GetClipMask.

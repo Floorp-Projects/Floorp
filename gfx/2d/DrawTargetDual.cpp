@@ -200,12 +200,6 @@ already_AddRefed<DrawTarget> DrawTargetDual::CreateSimilarDrawTarget(
   return mA->CreateSimilarDrawTarget(aSize, aFormat);
 }
 
-RefPtr<DrawTarget> DrawTargetDual::CreateClippedDrawTarget(
-    const Rect& aBounds, SurfaceFormat aFormat) {
-  /* The user probably doesn't want a DualDrawTarget here. */
-  return mA->CreateClippedDrawTarget(aBounds, aFormat);
-}
-
 bool DrawTargetDual::CanCreateSimilarDrawTarget(const IntSize& aSize,
                                                 SurfaceFormat aFormat) const {
   return mA->CanCreateSimilarDrawTarget(aSize, aFormat);

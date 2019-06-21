@@ -140,9 +140,6 @@ class DrawTargetTiled : public DrawTarget {
     return mTiles[0].mDrawTarget->CanCreateSimilarDrawTarget(aSize, aFormat);
   }
 
-  RefPtr<DrawTarget> CreateClippedDrawTarget(const Rect& aBounds,
-                                             SurfaceFormat aFormat) override;
-
   already_AddRefed<PathBuilder> CreatePathBuilder(
       FillRule aFillRule = FillRule::FILL_WINDING) const override {
     return mTiles[0].mDrawTarget->CreatePathBuilder(aFillRule);
