@@ -104,6 +104,7 @@
 #include "nsIStringBundle.h"
 #include "nsIWorkerDebuggerManager.h"
 #include "nsGeolocation.h"
+#include "audio_thread_priority.h"
 
 #if !defined(XP_WIN)
 #  include "mozilla/Omnijar.h"
@@ -1718,6 +1719,11 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
     if (!Preferences::GetBool("media.cubeb.sandbox")) {
       Unused << CubebUtils::GetCubebContext();
     }
+#    if defined(XP_LINUX)
+    else {
+      CubebUtils::InitAudioThreads();
+    }
+#    endif
   }
 
   if (sandboxEnabled) {
