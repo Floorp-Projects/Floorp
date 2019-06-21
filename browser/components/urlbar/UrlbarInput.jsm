@@ -1307,7 +1307,7 @@ class UrlbarInput {
       if (this.view.isOpen) {
         this.view.close();
       } else {
-        this.startQuery();
+        this.startQuery({ allowAutofill: false });
       }
     }
   }
