@@ -124,6 +124,7 @@ export MOZ_SRC=$(topsrcdir)
 export MOZ_DIST=$(ABS_DIST)
 export LIBCLANG_PATH=$(MOZ_LIBCLANG_PATH)
 export CLANG_PATH=$(MOZ_CLANG_PATH)
+export PKG_CONFIG
 export PKG_CONFIG_ALLOW_CROSS=1
 export RUST_BACKTRACE=full
 export MOZ_TOPOBJDIR=$(topobjdir)
