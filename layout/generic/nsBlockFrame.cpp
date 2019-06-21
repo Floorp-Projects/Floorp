@@ -6762,6 +6762,11 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   aBuilder->MarkFramesForDisplayList(this, mFloats);
 
+  if (HasOutsideMarker()) {
+    // Display outside ::marker manually.
+    BuildDisplayListForChild(aBuilder, GetOutsideMarker(), aLists);
+  }
+
   // Prepare for text-overflow processing.
   Maybe<TextOverflow> textOverflow =
       TextOverflow::WillProcessLines(aBuilder, this);
@@ -6851,11 +6856,6 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // content of the block's lines. (If we ever start sorting the Content()
     // list this will end up in the wrong place.)
     aLists.Content()->AppendToTop(&textOverflow->GetMarkers());
-  }
-
-  if (HasOutsideMarker()) {
-    // Display outside ::marker manually.
-    BuildDisplayListForChild(aBuilder, GetOutsideMarker(), aLists);
   }
 
 #ifdef DEBUG
