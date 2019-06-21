@@ -48,6 +48,8 @@ extern crate shift_or_euc_c;
 
 extern crate arrayvec;
 
+extern crate audio_thread_priority;
+
 use std::boxed::Box;
 use std::env;
 use std::ffi::{CStr, CString};
