@@ -1211,7 +1211,15 @@ struct ParamTraits<mozilla::PanGestureInput::PanGestureType>
           mozilla::PanGestureInput::sHighestPanGestureType> {};
 
 template <>
-struct ParamTraits<mozilla::PanGestureInput> {
+struct ParamTraits<mozilla::PanGestureInput::PanDeltaType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::PanGestureInput::PanDeltaType,
+          mozilla::PanGestureInput::PanDeltaType::PANDELTA_PAGE,
+          mozilla::PanGestureInput::sHighestPanDeltaType> {};
+
+template <>
+struct ParamTraits<mozilla::PanGestureInput>
+    : BitfieldHelper<mozilla::PanGestureInput> {
   typedef mozilla::PanGestureInput paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
@@ -1225,6 +1233,7 @@ struct ParamTraits<mozilla::PanGestureInput> {
     WriteParam(aMsg, aParam.mLineOrPageDeltaY);
     WriteParam(aMsg, aParam.mUserDeltaMultiplierX);
     WriteParam(aMsg, aParam.mUserDeltaMultiplierY);
+    WriteParam(aMsg, aParam.mDeltaType);
     WriteParam(aMsg, aParam.mHandledByAPZ);
     WriteParam(aMsg, aParam.mFollowedByMomentum);
     WriteParam(
@@ -1232,6 +1241,7 @@ struct ParamTraits<mozilla::PanGestureInput> {
         aParam
             .mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection);
     WriteParam(aMsg, aParam.mOverscrollBehaviorAllowsSwipe);
+    WriteParam(aMsg, aParam.mSimulateMomentum);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -1246,13 +1256,19 @@ struct ParamTraits<mozilla::PanGestureInput> {
            ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaY) &&
            ReadParam(aMsg, aIter, &aResult->mUserDeltaMultiplierX) &&
            ReadParam(aMsg, aIter, &aResult->mUserDeltaMultiplierY) &&
-           ReadParam(aMsg, aIter, &aResult->mHandledByAPZ) &&
-           ReadParam(aMsg, aIter, &aResult->mFollowedByMomentum) &&
-           ReadParam(
-               aMsg, aIter,
-               &aResult
-                    ->mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection) &&
-           ReadParam(aMsg, aIter, &aResult->mOverscrollBehaviorAllowsSwipe);
+           ReadParam(aMsg, aIter, &aResult->mDeltaType) &&
+           ReadBoolForBitfield(aMsg, aIter, aResult,
+                               &paramType::SetHandledByAPZ) &&
+           ReadBoolForBitfield(aMsg, aIter, aResult,
+                               &paramType::SetFollowedByMomentum) &&
+           ReadBoolForBitfield(
+               aMsg, aIter, aResult,
+               &paramType::
+                   SetRequiresContentResponseIfCannotScrollHorizontallyInStartDirection) &&
+           ReadBoolForBitfield(aMsg, aIter, aResult,
+                               &paramType::SetOverscrollBehaviorAllowsSwipe) &&
+           ReadBoolForBitfield(aMsg, aIter, aResult,
+                               &paramType::SetSimulateMomentum);
   }
 };
 

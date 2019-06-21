@@ -3679,6 +3679,26 @@ size_t TypeNewScript::sizeOfIncludingThis(
   return n;
 }
 
+/* static */ size_t TypeNewScript::sizeOfInitializerList(size_t length) {
+  // TypeNewScriptInitializer struct contains [1] element in its size.
+  size_t size = sizeof(TypeNewScript::InitializerList);
+  if (length > 0) {
+    size += (length - 1) * sizeof(TypeNewScriptInitializer);
+  }
+  return size;
+}
+
+size_t TypeNewScript::gcMallocBytes() const {
+  size_t size = sizeof(TypeNewScript);
+  if (preliminaryObjects) {
+    size += sizeof(PreliminaryObjectArray);
+  }
+  if (initializerList) {
+    size += sizeOfInitializerList(initializerList->length);
+  }
+  return size;
+}
+
 void TypeNewScript::registerNewObject(PlainObject* res) {
   MOZ_ASSERT(!analyzed());
 
@@ -3835,6 +3855,8 @@ bool TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group,
 
   MOZ_ASSERT(OnlyHasDataProperties(templateObject()->lastProperty()));
 
+  MOZ_ASSERT(!initializerList);
+  InitializerList* newInitializerList = nullptr;
   if (templateObject()->slotSpan() != 0) {
     // Make sure that all definite properties found are reflected in the
     // prefix shape. Otherwise, the constructor behaved differently before
@@ -3866,24 +3888,26 @@ bool TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group,
       }
     }
 
-    TypeNewScriptInitializer done(TypeNewScriptInitializer::DONE, 0);
-
-    if (!initializerVector.append(done)) {
-      return false;
-    }
-
-    initializerList = group->zone()->pod_calloc<TypeNewScriptInitializer>(
-        initializerVector.length());
-    if (!initializerList) {
+    size_t nbytes = sizeOfInitializerList(initializerVector.length());
+    newInitializerList = reinterpret_cast<InitializerList*>(
+        group->zone()->pod_calloc<uint8_t>(nbytes));
+    if (!newInitializerList) {
       ReportOutOfMemory(cx);
       return false;
     }
-    PodCopy(initializerList, initializerVector.begin(),
+    newInitializerList->length = initializerVector.length();
+    PodCopy(newInitializerList->entries, initializerVector.begin(),
             initializerVector.length());
   }
 
+  RemoveCellMemory(group, gcMallocBytes(), MemoryUse::ObjectGroupAddendum);
+
+  initializerList = newInitializerList;
+
   js_delete(preliminaryObjects);
   preliminaryObjects = nullptr;
+
+  AddCellMemory(group, gcMallocBytes(), MemoryUse::ObjectGroupAddendum);
 
   if (prefixShape->slotSpan() == templateObject()->slotSpan()) {
     // The definite properties analysis found exactly the properties that
@@ -4006,9 +4030,10 @@ bool TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx,
     // Index in pcOffsets of the frame currently being checked for a SETPROP.
     int setpropDepth = callDepth;
 
-    for (TypeNewScriptInitializer* init = initializerList;; init++) {
-      if (init->kind == TypeNewScriptInitializer::SETPROP) {
-        if (!pastProperty && pcOffsets[setpropDepth] < init->offset) {
+    for (size_t i = 0; i < initializerList->length; i++) {
+      const TypeNewScriptInitializer init = initializerList->entries[i];
+      if (init.kind == TypeNewScriptInitializer::SETPROP) {
+        if (!pastProperty && pcOffsets[setpropDepth] < init.offset) {
           // Have not yet reached this setprop.
           break;
         }
@@ -4016,12 +4041,12 @@ bool TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx,
         numProperties++;
         pastProperty = false;
         setpropDepth = callDepth;
-      } else if (init->kind == TypeNewScriptInitializer::SETPROP_FRAME) {
+      } else if (init.kind == TypeNewScriptInitializer::SETPROP_FRAME) {
         if (!pastProperty) {
-          if (pcOffsets[setpropDepth] < init->offset) {
+          if (pcOffsets[setpropDepth] < init.offset) {
             // Have not yet reached this inner call.
             break;
-          } else if (pcOffsets[setpropDepth] > init->offset) {
+          } else if (pcOffsets[setpropDepth] > init.offset) {
             // Have advanced past this inner call.
             pastProperty = true;
           } else if (setpropDepth == 0) {
@@ -4033,7 +4058,7 @@ bool TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx,
           }
         }
       } else {
-        MOZ_ASSERT(init->kind == TypeNewScriptInitializer::DONE);
+        MOZ_ASSERT(init.kind == TypeNewScriptInitializer::DONE);
         finished = true;
         break;
       }
