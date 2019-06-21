@@ -5,7 +5,7 @@
 .event-listeners-content {
   padding-top: 4px;
   padding-bottom: 4px;
-  padding-inline-start: 14px;
+  padding-inline-start: 6px;
   padding-inline-end: 20px;
 }
 
@@ -31,7 +31,10 @@
 .event-listener-expand {
   border: none;
   background: none;
-  padding: 4px 5px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-inline-start: 0;
+  padding-inline-end: 2px;
   line-height: 12px;
 }
 
