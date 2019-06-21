@@ -3145,7 +3145,7 @@ void jit::DestroyJitScripts(FreeOp* fop, JSScript* script) {
   }
 
   if (script->hasJitScript()) {
-    JitScript::Destroy(script->zone(), script->jitScript());
+    script->releaseJitScript();
   }
 }
 

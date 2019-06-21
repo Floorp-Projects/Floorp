@@ -406,6 +406,15 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+#ifdef MOZ_WIDGET_GTK
+VARCACHE_PREF(
+  Live,
+  "apz.gtk.kinetic_scroll.enabled",
+  APZGTKKineticScrollEnabled,
+  RelaxedAtomicBool, false
+)
+#endif
+
 #if !defined(MOZ_WIDGET_ANDROID)
 # define PREF_VALUE true
 #else
