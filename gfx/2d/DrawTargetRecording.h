@@ -297,7 +297,8 @@ class DrawTargetRecording : public DrawTarget {
    * on this DrawTarget's rect transformed to the new target's space.
    */
   virtual RefPtr<DrawTarget> CreateClippedDrawTarget(
-      const Rect& aBounds, SurfaceFormat aFormat) override;
+      const IntSize& aMaxSize, const Matrix& aTransform,
+      SurfaceFormat aFormat) const override;
 
   virtual already_AddRefed<DrawTarget> CreateSimilarDrawTargetForFilter(
       const IntSize& aSize, SurfaceFormat aFormat, FilterNode* aFilter,

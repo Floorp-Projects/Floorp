@@ -1417,8 +1417,7 @@ void DrawTargetCairo::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
   cairo_pattern_t* mask = cairo_pattern_create_for_surface(surf);
   cairo_matrix_t matrix;
 
-  cairo_matrix_init_translate(&matrix, -aOffset.x - aMask->GetRect().x,
-                              -aOffset.y - aMask->GetRect().y);
+  cairo_matrix_init_translate(&matrix, -aOffset.x - aMask->GetRect().x, -aOffset.y - aMask->GetRect().y);
   cairo_pattern_set_matrix(mask, &matrix);
 
   cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
@@ -1775,34 +1774,6 @@ already_AddRefed<DrawTarget> DrawTargetCairo::CreateSimilarDrawTarget(
   return nullptr;
 }
 
-RefPtr<DrawTarget> DrawTargetCairo::CreateClippedDrawTarget(
-    const Rect& aBounds, SurfaceFormat aFormat) {
-  RefPtr<DrawTarget> result;
-  // Doing this save()/restore() dance is wasteful
-  cairo_save(mContext);
-
-  if (!aBounds.IsEmpty()) {
-    cairo_new_path(mContext);
-    cairo_rectangle(mContext, aBounds.X(), aBounds.Y(), aBounds.Width(),
-                    aBounds.Height());
-    cairo_clip(mContext);
-  }
-  cairo_identity_matrix(mContext);
-  IntRect clipBounds = IntRect::RoundOut(GetUserSpaceClip());
-  if (!clipBounds.IsEmpty()) {
-    RefPtr<DrawTarget> dt = CreateSimilarDrawTarget(
-        IntSize(clipBounds.width, clipBounds.height), aFormat);
-    result = gfx::Factory::CreateOffsetDrawTarget(
-        dt, IntPoint(clipBounds.x, clipBounds.y));
-    result->SetTransform(mTransform);
-  } else {
-    // Everything is clipped but we still want some kind of surface
-    result = CreateSimilarDrawTarget(IntSize(1, 1), aFormat);
-  }
-
-  cairo_restore(mContext);
-  return result;
-}
 bool DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface,
                                             const IntSize& aSize,
                                             SurfaceFormat* aFormat) {
@@ -2167,7 +2138,7 @@ void DrawTargetCairo::SetTransform(const Matrix& aTransform) {
   }
 }
 
-Rect DrawTargetCairo::GetUserSpaceClip() const {
+Rect DrawTargetCairo::GetUserSpaceClip() {
   double clipX1, clipY1, clipX2, clipY2;
   cairo_clip_extents(mContext, &clipX1, &clipY1, &clipX2, &clipY2);
   return Rect(clipX1, clipY1, clipX2 - clipX1,
