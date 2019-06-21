@@ -13,14 +13,17 @@ const { Async } = ChromeUtils.import("resource://services-common/async.js");
 // https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#wiki-use-session-certificatesign-etc
 var SESSION_KEYS = {
   sessionToken: h(
+    // eslint-disable-next-line no-useless-concat
     "a0a1a2a3a4a5a6a7 a8a9aaabacadaeaf" + "b0b1b2b3b4b5b6b7 b8b9babbbcbdbebf"
   ),
 
   tokenID: h(
+    // eslint-disable-next-line no-useless-concat
     "c0a29dcf46174973 da1378696e4c82ae" + "10f723cf4f4d9f75 e39f4ae3851595ab"
   ),
 
   reqHMACkey: h(
+    // eslint-disable-next-line no-useless-concat
     "9d8f22998ee7f579 8b887042466b72d5" + "3e56ab0c094388bf 65831f702d2febc0"
   ),
 };

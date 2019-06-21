@@ -1732,7 +1732,7 @@ SyncEngine.prototype = {
     // are the same, does it matter?
     if (recordsEqual) {
       this._log.trace(
-        "Ignoring incoming item because the local item is " + "identical."
+        "Ignoring incoming item because the local item is identical."
       );
 
       this._modified.delete(item.id);

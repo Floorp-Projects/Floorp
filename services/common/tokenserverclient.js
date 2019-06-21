@@ -360,7 +360,7 @@ TokenServerClient.prototype = {
     for (let k of ["id", "key", "api_endpoint", "uid", "duration"]) {
       if (!(k in result)) {
         let error = new TokenServerClientServerError(
-          "Expected key not " + " present in result: " + k
+          "Expected key not present in result: " + k
         );
         error.cause = "malformed-response";
         error.response = response;

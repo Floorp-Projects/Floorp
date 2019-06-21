@@ -169,7 +169,7 @@ BulkKeyBundle.prototype = {
   set keyPairB64(value) {
     if (!Array.isArray(value) || value.length != 2) {
       throw new Error(
-        "BulkKeyBundle.keyPairB64 value must be an array of 2 " + "keys."
+        "BulkKeyBundle.keyPairB64 value must be an array of 2 keys."
       );
     }
 
