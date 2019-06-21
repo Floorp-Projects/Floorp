@@ -705,8 +705,6 @@ class MozbuildObject(ProcessExecutionMixin):
 
         if silent:
             args.append('-s')
-        else:
-            args.append('BUILD_VERBOSE_LOG=1')
 
         # Print entering/leaving directory messages. Some consumers look at
         # these to measure progress.
