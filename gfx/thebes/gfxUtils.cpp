@@ -1499,12 +1499,13 @@ Maybe<wr::RenderRoot> gfxUtils::GetRenderRootForElement(
       !StaticPrefs::gfx_webrender_split_render_roots()) {
     return Nothing();
   }
-  if (!aElement->IsXULElement()) {
-    return Nothing();
-  }
   if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::renderroot,
                             NS_LITERAL_STRING("content"), eCaseMatters)) {
     return Some(wr::RenderRoot::Content);
+  }
+  if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::renderroot,
+                            NS_LITERAL_STRING("popover"), eCaseMatters)) {
+    return Some(wr::RenderRoot::Popover);
   }
   return Nothing();
 }

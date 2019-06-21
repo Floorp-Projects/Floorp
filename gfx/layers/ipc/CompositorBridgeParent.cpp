@@ -1796,6 +1796,8 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
   if (StaticPrefs::gfx_webrender_split_render_roots()) {
     apis.AppendElement(
         apis[0]->CreateDocument(aSize, 1, wr::RenderRoot::Content));
+    apis.AppendElement(
+        apis[0]->CreateDocument(aSize, 2, wr::RenderRoot::Popover));
   }
 
   InfallibleTArray<RefPtr<wr::WebRenderAPI>> clonedApis;
