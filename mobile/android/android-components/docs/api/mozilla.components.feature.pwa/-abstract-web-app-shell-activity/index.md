@@ -2,7 +2,7 @@
 
 # AbstractWebAppShellActivity
 
-`abstract class AbstractWebAppShellActivity : AppCompatActivity` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/AbstractWebAppShellActivity.kt#L21)
+`abstract class AbstractWebAppShellActivity : AppCompatActivity` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/AbstractWebAppShellActivity.kt#L22)
 
 Activity for "standalone" and "fullscreen" web applications.
 

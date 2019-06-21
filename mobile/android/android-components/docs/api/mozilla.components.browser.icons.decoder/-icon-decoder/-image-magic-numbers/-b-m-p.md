@@ -2,7 +2,7 @@
 
 # BMP
 
-`BMP` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/decoder/IconDecoder.kt#L31)
+`BMP` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/decoder/IconDecoder.kt#L32)
 
 ### Inherited Properties
 

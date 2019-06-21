@@ -45,3 +45,9 @@ https://developers.google.com/web/fundamentals/web-app-manifest/
 | [shortName](short-name.md) | `val shortName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Provides a short human-readable name for the application. This is intended for when there is insufficient space to display the full name of the web application, like device homescreens. |
 | [startUrl](start-url.md) | `val startUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The URL that loads when a user launches the application (e.g. when added to home screen), typically the index. Note that this has to be a relative URL, relative to the manifest url. |
 | [themeColor](theme-color.md) | `val themeColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`?`<br>Defines the default theme color for an application. This sometimes affects how the OS displays the site (e.g., on Android's task switcher, the theme color surrounds the site). |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [asTaskDescription](../../mozilla.components.feature.pwa.ext/as-task-description.md) | `fun `[`WebAppManifest`](./index.md)`.asTaskDescription(): `[`TaskDescription`](https://developer.android.com/reference/android/app/ActivityManager/TaskDescription.html)<br>Create a [TaskDescription](https://developer.android.com/reference/android/app/ActivityManager/TaskDescription.html) for the activity manager based on the manifest. |

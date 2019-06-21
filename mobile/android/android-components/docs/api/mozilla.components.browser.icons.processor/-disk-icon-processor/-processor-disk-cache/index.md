@@ -2,7 +2,7 @@
 
 # ProcessorDiskCache
 
-`interface ProcessorDiskCache` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/processor/DiskIconProcessor.kt#L17)
+`interface ProcessorDiskCache` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/processor/DiskIconProcessor.kt#L19)
 
 ### Functions
 

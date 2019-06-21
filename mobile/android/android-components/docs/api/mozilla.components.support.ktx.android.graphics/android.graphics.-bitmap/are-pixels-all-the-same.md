@@ -2,7 +2,7 @@
 
 # arePixelsAllTheSame
 
-`fun `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`.arePixelsAllTheSame(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/graphics/Bitmap.kt#L52)
+`fun `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`.arePixelsAllTheSame(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/graphics/Bitmap.kt#L54)
 
 Returns true if all pixels have the same value, false otherwise.
 

@@ -2,7 +2,7 @@
 
 # ProcessorMemoryCache
 
-`interface ProcessorMemoryCache` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/processor/MemoryIconProcessor.kt#L17)
+`interface ProcessorMemoryCache` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/processor/MemoryIconProcessor.kt#L19)
 
 ### Functions
 
