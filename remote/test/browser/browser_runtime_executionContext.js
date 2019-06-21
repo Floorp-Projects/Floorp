@@ -93,7 +93,7 @@ async function testNavigate({ Runtime, Page }, previousContext) {
   isnot(
     executionContextId,
     context.id,
-    "The destroyed id is different from the " + "created one"
+    "The destroyed id is different from the created one"
   );
 
   return context;
@@ -173,7 +173,7 @@ async function testNavigateViaLocation({ Runtime }, previousContext) {
   isnot(
     executionContextId,
     context.id,
-    "The destroyed id is different from the " + "created one"
+    "The destroyed id is different from the created one"
   );
 
   return context;
@@ -200,12 +200,12 @@ async function testReload({ Runtime, Page }, previousContext) {
   is(
     context.auxData.frameId,
     previousContext.auxData.frameId,
-    "The execution context " + "frame id is the same one"
+    "The execution context frame id is the same one"
   );
 
   isnot(
     executionContextId,
     context.id,
-    "The destroyed id is different from the " + "created one"
+    "The destroyed id is different from the created one"
   );
 }
