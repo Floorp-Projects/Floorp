@@ -27,6 +27,7 @@
       <button id="create-login-button" data-l10n-id="create-login-button"></button>
       <menu-button data-l10n-id="menu-button"
                    data-l10n-attrs="button-title,
+                                    menuitem-feedback,
                                     menuitem-import,
                                     menuitem-preferences"></menu-button>
     </header>
@@ -146,6 +147,9 @@
       <ul class="menu" role="menu" hidden>
         <li role="menuitem" class="menuitem windows-only">
           <button class="menuitem-button menuitem-import alternate-button" data-event-name="AboutLoginsImport"></button>
+        </li>
+        <li role="menuitem" class="menuitem">
+          <button class="menuitem-button menuitem-feedback alternate-button" data-event-name="AboutLoginsOpenFeedback"></button>
         </li>
         <li role="menuitem" class="menuitem">
           <button class="menuitem-button menuitem-preferences alternate-button" data-event-name="AboutLoginsOpenPreferences"></button>

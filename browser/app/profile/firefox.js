@@ -1735,6 +1735,8 @@ pref("signon.showAutoCompleteFooter", true);
 pref("signon.management.page.enabled", false);
 pref("signon.showAutoCompleteOrigins", true);
 pref("signon.includeOtherSubdomainsInLookup", true);
+pref("signon.feedbackURL",
+     "https://www.surveygizmo.com/s3/5036102/Lockwise-feedback?ver=%VERSION%");
 
 // Enable the "Simplify Page" feature in Print Preview. This feature
 // is disabled by default in toolkit.
