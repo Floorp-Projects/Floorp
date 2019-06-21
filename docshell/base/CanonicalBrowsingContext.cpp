@@ -82,6 +82,15 @@ void CanonicalBrowsingContext::GetCurrentRemoteType(nsAString& aRemoteType,
   aRemoteType.Assign(cp->GetRemoteType());
 }
 
+void CanonicalBrowsingContext::SetOwnerProcessId(uint64_t aProcessId) {
+  MOZ_LOG(GetLog(), LogLevel::Debug,
+          ("SetOwnerProcessId for 0x%08" PRIx64 " (0x%08" PRIx64
+           " -> 0x%08" PRIx64 ")",
+           Id(), mProcessId, aProcessId));
+
+  mProcessId = aProcessId;
+}
+
 void CanonicalBrowsingContext::GetWindowGlobals(
     nsTArray<RefPtr<WindowGlobalParent>>& aWindows) {
   aWindows.SetCapacity(mWindowGlobals.Count());
@@ -129,6 +138,18 @@ void CanonicalBrowsingContext::SetEmbedderWindowGlobal(
 
 bool CanonicalBrowsingContext::ValidateTransaction(
     const Transaction& aTransaction, ContentParent* aProcess) {
+  if (MOZ_LOG_TEST(GetLog(), LogLevel::Debug)) {
+#define MOZ_BC_FIELD(name, ...)                                               \
+  if (aTransaction.m##name.isSome()) {                                        \
+    MOZ_LOG(GetLog(), LogLevel::Debug,                                        \
+            ("Validate Transaction 0x%08" PRIx64 " set " #name                \
+             " (from: 0x%08" PRIx64 " owner: 0x%08" PRIx64 ")",               \
+             Id(), aProcess ? static_cast<uint64_t>(aProcess->ChildID()) : 0, \
+             mProcessId));                                                    \
+  }
+#include "mozilla/dom/BrowsingContextFieldList.h"
+  }
+
   // Check that the correct process is performing sets for transactions with
   // non-racy fields.
   if (aTransaction.HasNonRacyField()) {
