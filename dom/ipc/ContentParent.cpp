@@ -5488,14 +5488,13 @@ mozilla::ipc::IPCResult ContentParent::RecvRecordOrigin(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvReportContentBlockingLog(
-    const Principal& aPrincipal, const IPCStream& aIPCStream) {
+    const IPCStream& aIPCStream) {
   nsCOMPtr<nsITrackingDBService> trackingDBService =
       do_GetService("@mozilla.org/tracking-db-service;1");
   if (NS_WARN_IF(!trackingDBService)) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  nsCOMPtr<nsIPrincipal> principal(aPrincipal);
   nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aIPCStream);
   nsCOMPtr<nsIAsyncInputStream> asyncStream;
   nsresult rv = NS_MakeAsyncNonBlockingInputStream(stream.forget(),
@@ -5503,7 +5502,7 @@ mozilla::ipc::IPCResult ContentParent::RecvReportContentBlockingLog(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_FAIL_NO_REASON(this);
   }
-  trackingDBService->RecordContentBlockingLog(principal, asyncStream);
+  trackingDBService->RecordContentBlockingLog(asyncStream);
   return IPC_OK();
 }
 

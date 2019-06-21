@@ -200,6 +200,11 @@ interface nsIClearDataService : nsISupports
   const uint32_t CLEAR_CERT_EXCEPTIONS = 1 << 21;
 
   /**
+   * Clear entries in the content blocking database.
+   */
+  const uint32_t CLEAR_CONTENT_BLOCKING_RECORDS = 1 << 22;
+
+  /**
    * Use this value to delete all the data.
    */
   const uint32_t CLEAR_ALL = 0xFFFFFF;

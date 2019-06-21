@@ -16,9 +16,31 @@ interface nsITrackingDBService : nsISupports
    * This function is typically called at the end of the document lifecycle,
    * since calling it multiple times results in multiple new entries.
    *
-   * @param aFirstPartyPrincipal the principal of the first party that was
-   *        loaded in the document that the content blocking log belongs to
    * @param aInputStream the content blocking log as an input stream that outputs a JSON string
    */
-  void recordContentBlockingLog(in nsIPrincipal aFirstPartyPrincipal, in nsIAsyncInputStream aInputStream);
+  void recordContentBlockingLog(in nsIAsyncInputStream aInputStream);
+
+  /**
+   * Save new events in the content blocking database
+   * @param data    a json string containing the content blocking log.
+   */
+  Promise saveEvents(in AString data);
+
+  /**
+   * Clear all content blocking database entries.
+   */
+  Promise clearAll();
+
+  /**
+   * Clear all content blocking database entries added since the specified time.
+   * @param since   a unix timestamp representing the number of milliseconds from
+   *                Jan 1, 1970 00:00:00 UTC.
+   */
+  Promise clearSince(in int64_t since);
+
+  const unsigned long OTHER_COOKIES_BLOCKED_ID = 0;
+  const unsigned long TRACKERS_ID = 1;
+  const unsigned long TRACKING_COOKIES_ID = 2;
+  const unsigned long CRYPTOMINERS_ID = 3;
+  const unsigned long FINGERPRINTERS_ID = 4;
 };
