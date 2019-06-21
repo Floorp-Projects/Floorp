@@ -46,7 +46,7 @@ EXEC			= exec
 # ELOG prints out failed command when building silently (gmake -s). Pymake
 # prints out failed commands anyway, so ELOG just makes things worse by
 # forcing shell invocations.
-ifneq (,$(findstring -s, $(filter-out --%, $(MAKEFLAGS))))
+ifndef BUILD_VERBOSE_LOG
   ELOG := $(EXEC) sh $(MOZILLA_DIR)/build/unix/print-failed-commands.sh
 else
   ELOG :=
