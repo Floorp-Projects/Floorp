@@ -92,6 +92,7 @@ class RLogConnector {
   }
 
   void SetLogLimit(uint32_t new_limit);
+  bool ShouldLog(int level) const;
   void Log(int level, std::string&& log);
   void Clear();
 
