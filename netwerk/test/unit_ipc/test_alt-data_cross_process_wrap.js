@@ -1,7 +1,7 @@
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // needs to be rooted
-var cacheFlushObserver = { observe: function() {
+var cacheFlushObserver = { observe() {
   cacheFlushObserver = null;
   do_send_remote_message('flushed');
 }};
@@ -10,7 +10,7 @@ var cacheFlushObserver = { observe: function() {
 var URL = null;
 
 // needs to be rooted
-var cacheFlushObserver2 = { observe: function() {
+var cacheFlushObserver2 = { observe() {
   cacheFlushObserver2 = null;
   openAltChannel();
 }};

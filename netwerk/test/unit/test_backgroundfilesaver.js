@@ -170,8 +170,8 @@ function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
     copier.init(inputStream, aSaverOutputStream, null, false, true, 0x8000, true,
                 aCloseWhenDone);
     copier.asyncCopy({
-      onStartRequest: function () { },
-      onStopRequest: function (aRequest, aStatusCode)
+      onStartRequest () { },
+      onStopRequest (aRequest, aStatusCode)
       {
         if (Components.isSuccessCode(aStatusCode)) {
           resolve();
@@ -234,11 +234,6 @@ var gStillRunning = true;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
-
-function run_test()
-{
-  run_next_test();
-}
 
 add_task(function test_setup()
 {

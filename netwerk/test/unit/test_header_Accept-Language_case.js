@@ -40,7 +40,7 @@ function run_test() {
 function setupChannel(path) {
   let uri = NetUtil.newURI("http://localhost:4444" + path);
   let chan = NetUtil.newChannel({
-    uri: uri,
+    uri,
     loadUsingSystemPrincipal: true
   });
   chan.QueryInterface(Ci.nsIHttpChannel);

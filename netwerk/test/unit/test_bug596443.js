@@ -28,21 +28,15 @@ Listener.prototype = {
     _response: null,
     _buffer: null,
 
-    QueryInterface: function(iid) {
-        if (iid.equals(Ci.nsIStreamListener) ||
-            iid.equals(Ci.nsIRequestObserver) ||
-            iid.equals(Ci.nsISupports))
-          return this;
-        throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
 
-    onStartRequest: function (request) {
+    onStartRequest (request) {
         this._buffer = "";
     },
-    onDataAvailable: function (request, stream, offset, count) {
+    onDataAvailable (request, stream, offset, count) {
         this._buffer = this._buffer.concat(read_stream(stream, count));
     },
-    onStopRequest: function (request, status) {
+    onStopRequest (request, status) {
         Assert.equal(this._buffer, this._response);
         if (--expectedOnStopRequests == 0)
             do_timeout(10, function() {

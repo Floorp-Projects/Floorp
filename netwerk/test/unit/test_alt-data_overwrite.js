@@ -93,7 +93,7 @@ function flushAndOpenAltChannel()
 }
 
 // needs to be rooted
-let cacheFlushObserver = { observe: function() {
+let cacheFlushObserver = { observe() {
   if (!cacheFlushObserver) {
     info("ignoring cacheFlushObserver\n");
     return;
@@ -141,7 +141,7 @@ function flushAndOpenAltChannel2()
 }
 
 // needs to be rooted
-let cacheFlushObserver2 = { observe: function() {
+let cacheFlushObserver2 = { observe() {
   if (!cacheFlushObserver2) {
     info("ignoring cacheFlushObserver2\n");
     return;
@@ -179,7 +179,7 @@ function flushAndOpenAltChannel3()
 }
 
 // needs to be rooted
-let cacheFlushObserver3 = { observe: function() {
+let cacheFlushObserver3 = { observe() {
   if (!cacheFlushObserver3) {
     info("ignoring cacheFlushObserver3\n");
     return;

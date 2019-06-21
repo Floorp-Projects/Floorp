@@ -20,14 +20,10 @@ const socketTransportService =
 const prefs = Cc["@mozilla.org/preferences-service;1"]
               .getService(Ci.nsIPrefBranch);
 
-function run_test() {
-  run_next_test();
-}
-
 function getCert() {
   return new Promise((resolve, reject) => {
     certService.getOrCreateCert("tls-test", {
-      handleCert: function(c, rv) {
+      handleCert(c, rv) {
         if (rv) {
           reject(rv);
           return;
@@ -48,7 +44,7 @@ function startServer(cert, expectingPeerCert, clientCertificateConfig,
   let input, output;
 
   let listener = {
-    onSocketAccepted: function(socket, transport) {
+    onSocketAccepted(socket, transport) {
       info("Accept TLS client connection");
       let connectionInfo = transport.securityInfo
                            .QueryInterface(Ci.nsITLSServerConnectionInfo);
@@ -56,7 +52,7 @@ function startServer(cert, expectingPeerCert, clientCertificateConfig,
       input = transport.openInputStream(0, 0, 0);
       output = transport.openOutputStream(0, 0, 0);
     },
-    onHandshakeDone: function(socket, status) {
+    onHandshakeDone(socket, status) {
       info("TLS handshake done");
       if (expectingPeerCert) {
         ok(!!status.peerCert, "Has peer cert");
@@ -79,12 +75,12 @@ function startServer(cert, expectingPeerCert, clientCertificateConfig,
       equal(status.macLength, 128, "Using 128-bit MAC");
 
       input.asyncWait({
-        onInputStreamReady: function(input) {
+        onInputStreamReady(input) {
           NetUtil.asyncCopy(input, output);
         }
       }, 0, 0, Services.tm.currentThread);
     },
-    onStopListening: function() {
+    onStopListening() {
       info("onStopListening");
       input.close();
       output.close();
@@ -120,13 +116,13 @@ function startClient(port, cert, expectingAlert, tlsVersion) {
 
   let handler = {
 
-    onTransportStatus: function(transport, status) {
+    onTransportStatus(transport, status) {
       if (status === Ci.nsISocketTransport.STATUS_CONNECTED_TO) {
         output.asyncWait(handler, 0, 0, Services.tm.currentThread);
       }
     },
 
-    onInputStreamReady: function(input) {
+    onInputStreamReady(input) {
       try {
         let data = NetUtil.readInputStreamToString(input, input.available());
         equal(data, "HELLO", "Echoed data received");
@@ -158,7 +154,7 @@ function startClient(port, cert, expectingAlert, tlsVersion) {
       }
     },
 
-    onOutputStreamReady: function(output) {
+    onOutputStreamReady(output) {
       try {
         // Set the client certificate as appropriate.
         if (cert) {

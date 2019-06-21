@@ -31,10 +31,10 @@ TestProtocolHandler.prototype = {
                  Ci.nsIProtocolHandler.URI_NORELATIVE |
                  Ci.nsIProtocolHandler.ALLOWS_PROXY |
                  Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
-  newChannel: function(uri, aLoadInfo) {
+  newChannel(uri, aLoadInfo) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
-  allowPort: function(port, scheme) {
+  allowPort(port, scheme) {
     return true;
   }
 };
@@ -42,10 +42,10 @@ TestProtocolHandler.prototype = {
 function TestProtocolHandlerFactory() {
 }
 TestProtocolHandlerFactory.prototype = {
-  createInstance: function(delegate, iid) {
+  createInstance(delegate, iid) {
     return new TestProtocolHandler().QueryInterface(iid);
   },
-  lockFactory: function(lock) {
+  lockFactory(lock) {
   }
 };
 
@@ -96,7 +96,7 @@ TestFilter.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]),
 
-  applyFilter: function(pps, uri, pi, cb) {
+  applyFilter(pps, uri, pi, cb) {
     if (this._result == THROW) {
       throw Cr.NS_ERROR_FAILURE;
     }
@@ -122,7 +122,7 @@ resolveCallback.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyCallback]),
 
-  onProxyAvailable : function (req, channel, pi, status) {
+  onProxyAvailable (req, channel, pi, status) {
     this.nextFunction(pi);
   }
 };

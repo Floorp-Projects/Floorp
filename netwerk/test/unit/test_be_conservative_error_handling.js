@@ -19,7 +19,7 @@ function getCert() {
     let certService = Cc["@mozilla.org/security/local-cert-service;1"]
                         .getService(Ci.nsILocalCertService);
     certService.getOrCreateCert("beConservative-test", {
-      handleCert: function(c, rv) {
+      handleCert(c, rv) {
         if (rv) {
           reject(rv);
           return;

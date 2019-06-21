@@ -64,15 +64,9 @@ ChannelListener.prototype = {
   _contentLen: -1,
   _lastEvent: 0,
 
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
 
-  onStartRequest: function(request) {
+  onStartRequest(request) {
     try {
       if (this._got_onstartrequest)
         do_throw("Got second onStartRequest event!");
@@ -129,7 +123,7 @@ ChannelListener.prototype = {
     }
   },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable(request, stream, offset, count) {
     try {
       let current = Date.now();
 
@@ -159,7 +153,7 @@ ChannelListener.prototype = {
     }
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest(request, status) {
     try {
       var success = Components.isSuccessCode(status);
       if (!this._got_onstartrequest)
@@ -203,20 +197,15 @@ function ChannelEventSink(flags)
 }
 
 ChannelEventSink.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIInterfaceRequestor) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor"]),
 
-  getInterface: function(iid) {
+  getInterface(iid) {
     if (iid.equals(Ci.nsIChannelEventSink))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  asyncOnChannelRedirect: function(oldChannel, newChannel, flags, callback) {
+  asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
     if (this._flags & ES_ABORT_REDIRECT)
       throw Cr.NS_BINDING_ABORTED;
 

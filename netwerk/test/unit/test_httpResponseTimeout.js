@@ -26,13 +26,13 @@ function TimeoutListener(expectResponse) {
 }
 
 TimeoutListener.prototype = {
-  onStartRequest: function (request) {
+  onStartRequest (request) {
   },
 
-  onDataAvailable: function (request, stream) {
+  onDataAvailable (request, stream) {
   },
 
-  onStopRequest: function (request, status) {
+  onStopRequest (request, status) {
     if (this.expectResponse) {
       Assert.equal(status, Cr.NS_OK);
     } else {

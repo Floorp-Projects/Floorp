@@ -16,7 +16,7 @@ function test_policy(test) {
 
   var uri = NetUtil.newURI(test.url)
   var chan = NetUtil.newChannel({
-    uri: uri,
+    uri,
     loadUsingSystemPrincipal: true
   });
 

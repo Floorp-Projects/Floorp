@@ -30,7 +30,7 @@ function test_policy(test) {
   let chan = NetUtil.newChannel({
     uri: test.url,
     loadingPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    triggeringPrincipal: triggeringPrincipal,
+    triggeringPrincipal,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
     securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
   });

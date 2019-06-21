@@ -100,13 +100,7 @@ var upgradeListener = {
     socketIn.asyncWait(connectHandler, 0, 0, threadManager.mainThread);
     socketOut.asyncWait(connectHandler, 0, 0, threadManager.mainThread);
   },
-  QueryInterface: function qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIHttpUpgradeListener)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIHttpUpgradeListener"])
 }
 
 var connectHandler = {

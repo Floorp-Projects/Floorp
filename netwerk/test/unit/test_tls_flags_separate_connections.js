@@ -57,7 +57,7 @@ function Listener(tlsFlags) {
 
 let gTestsRun = 0;
 Listener.prototype = {
-  onStartRequest: function(request) {
+  onStartRequest(request) {
     request.QueryInterface(Ci.nsIHttpChannel)
            .QueryInterface(Ci.nsIHttpChannelInternal);
 
@@ -79,10 +79,10 @@ Listener.prototype = {
       previousHashKeys[this.tlsFlags] = hashKey;
     }
   },
-  onDataAvailable: function(request, stream, off, cnt) {
+  onDataAvailable(request, stream, off, cnt) {
     read_stream(stream, cnt);
   },
-  onStopRequest: function() {
+  onStopRequest() {
     gTestsRun++;
     if (gTestsRun == randomFlagValues.length) {
       gTestsRun = 0;

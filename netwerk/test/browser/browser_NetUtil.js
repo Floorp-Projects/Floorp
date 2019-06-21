@@ -40,9 +40,9 @@ function test_asyncFetchBadCert() {
     channel.notificationCallbacks = {
       QueryInterface: ChromeUtils.generateQI([Ci.nsIProgressEventSink,
                                               Ci.nsIInterfaceRequestor]),
-      getInterface: function (aIID) { return this.QueryInterface(aIID); },
-      onProgress: function () {},
-      onStatus: function () {}
+      getInterface (aIID) { return this.QueryInterface(aIID); },
+      onProgress () {},
+      onStatus () {}
     };
     NetUtil.asyncFetch(channel, function (aInputStream, aStatusCode, aRequest) {
       ok(!Components.isSuccessCode(aStatusCode), "request failed");
@@ -69,7 +69,7 @@ function WindowListener(aURL, aCallback) {
   this.url = aURL;
 }
 WindowListener.prototype = {
-  onOpenWindow: function(aXULWindow) {
+  onOpenWindow(aXULWindow) {
     var domwindow = aXULWindow.docShell.domWindow;
     var self = this;
     domwindow.addEventListener("load", function() {
@@ -82,5 +82,5 @@ WindowListener.prototype = {
       });
     }, {once: true});
   },
-  onCloseWindow: function(aXULWindow) {},
+  onCloseWindow(aXULWindow) {},
 }

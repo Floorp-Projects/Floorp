@@ -89,8 +89,3 @@ add_test(function test_LoadContextRegular() {
 // Do not test simultanous uses of .setPrivate and load context.
 // There is little merit in doing so, and combining both will assert in
 // Debug builds anyway.
-
-
-function run_test() {
-    run_next_test();
-}

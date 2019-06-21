@@ -19,7 +19,7 @@ function responseHandler(metadata, response)
 
 function onExamineListener(callback) {
   obs.addObserver({
-    observe: function(subject, topic, data) {
+    observe(subject, topic, data) {
       var obs = Cc["@mozilla.org/observer-service;1"].getService();
       obs = obs.QueryInterface(Ci.nsIObserverService);
       obs.removeObserver(this, "http-on-examine-response");
@@ -49,7 +49,7 @@ add_test(function testAsyncCancel() {
     });
   });
   startChannelRequest(baseUrl, CL_EXPECT_FAILURE, (request, data, context) => {
-    Assert.ok(!!!data, "no response");
+    Assert.ok(!data, "no response");
 
     var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
     Assert.equal(cm.countCookiesFromHost("localhost"), 0, "no cookies set");

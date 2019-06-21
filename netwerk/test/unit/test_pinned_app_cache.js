@@ -146,9 +146,7 @@ function do_app_cache(manifestURL, pageURL, pinned) {
 
 function watch_update(update, stateChangeHandler, cacheAvailHandler) {
   let observer = {
-    QueryInterface: function QueryInterface(iftype) {
-      return this;
-    },
+    QueryInterface: ChromeUtils.generateQI([]),
 
     updateStateChanged: stateChangeHandler,
     applicationCacheAvailable: cacheAvailHandler

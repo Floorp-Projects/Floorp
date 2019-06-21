@@ -247,16 +247,11 @@ Http2PushApiListener.prototype = {
   fooOK : false,
   alt1OK : false,
 
-  getInterface: function(aIID) {
+  getInterface(aIID) {
     return this.QueryInterface(aIID);
   },
 
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIHttpPushListener) ||
-        aIID.equals(Ci.nsIStreamListener))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIHttpPushListener", "nsIStreamListener"]),
 
   // nsIHttpPushListener
   onPush: function onPush(associatedChannel, pushChannel) {

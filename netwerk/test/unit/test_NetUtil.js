@@ -147,13 +147,13 @@ function test_async_copy()
     ostream.init(file, -1, -1, 0);
 
     if (!isBuffered) {
-      return {file: file, sink: ostream};
+      return {file, sink: ostream};
     }
 
     let bstream = Cc["@mozilla.org/network/buffered-output-stream;1"].
       createInstance(Ci.nsIBufferedOutputStream);
     bstream.init(ostream, 256);
-    return {file: file, sink: bstream};
+    return {file, sink: bstream};
   }
   (async function() {
     do_test_pending();
@@ -543,7 +543,7 @@ function test_newChannel_with_nsIURI()
                                                  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                                  Ci.nsIContentPolicy.TYPE_OTHER);
   let NetUtilChannel = NetUtil.newChannel({
-    uri: uri,
+    uri,
     loadUsingSystemPrincipal: true
   });
   Assert.ok(iosChannel.URI.equals(NetUtilChannel.URI));
@@ -792,9 +792,4 @@ function test_readInputStreamToString_invalid_sequence()
   test_readInputStreamToString_invalid_sequence,
 ].forEach(f => add_test(f));
 var index = 0;
-
-function run_test()
-{
-  run_next_test();
-}
 

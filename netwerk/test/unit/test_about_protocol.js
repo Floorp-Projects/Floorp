@@ -5,24 +5,24 @@
 
 var unsafeAboutModule = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule]),
-  newChannel: function (aURI, aLoadInfo) {
+  newChannel (aURI, aLoadInfo) {
     var uri = Services.io.newURI("about:blank");
     let chan = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
     return chan;
   },
-  getURIFlags: function (aURI) {
+  getURIFlags (aURI) {
     return Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT;
   }
 };
 
 var factory = {
-  createInstance: function(aOuter, aIID) {
+  createInstance(aOuter, aIID) {
     if (aOuter)
       throw Cr.NS_ERROR_NO_AGGREGATION;
     return unsafeAboutModule.QueryInterface(aIID);
   },
-  lockFactory: function(aLock) {
+  lockFactory(aLock) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
