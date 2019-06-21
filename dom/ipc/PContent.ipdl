@@ -1354,7 +1354,7 @@ parent:
     async RecordDiscardedData(DiscardedData data);
     async RecordOrigin(uint32_t metricId, nsCString origin);
 
-    async ReportContentBlockingLog(Principal firstPartyPrincipal, IPCStream aJSONStream);
+    async ReportContentBlockingLog(IPCStream aJSONStream);
 
     sync GetA11yContentId() returns (uint32_t aContentId);
     async A11yHandlerControl(uint32_t aPid,
