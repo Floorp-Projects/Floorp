@@ -107,6 +107,8 @@ class WindowGlobalParent final : public WindowGlobalActor,
                                                   uint64_t aPendingSwitchId,
                                                   ErrorResult& aRv);
 
+  already_AddRefed<Promise> GetSecurityInfo(ErrorResult& aRv);
+
   // Create a WindowGlobalParent from over IPC. This method should not be called
   // from outside of the IPC constructors.
   WindowGlobalParent(const WindowGlobalInit& aInit, bool aInProcess);

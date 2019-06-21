@@ -7,6 +7,7 @@ interface Principal;
 interface URI;
 interface nsIDocShell;
 interface RemoteTab;
+interface nsITransportSecurityInfo;
 
 [Exposed=Window, ChromeOnly]
 interface WindowGlobalParent {
@@ -54,6 +55,18 @@ interface WindowGlobalParent {
   Promise<unsigned long long> changeFrameRemoteness(
     BrowsingContext? bc, DOMString remoteType,
     unsigned long long pendingSwitchId);
+
+  /**
+   * Fetches the securityInfo object for this window. This function will
+   * look for failed and successful channels to find the security info,
+   * thus it will work on regular HTTPS pages as well as certificate
+   * error pages.
+   *
+   * This returns a Promise which resolves to an nsITransportSecurity
+   * object with certificate data or undefined if no security info is available.
+   */
+  [Throws]
+  Promise<nsITransportSecurityInfo> getSecurityInfo();
 };
 
 [Exposed=Window, ChromeOnly]
