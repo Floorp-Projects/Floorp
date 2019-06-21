@@ -69,18 +69,18 @@ add_task(async function testCDP() {
   is(
     frameId,
     frameTree.frame.id,
-    "The Page.navigate's frameId is the same than " + "getFrameTree's one"
+    "The Page.navigate's frameId is the same than getFrameTree's one"
   );
 
   const frameNavigated = await onFrameNavigated;
   ok(
     !frameNavigated.frame.parentId,
-    "frameNavigated is for the top level document and" + " has a null parentId"
+    "frameNavigated is for the top level document and has a null parentId"
   );
   is(
     frameNavigated.frame.id,
     frameId,
-    "frameNavigated id is the same than the one " + "returned by Page.navigate"
+    "frameNavigated id is the same than the one returned by Page.navigate"
   );
   is(
     frameNavigated.frame.name,
@@ -90,7 +90,7 @@ add_task(async function testCDP() {
   is(
     frameNavigated.frame.url,
     url,
-    "frameNavigated url is the same being given to " + "Page.navigate"
+    "frameNavigated url is the same being given to Page.navigate"
   );
 
   const { executionContextId } = await onExecutionContextDestroyed;
@@ -114,7 +114,7 @@ add_task(async function testCDP() {
   isnot(
     executionContextId,
     context.id,
-    "The destroyed id is different from the " + "created one"
+    "The destroyed id is different from the created one"
   );
 
   assertReceivedEvents(
