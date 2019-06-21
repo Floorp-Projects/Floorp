@@ -2,7 +2,7 @@
 
 Task execution related traits and utilities.
 
-[Documentation](https://tokio-rs.github.io/tokio/tokio_executor/)
+[Documentation](https://docs.rs/tokio-executor/0.1.7/tokio_executor)
 
 ## Overview
 
@@ -22,7 +22,7 @@ executor, including:
 * The [`Executor`] trait describes the API for spawning a future onto an
   executor.
 
-* [`enter`] marks that the the current thread is entering an execution
+* [`enter`] marks that the current thread is entering an execution
   context. This prevents a second executor from accidentally starting from
   within the context of one that is already running.
 
@@ -31,10 +31,10 @@ executor, including:
 
 * [`Park`] abstracts over blocking and unblocking the current thread.
 
-[`Executor`]: https://tokio-rs.github.io/tokio/tokio_executor/trait.Executor.html
-[`enter`]: https://tokio-rs.github.io/tokio/tokio_executor/fn.enter.html
-[`DefaultExecutor`]: https://tokio-rs.github.io/tokio/tokio_executor/struct.DefaultExecutor.html
-[`Park`]: https://tokio-rs.github.io/tokio/tokio_executor/park/index.html
+[`Executor`]: https://docs.rs/tokio-executor/0.1.7/tokio_executor/trait.Executor.html
+[`enter`]: https://docs.rs/tokio-executor/0.1.7/tokio_executor/fn.enter.html
+[`DefaultExecutor`]: https://docs.rs/tokio-executor/0.1.7/tokio_executor/struct.DefaultExecutor.html
+[`Park`]: https://docs.rs/tokio-executor/0.1.7/tokio_executor/park/trait.Park.html
 
 ## License
 

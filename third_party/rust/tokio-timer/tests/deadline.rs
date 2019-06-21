@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 extern crate futures;
 extern crate tokio_executor;
 extern crate tokio_timer;
@@ -8,8 +9,8 @@ use support::*;
 
 use tokio_timer::*;
 
-use futures::{future, Future};
 use futures::sync::oneshot;
+use futures::{future, Future};
 
 #[test]
 fn simultaneous_deadline_future_completion() {

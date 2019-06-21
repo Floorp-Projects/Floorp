@@ -173,9 +173,20 @@ impl HeaderValue {
     /// within the buffer.
     #[inline]
     pub unsafe fn from_shared_unchecked(src: Bytes) -> HeaderValue {
-        HeaderValue {
-            inner: src,
-            is_sensitive: false,
+        if cfg!(debug_assertions) {
+            match HeaderValue::from_shared(src) {
+                Ok(val) => val,
+                Err(_err) => {
+                    //TODO: if the Bytes were part of the InvalidHeaderValueBytes,
+                    //this message could include the invalid bytes.
+                    panic!("HeaderValue::from_shared_unchecked() with invalid bytes");
+                },
+            }
+        } else {
+            HeaderValue {
+                inner: src,
+                is_sensitive: false,
+            }
         }
     }
 
@@ -485,6 +496,13 @@ impl From<HeaderValue> for Bytes {
     }
 }
 
+impl<'a> From<&'a HeaderValue> for HeaderValue {
+    #[inline]
+    fn from(t: &'a HeaderValue) -> Self {
+        t.clone()
+    }
+}
+
 impl<'a> HttpTryFrom<&'a HeaderValue> for HeaderValue {
     type Error = ::error::Never;
 
@@ -555,12 +573,12 @@ mod try_from_header_name_tests {
 }
 
 fn is_visible_ascii(b: u8) -> bool {
-    b >= 32 && b < 127
+    b >= 32 && b < 127 || b == b'\t'
 }
 
 #[inline]
 fn is_valid(b: u8) -> bool {
-    b >= 32 && b != 127
+    b >= 32 && b != 127 || b == b'\t'
 }
 
 impl fmt::Display for InvalidHeaderValue {

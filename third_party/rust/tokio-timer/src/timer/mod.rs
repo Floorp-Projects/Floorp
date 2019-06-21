@@ -10,64 +10,70 @@
 //! `Clone`, `Send`, and `Sync`. This type is used to create instances of
 //! [`Delay`].
 //!
-//! The [`Now`] trait describes how to get an `Instance` representing the
+//! The [`Now`] trait describes how to get an [`Instant`] representing the
 //! current moment in time. [`SystemNow`] is the default implementation, where
-//! [`Now::now`] is implemented by calling `Instant::now`.
+//! [`Now::now`] is implemented by calling [`Instant::now`].
 //!
 //! [`Timer`] is generic over [`Now`]. This allows the source of time to be
 //! customized. This ability is especially useful in tests and any environment
 //! where determinism is necessary.
 //!
-//! Note, when using the Tokio runtime, the `Timer` does not need to be manually
-//! setup as the runtime comes pre-configured with a `Timer` instance.
+//! Note, when using the Tokio runtime, the [`Timer`] does not need to be manually
+//! setup as the runtime comes pre-configured with a [`Timer`] instance.
 //!
 //! [`Timer`]: struct.Timer.html
 //! [`Handle`]: struct.Handle.html
 //! [`Delay`]: ../struct.Delay.html
-//! [`Now`]: trait.Now.html
-//! [`Now::now`]: trait.Now.html#method.now
+//! [`Now`]: ../clock/trait.Now.html
+//! [`Now::now`]: ../clock/trait.Now.html#method.now
 //! [`SystemNow`]: struct.SystemNow.html
+//! [`Instant`]: https://doc.rust-lang.org/std/time/struct.Instant.html
+//! [`Instant::now`]: https://doc.rust-lang.org/std/time/struct.Instant.html#method.now
 
 // This allows the usage of the old `Now` trait.
 #![allow(deprecated)]
 
+mod atomic_stack;
 mod entry;
 mod handle;
-mod level;
 mod now;
 mod registration;
+mod stack;
 
+use self::atomic_stack::AtomicStack;
 use self::entry::Entry;
-use self::level::{Level, Expiration};
+use self::stack::Stack;
 
-pub use self::handle::{Handle, with_default};
+pub(crate) use self::handle::HandlePriv;
+pub use self::handle::{with_default, Handle};
 pub use self::now::{Now, SystemNow};
 pub(crate) use self::registration::Registration;
 
-use Error;
 use atomic::AtomicU64;
+use wheel;
+use Error;
 
-use tokio_executor::park::{Park, Unpark, ParkThread};
+use tokio_executor::park::{Park, ParkThread, Unpark};
 
-use std::{cmp, fmt};
-use std::time::{Duration, Instant};
-use std::sync::Arc;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 use std::usize;
+use std::{cmp, fmt};
 
-/// Timer implementation that drives [`Delay`], [`Interval`], and [`Deadline`].
+/// Timer implementation that drives [`Delay`], [`Interval`], and [`Timeout`].
 ///
 /// A `Timer` instance tracks the state necessary for managing time and
 /// notifying the [`Delay`] instances once their deadlines are reached.
 ///
 /// It is expected that a single `Timer` instance manages many individual
-/// `Delay` instances. The `Timer` implementation is thread-safe and, as such,
+/// [`Delay`] instances. The `Timer` implementation is thread-safe and, as such,
 /// is able to handle callers from across threads.
 ///
-/// Callers do not use `Timer` directly to create `Delay` instances.  Instead,
-/// [`Handle`] is used. A handle for the timer instance is obtained by calling
-/// [`handle`]. [`Handle`] is the type that implements `Clone` and is `Send +
+/// Callers do not use `Timer` directly to create [`Delay`] instances.  Instead,
+/// [`Handle`][Handle.struct] is used. A handle for the timer instance is obtained by calling
+/// [`handle`]. [`Handle`][Handle.struct] is the type that implements `Clone` and is `Send +
 /// Sync`.
 ///
 /// After creating the `Timer` instance, the caller must repeatedly call
@@ -77,9 +83,9 @@ use std::usize;
 /// The `Timer` has a resolution of one millisecond. Any unit of time that falls
 /// between milliseconds are rounded up to the next millisecond.
 ///
-/// When the `Timer` instance is dropped, any outstanding `Delay` instance that
+/// When the `Timer` instance is dropped, any outstanding [`Delay`] instance that
 /// has not elapsed will be notified with an error. At this point, calling
-/// `poll` on the `Delay` instance will result in `Err` being returned.
+/// `poll` on the [`Delay`] instance will result in `Err` being returned.
 ///
 /// # Implementation
 ///
@@ -108,36 +114,24 @@ use std::usize;
 /// When the timer processes entries at level zero, it will notify all the
 /// [`Delay`] instances as their deadlines have been reached. For all higher
 /// levels, all entries will be redistributed across the wheel at the next level
-/// down. Eventually, as time progresses, entries will `Delay` instances will
+/// down. Eventually, as time progresses, entries will [`Delay`] instances will
 /// either be canceled (dropped) or their associated entries will reach level
 /// zero and be notified.
 ///
 /// [`Delay`]: ../struct.Delay.html
 /// [`Interval`]: ../struct.Interval.html
-/// [`Deadline`]: ../struct.Deadline.html
+/// [`Timeout`]: ../struct.Timeout.html
 /// [paper]: http://www.cs.columbia.edu/~nahum/w6998/papers/ton97-timing-wheels.pdf
 /// [`handle`]: #method.handle
 /// [`turn`]: #method.turn
-/// [`Handle`]: struct.Handle.html
+/// [Handle.struct]: struct.Handle.html
 #[derive(Debug)]
 pub struct Timer<T, N = SystemNow> {
     /// Shared state
     inner: Arc<Inner>,
 
-    /// The number of milliseconds elapsed since the timer started.
-    elapsed: u64,
-
-    /// Timer wheel.
-    ///
-    /// Levels:
-    ///
-    /// * 1 ms slots / 64 ms range
-    /// * 64 ms slots / ~ 4 sec range
-    /// * ~ 4 sec slots / ~ 4 min range
-    /// * ~ 4 min slots / ~ 4 hr range
-    /// * ~ 4 hr slots / ~ 12 day range
-    /// * ~ 12 day slots / ~ 2 yr range
-    levels: Vec<Level>,
+    /// Timer wheel
+    wheel: wheel::Wheel<Stack>,
 
     /// Thread parker. The `Timer` park implementation delegates to this.
     park: T,
@@ -165,19 +159,11 @@ pub(crate) struct Inner {
     num: AtomicUsize,
 
     /// Head of the "process" linked list.
-    process: entry::AtomicStack,
+    process: AtomicStack,
 
     /// Unparks the timer thread.
     unpark: Box<Unpark>,
 }
-
-/// Number of levels. Each level has 64 slots. By using 6 levels with 64 slots
-/// each, the timer is able to track time up to 2 years into the future with a
-/// precision of 1 millisecond.
-const NUM_LEVELS: usize = 6;
-
-/// The maximum duration of a delay
-const MAX_DURATION: u64 = 1 << (6 * NUM_LEVELS);
 
 /// Maximum number of timeouts the system can handle concurrently.
 const MAX_TIMEOUTS: usize = usize::MAX >> 1;
@@ -185,7 +171,8 @@ const MAX_TIMEOUTS: usize = usize::MAX >> 1;
 // ===== impl Timer =====
 
 impl<T> Timer<T>
-where T: Park
+where
+    T: Park,
 {
     /// Create a new `Timer` instance that uses `park` to block the current
     /// thread.
@@ -215,8 +202,9 @@ impl<T, N> Timer<T, N> {
 }
 
 impl<T, N> Timer<T, N>
-where T: Park,
-      N: Now,
+where
+    T: Park,
+    N: Now,
 {
     /// Create a new `Timer` instance that uses `park` to block the current
     /// thread and `now` to get the current `Instant`.
@@ -225,14 +213,9 @@ where T: Park,
     pub fn new_with_now(park: T, mut now: N) -> Self {
         let unpark = Box::new(park.unpark());
 
-        let levels = (0..NUM_LEVELS)
-            .map(Level::new)
-            .collect();
-
         Timer {
             inner: Arc::new(Inner::new(now.now(), unpark)),
-            elapsed: 0,
-            levels,
+            wheel: wheel::Wheel::new(),
             park,
             now,
         }
@@ -276,102 +259,28 @@ where T: Park,
         Ok(Turn(()))
     }
 
-    /// Returns the instant at which the next timeout expires.
-    fn next_expiration(&self) -> Option<Expiration> {
-        // Check all levels
-        for level in 0..NUM_LEVELS {
-            if let Some(expiration) = self.levels[level].next_expiration(self.elapsed) {
-                // There cannot be any expirations at a higher level that happen
-                // before this one.
-                debug_assert!({
-                    let mut res = true;
-
-                    for l2 in (level+1)..NUM_LEVELS {
-                        if let Some(e2) = self.levels[l2].next_expiration(self.elapsed) {
-                            if e2.deadline < expiration.deadline {
-                                res = false;
-                            }
-                        }
-                    }
-
-                    res
-                });
-
-                return Some(expiration);
-            }
-        }
-
-        None
-    }
-
     /// Converts an `Expiration` to an `Instant`.
-    fn expiration_instant(&self, expiration: &Expiration) -> Instant {
-        self.inner.start + Duration::from_millis(expiration.deadline)
+    fn expiration_instant(&self, when: u64) -> Instant {
+        self.inner.start + Duration::from_millis(when)
     }
 
     /// Run timer related logic
     fn process(&mut self) {
-        let now = ms(self.now.now() - self.inner.start, Round::Down);
+        let now = ::ms(self.now.now() - self.inner.start, ::Round::Down);
+        let mut poll = wheel::Poll::new(now);
 
-        loop {
-            let expiration = match self.next_expiration() {
-                Some(expiration) => expiration,
-                None => break,
-            };
+        while let Some(entry) = self.wheel.poll(&mut poll, &mut ()) {
+            let when = entry.when_internal().expect("invalid internal entry state");
 
-            if expiration.deadline > now {
-                // This expiration should not fire on this tick
-                break;
-            }
+            // Fire the entry
+            entry.fire(when);
 
-            // Process the slot, either moving it down a level or firing the
-            // timeout if currently at the final (boss) level.
-            self.process_expiration(&expiration);
-
-            self.set_elapsed(expiration.deadline);
+            // Track that the entry has been fired
+            entry.set_when_internal(None);
         }
 
-        self.set_elapsed(now);
-    }
-
-    fn set_elapsed(&mut self, when: u64) {
-        assert!(self.elapsed <= when, "elapsed={:?}; when={:?}", self.elapsed, when);
-
-        if when > self.elapsed {
-            self.elapsed = when;
-            self.inner.elapsed.store(when, SeqCst);
-        } else {
-            assert_eq!(self.elapsed, when);
-        }
-    }
-
-    fn process_expiration(&mut self, expiration: &Expiration) {
-        while let Some(entry) = self.pop_entry(expiration) {
-            if expiration.level == 0 {
-                let when = entry.when_internal()
-                    .expect("invalid internal entry state");
-
-                debug_assert_eq!(when, expiration.deadline);
-
-                // Fire the entry
-                entry.fire(when);
-
-                // Track that the entry has been fired
-                entry.set_when_internal(None);
-            } else {
-                let when = entry.when_internal()
-                    .expect("entry not tracked");
-
-                let next_level = expiration.level - 1;
-
-                self.levels[next_level]
-                    .add_entry(entry, when);
-            }
-        }
-    }
-
-    fn pop_entry(&mut self, expiration: &Expiration) -> Option<Arc<Entry>> {
-        self.levels[expiration.level].pop_entry_slot(expiration.slot)
+        // Update the elapsed cache
+        self.inner.elapsed.store(self.wheel.elapsed(), SeqCst);
     }
 
     /// Process the entry queue
@@ -383,27 +292,24 @@ where T: Park,
                 (None, None) => {
                     // Nothing to do
                 }
-                (Some(when), None) => {
+                (Some(_), None) => {
                     // Remove the entry
-                    self.clear_entry(&entry, when);
+                    self.clear_entry(&entry);
                 }
                 (None, Some(when)) => {
                     // Queue the entry
                     self.add_entry(entry, when);
                 }
-                (Some(curr), Some(next)) => {
-                    self.clear_entry(&entry, curr);
+                (Some(_), Some(next)) => {
+                    self.clear_entry(&entry);
                     self.add_entry(entry, next);
                 }
             }
         }
     }
 
-    fn clear_entry(&mut self, entry: &Arc<Entry>, when: u64) {
-        // Get the level at which the entry should be stored
-        let level = self.level_for(when);
-        self.levels[level].remove_entry(entry, when);
-
+    fn clear_entry(&mut self, entry: &Arc<Entry>) {
+        self.wheel.remove(entry, &mut ());
         entry.set_when_internal(None);
     }
 
@@ -411,48 +317,26 @@ where T: Park,
     ///
     /// Returns `None` if the entry was fired.
     fn add_entry(&mut self, entry: Arc<Entry>, when: u64) {
-        if when <= self.elapsed {
-            // The entry's deadline has elapsed, so fire it and update the
-            // internal state accordingly.
-            entry.set_when_internal(None);
-            entry.fire(when);
-
-            return;
-        } else if when - self.elapsed > MAX_DURATION {
-            // The entry's deadline is invalid, so error it and update the
-            // internal state accordingly.
-            entry.set_when_internal(None);
-            entry.error();
-
-            return;
-        }
-
-        // Get the level at which the entry should be stored
-        let level = self.level_for(when);
+        use wheel::InsertError;
 
         entry.set_when_internal(Some(when));
-        self.levels[level].add_entry(entry, when);
 
-        debug_assert!({
-            self.levels[level].next_expiration(self.elapsed)
-                .map(|e| e.deadline >= self.elapsed)
-                .unwrap_or(true)
-        });
+        match self.wheel.insert(when, entry, &mut ()) {
+            Ok(_) => {}
+            Err((entry, InsertError::Elapsed)) => {
+                // The entry's deadline has elapsed, so fire it and update the
+                // internal state accordingly.
+                entry.set_when_internal(None);
+                entry.fire(when);
+            }
+            Err((entry, InsertError::Invalid)) => {
+                // The entry's deadline is invalid, so error it and update the
+                // internal state accordingly.
+                entry.set_when_internal(None);
+                entry.error();
+            }
+        }
     }
-
-    fn level_for(&self, when: u64) -> usize {
-        level_for(self.elapsed, when)
-    }
-}
-
-fn level_for(elapsed: u64, when: u64) -> usize {
-    let masked = elapsed ^ when;
-
-    assert!(masked != 0, "elapsed={}; when={}", elapsed, when);
-
-    let leading_zeros = masked.leading_zeros() as usize;
-    let significant = 63 - leading_zeros;
-    significant / 6
 }
 
 impl Default for Timer<ParkThread, SystemNow> {
@@ -462,8 +346,9 @@ impl Default for Timer<ParkThread, SystemNow> {
 }
 
 impl<T, N> Park for Timer<T, N>
-where T: Park,
-      N: Now,
+where
+    T: Park,
+    N: Now,
 {
     type Unpark = T::Unpark;
     type Error = T::Error;
@@ -475,10 +360,10 @@ where T: Park,
     fn park(&mut self) -> Result<(), Self::Error> {
         self.process_queue();
 
-        match self.next_expiration() {
-            Some(expiration) => {
+        match self.wheel.poll_at() {
+            Some(when) => {
                 let now = self.now.now();
-                let deadline = self.expiration_instant(&expiration);
+                let deadline = self.expiration_instant(when);
 
                 if deadline > now {
                     self.park.park_timeout(deadline - now)?;
@@ -499,10 +384,10 @@ where T: Park,
     fn park_timeout(&mut self, duration: Duration) -> Result<(), Self::Error> {
         self.process_queue();
 
-        match self.next_expiration() {
-            Some(expiration) => {
+        match self.wheel.poll_at() {
+            Some(when) => {
                 let now = self.now.now();
-                let deadline = self.expiration_instant(&expiration);
+                let deadline = self.expiration_instant(when);
 
                 if deadline > now {
                     self.park.park_timeout(cmp::min(deadline - now, duration))?;
@@ -523,9 +408,18 @@ where T: Park,
 
 impl<T, N> Drop for Timer<T, N> {
     fn drop(&mut self) {
+        use std::u64;
+
         // Shutdown the stack of entries to process, preventing any new entries
         // from being pushed.
         self.inner.process.shutdown();
+
+        // Clear the wheel, using u64::MAX allows us to drain everything
+        let mut poll = wheel::Poll::new(u64::MAX);
+
+        while let Some(entry) = self.wheel.poll(&mut poll, &mut ()) {
+            entry.error();
+        }
     }
 }
 
@@ -536,7 +430,7 @@ impl Inner {
         Inner {
             num: AtomicUsize::new(0),
             elapsed: AtomicU64::new(0),
-            process: entry::AtomicStack::new(),
+            process: AtomicStack::new(),
             start,
             unpark,
         }
@@ -585,69 +479,12 @@ impl Inner {
             return 0;
         }
 
-        ms(deadline - self.start, Round::Up)
+        ::ms(deadline - self.start, ::Round::Up)
     }
 }
 
 impl fmt::Debug for Inner {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("Inner")
-            .finish()
-    }
-}
-
-enum Round {
-    Up,
-    Down,
-}
-
-/// Convert a `Duration` to milliseconds, rounding up and saturating at
-/// `u64::MAX`.
-///
-/// The saturating is fine because `u64::MAX` milliseconds are still many
-/// million years.
-#[inline]
-fn ms(duration: Duration, round: Round) -> u64 {
-    const NANOS_PER_MILLI: u32 = 1_000_000;
-    const MILLIS_PER_SEC: u64 = 1_000;
-
-    // Round up.
-    let millis = match round {
-        Round::Up => (duration.subsec_nanos() + NANOS_PER_MILLI - 1) / NANOS_PER_MILLI,
-        Round::Down => duration.subsec_nanos() / NANOS_PER_MILLI,
-    };
-
-    duration.as_secs().saturating_mul(MILLIS_PER_SEC).saturating_add(millis as u64)
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_level_for() {
-        for pos in 1..64 {
-            assert_eq!(0, level_for(0, pos), "level_for({}) -- binary = {:b}", pos, pos);
-        }
-
-        for level in 1..5 {
-            for pos in level..64 {
-                let a = pos * 64_usize.pow(level as u32);
-                assert_eq!(level, level_for(0, a as u64),
-                           "level_for({}) -- binary = {:b}", a, a);
-
-                if pos > level {
-                    let a = a - 1;
-                    assert_eq!(level, level_for(0, a as u64),
-                               "level_for({}) -- binary = {:b}", a, a);
-                }
-
-                if pos < 64 {
-                    let a = a + 1;
-                    assert_eq!(level, level_for(0, a as u64),
-                               "level_for({}) -- binary = {:b}", a, a);
-                }
-            }
-        }
+        fmt.debug_struct("Inner").finish()
     }
 }

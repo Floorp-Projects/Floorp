@@ -143,6 +143,9 @@ impl Method {
     /// Converts a slice of bytes to an HTTP method.
     pub fn from_bytes(src: &[u8]) -> Result<Method, InvalidMethod> {
         match src.len() {
+            0 => {
+                Err(InvalidMethod::new())
+            }
             3 => {
                 match src {
                     b"GET" => Ok(Method(Get)),
@@ -336,6 +339,13 @@ impl Default for Method {
     }
 }
 
+impl<'a> From<&'a Method> for Method {
+    #[inline]
+    fn from(t: &'a Method) -> Self {
+        t.clone()
+    }
+}
+
 impl<'a> HttpTryFrom<&'a Method> for Method {
     type Error = ::error::Never;
 
@@ -403,4 +413,10 @@ fn test_method_eq() {
 
     assert_eq!(&Method::GET, Method::GET);
     assert_eq!(Method::GET, &Method::GET);
+}
+
+#[test]
+fn test_invalid_method() {
+    assert!(Method::from_str("").is_err());
+    assert!(Method::from_bytes(b"").is_err());
 }

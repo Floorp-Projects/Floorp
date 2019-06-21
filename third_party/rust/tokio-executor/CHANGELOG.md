@@ -1,3 +1,22 @@
+# 0.1.7 (March 22, 2019)
+
+### Added
+- `TypedExecutor` for spawning futures of a specific type (#993).
+
+# 0.1.6 (January 6, 2019)
+
+* Implement `Unpark` for `Arc<Unpark>` (#802).
+* Switch to crossbeam's Parker / Unparker (#528).
+
+# 0.1.5 (September 26, 2018)
+
+* Implement `futures::Executor` for `DefaultExecutor` (#563).
+* Add `Enter::block_on(future)` (#646)
+
+# 0.1.4 (August 23, 2018)
+
+* Implement `std::error::Error` for error types (#511).
+
 # 0.1.3 (August 6, 2018)
 
 * Implement `Executor` for `Box<E: Executor>` (#420).

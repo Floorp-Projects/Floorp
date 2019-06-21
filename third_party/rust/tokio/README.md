@@ -53,7 +53,7 @@ These components provide the runtime components necessary for building
 an asynchronous application.
 
 [net]: https://docs.rs/tokio/0.1/tokio/net/index.html
-[reactor]: https://docs.rs/tokio/0.1.1/tokio/reactor/index.html
+[reactor]: https://docs.rs/tokio/0.1/tokio/reactor/index.html
 [scheduler]: https://tokio-rs.github.io/tokio/tokio/runtime/index.html
 
 ## Example
@@ -103,6 +103,24 @@ fn main() {
 
 More examples can be found [here](examples).
 
+## Getting Help
+
+First, see if the answer to your question can be found in the [Guides] or the
+[API documentation]. If the answer is not there, there is an active community in
+the [Tokio Gitter channel][chat]. We would be happy to try to answer your
+question.  Last, if that doesn't work, try opening an [issue] with the question.
+
+[chat]: https://gitter.im/tokio-rs/tokio
+[issue]: https://github.com/tokio-rs/tokio/issues/new
+
+## Contributing
+
+:balloon: Thanks for your help improving the project! We are so happy to have
+you! We have a [contributing guide][guide] to help you get involved in the Tokio
+project.
+
+[guide]: CONTRIBUTING.md
+
 ## Project layout
 
 The `tokio` crate, found at the root, is primarily intended for use by
@@ -110,6 +128,13 @@ application developers.  Library authors should depend on the sub crates, which
 have greater guarantees of stability.
 
 The crates included as part of Tokio are:
+
+* [`tokio-async-await`]: Experimental `async` / `await` support.
+
+* [`tokio-codec`]: Utilities for encoding and decoding protocol frames.
+
+* [`tokio-current-thread`]: Schedule the execution of futures on the current
+  thread.
 
 * [`tokio-executor`]: Task execution related traits and utilities.
 
@@ -132,6 +157,9 @@ The crates included as part of Tokio are:
 * [`tokio-uds`]: Unix Domain Socket bindings for use with `tokio-io` and
   `tokio-reactor`.
 
+[`tokio-async-await`]: tokio-async-await
+[`tokio-codec`]: tokio-codec
+[`tokio-current-thread`]: tokio-current-thread
 [`tokio-executor`]: tokio-executor
 [`tokio-fs`]: tokio-fs
 [`tokio-io`]: tokio-io
@@ -141,6 +169,14 @@ The crates included as part of Tokio are:
 [`tokio-timer`]: tokio-timer
 [`tokio-udp`]: tokio-udp
 [`tokio-uds`]: tokio-uds
+
+## Supported Rust Versions
+
+Tokio is built against the latest stable, nightly, and beta Rust releases. The
+minimum version supported is the stable release from three months before the
+current stable release version. For example, if the latest stable Rust is 1.29,
+the minimum version supported is 1.26. The current Tokio version is not
+guaranteed to build on Rust versions earlier than the minimum supported version.
 
 ## License
 

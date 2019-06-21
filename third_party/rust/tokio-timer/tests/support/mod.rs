@@ -1,34 +1,62 @@
 #![allow(unused_macros, unused_imports, dead_code, deprecated)]
 
 use tokio_executor::park::{Park, Unpark};
-use tokio_timer::timer::{Timer, Now};
+use tokio_timer::clock::Now;
+use tokio_timer::timer::Timer;
 
 use futures::future::{lazy, Future};
 
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 
 macro_rules! assert_ready {
-    ($f:expr) => {
-        assert!($f.poll().unwrap().is_ready());
-    };
+    ($f:expr) => {{
+        use ::futures::Async::*;
+
+        match $f.poll().unwrap() {
+            Ready(v) => v,
+            NotReady => panic!("NotReady"),
+        }
+    }};
+    ($f:expr, $($msg:expr),+) => {{
+        use ::futures::Async::*;
+
+        match $f.poll().unwrap() {
+            Ready(v) => v,
+            NotReady => {
+                let msg = format!($($msg),+);
+                panic!("NotReady; {}", msg)
+            }
+        }
+    }}
+}
+
+macro_rules! assert_ready_eq {
     ($f:expr, $expect:expr) => {
         assert_eq!($f.poll().unwrap(), ::futures::Async::Ready($expect));
     };
 }
 
 macro_rules! assert_not_ready {
-    ($f:expr) => {
-        assert!(!$f.poll().unwrap().is_ready());
-    }
+    ($f:expr) => {{
+        let res = $f.poll().unwrap();
+        assert!(!res.is_ready(), "actual={:?}", res)
+    }};
+    ($f:expr, $($msg:expr),+) => {{
+        let res = $f.poll().unwrap();
+        if res.is_ready() {
+            let msg = format!($($msg),+);
+            panic!("actual={:?}; {}", res, msg);
+        }
+    }};
 }
 
 macro_rules! assert_elapsed {
     ($f:expr) => {
         assert!($f.poll().unwrap_err().is_elapsed());
-    }
+    };
 }
 
 #[derive(Debug)]
@@ -40,7 +68,6 @@ pub struct MockTime {
 #[derive(Debug)]
 pub struct MockNow {
     inner: Inner,
-    _p: PhantomData<Rc<()>>,
 }
 
 #[derive(Debug)]
@@ -85,12 +112,12 @@ impl IntoTimeout for Duration {
 }
 
 /// Turn the timer state once
-pub fn turn<T: IntoTimeout>(timer: &mut Timer<MockPark, MockNow>, duration: T) {
+pub fn turn<T: IntoTimeout>(timer: &mut Timer<MockPark>, duration: T) {
     timer.turn(duration.into_timeout()).unwrap();
 }
 
 /// Advance the timer the specified amount
-pub fn advance(timer: &mut Timer<MockPark, MockNow>, duration: Duration) {
+pub fn advance(timer: &mut Timer<MockPark>, duration: Duration) {
     let inner = timer.get_park().inner.clone();
     let deadline = inner.lock().unwrap().now() + duration;
 
@@ -101,27 +128,31 @@ pub fn advance(timer: &mut Timer<MockPark, MockNow>, duration: Duration) {
 }
 
 pub fn mocked<F, R>(f: F) -> R
-where F: FnOnce(&mut Timer<MockPark, MockNow>, &mut MockTime) -> R
+where
+    F: FnOnce(&mut Timer<MockPark>, &mut MockTime) -> R,
 {
     mocked_with_now(Instant::now(), f)
 }
 
 pub fn mocked_with_now<F, R>(now: Instant, f: F) -> R
-where F: FnOnce(&mut Timer<MockPark, MockNow>, &mut MockTime) -> R
+where
+    F: FnOnce(&mut Timer<MockPark>, &mut MockTime) -> R,
 {
     let mut time = MockTime::new(now);
     let park = time.mock_park();
-    let now = time.mock_now();
-
-    let mut timer = Timer::new_with_now(park, now);
-    let handle = timer.handle();
+    let now = ::tokio_timer::clock::Clock::new_with_now(time.mock_now());
 
     let mut enter = ::tokio_executor::enter().unwrap();
 
-    ::tokio_timer::with_default(&handle, &mut enter, |_| {
-        lazy(|| {
-            Ok::<_, ()>(f(&mut timer, &mut time))
-        }).wait().unwrap()
+    ::tokio_timer::clock::with_default(&now, &mut enter, |enter| {
+        let mut timer = Timer::new(park);
+        let handle = timer.handle();
+
+        ::tokio_timer::with_default(&handle, enter, |_| {
+            lazy(|| Ok::<_, ()>(f(&mut timer, &mut time)))
+                .wait()
+                .unwrap()
+        })
     })
 }
 
@@ -142,10 +173,7 @@ impl MockTime {
 
     pub fn mock_now(&self) -> MockNow {
         let inner = self.inner.clone();
-        MockNow {
-            inner,
-            _p: PhantomData,
-        }
+        MockNow { inner }
     }
 
     pub fn mock_park(&self) -> MockPark {
@@ -189,8 +217,7 @@ impl Park for MockPark {
     fn park(&mut self) -> Result<(), Self::Error> {
         let mut inner = self.inner.lock().map_err(|_| ())?;
 
-        let duration = inner.park_for.take()
-            .expect("call park_for first");
+        let duration = inner.park_for.take().expect("call park_for first");
 
         inner.advance(duration);
         Ok(())
@@ -218,7 +245,7 @@ impl Unpark for MockUnpark {
 }
 
 impl Now for MockNow {
-    fn now(&mut self) -> Instant {
+    fn now(&self) -> Instant {
         self.inner.lock().unwrap().now()
     }
 }

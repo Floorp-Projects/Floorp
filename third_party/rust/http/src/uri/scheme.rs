@@ -8,6 +8,7 @@ use std::str::FromStr;
 use bytes::Bytes;
 
 use byte_str::ByteStr;
+use convert::HttpTryFrom;
 use super::{ErrorKind, InvalidUri, InvalidUriBytes};
 
 /// Represents the scheme component of a URI
@@ -109,19 +110,46 @@ impl Scheme {
     }
 }
 
+impl HttpTryFrom<Bytes> for Scheme {
+    type Error = InvalidUriBytes;
+    #[inline]
+    fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
+        Scheme::from_shared(bytes)
+    }
+}
+
+impl<'a> HttpTryFrom<&'a [u8]> for Scheme {
+    type Error = InvalidUri;
+    #[inline]
+    fn try_from(s: &'a [u8]) -> Result<Self, Self::Error> {
+        use self::Scheme2::*;
+
+        match Scheme2::parse_exact(s)? {
+            None => Err(ErrorKind::InvalidScheme.into()),
+            Standard(p) => Ok(Standard(p).into()),
+            Other(_) => {
+                // Unsafe: parse_exact already checks for a strict subset of UTF-8
+                Ok(Other(Box::new(unsafe {
+                    ByteStr::from_utf8_unchecked(s.into())
+                })).into())
+            }
+        }
+    }
+}
+
+impl<'a> HttpTryFrom<&'a str> for Scheme {
+    type Error = InvalidUri;
+    #[inline]
+    fn try_from(s: &'a str) -> Result<Self, Self::Error> {
+        HttpTryFrom::try_from(s.as_bytes())
+    }
+}
+
 impl FromStr for Scheme {
     type Err = InvalidUri;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        use self::Scheme2::*;
-
-        match Scheme2::parse_exact(s.as_bytes())? {
-            None => Err(ErrorKind::InvalidScheme.into()),
-            Standard(p) => Ok(Standard(p).into()),
-            Other(_) => {
-                Ok(Other(Box::new(s.into())).into())
-            }
-        }
+        HttpTryFrom::try_from(s)
     }
 }
 
