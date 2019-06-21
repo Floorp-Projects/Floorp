@@ -214,7 +214,7 @@ function insertTrustAnchorsFromDatabase() {
 
 if (arguments.length != 1) {
   throw new Error(
-    "Usage: genRootCAHashes.js " + "<absolute path to current RootHashes.inc>"
+    "Usage: genRootCAHashes.js <absolute path to current RootHashes.inc>"
   );
 }
 
