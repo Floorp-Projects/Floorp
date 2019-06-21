@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const {TelemetryTestUtils} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
+
 XPCOMUtils.defineLazyPreferenceGetter(this, "ABUSE_REPORT_ENABLED",
                                       "extensions.abuseReport.enabled", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "HTML_ABOUTADDONS_ENABLED",
@@ -49,30 +51,16 @@ let contextMenuItems = {
   "context-bookmarkpage": "hidden",
 };
 
-const TELEMETRY_CATEGORY = "addonsManager";
-const TELEMETRY_METHODS = new Set(["action", "link", "view"]);
 const type = "extension";
 
 function assertTelemetryMatches(events) {
-  let snapshot = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
-
-  if (events.length == 0) {
-    ok(!snapshot.parent || snapshot.parent.length == 0, "There are no telemetry events");
-    return;
-  }
-
-  // Make sure we got some data.
-  ok(snapshot.parent && snapshot.parent.length > 0, "Got parent telemetry events in the snapshot");
-
-  // Only look at the related events after stripping the timestamp and category.
-  let relatedEvents = snapshot.parent
-    .filter(([timestamp, category, method]) =>
-      category == TELEMETRY_CATEGORY && TELEMETRY_METHODS.has(method))
-    .map(relatedEvent => relatedEvent.slice(2, 6));
-
-  // Events are now [method, object, value, extra] as expected.
-  Assert.deepEqual(relatedEvents, events, "The events are recorded correctly");
+  events = events.map(([method, object, value, extra]) => {
+    return {method, object, value, extra};
+  });
+  TelemetryTestUtils.assertEvents(events, {
+    category: "addonsManager",
+    method: /^(action|link|view)$/,
+  });
 }
 
 add_task(async function test_setup() {
