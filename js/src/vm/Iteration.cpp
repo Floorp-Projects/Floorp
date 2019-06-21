@@ -592,14 +592,7 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
   return res;
 }
 
-static PropertyIteratorObject* CreatePropertyIterator(
-    JSContext* cx, Handle<JSObject*> objBeingIterated, HandleIdVector props,
-    uint32_t numGuards, uint32_t guardKey) {
-  Rooted<PropertyIteratorObject*> propIter(cx, NewPropertyIteratorObject(cx));
-  if (!propIter) {
-    return nullptr;
-  }
-
+static inline size_t ExtraStringCount(size_t propertyCount, size_t guardCount) {
   static_assert(sizeof(ReceiverGuard) == 2 * sizeof(GCPtrFlatString),
                 "NativeIterators are allocated in space for 1) themselves, "
                 "2) the properties a NativeIterator iterates (as "
@@ -608,9 +601,24 @@ static PropertyIteratorObject* CreatePropertyIterator(
                 "this size-relationship when determining the extra space to "
                 "allocate");
 
-  size_t extraCount = props.length() + numGuards * 2;
-  void* mem =
-      cx->pod_malloc_with_extra<NativeIterator, GCPtrFlatString>(extraCount);
+  return propertyCount + guardCount * 2;
+}
+
+static inline size_t AllocationSize(size_t propertyCount, size_t guardCount) {
+  return sizeof(NativeIterator) +
+         ExtraStringCount(propertyCount, guardCount) * sizeof(GCPtrFlatString);
+}
+
+static PropertyIteratorObject* CreatePropertyIterator(
+    JSContext* cx, Handle<JSObject*> objBeingIterated, HandleIdVector props,
+    uint32_t numGuards, uint32_t guardKey) {
+  Rooted<PropertyIteratorObject*> propIter(cx, NewPropertyIteratorObject(cx));
+  if (!propIter) {
+    return nullptr;
+  }
+
+  void* mem = cx->pod_malloc_with_extra<NativeIterator, GCPtrFlatString>(
+      ExtraStringCount(props.length(), numGuards));
   if (!mem) {
     return nullptr;
   }
@@ -680,13 +688,22 @@ NativeIterator::NativeIterator(JSContext* cx,
           reinterpret_cast<GCPtrFlatString*>(guardsBegin() + numGuards)),
       propertiesEnd_(propertyCursor_),
       guardKey_(guardKey),
-      flags_(0)  // note: no Flags::Initialized
+      flagsAndCount_(0)  // note: no Flags::Initialized
 {
   MOZ_ASSERT(!*hadError);
 
   // NOTE: This must be done first thing: PropertyIteratorObject::finalize
   //       can only free |this| (and not leak it) if this has happened.
   propIter->setNativeIterator(this);
+
+  if (!setInitialPropertyCount(props.length())) {
+    ReportAllocationOverflow(cx);
+    *hadError = true;
+    return;
+  }
+
+  size_t nbytes = AllocationSize(props.length(), numGuards);
+  AddCellMemory(propIter, nbytes, MemoryUse::NativeIterator);
 
   for (size_t i = 0, len = props.length(); i < len; i++) {
     JSFlatString* str = IdToString(cx, props[i]);
@@ -752,6 +769,11 @@ NativeIterator::NativeIterator(JSContext* cx,
   markInitialized();
 
   MOZ_ASSERT(!*hadError);
+}
+
+inline size_t NativeIterator::allocationSize() const {
+  size_t numGuards = guardsEnd() - guardsBegin();
+  return AllocationSize(initialPropertyCount(), numGuards);
 }
 
 /* static */
@@ -1059,7 +1081,7 @@ void PropertyIteratorObject::trace(JSTracer* trc, JSObject* obj) {
 void PropertyIteratorObject::finalize(FreeOp* fop, JSObject* obj) {
   if (NativeIterator* ni =
           obj->as<PropertyIteratorObject>().getNativeIterator()) {
-    fop->free_(ni);
+    fop->free_(obj, ni, ni->allocationSize(), MemoryUse::NativeIterator);
   }
 }
 
