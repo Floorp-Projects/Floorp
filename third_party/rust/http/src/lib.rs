@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/http/0.1.10")]
+#![doc(html_root_url = "https://docs.rs/http/0.1.17")]
 
 //! A general purpose library of common HTTP types
 //!
@@ -179,6 +179,7 @@ mod extensions;
 pub use convert::HttpTryFrom;
 pub use error::{Error, Result};
 pub use extensions::Extensions;
+#[doc(no_inline)]
 pub use header::HeaderMap;
 pub use method::Method;
 pub use request::Request;

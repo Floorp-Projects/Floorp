@@ -6,7 +6,7 @@ use std::path::Path;
 use libc;
 use mio::event::Evented;
 use mio::unix::EventedFd;
-use mio::{Poll, Token, Ready, PollOpt};
+use mio::{Poll, PollOpt, Ready, Token};
 
 use UnixStream;
 use cvt;
@@ -59,13 +59,24 @@ impl UnixListener {
     ///
     /// If an error happens while accepting, `Err` is returned.
     pub fn accept(&self) -> io::Result<Option<(UnixStream, net::SocketAddr)>> {
+        match try!(self.accept_std()) {
+            Some((stream, addr)) => Ok(Some((UnixStream::from_stream(stream)?, addr))),
+            None => Ok(None),
+        }
+    }
+
+    /// Accepts a new incoming connection to this listener.
+    ///
+    /// This method is the same as `accept`, except that it returns a UDP socket *in blocking mode*
+    /// which isn't bound to a `mio` type. This can later be converted to a `mio` type, if
+    /// necessary.
+    ///
+    /// If an error happens while accepting, `Err` is returned.
+    pub fn accept_std(&self) -> io::Result<Option<(net::UnixStream, net::SocketAddr)>> {
         match self.inner.accept() {
-            Ok((socket, addr)) => {
-                try!(socket.set_nonblocking(true));
-                Ok(Some(unsafe {
-                    (UnixStream::from_raw_fd(socket.into_raw_fd()), addr)
-                }))
-            }
+            Ok((socket, addr)) => Ok(Some(unsafe {
+                (net::UnixStream::from_raw_fd(socket.into_raw_fd()), addr)
+            })),
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => Ok(None),
             Err(e) => Err(e),
         }
@@ -77,9 +88,7 @@ impl UnixListener {
     /// object references. Both handles can be used to accept incoming
     /// connections and options set on one listener will affect the other.
     pub fn try_clone(&self) -> io::Result<UnixListener> {
-        self.inner.try_clone().map(|l| {
-            UnixListener { inner: l }
-        })
+        self.inner.try_clone().map(|l| UnixListener { inner: l })
     }
 
     /// Returns the local socket address of this listener.
@@ -94,19 +103,17 @@ impl UnixListener {
 }
 
 impl Evented for UnixListener {
-    fn register(&self,
-                poll: &Poll,
-                token: Token,
-                events: Ready,
-                opts: PollOpt) -> io::Result<()> {
+    fn register(&self, poll: &Poll, token: Token, events: Ready, opts: PollOpt) -> io::Result<()> {
         EventedFd(&self.as_raw_fd()).register(poll, token, events, opts)
     }
 
-    fn reregister(&self,
-                  poll: &Poll,
-                  token: Token,
-                  events: Ready,
-                  opts: PollOpt) -> io::Result<()> {
+    fn reregister(
+        &self,
+        poll: &Poll,
+        token: Token,
+        events: Ready,
+        opts: PollOpt,
+    ) -> io::Result<()> {
         EventedFd(&self.as_raw_fd()).reregister(poll, token, events, opts)
     }
 
@@ -129,6 +136,8 @@ impl IntoRawFd for UnixListener {
 
 impl FromRawFd for UnixListener {
     unsafe fn from_raw_fd(fd: i32) -> UnixListener {
-        UnixListener { inner: net::UnixListener::from_raw_fd(fd) }
+        UnixListener {
+            inner: net::UnixListener::from_raw_fd(fd),
+        }
     }
 }

@@ -630,6 +630,63 @@ impl Builder {
         self
     }
 
+    /// Get header on this response builder.
+    /// when builder has error returns None
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// # use http::*;
+    /// # use http::header::HeaderValue;
+    /// # use http::response::Builder;
+    /// let mut res = Response::builder();
+    /// res.header("Accept", "text/html")
+    ///    .header("X-Custom-Foo", "bar");
+    /// let headers = res.headers_ref().unwrap();
+    /// assert_eq!( headers["Accept"], "text/html" );
+    /// assert_eq!( headers["X-Custom-Foo"], "bar" );
+    /// ```
+    pub fn headers_ref(&self) -> Option<&HeaderMap<HeaderValue>> {
+        if self.err.is_some() {
+            return None;
+        }
+        match self.head
+        {
+            Some(ref head) => Some(&head.headers),
+            None => None
+        }
+    }
+
+    /// Get header on this response builder.
+    /// when builder has error returns None
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// # use http::*;
+    /// # use http::header::HeaderValue;
+    /// # use http::response::Builder;
+    /// let mut res = Response::builder();
+    /// {
+    ///   let headers = res.headers_mut().unwrap();
+    ///   headers.insert("Accept", HeaderValue::from_static("text/html"));
+    ///   headers.insert("X-Custom-Foo", HeaderValue::from_static("bar"));
+    /// }
+    /// let headers = res.headers_ref().unwrap();
+    /// assert_eq!( headers["Accept"], "text/html" );
+    /// assert_eq!( headers["X-Custom-Foo"], "bar" );
+    /// ```
+    pub fn headers_mut(&mut self) -> Option<&mut HeaderMap<HeaderValue>> {
+        if self.err.is_some() {
+            return None;
+        }
+        match self.head
+        {
+            Some(ref mut head) => Some(&mut head.headers),
+            None => None
+        }
+    }
+
     /// Adds an extension to this builder
     ///
     /// # Examples

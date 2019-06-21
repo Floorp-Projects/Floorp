@@ -10,20 +10,22 @@ use http::HeaderMap;
 use body::Payload;
 
 mod client;
-mod server;
+pub(crate) mod server;
 
 pub(crate) use self::client::Client;
 pub(crate) use self::server::Server;
 
-fn strip_connection_headers(headers: &mut HeaderMap) {
+fn strip_connection_headers(headers: &mut HeaderMap, is_request: bool) {
     // List of connection headers from:
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Connection
+    //
+    // TE headers are allowed in HTTP/2 requests as long as the value is "trailers", so they're
+    // tested separately.
     let connection_headers = [
         HeaderName::from_lowercase(b"keep-alive").unwrap(),
         HeaderName::from_lowercase(b"proxy-connection").unwrap(),
         PROXY_AUTHENTICATE,
         PROXY_AUTHORIZATION,
-        TE,
         TRAILER,
         TRANSFER_ENCODING,
         UPGRADE,
@@ -32,6 +34,17 @@ fn strip_connection_headers(headers: &mut HeaderMap) {
     for header in connection_headers.iter() {
         if headers.remove(header).is_some() {
             warn!("Connection header illegal in HTTP/2: {}", header.as_str());
+        }
+    }
+
+    if is_request {
+        if headers.get(TE).map(|te_header| te_header != "trailers").unwrap_or(false) {
+            warn!("TE headers not set to \"trailers\" are illegal in HTTP/2 requests");
+            headers.remove(TE);
+        }
+    } else {
+        if headers.remove(TE).is_some() {
+            warn!("TE headers illegal in HTTP/2 responses");
         }
     }
 
@@ -110,7 +123,7 @@ where
 
                 if self.body_tx.capacity() == 0 {
                     loop {
-                        match try_ready!(self.body_tx.poll_capacity().map_err(::Error::new_h2)) {
+                        match try_ready!(self.body_tx.poll_capacity().map_err(::Error::new_body_write)) {
                             Some(0) => {}
                             Some(_) => break,
                             None => return Err(::Error::new_canceled(None::<::Error>)),
@@ -118,10 +131,10 @@ where
                     }
                 } else {
                     if let Async::Ready(reason) =
-                        self.body_tx.poll_reset().map_err(|e| ::Error::new_h2(e))?
+                        self.body_tx.poll_reset().map_err(::Error::new_body_write)?
                     {
                         debug!("stream received RST_STREAM: {:?}", reason);
-                        return Err(::Error::new_h2(reason.into()));
+                        return Err(::Error::new_body_write(::h2::Error::from(reason)));
                     }
                 }
 
@@ -156,10 +169,10 @@ where
                 }
             } else {
                 if let Async::Ready(reason) =
-                    self.body_tx.poll_reset().map_err(|e| ::Error::new_h2(e))?
+                    self.body_tx.poll_reset().map_err(|e| ::Error::new_body_write(e))?
                 {
                     debug!("stream received RST_STREAM: {:?}", reason);
-                    return Err(::Error::new_h2(reason.into()));
+                    return Err(::Error::new_body_write(::h2::Error::from(reason)));
                 }
 
                 match try_ready!(self.stream.poll_trailers().map_err(|e| self.on_err(e))) {

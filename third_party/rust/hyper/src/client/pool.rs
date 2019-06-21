@@ -12,8 +12,11 @@ use tokio_timer::Interval;
 use common::Exec;
 use super::Ver;
 
+// FIXME: allow() required due to `impl Trait` leaking types to this lint
+#[allow(missing_debug_implementations)]
 pub(super) struct Pool<T> {
-    inner: Arc<PoolInner<T>>,
+    // If the pool is disabled, this is None.
+    inner: Option<Arc<Mutex<PoolInner<T>>>>,
 }
 
 // Before using a pooled connection, make sure the sender is not dead.
@@ -27,6 +30,7 @@ pub(super) trait Poolable: Send + Sized + 'static {
     ///
     /// Allows for HTTP/2 to return a shared reservation.
     fn reserve(self) -> Reservation<Self>;
+    fn can_share(&self) -> bool;
 }
 
 /// When checking out a pooled connection, it might be that the connection
@@ -34,6 +38,8 @@ pub(super) trait Poolable: Send + Sized + 'static {
 ///
 /// Specifically, HTTP/1 requires a unique reservation, but HTTP/2 can be
 /// used for multiple requests.
+// FIXME: allow() required due to `impl Trait` leaking types to this lint
+#[allow(missing_debug_implementations)]
 pub(super) enum Reservation<T> {
     /// This connection could be used multiple times, the first one will be
     /// reinserted into the `idle` pool, and the second will be given to
@@ -45,14 +51,9 @@ pub(super) enum Reservation<T> {
 }
 
 /// Simple type alias in case the key type needs to be adjusted.
-type Key = (Arc<String>, Ver);
+pub(super) type Key = Arc<String>;
 
 struct PoolInner<T> {
-    connections: Mutex<Connections<T>>,
-    enabled: bool,
-}
-
-struct Connections<T> {
     // A flag that a connection is being estabilished, and the connection
     // should be shared. This prevents making multiple HTTP/2 connections
     // to the same host.
@@ -60,6 +61,7 @@ struct Connections<T> {
     // These are internal Conns sitting in the event loop in the KeepAlive
     // state, waiting to receive a new Request to send on the socket.
     idle: HashMap<Key, Vec<Idle<T>>>,
+    max_idle_per_host: usize,
     // These are outstanding Checkouts that are waiting for a socket to be
     // able to send a Request one. This is used when "racing" for a new
     // connection.
@@ -83,23 +85,38 @@ struct Connections<T> {
 // doesn't need it!
 struct WeakOpt<T>(Option<Weak<T>>);
 
+#[derive(Clone, Copy, Debug)]
+pub(super) struct Config {
+    pub(super) enabled: bool,
+    pub(super) keep_alive_timeout: Option<Duration>,
+    pub(super) max_idle_per_host: usize,
+}
+
 impl<T> Pool<T> {
-    pub fn new(enabled: bool, timeout: Option<Duration>, __exec: &Exec) -> Pool<T> {
+    pub fn new(config: Config, __exec: &Exec) -> Pool<T> {
+        let inner = if config.enabled {
+             Some(Arc::new(Mutex::new(PoolInner {
+                connecting: HashSet::new(),
+                idle: HashMap::new(),
+                #[cfg(feature = "runtime")]
+                idle_interval_ref: None,
+                max_idle_per_host: config.max_idle_per_host,
+                waiters: HashMap::new(),
+                #[cfg(feature = "runtime")]
+                exec: __exec.clone(),
+                timeout: config.keep_alive_timeout,
+             })))
+        } else {
+            None
+        };
+
         Pool {
-            inner: Arc::new(PoolInner {
-                connections: Mutex::new(Connections {
-                    connecting: HashSet::new(),
-                    idle: HashMap::new(),
-                    #[cfg(feature = "runtime")]
-                    idle_interval_ref: None,
-                    waiters: HashMap::new(),
-                    #[cfg(feature = "runtime")]
-                    exec: __exec.clone(),
-                    timeout,
-                }),
-                enabled,
-            }),
+            inner,
         }
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.inner.is_some()
     }
 
     #[cfg(test)]
@@ -107,7 +124,7 @@ impl<T> Pool<T> {
         // Prevent an actual interval from being created for this pool...
         #[cfg(feature = "runtime")]
         {
-            let mut inner = self.inner.connections.lock().unwrap();
+            let mut inner = self.inner.as_ref().unwrap().lock().unwrap();
             assert!(inner.idle_interval_ref.is_none(), "timer already spawned");
             let (tx, _) = oneshot::channel();
             inner.idle_interval_ref = Some(tx);
@@ -128,43 +145,53 @@ impl<T: Poolable> Pool<T> {
 
     /// Ensure that there is only ever 1 connecting task for HTTP/2
     /// connections. This does nothing for HTTP/1.
-    pub(super) fn connecting(&self, key: &Key) -> Option<Connecting<T>> {
-        if key.1 == Ver::Http2 && self.inner.enabled {
-            let mut inner = self.inner.connections.lock().unwrap();
-            if inner.connecting.insert(key.clone()) {
-                let connecting = Connecting {
-                    key: key.clone(),
-                    pool: WeakOpt::downgrade(&self.inner),
+    pub(super) fn connecting(&self, key: &Key, ver: Ver) -> Option<Connecting<T>> {
+        if ver == Ver::Http2 {
+            if let Some(ref enabled) = self.inner {
+                let mut inner = enabled.lock().unwrap();
+                return if inner.connecting.insert(key.clone()) {
+                    let connecting = Connecting {
+                        key: key.clone(),
+                        pool: WeakOpt::downgrade(enabled),
+                    };
+                    Some(connecting)
+                } else {
+                    trace!("HTTP/2 connecting already in progress for {:?}", key);
+                    None
                 };
-                Some(connecting)
-            } else {
-                trace!("HTTP/2 connecting already in progress for {:?}", key.0);
-                None
             }
-        } else {
-            Some(Connecting {
-                key: key.clone(),
-                // in HTTP/1's case, there is never a lock, so we don't
-                // need to do anything in Drop.
-                pool: WeakOpt::none(),
-            })
         }
+
+        // else
+        Some(Connecting {
+            key: key.clone(),
+            // in HTTP/1's case, there is never a lock, so we don't
+            // need to do anything in Drop.
+            pool: WeakOpt::none(),
+        })
+    }
+
+    #[cfg(test)]
+    fn locked(&self) -> ::std::sync::MutexGuard<PoolInner<T>> {
+        self
+            .inner
+            .as_ref()
+            .expect("enabled")
+            .lock()
+            .expect("lock")
     }
 
     #[cfg(feature = "runtime")]
     #[cfg(test)]
     pub(super) fn h1_key(&self, s: &str) -> Key {
-        (Arc::new(s.to_string()), Ver::Http1)
+        Arc::new(s.to_string())
     }
 
     #[cfg(feature = "runtime")]
     #[cfg(test)]
     pub(super) fn idle_count(&self, key: &Key) -> usize {
         self
-            .inner
-            .connections
-            .lock()
-            .unwrap()
+            .locked()
             .idle
             .get(key)
             .map(|list| list.len())
@@ -173,7 +200,7 @@ impl<T: Poolable> Pool<T> {
 
     fn take(&self, key: &Key) -> Option<Pooled<T>> {
         let entry = {
-            let mut inner = self.inner.connections.lock().unwrap();
+            let mut inner = self.inner.as_ref()?.lock().unwrap();
             let expiration = Expiration::new(inner.timeout);
             let maybe_entry = inner.idle.get_mut(key)
                 .and_then(|list| {
@@ -207,16 +234,11 @@ impl<T: Poolable> Pool<T> {
     }
 
     pub(super) fn pooled(&self, mut connecting: Connecting<T>, value: T) -> Pooled<T> {
-        let (value, pool_ref)  = if self.inner.enabled {
+        let (value, pool_ref) = if let Some(ref enabled) = self.inner {
             match value.reserve() {
                 Reservation::Shared(to_insert, to_return) => {
-                    debug_assert_eq!(
-                        connecting.key.1,
-                        Ver::Http2,
-                        "shared reservation without Http2"
-                    );
-                    let mut inner = self.inner.connections.lock().unwrap();
-                    inner.put(connecting.key.clone(), to_insert, &self.inner);
+                    let mut inner = enabled.lock().unwrap();
+                    inner.put(connecting.key.clone(), to_insert, enabled);
                     // Do this here instead of Drop for Connecting because we
                     // already have a lock, no need to lock the mutex twice.
                     inner.connected(&connecting.key);
@@ -231,7 +253,7 @@ impl<T: Poolable> Pool<T> {
                     // Unique reservations must take a reference to the pool
                     // since they hope to reinsert once the reservation is
                     // completed
-                    (value, WeakOpt::downgrade(&self.inner))
+                    (value, WeakOpt::downgrade(enabled))
                 },
             }
         } else {
@@ -260,11 +282,12 @@ impl<T: Poolable> Pool<T> {
         // we just have the final value, without knowledge of if this is
         // unique or shared. So, the hack is to just assume Ver::Http2 means
         // shared... :(
-        let pool_ref = if key.1 == Ver::Http2 {
-            WeakOpt::none()
-        } else {
-            WeakOpt::downgrade(&self.inner)
-        };
+        let mut pool_ref = WeakOpt::none();
+        if !value.can_share() {
+            if let Some(ref enabled) = self.inner {
+                pool_ref = WeakOpt::downgrade(enabled);
+            }
+        }
 
         Pooled {
             is_reused: true,
@@ -274,10 +297,19 @@ impl<T: Poolable> Pool<T> {
         }
     }
 
-    fn waiter(&mut self, key: Key, tx: oneshot::Sender<T>) {
+    fn waiter(&self, key: Key, tx: oneshot::Sender<T>) {
+        debug_assert!(
+            self.is_enabled(),
+            "pool.waiter() should not be called if disabled",
+        );
         trace!("checkout waiting for idle connection: {:?}", key);
-        self.inner.connections.lock().unwrap()
-            .waiters.entry(key)
+        self.inner
+            .as_ref()
+            .expect("pool.waiter() expects pool is enabled")
+            .lock()
+            .unwrap()
+            .waiters
+            .entry(key)
             .or_insert(VecDeque::new())
             .push_back(tx);
     }
@@ -332,9 +364,9 @@ impl<'a, T: Poolable + 'a> IdlePopper<'a, T> {
     }
 }
 
-impl<T: Poolable> Connections<T> {
-    fn put(&mut self, key: Key, value: T, __pool_ref: &Arc<PoolInner<T>>) {
-        if key.1 == Ver::Http2 && self.idle.contains_key(&key) {
+impl<T: Poolable> PoolInner<T> {
+    fn put(&mut self, key: Key, value: T, __pool_ref: &Arc<Mutex<PoolInner<T>>>) {
+        if value.can_share() && self.idle.contains_key(&key) {
             trace!("put; existing idle HTTP/2 connection for {:?}", key);
             return;
         }
@@ -376,13 +408,23 @@ impl<T: Poolable> Connections<T> {
 
         match value {
             Some(value) => {
-                debug!("pooling idle connection for {:?}", key);
-                self.idle.entry(key)
-                     .or_insert(Vec::new())
-                     .push(Idle {
-                         value: value,
-                         idle_at: Instant::now(),
-                     });
+                // borrow-check scope...
+                {
+                    let idle_list = self
+                        .idle
+                        .entry(key.clone())
+                        .or_insert(Vec::new());
+                    if self.max_idle_per_host <= idle_list.len() {
+                        trace!("max idle per host for {:?}, dropping connection", key);
+                        return;
+                    }
+
+                    debug!("pooling idle connection for {:?}", key);
+                    idle_list.push(Idle {
+                        value: value,
+                        idle_at: Instant::now(),
+                    });
+                }
 
                 #[cfg(feature = "runtime")]
                 {
@@ -408,10 +450,8 @@ impl<T: Poolable> Connections<T> {
     }
 
     #[cfg(feature = "runtime")]
-    fn spawn_idle_interval(&mut self, pool_ref: &Arc<PoolInner<T>>) {
+    fn spawn_idle_interval(&mut self, pool_ref: &Arc<Mutex<PoolInner<T>>>) {
         let (dur, rx) = {
-            debug_assert!(pool_ref.enabled);
-
             if self.idle_interval_ref.is_some() {
                 return;
             }
@@ -440,7 +480,7 @@ impl<T: Poolable> Connections<T> {
     }
 }
 
-impl<T> Connections<T> {
+impl<T> PoolInner<T> {
     /// Any `FutureResponse`s that were created will have made a `Checkout`,
     /// and possibly inserted into the pool that it is waiting for an idle
     /// connection. If a user ever dropped that future, we need to clean out
@@ -460,7 +500,7 @@ impl<T> Connections<T> {
 }
 
 #[cfg(feature = "runtime")]
-impl<T: Poolable> Connections<T> {
+impl<T: Poolable> PoolInner<T> {
     /// This should *only* be called by the IdleInterval.
     fn clear_expired(&mut self) {
         let dur = self.timeout.expect("interval assumes timeout");
@@ -503,7 +543,7 @@ pub(super) struct Pooled<T: Poolable> {
     value: Option<T>,
     is_reused: bool,
     key: Key,
-    pool: WeakOpt<PoolInner<T>>,
+    pool: WeakOpt<Mutex<PoolInner<T>>>,
 }
 
 impl<T: Poolable> Pooled<T> {
@@ -547,14 +587,10 @@ impl<T: Poolable> Drop for Pooled<T> {
             }
 
             if let Some(pool) = self.pool.upgrade() {
-                // Pooled should not have had a real reference if pool is
-                // not enabled!
-                debug_assert!(pool.enabled);
-
-                if let Ok(mut inner) = pool.connections.lock() {
+                if let Ok(mut inner) = pool.lock() {
                     inner.put(self.key.clone(), value, &pool);
                 }
-            } else if self.key.1 == Ver::Http1 {
+            } else if !value.can_share() {
                 trace!("pool dropped, dropping pooled ({:?})", self.key);
             }
             // Ver::Http2 is already in the Pool (or dead), so we wouldn't
@@ -576,6 +612,8 @@ struct Idle<T> {
     value: T,
 }
 
+// FIXME: allow() required due to `impl Trait` leaking types to this lint
+#[allow(missing_debug_implementations)]
 pub(super) struct Checkout<T> {
     key: Key,
     pool: Pool<T>,
@@ -606,6 +644,8 @@ impl<T: Poolable> Checkout<T> {
     }
 
     fn add_waiter(&mut self) {
+        debug_assert!(self.pool.is_enabled());
+
         if self.waiter.is_none() {
             let (tx, mut rx) = oneshot::channel();
             let _ = rx.poll(); // park this task
@@ -628,6 +668,8 @@ impl<T: Poolable> Future for Checkout<T> {
 
         if let Some(pooled) = entry {
             Ok(Async::Ready(pooled))
+        } else if !self.pool.is_enabled() {
+            Err(::Error::new_canceled(Some("pool is disabled")))
         } else {
             self.add_waiter();
             Ok(Async::NotReady)
@@ -638,28 +680,36 @@ impl<T: Poolable> Future for Checkout<T> {
 impl<T> Drop for Checkout<T> {
     fn drop(&mut self) {
         if self.waiter.take().is_some() {
-            if let Ok(mut inner) = self.pool.inner.connections.lock() {
+            if let Some(Ok(mut inner)) = self.pool.inner.as_ref().map(|i| i.lock()) {
                 inner.clean_waiters(&self.key);
             }
         }
     }
 }
 
+// FIXME: allow() required due to `impl Trait` leaking types to this lint
+#[allow(missing_debug_implementations)]
 pub(super) struct Connecting<T: Poolable> {
     key: Key,
-    pool: WeakOpt<PoolInner<T>>,
+    pool: WeakOpt<Mutex<PoolInner<T>>>,
+}
+
+impl<T: Poolable> Connecting<T> {
+    pub(super) fn alpn_h2(self, pool: &Pool<T>) -> Option<Self> {
+        debug_assert!(
+            self.pool.0.is_none(),
+            "Connecting::alpn_h2 but already Http2"
+        );
+
+        pool.connecting(&self.key, Ver::Http2)
+    }
 }
 
 impl<T: Poolable> Drop for Connecting<T> {
     fn drop(&mut self) {
         if let Some(pool) = self.pool.upgrade() {
             // No need to panic on drop, that could abort!
-            if let Ok(mut inner) = pool.connections.lock() {
-                debug_assert_eq!(
-                    self.key.1,
-                    Ver::Http2,
-                    "Connecting constructed without Http2"
-                );
+            if let Ok(mut inner) = pool.lock() {
                 inner.connected(&self.key);
             }
         }
@@ -684,7 +734,7 @@ impl Expiration {
 #[cfg(feature = "runtime")]
 struct IdleInterval<T> {
     interval: Interval,
-    pool: WeakOpt<PoolInner<T>>,
+    pool: WeakOpt<Mutex<PoolInner<T>>>,
     // This allows the IdleInterval to be notified as soon as the entire
     // Pool is fully dropped, and shutdown. This channel is never sent on,
     // but Err(Canceled) will be received when the Pool is dropped.
@@ -715,7 +765,7 @@ impl<T: Poolable + 'static> Future for IdleInterval<T> {
             }));
 
             if let Some(inner) = self.pool.upgrade() {
-                if let Ok(mut inner) = inner.connections.lock() {
+                if let Ok(mut inner) = inner.lock() {
                     trace!("idle interval checking for expired");
                     inner.clear_expired();
                     continue;
@@ -749,7 +799,7 @@ mod tests {
     use futures::{Async, Future};
     use futures::future;
     use common::Exec;
-    use super::{Connecting, Key, Poolable, Pool, Reservation, Ver, WeakOpt};
+    use super::{Connecting, Key, Poolable, Pool, Reservation, WeakOpt};
 
     /// Test unique reservations.
     #[derive(Debug, PartialEq, Eq)]
@@ -763,6 +813,10 @@ mod tests {
         fn reserve(self) -> Reservation<Self> {
             Reservation::Unique(self)
         }
+
+        fn can_share(&self) -> bool {
+            false
+        }
     }
 
     fn c<T: Poolable>(key: Key) -> Connecting<T> {
@@ -773,7 +827,17 @@ mod tests {
     }
 
     fn pool_no_timer<T>() -> Pool<T> {
-        let pool = Pool::new(true, Some(Duration::from_millis(100)), &Exec::Default);
+        pool_max_idle_no_timer(::std::usize::MAX)
+    }
+
+    fn pool_max_idle_no_timer<T>(max_idle: usize) -> Pool<T> {
+        let pool = Pool::new(super::Config {
+                enabled: true,
+                keep_alive_timeout: Some(Duration::from_millis(100)),
+                max_idle_per_host: max_idle,
+            },
+            &Exec::Default,
+        );
         pool.no_timer();
         pool
     }
@@ -781,7 +845,7 @@ mod tests {
     #[test]
     fn test_pool_checkout_smoke() {
         let pool = pool_no_timer();
-        let key = (Arc::new("foo".to_string()), Ver::Http1);
+        let key = Arc::new("foo".to_string());
         let pooled = pool.pooled(c(key.clone()), Uniq(41));
 
         drop(pooled);
@@ -796,10 +860,10 @@ mod tests {
     fn test_pool_checkout_returns_none_if_expired() {
         future::lazy(|| {
             let pool = pool_no_timer();
-            let key = (Arc::new("foo".to_string()), Ver::Http1);
+            let key = Arc::new("foo".to_string());
             let pooled = pool.pooled(c(key.clone()), Uniq(41));
             drop(pooled);
-            ::std::thread::sleep(pool.inner.connections.lock().unwrap().timeout.unwrap());
+            ::std::thread::sleep(pool.locked().timeout.unwrap());
             assert!(pool.checkout(key).poll().unwrap().is_not_ready());
             ::futures::future::ok::<(), ()>(())
         }).wait().unwrap();
@@ -809,18 +873,35 @@ mod tests {
     fn test_pool_checkout_removes_expired() {
         future::lazy(|| {
             let pool = pool_no_timer();
-            let key = (Arc::new("foo".to_string()), Ver::Http1);
+            let key = Arc::new("foo".to_string());
 
             pool.pooled(c(key.clone()), Uniq(41));
             pool.pooled(c(key.clone()), Uniq(5));
             pool.pooled(c(key.clone()), Uniq(99));
 
-            assert_eq!(pool.inner.connections.lock().unwrap().idle.get(&key).map(|entries| entries.len()), Some(3));
-            ::std::thread::sleep(pool.inner.connections.lock().unwrap().timeout.unwrap());
+            assert_eq!(pool.locked().idle.get(&key).map(|entries| entries.len()), Some(3));
+            ::std::thread::sleep(pool.locked().timeout.unwrap());
 
             // checkout.poll() should clean out the expired
             pool.checkout(key.clone()).poll().unwrap();
-            assert!(pool.inner.connections.lock().unwrap().idle.get(&key).is_none());
+            assert!(pool.locked().idle.get(&key).is_none());
+
+            Ok::<(), ()>(())
+        }).wait().unwrap();
+    }
+
+    #[test]
+    fn test_pool_max_idle_per_host() {
+        future::lazy(|| {
+            let pool = pool_max_idle_no_timer(2);
+            let key = Arc::new("foo".to_string());
+
+            pool.pooled(c(key.clone()), Uniq(41));
+            pool.pooled(c(key.clone()), Uniq(5));
+            pool.pooled(c(key.clone()), Uniq(99));
+
+            // pooled and dropped 3, max_idle should only allow 2
+            assert_eq!(pool.locked().idle.get(&key).map(|entries| entries.len()), Some(2));
 
             Ok::<(), ()>(())
         }).wait().unwrap();
@@ -832,9 +913,15 @@ mod tests {
         use std::time::Instant;
         use tokio_timer::Delay;
         let mut rt = ::tokio::runtime::current_thread::Runtime::new().unwrap();
-        let pool = Pool::new(true, Some(Duration::from_millis(100)), &Exec::Default);
+        let pool = Pool::new(super::Config {
+                enabled: true,
+                keep_alive_timeout: Some(Duration::from_millis(100)),
+                max_idle_per_host: ::std::usize::MAX,
+            },
+            &Exec::Default,
+        );
 
-        let key = (Arc::new("foo".to_string()), Ver::Http1);
+        let key = Arc::new("foo".to_string());
 
         // Since pool.pooled() will be calling spawn on drop, need to be sure
         // those drops are called while `rt` is the current executor. To do so,
@@ -846,20 +933,20 @@ mod tests {
             Ok::<_, ()>(())
         })).unwrap();
 
-        assert_eq!(pool.inner.connections.lock().unwrap().idle.get(&key).map(|entries| entries.len()), Some(3));
+        assert_eq!(pool.locked().idle.get(&key).map(|entries| entries.len()), Some(3));
 
         // Let the timer tick passed the expiration...
         rt
             .block_on(Delay::new(Instant::now() + Duration::from_millis(200)))
             .expect("rt block_on 200ms");
 
-        assert!(pool.inner.connections.lock().unwrap().idle.get(&key).is_none());
+        assert!(pool.locked().idle.get(&key).is_none());
     }
 
     #[test]
     fn test_pool_checkout_task_unparked() {
         let pool = pool_no_timer();
-        let key = (Arc::new("foo".to_string()), Ver::Http1);
+        let key = Arc::new("foo".to_string());
         let pooled = pool.pooled(c(key.clone()), Uniq(41));
 
         let checkout = pool.checkout(key).join(future::lazy(move || {
@@ -878,23 +965,23 @@ mod tests {
     fn test_pool_checkout_drop_cleans_up_waiters() {
         future::lazy(|| {
             let pool = pool_no_timer::<Uniq<i32>>();
-            let key = (Arc::new("localhost:12345".to_string()), Ver::Http1);
+            let key = Arc::new("localhost:12345".to_string());
 
             let mut checkout1 = pool.checkout(key.clone());
             let mut checkout2 = pool.checkout(key.clone());
 
             // first poll needed to get into Pool's parked
             checkout1.poll().unwrap();
-            assert_eq!(pool.inner.connections.lock().unwrap().waiters.get(&key).unwrap().len(), 1);
+            assert_eq!(pool.locked().waiters.get(&key).unwrap().len(), 1);
             checkout2.poll().unwrap();
-            assert_eq!(pool.inner.connections.lock().unwrap().waiters.get(&key).unwrap().len(), 2);
+            assert_eq!(pool.locked().waiters.get(&key).unwrap().len(), 2);
 
             // on drop, clean up Pool
             drop(checkout1);
-            assert_eq!(pool.inner.connections.lock().unwrap().waiters.get(&key).unwrap().len(), 1);
+            assert_eq!(pool.locked().waiters.get(&key).unwrap().len(), 1);
 
             drop(checkout2);
-            assert!(pool.inner.connections.lock().unwrap().waiters.get(&key).is_none());
+            assert!(pool.locked().waiters.get(&key).is_none());
 
             ::futures::future::ok::<(), ()>(())
         }).wait().unwrap();
@@ -914,17 +1001,21 @@ mod tests {
         fn reserve(self) -> Reservation<Self> {
             Reservation::Unique(self)
         }
+
+        fn can_share(&self) -> bool {
+            false
+        }
     }
 
     #[test]
     fn pooled_drop_if_closed_doesnt_reinsert() {
         let pool = pool_no_timer();
-        let key = (Arc::new("localhost:12345".to_string()), Ver::Http1);
+        let key = Arc::new("localhost:12345".to_string());
         pool.pooled(c(key.clone()), CanClose {
             val: 57,
             closed: true,
         });
 
-        assert!(!pool.inner.connections.lock().unwrap().idle.contains_key(&key));
+        assert!(!pool.locked().idle.contains_key(&key));
     }
 }

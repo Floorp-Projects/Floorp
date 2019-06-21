@@ -108,7 +108,7 @@ where
                             }
                             let (head, body) = req.into_parts();
                             let mut req = ::http::Request::from_parts(head, ());
-                            super::strip_connection_headers(req.headers_mut());
+                            super::strip_connection_headers(req.headers_mut(), true);
                             if let Some(len) = body.content_length() {
                                 headers::set_content_length_if_missing(req.headers_mut(), len);
                             }
@@ -117,19 +117,27 @@ where
                                 Ok(ok) => ok,
                                 Err(err) => {
                                     debug!("client send request error: {}", err);
-                                    let _ = cb.send(Err((::Error::new_h2(err), None)));
+                                    let _ = cb.send(Err((::Error::new_canceled(Some(err)), None)));
                                     continue;
                                 }
                             };
                             if !eos {
-                                let conn_drop_ref = conn_dropper.clone();
-                                let pipe = PipeToSendStream::new(body, body_tx)
-                                    .map_err(|e| debug!("client request body error: {}", e))
-                                    .then(move |x| {
-                                        drop(conn_drop_ref);
-                                        x
-                                    });
-                                self.executor.execute(pipe)?;
+                                let mut pipe = PipeToSendStream::new(body, body_tx)
+                                    .map_err(|e| debug!("client request body error: {}", e));
+
+                                // eagerly see if the body pipe is ready and
+                                // can thus skip allocating in the executor
+                                match pipe.poll() {
+                                    Ok(Async::Ready(())) | Err(()) => (),
+                                    Ok(Async::NotReady) => {
+                                        let conn_drop_ref = conn_dropper.clone();
+                                        let pipe = pipe.then(move |x| {
+                                                drop(conn_drop_ref);
+                                                x
+                                            });
+                                        self.executor.execute(pipe)?;
+                                    }
+                                }
                             }
 
                             let fut = fut
