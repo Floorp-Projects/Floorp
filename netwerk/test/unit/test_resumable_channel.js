@@ -24,12 +24,7 @@ AuthPrompt2.prototype = {
   user: "guest",
   pass: "guest",
 
-  QueryInterface: function authprompt2_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIAuthPrompt2))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt2"]),
 
   promptAuth:
     function ap2_promptAuth(channel, level, authInfo)
@@ -48,12 +43,7 @@ function Requestor() {
 }
 
 Requestor.prototype = {
-  QueryInterface: function requestor_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIInterfaceRequestor))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor"]),
 
   getInterface: function requestor_gi(iid) {
     if (iid.equals(Ci.nsIAuthPrompt2)) {
@@ -324,14 +314,10 @@ function handleAuth(metadata, response) {
 
     return true;
   }
-  else
-  {
-    // didn't know guest:guest, failure
-    response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
-    response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
-
-    return false;
-  }
+  // didn't know guest:guest, failure
+  response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+  response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
+  return false;
 }
 
 // /auth

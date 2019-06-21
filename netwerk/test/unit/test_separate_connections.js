@@ -25,7 +25,7 @@ function handler(metadata, response) {
 
 function makeChan(url, userContextId) {
   let chan = NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
-  chan.loadInfo.originAttributes = { userContextId: userContextId };
+  chan.loadInfo.originAttributes = { userContextId };
   return chan;
 }
 
@@ -37,7 +37,7 @@ function Listener(userContextId) {
 
 let gTestsRun = 0;
 Listener.prototype = {
-  onStartRequest: function(request) {
+  onStartRequest(request) {
     request.QueryInterface(Ci.nsIHttpChannel)
            .QueryInterface(Ci.nsIHttpChannelInternal);
 
@@ -59,10 +59,10 @@ Listener.prototype = {
       previousHashKeys[this.userContextId] = hashKey;
     }
   },
-  onDataAvailable: function(request, stream, off, cnt) {
+  onDataAvailable(request, stream, off, cnt) {
     read_stream(stream, cnt);
   },
-  onStopRequest: function() {
+  onStopRequest() {
     gTestsRun++;
     if (gTestsRun == 3) {
       gTestsRun = 0;

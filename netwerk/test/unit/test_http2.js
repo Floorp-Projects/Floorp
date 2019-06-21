@@ -179,12 +179,7 @@ Http2ContinuedHeaderListener.prototype = new Http2CheckListener();
 
 Http2ContinuedHeaderListener.prototype.onStopsLeft = 2;
 
-Http2ContinuedHeaderListener.prototype.QueryInterface = function (aIID) {
-  if (aIID.equals(Ci.nsIHttpPushListener) ||
-      aIID.equals(Ci.nsIStreamListener))
-    return this;
-  throw Cr.NS_ERROR_NO_INTERFACE;
-};
+Http2ContinuedHeaderListener.prototype.QueryInterface = ChromeUtils.generateQI(["nsIHttpPushListener", "nsIStreamListener"]);
 
 Http2ContinuedHeaderListener.prototype.getInterface = function(aIID) {
   return this.QueryInterface(aIID);
@@ -706,16 +701,11 @@ var Http2PushApiListener = function() {};
 Http2PushApiListener.prototype = {
   checksPending: 9, // 4 onDataAvailable and 5 onStop
 
-  getInterface: function(aIID) {
+  getInterface(aIID) {
     return this.QueryInterface(aIID);
   },
 
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIHttpPushListener) ||
-        aIID.equals(Ci.nsIStreamListener))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIHttpPushListener", "nsIStreamListener"]),
 
   // nsIHttpPushListener
   onPush: function onPush(associatedChannel, pushChannel) {

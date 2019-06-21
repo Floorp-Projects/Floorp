@@ -7,14 +7,9 @@ var handlers_called = "";
 var buffer = "";
 
 var observer = {
-  QueryInterface: function (aIID) {
-    if (aIID.equals(Ci.nsISupports) ||
-        aIID.equals(Ci.nsIObserver))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (observers_called.length)
       observers_called += ",";
 
@@ -23,15 +18,15 @@ var observer = {
 };
 
 var listener = {
-  onStartRequest: function (request) {
+  onStartRequest (request) {
     buffer = "";
   },
 
-  onDataAvailable: function (request, stream, offset, count) {
+  onDataAvailable (request, stream, offset, count) {
     buffer = buffer.concat(read_stream(stream, count));
   },
 
-  onStopRequest: function (request, status) {
+  onStopRequest (request, status) {
     Assert.equal(status, Cr.NS_OK);
     Assert.equal(buffer, "0123456789");
     Assert.equal(observers_called, results[test_nr]);

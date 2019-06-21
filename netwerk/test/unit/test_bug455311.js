@@ -22,20 +22,12 @@ function NotificationCallbacks(origURI, newURI)
   this._newURI = newURI;
 }
 NotificationCallbacks.prototype = {
-  QueryInterface: function(iid)
-  {
-    if (iid.equals(Ci.nsISupports) ||
-	iid.equals(Ci.nsIInterfaceRequestor) ||
-	iid.equals(Ci.nsIChannelEventSink)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  getInterface: function (iid)
+  QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor", "nsIChannelEventSink"]),
+  getInterface (iid)
   {
     return this.QueryInterface(iid);
   },
-  asyncOnChannelRedirect: function(oldChan, newChan, flags, callback)
+  asyncOnChannelRedirect(oldChan, newChan, flags, callback)
   {
     Assert.equal(oldChan.URI.spec, this._origURI.spec);
     Assert.equal(oldChan.URI, this._origURI);
@@ -55,16 +47,8 @@ function RequestObserver(origURI, newURI, nextTest)
   this._nextTest = nextTest;
 }
 RequestObserver.prototype = {
-  QueryInterface: function(iid)
-  {
-    if (iid.equals(Ci.nsISupports) ||
-	iid.equals(Ci.nsIRequestObserver) ||
-	iid.equals(Ci.nsIStreamListener)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  onStartRequest: function (req)
+  QueryInterface: ChromeUtils.generateQI(["nsIRequestObserver", "nsIStreamListener"]),
+  onStartRequest (req)
   {
     var chan = req.QueryInterface(Ci.nsIChannel);
     Assert.equal(chan.URI.spec, this._origURI.spec);
@@ -72,11 +56,11 @@ RequestObserver.prototype = {
     Assert.equal(chan.originalURI.spec, this._origURI.spec);
     Assert.equal(chan.originalURI, this._origURI);
   },
-  onDataAvailable: function(req, stream, offset, count)
+  onDataAvailable(req, stream, offset, count)
   {
     do_throw("Unexpected call to onDataAvailable");
   },
-  onStopRequest: function (req, status)
+  onStopRequest (req, status)
   {
     var chan = req.QueryInterface(Ci.nsIChannel);
     try {

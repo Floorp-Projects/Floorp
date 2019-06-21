@@ -28,12 +28,11 @@ function authHandler(metadata, response) {
       noAuthHeader = true;
     }
     Assert.ok(noAuthHeader);
-  } else {
+  }
     // Not our test request yet.
-    if (!metadata.hasHeader("Authorization")) {
-      response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
-      response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
-    }
+  else if (!metadata.hasHeader("Authorization")) {
+    response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+    response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
   }
 }
 
@@ -42,21 +41,15 @@ function RequestObserver() {
 }
 
 RequestObserver.prototype = {
-  register: function() {
+  register() {
     info("Registering " + notification);
     Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService).
       addObserver(this, notification, true);
   },
 
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIObserver) || iid.equals(Ci.nsISupportsWeakReference) ||
-        iid.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver", "nsISupportsWeakReference"]),
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic == notification) {
       if (!(subject instanceof Ci.nsIHttpChannel)) {
         do_throw(notification + " observed a non-HTTP channel.");

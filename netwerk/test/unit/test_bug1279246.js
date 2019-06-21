@@ -19,20 +19,14 @@ function Listener() {}
 Listener.prototype = {
   _buffer: null,
 
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
 
-  onStartRequest: function(request) {
+  onStartRequest(request) {
     Assert.equal(request.status, Cr.NS_OK);
     this._buffer = "";
   },
 
-  onDataAvailable: function(request, stream, offset, cnt) {
+  onDataAvailable(request, stream, offset, cnt) {
     if (pass == 0) {
       this._buffer = this._buffer.concat(read_stream(stream, cnt));
     } else {
@@ -45,7 +39,7 @@ Listener.prototype = {
     }
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest(request, status) {
     if (pass == 0) {
       Assert.equal(this._buffer.length, responseLen);
       pass++;

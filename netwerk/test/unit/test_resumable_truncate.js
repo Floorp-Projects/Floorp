@@ -37,23 +37,17 @@ function Canceler(continueFn) {
 }
 
 Canceler.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
+
+  onStartRequest(request) {
   },
 
-  onStartRequest: function(request) {
-  },
-
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable(request, stream, offset, count) {
     request.QueryInterface(Ci.nsIChannel)
            .cancel(Cr.NS_BINDING_ABORTED);
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_BINDING_ABORTED);
     this.continueFn();
   }

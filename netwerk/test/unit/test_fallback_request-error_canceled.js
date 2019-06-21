@@ -85,7 +85,7 @@ function run_test()
   ps.setBoolPref("browser.cache.offline.enable", true);
   ps.setComplexValue("browser.cache.offline.parent_directory", Ci.nsIFile, do_get_profile());
 
-  cacheUpdateObserver = {observe: function() {
+  cacheUpdateObserver = {observe() {
     dump("got offline-cache-update-completed\n");
     // offline cache update completed.
 

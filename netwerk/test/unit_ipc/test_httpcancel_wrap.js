@@ -12,14 +12,9 @@ let observer = null;
 function run_test() {
   do_await_remote_message("register-observer").then(() => {
     observer =  {
-      QueryInterface: function eventsink_qi(iid) {
-        if (iid.equals(Ci.nsISupports) ||
-            iid.equals(Ci.nsIObserver))
-          return this;
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      },
+      QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-      observe: function(subject, topic, data) {
+      observe(subject, topic, data) {
         subject = subject.QueryInterface(Ci.nsIRequest);
         subject.cancel(Cr.NS_BINDING_ABORTED);
 

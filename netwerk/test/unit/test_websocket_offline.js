@@ -9,16 +9,16 @@ var chan;
 var offlineStatus;
 
 var listener = {
-  onAcknowledge: function(aContext, aSize) {},
-  onBinaryMessageAvailable: function(aContext, aMsg) {},
-  onMessageAvailable: function(aContext, aMsg) {},
-  onServerClose: function(aContext, aCode, aReason) {},
-  onStart: function(aContext)
+  onAcknowledge(aContext, aSize) {},
+  onBinaryMessageAvailable(aContext, aMsg) {},
+  onMessageAvailable(aContext, aMsg) {},
+  onServerClose(aContext, aCode, aReason) {},
+  onStart(aContext)
   {
     // onStart is not called when a connection fails
     Assert.ok(false);
   },
-  onStop: function(aContext, aStatusCode)
+  onStop(aContext, aStatusCode)
   {
     Assert.notEqual(aStatusCode, Cr.NS_OK);
     Services.io.offline = offlineStatus;

@@ -2,7 +2,7 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
 
 var observer = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic == "cookie-changed") {
       let cookie = subject.QueryInterface(Ci.nsICookie);
       sendAsyncMessage("cookieName", cookie.name + "=" + cookie.value);

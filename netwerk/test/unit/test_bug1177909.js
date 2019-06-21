@@ -8,17 +8,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "gProxyService",
 
 XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
   return {
-    QueryInterface: function (iid) {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsISystemProxySettings))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsISystemProxySettings"]),
 
     mainThreadOnly: true,
     PACURI: null,
 
-    getProxyForURI: function(aSpec, aScheme, aHost, aPort) {
+    getProxyForURI(aSpec, aScheme, aHost, aPort) {
       if (aPort != -1) {
         return 'SOCKS5 http://localhost:9050'
       }
@@ -41,7 +36,7 @@ registerCleanupFunction(() => {
 
 function makeChannel(uri) {
   return NetUtil.newChannel({
-    uri: uri,
+    uri,
     loadUsingSystemPrincipal: true,
   });
 }

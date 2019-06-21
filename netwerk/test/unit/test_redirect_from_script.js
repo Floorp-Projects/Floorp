@@ -124,23 +124,16 @@ function Redirector()
 Redirector.prototype = {
   // This class observes an event and uses that to
   // trigger a redirectTo(uri) redirect using the new API
-  register: function()
+  register()
   {
     Cc["@mozilla.org/observer-service;1"].
       getService(Ci.nsIObserverService).
       addObserver(this, redirectHook, true);
   },
 
-  QueryInterface: function(iid)
-  {
-    if (iid.equals(Ci.nsIObserver) ||
-        iid.equals(Ci.nsISupportsWeakReference) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_NOINTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver", "nsISupportsWeakReference"]),
 
-  observe: function(subject, topic, data)
+  observe(subject, topic, data)
   {
     if (topic == redirectHook) {
       if (!(subject instanceof Ci.nsIHttpChannel))

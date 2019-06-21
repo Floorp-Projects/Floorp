@@ -11,19 +11,19 @@ var prefs = Cc["@mozilla.org/preferences-service;1"].
 var url = "ws://dnsleak.example.com";
 
 var dnsRequestObserver = {
-  register: function() {
+  register() {
     this.obs = Cc["@mozilla.org/observer-service;1"].
       getService(Ci.nsIObserverService);
     this.obs.addObserver(this, "dns-resolution-request");
   },
 
-  unregister: function() {
+  unregister() {
     if (this.obs) {
       this.obs.removeObserver(this, "dns-resolution-request");
     }
   },
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic == "dns-resolution-request") {
       info(data);
       if (data.indexOf("dnsleak.example.com") > -1) {
@@ -36,12 +36,12 @@ var dnsRequestObserver = {
 };
 
 var listener = {
-  onAcknowledge: function(aContext, aSize) {},
-  onBinaryMessageAvailable: function(aContext, aMsg) {},
-  onMessageAvailable: function(aContext, aMsg) {},
-  onServerClose: function(aContext, aCode, aReason) {},
-  onStart: function(aContext) {},
-  onStop: function(aContext, aStatusCode) {
+  onAcknowledge(aContext, aSize) {},
+  onBinaryMessageAvailable(aContext, aMsg) {},
+  onMessageAvailable(aContext, aMsg) {},
+  onServerClose(aContext, aCode, aReason) {},
+  onStart(aContext) {},
+  onStop(aContext, aStatusCode) {
     prefs.clearUserPref("network.proxy.socks");
     prefs.clearUserPref("network.proxy.socks_port");
     prefs.clearUserPref("network.proxy.type");

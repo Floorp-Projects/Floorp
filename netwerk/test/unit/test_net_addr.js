@@ -30,7 +30,7 @@ function TestServer() {
 }
 
 TestServer.prototype = {
-  onSocketAccepted: function(socket, trans) {
+  onSocketAccepted(socket, trans) {
     info('server: got client connection');
 
     // one connection at a time.
@@ -56,12 +56,12 @@ TestServer.prototype = {
     this.reset();
   } ,
   
-  onStopListening: function(socket) {} ,
+  onStopListening(socket) {} ,
 
   /**
    * Called to close a connection and clean up properties.
    */
-  reset: function() {
+  reset() {
     if (this.input)
       try { this.input.close(); } catch(ignore) {}
     if (this.output)
@@ -77,7 +77,7 @@ TestServer.prototype = {
   /**
    * Cleanup for TestServer and this test case.
    */
-  stop: function() {
+  stop() {
     this.reset();
     try { this.listener.close(); } catch(ignore) {}
   }

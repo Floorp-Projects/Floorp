@@ -22,7 +22,7 @@ function redirectHandler(metadata, response)
 {
   response.setStatusLine(metadata.httpVersion, 301, "Moved");
   response.setHeader("Location", URL + "/content", false);
-  return;
+  
 }
 
 function contentHandler(metadata, response)

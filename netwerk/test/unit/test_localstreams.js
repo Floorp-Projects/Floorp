@@ -69,7 +69,7 @@ function stream_from_channel(file) {
               .getService(Ci.nsIIOService);
   var uri = ios.newFileURI(file);
   return NetUtil.newChannel({
-    uri: uri,
+    uri,
     loadUsingSystemPrincipal: true
   }).open();
 }

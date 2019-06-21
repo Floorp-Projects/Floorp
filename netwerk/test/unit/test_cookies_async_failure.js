@@ -70,7 +70,6 @@ function* do_run_test() {
   yield;
 
   finish_test();
-  return;
 }
 
 function do_get_backup_file(profile)

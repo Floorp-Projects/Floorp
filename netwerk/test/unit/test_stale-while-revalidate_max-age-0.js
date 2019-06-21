@@ -25,10 +25,6 @@ the window is set and we hit it.
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
-function run_test() {
-  run_next_test();
-}
-
 let max_age;
 let version;
 let generate_response = ver => `response version=${ver}`;

@@ -63,24 +63,18 @@ function run_gzip_test(num)
   function StreamListener() {}
 
   StreamListener.prototype = {
-    QueryInterface: function(aIID) {
-      if (aIID.equals(Ci.nsIStreamListener) ||
-          aIID.equals(Ci.nsIRequestObserver) ||
-          aIID.equals(Ci.nsISupports))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
 
-    onStartRequest: function(aRequest) {},
+    onStartRequest(aRequest) {},
 
-    onStopRequest: function(aRequest, aStatusCode) {
+    onStopRequest(aRequest, aStatusCode) {
       // Make sure we catch the error NS_ERROR_NET_PARTIAL_TRANSFER here.
       Assert.equal(aStatusCode, Cr.NS_ERROR_NET_PARTIAL_TRANSFER);
       //  do_test_finished();
         endTests();
     },
 
-    onDataAvailable: function(request, stream, offset, count) {}
+    onDataAvailable(request, stream, offset, count) {}
   };
 
   let listener = new StreamListener();

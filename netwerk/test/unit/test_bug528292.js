@@ -26,7 +26,6 @@ function preRedirectHandler(metadata, response)
 {
   response.setStatusLine(metadata.httpVersion, 302, "Found");
   response.setHeader("Location", postRedirectURL, false);
-  return;
 }
 
 function postRedirectHandler(metadata, response)

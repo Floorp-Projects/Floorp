@@ -43,20 +43,14 @@ function Canceler(continueFn) {
   this.continueFn = continueFn;
 }
 Canceler.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  onStartRequest: function(request) { },
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
+  onStartRequest(request) { },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable(request, stream, offset, count) {
     request.QueryInterface(Ci.nsIChannel)
            .cancel(Cr.NS_BINDING_ABORTED);
   },
-  onStopRequest: function(request, status) {
+  onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_BINDING_ABORTED);
     this.continueFn(request, null);
   }
@@ -67,19 +61,13 @@ function MyListener(continueFn) {
   this._buffer = null;
 }
 MyListener.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  onStartRequest: function(request) { this._buffer = ""; },
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
+  onStartRequest(request) { this._buffer = ""; },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable(request, stream, offset, count) {
     this._buffer = this._buffer.concat(read_stream(stream, count));
   },
-  onStopRequest: function(request, status) {
+  onStopRequest(request, status) {
     this.continueFn(request, this._buffer);
   }
 };
@@ -89,18 +77,12 @@ function FailedChannelListener(continueFn) {
   this.continueFn = continueFn;
 }
 FailedChannelListener.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  onStartRequest: function(request) { },
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
+  onStartRequest(request) { },
 
-  onDataAvailable: function(request, stream, offset, count) { },
+  onDataAvailable(request, stream, offset, count) { },
 
-  onStopRequest: function(request, status) {
+  onStopRequest(request, status) {
     if (case_8_range_request)
       Assert.equal(status, Cr.NS_ERROR_CORRUPTED_CONTENT);
     this.continueFn(request, null);

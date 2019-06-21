@@ -33,7 +33,7 @@ function successResponseHandler(metadata, response)
 
 function onModifyListener(callback) {
   obs.addObserver({
-    observe: function(subject, topic, data) {
+    observe(subject, topic, data) {
       var obs = Cc["@mozilla.org/observer-service;1"].getService();
       obs = obs.QueryInterface(Ci.nsIObserverService);
       obs.removeObserver(this, "http-on-modify-request");
@@ -51,7 +51,7 @@ function startChannelRequest(baseUrl, flags, expectedResponse=null) {
     if (expectedResponse) {
       Assert.equal(data, expectedResponse);
     } else {
-      Assert.ok(!!!data, "no response");
+      Assert.ok(!data, "no response");
     }
     executeSoon(run_next_test)
   }, null, flags));

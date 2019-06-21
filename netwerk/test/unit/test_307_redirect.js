@@ -24,7 +24,6 @@ function redirectHandler(metadata, response)
 {
   response.setStatusLine(metadata.httpVersion, 307, "Moved Temporarily");
   response.setHeader("Location", noRedirectURI, false);
-  return;
 }
 
 function contentHandler(metadata, response)

@@ -78,7 +78,7 @@ function test_echo()
   info("creating socket: " + socketName.path);
   let server = new UnixServerSocket(socketName, allPermissions, -1);
   server.asyncListen({
-    onSocketAccepted: function(aServ, aTransport) {
+    onSocketAccepted(aServ, aTransport) {
       info("called test_echo's onSocketAccepted");
       log += 'a';
 
@@ -114,7 +114,7 @@ function test_echo()
       }, 0, 0, threadManager.currentThread);
     },
 
-    onStopListening: function(aServ, aStatus) {
+    onStopListening(aServ, aStatus) {
       info("called test_echo's onStopListening");
       log += 's';
 
@@ -440,7 +440,7 @@ function test_keep_when_offline()
 
   // Create a listening socket.
   let listener = new UnixServerSocket(socketName, allPermissions, -1);
-  listener.asyncListen({ onSocketAccepted: onAccepted, onStopListening: onStopListening });
+  listener.asyncListen({ onSocketAccepted: onAccepted, onStopListening });
 
   // Connect a client socket to the listening socket.
   let client = socketTransportService.createUnixDomainTransport(socketName);

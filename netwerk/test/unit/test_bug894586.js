@@ -31,11 +31,11 @@ ProtocolHandler.prototype = {
            Ci.nsIProtocolHandler.URI_NON_PERSISTABLE |
            Ci.nsIProtocolHandler.URI_SYNC_LOAD_IS_OK;
   },
-  newChannel: function(aURI, aLoadInfo) {
+  newChannel(aURI, aLoadInfo) {
     this.loadInfo = aLoadInfo;
     return this;
   },
-  allowPort: function(port, scheme) {
+  allowPort(port, scheme) {
     return port != -1;
   },
 
@@ -63,7 +63,7 @@ ProtocolHandler.prototype = {
   set contentLength(val) {
     throw Components.Exception("Setting content length", NS_ERROR_NOT_IMPLEMENTED);
   },
-  open: function() {
+  open() {
     // throws an error if security checks fail
     contentSecManager.performSecurityCheck(this, null);
 
@@ -72,7 +72,7 @@ ProtocolHandler.prototype = {
     var url = Services.io.newFileURI(file);
     return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true}).open();
   },
-  asyncOpen: function(aListener, aContext) {
+  asyncOpen(aListener, aContext) {
     throw Components.Exception("Not implemented",
                                Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
@@ -94,21 +94,21 @@ ProtocolHandler.prototype = {
   get status() {
     return Cr.NS_OK;
   },
-  cancel: function(status) {},
+  cancel(status) {},
   loadGroup: null,
   loadFlags: Ci.nsIRequest.LOAD_NORMAL |
              Ci.nsIRequest.INHIBIT_CACHING |
              Ci.nsIRequest.LOAD_BYPASS_CACHE,
 
   /** nsIFactory */
-  createInstance: function(aOuter, aIID) {
+  createInstance(aOuter, aIID) {
     if (aOuter) {
       throw Components.Exception("createInstance no aggregation",
                                  Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this.QueryInterface(aIID);
   },
-  lockFactory: function() {},
+  lockFactory() {},
 
   /** nsISupports */
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolHandler,

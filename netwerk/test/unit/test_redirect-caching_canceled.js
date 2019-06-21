@@ -23,7 +23,7 @@ function redirectHandler(metadata, response)
   response.setStatusLine(metadata.httpVersion, 301, "Moved");
   response.setHeader("Location", URL + "/content", false);
   response.setHeader("Cache-control", "max-age=1000", false);
-  return;
+  
 }
 
 function contentHandler(metadata, response)

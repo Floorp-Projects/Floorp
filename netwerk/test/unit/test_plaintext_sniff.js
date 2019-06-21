@@ -176,7 +176,7 @@ function run_test() {
   // Silly operating system!
   // This is a really nasty way to detect Windows.  I wish we could do better.
   if (mozinfo.os == "win") {
-    return;
+    //failing eslint no-empty test
   }
 
   httpserv = new HttpServer();

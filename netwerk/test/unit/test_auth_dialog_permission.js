@@ -59,18 +59,13 @@ AuthPrompt.prototype = {
   user: "guest",
   pass: "guest",
 
-  QueryInterface: function authprompt_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIAuthPrompt))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt"]),
 
-  prompt: function(title, text, realm, save, defaultText, result) {
+  prompt(title, text, realm, save, defaultText, result) {
     do_throw("unexpected prompt call");
   },
 
-  promptUsernameAndPassword: function(title, text, realm, savePW, user, pw) {
+  promptUsernameAndPassword(title, text, realm, savePW, user, pw) {
     Assert.ok(this.promptExpected,
               "Not expected the authentication prompt.");
 
@@ -79,7 +74,7 @@ AuthPrompt.prototype = {
     return true;
   },
 
-  promptPassword: function(title, text, realm, save, pwd) {
+  promptPassword(title, text, realm, save, pwd) {
     do_throw("unexpected promptPassword call");
   }
 
@@ -90,14 +85,9 @@ function Requestor(promptExpected) {
 }
 
 Requestor.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIInterfaceRequestor))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor"]),
 
-  getInterface: function(iid) {
+  getInterface(iid) {
     if (iid.equals(Ci.nsIAuthPrompt)) {
       this.prompter = new AuthPrompt(this.promptExpected);
       return this.prompter;
@@ -145,7 +135,7 @@ Test.prototype = {
   _contentPolicy: Ci.nsIContentPolicy.TYPE_OTHER,
   _expectedCode: 200,
 
-  onStartRequest: function(request) {
+  onStartRequest(request) {
     try {
       if (!Components.isSuccessCode(request.status)) {
         do_throw("Channel should have a success code!");
@@ -166,11 +156,11 @@ Test.prototype = {
     throw Cr.NS_ERROR_ABORT;
   },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable(request, stream, offset, count) {
     do_throw("Should not get any data!");
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_ERROR_ABORT);
 
     // Clear the auth cache.
@@ -181,7 +171,7 @@ Test.prototype = {
     do_timeout(0, run_next_test);
   },
 
-  run: function() {
+  run() {
     dump("Run test: " + this._subresource_http_auth_allow_pref
                       + this._loadingUri
                       + this._uri

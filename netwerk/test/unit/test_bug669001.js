@@ -23,42 +23,42 @@ var fetched;
 
 var tests = [
 {
-  prepare: function() { },
-  test: function(response) {
+  prepare() { },
+  test(response) {
     Assert.ok(fetched);
   }
 },
 {
-  prepare: function() { },
-  test: function(response) {
+  prepare() { },
+  test(response) {
     Assert.ok(!fetched);
   }
 },
 {
-  prepare: function() {
+  prepare() {
     setUA("A different User Agent");
   },
-  test: function(response) {
+  test(response) {
     Assert.ok(fetched);
   }
 },
 {
-  prepare: function() { },
-  test: function(response) {
+  prepare() { },
+  test(response) {
     Assert.ok(!fetched);
   }
 },
 {
-  prepare: function() {
+  prepare() {
     setUA("And another User Agent");
   },
-  test: function(response) {
+  test(response) {
     Assert.ok(fetched);
   }
 },
 {
-  prepare: function() { },
-  test: function(response) {
+  prepare() { },
+  test(response) {
     Assert.ok(!fetched);
   }
 }

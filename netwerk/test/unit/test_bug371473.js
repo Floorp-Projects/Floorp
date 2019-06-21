@@ -34,7 +34,6 @@ function test_too_long() {
     var newURI = ios.newURI(spec);
   }
   catch (e) {
-    return;
   }
 }
 

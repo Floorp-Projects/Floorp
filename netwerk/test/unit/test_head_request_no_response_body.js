@@ -17,10 +17,6 @@ Test that a response to HEAD method should not have a body.
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
-function run_test() {
-  run_next_test();
-}
-
 const responseContent = "response body";
 
 function test_handler(metadata, response) {

@@ -19,13 +19,7 @@ var listener_3 = {
     // this listener is used to process the the request made after
     // the cache invalidation. it expects to see the 'right data'
 
-    QueryInterface: function(iid) {
-	if (iid.equals(Ci.nsIStreamListener) ||
-            iid.equals(Ci.nsIRequestObserver) ||
-            iid.equals(Ci.nsISupports))
-	    return this;
-	throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
 
     onStartRequest: function test_onStartR(request) {},
     
@@ -46,13 +40,7 @@ XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
     // this listener is used to process the revalidation of the
     // corrupted cache entry. its revalidation prompts it to be cleaned
 
-    QueryInterface: function(iid) {
-	if (iid.equals(Ci.nsIStreamListener) ||
-            iid.equals(Ci.nsIRequestObserver) ||
-            iid.equals(Ci.nsISupports))
-	    return this;
-	throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
 
     onStartRequest: function test_onStartR(request) {},
     
@@ -82,13 +70,7 @@ XPCOMUtils.defineLazyGetter(this, "listener_1", function() {
     // this listener processes the initial request from a empty cache.
     // the server responds with the wrong data ('A')
 
-    QueryInterface: function(iid) {
-	if (iid.equals(Ci.nsIStreamListener) ||
-            iid.equals(Ci.nsIRequestObserver) ||
-            iid.equals(Ci.nsISupports))
-	    return this;
-	throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
 
     onStartRequest: function test_onStartR(request) {},
     

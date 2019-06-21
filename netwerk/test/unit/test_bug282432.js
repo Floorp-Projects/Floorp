@@ -5,23 +5,17 @@ function run_test() {
   function StreamListener() {}
 
   StreamListener.prototype = {
-    QueryInterface: function(aIID) {
-      if (aIID.equals(Ci.nsIStreamListener) ||
-          aIID.equals(Ci.nsIRequestObserver) ||
-          aIID.equals(Ci.nsISupports))
-        return this;
-      throw Cr.NS_NOINTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
 
-    onStartRequest: function(aRequest) {},
+    onStartRequest(aRequest) {},
 
-    onStopRequest: function(aRequest, aStatusCode) {
+    onStopRequest(aRequest, aStatusCode) {
       // Make sure we can catch the error NS_ERROR_FILE_NOT_FOUND here.
       Assert.equal(aStatusCode, Cr.NS_ERROR_FILE_NOT_FOUND);
       do_test_finished();
     },
 
-    onDataAvailable: function(aRequest, aStream, aOffset, aCount) {
+    onDataAvailable(aRequest, aStream, aOffset, aCount) {
       do_throw("The channel must not call onDataAvailable().");
     }
   };

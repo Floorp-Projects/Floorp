@@ -22,28 +22,23 @@ function TestServer() {
 }
 
 TestServer.prototype = {
-  onSocketAccepted: function(socket, trans) {
+  onSocketAccepted(socket, trans) {
     Assert.ok(false, "Socket should not have tried to connect!");
   },
 
-  onStopListening: function(socket) {
+  onStopListening(socket) {
   },
 
-  stop: function() {
+  stop() {
     try { this.listener.close(); } catch(ignore) {}
   }
 }
 
 var requestListenerObserver = {
 
-  QueryInterface: function queryinterface(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIObserver))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic === "http-on-modify-request" &&
         subject instanceof Ci.nsIHttpChannel) {
 
@@ -95,7 +90,3 @@ add_test(function testNoConnectChannelCanceledEarly() {
 
   registerCleanupFunction(function(){ serv.stop(); });
 });
-
-function run_test() {
-  run_next_test();
-}

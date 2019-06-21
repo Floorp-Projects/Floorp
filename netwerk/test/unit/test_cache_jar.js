@@ -19,8 +19,8 @@ function cached_handler(metadata, response) {
 function makeChan(url, inIsolatedMozBrowser, userContextId) {
   var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
                     .QueryInterface(Ci.nsIHttpChannel);
-  chan.loadInfo.originAttributes = { inIsolatedMozBrowser: inIsolatedMozBrowser,
-                                     userContextId: userContextId,
+  chan.loadInfo.originAttributes = { inIsolatedMozBrowser,
+                                     userContextId,
                                    };
   return chan;
 }

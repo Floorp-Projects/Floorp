@@ -39,21 +39,21 @@ function make_channel(url, body, cb) {
     QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkInterceptController,
                                             Ci.nsIInterfaceRequestor,
                                             Ci.nsIProgressEventSink]),
-    getInterface: function(iid) {
+    getInterface(iid) {
       return this.QueryInterface(iid);
     },
-    onProgress: function(request, context, progress, progressMax) {
+    onProgress(request, context, progress, progressMax) {
       gotOnProgress = true;
     },
-    onStatus: function(request, context, status, statusArg) {
+    onStatus(request, context, status, statusArg) {
       gotOnStatus = true;
     },
-    shouldPrepareForIntercept: function() {
+    shouldPrepareForIntercept() {
       Assert.equal(this.numChecks, 0);
       this.numChecks++;
       return true;
     },
-    channelIntercepted: function(channel) {
+    channelIntercepted(channel) {
       channel.QueryInterface(Ci.nsIInterceptedChannel);
       if (body) {
         var synthesized = Cc["@mozilla.org/io/string-input-stream;1"]
@@ -67,7 +67,7 @@ function make_channel(url, body, cb) {
         cb(channel);
       }
       return {
-        dispatch: function() { }
+        dispatch() { }
       };
     },
   };

@@ -24,14 +24,14 @@ TestAppend.prototype = {
   _compress: false,
   _callback: null,
 
-  run: function() {
+  run() {
     evict_cache_entries();
     asyncOpenCacheEntry("http://data/",
                         "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
                         this.writeData.bind(this));
   },
 
-  writeData: function(status, entry) {
+  writeData(status, entry) {
     Assert.equal(status, Cr.NS_OK);
     if (this._compress)
       entry.setMetaDataElement("uncompressed-len", "0");
@@ -44,7 +44,7 @@ TestAppend.prototype = {
                         this.appendData.bind(this));
   },
 
-  appendData: function(status, entry) {
+  appendData(status, entry) {
     Assert.equal(status, Cr.NS_OK);
     var os = entry.openOutputStream(entry.storageDataSize, 5);
     write_and_check(os, "abcde", 5);
@@ -56,7 +56,7 @@ TestAppend.prototype = {
                         this.checkData.bind(this));
   },
 
-  checkData: function(status, entry) {
+  checkData(status, entry) {
     Assert.equal(status, Cr.NS_OK);
     var self = this;
     pumpReadStream(entry.openInputStream(0), function(str) {

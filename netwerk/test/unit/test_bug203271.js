@@ -86,7 +86,7 @@ function logit(i, data, ctx) {
     // Dump all response-headers
     dump("\n===================================\n")
     ctx.visitResponseHeaders({
-        visitHeader: function(key, val) {
+        visitHeader(key, val) {
             dump("\t" + key + ":"+val + "\n");
         }}
     );

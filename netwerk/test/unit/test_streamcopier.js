@@ -24,9 +24,9 @@ function run_test() {
   ctx.wrappedJSObject = ctx;
   
   var observer = {
-    onStartRequest: function(aRequest) {
+    onStartRequest(aRequest) {
     },
-    onStopRequest: function(aRequest, aStatusCode) {
+    onStopRequest(aRequest, aStatusCode) {
       Assert.equal(aStatusCode, 0);
       var sis =
         Cc["@mozilla.org/scriptableinputstream;1"]

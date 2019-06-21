@@ -14,15 +14,9 @@ var listener = {
   _lastEvent: 0,
   _gotData: false,
 
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
 
-  onStartRequest: function(request) {
+  onStartRequest(request) {
     this._lastEvent = Date.now();
     request.QueryInterface(Ci.nsIRequest);
 
@@ -34,7 +28,7 @@ var listener = {
     do_timeout(RESUME_DELAY + 1000, function() { request.resume(); });
   },
 
-  onDataAvailable: function(request, stream, offset, count) {
+  onDataAvailable(request, stream, offset, count) {
     Assert.ok(Date.now() - this._lastEvent >= MIN_TIME_DIFFERENCE);
     read_stream(stream, count);
 
@@ -47,7 +41,7 @@ var listener = {
     this._gotData = true;
   },
 
-  onStopRequest: function(request, status) {
+  onStopRequest(request, status) {
     Assert.ok(this._gotData);
     httpserv.stop(do_test_finished);
   }

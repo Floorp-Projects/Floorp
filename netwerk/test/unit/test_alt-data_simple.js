@@ -112,7 +112,7 @@ function readServerContent(request, buffer)
 }
 
 // needs to be rooted
-var cacheFlushObserver = cacheFlushObserver = { observe: function() {
+var cacheFlushObserver = cacheFlushObserver = { observe() {
   cacheFlushObserver = null;
   openAltChannel();
 }};
@@ -151,7 +151,7 @@ function readAltContent(request, buffer)
   check_has_alt_data_in_index(true);
 
   cc.getOriginalInputStream({
-    onInputStreamReady: function(aInputStream) {
+    onInputStreamReady(aInputStream) {
       executeSoon(() => readOriginalInputStream(aInputStream));
     }
   });

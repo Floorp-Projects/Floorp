@@ -21,7 +21,7 @@ function getCert() {
     let certService = Cc["@mozilla.org/security/local-cert-service;1"]
                         .getService(Ci.nsILocalCertService);
     certService.getOrCreateCert("tlsflags-test", {
-      handleCert: function(c, rv) {
+      handleCert(c, rv) {
         if (rv) {
           reject(rv);
           return;
@@ -121,7 +121,7 @@ function startServer(cert, minServerVersion, maxServerVersion, expectedVersion) 
   let listener = {
     securityObservers : [],
 
-    onSocketAccepted: function(socket, transport) {
+    onSocketAccepted(socket, transport) {
       info("accepted TLS client connection");
       let connectionInfo = transport.securityInfo
           .QueryInterface(Ci.nsITLSServerConnectionInfo);
@@ -134,7 +134,7 @@ function startServer(cert, minServerVersion, maxServerVersion, expectedVersion) 
 
     // For some reason we get input stream callback events after we've stopped
     // listening, so this ensures we just drop those events.
-    onStopListening: function() {
+    onStopListening() {
       info("onStopListening");
       this.securityObservers.forEach((observer) => {
         observer.stop();
