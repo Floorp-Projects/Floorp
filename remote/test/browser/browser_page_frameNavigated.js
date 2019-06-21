@@ -54,7 +54,7 @@ add_task(async function() {
   is(
     frameId,
     frameTree.frame.id,
-    "The Page.navigate's frameId is the same than " + "getFrameTree's one"
+    "The Page.navigate's frameId is the same than getFrameTree's one"
   );
 
   await assertNavigationEvents({ url, frameId });
@@ -124,7 +124,7 @@ async function assertNavigationEvents({ url, frameId }) {
   const frameNavigated = resolutions.get("frameNavigated");
   ok(
     !frameNavigated.frame.parentId,
-    "frameNavigated is for the top level document and" + " has a null parentId"
+    "frameNavigated is for the top level document and has a null parentId"
   );
   is(frameNavigated.frame.id, frameId, "frameNavigated id is the right one");
   is(
@@ -138,7 +138,7 @@ async function assertNavigationEvents({ url, frameId }) {
   is(
     navigatedWithinDocument.frameId,
     frameId,
-    "navigatedWithinDocument frameId is " + "the same one"
+    "navigatedWithinDocument frameId is the same one"
   );
   is(
     navigatedWithinDocument.url,
