@@ -585,6 +585,9 @@ pref("media.webspeech.synth.enabled", true);
 pref("media.gmp-gmpopenh264.visible", true);
 pref("media.gmp-gmpopenh264.enabled", true);
 
+// Disable future downloads of OpenH264 on Android
+pref("media.gmp-gmpopenh264.autoupdate", false);
+
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
 
