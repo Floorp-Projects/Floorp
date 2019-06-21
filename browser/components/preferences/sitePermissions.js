@@ -289,7 +289,7 @@ var gSitePermissionsManager = {
   },
 
   _createPermissionListItem(permission) {
-    let width = (permission.type == "autoplay-media") ? "75" : "50";
+    let width = "75";
     let richlistitem = document.createXULElement("richlistitem");
     richlistitem.setAttribute("origin", permission.origin);
     let row = document.createXULElement("hbox");
