@@ -512,6 +512,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   RefPtr<mozilla::dom::TabListener> mSessionStoreListener;
 
+  nsString mRemoteType;
+
   bool mDepthTooGreat : 1;
   bool mIsTopLevelContent : 1;
   bool mDestroyCalled : 1;
