@@ -1921,8 +1921,9 @@ static bool ValidateCopyTexImageForFeedback(const WebGLContext& webgl,
 }
 
 static bool DoCopyTexOrSubImage(WebGLContext* webgl, bool isSubImage,
-                                WebGLTexture* const tex, const TexImageTarget target,
-                                GLint level, GLint xWithinSrc, GLint yWithinSrc,
+                                WebGLTexture* const tex,
+                                const TexImageTarget target, GLint level,
+                                GLint xWithinSrc, GLint yWithinSrc,
                                 uint32_t srcTotalWidth, uint32_t srcTotalHeight,
                                 const webgl::FormatUsageInfo* srcUsage,
                                 GLint xOffset, GLint yOffset, GLint zOffset,

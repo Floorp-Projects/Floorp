@@ -278,8 +278,8 @@ IPCResult WindowGlobalParent::RecvDidEmbedBrowsingContext(
 already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(
     dom::BrowsingContext* aBc, const nsAString& aRemoteType,
     uint64_t aPendingSwitchId, ErrorResult& aRv) {
-  RefPtr<BrowserParent> browserParent = GetBrowserParent();
-  if (NS_WARN_IF(!browserParent)) {
+  RefPtr<BrowserParent> embedderBrowserParent = GetBrowserParent();
+  if (NS_WARN_IF(!embedderBrowserParent)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
@@ -289,6 +289,9 @@ already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(
   if (aRv.Failed()) {
     return nullptr;
   }
+
+  RefPtr<CanonicalBrowsingContext> browsingContext =
+      CanonicalBrowsingContext::Cast(aBc);
 
   // When the reply comes back from content, either resolve or reject.
   auto resolve =
@@ -301,15 +304,31 @@ already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(
           return;
         }
 
-        // If we got a BrowserBridgeParent, the frame is out-of-process, so pull
-        // our target content process off of it. Otherwise, it's an in-process
-        // frame, so we can directly use ours.
+        // If we got a `BrowserBridgeParent`, the frame is out-of-process, so we
+        // can get the target off of it. Otherwise, it's an in-process frame, so
+        // we can use the embedder `BrowserParent`.
+        RefPtr<BrowserParent> browserParent;
         if (bridge) {
-          promise->MaybeResolve(
-              bridge->GetBrowserParent()->Manager()->ChildID());
+          browserParent = bridge->GetBrowserParent();
         } else {
-          promise->MaybeResolve(browserParent->Manager()->ChildID());
+          browserParent = embedderBrowserParent;
         }
+        MOZ_ASSERT(browserParent);
+
+        if (!browserParent || !browserParent->CanSend()) {
+          promise->MaybeReject(NS_ERROR_FAILURE);
+          return;
+        }
+
+        // Update our BrowsingContext to its new owner, if it hasn't been
+        // updated yet. This can happen when switching from a out-of-process to
+        // in-process frame. For remote frames, the BrowserBridgeParent::Init
+        // method should've already set up the OwnerProcessId.
+        uint64_t childId = browserParent->Manager()->ChildID();
+        MOZ_ASSERT_IF(bridge, browsingContext->IsOwnedByProcess(childId));
+        browsingContext->SetOwnerProcessId(childId);
+
+        promise->MaybeResolve(childId);
       };
 
   auto reject = [=](ResponseRejectReason aReason) {

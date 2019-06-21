@@ -1302,10 +1302,19 @@ static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
       if (aIsSynchronous ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Wasm) {
         aCollector.CollectWasmFrame(jsFrame.label);
+      } else if (jsFrame.kind ==
+                 JS::ProfilingFrameIterator::Frame_BaselineInterpreter) {
+        // For now treat this as a C++ Interpreter frame by materializing a
+        // ProfilingStackFrame.
+        JSScript* script = jsFrame.interpreterScript;
+        jsbytecode* pc = jsFrame.interpreterPC();
+        js::ProfilingStackFrame stackFrame;
+        stackFrame.initJsFrame("", jsFrame.label, script, pc);
+        aCollector.CollectProfilingStackFrame(stackFrame);
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
                    jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
-        aCollector.CollectJitReturnAddr(jsFrame.returnAddress);
+        aCollector.CollectJitReturnAddr(jsFrame.returnAddress());
       }
 
       jsIndex--;
