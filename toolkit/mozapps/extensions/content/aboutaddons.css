@@ -407,6 +407,7 @@ panel-item-separator {
   min-height: 250px;
   width: 100%;
   background-color: white;
+  margin-block: 4px;
 }
 
 addon-permissions-list > .addon-detail-row:first-of-type {
