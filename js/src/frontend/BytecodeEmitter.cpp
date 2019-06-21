@@ -8070,7 +8070,9 @@ bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj) {
   return true;
 }
 
-bool BytecodeEmitter::emitCreateFieldInitializers(ListNode* obj) {
+bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
+                                                  ListNode* obj) {
+  //          [stack] HOMEOBJ HERITAGE?
   FieldInitializers fieldInitializers = setupFieldInitializers(obj);
   MOZ_ASSERT(fieldInitializers.valid);
   size_t numFields = fieldInitializers.numFieldInitializers;
@@ -8079,50 +8081,35 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ListNode* obj) {
     return true;
   }
 
-  // .initializers is a variable that stores an array of lambdas containing
-  // code (the initializer) for each field. Upon an object's construction,
-  // these lambdas will be called, defining the values.
-
-  NameOpEmitter noe(this, cx->names().dotInitializers,
-                    NameOpEmitter::Kind::Initialize);
-  if (!noe.prepareForRhs()) {
+  if (!ce.prepareForFieldInitializers(numFields)) {
+    //          [stack] HOMEOBJ HERITAGE? ARRAY
     return false;
   }
 
-  if (!emitUint32Operand(JSOP_NEWARRAY, numFields)) {
-    //              [stack] CTOR? OBJ ARRAY
-    return false;
-  }
-
-  size_t curFieldIndex = 0;
   for (ParseNode* propdef : obj->contents()) {
     if (propdef->is<ClassField>()) {
-      FunctionNode* initializer = propdef->as<ClassField>().initializer();
-      if (initializer == nullptr) {
-        continue;
+      if (FunctionNode* initializer = propdef->as<ClassField>().initializer()) {
+        if (!emitTree(initializer)) {
+          //          [stack] HOMEOBJ HERITAGE? ARRAY LAMBDA
+          return false;
+        }
+        if (initializer->funbox()->needsHomeObject()) {
+          MOZ_ASSERT(initializer->funbox()->function()->allowSuperProperty());
+          if (!ce.emitFieldInitializerHomeObject()) {
+            //          [stack] CTOR OBJ ARRAY LAMBDA
+            return false;
+          }
+        }
+        if (!ce.emitStoreFieldInitializer()) {
+          //          [stack] HOMEOBJ HERITAGE? ARRAY
+          return false;
+        }
       }
-
-      if (!emitTree(initializer)) {
-        //          [stack] CTOR? OBJ ARRAY LAMBDA
-        return false;
-      }
-
-      if (!emitUint32Operand(JSOP_INITELEM_ARRAY, curFieldIndex)) {
-        //          [stack] CTOR? OBJ ARRAY
-        return false;
-      }
-
-      curFieldIndex++;
     }
   }
 
-  if (!noe.emitAssignment()) {
-    //              [stack] CTOR? OBJ ARRAY
-    return false;
-  }
-
-  if (!emit1(JSOP_POP)) {
-    //              [stack] CTOR? OBJ
+  if (!ce.emitFieldInitializersEnd()) {
+    //              [stack] HOMEOBJ HERITAGE?
     return false;
   }
 
@@ -8800,7 +8787,7 @@ bool BytecodeEmitter::emitClass(
         }
 
         // Any class with field initializers will have a constructor
-        if (!emitCreateFieldInitializers(classMembers)) {
+        if (!emitCreateFieldInitializers(ce, classMembers)) {
           return false;
         }
       }

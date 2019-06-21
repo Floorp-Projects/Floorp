@@ -1374,8 +1374,7 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
         return 1;
       }
 
-      if (!JS_DefineFunctions(cx, glob, glob_functions) ||
-          !JS_DefineProfilingFunctions(cx, glob)) {
+      if (!JS_DefineFunctions(cx, glob, glob_functions)) {
         return 1;
       }
 

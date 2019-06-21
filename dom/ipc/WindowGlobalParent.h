@@ -94,6 +94,8 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
   uint64_t ContentParentId();
 
+  int32_t OsPid();
+
   bool IsCurrentGlobal();
 
   bool IsProcessRoot();
@@ -104,6 +106,8 @@ class WindowGlobalParent final : public WindowGlobalActor,
                                                   const nsAString& aRemoteType,
                                                   uint64_t aPendingSwitchId,
                                                   ErrorResult& aRv);
+
+  already_AddRefed<Promise> GetSecurityInfo(ErrorResult& aRv);
 
   // Create a WindowGlobalParent from over IPC. This method should not be called
   // from outside of the IPC constructors.

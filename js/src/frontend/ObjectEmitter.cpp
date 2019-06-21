@@ -618,7 +618,8 @@ bool ClassEmitter::emitDerivedClass(JS::Handle<JSAtom*> name,
 
 bool ClassEmitter::emitInitConstructor(bool needsHomeObject) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
-  MOZ_ASSERT(classState_ == ClassState::Class);
+  MOZ_ASSERT(classState_ == ClassState::Class ||
+             classState_ == ClassState::FieldInitializersEnd);
 
   //                [stack] HOMEOBJ CTOR
 
@@ -647,7 +648,8 @@ bool ClassEmitter::emitInitConstructor(bool needsHomeObject) {
 bool ClassEmitter::emitInitDefaultConstructor(const Maybe<uint32_t>& classStart,
                                               const Maybe<uint32_t>& classEnd) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
-  MOZ_ASSERT(classState_ == ClassState::Class);
+  MOZ_ASSERT(classState_ == ClassState::Class ||
+             classState_ == ClassState::FieldInitializersEnd);
 
   if (classStart && classEnd) {
     // In the case of default class constructors, emit the start and end
@@ -753,11 +755,97 @@ bool ClassEmitter::initProtoAndCtor() {
   return true;
 }
 
+bool ClassEmitter::prepareForFieldInitializers(size_t numFields) {
+  MOZ_ASSERT(classState_ == ClassState::Class);
+
+  // .initializers is a variable that stores an array of lambdas containing
+  // code (the initializer) for each field. Upon an object's construction,
+  // these lambdas will be called, defining the values.
+  initializersAssignment_.emplace(bce_, bce_->cx->names().dotInitializers,
+                                  NameOpEmitter::Kind::Initialize);
+  if (!initializersAssignment_->prepareForRhs()) {
+    return false;
+  }
+
+  if (!bce_->emitUint32Operand(JSOP_NEWARRAY, numFields)) {
+    //              [stack] HOMEOBJ HERITAGE? ARRAY
+    return false;
+  }
+
+  MOZ_ASSERT(fieldIndex_ == 0);
+#ifdef DEBUG
+  classState_ = ClassState::FieldInitializers;
+  numFields_ = numFields;
+#endif
+  return true;
+}
+
+bool ClassEmitter::emitFieldInitializerHomeObject() {
+  MOZ_ASSERT(classState_ == ClassState::FieldInitializers);
+  //          [stack] OBJ HERITAGE? ARRAY METHOD
+
+  if (!bce_->emitDupAt(isDerived_ ? 3 : 2)) {
+    //              [stack] OBJ HERITAGE? ARRAY METHOD OBJ
+    return false;
+  }
+  if (!bce_->emit1(JSOP_INITHOMEOBJECT)) {
+    //              [stack] OBJ HERITAGE? ARRAY METHOD
+    return false;
+  }
+
+#ifdef DEBUG
+  classState_ = ClassState::FieldInitializerWithHomeObject;
+#endif
+  return true;
+}
+
+bool ClassEmitter::emitStoreFieldInitializer() {
+  MOZ_ASSERT(classState_ == ClassState::FieldInitializers ||
+             classState_ == ClassState::FieldInitializerWithHomeObject);
+  MOZ_ASSERT(fieldIndex_ < numFields_);
+  //          [stack] HOMEOBJ HERITAGE? ARRAY METHOD
+
+  if (!bce_->emitUint32Operand(JSOP_INITELEM_ARRAY, fieldIndex_)) {
+    //          [stack] HOMEOBJ HERITAGE? ARRAY
+    return false;
+  }
+
+  fieldIndex_++;
+#ifdef DEBUG
+  classState_ = ClassState::FieldInitializers;
+#endif
+  return true;
+}
+
+bool ClassEmitter::emitFieldInitializersEnd() {
+  MOZ_ASSERT(propertyState_ == PropertyState::Start ||
+             propertyState_ == PropertyState::Init);
+  MOZ_ASSERT(classState_ == ClassState::FieldInitializers ||
+             classState_ == ClassState::FieldInitializerWithHomeObject);
+  MOZ_ASSERT(fieldIndex_ == numFields_);
+
+  if (!initializersAssignment_->emitAssignment()) {
+    //              [stack] HOMEOBJ HERITAGE? ARRAY
+    return false;
+  }
+  initializersAssignment_.reset();
+
+  if (!bce_->emit1(JSOP_POP)) {
+    //              [stack] HOMEOBJ HERITAGE?
+    return false;
+  }
+
+#ifdef DEBUG
+  classState_ = ClassState::FieldInitializersEnd;
+#endif
+  return true;
+}
+
 bool ClassEmitter::emitEnd(Kind kind) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start ||
              propertyState_ == PropertyState::Init);
-  MOZ_ASSERT(classState_ == ClassState::InitConstructor);
-
+  MOZ_ASSERT(classState_ == ClassState::InitConstructor ||
+             classState_ == ClassState::FieldInitializersEnd);
   //                [stack] CTOR HOMEOBJ
 
   if (!bce_->emit1(JSOP_POP)) {

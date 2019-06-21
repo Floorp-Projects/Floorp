@@ -428,6 +428,13 @@ struct MOZ_RAII AutoSetContextRuntime {
   ~AutoSetContextRuntime() { TlsContext.get()->setRuntime(nullptr); }
 };
 
+struct MOZ_RAII AutoSetContextParse {
+  explicit AutoSetContextParse(ParseTask* task) {
+    TlsContext.get()->setParseTask(task);
+  }
+  ~AutoSetContextParse() { TlsContext.get()->setParseTask(nullptr); }
+};
+
 static const JSClass parseTaskGlobalClass = {"internal-parse-task-global",
                                              JSCLASS_GLOBAL_FLAGS,
                                              &JS::DefaultGlobalClassOps};
@@ -494,6 +501,7 @@ void ParseTask::runTask() {
   JSRuntime* runtime = parseGlobal->runtimeFromAnyThread();
 
   AutoSetContextRuntime ascr(runtime);
+  AutoSetContextParse parsetask(this);
 
   Zone* zone = parseGlobal->zoneFromAnyThread();
   zone->setHelperThreadOwnerContext(cx);
@@ -1062,7 +1070,7 @@ void js::EnqueuePendingParseTasksAfterGC(JSRuntime* rt) {
 #ifdef DEBUG
 bool js::CurrentThreadIsParseThread() {
   JSContext* cx = TlsContext.get();
-  return cx->helperThread() && cx->helperThread()->parseTask();
+  return cx->isHelperThreadContext() && cx->parseTask();
 }
 #endif
 
@@ -1763,7 +1771,7 @@ ParseTask* GlobalHelperThreadState::removeFinishedParseTask(
 
 UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
     JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token) {
-  MOZ_ASSERT(!cx->helperThread());
+  MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(cx->realm());
 
   Rooted<UniquePtr<ParseTask>> parseTask(cx,
@@ -2161,30 +2169,28 @@ bool JSContext::addPendingCompileError(js::CompileError** error) {
   if (!errorPtr) {
     return false;
   }
-  ParseTask* parseTask = helperThread()->parseTask();
-  if (!parseTask->errors.append(std::move(errorPtr))) {
+  if (!parseTask_->errors.append(std::move(errorPtr))) {
     ReportOutOfMemory(this);
     return false;
   }
-  *error = parseTask->errors.back().get();
+  *error = parseTask_->errors.back().get();
   return true;
 }
 
 bool JSContext::isCompileErrorPending() const {
-  ParseTask* parseTask = helperThread()->parseTask();
-  return parseTask->errors.length() > 0;
+  return parseTask_->errors.length() > 0;
 }
 
 void JSContext::addPendingOverRecursed() {
-  if (helperThread()->parseTask()) {
-    helperThread()->parseTask()->overRecursed = true;
+  if (parseTask_) {
+    parseTask_->overRecursed = true;
   }
 }
 
 void JSContext::addPendingOutOfMemory() {
   // Keep in sync with recoverFromOutOfMemory.
-  if (helperThread()->parseTask()) {
-    helperThread()->parseTask()->outOfMemory = true;
+  if (parseTask_) {
+    parseTask_->outOfMemory = true;
   }
 }
 
@@ -2263,7 +2269,7 @@ bool js::EnqueueOffThreadCompression(JSContext* cx,
 
   auto& pending = HelperThreadState().compressionPendingList(lock);
   if (!pending.append(std::move(task))) {
-    if (!cx->helperThread()) {
+    if (!cx->isHelperThreadContext()) {
       ReportOutOfMemory(cx);
     }
     return false;
@@ -2429,18 +2435,6 @@ void GlobalHelperThreadState::trace(JSTracer* trc) {
   }
 }
 
-void JSContext::setHelperThread(HelperThread* thread) {
-  if (helperThread_) {
-    nurserySuppressions_--;
-  }
-
-  helperThread_ = thread;
-
-  if (helperThread_) {
-    nurserySuppressions_++;
-  }
-}
-
 // Definition of helper thread tasks.
 //
 // Priority is determined by the order they're listed here.
@@ -2496,7 +2490,7 @@ void HelperThread::threadLoop() {
       oomUnsafe.crash("HelperThread cx.init()");
     }
   }
-  cx.setHelperThread(this);
+  gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(&cx);
   JS_SetNativeStackQuota(&cx, HELPER_STACK_QUOTA);
 
   while (!terminate) {

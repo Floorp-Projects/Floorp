@@ -561,6 +561,13 @@ nsresult InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
     return UnexpectedFailure(NS_ERROR_FAILURE);
   }
 
+  {  // Scope for JSAutoRealm
+    JSAutoRealm ar(aJSContext, global);
+    if (!JS_DefineProfilingFunctions(aJSContext, global)) {
+      return UnexpectedFailure(NS_ERROR_OUT_OF_MEMORY);
+    }
+  }
+
   aNewGlobal.set(global);
   return NS_OK;
 }

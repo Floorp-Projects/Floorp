@@ -2817,8 +2817,8 @@ static HCURSOR CursorFor(nsCursor aCursor) {
 }
 
 static HCURSOR CursorForImage(imgIContainer* aImageContainer,
-                              uint32_t aHotspotX, uint32_t aHotspotY,
-                              double aScale) {
+                              CSSIntPoint aHotspot,
+                              CSSToLayoutDeviceScale aScale) {
   if (!aImageContainer) {
     return nullptr;
   }
@@ -2839,10 +2839,11 @@ static HCURSOR CursorForImage(imgIContainer* aImageContainer,
     return nullptr;
   }
 
-  IntSize size = RoundedToInt(Size(width * aScale, height * aScale));
+  LayoutDeviceIntSize size = RoundedToInt(CSSIntSize(width, height) * aScale);
+  LayoutDeviceIntPoint hotspot = RoundedToInt(aHotspot * aScale);
   HCURSOR cursor;
-  nsresult rv = nsWindowGfx::CreateIcon(aImageContainer, true, aHotspotX,
-                                        aHotspotY, size, &cursor);
+  nsresult rv =
+      nsWindowGfx::CreateIcon(aImageContainer, true, hotspot, size, &cursor);
   if (NS_FAILED(rv)) {
     return nullptr;
   }
@@ -2858,8 +2859,8 @@ void nsWindow::SetCursor(nsCursor aDefaultCursor, imgIContainer* aImageCursor,
     return;
   }
 
-  double scale = GetDefaultScale().scale;
-  HCURSOR cursor = CursorForImage(aImageCursor, aHotspotX, aHotspotY, scale);
+  HCURSOR cursor = CursorForImage(
+      aImageCursor, CSSIntPoint(aHotspotX, aHotspotY), GetDefaultScale());
   if (cursor) {
     mCursor = eCursorInvalid;
     ::SetCursor(cursor);

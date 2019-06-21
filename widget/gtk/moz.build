@@ -99,17 +99,11 @@ if CONFIG['MOZ_WAYLAND']:
     UNIFIED_SOURCES += [
         'nsClipboardWayland.cpp',
         'nsWaylandDisplay.cpp',
+        'WaylandDMABufSurface.cpp',
         'WindowSurfaceWayland.cpp',
     ]
     EXPORTS.mozilla.widget += [
         'nsWaylandDisplay.h',
-    ]
-
-if CONFIG['MOZ_WAYLAND'] and CONFIG['HAVE_LIBDRM']:
-    SOURCES += [
-        'WaylandDMABufSurface.cpp',
-    ]
-    EXPORTS.mozilla.widget += [
         'WaylandDMABufSurface.h',
     ]
 
@@ -166,6 +160,10 @@ CXXFLAGS += CONFIG['MOZ_STARTUP_NOTIFICATION_CFLAGS']
 
 CFLAGS += CONFIG['TK_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
+
+if CONFIG['MOZ_WAYLAND']:
+    CFLAGS += CONFIG['MOZ_WAYLAND_CFLAGS']
+    CXXFLAGS += CONFIG['MOZ_WAYLAND_CFLAGS']
 
 if CONFIG['MOZ_ENABLE_DBUS']:
     CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']

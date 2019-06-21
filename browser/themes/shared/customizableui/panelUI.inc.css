@@ -535,12 +535,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 /* FxAccount indicator bits. */
 
-/* Add the .toolbaritem-combined-buttons class to increase the specificity so as
- * to override the end margin for .toolbaritem-combined-buttons items further down. */
-#appMenu-fxa-container.toolbaritem-combined-buttons:not([fxastatus="signedin"]) {
-  margin-inline-end: 0;
-}
-
 #appMenu-fxa-label {
   -moz-context-properties: fill;
   fill: currentColor;
@@ -1120,10 +1114,6 @@ panelview .toolbarbutton-1,
   fill-opacity: 0.6;
   float: right;
   transform: translateY(1px);
-}
-
-:root:not([customizing]) .subviewbutton-nav[disabled=true]::after {
-  opacity: 0.4;
 }
 
 .PanelUI-subView .subviewbutton-nav:-moz-locale-dir(ltr)::after {
