@@ -123,20 +123,20 @@ class TabMenuStripLayout extends ThemedLinearLayout
     }
 
     void onPageSelected(final int position) {
-        if (selectedView != null) {
-            selectedView.setTextColor(inactiveTextColor);
-        }
-
-        selectedView = (TextView) getChildAt(position);
-        selectedView.setTextColor(activeTextColor);
-
         // Callback to measure and draw the strip after the view is visible.
-        ViewTreeObserver vto = selectedView.getViewTreeObserver();
+        ViewTreeObserver vto = getViewTreeObserver();
         if (vto.isAlive()) {
             vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
                 public void onGlobalLayout() {
-                    selectedView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                    // let's ensure that we are calling this only once
+                    vto.removeOnGlobalLayoutListener(this);
+                    if (selectedView != null) {
+                        selectedView.setTextColor(inactiveTextColor);
+                    }
+
+                    selectedView = (TextView) getChildAt(position);
+                    selectedView.setTextColor(activeTextColor);
 
                     if (strip != null) {
                         boolean isLayoutRtl = ViewCompat.getLayoutDirection(selectedView) == ViewCompat.LAYOUT_DIRECTION_RTL;
