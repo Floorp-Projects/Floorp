@@ -921,6 +921,7 @@ function myipaddress2_callback(pi) {
 
 function run_failed_script_test() {
   // test to make sure we go direct with invalid PAC
+  // eslint-disable-next-line no-useless-concat
   var pac = "data:text/plain," + "\nfor(;\n";
 
   var channel = NetUtil.newChannel({
