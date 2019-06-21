@@ -691,7 +691,7 @@ html|input.urlbar-input {
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"] {
   -moz-box-pack: center;
   color: -moz-fieldText;
-  min-height: 40px;
+  min-height: 2.6666em;
   border-top: 1px solid rgba(38,38,38,.15);
   background-color: hsla(0,0%,80%,.35); /* match arrowpanel-dimmed */;
 }
