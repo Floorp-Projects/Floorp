@@ -386,9 +386,9 @@ function RawTest(host, port, data, responseCheck) {
     throw new Error("bad data length");
   }
 
-  // eslint-disable-next-line no-control-regex
   if (
     !data.every(function(v) {
+      // eslint-disable-next-line no-control-regex
       return /^[\x00-\xff]*$/.test(v);
     })
   ) {

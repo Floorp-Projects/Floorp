@@ -22,6 +22,7 @@ function run_test() {
   do_test_pending();
   tests.push(function testsComplete(_) {
     dumpn(
+      // eslint-disable-next-line no-useless-concat
       "******************\n" + "* TESTS COMPLETE *\n" + "******************"
     );
     do_test_finished();
@@ -527,6 +528,7 @@ function CustomPipe(name) {
     // see nsIAsyncInputStream.closeWithStatus
     //
     closeWithStatus: function closeWithStatus(status) {
+      // eslint-disable-next-line no-useless-concat
       dumpn("*** [" + this.name + "].closeWithStatus" + "(" + status + ")");
 
       if (!Components.isSuccessCode(self._status)) {
@@ -929,7 +931,7 @@ function CustomPipe(name) {
         Assert.equal(
           this._writable,
           sum(this._writableAmounts),
-          "total writable amount not equal to sum of writable " + "increments"
+          "total writable amount not equal to sum of writable increments"
         );
         actualWritten = this._writableAmounts.shift();
       }
@@ -1493,6 +1495,7 @@ CopyTest.prototype = {
     var outputWrittenWatcher = {
       onInputStreamReady: function onInputStreamReady(input) {
         dumpn(
+          // eslint-disable-next-line no-useless-concat
           "*** outputWrittenWatcher.onInputStreamReady" + "(" + input.name + ")"
         );
 
@@ -1565,9 +1568,7 @@ CopyTest.prototype = {
    * this test was first created.
    */
   _testComplete: function _testComplete() {
-    dumpn(
-      "*** CopyTest(" + this.name + ") complete!  " + "On to the next test..."
-    );
+    dumpn("*** CopyTest(" + this.name + ") complete!  On to the next test...");
 
     try {
       Assert.ok(this._allDataWritten, "expect all data written now!");
