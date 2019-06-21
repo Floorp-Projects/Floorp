@@ -217,7 +217,9 @@ class UrlbarView {
         });
       } else {
         // Clear the selection when we get a new set of results.
-        this._selectItem(null);
+        this._selectItem(null, {
+          updateInput: false,
+        });
       }
       // Hide the one-off search buttons if the search string is empty, or
       // starts with a potential @ search alias or the search restriction
