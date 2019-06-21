@@ -135,11 +135,13 @@ class RecordedCreateSimilarDrawTarget
 class RecordedCreateClippedDrawTarget
     : public RecordedEventDerived<RecordedCreateClippedDrawTarget> {
  public:
-  RecordedCreateClippedDrawTarget(ReferencePtr aRefPtr, const Rect& aBounds,
+  RecordedCreateClippedDrawTarget(ReferencePtr aRefPtr, const IntSize& aMaxSize,
+                                  const Matrix& aTransform,
                                   SurfaceFormat aFormat)
       : RecordedEventDerived(CREATECLIPPEDDRAWTARGET),
         mRefPtr(aRefPtr),
-        mBounds(aBounds),
+        mMaxSize(aMaxSize),
+        mTransform(aTransform),
         mFormat(aFormat) {}
 
   bool PlayEvent(Translator* aTranslator) const override;
@@ -152,7 +154,8 @@ class RecordedCreateClippedDrawTarget
   std::string GetName() const override { return "CreateClippedDrawTarget"; }
 
   ReferencePtr mRefPtr;
-  Rect mBounds;
+  IntSize mMaxSize;
+  Matrix mTransform;
   SurfaceFormat mFormat;
 
  private:
@@ -1922,9 +1925,23 @@ inline bool RecordedCreateDrawTargetForFilter::PlayEvent(
 
 inline bool RecordedCreateClippedDrawTarget::PlayEvent(
     Translator* aTranslator) const {
+  const IntRect baseRect = aTranslator->GetReferenceDrawTarget()->GetRect();
+  const IntRect transformedRect = RoundedToInt(
+      mTransform.Inverse().TransformBounds(IntRectToRect(baseRect)));
+  IntRect intersection =
+      IntRect(IntPoint(0, 0), mMaxSize).Intersect(transformedRect);
+
+  // Making 0 size DrawTargets isn't great. So let's make sure we have a size of
+  // at least 1
+  if (intersection.width == 0) intersection.width = 1;
+  if (intersection.height == 0) intersection.height = 1;
+
   RefPtr<DrawTarget> newDT =
-      aTranslator->GetReferenceDrawTarget()->CreateClippedDrawTarget(mBounds,
-                                                                     mFormat);
+      aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(
+          intersection.Size(), mFormat);
+  // It's overkill to use a TiledDrawTarget for a single tile
+  // but it was the easiest way to get the offset handling working
+  newDT = gfx::Factory::CreateOffsetDrawTarget(newDT, intersection.TopLeft());
 
   // If we couldn't create a DrawTarget this will probably cause us to crash
   // with nullptr later in the playback, so return false to abort.
@@ -1939,7 +1956,8 @@ inline bool RecordedCreateClippedDrawTarget::PlayEvent(
 template <class S>
 void RecordedCreateClippedDrawTarget::Record(S& aStream) const {
   WriteElement(aStream, mRefPtr);
-  WriteElement(aStream, mBounds);
+  WriteElement(aStream, mMaxSize);
+  WriteElement(aStream, mTransform);
   WriteElement(aStream, mFormat);
 }
 
@@ -1947,7 +1965,8 @@ template <class S>
 RecordedCreateClippedDrawTarget::RecordedCreateClippedDrawTarget(S& aStream)
     : RecordedEventDerived(CREATECLIPPEDDRAWTARGET) {
   ReadElement(aStream, mRefPtr);
-  ReadElement(aStream, mBounds);
+  ReadElement(aStream, mMaxSize);
+  ReadElement(aStream, mTransform);
   ReadElement(aStream, mFormat);
 }
 
