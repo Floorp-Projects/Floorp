@@ -14,7 +14,6 @@ build/**
 caps/**
 chrome/**
 config/**
-db/**
 docshell/**
 dom/**
 editor/**
@@ -34,7 +33,6 @@ mobile/**
 modules/**
 mozglue/**
 netwerk/**
-node_modules/**
 nsprpub/**
 other-licenses/**
 parser/**
@@ -47,7 +45,6 @@ startupcache/**
 storage/**
 taskcluster/**
 testing/**
-third_party/**
 toolkit/**
 tools/**
 uriloader/**
