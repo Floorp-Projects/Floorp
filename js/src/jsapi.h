@@ -395,6 +395,12 @@ JS_PUBLIC_API void AssertObjectBelongsToCurrentThread(JSObject* obj);
 
 } /* namespace JS */
 
+/**
+ * Set callback to send tasks to XPCOM thread pools
+ */
+JS_PUBLIC_API void SetHelperThreadTaskCallback(
+    void (*callback)(js::RunnableTask*));
+
 extern JS_PUBLIC_API const char* JS_GetImplementationVersion(void);
 
 extern JS_PUBLIC_API void JS_SetDestroyCompartmentCallback(
