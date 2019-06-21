@@ -1255,212 +1255,6 @@ module.exports = {
 
 /***/ }),
 
-/***/ 180:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const { SourceMapConsumer } = __webpack_require__(60);
-
-let root;
-function setAssetRootURL(assetRoot) {
-  // Remove any trailing slash so we don't generate a double-slash below.
-  root = assetRoot.replace(/\/$/, "");
-
-  SourceMapConsumer.initialize({
-    "lib/mappings.wasm": `${root}/source-map-mappings.wasm`
-  });
-}
-
-async function getDwarfToWasmData(name) {
-  if (!root) {
-    throw new Error(`No wasm path - Unable to resolve ${name}`);
-  }
-
-  const response = await fetch(`${root}/dwarf_to_json.wasm`);
-
-  return response.arrayBuffer();
-}
-
-module.exports = {
-  setAssetRootURL,
-  getDwarfToWasmData
-};
-
-/***/ }),
-
-/***/ 181:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const { getSourceMap } = __webpack_require__(104); /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                          * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                          * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-/* eslint camelcase: 0*/
-
-const { generatedToOriginalId } = __webpack_require__(64);
-
-const xScopes = new Map();
-
-function indexLinkingNames(items) {
-  const result = new Map();
-  let queue = [...items];
-  while (queue.length > 0) {
-    const item = queue.shift();
-    if ("uid" in item) {
-      result.set(item.uid, item);
-    } else if ("linkage_name" in item) {
-      // TODO the linkage_name string value is used for compatibility
-      // with old format. Remove in favour of the uid referencing.
-      result.set(item.linkage_name, item);
-    }
-    if ("children" in item) {
-      queue = [...queue, ...item.children];
-    }
-  }
-  return result;
-}
-
-function getIndexedItem(index, key) {
-  if (typeof key === "object" && key != null) {
-    return index.get(key.uid);
-  }
-  if (typeof key === "string") {
-    return index.get(key);
-  }
-  return null;
-}
-
-async function getXScopes(sourceId) {
-  if (xScopes.has(sourceId)) {
-    return xScopes.get(sourceId);
-  }
-  const map = await getSourceMap(sourceId);
-  if (!map || !map.xScopes) {
-    xScopes.set(sourceId, null);
-    return null;
-  }
-  const { code_section_offset, debug_info } = map.xScopes;
-  const xScope = {
-    code_section_offset,
-    debug_info,
-    idIndex: indexLinkingNames(debug_info),
-    sources: map.sources
-  };
-  xScopes.set(sourceId, xScope);
-  return xScope;
-}
-
-function isInRange(item, pc) {
-  if ("ranges" in item) {
-    return item.ranges.some(r => r[0] <= pc && pc < r[1]);
-  }
-  if ("high_pc" in item) {
-    return item.low_pc <= pc && pc < item.high_pc;
-  }
-  return false;
-}
-
-function filterScopes(items, pc, lastItem, index) {
-  if (!items) {
-    return [];
-  }
-  return items.reduce((result, item) => {
-    switch (item.tag) {
-      case "compile_unit":
-        if (isInRange(item, pc)) {
-          result = [...result, ...filterScopes(item.children, pc, lastItem, index)];
-        }
-        break;
-      case "namespace":
-      case "structure_type":
-      case "union_type":
-        result = [...result, ...filterScopes(item.children, pc, lastItem, index)];
-        break;
-      case "subprogram":
-        if (isInRange(item, pc)) {
-          const s = {
-            id: item.linkage_name,
-            name: item.name
-          };
-          result = [...result, s, ...filterScopes(item.children, pc, s, index)];
-        }
-        break;
-      case "inlined_subroutine":
-        if (isInRange(item, pc)) {
-          const linkedItem = getIndexedItem(index, item.abstract_origin);
-          const s = {
-            id: item.abstract_origin,
-            name: linkedItem ? linkedItem.name : void 0
-          };
-          if (lastItem) {
-            lastItem.file = item.call_file;
-            lastItem.line = item.call_line;
-          }
-          result = [...result, s, ...filterScopes(item.children, pc, s, index)];
-        }
-        break;
-    }
-    return result;
-  }, []);
-}
-
-class XScope {
-
-  constructor(xScopeData) {
-    this.xScope = xScopeData;
-  }
-
-  search(generatedLocation) {
-    const { code_section_offset, debug_info, sources, idIndex } = this.xScope;
-    const pc = generatedLocation.line - (code_section_offset || 0);
-    const scopes = filterScopes(debug_info, pc, null, idIndex);
-    scopes.reverse();
-
-    return scopes.map(i => {
-      if (!("file" in i)) {
-        return {
-          displayName: i.name || ""
-        };
-      }
-      const sourceId = generatedToOriginalId(generatedLocation.sourceId, sources[i.file || 0]);
-      return {
-        displayName: i.name || "",
-        location: {
-          line: i.line || 0,
-          sourceId
-        }
-      };
-    });
-  }
-}
-
-async function getWasmXScopes(sourceId) {
-  const xScopeData = await getXScopes(sourceId);
-  if (!xScopeData) {
-    return null;
-  }
-  return new XScope(xScopeData);
-}
-
-function clearWasmXScopes() {
-  xScopes.clear();
-}
-
-module.exports = {
-  getWasmXScopes,
-  clearWasmXScopes
-};
-
-/***/ }),
-
 /***/ 36:
 /***/ (function(module, exports) {
 
@@ -1536,7 +1330,7 @@ const {
 } = __webpack_require__(391);
 
 const { getOriginalStackFrames } = __webpack_require__(411);
-const { setAssetRootURL } = __webpack_require__(180);
+const { setAssetRootURL } = __webpack_require__(515);
 
 const {
   workerUtils: { workerHandler }
@@ -1602,7 +1396,7 @@ const {
   isOriginalId,
   getContentType
 } = __webpack_require__(64);
-const { clearWasmXScopes } = __webpack_require__(181);
+const { clearWasmXScopes } = __webpack_require__(510);
 
 async function getOriginalURLs(generatedSource) {
   const map = await fetchSourceMap(generatedSource);
@@ -2104,7 +1898,7 @@ exports.encode = function(number) {
  * * https://bugzilla.mozilla.org/show_bug.cgi?id=1374505
  * * https://bugs.chromium.org/p/chromium/issues/detail?id=734880
  */
-module.exports = __webpack_require__(508).URL;
+module.exports = __webpack_require__(507).URL;
 
 
 /***/ }),
@@ -3892,7 +3686,7 @@ const { networkRequest } = __webpack_require__(7);
 const { getSourceMap, setSourceMap } = __webpack_require__(104);
 const { WasmRemap } = __webpack_require__(409);
 const { SourceMapConsumer } = __webpack_require__(60);
-const { convertToJSON } = __webpack_require__(410);
+const { convertToJSON } = __webpack_require__(510);
 const { createConsumer } = __webpack_require__(179);
 
 // URLs which have been seen in a completed source map request.
@@ -4049,7 +3843,7 @@ class WasmRemap {
       column: 0
     };
     if (this._computeColumnSpans) {
-      generatedPosition.lastColumn = Infinity;
+      generatedPosition.lastColumn = 0;
     }
     return generatedPosition;
   }
@@ -4087,6 +3881,7 @@ class WasmRemap {
         source,
         generatedLine: generatedColumn,
         generatedColumn: 0,
+        lastGeneratedColumn: 0,
         originalLine,
         originalColumn,
         name
@@ -4099,7 +3894,111 @@ exports.WasmRemap = WasmRemap;
 
 /***/ }),
 
-/***/ 410:
+/***/ 411:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const { getWasmXScopes } = __webpack_require__(510); /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                            * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                            * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const { getSourceMap } = __webpack_require__(104);
+const { generatedToOriginalId } = __webpack_require__(64);
+
+// Returns expanded stack frames details based on the generated location.
+// The function return null if not information was found.
+async function getOriginalStackFrames(generatedLocation) {
+  const wasmXScopes = await getWasmXScopes(generatedLocation.sourceId, {
+    getSourceMap,
+    generatedToOriginalId
+  });
+  if (!wasmXScopes) {
+    return null;
+  }
+
+  const scopes = wasmXScopes.search(generatedLocation);
+  if (scopes.length === 0) {
+    console.warn("Something wrong with debug data: none original frames found");
+    return null;
+  }
+  return scopes;
+}
+
+module.exports = {
+  getOriginalStackFrames
+};
+
+/***/ }),
+
+/***/ 507:
+/***/ (function(module, exports) {
+
+module.exports = 
+(() => { 
+  importScripts("resource://devtools/client/shared/vendor/whatwg-url.js");
+  return { URL }
+})()
+;
+
+/***/ }),
+
+/***/ 510:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const { convertToJSON } = __webpack_require__(512);
+const { setAssetRootURL } = __webpack_require__(511);
+const { getWasmXScopes, clearWasmXScopes } = __webpack_require__(513);
+
+module.exports = {
+  convertToJSON,
+  setAssetRootURL,
+  getWasmXScopes,
+  clearWasmXScopes
+};
+
+/***/ }),
+
+/***/ 511:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+let root;
+function setAssetRootURL(assetRoot) {
+  root = assetRoot;
+}
+
+async function getDwarfToWasmData(name) {
+  if (!root) {
+    throw new Error(`No wasm path - Unable to resolve ${name}`);
+  }
+
+  const response = await fetch(`${root}/dwarf_to_json.wasm`);
+
+  return response.arrayBuffer();
+}
+
+module.exports = {
+  setAssetRootURL,
+  getDwarfToWasmData
+};
+
+/***/ }),
+
+/***/ 512:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4111,7 +4010,7 @@ exports.WasmRemap = WasmRemap;
 
 /* eslint camelcase: 0*/
 
-const { getDwarfToWasmData } = __webpack_require__(180);
+const { getDwarfToWasmData } = __webpack_require__(511);
 
 let cachedWasmModule;
 let utf8Decoder;
@@ -4160,49 +4059,505 @@ module.exports = {
 
 /***/ }),
 
-/***/ 411:
+/***/ 513:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const { getWasmXScopes } = __webpack_require__(181);
-
-// Returns expanded stack frames details based on the generated location.
-// The function return null if not information was found.
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-async function getOriginalStackFrames(generatedLocation) {
-  const wasmXScopes = await getWasmXScopes(generatedLocation.sourceId);
-  if (!wasmXScopes) {
+/* eslint camelcase: 0*/
+
+const { decodeExpr } = __webpack_require__(514);
+
+const xScopes = new Map();
+
+function indexLinkingNames(items) {
+  const result = new Map();
+  let queue = [...items];
+  while (queue.length > 0) {
+    const item = queue.shift();
+    if ("uid" in item) {
+      result.set(item.uid, item);
+    } else if ("linkage_name" in item) {
+      // TODO the linkage_name string value is used for compatibility
+      // with old format. Remove in favour of the uid referencing.
+      result.set(item.linkage_name, item);
+    }
+    if ("children" in item) {
+      queue = [...queue, ...item.children];
+    }
+  }
+  return result;
+}
+
+function getIndexedItem(index, key) {
+  if (typeof key === "object" && key != null) {
+    return index.get(key.uid);
+  }
+  if (typeof key === "string") {
+    return index.get(key);
+  }
+  return null;
+}
+
+async function getXScopes(sourceId, getSourceMap) {
+  if (xScopes.has(sourceId)) {
+    return xScopes.get(sourceId);
+  }
+  const map = await getSourceMap(sourceId);
+  if (!map || !map.xScopes) {
+    xScopes.set(sourceId, null);
     return null;
+  }
+  const { code_section_offset, debug_info } = map.xScopes;
+  const xScope = {
+    code_section_offset,
+    debug_info,
+    idIndex: indexLinkingNames(debug_info),
+    sources: map.sources
+  };
+  xScopes.set(sourceId, xScope);
+  return xScope;
+}
+
+function isInRange(item, pc) {
+  if ("ranges" in item) {
+    return item.ranges.some(r => r[0] <= pc && pc < r[1]);
+  }
+  if ("high_pc" in item) {
+    return item.low_pc <= pc && pc < item.high_pc;
+  }
+  return false;
+}
+
+function decodeExprAt(expr, pc) {
+  if (typeof expr === "string") {
+    return decodeExpr(expr);
+  }
+  const foundAt = expr.find(i => i.range[0] <= pc && pc < i.range[1]);
+  return foundAt ? decodeExpr(foundAt.expr) : null;
+}
+
+function getVariables(scope, pc) {
+  const vars = scope.children ? scope.children.reduce((result, item) => {
+    switch (item.tag) {
+      case "variable":
+      case "formal_parameter":
+        result.push({
+          name: item.name || "",
+          expr: item.location ? decodeExprAt(item.location, pc) : null
+        });
+        break;
+      case "lexical_block":
+        // FIXME build scope blocks (instead of combining)
+        const tmp = getVariables(item, pc);
+        result = [...tmp.vars, ...result];
+        break;
+    }
+    return result;
+  }, []) : [];
+  const frameBase = scope.frame_base ? decodeExpr(scope.frame_base) : null;
+  return {
+    vars,
+    frameBase
+  };
+}
+
+function filterScopes(items, pc, lastItem, index) {
+  if (!items) {
+    return [];
+  }
+  return items.reduce((result, item) => {
+    switch (item.tag) {
+      case "compile_unit":
+        if (isInRange(item, pc)) {
+          result = [...result, ...filterScopes(item.children, pc, lastItem, index)];
+        }
+        break;
+      case "namespace":
+      case "structure_type":
+      case "union_type":
+        result = [...result, ...filterScopes(item.children, pc, lastItem, index)];
+        break;
+      case "subprogram":
+        if (isInRange(item, pc)) {
+          const s = {
+            id: item.linkage_name,
+            name: item.name,
+            variables: getVariables(item, pc)
+          };
+          result = [...result, s, ...filterScopes(item.children, pc, s, index)];
+        }
+        break;
+      case "inlined_subroutine":
+        if (isInRange(item, pc)) {
+          const linkedItem = getIndexedItem(index, item.abstract_origin);
+          const s = {
+            id: item.abstract_origin,
+            name: linkedItem ? linkedItem.name : void 0,
+            variables: getVariables(item, pc)
+          };
+          if (lastItem) {
+            lastItem.file = item.call_file;
+            lastItem.line = item.call_line;
+          }
+          result = [...result, s, ...filterScopes(item.children, pc, s, index)];
+        }
+        break;
+    }
+    return result;
+  }, []);
+}
+
+class XScope {
+
+  constructor(xScopeData, sourceMapContext) {
+    this.xScope = xScopeData;
+    this.sourceMapContext = sourceMapContext;
   }
 
-  const scopes = wasmXScopes.search(generatedLocation);
-  if (scopes.length === 0) {
-    console.warn("Something wrong with debug data: none original frames found");
+  search(generatedLocation) {
+    const { code_section_offset, debug_info, sources, idIndex } = this.xScope;
+    const pc = generatedLocation.line - (code_section_offset || 0);
+    const scopes = filterScopes(debug_info, pc, null, idIndex);
+    scopes.reverse();
+
+    return scopes.map(i => {
+      if (!("file" in i)) {
+        return {
+          displayName: i.name || "",
+          variables: i.variables
+        };
+      }
+      const sourceId = this.sourceMapContext.generatedToOriginalId(generatedLocation.sourceId, sources[i.file || 0]);
+      return {
+        displayName: i.name || "",
+        variables: i.variables,
+        location: {
+          line: i.line || 0,
+          sourceId
+        }
+      };
+    });
+  }
+}
+
+async function getWasmXScopes(sourceId, sourceMapContext) {
+  const { getSourceMap } = sourceMapContext;
+  const xScopeData = await getXScopes(sourceId, getSourceMap);
+  if (!xScopeData) {
     return null;
   }
-  return scopes;
+  return new XScope(xScopeData, sourceMapContext);
+}
+
+function clearWasmXScopes() {
+  xScopes.clear();
 }
 
 module.exports = {
-  getOriginalStackFrames
+  getWasmXScopes,
+  clearWasmXScopes
 };
 
 /***/ }),
 
-/***/ 508:
-/***/ (function(module, exports) {
+/***/ 514:
+/***/ (function(module, exports, __webpack_require__) {
 
-module.exports = 
-(() => { 
-  importScripts("resource://devtools/client/shared/vendor/whatwg-url.js");
-  return { URL }
-})()
-;
+"use strict";
+
+
+class Value {
+
+  constructor(val) {
+    this.val = val;
+  }
+  toString() {
+    return `${this.val}`;
+  }
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/* eslint camelcase: 0*/
+/* eslint-disable no-inline-comments */
+
+const Int32Formatter = {
+  fromAddr(addr) {
+    return `(new DataView(memory0.buffer).getInt32(${addr}, true))`;
+  },
+  fromValue(value) {
+    return `${value.val}`;
+  }
+};
+
+const Uint32Formatter = {
+  fromAddr(addr) {
+    return `(new DataView(memory0.buffer).getUint32(${addr}, true))`;
+  },
+  fromValue(value) {
+    return `(${value.val} >>> 0)`;
+  }
+};
+
+function createPieceFormatter(bytes) {
+  let getter;
+  switch (bytes) {
+    case 0:
+    case 1:
+      getter = "getUint8";
+      break;
+    case 2:
+      getter = "getUint16";
+      break;
+    case 3:
+    case 4:
+    default:
+      // FIXME 64-bit
+      getter = "getUint32";
+      break;
+  }
+  const mask = (1 << 8 * bytes) - 1;
+  return {
+    fromAddr(addr) {
+      return `(new DataView(memory0.buffer).${getter}(${addr}, true))`;
+    },
+    fromValue(value) {
+      return `((${value.val} & ${mask}) >>> 0)`;
+    }
+  };
+}
+
+// eslint-disable-next-line complexity
+function toJS(buf, typeFormatter, frame_base = "fp()") {
+  const readU8 = function () {
+    return buf[i++];
+  };
+  const readS8 = function () {
+    return readU8() << 24 >> 24;
+  };
+  const readU16 = function () {
+    const w = buf[i] | buf[i + 1] << 8;
+    i += 2;
+    return w;
+  };
+  const readS16 = function () {
+    return readU16() << 16 >> 16;
+  };
+  const readS32 = function () {
+    const w = buf[i] | buf[i + 1] << 8 | buf[i + 2] << 16 | buf[i + 3] << 24;
+    i += 4;
+    return w;
+  };
+  const readU32 = function () {
+    return readS32() >>> 0;
+  };
+  const readU = function () {
+    let n = 0,
+        shift = 0,
+        b;
+    while ((b = readU8()) & 0x80) {
+      n |= (b & 0x7f) << shift;
+      shift += 7;
+    }
+    return n | b << shift;
+  };
+  const readS = function () {
+    let n = 0,
+        shift = 0,
+        b;
+    while ((b = readU8()) & 0x80) {
+      n |= (b & 0x7f) << shift;
+      shift += 7;
+    }
+    n |= b << shift;
+    shift += 7;
+    return shift > 32 ? n << 32 - shift >> 32 - shift : n;
+  };
+  const popValue = function (formatter) {
+    const loc = stack.pop();
+    if (loc instanceof Value) {
+      return formatter.fromValue(loc);
+    }
+    return formatter.fromAddr(loc);
+  };
+  let i = 0,
+      a,
+      b;
+  const stack = [frame_base];
+  while (i < buf.length) {
+    const code = buf[i++];
+    switch (code) {
+      case 0x03 /* DW_OP_addr */:
+        stack.push(Uint32Formatter.fromAddr(readU32()));
+        break;
+      case 0x08 /* DW_OP_const1u 0x08 1 1-byte constant */:
+        stack.push(readU8());
+        break;
+      case 0x09 /* DW_OP_const1s 0x09 1 1-byte constant */:
+        stack.push(readS8());
+        break;
+      case 0x0a /* DW_OP_const2u 0x0a 1 2-byte constant */:
+        stack.push(readU16());
+        break;
+      case 0x0b /* DW_OP_const2s 0x0b 1 2-byte constant */:
+        stack.push(readS16());
+        break;
+      case 0x0c /* DW_OP_const2u 0x0a 1 2-byte constant */:
+        stack.push(readU32());
+        break;
+      case 0x0d /* DW_OP_const2s 0x0b 1 2-byte constant */:
+        stack.push(readS32());
+        break;
+      case 0x10 /* DW_OP_constu 0x10 1 ULEB128 constant */:
+        stack.push(readU());
+        break;
+      case 0x11 /* DW_OP_const2s 0x0b 1 2-byte constant */:
+        stack.push(readS());
+        break;
+
+      case 0x1c /* DW_OP_minus */:
+        b = stack.pop();
+        a = stack.pop();
+        stack.push(`${a} - ${b}`);
+        break;
+
+      case 0x22 /* DW_OP_plus */:
+        b = stack.pop();
+        a = stack.pop();
+        stack.push(`${a} + ${b}`);
+        break;
+
+      case 0x23 /* DW_OP_plus_uconst */:
+        b = readU();
+        a = stack.pop();
+        stack.push(`${a} + ${b}`);
+        break;
+
+      case 0x30 /* DW_OP_lit0 */:
+      case 0x31:
+      case 0x32:
+      case 0x33:
+      case 0x34:
+      case 0x35:
+      case 0x36:
+      case 0x37:
+      case 0x38:
+      case 0x39:
+      case 0x3a:
+      case 0x3b:
+      case 0x3c:
+      case 0x3d:
+      case 0x3e:
+      case 0x3f:
+      case 0x40:
+      case 0x41:
+      case 0x42:
+      case 0x43:
+      case 0x44:
+      case 0x45:
+      case 0x46:
+      case 0x47:
+      case 0x48:
+      case 0x49:
+      case 0x4a:
+      case 0x4b:
+      case 0x4c:
+      case 0x4d:
+      case 0x4e:
+      case 0x4f:
+        stack.push(`${code - 0x30}`);
+        break;
+
+      case 0x93 /* DW_OP_piece */:
+        {
+          a = readU();
+          const formatter = createPieceFormatter(a);
+          stack.push(popValue(formatter));
+          break;
+        }
+
+      case 0x9f /* DW_OP_stack_value */:
+        stack.push(new Value(stack.pop()));
+        break;
+
+      case 0xf6 /* WASM ext (old, FIXME phase out) */:
+      case 0xed /* WASM ext */:
+        b = readU();
+        a = readS();
+        switch (b) {
+          case 0:
+            stack.push(`var${a}`);
+            break;
+          case 1:
+            stack.push(`global${a}`);
+            break;
+          default:
+            stack.push(`ti${b}(${a})`);
+            break;
+        }
+        break;
+
+      default:
+        // Unknown encoding, baling out
+        return null;
+    }
+  }
+  // FIXME use real DWARF type information
+  return popValue(typeFormatter);
+}
+
+function decodeExpr(expr) {
+  if (expr.includes("//")) {
+    expr = expr.slice(0, expr.indexOf("//")).trim();
+  }
+  const code = new Uint8Array(expr.length >> 1);
+  for (let i = 0; i < code.length; i++) {
+    code[i] = parseInt(expr.substr(i << 1, 2), 16);
+  }
+  const typeFormatter = Int32Formatter;
+  return toJS(code, typeFormatter) || `dwarf("${expr}")`;
+}
+
+module.exports = {
+  decodeExpr
+};
+
+/***/ }),
+
+/***/ 515:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+const { SourceMapConsumer } = __webpack_require__(60);
+const {
+  setAssetRootURL: wasmDwarfSetAssetRootURL
+} = __webpack_require__(510);
+
+function setAssetRootURL(assetRoot) {
+  // Remove any trailing slash so we don't generate a double-slash below.
+  const root = assetRoot.replace(/\/$/, "");
+
+  wasmDwarfSetAssetRootURL(root);
+
+  SourceMapConsumer.initialize({
+    "lib/mappings.wasm": `${root}/source-map-mappings.wasm`
+  });
+}
+
+module.exports = {
+  setAssetRootURL
+};
 
 /***/ }),
 
