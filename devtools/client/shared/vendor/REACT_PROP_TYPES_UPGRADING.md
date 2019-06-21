@@ -22,7 +22,7 @@ NODE_ENV=production browserify index.js -t envify --standalone PropTypes -o reac
 ## Copying files to your Firefox repo
 
 ```bash
-mv react-prop-types.js /firefox/repo/devtools/client/shared/vendor/react-prop-types-dev.js
+mv react-prop-types.js /firefox/repo/devtools/client/shared/vendor/react-prop-types.js
 mv react-prop-types-dev.js /firefox/repo/devtools/client/shared/vendor/react-prop-types-dev.js
 ```
 
