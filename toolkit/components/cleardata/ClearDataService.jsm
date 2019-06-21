@@ -19,6 +19,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 XPCOMUtils.defineLazyServiceGetter(this, "sas",
                                    "@mozilla.org/storage/activity-service;1",
                                    "nsIStorageActivityService");
+XPCOMUtils.defineLazyServiceGetter(this, "TrackingDBService",
+                                   "@mozilla.org/tracking-db-service;1",
+                                   "nsITrackingDBService");
 
 // A Cleaner is an object with 3 methods. These methods must return a Promise
 // object. Here a description of these methods:
@@ -846,6 +849,16 @@ const ReportsCleaner = {
   },
 };
 
+const ContentBlockingCleaner = {
+  deleteAll() {
+    return TrackingDBService.clearAll();
+  },
+
+  deleteByRange(aFrom, aTo) {
+    return TrackingDBService.clearSince(aFrom);
+  },
+};
+
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
   { flag: Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS,
@@ -913,6 +926,9 @@ const FLAGS_MAP = [
 
  { flag: Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS,
    cleaner: StorageAccessCleaner },
+
+ { flag: Ci.nsIClearDataService.CLEAR_CONTENT_BLOCKING_RECORDS,
+   cleaner: ContentBlockingCleaner},
 ];
 
 this.ClearDataService = function() {

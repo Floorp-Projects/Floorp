@@ -47,3 +47,5 @@ FINAL_LIBRARY = 'xul'
 
 if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
     BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']

@@ -1172,7 +1172,7 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvRecordOrigin(const uint32_t& aMetricId,
                                            const nsCString& aOrigin);
   mozilla::ipc::IPCResult RecvReportContentBlockingLog(
-      const Principal& aPrincipal, const IPCStream& aIPCStream);
+      const IPCStream& aIPCStream);
 
   mozilla::ipc::IPCResult RecvBHRThreadHang(const HangDetails& aHangDetails);
 

@@ -140,8 +140,7 @@ void ContentBlockingLog::ReportLog(nsIPrincipal* aFirstPartyPrincipal) {
   AutoIPCStream ipcStream;
   ipcStream.Serialize(stream, contentChild);
 
-  Unused << contentChild->SendReportContentBlockingLog(
-      IPC::Principal(aFirstPartyPrincipal), ipcStream.TakeValue());
+  Unused << contentChild->SendReportContentBlockingLog(ipcStream.TakeValue());
 }
 
 void ContentBlockingLog::ReportOrigins() {
