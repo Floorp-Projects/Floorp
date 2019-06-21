@@ -5,7 +5,7 @@
 
 const fs = require("fs");
 
-const assets = require("../../assets");
+const assets = require("../assets");
 
 function setAssetRootURL(assetRoot: string): void {
   // No-op on Node
