@@ -7,6 +7,9 @@
 #ifndef MOZILLA_GFX_DRAWTARGETCAPTURE_H_
 #define MOZILLA_GFX_DRAWTARGETCAPTURE_H_
 
+#include <vector>
+#include <stack>
+
 #include "2D.h"
 #include "CaptureCommandList.h"
 
@@ -118,6 +121,8 @@ class DrawTargetCaptureImpl final : public DrawTargetCapture {
       const IntSize& aSize, SurfaceFormat aFormat) const override;
   RefPtr<DrawTarget> CreateSimilarRasterTarget(
       const IntSize& aSize, SurfaceFormat aFormat) const override;
+  RefPtr<DrawTarget> CreateClippedDrawTarget(const Rect& aBounds,
+                                             SurfaceFormat aFormat) override;
 
   already_AddRefed<PathBuilder> CreatePathBuilder(
       FillRule aFillRule = FillRule::FILL_WINDING) const override;
@@ -185,6 +190,7 @@ class DrawTargetCaptureImpl final : public DrawTargetCapture {
     bool mOldPermitSubpixelAA;
   };
   std::vector<PushedLayer> mPushedLayers;
+  std::stack<IntRect> mCurrentClipBounds;
 
   CaptureCommandList mCommands;
   size_t mFlushBytes;
