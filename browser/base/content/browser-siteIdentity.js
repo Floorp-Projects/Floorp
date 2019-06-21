@@ -869,7 +869,7 @@ var gIdentityHandler = {
    */
   handleIdentityButtonEvent(event) {
     // For Nightly users, show the WIP protections panel if the meta key was held.
-    if (this._protectionsPanelEnabled && event.metaKey) {
+    if (this._protectionsPanelEnabled && event.altKey) {
       gProtectionsHandler.handleProtectionsButtonEvent(event);
       return;
     }
