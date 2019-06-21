@@ -40,8 +40,10 @@ static size_t NumTypeSets(JSScript* script) {
 }
 
 JitScript::JitScript(JSScript* script, uint32_t typeSetOffset,
-                     uint32_t bytecodeTypeMapOffset, uint32_t allocBytes)
-    : typeSetOffset_(typeSetOffset),
+                     uint32_t bytecodeTypeMapOffset, uint32_t allocBytes,
+                     const char* profileString)
+    : profileString_(profileString),
+      typeSetOffset_(typeSetOffset),
       bytecodeTypeMapOffset_(bytecodeTypeMapOffset),
       allocBytes_(allocBytes) {
   setTypesGeneration(script->zone()->types.generation);
@@ -69,6 +71,15 @@ bool JSScript::createJitScript(JSContext* cx) {
   // If ensureHasAnalyzedArgsUsage allocated the JitScript we're done.
   if (jitScript_) {
     return true;
+  }
+
+  // Store the profile string in the JitScript if the profiler is enabled.
+  const char* profileString = nullptr;
+  if (cx->runtime()->geckoProfiler().enabled()) {
+    profileString = cx->runtime()->geckoProfiler().profileString(cx, this);
+    if (!profileString) {
+      return false;
+    }
   }
 
   size_t numTypeSets = NumTypeSets(this);
@@ -99,8 +110,9 @@ bool JSScript::createJitScript(JSContext* cx) {
   uint32_t typeSetOffset = sizeof(JitScript) + numICEntries() * sizeof(ICEntry);
   uint32_t bytecodeTypeMapOffset =
       typeSetOffset + numTypeSets * sizeof(StackTypeSet);
-  UniquePtr<JitScript> jitScript(new (raw) JitScript(
-      this, typeSetOffset, bytecodeTypeMapOffset, allocSize.value()));
+  UniquePtr<JitScript> jitScript(
+      new (raw) JitScript(this, typeSetOffset, bytecodeTypeMapOffset,
+                          allocSize.value(), profileString));
 
   // Sanity check the length computations.
   MOZ_ASSERT(jitScript->numICEntries() == numICEntries());
@@ -170,6 +182,19 @@ void JitScript::trace(JSTracer* trc) {
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& ent = icEntry(i);
     ent.trace(trc);
+  }
+}
+
+void JitScript::ensureProfileString(JSContext* cx, JSScript* script) {
+  MOZ_ASSERT(cx->runtime()->geckoProfiler().enabled());
+
+  if (profileString_) {
+    return;
+  }
+
+  profileString_ = cx->runtime()->geckoProfiler().profileString(cx, script);
+  if (!profileString_) {
+    MOZ_CRASH("Failed to allocate profile string");
   }
 }
 

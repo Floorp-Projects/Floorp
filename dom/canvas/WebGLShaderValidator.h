@@ -15,6 +15,31 @@
 namespace mozilla {
 namespace webgl {
 
+class ShaderValidatorResults final {
+ public:
+  std::string mInfoLog;
+  bool mValid = false;
+
+  std::string mObjectCode;
+  int mShaderVersion = 0;
+  int mVertexShaderNumViews = 0;
+
+  std::vector<sh::Attribute> mAttributes;
+  std::vector<sh::InterfaceBlock> mInterfaceBlocks;
+  std::vector<sh::OutputVariable> mOutputVariables;
+  std::vector<sh::Uniform> mUniforms;
+  std::vector<sh::Varying> mVaryings;
+
+  int mMaxVaryingVectors = 0;
+
+  bool CanLinkTo(const ShaderValidatorResults& vert,
+                 nsCString* const out_log) const;
+  bool FindUniformByMappedName(const std::string& mappedName,
+                               std::string* const out_userName,
+                               bool* const out_isArray) const;
+  size_t SizeOfIncludingThis(MallocSizeOf) const;
+};
+
 class ShaderValidator final {
  public:
   const ShHandle mHandle;
@@ -22,36 +47,24 @@ class ShaderValidator final {
  private:
   const ShCompileOptions mCompileOptions;
   const int mMaxVaryingVectors;
-  bool mHasRun;
 
  public:
-  static ShaderValidator* Create(GLenum shaderType, ShShaderSpec spec,
-                                 ShShaderOutput outputLanguage,
-                                 const ShBuiltInResources& resources,
-                                 ShCompileOptions compileOptions);
+  static std::unique_ptr<ShaderValidator> Create(
+      GLenum shaderType, ShShaderSpec spec, ShShaderOutput outputLanguage,
+      const ShBuiltInResources& resources, ShCompileOptions compileOptions);
 
  private:
   ShaderValidator(ShHandle handle, ShCompileOptions compileOptions,
                   int maxVaryingVectors)
       : mHandle(handle),
         mCompileOptions(compileOptions),
-        mMaxVaryingVectors(maxVaryingVectors),
-        mHasRun(false) {}
+        mMaxVaryingVectors(maxVaryingVectors) {}
 
  public:
   ~ShaderValidator();
 
-  bool ValidateAndTranslate(const char* source);
-  bool CanLinkTo(const ShaderValidator* prev, nsCString* const out_log) const;
-
-  bool FindUniformByMappedName(const std::string& mappedName,
-                               std::string* const out_userName,
-                               bool* const out_isArray) const;
-
-  bool ValidateTransformFeedback(
-      const std::vector<nsString>& userNames, uint32_t maxComponents,
-      nsCString* const out_errorText,
-      std::vector<std::string>* const out_mappedNames);
+  std::unique_ptr<const ShaderValidatorResults> ValidateAndTranslate(
+      const char*) const;
 };
 
 }  // namespace webgl

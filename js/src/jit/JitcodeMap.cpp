@@ -198,6 +198,26 @@ void JitcodeGlobalEntry::BaselineEntry::destroy() {
   str_ = nullptr;
 }
 
+void* JitcodeGlobalEntry::BaselineInterpreterEntry::canonicalNativeAddrFor(
+    void* ptr) const {
+  return ptr;
+}
+
+bool JitcodeGlobalEntry::BaselineInterpreterEntry::callStackAtAddr(
+    void* ptr, BytecodeLocationVector& results, uint32_t* depth) const {
+  MOZ_CRASH("shouldn't be called for BaselineInterpreter entries");
+}
+
+uint32_t JitcodeGlobalEntry::BaselineInterpreterEntry::callStackAtAddr(
+    void* ptr, const char** results, uint32_t maxResults) const {
+  MOZ_CRASH("shouldn't be called for BaselineInterpreter entries");
+}
+
+void JitcodeGlobalEntry::BaselineInterpreterEntry::youngestFrameLocationAtAddr(
+    void* ptr, JSScript** script, jsbytecode** pc) const {
+  MOZ_CRASH("shouldn't be called for BaselineInterpreter entries");
+}
+
 static inline JitcodeGlobalEntry& RejoinEntry(
     JSRuntime* rt, const JitcodeGlobalEntry::IonCacheEntry& cache, void* ptr) {
   MOZ_ASSERT(cache.containsPointer(ptr));
@@ -367,7 +387,7 @@ JitcodeGlobalEntry* JitcodeGlobalTable::lookupInternal(void* ptr) {
 
 bool JitcodeGlobalTable::addEntry(const JitcodeGlobalEntry& entry) {
   MOZ_ASSERT(entry.isIon() || entry.isBaseline() || entry.isIonCache() ||
-             entry.isDummy());
+             entry.isBaselineInterpreter() || entry.isDummy());
 
   JitcodeGlobalEntry* searchTower[JitcodeSkiplistTower::MAX_HEIGHT];
   searchInternal(entry, searchTower);
@@ -1523,6 +1543,9 @@ JS::ProfiledFrameHandle::ProfiledFrameHandle(JSRuntime* rt,
 
 JS_PUBLIC_API JS::ProfilingFrameIterator::FrameKind
 JS::ProfiledFrameHandle::frameKind() const {
+  if (entry_.isBaselineInterpreter()) {
+    return JS::ProfilingFrameIterator::Frame_BaselineInterpreter;
+  }
   if (entry_.isBaseline()) {
     return JS::ProfilingFrameIterator::Frame_Baseline;
   }

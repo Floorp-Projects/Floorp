@@ -36,12 +36,12 @@ inline size_t JSJitFrameIter::prevFrameLocalSize() const {
   return current->prevFrameLocalSize();
 }
 
-inline JitFrameLayout* JSJitProfilingFrameIterator::framePtr() {
+inline JitFrameLayout* JSJitProfilingFrameIterator::framePtr() const {
   MOZ_ASSERT(!done());
   return (JitFrameLayout*)fp_;
 }
 
-inline JSScript* JSJitProfilingFrameIterator::frameScript() {
+inline JSScript* JSJitProfilingFrameIterator::frameScript() const {
   return ScriptFromCalleeToken(framePtr()->calleeToken());
 }
 

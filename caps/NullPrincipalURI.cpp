@@ -13,7 +13,6 @@
 
 #include "nsEscape.h"
 #include "nsCRT.h"
-#include "nsIUUIDGenerator.h"
 
 #include "mozilla/GkRustUtils.h"
 

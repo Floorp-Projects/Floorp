@@ -1097,17 +1097,17 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
 /*static*/
 already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
     const TabContext& aContext, Element* aFrameElement,
-    BrowsingContext* aBrowsingContext, ContentParent* aOpenerContentParent,
-    BrowserParent* aSameTabGroupAs, uint64_t aNextRemoteTabId) {
+    const nsAString& aRemoteType, BrowsingContext* aBrowsingContext,
+    ContentParent* aOpenerContentParent, BrowserParent* aSameTabGroupAs,
+    uint64_t aNextRemoteTabId) {
   AUTO_PROFILER_LABEL("ContentParent::CreateBrowser", OTHER);
 
   if (!sCanLaunchSubprocesses) {
     return nullptr;
   }
 
-  nsAutoString remoteType;
-  if (!aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType,
-                              remoteType)) {
+  nsAutoString remoteType(aRemoteType);
+  if (remoteType.IsEmpty()) {
     remoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
   }
 

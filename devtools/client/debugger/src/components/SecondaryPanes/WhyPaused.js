@@ -61,14 +61,14 @@ class WhyPaused extends PureComponent<Props, State> {
   renderMessage(why: ExceptionReason) {
     if (why.type == "exception" && why.exception) {
       return (
-        <div className={"message warning"}>
+        <div className="message warning">
           {this.renderExceptionSummary(why.exception)}
         </div>
       );
     }
 
     if (typeof why.message == "string") {
-      return <div className={"message"}>{why.message}</div>;
+      return <div className="message">{why.message}</div>;
     }
 
     return null;
@@ -78,33 +78,29 @@ class WhyPaused extends PureComponent<Props, State> {
     const { endPanelCollapsed, why } = this.props;
     const reason = getPauseReason(why);
 
-    if (reason) {
-      if (!endPanelCollapsed) {
-        return (
-          <div className={"pane why-paused"}>
-            <div>
-              <div className="pause reason">
-                {L10N.getStr(reason)}
-                {this.renderMessage(why)}
-              </div>
-              <div className="info icon">
-                <AccessibleImage className="info" />
-              </div>
-            </div>
-          </div>
-        );
-      }
+    if (!reason || endPanelCollapsed) {
+      return <div className={this.state.hideWhyPaused} />;
     }
-    return <div className={this.state.hideWhyPaused} />;
+
+    return (
+      <div className="pane why-paused">
+        <div>
+          <div className="pause reason">
+            {L10N.getStr(reason)}
+            {this.renderMessage(why)}
+          </div>
+          <div className="info icon">
+            <AccessibleImage className="info" />
+          </div>
+        </div>
+      </div>
+    );
   }
 }
 
-const mapStateToProps = state => {
-  const thread = getCurrentThread(state);
-  return {
-    endPanelCollapsed: getPaneCollapse(state, "end"),
-    why: getWhy(state, thread),
-  };
-};
+const mapStateToProps = state => ({
+  endPanelCollapsed: getPaneCollapse(state, "end"),
+  why: getWhy(state, getCurrentThread(state)),
+});
 
 export default connect(mapStateToProps)(WhyPaused);

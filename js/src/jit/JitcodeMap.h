@@ -123,7 +123,16 @@ class JitcodeGlobalEntry {
   friend class JitcodeGlobalTable;
 
  public:
-  enum Kind { INVALID = 0, Ion, Baseline, IonCache, Dummy, Query, LIMIT };
+  enum Kind {
+    INVALID = 0,
+    Ion,
+    Baseline,
+    BaselineInterpreter,
+    IonCache,
+    Dummy,
+    Query,
+    LIMIT
+  };
   JS_STATIC_ASSERT(LIMIT <= 8);
 
   struct BytecodeLocation {
@@ -414,6 +423,27 @@ class JitcodeGlobalEntry {
     bool isMarkedFromAnyThread(JSRuntime* rt);
   };
 
+  struct BaselineInterpreterEntry : public BaseEntry {
+    void init(JitCode* code, void* nativeStartAddr, void* nativeEndAddr) {
+      BaseEntry::init(BaselineInterpreter, code, nativeStartAddr,
+                      nativeEndAddr);
+    }
+
+    void destroy() {}
+
+    void* canonicalNativeAddrFor(void* ptr) const;
+
+    MOZ_MUST_USE bool callStackAtAddr(void* ptr,
+                                      BytecodeLocationVector& results,
+                                      uint32_t* depth) const;
+
+    uint32_t callStackAtAddr(void* ptr, const char** results,
+                             uint32_t maxResults) const;
+
+    void youngestFrameLocationAtAddr(void* ptr, JSScript** script,
+                                     jsbytecode** pc) const;
+  };
+
   struct IonCacheEntry : public BaseEntry {
     void* rejoinAddr_;
     JS::TrackedOutcome trackedOutcome_;
@@ -517,6 +547,9 @@ class JitcodeGlobalEntry {
     // Baseline jitcode.
     BaselineEntry baseline_;
 
+    // BaselineInterpreter code.
+    BaselineInterpreterEntry baselineInterpreter_;
+
     // IonCache stubs.
     IonCacheEntry ionCache_;
 
@@ -538,6 +571,11 @@ class JitcodeGlobalEntry {
   explicit JitcodeGlobalEntry(const BaselineEntry& baseline)
       : JitcodeGlobalEntry() {
     baseline_ = baseline;
+  }
+
+  explicit JitcodeGlobalEntry(const BaselineInterpreterEntry& baselineInterp)
+      : JitcodeGlobalEntry() {
+    baselineInterpreter_ = baselineInterp;
   }
 
   explicit JitcodeGlobalEntry(const IonCacheEntry& ionCache)
@@ -566,6 +604,9 @@ class JitcodeGlobalEntry {
         break;
       case Baseline:
         baselineEntry().destroy();
+        break;
+      case BaselineInterpreter:
+        baselineInterpreterEntry().destroy();
         break;
       case IonCache:
         ionCacheEntry().destroy();
@@ -620,6 +661,7 @@ class JitcodeGlobalEntry {
   bool isValid() const { return (kind() > INVALID) && (kind() < LIMIT); }
   bool isIon() const { return kind() == Ion; }
   bool isBaseline() const { return kind() == Baseline; }
+  bool isBaselineInterpreter() const { return kind() == BaselineInterpreter; }
   bool isIonCache() const { return kind() == IonCache; }
   bool isDummy() const { return kind() == Dummy; }
   bool isQuery() const { return kind() == Query; }
@@ -635,6 +677,10 @@ class JitcodeGlobalEntry {
   BaselineEntry& baselineEntry() {
     MOZ_ASSERT(isBaseline());
     return baseline_;
+  }
+  BaselineInterpreterEntry& baselineInterpreterEntry() {
+    MOZ_ASSERT(isBaselineInterpreter());
+    return baselineInterpreter_;
   }
   IonCacheEntry& ionCacheEntry() {
     MOZ_ASSERT(isIonCache());
@@ -660,6 +706,10 @@ class JitcodeGlobalEntry {
   const BaselineEntry& baselineEntry() const {
     MOZ_ASSERT(isBaseline());
     return baseline_;
+  }
+  const BaselineInterpreterEntry& baselineInterpreterEntry() const {
+    MOZ_ASSERT(isBaselineInterpreter());
+    return baselineInterpreter_;
   }
   const IonCacheEntry& ionCacheEntry() const {
     MOZ_ASSERT(isIonCache());
@@ -703,6 +753,8 @@ class JitcodeGlobalEntry {
         return ionEntry().callStackAtAddr(ptr, results, depth);
       case Baseline:
         return baselineEntry().callStackAtAddr(ptr, results, depth);
+      case BaselineInterpreter:
+        return baselineInterpreterEntry().callStackAtAddr(ptr, results, depth);
       case IonCache:
         return ionCacheEntry().callStackAtAddr(rt, ptr, results, depth);
       case Dummy:
@@ -720,6 +772,9 @@ class JitcodeGlobalEntry {
         return ionEntry().callStackAtAddr(ptr, results, maxResults);
       case Baseline:
         return baselineEntry().callStackAtAddr(ptr, results, maxResults);
+      case BaselineInterpreter:
+        return baselineInterpreterEntry().callStackAtAddr(ptr, results,
+                                                          maxResults);
       case IonCache:
         return ionCacheEntry().callStackAtAddr(rt, ptr, results, maxResults);
       case Dummy:
@@ -855,6 +910,7 @@ class JitcodeGlobalEntry {
       case IonCache:
         tracedAny |= ionCacheEntry().trace<ShouldTraceProvider>(trc);
         break;
+      case BaselineInterpreter:
       case Dummy:
         break;
       default:
@@ -874,6 +930,7 @@ class JitcodeGlobalEntry {
       case IonCache:
         ionCacheEntry().sweepChildren(rt);
         break;
+      case BaselineInterpreter:
       case Dummy:
         break;
       default:
@@ -980,6 +1037,10 @@ class JitcodeGlobalTable {
     return addEntry(JitcodeGlobalEntry(entry));
   }
   MOZ_MUST_USE bool addEntry(const JitcodeGlobalEntry::BaselineEntry& entry) {
+    return addEntry(JitcodeGlobalEntry(entry));
+  }
+  MOZ_MUST_USE bool addEntry(
+      const JitcodeGlobalEntry::BaselineInterpreterEntry& entry) {
     return addEntry(JitcodeGlobalEntry(entry));
   }
   MOZ_MUST_USE bool addEntry(const JitcodeGlobalEntry::IonCacheEntry& entry) {
