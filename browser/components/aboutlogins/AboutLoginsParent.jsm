@@ -30,10 +30,6 @@ const PRIVILEGEDABOUT_PROCESS_PREF =
 const PRIVILEGEDABOUT_PROCESS_ENABLED =
   Services.prefs.getBoolPref(PRIVILEGEDABOUT_PROCESS_PREF, false);
 
-
-const FEEDBACK_URL_PREF = "signon.feedbackURL";
-const FEEDBACK_URL = Services.urlFormatter.formatURLPref(FEEDBACK_URL_PREF);
-
 // When the privileged content process is enabled, we expect about:logins
 // to load in it. Otherwise, it's in a normal web content process.
 const EXPECTED_ABOUTLOGINS_REMOTE_TYPE =
@@ -109,10 +105,6 @@ var AboutLoginsParent = {
         } catch (ex) {
           Cu.reportError(ex);
         }
-        break;
-      }
-      case "AboutLogins:OpenFeedback": {
-        message.target.ownerGlobal.openWebLinkIn(FEEDBACK_URL, "tab", {relatedToCurrent: true});
         break;
       }
       case "AboutLogins:OpenPreferences": {

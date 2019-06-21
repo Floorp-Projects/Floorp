@@ -61,7 +61,6 @@ master-password-reload-button-accesskey = L
 
 menu-button =
   .button-title = Open menu
-  .menuitem-feedback = Leave Feedback
   .menuitem-import = Import Passwords…
   .menuitem-preferences =
     { PLATFORM() ->
