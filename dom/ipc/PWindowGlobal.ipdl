@@ -40,6 +40,11 @@ child:
                               uint64_t aSwitchId)
       returns (nsresult rv, nullable PBrowserBridge bridge);
 
+  /**
+   * Returns the serialized security info associated with this window.
+   */
+  async GetSecurityInfo() returns(nsCString? serializedSecInfo);
+
 both:
   async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData);
 

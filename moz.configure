@@ -640,19 +640,21 @@ include('js/sub.configure', when=compile_environment & toolkit)
 @depends(check_build_environment, build_project)
 @imports('__sandbox__')
 @imports('glob')
+@imports(_from='os.path', _import='exists')
 def config_status_deps(build_env, build_project):
 
     topsrcdir = build_env.topsrcdir
     topobjdir = build_env.topobjdir
 
-    if not build_env.topobjdir.endswith('js/src'):
-        extra_deps = [
-            os.path.join(topsrcdir, build_project, 'confvars.sh'),
-            os.path.join(topobjdir, '.mozconfig.json'),
-        ]
+    if not topobjdir.endswith('js/src'):
+        extra_deps = [os.path.join(topobjdir, '.mozconfig.json')]
     else:
         # mozconfig changes may impact js configure.
         extra_deps = [os.path.join(topobjdir[:-7], '.mozconfig.json')]
+
+    confvars = os.path.join(topsrcdir, build_project, 'confvars.sh')
+    if exists(confvars):
+        extra_deps.append(confvars)
 
     return list(__sandbox__._all_paths) + extra_deps + [
         os.path.join(topsrcdir, 'CLOBBER'),

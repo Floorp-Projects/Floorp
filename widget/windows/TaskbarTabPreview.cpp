@@ -88,8 +88,8 @@ TaskbarTabPreview::SetIcon(imgIContainer* icon) {
   if (icon) {
     nsresult rv;
     rv = nsWindowGfx::CreateIcon(
-        icon, false, 0, 0, nsWindowGfx::GetIconMetrics(nsWindowGfx::kSmallIcon),
-        &hIcon);
+        icon, false, LayoutDeviceIntPoint(),
+        nsWindowGfx::GetIconMetrics(nsWindowGfx::kSmallIcon), &hIcon);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -51,6 +51,7 @@ namespace js {
 namespace frontend {
 
 class CallOrNewEmitter;
+class ClassEmitter;
 class ElemOpEmitter;
 class EmitterScope;
 class NestableControl;
@@ -504,7 +505,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   FieldInitializers setupFieldInitializers(ListNode* classMembers);
   MOZ_MUST_USE bool emitCreateFieldKeys(ListNode* obj);
-  MOZ_MUST_USE bool emitCreateFieldInitializers(ListNode* obj);
+  MOZ_MUST_USE bool emitCreateFieldInitializers(ClassEmitter& ce,
+                                                ListNode* obj);
   const FieldInitializers& findFieldInitializersForCall();
   MOZ_MUST_USE bool emitInitializeInstanceFields();
 

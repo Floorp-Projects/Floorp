@@ -21,6 +21,8 @@ using namespace ipc;
 namespace dom {
 namespace ipc {
 
+static constexpr uint32_t kSharedStringMapMagic = 0x9e3779b9;
+
 static inline size_t GetAlignmentOffset(size_t aOffset, size_t aAlign) {
   auto mod = aOffset % aAlign;
   return mod ? aAlign - mod : 0;
@@ -30,6 +32,7 @@ SharedStringMap::SharedStringMap(const FileDescriptor& aMapFile,
                                  size_t aMapSize) {
   auto result = mMap.initWithHandle(aMapFile, aMapSize);
   MOZ_RELEASE_ASSERT(result.isOk());
+  MOZ_RELEASE_ASSERT(GetHeader().mMagic == kSharedStringMapMagic);
   // We return literal nsStrings and nsCStrings pointing to the mapped data,
   // which means that we may still have references to the mapped data even
   // after this instance is destroyed. That means that we need to keep the
@@ -40,6 +43,7 @@ SharedStringMap::SharedStringMap(const FileDescriptor& aMapFile,
 SharedStringMap::SharedStringMap(SharedStringMapBuilder&& aBuilder) {
   auto result = aBuilder.Finalize(mMap);
   MOZ_RELEASE_ASSERT(result.isOk());
+  MOZ_RELEASE_ASSERT(GetHeader().mMagic == kSharedStringMapMagic);
   mMap.setPersistent();
 }
 
@@ -92,7 +96,7 @@ Result<Ok, nsresult> SharedStringMapBuilder::Finalize(
   }
   keys.Sort();
 
-  Header header = {uint32_t(keys.Length())};
+  Header header = {kSharedStringMapMagic, uint32_t(keys.Length())};
 
   size_t offset = sizeof(header);
   offset += GetAlignmentOffset(offset, alignof(Header));

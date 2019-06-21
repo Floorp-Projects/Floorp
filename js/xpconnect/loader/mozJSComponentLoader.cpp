@@ -588,8 +588,7 @@ void mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
   backstagePass->SetGlobalObject(global);
 
   JSAutoRealm ar(aCx, global);
-  if (!JS_DefineFunctions(aCx, global, gGlobalFun) ||
-      !JS_DefineProfilingFunctions(aCx, global)) {
+  if (!JS_DefineFunctions(aCx, global, gGlobalFun)) {
     return;
   }
 

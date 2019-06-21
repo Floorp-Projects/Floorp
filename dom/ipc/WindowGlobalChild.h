@@ -103,6 +103,9 @@ class WindowGlobalChild final : public WindowGlobalActor,
       dom::BrowsingContext* aBc, const nsString& aRemoteType,
       uint64_t aPendingSwitchId, ChangeFrameRemotenessResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvGetSecurityInfo(
+      GetSecurityInfoResolver&& aResolve);
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

@@ -8,6 +8,7 @@
  */
 
 const {PanelMultiView} = ChromeUtils.import("resource:///modules/PanelMultiView.jsm");
+const kEmbeddedDocUrl = 'data:text/html,<textarea id="docTextarea">value</textarea><button id="docButton"></button>';
 
 let gAnchor;
 let gPanel;
@@ -24,8 +25,10 @@ let gMainArrowOrder;
 let gSubView;
 let gSubButton;
 let gSubTextarea;
-let gDocView;
-let gDocBrowser;
+let gBrowserView;
+let gBrowserBrowser;
+let gIframeView;
+let gIframeIframe;
 
 async function openPopup() {
   let shown = BrowserTestUtils.waitForEvent(gMainView, "ViewShown");
@@ -122,17 +125,24 @@ add_task(async function setup() {
   gSubView.appendChild(gSubTextarea);
   gSubTextarea.value = "value";
 
-  gDocView = document.createXULElement("panelview");
-  gDocView.id = "testDocView";
-  gPanelMultiView.appendChild(gDocView);
-  gDocBrowser = document.createXULElement("browser");
-  gDocBrowser.id = "gDocBrowser";
-  gDocBrowser.setAttribute("type", "content");
-  gDocBrowser.setAttribute("src",
-    'data:text/html,<textarea id="docTextarea">value</textarea><button id="docButton"></button>');
-  gDocBrowser.setAttribute("width", 100);
-  gDocBrowser.setAttribute("height", 100);
-  gDocView.appendChild(gDocBrowser);
+  gBrowserView = document.createXULElement("panelview");
+  gBrowserView.id = "testBrowserView";
+  gPanelMultiView.appendChild(gBrowserView);
+  gBrowserBrowser = document.createXULElement("browser");
+  gBrowserBrowser.id = "GBrowserBrowser";
+  gBrowserBrowser.setAttribute("type", "content");
+  gBrowserBrowser.setAttribute("src", kEmbeddedDocUrl);
+  gBrowserBrowser.setAttribute("width", 100);
+  gBrowserBrowser.setAttribute("height", 100);
+  gBrowserView.appendChild(gBrowserBrowser);
+
+  gIframeView = document.createXULElement("panelview");
+  gIframeView.id = "testIframeView";
+  gPanelMultiView.appendChild(gIframeView);
+  gIframeIframe = document.createXULElement("iframe");
+  gIframeIframe.id = "gIframeIframe";
+  gIframeIframe.setAttribute("src", kEmbeddedDocUrl);
+  gIframeView.appendChild(gIframeIframe);
 
   registerCleanupFunction(() => {
     gAnchor.remove();
@@ -309,20 +319,20 @@ add_task(async function testActivationMousedown() {
 });
 
 // Test that tab and the arrow keys aren't overridden in embedded documents.
-add_task(async function testTabArrowsBrowser() {
+async function testTabArrowsEmbeddedDoc(aView, aEmbedder) {
   await openPopup();
-  await showSubView(gDocView);
-  let backButton = gDocView.querySelector(".subviewbutton-back");
+  await showSubView(aView);
+  let backButton = aView.querySelector(".subviewbutton-back");
   backButton.id = "docBack";
   await expectFocusAfterKey("Tab", backButton);
-  let doc = gDocBrowser.contentDocument;
+  let doc = aEmbedder.contentDocument;
   // Documents don't have an id property, but expectFocusAfterKey wants one.
   doc.id = "doc";
   await expectFocusAfterKey("Tab", doc);
   // Make sure tab/arrows aren't overridden within the embedded document.
   let textarea = doc.getElementById("docTextarea");
   // Tab should really focus the textarea, but default tab handling seems to
-  // skip everything inside the browser element when run in this test. This
+  // skip everything inside the embedder element when run in this test. This
   // behaves as expected in real panels, though. Force focus to the textarea
   // and then test from there.
   textarea.focus();
@@ -338,6 +348,16 @@ add_task(async function testTabArrowsBrowser() {
   // Make sure tab leaves the document and reaches the Back button.
   expectFocusAfterKey("Tab", backButton);
   await hidePopup();
+}
+
+// Test that tab and the arrow keys aren't overridden in embedded browsers.
+add_task(async function testTabArrowsBrowser() {
+  await testTabArrowsEmbeddedDoc(gBrowserView, gBrowserBrowser);
+});
+
+// Test that tab and the arrow keys aren't overridden in embedded iframes.
+add_task(async function testTabArrowsIframe() {
+  await testTabArrowsEmbeddedDoc(gIframeView, gIframeIframe);
 });
 
 // Test that the arrow keys aren't overridden in context menus.

@@ -51,6 +51,12 @@ SocketProcessChild* SocketProcessChild::GetSingleton() {
   return sSocketProcessChild;
 }
 
+#if defined(XP_MACOSX)
+extern "C" {
+void CGSShutdownServerConnections();
+};
+#endif
+
 bool SocketProcessChild::Init(base::ProcessId aParentPid,
                               const char* aParentBuildID, MessageLoop* aIOLoop,
                               IPC::Channel* aChannel) {
@@ -78,6 +84,12 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
   }
 
   SetThisProcessName("Socket Process");
+#if defined(XP_MACOSX)
+  // Close all current connections to the WindowServer. This ensures that the
+  // Activity Monitor will not label the socket process as "Not responding"
+  // because it's not running a native event loop. See bug 1384336.
+  CGSShutdownServerConnections();
+#endif  // XP_MACOSX
   return true;
 }
 

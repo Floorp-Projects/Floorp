@@ -1417,8 +1417,8 @@ var PanelView = class extends AssociatedToNode {
     let tag = element.localName;
     return tag == "menulist" || tag == "textbox" || tag == "input"
            || tag == "textarea"
-           // Allow tab to reach embedded documents in extension panels.
-           || tag == "browser";
+           // Allow tab to reach embedded documents.
+           || tag == "browser" || tag == "iframe";
   }
 
   /**
@@ -1441,7 +1441,10 @@ var PanelView = class extends AssociatedToNode {
           node.classList.contains("navigable") ||
           (!arrowKey && this._isNavigableWithTabOnly(node))) {
         // Set the tabindex attribute to make sure the node is focusable.
-        if (!node.hasAttribute("tabindex")) {
+        // Don't do this for browser and iframe elements because this breaks
+        // tabbing behavior. They're already focusable anyway.
+        if (node.tagName != "browser" && node.tagName != "iframe" &&
+            !node.hasAttribute("tabindex")) {
           node.setAttribute("tabindex", "-1");
         }
         return NodeFilter.FILTER_ACCEPT;
@@ -1584,9 +1587,9 @@ var PanelView = class extends AssociatedToNode {
       focus = null;
     }
 
-    // Extension panels contain embedded documents. We can't manage
+    // Some panels contain embedded documents. We can't manage
     // keyboard navigation within those.
-    if (focus && focus.tagName == "browser") {
+    if (focus && (focus.tagName == "browser" || focus.tagName == "iframe")) {
       return;
     }
 
