@@ -17,6 +17,7 @@
   --onboarding-link-active-color: var(--blue-40);
 
   /* Tooltips */
+  --theme-tooltip-color: var(--theme-text-color-strong);
   --theme-tooltip-background: var(--theme-popup-background);
   --theme-tooltip-shadow: rgba(25, 25, 25, 0.76);
 
@@ -39,6 +40,7 @@
   --onboarding-link-active-color: var(--blue-70);
 
   /* Tooltips */
+  --theme-tooltip-color: var(--theme-body-color);
   --theme-tooltip-background: rgb(255, 255, 255);
   --theme-tooltip-shadow: rgba(155, 155, 155, 0.26);
 
@@ -483,29 +485,38 @@ strong {
 
 /* Tooltip: Events */
 
+.devtools-tooltip-events-container {
+  height: 100%;
+  overflow-y: auto;
+}
+
 .devtools-tooltip-events-container .event-header {
   display: flex;
   align-items: center;
+  box-sizing: content-box;
+  height: 24px;
+  padding: 0 4px;
+  border-top: 1px solid var(--theme-splitter-color);
   cursor: pointer;
   overflow: hidden;
+  color: var(--theme-tooltip-color);
   background-color: var(--theme-tooltip-background);
 }
 
-.event-header:before {
-  content: "▶︎";
-  padding-inline-end: 5px;
+.devtools-tooltip-events-container .event-header:first-child {
+  border-top-width: 0;
 }
 
-.event-header.content-expanded:before {
-  content: "▼";
+.event-header .theme-twisty {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin-inline-end: 4px;
+  fill: currentColor;
 }
 
-.event-header:first-child {
-  border-width: 0;
-}
-
-.event-header:not(:first-child) {
-  border-width: 1px 0 0 0;
+.event-header.content-expanded .theme-twisty {
+  transform: none;
 }
 
 .event-tooltip-debugger-icon {
@@ -515,19 +526,15 @@ strong {
   background-repeat: no-repeat;
   background-position: center;
   width: 20px;
-  height: 18px;
+  height: 20px;
   border-radius: 2px;
   margin-inline-end: 4px;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .event-tooltip-debugger-icon:hover {
   background-color: var(--toolbarbutton-hover-background);
-}
-
-.devtools-tooltip-events-container {
-  height: 100%;
-  overflow-y: auto;
 }
 
 .event-tooltip-event-type,
@@ -540,7 +547,8 @@ strong {
 
 .event-tooltip-event-type {
   font-weight: bold;
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 16px;
 }
 
 .event-tooltip-filename {
@@ -596,8 +604,8 @@ strong {
   align-items: center;
   height: 14px;
   border-radius: 3px;
-  padding: 2px;
-  margin-inline-start: 5px;
+  padding: 1px 3px;
+  margin-inline-start: 4px;
   background-color: var(--theme-text-color-alt);
   color: var(--theme-body-background);
 }
@@ -605,7 +613,7 @@ strong {
 .event-tooltip-attributes {
   margin: 0;
   font-size: 9px;
-  padding-top: 2px;
+  line-height: 14px;
 }
 
 /* Tooltip: HTML Search */
