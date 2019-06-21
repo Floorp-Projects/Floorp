@@ -158,6 +158,8 @@ class DrawTargetDual : public DrawTarget {
       const IntSize& aSize, SurfaceFormat aFormat) const override;
   virtual bool CanCreateSimilarDrawTarget(const IntSize& aSize,
                                           SurfaceFormat aFormat) const override;
+  virtual RefPtr<DrawTarget> CreateClippedDrawTarget(
+      const Rect& aBounds, SurfaceFormat aFormat) override;
 
   virtual already_AddRefed<PathBuilder> CreatePathBuilder(
       FillRule aFillRule = FillRule::FILL_WINDING) const override {
