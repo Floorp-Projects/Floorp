@@ -350,7 +350,7 @@ class SecondaryPanes extends Component<Props, State> {
 
   getEventListenersItem(): AccordionPaneItem {
     return {
-      header: L10N.getStr("eventListenersHeader"),
+      header: L10N.getStr("eventListenersHeader1"),
       className: "event-listeners-pane",
       buttons: [],
       component: <EventListeners />,
