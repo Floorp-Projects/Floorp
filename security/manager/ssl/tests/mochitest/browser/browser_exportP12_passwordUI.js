@@ -120,7 +120,7 @@ add_task(async function testPasswordStrengthAndEquality() {
     Assert.equal(
       strengthProgressBar.value,
       testCase.strength,
-      "Actual and expected strength value should match for" + `${testCase.name}`
+      `Actual and expected strength value should match for ${testCase.name}`
     );
   }
 
