@@ -12,7 +12,7 @@ const FontPropertyValue = createFactory(require("./FontPropertyValue"));
 const { getStr } = require("../utils/l10n");
 const { getUnitFromValue, getStepForUnit } = require("../utils/font-utils");
 
-class LineHeight extends PureComponent {
+class LetterSpacing extends PureComponent {
   static get propTypes() {
     return {
       disabled: PropTypes.bool.isRequired,
@@ -55,9 +55,8 @@ class LineHeight extends PureComponent {
     const unit = getUnitFromValue(this.props.value) || "em";
     // When the initial value of "letter-spacing" is "normal", the parsed value
     // is not a number (NaN). Guard by setting the default value to 0.
-    let value = parseFloat(this.props.value);
-    const hasKeywordValue = isNaN(value);
-    value = isNaN(value) ? 0 : value;
+    const isKeywordValue = this.props.value === "normal";
+    const value = isKeywordValue ? 1.2 : parseFloat(this.props.value);
 
     let { min, max } = this.getDefaultMinMax(unit);
     min = Math.min(min, value);
@@ -82,15 +81,15 @@ class LineHeight extends PureComponent {
       // Increase the increment granularity because letter spacing is very sensitive.
       step: getStepForUnit(unit) / 100,
       // Show the value input and unit only when the value is not a keyword.
-      showInput: !hasKeywordValue,
-      showUnit: !hasKeywordValue,
+      showInput: !isKeywordValue,
+      showUnit: !isKeywordValue,
       unit,
       unitOptions: ["em", "rem", "px"],
       value,
       // Show the value as a read-only label if it's a keyword.
-      valueLabel: hasKeywordValue ? this.props.value : null,
+      valueLabel: isKeywordValue ? this.props.value : null,
     });
   }
 }
 
-module.exports = LineHeight;
+module.exports = LetterSpacing;
