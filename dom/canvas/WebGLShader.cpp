@@ -38,25 +38,6 @@ static void PrintLongString(const char* const begin, const size_t len) {
   printf_stderr("%s", chunkBegin);
 }
 
-// On success, writes to out_validator and out_translatedSource.
-// On failure, writes to out_translationLog.
-static bool Translate(const nsACString& source,
-                      webgl::ShaderValidator* validator,
-                      nsACString* const out_translationLog,
-                      nsACString* const out_translatedSource) {
-  if (!validator->ValidateAndTranslate(source.BeginReading())) {
-    const std::string& log = sh::GetInfoLog(validator->mHandle);
-    out_translationLog->Assign(log.data(), log.length());
-    return false;
-  }
-
-  // Success
-  const std::string& output = sh::GetObjectCode(validator->mHandle);
-  out_translatedSource->Assign(output.data(), output.length());
-
-  return true;
-}
-
 template <size_t N>
 static bool SubstringStartsWith(const std::string& testStr, size_t offset,
                                 const char (&refStr)[N]) {
@@ -93,9 +74,8 @@ static void GetCompilationStatusAndLog(gl::GLContext* gl, GLuint shader,
 WebGLShader::WebGLShader(WebGLContext* webgl, GLenum type)
     : WebGLRefCountedObject(webgl),
       mGLName(webgl->gl->fCreateShader(type)),
-      mType(type),
-      mTranslationSuccessful(false),
-      mCompilationSuccessful(false) {
+      mType(type) {
+  mCompileResults = std::make_unique<webgl::ShaderValidatorResults>();
   mContext->mShaders.insertBack(this);
 }
 
@@ -119,14 +99,9 @@ void WebGLShader::ShaderSource(const nsAString& source) {
 }
 
 void WebGLShader::CompileShader() {
-  mValidator = nullptr;
-  mTranslationSuccessful = false;
   mCompilationSuccessful = false;
 
   gl::GLContext* gl = mContext->gl;
-
-  mValidator.reset(mContext->CreateShaderValidator(mType));
-  MOZ_ASSERT(mValidator);
 
   static const bool kDumpShaders = PR_GetEnv("MOZ_WEBGL_DUMP_SHADERS");
   if (MOZ_UNLIKELY(kDumpShaders)) {
@@ -134,26 +109,34 @@ void WebGLShader::CompileShader() {
     PrintLongString(mCleanSource.BeginReading(), mCleanSource.Length());
   }
 
-  const bool success = Translate(mCleanSource, mValidator.get(),
-                                 &mValidationLog, &mTranslatedSource);
+  {
+    const auto validator = mContext->CreateShaderValidator(mType);
+    MOZ_ASSERT(validator);
+
+    mCompileResults =
+        validator->ValidateAndTranslate(mCleanSource.BeginReading());
+  }
+
+  mCompilationLog = mCompileResults->mInfoLog.c_str();
+  const auto& success = mCompileResults->mValid;
 
   if (MOZ_UNLIKELY(kDumpShaders)) {
     printf_stderr("\n==== \\/ \\/ \\/ ====\n");
     if (success) {
-      PrintLongString(mTranslatedSource.BeginReading(),
-                      mTranslatedSource.Length());
+      const auto& translated = mCompileResults->mObjectCode;
+      PrintLongString(translated.data(), translated.length());
     } else {
-      printf_stderr("Validation failed:\n%s", mValidationLog.BeginReading());
+      printf_stderr("Validation failed:\n%s",
+                    mCompileResults->mInfoLog.c_str());
     }
     printf_stderr("\n==== end ====\n");
   }
 
   if (!success) return;
 
-  mTranslationSuccessful = true;
-
-  const char* const parts[] = {mTranslatedSource.BeginReading()};
-  gl->fShaderSource(mGLName, ArrayLength(parts), parts, nullptr);
+  const std::array<const char*, 1> parts = {
+      mCompileResults->mObjectCode.c_str()};
+  gl->fShaderSource(mGLName, parts.size(), parts.data(), nullptr);
 
   gl->fCompileShader(mGLName);
 
@@ -161,10 +144,8 @@ void WebGLShader::CompileShader() {
                              &mCompilationLog);
 }
 
-void WebGLShader::GetShaderInfoLog(nsAString* out) const {
-  const nsCString& log =
-      !mTranslationSuccessful ? mValidationLog : mCompilationLog;
-  CopyASCIItoUTF16(log, *out);
+void WebGLShader::GetShaderInfoLog(nsAString* const out) const {
+  CopyASCIItoUTF16(mCompilationLog, *out);
 }
 
 JS::Value WebGLShader::GetShaderParameter(GLenum pname) const {
@@ -191,20 +172,16 @@ void WebGLShader::GetShaderSource(nsAString* out) const {
 
 void WebGLShader::GetShaderTranslatedSource(nsAString* out) const {
   out->SetIsVoid(false);
-  CopyASCIItoUTF16(mTranslatedSource, *out);
+  const auto& wrapper =
+      nsDependentCString(mCompileResults->mObjectCode.c_str());
+  CopyASCIItoUTF16(wrapper, *out);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool WebGLShader::CanLinkTo(const WebGLShader* prev,
-                            nsCString* const out_log) const {
-  return mValidator->CanLinkTo(prev->mValidator.get(), out_log);
-}
-
 size_t WebGLShader::CalcNumSamplerUniforms() const {
-  const auto& uniforms = *sh::GetUniforms(mValidator->mHandle);
   size_t accum = 0;
-  for (const auto& cur : uniforms) {
+  for (const auto& cur : mCompileResults->mUniforms) {
     const auto& type = cur.type;
     if (type == LOCAL_GL_SAMPLER_2D || type == LOCAL_GL_SAMPLER_CUBE) {
       accum += cur.getArraySizeProduct();
@@ -214,13 +191,12 @@ size_t WebGLShader::CalcNumSamplerUniforms() const {
 }
 
 size_t WebGLShader::NumAttributes() const {
-  return sh::GetAttributes(mValidator->mHandle)->size();
+  return mCompileResults->mAttributes.size();
 }
 
 void WebGLShader::BindAttribLocation(GLuint prog, const std::string& userName,
                                      GLuint index) const {
-  const auto& attribs = *sh::GetAttributes(mValidator->mHandle);
-  for (const auto& attrib : attribs) {
+  for (const auto& attrib : mCompileResults->mAttributes) {
     if (attrib.name == userName) {
       mContext->gl->fBindAttribLocation(prog, index, attrib.mappedName.c_str());
       return;
@@ -232,8 +208,7 @@ bool WebGLShader::FindAttribUserNameByMappedName(
     const nsACString& mappedName, nsCString* const out_userName) const {
   const std::string mappedNameStr(mappedName.BeginReading());
 
-  const auto& attribs = *sh::GetAttributes(mValidator->mHandle);
-  for (const auto& cur : attribs) {
+  for (const auto& cur : mCompileResults->mAttributes) {
     if (cur.mappedName == mappedNameStr) {
       *out_userName = cur.name.c_str();
       return true;
@@ -247,8 +222,7 @@ bool WebGLShader::FindVaryingByMappedName(const nsACString& mappedName,
                                           bool* const out_isArray) const {
   const std::string mappedNameStr(mappedName.BeginReading());
 
-  const auto& varyings = *sh::GetVaryings(mValidator->mHandle);
-  for (const auto& cur : varyings) {
+  for (const auto& cur : mCompileResults->mVaryings) {
     const sh::ShaderVariable* found;
     std::string userName;
     if (!cur.findInfoByMappedName(mappedNameStr, &found, &userName)) continue;
@@ -267,8 +241,8 @@ bool WebGLShader::FindUniformByMappedName(const nsACString& mappedName,
   const std::string mappedNameStr(mappedName.BeginReading(),
                                   mappedName.Length());
   std::string userNameStr;
-  if (!mValidator->FindUniformByMappedName(mappedNameStr, &userNameStr,
-                                           out_isArray))
+  if (!mCompileResults->FindUniformByMappedName(mappedNameStr, &userNameStr,
+                                                out_isArray))
     return false;
 
   *out_userName = userNameStr.c_str();
@@ -277,8 +251,7 @@ bool WebGLShader::FindUniformByMappedName(const nsACString& mappedName,
 
 bool WebGLShader::UnmapUniformBlockName(
     const nsACString& baseMappedName, nsCString* const out_baseUserName) const {
-  const auto& interfaces = *sh::GetInterfaceBlocks(mValidator->mHandle);
-  for (const auto& interface : interfaces) {
+  for (const auto& interface : mCompileResults->mInterfaceBlocks) {
     const nsDependentCString interfaceMappedName(interface.mappedName.data(),
                                                  interface.mappedName.size());
     if (baseMappedName == interfaceMappedName) {
@@ -299,7 +272,7 @@ void WebGLShader::MapTransformFeedbackVaryings(
   out_mappedVaryings->clear();
   out_mappedVaryings->reserve(varyings.size());
 
-  const auto& shaderVaryings = *sh::GetVaryings(mValidator->mHandle);
+  const auto& shaderVaryings = mCompileResults->mVaryings;
 
   for (const auto& wideUserName : varyings) {
     const NS_LossyConvertUTF16toASCII mozUserName(
@@ -326,13 +299,10 @@ JSObject* WebGLShader::WrapObject(JSContext* js,
 }
 
 size_t WebGLShader::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
-  size_t validatorSize = mValidator ? mallocSizeOf(mValidator.get()) : 0;
   return mallocSizeOf(this) +
          mSource.SizeOfExcludingThisIfUnshared(mallocSizeOf) +
          mCleanSource.SizeOfExcludingThisIfUnshared(mallocSizeOf) +
-         validatorSize +
-         mValidationLog.SizeOfExcludingThisIfUnshared(mallocSizeOf) +
-         mTranslatedSource.SizeOfExcludingThisIfUnshared(mallocSizeOf) +
+         mCompileResults->SizeOfIncludingThis(mallocSizeOf) +
          mCompilationLog.SizeOfExcludingThisIfUnshared(mallocSizeOf);
 }
 
