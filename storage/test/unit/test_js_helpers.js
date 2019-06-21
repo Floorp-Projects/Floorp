@@ -139,7 +139,7 @@ function run_test() {
 
   // Create our database.
   getOpenedDatabase().executeSimpleSQL(
-    "CREATE TABLE test (" + "id INTEGER PRIMARY KEY, string TEXT" + ")"
+    "CREATE TABLE test (id INTEGER PRIMARY KEY, string TEXT)"
   );
   getOpenedDatabase().executeSimpleSQL(
     "INSERT INTO test (id, string) VALUES (123, 'foo')"

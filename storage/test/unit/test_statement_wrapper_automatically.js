@@ -9,7 +9,7 @@
 function setup() {
   getOpenedDatabase().createTable(
     "test",
-    "id INTEGER PRIMARY KEY, val NONE," + "alt_val NONE"
+    "id INTEGER PRIMARY KEY, val NONE,alt_val NONE"
   );
 }
 
@@ -103,7 +103,7 @@ function insertAndCheckMultipleParams(aVal) {
   clearTable();
 
   var stmt = createStatement(
-    "INSERT INTO test (val, alt_val) " + "VALUES (:val, :val)"
+    "INSERT INTO test (val, alt_val) VALUES (:val, :val)"
   );
   stmt.params.val = aVal;
   stmt.execute();
