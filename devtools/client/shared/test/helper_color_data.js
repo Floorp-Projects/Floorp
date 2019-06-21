@@ -159,6 +159,7 @@ function getFixtureColorData() {
     {authored: "hsla(19.304, 56%, 40%, 1)", name: "#9f522d", hex: "#9f522d", hsl: "hsl(19.5, 55.9%, 40%)", rgb: "rgb(159, 82, 45)", cycle: 3},
     {authored: "#f089", name: "#f089", hex: "#f089", hsl: "hsla(328, 100%, 50%, 0.6)", rgb: "rgba(255, 0, 136, 0.6)", cycle: 3},
     {authored: "#00ff8080", name: "#00ff8080", hex: "#00ff8080", hsl: "hsla(150.1, 100%, 50%, 0.5)", rgb: "rgba(0, 255, 128, 0.5)", cycle: 3},
+    {authored: "#aaaaaa08", name: "#aaaaaa08", hex: "#aaaaaa08", hsl: "hsla(0, 0%, 66.7%, 0)", rgb: "rgba(170, 170, 170, 0)", disableColorMatch: true},
     {authored: "currentcolor", name: "currentcolor", hex: "currentcolor", hsl: "currentcolor", rgb: "currentcolor", cycle: false},
     {authored: "inherit", name: "inherit", hex: "inherit", hsl: "inherit", rgb: "inherit", cycle: false},
     {authored: "initial", name: "initial", hex: "initial", hsl: "initial", rgb: "initial", cycle: false},
