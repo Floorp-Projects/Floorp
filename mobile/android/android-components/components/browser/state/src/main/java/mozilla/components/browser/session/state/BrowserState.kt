@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.session.state
 
+import mozilla.components.lib.state.State
+
 /**
  * Value type that represents the complete state of the browser/engine.
  *
@@ -13,4 +15,4 @@ package mozilla.components.browser.session.state
 data class BrowserState(
     val sessions: List<SessionState> = emptyList(),
     val selectedSessionId: String? = null
-)
+) : State

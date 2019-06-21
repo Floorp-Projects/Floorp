@@ -7,6 +7,7 @@ package mozilla.components.browser.session.action
 import mozilla.components.browser.session.state.SessionState
 import mozilla.components.browser.session.state.BrowserState
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.lib.state.Action
 
 /**
  * [Action] implementation related to [BrowserState].

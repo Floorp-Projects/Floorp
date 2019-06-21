@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.session.reducer
 
-import mozilla.components.browser.session.action.Action
 import mozilla.components.browser.session.action.BrowserAction
 import mozilla.components.browser.session.action.SessionAction
 import mozilla.components.browser.session.action.SessionListAction
@@ -12,7 +11,7 @@ import mozilla.components.browser.session.selector.findSession
 import mozilla.components.browser.session.state.BrowserState
 import mozilla.components.browser.session.state.SessionState
 import mozilla.components.browser.session.store.BrowserStore
-import mozilla.components.browser.session.store.Reducer
+import mozilla.components.lib.state.Action
 
 /**
  * Reducers for [BrowserStore].
@@ -21,15 +20,7 @@ import mozilla.components.browser.session.store.Reducer
  * [BrowserState].
  */
 internal object BrowserReducers {
-    fun get(): List<Reducer> = listOf(
-        ::reduce
-    )
-
-    private fun reduce(state: BrowserState, action: Action): BrowserState {
-        if (action !is BrowserAction) {
-            return state
-        }
-
+    fun reduce(state: BrowserState, action: BrowserAction): BrowserState {
         return when (action) {
             is SessionListAction -> reduceSessionListAction(state, action)
             is SessionAction -> reduceSessionAction(state, action)

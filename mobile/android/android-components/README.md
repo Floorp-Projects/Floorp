@@ -206,6 +206,8 @@ _Supporting components with generic helper code._
 
 * ⚪ [**Public Suffix List**](components/lib/publicsuffixlist/README.md) - A library for reading and using the [public suffix list](https://publicsuffix.org/).
 
+* ⚪ [**State**](components/lib/state/README.md) - A library for maintaining application state.
+
 * 🔴 [**Push-Firebase**](components/lib/push-firebase/README.md) - A [concept-push](concept/push/README.md) implementation using [Firebase Cloud Messaging](https://firebase.google.com/products/cloud-messaging/).
 
 ## Tooling

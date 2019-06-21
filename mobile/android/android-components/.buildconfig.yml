@@ -288,6 +288,10 @@ projects:
     path: components/lib/push-firebase
     description: 'An implementation of concept-push for the Firebase Message Service.'
     publish: true
+  lib-state:
+    path: components/lib/state
+    description: 'A library for maintaining application state.'
+    publish: true
   tooling-lint:
     path: components/tooling/lint
     description: 'Custom Lint checks for using and writing components.'
