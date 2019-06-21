@@ -8,7 +8,7 @@
 
 #include <d3d11.h>
 
-#include "GLContext.h"
+#include "GLContextEGL.h"
 #include "GLLibraryEGL.h"
 #include "GPUVideoImage.h"
 #include "ScopedGLHelpers.h"
