@@ -275,8 +275,8 @@ class JSJitProfilingFrameIterator {
   FrameType type_;
   void* resumePCinCurrentFrame_;
 
-  inline JitFrameLayout* framePtr();
-  inline JSScript* frameScript();
+  inline JitFrameLayout* framePtr() const;
+  inline JSScript* frameScript() const;
   MOZ_MUST_USE bool tryInitWithPC(void* pc);
   MOZ_MUST_USE bool tryInitWithTable(JitcodeGlobalTable* table, void* pc,
                                      bool forLastCallSite);
@@ -292,6 +292,9 @@ class JSJitProfilingFrameIterator {
 
   void operator++();
   bool done() const { return fp_ == nullptr; }
+
+  const char* baselineInterpreterLabel() const;
+  void baselineInterpreterScriptPC(JSScript** script, jsbytecode** pc) const;
 
   void* fp() const {
     MOZ_ASSERT(!done());

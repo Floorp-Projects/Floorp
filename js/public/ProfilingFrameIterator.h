@@ -105,15 +105,34 @@ class MOZ_NON_PARAM JS_PUBLIC_API ProfilingFrameIterator {
   //    and less than older native and psuedo-stack frame addresses
   void* stackAddress() const;
 
-  enum FrameKind { Frame_Baseline, Frame_Ion, Frame_Wasm };
+  enum FrameKind {
+    Frame_BaselineInterpreter,
+    Frame_Baseline,
+    Frame_Ion,
+    Frame_Wasm
+  };
 
   struct Frame {
     FrameKind kind;
     void* stackAddress;
-    void* returnAddress;
+    union {
+      void* returnAddress_;
+      jsbytecode* interpreterPC_;
+    };
     void* activation;
     void* endStackAddress;
     const char* label;
+    JSScript* interpreterScript;
+
+   public:
+    void* returnAddress() const {
+      MOZ_ASSERT(kind != Frame_BaselineInterpreter);
+      return returnAddress_;
+    }
+    jsbytecode* interpreterPC() const {
+      MOZ_ASSERT(kind == Frame_BaselineInterpreter);
+      return interpreterPC_;
+    }
   } JS_HAZ_GC_INVALIDATED;
 
   bool isWasm() const;

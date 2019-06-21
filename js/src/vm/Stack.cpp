@@ -1934,10 +1934,11 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
     Frame frame;
     frame.kind = Frame_Wasm;
     frame.stackAddress = stackAddr;
-    frame.returnAddress = nullptr;
+    frame.returnAddress_ = nullptr;
     frame.activation = activation_;
     frame.label = nullptr;
     frame.endStackAddress = activation_->asJit()->jsOrWasmExitFP();
+    frame.interpreterScript = nullptr;
     return mozilla::Some(frame);
   }
 
@@ -1955,7 +1956,7 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
   }
 
   MOZ_ASSERT(entry->isIon() || entry->isIonCache() || entry->isBaseline() ||
-             entry->isDummy());
+             entry->isBaselineInterpreter() || entry->isDummy());
 
   // Dummy frames produce no stack frames.
   if (entry->isDummy()) {
@@ -1963,11 +1964,26 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
   }
 
   Frame frame;
-  frame.kind = entry->isBaseline() ? Frame_Baseline : Frame_Ion;
+  if (entry->isBaselineInterpreter()) {
+    frame.kind = Frame_BaselineInterpreter;
+  } else if (entry->isBaseline()) {
+    frame.kind = Frame_Baseline;
+  } else {
+    frame.kind = Frame_Ion;
+  }
   frame.stackAddress = stackAddr;
-  frame.returnAddress = returnAddr;
+  if (entry->isBaselineInterpreter()) {
+    frame.label = jsJitIter().baselineInterpreterLabel();
+    jsJitIter().baselineInterpreterScriptPC(&frame.interpreterScript,
+                                            &frame.interpreterPC_);
+    MOZ_ASSERT(frame.interpreterScript);
+    MOZ_ASSERT(frame.interpreterPC_);
+  } else {
+    frame.interpreterScript = nullptr;
+    frame.returnAddress_ = returnAddr;
+    frame.label = nullptr;
+  }
   frame.activation = activation_;
-  frame.label = nullptr;
   frame.endStackAddress = activation_->asJit()->jsOrWasmExitFP();
   return mozilla::Some(frame);
 }
@@ -1990,6 +2006,11 @@ uint32_t JS::ProfilingFrameIterator::extractStack(Frame* frames,
   if (isWasm()) {
     frames[offset] = physicalFrame.value();
     frames[offset].label = wasmIter().label();
+    return 1;
+  }
+
+  if (physicalFrame->kind == Frame_BaselineInterpreter) {
+    frames[offset] = physicalFrame.value();
     return 1;
   }
 
