@@ -254,7 +254,7 @@ function http10Request(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.0", 200, "TEST PASSED");
 }
-data = "GET /http/1.0-request HTTP/1.0\r\n" + "\r\n";
+data = "GET /http/1.0-request HTTP/1.0\r\n\r\n";
 function check10(aData) {
   let iter = LineIterator(aData);
 
@@ -281,6 +281,7 @@ tests.push(test);
 
 // HTTP/1.1 request, no Host header, expect a 400 response
 
+// eslint-disable-next-line no-useless-concat
 data = "GET /http/1.1-request HTTP/1.1\r\n" + "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
@@ -288,6 +289,7 @@ tests.push(test);
 // HTTP/1.1 request, wrong host, expect a 400 response
 
 data =
+  // eslint-disable-next-line no-useless-concat
   "GET /http/1.1-request HTTP/1.1\r\n" + "Host: not-localhost\r\n" + "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
@@ -303,6 +305,7 @@ tests.push(test);
 
 // HTTP/1.1 request, Host header has host but no port, expect a 400 response
 
+// eslint-disable-next-line no-useless-concat
 data = "GET /http/1.1-request HTTP/1.1\r\n" + "Host: 127.0.0.1\r\n" + "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
@@ -341,6 +344,7 @@ function http11goodHost(request, response) {
   response.setStatusLine("1.1", 200, "TEST PASSED");
 }
 data =
+  // eslint-disable-next-line no-useless-concat
   "GET /http/1.1-good-host HTTP/1.1\r\n" + "Host: localhost:4444\r\n" + "\r\n";
 function check11goodHost(aData) {
   let iter = LineIterator(aData);
@@ -373,6 +377,7 @@ function http11ipHost(request, response) {
   response.setStatusLine("1.1", 200, "TEST PASSED");
 }
 data =
+  // eslint-disable-next-line no-useless-concat
   "GET /http/1.1-ip-host HTTP/1.1\r\n" + "Host: 127.0.0.1:4444\r\n" + "\r\n";
 function check11ipHost(aData) {
   let iter = LineIterator(aData);
@@ -561,6 +566,7 @@ tests.push(test);
 
 // HTTP/1.1 request, a malformed Host header
 
+// eslint-disable-next-line no-useless-concat
 data = "GET /http/1.1-request HTTP/1.1\r\n" + "Host: la la la\r\n" + "\r\n";
 test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);

@@ -81,18 +81,21 @@ function pathHandler(request, response) {
 XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return [
     new Test(
+      // eslint-disable-next-line no-useless-concat
       URL + "/state1.sjs?" + "newShared=newShared&newPrivate=newPrivate",
       null,
       start_initial,
       null
     ),
     new Test(
+      // eslint-disable-next-line no-useless-concat
       URL + "/state1.sjs?" + "newShared=newShared2&newPrivate=newPrivate2",
       null,
       start_overwrite,
       null
     ),
     new Test(
+      // eslint-disable-next-line no-useless-concat
       URL + "/state1.sjs?" + "newShared=&newPrivate=newPrivate3",
       null,
       start_remove,
@@ -101,24 +104,28 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
     new Test(URL + "/path-handler", null, start_handler, null),
     new Test(URL + "/path-handler", null, start_handler_again, null),
     new Test(
+      // eslint-disable-next-line no-useless-concat
       URL + "/state2.sjs?" + "newShared=newShared4&newPrivate=newPrivate4",
       null,
       start_other_initial,
       null
     ),
     new Test(
+      // eslint-disable-next-line no-useless-concat
       URL + "/state2.sjs?" + "newShared=",
       null,
       start_other_remove_ignore,
       null
     ),
     new Test(
+      // eslint-disable-next-line no-useless-concat
       URL + "/state2.sjs?" + "newShared=newShared5&newPrivate=newPrivate5",
       null,
       start_other_set_new,
       null
     ),
     new Test(
+      // eslint-disable-next-line no-useless-concat
       URL + "/state1.sjs?" + "newShared=done!&newPrivate=",
       null,
       start_set_remove_original,
