@@ -8,7 +8,7 @@ Fenix creates and tries to send a "baseline" ping when the app goes to the backg
 
 ## Metrics ping
 
-Fenix creates and tries to send a "baseline" ping. It is defined inside the [`metrics.yaml`](https://github.com/mozilla-mobile/fenix/blob/master/app/metrics.yaml) file. This ping includes things like wether or not Fenix is currently the default browser.
+Fenix creates and tries to send a "baseline" ping. It is defined inside the [`metrics.yaml`](https://github.com/mozilla-mobile/fenix/blob/master/app/metrics.yaml) file. This ping includes things like whether or not Fenix is currently the default browser.
 
 ## Events
 
