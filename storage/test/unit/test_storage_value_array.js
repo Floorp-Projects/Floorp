@@ -12,7 +12,7 @@ add_task(async function setup() {
   );
 
   var stmt = createStatement(
-    "INSERT INTO test (name, number, blobber) " + "VALUES (?1, ?2, ?3)"
+    "INSERT INTO test (name, number, blobber) VALUES (?1, ?2, ?3)"
   );
   stmt.bindByIndex(0, "foo");
   stmt.bindByIndex(1, 2.34);

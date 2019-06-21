@@ -618,7 +618,7 @@ function test_bind_multiple_rows_by_name() {
  * try and bind to an illegal index.
  */
 function test_bind_out_of_bounds_sync_immediate() {
-  let stmt = makeTestStatement("INSERT INTO test (id) " + "VALUES (?)");
+  let stmt = makeTestStatement("INSERT INTO test (id) VALUES (?)");
 
   let array = stmt.newBindingParamsArray();
   let bp = array.newBindingParams();
@@ -640,7 +640,7 @@ test_bind_out_of_bounds_sync_immediate.syncOnly = true;
  * we bind to an illegal index.
  */
 function test_bind_out_of_bounds_async_deferred() {
-  let stmt = makeTestStatement("INSERT INTO test (id) " + "VALUES (?)");
+  let stmt = makeTestStatement("INSERT INTO test (id) VALUES (?)");
 
   let array = stmt.newBindingParamsArray();
   let bp = array.newBindingParams();
@@ -657,7 +657,7 @@ function test_bind_out_of_bounds_async_deferred() {
 test_bind_out_of_bounds_async_deferred.asyncOnly = true;
 
 function test_bind_no_such_name_sync_immediate() {
-  let stmt = makeTestStatement("INSERT INTO test (id) " + "VALUES (:foo)");
+  let stmt = makeTestStatement("INSERT INTO test (id) VALUES (:foo)");
 
   let array = stmt.newBindingParamsArray();
   let bp = array.newBindingParams();
@@ -677,7 +677,7 @@ function test_bind_no_such_name_sync_immediate() {
 test_bind_no_such_name_sync_immediate.syncOnly = true;
 
 function test_bind_no_such_name_async_deferred() {
-  let stmt = makeTestStatement("INSERT INTO test (id) " + "VALUES (:foo)");
+  let stmt = makeTestStatement("INSERT INTO test (id) VALUES (:foo)");
 
   let array = stmt.newBindingParamsArray();
   let bp = array.newBindingParams();
@@ -694,7 +694,7 @@ test_bind_no_such_name_async_deferred.asyncOnly = true;
 
 function test_bind_bogus_type_by_index() {
   // We try to bind a JS Object here that should fail to bind.
-  let stmt = makeTestStatement("INSERT INTO test (blober) " + "VALUES (?)");
+  let stmt = makeTestStatement("INSERT INTO test (blober) VALUES (?)");
 
   let array = stmt.newBindingParamsArray();
   let bp = array.newBindingParams();
@@ -706,7 +706,7 @@ function test_bind_bogus_type_by_index() {
 
 function test_bind_bogus_type_by_name() {
   // We try to bind a JS Object here that should fail to bind.
-  let stmt = makeTestStatement("INSERT INTO test (blober) " + "VALUES (:blob)");
+  let stmt = makeTestStatement("INSERT INTO test (blober) VALUES (:blob)");
 
   let array = stmt.newBindingParamsArray();
   let bp = array.newBindingParams();
@@ -717,7 +717,7 @@ function test_bind_bogus_type_by_name() {
 }
 
 function test_bind_params_already_locked() {
-  let stmt = makeTestStatement("INSERT INTO test (id) " + "VALUES (:int)");
+  let stmt = makeTestStatement("INSERT INTO test (id) VALUES (:int)");
 
   let array = stmt.newBindingParamsArray();
   let bp = array.newBindingParams();
@@ -732,7 +732,7 @@ function test_bind_params_already_locked() {
 }
 
 function test_bind_params_array_already_locked() {
-  let stmt = makeTestStatement("INSERT INTO test (id) " + "VALUES (:int)");
+  let stmt = makeTestStatement("INSERT INTO test (id) VALUES (:int)");
 
   let array = stmt.newBindingParamsArray();
   let bp1 = array.newBindingParams();
@@ -750,7 +750,7 @@ function test_bind_params_array_already_locked() {
 }
 
 function test_no_binding_params_from_locked_array() {
-  let stmt = makeTestStatement("INSERT INTO test (id) " + "VALUES (:int)");
+  let stmt = makeTestStatement("INSERT INTO test (id) VALUES (:int)");
 
   let array = stmt.newBindingParamsArray();
   let bp = array.newBindingParams();
@@ -767,7 +767,7 @@ function test_no_binding_params_from_locked_array() {
 }
 
 function test_not_right_owning_array() {
-  let stmt = makeTestStatement("INSERT INTO test (id) " + "VALUES (:int)");
+  let stmt = makeTestStatement("INSERT INTO test (id) VALUES (:int)");
 
   let array1 = stmt.newBindingParamsArray();
   let array2 = stmt.newBindingParamsArray();
@@ -782,8 +782,8 @@ function test_not_right_owning_array() {
 }
 
 function test_not_right_owning_statement() {
-  let stmt1 = makeTestStatement("INSERT INTO test (id) " + "VALUES (:int)");
-  let stmt2 = makeTestStatement("INSERT INTO test (id) " + "VALUES (:int)");
+  let stmt1 = makeTestStatement("INSERT INTO test (id) VALUES (:int)");
+  let stmt2 = makeTestStatement("INSERT INTO test (id) VALUES (:int)");
 
   let array1 = stmt1.newBindingParamsArray();
   stmt2.newBindingParamsArray();
@@ -800,7 +800,7 @@ function test_not_right_owning_statement() {
 }
 
 function test_bind_empty_array() {
-  let stmt = makeTestStatement("INSERT INTO test (id) " + "VALUES (:int)");
+  let stmt = makeTestStatement("INSERT INTO test (id) VALUES (:int)");
 
   let paramsArray = stmt.newBindingParamsArray();
 

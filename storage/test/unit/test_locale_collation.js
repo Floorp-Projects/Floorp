@@ -92,7 +92,7 @@ function ensureResultsAreCorrect(aActual, aExpected) {
 function getResults(aCollation, aConn) {
   let results = [];
   let stmt = aConn.createStatement(
-    "SELECT t FROM test " + "ORDER BY t COLLATE " + aCollation + " ASC"
+    "SELECT t FROM test ORDER BY t COLLATE " + aCollation + " ASC"
   );
   while (stmt.executeStep()) {
     results.push(stmt.row.t);
