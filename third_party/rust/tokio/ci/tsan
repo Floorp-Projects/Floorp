@@ -3,7 +3,7 @@
 # TSAN does not understand fences and `Arc::drop` is implemented using a fence.
 # This causes many false positives.
 race:Arc*drop
-race:arc*Weak*drop
+race:Weak*drop
 
 # `std` mpsc is not used in any Tokio code base. This race is triggered by some
 # rust runtime logic.
@@ -12,17 +12,16 @@ race:std*mpsc_queue
 # Probably more fences in std.
 race:__call_tls_dtors
 
-# The crossbeam deque uses fences.
-race:crossbeam_deque
+# The epoch-based GC uses fences.
+race:crossbeam_epoch
 
-# This is excluded as this race shows up due to using the stealing features of
-# the deque. Unfortunately, the implementation uses a fence, which makes tsan
-# unhappy.
-#
-# TODO: It would be nice to not have to filter this out.
-race:try_steal_task
+# Push and steal operations in crossbeam-deque may cause data races, but such
+# data races are safe. If a data race happens, the value read by `steal` is
+# forgotten and the steal operation is then retried.
+race:crossbeam_deque*push
+race:crossbeam_deque*steal
 
-# This filters out expected data race in the treiber stack implementations.
+# This filters out expected data race in the Treiber stack implementations.
 # Treiber stacks are inherently racy. The pop operation will attempt to access
 # the "next" pointer on the node it is attempting to pop. However, at this
 # point it has not gained ownership of the node and another thread might beat
@@ -30,4 +29,5 @@ race:try_steal_task
 # original pop operation will fail due to the ABA guard, but tsan still picks
 # up the access on the next pointer.
 race:Backup::next_sleeper
+race:Backup::set_next_sleeper
 race:WorkerEntry::set_next_sleeper

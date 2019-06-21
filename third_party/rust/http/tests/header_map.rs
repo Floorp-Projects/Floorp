@@ -319,3 +319,11 @@ fn insert_invalid() {
     let mut headers = HeaderMap::new();
     headers.insert("evil\r\nfoo", "bar".parse().unwrap());
 }
+
+#[test]
+fn value_htab() {
+    // RFC 7230 Section 3.2:
+    // > field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+    HeaderValue::from_static("hello\tworld");
+    HeaderValue::from_str("hello\tworld").unwrap();
+}

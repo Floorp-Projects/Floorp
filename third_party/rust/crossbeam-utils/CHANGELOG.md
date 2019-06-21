@@ -1,3 +1,13 @@
+# Version 0.6.5
+
+- Rename `Backoff::is_complete()` to `Backoff::is_completed()`.
+
+# Version 0.6.4
+
+- Add `WaitGroup`, `ShardedLock`, and `Backoff`.
+- Add `fetch_*` methods for `AtomicCell<i128>` and `AtomicCell<u128>`.
+- Expand documentation.
+
 # Version 0.6.3
 
 - Add `AtomicCell`.

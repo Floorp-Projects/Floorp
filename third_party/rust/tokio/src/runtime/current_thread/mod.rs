@@ -62,9 +62,31 @@
 //! [rt]: struct.Runtime.html
 //! [concurrent-rt]: ../struct.Runtime.html
 //! [chan]: https://docs.rs/futures/0.1/futures/sync/mpsc/fn.channel.html
+//! [reactor]: ../../reactor/struct.Reactor.html
+//! [executor]: https://tokio.rs/docs/getting-started/runtime-model/#executors
+//! [timer]: ../../timer/index.html
 
 mod builder;
 mod runtime;
 
 pub use self::builder::Builder;
 pub use self::runtime::{Runtime, Handle};
+pub use tokio_current_thread::spawn;
+pub use tokio_current_thread::TaskExecutor;
+
+use futures::Future;
+
+/// Run the provided future to completion using a runtime running on the current thread.
+///
+/// This first creates a new [`Runtime`], and calls [`Runtime::block_on`] with the provided future,
+/// which blocks the current thread until the provided future completes. It then calls
+/// [`Runtime::run`] to wait for any other spawned futures to resolve.
+pub fn block_on_all<F>(future: F) -> Result<F::Item, F::Error>
+where
+    F: Future,
+{
+    let mut r = Runtime::new().expect("failed to start runtime on current thread");
+    let v = r.block_on(future)?;
+    r.run().expect("failed to resolve remaining futures");
+    Ok(v)
+}

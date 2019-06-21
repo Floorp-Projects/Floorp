@@ -104,7 +104,7 @@ impl Http1Transaction for Server {
                         Version::HTTP_10
                     };
 
-                    record_header_indices(bytes, &req.headers, &mut headers_indices);
+                    record_header_indices(bytes, &req.headers, &mut headers_indices)?;
                     headers_len = req.headers.len();
                     //(len, subject, version, headers_len)
                 }
@@ -242,7 +242,7 @@ impl Http1Transaction for Server {
         let (ret, mut is_last) = if is_upgrade {
             (Ok(()), true)
         } else if msg.head.subject.is_informational() {
-            error!("response with 1xx status code not supported");
+            warn!("response with 1xx status code not supported");
             *msg.head = MessageHead::default();
             msg.head.subject = StatusCode::INTERNAL_SERVER_ERROR;
             msg.body = None;
@@ -267,6 +267,10 @@ impl Http1Transaction for Server {
             match msg.head.version {
                 Version::HTTP_10 => extend(dst, b"HTTP/1.0 "),
                 Version::HTTP_11 => extend(dst, b"HTTP/1.1 "),
+                Version::HTTP_2 => {
+                    warn!("response with HTTP2 version coerced to HTTP/1.1");
+                    extend(dst, b"HTTP/1.1 ");
+                },
                 _ => unreachable!(),
             }
 
@@ -586,7 +590,7 @@ impl Http1Transaction for Client {
                         } else {
                             Version::HTTP_10
                         };
-                        record_header_indices(bytes, &res.headers, &mut headers_indices);
+                        record_header_indices(bytes, &res.headers, &mut headers_indices)?;
                         let headers_len = res.headers.len();
                         (len, status, version, headers_len)
                     },
@@ -914,16 +918,54 @@ struct HeaderIndices {
     value: (usize, usize),
 }
 
-fn record_header_indices(bytes: &[u8], headers: &[httparse::Header], indices: &mut [HeaderIndices]) {
+fn record_header_indices(
+    bytes: &[u8],
+    headers: &[httparse::Header],
+    indices: &mut [HeaderIndices]
+) -> Result<(), ::error::Parse> {
     let bytes_ptr = bytes.as_ptr() as usize;
-    for (header, indices) in headers.iter().zip(indices.iter_mut()) {
-        let name_start = header.name.as_ptr() as usize - bytes_ptr;
-        let name_end = name_start + header.name.len();
-        indices.name = (name_start, name_end);
-        let value_start = header.value.as_ptr() as usize - bytes_ptr;
-        let value_end = value_start + header.value.len();
-        indices.value = (value_start, value_end);
+
+    // FIXME: This should be a single plain `for` loop.
+    // Splitting it is a work-around for https://github.com/rust-lang/rust/issues/55105
+    macro_rules! split_loops_if {
+        (
+            cfg($($cfg: tt)+)
+            for $i: pat in ($iter: expr) {
+                $body1: block
+                $body2: block
+            }
+        ) => {
+            for $i in $iter {
+                $body1
+                #[cfg(not($($cfg)+))] $body2
+            }
+            #[cfg($($cfg)+)]
+            for $i in $iter {
+                $body2
+            }
+        }
     }
+    split_loops_if! {
+        cfg(all(target_arch = "arm", target_feature = "v7", target_feature = "neon"))
+        for (header, indices) in (headers.iter().zip(indices.iter_mut())) {
+            {
+                if header.name.len() >= (1 << 16) {
+                    debug!("header name larger than 64kb: {:?}", header.name);
+                    return Err(::error::Parse::TooLarge);
+                }
+                let name_start = header.name.as_ptr() as usize - bytes_ptr;
+                let name_end = name_start + header.name.len();
+                indices.name = (name_start, name_end);
+            }
+            {
+                let value_start = header.value.as_ptr() as usize - bytes_ptr;
+                let value_end = value_start + header.value.len();
+                indices.value = (value_start, value_end);
+            }
+        }
+    }
+
+    Ok(())
 }
 
 // Write header names as title case. The header name is assumed to be ASCII,
@@ -939,6 +981,8 @@ fn title_case(dst: &mut Vec<u8>, name: &[u8]) {
     if let Some(c) = iter.next() {
         if *c >= b'a' && *c <= b'z' {
             dst.push(*c ^ b' ');
+        } else {
+            dst.push(*c);
         }
     }
 
@@ -949,6 +993,8 @@ fn title_case(dst: &mut Vec<u8>, name: &[u8]) {
           if let Some(c) = iter.next() {
               if *c >= b'a' && *c <= b'z' {
                   dst.push(*c ^ b' ');
+              } else {
+                  dst.push(*c);
               }
           }
       }
@@ -1367,6 +1413,7 @@ mod tests {
         let mut head = MessageHead::default();
         head.headers.insert("content-length", HeaderValue::from_static("10"));
         head.headers.insert("content-type", HeaderValue::from_static("application/json"));
+        head.headers.insert("*-*", HeaderValue::from_static("o_o"));
 
         let mut vec = Vec::new();
         Client::encode(Encode {
@@ -1377,7 +1424,7 @@ mod tests {
             title_case_headers: true,
         }, &mut vec).unwrap();
 
-        assert_eq!(vec, b"GET / HTTP/1.1\r\nContent-Length: 10\r\nContent-Type: application/json\r\n\r\n".to_vec());
+        assert_eq!(vec, b"GET / HTTP/1.1\r\nContent-Length: 10\r\nContent-Type: application/json\r\n*-*: o_o\r\n\r\n".to_vec());
     }
 
     #[test]
@@ -1394,6 +1441,19 @@ mod tests {
         }, &mut vec).unwrap();
 
         assert!(encoder.is_last());
+    }
+
+    #[test]
+    fn parse_header_htabs() {
+        let mut bytes = BytesMut::from("HTTP/1.1 200 OK\r\nserver: hello\tworld\r\n\r\n");
+        let parsed = Client::parse(&mut bytes, ParseContext {
+            cached_headers: &mut None,
+            req_method: &mut Some(Method::GET),
+        })
+            .expect("parse ok")
+            .expect("parse complete");
+
+        assert_eq!(parsed.head.headers["server"], "hello\tworld");
     }
 
     #[cfg(feature = "nightly")]
@@ -1525,10 +1585,7 @@ mod tests {
             assert_eq!(vec.len(), len);
             ::test::black_box(&vec);
 
-            // reset Vec<u8> to 0 (always safe)
-            unsafe {
-                vec.set_len(0);
-            }
+            vec.clear();
         })
     }
 }

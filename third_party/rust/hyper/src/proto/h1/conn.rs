@@ -5,10 +5,12 @@ use std::marker::PhantomData;
 use bytes::{Buf, Bytes};
 use futures::{Async, Poll};
 use http::{HeaderMap, Method, Version};
+use http::header::{HeaderValue, CONNECTION};
 use tokio_io::{AsyncRead, AsyncWrite};
 
 use ::Chunk;
 use proto::{BodyLength, DecodedLength, MessageHead};
+use headers::connection_keep_alive;
 use super::io::{Buffered};
 use super::{EncodedBuf, Encode, Encoder, /*Decode,*/ Decoder, Http1Transaction, ParseContext};
 
@@ -36,6 +38,7 @@ where I: AsyncRead + AsyncWrite,
         Conn {
             io: Buffered::new(io),
             state: State {
+                allow_half_close: true,
                 cached_headers: None,
                 error: None,
                 keep_alive: KA::Busy,
@@ -61,12 +64,20 @@ where I: AsyncRead + AsyncWrite,
         self.io.set_max_buf_size(max);
     }
 
+    pub fn set_read_buf_exact_size(&mut self, sz: usize) {
+        self.io.set_read_buf_exact_size(sz);
+    }
+
     pub fn set_write_strategy_flatten(&mut self) {
         self.io.set_write_strategy_flatten();
     }
 
     pub fn set_title_case_headers(&mut self) {
         self.state.title_case_headers = true;
+    }
+
+    pub(crate) fn set_disable_half_close(&mut self) {
+        self.state.allow_half_close = false;
     }
 
     pub fn into_inner(self) -> (I, Bytes) {
@@ -222,10 +233,11 @@ where I: AsyncRead + AsyncWrite,
 
         trace!("read_keep_alive; is_mid_message={}", self.is_mid_message());
 
-        if !self.is_mid_message() {
-            self.require_empty_read().map_err(::Error::new_io)?;
+        if self.is_mid_message() {
+            self.mid_message_detect_eof().map_err(::Error::new_io)
+        } else {
+            self.require_empty_read().map_err(::Error::new_io)
         }
-        Ok(())
     }
 
     fn is_mid_message(&self) -> bool {
@@ -246,7 +258,7 @@ where I: AsyncRead + AsyncWrite,
     // This should only be called for Clients wanting to enter the idle
     // state.
     fn require_empty_read(&mut self) -> io::Result<()> {
-        assert!(!self.can_read_head() && !self.can_read_body());
+        debug_assert!(!self.can_read_head() && !self.can_read_body());
 
         if !self.io.read_buf().is_empty() {
             debug!("received an unexpected {} bytes", self.io.read_buf().len());
@@ -273,11 +285,21 @@ where I: AsyncRead + AsyncWrite,
         }
     }
 
+    fn mid_message_detect_eof(&mut self) -> io::Result<()> {
+        debug_assert!(!self.can_read_head() && !self.can_read_body());
+
+        if self.state.allow_half_close || !self.io.read_buf().is_empty() {
+            Ok(())
+        } else {
+            self.try_io_read().map(|_| ())
+        }
+    }
+
     fn try_io_read(&mut self) -> Poll<usize, io::Error> {
          match self.io.read_from_io() {
             Ok(Async::Ready(0)) => {
                 trace!("try_io_read; found EOF on connection: {:?}", self.state);
-                let must_error = self.should_error_on_eof();
+                let must_error = !self.state.is_idle();
                 let ret = if must_error {
                     let desc = if self.is_mid_message() {
                         "unexpected EOF waiting for response"
@@ -438,12 +460,38 @@ where I: AsyncRead + AsyncWrite,
         }
     }
 
+    // Fix keep-alives when Connection: keep-alive header is not present
+    fn fix_keep_alive(&mut self, head: &mut MessageHead<T::Outgoing>) {
+        let outgoing_is_keep_alive = head
+            .headers
+            .get(CONNECTION)
+            .and_then(|value| Some(connection_keep_alive(value)))
+            .unwrap_or(false);
+
+        if !outgoing_is_keep_alive {
+            match head.version {
+                // If response is version 1.0 and keep-alive is not present in the response,
+                // disable keep-alive so the server closes the connection
+                Version::HTTP_10 => self.state.disable_keep_alive(),
+                // If response is version 1.1 and keep-alive is wanted, add
+                // Connection: keep-alive header when not present
+                Version::HTTP_11 => if self.state.wants_keep_alive() {
+                    head.headers
+                        .insert(CONNECTION, HeaderValue::from_static("keep-alive"));
+                },
+                _ => (),
+            }
+        }
+    }
+
     // If we know the remote speaks an older version, we try to fix up any messages
     // to work with our older peer.
     fn enforce_version(&mut self, head: &mut MessageHead<T::Outgoing>) {
 
         match self.state.version {
             Version::HTTP_10 => {
+                // Fixes response or connection when keep-alive header is not present
+                self.fix_keep_alive(head);
                 // If the remote only knows HTTP/1.0, we should force ourselves
                 // to do only speak HTTP/1.0 as well.
                 head.version = Version::HTTP_10;
@@ -623,6 +671,7 @@ impl<I, B: Buf, T> fmt::Debug for Conn<I, B, T> {
 }
 
 struct State {
+    allow_half_close: bool,
     /// Re-usable HeaderMap to reduce allocating new ones.
     cached_headers: Option<HeaderMap>,
     /// If an error occurs when there wasn't a direct way to return it
@@ -762,7 +811,7 @@ impl State {
         match (&self.reading, &self.writing) {
             (&Reading::KeepAlive, &Writing::KeepAlive) => {
                 if let KA::Busy = self.keep_alive.status() {
-                    self.idle();
+                    self.idle::<T>();
                 } else {
                     trace!("try_keep_alive({}): could keep-alive, but status = {:?}", T::LOG, self.keep_alive);
                     self.close();
@@ -787,12 +836,23 @@ impl State {
         self.keep_alive.busy();
     }
 
-    fn idle(&mut self) {
+    fn idle<T: Http1Transaction>(&mut self) {
+        debug_assert!(!self.is_idle(), "State::idle() called while idle");
+
         self.method = None;
         self.keep_alive.idle();
         if self.is_idle() {
             self.reading = Reading::Init;
             self.writing = Writing::Init;
+
+            // !T::should_read_first() means Client.
+            //
+            // If Client connection has just gone idle, the Dispatcher
+            // should try the poll loop one more time, so as to poll the
+            // pending requests stream.
+            if !T::should_read_first() {
+                self.notify_read = true;
+            }
         } else {
             self.close();
         }

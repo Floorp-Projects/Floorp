@@ -1,3 +1,4 @@
+use std::cmp;
 use std::io::prelude::*;
 use std::io;
 use std::os::unix::net;
@@ -5,6 +6,8 @@ use std::os::unix::prelude::*;
 use std::path::Path;
 use std::net::Shutdown;
 
+use iovec::IoVec;
+use iovec::unix as iovec;
 use libc;
 use mio::event::Evented;
 use mio::unix::EventedFd;
@@ -113,6 +116,60 @@ impl UnixStream {
     /// (see the documentation of `Shutdown`).
     pub fn shutdown(&self, how: Shutdown) -> io::Result<()> {
         self.inner.shutdown(how)
+    }
+
+    /// Read in a list of buffers all at once.
+    ///
+    /// This operation will attempt to read bytes from this socket and place
+    /// them into the list of buffers provided. Note that each buffer is an
+    /// `IoVec` which can be created from a byte slice.
+    ///
+    /// The buffers provided will be filled in sequentially. A buffer will be
+    /// entirely filled up before the next is written to.
+    ///
+    /// The number of bytes read is returned, if successful, or an error is
+    /// returned otherwise. If no bytes are available to be read yet then
+    /// a "would block" error is returned. This operation does not block.
+    pub fn read_bufs(&self, bufs: &mut [&mut IoVec]) -> io::Result<usize> {
+        unsafe {
+            let slice = iovec::as_os_slice_mut(bufs);
+            let len = cmp::min(<libc::c_int>::max_value() as usize, slice.len());
+            let rc = libc::readv(self.inner.as_raw_fd(),
+                                slice.as_ptr(),
+                                len as libc::c_int);
+            if rc < 0 {
+                Err(io::Error::last_os_error())
+            } else {
+                Ok(rc as usize)
+            }
+        }
+    }
+
+    /// Write a list of buffers all at once.
+    ///
+    /// This operation will attempt to write a list of byte buffers to this
+    /// socket. Note that each buffer is an `IoVec` which can be created from a
+    /// byte slice.
+    ///
+    /// The buffers provided will be written sequentially. A buffer will be
+    /// entirely written before the next is written.
+    ///
+    /// The number of bytes written is returned, if successful, or an error is
+    /// returned otherwise. If the socket is not currently writable then a
+    /// "would block" error is returned. This operation does not block.
+    pub fn write_bufs(&self, bufs: &[&IoVec]) -> io::Result<usize> {
+        unsafe {
+            let slice = iovec::as_os_slice(bufs);
+            let len = cmp::min(<libc::c_int>::max_value() as usize, slice.len());
+            let rc = libc::writev(self.inner.as_raw_fd(),
+                                 slice.as_ptr(),
+                                 len as libc::c_int);
+            if rc < 0 {
+                Err(io::Error::last_os_error())
+            } else {
+                Ok(rc as usize)
+            }
+        }
     }
 }
 

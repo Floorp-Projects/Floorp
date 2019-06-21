@@ -1,5 +1,5 @@
-use executor::current_thread::{self, CurrentThread};
-use executor::current_thread::Handle as ExecutorHandle;
+use tokio_current_thread::{self as current_thread, CurrentThread};
+use tokio_current_thread::Handle as ExecutorHandle;
 use runtime::current_thread::Builder;
 
 use tokio_reactor::{self, Reactor};
@@ -7,8 +7,10 @@ use tokio_timer::clock::{self, Clock};
 use tokio_timer::timer::{self, Timer};
 use tokio_executor;
 
-use futures::Future;
+use futures::{future, Future};
 
+use std::fmt;
+use std::error::Error;
 use std::io;
 
 /// Single-threaded runtime provides a way to start reactor
@@ -40,12 +42,59 @@ impl Handle {
     where F: Future<Item = (), Error = ()> + Send + 'static {
         self.0.spawn(future)
     }
+
+    /// Provides a best effort **hint** to whether or not `spawn` will succeed.
+    ///
+    /// This function may return both false positives **and** false negatives.
+    /// If `status` returns `Ok`, then a call to `spawn` will *probably*
+    /// succeed, but may fail. If `status` returns `Err`, a call to `spawn` will
+    /// *probably* fail, but may succeed.
+    ///
+    /// This allows a caller to avoid creating the task if the call to `spawn`
+    /// has a high likelihood of failing.
+    pub fn status(&self) -> Result<(), tokio_executor::SpawnError> {
+        self.0.status()
+    }
+}
+
+impl<T> future::Executor<T> for Handle
+where T: Future<Item = (), Error = ()> + Send + 'static,
+{
+    fn execute(&self, future: T) -> Result<(), future::ExecuteError<T>> {
+        if let Err(e) = self.status() {
+            let kind = if e.is_at_capacity() {
+                future::ExecuteErrorKind::NoCapacity
+            } else {
+                future::ExecuteErrorKind::Shutdown
+            };
+
+            return Err(future::ExecuteError::new(kind, future));
+        }
+
+        let _ = self.spawn(future);
+        Ok(())
+    }
 }
 
 /// Error returned by the `run` function.
 #[derive(Debug)]
 pub struct RunError {
     inner: current_thread::RunError,
+}
+
+impl fmt::Display for RunError {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}", self.inner)
+    }
+}
+
+impl Error for RunError {
+    fn description(&self) -> &str {
+        self.inner.description()
+    }
+    fn cause(&self) -> Option<&Error> {
+        self.inner.cause()
+    }
 }
 
 impl Runtime {

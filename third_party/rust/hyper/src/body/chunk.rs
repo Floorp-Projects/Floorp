@@ -114,7 +114,7 @@ impl AsRef<[u8]> for Chunk {
 impl fmt::Debug for Chunk {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Debug::fmt(self.as_ref(), f)
+        fmt::Debug::fmt(&self.bytes, f)
     }
 }
 
@@ -179,7 +179,7 @@ mod tests {
             let chunk = ::Chunk::from(s);
             dst.put(chunk);
             ::test::black_box(&dst);
-            unsafe { dst.set_len(0); }
+            dst.clear();
         })
     }
 }
