@@ -861,11 +861,10 @@ nsresult Classifier::RegenActiveTables() {
   mActiveTablesCache.Clear();
 
   nsTArray<nsCString> foundTables;
-  ScanStoreDir(mRootStoreDirectory, foundTables);
+  nsresult rv = ScanStoreDir(mRootStoreDirectory, foundTables);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 
-  for (uint32_t i = 0; i < foundTables.Length(); i++) {
-    nsCString table(foundTables[i]);
-
+  for (const auto& table : foundTables) {
     RefPtr<const LookupCache> lookupCache = GetLookupCache(table);
     if (!lookupCache) {
       LOG(("Inactive table (no cache): %s", table.get()));
@@ -877,25 +876,9 @@ nsresult Classifier::RegenActiveTables() {
       continue;
     }
 
-    if (LookupCache::Cast<const LookupCacheV4>(lookupCache)) {
-      LOG(("Active v4 table: %s", table.get()));
-    } else {
-      HashStore store(table, GetProvider(table), mRootStoreDirectory);
-
-      nsresult rv = store.Open();
-      if (NS_FAILED(rv)) {
-        continue;
-      }
-
-      const ChunkSet& adds = store.AddChunks();
-      const ChunkSet& subs = store.SubChunks();
-
-      if (adds.Length() == 0 && subs.Length() == 0) {
-        continue;
-      }
-
-      LOG(("Active v2 table: %s", store.TableName().get()));
-    }
+    LOG(("Active %s table: %s",
+         LookupCache::Cast<const LookupCacheV4>(lookupCache) ? "v4" : "v2",
+         table.get()));
 
     mActiveTablesCache.AppendElement(table);
   }
