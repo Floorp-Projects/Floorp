@@ -155,7 +155,7 @@ function add_tests() {
     "ocsp-stapling-unknown.example.com",
     SEC_ERROR_OCSP_UNKNOWN_CERT,
     [],
-    "Stapled Unknown response -> a fetch should not have been" + " attempted"
+    "Stapled Unknown response -> a fetch should not have been attempted"
   );
 
   // A failure to retrieve an OCSP response must result in the cached Unknown
@@ -200,7 +200,7 @@ function add_tests() {
     "ocsp-stapling-none.example.com",
     PRErrorCodeSuccess,
     [],
-    "Cached Good response -> a fetch should not have been" + " attempted"
+    "Cached Good response -> a fetch should not have been attempted"
   );
 
   // ---------------------------------------------------------------------------
@@ -225,7 +225,7 @@ function add_tests() {
     "ocsp-stapling-none.example.com",
     PRErrorCodeSuccess,
     [],
-    "Noted OCSP server failure -> a fetch should not have been" + " attempted"
+    "Noted OCSP server failure -> a fetch should not have been attempted"
   );
 
   // The error entry must not prevent a stapled OCSP response from being
@@ -234,7 +234,7 @@ function add_tests() {
     "ocsp-stapling-revoked.example.com",
     SEC_ERROR_REVOKED_CERTIFICATE,
     [],
-    "Stapled Revoked response -> a fetch should not have been" + " attempted"
+    "Stapled Revoked response -> a fetch should not have been attempted"
   );
 
   // ---------------------------------------------------------------------------
