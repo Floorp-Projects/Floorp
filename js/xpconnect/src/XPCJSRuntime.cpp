@@ -3085,8 +3085,10 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
       OnLargeAllocationFailureCallback);
   JS::SetProcessBuildIdOp(GetBuildId);
 
-  // Initialize a helper thread pool for JS offthread tasks.
+  // Initialize a helper thread pool for JS offthread tasks. Set the
+  // task callback to divert tasks to the helperthreads.
   InitializeHelperThreadPool();
+  SetHelperThreadTaskCallback(&DispatchOffThreadTask);
 
   // The JS engine needs to keep the source code around in order to implement
   // Function.prototype.toSource(). It'd be nice to not have to do this for
