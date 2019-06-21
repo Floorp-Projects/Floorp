@@ -8,11 +8,13 @@
   <head>
     <meta name="viewport" content="width=device-width" />
     <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
+    <script defer="defer" src="chrome://global/content/certviewer/certviewer.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/info-item.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/info-group.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/dummy-info.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/handshake-section.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/components/certificate-tab.js"></script>
+    <script defer="defer" src="chrome://global/content/certviewer/components/certificate-section.js"></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://global/content/certviewer/certviewer.css">
     <title>about:certificate</title>
@@ -21,11 +23,21 @@
     <h1>Certificate Viewer</h1>
 
     <handshake-section></handshake-section> 
+
+    <certificate-section></certificate-section> 
     
     <template id="handshake-section-template" class="section">
       <link rel="stylesheet" href="chrome://global/content/certviewer/components/handshake-section.css">
       <h1 class="title"></h1>
     </template>
+
+    <template id="certificate-section-template" class="section">
+      <link rel="stylesheet" href="chrome://global/content/certviewer/components/certificate-section.css">
+      <h1 class="title"></h1>
+      <div class="certificate-tabs"></div>
+      <div class="info-groups"></div>
+    </template>
+
 
     <template id="info-item-template">
       <link rel="stylesheet" href="chrome://global/content/certviewer/components/info-item.css">
@@ -38,7 +50,7 @@
       <span class="info-group-title"></span>
       <span class="info-group-title-hr"></span>
     </template>
-    
+
     <template id="certificate-tab-template">
       <link rel="stylesheet" href="chrome://global/content/certviewer/components/certificate-tab.css">
       <span class="tab"></span>
