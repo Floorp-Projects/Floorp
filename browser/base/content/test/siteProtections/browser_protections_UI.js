@@ -3,6 +3,14 @@
 
 /* Basic UI tests for the protections panel */
 
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.protections_panel.enabled", true],
+    ],
+  });
+});
+
 add_task(async function testToggleSwitch() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com");
   await openProtectionsPanel();
