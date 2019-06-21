@@ -808,7 +808,7 @@ struct nsGridContainerFrame::UsedTrackSizes {
   /** Helper function for the above method */
   void ResolveSubgridTrackSizesForAxis(nsGridContainerFrame* aFrame,
                                        LogicalAxis aAxis, Subgrid* aSubgrid,
-                                       gfxContext& aRC, nscoord aCBSize);
+                                       gfxContext& aRC, nscoord aContentBoxSize);
 
   // This only has valid sizes when mCanResolveLineRangeSize is true in
   // the same axis.  It may have zero tracks (a grid with only abs.pos.
@@ -2021,7 +2021,7 @@ struct nsGridContainerFrame::Tracks {
   void CalculateSizes(GridReflowInput& aState,
                       nsTArray<GridItemInfo>& aGridItems,
                       const TrackSizingFunctions& aFunctions,
-                      nscoord aContentSize, LineRange GridArea::*aRange,
+                      nscoord aContentBoxSize, LineRange GridArea::*aRange,
                       SizingConstraint aConstraint);
 
   /**
@@ -2029,7 +2029,7 @@ struct nsGridContainerFrame::Tracks {
    * https://drafts.csswg.org/css-align-3/#propdef-align-content
    */
   void AlignJustifyContent(const nsStylePosition* aStyle, WritingMode aWM,
-                           nscoord aContentSize, bool aIsSubgridded);
+                           nscoord aContentBoxSize, bool aIsSubgridded);
 
   nscoord GridLineEdge(uint32_t aLine, GridLineSide aSide) const {
     if (MOZ_UNLIKELY(mSizes.IsEmpty())) {
@@ -3010,20 +3010,23 @@ void nsGridContainerFrame::UsedTrackSizes::ResolveTrackSizesForAxis(
     mCanResolveLineRangeSize[aAxis] = true;
   } else {
     const auto& range = subgrid->mArea.LineRangeForAxis(parentAxis);
-    nscoord cbSize = range.ToLength(parentSizes->mSizes[parentAxis]);
-    ResolveSubgridTrackSizesForAxis(aFrame, aAxis, subgrid, aRC, cbSize);
+    nscoord contentBoxSize = range.ToLength(parentSizes->mSizes[parentAxis]);
+    auto parentWM = aFrame->GetParent()->GetWritingMode();
+    contentBoxSize -= subgrid->mMarginBorderPadding.StartEnd(parentAxis, parentWM);
+    contentBoxSize = std::max(nscoord(0), contentBoxSize);
+    ResolveSubgridTrackSizesForAxis(aFrame, aAxis, subgrid, aRC, contentBoxSize);
   }
 }
 
 void nsGridContainerFrame::UsedTrackSizes::ResolveSubgridTrackSizesForAxis(
     nsGridContainerFrame* aFrame, LogicalAxis aAxis, Subgrid* aSubgrid,
-    gfxContext& aRC, nscoord aCBSize) {
+    gfxContext& aRC, nscoord aContentBoxSize) {
   GridReflowInput state(aFrame, aRC);
   state.mGridItems = aSubgrid->mGridItems;
   Grid grid;
   grid.mGridColEnd = aSubgrid->mGridColEnd;
   grid.mGridRowEnd = aSubgrid->mGridRowEnd;
-  state.CalculateTrackSizesForAxis(aAxis, grid, aCBSize,
+  state.CalculateTrackSizesForAxis(aAxis, grid, aContentBoxSize,
                                    SizingConstraint::NoConstraint);
   const auto& tracks = aAxis == eLogicalAxisInline ? state.mCols : state.mRows;
   mSizes[aAxis] = tracks.mSizes;
@@ -3032,7 +3035,7 @@ void nsGridContainerFrame::UsedTrackSizes::ResolveSubgridTrackSizesForAxis(
 }
 
 void nsGridContainerFrame::GridReflowInput::CalculateTrackSizesForAxis(
-    LogicalAxis aAxis, const Grid& aGrid, nscoord aContentSize,
+    LogicalAxis aAxis, const Grid& aGrid, nscoord aContentBoxSize,
     SizingConstraint aConstraint) {
   auto& tracks = aAxis == eLogicalAxisInline ? mCols : mRows;
   const auto& sizingFunctions =
@@ -3046,10 +3049,10 @@ void nsGridContainerFrame::GridReflowInput::CalculateTrackSizesForAxis(
   bool useParentGaps = false;
   const bool isSubgriddedAxis = mFrame->IsSubgrid(aAxis);
   if (MOZ_LIKELY(!isSubgriddedAxis)) {
-    tracks.Initialize(sizingFunctions, gapStyle, gridEnd, aContentSize);
+    tracks.Initialize(sizingFunctions, gapStyle, gridEnd, aContentBoxSize);
   } else {
-    tracks.mGridGap = nsLayoutUtils::ResolveGapToLength(gapStyle, aContentSize);
-    tracks.mContentBoxSize = aContentSize;
+    tracks.mGridGap = nsLayoutUtils::ResolveGapToLength(gapStyle, aContentBoxSize);
+    tracks.mContentBoxSize = aContentBoxSize;
     const auto* subgrid = mFrame->GetProperty(Subgrid::Prop());
     tracks.mSizes.SetLength(gridEnd);
     auto* parent = mFrame->ParentGridContainerForSubgrid();
@@ -3068,7 +3071,7 @@ void nsGridContainerFrame::GridReflowInput::CalculateTrackSizesForAxis(
                                *fallbackTrackSizing->mAutoMaxSizing,
                                fallbackTrackSizing->mHasRepeatAuto,
                                fallbackTrackSizing->mRepeatAutoIndex),
-          gapStyle, gridEnd, aContentSize);
+          gapStyle, gridEnd, aContentBoxSize);
     }
   }
 
@@ -3089,7 +3092,7 @@ void nsGridContainerFrame::GridReflowInput::CalculateTrackSizesForAxis(
                                    fallbackTrackSizing->mHasRepeatAuto,
                                    fallbackTrackSizing->mRepeatAutoIndex)
             : sizingFunctions,
-        aContentSize,
+        aContentBoxSize,
         aAxis == eLogicalAxisInline ? &GridArea::mCols : &GridArea::mRows,
         aConstraint);
     // XXXmats we're losing the baseline state of subgrid descendants that
@@ -3098,8 +3101,8 @@ void nsGridContainerFrame::GridReflowInput::CalculateTrackSizesForAxis(
     mGridItems.TruncateLength(origGridItemCount);
   }
 
-  if (aContentSize != NS_UNCONSTRAINEDSIZE) {
-    tracks.AlignJustifyContent(mGridStyle, mWM, aContentSize, isSubgriddedAxis);
+  if (aContentBoxSize != NS_UNCONSTRAINEDSIZE) {
+    tracks.AlignJustifyContent(mGridStyle, mWM, aContentBoxSize, isSubgriddedAxis);
   } else if (!useParentGaps) {
     const nscoord gridGap = tracks.mGridGap;
     nscoord pos = 0;
@@ -5612,7 +5615,7 @@ void nsGridContainerFrame::Tracks::StretchFlexibleTracks(
 }
 
 void nsGridContainerFrame::Tracks::AlignJustifyContent(
-    const nsStylePosition* aStyle, WritingMode aWM, nscoord aContentSize,
+    const nsStylePosition* aStyle, WritingMode aWM, nscoord aContentBoxSize,
     bool aIsSubgriddedAxis) {
   const bool isAlign = mAxis == eLogicalAxisBlock;
   // Align-/justify-content doesn't apply in a subgridded axis.
@@ -5702,7 +5705,7 @@ void nsGridContainerFrame::Tracks::AlignJustifyContent(
         }
       }
     }
-    space = aContentSize - trackSizeSum - SumOfGridGaps();
+    space = aContentBoxSize - trackSizeSum - SumOfGridGaps();
     // Use the fallback value instead when applicable.
     if (space < 0 ||
         (alignment == NS_STYLE_ALIGN_SPACE_BETWEEN && mSizes.Length() == 1)) {

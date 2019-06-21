@@ -298,6 +298,11 @@ class DebugScript {
   bool needed() const {
     return generatorObserverCount > 0 || stepperCount > 0 || numSites > 0;
   }
+
+  static size_t allocSize(size_t codeLength) {
+    return offsetof(DebugScript, breakpoints) +
+           codeLength * sizeof(BreakpointSite*);
+  }
 };
 
 using UniqueDebugScript = js::UniquePtr<DebugScript, JS::FreePolicy>;
@@ -2661,6 +2666,7 @@ class JSScript : public js::gc::TenuredCell {
   js::jit::JitScript* jitScript() { return jitScript_; }
 
   void maybeReleaseJitScript();
+  void releaseJitScript();
 
   inline js::GlobalObject& global() const;
   inline bool hasGlobal(const js::GlobalObject* global) const;
@@ -2958,6 +2964,7 @@ class JSScript : public js::gc::TenuredCell {
   js::DebugScript* debugScript();
   js::DebugScript* releaseDebugScript();
   void destroyDebugScript(js::FreeOp* fop);
+  void freeDebugScript(js::FreeOp* fop);
 
   bool hasDebugScript() const { return hasFlag(MutableFlags::HasDebugScript); }
 

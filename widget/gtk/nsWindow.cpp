@@ -119,6 +119,9 @@ using namespace mozilla::widget;
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/KnowsCompositor.h"
 
+#include "mozilla/layers/APZInputBridge.h"
+#include "mozilla/layers/IAPZCTreeManager.h"
+
 #ifdef MOZ_X11
 #  include "GLContextGLX.h"  // for GLContextGLX::FindVisual()
 #  include "GtkCompositorWidget.h"
@@ -3034,8 +3037,11 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
 #if GTK_CHECK_VERSION(3, 4, 0)
   // check for duplicate legacy scroll event, see GNOME bug 726878
   if (aEvent->direction != GDK_SCROLL_SMOOTH &&
-      mLastScrollEventTime == aEvent->time)
+      mLastScrollEventTime == aEvent->time) {
+    LOG(("[%d] duplicate legacy scroll event %d\n", aEvent->time,
+         aEvent->direction));
     return;
+  }
 #endif
   WidgetWheelEvent wheelEvent(true, eWheel, this);
   wheelEvent.mDeltaMode = dom::WheelEvent_Binding::DOM_DELTA_LINE;
@@ -3043,21 +3049,56 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
 #if GTK_CHECK_VERSION(3, 4, 0)
     case GDK_SCROLL_SMOOTH: {
       // As of GTK 3.4, all directional scroll events are provided by
-      // the GDK_SCROLL_SMOOTH direction on XInput2 devices.
+      // the GDK_SCROLL_SMOOTH direction on XInput2 and Wayland devices.
       mLastScrollEventTime = aEvent->time;
+
+      // Special handling for touchpads to support flings
+      // (also known as kinetic/inertial/momentum scrolling)
+      GdkDevice* device = gdk_event_get_source_device((GdkEvent*)aEvent);
+      GdkInputSource source = gdk_device_get_source(device);
+      if (source == GDK_SOURCE_TOUCHSCREEN || source == GDK_SOURCE_TOUCHPAD) {
+        if (StaticPrefs::APZGTKKineticScrollEnabled() &&
+            gtk_check_version(3, 20, 0) == nullptr) {
+          static auto sGdkEventIsScrollStopEvent =
+              (gboolean(*)(const GdkEvent*))dlsym(
+                  RTLD_DEFAULT, "gdk_event_is_scroll_stop_event");
+
+          LOG(("[%d] pan smooth event dx=%f dy=%f inprogress=%d\n",
+               aEvent->time, aEvent->delta_x, aEvent->delta_y, mPanInProgress));
+          PanGestureInput::PanGestureType eventType =
+              PanGestureInput::PANGESTURE_PAN;
+          if (sGdkEventIsScrollStopEvent((GdkEvent*)aEvent)) {
+            eventType = PanGestureInput::PANGESTURE_END;
+            mPanInProgress = false;
+          } else if (!mPanInProgress) {
+            eventType = PanGestureInput::PANGESTURE_START;
+            mPanInProgress = true;
+          }
+
+          LayoutDeviceIntPoint touchPoint = GetRefPoint(this, aEvent);
+          PanGestureInput panEvent(
+              eventType, aEvent->time, GetEventTimeStamp(aEvent->time),
+              ScreenPoint(touchPoint.x, touchPoint.y),
+              ScreenPoint(aEvent->delta_x, aEvent->delta_y),
+              KeymapWrapper::ComputeKeyModifiers(aEvent->state));
+          panEvent.mDeltaType = PanGestureInput::PANDELTA_PAGE;
+          panEvent.mSimulateMomentum = true;
+
+          DispatchPanGestureInput(panEvent);
+
+          return;
+        }
+
+        // Older GTK doesn't support stop events, so we can't support fling
+        wheelEvent.mScrollType = WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY;
+      }
+
       // TODO - use a more appropriate scrolling unit than lines.
       // Multiply event deltas by 3 to emulate legacy behaviour.
       wheelEvent.mDeltaX = aEvent->delta_x * 3;
       wheelEvent.mDeltaY = aEvent->delta_y * 3;
       wheelEvent.mIsNoLineOrPageDelta = true;
-      // This next step manually unsets smooth scrolling for touch devices
-      // that trigger GDK_SCROLL_SMOOTH. We use the slave device, which
-      // represents the actual input.
-      GdkDevice* device = gdk_event_get_source_device((GdkEvent*)aEvent);
-      GdkInputSource source = gdk_device_get_source(device);
-      if (source == GDK_SOURCE_TOUCHSCREEN || source == GDK_SOURCE_TOUCHPAD) {
-        wheelEvent.mScrollType = WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY;
-      }
+
       break;
     }
 #endif

@@ -3462,7 +3462,7 @@ void MacroAssembler::debugAssertObjHasFixedSlots(Register obj,
 void MacroAssembler::branchIfNativeIteratorNotReusable(Register ni,
                                                        Label* notReusable) {
   // See NativeIterator::isReusable.
-  Address flagsAddr(ni, NativeIterator::offsetOfFlags());
+  Address flagsAddr(ni, NativeIterator::offsetOfFlagsAndCount());
 
 #ifdef DEBUG
   Label niIsInitialized;
@@ -3530,7 +3530,7 @@ void MacroAssembler::iteratorClose(Register obj, Register temp1, Register temp2,
 
   // Clear active bit.
   and32(Imm32(~NativeIterator::Flags::Active),
-        Address(temp1, NativeIterator::offsetOfFlags()));
+        Address(temp1, NativeIterator::offsetOfFlagsAndCount()));
 
   // Reset property cursor.
   loadPtr(Address(temp1, NativeIterator::offsetOfGuardsEnd()), temp2);
