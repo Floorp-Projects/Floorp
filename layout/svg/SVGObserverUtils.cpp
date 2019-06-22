@@ -165,12 +165,12 @@ void SVGRenderingObserver::StopObserving() {
 
   if (target) {
     target->RemoveMutationObserver(this);
-    if (mInObserverList) {
+    if (mInObserverSet) {
       SVGObserverUtils::RemoveRenderingObserver(target, this);
-      mInObserverList = false;
+      mInObserverSet = false;
     }
   }
-  NS_ASSERTION(!mInObserverList, "still in an observer list?");
+  NS_ASSERTION(!mInObserverSet, "still in an observer set?");
 }
 
 Element* SVGRenderingObserver::GetAndObserveReferencedElement() {
@@ -178,9 +178,9 @@ Element* SVGRenderingObserver::GetAndObserveReferencedElement() {
   DebugObserverSet();
 #endif
   Element* referencedElement = GetReferencedElementWithoutObserving();
-  if (referencedElement && !mInObserverList) {
+  if (referencedElement && !mInObserverSet) {
     SVGObserverUtils::AddRenderingObserver(referencedElement, this);
-    mInObserverList = true;
+    mInObserverSet = true;
   }
   return referencedElement;
 }
@@ -205,13 +205,13 @@ nsIFrame* SVGRenderingObserver::GetAndObserveReferencedFrame(
 }
 
 void SVGRenderingObserver::OnNonDOMMutationRenderingChange() {
-  mInObserverList = false;
+  mInObserverSet = false;
   OnRenderingChange();
 }
 
 void SVGRenderingObserver::NotifyEvictedFromRenderingObserverSet() {
-  mInObserverList = false;  // We've been removed from rendering-obs. list.
-  StopObserving();          // Remove ourselves from mutation-obs. list.
+  mInObserverSet = false;  // We've been removed from rendering-obs. set.
+  StopObserving();         // Stop observing mutations too.
 }
 
 void SVGRenderingObserver::AttributeChanged(dom::Element* aElement,
@@ -342,10 +342,10 @@ SVGIDRenderingObserver::SVGIDRenderingObserver(URLAndReferrerInfo* aURI,
 }
 
 void SVGIDRenderingObserver::OnRenderingChange() {
-  if (mObservedElementTracker.get() && mInObserverList) {
+  if (mObservedElementTracker.get() && mInObserverSet) {
     SVGObserverUtils::RemoveRenderingObserver(mObservedElementTracker.get(),
                                               this);
-    mInObserverList = false;
+    mInObserverSet = false;
   }
 }
 
@@ -517,6 +517,21 @@ class SVGMozElementObserver final : public nsSVGPaintingProperty {
   bool ObservesReflow() override { return true; }
 };
 
+/**
+ * For content with `background-clip: text`.
+ *
+ * This observer is unusual in that the observing frame and observed frame are
+ * the same frame.  This is because the observing frame is observing for reflow
+ * of its descendant text nodes, since such reflows may not result in the
+ * frame's nsDisplayBackground changing.  In other words, Display List Based
+ * Invalidation may not invalidate the frame's background, so we need this
+ * observer to make sure that happens.
+ *
+ * XXX: It's questionable whether we should even be [ab]using the SVG observer
+ * mechanism for `background-clip:text`.  Since we know that the observed frame
+ * is the frame we need to invalidate, we could just check the computed style
+ * in the (one) place where we pass INVALIDATE_REFLOW and invalidate there...
+ */
 class BackgroundClipRenderingObserver : public SVGRenderingObserver {
  public:
   explicit BackgroundClipRenderingObserver(nsIFrame* aFrame) : mFrame(aFrame) {}
@@ -531,8 +546,15 @@ class BackgroundClipRenderingObserver : public SVGRenderingObserver {
   }
 
   void OnRenderingChange() final;
+
+  /**
+   * Observing for mutations is not enough.  A new font loading and applying
+   * to the text content could cause it to reflow, and we need to invalidate
+   * for that.
+   */
   bool ObservesReflow() final { return true; }
 
+  // The observer and observee!
   nsIFrame* mFrame;
 };
 
@@ -1040,11 +1062,11 @@ void SVGRenderingObserver::DebugObserverSet() {
   if (referencedElement) {
     SVGRenderingObserverSet* observers = GetObserverSet(referencedElement);
     bool inObserverSet = observers && observers->Contains(this);
-    MOZ_ASSERT(inObserverSet == mInObserverList,
+    MOZ_ASSERT(inObserverSet == mInObserverSet,
                "failed to track whether we're in our referenced element's "
                "observer set!");
   } else {
-    MOZ_ASSERT(!mInObserverList, "In whose observer set are we, then?");
+    MOZ_ASSERT(!mInObserverSet, "In whose observer set are we, then?");
   }
 }
 #endif
@@ -1464,33 +1486,33 @@ Element* SVGObserverUtils::GetAndObserveBackgroundClip(nsIFrame* aFrame) {
 }
 
 nsSVGPaintServerFrame* SVGObserverUtils::GetAndObservePaintServer(
-    nsIFrame* aTargetFrame, nsStyleSVGPaint nsStyleSVG::*aPaint) {
+    nsIFrame* aPaintedFrame, nsStyleSVGPaint nsStyleSVG::*aPaint) {
   // If we're looking at a frame within SVG text, then we need to look up
   // to find the right frame to get the painting property off.  We should at
   // least look up past a text frame, and if the text frame's parent is the
   // anonymous block frame, then we look up to its parent (the SVGTextFrame).
-  nsIFrame* frame = aTargetFrame;
-  if (frame->GetContent()->IsText()) {
-    frame = frame->GetParent();
-    nsIFrame* grandparent = frame->GetParent();
+  nsIFrame* paintedFrame = aPaintedFrame;
+  if (paintedFrame->GetContent()->IsText()) {
+    paintedFrame = paintedFrame->GetParent();
+    nsIFrame* grandparent = paintedFrame->GetParent();
     if (grandparent && grandparent->IsSVGTextFrame()) {
-      frame = grandparent;
+      paintedFrame = grandparent;
     }
   }
 
-  const nsStyleSVG* svgStyle = frame->StyleSVG();
+  const nsStyleSVG* svgStyle = paintedFrame->StyleSVG();
   if ((svgStyle->*aPaint).Type() != eStyleSVGPaintType_Server) {
     return nullptr;
   }
 
-  RefPtr<URLAndReferrerInfo> paintServerURL =
-      ResolveURLUsingLocalRef(frame, (svgStyle->*aPaint).GetPaintServer());
+  RefPtr<URLAndReferrerInfo> paintServerURL = ResolveURLUsingLocalRef(
+      paintedFrame, (svgStyle->*aPaint).GetPaintServer());
 
   MOZ_ASSERT(aPaint == &nsStyleSVG::mFill || aPaint == &nsStyleSVG::mStroke);
   PaintingPropertyDescriptor propDesc =
       (aPaint == &nsStyleSVG::mFill) ? FillProperty() : StrokeProperty();
   nsSVGPaintingProperty* property =
-      GetPaintingProperty(paintServerURL, frame, propDesc);
+      GetPaintingProperty(paintServerURL, paintedFrame, propDesc);
   if (!property) {
     return nullptr;
   }
