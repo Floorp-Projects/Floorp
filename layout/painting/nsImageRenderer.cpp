@@ -342,7 +342,8 @@ nsSize nsImageRenderer::ComputeConstrainedSize(
   auto constrainingRatio =
       AspectRatio::FromSize(aConstrainingSize.width, aConstrainingSize.height);
   nsSize size;
-  if ((aFitType == CONTAIN) == (constrainingRatio < aIntrinsicRatio)) {
+  if ((aFitType == CONTAIN) ==
+      (constrainingRatio && constrainingRatio < aIntrinsicRatio)) {
     size.width = aConstrainingSize.width;
     size.height = aIntrinsicRatio.Inverted().ApplyTo(aConstrainingSize.width);
     // If we're reducing the size by less than one css pixel, then just use the
