@@ -555,6 +555,13 @@ interface nsIHttpChannel : nsIChannel
       CLASSIFIED_TRACKING_CONTENT = 0x0040,
 
       /**
+       * The following are about social tracking.
+       */
+      CLASSIFIED_SOCIALTRACKING = 0x0100,
+      CLASSIFIED_SOCIALTRACKING_FACEBOOK = 0x0200,
+      CLASSIFIED_SOCIALTRACKING_TWITTER = 0x0400,
+
+      /**
        * This is exposed to help to identify tracking classification using the
        * basic lists.
        */

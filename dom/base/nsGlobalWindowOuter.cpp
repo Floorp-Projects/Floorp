@@ -5464,6 +5464,18 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(
             unblocked = !doc->GetHasCryptominingContentLoaded();
           }
         } else if (aEvent == nsIWebProgressListener::
+                                 STATE_BLOCKED_SOCIALTRACKING_CONTENT) {
+          doc->SetHasSocialTrackingContentBlocked(aBlocked, origin);
+          if (!aBlocked) {
+            unblocked = !doc->GetHasSocialTrackingContentBlocked();
+          }
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_LOADED_SOCIALTRACKING_CONTENT) {
+          doc->SetHasSocialTrackingContentLoaded(aBlocked, origin);
+          if (!aBlocked) {
+            unblocked = !doc->GetHasSocialTrackingContentLoaded();
+          }
+        } else if (aEvent == nsIWebProgressListener::
                                  STATE_COOKIES_BLOCKED_BY_PERMISSION) {
           doc->SetHasCookiesBlockedByPermission(aBlocked, origin);
           if (!aBlocked) {

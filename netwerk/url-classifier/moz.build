@@ -41,6 +41,8 @@ UNIFIED_SOURCES += [
     'UrlClassifierFeatureLoginReputation.cpp',
     'UrlClassifierFeaturePhishingProtection.cpp',
     'UrlClassifierFeatureResult.cpp',
+    'UrlClassifierFeatureSocialTrackingAnnotation.cpp',
+    'UrlClassifierFeatureSocialTrackingProtection.cpp',
     'UrlClassifierFeatureTrackingAnnotation.cpp',
     'UrlClassifierFeatureTrackingProtection.cpp',
 ]

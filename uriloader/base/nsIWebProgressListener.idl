@@ -301,6 +301,12 @@ interface nsIWebProgressListener : nsISupports
    *
    * STATE_COOKIES_BLOCKED_FOREIGN
    *   Rejected because cookie policy blocks 3rd party cookies.
+   *
+   * STATE_BLOCKED_SOCIALTRACKING_CONTENT
+   *   SocialTracking content has been blocked from loading.
+   *
+   * STATE_LOADED_SOCIALTRACKING_CONTENT
+   *   SocialTracking content has been loaded.
    */
   const unsigned long STATE_BLOCKED_TRACKING_CONTENT       = 0x00001000;
   const unsigned long STATE_LOADED_TRACKING_CONTENT        = 0x00002000;
@@ -315,6 +321,8 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_COOKIES_BLOCKED_ALL            = 0x40000000;
   const unsigned long STATE_COOKIES_PARTITIONED_FOREIGN    = 0x80000000;
   const unsigned long STATE_COOKIES_BLOCKED_FOREIGN        = 0x00000080;
+  const unsigned long STATE_BLOCKED_SOCIALTRACKING_CONTENT = 0x00010000;
+  const unsigned long STATE_LOADED_SOCIALTRACKING_CONTENT  = 0x00020000;
 
   /**
    * Notification indicating the state has changed for one of the requests

@@ -6930,6 +6930,22 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Block 3rd party socialtracking resources.
+VARCACHE_PREF(
+  Live,
+  "privacy.trackingprotection.socialtracking.enabled",
+  privacy_trackingprotection_socialtracking_enabled,
+  bool, false
+)
+
+// Annotate socialtracking resources.
+VARCACHE_PREF(
+  Live,
+  "privacy.trackingprotection.socialtracking.annotate.enabled",
+  privacy_trackingprotection_socialtracking_annotate_enabled,
+  bool, false
+)
+
 // Whether origin telemetry should be enabled
 // NOTE: if telemetry.origin_telemetry_test_mode.enabled is enabled, this pref
 //       won't have any effect.

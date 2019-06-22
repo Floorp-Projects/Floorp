@@ -1119,6 +1119,14 @@ class Document : public nsINode,
   }
 
   /**
+   * Get socialtracking content blocked flag for this document.
+   */
+  bool GetHasSocialTrackingContentBlocked() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_BLOCKED_SOCIALTRACKING_CONTENT);
+  }
+
+  /**
    * Get all cookies blocked flag for this document.
    */
   bool GetHasAllCookiesBlocked() {
@@ -1180,6 +1188,17 @@ class Document : public nsINode,
         aOriginBlocked,
         nsIWebProgressListener::STATE_BLOCKED_CRYPTOMINING_CONTENT,
         aHasCryptominingContentBlocked);
+  }
+
+  /**
+   * Set the socialtracking content blocked flag for this document.
+   */
+  void SetHasSocialTrackingContentBlocked(bool aHasSocialTrackingContentBlocked,
+                                          const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_BLOCKED_SOCIALTRACKING_CONTENT,
+        aHasSocialTrackingContentBlocked);
   }
 
   /**
@@ -1297,6 +1316,25 @@ class Document : public nsINode,
         aOriginBlocked,
         nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT,
         aHasCryptominingContentLoaded);
+  }
+
+  /**
+   * Get socialtracking content loaded flag for this document.
+   */
+  bool GetHasSocialTrackingContentLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_LOADED_SOCIALTRACKING_CONTENT);
+  }
+
+  /**
+   * Set the socialtracking content loaded flag for this document.
+   */
+  void SetHasSocialTrackingContentLoaded(bool aHasSocialTrackingContentLoaded,
+                                         const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_LOADED_SOCIALTRACKING_CONTENT,
+        aHasSocialTrackingContentLoaded);
   }
 
   /**
