@@ -78,23 +78,15 @@ const SYNTAX_ERROR_STMTS = [
     "true ? {x=1} : 1;",
     "false ? 1 : {x=1};",
     "{x=1} ? 2 : 3;",
-]
-
-for (var stmt of SYNTAX_ERROR_STMTS) {
-    assertThrowsInstanceOf(() => {
-        eval(stmt);
-    }, SyntaxError);
-}
-
-const REFERENCE_ERROR_STMTS = [
+    // assignment
     "({x} += {});",
     "({x = 1}) = {x: 2};",
 ]
 
-for (var stmt of REFERENCE_ERROR_STMTS) {
+for (var stmt of SYNTAX_ERROR_STMTS) {
     assertThrowsInstanceOf(() => {
-        eval(stmt);
-    }, ReferenceError);
+        Function(stmt);
+    }, SyntaxError);
 }
 
 // A few tricky but acceptable cases:
