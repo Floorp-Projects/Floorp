@@ -1741,7 +1741,9 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
       (aPurpose == eFingerprinting &&
        !StaticPrefs::privacy_trackingprotection_fingerprinting_enabled()) ||
       (aPurpose == eCryptomining &&
-       !StaticPrefs::privacy_trackingprotection_cryptomining_enabled())) {
+       !StaticPrefs::privacy_trackingprotection_cryptomining_enabled()) ||
+      (aPurpose == eSocialTracking &&
+       !StaticPrefs::privacy_trackingprotection_socialtracking_enabled())) {
     LOG(
         ("Attempting to check the content blocking allow list aborted because "
          "the third-party cookies UI has been disabled."));

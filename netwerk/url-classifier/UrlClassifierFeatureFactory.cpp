@@ -14,6 +14,8 @@
 #include "UrlClassifierFeatureFlash.h"
 #include "UrlClassifierFeatureLoginReputation.h"
 #include "UrlClassifierFeaturePhishingProtection.h"
+#include "UrlClassifierFeatureSocialTrackingAnnotation.h"
+#include "UrlClassifierFeatureSocialTrackingProtection.h"
 #include "UrlClassifierFeatureTrackingProtection.h"
 #include "UrlClassifierFeatureTrackingAnnotation.h"
 #include "UrlClassifierFeatureCustomTables.h"
@@ -37,6 +39,8 @@ void UrlClassifierFeatureFactory::Shutdown() {
   UrlClassifierFeatureFlash::MaybeShutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
   UrlClassifierFeaturePhishingProtection::MaybeShutdown();
+  UrlClassifierFeatureSocialTrackingAnnotation::MaybeShutdown();
+  UrlClassifierFeatureSocialTrackingProtection::MaybeShutdown();
   UrlClassifierFeatureTrackingAnnotation::MaybeShutdown();
   UrlClassifierFeatureTrackingProtection::MaybeShutdown();
 }
@@ -67,6 +71,12 @@ void UrlClassifierFeatureFactory::GetFeaturesFromChannel(
     aFeatures.AppendElement(feature);
   }
 
+  // SocialTracking Protection
+  feature = UrlClassifierFeatureSocialTrackingProtection::MaybeCreate(aChannel);
+  if (feature) {
+    aFeatures.AppendElement(feature);
+  }
+
   // Tracking Protection
   feature = UrlClassifierFeatureTrackingProtection::MaybeCreate(aChannel);
   if (feature) {
@@ -81,6 +91,12 @@ void UrlClassifierFeatureFactory::GetFeaturesFromChannel(
 
   // Fingerprinting Annotation
   feature = UrlClassifierFeatureFingerprintingAnnotation::MaybeCreate(aChannel);
+  if (feature) {
+    aFeatures.AppendElement(feature);
+  }
+
+  // SocialTracking Annotation
+  feature = UrlClassifierFeatureSocialTrackingAnnotation::MaybeCreate(aChannel);
   if (feature) {
     aFeatures.AppendElement(feature);
   }
@@ -140,6 +156,20 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
   // Fingerprinting Protection
   feature =
       UrlClassifierFeatureFingerprintingProtection::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  // SocialTracking Annotation
+  feature =
+      UrlClassifierFeatureSocialTrackingAnnotation::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  // SocialTracking Protection
+  feature =
+      UrlClassifierFeatureSocialTrackingProtection::GetIfNameMatches(aName);
   if (feature) {
     return feature.forget();
   }
@@ -209,6 +239,18 @@ void UrlClassifierFeatureFactory::GetFeatureNames(nsTArray<nsCString>& aArray) {
     aArray.AppendElement(name);
   }
 
+  // SocialTracking Annotation
+  name.Assign(UrlClassifierFeatureSocialTrackingAnnotation::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
+  // SocialTracking Protection
+  name.Assign(UrlClassifierFeatureSocialTrackingProtection::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
   // Tracking Protection
   name.Assign(UrlClassifierFeatureTrackingProtection::Name());
   if (!name.IsEmpty()) {
@@ -271,6 +313,9 @@ static const BlockingErrorCode sBlockingErrorCodes[] = {
      "TrackerUriBlocked", NS_LITERAL_CSTRING("Tracking Protection")},
     {NS_ERROR_CRYPTOMINING_URI,
      nsIWebProgressListener::STATE_BLOCKED_CRYPTOMINING_CONTENT,
+     "TrackerUriBlocked", NS_LITERAL_CSTRING("Tracking Protection")},
+    {NS_ERROR_SOCIALTRACKING_URI,
+     nsIWebProgressListener::STATE_BLOCKED_SOCIALTRACKING_CONTENT,
      "TrackerUriBlocked", NS_LITERAL_CSTRING("Tracking Protection")},
 };
 

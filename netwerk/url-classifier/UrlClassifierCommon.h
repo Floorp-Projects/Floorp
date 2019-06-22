@@ -10,6 +10,8 @@
 #include "nsString.h"
 #include "mozilla/AntiTrackingCommon.h"
 
+#include <vector>
+
 class nsIChannel;
 class nsIURI;
 

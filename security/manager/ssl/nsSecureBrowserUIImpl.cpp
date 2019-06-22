@@ -196,6 +196,15 @@ void nsSecureBrowserUIImpl::CheckForContentBlockingEvents() {
     mEvent |= STATE_LOADED_CRYPTOMINING_CONTENT;
   }
 
+  // Has socialtracking content been blocked or loaded?
+  if (doc->GetHasSocialTrackingContentBlocked()) {
+    mEvent |= STATE_BLOCKED_SOCIALTRACKING_CONTENT;
+  }
+
+  if (doc->GetHasSocialTrackingContentLoaded()) {
+    mEvent |= STATE_LOADED_SOCIALTRACKING_CONTENT;
+  }
+
   // Other block types.
   if (doc->GetHasCookiesBlockedByPermission()) {
     mEvent |= STATE_COOKIES_BLOCKED_BY_PERMISSION;
