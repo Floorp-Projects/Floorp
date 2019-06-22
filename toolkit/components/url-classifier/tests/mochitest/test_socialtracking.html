@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test the cryptomining classifier</title>
+  <title>Test the socialtracking classifier</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -31,15 +31,15 @@ function prefValue(value, what) {
 
 async function runTest(test) {
   await SpecialPowers.pushPrefEnv({set: [
-    [ "urlclassifier.features.cryptomining.blacklistHosts", prefValue(test.config[0], "example.com") ],
-    [ "urlclassifier.features.cryptomining.whitelistHosts", prefValue(test.config[1], "mochi.test") ],
-    [ "urlclassifier.features.cryptomining.blacklistTables", prefValue(test.config[0], "mochitest1-track-simple") ],
-    [ "urlclassifier.features.cryptomining.whitelistTables", "" ],
+    [ "urlclassifier.features.socialtracking.blacklistHosts", prefValue(test.config[0], "example.com") ],
+    [ "urlclassifier.features.socialtracking.whitelistHosts", prefValue(test.config[1], "mochi.test") ],
+    [ "urlclassifier.features.socialtracking.blacklistTables", prefValue(test.config[0], "mochitest1-track-simple") ],
+    [ "urlclassifier.features.socialtracking.whitelistTables", "" ],
     [ "privacy.trackingprotection.enabled", false ],
     [ "privacy.trackingprotection.annotate_channels", false ],
-    [ "privacy.trackingprotection.cryptomining.enabled", true ],
+    [ "privacy.trackingprotection.cryptomining.enabled", false ],
     [ "privacy.trackingprotection.fingerprinting.enabled", false ],
-    [ "privacy.trackingprotection.socialtracking.enabled", false ],
+    [ "privacy.trackingprotection.socialtracking.enabled", true ],
   ]});
 
   info("Testing: " + test.config.toSource() + "\n");
