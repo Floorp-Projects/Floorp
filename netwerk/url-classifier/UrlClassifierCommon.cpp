@@ -396,7 +396,8 @@ void UrlClassifierCommon::AnnotateChannel(
   MOZ_ASSERT(aPurpose == AntiTrackingCommon::eTrackingProtection ||
              aPurpose == AntiTrackingCommon::eTrackingAnnotations ||
              aPurpose == AntiTrackingCommon::eFingerprinting ||
-             aPurpose == AntiTrackingCommon::eCryptomining);
+             aPurpose == AntiTrackingCommon::eCryptomining ||
+             aPurpose == AntiTrackingCommon::eSocialTracking);
 
   nsCOMPtr<nsIURI> chanURI;
   nsresult rv = aChannel->GetURI(getter_AddRefs(chanURI));
@@ -441,7 +442,8 @@ bool UrlClassifierCommon::IsAllowListed(
   MOZ_ASSERT(aPurpose == AntiTrackingCommon::eTrackingProtection ||
              aPurpose == AntiTrackingCommon::eTrackingAnnotations ||
              aPurpose == AntiTrackingCommon::eFingerprinting ||
-             aPurpose == AntiTrackingCommon::eCryptomining);
+             aPurpose == AntiTrackingCommon::eCryptomining ||
+             aPurpose == AntiTrackingCommon::eSocialTracking);
 
   nsCOMPtr<nsIHttpChannelInternal> channel = do_QueryInterface(aChannel);
   if (!channel) {
