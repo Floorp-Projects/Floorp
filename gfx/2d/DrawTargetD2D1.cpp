@@ -2123,10 +2123,11 @@ already_AddRefed<ID2D1Image> DrawTargetD2D1::GetImageForSurface(
     SourceSurface* aSurface, Matrix& aSourceTransform, ExtendMode aExtendMode,
     const IntRect* aSourceRect, bool aUserSpace) {
   RefPtr<ID2D1Image> image;
-  switch (aSurface->GetType()) {
+  RefPtr<SourceSurface> surface = aSurface->GetUnderlyingSurface();
+  switch (surface->GetType()) {
     case SurfaceType::CAPTURE: {
       SourceSurfaceCapture* capture =
-          static_cast<SourceSurfaceCapture*>(aSurface);
+          static_cast<SourceSurfaceCapture*>(surface.get());
       RefPtr<SourceSurface> resolved = capture->Resolve(GetBackendType());
       if (!resolved) {
         return nullptr;
@@ -2136,17 +2137,17 @@ already_AddRefed<ID2D1Image> DrawTargetD2D1::GetImageForSurface(
                                 aSourceRect, aUserSpace);
     } break;
     case SurfaceType::D2D1_1_IMAGE: {
-      SourceSurfaceD2D1* surf = static_cast<SourceSurfaceD2D1*>(aSurface);
+      SourceSurfaceD2D1* surf = static_cast<SourceSurfaceD2D1*>(surface.get());
       image = surf->GetImage();
       AddDependencyOnSource(surf);
     } break;
     case SurfaceType::DUAL_DT: {
       // Sometimes we have a dual drawtarget but the underlying targets
       // are d2d surfaces. Let's not readback and reupload in those cases.
-      SourceSurfaceDual* surface = static_cast<SourceSurfaceDual*>(aSurface);
-      SourceSurface* first = surface->GetFirstSurface();
+      SourceSurfaceDual* dualSurface = static_cast<SourceSurfaceDual*>(surface.get());
+      SourceSurface* first = dualSurface->GetFirstSurface();
       if (first->GetType() == SurfaceType::D2D1_1_IMAGE) {
-        MOZ_ASSERT(surface->SameSurfaceTypes());
+        MOZ_ASSERT(dualSurface->SameSurfaceTypes());
         SourceSurfaceD2D1* d2dSurface = static_cast<SourceSurfaceD2D1*>(first);
         image = d2dSurface->GetImage();
         AddDependencyOnSource(d2dSurface);
@@ -2155,7 +2156,7 @@ already_AddRefed<ID2D1Image> DrawTargetD2D1::GetImageForSurface(
       // Otherwise fall through
     }
     default: {
-      RefPtr<DataSourceSurface> dataSurf = aSurface->GetDataSurface();
+      RefPtr<DataSourceSurface> dataSurf = surface->GetDataSurface();
       if (!dataSurf) {
         gfxWarning() << "Invalid surface type.";
         return nullptr;

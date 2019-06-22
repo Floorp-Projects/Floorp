@@ -34,6 +34,9 @@ class SourceSurfaceOffset : public SourceSurface {
   virtual already_AddRefed<DataSourceSurface> GetDataSurface() override {
     return mSurface->GetDataSurface();
   }
+  virtual already_AddRefed<SourceSurface> GetUnderlyingSurface() override {
+    return mSurface->GetUnderlyingSurface();
+  }
 
  private:
   RefPtr<SourceSurface> mSurface;
