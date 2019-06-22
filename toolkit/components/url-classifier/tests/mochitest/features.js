@@ -64,18 +64,22 @@ async function runTest(test, expectedFlag, expectedTrackingResource, prefs) {
     [ "urlclassifier.trackingAnnotationTable.testEntries", prefBlacklistValue(test.config[0]) ],
     [ "urlclassifier.features.fingerprinting.annotate.blacklistHosts", prefBlacklistValue(test.config[0]) ],
     [ "urlclassifier.features.cryptomining.annotate.blacklistHosts", prefBlacklistValue(test.config[0]) ],
+    [ "urlclassifier.features.socialtracking.annotate.blacklistHosts", prefBlacklistValue(test.config[0]) ],
 
     [ "urlclassifier.trackingAnnotationWhitelistTable.testEntries", prefWhitelistValue(test.config[1]) ],
     [ "urlclassifier.features.fingerprinting.annotate.whitelistHosts", prefWhitelistValue(test.config[1]) ],
     [ "urlclassifier.features.cryptomining.annotate.whitelistHosts", prefWhitelistValue(test.config[1]) ],
+    [ "urlclassifier.features.socialtracking.annotate.whitelistHosts", prefWhitelistValue(test.config[1]) ],
 
     [ "urlclassifier.trackingTable.testEntries", prefBlacklistValue(test.config[2]) ],
     [ "urlclassifier.features.fingerprinting.blacklistHosts", prefBlacklistValue(test.config[2]) ],
     [ "urlclassifier.features.cryptomining.blacklistHosts", prefBlacklistValue(test.config[2]) ],
+    [ "urlclassifier.features.socialtracking.blacklistHosts", prefBlacklistValue(test.config[2]) ],
 
     [ "urlclassifier.trackingWhitelistTable.testEntries", prefWhitelistValue(test.config[3]) ],
     [ "urlclassifier.features.fingerprinting.whitelistHosts", prefWhitelistValue(test.config[3]) ],
     [ "urlclassifier.features.cryptomining.whitelistHosts", prefWhitelistValue(test.config[3]) ],
+    [ "urlclassifier.features.socialtracking.whitelistHosts", prefWhitelistValue(test.config[3]) ],
   ];
 
   info("Testing: " + config.toSource() + "\n");

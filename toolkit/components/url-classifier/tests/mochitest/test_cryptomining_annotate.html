@@ -18,6 +18,8 @@ runTests(SpecialPowers.Ci.nsIHttpChannel.CLASSIFIED_CRYPTOMINING,
            ["privacy.trackingprotection.fingerprinting.enabled", false],
            ["privacy.trackingprotection.cryptomining.annotate.enabled", true],
            ["privacy.trackingprotection.cryptomining.enabled", true],
+           ["privacy.trackingprotection.socialtracking.annotate.enabled", false],
+           ["privacy.trackingprotection.socialtracking.enabled", false],
          ],
          false /* a tracking resource */);
 SimpleTest.waitForExplicitFinish();
