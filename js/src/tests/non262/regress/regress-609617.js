@@ -37,11 +37,11 @@ for (var i = 0; i < lhs_prefix.length; i++) {
             assertEq(e.message, "invalid destructuring target");
         } else {
             /*
-             * NB: JSOP_SETCALL throws only JSMSG_BAD_LEFTSIDE_OF_ASS, it does not
+             * NB: JSOP_SETCALL throws only JSMSG_ASSIGN_TO_CALL, it does not
              * specialize for ++ and -- as the compiler's error reporting does. See
              * the next section's forked assertEq code.
              */
-            assertEq(e.message, "invalid assignment left-hand side");
+            assertEq(e.message, "cannot assign to function call");
         }
     }
 }
@@ -71,7 +71,7 @@ try {
     eval("delete (foo('x') = 42);");
     assertEq(0, -4);
 } catch (e) {
-    assertEq(e.message, "invalid assignment left-hand side");
+    assertEq(e.message, "cannot assign to function call");
 }
 assertEq(fooArg, 'x');
 
