@@ -2603,7 +2603,14 @@ static FeatureState& WebRenderHardwareQualificationStatus(
               (deviceID >= 0x9830 && deviceID < 0x9870) ||
               (deviceID >= 0x9900 && deviceID < 0x9a00)) {
             // we have a desktop CAYMAN, SI, CIK, VI, or GFX9 device
-            // so treat the device as qualified.
+            // so treat the device as qualified unless it is not Windows
+            // and not nightly.
+#if !defined(XP_WIN) && !defined(NIGHTLY_BUILD)
+            featureWebRenderQualified.Disable(
+                FeatureStatus::BlockedReleaseChannelAMD,
+                "Release channel and AMD",
+                NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_AMD"));
+#endif  // !XPWIN && !NIGHTLY_BUILD
           } else {
             featureWebRenderQualified.Disable(
                 FeatureStatus::BlockedDeviceTooOld, "Device too old",
