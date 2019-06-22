@@ -1510,7 +1510,7 @@ pref("network.protocol-handler.external.le", false);   // file
 pref("network.protocol-handler.expose-all", true);
 
 // Warning for about:networking page
-pref("network.warnOnAboutNetworking", true);
+pref("network.warnOnAboutNetworking", false);
 
 // Example: make IMAP an exposed protocol
 // pref("network.protocol-handler.expose.imap", true);
