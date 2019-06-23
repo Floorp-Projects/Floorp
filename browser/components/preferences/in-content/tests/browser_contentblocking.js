@@ -525,6 +525,8 @@ add_task(async function testContentBlockingReloadWarning() {
 add_task(async function testReloadTabsMessage() {
   Services.prefs.setStringPref(CAT_PREF, "strict");
   let exampleTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+  let examplePinnedTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+  gBrowser.pinTab(examplePinnedTab);
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
   let doc = gBrowser.contentDocument;
   let standardWarning = doc.querySelector("#contentBlockingOptionStandard .content-blocking-warning.reload-tabs");
@@ -533,14 +535,19 @@ add_task(async function testReloadTabsMessage() {
   Services.prefs.setStringPref(CAT_PREF, "standard");
   ok(!BrowserTestUtils.is_hidden(standardWarning), "The warning in the standard section should be showing");
 
+  let exampleTabBrowserDiscardedPromise = BrowserTestUtils.waitForEvent(exampleTab, "TabBrowserDiscarded");
+  let examplePinnedTabLoadPromise = BrowserTestUtils.browserLoaded(examplePinnedTab.linkedBrowser);
   standardReloadButton.click();
-  // The example page had a load event
-  await BrowserTestUtils.browserLoaded(exampleTab.linkedBrowser);
+  // The pinned example page had a load event
+  await examplePinnedTabLoadPromise;
+  // The other one had its browser discarded
+  await exampleTabBrowserDiscardedPromise;
 
   ok(BrowserTestUtils.is_hidden(standardWarning), "The warning in the standard section should have hidden after being clicked");
 
   // cleanup
   Services.prefs.setStringPref(CAT_PREF, "standard");
   gBrowser.removeTab(exampleTab);
+  gBrowser.removeTab(examplePinnedTab);
   gBrowser.removeCurrentTab();
 });
