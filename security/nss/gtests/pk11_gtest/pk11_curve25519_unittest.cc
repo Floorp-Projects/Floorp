@@ -40,6 +40,9 @@ class Pkcs11Curve25519Test
 
     ScopedCERTSubjectPublicKeyInfo certSpki(
         SECKEY_DecodeDERSubjectPublicKeyInfo(&spkiItem));
+    if (!expect_success && !certSpki) {
+      return;
+    }
     ASSERT_TRUE(certSpki);
 
     ScopedSECKEYPublicKey pubKey(SECKEY_ExtractPublicKey(certSpki.get()));
