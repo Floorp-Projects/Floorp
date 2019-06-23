@@ -34,7 +34,7 @@ class BrowserMenuHighlightableItem(
     private val iconTintColorResource: Int = NO_ID,
     @ColorRes
     private val textColorResource: Int = NO_ID,
-    val highlight: BrowserMenuHighlightableItem.Highlight,
+    val highlight: Highlight,
     val isHighlighted: () -> Boolean = { true },
     private val listener: () -> Unit = {}
 ) : BrowserMenuImageText(
@@ -57,7 +57,7 @@ class BrowserMenuHighlightableItem(
         iconTintColorResource: Int = NO_ID,
         @ColorRes
         textColorResource: Int = NO_ID,
-        highlight: BrowserMenuHighlightableItem.Highlight? = null,
+        highlight: Highlight? = null,
         listener: () -> Unit = {}
     ) : this(
         label,
