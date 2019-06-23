@@ -1150,19 +1150,26 @@ var gPrivacyPane = {
   },
 
   /**
-   * Reload all tabs in all windows, except the active Preferences tab.
+   * Discard the browsers of all tabs in all windows. Pinned tabs, as
+   * well as tabs for which discarding doesn't succeed (e.g. selected
+   * tabs, tabs with beforeunload listeners), are reloaded.
    */
   reloadAllOtherTabs() {
-    let activeWindow = window.BrowserWindowTracker.getTopWindow();
-    let selectedPrefTab = activeWindow.gBrowser.selectedTab;
-    for (let win of window.BrowserWindowTracker.orderedWindows) {
-      let tabbrowser = win.gBrowser;
-      let tabsToReload = [...tabbrowser.tabs];
-      if (win == activeWindow ) {
-        tabsToReload = tabsToReload.filter(tab => tab !== selectedPrefTab);
+    let ourTab = BrowserWindowTracker.getTopWindow().gBrowser.selectedTab;
+    BrowserWindowTracker.orderedWindows.forEach(win => {
+      let otherGBrowser = win.gBrowser;
+      for (let tab of otherGBrowser.tabs) {
+        if (tab == ourTab) {
+          // Don't reload our preferences tab.
+          continue;
+        }
+
+        if (tab.pinned || !otherGBrowser.discardBrowser(tab)) {
+          otherGBrowser.reloadTab(tab);
+        }
       }
-      tabbrowser.reloadTabs(tabsToReload);
-    }
+    });
+
     for (let notification of document.querySelectorAll(".reload-tabs")) {
       notification.hidden = true;
     }
