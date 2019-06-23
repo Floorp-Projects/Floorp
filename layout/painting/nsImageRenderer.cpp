@@ -339,10 +339,44 @@ nsSize nsImageRenderer::ComputeConstrainedSize(
     return aConstrainingSize;
   }
 
-  auto constrainingRatio =
-      AspectRatio::FromSize(aConstrainingSize.width, aConstrainingSize.height);
+  // Suppose we're doing a "contain" fit. If the image's aspect ratio has a
+  // "fatter" shape than the constraint area, then we need to use the
+  // constraint area's full width, and we need to use the aspect ratio to
+  // produce a height. On the other hand, if the aspect ratio is "skinnier", we
+  // use the constraint area's full height, and we use the aspect ratio to
+  // produce a width. (If instead we're doing a "cover" fit, then it can easily
+  // be seen that we should do precisely the opposite.)
+  //
+  // We check if the image's aspect ratio is "fatter" than the constraint area
+  // by simply applying the aspect ratio to the constraint area's height, to
+  // produce a "hypothetical width", and we check whether that
+  // aspect-ratio-provided "hypothetical width" is wider than the constraint
+  // area's actual width. If it is, then the aspect ratio is fatter than the
+  // constraint area.
+  //
+  // This is equivalent to the more descriptive alternative:
+  //
+  //   AspectRatio::FromSize(aConstrainingSize) < aIntrinsicRatio
+  //
+  // But gracefully handling the case where one of the two dimensions from
+  // aConstrainingSize is zero. This is easy to prove since:
+  //
+  //   aConstrainingSize.width / aConstrainingSize.height < aIntrinsicRatio
+  //
+  // Is trivially equivalent to:
+  //
+  //   aIntrinsicRatio.width < aIntrinsicRatio * aConstrainingSize.height
+  //
+  // For the cases where height is not zero.
+  //
+  // We use float math here to avoid losing precision for very large backgrounds
+  // since we use saturating nscoord math otherwise.
+  const float constraintWidth = float(aConstrainingSize.width);
+  const float hypotheticalWidth =
+      aIntrinsicRatio.ApplyToFloat(aConstrainingSize.height);
+
   nsSize size;
-  if ((aFitType == CONTAIN) == (constrainingRatio < aIntrinsicRatio)) {
+  if ((aFitType == CONTAIN) == (constraintWidth < hypotheticalWidth)) {
     size.width = aConstrainingSize.width;
     size.height = aIntrinsicRatio.Inverted().ApplyTo(aConstrainingSize.width);
     // If we're reducing the size by less than one css pixel, then just use the
