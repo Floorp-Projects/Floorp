@@ -184,7 +184,9 @@ PK11_IsUserCert(PK11SlotInfo *slot, CERTCertificate *cert,
             SECKEY_DestroyPublicKey(pubKey);
             return PR_FALSE;
         }
-        pk11_SignedToUnsigned(&theTemplate);
+        if (pubKey->keyType != ecKey) {
+            pk11_SignedToUnsigned(&theTemplate);
+        }
         if (pk11_FindObjectByTemplate(slot, &theTemplate, 1) != CK_INVALID_HANDLE) {
             SECKEY_DestroyPublicKey(pubKey);
             return PR_TRUE;
