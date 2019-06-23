@@ -639,6 +639,11 @@ seckey_ExtractPublicKey(const CERTSubjectPublicKeyInfo *spki)
                     return pubk;
                 break;
             case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
+                /* A basic sanity check on inputs. */
+                if (spki->algorithm.parameters.len == 0 || newOs.len == 0) {
+                    PORT_SetError(SEC_ERROR_INPUT_LEN);
+                    break;
+                }
                 pubk->keyType = ecKey;
                 pubk->u.ec.size = 0;
 
