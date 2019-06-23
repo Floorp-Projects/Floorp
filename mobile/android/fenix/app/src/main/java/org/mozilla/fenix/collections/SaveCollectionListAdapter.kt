@@ -4,6 +4,7 @@ package org.mozilla.fenix.collections
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -89,7 +90,7 @@ class CollectionViewHolder(
                 view.context,
                 getIconColor(collection.id)
             ),
-            android.graphics.PorterDuff.Mode.SRC_IN
+            SRC_IN
         )
     }
 

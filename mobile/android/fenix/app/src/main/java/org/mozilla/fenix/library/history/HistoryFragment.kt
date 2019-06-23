@@ -5,7 +5,7 @@
 package org.mozilla.fenix.library.history
 
 import android.content.DialogInterface
-import android.graphics.PorterDuff
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -107,7 +107,7 @@ class HistoryFragment : Fragment(), BackHandler {
                 isVisible = mode.selectedItems.isNotEmpty()
                 icon.colorFilter = PorterDuffColorFilter(
                     ContextCompat.getColor(context!!, R.color.white_color),
-                    PorterDuff.Mode.SRC_IN
+                    SRC_IN
                 )
             }
         }

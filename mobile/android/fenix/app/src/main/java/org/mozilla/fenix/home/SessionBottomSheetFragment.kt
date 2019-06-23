@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.home
 
-import android.graphics.PorterDuff
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,10 +13,10 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.session_bottom_sheet.view.*
-import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.getColorFromAttr
+import org.mozilla.fenix.utils.ItsNotBrokenSnack
 
 class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer {
     sealed class SessionType {
@@ -48,7 +48,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
                 ContextCompat.getColor(
                     context!!,
                     ThemeManager.resolveAttribute(R.attr.accent, context!!)
-                ), PorterDuff.Mode.SRC_IN
+                ), SRC_IN
             )
             setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
             setOnClickListener {
@@ -59,7 +59,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
         view.delete_session_button.apply {
             val drawable = ContextCompat.getDrawable(context!!, R.drawable.ic_delete)
             drawable?.setColorFilter(
-                R.attr.destructive.getColorFromAttr(context), PorterDuff.Mode.SRC_IN
+                R.attr.destructive.getColorFromAttr(context), SRC_IN
             )
             setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
         }
@@ -70,7 +70,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
                 ContextCompat.getColor(
                     context!!,
                     ThemeManager.resolveAttribute(R.attr.primaryText, context!!)
-                ), PorterDuff.Mode.SRC_IN
+                ), SRC_IN
             )
             setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
         }

@@ -4,14 +4,14 @@
 
 package org.mozilla.fenix.library.history
 
-import android.graphics.PorterDuff
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.graphics.PorterDuffColorFilter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.Toolbar
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -97,9 +97,7 @@ class HistoryUIView(
 
     private fun setToolbarColors(foreground: Int, background: Int) {
         val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
-        val colorFilter = PorterDuffColorFilter(
-            ContextCompat.getColor(context, foreground), PorterDuff.Mode.SRC_IN
-        )
+        val colorFilter = PorterDuffColorFilter(ContextCompat.getColor(context, foreground), SRC_IN)
         toolbar.setBackgroundColor(ContextCompat.getColor(context, background))
         toolbar.setTitleTextColor(ContextCompat.getColor(context, foreground))
 

@@ -12,6 +12,7 @@ import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.TextViewCompat
 import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.ContentViewCallback
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fenix_snackbar.view.*
 import org.mozilla.fenix.R
@@ -110,7 +111,7 @@ class FenixSnackbar private constructor(
 
 private class FenixSnackbarCallback(
     private val content: View
-) : com.google.android.material.snackbar.ContentViewCallback {
+) : ContentViewCallback {
 
     override fun animateContentIn(delay: Int, duration: Int) {
         content.translationY = (content.height).toFloat()

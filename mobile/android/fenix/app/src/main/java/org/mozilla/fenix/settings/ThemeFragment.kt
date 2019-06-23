@@ -5,6 +5,8 @@
 package org.mozilla.fenix.settings
 
 import android.annotation.SuppressLint
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -42,7 +44,7 @@ class ThemeFragment : PreferenceFragmentCompat() {
 
         radioDarkTheme.addToRadioGroup(radioLightTheme)
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+        if (SDK_INT >= Build.VERSION_CODES.P) {
             radioLightTheme.addToRadioGroup(radioFollowDeviceTheme)
             radioDarkTheme.addToRadioGroup(radioFollowDeviceTheme)
 
@@ -86,7 +88,7 @@ class ThemeFragment : PreferenceFragmentCompat() {
     private fun bindFollowDeviceTheme() {
         val keyDeviceTheme = getString(R.string.pref_key_follow_device_theme)
         radioFollowDeviceTheme = requireNotNull(findPreference(keyDeviceTheme))
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+        if (SDK_INT >= Build.VERSION_CODES.P) {
             radioFollowDeviceTheme.onClickListener {
                 setNewTheme(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             }

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.content.Context
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -104,7 +105,7 @@ class CollectionViewHolder(
                 view.context,
                 getIconColor(collection.id)
             ),
-            android.graphics.PorterDuff.Mode.SRC_IN
+            SRC_IN
         )
     }
 

@@ -11,12 +11,12 @@ import android.content.Context
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import org.mozilla.fenix.utils.Settings
+import android.Manifest.permission.CAMERA as CAMERA_PERMISSION
 
 const val ID_CAMERA_PERMISSION = 0
 const val ID_LOCATION_PERMISSION = 1
 const val ID_MICROPHONE_PERMISSION = 2
 const val ID_NOTIFICATION_PERMISSION = 3
-private const val CAMERA_PERMISSION = android.Manifest.permission.CAMERA
 
 enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) {
     CAMERA(ID_CAMERA_PERMISSION, arrayOf(CAMERA_PERMISSION)),

@@ -5,6 +5,8 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.content.Context
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.RecyclerView
@@ -29,7 +31,7 @@ class OnboardingThemePickerViewHolder(private val view: View) : RecyclerView.Vie
         val radioDarkTheme = view.theme_dark_radio_button
         val radioFollowDeviceTheme = view.theme_automatic_radio_button
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+        if (SDK_INT >= Build.VERSION_CODES.P) {
             radioFollowDeviceTheme?.key = R.string.pref_key_follow_device_theme
         } else {
             radioFollowDeviceTheme?.key = R.string.pref_key_auto_battery_theme
@@ -69,7 +71,7 @@ class OnboardingThemePickerViewHolder(private val view: View) : RecyclerView.Vie
         }
 
         radioFollowDeviceTheme.onClickListener {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            if (SDK_INT >= Build.VERSION_CODES.P) {
                 setNewTheme(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             } else {
                 setNewTheme(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)

@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.library
 
-import android.graphics.PorterDuff
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -97,6 +97,6 @@ class LibraryFragment : Fragment() {
         toolbar.setBackgroundColor(backgroundColor)
         toolbar.setTitleTextColor(foregroundColor)
         toolbar.navigationIcon?.colorFilter =
-            PorterDuffColorFilter(foregroundColor, PorterDuff.Mode.SRC_IN)
+            PorterDuffColorFilter(foregroundColor, SRC_IN)
     }
 }

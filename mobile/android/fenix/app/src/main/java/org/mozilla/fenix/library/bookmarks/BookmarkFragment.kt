@@ -7,7 +7,7 @@ package org.mozilla.fenix.library.bookmarks
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.graphics.PorterDuff
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -158,7 +158,7 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
                     isVisible = mode.selectedItems.size == 1
                     icon.colorFilter = PorterDuffColorFilter(
                         ContextCompat.getColor(context!!, R.color.white_color),
-                        PorterDuff.Mode.SRC_IN
+                        SRC_IN
                     )
                 }
             }

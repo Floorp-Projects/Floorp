@@ -8,6 +8,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.util.TypedValue
 import android.view.View
 import android.view.Window
@@ -70,7 +72,7 @@ interface ThemeManager {
             window: Window,
             context: Context
         ) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (SDK_INT >= Build.VERSION_CODES.M) {
                 window.statusBarColor = ContextCompat
                     .getColor(
                         context, resolveAttribute(android.R.attr.statusBarColor, context)
@@ -83,7 +85,7 @@ interface ThemeManager {
                 window.statusBarColor = Color.BLACK
             }
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            if (SDK_INT >= Build.VERSION_CODES.O) {
                 // API level can display handle light navigation bar color
                 window.decorView.systemUiVisibility =
                     window.decorView.systemUiVisibility or

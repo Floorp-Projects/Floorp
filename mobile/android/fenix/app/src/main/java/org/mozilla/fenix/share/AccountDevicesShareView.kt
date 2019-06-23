@@ -5,7 +5,7 @@
 package org.mozilla.fenix.share
 
 import android.content.Context
-import android.graphics.PorterDuff
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -143,7 +143,7 @@ class AccountDeviceViewHolder(
 
         itemView.device_icon.apply {
             setImageResource(drawableRes)
-            background.setColorFilter(ContextCompat.getColor(context, colorRes), PorterDuff.Mode.SRC_IN)
+            background.setColorFilter(ContextCompat.getColor(context, colorRes), SRC_IN)
             drawable.setTint(ContextCompat.getColor(context, R.color.device_foreground))
         }
         itemView.device_name.text = name

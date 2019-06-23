@@ -5,7 +5,7 @@
 package org.mozilla.fenix.library.bookmarks.selectfolder
 
 import android.content.Context
-import android.graphics.PorterDuff
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -131,7 +131,7 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
         if (!visitedAddBookmark) {
             inflater.inflate(R.menu.bookmarks_select_folder, menu)
             menu.findItem(R.id.add_folder_button).icon.colorFilter =
-                PorterDuffColorFilter(R.attr.primaryText.getColorFromAttr(context!!), PorterDuff.Mode.SRC_IN)
+                PorterDuffColorFilter(R.attr.primaryText.getColorFromAttr(context!!), SRC_IN)
         }
     }
 

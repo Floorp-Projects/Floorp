@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.ext
 
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.text.SpannableString
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import androidx.annotation.StringRes
@@ -19,12 +21,18 @@ fun Resources.getSpannable(@StringRes id: Int, spanParts: List<Pair<Any, Iterabl
     val resultCreator = SpannableStringCreator()
     Formatter(
         SpannableAppendable(resultCreator, spanParts),
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            configuration.locales[0]
-        } else configuration.locale
+        getLocale(configuration)
     ).format(getString(id), *spanParts.map { it.first }.toTypedArray())
     return resultCreator.toSpannableString()
 }
+
+@Suppress("Deprecation")
+private fun getLocale(configuration: Configuration) =
+    if (SDK_INT >= Build.VERSION_CODES.N) {
+        configuration.locales[0]
+    } else {
+        configuration.locale
+    }
 
 class SpannableStringCreator {
     private val parts = ArrayList<CharSequence>()

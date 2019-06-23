@@ -5,6 +5,8 @@
 package org.mozilla.fenix.settings
 
 import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -27,9 +29,10 @@ class AboutFragment : Fragment() {
 
         val appName = requireContext().resources.getString(R.string.app_name)
         (activity as AppCompatActivity).title = getString(R.string.preferences_about, appName)
-        var maybeGecko = " \uD83E\uDD8E "
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N) {
-            maybeGecko = "GV: "
+        val maybeGecko = if (SDK_INT < Build.VERSION_CODES.N) {
+            "GV: "
+        } else {
+            " \uD83E\uDD8E "
         }
 
         val aboutText = try {

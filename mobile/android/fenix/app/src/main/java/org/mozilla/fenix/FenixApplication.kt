@@ -6,6 +6,8 @@ package org.mozilla.fenix
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import androidx.appcompat.app.AppCompatDelegate
 import io.reactivex.plugins.RxJavaPlugins
 import kotlinx.coroutines.Deferred
@@ -197,41 +199,40 @@ open class FenixApplication : Application() {
     @SuppressLint("WrongConstant")
     // Suppressing erroneous lint warning about using MODE_NIGHT_AUTO_BATTERY, a likely library bug
     private fun setDayNightTheme() {
+        val settings = Settings.getInstance(this)
         when {
-            Settings.getInstance(this).shouldUseLightTheme -> {
+            settings.shouldUseLightTheme -> {
                 AppCompatDelegate.setDefaultNightMode(
                     AppCompatDelegate.MODE_NIGHT_NO
                 )
             }
-            Settings.getInstance(this).shouldUseDarkTheme -> {
+            settings.shouldUseDarkTheme -> {
                 AppCompatDelegate.setDefaultNightMode(
                     AppCompatDelegate.MODE_NIGHT_YES
                 )
             }
-            android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.P &&
-                    Settings.getInstance(this).shouldUseAutoBatteryTheme -> {
+            SDK_INT < Build.VERSION_CODES.P && settings.shouldUseAutoBatteryTheme -> {
                 AppCompatDelegate.setDefaultNightMode(
                     AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
                 )
             }
-            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P &&
-                    Settings.getInstance(this).shouldFollowDeviceTheme -> {
+            SDK_INT >= Build.VERSION_CODES.P && settings.shouldFollowDeviceTheme -> {
                 AppCompatDelegate.setDefaultNightMode(
                     AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                 )
             }
             // First run of app no default set, set the default to Follow System for 28+ and Normal Mode otherwise
             else -> {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                if (SDK_INT >= Build.VERSION_CODES.P) {
                     AppCompatDelegate.setDefaultNightMode(
                         AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                     )
-                    Settings.getInstance(this).setFollowDeviceTheme(true)
+                    settings.setFollowDeviceTheme(true)
                 } else {
                     AppCompatDelegate.setDefaultNightMode(
                         AppCompatDelegate.MODE_NIGHT_NO
                     )
-                    Settings.getInstance(this).setLightTheme(true)
+                    settings.setLightTheme(true)
                 }
             }
         }

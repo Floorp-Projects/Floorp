@@ -6,7 +6,7 @@ package org.mozilla.fenix.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.PorterDuff
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.graphics.PorterDuffColorFilter
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -16,8 +16,7 @@ import androidx.core.content.ContextCompat.getColor
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 
-class ClearableEditText @JvmOverloads
-constructor(
+class ClearableEditText @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = R.attr.editTextStyle
@@ -41,7 +40,7 @@ constructor(
             setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_clear, 0)
             for (drawable: Drawable in compoundDrawables.filterNotNull()) {
                 val color = ThemeManager.resolveAttribute(R.attr.primaryText, context!!)
-                drawable.colorFilter = PorterDuffColorFilter(getColor(context, color), PorterDuff.Mode.SRC_IN)
+                drawable.colorFilter = PorterDuffColorFilter(getColor(context, color), SRC_IN)
             }
         } else {
             setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)

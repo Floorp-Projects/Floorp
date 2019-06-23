@@ -4,7 +4,7 @@ package org.mozilla.fenix.search.awesomebar
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import android.graphics.PorterDuff
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -93,13 +93,13 @@ class AwesomeBarUIView(
 
     init {
         with(container.context) {
-            val draw = getDrawable(R.drawable.ic_link)
-            draw?.setColorFilter(
-                ContextCompat.getColor(
-                    this,
-                    ThemeManager.resolveAttribute(R.attr.primaryText, this)
-                ), PorterDuff.Mode.SRC_IN
+            val primaryTextColor = ContextCompat.getColor(
+                this,
+                ThemeManager.resolveAttribute(R.attr.primaryText, this)
             )
+
+            val draw = getDrawable(R.drawable.ic_link)
+            draw?.setColorFilter(primaryTextColor, SRC_IN)
             clipboardSuggestionProvider = ClipboardSuggestionProvider(
                 this,
                 loadUrlUseCase,
@@ -130,12 +130,7 @@ class AwesomeBarUIView(
 
             if (Settings.getInstance(container.context).showSearchSuggestions) {
                 val searchDrawable = getDrawable(R.drawable.ic_search)
-                searchDrawable?.setColorFilter(
-                    ContextCompat.getColor(
-                        this,
-                        ThemeManager.resolveAttribute(R.attr.primaryText, this)
-                    ), PorterDuff.Mode.SRC_IN
-                )
+                searchDrawable?.setColorFilter(primaryTextColor, SRC_IN)
                 defaultSearchSuggestionProvider =
                     SearchSuggestionProvider(
                         searchEngine = components.search.searchEngineManager.getDefaultSearchEngine(
@@ -199,7 +194,7 @@ class AwesomeBarUIView(
                 ContextCompat.getColor(
                     this,
                     ThemeManager.resolveAttribute(R.attr.primaryText, this)
-                ), PorterDuff.Mode.SRC_IN
+                ), SRC_IN
             )
 
             searchSuggestionFromShortcutProvider =

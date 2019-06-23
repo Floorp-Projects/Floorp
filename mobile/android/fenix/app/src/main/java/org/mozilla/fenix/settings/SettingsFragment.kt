@@ -9,6 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
@@ -86,7 +88,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
 
-        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.M) {
+        if (SDK_INT <= Build.VERSION_CODES.M) {
             findPreference<DefaultBrowserPreference>(getString(R.string.pref_key_make_default_browser))?.apply {
                 isVisible = false
             }
@@ -259,7 +261,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     private fun getClickListenerForMakeDefaultBrowser(): OnPreferenceClickListener {
-        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+        return if (SDK_INT >= Build.VERSION_CODES.N) {
             OnPreferenceClickListener {
                 val intent = Intent(
                     Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS

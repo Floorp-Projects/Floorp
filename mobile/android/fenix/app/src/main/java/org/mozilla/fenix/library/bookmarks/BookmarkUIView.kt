@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.library.bookmarks
 
-import android.graphics.PorterDuff
+import android.graphics.PorterDuff.Mode.SRC_IN
 import android.graphics.PorterDuffColorFilter
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -90,7 +90,7 @@ class BookmarkUIView(
     private fun setToolbarColors(foreground: Int, background: Int) {
         val toolbar = activity?.findViewById<Toolbar>(R.id.navigationToolbar)
         val colorFilter = PorterDuffColorFilter(
-            ContextCompat.getColor(context, foreground), PorterDuff.Mode.SRC_IN
+            ContextCompat.getColor(context, foreground), SRC_IN
         )
         toolbar?.run {
             setBackgroundColor(ContextCompat.getColor(context, background))
