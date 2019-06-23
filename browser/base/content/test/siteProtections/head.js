@@ -6,6 +6,6 @@ var protectionsPopup = document.getElementById("protections-popup");
 async function openProtectionsPanel() {
   let popupShownPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popupshown");
   let identityBox = document.getElementById("identity-box");
-  EventUtils.synthesizeMouseAtCenter(identityBox, { metaKey: true });
+  EventUtils.synthesizeMouseAtCenter(identityBox, { altKey: true });
   await popupShownPromise;
 }

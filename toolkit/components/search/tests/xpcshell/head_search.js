@@ -7,11 +7,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
+  RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
+  sinon: "resource://testing-common/Sinon.jsm",
 });
 
 var {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
@@ -463,21 +465,18 @@ function checkCountryResultTelemetry(aExpectedValue) {
  * Provides a basic set of remote settings for use in tests.
  */
 async function setupRemoteSettings() {
-  const collection = await RemoteSettings("hijack-blocklists").openCollection();
-  await collection.clear();
-  await collection.create({
-    "id": "submission-urls",
-    "matches": [
-      "ignore=true",
-    ],
-  }, { synced: true });
-  await collection.create({
-    "id": "load-paths",
-    "matches": [
+  const settings = await RemoteSettings("hijack-blocklists");
+  sinon.stub(settings, "get").returns([{
+    id: "load-paths",
+    matches: [
       "[other]addEngineWithDetails:searchignore@mozilla.com",
     ],
-  }, { synced: true });
-  await collection.db.saveLastModified(42);
+    _status: "synced",
+  }, {
+    id: "submission-urls",
+    matches: ["ignore=true"],
+    _status: "synced",
+  }]);
 }
 
 /**

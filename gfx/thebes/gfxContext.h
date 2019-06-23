@@ -168,6 +168,7 @@ class gfxContext final {
    * transformations.
    */
   void Multiply(const gfxMatrix& other);
+  void Multiply(const mozilla::gfx::Matrix& other);
 
   /**
    * Replaces the current transformation matrix with matrix.

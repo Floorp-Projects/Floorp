@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test the relationship between annotation vs blocking - fingerprinting</title>
+  <title>Test the relationship between annotation vs blocking - socialtracking</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="features.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -10,18 +10,18 @@
 <body>
 <script class="testbody" type="text/javascript">
 
-runTests(SpecialPowers.Ci.nsIHttpChannel.CLASSIFIED_FINGERPRINTING,
+runTests(SpecialPowers.Ci.nsIHttpChannel.CLASSIFIED_SOCIALTRACKING,
          [
            ["privacy.trackingprotection.enabled", false],
            ["privacy.trackingprotection.annotate_channels", false],
-           ["privacy.trackingprotection.fingerprinting.annotate.enabled", true],
-           ["privacy.trackingprotection.fingerprinting.enabled", true],
+           ["privacy.trackingprotection.fingerprinting.annotate.enabled", false],
+           ["privacy.trackingprotection.fingerprinting.enabled", false],
            ["privacy.trackingprotection.cryptomining.annotate.enabled", false],
            ["privacy.trackingprotection.cryptomining.enabled", false],
-           ["privacy.trackingprotection.socialtracking.annotate.enabled", false],
-           ["privacy.trackingprotection.socialtracking.enabled", false],
+           ["privacy.trackingprotection.socialtracking.annotate.enabled", true],
+           ["privacy.trackingprotection.socialtracking.enabled", true],
          ],
-         true /* a tracking resource */);
+         false /* a tracking resource */);
 SimpleTest.waitForExplicitFinish();
 
 </script>

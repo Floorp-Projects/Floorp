@@ -211,6 +211,10 @@ var CaptivePortalWatcher = {
   },
 
   _showNotification() {
+    if (this._captivePortalNotification) {
+      return;
+    }
+
     let buttons = [
       {
         label: this._browserBundle.GetStringFromName("captivePortal.showLoginPage2"),
