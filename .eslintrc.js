@@ -40,11 +40,12 @@ module.exports = {
     "plugin:mozilla/recommended"
   ],
   "plugins": [
+    "html",
     "mozilla"
   ],
-  // The html plugin is enabled via a command line option on eslint. To avoid
-  // bad interactions with the xml preprocessor in eslint-plugin-mozilla, we
-  // turn off processing of the html plugin for .xml files.
+  // To avoid bad interactions of the html plugin with the xml preprocessor in
+  // eslint-plugin-mozilla, we turn off processing of the html plugin for .xml
+  // files.
   "settings": {
     "html/xml-extensions": [ ".xhtml" ]
   },

@@ -143,6 +143,8 @@ class DrawTargetCairo final : public DrawTarget {
       const IntSize& aSize, SurfaceFormat aFormat) const override;
   virtual already_AddRefed<DrawTarget> CreateShadowDrawTarget(
       const IntSize& aSize, SurfaceFormat aFormat, float aSigma) const override;
+  virtual RefPtr<DrawTarget> CreateClippedDrawTarget(
+      const Rect& aBounds, SurfaceFormat aFormat) override;
 
   virtual already_AddRefed<GradientStops> CreateGradientStops(
       GradientStop* aStops, uint32_t aNumStops,
@@ -188,7 +190,7 @@ class DrawTargetCairo final : public DrawTarget {
   void CopySurfaceInternal(cairo_surface_t* aSurface, const IntRect& aSource,
                            const IntPoint& aDest);
 
-  Rect GetUserSpaceClip();
+  Rect GetUserSpaceClip() const;
 
   // Call before you make any changes to the backing surface with which this
   // context is associated. Pass the path you're going to be using if you have
