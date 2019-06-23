@@ -202,8 +202,8 @@ ec_NewKey(ECParams *ecParams, ECPrivateKey **privKey,
 #endif
     MP_DIGITS(&k) = 0;
 
-    if (!ecParams || !privKey || !privKeyBytes || (privKeyLen < 0) ||
-        !ecParams->name) {
+    if (!ecParams || ecParams->name == ECCurve_noName ||
+        !privKey || !privKeyBytes || privKeyLen <= 0) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
@@ -391,7 +391,7 @@ EC_NewKey(ECParams *ecParams, ECPrivateKey **privKey)
     int len;
     unsigned char *privKeyBytes = NULL;
 
-    if (!ecParams) {
+    if (!ecParams || ecParams->name == ECCurve_noName || !privKey) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
@@ -430,7 +430,8 @@ EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
     mp_err err = MP_OKAY;
     int len;
 
-    if (!ecParams || !publicValue || !ecParams->name) {
+    if (!ecParams || ecParams->name == ECCurve_noName ||
+        !publicValue || !publicValue->len) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
@@ -536,8 +537,9 @@ ECDH_Derive(SECItem *publicValue,
     int i;
 #endif
 
-    if (!publicValue || !ecParams || !privateValue || !derivedSecret ||
-        !ecParams->name) {
+    if (!publicValue || !publicValue->len ||
+        !ecParams || ecParams->name == ECCurve_noName ||
+        !privateValue || !privateValue->len || !derivedSecret) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
