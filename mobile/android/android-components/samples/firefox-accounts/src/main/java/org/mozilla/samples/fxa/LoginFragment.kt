@@ -69,7 +69,7 @@ class LoginFragment : Fragment() {
         if (context is OnLoginCompleteListener) {
             listener = context
         } else {
-            throw IllegalStateException(context.toString() + " must implement OnLoginCompleteListener")
+            throw IllegalStateException("$context must implement OnLoginCompleteListener")
         }
     }
 
