@@ -213,10 +213,12 @@ float DOMSVGLength::GetValue(ErrorResult& aRv) {
     }
     return value;
   }
-  if (mUnit == SVGLength_Binding::SVG_LENGTHTYPE_NUMBER ||
-      mUnit == SVGLength_Binding::SVG_LENGTHTYPE_PX) {
-    return mValue;
+
+  float unitToPx;
+  if (UserSpaceMetrics::ResolveAbsoluteUnit(mUnit, unitToPx)) {
+    return mValue * unitToPx;
   }
+
   // else [SVGWG issue] Can't convert this length's value to user units
   // ReportToConsole
   aRv.Throw(NS_ERROR_FAILURE);
