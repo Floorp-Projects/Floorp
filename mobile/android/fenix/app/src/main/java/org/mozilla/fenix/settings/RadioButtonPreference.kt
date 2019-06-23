@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings
 
 import android.content.Context
-import android.content.res.TypedArray
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.view.View
@@ -13,6 +12,7 @@ import android.widget.RadioButton
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.TypedArrayUtils
+import androidx.core.content.withStyledAttributes
 import androidx.core.text.HtmlCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
@@ -20,7 +20,11 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.utils.Settings
 
-class RadioButtonPreference : Preference {
+class RadioButtonPreference @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    attributeSetId: Int = 0
+) : Preference(context, attrs, attributeSetId) {
     private val radioGroups = mutableListOf<RadioButtonPreference>()
     private lateinit var summaryView: TextView
     private lateinit var radioButton: RadioButton
@@ -30,6 +34,27 @@ class RadioButtonPreference : Preference {
 
     init {
         layoutResource = R.layout.preference_widget_radiobutton
+
+        context.withStyledAttributes(
+            attrs,
+            androidx.preference.R.styleable.Preference,
+            TypedArrayUtils.getAttr(
+                context, androidx.preference.R.attr.preferenceStyle, android.R.attr.preferenceStyle
+            ),
+            0
+        ) {
+            if (hasValue(androidx.preference.R.styleable.Preference_defaultValue)) {
+                defaultValue = getBoolean(
+                    androidx.preference.R.styleable.Preference_defaultValue,
+                    false
+                )
+            } else if (hasValue(androidx.preference.R.styleable.Preference_android_defaultValue)) {
+                defaultValue = getBoolean(
+                    androidx.preference.R.styleable.Preference_android_defaultValue,
+                    false
+                )
+            }
+        }
     }
 
     /* In devices with Android 6, when we use android:button="@null" android:drawableStart doesn't work via xml
@@ -43,16 +68,6 @@ class RadioButtonPreference : Preference {
             this?.setBounds(0, 0, this.intrinsicWidth, this.intrinsicHeight)
         }
         this.setCompoundDrawables(buttonDrawable, null, null, null)
-    }
-
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
-        val typedArray = context.obtainStyledAttributes(
-            attrs, androidx.preference.R.styleable.Preference, TypedArrayUtils.getAttr(
-                context, androidx.preference.R.attr.preferenceStyle,
-                android.R.attr.preferenceStyle
-            ), 0
-        )
-        initDefaultValue(typedArray)
     }
 
     fun addToRadioGroup(radioPreference: RadioButtonPreference) {
@@ -92,20 +107,6 @@ class RadioButtonPreference : Preference {
         radioButton = holder.findViewById(R.id.radio_button) as RadioButton
         radioButton.isChecked = Settings.getInstance(context).preferences.getBoolean(key, false)
         radioButton.setStartCheckedIndicator()
-    }
-
-    private fun initDefaultValue(typedArray: TypedArray) {
-        if (typedArray.hasValue(androidx.preference.R.styleable.Preference_defaultValue)) {
-            defaultValue = typedArray.getBoolean(
-                androidx.preference.R.styleable.Preference_defaultValue,
-                false
-            )
-        } else if (typedArray.hasValue(androidx.preference.R.styleable.Preference_android_defaultValue)) {
-            defaultValue = typedArray.getBoolean(
-                androidx.preference.R.styleable.Preference_android_defaultValue,
-                false
-            )
-        }
     }
 
     private fun toggleRadioGroups() {

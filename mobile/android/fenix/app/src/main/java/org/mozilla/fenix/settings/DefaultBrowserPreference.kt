@@ -12,17 +12,13 @@ import androidx.preference.PreferenceViewHolder
 import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.R
 
-class DefaultBrowserPreference : Preference {
+class DefaultBrowserPreference @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    attributeSetId: Int = 0
+) : Preference(context, attrs, attributeSetId) {
 
     private var switchView: Switch? = null
-
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context, attrs: AttributeSet?, attributeSetId: Int) : super(
-        context,
-        attrs,
-        attributeSetId
-    )
 
     init {
         widgetLayoutResource = R.layout.preference_default_browser

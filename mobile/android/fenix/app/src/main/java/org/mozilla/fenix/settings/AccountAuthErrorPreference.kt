@@ -12,12 +12,12 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
 
-class AccountAuthErrorPreference : Preference {
+class AccountAuthErrorPreference @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    attributeSetId: Int = 0
+) : Preference(context, attrs, attributeSetId) {
     var email: String? = null
-
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context, attrs: AttributeSet?, attributeSetId: Int) : super(context, attrs, attributeSetId)
 
     init {
         layoutResource = R.layout.account_auth_error_preference

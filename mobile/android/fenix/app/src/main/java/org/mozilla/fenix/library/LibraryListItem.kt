@@ -8,6 +8,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.withStyledAttributes
 import kotlinx.android.synthetic.main.library_list_item.view.*
 import org.mozilla.fenix.R
 
@@ -19,28 +20,18 @@ class LibraryListItem @JvmOverloads constructor(
     init {
         LayoutInflater.from(context).inflate(R.layout.library_list_item, this, true)
 
-        attrs.let {
-            context.theme.obtainStyledAttributes(
-                it,
-                R.styleable.LibraryListItem,
-                0, 0
-            ).apply {
-                try {
-                    val id = getResourceId(
-                        R.styleable.LibraryListItem_listItemIcon,
-                        R.drawable.library_icon_reading_list_circle_background
-                    )
-                    libraryIcon?.background = resources.getDrawable(id, context.theme)
-                    libraryItemTitle?.text = resources.getString(
-                        getResourceId(
-                            R.styleable.LibraryListItem_listItemTitle,
-                            R.string.browser_menu_your_library
-                        )
-                    )
-                } finally {
-                    recycle()
-                }
-            }
+        context.withStyledAttributes(attrs, R.styleable.LibraryListItem, defStyleAttr, 0) {
+            val id = getResourceId(
+                R.styleable.LibraryListItem_listItemIcon,
+                R.drawable.library_icon_reading_list_circle_background
+            )
+            libraryIcon?.background = resources.getDrawable(id, context.theme)
+            libraryItemTitle?.text = resources.getString(
+                getResourceId(
+                    R.styleable.LibraryListItem_listItemTitle,
+                    R.string.browser_menu_your_library
+                )
+            )
         }
     }
 }

@@ -12,17 +12,13 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 
-class RadioSearchEngineListPreference : SearchEngineListPreference {
+class RadioSearchEngineListPreference @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : SearchEngineListPreference(context, attrs, defStyleAttr) {
     override val itemResId: Int
         get() = R.layout.search_engine_radio_button
-
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
-
-    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
 
     override fun updateDefaultItem(defaultButton: CompoundButton) {
         defaultButton.isChecked = true
