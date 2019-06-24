@@ -5428,31 +5428,10 @@ void StaticPrefs::MaybeInitOncePrefs() {
 //     MaybeInitOncePrefs();
 //     return sVarCache_myvarcache;
 //   }
-//   void StaticPrefs::Setmy_varcache(int32_t aValue) {
-//     SetPref(Getmy_varcachePrefName(), aValue);
-//     if (UpdatePolicy::policy == UpdatePolicy::Once) {
-//       sVarCache_my_varcache = PreferencesInternalMethods::GetPref(
-//           Getmy_varcachePrefName(), sVarCache_my_varcache);
-//     }
-//     return;
-//   }
 
 #define PREF(name, cpp_type, value)
-#define VARCACHE_PREF(policy, name, id, cpp_type, default_value)               \
-  cpp_type StaticPrefs::sVarCache_##id(default_value);                         \
-  void StaticPrefs::Set##id(StripAtomic<cpp_type> aValue) {                    \
-    MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread() && XRE_IsParentProcess(),          \
-                          "pref '" name "' being set outside parent process"); \
-    MOZ_DIAGNOSTIC_ASSERT(UpdatePolicy::policy == UpdatePolicy::Live ||        \
-                          !sOncePrefRead);                                     \
-    SetPref(Get##id##PrefName(), aValue);                                      \
-    if (UpdatePolicy::policy == UpdatePolicy::Once) {                          \
-      sVarCache_##id = PreferencesInternalMethods::GetPref(                    \
-          Get##id##PrefName(), StripAtomic<cpp_type>(sVarCache_##id));         \
-    }                                                                          \
-    /* The StaticPrefs storage will be updated by the registered callback */   \
-    return;                                                                    \
-  }
+#define VARCACHE_PREF(policy, name, id, cpp_type, default_value) \
+  cpp_type StaticPrefs::sVarCache_##id(default_value);
 #include "mozilla/StaticPrefList.h"
 #undef PREF
 #undef VARCACHE_PREF
