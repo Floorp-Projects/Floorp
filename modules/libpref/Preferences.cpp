@@ -103,7 +103,7 @@
 
 using namespace mozilla;
 
-using mozilla::ipc::FileDescriptor;
+using ipc::FileDescriptor;
 
 #ifdef DEBUG
 
@@ -890,7 +890,7 @@ class Pref {
 };
 
 struct PrefHasher {
-  using Key = mozilla::UniquePtr<Pref>;
+  using Key = UniquePtr<Pref>;
   using Lookup = const char*;
 
   static HashNumber hash(const Lookup& aLookup) { return HashString(aLookup); }
@@ -1194,7 +1194,7 @@ class CallbackNode {
   uintptr_t mNextAndMatchKind;
 };
 
-using PrefsHashTable = mozilla::HashSet<mozilla::UniquePtr<Pref>, PrefHasher>;
+using PrefsHashTable = HashSet<UniquePtr<Pref>, PrefHasher>;
 
 static PrefsHashTable* gHashTable;
 
@@ -1509,7 +1509,7 @@ static bool gContentProcessPrefsAreInited = false;
 #endif  // DEBUG
 
 static Pref* pref_HashTableLookup(const char* aPrefName) {
-  MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
+  MOZ_ASSERT(NS_IsMainThread() || ServoStyleSet::IsInServoTraversal());
 
   MOZ_ASSERT_IF(!XRE_IsParentProcess(), gContentProcessPrefsAreInited);
 
@@ -1538,7 +1538,7 @@ Maybe<PrefWrapper> pref_SharedLookup(const char* aPrefName) {
 
 Maybe<PrefWrapper> pref_Lookup(const char* aPrefName,
                                bool aIncludeTypeNone = false) {
-  MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
+  MOZ_ASSERT(NS_IsMainThread() || ServoStyleSet::IsInServoTraversal());
 
   AddAccessCount(aPrefName);
 
@@ -1866,8 +1866,8 @@ class PrefCallback : public PLDHashEntryHdr {
   static const PrefCallback* KeyToPointer(PrefCallback* aKey) { return aKey; }
 
   static PLDHashNumber HashKey(const PrefCallback* aKey) {
-    uint32_t hash = mozilla::HashString(aKey->mDomain);
-    return mozilla::AddToHash(hash, aKey->mCanonical);
+    uint32_t hash = HashString(aKey->mDomain);
+    return AddToHash(hash, aKey->mCanonical);
   }
 
  public:
@@ -2005,7 +2005,7 @@ class nsPrefBranch final : public nsIPrefBranch,
 
  private:
   // Helper class for either returning a raw cstring or nsCString.
-  typedef mozilla::Variant<const char*, const nsCString> PrefNameBase;
+  typedef Variant<const char*, const nsCString> PrefNameBase;
   class PrefName : public PrefNameBase {
    public:
     explicit PrefName(const char* aName) : PrefNameBase(aName) {}
@@ -2104,8 +2104,7 @@ nsPrefBranch::nsPrefBranch(const char* aPrefRoot, PrefValueKind aKind)
       mKind(aKind),
       mFreeingObserverList(false),
       mObservers() {
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
     ++mRefCnt;  // must be > 0 when we call this, or we'll get deleted!
 
@@ -2804,8 +2803,7 @@ void nsPrefBranch::FreeObserverList() {
     iter.Remove();
   }
 
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
     observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   }
@@ -2830,7 +2828,7 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char* aPrefName,
   }
 
   nsCOMPtr<nsIStringBundleService> bundleService =
-      mozilla::services::GetStringBundleService();
+      services::GetStringBundleService();
   if (!bundleService) {
     return NS_ERROR_FAILURE;
   }
@@ -2938,9 +2936,9 @@ void Preferences::HandleDirty() {
       sPreferences->mSavePending = true;
       static const int PREF_DELAY_MS = 500;
       NS_DelayedDispatchToCurrentThread(
-          mozilla::NewRunnableMethod("Preferences::SavePrefFileAsynchronous",
-                                     sPreferences.get(),
-                                     &Preferences::SavePrefFileAsynchronous),
+          NewRunnableMethod("Preferences::SavePrefFileAsynchronous",
+                            sPreferences.get(),
+                            &Preferences::SavePrefFileAsynchronous),
           PREF_DELAY_MS);
     }
   }
@@ -3074,7 +3072,7 @@ class PWRunnable : public Runnable {
   NS_IMETHOD Run() override {
     // If we get a nullptr on the exchange, it means that somebody
     // else has already processed the request, and we can just return.
-    mozilla::UniquePtr<PrefSaveData> prefs(
+    UniquePtr<PrefSaveData> prefs(
         PreferencesWriter::sPendingWriteData.exchange(nullptr));
     nsresult rv = NS_OK;
     if (prefs) {
@@ -3554,7 +3552,7 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
     }
 
     nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
+        services::GetObserverService();
     if (!observerService) {
       sPreferences = nullptr;
       gCacheDataDesc = "GetObserverService() failed (1)";
@@ -3599,7 +3597,7 @@ bool Preferences::IsServiceAvailable() { return !!sPreferences; }
 
 /* static */
 bool Preferences::InitStaticMembers() {
-  MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
+  MOZ_ASSERT(NS_IsMainThread() || ServoStyleSet::IsInServoTraversal());
 
   if (MOZ_LIKELY(sPreferences)) {
     return true;
@@ -4065,8 +4063,7 @@ Preferences::GetDirty(bool* aRetVal) {
 }
 
 nsresult Preferences::NotifyServiceObservers(const char* aTopic) {
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (!observerService) {
     return NS_ERROR_FAILURE;
   }
@@ -4207,8 +4204,7 @@ nsresult Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod) {
 
   if (AllowOffMainThreadSave()) {
     nsresult rv = NS_OK;
-    mozilla::UniquePtr<PrefSaveData> prefs =
-        MakeUnique<PrefSaveData>(pref_savePrefs());
+    UniquePtr<PrefSaveData> prefs = MakeUnique<PrefSaveData>(pref_savePrefs());
 
     // Put the newly constructed preference data into sPendingWriteData
     // for the next request to pick up
@@ -4544,8 +4540,7 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
   const char* entryName;
   uint16_t entryNameLen;
 
-  RefPtr<nsZipArchive> jarReader =
-      mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
+  RefPtr<nsZipArchive> jarReader = Omnijar::GetReader(Omnijar::GRE);
   if (jarReader) {
 #ifdef MOZ_WIDGET_ANDROID
     // Try to load an architecture-specific greprefs.js first. This will be
@@ -4629,13 +4624,12 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
 
   // Load jar:$app/omni.jar!/defaults/preferences/*.js
   // or jar:$gre/omni.jar!/defaults/preferences/*.js.
-  RefPtr<nsZipArchive> appJarReader =
-      mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
+  RefPtr<nsZipArchive> appJarReader = Omnijar::GetReader(Omnijar::APP);
 
-  // GetReader(mozilla::Omnijar::APP) returns null when `$app == $gre`, in
+  // GetReader(Omnijar::APP) returns null when `$app == $gre`, in
   // which case we look for app-specific default preferences in $gre.
   if (!appJarReader) {
-    appJarReader = mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
+    appJarReader = Omnijar::GetReader(Omnijar::GRE);
   }
 
   if (appJarReader) {
@@ -4689,8 +4683,7 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
   NS_CreateServicesFromCategory(NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID, nullptr,
                                 NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID);
 
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   NS_ENSURE_SUCCESS(rv, Err("GetObserverService() failed (2)"));
 
   observerService->NotifyObservers(nullptr, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID,
@@ -5408,8 +5401,8 @@ void StaticPrefs::MaybeInitOncePrefs() {
     RefPtr<Runnable> runnable = NS_NewRunnableFunction(
         "Preferences::MaybeInitOncePrefs", [&]() { InitOncePrefs(); });
     // This logic needs to run on the main thread
-    mozilla::SyncRunnable::DispatchToThread(
-        SystemGroup::EventTargetFor(mozilla::TaskCategory::Other), runnable);
+    SyncRunnable::DispatchToThread(
+        SystemGroup::EventTargetFor(TaskCategory::Other), runnable);
   }
   sOncePrefRead = true;
 }
