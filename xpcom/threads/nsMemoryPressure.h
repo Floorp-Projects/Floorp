@@ -55,7 +55,10 @@ enum MemoryPressureState {
 
 /**
  * Return and erase the latest state of the memory pressure event set by any of
- * the corresponding dispatch function.
+ * the corresponding dispatch functions.
+ *
+ * This is called when processing events on the main thread to check whether to
+ * fire a memory pressure notification.
  */
 MemoryPressureState NS_GetPendingMemoryPressure();
 
