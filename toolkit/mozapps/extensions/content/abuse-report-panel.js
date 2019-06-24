@@ -404,18 +404,16 @@ class AbuseReport extends HTMLElement {
     this.render();
 
     this.addEventListener("click", this);
-    // Start listening to focus events (to adjust the focused
-    // element during keyboard navigation).
-    document.addEventListener("focus", this, true);
+
     // Start listening to keydown events (to close the modal
-    // when Escape has been pressed).
+    // when Escape has been pressed and to handling the keyboard
+    // navigation).
     document.addEventListener("keydown", this);
   }
 
   disconnectedCallback() {
     this.textContent = "";
     this.removeEventListener("click", this);
-    document.removeEventListener("focus", this, true);
     document.removeEventListener("keydown", this);
   }
 
@@ -425,25 +423,6 @@ class AbuseReport extends HTMLElement {
     }
 
     switch (evt.type) {
-      case "focus":
-        if (evt.target === document.body) {
-          // Return the focus to the Firefox UI when the body has been focused
-          // (as it is only reached when navigating back from the last focusable
-          // objects in the abuse report panel).
-          const chromeWin = window.windowRoot.ownerGlobal;
-          // Top level browser's previous sibling.
-          const {
-            previousElementSibling,
-          } = window.parent.docShell.chromeEventHandler;
-          Services.focus.moveFocus(
-            chromeWin, previousElementSibling,
-            Services.focus.MOVE_BACKWARD, Services.focus.FLAG_BYKEY);
-          return;
-        } else if (this.contains(evt.target)) {
-          return;
-        }
-        this.focus();
-        break;
       case "keydown":
         if (evt.key === "Escape") {
           // Prevent Esc to close the panel if the textarea is
@@ -453,10 +432,15 @@ class AbuseReport extends HTMLElement {
           }
           this.cancel();
         }
+        this.handleKeyboardNavigation(evt);
         break;
       case "click":
         if (evt.target === this._iconClose ||
             evt.target === this._btnCancel) {
+          // NOTE: clear the focus on the clicked element to ensure that
+          // -moz-focusring pseudo class is not still set on the element
+          // when the panel is going to be shown again (See Bug 1560949).
+          evt.target.blur();
           this.cancel();
         }
         if (evt.target === this._btnNext) {
@@ -480,6 +464,41 @@ class AbuseReport extends HTMLElement {
           }
         }
         break;
+    }
+  }
+
+  handleKeyboardNavigation(evt) {
+    if (evt.keyCode !== evt.DOM_VK_TAB ||
+      evt.altKey || evt.controlKey || evt.metaKey) {
+      return;
+    }
+
+    const fm = Services.focus;
+    const backward = evt.shiftKey;
+
+    const isFirstFocusableElement = el => {
+      // Also consider the document body as a valid first focusable element.
+      if (el === document.body) {
+        return true;
+      }
+      // XXXrpl unfortunately there is no way to get the first focusable element
+      // without asking the focus manager to move focus to it (similar strategy
+      // is also being used in about:prefereces subdialog.js).
+      const rv = el == fm.moveFocus(window, null, fm.MOVEFOCUS_FIRST, 0);
+      fm.setFocus(el, 0);
+      return rv;
+    };
+
+    // If the focus is exiting the panel while navigating
+    // backward, focus the previous element sibling on the
+    // Firefox UI.
+    if (backward && isFirstFocusableElement(evt.target)) {
+      evt.preventDefault();
+      evt.stopImmediatePropagation();
+      const chromeWin = window.windowRoot.ownerGlobal;
+      Services.focus.moveFocus(
+        chromeWin, null,
+        Services.MOVEFOCUS_BACKWARD, Services.focus.FLAG_BYKEY);
     }
   }
 
