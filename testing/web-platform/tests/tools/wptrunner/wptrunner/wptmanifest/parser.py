@@ -16,7 +16,7 @@ from __future__ import unicode_literals
 
 from six import binary_type, text_type, BytesIO
 
-from .node import (AtomNode, BinaryExpressionNode, BinaryOperatorNode,
+from .node import (Node, AtomNode, BinaryExpressionNode, BinaryOperatorNode,
                    ConditionalNode, DataNode, IndexNode, KeyValueNode, ListNode,
                    NumberNode, StringNode, UnaryExpressionNode,
                    UnaryOperatorNode, ValueNode, VariableNode)
@@ -698,13 +698,16 @@ class Treebuilder(object):
         self.node = root
 
     def append(self, node):
+        assert isinstance(node, Node)
         self.node.append(node)
         self.node = node
+        assert self.node is not None
         return node
 
     def pop(self):
         node = self.node
         self.node = self.node.parent
+        assert self.node is not None
         return node
 
 
