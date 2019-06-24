@@ -123,7 +123,7 @@ var TelemetryTestUtils = {
     let matches = (expected, actual) => {
       if (expected === undefined) {
         return true;
-      } else if (expected instanceof RegExp) {
+      } else if (expected && expected.test) { // Possibly a RegExp.
         return expected.test(actual);
       } else if ((typeof expected) === "function") {
         return expected(actual);
