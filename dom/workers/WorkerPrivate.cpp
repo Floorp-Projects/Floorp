@@ -696,6 +696,22 @@ class UpdateGCZealRunnable final : public WorkerControlRunnable {
 };
 #endif
 
+class SetLowMemoryStateRunnable final : public WorkerControlRunnable {
+  bool mState;
+
+ public:
+  SetLowMemoryStateRunnable(WorkerPrivate* aWorkerPrivate, bool aState)
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+        mState(aState) {}
+
+ private:
+  virtual bool WorkerRun(JSContext* aCx,
+                         WorkerPrivate* aWorkerPrivate) override {
+    aWorkerPrivate->SetLowMemoryStateInternal(aCx, mState);
+    return true;
+  }
+};
+
 class GarbageCollectRunnable final : public WorkerControlRunnable {
   bool mShrinking;
   bool mCollectChildren;
@@ -1818,6 +1834,16 @@ void WorkerPrivate::UpdateGCZeal(uint8_t aGCZeal, uint32_t aFrequency) {
   }
 }
 #endif
+
+void WorkerPrivate::SetLowMemoryState(bool aState) {
+  AssertIsOnParentThread();
+
+  RefPtr<SetLowMemoryStateRunnable> runnable =
+      new SetLowMemoryStateRunnable(this, aState);
+  if (!runnable->Dispatch()) {
+    NS_WARNING("Failed to set low memory state!");
+  }
+}
 
 void WorkerPrivate::GarbageCollect(bool aShrinking) {
   AssertIsOnParentThread();
@@ -4501,6 +4527,16 @@ void WorkerPrivate::UpdateGCZealInternal(JSContext* aCx, uint8_t aGCZeal,
   }
 }
 #endif
+
+void WorkerPrivate::SetLowMemoryStateInternal(JSContext* aCx, bool aState) {
+  MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
+
+  JS::SetLowMemoryState(aCx, aState);
+
+  for (uint32_t index = 0; index < data->mChildWorkers.Length(); index++) {
+    data->mChildWorkers[index]->SetLowMemoryState(aState);
+  }
+}
 
 void WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
                                            bool aCollectChildren) {
