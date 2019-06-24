@@ -294,9 +294,6 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
                                    public ErrorReportMixin {
   using Base = ErrorReportMixin;
 
- private:
-  ParserBase* thisForCtor() { return this; }
-
  public:
   TokenStreamAnyChars anyChars;
 
@@ -1037,8 +1034,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   }
 
  private:
-  GeneralParser* thisForCtor() { return this; }
-
   NameNodeType noSubstitutionUntaggedTemplate();
   ListNodeType templateLiteral(YieldHandling yieldHandling);
   bool taggedTemplate(YieldHandling yieldHandling, ListNodeType tagArgsList,
