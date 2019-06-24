@@ -5529,11 +5529,6 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
     event.mLayersId = bbc->GetLayersId();
     bbc->SendDispatchSynthesizedMouseEvent(event);
   } else if (RefPtr<PresShell> presShell = pointVM->GetPresShell()) {
-    // Otherwise we're targetting regular (non-OOP iframe) content in the
-    // current process. This field probably won't even be read, but we
-    // can fill it in with a sane value.
-    event.mLayersId = mMouseEventTargetGuid.mLayersId;
-
     // Since this gets run in a refresh tick there isn't an InputAPZContext on
     // the stack from the nsBaseWidget. We need to simulate one with at least
     // the correct target guid, so that the correct callback transform gets
