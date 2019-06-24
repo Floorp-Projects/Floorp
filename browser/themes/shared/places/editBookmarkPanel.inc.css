@@ -68,8 +68,8 @@
   border: none;
 }
 
-#editBookmarkPanelRecommendation > div * {
-  max-width: 220px;
+#editBookmarkPanelRecommendation > div h1 {
+  max-width: 215px;
 }
 
 #editBookmarkPanelRecommendationTitle {
