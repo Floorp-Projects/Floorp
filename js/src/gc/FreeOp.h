@@ -86,8 +86,8 @@ class FreeOp : public JSFreeOp {
     }
   }
 
-  // Delete a C++ object that associated with a GC thing and update the memory
-  // accounting. The size is determined by the type T.
+  // Delete a C++ object that was associated with a GC thing and update the
+  // memory accounting. The size is determined by the type T.
   //
   // The memory should have been associated with the GC thing using
   // js::InitReservedSlot or js::InitObjectPrivate, or possibly
@@ -97,8 +97,8 @@ class FreeOp : public JSFreeOp {
     delete_(cell, p, sizeof(T), use);
   }
 
-  // Delete a C++ object that associated with a GC thing and update the memory
-  // accounting.
+  // Delete a C++ object that was associated with a GC thing and update the
+  // memory accounting.
   //
   // The memory should have been associated with the GC thing using
   // js::InitReservedSlot or js::InitObjectPrivate, or possibly
@@ -110,6 +110,31 @@ class FreeOp : public JSFreeOp {
       free_(cell, p, nbytes, use);
     }
   }
+
+  // Release a RefCounted object that was associated with a GC thing and update
+  // the memory accounting.
+  //
+  // The memory should have been associated with the GC thing using
+  // js::InitReservedSlot or js::InitObjectPrivate, or possibly
+  // js::AddCellMemory.
+  //
+  // This counts the memory once per association with a GC thing. It's not
+  // expected that the same object is associated with more than one GC thing in
+  // each zone. If this is the case then some other form of accounting would be
+  // more appropriate.
+  template <class T>
+  void release(gc::Cell* cell, T* p, MemoryUse use) {
+    release(cell, p, sizeof(T), use);
+  }
+
+  // Release a RefCounted object and that was associated with a GC thing and
+  // update the memory accounting.
+  //
+  // The memory should have been associated with the GC thing using
+  // js::InitReservedSlot or js::InitObjectPrivate, or possibly
+  // js::AddCellMemory.
+  template <class T>
+  void release(gc::Cell* cell, T* p, size_t nbytes, MemoryUse use);
 };
 
 }  // namespace js
