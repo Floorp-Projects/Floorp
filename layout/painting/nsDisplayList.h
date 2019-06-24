@@ -1699,13 +1699,6 @@ class nsDisplayListBuilder {
     mBuildingInvisibleItems = aBuildingInvisibleItems;
   }
 
-  void SetBuildingExtraPagesForPageNum(uint8_t aPageNum) {
-    mBuildingExtraPagesForPageNum = aPageNum;
-  }
-  uint8_t GetBuildingExtraPagesForPageNum() const {
-    return mBuildingExtraPagesForPageNum;
-  }
-
   /**
    * This is a convenience function to ease the transition until AGRs and ASRs
    * are unified.
@@ -1896,8 +1889,6 @@ class nsDisplayListBuilder {
   nsDataHashtable<nsPtrHashKey<nsIFrame>, FrameWillChangeBudget>
       mWillChangeBudgetSet;
 
-  uint8_t mBuildingExtraPagesForPageNum;
-
   // Area of animated geometry root budget already allocated
   uint32_t mUsedAGRBudget;
   // Set of frames already counted in budget
@@ -2074,7 +2065,6 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
   }
 
   item->SetPerFrameKey(item->CalculatePerFrameKey());
-  item->SetExtraPageForPageNum(aBuilder->GetBuildingExtraPagesForPageNum());
 
   nsPaintedDisplayItem* paintedItem = item->AsPaintedDisplayItem();
   if (paintedItem) {
@@ -2087,7 +2077,8 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
   }
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  if (aBuilder->IsRetainingDisplayList() && aBuilder->IsBuilding()) {
+  if (aBuilder->IsRetainingDisplayList() && !aBuilder->IsInPageSequence() &&
+      aBuilder->IsBuilding()) {
     AssertUniqueItem(item);
   }
 
@@ -2229,12 +2220,11 @@ class nsDisplayItemBase : public nsDisplayItemLink {
    * uniquely identifies this display item in the display item tree.
    */
   uint32_t GetPerFrameKey() const {
-    // The top 8 bits are the page index
+    // The top 8 bits are currently unused.
     // The middle 16 bits of the per frame key uniquely identify the display
     // item when there are more than one item of the same type for a frame.
     // The low 8 bits are the display item type.
-    return (static_cast<uint32_t>(mExtraPageForPageNum) << (TYPE_BITS + (sizeof(mKey) * 8))) |
-           (static_cast<uint32_t>(mKey) << TYPE_BITS) |
+    return (static_cast<uint32_t>(mKey) << TYPE_BITS) |
            static_cast<uint32_t>(mType);
   }
 
@@ -2341,7 +2331,6 @@ class nsDisplayItemBase : public nsDisplayItemLink {
       : mFrame(aOther.mFrame),
         mItemFlags(aOther.mItemFlags),
         mType(aOther.mType),
-        mExtraPageForPageNum(aOther.mExtraPageForPageNum),
         mKey(aOther.mKey) {
     MOZ_COUNT_CTOR(nsDisplayItemBase);
   }
@@ -2355,15 +2344,6 @@ class nsDisplayItemBase : public nsDisplayItemLink {
 
   void SetType(const DisplayItemType aType) { mType = aType; }
   void SetPerFrameKey(const uint16_t aKey) { mKey = aKey; }
-
-  // Display list building for printing can build duplicate
-  // container display items when they contain a mixture of
-  // OOF and normal content that is spread across multiple
-  // pages. We include the page number for the duplicates
-  // to make our GetPerFrameKey unique.
-  void SetExtraPageForPageNum(const uint8_t aPageNum) {
-    mExtraPageForPageNum = aPageNum;
-  }
 
   void SetDeletedFrame();
 
@@ -2383,7 +2363,6 @@ class nsDisplayItemBase : public nsDisplayItemLink {
 
   mozilla::EnumSet<ItemBaseFlag, uint8_t> mItemFlags;  // 1
   DisplayItemType mType;                               // 1
-  uint8_t mExtraPageForPageNum = 0;                    // 1
   uint16_t mKey;                                       // 2
   OldListIndex mOldListIndex;                          // 4
   uintptr_t mOldList = 0;                              // 8
