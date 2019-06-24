@@ -456,7 +456,11 @@ class GitRepository(Repository):
 
         self._run('commit', '--allow-empty', '-m', message)
         try:
-            subprocess.check_call((self._tool, 'push', 'hg::ssh://hg.mozilla.org/try',
+            subprocess.check_call((self._tool,
+                                   '-c',
+                                   'remote.try.url=hg::ssh://hg.mozilla.org/try',
+                                   'push',
+                                   'try',
                                    '+HEAD:refs/heads/branches/default/tip'), cwd=self.path)
         finally:
             self._run('reset', 'HEAD~')
