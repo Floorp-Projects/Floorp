@@ -7,26 +7,25 @@
  */
 add_task(async function() {
   const dbg = await initDebugger("doc-wasm-sourcemaps.html");
-
-  // NOTE: wait for page load -- attempt to fight the intermittent failure:
-  // "A promise chain failed to handle a rejection: Debugger.Frame is not live"
-  await waitForSource(dbg, "doc-wasm-sourcemaps");
-
-  await waitForLoadedSources(dbg);
   await reload(dbg);
+
+  // After reload() we are getting getSources notifiction for old sources,
+  // using the debugger statement to really stop are reloaded page.
   await waitForPaused(dbg);
+  await resume(dbg);
 
-  await waitForLoadedSource(dbg, "doc-wasm-sourcemaps");
-  assertPausedLocation(dbg);
+  await waitForSources(dbg, "doc-wasm-sourcemaps.html", "fib.c");
 
-  await waitForSource(dbg, "fib.c");
-
+  // Set breakpoint and reload the page.
   ok(true, "Original sources exist");
-  const mainSrc = findSource(dbg, "fib.c");
-
-  await selectSource(dbg, mainSrc);
+  await selectSource(dbg, "fib.c");
   await addBreakpoint(dbg, "fib.c", 10);
+  reload(dbg);
 
+  // The same debugger statement as above, but using at for
+  // workaround to break at original source (see below) and not generated.
+  await waitForPaused(dbg);
+  await selectSource(dbg, "fib.c");
   resume(dbg);
 
   await waitForPaused(dbg, "fib.c");
@@ -38,6 +37,6 @@ add_task(async function() {
   is(
     firstFrameLocation.includes("fib.c"),
     true,
-    "It shall be to fib.c source"
+    "It shall be fib.c source"
   );
 });
