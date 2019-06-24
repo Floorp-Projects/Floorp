@@ -26,7 +26,6 @@ py3:
         - testing/awsy
         - testing/mochitest
         - testing/mozharness
-        - testing/raptor
         - testing/tools/iceserver
         - testing/tps
         - testing/web-platform
