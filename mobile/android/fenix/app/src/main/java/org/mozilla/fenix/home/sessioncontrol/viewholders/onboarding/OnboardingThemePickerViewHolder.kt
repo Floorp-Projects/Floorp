@@ -52,6 +52,10 @@ class OnboardingThemePickerViewHolder(private val view: View) : RecyclerView.Vie
             radioLightTheme.performClick()
         }
 
+        val automaticTitle = view.context.getString(R.string.onboarding_theme_automatic_title)
+        val automaticSummary = view.context.getString(R.string.onboarding_theme_automatic_summary)
+        view.clickable_region_automatic.contentDescription = "$automaticTitle $automaticSummary"
+
         view.clickable_region_automatic.setOnClickListener {
             radioFollowDeviceTheme.performClick()
         }

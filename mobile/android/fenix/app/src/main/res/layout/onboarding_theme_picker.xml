@@ -60,7 +60,6 @@
         app:layout_constraintTop_toBottomOf="@+id/description_text"
         app:onboardingKey="@string/pref_key_light_theme" />
 
-
     <ImageButton
         android:id="@+id/theme_light_image"
         android:layout_width="wrap_content"
@@ -144,6 +143,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
+        android:contentDescription="@string/onboarding_theme_automatic_title"
         android:paddingStart="0dp"
         android:paddingEnd="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
