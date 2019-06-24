@@ -710,7 +710,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         // they're run on a bare archive rather than a running instance,
         // as the add-on manager runs them.
         let extensionData = new ExtensionData(extension.rootURI);
-        extensionData.loadManifest().then(
+        return extensionData.loadManifest().then(
           () => {
             return extensionData.initAllLocales().then(() => {
               if (extensionData.errors.length) {
@@ -730,14 +730,11 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
           if (extension.id) {
             await ExtensionTestCommon.setIncognitoOverride(extension);
           }
-          return extension.startup();
-        }).then(() => {
-          this.sendAsyncMessage("SPExtensionMessage", {id, type: "extensionStarted", args: []});
-        }).catch(e => {
-          dump(`Extension startup failed: ${e}\n${e.stack}`);
-          this.sendAsyncMessage("SPExtensionMessage", {id, type: "extensionFailed", args: []});
+          return extension.startup().then(() => {}, e => {
+            dump(`Extension startup failed: ${e}\n${e.stack}`);
+            throw e;
+          });
         });
-        return undefined;
       }
 
       case "SPExtensionMessage": {
@@ -751,12 +748,9 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         let id = aMessage.data.id;
         let extension = this._extensions.get(id);
         this._extensions.delete(id);
-        let done = async () => {
-          await extension._uninstallPromise;
-          this.sendAsyncMessage("SPExtensionMessage", {id, type: "extensionUnloaded", args: []});
-        };
-        extension.shutdown().then(done, done);
-        return undefined;
+        return extension.shutdown().then(() => {
+          return extension._uninstallPromise;
+        });
       }
 
       case "Spawn": {
