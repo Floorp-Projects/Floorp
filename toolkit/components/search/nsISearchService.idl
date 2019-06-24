@@ -300,7 +300,7 @@ interface nsISearchService : nsISupports
    *         An object that can contain the following fields:
    *
    *         {iconURL} Optional: A URL string pointing to the icon to be used to
-   *                   represent the engine. 
+   *                   represent the engine.
    *
    *         {alias} Optional: A unique shortcut that can be used to retrieve the
    *                 search engine.
@@ -446,6 +446,15 @@ interface nsISearchService : nsISupports
 
   Promise getDefault();
   Promise setDefault(in nsISearchEngine engine);
+
+  /**
+   * The currently active search engine for private browsing mode.
+   * @see defaultEngine.
+   */
+  attribute nsISearchEngine defaultPrivateEngine;
+
+  Promise getDefaultPrivate();
+  Promise setDefaultPrivate(in nsISearchEngine engine);
 
   /**
    * Gets a representation of the default engine in an anonymized JSON
