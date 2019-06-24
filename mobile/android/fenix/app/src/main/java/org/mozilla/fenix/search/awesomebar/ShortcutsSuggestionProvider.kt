@@ -33,6 +33,7 @@ class ShortcutsSuggestionProvider(
             suggestions.add(
                 AwesomeBar.Suggestion(
                     provider = this,
+                    id = it.identifier,
                     icon = { _, _ ->
                         it.icon
                     },
@@ -46,6 +47,7 @@ class ShortcutsSuggestionProvider(
         suggestions.add(
             AwesomeBar.Suggestion(
                 provider = this,
+                id = context.getString(R.string.search_shortcuts_engine_settings),
                 icon = { _, _ -> settingsIcon },
                 title = context.getString(R.string.search_shortcuts_engine_settings),
                 onSuggestionClicked = {
