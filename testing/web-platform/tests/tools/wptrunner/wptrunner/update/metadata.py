@@ -6,13 +6,10 @@ from .base import Step, StepRunner
 
 
 class GetUpdatePropertyList(Step):
-    provides = ["property_order", "boolean_properties"]
+    provides = ["update_properties"]
 
     def create(self, state):
-        property_order, boolean_properties = products.load_product_update(
-            state.config, state.product)
-        state.property_order = (property_order or []) + state.extra_properties
-        state.boolean_properties = boolean_properties
+        state.update_properties = products.load_product_update(state.config, state.product)
 
 
 class UpdateExpected(Step):
