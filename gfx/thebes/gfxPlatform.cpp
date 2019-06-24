@@ -3232,7 +3232,7 @@ void gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj) {
   }
 
   if (SupportsApzKeyboardInput() &&
-      !StaticPrefs::AccessibilityBrowseWithCaret()) {
+      !StaticPrefs::accessibility_browsewithcaret()) {
     aObj.DefineProperty("ApzKeyboardInput", 1);
   }
 
@@ -3477,15 +3477,15 @@ bool gfxPlatform::SupportsApzTouchInput() const {
 }
 
 bool gfxPlatform::SupportsApzDragInput() const {
-  return StaticPrefs::APZDragEnabled();
+  return StaticPrefs::apz_drag_enabled();
 }
 
 bool gfxPlatform::SupportsApzKeyboardInput() const {
-  return StaticPrefs::APZKeyboardEnabled();
+  return StaticPrefs::apz_keyboard_enabled();
 }
 
 bool gfxPlatform::SupportsApzAutoscrolling() const {
-  return StaticPrefs::APZAutoscrollEnabled();
+  return StaticPrefs::apz_autoscroll_enabled();
 }
 
 void gfxPlatform::InitOpenGLConfig() {

@@ -55,7 +55,7 @@ AndroidSpecificState::AndroidSpecificState() {
 AsyncPanZoomAnimation* AndroidSpecificState::CreateFlingAnimation(
     AsyncPanZoomController& aApzc, const FlingHandoffState& aHandoffState,
     float aPLPPI) {
-  if (StaticPrefs::APZUseChromeFlingPhysics()) {
+  if (StaticPrefs::apz_android_chrome_fling_physics_enabled()) {
     return new GenericFlingAnimation<AndroidFlingPhysics>(
         aApzc, aHandoffState.mChain, aHandoffState.mIsHandoff,
         aHandoffState.mScrolledApzc, aPLPPI);
@@ -68,7 +68,7 @@ AsyncPanZoomAnimation* AndroidSpecificState::CreateFlingAnimation(
 
 UniquePtr<VelocityTracker> AndroidSpecificState::CreateVelocityTracker(
     Axis* aAxis) {
-  if (StaticPrefs::APZUseChromeFlingPhysics()) {
+  if (StaticPrefs::apz_android_chrome_fling_physics_enabled()) {
     return MakeUnique<AndroidVelocityTracker>();
   }
   return MakeUnique<SimpleVelocityTracker>(aAxis);
@@ -76,8 +76,9 @@ UniquePtr<VelocityTracker> AndroidSpecificState::CreateVelocityTracker(
 
 /* static */
 void AndroidSpecificState::InitializeGlobalState() {
-  // Not conditioned on StaticPrefs::APZUseChromeFlingPhysics() because
-  // the pref is live.
+  // Not conditioned on
+  // StaticPrefs::apz_android_chrome_fling_physics_enabled() because the pref
+  // is live.
   AndroidFlingPhysics::InitializeGlobalState();
 }
 
@@ -167,8 +168,9 @@ StackScrollerFlingAnimation::StackScrollerFlingAnimation(
     // flywheel to kick in, then we need to update the timestamp on the
     // StackScroller because otherwise it might use a stale velocity.
     TimeDuration flingDuration = TimeStamp::Now() - state->mLastFling;
-    if (flingDuration.ToMilliseconds() < StaticPrefs::APZFlingAccelInterval() &&
-        velocity.Length() >= StaticPrefs::APZFlingAccelMinVelocity()) {
+    if (flingDuration.ToMilliseconds() <
+            StaticPrefs::apz_fling_accel_interval_ms() &&
+        velocity.Length() >= StaticPrefs::apz_fling_accel_interval_ms()) {
       bool unused = false;
       mOverScroller->ComputeScrollOffset(flingDuration.ToMilliseconds(),
                                          &unused);
@@ -242,9 +244,9 @@ bool StackScrollerFlingAnimation::DoSample(FrameMetrics& aFrameMetrics,
 
   float speed = velocity.Length();
 
-  // StaticPrefs::APZFlingStoppedThreshold is only used in tests.
+  // StaticPrefs::apz_fling_stopped_threshold is only used in tests.
   if (!shouldContinueFling ||
-      (speed < StaticPrefs::APZFlingStoppedThreshold())) {
+      (speed < StaticPrefs::apz_fling_stopped_threshold())) {
     if (shouldContinueFling) {
       // The OverScroller thinks it should continue but the speed is below
       // the stopping threshold so abort the animation.

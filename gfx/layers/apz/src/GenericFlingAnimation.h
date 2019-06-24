@@ -94,8 +94,8 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
     bool applyAcceleration = !aFlingIsHandedOff;
     if (applyAcceleration && !mApzc.mLastFlingTime.IsNull() &&
         (now - mApzc.mLastFlingTime).ToMilliseconds() <
-            StaticPrefs::APZFlingAccelInterval() &&
-        velocity.Length() >= StaticPrefs::APZFlingAccelMinVelocity()) {
+            StaticPrefs::apz_fling_accel_interval_ms() &&
+        velocity.Length() >= StaticPrefs::apz_fling_accel_min_velocity()) {
       if (velocity.x != 0 &&
           SameDirection(velocity.x, mApzc.mLastFlingVelocity.x)) {
         velocity.x = Accelerate(velocity.x, mApzc.mLastFlingVelocity.x);
@@ -220,8 +220,8 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
   }
 
   static float Accelerate(float aBase, float aSupplemental) {
-    return (aBase * StaticPrefs::APZFlingAccelBaseMultiplier()) +
-           (aSupplemental * StaticPrefs::APZFlingAccelSupplementalMultiplier());
+    return (aBase * StaticPrefs::apz_fling_accel_base_mult()) +
+           (aSupplemental * StaticPrefs::apz_fling_accel_supplemental_mult());
   }
 
   AsyncPanZoomController& mApzc;

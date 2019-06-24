@@ -173,7 +173,7 @@ static mozilla::layers::ZoomConstraints ComputeZoomConstraintsFromViewportInfo(
   constraints.mAllowZoom = aViewportInfo.IsZoomAllowed() &&
                            nsLayoutUtils::AllowZoomingForDocument(aDocument);
   constraints.mAllowDoubleTapZoom =
-      constraints.mAllowZoom && StaticPrefs::APZAllowDoubleTapZooming();
+      constraints.mAllowZoom && StaticPrefs::apz_allow_double_tap_zooming();
   if (constraints.mAllowZoom) {
     constraints.mMinZoom.scale = aViewportInfo.GetMinZoom().scale;
     constraints.mMaxZoom.scale = aViewportInfo.GetMaxZoom().scale;
