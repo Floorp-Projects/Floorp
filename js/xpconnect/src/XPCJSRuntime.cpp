@@ -14,6 +14,7 @@
 #include "xpcpublic.h"
 #include "XPCWrapper.h"
 #include "XPCJSMemoryReporter.h"
+#include "XPCJSThreadPool.h"
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
 #include "mozJSComponentLoader.h"
@@ -31,6 +32,7 @@
 #include "nsIPlatformInfo.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
+#include "nsThreadPool.h"
 #include "nsWindowSizes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -1123,6 +1125,14 @@ void XPCJSRuntime::SystemIsBeingShutDown() {
   mWrappedJSRoots = nullptr;
 }
 
+StaticAutoPtr<HelperThreadPool> gHelperThreads;
+
+void InitializeHelperThreadPool() { gHelperThreads = new HelperThreadPool(); }
+
+void DispatchOffThreadTask(RunnableTask* task) {
+  gHelperThreads->Dispatch(MakeAndAddRef<HelperThreadTaskHandler>(task));
+}
+
 void XPCJSRuntime::Shutdown(JSContext* cx) {
   // This destructor runs before ~CycleCollectedJSContext, which does the
   // actual JS_DestroyContext() call. But destroying the context triggers
@@ -1134,6 +1144,10 @@ void XPCJSRuntime::Shutdown(JSContext* cx) {
   xpc_DelocalizeRuntime(JS_GetRuntime(cx));
 
   JS::SetGCSliceCallback(cx, mPrevGCSliceCallback);
+
+  // Shut down the helper threads
+  gHelperThreads->Shutdown();
+  gHelperThreads = nullptr;
 
   // clean up and destroy maps...
   mWrappedJSMap->ShutdownMarker();
@@ -3071,6 +3085,9 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
       OnLargeAllocationFailureCallback);
   JS::SetProcessBuildIdOp(GetBuildId);
 
+  // Initialize a helper thread pool for JS offthread tasks.
+  InitializeHelperThreadPool();
+
   // The JS engine needs to keep the source code around in order to implement
   // Function.prototype.toSource(). It'd be nice to not have to do this for
   // chrome code and simply stub out requests for source on it. Life is not so
@@ -3330,3 +3347,25 @@ JSObject* XPCJSRuntime::LoaderGlobal() {
   }
   return mLoaderGlobal;
 }
+
+uint32_t GetAndClampCPUCount() {
+  // See HelperThreads.cpp for why we want between 2-8 threads
+  int32_t proc = GetNumberOfProcessors();
+  if (proc < 2) {
+    return 2;
+  }
+  return std::min(proc, 8);
+}
+nsresult HelperThreadPool::Dispatch(
+    already_AddRefed<HelperThreadTaskHandler> aRunnable) {
+  mPool->Dispatch(std::move(aRunnable), NS_DISPATCH_NORMAL);
+  return NS_OK;
+}
+
+HelperThreadPool::HelperThreadPool() {
+  mPool = new nsThreadPool();
+  mPool->SetName(NS_LITERAL_CSTRING("JSHelperThreads"));
+  mPool->SetThreadLimit(GetAndClampCPUCount());
+}
+
+void HelperThreadPool::Shutdown() { mPool->Shutdown(); }
