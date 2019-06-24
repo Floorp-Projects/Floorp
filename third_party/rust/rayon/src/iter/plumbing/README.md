@@ -70,7 +70,7 @@ a very simple consumer because it doesn't need to thread any state
 between items at all.)
 
 Now, the `for_each` call will pass this consumer to the base iterator,
-which is the `flat_map`. It will do by calling the `drive_unindexed`
+which is the `flat_map`. It will do this by calling the `drive_unindexed`
 method on the `ParallelIterator` trait. `drive_unindexed` basically
 says "produce items for this iterator and feed them to this consumer";
 it only works for unindexed consumers.
@@ -140,7 +140,7 @@ such as string characters.
 ## What on earth is `ProducerCallback`?
 
 We saw that when you call a parallel action method like
-`par_iter.reduce()`, that will creating a "reducing" consumer and then
+`par_iter.reduce()`, that will create a "reducing" consumer and then
 invoke `par_iter.drive_unindexed()` (or `par_iter.drive()`) as
 appropriate. This may create yet more consumers as we proceed up the
 parallel iterator chain. But at some point we're going to get to the

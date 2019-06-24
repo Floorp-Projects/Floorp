@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "rayon-core"
-version = "1.4.0"
+version = "1.5.0"
 authors = ["Niko Matsakis <niko@alum.mit.edu>", "Josh Stone <cuviper@gmail.com>"]
 build = "build.rs"
 links = "rayon-core"
@@ -23,19 +23,52 @@ keywords = ["parallel", "thread", "concurrency", "join", "performance"]
 categories = ["concurrency"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/rayon-rs/rayon"
+
+[[test]]
+name = "stack_overflow_crash"
+path = "tests/stack_overflow_crash.rs"
+harness = false
+
+[[test]]
+name = "double_init_fail"
+path = "tests/double_init_fail.rs"
+
+[[test]]
+name = "init_zero_threads"
+path = "tests/init_zero_threads.rs"
+
+[[test]]
+name = "scope_join"
+path = "tests/scope_join.rs"
+
+[[test]]
+name = "simple_panic"
+path = "tests/simple_panic.rs"
+
+[[test]]
+name = "scoped_threadpool"
+path = "tests/scoped_threadpool.rs"
 [dependencies.crossbeam-deque]
-version = "0.2.0"
+version = "0.6.3"
+
+[dependencies.crossbeam-queue]
+version = "0.1.2"
+
+[dependencies.crossbeam-utils]
+version = "0.6.5"
 
 [dependencies.lazy_static]
 version = "1"
 
-[dependencies.libc]
-version = "0.2.16"
-
 [dependencies.num_cpus]
 version = "1.2"
+[dev-dependencies.rand]
+version = "0.6"
 
-[dependencies.rand]
-version = ">= 0.3, < 0.5"
+[dev-dependencies.rand_xorshift]
+version = "0.1"
 
-[dev-dependencies]
+[dev-dependencies.scoped-tls]
+version = "1.0"
+[target."cfg(unix)".dev-dependencies.libc]
+version = "0.2"

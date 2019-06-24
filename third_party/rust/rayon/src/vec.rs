@@ -5,8 +5,8 @@
 //!
 //! [std::vec]: https://doc.rust-lang.org/stable/std/vec/
 
-use iter::*;
 use iter::plumbing::*;
+use iter::*;
 use std;
 
 /// Parallel iterator that moves out of a vector.
@@ -28,7 +28,8 @@ impl<T: Send> ParallelIterator for IntoIter<T> {
     type Item = T;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<Self::Item>
+    where
+        C: UnindexedConsumer<Self::Item>,
     {
         bridge(self, consumer)
     }
@@ -40,7 +41,8 @@ impl<T: Send> ParallelIterator for IntoIter<T> {
 
 impl<T: Send> IndexedParallelIterator for IntoIter<T> {
     fn drive<C>(self, consumer: C) -> C::Result
-        where C: Consumer<Self::Item>
+    where
+        C: Consumer<Self::Item>,
     {
         bridge(self, consumer)
     }
@@ -50,7 +52,8 @@ impl<T: Send> IndexedParallelIterator for IntoIter<T> {
     }
 
     fn with_producer<CB>(mut self, callback: CB) -> CB::Output
-        where CB: ProducerCallback<Self::Item>
+    where
+        CB: ProducerCallback<Self::Item>,
     {
         // The producer will move or drop each item from its slice, effectively taking ownership of
         // them.  When we're done, the vector only needs to free its buffer.
@@ -63,7 +66,7 @@ impl<T: Send> IndexedParallelIterator for IntoIter<T> {
             let mut slice = self.vec.as_mut_slice();
             slice = std::slice::from_raw_parts_mut(slice.as_mut_ptr(), len);
 
-            callback.callback(VecProducer { slice: slice })
+            callback.callback(VecProducer { slice })
         }
     }
 }
@@ -81,7 +84,9 @@ impl<'data, T: 'data + Send> Producer for VecProducer<'data, T> {
     fn into_iter(mut self) -> Self::IntoIter {
         // replace the slice so we don't drop it twice
         let slice = std::mem::replace(&mut self.slice, &mut []);
-        SliceDrain { iter: slice.iter_mut() }
+        SliceDrain {
+            iter: slice.iter_mut(),
+        }
     }
 
     fn split_at(mut self, index: usize) -> (Self, Self) {
@@ -94,7 +99,9 @@ impl<'data, T: 'data + Send> Producer for VecProducer<'data, T> {
 
 impl<'data, T: 'data + Send> Drop for VecProducer<'data, T> {
     fn drop(&mut self) {
-        SliceDrain { iter: self.slice.iter_mut() };
+        SliceDrain {
+            iter: self.slice.iter_mut(),
+        };
     }
 }
 
@@ -109,7 +116,8 @@ impl<'data, T: 'data> Iterator for SliceDrain<'data, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        self.iter.next().map(|ptr| unsafe { std::ptr::read(ptr) })
+        let ptr = self.iter.next()?;
+        Some(unsafe { std::ptr::read(ptr) })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -120,7 +128,8 @@ impl<'data, T: 'data> Iterator for SliceDrain<'data, T> {
 
 impl<'data, T: 'data> DoubleEndedIterator for SliceDrain<'data, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.iter.next_back().map(|ptr| unsafe { std::ptr::read(ptr) })
+        let ptr = self.iter.next_back()?;
+        Some(unsafe { std::ptr::read(ptr) })
     }
 }
 
