@@ -81,7 +81,7 @@
 //! ## Implementation
 //!
 //! The reactor implementation uses [`mio`] to interface with the operating
-//! system's event queue. A call to [`Reactor::poll`] results in in a single
+//! system's event queue. A call to [`Reactor::poll`] results in a single
 //! call to [`Poll::poll`] which in turn results in a single call to the
 //! operating system's selector.
 //!
@@ -107,8 +107,8 @@
 //! There are a couple of ways to do this.
 //!
 //! If the custom I/O resource implements [`mio::Evented`] and implements
-//! [`std::Read`] and / or [`std::Write`], then [`PollEvented`] is the most
-//! suited.
+//! [`std::io::Read`] and / or [`std::io::Write`], then [`PollEvented`] is the
+//! most suited.
 //!
 //! Otherwise, [`Registration`] can be used directly. This provides the lowest
 //! level primitive needed for integrating with the reactor: a stream of
@@ -132,8 +132,8 @@
 //! [`Poll::poll`]: https://docs.rs/mio/0.6/mio/struct.Poll.html#method.poll
 //! [`mio::Evented`]: https://docs.rs/mio/0.6/mio/trait.Evented.html
 //! [`PollEvented`]: struct.PollEvented.html
-//! [`std::Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
-//! [`std::Write`]: https://doc.rust-lang.org/std/io/trait.Write.html
+//! [`std::io::Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
+//! [`std::io::Write`]: https://doc.rust-lang.org/std/io/trait.Write.html
 
 pub use tokio_reactor::{
     Reactor,

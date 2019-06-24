@@ -5,6 +5,7 @@ use std::cell::UnsafeCell;
 use std::fmt;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::{self, Acquire, AcqRel, Relaxed};
+use std::time::{Duration, Instant};
 
 /// State associated with a thread in the thread pool.
 ///
@@ -39,7 +40,7 @@ pub(crate) struct Backup {
     /// * If the thread is running
     state: AtomicUsize,
 
-    /// Next entry in the treiber stack.
+    /// Next entry in the Treiber stack.
     next_sleeper: UnsafeCell<BackupId>,
 
     /// Used to put the thread to sleep
@@ -155,7 +156,8 @@ impl Backup {
     }
 
     /// Wait for a worker handoff
-    pub fn wait_for_handoff(&self, sleep: bool) -> Handoff {
+    pub fn wait_for_handoff(&self, timeout: Option<Duration>) -> Handoff {
+        let sleep_until = timeout.map(|dur| Instant::now() + dur);
         let mut state: State = self.state.load(Acquire).into();
 
         // Run in a loop since there can be spurious wakeups
@@ -169,36 +171,40 @@ impl Backup {
                     (*self.handoff.get()).take()
                         .expect("no worker handoff")
                 };
-
                 return Handoff::Worker(worker_id);
             }
 
-            if sleep {
-                // TODO: Park with a timeout
-                self.park.park_sync(None);
-
-                // Reload the state
-                state = self.state.load(Acquire).into();
-                debug_assert!(state.is_running());
-            } else {
-                debug_assert!(state.is_running());
-
-                // Transition out of running
-                let mut next = state;
-                next.unset_running();
-
-                let actual = self.state.compare_and_swap(
-                    state.into(),
-                    next.into(),
-                    AcqRel).into();
-
-                if actual == state {
-                    debug_assert!(!next.is_running());
-
-                    return Handoff::Idle;
+            match sleep_until {
+                None => {
+                    self.park.park_sync(None);
+                    state = self.state.load(Acquire).into();
                 }
+                Some(when) => {
+                    let now = Instant::now();
 
-                state = actual;
+                    if now < when {
+                        self.park.park_sync(Some(when - now));
+                        state = self.state.load(Acquire).into();
+                    } else {
+                        debug_assert!(state.is_running());
+
+                        // Transition out of running
+                        let mut next = state;
+                        next.unset_running();
+
+                        let actual = self.state.compare_and_swap(
+                            state.into(),
+                            next.into(),
+                            AcqRel).into();
+
+                        if actual == state {
+                            debug_assert!(!next.is_running());
+                            return Handoff::Idle;
+                        }
+
+                        state = actual;
+                    }
+                }
             }
         }
     }
@@ -235,10 +241,6 @@ impl State {
     /// Returns true if the thread entry is pushed in the sleeper stack
     pub fn is_pushed(&self) -> bool {
         self.0 & PUSHED == PUSHED
-    }
-
-    pub fn set_pushed(&mut self) {
-        self.0 |= PUSHED;
     }
 
     fn unset_pushed(&mut self) {

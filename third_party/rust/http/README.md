@@ -3,7 +3,7 @@
 A general purpose library of common HTTP types
 
 [![Build Status](https://travis-ci.org/hyperium/http.svg?branch=master)](https://travis-ci.org/hyperium/http)
-[![Crates.io](https://img.shields.io/crates/v/http.svg?maxAge=2592000)](https://crates.io/crates/http)
+[![Crates.io](https://img.shields.io/crates/v/http.svg)](https://crates.io/crates/http)
 [![Documentation](https://docs.rs/http/badge.svg)][dox]
 
 More information about this crate can be found in the [crate

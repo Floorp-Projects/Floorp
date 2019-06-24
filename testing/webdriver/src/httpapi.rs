@@ -1,14 +1,13 @@
-use regex::{Captures, Regex};
-
-use hyper::Method;
+use http::Method;
 use serde_json::Value;
 
+use crate::Parameters;
 use crate::command::{
-    VoidWebDriverExtensionCommand, WebDriverCommand, WebDriverExtensionCommand, WebDriverMessage,
+    VoidWebDriverExtensionCommand, WebDriverCommand, WebDriverExtensionCommand,
 };
-use crate::error::{ErrorStatus, WebDriverError, WebDriverResult};
+use crate::error::WebDriverResult;
 
-fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Route<U>)> {
+pub(crate) fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Route<U>)> {
     return vec![
         (Method::POST, "/session", Route::NewSession),
         (Method::DELETE, "/session/{sessionId}", Route::DeleteSession),
@@ -285,7 +284,7 @@ pub enum Route<U: WebDriverExtensionRoute> {
 pub trait WebDriverExtensionRoute: Clone + Send + PartialEq {
     type Command: WebDriverExtensionCommand + 'static;
 
-    fn command(&self, _: &Captures, _: &Value) -> WebDriverResult<WebDriverCommand<Self::Command>>;
+    fn command(&self, _: &Parameters, _: &Value) -> WebDriverResult<WebDriverCommand<Self::Command>>;
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -296,111 +295,9 @@ impl WebDriverExtensionRoute for VoidWebDriverExtensionRoute {
 
     fn command(
         &self,
-        _: &Captures,
+        _: &Parameters,
         _: &Value,
     ) -> WebDriverResult<WebDriverCommand<VoidWebDriverExtensionCommand>> {
         panic!("No extensions implemented");
-    }
-}
-
-#[derive(Clone, Debug)]
-struct RequestMatcher<U: WebDriverExtensionRoute> {
-    method: Method,
-    path_regexp: Regex,
-    match_type: Route<U>,
-}
-
-impl<U: WebDriverExtensionRoute> RequestMatcher<U> {
-    pub fn new(method: Method, path: &str, match_type: Route<U>) -> RequestMatcher<U> {
-        let path_regexp = RequestMatcher::<U>::compile_path(path);
-        RequestMatcher {
-            method,
-            path_regexp,
-            match_type,
-        }
-    }
-
-    pub fn get_match<'t>(&'t self, method: &Method, path: &'t str) -> (bool, Option<Captures>) {
-        let captures = self.path_regexp.captures(path);
-        (method == self.method, captures)
-    }
-
-    fn compile_path(path: &str) -> Regex {
-        let mut rv = String::new();
-        rv.push_str("^");
-        let components = path.split('/');
-        for component in components {
-            if component.starts_with('{') {
-                if !component.ends_with('}') {
-                    panic!("Invalid url pattern")
-                }
-                rv.push_str(&format!("(?P<{}>[^/]+)/", &component[1..component.len() - 1])[..]);
-            } else {
-                rv.push_str(&format!("{}/", component)[..]);
-            }
-        }
-        // Remove the trailing /
-        rv.pop();
-        rv.push_str("$");
-        // This will fail at runtime if the regexp is invalid
-        Regex::new(&rv[..]).unwrap()
-    }
-}
-
-#[derive(Debug)]
-pub struct WebDriverHttpApi<U: WebDriverExtensionRoute> {
-    routes: Vec<(Method, RequestMatcher<U>)>,
-}
-
-impl<U: WebDriverExtensionRoute> WebDriverHttpApi<U> {
-    pub fn new(extension_routes: &[(Method, &str, U)]) -> WebDriverHttpApi<U> {
-        let mut rv = WebDriverHttpApi::<U> { routes: vec![] };
-        debug!("Creating routes");
-        for &(ref method, ref url, ref match_type) in &standard_routes::<U>() {
-            rv.add(method.clone(), *url, (*match_type).clone());
-        }
-        for &(ref method, ref url, ref extension_route) in extension_routes {
-            rv.add(
-                method.clone(),
-                *url,
-                Route::Extension(extension_route.clone()),
-            );
-        }
-        rv
-    }
-
-    fn add(&mut self, method: Method, path: &str, match_type: Route<U>) {
-        let http_matcher = RequestMatcher::new(method.clone(), path, match_type);
-        self.routes.push((method, http_matcher));
-    }
-
-    pub fn decode_request(
-        &self,
-        method: &Method,
-        path: &str,
-        body: &str,
-    ) -> WebDriverResult<WebDriverMessage<U>> {
-        let mut error = ErrorStatus::UnknownPath;
-        for &(ref match_method, ref matcher) in &self.routes {
-            if method == *match_method {
-                let (method_match, captures) = matcher.get_match(method, path);
-                if captures.is_some() {
-                    if method_match {
-                        return WebDriverMessage::from_http(
-                            &matcher.match_type,
-                            &captures.unwrap(),
-                            body,
-                            method == Method::POST,
-                        );
-                    } else {
-                        error = ErrorStatus::UnknownMethod;
-                    }
-                }
-            }
-        }
-        Err(WebDriverError::new(
-            error,
-            format!("{} {} did not match a known command", method, path),
-        ))
     }
 }

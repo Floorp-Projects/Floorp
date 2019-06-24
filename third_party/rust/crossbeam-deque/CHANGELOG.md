@@ -1,46 +1,71 @@
-# Changelog
-All notable changes to this project will be documented in this file.
+# Version 0.6.3
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+- Bump `crossbeam-epoch` to `0.7`.
 
-## [Unreleased]
+# Version 0.6.2
 
-## [0.3.1] - 2018-05-04
+- Update `crosbeam-utils` to `0.6`.
 
-### Added
-- `Deque::capacity`
-- `Deque::min_capacity`
-- `Deque::shrink_to_fit`
+# Version 0.6.1
 
-### Changed
+- Change a few `Relaxed` orderings to `Release` in order to fix false positives by tsan.
+
+# Version 0.6.0
+
+- Add `Stealer::steal_many` for batched stealing.
+- Change the return type of `pop` to `Pop<T>` so that spinning can be handled manually.
+
+# Version 0.5.2
+
+- Update `crossbeam-utils` to `0.5.0`.
+
+# Version 0.5.1
+
+- Minor optimizations.
+
+# Version 0.5.0
+
+- Add two deque constructors : `fifo()` and `lifo()`.
+- Update `rand` to `0.5.3`.
+- Rename `Deque` to `Worker`.
+- Return `Option<T>` from `Stealer::steal`.
+- Remove methods `Deque::len` and `Stealer::len`.
+- Remove method `Deque::stealer`.
+- Remove method `Deque::steal`.
+
+# Version 0.4.1
+
+- Update `crossbeam-epoch` to `0.5.0`.
+
+# Version 0.4.0
+
+- Update `crossbeam-epoch` to `0.4.2`.
+- Update `crossbeam-utils` to `0.4.0`.
+- Require minimum Rust version 1.25.
+
+# Version 0.3.1
+
+- Add `Deque::capacity`.
+- Add `Deque::min_capacity`.
+- Add `Deque::shrink_to_fit`.
 - Update `crossbeam-epoch` to `0.3.0`.
 - Support Rust 1.20.
 - Shrink the buffer in `Deque::push` if necessary.
 
-## [0.3.0] - 2018-02-10
+# Version 0.3.0
 
-### Changed
 - Update `crossbeam-epoch` to `0.4.0`.
 - Drop support for Rust 1.13.
 
-## [0.2.0] - 2018-02-10
+# Version 0.2.0
 
-### Changed
 - Update `crossbeam-epoch` to `0.3.0`.
 - Support Rust 1.13.
 
-## [0.1.1] - 2017-11-29
+# Version 0.1.1
 
-### Changed
 - Update `crossbeam-epoch` to `0.2.0`.
 
-## 0.1.0 - 2017-11-26
-### Added
-- First implementation of the Chase-Lev deque.
+# Version 0.1.0
 
-[Unreleased]: https://github.com/crossbeam-rs/crossbeam-deque/compare/v0.3.1...HEAD
-[0.3.1]: https://github.com/crossbeam-rs/crossbeam-deque/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/crossbeam-rs/crossbeam-deque/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/crossbeam-rs/crossbeam-deque/compare/v0.1.0...v0.2.0
-[0.1.1]: https://github.com/crossbeam-rs/crossbeam-deque/compare/v0.1.0...v0.1.1
+- First implementation of the Chase-Lev deque.

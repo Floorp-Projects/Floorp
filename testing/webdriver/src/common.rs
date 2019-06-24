@@ -1,11 +1,14 @@
 use serde::ser::{Serialize, Serializer};
 use serde::{Deserialize, Deserializer};
+use std::collections::HashMap;
 
 pub static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
 pub static FRAME_KEY: &'static str = "frame-075b-4da1-b6ba-e579c2d3230a";
 pub static WINDOW_KEY: &'static str = "window-fcc6-11e5-b4f8-330a88ab9d7f";
 
 pub static MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
+
+pub type Parameters = HashMap<String, String>;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Cookie {

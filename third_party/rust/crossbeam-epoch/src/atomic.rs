@@ -1,16 +1,15 @@
+use alloc::boxed::Box;
 use core::borrow::{Borrow, BorrowMut};
 use core::cmp;
 use core::fmt;
 use core::marker::PhantomData;
 use core::mem;
-use core::ptr;
 use core::ops::{Deref, DerefMut};
-use core::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT};
-use core::sync::atomic::Ordering;
-use alloc::boxed::Box;
+use core::ptr;
+use core::sync::atomic::{AtomicUsize, Ordering};
 
+use crossbeam_utils::atomic::AtomicConsume;
 use guard::Guard;
-use crossbeam_utils::consume::AtomicConsume;
 
 /// Given ordering for the success case in a compare-exchange operation, returns the strongest
 /// appropriate ordering for the failure case.
@@ -154,7 +153,7 @@ impl<T> Atomic<T> {
     #[cfg(not(feature = "nightly"))]
     pub fn null() -> Atomic<T> {
         Self {
-            data: ATOMIC_USIZE_INIT,
+            data: AtomicUsize::new(0),
             _marker: PhantomData,
         }
     }
@@ -171,7 +170,7 @@ impl<T> Atomic<T> {
     #[cfg(feature = "nightly")]
     pub const fn null() -> Atomic<T> {
         Self {
-            data: ATOMIC_USIZE_INIT,
+            data: AtomicUsize::new(0),
             _marker: PhantomData,
         }
     }
@@ -934,6 +933,46 @@ impl<'g, T> Shared<'g, T> {
     /// ```
     pub unsafe fn deref(&self) -> &'g T {
         &*self.as_raw()
+    }
+
+    /// Dereferences the pointer.
+    ///
+    /// Returns a mutable reference to the pointee that is valid during the lifetime `'g`.
+    ///
+    /// # Safety
+    ///
+    /// * There is no guarantee that there are no more threads attempting to read/write from/to the
+    ///   actual object at the same time.
+    ///
+    ///   The user must know that there are no concurrent accesses towards the object itself.
+    ///
+    /// * Other than the above, all safety concerns of `deref()` applies here.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use crossbeam_epoch::{self as epoch, Atomic};
+    /// use std::sync::atomic::Ordering::SeqCst;
+    ///
+    /// let a = Atomic::new(vec![1, 2, 3, 4]);
+    /// let guard = &epoch::pin();
+    ///
+    /// let mut p = a.load(SeqCst, guard);
+    /// unsafe {
+    ///     assert!(!p.is_null());
+    ///     let b = p.deref_mut();
+    ///     assert_eq!(b, &vec![1, 2, 3, 4]);
+    ///     b.push(5);
+    ///     assert_eq!(b, &vec![1, 2, 3, 4, 5]);
+    /// }
+    ///
+    /// let p = a.load(SeqCst, guard);
+    /// unsafe {
+    ///     assert_eq!(p.deref(), &vec![1, 2, 3, 4, 5]);
+    /// }
+    /// ```
+    pub unsafe fn deref_mut(&mut self) -> &'g mut T {
+        &mut *(self.as_raw() as *mut T)
     }
 
     /// Converts the pointer to a reference.

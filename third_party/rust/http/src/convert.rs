@@ -3,7 +3,7 @@ use header::{HeaderName, HeaderValue};
 use method::Method;
 use sealed::Sealed;
 use status::StatusCode;
-use uri::Uri;
+use uri::{Scheme, Authority, PathAndQuery, Uri};
 
 /// Private trait for the `http` crate to have generic methods with fallible
 /// conversions.
@@ -20,6 +20,22 @@ pub trait HttpTryFrom<T>: Sized + Sealed {
 
     #[doc(hidden)]
     fn try_from(t: T) -> Result<Self, Self::Error>;
+}
+
+pub(crate) trait HttpTryInto<T>: Sized {
+    fn http_try_into(self) -> Result<T, Error>;
+}
+
+#[doc(hidden)]
+impl<T, U> HttpTryInto<U> for T
+where
+    U: HttpTryFrom<T>,
+    T: Sized,
+{
+    fn http_try_into(self) -> Result<U, Error> {
+        HttpTryFrom::try_from(self)
+            .map_err(|e: U::Error| e.into())
+    }
 }
 
 macro_rules! reflexive {
@@ -42,4 +58,7 @@ reflexive! {
     StatusCode,
     HeaderName,
     HeaderValue,
+    Scheme,
+    Authority,
+    PathAndQuery,
 }

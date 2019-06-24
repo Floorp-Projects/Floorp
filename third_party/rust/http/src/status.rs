@@ -241,6 +241,13 @@ impl FromStr for StatusCode {
     }
 }
 
+impl<'a> From<&'a StatusCode> for StatusCode {
+    #[inline]
+    fn from(t: &'a StatusCode) -> Self {
+        t.clone()
+    }
+}
+
 impl<'a> HttpTryFrom<&'a StatusCode> for StatusCode {
     type Error = ::error::Never;
 
