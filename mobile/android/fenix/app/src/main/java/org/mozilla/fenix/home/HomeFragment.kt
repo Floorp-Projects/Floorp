@@ -476,16 +476,45 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             }
             is CollectionAction.OpenTab -> {
                 invokePendingDeleteJobs()
-                (activity as HomeActivity).openToBrowserAndLoad(
-                    searchTermOrURL = action.tab.url,
-                    newTab = true,
-                    from = BrowserDirection.FromHome
+                val tabSnapshot = action.tab.restore(
+                    context = context!!,
+                    engine = requireComponents.core.engine,
+                    tab = action.tab,
+                    restoreSessionId = false
                 )
+                if (tabSnapshot.isEmpty()) {
+                        // We were unable to create a snapshot, so just load the tab instead
+                        (activity as HomeActivity).openToBrowserAndLoad(
+                            searchTermOrURL = action.tab.url,
+                            newTab = true,
+                            from = BrowserDirection.FromHome
+                        )
+                    } else {
+                        requireComponents.core.sessionManager.restore(
+                            tabSnapshot,
+                            true
+                        )
+                        (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
+                    }
             }
             is CollectionAction.OpenTabs -> {
                 invokePendingDeleteJobs()
                 action.collection.tabs.forEach {
-                    requireComponents.useCases.tabsUseCases.addTab.invoke(it.url)
+                    val tabSnapshot = it.restore(
+                        context = context!!,
+                        engine = requireComponents.core.engine,
+                        tab = it,
+                        restoreSessionId = false
+                    )
+                    if (tabSnapshot.isEmpty()) {
+                        // We were unable to create a snapshot, so just load the tab instead
+                        requireComponents.useCases.tabsUseCases.addTab.invoke(it.url)
+                    } else {
+                        requireComponents.core.sessionManager.restore(
+                            tabSnapshot,
+                            requireComponents.core.sessionManager.selectedSession == null
+                        )
+                    }
                 }
                 launch {
                     delay(ANIM_SCROLL_DELAY)
