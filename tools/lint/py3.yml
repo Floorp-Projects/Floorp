@@ -26,7 +26,6 @@ py3:
         - servo
         - testing/awsy
         - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
-        - testing/gtest
         - testing/mochitest
         - testing/mozharness
         - testing/raptor
