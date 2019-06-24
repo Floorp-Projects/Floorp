@@ -136,7 +136,7 @@ class HistoryUIView(
                 mode = HistoryState.Mode.Normal
                 historyAdapter.updateData(items, mode)
                 setUIForNormalMode(items.isEmpty())
-                actionEmitter.onNext(HistoryAction.SwitchMode)
+                actionEmitter.onNext(HistoryAction.BackPressed)
                 true
             }
             else -> false
