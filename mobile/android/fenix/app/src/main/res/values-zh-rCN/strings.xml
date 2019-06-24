@@ -161,7 +161,7 @@
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">正在同步…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
-    <string name="sync_failed_summary">同步失败。上次成功：％s</string>
+    <string name="sync_failed_summary">同步失败。上次成功：%s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_failed_never_synced_summary">同步失败。上次同步：从未</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
@@ -296,7 +296,7 @@
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
-    <string name="tab_header_label">打开的标签页</string>
+    <string name="tab_header_label">标签页</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">隐私浏览阶段</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -330,7 +330,7 @@
     <!-- Text for the menu button to rename a collection -->
     <string name="collection_rename">重命名收藏集</string>
     <!-- Text for the button to open tabs of the selected collection -->
-    <string name="collection_open_tabs">打开的标签页</string>
+    <string name="collection_open_tabs">打开标签页</string>
     <!-- Text for the button to delete a single session -->
     <string name="session_item_delete">删除</string>
 

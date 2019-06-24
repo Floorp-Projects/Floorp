@@ -574,6 +574,8 @@
     <string name="url_copied">URL をコピーしました</string>
 
 
+    <!-- Sample text for accessiblity font size -->
+    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
     <!-- Summary for Accessiblity Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">ウェブサイト上のテキストを拡大または縮小します</string>
     <!-- Title for Accessiblity Text Size Scaling Preference -->
