@@ -392,7 +392,7 @@ if not args.nobuild:
     configure = os.path.join(DIR.js_src, 'configure')
     if need_updating_configure(configure):
         shutil.copyfile(configure + ".in", configure)
-        os.chmod(configure, 0755)
+        os.chmod(configure, 0o755)
 
     # Run configure
     if not args.noconf:
