@@ -765,9 +765,9 @@ pref("gfx.font_ahem_antialias_none", false);
 
 #ifdef XP_WIN
 // comma separated list of backends to use in order of preference
-// e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
-pref("gfx.canvas.azure.backends", "direct2d1.1,skia,cairo");
-pref("gfx.content.azure.backends", "direct2d1.1,skia,cairo");
+// e.g., pref("gfx.canvas.azure.backends", "direct2d,skia");
+pref("gfx.canvas.azure.backends", "direct2d1.1,skia");
+pref("gfx.content.azure.backends", "direct2d1.1,skia");
 pref("gfx.canvas.remote", false);
 #else
 #ifdef XP_MACOSX
