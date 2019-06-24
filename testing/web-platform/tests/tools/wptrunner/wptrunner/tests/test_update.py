@@ -6,11 +6,12 @@ import sys
 from io import BytesIO
 
 from .. import metadata, manifestupdate
-from ..update import WPTUpdate
+from ..update.update import WPTUpdate
 from ..update.base import StepRunner, Step
 from mozlog import structuredlog, handlers, formatters
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir))
+here = os.path.dirname(__file__)
+sys.path.insert(0, os.path.join(here, os.pardir, os.pardir, os.pardir))
 from manifest import manifest, item as manifest_item
 
 
@@ -37,30 +38,50 @@ item_classes = {"testharness": manifest_item.TestharnessTest,
                 "support": manifest_item.SupportFile}
 
 
+default_run_info = {"debug": False, "os": "linux", "version": "18.04", "processor": "x86_64", "bits": 64}
+
+
+def reset_globals():
+    metadata.prop_intern.clear()
+    metadata.run_info_intern.clear()
+    metadata.status_intern.clear()
+
+
+def get_run_info(overrides):
+    run_info = default_run_info.copy()
+    run_info.update(overrides)
+    return run_info
+
+
 def update(tests, *logs):
     id_test_map, updater = create_updater(tests)
+
     for log in logs:
         log = create_log(log)
         updater.update_from_log(log)
 
+    update_properties = (["debug", "os", "version", "processor"],
+                         {"os": ["version"], "processor": "bits"})
+
+    expected_data = {}
+    metadata.load_expected = lambda _, __, test_path, *args: expected_data[test_path]
+    for test_path, test_ids, test_type, manifest_str in tests:
+        expected_data[test_path] = manifestupdate.compile(BytesIO(manifest_str),
+                                                          test_path,
+                                                          "/",
+                                                          update_properties)
+
     return list(metadata.update_results(id_test_map,
-                                        ["debug", "os", "version", "processor", "bits"],
-                                        ["debug"],
+                                        update_properties,
                                         False))
 
 
 def create_updater(tests, url_base="/", **kwargs):
     id_test_map = {}
     m = create_test_manifest(tests, url_base)
-    expected_data = {}
-    metadata.load_expected = lambda _, __, test_path, *args: expected_data[test_path]
 
+    reset_globals()
     id_test_map = metadata.create_test_tree(None, m)
-
-    for test_path, test_ids, test_type, manifest_str in tests:
-        expected_data[test_path] = manifestupdate.compile(BytesIO(manifest_str),
-                                                          test_path,
-                                                          url_base)
 
     return id_test_map, metadata.ExpectedUpdater(id_test_map, **kwargs)
 
@@ -83,7 +104,10 @@ def create_log(entries):
 
 
 def suite_log(entries, run_info=None):
-    return ([("suite_start", {"tests": [], "run_info": run_info or {}})] +
+    _run_info = default_run_info.copy()
+    if run_info:
+        _run_info.update(run_info)
+    return ([("suite_start", {"tests": [], "run_info": _run_info})] +
             entries +
             [("suite_end", {})])
 
@@ -141,7 +165,7 @@ def test_update_1():
 
     new_manifest = updated[0][1]
     assert not new_manifest.is_empty
-    assert new_manifest.get_test(test_id).children[0].get("expected") == "FAIL"
+    assert new_manifest.get_test(test_id).children[0].get("expected", default_run_info) == "FAIL"
 
 
 @pytest.mark.xfail(sys.version[0] == "3",
@@ -187,8 +211,8 @@ def test_new_subtest():
     updated = update(tests, log)
     new_manifest = updated[0][1]
     assert not new_manifest.is_empty
-    assert new_manifest.get_test(test_id).children[0].get("expected") == "FAIL"
-    assert new_manifest.get_test(test_id).children[1].get("expected") == "FAIL"
+    assert new_manifest.get_test(test_id).children[0].get("expected", default_run_info) == "FAIL"
+    assert new_manifest.get_test(test_id).children[1].get("expected", default_run_info) == "FAIL"
 
 
 @pytest.mark.xfail(sys.version[0] == "3",
@@ -221,8 +245,12 @@ def test_update_multiple_0():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"debug": False, "os": "osx"})
+    run_info_2 = default_run_info.copy()
+    run_info_2.update({"debug": False, "os": "linux"})
     assert new_manifest.get_test(test_id).children[0].get(
-        "expected", {"debug": False, "os": "osx"}) == "FAIL"
+        "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", {"debug": False, "os": "linux"}) == "TIMEOUT"
 
@@ -257,12 +285,18 @@ def test_update_multiple_1():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"debug": False, "os": "osx"})
+    run_info_2 = default_run_info.copy()
+    run_info_2.update({"debug": False, "os": "linux"})
+    run_info_3 = default_run_info.copy()
+    run_info_3.update({"debug": False, "os": "win"})
     assert new_manifest.get_test(test_id).children[0].get(
-        "expected", {"debug": False, "os": "osx"}) == "FAIL"
+        "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
-        "expected", {"debug": False, "os": "linux"}) == "TIMEOUT"
+        "expected", run_info_2) == "TIMEOUT"
     assert new_manifest.get_test(test_id).children[0].get(
-        "expected", {"debug": False, "os": "windows"}) == "FAIL"
+        "expected", run_info_3) == "FAIL"
 
 
 @pytest.mark.xfail(sys.version[0] == "3",
@@ -294,11 +328,16 @@ def test_update_multiple_2():
     updated = update(tests, log_0, log_1)
     new_manifest = updated[0][1]
 
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"debug": False, "os": "osx"})
+    run_info_2 = default_run_info.copy()
+    run_info_2.update({"debug": True, "os": "osx"})
+
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).children[0].get(
-        "expected", {"debug": False, "os": "osx"}) == "FAIL"
+        "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
-        "expected", {"debug": True, "os": "osx"}) == "TIMEOUT"
+        "expected", run_info_2) == "TIMEOUT"
 
 
 @pytest.mark.xfail(sys.version[0] == "3",
@@ -332,11 +371,16 @@ def test_update_multiple_3():
     updated = update(tests, log_0, log_1)
     new_manifest = updated[0][1]
 
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"debug": False, "os": "osx"})
+    run_info_2 = default_run_info.copy()
+    run_info_2.update({"debug": True, "os": "osx"})
+
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).children[0].get(
-        "expected", {"debug": False, "os": "osx"}) == "FAIL"
+        "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
-        "expected", {"debug": True, "os": "osx"}) == "TIMEOUT"
+        "expected", run_info_2) == "TIMEOUT"
 
 
 @pytest.mark.xfail(sys.version[0] == "3",
@@ -370,11 +414,116 @@ def test_update_ignore_existing():
     updated = update(tests, log_0, log_1)
     new_manifest = updated[0][1]
 
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"debug": False, "os": "linux"})
+    run_info_2 = default_run_info.copy()
+    run_info_2.update({"debug": False, "os": "osx"})
+
     assert not new_manifest.is_empty
     assert new_manifest.get_test(test_id).children[0].get(
-        "expected", {"debug": True, "os": "osx"}) == "FAIL"
+        "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
-        "expected", {"debug": False, "os": "osx"}) == "NOTRUN"
+        "expected", run_info_2) == "NOTRUN"
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_default():
+    test_id = "/path/to/test.htm"
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
+  [test1]
+    expected:
+      if os == "mac": FAIL
+      ERROR""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "PASS",
+                                        "expected": "FAIL"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})],
+                      run_info={"os": "mac"})
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "PASS",
+                                        "expected": "ERROR"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})],
+                      run_info={"os": "linux"})
+
+    updated = update(tests, log_0, log_1)
+    new_manifest = updated[0][1]
+
+    assert new_manifest.is_empty
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_default_1():
+    test_id = "/path/to/test.htm"
+    tests = [("path/to/test.htm", [test_id], "testharness", """
+[test.htm]
+  expected:
+    if os == "mac": TIMEOUT
+    ERROR""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "expected": "ERROR",
+                                     "status": "FAIL"})],
+                      run_info={"os": "linux"})
+
+    updated = update(tests, log_0)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"os": "mac"})
+    run_info_2 = default_run_info.copy()
+    run_info_2.update({"os": "win"})
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).get(
+        "expected", run_info_1) == "TIMEOUT"
+    assert new_manifest.get_test(test_id).get(
+        "expected", run_info_2) == "FAIL"
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_default_2():
+    test_id = "/path/to/test.htm"
+    tests = [("path/to/test.htm", [test_id], "testharness", """
+[test.htm]
+  expected:
+    if os == "mac": TIMEOUT
+    ERROR""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "expected": "ERROR",
+                                     "status": "TIMEOUT"})],
+                      run_info={"os": "linux"})
+
+    updated = update(tests, log_0)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"os": "mac"})
+    run_info_2 = default_run_info.copy()
+    run_info_2.update({"os": "win"})
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).get(
+        "expected", run_info_1) == "TIMEOUT"
+    assert new_manifest.get_test(test_id).get(
+        "expected", run_info_2) == "TIMEOUT"
 
 
 @pytest.mark.xfail(sys.version[0] == "3",
@@ -398,8 +547,8 @@ def test_update_assertion_count_0():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
-    assert new_manifest.get_test(test_id).get("max-asserts") == 7
-    assert new_manifest.get_test(test_id).get("min-asserts") == 2
+    assert new_manifest.get_test(test_id).get("max-asserts") == "7"
+    assert new_manifest.get_test(test_id).get("min-asserts") == "2"
 
 
 @pytest.mark.xfail(sys.version[0] == "3",
@@ -423,7 +572,7 @@ def test_update_assertion_count_1():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
-    assert new_manifest.get_test(test_id).get("max-asserts") == 4
+    assert new_manifest.get_test(test_id).get("max-asserts") == "4"
     assert new_manifest.get_test(test_id).has_key("min-asserts") is False
 
 
@@ -479,8 +628,8 @@ def test_update_assertion_count_3():
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
-    assert new_manifest.get_test(test_id).get("max-asserts") == 8
-    assert new_manifest.get_test(test_id).get("min-asserts") == 2
+    assert new_manifest.get_test(test_id).get("max-asserts") == "8"
+    assert new_manifest.get_test(test_id).get("min-asserts") == "2"
 
 
 @pytest.mark.xfail(sys.version[0] == "3",
@@ -612,7 +761,7 @@ def test_update_wptreport_0():
   [test1]
     expected: FAIL""")]
 
-    log = {"run_info": {},
+    log = {"run_info": default_run_info.copy(),
            "results": [
                {"test": "/path/to/test.htm",
                 "subtests": [{"name": "test1",
@@ -633,7 +782,7 @@ def test_update_wptreport_1():
     tests = [("path/to/test.htm", ["/path/to/test.htm"], "testharness", ""),
              ("path/to/__dir__", ["path/to/__dir__"], None, "")]
 
-    log = {"run_info": {},
+    log = {"run_info": default_run_info.copy(),
            "results": [],
            "lsan_leaks": [{"scope": "path/to/",
                            "frames": ["baz", "foobar"]}]}
@@ -749,14 +898,142 @@ leak-total: 110""")]
     assert new_manifest.has_key("leak-threshold") is False
 
 
+def dump_tree(tree):
+    rv = []
+
+    def dump_node(node, indent=0):
+        prefix = " " * indent
+        if not node.prop:
+            data = "root"
+        else:
+            data = "%s:%s" % (node.prop, node.value)
+        if node.update_values:
+            data += " update_values:%s" % (",".join(sorted(node.update_values)))
+        rv.append("%s<%s>" % (prefix, data))
+        for child in sorted(node.children, key=lambda x:x.value):
+            dump_node(child, indent + 2)
+
+    dump_node(tree)
+    return "\n".join(rv)
+
+
+# @pytest.mark.xfail(sys.version[0] == "3",
+#                    reason="metadata doesn't support py3")
+# def test_property_tree():
+#     run_info_values = [{"os": "linux", "version": "18.04", "debug": False},
+#                        {"os": "linux", "version": "18.04", "debug": True},
+#                        {"os": "linux", "version": "16.04", "debug": False},
+#                        {"os": "mac", "version": "10.12", "debug": True},
+#                        {"os": "mac", "version": "10.12", "debug": False},
+#                        {"os": "win", "version": "7", "debug": False},
+#                        {"os": "win", "version": "10", "debug": False}]
+#     run_info_values = [metadata.RunInfo(item) for item in run_info_values]
+#     tree = metadata.build_property_tree(["os", "version", "debug"],
+#                                         run_info_values)
+
+#     expected = """<root>
+#   <os:linux>
+#     <version:16.04>
+#     <version:18.04>
+#       <debug:False>
+#       <debug:True>
+#   <os:mac>
+#     <debug:False>
+#     <debug:True>
+#   <os:win>
+#     <version:10>
+#     <version:7>"""
+
+#     assert dump_tree(tree) == expected
+
+
+# @pytest.mark.xfail(sys.version[0] == "3",
+#                    reason="metadata doesn't support py3")
+# def test_propogate_up():
+#     update_values = [({"os": "linux", "version": "18.04", "debug": False}, "FAIL"),
+#                      ({"os": "linux", "version": "18.04", "debug": True}, "FAIL"),
+#                      ({"os": "linux", "version": "16.04", "debug": False}, "FAIL"),
+#                      ({"os": "mac", "version": "10.12", "debug": True}, "PASS"),
+#                      ({"os": "mac", "version": "10.12", "debug": False}, "PASS"),
+#                      ({"os": "win", "version": "7", "debug": False}, "PASS"),
+#                      ({"os": "win", "version": "10", "debug": False}, "FAIL")]
+#     update_values = {metadata.RunInfo(item[0]): item[1] for item in update_values}
+#     tree = metadata.build_property_tree(["os", "version", "debug"],
+#                                         update_values.keys())
+#     for node in tree:
+#         for run_info in node.run_info:
+#             node.update_values.add(update_values[run_info])
+
+#     optimiser = manifestupdate.OptimiseConditionalTree()
+#     optimiser.propogate_up(tree)
+
+#     expected = """<root>
+#   <os:linux update_values:FAIL>
+#   <os:mac update_values:PASS>
+#   <os:win>
+#     <version:10 update_values:FAIL>
+#     <version:7 update_values:PASS>"""
+
+#     assert dump_tree(tree) == expected
+
+
+# @pytest.mark.xfail(sys.version[0] == "3",
+#                    reason="metadata doesn't support py3")
+# def test_common_properties():
+#     update_values = [({"os": "linux", "version": "18.04", "debug": False}, "PASS"),
+#                      ({"os": "linux", "version": "18.04", "debug": True}, "FAIL"),
+#                      ({"os": "linux", "version": "16.04", "debug": False}, "PASS"),
+#                      ({"os": "mac", "version": "10.12", "debug": True}, "FAIL"),
+#                      ({"os": "mac", "version": "10.12", "debug": False}, "PASS"),
+#                      ({"os": "win", "version": "7", "debug": False}, "PASS"),
+#                      ({"os": "win", "version": "10", "debug": False}, "PASS")]
+#     update_values = {metadata.RunInfo(item[0]): item[1] for item in update_values}
+#     tree = metadata.build_property_tree(["os", "version", "debug"],
+#                                         update_values.keys())
+#     for node in tree:
+#         for run_info in node.run_info:
+#             node.update_values.add(update_values[run_info])
+
+#     optimiser = manifestupdate.OptimiseConditionalTree()
+#     optimiser.propogate_up(tree)
+
+#     expected = """<root>
+#   <os:linux>
+#     <version:16.04 update_values:PASS>
+#     <version:18.04>
+#       <debug:False update_values:PASS>
+#       <debug:True update_values:FAIL>
+#   <os:mac>
+#     <debug:False update_values:PASS>
+#     <debug:True update_values:FAIL>
+#   <os:win update_values:PASS>"""
+
+#     assert dump_tree(tree) == expected
+
+
+#     optimiser.common_properties(tree)
+
+#     expected = """<root>
+#   <os:linux>
+#     <debug:False update_values:PASS>
+#     <debug:True update_values:FAIL>
+#   <os:mac update_values:PASS>
+#     <debug:False update_values:PASS>
+#     <debug:True update_values:FAIL>
+#   <os:win update_values: PASS>"""
+#     assert dump_tree(tree) == expected
+
+
 class TestStep(Step):
     def create(self, state):
         test_id = "/path/to/test.htm"
         tests = [("path/to/test.htm", [test_id], "testharness", "")]
         state.foo = create_test_manifest(tests)
 
+
 class UpdateRunner(StepRunner):
     steps = [TestStep]
+
 
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="update.state doesn't support py3")
@@ -764,7 +1041,11 @@ def test_update_pickle():
     logger = structuredlog.StructuredLogger("expected_test")
     args = {
         "test_paths": {
-            "/": {"tests_path": ""},
+            "/": {"tests_path": os.path.abspath(os.path.join(here,
+                                                             os.pardir,
+                                                             os.pardir,
+                                                             os.pardir,
+                                                             os.pardir))},
         },
         "abort": False,
         "continue": False,

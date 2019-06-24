@@ -25,10 +25,36 @@ except ImportError:
     import json
 
 
+class RunInfo(object):
+    """A wrapper around RunInfo dicts so that they can be hashed by identity"""
+
+    def __init__(self, dict_value):
+        self.data = dict_value
+        self.canonical_repr = tuple(tuple(item) for item in sorted(dict_value.items()))
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __setitem__(self, key, value):
+        raise TypeError
+
+    def __hash__(self):
+        return hash(self.canonical_repr)
+
+    def __eq__(self, other):
+        return self.canonical_repr == other.canonical_repr
+
+    def iteritems(self):
+        for key, value in self.data.iteritems():
+            yield key, value
+
+    def items(self):
+        return list(self.iteritems())
+
+
 def update_expected(test_paths, serve_root, log_file_names,
-                    rev_old=None, rev_new="HEAD", ignore_existing=False,
-                    sync_root=None, property_order=None, boolean_properties=None,
-                    stability=None):
+                    update_properties, rev_old=None, rev_new="HEAD",
+                    ignore_existing=False, sync_root=None, stability=None):
     """Update the metadata files for web-platform-tests based on
     the results obtained in a previous run or runs
 
@@ -39,11 +65,10 @@ def update_expected(test_paths, serve_root, log_file_names,
     id_test_map = load_test_data(test_paths)
 
     for metadata_path, updated_ini in update_from_logs(id_test_map,
-                                                       *log_file_names,
-                                                       ignore_existing=ignore_existing,
-                                                       property_order=property_order,
-                                                       boolean_properties=boolean_properties,
-                                                       stability=stability):
+                                                       update_properties,
+                                                       ignore_existing,
+                                                       stability,
+                                                       *log_file_names):
 
         write_new_expected(metadata_path, updated_ini)
         if stability:
@@ -139,6 +164,9 @@ class InternedData(object):
         # Reserve 0 as a sentinal
         self._data = [None], {}
 
+    def clear(self):
+        self.__init__()
+
     def store(self, obj):
         if self.type_conv is not None:
             obj = self.type_conv(obj)
@@ -160,6 +188,10 @@ class InternedData(object):
             obj = self.rev_type_conv(obj)
         return obj
 
+    def __iter__(self):
+        for i in xrange(1, len(self._data[0])):
+            yield self.get(i)
+
 
 class RunInfoInterned(InternedData):
     def type_conv(self, value):
@@ -170,7 +202,7 @@ class RunInfoInterned(InternedData):
 
 
 prop_intern = InternedData(4)
-run_info_intern = RunInfoInterned()
+run_info_intern = InternedData(8)
 status_intern = InternedData(4)
 
 
@@ -185,11 +217,8 @@ def load_test_data(test_paths):
     return id_test_map
 
 
-def update_from_logs(id_test_map, *log_filenames, **kwargs):
-    ignore_existing = kwargs.get("ignore_existing", False)
-    property_order = kwargs.get("property_order")
-    boolean_properties = kwargs.get("boolean_properties")
-    stability = kwargs.get("stability")
+def update_from_logs(id_test_map, update_properties, ignore_existing, stability,
+                     *log_filenames):
 
     updater = ExpectedUpdater(id_test_map,
                               ignore_existing=ignore_existing)
@@ -199,11 +228,11 @@ def update_from_logs(id_test_map, *log_filenames, **kwargs):
         with open(log_filename) as f:
             updater.update_from_log(f)
 
-    for item in update_results(id_test_map, property_order, boolean_properties, stability):
+    for item in update_results(id_test_map, update_properties, stability):
         yield item
 
 
-def update_results(id_test_map, property_order, boolean_properties, stability):
+def update_results(id_test_map, update_properties, stability):
     test_file_items = set(id_test_map.itervalues())
 
     default_expected_by_type = {}
@@ -214,8 +243,7 @@ def update_results(id_test_map, property_order, boolean_properties, stability):
             default_expected_by_type[(test_type, True)] = test_cls.subtest_result_cls.default_expected
 
     for test_file in test_file_items:
-        updated_expected = test_file.update(property_order, boolean_properties, stability,
-                                            default_expected_by_type)
+        updated_expected = test_file.update(stability, default_expected_by_type, update_properties)
         if updated_expected is not None and updated_expected.modified:
             yield test_file.metadata_path, updated_expected
 
@@ -227,31 +255,6 @@ def directory_manifests(metadata_path):
             rel_path = os.path.relpath(dirpath, metadata_path)
             rv.append(os.path.join(rel_path, "__dir__.ini"))
     return rv
-
-
-def write_changes(metadata_path, expected):
-    # First write the new manifest files to a temporary directory
-    temp_path = tempfile.mkdtemp(dir=os.path.split(metadata_path)[0])
-    write_new_expected(temp_path, expected)
-
-    # Copy all files in the root to the temporary location since
-    # these cannot be ini files
-    keep_files = [item for item in os.listdir(metadata_path) if
-                  not os.path.isdir(os.path.join(metadata_path, item))]
-
-    for item in keep_files:
-        dest_dir = os.path.dirname(os.path.join(temp_path, item))
-        if not os.path.exists(dest_dir):
-            os.makedirs(dest_dir)
-        shutil.copyfile(os.path.join(metadata_path, item),
-                        os.path.join(temp_path, item))
-
-    # Then move the old manifest files to a new location
-    temp_path_2 = metadata_path + str(uuid.uuid4())
-    os.rename(metadata_path, temp_path_2)
-    # Move the new files to the destination location and remove the old files
-    os.rename(temp_path, metadata_path)
-    shutil.rmtree(temp_path_2)
 
 
 def write_new_expected(metadata_path, expected):
@@ -353,7 +356,7 @@ class ExpectedUpdater(object):
                     action_map[action](item_data)
 
     def suite_start(self, data):
-        self.run_info = run_info_intern.store(data["run_info"])
+        self.run_info = run_info_intern.store(RunInfo(data["run_info"]))
 
     def test_start(self, data):
         test_id = intern(data["test"].encode("utf8"))
@@ -528,7 +531,7 @@ class PackedResultList(object):
 
 class TestFileData(object):
     __slots__ = ("url_base", "item_type", "test_path", "metadata_path", "tests",
-                 "_requires_update", "clear", "data")
+                 "_requires_update", "data")
     def __init__(self, url_base, item_type, metadata_path, test_path, tests):
         self.url_base = url_base
         self.item_type = item_type
@@ -536,7 +539,6 @@ class TestFileData(object):
         self.metadata_path = metadata_path
         self.tests = {intern(item.id.encode("utf8")) for item in tests}
         self._requires_update = False
-        self.clear = set()
         self.data = defaultdict(lambda: defaultdict(PackedResultList))
 
     def set_requires_update(self):
@@ -547,26 +549,23 @@ class TestFileData(object):
                                               run_info,
                                               value)
 
-    def expected(self, property_order, boolean_properties):
+    def expected(self, update_properties):
         expected_data = load_expected(self.url_base,
                                       self.metadata_path,
                                       self.test_path,
                                       self.tests,
-                                      property_order,
-                                      boolean_properties)
+                                      update_properties)
         if expected_data is None:
             expected_data = create_expected(self.url_base,
                                             self.test_path,
-                                            property_order,
-                                            boolean_properties)
+                                            update_properties)
         return expected_data
 
-    def update(self, property_order, boolean_properties, stability,
-               default_expected_by_type):
+    def update(self, stability, default_expected_by_type, update_properties):
         if not self._requires_update:
             return
 
-        expected = self.expected(property_order, boolean_properties)
+        expected = self.expected(update_properties)
         expected_by_test = {}
 
         for test_id in self.tests:
@@ -574,10 +573,9 @@ class TestFileData(object):
                 expected.append(manifestupdate.TestNode.create(test_id))
             test_expected = expected.get_test(test_id)
             expected_by_test[test_id] = test_expected
-            for prop in self.clear:
-                test_expected.clear(prop)
 
         for test_id, test_data in self.data.iteritems():
+            test_id = test_id.decode("utf8")
             for subtest_id, results_list in test_data.iteritems():
                 for prop, run_info, value in results_list:
                     # Special case directory metadata
@@ -598,17 +596,19 @@ class TestFileData(object):
                     if subtest_id is None:
                         item_expected = test_expected
                     else:
+                        if isinstance(subtest_id, str):
+                            subtest_id = subtest_id.decode("utf8")
                         item_expected = test_expected.get_subtest(subtest_id)
                     if prop == "status":
                         item_expected.set_result(run_info, value)
                     elif prop == "asserts":
                         item_expected.set_asserts(run_info, value)
 
-        expected.coalesce_properties(stability=stability)
+        expected.update(stability=stability)
         for test in expected.iterchildren():
             for subtest in test.iterchildren():
-                subtest.coalesce_properties(stability=stability)
-            test.coalesce_properties(stability=stability)
+                subtest.update(stability=stability)
+            test.update(stability=stability)
 
         return expected
 
@@ -616,29 +616,17 @@ class TestFileData(object):
 Result = namedtuple("Result", ["status", "default_expected"])
 
 
-def create_expected(url_base, test_path, property_order=None,
-                    boolean_properties=None):
+def create_expected(url_base, test_path,  run_info_properties):
     expected = manifestupdate.ExpectedManifest(None,
                                                test_path,
                                                url_base,
-                                               property_order=property_order,
-                                               boolean_properties=boolean_properties)
+                                               run_info_properties)
     return expected
 
 
-def load_expected(url_base, metadata_path, test_path, tests, property_order=None,
-                  boolean_properties=None):
+def load_expected(url_base, metadata_path, test_path, tests, run_info_properties):
     expected_manifest = manifestupdate.get_manifest(metadata_path,
                                                     test_path,
                                                     url_base,
-                                                    property_order=property_order,
-                                                    boolean_properties=boolean_properties)
-    if expected_manifest is None:
-        return
-
-    # Remove expected data for tests that no longer exist
-    for test in expected_manifest.iterchildren():
-        if test.id not in tests:
-            test.remove()
-
+                                                    run_info_properties)
     return expected_manifest
