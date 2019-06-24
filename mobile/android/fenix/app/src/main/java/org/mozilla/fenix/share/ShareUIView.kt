@@ -14,6 +14,7 @@ import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.component_share.*
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.UIView
 
 class ShareUIView(
@@ -39,7 +40,10 @@ class ShareUIView(
         }
         intent_handler_recyclerview.adapter = adapter
 
-        if (BuildConfig.SEND_TAB_ENABLED) {
+        // And authorized
+        if (BuildConfig.SEND_TAB_ENABLED &&
+            !view.context.components.backgroundServices.accountManager.accountNeedsReauth()
+        ) {
             account_devices_recyclerview.adapter = AccountDevicesShareAdapter(view.context, actionEmitter)
         } else {
             send_tab_group.visibility = View.GONE
