@@ -34,19 +34,19 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
     private var tree: List<BookmarkNode> = listOf()
     private var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
-    var selected = setOf<BookmarkNode>()
+    val selected: Set<BookmarkNode>
+        get() = (mode as? BookmarkState.Mode.Selecting)?.selectedItems ?: setOf()
     private var isFirstRun = true
 
     lateinit var job: Job
 
     fun updateData(tree: BookmarkNode?, mode: BookmarkState.Mode) {
-        this.tree = tree?.children?.filterNotNull() ?: listOf()
+        this.tree = tree?.children ?: listOf()
         isFirstRun = if (isFirstRun) false else {
             emptyView.visibility = if (this.tree.isEmpty()) View.VISIBLE else View.GONE
             false
         }
         this.mode = mode
-        this.selected = if (mode is BookmarkState.Mode.Selecting) mode.selectedItems else setOf()
         notifyDataSetChanged()
     }
 
@@ -137,9 +137,9 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
             val shiftTwoDp = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, TWO_DIGIT_MARGIN, containerView!!.context.resources.displayMetrics
             ).toInt()
-            val params = bookmark_title.getLayoutParams() as ViewGroup.MarginLayoutParams
+            val params = bookmark_title.layoutParams as ViewGroup.MarginLayoutParams
             params.topMargin = shiftTwoDp
-            bookmark_title.setLayoutParams(params)
+            bookmark_title.layoutParams = params
 
             bookmark_favicon.visibility = View.VISIBLE
             bookmark_title.visibility = View.VISIBLE

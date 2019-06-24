@@ -275,11 +275,10 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                         }
                     }
                     is BookmarkAction.SwitchMode -> {
-                        if ((bookmarkComponent.uiView as BookmarkUIView).mode is BookmarkState.Mode.Normal) {
-                            getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.ClearSelection)
-                        }
                         activity?.invalidateOptionsMenu()
                     }
+                    is BookmarkAction.DeselectAll ->
+                        getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.ClearSelection)
                 }
             }
 
