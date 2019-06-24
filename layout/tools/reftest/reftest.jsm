@@ -48,7 +48,7 @@ function HasUnexpectedResult()
 var gDumpFn = function(line) {
   dump(line);
   if (g.logFile) {
-    g.logFile.write(line, line.length);
+    g.logFile.writeString(line);
   }
 }
 var gDumpRawLog = function(record) {
@@ -57,7 +57,7 @@ var gDumpRawLog = function(record) {
   dump(line);
 
   if (g.logFile) {
-    g.logFile.write(line, line.length);
+    g.logFile.writeString(line);
   }
 }
 g.logger = new StructuredLogger('reftest', gDumpRawLog);
@@ -240,7 +240,10 @@ function InitAndStartRefTests()
         var logFile = prefs.getStringPref("reftest.logFile");
         if (logFile) {
             var f = FileUtils.File(logFile);
-            g.logFile = FileUtils.openFileOutputStream(f, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
+            var out = FileUtils.openFileOutputStream(f, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
+            g.logFile = Cc["@mozilla.org/intl/converter-output-stream;1"]
+                          .createInstance(Ci.nsIConverterOutputStream);
+            g.logFile.init(out, null);
         }
     } catch(e) {}
 
