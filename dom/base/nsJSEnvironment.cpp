@@ -1942,6 +1942,11 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
     return;
   }
 
+  // Only do this if there is an incremental collection active.
+  if (!sInterSliceGCRunner && !sICCRunner) {
+    return;
+  }
+
   nsCOMPtr<nsIDocShellTreeItem> root;
   aDocShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
   if (root == aDocShell) {
