@@ -1303,9 +1303,9 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
     return true;
   }
 
-  // Shrink the nursery to its minimum size of we ran out of memory or
+  // Shrink the nursery to its minimum size if we ran out of memory or
   // received a memory pressure event.
-  if (gc::IsOOMReason(reason)) {
+  if (gc::IsOOMReason(reason) || runtime()->gc.systemHasLowMemory()) {
     minimizeAllocableSpace();
     return true;
   }
