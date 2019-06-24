@@ -214,6 +214,28 @@ class Repository(object):
         if git cinnabar is not present.
         """
 
+    def commit(self, message, author=None, date=None, paths=None):
+        """Create a commit using the provided commit message. The author, date,
+        and files/paths to be included may also be optionally provided. The
+        message, author and date arguments must be strings, and are passed as-is
+        to the commit command. Multiline commit messages are supported. The
+        paths argument must be None or an array of strings that represents the
+        set of files and folders to include in the commit.
+        """
+        args = ['commit', '-m', message]
+        if author is not None:
+            if isinstance(self, HgRepository):
+                args = args + ['--user', author]
+            elif isinstance(self, GitRepository):
+                args = args + ['--author', author]
+            else:
+                raise MissingVCSInfo('Unknown repo type')
+        if date is not None:
+            args = args + ['--date', date]
+        if paths is not None:
+            args = args + paths
+        self._run(*args)
+
 
 class HgRepository(Repository):
     '''An implementation of `Repository` for Mercurial repositories.'''
