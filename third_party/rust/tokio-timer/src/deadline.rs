@@ -1,26 +1,23 @@
+#![allow(deprecated)]
+
 use Delay;
 
-use futures::{Future, Poll, Async};
+use futures::{Async, Future, Poll};
 
 use std::error;
 use std::fmt;
 use std::time::Instant;
 
-/// Allows a given `Future` to execute until the specified deadline.
-///
-/// If the inner future completes before the deadline is reached, then
-/// `Deadline` completes with that value. Otherwise, `Deadline` completes with a
-/// [`DeadlineError`].
-///
-/// [`DeadlineError`]: struct.DeadlineError.html
-#[must_use = "futures do nothing unless polled"]
+#[deprecated(since = "0.2.6", note = "use Timeout instead")]
+#[doc(hidden)]
 #[derive(Debug)]
 pub struct Deadline<T> {
     future: T,
     delay: Delay,
 }
 
-/// Error returned by `Deadline` future.
+#[deprecated(since = "0.2.6", note = "use Timeout instead")]
+#[doc(hidden)]
 #[derive(Debug)]
 pub struct DeadlineError<T>(Kind<T>);
 
@@ -45,10 +42,7 @@ impl<T> Deadline<T> {
     }
 
     pub(crate) fn new_with_delay(future: T, delay: Delay) -> Deadline<T> {
-        Deadline {
-            future,
-            delay,
-        }
+        Deadline { future, delay }
     }
 
     /// Gets a reference to the underlying future in this deadline.
@@ -68,7 +62,8 @@ impl<T> Deadline<T> {
 }
 
 impl<T> Future for Deadline<T>
-where T: Future,
+where
+    T: Future,
 {
     type Item = T::Item;
     type Error = DeadlineError<T::Error>;
@@ -84,9 +79,7 @@ where T: Future,
         // Now check the timer
         match self.delay.poll() {
             Ok(Async::NotReady) => Ok(Async::NotReady),
-            Ok(Async::Ready(_)) => {
-                Err(DeadlineError::elapsed())
-            },
+            Ok(Async::Ready(_)) => Err(DeadlineError::elapsed()),
             Err(e) => Err(DeadlineError::timer(e)),
         }
     }

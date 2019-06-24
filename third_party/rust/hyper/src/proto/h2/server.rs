@@ -5,7 +5,8 @@ use tokio_io::{AsyncRead, AsyncWrite};
 
 use ::headers::content_length_parse_all;
 use ::body::Payload;
-use ::common::Exec;
+use body::internal::FullDataArg;
+use ::common::exec::H2Exec;
 use ::headers;
 use ::service::Service;
 use ::proto::Dispatched;
@@ -13,12 +14,12 @@ use super::{PipeToSendStream, SendBuf};
 
 use ::{Body, Response};
 
-pub(crate) struct Server<T, S, B>
+pub(crate) struct Server<T, S, B, E>
 where
     S: Service,
     B: Payload,
 {
-    exec: Exec,
+    exec: E,
     service: S,
     state: State<T, B>,
 }
@@ -40,15 +41,16 @@ where
 }
 
 
-impl<T, S, B> Server<T, S, B>
+impl<T, S, B, E> Server<T, S, B, E>
 where
     T: AsyncRead + AsyncWrite,
     S: Service<ReqBody=Body, ResBody=B>,
     S::Error: Into<Box<::std::error::Error + Send + Sync>>,
-    S::Future: Send + 'static,
+    //S::Future: Send + 'static,
     B: Payload,
+    E: H2Exec<S::Future, B>,
 {
-    pub(crate) fn new(io: T, service: S, exec: Exec) -> Server<T, S, B> {
+    pub(crate) fn new(io: T, service: S, exec: E) -> Server<T, S, B, E> {
         let handshake = Builder::new()
             .handshake(io);
         Server {
@@ -76,13 +78,14 @@ where
     }
 }
 
-impl<T, S, B> Future for Server<T, S, B>
+impl<T, S, B, E> Future for Server<T, S, B, E>
 where
     T: AsyncRead + AsyncWrite,
     S: Service<ReqBody=Body, ResBody=B>,
     S::Error: Into<Box<::std::error::Error + Send + Sync>>,
-    S::Future: Send + 'static,
+    //S::Future: Send + 'static,
     B: Payload,
+    E: H2Exec<S::Future, B>,
 {
     type Item = Dispatched;
     type Error = ::Error;
@@ -116,14 +119,14 @@ where
     T: AsyncRead + AsyncWrite,
     B: Payload,
 {
-    fn poll_server<S>(&mut self, service: &mut S, exec: &Exec) -> Poll<(), ::Error>
+    fn poll_server<S, E>(&mut self, service: &mut S, exec: &E) -> Poll<(), ::Error>
     where
         S: Service<
             ReqBody=Body,
             ResBody=B,
         >,
         S::Error: Into<Box<::std::error::Error + Send + Sync>>,
-        S::Future: Send + 'static,
+        E: H2Exec<S::Future, B>,
     {
         while let Some((req, respond)) = try_ready!(self.conn.poll().map_err(::Error::new_h2)) {
             trace!("incoming request");
@@ -132,7 +135,7 @@ where
                 ::Body::h2(stream, content_length)
             });
             let fut = H2Stream::new(service.call(req), respond);
-            exec.execute(fut)?;
+            exec.execute_h2stream(fut)?;
         }
 
         // no more incoming streams...
@@ -141,7 +144,8 @@ where
     }
 }
 
-struct H2Stream<F, B>
+#[allow(missing_debug_implementations)]
+pub struct H2Stream<F, B>
 where
     B: Payload,
 {
@@ -190,12 +194,17 @@ where
                         Err(e) => return Err(::Error::new_user_service(e)),
                     };
 
-                    let (head, body) = res.into_parts();
+                    let (head, mut body) = res.into_parts();
                     let mut res = ::http::Response::from_parts(head, ());
-                    super::strip_connection_headers(res.headers_mut());
-                    if let Some(len) = body.content_length() {
-                        headers::set_content_length_if_missing(res.headers_mut(), len);
-                    }
+                    super::strip_connection_headers(res.headers_mut(), false);
+
+                    // set Date header if it isn't already set...
+                    res
+                        .headers_mut()
+                        .entry(::http::header::DATE)
+                        .expect("DATE is a valid HeaderName")
+                        .or_insert_with(::proto::h1::date::update_and_header_value);
+
                     macro_rules! reply {
                         ($eos:expr) => ({
                             match self.reply.send_response(res, $eos) {
@@ -208,6 +217,21 @@ where
                             }
                         })
                     }
+
+                    // automatically set Content-Length from body...
+                    if let Some(len) = body.content_length() {
+                        headers::set_content_length_if_missing(res.headers_mut(), len);
+                    }
+
+                    if let Some(full) = body.__hyper_full_data(FullDataArg(())).0 {
+                        let mut body_tx = reply!(false);
+                        let buf = SendBuf(Some(full));
+                        body_tx
+                            .send_data(buf, true)
+                            .map_err(::Error::new_body_write)?;
+                        return Ok(Async::Ready(()));
+                    }
+
                     if !body.is_end_stream() {
                         let body_tx = reply!(false);
                         H2StreamState::Body(PipeToSendStream::new(body, body_tx))

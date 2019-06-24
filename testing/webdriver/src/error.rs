@@ -1,5 +1,5 @@
 use base64::DecodeError;
-use hyper::StatusCode;
+use http::StatusCode;
 use serde::ser::{Serialize, Serializer};
 use serde_json;
 use std::borrow::Cow;

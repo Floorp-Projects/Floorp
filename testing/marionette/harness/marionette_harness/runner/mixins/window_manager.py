@@ -98,7 +98,7 @@ class WindowManagerMixin(object):
 
         try:
             if callable(callback):
-                callback()
+                callback(focus)
             else:
                 result = self.marionette.open(type="window", focus=focus)
                 if result["type"] != "window":
@@ -136,10 +136,10 @@ class WindowManagerMixin(object):
         Can be replaced with "WebDriver:NewWindow" once the command
         supports opening generic chrome windows beside browsers (bug 1507771).
         """
-        def open_with_js():
+        def open_with_js(focus):
             with self.marionette.using_context("chrome"):
                 self.marionette.execute_async_script("""
-                  let [url, resolve] = arguments;
+                  let [url, focus, resolve] = arguments;
 
                   function waitForEvent(target, type, args) {
                     return new Promise(resolve => {
@@ -169,14 +169,17 @@ class WindowManagerMixin(object):
                     win.setTimeout(() => win.focus(), 0);
                     await focused;
 
-                    // Now refocus our original window and wait for that to happen.
-                    focused = waitForFocus(window);
-                    window.focus();
-                    await focused;
+                    // The new window shouldn't get focused. As such set the
+                    // focus back to the opening window.
+                    if (!focus && Services.focus.activeWindow != window) {
+                      let focused = waitForFocus(window);
+                      window.focus();
+                      await focused;
+                    }
 
-                    resolve();
+                    resolve(win.windowUtils.outerWindowID);
                   })();
-                """, script_args=(url,))
+                """, script_args=(url, focus))
 
         with self.marionette.using_context("chrome"):
             return self.open_window(callback=open_with_js, focus=focus)

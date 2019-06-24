@@ -87,12 +87,12 @@ class UpdateMetadata(Step):
         kwargs = state.kwargs
         with state.push(["local_tree", "sync_tree", "paths", "serve_root"]):
             state.run_log = kwargs["run_log"]
-            state.ignore_existing = kwargs["ignore_existing"]
             state.stability = kwargs["stability"]
             state.patch = kwargs["patch"]
             state.suite_name = kwargs["suite_name"]
             state.product = kwargs["product"]
             state.config = kwargs["config"]
+            state.full_update = kwargs["full"]
             state.extra_properties = kwargs["extra_property"]
             runner = MetadataUpdateRunner(self.logger, state)
             runner.run()

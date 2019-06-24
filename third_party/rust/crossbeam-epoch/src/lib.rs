@@ -54,34 +54,30 @@
 //! [`pin`]: fn.pin.html
 //! [`defer`]: fn.defer.html
 
-#![cfg_attr(feature = "nightly", feature(const_fn))]
+#![warn(missing_docs)]
+#![warn(missing_debug_implementations)]
+#![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(feature = "nightly", feature(alloc))]
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(feature = "nightly", feature(const_fn))]
 
-#![warn(missing_docs, missing_debug_implementations)]
-
-#[cfg(test)]
-extern crate core;
-#[cfg(all(not(test), feature = "use_std"))]
 #[macro_use]
-extern crate std;
+extern crate cfg_if;
+#[cfg(feature = "std")]
+extern crate core;
 
-// Use liballoc on nightly to avoid a dependency on libstd
-#[cfg(feature = "nightly")]
-extern crate alloc;
-#[cfg(not(feature = "nightly"))]
-mod alloc {
-    // Tweak the module layout to match the one in liballoc
-    extern crate std;
-    pub use self::std::boxed;
-    pub use self::std::sync as arc;
+cfg_if! {
+    if #[cfg(feature = "nightly")] {
+        extern crate alloc;
+    } else {
+        mod alloc {
+            extern crate std;
+            pub use self::std::*;
+        }
+    }
 }
 
 extern crate arrayvec;
 extern crate crossbeam_utils;
-#[cfg(feature = "use_std")]
-#[macro_use]
-extern crate lazy_static;
 #[macro_use]
 extern crate memoffset;
 #[macro_use]
@@ -89,16 +85,22 @@ extern crate scopeguard;
 
 mod atomic;
 mod collector;
-#[cfg(feature = "use_std")]
-mod default;
 mod deferred;
 mod epoch;
 mod guard;
 mod internal;
 mod sync;
 
-pub use self::atomic::{Atomic, CompareAndSetError, CompareAndSetOrdering, Owned, Shared, Pointer};
+pub use self::atomic::{Atomic, CompareAndSetError, CompareAndSetOrdering, Owned, Pointer, Shared};
+pub use self::collector::{Collector, LocalHandle};
 pub use self::guard::{unprotected, Guard};
-#[cfg(feature = "use_std")]
-pub use self::default::{default_collector, default_handle, is_pinned, pin};
-pub use self::collector::{Collector, Handle};
+
+cfg_if! {
+    if #[cfg(feature = "std")] {
+        #[macro_use]
+        extern crate lazy_static;
+
+        mod default;
+        pub use self::default::{default_collector, is_pinned, pin};
+    }
+}

@@ -12,20 +12,26 @@
 
 [package]
 name = "crossbeam-utils"
-version = "0.6.3"
+version = "0.6.5"
 authors = ["The Crossbeam Project Developers"]
 description = "Utilities for concurrent programming"
-homepage = "https://github.com/crossbeam-rs/crossbeam"
+homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-utils"
 documentation = "https://docs.rs/crossbeam-utils"
 readme = "README.md"
 keywords = ["scoped", "thread", "atomic", "cache"]
-categories = ["algorithms", "concurrency", "data-structures"]
+categories = ["algorithms", "concurrency", "data-structures", "no-std"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/crossbeam-rs/crossbeam"
 [dependencies.cfg-if]
 version = "0.1"
 
+[dependencies.lazy_static]
+version = "1.1.0"
+optional = true
+[dev-dependencies.rand]
+version = "0.6"
+
 [features]
 default = ["std"]
 nightly = []
-std = []
+std = ["lazy_static"]

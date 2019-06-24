@@ -10,10 +10,11 @@
 use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
+use std::sync::Arc;
 
 use bytes::Bytes;
 use futures::{Async, Future, Poll};
-use futures::future::{self, Either};
+use futures::future::{self, Either, Executor};
 use tokio_io::{AsyncRead, AsyncWrite};
 
 use body::Payload;
@@ -70,9 +71,10 @@ where
 /// After setting options, the builder is used to create a `Handshake` future.
 #[derive(Clone, Debug)]
 pub struct Builder {
-    exec: Exec,
+    pub(super) exec: Exec,
     h1_writev: bool,
     h1_title_case_headers: bool,
+    h1_read_buf_exact_size: Option<usize>,
     http2: bool,
 }
 
@@ -119,6 +121,8 @@ pub struct Parts<T> {
 // ========== internal client api
 
 /// A `Future` for when `SendRequest::poll_ready()` is ready.
+// FIXME: allow() required due to `impl Trait` leaking types to this lint
+#[allow(missing_debug_implementations)]
 #[must_use = "futures do nothing unless polled"]
 pub(super) struct WhenReady<B> {
     tx: Option<SendRequest<B>>,
@@ -238,12 +242,11 @@ where
         }
     }
 
-    //TODO: replace with `impl Future` when stable
-    pub(crate) fn send_request_retryable(&mut self, req: Request<B>) -> Box<Future<Item=Response<Body>, Error=(::Error, Option<Request<B>>)> + Send>
+    pub(crate) fn send_request_retryable(&mut self, req: Request<B>) -> impl Future<Item = Response<Body>, Error = (::Error, Option<Request<B>>)>
     where
         B: Send,
     {
-        let inner = match self.dispatch.try_send(req) {
+        match self.dispatch.try_send(req) {
             Ok(rx) => {
                 Either::A(rx.then(move |res| {
                     match res {
@@ -259,8 +262,7 @@ where
                 let err = ::Error::new_canceled(Some("connection was not ready"));
                 Either::B(future::err((err, Some(req))))
             }
-        };
-        Box::new(inner)
+        }
     }
 }
 
@@ -300,12 +302,11 @@ impl<B> Http2SendRequest<B>
 where
     B: Payload + 'static,
 {
-    //TODO: replace with `impl Future` when stable
-    pub(super) fn send_request_retryable(&mut self, req: Request<B>) -> Box<Future<Item=Response<Body>, Error=(::Error, Option<Request<B>>)> + Send>
+    pub(super) fn send_request_retryable(&mut self, req: Request<B>) -> impl Future<Item=Response<Body>, Error=(::Error, Option<Request<B>>)>
     where
         B: Send,
     {
-        let inner = match self.dispatch.try_send(req) {
+        match self.dispatch.try_send(req) {
             Ok(rx) => {
                 Either::A(rx.then(move |res| {
                     match res {
@@ -321,8 +322,7 @@ where
                 let err = ::Error::new_canceled(Some("connection was not ready"));
                 Either::B(future::err((err, Some(req))))
             }
-        };
-        Box::new(inner)
+        }
     }
 }
 
@@ -433,13 +433,18 @@ impl Builder {
         Builder {
             exec: Exec::Default,
             h1_writev: true,
+            h1_read_buf_exact_size: None,
             h1_title_case_headers: false,
             http2: false,
         }
     }
 
-    pub(super) fn exec(&mut self, exec: Exec) -> &mut Builder {
-        self.exec = exec;
+    /// Provide an executor to execute background HTTP2 tasks.
+    pub fn executor<E>(&mut self, exec: E) -> &mut Builder
+    where
+        E: Executor<Box<Future<Item=(), Error=()> + Send>> + Send + Sync + 'static,
+    {
+        self.exec = Exec::Executor(Arc::new(exec));
         self
     }
 
@@ -453,6 +458,10 @@ impl Builder {
         self
     }
 
+    pub(super) fn h1_read_buf_exact_size(&mut self, sz: Option<usize>) -> &mut Builder {
+        self.h1_read_buf_exact_size = sz;
+        self
+    }
     /// Sets whether HTTP2 is required.
     ///
     /// Default is false.
@@ -468,6 +477,7 @@ impl Builder {
         T: AsyncRead + AsyncWrite + Send + 'static,
         B: Payload + 'static,
     {
+        trace!("client handshake HTTP/{}", if self.http2 { 2 } else { 1 });
         Handshake {
             builder: self.clone(),
             io: Some(io),
@@ -496,6 +506,9 @@ where
             }
             if self.builder.h1_title_case_headers {
                 conn.set_title_case_headers();
+            }
+            if let Some(sz) = self.builder.h1_read_buf_exact_size {
+                conn.set_read_buf_exact_size(sz);
             }
             let cd = proto::h1::dispatch::Client::new(rx);
             let dispatch = proto::h1::Dispatcher::new(cd, conn);

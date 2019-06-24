@@ -14,20 +14,21 @@ use self::backup::Handoff;
 use self::backup_stack::BackupStack;
 
 use config::Config;
-use shutdown_task::ShutdownTask;
-use task::{Task, Blocking};
+use shutdown::ShutdownTrigger;
+use task::{Blocking, Queue, Task};
 use worker::{self, Worker, WorkerId};
 
 use futures::Poll;
-use futures::task::AtomicTask;
 
-use std::cell::UnsafeCell;
-use std::sync::atomic::Ordering::{Acquire, AcqRel, Relaxed};
+use std::cell::Cell;
+use std::num::Wrapping;
+use std::sync::atomic::Ordering::{Acquire, AcqRel};
 use std::sync::atomic::AtomicUsize;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 use std::thread;
 
-use rand::{Rng, SeedableRng, XorShiftRng};
+use crossbeam_utils::CachePadded;
+use rand;
 
 #[derive(Debug)]
 pub(crate) struct Pool {
@@ -39,10 +40,10 @@ pub(crate) struct Pool {
     //
     // The value of this atomic is deserialized into a `pool::State` instance.
     // See comments for that type.
-    pub state: AtomicUsize,
+    pub state: CachePadded<AtomicUsize>,
 
     // Stack tracking sleeping workers.
-    sleep_stack: worker::Stack,
+    sleep_stack: CachePadded<worker::Stack>,
 
     // Number of workers that haven't reached the final state of shutdown
     //
@@ -50,16 +51,25 @@ pub(crate) struct Pool {
     // shutdown process has completed.
     pub num_workers: AtomicUsize,
 
-    // Used to generate a thread local RNG seed
-    pub next_thread_id: AtomicUsize,
-
     // Worker state
     //
     // A worker is a thread that is processing the work queue and polling
     // futures.
     //
-    // This will *usually* be a small number.
-    pub workers: Box<[worker::Entry]>,
+    // The number of workers will *usually* be small.
+    pub workers: Arc<[worker::Entry]>,
+
+    // The global MPMC queue of tasks.
+    //
+    // Spawned tasks are pushed into this queue. Although worker threads have their own dedicated
+    // task queues, they periodically steal tasks from this global queue, too.
+    pub queue: Arc<Queue>,
+
+    // Completes the shutdown process when the `ThreadPool` and all `Worker`s get dropped.
+    //
+    // When spawning a new `Worker`, this weak reference is upgraded and handed out to the new
+    // thread.
+    pub trigger: Weak<ShutdownTrigger>,
 
     // Backup thread state
     //
@@ -75,18 +85,19 @@ pub(crate) struct Pool {
     // are pending blocking capacity.
     blocking: Blocking,
 
-    // Task notified when the worker shuts down
-    pub shutdown_task: ShutdownTask,
-
     // Configuration
     pub config: Config,
 }
 
-const TERMINATED: usize = 1;
-
 impl Pool {
     /// Create a new `Pool`
-    pub fn new(workers: Box<[worker::Entry]>, max_blocking: usize, config: Config) -> Pool {
+    pub fn new(
+        workers: Arc<[worker::Entry]>,
+        trigger: Weak<ShutdownTrigger>,
+        max_blocking: usize,
+        config: Config,
+        queue: Arc<Queue>,
+    ) -> Pool {
         let pool_size = workers.len();
         let total_size = max_blocking + pool_size;
 
@@ -109,19 +120,15 @@ impl Pool {
         let blocking = Blocking::new(max_blocking);
 
         let ret = Pool {
-            state: AtomicUsize::new(State::new().into()),
-            sleep_stack: worker::Stack::new(),
+            state: CachePadded::new(AtomicUsize::new(State::new().into())),
+            sleep_stack: CachePadded::new(worker::Stack::new()),
             num_workers: AtomicUsize::new(0),
-            next_thread_id: AtomicUsize::new(0),
             workers,
+            queue,
+            trigger,
             backup,
             backup_stack,
             blocking,
-            shutdown_task: ShutdownTask {
-                task1: AtomicTask::new(),
-                #[cfg(feature = "unstable-futures")]
-                task2: futures2::task::AtomicWaker::new(),
-            },
             config,
         };
 
@@ -195,10 +202,6 @@ impl Pool {
         self.terminate_sleeping_workers();
     }
 
-    pub fn is_shutdown(&self) -> bool {
-        self.num_workers.load(Acquire) == TERMINATED
-    }
-
     /// Called by `Worker` as it tries to enter a sleeping state. Before it
     /// sleeps, it must push itself onto the sleep stack. This enables other
     /// threads to see it when signaling work.
@@ -208,12 +211,6 @@ impl Pool {
 
     pub fn terminate_sleeping_workers(&self) {
         use worker::Lifecycle::Signaled;
-
-        // First, set the TERMINATED flag on `num_workers`. This signals that
-        // whichever thread transitions the count to zero must notify the
-        // shutdown task.
-        let prev = self.num_workers.fetch_or(TERMINATED, AcqRel);
-        let notify = prev == 0;
 
         trace!("  -> shutting down workers");
         // Wakeup all sleeping workers. They will wake up, see the state
@@ -230,40 +227,6 @@ impl Pool {
         while let Ok(Some(backup_id)) = self.backup_stack.pop(&self.backup, true) {
             self.backup[backup_id.0].signal_stop();
         }
-
-        if notify {
-            self.shutdown_task.notify();
-        }
-    }
-
-    /// Track that a worker thread has started
-    ///
-    /// If `Err` is returned, then the thread is not permitted to started.
-    fn thread_started(&self) -> Result<(), ()> {
-        let mut curr = self.num_workers.load(Acquire);
-
-        loop {
-            if curr & TERMINATED == TERMINATED {
-                return Err(());
-            }
-
-            let actual = self.num_workers.compare_and_swap(
-                curr, curr + 2, AcqRel);
-
-            if curr == actual {
-                return Ok(());
-            }
-
-            curr = actual;
-        }
-    }
-
-    fn thread_stopped(&self) {
-        let prev = self.num_workers.fetch_sub(2, AcqRel);
-
-        if prev == TERMINATED | 2 {
-            self.shutdown_task.notify();
-        }
     }
 
     pub fn poll_blocking_capacity(&self, task: &Arc<Task>) -> Poll<(), ::BlockingError> {
@@ -274,8 +237,8 @@ impl Pool {
     ///
     /// Called from either inside or outside of the scheduler. If currently on
     /// the scheduler, then a fast path is taken.
-    pub fn submit(&self, task: Arc<Task>, inner: &Arc<Pool>) {
-        debug_assert_eq!(*self, **inner);
+    pub fn submit(&self, task: Arc<Task>, pool: &Arc<Pool>) {
+        debug_assert_eq!(*self, **pool);
 
         Worker::with_current(|worker| {
             if let Some(worker) = worker {
@@ -287,18 +250,18 @@ impl Pool {
                 // The second check handles the case where the current thread is
                 // part of a different threadpool than the one being submitted
                 // to.
-                if !worker.is_blocking() && *self == *worker.inner {
+                if !worker.is_blocking() && *self == *worker.pool {
                     let idx = worker.id.0;
 
                     trace!("    -> submit internal; idx={}", idx);
 
-                    worker.inner.workers[idx].submit_internal(task);
-                    worker.inner.signal_work(inner);
+                    worker.pool.workers[idx].submit_internal(task);
+                    worker.pool.signal_work(pool);
                     return;
                 }
             }
 
-            self.submit_external(task, inner);
+            self.submit_external(task, pool);
         });
     }
 
@@ -306,43 +269,13 @@ impl Pool {
     ///
     /// Called from outside of the scheduler, this function is how new tasks
     /// enter the system.
-    pub fn submit_external(&self, task: Arc<Task>, inner: &Arc<Pool>) {
-        debug_assert_eq!(*self, **inner);
+    pub fn submit_external(&self, task: Arc<Task>, pool: &Arc<Pool>) {
+        debug_assert_eq!(*self, **pool);
 
-        use worker::Lifecycle::Notified;
+        trace!("    -> submit external");
 
-        // First try to get a handle to a sleeping worker. This ensures that
-        // sleeping tasks get woken up
-        if let Some((idx, worker_state)) = self.sleep_stack.pop(&self.workers, Notified, false) {
-            trace!("submit to existing worker; idx={}; state={:?}", idx, worker_state);
-            self.submit_to_external(idx, task, worker_state, inner);
-            return;
-        }
-
-        // All workers are active, so pick a random worker and submit the
-        // task to it.
-        let len = self.workers.len();
-        let idx = self.rand_usize() % len;
-
-        trace!("  -> submitting to random; idx={}", idx);
-
-        let state = self.workers[idx].load_state();
-        self.submit_to_external(idx, task, state, inner);
-    }
-
-    fn submit_to_external(&self,
-                          idx: usize,
-                          task: Arc<Task>,
-                          state: worker::State,
-                          inner: &Arc<Pool>)
-    {
-        debug_assert_eq!(*self, **inner);
-
-        let entry = &self.workers[idx];
-
-        if !entry.submit_external(task, state) {
-            self.spawn_thread(WorkerId::new(idx), inner);
-        }
+        self.queue.push(task);
+        self.signal_work(pool);
     }
 
     pub fn release_backup(&self, backup_id: BackupId) -> Result<(), ()> {
@@ -354,14 +287,14 @@ impl Pool {
         self.backup_stack.push(&self.backup, backup_id)
     }
 
-    pub fn notify_blocking_task(&self, inner: &Arc<Pool>) {
-        debug_assert_eq!(*self, **inner);
-        self.blocking.notify_task(&inner);
+    pub fn notify_blocking_task(&self, pool: &Arc<Pool>) {
+        debug_assert_eq!(*self, **pool);
+        self.blocking.notify_task(&pool);
     }
 
     /// Provision a thread to run a worker
-    pub fn spawn_thread(&self, id: WorkerId, inner: &Arc<Pool>) {
-        debug_assert_eq!(*self, **inner);
+    pub fn spawn_thread(&self, id: WorkerId, pool: &Arc<Pool>) {
+        debug_assert_eq!(*self, **pool);
 
         let backup_id = match self.backup_stack.pop(&self.backup, false) {
             Ok(Some(backup_id)) => backup_id,
@@ -379,38 +312,42 @@ impl Pool {
             return;
         }
 
-        if self.thread_started().is_err() {
+        let trigger = match self.trigger.upgrade() {
             // The pool is shutting down.
-            return;
-        }
+            None => {
+                // The pool is shutting down.
+                return;
+            }
+            Some(t) => t,
+        };
 
         let mut th = thread::Builder::new();
 
-        if let Some(ref prefix) = inner.config.name_prefix {
+        if let Some(ref prefix) = pool.config.name_prefix {
             th = th.name(format!("{}{}", prefix, backup_id.0));
         }
 
-        if let Some(stack) = inner.config.stack_size {
+        if let Some(stack) = pool.config.stack_size {
             th = th.stack_size(stack);
         }
 
-        let inner = inner.clone();
+        let pool = pool.clone();
 
         let res = th.spawn(move || {
-            if let Some(ref f) = inner.config.after_start {
+            if let Some(ref f) = pool.config.after_start {
                 f();
             }
 
             let mut worker_id = id;
 
-            inner.backup[backup_id.0].start(&worker_id);
+            pool.backup[backup_id.0].start(&worker_id);
 
             loop {
                 // The backup token should be in the running state.
-                debug_assert!(inner.backup[backup_id.0].is_running());
+                debug_assert!(pool.backup[backup_id.0].is_running());
 
                 // TODO: Avoid always cloning
-                let worker = Worker::new(worker_id, backup_id, inner.clone());
+                let worker = Worker::new(worker_id, backup_id, pool.clone(), trigger.clone());
 
                 // Run the worker. If the worker transitioned to a "blocking"
                 // state, then `is_blocking` will be true.
@@ -419,12 +356,14 @@ impl Pool {
                     break;
                 }
 
+                debug_assert!(!pool.backup[backup_id.0].is_pushed());
+
                 // Push the thread back onto the backup stack. This makes it
                 // available for future handoffs.
                 //
                 // This **must** happen before notifying the task.
-                let res = inner.backup_stack
-                    .push(&inner.backup, backup_id);
+                let res = pool.backup_stack
+                    .push(&pool.backup, backup_id);
 
                 if res.is_err() {
                     // The pool is being shutdown.
@@ -433,124 +372,81 @@ impl Pool {
 
                 // The task switched the current thread to blocking mode.
                 // Now that the blocking task completed, any tasks
-                inner.notify_blocking_task(&inner);
+                pool.notify_blocking_task(&pool);
 
-                debug_assert!(inner.backup[backup_id.0].is_running());
+                debug_assert!(pool.backup[backup_id.0].is_running());
 
                 // Wait for a handoff
-                let handoff = inner.backup[backup_id.0]
-                    .wait_for_handoff(true);
+                let handoff = pool.backup[backup_id.0]
+                    .wait_for_handoff(pool.config.keep_alive);
 
                 match handoff {
                     Handoff::Worker(id) => {
-                        debug_assert!(inner.backup[backup_id.0].is_running());
+                        debug_assert!(pool.backup[backup_id.0].is_running());
                         worker_id = id;
                     }
-                    Handoff::Idle => {
-                        // Worker is idle
-                        break;
-                    }
-                    Handoff::Terminated => {
-                        // TODO: When wait_for_handoff supports blocking with a
-                        // timeout, this will have to be smarter
+                    Handoff::Idle | Handoff::Terminated => {
                         break;
                     }
                 }
             }
 
-            if let Some(ref f) = inner.config.before_stop {
+            if let Some(ref f) = pool.config.before_stop {
                 f();
             }
-
-            inner.thread_stopped();
         });
 
         if let Err(e) = res {
-            warn!("failed to spawn worker thread; err={:?}", e);
+            error!("failed to spawn worker thread; err={:?}", e);
+            panic!("failed to spawn worker thread: {:?}", e);
         }
     }
 
     /// If there are any other workers currently relaxing, signal them that work
     /// is available so that they can try to find more work to process.
-    pub fn signal_work(&self, inner: &Arc<Pool>) {
-        debug_assert_eq!(*self, **inner);
+    pub fn signal_work(&self, pool: &Arc<Pool>) {
+        debug_assert_eq!(*self, **pool);
 
-        use worker::Lifecycle::*;
+        use worker::Lifecycle::Signaled;
 
-        if let Some((idx, mut worker_state)) = self.sleep_stack.pop(&self.workers, Signaled, false) {
+        if let Some((idx, worker_state)) = self.sleep_stack.pop(&self.workers, Signaled, false) {
             let entry = &self.workers[idx];
 
-            debug_assert!(worker_state.lifecycle() != Signaled, "actual={:?}", worker_state.lifecycle());
+            debug_assert!(
+                worker_state.lifecycle() != Signaled,
+                "actual={:?}", worker_state.lifecycle(),
+            );
 
-            // Transition the worker state to signaled
-            loop {
-                let mut next = worker_state;
+            trace!("signal_work -- notify; idx={}", idx);
 
-                next.set_lifecycle(Signaled);
-
-                let actual = entry.state.compare_and_swap(
-                    worker_state.into(), next.into(), AcqRel).into();
-
-                if actual == worker_state {
-                    break;
-                }
-
-                worker_state = actual;
-            }
-
-            // The state has been transitioned to signal, now we need to wake up
-            // the worker if necessary.
-            match worker_state.lifecycle() {
-                Sleeping => {
-                    trace!("signal_work -- wakeup; idx={}", idx);
-                    self.workers[idx].wakeup();
-                }
-                Shutdown => {
-                    trace!("signal_work -- spawn; idx={}", idx);
-                    self.spawn_thread(WorkerId(idx), inner);
-                }
-                Running | Notified | Signaled => {
-                    // The workers are already active. No need to wake them up.
-                }
+            if !entry.notify(worker_state) {
+                trace!("signal_work -- spawn; idx={}", idx);
+                self.spawn_thread(WorkerId(idx), pool);
             }
         }
     }
 
     /// Generates a random number
     ///
-    /// Uses a thread-local seeded XorShift.
+    /// Uses a thread-local random number generator based on XorShift.
     pub fn rand_usize(&self) -> usize {
-        // Use a thread-local random number generator. If the thread does not
-        // have one yet, then seed a new one
-        thread_local!(static THREAD_RNG_KEY: UnsafeCell<Option<XorShiftRng>> = UnsafeCell::new(None));
-
-        THREAD_RNG_KEY.with(|t| {
-            #[cfg(target_pointer_width = "32")]
-            fn new_rng(thread_id: usize) -> XorShiftRng {
-                XorShiftRng::from_seed([
-                    thread_id as u32,
-                    0x00000000,
-                    0xa8a7d469,
-                    0x97830e05])
+        thread_local! {
+            static RNG: Cell<Wrapping<u32>> = {
+                // The initial seed must be non-zero.
+                let init = rand::random::<u32>() | 1;
+                Cell::new(Wrapping(init))
             }
+        }
 
-            #[cfg(target_pointer_width = "64")]
-            fn new_rng(thread_id: usize) -> XorShiftRng {
-                XorShiftRng::from_seed([
-                    thread_id as u32,
-                    (thread_id >> 32) as u32,
-                    0xa8a7d469,
-                    0x97830e05])
-            }
-
-            let thread_id = self.next_thread_id.fetch_add(1, Relaxed);
-            let rng = unsafe { &mut *t.get() };
-
-            if rng.is_none() {
-                *rng = Some(new_rng(thread_id));
-            }
-
-            rng.as_mut().unwrap().next_u32() as usize
+        RNG.with(|rng| {
+            // This is the 32-bit variant of Xorshift.
+            // https://en.wikipedia.org/wiki/Xorshift
+            let mut x = rng.get();
+            x ^= x << 13;
+            x ^= x >> 17;
+            x ^= x << 5;
+            rng.set(x);
+            x.0 as usize
         })
     }
 }

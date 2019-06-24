@@ -4,7 +4,8 @@ use std::str::FromStr;
 use bytes::Bytes;
 
 use byte_str::ByteStr;
-use super::{ErrorKind, InvalidUri, InvalidUriBytes, URI_CHARS};
+use convert::HttpTryFrom;
+use super::{ErrorKind, InvalidUri, InvalidUriBytes};
 
 /// Represents the path component of a URI
 #[derive(Clone)]
@@ -40,51 +41,68 @@ impl PathAndQuery {
     /// ```
     pub fn from_shared(mut src: Bytes) -> Result<Self, InvalidUriBytes> {
         let mut query = NONE;
+        let mut fragment = None;
 
-        let mut i = 0;
+        // block for iterator borrow
+        {
+            let mut iter = src.as_ref().iter().enumerate();
 
-        while i < src.len() {
-            let b = src[i];
-
-            match URI_CHARS[b as usize] {
-                0 => {
-                    if b == b'%' {
-                        // Check if next character is not %
-                        if i + 2 <= src.len() && b'%' == src[i + 1] {
-                            break;
-                        }
-
-                        // Check that there are enough chars for a percent
-                        // encoded char
-                        let perc_encoded =
-                            i + 3 <= src.len() && // enough capacity
-                            HEX_DIGIT[src[i + 1] as usize] != 0 &&
-                            HEX_DIGIT[src[i + 2] as usize] != 0;
-
-                        if !perc_encoded {
-                            return Err(ErrorKind::InvalidUriChar.into());
-                        }
-
-                        i += 3;
-                        continue;
-                    } else {
-                        return Err(ErrorKind::InvalidUriChar.into());
-                    }
-                }
-                b'?' => {
-                    if query == NONE {
+            // path ...
+            for (i, &b) in &mut iter {
+                // See https://url.spec.whatwg.org/#path-state
+                match b {
+                    b'?' => {
+                        debug_assert_eq!(query, NONE);
                         query = i as u16;
+                        break;
                     }
+                    b'#' => {
+                        fragment = Some(i);
+                        break;
+                    },
+
+                    // This is the range of bytes that don't need to be
+                    // percent-encoded in the path. If it should have been
+                    // percent-encoded, then error.
+                    0x21 |
+                    0x24...0x3B |
+                    0x3D |
+                    0x40...0x5F |
+                    0x61...0x7A |
+                    0x7C |
+                    0x7E => {},
+
+                    _ => return Err(ErrorKind::InvalidUriChar.into()),
                 }
-                b'#' => {
-                    // TODO: truncate
-                    src.split_off(i);
-                    break;
-                }
-                _ => {}
             }
 
-            i += 1;
+            // query ...
+            if query != NONE {
+                for (i, &b) in iter {
+                    match b {
+                        // While queries *should* be percent-encoded, most
+                        // bytes are actually allowed...
+                        // See https://url.spec.whatwg.org/#query-state
+                        //
+                        // Allowed: 0x21 / 0x24 - 0x3B / 0x3D / 0x3F - 0x7E
+                        0x21 |
+                        0x24...0x3B |
+                        0x3D |
+                        0x3F...0x7E => {},
+
+                        b'#' => {
+                            fragment = Some(i);
+                            break;
+                        },
+
+                        _ => return Err(ErrorKind::InvalidUriChar.into()),
+                    }
+                }
+            }
+        }
+
+        if let Some(i) = fragment {
+            src.truncate(i);
         }
 
         Ok(PathAndQuery {
@@ -258,11 +276,35 @@ impl PathAndQuery {
     }
 }
 
+impl HttpTryFrom<Bytes> for PathAndQuery {
+    type Error = InvalidUriBytes;
+    #[inline]
+    fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
+        PathAndQuery::from_shared(bytes)
+    }
+}
+
+impl<'a> HttpTryFrom<&'a [u8]> for PathAndQuery {
+    type Error = InvalidUri;
+    #[inline]
+    fn try_from(s: &'a [u8]) -> Result<Self, Self::Error> {
+        PathAndQuery::from_shared(s.into()).map_err(|e| e.0)
+    }
+}
+
+impl<'a> HttpTryFrom<&'a str> for PathAndQuery {
+    type Error = InvalidUri;
+    #[inline]
+    fn try_from(s: &'a str) -> Result<Self, Self::Error> {
+        HttpTryFrom::try_from(s.as_bytes())
+    }
+}
+
 impl FromStr for PathAndQuery {
     type Err = InvalidUri;
-
+    #[inline]
     fn from_str(s: &str) -> Result<Self, InvalidUri> {
-        PathAndQuery::from_shared(s.into()).map_err(|e| e.0)
+        HttpTryFrom::try_from(s)
     }
 }
 
@@ -393,36 +435,6 @@ impl PartialOrd<PathAndQuery> for String {
     }
 }
 
-const HEX_DIGIT: [u8; 256] = [
-    //  0      1      2      3      4      5      6      7      8      9
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, //   x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, //  1x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, //  2x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, //  3x
-        0,     0,     0,     0,     0,     0,     0,     0,  b'0',  b'1', //  4x
-     b'2',  b'3',  b'4',  b'5',  b'6',  b'7',  b'8',  b'9',     0,     0, //  5x
-        0,     0,     0,     0,     0,  b'A',  b'B',  b'C',  b'D',  b'E', //  6x
-     b'F',  b'G',  b'H',  b'I',  b'J',  b'K',  b'L',  b'M',  b'N',  b'O', //  7x
-     b'P',  b'Q',  b'R',  b'S',  b'T',  b'U',  b'V',  b'W',  b'X',  b'Y', //  8x
-     b'Z',     0,     0,     0,     0,     0,     0,  b'a',  b'b',  b'c', //  9x
-     b'd',  b'e',  b'f',  b'g',  b'h',  b'i',  b'j',  b'k',  b'l',  b'm', // 10x
-     b'n',  b'o',  b'p',  b'q',  b'r',  b's',  b't',  b'u',  b'v',  b'w', // 11x
-     b'x',  b'y',  b'z',     0,     0,     0,  b'~',     0,     0,     0, // 12x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 13x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 14x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 15x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 16x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 17x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 18x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 19x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 20x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 21x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 22x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 23x
-        0,     0,     0,     0,     0,     0,     0,     0,     0,     0, // 24x
-        0,     0,     0,     0,     0,     0                              // 25x
-];
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -511,30 +523,22 @@ mod tests {
     }
 
     #[test]
-    fn double_percent_path() {
-        let double_percent_path = "/your.js?bn=%%val";
-
-        assert!(double_percent_path.parse::<PathAndQuery>().is_ok());
-
-        let path: PathAndQuery = double_percent_path.parse().unwrap();
-        assert_eq!(path, double_percent_path);
-
-        let double_percent_path = "/path%%";
-
-        assert!(double_percent_path.parse::<PathAndQuery>().is_ok());
+    fn ignores_valid_percent_encodings() {
+        assert_eq!("/a%20b", pq("/a%20b?r=1").path());
+        assert_eq!("qr=%31", pq("/a/b?qr=%31").query().unwrap());
     }
 
     #[test]
-    fn path_ends_with_question_mark() {
-        let path = "/path?%";
-
-        assert!(path.parse::<PathAndQuery>().is_err());
+    fn ignores_invalid_percent_encodings() {
+        assert_eq!("/a%%b", pq("/a%%b?r=1").path());
+        assert_eq!("/aaa%", pq("/aaa%").path());
+        assert_eq!("/aaa%", pq("/aaa%?r=1").path());
+        assert_eq!("/aa%2", pq("/aa%2").path());
+        assert_eq!("/aa%2", pq("/aa%2?r=1").path());
+        assert_eq!("qr=%3", pq("/a/b?qr=%3").query().unwrap());
     }
 
-    #[test]
-    fn path_ends_with_fragment_percent() {
-        let path = "/path#%";
-
-        assert!(path.parse::<PathAndQuery>().is_ok());
+    fn pq(s: &str) -> PathAndQuery {
+        s.parse().expect(&format!("parsing {}", s))
     }
 }
