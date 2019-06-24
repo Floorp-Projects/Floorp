@@ -32,6 +32,16 @@ var gProtectionsHandler = {
     return this._protectionPopupSettingsButton =
       document.getElementById("protections-popup-settings-button");
   },
+  get _protectionPopupFooter() {
+    delete this._protectionPopupFooter;
+    return this._protectionPopupFooter =
+      document.getElementById("protections-popup-footer");
+  },
+  get _protectionPopupTrackersCounterDescription() {
+    delete this._protectionPopupTrackersCounterDescription;
+    return this._protectionPopupTrackersCounterDescription =
+      document.getElementById("protections-popup-trackers-blocked-counter-description");
+  },
 
   handleProtectionsButtonEvent(event) {
     event.stopPropagation();
@@ -98,6 +108,12 @@ var gProtectionsHandler = {
       !this._protectionsPopup.hasAttribute("hasException");
 
     this._protectionsPopupTPSwitch.toggleAttribute("enabled", currentlyEnabled);
+
+    // Set the counter of the 'Trackers blocked This Week'.
+    // We need to get the statistics of trackers. So far, we haven't implemented
+    // this yet. So we use a fake number here. Should be resolved in
+    // Bug 1555231.
+    this.setTrackersBlockedCounter(244051);
   },
 
   async onTPSwitchCommand(event) {
@@ -127,5 +143,12 @@ var gProtectionsHandler = {
 
     PanelMultiView.hidePopup(this._protectionsPopup);
     delete this._TPSwitchCommanding;
+  },
+
+  setTrackersBlockedCounter(trackerCount) {
+    this._protectionPopupTrackersCounterDescription.textContent =
+      // gNavigatorBundle.getFormattedString(
+      //   "protections.trackers_counter", [cnt]);
+      `Trackers blocked this week: ${trackerCount.toLocaleString()}`;
   },
 };
