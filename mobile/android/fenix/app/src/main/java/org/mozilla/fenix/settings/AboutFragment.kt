@@ -36,10 +36,13 @@ class AboutFragment : Fragment() {
             val packageInfo = requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
             val geckoVersion = PackageInfoCompat.getLongVersionCode(packageInfo).toString() + maybeGecko +
                     GeckoViewBuildConfig.MOZ_APP_VERSION + "-" + GeckoViewBuildConfig.MOZ_APP_BUILDID
+            val componentsVersion = mozilla.components.Build.version
+
             String.format(
-                "%s (Build #%s)",
+                "%s (Build #%s)\nAC: %s",
                 packageInfo.versionName,
-                geckoVersion
+                geckoVersion,
+                componentsVersion
             )
         } catch (e: PackageManager.NameNotFoundException) {
             ""
