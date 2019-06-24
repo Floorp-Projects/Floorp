@@ -48,8 +48,15 @@ class Pk11KeyImportTestBase : public ::testing::Test {
     ScopedSECKEYEncryptedPrivateKeyInfo key_info;
     ScopedSECItem public_value;
     GenerateAndExport(&key_type, &key_info, &public_value);
-    ASSERT_NE(nullptr, key_info);
+
     ASSERT_NE(nullptr, public_value);
+    // Note: NSS is currently unable export wrapped DH keys, so this doesn't
+    // test
+    // CKM_DH_PKCS_KEY_PAIR_GEN beyond generate and verify
+    if (key_type == dhKey) {
+      return;
+    }
+    ASSERT_NE(nullptr, key_info);
 
     // Now import the encrypted key.
     static const uint8_t nick[] = "nick";
@@ -78,17 +85,41 @@ class Pk11KeyImportTestBase : public ::testing::Test {
   CK_MECHANISM_TYPE mech_;
 
  private:
+  SECItem GetPublicComponent(ScopedSECKEYPublicKey& pub_key) {
+    SECItem null = {siBuffer, NULL, 0};
+    switch (SECKEY_GetPublicKeyType(pub_key.get())) {
+      case rsaKey:
+      case rsaPssKey:
+      case rsaOaepKey:
+        return pub_key->u.rsa.modulus;
+      case keaKey:
+        return pub_key->u.kea.publicValue;
+      case dsaKey:
+        return pub_key->u.dsa.publicValue;
+      case dhKey:
+        return pub_key->u.dh.publicValue;
+      case ecKey:
+        return pub_key->u.ec.publicValue;
+      case fortezzaKey: /* depricated */
+      case nullKey:
+        /* didn't use default here so we can catch new key types at compile time
+         */
+        break;
+    }
+    return null;
+  }
   void CheckForPublicKey(const ScopedSECKEYPrivateKey& priv_key,
                          const SECItem* expected_public) {
     // Verify the public key exists.
     StackSECItem priv_id;
+    KeyType type = SECKEY_GetPrivateKeyType(priv_key.get());
     SECStatus rv = PK11_ReadRawAttribute(PK11_TypePrivKey, priv_key.get(),
                                          CKA_ID, &priv_id);
     ASSERT_EQ(SECSuccess, rv) << "Couldn't read CKA_ID from private key: "
                               << PORT_ErrorToName(PORT_GetError());
 
     CK_ATTRIBUTE_TYPE value_type = CKA_VALUE;
-    switch (SECKEY_GetPrivateKeyType(priv_key.get())) {
+    switch (type) {
       case rsaKey:
         value_type = CKA_MODULUS;
         break;
@@ -106,6 +137,8 @@ class Pk11KeyImportTestBase : public ::testing::Test {
         FAIL() << "unknown key type";
     }
 
+    // Scan public key objects until we find one with the same CKA_ID as
+    // priv_key
     std::unique_ptr<PK11GenericObject, PK11GenericObjectsDeleter> objs(
         PK11_FindGenericObjects(slot_.get(), CKO_PUBLIC_KEY));
     ASSERT_NE(nullptr, objs);
@@ -128,20 +161,44 @@ class Pk11KeyImportTestBase : public ::testing::Test {
       ASSERT_EQ(1U, token.len);
       ASSERT_NE(0, token.data[0]);
 
-      StackSECItem value;
-      rv = PK11_ReadRawAttribute(PK11_TypeGeneric, obj, value_type, &value);
+      StackSECItem raw_value;
+      SECItem decoded_value;
+      rv = PK11_ReadRawAttribute(PK11_TypeGeneric, obj, value_type, &raw_value);
       ASSERT_EQ(SECSuccess, rv);
+      SECItem value = raw_value;
 
+      // Decode the EC_POINT and check the output against expected.
       // CKA_EC_POINT isn't stable, see Bug 1520649.
+      ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+      ASSERT_TRUE(arena);
       if (value_type == CKA_EC_POINT) {
-        continue;
+        // If this fails due to the noted inconsistency, we may need to
+        // check the whole raw_value, or remove a leading UNCOMPRESSED_POINT tag
+        rv = SEC_QuickDERDecodeItem(arena.get(), &decoded_value,
+                                    SEC_ASN1_GET(SEC_OctetStringTemplate),
+                                    &raw_value);
+        ASSERT_EQ(SECSuccess, rv);
+        value = decoded_value;
       }
-
       ASSERT_TRUE(SECITEM_ItemsAreEqual(expected_public, &value))
           << "expected: "
           << DataBuffer(expected_public->data, expected_public->len)
           << std::endl
           << "actual: " << DataBuffer(value.data, value.len) << std::endl;
+
+      // Finally, convert the private to public and ensure it matches.
+      ScopedSECKEYPublicKey pub_key(SECKEY_ConvertToPublicKey(priv_key.get()));
+      ASSERT_TRUE(pub_key);
+      SECItem converted_public = GetPublicComponent(pub_key);
+      ASSERT_TRUE(converted_public.len != 0);
+
+      ASSERT_TRUE(SECITEM_ItemsAreEqual(expected_public, &converted_public))
+          << "expected: "
+          << DataBuffer(expected_public->data, expected_public->len)
+          << std::endl
+          << "actual: "
+          << DataBuffer(converted_public.data, converted_public.len)
+          << std::endl;
     }
   }
 
@@ -159,13 +216,6 @@ class Pk11KeyImportTestBase : public ::testing::Test {
                                  << PORT_ErrorToName(PORT_GetError());
     ScopedSECKEYPublicKey pub_key(pub_tmp);
     ASSERT_NE(nullptr, pub_key);
-
-    // Wrap and export the key.
-    ScopedSECKEYEncryptedPrivateKeyInfo epki(PK11_ExportEncryptedPrivKeyInfo(
-        slot_.get(), SEC_OID_AES_256_CBC, password_.get(), priv_key.get(), 1,
-        nullptr));
-    ASSERT_NE(nullptr, epki) << "PK11_ExportEncryptedPrivKeyInfo failed: "
-                             << PORT_ErrorToName(PORT_GetError());
 
     // Save the public value, which we will need on import */
     SECItem* pub_val;
@@ -190,8 +240,22 @@ class Pk11KeyImportTestBase : public ::testing::Test {
     CheckForPublicKey(priv_key, pub_val);
 
     *key_type = t;
-    key_info->swap(epki);
     public_value->reset(SECITEM_DupItem(pub_val));
+
+    // Note: NSS is currently unable export wrapped DH keys, so this doesn't
+    // test
+    // CKM_DH_PKCS_KEY_PAIR_GEN beyond generate and verify
+    if (mech_ == CKM_DH_PKCS_KEY_PAIR_GEN) {
+      return;
+    }
+    // Wrap and export the key.
+    ScopedSECKEYEncryptedPrivateKeyInfo epki(PK11_ExportEncryptedPrivKeyInfo(
+        slot_.get(), SEC_OID_AES_256_CBC, password_.get(), priv_key.get(), 1,
+        nullptr));
+    ASSERT_NE(nullptr, epki) << "PK11_ExportEncryptedPrivKeyInfo failed: "
+                             << PORT_ErrorToName(PORT_GetError());
+
+    key_info->swap(epki);
   }
 
   ScopedPK11SlotInfo slot_;
@@ -281,9 +345,8 @@ TEST_P(Pk11KeyImportTest, GenerateExportImport) { Test(); }
 
 INSTANTIATE_TEST_CASE_P(Pk11KeyImportTest, Pk11KeyImportTest,
                         ::testing::Values(CKM_RSA_PKCS_KEY_PAIR_GEN,
-                                          CKM_DSA_KEY_PAIR_GEN));
-// Note: NSS is currently unable export wrapped DH keys, so this doesn't test
-// CKM_DH_PKCS_KEY_PAIR_GEN.
+                                          CKM_DSA_KEY_PAIR_GEN,
+                                          CKM_DH_PKCS_KEY_PAIR_GEN));
 
 class Pk11KeyImportTestEC : public Pk11KeyImportTestBase,
                             public ::testing::WithParamInterface<SECOidTag> {

@@ -135,7 +135,8 @@ function convertTask(def) {
   return {
     provisionerId: def.provisioner || "aws-provisioner-v1",
     workerType: def.workerType || "hg-worker",
-    schedulerId: "task-graph-scheduler",
+    schedulerId: process.env.TC_SCHEDULER_ID,
+    taskGroupId: process.env.TASK_ID,
 
     scopes,
     created: fromNow(0),

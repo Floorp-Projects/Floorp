@@ -1598,6 +1598,7 @@ PK11_DeriveWithTemplate(PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
         PK11_FreeSymKey(newBaseKey);
     if (crv != CKR_OK) {
         PK11_FreeSymKey(symKey);
+        PORT_SetError(PK11_MapError(crv));
         return NULL;
     }
     return symKey;
@@ -1837,6 +1838,35 @@ loser:
     if (intermediateResult != NULL)
         PK11_FreeSymKey(intermediateResult);
     return NULL;
+}
+
+/*
+ * This regenerate a public key from a private key. This function is currently
+ * NSS private. If we want to make it public, we need to add and optional
+ * template or at least flags (a.la. PK11_DeriveWithFlags).
+ */
+CK_OBJECT_HANDLE
+PK11_DerivePubKeyFromPrivKey(SECKEYPrivateKey *privKey)
+{
+    PK11SlotInfo *slot = privKey->pkcs11Slot;
+    CK_MECHANISM mechanism;
+    CK_OBJECT_HANDLE objectID = CK_INVALID_HANDLE;
+    CK_RV crv;
+
+    mechanism.mechanism = CKM_NSS_PUB_FROM_PRIV;
+    mechanism.pParameter = NULL;
+    mechanism.ulParameterLen = 0;
+
+    PK11_EnterSlotMonitor(slot);
+    crv = PK11_GETTAB(slot)->C_DeriveKey(slot->session, &mechanism,
+                                         privKey->pkcs11ID, NULL, 0,
+                                         &objectID);
+    PK11_ExitSlotMonitor(slot);
+    if (crv != CKR_OK) {
+        PORT_SetError(PK11_MapError(crv));
+        return CK_INVALID_HANDLE;
+    }
+    return objectID;
 }
 
 /*

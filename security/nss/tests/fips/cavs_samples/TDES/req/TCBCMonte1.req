@@ -1,0 +1,23 @@
+# CAVS 17.1
+# Config Info for : "aesniavx+ssse3sha-64"
+# TDES Monte Carlo (Modes) Test for CBC
+# State : Encrypt and Decrypt
+# Mon Aug 18 09:19:15 AM
+
+[ENCRYPT]
+NumKeys = 1
+
+KEY1 = 156b5da1b35b79d3
+KEY2 = 156b5da1b35b79d3
+KEY3 = 156b5da1b35b79d3
+IV = 43e6298dc5265678
+PLAINTEXT = a4f18da256572a9d
+
+[DECRYPT]
+NumKeys = 1
+
+KEY1 = aef261d6e55e383b
+KEY2 = aef261d6e55e383b
+KEY3 = aef261d6e55e383b
+IV = ddaef22ed38a601b
+CIPHERTEXT = 748e0e978dee3397

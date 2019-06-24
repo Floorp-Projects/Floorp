@@ -111,6 +111,7 @@ CK_OBJECT_HANDLE PK11_FindObjectForCert(CERTCertificate *cert,
 PK11SymKey *pk11_CopyToSlot(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
                             CK_ATTRIBUTE_TYPE operation, PK11SymKey *symKey);
 unsigned int pk11_GetPredefinedKeyLength(CK_KEY_TYPE keyType);
+CK_OBJECT_HANDLE PK11_DerivePubKeyFromPrivKey(SECKEYPrivateKey *privKey);
 
 /**********************************************************************
  *                   Certs

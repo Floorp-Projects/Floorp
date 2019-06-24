@@ -505,7 +505,7 @@ PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
             }
             PK11_SETATTRS(attrs, CKA_ID, ck_id->data, ck_id->len);
             attrs++;
-            signedattr = attrs;
+            /* No signed attrs for EC */
             /* curveOID always is a copy of AlgorithmID.parameters. */
             PK11_SETATTRS(attrs, CKA_EC_PARAMS, lpk->u.ec.curveOID.data,
                           lpk->u.ec.curveOID.len);
@@ -523,11 +523,12 @@ PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
     }
     templateCount = attrs - theTemplate;
     PORT_Assert(templateCount <= sizeof(theTemplate) / sizeof(CK_ATTRIBUTE));
-    PORT_Assert(signedattr != NULL);
-    signedcount = attrs - signedattr;
-
-    for (ap = signedattr; signedcount; ap++, signedcount--) {
-        pk11_SignedToUnsigned(ap);
+    if (lpk->keyType != ecKey) {
+        PORT_Assert(signedattr);
+        signedcount = attrs - signedattr;
+        for (ap = signedattr; signedcount; ap++, signedcount--) {
+            pk11_SignedToUnsigned(ap);
+        }
     }
 
     rv = PK11_CreateNewObject(slot, CK_INVALID_SESSION,

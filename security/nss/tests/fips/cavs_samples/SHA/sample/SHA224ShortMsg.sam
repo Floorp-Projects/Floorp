@@ -1,0 +1,267 @@
+#  CAVS 17.8
+#  "SHA-224 ShortMsg" information for "ppcle-nss-64"
+#  SHA-224 tests are configured for BYTE oriented implementations
+#  Generated on Fri Jul 17 16:27:23 2015
+
+[L = 28]
+
+Len = 0
+Msg = 00
+MD = ?
+
+Len = 8
+Msg = 0a
+MD = ?
+
+Len = 16
+Msg = 5cf2
+MD = ?
+
+Len = 24
+Msg = c9f0d0
+MD = ?
+
+Len = 32
+Msg = 0ea82e8b
+MD = ?
+
+Len = 40
+Msg = 7740bb73bf
+MD = ?
+
+Len = 48
+Msg = 75e8fab423af
+MD = ?
+
+Len = 56
+Msg = f3c5ed917f9659
+MD = ?
+
+Len = 64
+Msg = fca04f1f0292a8c9
+MD = ?
+
+Len = 72
+Msg = 3bf4aa55a1c764d268
+MD = ?
+
+Len = 80
+Msg = 90ec12a0e960747e8049
+MD = ?
+
+Len = 88
+Msg = da9d00bffd4512aeff0b9f
+MD = ?
+
+Len = 96
+Msg = 81627160a94016f0c1e1b5cf
+MD = ?
+
+Len = 104
+Msg = 00f8c52bc21780f9a0e905bab1
+MD = ?
+
+Len = 112
+Msg = 5519a4f3e8506e81b3d08e8aa127
+MD = ?
+
+Len = 120
+Msg = 4906a7299fb9aa0888affbc0a3d364
+MD = ?
+
+Len = 128
+Msg = 9c20ea3b2be19b8b53665ba43f3a5399
+MD = ?
+
+Len = 136
+Msg = 0241129eec5f63ef7785d333283aa143c6
+MD = ?
+
+Len = 144
+Msg = c08a68c6b6fc5868c14c58de406c5fd2847c
+MD = ?
+
+Len = 152
+Msg = 31a0aa3589de5d18313b8dfa7ad1b8ed835497
+MD = ?
+
+Len = 160
+Msg = 8fcf28fd51900c19e16c11808d0c8e3dfc050dc0
+MD = ?
+
+Len = 168
+Msg = a402266b3ae1e173b7f16801e61812deff02f59bd9
+MD = ?
+
+Len = 176
+Msg = d325edcd37c9d0f1a14d42e33299996f1e6bacde15f8
+MD = ?
+
+Len = 184
+Msg = f87b11a4d99ba15db43c6a3e96458592f26e97f442549a
+MD = ?
+
+Len = 192
+Msg = 4b1abd110d21fc99e48d29021fbd3642680142ccfa006e11
+MD = ?
+
+Len = 200
+Msg = 9cc33c3491602c4adc11a48682586ba025d9e286ce11e8aee9
+MD = ?
+
+Len = 208
+Msg = 35c9d024debf6060a537d3b9c887f75327214553a667674fd3c1
+MD = ?
+
+Len = 216
+Msg = adcc1b9a886de095fc24be2ddbcf30c19e49b0b6a2d6850491c1dd
+MD = ?
+
+Len = 224
+Msg = 466599f7d96e73ca8252645cdd517f0534951369ea0a2cf01a705d76
+MD = ?
+
+Len = 232
+Msg = 707b68e64882e402893f687c46ccbdce9e152af236818925e7d5a0ebb3
+MD = ?
+
+Len = 240
+Msg = 7151b95825306b99a045df640ddac6f6bdcf16be7b97007a1983239e4f43
+MD = ?
+
+Len = 248
+Msg = 2e4348e1cbdc6bf0778b865e2dab9eef2ece0a6dada4cba7cc1e1bbac7d248
+MD = ?
+
+Len = 256
+Msg = ae45be05cb9af8ec9cd57df7e4fb51f0dbb87b92db47598f5c9736d822a61e18
+MD = ?
+
+Len = 264
+Msg = aafbb76ad08f3295b6e8405adb5d735283f44265086d01eb71831011456e527ea2
+MD = ?
+
+Len = 272
+Msg = 1412c74bc6718aa414bb558cc89dee3a883ac2ffb67be33594a64d72ac336d016fdb
+MD = ?
+
+Len = 280
+Msg = 679f0c374d7436ff6cfe2ba71650810522fa554a4aded87ad23f0b206b1bc63f56bbff
+MD = ?
+
+Len = 288
+Msg = bdaa962b1353d8ee6aadf45e1213e84e1ba66285c8f0d67940c7cd5a87748052ad15a50c
+MD = ?
+
+Len = 296
+Msg = 7e060820aef40131cedcaf2ff34ef6c727fc4be3bcc2b2cfe0e3e89a7196e1c012c175057e
+MD = ?
+
+Len = 304
+Msg = fc1fcc32ab71f88c4ad35dfe51e7e6599d2ae82ecdcca83eedbf1e32520ef88cc470e2dee31d
+MD = ?
+
+Len = 312
+Msg = 3c8d2997b78c201d29700adac276c58668bc83d90a49c2a8324e7f52daaba65a81b5ce557e3723
+MD = ?
+
+Len = 320
+Msg = 52eb91bc95f25241f63f5998e5d3bb592d9db79526e38c5f2ce48e8b51bc79b64f870587c1c9bb33
+MD = ?
+
+Len = 328
+Msg = 029dcc6c706b5441f225a8fbdc5a6cc388906167563586f5f0d88489d39948630bdef23c3d48eedaeb
+MD = ?
+
+Len = 336
+Msg = 4837f161a8c19fb8c543c486e58559ee70d9bcee3d4f0b340f27d033608ce4775d7f8d353111ea2786d5
+MD = ?
+
+Len = 344
+Msg = e171c89dc0dda4e593a7bc7b7845401f3e1a90fd763ff78acd8296af99af9e29b10fc330822fed565fe230
+MD = ?
+
+Len = 352
+Msg = b367fe91839ac27685c8df681331a93c3ff0dc8fc52430073f4e2ddc98fa4197c3a2101aadcf0be170814487
+MD = ?
+
+Len = 360
+Msg = 64df1c4e2ca3baf3011bb32649e1c501c38ac5521ae3d9fabb7ae793e4604d56fe2ed33b2d46dd61255be6b13f
+MD = ?
+
+Len = 368
+Msg = 1493445895a39908b4f5d019a10d2f477b9a78d9b84b6f1ac6e4960df2913b5d8a7ab4933e97ea8bccc61429dd1b
+MD = ?
+
+Len = 376
+Msg = f05a0f04138fd1da84a39ba5e18e18bc3cea062e6df92ff1ace89b3c5f55043130108abf631ea8c76604677daa42d1
+MD = ?
+
+Len = 384
+Msg = 80a71c32fc2ed84918f95b5862ee3fa1ec6bbd8a4c37cd37e7b98e5e7068e957ab83717377028e8f0bccdbe9802acc32
+MD = ?
+
+Len = 392
+Msg = 452abbfc4e4ce50cafaf66cde1fe0b67b7cde82f872d9cd58a7ed7de85851955a9bfbcbeb8f4344c6a0e96540f2c570075
+MD = ?
+
+Len = 400
+Msg = 605a3c982d6407b88c4a8dbeec0ed664b3d0936a2ff0afdbcf77269293b31afcc1222420da92e8dccc85ec7169daaa4218aa
+MD = ?
+
+Len = 408
+Msg = b84a856f946a43182b2da82884c91b336e24ffe871f53f4f04262a4f007e8273557ccfeefc86f9dc2d4316cad14581793aeb2c
+MD = ?
+
+Len = 416
+Msg = 8e017234599801c81f01da46cebe83ec38ac761dc4e5746564e41db8c7eabefacfa16ac545ff4c66cc6e3b28132a8fd64fea337b
+MD = ?
+
+Len = 424
+Msg = 003984af3cd9e7fb33a1c8f1cab250629d0724af97b39732c06a1ed9554304141ebc5ef2fcff4287c26434904536e15ab7ba10df30
+MD = ?
+
+Len = 432
+Msg = efdf795ae03ffa356f720566289dbfca881d9d51ca11d7a7fe181a135b5c7e9fd6cfb779f4b48f99dc6294a4b0440d101d25338a31aa
+MD = ?
+
+Len = 440
+Msg = 5953374172a1c1844499d0b6d2c022ab70ae3fdd83c25cbb8914804359abe5d2abf1a13bda638517e98d465dc536da33c9d825038753d5
+MD = ?
+
+Len = 448
+Msg = ee358cb79509ee2e912d7dd7ddbfa9ec10086918830c839fb65e08d8f0391de426cd019a1ed74cc1d57475821d37971c8a7975da8ff0bb43
+MD = ?
+
+Len = 456
+Msg = a325fc51f781227025974137a9c3cf90d3e8ba031b6d5adab485a48364b4a037928f1dd9a1c3a3217c58a9f97237082745eab02d7da4996d02
+MD = ?
+
+Len = 464
+Msg = 52cfa2387533490312a365b141a7e6c1984b3f2a43da1a3e57ea4ad4649801a64a1543f84d629a7b6b570c70ecea4a103cae2a2cf69a5711410c
+MD = ?
+
+Len = 472
+Msg = 2fbede86247e003613f1287e409adc988b2c107c9ff1f85e6d6c1b78d93ea909b2460e9ee80cc790f96074cead3e2fdc03f51d1c6b88424d35559a
+MD = ?
+
+Len = 480
+Msg = f5fcd27e22af4ba153908d69915214b258544e84a56a50ef50e0c8399cbc323c0d444f0979c0d3d162815e068322aebda90e1357c44223603e55aeb7
+MD = ?
+
+Len = 488
+Msg = 0ec80a5dcd35000771a8d3508abac24f68cdbc088eab7232646bb13e2c95ef94378624205915db0d9a7688d02e5f1c69a86ad7e56abb5d2860e20de9ee
+MD = ?
+
+Len = 496
+Msg = ed1c89814e76414772f06c424d3555a02bf736c4ade557e10ed77ac8ab4c77fec31724127b55772d25a2efebc18d2f69c449eda019a50af1663d020090f2
+MD = ?
+
+Len = 504
+Msg = a017ccd2ffa94afdce8ded62f45b00f0341b7b9160abd4afca6117f7fcf0395da990aa60e359298f8df0dc4c1466a0d05a5d9e6ff36d1f1d94c6a132c81629
+MD = ?
+
+Len = 512
+Msg = 2f10048f2570587af882c77d3a1928280c67355d9c70325febbed02cd456500d4aeceb6be15372e48f37329eb40e1adb594c20ceb5d6e0aef6ba86083e1def59
+MD = ?
+

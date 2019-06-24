@@ -651,8 +651,11 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
     RELOAD_CRL=1
 
-    NSS_DEFAULT_DB_TYPE="dbm"
-    export NSS_DEFAULT_DB_TYPE
+    # if test mode isn't set, test scripts default to expecting dbm
+    if [ "${TEST_MODE}" = "" ]; then
+        NSS_DEFAULT_DB_TYPE="dbm"
+        export NSS_DEFAULT_DB_TYPE
+    fi
 
     MSG_ID=0
 

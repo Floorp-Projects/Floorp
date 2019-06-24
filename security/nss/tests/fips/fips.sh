@@ -45,6 +45,8 @@ fips_init()
   }
 
   COPYDIR=${FIPSDIR}/copydir
+  CAVSDIR=${FIPSDIR}/cavs/tests
+  CAVSRUNDIR=${FIPSDIR}/cavs/scripts
 
   R_FIPSDIR=../fips
   P_R_FIPSDIR=../fips
@@ -56,6 +58,8 @@ fips_init()
 
   mkdir -p ${FIPSDIR}
   mkdir -p ${COPYDIR}
+  mkdir -p ${CAVSDIR}
+  mkdir -p ${CAVSRUNDIR}
 
   cd ${FIPSDIR}
 }
@@ -274,6 +278,31 @@ fips_140()
   fi
 }
 
+fips_cavs()
+{
+    if [ "${CAVS_VECTORS}" = "all" ]; then
+        VECTORS=
+    elif [ "${CAVS_VECTORS}" = "" ]; then
+        VECTORS="aesgcm ecdsa hmac kas tls ike rng sha"
+    else
+        VECTORS=${CAVS_VECTORS}
+    fi
+    echo "Copying CAVS vectors"
+    cp -r ${QADIR}/fips/cavs_samples/* ${CAVSDIR}
+# we copy the scripts to the test directory because they are designed to run from their
+# own directory and we want any resulting core dumps to wind up in the test_results directory.
+    echo "Copying CAVS scripts"
+    cp -r ${QADIR}/fips/cavs_scripts/* ${CAVSRUNDIR}
+    echo "cd ${CAVSRUNDIR}"
+    cd ${CAVSRUNDIR}
+    echo "Running CAVS tests in ${CAVSDIR}"
+    ./runtest.sh ${CAVSDIR} run ${VECTORS}
+    echo "Verifying CAVS results in ${CAVSDIR}"
+    ./runtest.sh ${CAVSDIR} verify ${VECTORS}
+    RESULT=$?
+    html_msg $RESULT 0 "NIST CAVS test" "${CAVSDIR}"
+}
+
 ############################## fips_cleanup ############################
 # local shell function to finish this script (no exit since it might be 
 # sourced)
@@ -289,5 +318,6 @@ fips_cleanup()
 
 fips_init
 fips_140
+fips_cavs
 fips_cleanup
 echo "fips.sh done"

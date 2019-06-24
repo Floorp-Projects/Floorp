@@ -1,0 +1,23 @@
+# CAVS 17.1
+# Config Info for : "aesniavx+ssse3sha-64"
+# TDES Monte Carlo (Modes) Test for OFB
+# State : Encrypt and Decrypt
+# Mon Aug 18 09:21:18 AM
+
+[ENCRYPT]
+NumKeys = 1
+
+KEY1 = 1310e698cd83e001
+KEY2 = 1310e698cd83e001
+KEY3 = 1310e698cd83e001
+IV = 7837b77338efe61d
+PLAINTEXT = 73c63851a9e9c02c
+
+[DECRYPT]
+NumKeys = 1
+
+KEY1 = 949d1c0294ce3bdc
+KEY2 = 949d1c0294ce3bdc
+KEY3 = 949d1c0294ce3bdc
+IV = 8affd755b5393365
+CIPHERTEXT = 64f14ca9f4db0267

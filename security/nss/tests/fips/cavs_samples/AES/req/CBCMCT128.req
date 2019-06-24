@@ -1,0 +1,20 @@
+# CAVS 17.8
+# Config info for ppcle-nss-64
+# AESVS MCT test data for CBC
+# State : Encrypt and Decrypt
+# Key Length : 128
+# Generated on Fri Jul 17 16:27:15 2015
+
+[ENCRYPT]
+
+COUNT = 0
+KEY = 254cf6c94e74d377b7224bbe0be40da8
+IV = 3a6a9f64d76a5c39776fe2266f88d6d0
+PLAINTEXT = f7611455f4a4d6ae538a638e55dab12c
+
+[DECRYPT]
+
+COUNT = 0
+KEY = f7b2414458320f2af7a50d729e787da3
+IV = fade59610e2d0da273c04b48a9eca1f3
+CIPHERTEXT = ccbc4e27e208018697b4df8bedca96bb
