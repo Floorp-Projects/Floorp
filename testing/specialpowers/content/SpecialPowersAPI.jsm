@@ -118,7 +118,6 @@ class SpecialPowersAPI extends JSWindowActorChild {
     this._unexpectedCrashDumpFiles = { };
     this._crashDumpDir = null;
     this._mfl = null;
-    this._applyingPrefs = false;
     this._applyingPermissions = false;
     this._observingPermissions = false;
     this._asyncObservers = new WeakMap();
@@ -517,6 +516,12 @@ class SpecialPowersAPI extends JSWindowActorChild {
       this.contentWindow.setTimeout(callback, 0);
   }
 
+  promiseTimeout(delay) {
+    return new Promise(resolve => {
+      this._setTimeout(resolve, delay);
+    });
+  }
+
   _delayCallbackTwice(callback) {
      let delayedCallback = () => {
        let delayAgain = (aCallback) => {
@@ -737,236 +742,19 @@ class SpecialPowersAPI extends JSWindowActorChild {
     }
   }
 
-  /**
-   * Helper to resolve a promise by calling the resolve function and call an
-   * optional callback.
-   */
-  _resolveAndCallOptionalCallback(resolveFn, callback = null) {
-    resolveFn();
-
-    if (callback) {
-      callback();
-    }
+  async pushPrefEnv(inPrefs, callback = null) {
+    await this.sendQuery("PushPrefEnv", inPrefs).then(callback);
+    await this.promiseTimeout(0);
   }
 
-  /**
-   * Take in a list of pref changes to make, then invokes |callback| and resolves
-   * the returned Promise once those changes have taken effect.  When the test
-   * finishes, these changes are reverted.
-   *
-   * |inPrefs| must be an object with up to two properties: "set" and "clear".
-   * pushPrefEnv will set prefs as indicated in |inPrefs.set| and will unset
-   * the prefs indicated in |inPrefs.clear|.
-   *
-   * For example, you might pass |inPrefs| as:
-   *
-   *  inPrefs = {'set': [['foo.bar', 2], ['magic.pref', 'baz']],
-   *             'clear': [['clear.this'], ['also.this']] };
-   *
-   * Notice that |set| and |clear| are both an array of arrays.  In |set|, each
-   * of the inner arrays must have the form [pref_name, value] or [pref_name,
-   * value, iid].  (The latter form is used for prefs with "complex" values.)
-   *
-   * In |clear|, each inner array should have the form [pref_name].
-   *
-   * If you set the same pref more than once (or both set and clear a pref),
-   * the behavior of this method is undefined.
-   *
-   * (Implementation note: _prefEnvUndoStack is a stack of values to revert to,
-   * not values which have been set!)
-   *
-   * TODO: complex values for original cleanup?
-   *
-   */
-  async _pushPrefEnv(inPrefs) {
-    var prefs = Services.prefs;
-
-    var pref_string = [];
-    pref_string[prefs.PREF_INT] = "INT";
-    pref_string[prefs.PREF_BOOL] = "BOOL";
-    pref_string[prefs.PREF_STRING] = "CHAR";
-
-    var pendingActions = [];
-    var cleanupActions = [];
-
-    for (var action in inPrefs) { /* set|clear */
-      for (var idx in inPrefs[action]) {
-        var aPref = inPrefs[action][idx];
-        var prefName = aPref[0];
-        var prefValue = null;
-        var prefIid = null;
-        var prefType = prefs.PREF_INVALID;
-        var originalValue = null;
-
-        if (aPref.length == 3) {
-          prefValue = aPref[1];
-          prefIid = aPref[2];
-        } else if (aPref.length == 2) {
-          prefValue = aPref[1];
-        }
-
-        /* If pref is not found or invalid it doesn't exist. */
-        if (prefs.getPrefType(prefName) != prefs.PREF_INVALID) {
-          prefType = pref_string[prefs.getPrefType(prefName)];
-          if ((prefs.prefHasUserValue(prefName) && action == "clear") ||
-              (action == "set"))
-            originalValue = this._getPref(prefName, prefType, {});
-        } else if (action == "set") {
-          /* prefName doesn't exist, so 'clear' is pointless */
-          if (aPref.length == 3) {
-            prefType = "COMPLEX";
-          } else if (aPref.length == 2) {
-            if (typeof(prefValue) == "boolean")
-              prefType = "BOOL";
-            else if (typeof(prefValue) == "number")
-              prefType = "INT";
-            else if (typeof(prefValue) == "string")
-              prefType = "CHAR";
-          }
-        }
-
-        /* PREF_INVALID: A non existing pref which we are clearing or invalid values for a set */
-        if (prefType == prefs.PREF_INVALID)
-          continue;
-
-        /* We are not going to set a pref if the value is the same */
-        if (originalValue == prefValue)
-          continue;
-
-        pendingActions.push({"action": action, "type": prefType, "name": prefName, "value": prefValue, "Iid": prefIid});
-
-        /* Push original preference value or clear into cleanup array */
-        var cleanupTodo = {"action": action, "type": prefType, "name": prefName, "value": originalValue, "Iid": prefIid};
-        if (originalValue == null) {
-          cleanupTodo.action = "clear";
-        } else {
-          cleanupTodo.action = "set";
-        }
-        cleanupActions.push(cleanupTodo);
-      }
-    }
-
-    return new Promise(resolve => {
-      if (pendingActions.length > 0) {
-        // The callback needs to be delayed twice. One delay is because the pref
-        // service doesn't guarantee the order it calls its observers in, so it
-        // may notify the observer holding the callback before the other
-        // observers have been notified and given a chance to make the changes
-        // that the callback checks for. The second delay is because pref
-        // observers often defer making their changes by posting an event to the
-        // event loop.
-        this._prefEnvUndoStack.push(cleanupActions);
-        this._pendingPrefs.push([pendingActions,
-                                 this._delayCallbackTwice(resolve)]);
-        this._applyPrefs();
-      } else {
-        this._setTimeout(resolve);
-      }
-    });
+  async popPrefEnv(callback = null) {
+    await this.sendQuery("PopPrefEnv").then(callback);
+    await this.promiseTimeout(0);
   }
 
-  pushPrefEnv(inPrefs, callback = null) {
-    let promise = this._pushPrefEnv(inPrefs);
-    if (callback) {
-      promise.then(callback);
-    }
-    return promise;
-  }
-
-  popPrefEnv(callback = null) {
-    return new Promise(resolve => {
-      let done = this._resolveAndCallOptionalCallback.bind(this, resolve, callback);
-      if (this._prefEnvUndoStack.length > 0) {
-        // See pushPrefEnv comment regarding delay.
-        let cb = this._delayCallbackTwice(done);
-        /* Each pop will have a valid block of preferences */
-        this._pendingPrefs.push([this._prefEnvUndoStack.pop(), cb]);
-        this._applyPrefs();
-      } else {
-        this._setTimeout(done);
-      }
-    });
-  }
-
-  flushPrefEnv(callback = null) {
-    while (this._prefEnvUndoStack.length > 1)
-      this.popPrefEnv(null);
-
-    return new Promise(resolve => {
-      let done = this._resolveAndCallOptionalCallback.bind(this, resolve, callback);
-      this.popPrefEnv(done);
-    });
-  }
-
-  _isPrefActionNeeded(prefAction) {
-    if (prefAction.action === "clear") {
-      return Services.prefs.prefHasUserValue(prefAction.name);
-    } else if (prefAction.action === "set") {
-      try {
-        let currentValue = this._getPref(prefAction.name, prefAction.type, {});
-        return currentValue != prefAction.value;
-      } catch (e) {
-        // If the preference is not defined yet, setting the value will have an effect.
-        return true;
-      }
-    }
-    // Only "clear" and "set" actions are supported.
-    return false;
-  }
-
-  /*
-    Iterate through one atomic set of pref actions and perform sets/clears as appropriate.
-    All actions performed must modify the relevant pref.
-  */
-  _applyPrefs() {
-    if (this._applyingPrefs || this._pendingPrefs.length <= 0) {
-      return;
-    }
-
-    /* Set lock and get prefs from the _pendingPrefs queue */
-    this._applyingPrefs = true;
-    var transaction = this._pendingPrefs.shift();
-    var pendingActions = transaction[0];
-    var callback = transaction[1];
-
-    // Filter out all the pending actions that will not have any effect.
-    pendingActions = pendingActions.filter(action => {
-      return this._isPrefActionNeeded(action);
-    });
-
-
-    var self = this;
-    let onPrefActionsApplied = function() {
-      self._setTimeout(callback);
-      self._setTimeout(function() {
-        self._applyingPrefs = false;
-        // Now apply any prefs that may have been queued while we were applying
-        self._applyPrefs();
-      });
-    };
-
-    // If no valid action remains, call onPrefActionsApplied directly and bail out.
-    if (pendingActions.length === 0) {
-      onPrefActionsApplied();
-      return;
-    }
-
-    var lastPref = pendingActions[pendingActions.length - 1];
-
-    var pb = Services.prefs;
-    pb.addObserver(lastPref.name, function prefObs(subject, topic, data) {
-      pb.removeObserver(lastPref.name, prefObs);
-      onPrefActionsApplied();
-    });
-
-    for (var idx in pendingActions) {
-      var pref = pendingActions[idx];
-      if (pref.action == "set") {
-        this._setPref(pref.name, pref.type, pref.value, pref.Iid);
-      } else if (pref.action == "clear") {
-        this.clearUserPref(pref.name);
-      }
-    }
+  async flushPrefEnv(callback = null) {
+    await this.sendQuery("FlushPrefEnv").then(callback);
+    await this.promiseTimeout(0);
   }
 
   _addObserverProxy(notification) {
@@ -2075,8 +1863,6 @@ SpecialPowersAPI.prototype.EARLY_BETA_OR_EARLIER = AppConstants.EARLY_BETA_OR_EA
 // code depends on all SpecialPowers instances using the same arrays for
 // these.
 Object.assign(SpecialPowersAPI.prototype, {
-  _prefEnvUndoStack: [],
-  _pendingPrefs: [],
   _permissionsUndoStack: [],
   _pendingPermissions: [],
 });
