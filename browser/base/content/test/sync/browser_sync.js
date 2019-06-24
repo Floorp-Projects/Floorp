@@ -144,12 +144,11 @@ add_task(async function test_ui_state_loginFailed() {
 
 function checkPanelUIStatusBar({label, tooltip, fxastatus, syncing, syncNowTooltip}) {
   let labelNode = document.getElementById("appMenu-fxa-label");
-  let tooltipNode = document.getElementById("appMenu-fxa-status");
-  let statusNode = document.getElementById("appMenu-fxa-container");
+  let statusNode = document.getElementById("appMenu-fxa-status");
 
   is(labelNode.getAttribute("label"), label, "fxa label has the right value");
-  if (tooltipNode.getAttribute("tooltiptext")) {
-    is(tooltipNode.getAttribute("tooltiptext"), tooltip, "fxa tooltip has the right value");
+  if (statusNode.getAttribute("tooltiptext")) {
+    is(statusNode.getAttribute("tooltiptext"), tooltip, "fxa tooltip has the right value");
   }
   if (fxastatus) {
     is(statusNode.getAttribute("fxastatus"), fxastatus, "fxa fxastatus has the right value");
