@@ -119,7 +119,14 @@ enum class ZealMode {
   _(ScriptDebugScript)                     \
   _(BreakpointSite)                        \
   _(ForOfPIC)                              \
-  _(ForOfPICStub)
+  _(ForOfPICStub)                          \
+  _(WasmInstanceExports)                   \
+  _(WasmInstanceScopes)                    \
+  _(WasmInstanceGlobals)                   \
+  _(WasmInstanceInstance)                  \
+  _(WasmMemoryObservers)                   \
+  _(WasmGlobalCell)                        \
+  _(WasmResolveResponseClosure)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
