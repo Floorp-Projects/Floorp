@@ -37,7 +37,6 @@ py3:
         - tools/jprof
         - tools/profiler
         - tools/rb
-        - tools/update-packaging
         - xpcom/idl-parser
     extensions: ['py']
     support-files:
