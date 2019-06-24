@@ -103,10 +103,33 @@ Since Device ID is a random UUID, Leanplum can't map the device to any know Clie
 User Attributes
 ---------------
 
-"default_browser": A string containing the name of the default browser if property of Mozilla or an empty string
-"focus_installed": A boolean indicated that Firefox Focus is installed
-"klar_installed": A boolean indicated that Firefox Klar is installed
-"fennec_installed": A boolean indicated that Fennec is installed
+<table>
+  <tr>
+    <th>Key</th>
+    <th>Description</th>
+    <th>Data Review</th>
+  </tr>
+  <tr>
+    <td>`default_browser`</td>
+    <td>A string containing the name of the default browser if property of Mozilla or an empty string</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502252010">#3459</a></td>
+  </tr>
+  <tr>
+    <td>`focus_installed`</td>
+    <td>A boolean indicated that Firefox Focus is installed</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502252010">#3459</a></td>
+  </tr>
+  <tr>
+    <td>`klar_installed`</td>
+    <td>A boolean indicated that Firefox Klar is installed</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502252010">#3459</a></td>
+  </tr>
+  <tr>
+    <td>`fennec_installed`</td>
+    <td>A boolean indicated that Fennec is installed</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502252010">#3459</a></td>
+  </tr> 
+</table>
 
 Events
 -------
@@ -117,41 +140,43 @@ Default value for event value is 0.0. Default value for event info is empty stri
 
 Here is the list of current Events sent, which can be found here in the code base: https://github.com/mozilla-mobile/fenix/blob/master/app/src/main/java/org/mozilla/fenix/components/metrics/LeanplumMetricsService.kt
 
-The first launch after install
-~~~~
-{
-  "event": "E_Opened_App_FirstRun"
-}
-~~~~
-
-Whenever the App is launched.
-~~~~
-{
-  "event": "E_Opened_App"
-}
-~~~~
-
-The user interacts with search url area.
-~~~~
-{
-  "event": "E_Interact_With_Search_URL_Area"
-}
-~~~~
-
-The user opened a bookmark
-~~~~
-{
-  "event": "E_Opened_Bookmark"
-}
-~~~~
-
-The user removed a bookmark
-~~~~
-{
-  "event": "E_Remove_Bookmark"
-}
-~~~~
-
+<table>
+  <tr>
+    <th>Event</th>
+    <th>Description</th>
+    <th>Data Review</th>
+  </tr>
+  <tr>
+    <td>`E_Opened_App_FirstRun`</td>
+    <td>The first launch after install</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502252010">#3459</a></td>
+  </tr>
+  <tr>
+    <td>`E_Opened_App`</td>
+    <td>Whenever the App is launched.</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502252010">#3459</a></td>
+  </tr>
+  <tr>
+    <td>`E_Interact_With_Search_URL_Area`</td>
+    <td>The user interacts with search url area.</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502252010">#3459</a></td>
+  </tr>
+  <tr>
+    <td>`E_Opened_Bookmark`</td>
+    <td>The user opened a bookmark</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/3632#issuecomment-505135753">#3632</a></td>
+  </tr>
+  <tr>
+    <td>`E_Add_Bookmark`</td>
+    <td>The user added a bookmark</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/3632#issuecomment-505135753">#3632</a></td>
+  </tr> 
+  <tr>
+    <td>`E_Remove_Bookmark`</td>
+    <td>The user removed a bookmark</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/3632#issuecomment-505135753">#3632</a></td>
+  </tr> 
+</table>
 
 Messages
 -----------
