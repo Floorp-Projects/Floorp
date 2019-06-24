@@ -22,7 +22,7 @@ swap8b(PRUint64 value)
     return (value);
 }
 
-#elif !defined(_MSC_VER) && !__has_builtin(__builtin_bswap64) && !((defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))))
+#elif defined(IS_LITTLE_ENDIAN) && !defined(_MSC_VER) && !__has_builtin(__builtin_bswap64) && !((defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))))
 
 PRUint64
 swap8b(PRUint64 x)

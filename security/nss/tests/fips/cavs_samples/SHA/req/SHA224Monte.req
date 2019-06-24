@@ -1,0 +1,9 @@
+#  CAVS 17.8
+#  "SHA-224 Monte" information for "ppcle-nss-64"
+#  SHA-224 tests are configured for BYTE oriented implementations
+#  Generated on Fri Jul 17 16:27:23 2015
+
+[L = 28]
+
+Seed = eabf272d90744f1fb74066a6010e3ba2d671a9d7fee6c64d6f595ef6
+

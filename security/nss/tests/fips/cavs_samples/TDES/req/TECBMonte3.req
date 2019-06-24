@@ -1,0 +1,21 @@
+# CAVS 17.1
+# Config Info for : "aesniavx+ssse3sha-64"
+# TDES Monte Carlo (Modes) Test for ECB
+# State : Encrypt and Decrypt
+# Mon Aug 18 09:18:30 AM
+
+[ENCRYPT]
+NumKeys = 3
+
+KEY1 = 791f2af20210e06e
+KEY2 = cec4b0ade375155e
+KEY3 = 37e6897964d97f70
+PLAINTEXT = 6941effa89f8c5c3
+
+[DECRYPT]
+NumKeys = 3
+
+KEY1 = 0b8a587058020858
+KEY2 = eacd70152cc29bb6
+KEY3 = 92628ab30b7ce9d9
+CIPHERTEXT = ac336a0d3b9f1c55

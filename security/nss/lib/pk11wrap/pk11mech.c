@@ -240,6 +240,8 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type, unsigned long len)
         case CKM_AES_KEY_GEN:
         case CKM_NETSCAPE_AES_KEY_WRAP:
         case CKM_NETSCAPE_AES_KEY_WRAP_PAD:
+        case CKM_AES_XCBC_MAC:
+        case CKM_AES_XCBC_MAC_96:
             return CKK_AES;
         case CKM_DES_ECB:
         case CKM_DES_CBC:

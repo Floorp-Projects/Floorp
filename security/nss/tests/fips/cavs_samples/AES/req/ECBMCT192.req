@@ -1,0 +1,18 @@
+# CAVS 17.8
+# Config info for ppcle-nss-64
+# AESVS MCT test data for ECB
+# State : Encrypt and Decrypt
+# Key Length : 192
+# Generated on Fri Jul 17 16:27:13 2015
+
+[ENCRYPT]
+
+COUNT = 0
+KEY = 64e01568ca07d8ba4290aa41fac1461aa84a31051f83f1c6
+PLAINTEXT = 05dd4043e95d80894303b0d02b57cc71
+
+[DECRYPT]
+
+COUNT = 0
+KEY = 9771a6aae6cfeb00b23f5ca61a323b20a5e9545f8e7deae5
+CIPHERTEXT = 35b8689e57906f1f535ef6f1e7bfbd25

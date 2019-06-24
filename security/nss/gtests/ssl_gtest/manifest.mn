@@ -31,7 +31,6 @@ CPPSRCS = \
       ssl_gather_unittest.cc \
       ssl_gtest.cc \
       ssl_hrr_unittest.cc \
-      ssl_keylog_unittest.cc \
       ssl_keyupdate_unittest.cc \
       ssl_loopback_unittest.cc \
       ssl_misc_unittest.cc \
@@ -55,6 +54,7 @@ CPPSRCS = \
       tls_filter.cc \
       tls_protect.cc \
       tls_esni_unittest.cc \
+      $(SSLKEYLOGFILE_FILES) \
       $(NULL)
 
 INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
