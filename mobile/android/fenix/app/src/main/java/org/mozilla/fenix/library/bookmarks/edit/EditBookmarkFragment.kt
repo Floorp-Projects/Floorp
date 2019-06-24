@@ -71,8 +71,8 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
 
     override fun onResume() {
         super.onResume()
-        (activity as? AppCompatActivity)?.title = getString(R.string.edit_bookmark_fragment_title)
-        (activity as? AppCompatActivity)?.supportActionBar?.show()
+        val activity = activity as? AppCompatActivity
+        activity?.supportActionBar?.show()
 
         guidToEdit = EditBookmarkFragmentArgs.fromBundle(arguments!!).guidToEdit
         launch(IO) {
@@ -83,10 +83,12 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
             launch(Main) {
                 when (bookmarkNode?.type) {
                     BookmarkNodeType.FOLDER -> {
+                        activity?.title = getString(R.string.edit_bookmark_folder_fragment_title)
                         bookmark_url_edit.visibility = View.GONE
                         bookmark_url_label.visibility = View.GONE
                     }
                     BookmarkNodeType.ITEM -> {
+                        activity?.title = getString(R.string.edit_bookmark_fragment_title)
                     }
                     else -> throw IllegalArgumentException()
                 }

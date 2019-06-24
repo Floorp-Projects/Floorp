@@ -406,6 +406,8 @@
     <string name="bookmarks_multi_select_title">%1$d selected</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Edit bookmark</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Edit folder</string>
     <!-- Bookmark sign in button message -->
     <string name="bookmark_sign_in_button">Sign in to see synced bookmarks</string>
     <!-- Bookmark URL editing field label -->

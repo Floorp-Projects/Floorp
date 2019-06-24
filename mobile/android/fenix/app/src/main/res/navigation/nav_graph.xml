@@ -206,7 +206,6 @@
     <fragment
         android:id="@+id/bookmarkEditFragment"
         android:name="org.mozilla.fenix.library.bookmarks.edit.EditBookmarkFragment"
-        android:label="@string/edit_bookmark_fragment_title"
         tools:layout="@layout/fragment_edit_bookmark">
         <argument
             android:name="guidToEdit"
