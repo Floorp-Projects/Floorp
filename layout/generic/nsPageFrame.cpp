@@ -405,8 +405,8 @@ static void BuildDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
                                          nsPageFrame* aPage,
                                          nsIFrame* aExtraPage,
                                          nsDisplayList* aList) {
-  // The only content in aExtraPage we care about is out-of-flow content from
-  // aPage, whose placeholders have occurred in aExtraPage. If
+  // The only content in aExtraPage we care about is out-of-flow content whose
+  // placeholders have occurred in aPage. If
   // NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO is not set, then aExtraPage has
   // no such content.
   if (!aExtraPage->HasAnyStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
@@ -520,27 +520,13 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // these extra pages are pruned so that only display items for the
     // page we currently care about (which we would have reached by
     // following placeholders to their out-of-flows) end up on the list.
-    //
-    // Stacking context frames that wrap content on their normal page,
-    // as well as OOF content for this page will have their container
-    // items duplicated. We tell the builder to include our page number
-    // in the unique key for any extra page items so that they can be
-    // differentiated from the ones created on the normal page.
-    NS_ASSERTION(mPageNum <= 255, "Too many pages to handle OOFs");
-    if (mPageNum <= 255) {
-      uint8_t oldPageNum = aBuilder->GetBuildingExtraPagesForPageNum();
-      aBuilder->SetBuildingExtraPagesForPageNum(mPageNum);
+    nsIFrame* page = child;
+    while ((page = GetNextPage(page)) != nullptr) {
+      nsRect childVisible = visibleRect + child->GetOffsetTo(page);
 
-      nsIFrame* page = child;
-      while ((page = GetNextPage(page)) != nullptr) {
-        nsRect childVisible = visibleRect + child->GetOffsetTo(page);
-
-        nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
-            aBuilder, page, childVisible, childVisible);
-        BuildDisplayListForExtraPage(aBuilder, this, page, &content);
-      }
-
-      aBuilder->SetBuildingExtraPagesForPageNum(oldPageNum);
+      nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
+          aBuilder, page, childVisible, childVisible);
+      BuildDisplayListForExtraPage(aBuilder, this, page, &content);
     }
 
     // Invoke AutoBuildingDisplayList to ensure that the correct visibleRect
