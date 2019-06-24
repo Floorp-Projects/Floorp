@@ -42,6 +42,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.app.links.AppLinksFeature
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
+import mozilla.components.feature.findinpage.FindInPageFeature
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.readerview.ReaderViewFeature
@@ -67,7 +68,6 @@ import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.collections.getStepForCollectionsSize
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.BrowserMenuItemTapped.Item
@@ -116,7 +116,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
     private val appLinksFeature = ViewBoundFeatureWrapper<AppLinksFeature>()
     private val promptsFeature = ViewBoundFeatureWrapper<PromptFeature>()
-    private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
+    private val findInPageFeature = ViewBoundFeatureWrapper<FindInPageFeature>()
     private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
     private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
@@ -276,10 +276,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             view = view
         )
 
-        findInPageIntegration.set(
-            feature = FindInPageIntegration(
-                requireComponents.core.sessionManager, view.findInPageView, view.engineView, toolbar
-            ),
+        findInPageFeature.set(
+            feature = FindInPageFeature(requireComponents.core.sessionManager, view.findInPageView, view.engineView) {
+                toolbar.visibility = View.VISIBLE
+                findInPageView.visibility = View.GONE
+            },
             owner = this,
             view = view
         )
@@ -640,7 +641,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     override fun onBackPressed(): Boolean {
         return when {
-            findInPageIntegration.onBackPressed() -> true
+            findInPageFeature.onBackPressed() -> true
             fullScreenFeature.onBackPressed() -> true
             readerViewFeature.onBackPressed() -> true
             sessionFeature.onBackPressed() -> true
@@ -744,7 +745,13 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
             }
             ToolbarMenu.Item.FindInPage -> {
-                FindInPageIntegration.launch?.invoke()
+                toolbar.visibility = View.GONE
+                findInPageView.visibility = View.VISIBLE
+                findInPageFeature.withFeature {
+                    getSessionById()?.let { session ->
+                        it.bind(session)
+                    }
+                }
                 requireComponents.analytics.metrics.track(Event.FindInPageOpened)
             }
             ToolbarMenu.Item.ReportIssue -> getSessionById()?.let { session ->
