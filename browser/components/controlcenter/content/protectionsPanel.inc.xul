@@ -42,6 +42,15 @@
           <label class="protections-popup-settings-label" flex="1">Protection Settings</label>
         </toolbarbutton>
       </vbox>
+
+      <hbox id="protections-popup-footer">
+        <description id="protections-popup-trackers-blocked-counter-description"
+                     flex="1"/>
+        <label id="protections-popup-show-full-report-link"
+               is="text-link"
+               useoriginprincipal="true"
+               href="about:protections">Show Full Report</label>
+      </hbox>
     </panelview>
   </panelmultiview>
 </panel>
