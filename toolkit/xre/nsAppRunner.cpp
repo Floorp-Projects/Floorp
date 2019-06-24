@@ -4704,8 +4704,12 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   NS_ENSURE_SUCCESS(rv, 1);
 
   if (!mAppData->xreDirectory) {
+    nsCOMPtr<nsIFile> lf;
+    rv = XRE_GetBinaryPath(getter_AddRefs(lf));
+    if (NS_FAILED(rv)) return 2;
+
     nsCOMPtr<nsIFile> greDir;
-    rv = binFile->GetParent(getter_AddRefs(greDir));
+    rv = lf->GetParent(getter_AddRefs(greDir));
     if (NS_FAILED(rv)) return 2;
 
 #ifdef XP_MACOSX
