@@ -251,7 +251,7 @@ Maybe<float> AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs) {
   float time[kHistorySize];
   uint32_t m = 0;
   int index = mHistory.Length() - 1;
-  const uint32_t horizon = StaticPrefs::APZVelocityRelevanceTime();
+  const uint32_t horizon = StaticPrefs::apz_velocity_relevance_time_ms();
   const auto& newest_movement = mHistory[index];
 
   do {

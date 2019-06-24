@@ -161,7 +161,8 @@ class APZCPinchLockingTester : public APZCPinchTester {
 
   void twoFingerPan() {
     ScreenCoord panDistance =
-        StaticPrefs::APZPinchLockScrollLockThreshold() * 1.2 * tm->GetDPI();
+        StaticPrefs::apz_pinch_lock_scroll_lock_threshold() * 1.2 *
+        tm->GetDPI();
 
     mFocus = ScreenIntPoint((int)(mFocus.x + panDistance), (int)(mFocus.y));
 
@@ -174,7 +175,8 @@ class APZCPinchLockingTester : public APZCPinchTester {
 
   void twoFingerZoom() {
     float pinchDistance =
-        StaticPrefs::APZPinchLockSpanBreakoutThreshold() * 1.2 * tm->GetDPI();
+        StaticPrefs::apz_pinch_lock_span_breakout_threshold() * 1.2 *
+        tm->GetDPI();
 
     float newSpan = mSpan + pinchDistance;
 
@@ -191,7 +193,8 @@ class APZCPinchLockingTester : public APZCPinchTester {
 
     // Send a small scale input to the APZC
     float pinchDistance =
-        StaticPrefs::APZPinchLockSpanBreakoutThreshold() * 0.8 * tm->GetDPI();
+        StaticPrefs::apz_pinch_lock_span_breakout_threshold() * 0.8 *
+        tm->GetDPI();
     apzc->ReceiveInputEvent(
         CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE, mFocus,
                                 mSpan + pinchDistance, mSpan, mcc->Time()),
@@ -252,7 +255,7 @@ TEST_F(APZCPinchGestureDetectorTester,
 
   // Since we are preventing the pinch action via touch-action we should not be
   // sending the pinch gesture notifications that would normally be sent when
-  // APZAllowZooming is false.
+  // apz_allow_zooming is false.
   EXPECT_CALL(*mcc, NotifyPinchGesture(_, _, _, _)).Times(0);
   nsTArray<uint32_t> behaviors = {mozilla::layers::AllowedTouchBehavior::NONE,
                                   mozilla::layers::AllowedTouchBehavior::NONE};
@@ -267,7 +270,7 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault_NoAPZZoom) {
   SCOPED_GFX_PREF_BOOL("apz.allow_zooming", false);
 
   // Since we are preventing the pinch action we should not be sending the pinch
-  // gesture notifications that would normally be sent when APZAllowZooming is
+  // gesture notifications that would normally be sent when apz_allow_zooming is
   // false.
   EXPECT_CALL(*mcc, NotifyPinchGesture(_, _, _, _)).Times(0);
 
@@ -435,11 +438,11 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_APZZoom_Disabled) {
   FrameMetrics originalMetrics = GetPinchableFrameMetrics();
   apzc->SetFrameMetrics(originalMetrics);
 
-  // When APZAllowZooming is false, the ZoomConstraintsClient produces
+  // When apz_allow_zooming is false, the ZoomConstraintsClient produces
   // ZoomConstraints with mAllowZoom set to false.
   MakeApzcUnzoomable();
 
-  // With APZAllowZooming false, we expect the NotifyPinchGesture function to
+  // With apz_allow_zooming false, we expect the NotifyPinchGesture function to
   // get called as the pinch progresses, but the metrics shouldn't change.
   EXPECT_CALL(*mcc,
               NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_START,
@@ -474,11 +477,11 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_NoSpan) {
   FrameMetrics originalMetrics = GetPinchableFrameMetrics();
   apzc->SetFrameMetrics(originalMetrics);
 
-  // When APZAllowZooming is false, the ZoomConstraintsClient produces
+  // When apz_allow_zooming is false, the ZoomConstraintsClient produces
   // ZoomConstraints with mAllowZoom set to false.
   MakeApzcUnzoomable();
 
-  // With APZAllowZooming false, we expect the NotifyPinchGesture function to
+  // With apz_allow_zooming false, we expect the NotifyPinchGesture function to
   // get called as the pinch progresses, but the metrics shouldn't change.
   EXPECT_CALL(*mcc,
               NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_START,

@@ -3057,7 +3057,7 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
       GdkDevice* device = gdk_event_get_source_device((GdkEvent*)aEvent);
       GdkInputSource source = gdk_device_get_source(device);
       if (source == GDK_SOURCE_TOUCHSCREEN || source == GDK_SOURCE_TOUCHPAD) {
-        if (StaticPrefs::APZGTKKineticScrollEnabled() &&
+        if (StaticPrefs::apz_gtk_kinetic_scroll_enabled() &&
             gtk_check_version(3, 20, 0) == nullptr) {
           static auto sGdkEventIsScrollStopEvent =
               (gboolean(*)(const GdkEvent*))dlsym(
