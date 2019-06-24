@@ -377,22 +377,11 @@
   padding: 10px calc(@horizontalTabPadding@ - 2px);
 }
 
-.tab-icon-pip,
 .tab-icon-sound {
   margin-inline-start: 1px;
   width: 16px;
   height: 16px;
   padding: 0;
-}
-
-.tab-icon-pip[pictureinpicture] {
-  background-image: url(chrome://global/skin/media/pictureinpicture.svg);
-  -moz-context-properties: fill, stroke;
-  fill: currentColor;
-  stroke: currentColor;
-  width: 14px;
-  height: 14px;
-  margin-inline-start: 5px
 }
 
 .tab-icon-sound[soundplaying],
@@ -411,21 +400,27 @@
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-blocked.svg);
 }
 
-:root[lwtheme-image] .tab-icon-pip:-moz-lwtheme-darktext[pictureinpicture],
+.tab-icon-sound[pictureinpicture] {
+  list-style-image: url(chrome://global/skin/media/pictureinpicture.svg);
+  width: 14px;
+  height: 14px;
+}
+
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[pictureinpicture],
 :root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[soundplaying],
 :root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[muted],
 :root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[activemedia-blocked] {
   filter: drop-shadow(1px 1px 1px white);
 }
 
-:root[lwtheme-image] .tab-icon-pip:-moz-lwtheme-brighttext[pictureinpicture],
+:root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[pictureinpicture],
 :root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[soundplaying],
 :root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[muted],
 :root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[activemedia-blocked] {
   filter: drop-shadow(1px 1px 1px black);
 }
 
-.tab-icon-pip[pictureinpicture]:not(:hover),
+.tab-icon-sound[pictureinpicture]:not(:hover),
 .tab-icon-sound[soundplaying]:not(:hover),
 .tab-icon-sound[muted]:not(:hover),
 .tab-icon-sound[activemedia-blocked]:not(:hover) {

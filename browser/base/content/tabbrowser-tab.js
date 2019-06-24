@@ -53,7 +53,6 @@ class MozTabbrowserTab extends MozElements.MozTab {
       ".tab-icon-overlay": "crashed,busy,soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked",
       ".tab-label-container": "pinned,selected=visuallyselected,labeldirection",
       ".tab-label": "text=label,accesskey,fadein,pinned,selected=visuallyselected,attention",
-      ".tab-icon-pip": "pictureinpicture",
       ".tab-icon-sound": "soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked,pictureinpicture",
       ".tab-close-button": "fadein,pinned,selected=visuallyselected",
     };
@@ -81,8 +80,6 @@ class MozTabbrowserTab extends MozElements.MozTab {
                   flex="1">
               <label class="tab-text tab-label" role="presentation"/>
             </hbox>
-            <image class="tab-icon-pip"
-                   role="presentation"/>
             <image class="tab-icon-sound" role="presentation"/>
             <image class="tab-close-button close-icon" role="presentation"/>
           </hbox>
