@@ -4,6 +4,7 @@
 #![deny(missing_docs)]
 #![doc(html_root_url = "https://docs.rs/mio-uds/0.6")]
 
+extern crate iovec;
 extern crate libc;
 extern crate mio;
 

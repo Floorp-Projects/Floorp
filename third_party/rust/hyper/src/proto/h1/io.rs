@@ -1,4 +1,5 @@
 use std::cell::Cell;
+use std::cmp;
 use std::collections::VecDeque;
 use std::fmt;
 use std::io;
@@ -31,9 +32,9 @@ const MAX_BUF_LIST_BUFFERS: usize = 16;
 pub struct Buffered<T, B> {
     flush_pipeline: bool,
     io: T,
-    max_buf_size: usize,
     read_blocked: bool,
     read_buf: BytesMut,
+    read_buf_strategy: ReadStrategy,
     write_buf: WriteBuf<B>,
 }
 
@@ -58,10 +59,10 @@ where
         Buffered {
             flush_pipeline: false,
             io: io,
-            max_buf_size: DEFAULT_MAX_BUFFER_SIZE,
-            read_buf: BytesMut::with_capacity(0),
-            write_buf: WriteBuf::new(),
             read_blocked: false,
+            read_buf: BytesMut::with_capacity(0),
+            read_buf_strategy: ReadStrategy::default(),
+            write_buf: WriteBuf::new(),
         }
     }
 
@@ -76,17 +77,22 @@ where
     pub fn set_max_buf_size(&mut self, max: usize) {
         assert!(
             max >= MINIMUM_MAX_BUFFER_SIZE,
-            "The max_buf_size cannot be smaller than the initial buffer size."
+            "The max_buf_size cannot be smaller than {}.",
+            MINIMUM_MAX_BUFFER_SIZE,
         );
-        self.max_buf_size = max;
+        self.read_buf_strategy = ReadStrategy::with_max(max);
         self.write_buf.max_buf_size = max;
+    }
+
+    pub fn set_read_buf_exact_size(&mut self, sz: usize) {
+        self.read_buf_strategy = ReadStrategy::Exact(sz);
     }
 
     pub fn set_write_strategy_flatten(&mut self) {
         // this should always be called only at construction time,
         // so this assert is here to catch myself
         debug_assert!(self.write_buf.queue.bufs.is_empty());
-        self.write_buf.set_strategy(Strategy::Flatten);
+        self.write_buf.set_strategy(WriteStrategy::Flatten);
     }
 
     pub fn read_buf(&self) -> &[u8] {
@@ -141,8 +147,9 @@ where
                     return Ok(Async::Ready(msg))
                 },
                 None => {
-                    if self.read_buf.capacity() >= self.max_buf_size {
-                        debug!("max_buf_size ({}) reached, closing", self.max_buf_size);
+                    let max = self.read_buf_strategy.max();
+                    if self.read_buf.len() >= max {
+                        debug!("max_buf_size ({}) reached, closing", max);
                         return Err(::Error::new_too_large());
                     }
                 },
@@ -160,13 +167,15 @@ where
     pub fn read_from_io(&mut self) -> Poll<usize, io::Error> {
         use bytes::BufMut;
         self.read_blocked = false;
-        if self.read_buf.remaining_mut() < INIT_BUFFER_SIZE {
-            self.read_buf.reserve(INIT_BUFFER_SIZE);
+        let next = self.read_buf_strategy.next();
+        if self.read_buf.remaining_mut() < next {
+            self.read_buf.reserve(next);
         }
         self.io.read_buf(&mut self.read_buf).map(|ok| {
             match ok {
                 Async::Ready(n) => {
                     debug!("read {} bytes", n);
+                    self.read_buf_strategy.record(n);
                     Async::Ready(n)
                 },
                 Async::NotReady => {
@@ -196,7 +205,7 @@ where
             try_nb!(self.io.flush());
         } else {
             match self.write_buf.strategy {
-                Strategy::Flatten => return self.flush_flattened(),
+                WriteStrategy::Flatten => return self.flush_flattened(),
                 _ => (),
             }
             loop {
@@ -256,6 +265,85 @@ where
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+enum ReadStrategy {
+    Adaptive {
+        decrease_now: bool,
+        next: usize,
+        max: usize
+    },
+    Exact(usize),
+}
+
+impl ReadStrategy {
+    fn with_max(max: usize) -> ReadStrategy {
+        ReadStrategy::Adaptive {
+            decrease_now: false,
+            next: INIT_BUFFER_SIZE,
+            max,
+        }
+    }
+
+    fn next(&self) -> usize {
+        match *self {
+            ReadStrategy::Adaptive { next, .. } => next,
+            ReadStrategy::Exact(exact) => exact,
+        }
+    }
+
+    fn max(&self) -> usize {
+        match *self {
+            ReadStrategy::Adaptive { max, .. } => max,
+            ReadStrategy::Exact(exact) => exact,
+        }
+    }
+
+    fn record(&mut self, bytes_read: usize) {
+        match *self {
+            ReadStrategy::Adaptive { ref mut decrease_now, ref mut next, max, .. } => {
+                if bytes_read >= *next {
+                    *next = cmp::min(incr_power_of_two(*next), max);
+                    *decrease_now = false;
+                } else {
+                    let decr_to = prev_power_of_two(*next);
+                    if bytes_read < decr_to {
+                        if *decrease_now {
+                            *next = cmp::max(decr_to, INIT_BUFFER_SIZE);
+                            *decrease_now = false;
+                        } else {
+                            // Decreasing is a two "record" process.
+                            *decrease_now = true;
+                        }
+                    } else {
+                        // A read within the current range should cancel
+                        // a potential decrease, since we just saw proof
+                        // that we still need this size.
+                        *decrease_now = false;
+                    }
+                }
+            },
+            _ => (),
+        }
+    }
+}
+
+fn incr_power_of_two(n: usize) -> usize {
+    n.saturating_mul(2)
+}
+
+fn prev_power_of_two(n: usize) -> usize {
+    // Only way this shift can underflow is if n is less than 4.
+    // (Which would means `usize::MAX >> 64` and underflowed!)
+    debug_assert!(n >= 4);
+    (::std::usize::MAX >> (n.leading_zeros() + 2)) + 1
+}
+
+impl Default for ReadStrategy {
+    fn default() -> ReadStrategy {
+        ReadStrategy::with_max(DEFAULT_MAX_BUFFER_SIZE)
+    }
+}
+
 #[derive(Clone)]
 pub struct Cursor<T> {
     bytes: T,
@@ -275,9 +363,7 @@ impl<T: AsRef<[u8]>> Cursor<T> {
 impl Cursor<Vec<u8>> {
     fn reset(&mut self) {
         self.pos = 0;
-        unsafe {
-            self.bytes.set_len(0);
-        }
+        self.bytes.clear();
     }
 }
 
@@ -315,7 +401,7 @@ pub(super) struct WriteBuf<B> {
     max_buf_size: usize,
     /// Deque of user buffers if strategy is Queue
     queue: BufDeque<B>,
-    strategy: Strategy,
+    strategy: WriteStrategy,
 }
 
 impl<B> WriteBuf<B> {
@@ -324,7 +410,7 @@ impl<B> WriteBuf<B> {
             headers: Cursor::new(Vec::with_capacity(INIT_BUFFER_SIZE)),
             max_buf_size: DEFAULT_MAX_BUFFER_SIZE,
             queue: BufDeque::new(),
-            strategy: Strategy::Auto,
+            strategy: WriteStrategy::Auto,
         }
     }
 }
@@ -334,7 +420,7 @@ impl<B> WriteBuf<B>
 where
     B: Buf,
 {
-    fn set_strategy(&mut self, strategy: Strategy) {
+    fn set_strategy(&mut self, strategy: WriteStrategy) {
         self.strategy = strategy;
     }
 
@@ -346,7 +432,7 @@ where
     pub(super) fn buffer<BB: Buf + Into<B>>(&mut self, mut buf: BB) {
         debug_assert!(buf.has_remaining());
         match self.strategy {
-            Strategy::Flatten => {
+            WriteStrategy::Flatten => {
                 let head = self.headers_mut();
                 //perf: This is a little faster than <Vec as BufMut>>::put,
                 //but accomplishes the same result.
@@ -362,7 +448,7 @@ where
                     buf.advance(adv);
                 }
             },
-            Strategy::Auto | Strategy::Queue => {
+            WriteStrategy::Auto | WriteStrategy::Queue => {
                 self.queue.bufs.push_back(buf.into());
             },
         }
@@ -370,10 +456,10 @@ where
 
     fn can_buffer(&self) -> bool {
         match self.strategy {
-            Strategy::Flatten => {
+            WriteStrategy::Flatten => {
                 self.remaining() < self.max_buf_size
             },
-            Strategy::Auto | Strategy::Queue => {
+            WriteStrategy::Auto | WriteStrategy::Queue => {
                 self.queue.bufs.len() < MAX_BUF_LIST_BUFFERS
                     && self.remaining() < self.max_buf_size
             },
@@ -476,12 +562,12 @@ impl<'a, B: Buf> Buf for WriteBufAuto<'a, B> {
 
 impl<'a, B: Buf + 'a> Drop for WriteBufAuto<'a, B> {
     fn drop(&mut self) {
-        if let Strategy::Auto = self.inner.strategy {
+        if let WriteStrategy::Auto = self.inner.strategy {
             if self.bytes_vec_called.get() {
-                self.inner.strategy = Strategy::Queue;
+                self.inner.strategy = WriteStrategy::Queue;
             } else if self.bytes_called.get() {
                 trace!("detected no usage of vectored write, flattening");
-                self.inner.strategy = Strategy::Flatten;
+                self.inner.strategy = WriteStrategy::Flatten;
                 self.inner.headers.bytes.put(&mut self.inner.queue);
             }
         }
@@ -490,7 +576,7 @@ impl<'a, B: Buf + 'a> Drop for WriteBufAuto<'a, B> {
 
 
 #[derive(Debug)]
-enum Strategy {
+enum WriteStrategy {
     Auto,
     Flatten,
     Queue,
@@ -606,6 +692,97 @@ mod tests {
     }
 
     #[test]
+    fn read_strategy_adaptive_increments() {
+        let mut strategy = ReadStrategy::default();
+        assert_eq!(strategy.next(), 8192);
+
+        // Grows if record == next
+        strategy.record(8192);
+        assert_eq!(strategy.next(), 16384);
+
+        strategy.record(16384);
+        assert_eq!(strategy.next(), 32768);
+
+        // Enormous records still increment at same rate
+        strategy.record(::std::usize::MAX);
+        assert_eq!(strategy.next(), 65536);
+
+        let max = strategy.max();
+        while strategy.next() < max {
+            strategy.record(max);
+        }
+
+        assert_eq!(strategy.next(), max, "never goes over max");
+        strategy.record(max + 1);
+        assert_eq!(strategy.next(), max, "never goes over max");
+    }
+
+    #[test]
+    fn read_strategy_adaptive_decrements() {
+        let mut strategy = ReadStrategy::default();
+        strategy.record(8192);
+        assert_eq!(strategy.next(), 16384);
+
+        strategy.record(1);
+        assert_eq!(strategy.next(), 16384, "first smaller record doesn't decrement yet");
+        strategy.record(8192);
+        assert_eq!(strategy.next(), 16384, "record was with range");
+
+        strategy.record(1);
+        assert_eq!(strategy.next(), 16384, "in-range record should make this the 'first' again");
+
+        strategy.record(1);
+        assert_eq!(strategy.next(), 8192, "second smaller record decrements");
+
+        strategy.record(1);
+        assert_eq!(strategy.next(), 8192, "first doesn't decrement");
+        strategy.record(1);
+        assert_eq!(strategy.next(), 8192, "doesn't decrement under minimum");
+    }
+
+    #[test]
+    fn read_strategy_adaptive_stays_the_same() {
+        let mut strategy = ReadStrategy::default();
+        strategy.record(8192);
+        assert_eq!(strategy.next(), 16384);
+
+        strategy.record(8193);
+        assert_eq!(strategy.next(), 16384, "first smaller record doesn't decrement yet");
+
+        strategy.record(8193);
+        assert_eq!(strategy.next(), 16384, "with current step does not decrement");
+    }
+
+    #[test]
+    fn read_strategy_adaptive_max_fuzz() {
+        fn fuzz(max: usize) {
+            let mut strategy = ReadStrategy::with_max(max);
+            while strategy.next() < max {
+                strategy.record(::std::usize::MAX);
+            }
+            let mut next = strategy.next();
+            while next > 8192 {
+                strategy.record(1);
+                strategy.record(1);
+                next = strategy.next();
+                assert!(
+                    next.is_power_of_two(),
+                    "decrement should be powers of two: {} (max = {})",
+                    next,
+                    max,
+                );
+            }
+        }
+
+        let mut max = 8192;
+        while max < ::std::usize::MAX {
+            fuzz(max);
+            max = (max / 2).saturating_mul(3);
+        }
+        fuzz(::std::usize::MAX);
+    }
+
+    #[test]
     #[should_panic]
     fn write_buf_requires_non_empty_bufs() {
         let mock = AsyncIo::new_buf(vec![], 1024);
@@ -642,7 +819,7 @@ mod tests {
 
         let mock = AsyncIo::new_buf(vec![], 1024);
         let mut buffered = Buffered::<_, Cursor<Vec<u8>>>::new(mock);
-        buffered.write_buf.set_strategy(Strategy::Flatten);
+        buffered.write_buf.set_strategy(WriteStrategy::Flatten);
 
         buffered.headers_buf().extend(b"hello ");
         buffered.buffer(Cursor::new(b"world, ".to_vec()));
@@ -688,7 +865,7 @@ mod tests {
         let mut mock = AsyncIo::new_buf(vec![], 1024);
         mock.max_read_vecs(0); // disable vectored IO
         let mut buffered = Buffered::<_, Cursor<Vec<u8>>>::new(mock);
-        buffered.write_buf.set_strategy(Strategy::Queue);
+        buffered.write_buf.set_strategy(WriteStrategy::Queue);
 
         // we have 4 buffers, and vec IO disabled, but explicitly said
         // don't try to auto detect (via setting strategy above)
@@ -712,14 +889,12 @@ mod tests {
         b.bytes = s.len() as u64;
 
         let mut write_buf = WriteBuf::<::Chunk>::new();
-        write_buf.set_strategy(Strategy::Flatten);
+        write_buf.set_strategy(WriteStrategy::Flatten);
         b.iter(|| {
             let chunk = ::Chunk::from(s);
             write_buf.buffer(chunk);
             ::test::black_box(&write_buf);
-            unsafe {
-                write_buf.headers.bytes.set_len(0);
-            }
+            write_buf.headers.bytes.clear();
         })
     }
 }

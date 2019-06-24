@@ -204,22 +204,40 @@ float SVGAnimatedLength::GetPixelsPerUnit(nsIFrame* aFrame,
 // See https://www.w3.org/TR/css-values-3/#absolute-lengths
 static const float DPI = 96.0f;
 
-float SVGAnimatedLength::GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
-                                          uint8_t aUnitType) const {
+bool UserSpaceMetrics::ResolveAbsoluteUnit(uint8_t aUnitType, float& aRes) {
   switch (aUnitType) {
     case SVGLength_Binding::SVG_LENGTHTYPE_NUMBER:
     case SVGLength_Binding::SVG_LENGTHTYPE_PX:
-      return 1;
+      aRes = 1;
+      break;
     case SVGLength_Binding::SVG_LENGTHTYPE_MM:
-      return DPI / MM_PER_INCH_FLOAT;
+      aRes = DPI / MM_PER_INCH_FLOAT;
+      break;
     case SVGLength_Binding::SVG_LENGTHTYPE_CM:
-      return 10.0f * DPI / MM_PER_INCH_FLOAT;
+      aRes = 10.0f * DPI / MM_PER_INCH_FLOAT;
+      break;
     case SVGLength_Binding::SVG_LENGTHTYPE_IN:
-      return DPI;
+      aRes = DPI;
+      break;
     case SVGLength_Binding::SVG_LENGTHTYPE_PT:
-      return DPI / POINTS_PER_INCH_FLOAT;
+      aRes = DPI / POINTS_PER_INCH_FLOAT;
+      break;
     case SVGLength_Binding::SVG_LENGTHTYPE_PC:
-      return 12.0f * DPI / POINTS_PER_INCH_FLOAT;
+      aRes = 12.0f * DPI / POINTS_PER_INCH_FLOAT;
+      break;
+    default:
+      return false;
+  }
+  return true;
+}
+
+float SVGAnimatedLength::GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
+                                          uint8_t aUnitType) const {
+  float res;
+  if (UserSpaceMetrics::ResolveAbsoluteUnit(aUnitType, res)) {
+    return res;
+  }
+  switch (aUnitType) {
     case SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE:
       return aMetrics.GetAxisLength(mCtxType) / 100.0f;
     case SVGLength_Binding::SVG_LENGTHTYPE_EMS:

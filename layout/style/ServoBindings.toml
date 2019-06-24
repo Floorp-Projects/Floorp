@@ -454,6 +454,7 @@ cbindgen-types = [
     { gecko = "StyleCSSPixelLength", servo = "values::computed::length::CSSPixelLength" },
     { gecko = "StyleNonNegativeLength", servo = "values::computed::NonNegativeLength" },
     { gecko = "StyleNonNegativeNumber", servo = "values::computed::NonNegativeNumber" },
+    { gecko = "StyleZeroToOneNumber", servo = "values::computed::ZeroToOneNumber" },
     { gecko = "StylePercentage", servo = "values::computed::Percentage" },
     { gecko = "StylePerspective", servo = "values::computed::Perspective" },
     { gecko = "StyleGenericPerspective", servo = "values::generics::box_::Perspective" },

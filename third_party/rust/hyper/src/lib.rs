@@ -1,7 +1,7 @@
-#![doc(html_root_url = "https://docs.rs/hyper/0.12.7")]
+#![doc(html_root_url = "https://docs.rs/hyper/0.12.19")]
 #![deny(missing_docs)]
-#![deny(warnings)]
 #![deny(missing_debug_implementations)]
+#![cfg_attr(test, deny(warnings))]
 #![cfg_attr(all(test, feature = "nightly"), feature(test))]
 
 //! # hyper
@@ -18,7 +18,7 @@ extern crate bytes;
 #[macro_use] extern crate futures;
 #[cfg(feature = "runtime")] extern crate futures_cpupool;
 extern crate h2;
-extern crate http;
+#[doc(hidden)] pub extern crate http;
 extern crate httparse;
 extern crate iovec;
 extern crate itoa;
@@ -30,6 +30,7 @@ extern crate time;
 #[macro_use] extern crate tokio_io;
 #[cfg(feature = "runtime")] extern crate tokio_reactor;
 #[cfg(feature = "runtime")] extern crate tokio_tcp;
+#[cfg(feature = "runtime")] extern crate tokio_threadpool;
 #[cfg(feature = "runtime")] extern crate tokio_timer;
 extern crate want;
 
@@ -52,6 +53,7 @@ pub use error::{Result, Error};
 pub use body::{Body, Chunk};
 pub use server::Server;
 
+#[macro_use]
 mod common;
 #[cfg(test)]
 mod mock;

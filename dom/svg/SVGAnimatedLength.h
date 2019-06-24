@@ -33,6 +33,7 @@ class SVGViewportElement;
 
 class UserSpaceMetrics {
  public:
+  static bool ResolveAbsoluteUnit(uint8_t aUnitType, float& aRes);
   virtual ~UserSpaceMetrics() = default;
 
   virtual float GetEmLength() const = 0;

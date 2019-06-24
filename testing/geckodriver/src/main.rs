@@ -203,7 +203,7 @@ fn inner_main(app: &mut App) -> ProgramResult<()> {
             }
 
             let handler = MarionetteHandler::new(settings);
-            let listening = webdriver::server::start(address, handler, &extension_routes()[..])?;
+            let listening = webdriver::server::start(address, handler, extension_routes())?;
             debug!("Listening on {}", listening.socket);
         }
     }
