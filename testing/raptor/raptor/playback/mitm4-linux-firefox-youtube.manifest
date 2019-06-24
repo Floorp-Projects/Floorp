@@ -1,9 +1,10 @@
 [
     {
-        "filename": "mitm4-linux-firefox-youtube.zip",
-        "size": 4927716,
-        "digest": "e599de242bc399ca9b1abb17c761c55f853dff4d9f779f5d01db9ac4743c6a9d2132ff7bcb97615b9fc43d0f7a4c6890732410e82f2ec9b9a657799ab46d35e8",
+        "size": 4828567,
+        "visibility": "public",
+        "digest": "eaca3d7f82de7e48332342db5ac18620d76f0568fa553c3ae12b631b35763e29eaee487f2c17179b987ffe192e01da6fae89f7f88f0e6adfb31a2b081a66e3c6",
         "algorithm": "sha512",
+        "filename": "mitm4-linux-firefox-youtube.zip",
         "unpack": true
     }
 ]
