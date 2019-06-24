@@ -86,7 +86,7 @@ Maybe<float> SimpleVelocityTracker::ComputeVelocity(uint32_t aTimestampMs) {
   int count = 0;
   for (const auto& e : mVelocityQueue) {
     uint32_t timeDelta = (aTimestampMs - e.first);
-    if (timeDelta < StaticPrefs::APZVelocityRelevanceTime()) {
+    if (timeDelta < StaticPrefs::apz_velocity_relevance_time_ms()) {
       count++;
       velocity += e.second;
     }
@@ -103,24 +103,26 @@ void SimpleVelocityTracker::Clear() { mVelocityQueue.Clear(); }
 void SimpleVelocityTracker::AddVelocityToQueue(uint32_t aTimestampMs,
                                                float aVelocity) {
   mVelocityQueue.AppendElement(std::make_pair(aTimestampMs, aVelocity));
-  if (mVelocityQueue.Length() > StaticPrefs::APZMaxVelocityQueueSize()) {
+  if (mVelocityQueue.Length() > StaticPrefs::apz_max_velocity_queue_size()) {
     mVelocityQueue.RemoveElementAt(0);
   }
 }
 
 float SimpleVelocityTracker::ApplyFlingCurveToVelocity(float aVelocity) const {
   float newVelocity = aVelocity;
-  if (StaticPrefs::APZMaxVelocity() > 0.0f) {
+  if (StaticPrefs::apz_max_velocity_inches_per_ms() > 0.0f) {
     bool velocityIsNegative = (newVelocity < 0);
     newVelocity = fabs(newVelocity);
 
-    float maxVelocity = mAxis->ToLocalVelocity(StaticPrefs::APZMaxVelocity());
+    float maxVelocity =
+        mAxis->ToLocalVelocity(StaticPrefs::apz_max_velocity_inches_per_ms());
     newVelocity = std::min(newVelocity, maxVelocity);
 
-    if (StaticPrefs::APZCurveThreshold() > 0.0f &&
-        StaticPrefs::APZCurveThreshold() < StaticPrefs::APZMaxVelocity()) {
-      float curveThreshold =
-          mAxis->ToLocalVelocity(StaticPrefs::APZCurveThreshold());
+    if (StaticPrefs::apz_fling_curve_threshold_inches_per_ms() > 0.0f &&
+        StaticPrefs::apz_fling_curve_threshold_inches_per_ms() <
+            StaticPrefs::apz_max_velocity_inches_per_ms()) {
+      float curveThreshold = mAxis->ToLocalVelocity(
+          StaticPrefs::apz_fling_curve_threshold_inches_per_ms());
       if (newVelocity > curveThreshold) {
         // here, 0 < curveThreshold < newVelocity <= maxVelocity, so we apply
         // the curve

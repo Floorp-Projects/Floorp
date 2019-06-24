@@ -108,7 +108,7 @@ class InputBlockState : public RefCounted<InputBlockState> {
   // The APZC that was actually scrolled by events in this input block.
   // This is used in configurations where a single input block is only
   // allowed to scroll a single APZC (configurations where
-  // StaticPrefs::APZAllowImmediateHandoff() is false). Set the first time an
+  // StaticPrefs::apz_allow_immediate_handoff() is false). Set the first time an
   // input event in this block scrolls an APZC.
   RefPtr<AsyncPanZoomController> mScrolledApzc;
 

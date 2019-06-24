@@ -60,7 +60,7 @@
 //   VARCACHE_PREF(
 //     <update-policy>,
 //     <pref-name-string>,
-//     <pref-name-id>,
+//      <pref-name-id>,  // indented one space to align with <pref-name-string>
 //     <cpp-type>, <default-value>
 //   )
 //
@@ -117,14 +117,14 @@
 VARCACHE_PREF(
   Live,
   "accessibility.monoaudio.enable",
-  accessibility_monoaudio_enable,
+   accessibility_monoaudio_enable,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "accessibility.browsewithcaret",
-  AccessibilityBrowseWithCaret,
+   accessibility_browsewithcaret,
   RelaxedAtomicBool, false
 )
 
@@ -136,273 +136,273 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "apz.allow_double_tap_zooming",
-  APZAllowDoubleTapZooming,
+   apz_allow_double_tap_zooming,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "apz.allow_immediate_handoff",
-  APZAllowImmediateHandoff,
+   apz_allow_immediate_handoff,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "apz.allow_zooming",
-  APZAllowZooming,
+   apz_allow_zooming,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.android.chrome_fling_physics.enabled",
-  APZUseChromeFlingPhysics,
+   apz_android_chrome_fling_physics_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.android.chrome_fling_physics.friction",
-  APZChromeFlingPhysicsFriction,
+   apz_android_chrome_fling_physics_friction,
   AtomicFloat, 0.015f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.android.chrome_fling_physics.inflexion",
-  APZChromeFlingPhysicsInflexion,
+   apz_android_chrome_fling_physics_inflexion,
   AtomicFloat, 0.35f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.android.chrome_fling_physics.stop_threshold",
-  APZChromeFlingPhysicsStopThreshold,
+   apz_android_chrome_fling_physics_stop_threshold,
   AtomicFloat, 0.1f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.autoscroll.enabled",
-  APZAutoscrollEnabled,
+   apz_autoscroll_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.axis_lock.breakout_angle",
-  APZAxisBreakoutAngle,
+   apz_axis_lock_breakout_angle,
   AtomicFloat, float(M_PI / 8.0) /* 22.5 degrees */
 )
 
 VARCACHE_PREF(
   Live,
   "apz.axis_lock.breakout_threshold",
-  APZAxisBreakoutThreshold,
+   apz_axis_lock_breakout_threshold,
   AtomicFloat, 1.0f / 32.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.axis_lock.direct_pan_angle",
-  APZAllowedDirectPanAngle,
+   apz_axis_lock_direct_pan_angle,
   AtomicFloat, float(M_PI / 3.0) /* 60 degrees */
 )
 
 VARCACHE_PREF(
   Live,
   "apz.axis_lock.lock_angle",
-  APZAxisLockAngle,
+   apz_axis_lock_lock_angle,
   AtomicFloat, float(M_PI / 6.0) /* 30 degrees */
 )
 
 VARCACHE_PREF(
   Live,
   "apz.axis_lock.mode",
-  APZAxisLockMode,
+   apz_axis_lock_mode,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "apz.content_response_timeout",
-  APZContentResponseTimeout,
+   apz_content_response_timeout,
   RelaxedAtomicInt32, 400
 )
 
 VARCACHE_PREF(
   Live,
   "apz.danger_zone_x",
-  APZDangerZoneX,
+   apz_danger_zone_x,
   RelaxedAtomicInt32, 50
 )
 
 VARCACHE_PREF(
   Live,
   "apz.danger_zone_y",
-  APZDangerZoneY,
+   apz_danger_zone_y,
   RelaxedAtomicInt32, 100
 )
 
 VARCACHE_PREF(
   Live,
   "apz.disable_for_scroll_linked_effects",
-  APZDisableForScrollLinkedEffects,
+   apz_disable_for_scroll_linked_effects,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.displayport_expiry_ms",
-  APZDisplayPortExpiryTime,
+   apz_displayport_expiry_ms,
   RelaxedAtomicUint32, 15000
 )
 
 VARCACHE_PREF(
   Live,
   "apz.drag.enabled",
-  APZDragEnabled,
+   apz_drag_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.drag.initial.enabled",
-  APZDragInitiationEnabled,
+   apz_drag_initial_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.drag.touch.enabled",
-  APZTouchDragEnabled,
+   apz_touch_drag_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.enlarge_displayport_when_clipped",
-  APZEnlargeDisplayPortWhenClipped,
+   apz_enlarge_displayport_when_clipped,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fixed-margin-override.enabled",
-  APZFixedMarginOverrideEnabled,
+   apz_fixed_margin_override_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fixed-margin-override.bottom",
-  APZFixedMarginOverrideBottom,
+   apz_fixed_margin_override_bottom,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fixed-margin-override.top",
-  APZFixedMarginOverrideTop,
+   apz_fixed_margin_override_top,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fling_accel_base_mult",
-  APZFlingAccelBaseMultiplier,
+   apz_fling_accel_base_mult,
   AtomicFloat, 1.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fling_accel_interval_ms",
-  APZFlingAccelInterval,
+   apz_fling_accel_interval_ms,
   RelaxedAtomicInt32, 500
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fling_accel_supplemental_mult",
-  APZFlingAccelSupplementalMultiplier,
+   apz_fling_accel_supplemental_mult,
   AtomicFloat, 1.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fling_accel_min_velocity",
-  APZFlingAccelMinVelocity,
+   apz_fling_accel_min_velocity,
   AtomicFloat, 1.5f
 )
 
 VARCACHE_PREF(
   Once,
   "apz.fling_curve_function_x1",
-  APZCurveFunctionX1,
+   apz_fling_curve_function_x1,
   float, 0.0f
 )
 
 VARCACHE_PREF(
   Once,
   "apz.fling_curve_function_x2",
-  APZCurveFunctionX2,
+   apz_fling_curve_function_x2,
   float, 1.0f
 )
 
 VARCACHE_PREF(
   Once,
   "apz.fling_curve_function_y1",
-  APZCurveFunctionY1,
+   apz_fling_curve_function_y1,
   float, 0.0f
 )
 
 VARCACHE_PREF(
   Once,
   "apz.fling_curve_function_y2",
-  APZCurveFunctionY2,
+   apz_fling_curve_function_y2,
   float, 1.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fling_curve_threshold_inches_per_ms",
-  APZCurveThreshold,
+   apz_fling_curve_threshold_inches_per_ms,
   AtomicFloat, -1.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fling_friction",
-  APZFlingFriction,
+   apz_fling_friction,
   AtomicFloat, 0.002f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fling_min_velocity_threshold",
-  APZFlingMinVelocityThreshold,
+   apz_fling_min_velocity_threshold,
   AtomicFloat, 0.5f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fling_stop_on_tap_threshold",
-  APZFlingStopOnTapThreshold,
+   apz_fling_stop_on_tap_threshold,
   AtomicFloat, 0.05f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.fling_stopped_threshold",
-  APZFlingStoppedThreshold,
+   apz_fling_stopped_threshold,
   AtomicFloat, 0.01f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.frame_delay.enabled",
-  APZFrameDelayEnabled,
+   apz_frame_delay_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -410,7 +410,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "apz.gtk.kinetic_scroll.enabled",
-  APZGTKKineticScrollEnabled,
+   apz_gtk_kinetic_scroll_enabled,
   RelaxedAtomicBool, false
 )
 #endif
@@ -423,7 +423,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "apz.keyboard.enabled",
-  APZKeyboardEnabled,
+   apz_keyboard_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -431,276 +431,260 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "apz.keyboard.passive-listeners",
-  APZKeyboardPassiveListeners,
+   apz_keyboard_passive_listeners,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.max_tap_time",
-  APZMaxTapTime,
+   apz_max_tap_time,
   RelaxedAtomicInt32, 300
 )
 
 VARCACHE_PREF(
   Live,
   "apz.max_velocity_inches_per_ms",
-  APZMaxVelocity,
+   apz_max_velocity_inches_per_ms,
   AtomicFloat, -1.0f
 )
 
 VARCACHE_PREF(
   Once,
   "apz.max_velocity_queue_size",
-  APZMaxVelocityQueueSize,
+   apz_max_velocity_queue_size,
   uint32_t, 5
 )
 
 VARCACHE_PREF(
   Live,
   "apz.min_skate_speed",
-  APZMinSkateSpeed,
+   apz_min_skate_speed,
   AtomicFloat, 1.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.minimap.enabled",
-  APZMinimap,
+   apz_minimap_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.one_touch_pinch.enabled",
-  APZOneTouchPinchEnabled,
+   apz_one_touch_pinch_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "apz.overscroll.enabled",
-  APZOverscrollEnabled,
+   apz_overscroll_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.overscroll.min_pan_distance_ratio",
-  APZMinPanDistanceRatio,
+   apz_overscroll_min_pan_distance_ratio,
   AtomicFloat, 1.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.overscroll.spring_stiffness",
-  APZOverscrollSpringStiffness,
+   apz_overscroll_spring_stiffness,
   AtomicFloat, 0.001f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.overscroll.stop_distance_threshold",
-  APZOverscrollStopDistanceThreshold,
+   apz_overscroll_stop_distance_threshold,
   AtomicFloat, 5.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.paint_skipping.enabled",
-  APZPaintSkipping,
+   apz_paint_skipping_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "apz.peek_messages.enabled",
-  APZPeekMessages,
+   apz_peek_messages_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "apz.pinch_lock.mode",
-  APZPinchLockMode,
+   apz_pinch_lock_mode,
   RelaxedAtomicInt32, 1
 )
 
 VARCACHE_PREF(
   Live,
   "apz.pinch_lock.scroll_lock_threshold",
-  APZPinchLockScrollLockThreshold,
+   apz_pinch_lock_scroll_lock_threshold,
   AtomicFloat, 1.0f / 32.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.pinch_lock.span_breakout_threshold",
-  APZPinchLockSpanBreakoutThreshold,
+   apz_pinch_lock_span_breakout_threshold,
   AtomicFloat, 1.0f / 32.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.pinch_lock.span_lock_threshold",
-  APZPinchLockSpanLockThreshold,
+   apz_pinch_lock_span_lock_threshold,
   AtomicFloat, 1.0f / 32.0f
 )
 
 VARCACHE_PREF(
   Once,
   "apz.pinch_lock.buffer_max_age",
-  APZPinchLockBufferMaxAge,
+   apz_pinch_lock_buffer_max_age,
   int32_t, 50 // milliseconds
 )
 
 VARCACHE_PREF(
   Live,
   "apz.popups.enabled",
-  APZPopupsEnabled,
+   apz_popups_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.printtree",
-  APZPrintTree,
+   apz_printtree,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.record_checkerboarding",
-  APZRecordCheckerboarding,
+   apz_record_checkerboarding,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.second_tap_tolerance",
-  APZSecondTapTolerance,
+   apz_second_tap_tolerance,
   AtomicFloat, 0.5f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.test.fails_with_native_injection",
-  APZTestFailsWithNativeInjection,
+   apz_test_fails_with_native_injection,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.test.logging_enabled",
-  apz_test_logging_enabled,
+   apz_test_logging_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "apz.touch_move_tolerance",
-  APZTouchMoveTolerance,
+   apz_touch_move_tolerance,
   AtomicFloat, 0.1f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.touch_start_tolerance",
-  APZTouchStartTolerance,
+   apz_touch_start_tolerance,
   AtomicFloat, 1.0f/4.5f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.velocity_bias",
-  APZVelocityBias,
+   apz_velocity_bias,
   AtomicFloat, 0.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.velocity_relevance_time_ms",
-  APZVelocityRelevanceTime,
+   apz_velocity_relevance_time_ms,
   RelaxedAtomicUint32, 150
 )
 
 VARCACHE_PREF(
   Live,
   "apz.x_skate_highmem_adjust",
-  APZXSkateHighMemAdjust,
+   apz_x_skate_highmem_adjust,
   AtomicFloat, 0.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.x_skate_size_multiplier",
-  APZXSkateSizeMultiplier,
+   apz_x_skate_size_multiplier,
   AtomicFloat, 1.5f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.x_stationary_size_multiplier",
-  APZXStationarySizeMultiplier,
+   apz_x_stationary_size_multiplier,
   AtomicFloat, 3.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.y_skate_highmem_adjust",
-  APZYSkateHighMemAdjust,
+   apz_y_skate_highmem_adjust,
   AtomicFloat, 0.0f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.y_skate_size_multiplier",
-  APZYSkateSizeMultiplier,
+   apz_y_skate_size_multiplier,
   AtomicFloat, 2.5f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.y_stationary_size_multiplier",
-  APZYStationarySizeMultiplier,
+   apz_y_stationary_size_multiplier,
   AtomicFloat, 3.5f
 )
 
 VARCACHE_PREF(
   Live,
   "apz.zoom_animation_duration_ms",
-  APZZoomAnimationDuration,
+   apz_zoom_animation_duration_ms,
   RelaxedAtomicInt32, 250
 )
 
 VARCACHE_PREF(
   Live,
   "apz.scale_repaint_delay_ms",
-  APZScaleRepaintDelay,
+   apz_scale_repaint_delay_ms,
   RelaxedAtomicInt32, 500
 )
 
 VARCACHE_PREF(
   Live,
   "apz.relative-update.enabled",
-  APZRelativeUpdate,
+   apz_relative_update_enabled,
   RelaxedAtomicBool, false
-)
-
-VARCACHE_PREF(
-  Live,
-  "full-screen-api.mouse-event-allow-left-button-only",
-  full_screen_api_mouse_event_allow_left_button_only,
-  bool, true
-)
-
-// When this pref is set, parent documents may consider child iframes've loaded
-// while they are still loading
-VARCACHE_PREF(
-  Live,
-  "dom.cross_origin_iframes_loaded_in_background",
-   dom_cross_origin_iframes_loaded_in_background,
-  bool, false
 )
 
 //---------------------------------------------------------------------------
@@ -2648,6 +2632,15 @@ VARCACHE_PREF(
   bool, false
 )
 
+// When this pref is set, parent documents may consider child iframes have
+// loaded while they are still loading.
+VARCACHE_PREF(
+  Live,
+  "dom.cross_origin_iframes_loaded_in_background",
+   dom_cross_origin_iframes_loaded_in_background,
+  bool, false
+)
+
 // Is support for Navigator.geolocation enabled?
 VARCACHE_PREF(
   Live,
@@ -2733,6 +2726,13 @@ VARCACHE_PREF(
   Live,
   "full-screen-api.allow-trusted-requests-only",
   full_screen_api_allow_trusted_requests_only,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "full-screen-api.mouse-event-allow-left-button-only",
+   full_screen_api_mouse_event_allow_left_button_only,
   bool, true
 )
 

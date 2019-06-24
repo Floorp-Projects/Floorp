@@ -229,9 +229,9 @@ bool SharedFrameMetricsHelper::AboutToCheckerboard(
   CSSRect showing =
       CSSRect(aCompositorMetrics.GetScrollOffset(),
               aCompositorMetrics.CalculateBoundedCompositedSizeInCssPixels());
-  showing.Inflate(
-      LayerSize(StaticPrefs::APZDangerZoneX(), StaticPrefs::APZDangerZoneY()) /
-      aCompositorMetrics.LayersPixelsPerCSSPixel());
+  showing.Inflate(LayerSize(StaticPrefs::apz_danger_zone_x(),
+                            StaticPrefs::apz_danger_zone_y()) /
+                  aCompositorMetrics.LayersPixelsPerCSSPixel());
 
   // Clamp both rects to the scrollable rect, because having either of those
   // exceed the scrollable rect doesn't make sense, and could lead to false
