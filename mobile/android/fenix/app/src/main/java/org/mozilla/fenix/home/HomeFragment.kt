@@ -845,11 +845,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     ): List<Session> {
         return this.sessions
             .filter { private == it.private }
-            .also { list: List<Session> ->
-                sessionFilter?.let {
-                    list.filter(it)
-                }
-            }
+            .filter { sessionFilter?.invoke(it) ?: true }
     }
 
     private fun List<Session>.toTabs(): List<Tab> {
