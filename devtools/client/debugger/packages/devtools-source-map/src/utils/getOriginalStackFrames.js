@@ -6,14 +6,19 @@
 
 import type { OriginalFrame, SourceLocation } from "debugger-html";
 
-const { getWasmXScopes } = require("./wasmXScopes");
+const { getWasmXScopes } = require("devtools-wasm-dwarf");
+const { getSourceMap } = require("./sourceMapRequests");
+const { generatedToOriginalId } = require("./index");
 
 // Returns expanded stack frames details based on the generated location.
 // The function return null if not information was found.
 async function getOriginalStackFrames(
   generatedLocation: SourceLocation
 ): Promise<?Array<OriginalFrame>> {
-  const wasmXScopes = await getWasmXScopes(generatedLocation.sourceId);
+  const wasmXScopes = await getWasmXScopes(generatedLocation.sourceId, {
+    getSourceMap,
+    generatedToOriginalId,
+  });
   if (!wasmXScopes) {
     return null;
   }

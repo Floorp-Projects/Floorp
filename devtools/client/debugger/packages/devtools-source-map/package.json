@@ -10,7 +10,7 @@
     "https://github.com/firefox-devtools/debugger/tree/master/packages/source-maps#readme",
   "main": "src/index.js",
   "browser": {
-    "./src/utils/wasmAsset.js": "./src/utils/wasmAssetBrowser.js"
+    "./src/utils/assetRoot.js": "./src/utils/assetRootBrowser.js"
   },
   "scripts": {
     "license-check": "devtools-license-check",
@@ -20,6 +20,7 @@
     "babel-plugin-transform-async-to-generator": "^6.22.0",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "devtools-utils": "0.0.14",
+    "devtools-wasm-dwarf": "0.0.1",
     "md5": "^2.2.1",
     "regenerator-runtime": "^0.13.0",
     "source-map": "0.8.0-beta.0"
