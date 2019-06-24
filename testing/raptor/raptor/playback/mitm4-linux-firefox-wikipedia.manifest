@@ -1,0 +1,10 @@
+[
+  {
+    "size": 1831047,
+    "visibility": "public",
+    "digest": "6f22a777b9e8df62795ecaee337c705e469f708879f19c9d2c6ee43d57c03f0cd62d006229fb7980aa1434b89e5d5d354756fbff3d79adec95e7dd408d86669e",
+    "algorithm": "sha512",
+    "filename": "firefox-wikipedia.zip",
+    "unpack": true
+  }
+]
