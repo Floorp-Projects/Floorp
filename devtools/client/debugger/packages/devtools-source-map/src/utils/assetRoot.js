@@ -3,6 +3,10 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 // @flow
 
+function setAssetRootURL(assetRoot: string): void {
+  // No-op on Node
+}
+
 module.exports = {
-  "source-map-mappings.wasm": require.resolve("source-map/lib/mappings.wasm"),
+  setAssetRootURL,
 };

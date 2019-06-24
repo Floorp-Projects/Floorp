@@ -8,7 +8,7 @@ const { networkRequest } = require("devtools-utils");
 const { getSourceMap, setSourceMap } = require("./sourceMapRequests");
 const { WasmRemap } = require("./wasmRemap");
 const { SourceMapConsumer } = require("source-map");
-const { convertToJSON } = require("./convertToJSON");
+const { convertToJSON } = require("devtools-wasm-dwarf");
 const { createConsumer } = require("./createConsumer");
 
 import type { Source } from "debugger-html";

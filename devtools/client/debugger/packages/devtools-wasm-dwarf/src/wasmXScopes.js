@@ -6,14 +6,24 @@
 /* eslint camelcase: 0*/
 
 import type { OriginalFrame, SourceLocation, SourceId } from "debugger-html";
+import type { Expr } from "./wasmDwarfExpressions";
 
-const { getSourceMap } = require("./sourceMapRequests");
-const { generatedToOriginalId } = require("./index");
+const { decodeExpr } = require("./wasmDwarfExpressions");
 
 const xScopes = new Map();
 
 type XScopeItem = any;
 type XScopeItemsIndex = Map<string | number, XScopeItem>;
+
+type XScopeVariable = {
+  name: string,
+  expr?: Expr,
+};
+
+type XScopeVariables = {
+  vars: XScopeVariable[],
+  frameBase?: Expr | null,
+};
 
 function indexLinkingNames(items: XScopeItem[]): XScopeItemsIndex {
   const result = new Map();
@@ -54,7 +64,15 @@ type XScopeData = {
   sources: Array<string>,
 };
 
-async function getXScopes(sourceId: SourceId): Promise<?XScopeData> {
+async function getXScopes(
+  sourceId: SourceId,
+  getSourceMap: (
+    sourceId: SourceId
+  ) => {
+    sources: string[],
+    xScopes?: XScopeData,
+  }
+): Promise<?XScopeData> {
   if (xScopes.has(sourceId)) {
     return xScopes.get(sourceId);
   }
@@ -87,9 +105,52 @@ function isInRange(item: XScopeItem, pc: number): boolean {
 type FoundScope = {
   id: string,
   name?: string,
+  variables: XScopeVariables,
   file?: number,
   line?: number,
 };
+
+type EncodedExpr =
+  | string
+  | Array<{
+      expr: string,
+      range: number[],
+    }>;
+
+function decodeExprAt(expr: EncodedExpr, pc: number): ?Expr {
+  if (typeof expr === "string") {
+    return decodeExpr(expr);
+  }
+  const foundAt = expr.find(i => i.range[0] <= pc && pc < i.range[1]);
+  return foundAt ? decodeExpr(foundAt.expr) : null;
+}
+
+function getVariables(scope: XScopeItem, pc: number): XScopeVariables {
+  const vars = scope.children
+    ? scope.children.reduce((result, item) => {
+        switch (item.tag) {
+          case "variable":
+          case "formal_parameter":
+            result.push({
+              name: item.name || "",
+              expr: item.location ? decodeExprAt(item.location, pc) : null,
+            });
+            break;
+          case "lexical_block":
+            // FIXME build scope blocks (instead of combining)
+            const tmp = getVariables(item, pc);
+            result = [...tmp.vars, ...result];
+            break;
+        }
+        return result;
+      }, [])
+    : [];
+  const frameBase = scope.frame_base ? decodeExpr(scope.frame_base) : null;
+  return {
+    vars,
+    frameBase,
+  };
+}
 
 function filterScopes(
   items: XScopeItem[],
@@ -123,6 +184,7 @@ function filterScopes(
           const s: FoundScope = {
             id: item.linkage_name,
             name: item.name,
+            variables: getVariables(item, pc),
           };
           result = [...result, s, ...filterScopes(item.children, pc, s, index)];
         }
@@ -133,6 +195,7 @@ function filterScopes(
           const s: FoundScope = {
             id: item.abstract_origin,
             name: linkedItem ? linkedItem.name : void 0,
+            variables: getVariables(item, pc),
           };
           if (lastItem) {
             lastItem.file = item.call_file;
@@ -146,11 +209,21 @@ function filterScopes(
   }, []);
 }
 
+interface XScopeSourceMapContext {
+  getSourceMap(sourceId: SourceId): any;
+  generatedToOriginalId(sourceId: SourceId, url: string): SourceId;
+}
+
 class XScope {
   xScope: XScopeData;
+  sourceMapContext: XScopeSourceMapContext;
 
-  constructor(xScopeData: XScopeData) {
+  constructor(
+    xScopeData: XScopeData,
+    sourceMapContext: XScopeSourceMapContext
+  ) {
     this.xScope = xScopeData;
+    this.sourceMapContext = sourceMapContext;
   }
 
   search(generatedLocation: SourceLocation): Array<OriginalFrame> {
@@ -163,14 +236,16 @@ class XScope {
       if (!("file" in i)) {
         return {
           displayName: i.name || "",
+          variables: i.variables,
         };
       }
-      const sourceId = generatedToOriginalId(
+      const sourceId = this.sourceMapContext.generatedToOriginalId(
         generatedLocation.sourceId,
         sources[i.file || 0]
       );
       return {
         displayName: i.name || "",
+        variables: i.variables,
         location: {
           line: i.line || 0,
           sourceId,
@@ -180,12 +255,16 @@ class XScope {
   }
 }
 
-async function getWasmXScopes(sourceId: SourceId): Promise<?XScope> {
-  const xScopeData = await getXScopes(sourceId);
+async function getWasmXScopes(
+  sourceId: SourceId,
+  sourceMapContext: XScopeSourceMapContext
+): Promise<?XScope> {
+  const { getSourceMap } = sourceMapContext;
+  const xScopeData = await getXScopes(sourceId, getSourceMap);
   if (!xScopeData) {
     return null;
   }
-  return new XScope(xScopeData);
+  return new XScope(xScopeData, sourceMapContext);
 }
 
 function clearWasmXScopes() {

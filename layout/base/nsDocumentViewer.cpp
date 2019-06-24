@@ -1102,7 +1102,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
       }
 
       nsPIDOMWindowInner* innerWindow = window->GetCurrentInnerWindow();
-      RefPtr<DocGroup> docGroup = mDocument->GetDocGroup();
+      RefPtr<DocGroup> docGroup = d->GetDocGroup();
       // It is possible that the parent document's load event fires earlier than
       // childs' load event, and in this case we need to fire some artificial
       // load events to make the parent thinks the load events for child has
@@ -1155,7 +1155,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
       d->SetLoadEventFiring(false);
 
       RefPtr<nsDocShell> dShell = nsDocShell::Cast(docShell);
-      if (dShell->TreatAsBackgroundLoad()) {
+      if (docGroup && dShell->TreatAsBackgroundLoad()) {
         docGroup->TryFlushIframePostMessages(dShell->GetOuterWindowID());
       }
 

@@ -210,6 +210,18 @@ export type PendingBreakpoint = {
  */
 export type FrameId = string;
 
+type Expr = string;
+
+export type XScopeVariable = {
+  name: string,
+  expr?: Expr,
+};
+
+export type XScopeVariables = {
+  vars: XScopeVariable[],
+  frameBase?: Expr | null,
+};
+
 /**
  * Frame
  * @memberof types
@@ -228,6 +240,7 @@ export type Frame = {
   framework?: string,
   isOriginal?: boolean,
   originalDisplayName?: string,
+  originalVariables?: XScopeVariables,
   library?: string,
 };
 
@@ -241,6 +254,7 @@ export type ChromeFrame = {
 
 export type OriginalFrame = {
   displayName: string,
+  variables?: Object,
   location?: SourceLocation,
   thread: string,
 };

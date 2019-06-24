@@ -4,28 +4,21 @@
 // @flow
 
 const { SourceMapConsumer } = require("source-map");
+const {
+  setAssetRootURL: wasmDwarfSetAssetRootURL,
+} = require("devtools-wasm-dwarf");
 
-let root;
 function setAssetRootURL(assetRoot: string): void {
   // Remove any trailing slash so we don't generate a double-slash below.
-  root = assetRoot.replace(/\/$/, "");
+  const root = assetRoot.replace(/\/$/, "");
+
+  wasmDwarfSetAssetRootURL(root);
 
   SourceMapConsumer.initialize({
     "lib/mappings.wasm": `${root}/source-map-mappings.wasm`,
   });
 }
 
-async function getDwarfToWasmData(name: string): Promise<ArrayBuffer> {
-  if (!root) {
-    throw new Error(`No wasm path - Unable to resolve ${name}`);
-  }
-
-  const response = await fetch(`${root}/dwarf_to_json.wasm`);
-
-  return response.arrayBuffer();
-}
-
 module.exports = {
   setAssetRootURL,
-  getDwarfToWasmData,
 };

@@ -189,11 +189,11 @@ static const nsCatalogData* LookupCatalogData(const char16_t* aPublicID) {
 // This function provides a resource URI to a local DTD
 // in resource://gre/res/dtd/ which may or may not exist.
 // If aCatalogData is provided, it is used to remap the
-// DTD instead of taking the filename from the URI.
+// DTD instead of taking the filename from the URI.  aDTD
+// may be null in some cases that are relying on
+// aCatalogData working for them.
 static void GetLocalDTDURI(const nsCatalogData* aCatalogData, nsIURI* aDTD,
                            nsIURI** aResult) {
-  NS_ASSERTION(aDTD, "Null parameter.");
-
   nsAutoCString fileName;
   if (aCatalogData) {
     // remap the DTD to a known local DTD
@@ -207,6 +207,8 @@ static void GetLocalDTDURI(const nsCatalogData* aCatalogData, nsIURI* aDTD,
     // special DTD directory and it will be picked.
     nsCOMPtr<nsIURL> dtdURL = do_QueryInterface(aDTD);
     if (!dtdURL) {
+      // Not a URL with a filename, or maybe it was null.  Either way, nothing
+      // else we can do here.
       return;
     }
 
@@ -599,13 +601,21 @@ nsresult nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUTF16toUTF8(aURLStr), nullptr,
                  baseURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Even if the URI is malformed (most likely because we have a
+  // non-hierarchical base URI and a relative DTD URI, with the latter
+  // being the normal XHTML DTD case), we can try to see whether we
+  // have catalog data for aFPIStr.
+  if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_MALFORMED_URI)) {
+    return rv;
+  }
 
-  // make sure the URI is allowed to be loaded in sync
+  // make sure the URI, if we have one, is allowed to be loaded in sync
   bool isUIResource = false;
-  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_UI_RESOURCE,
-                           &isUIResource);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (uri) {
+    rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                             &isUIResource);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsCOMPtr<nsIURI> localURI;
   if (!isUIResource) {

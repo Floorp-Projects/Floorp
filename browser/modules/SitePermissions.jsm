@@ -888,7 +888,7 @@ var gPermissionObject = {
       }
       Services.prefs.setIntPref("media.autoplay.default", prefValue);
     },
-    labelID: "autoplay-media2",
+    labelID: "autoplay",
     states: [
       SitePermissions.ALLOW,
       SitePermissions.BLOCK,

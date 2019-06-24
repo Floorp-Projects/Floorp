@@ -43,10 +43,12 @@ class Element;
 class ServoRestyleState {
  public:
   ServoRestyleState(ServoStyleSet& aStyleSet, nsStyleChangeList& aChangeList,
-                    nsTArray<nsIFrame*>& aPendingWrapperRestyles)
+                    nsTArray<nsIFrame*>& aPendingWrapperRestyles,
+                    nsTArray<nsIFrame*>& aPendingScrollAnchorSuppressions)
       : mStyleSet(aStyleSet),
         mChangeList(aChangeList),
         mPendingWrapperRestyles(aPendingWrapperRestyles),
+        mPendingScrollAnchorSuppressions(aPendingScrollAnchorSuppressions),
         mPendingWrapperRestyleOffset(aPendingWrapperRestyles.Length()),
         mChangesHandled(nsChangeHint(0))
 #ifdef DEBUG
@@ -77,6 +79,8 @@ class ServoRestyleState {
       : mStyleSet(aParentState.mStyleSet),
         mChangeList(aParentState.mChangeList),
         mPendingWrapperRestyles(aParentState.mPendingWrapperRestyles),
+        mPendingScrollAnchorSuppressions(
+            aParentState.mPendingScrollAnchorSuppressions),
         mPendingWrapperRestyleOffset(
             aParentState.mPendingWrapperRestyles.Length()),
         mChangesHandled(aType == Type::InFlow
@@ -126,6 +130,20 @@ class ServoRestyleState {
   // outer table and cellcontent frames.
   static nsIFrame* TableAwareParentFor(const nsIFrame* aChild);
 
+  // When the value of the position property changes such as we stop or start
+  // being absolutely or fixed positioned, we need to suppress scroll anchoring
+  // adjustments to avoid breaking websites.
+  //
+  // We do need to process all this once we're done with all our reframes,
+  // to handle correctly the cases where we reconstruct an ancestor, like when
+  // you reframe an ib-split (see bug 1559627 for example).
+  //
+  // This doesn't handle nested reframes. We'd need to rework quite some code to
+  // do that, and so far it doesn't seem to be a problem in practice.
+  void AddPendingScrollAnchorSuppression(nsIFrame* aFrame) {
+    mPendingScrollAnchorSuppressions.AppendElement(aFrame);
+  }
+
  private:
   // Process a wrapper restyle at the given index, and restyles for any
   // wrappers nested in it.  Returns the number of entries from
@@ -154,6 +172,8 @@ class ServoRestyleState {
   // occurs, the relevant frames will be placed in the array with ancestors
   // before descendants.
   nsTArray<nsIFrame*>& mPendingWrapperRestyles;
+
+  nsTArray<nsIFrame*>& mPendingScrollAnchorSuppressions;
 
   // Since we're given a possibly-nonempty mPendingWrapperRestyles to start
   // with, we need to keep track of where the part of it we're responsible for

@@ -656,7 +656,14 @@
       "external \"\\n(() => { \\n  importScripts \\\"resource://devtools/client/shared/vendor/whatwg-url\\\";\\n  return { URL: self.URL }\\n})()\\n\"": 505,
       "external \"\\n(() => { \\n  importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\");\\n  return { URL: self.URL }\\n})()\\n\"": 506,
       "external \"\\n(() => { \\n  importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\");\\n  return { URL }\\n})()\\n\"": 507,
-      "external \"\\n(() => { \\n  console.log('>> yo',importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\"));\\n  return { URL }\\n})()\\n\"": 508
+      "external \"\\n(() => { \\n  console.log('>> yo',importScripts(\\\"resource://devtools/client/shared/vendor/whatwg-url.js\\\"));\\n  return { URL }\\n})()\\n\"": 508,
+      "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-source-map/src/utils/wasmDwarfExpressions.js": 509,
+      "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-wasm-dwarf/index.js": 510,
+      "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-wasm-dwarf/src/wasmAssetBrowser.js": 511,
+      "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-wasm-dwarf/src/convertToJSON.js": 512,
+      "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-wasm-dwarf/src/wasmXScopes.js": 513,
+      "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-wasm-dwarf/src/wasmDwarfExpressions.js": 514,
+      "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-source-map/src/utils/assetRootBrowser.js": 515
     },
     "usedIds": {
       "0": 0,
@@ -1167,7 +1174,14 @@
       "505": 505,
       "506": 506,
       "507": 507,
-      "508": 508
+      "508": 508,
+      "509": 509,
+      "510": 510,
+      "511": 511,
+      "512": 512,
+      "513": 513,
+      "514": 514,
+      "515": 515
     }
   },
   "chunks": {

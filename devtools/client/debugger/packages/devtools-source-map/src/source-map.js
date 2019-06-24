@@ -31,7 +31,7 @@ const {
   isOriginalId,
   getContentType,
 } = require("./utils");
-const { clearWasmXScopes } = require("./utils/wasmXScopes");
+const { clearWasmXScopes } = require("devtools-wasm-dwarf");
 
 import type { SourceLocation, Source, SourceId } from "debugger-html";
 
