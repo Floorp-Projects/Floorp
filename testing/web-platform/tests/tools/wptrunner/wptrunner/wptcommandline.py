@@ -602,8 +602,8 @@ def create_parser_update(product_choices=None):
                         help="Don't create a VCS commit containing the changes.")
     parser.add_argument("--sync", dest="sync", action="store_true", default=False,
                         help="Sync the tests with the latest from upstream (implies --patch)")
-    parser.add_argument("--ignore-existing", action="store_true",
-                        help="When updating test results only consider results from the logfiles provided, not existing expectations.")
+    parser.add_argument("--full", action="store_true", default=False,
+                        help=("For all tests that are updated, remove any existing conditions and missing subtests"))
     parser.add_argument("--stability", nargs="?", action="store", const="unstable", default=None,
         help=("Reason for disabling tests. When updating test results, disable tests that have "
               "inconsistent results across many runs with the given reason."))
