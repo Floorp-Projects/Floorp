@@ -2100,13 +2100,14 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
 
     RuntimeService::GetDefaultJSSettings(mJSSettings);
 
+    mJSSettings.chrome.realmOptions.creationOptions().setClampAndJitterTime(
+        !UsesSystemPrincipal());
+    mJSSettings.content.realmOptions.creationOptions().setClampAndJitterTime(
+        !UsesSystemPrincipal());
+
     if (mIsSecureContext) {
       mJSSettings.chrome.realmOptions.creationOptions().setSecureContext(true);
-      mJSSettings.chrome.realmOptions.creationOptions().setClampAndJitterTime(
-          false);
       mJSSettings.content.realmOptions.creationOptions().setSecureContext(true);
-      mJSSettings.content.realmOptions.creationOptions().setClampAndJitterTime(
-          false);
     }
 
     mIsInAutomation = xpc::IsInAutomation();
