@@ -1,4 +1,5 @@
 from __future__ import absolute_import, unicode_literals
+from six import reraise
 
 import os
 import requests
@@ -164,7 +165,7 @@ def test_start_browser(get_binary, app):
 
     if thread.exc is not None:
         exc, value, tb = thread.exc
-        raise exc, value, tb
+        reraise(exc, value, tb)
 
     assert not raptor.runner.is_running()
     assert raptor.runner.returncode is not None
