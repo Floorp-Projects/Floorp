@@ -43,6 +43,7 @@ class BookmarksStorageSuggestionProvider(
         return this.map {
             AwesomeBar.Suggestion(
                 provider = this@BookmarksStorageSuggestionProvider,
+                id = it.guid,
                 icon = icons.loadLambda(it.url!!),
                 title = it.title,
                 description = it.url,

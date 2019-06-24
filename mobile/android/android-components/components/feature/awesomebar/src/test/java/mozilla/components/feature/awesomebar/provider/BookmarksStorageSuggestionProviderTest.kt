@@ -40,10 +40,16 @@ class BookmarksStorageSuggestionProviderTest {
     fun `Provider returns suggestions from configured bookmarks storage`() = runBlocking {
         val provider = BookmarksStorageSuggestionProvider(bookmarks, mock())
 
-        bookmarks.addItem("Mobile", newItem.url!!, newItem.title!!, null)
+        val id = bookmarks.addItem("Mobile", newItem.url!!, newItem.title!!, null)
 
-        val suggestions = provider.onInputChanged("moz")
+        var suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
+        assertEquals(id, suggestions[0].id)
+
+        suggestions = provider.onInputChanged("mozi")
+        assertEquals(1, suggestions.size)
+        assertEquals(id, suggestions[0].id)
+
         assertEquals("http://www.mozilla.org", suggestions[0].description)
     }
 
