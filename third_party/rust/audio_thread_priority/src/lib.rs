@@ -32,7 +32,7 @@ cfg_if! {
         use rt_linux::promote_current_thread_to_real_time_internal;
         use rt_linux::demote_current_thread_from_real_time_internal;
         use rt_linux::RtPriorityHandleInternal;
-    } else if #[cfg(target_os = "android")] {
+    } else {
         pub struct RtPriorityHandleInternal {}
         pub fn promote_current_thread_to_real_time_internal(_: u32, audio_samplerate_hz: u32) -> Result<RtPriorityHandle, ()> {
             if audio_samplerate_hz == 0 {
