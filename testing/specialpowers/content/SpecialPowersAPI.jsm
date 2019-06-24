@@ -1549,16 +1549,6 @@ class SpecialPowersAPI extends JSWindowActorChild {
     // between this content process and the chrome process.
     let id = this._nextExtensionID++;
 
-    let resolveStartup, resolveUnload, rejectStartup;
-    let startupPromise = new Promise((resolve, reject) => {
-      resolveStartup = resolve;
-      rejectStartup = reject;
-    });
-    let unloadPromise = new Promise(resolve => { resolveUnload = resolve; });
-
-    startupPromise.catch(() => {
-      this._extensionListeners.delete(listener);
-    });
 
     handler = Cu.waiveXrays(handler);
     ext = Cu.waiveXrays(ext);
@@ -1570,14 +1560,22 @@ class SpecialPowersAPI extends JSWindowActorChild {
 
       startup() {
         state = "pending";
-        sp.sendAsyncMessage("SPStartupExtension", {id});
-        return startupPromise;
+        return sp.sendQuery("SPStartupExtension", {id}).then(
+          () => {
+            state = "running";
+          }, () => {
+            state = "failed";
+            sp._extensionListeners.delete(listener);
+            return Promise.reject("startup failed");
+          });
       },
 
       unload() {
         state = "unloading";
-        sp.sendAsyncMessage("SPUnloadExtension", {id});
-        return unloadPromise;
+        return sp.sendQuery("SPUnloadExtension", {id}).finally(() => {
+          sp._extensionListeners.delete(listener);
+          state = "unloaded";
+        });
       },
 
       sendMessage(...args) {
@@ -1589,19 +1587,9 @@ class SpecialPowersAPI extends JSWindowActorChild {
 
     let listener = (msg) => {
       if (msg.data.id == id) {
-        if (msg.data.type == "extensionStarted") {
-          state = "running";
-          resolveStartup();
-        } else if (msg.data.type == "extensionSetId") {
+        if (msg.data.type == "extensionSetId") {
           extension.id = msg.data.args[0];
           extension.uuid = msg.data.args[1];
-        } else if (msg.data.type == "extensionFailed") {
-          state = "failed";
-          rejectStartup("startup failed");
-        } else if (msg.data.type == "extensionUnloaded") {
-          this._extensionListeners.delete(listener);
-          state = "unloaded";
-          resolveUnload();
         } else if (msg.data.type in handler) {
           handler[msg.data.type](...Cu.cloneInto(msg.data.args, this.contentWindow));
         } else {
