@@ -516,10 +516,8 @@ bool gfxWindowsPlatform::HandleDeviceReset() {
 BackendPrefsData gfxWindowsPlatform::GetBackendPrefs() const {
   BackendPrefsData data;
 
-  data.mCanvasBitmask =
-      BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
-  data.mContentBitmask =
-      BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
+  data.mCanvasBitmask = BackendTypeBit(BackendType::SKIA);
+  data.mContentBitmask = BackendTypeBit(BackendType::SKIA);
   data.mCanvasDefault = BackendType::SKIA;
   data.mContentDefault = BackendType::SKIA;
 
