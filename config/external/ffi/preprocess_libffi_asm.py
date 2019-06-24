@@ -7,7 +7,6 @@
 import buildconfig
 import mozpack.path as mozpath
 import os
-import re
 import shlex
 import subprocess
 
@@ -21,7 +20,4 @@ def main(output, input_asm, ffi_h, ffi_config_h, defines, includes):
     args = cpp + defines + includes + [input_asm]
     print(' '.join(args))
     preprocessed = subprocess.check_output(args)
-    r = re.compile('F[dpa][^ ]*')
-    for line in preprocessed.splitlines():
-        output.write(r.sub('', line))
-        output.write('\n')
+    output.write(preprocessed)
