@@ -9,7 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
-import mozilla.components.support.ktx.android.content.res.pxToDp
+import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -101,7 +101,7 @@ class DefaultIconGeneratorTest {
         assertNotNull(icon.bitmap)
         assertNotNull(icon.color)
 
-        val dp32 = testContext.resources.pxToDp(32)
+        val dp32 = 32.dpToPx(testContext.resources.displayMetrics)
         assertEquals(dp32, icon.bitmap.width)
         assertEquals(dp32, icon.bitmap.height)
 

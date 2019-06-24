@@ -2,9 +2,9 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <dimen name="mozac_browser_menu_corner_radius">4dp</dimen>
-    <dimen name="mozac_browser_menu_elevation">4dp</dimen>
+    <dimen name="mozac_browser_menu_elevation">8dp</dimen>
     <dimen name="mozac_browser_menu_width">250dp</dimen>
     <dimen name="mozac_browser_menu_padding_vertical">8dp</dimen>
 

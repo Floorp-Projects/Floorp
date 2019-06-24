@@ -34,7 +34,6 @@ import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.ui.autocomplete.AutocompleteView
@@ -385,7 +384,7 @@ class BrowserToolbar @JvmOverloads constructor(
                 siteSecurityColor = Pair(inSecure, secure)
                 val fadingEdgeLength = getDimensionPixelSize(
                     R.styleable.BrowserToolbar_browserToolbarFadingEdgeSize,
-                    resources.pxToDp(DisplayToolbar.URL_FADING_EDGE_SIZE_DP)
+                    resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_fading_edge_size)
                 )
                 displayToolbar.urlView.setFadingEdgeLength(fadingEdgeLength)
                 displayToolbar.urlView.isHorizontalFadingEdgeEnabled = fadingEdgeLength > 0
@@ -417,7 +416,7 @@ class BrowserToolbar @JvmOverloads constructor(
         val height = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
             MeasureSpec.getSize(heightMeasureSpec)
         } else {
-            resources.pxToDp(DEFAULT_TOOLBAR_HEIGHT_DP)
+            resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_default_toolbar_height)
         }
 
         setMeasuredDimension(width, height)
@@ -678,7 +677,6 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     companion object {
-        private const val DEFAULT_TOOLBAR_HEIGHT_DP = 56
         internal const val ACTION_PADDING_DP = 16
         internal val DEFAULT_PADDING =
             Padding(ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP)

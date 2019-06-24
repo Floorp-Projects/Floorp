@@ -18,7 +18,6 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.toolbar.R
 import mozilla.components.browser.toolbar.facts.emitOpenMenuFact
-import mozilla.components.support.ktx.android.content.res.pxToDp
 
 @Suppress("ViewConstructor") // This view is only instantiated in code
 internal class MenuButton(
@@ -29,7 +28,7 @@ internal class MenuButton(
     private var menu: BrowserMenu? = null
 
     private val menuIcon = AppCompatImageView(context).apply {
-        setPadding(resources.pxToDp(MENU_PADDING_DP))
+        setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_menu_padding))
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_menu)
         contentDescription = context.getString(R.string.mozac_browser_toolbar_menu_button)
     }
@@ -99,9 +98,5 @@ internal class MenuButton(
 
     fun setColorFilter(@ColorInt color: Int) {
         menuIcon.setColorFilter(color)
-    }
-
-    companion object {
-        private const val MENU_PADDING_DP = 16
     }
 }

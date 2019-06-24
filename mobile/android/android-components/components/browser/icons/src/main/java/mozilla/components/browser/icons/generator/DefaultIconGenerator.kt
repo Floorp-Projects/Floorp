@@ -14,8 +14,9 @@ import android.net.Uri
 import android.util.TypedValue
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
-import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
+import mozilla.components.support.ktx.android.util.dpToFloat
+import mozilla.components.support.ktx.android.util.dpToPx
 
 /**
  * [IconGenerator] implementation that will generate an icon with a background color, rounded corners and a letter
@@ -27,11 +28,11 @@ class DefaultIconGenerator(
     private val textColor: Int = Color.WHITE,
     private val backgroundColors: IntArray = DEFAULT_COLORS
 ) : IconGenerator {
-    private val cornerRadius: Float = context.resources.pxToDp(cornerRadius).toFloat()
+    private val cornerRadius: Float = cornerRadius.dpToFloat(context.resources.displayMetrics)
 
     @Suppress("MagicNumber")
     override fun generate(context: Context, request: IconRequest): Icon {
-        val size = context.resources.pxToDp(request.size.value)
+        val size = request.size.value.dpToPx(context.resources.displayMetrics)
 
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)

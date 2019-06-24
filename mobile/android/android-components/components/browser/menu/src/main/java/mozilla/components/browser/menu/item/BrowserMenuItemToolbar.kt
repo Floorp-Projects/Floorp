@@ -14,7 +14,6 @@ import androidx.appcompat.widget.AppCompatImageButton
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
-import mozilla.components.support.ktx.android.content.res.pxToDp
 
 /**
  * A toolbar of buttons to show inside the browser menu.
@@ -30,18 +29,20 @@ class BrowserMenuItemToolbar(
         val layout = view as LinearLayout
         layout.removeAllViews()
 
+        val selectableBackground = TypedValue().also {
+            layout.context.theme.resolveAttribute(
+                android.R.attr.selectableItemBackgroundBorderless,
+                it,
+                true
+            )
+        }
+        val iconHeight = view.resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_item_image_text_icon_height)
+
         for (item in items) {
             val button = AppCompatImageButton(layout.context)
             item.bind(button)
 
-            val outValue = TypedValue()
-            layout.context.theme.resolveAttribute(
-                android.R.attr.selectableItemBackgroundBorderless,
-                outValue,
-                true
-            )
-
-            button.setBackgroundResource(outValue.resourceId)
+            button.setBackgroundResource(selectableBackground.resourceId)
             button.setOnClickListener {
                 item.listener.invoke()
                 menu.dismiss()
@@ -49,7 +50,7 @@ class BrowserMenuItemToolbar(
 
             layout.addView(
                 button,
-                LinearLayout.LayoutParams(0, view.resources.pxToDp(ICON_HEIGHT_DP), 1f)
+                LinearLayout.LayoutParams(0, iconHeight, 1f)
             )
         }
     }

@@ -8,6 +8,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.LruCache
 import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
@@ -19,17 +20,10 @@ import kotlinx.coroutines.withContext
 import mozilla.components.browser.awesomebar.layout.SuggestionLayout
 import mozilla.components.browser.awesomebar.transform.SuggestionTransformer
 import mozilla.components.concept.awesomebar.AwesomeBar
-import mozilla.components.support.ktx.android.content.res.pxToDp
-import java.lang.IllegalStateException
 import java.util.concurrent.Executors
 
 private const val PROVIDER_QUERY_THREADS = 3
 
-private const val DEFAULT_TITLE_TEXT_COLOR = 0xFF272727.toInt()
-private const val DEFAULT_DESCRIPTION_TEXT_COLOR = 0xFF737373.toInt()
-private const val DEFAULT_CHIP_TEXT_COLOR = 0xFF272727.toInt()
-private const val DEFAULT_CHIP_BACKGROUND_COLOR = 0xFFEEEEEE.toInt()
-private const val DEFAULT_CHIP_SPACING_DP = 2
 internal const val PROVIDER_MAX_SUGGESTIONS = 20
 internal const val INITIAL_NUMBER_OF_PROVIDERS = 5
 
@@ -71,16 +65,31 @@ class BrowserAwesomeBar @JvmOverloads constructor(
         layoutManager = LinearLayoutManager(context, VERTICAL, false)
         adapter = suggestionsAdapter
 
-        val attr = context.obtainStyledAttributes(attrs, R.styleable.BrowserAwesomeBar, defStyleAttr, 0)
-        this@BrowserAwesomeBar.styling = BrowserAwesomeBarStyling(
-            attr.getColor(R.styleable.BrowserAwesomeBar_awesomeBarTitleTextColor, DEFAULT_TITLE_TEXT_COLOR),
-            attr.getColor(R.styleable.BrowserAwesomeBar_awesomeBarDescriptionTextColor, DEFAULT_DESCRIPTION_TEXT_COLOR),
-            attr.getColor(R.styleable.BrowserAwesomeBar_awesomeBarChipTextColor, DEFAULT_CHIP_TEXT_COLOR),
-            attr.getColor(R.styleable.BrowserAwesomeBar_awesomeBarChipBackgroundColor, DEFAULT_CHIP_BACKGROUND_COLOR),
-            attr.getDimensionPixelSize(R.styleable.BrowserAwesomeBar_awesomeBarChipSpacing, resources.pxToDp(
-                DEFAULT_CHIP_SPACING_DP))
-        )
-        attr.recycle()
+        context.obtainStyledAttributes(attrs, R.styleable.BrowserAwesomeBar, defStyleAttr, 0).apply {
+            styling = BrowserAwesomeBarStyling(
+                getColor(
+                    R.styleable.BrowserAwesomeBar_awesomeBarTitleTextColor,
+                    ContextCompat.getColor(context, R.color.mozac_browser_awesomebar_default_title_text_color)
+                ),
+                getColor(
+                    R.styleable.BrowserAwesomeBar_awesomeBarDescriptionTextColor,
+                    ContextCompat.getColor(context, R.color.mozac_browser_awesomebar_default_description_text_color)
+                ),
+                getColor(
+                    R.styleable.BrowserAwesomeBar_awesomeBarChipTextColor,
+                    ContextCompat.getColor(context, R.color.mozac_browser_awesomebar_default_chip_text_color)
+                ),
+                getColor(
+                    R.styleable.BrowserAwesomeBar_awesomeBarChipBackgroundColor,
+                    ContextCompat.getColor(context, R.color.mozac_browser_awesomebar_default_chip_background_color)
+                ),
+                getDimensionPixelSize(
+                    R.styleable.BrowserAwesomeBar_awesomeBarChipSpacing,
+                    resources.getDimensionPixelSize(R.dimen.mozac_browser_awesomebar_default_chip_spacing)
+                )
+            )
+            recycle()
+        }
     }
 
     @Synchronized

@@ -24,7 +24,6 @@ import mozilla.components.browser.toolbar.internal.invalidateActions
 import mozilla.components.browser.toolbar.internal.measureActions
 import mozilla.components.browser.toolbar.internal.wrapAction
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 
@@ -51,10 +50,10 @@ internal class EditToolbar(
         gravity = Gravity.CENTER_VERTICAL
         background = null
         setLines(1)
-        textSize = URL_TEXT_SIZE
+        textSize = URL_TEXT_SIZE_SP
         inputType = InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT
 
-        setPadding(resources.pxToDp(URL_PADDING_DP))
+        setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_padding))
         setSelectAllOnFocus(true)
 
         setOnCommitListener {
@@ -93,7 +92,7 @@ internal class EditToolbar(
     private val clearView = ImageView(context).apply {
         visibility = View.GONE
         id = R.id.mozac_browser_toolbar_clear_view
-        setPadding(resources.pxToDp(CANCEL_PADDING_DP))
+        setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_cancel_padding))
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_clear)
         contentDescription = context.getString(R.string.mozac_clear_button_description)
         scaleType = ImageView.ScaleType.CENTER
@@ -183,8 +182,6 @@ internal class EditToolbar(
     }
 
     companion object {
-        private const val URL_TEXT_SIZE = 15f
-        private const val URL_PADDING_DP = 8
-        private const val CANCEL_PADDING_DP = 16
+        private const val URL_TEXT_SIZE_SP = 15f
     }
 }

@@ -20,7 +20,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.menu.BrowserMenu.Orientation.DOWN
 import mozilla.components.browser.menu.BrowserMenu.Orientation.UP
-import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.isRTL
 
 /**
@@ -63,7 +62,7 @@ class BrowserMenu internal constructor(
         ).apply {
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             isFocusable = true
-            elevation = view.resources.pxToDp(MENU_ELEVATION_DP).toFloat()
+            elevation = view.resources.getDimension(R.dimen.mozac_browser_menu_elevation)
 
             setOnDismissListener {
                 adapter.menu = null
@@ -86,8 +85,6 @@ class BrowserMenu internal constructor(
     }
 
     companion object {
-        private const val MENU_ELEVATION_DP = 8
-
         /**
          * Determines the orientation to be used for a menu based on the positioning of the [parent] in the layout.
          */

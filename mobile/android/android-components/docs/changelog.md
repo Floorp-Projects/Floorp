@@ -13,7 +13,12 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
 * **lib-state**
-  * A new component for maintaining application, screen or component state via a redux-style `Store`. This component provides the architectural foundation for the `browser-state` component (in development). 
+  * A new component for maintaining application, screen or component state via a redux-style `Store`. This component provides the architectural foundation for the `browser-state` component (in development).
+
+* **support-ktx**
+  * Deprecated `Resource.pxToDp`.
+  * Added `Int.dpToPx` to convert from density independent pixels to an int representing screen pixels.
+  * Added `Int.dpToFloat` to convert from density independent pixels to a float representing screen pixels.
 
 * **support-ktx**
   * Added `Context.isScreenReaderEnabled` extension to check if TalkBack service is enabled.

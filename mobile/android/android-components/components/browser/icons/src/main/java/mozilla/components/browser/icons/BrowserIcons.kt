@@ -36,7 +36,7 @@ import mozilla.components.browser.session.utils.AllSessionsObserver
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.android.content.res.pxToDp
+import mozilla.components.support.ktx.android.util.dpToPx
 import java.util.concurrent.Executors
 
 private const val MAXIMUM_SCALE_FACTOR = 2.0f
@@ -92,7 +92,7 @@ class BrowserIcons(
 
     private fun loadIconInternal(initialRequest: IconRequest): Icon {
         val desiredSize = DesiredSize(
-            targetSize = context.resources.pxToDp(initialRequest.size.value),
+            targetSize = initialRequest.size.value.dpToPx(context.resources.displayMetrics),
             maxSize = maximumSize,
             maxScaleFactor = MAXIMUM_SCALE_FACTOR
         )

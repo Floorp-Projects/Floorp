@@ -13,7 +13,7 @@ import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.awesomebar.R
 import mozilla.components.browser.awesomebar.widget.FlowLayout
 import mozilla.components.concept.awesomebar.AwesomeBar
-import mozilla.components.support.ktx.android.content.res.pxToDp
+import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -176,6 +176,6 @@ class DefaultSuggestionViewHolderTest {
         val awesomeBar = BrowserAwesomeBar(testContext)
         DefaultSuggestionViewHolder.Chips(awesomeBar, view)
 
-        assertEquals(testContext.resources.pxToDp(2), flowLayout.spacing)
+        assertEquals(2.dpToPx(testContext.resources.displayMetrics), flowLayout.spacing)
     }
 }
