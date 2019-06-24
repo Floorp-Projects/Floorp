@@ -55,7 +55,6 @@ import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.toTab
@@ -376,13 +375,15 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 }
             }
             is TabAction.CloseAll -> {
-                if (pendingSessionDeletion?.deletionJob == null) removeAllTabsWithUndo(action.private) else {
+                if (pendingSessionDeletion?.deletionJob == null) removeAllTabsWithUndo(
+                    sessionManager.filteredSessions(action.private)
+                ) else {
                     pendingSessionDeletion?.deletionJob?.let {
                         launch {
                             it.invoke()
                         }.invokeOnCompletion {
                             pendingSessionDeletion = null
-                            removeAllTabsWithUndo(action.private)
+                            removeAllTabsWithUndo(sessionManager.filteredSessions(action.private))
                         }
                     }
                 }
@@ -595,15 +596,14 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         return observer
     }
 
-    private fun removeAllTabsWithUndo(isPrivate: Boolean) {
+    private fun removeAllTabsWithUndo(listOfSessionsToDelete: List<Session>) {
         val sessionManager = requireComponents.core.sessionManager
-        val useCases = context?.components?.useCases?.tabsUseCases ?: return
 
         getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.TabsChange(listOf()))
 
         val deleteOperation: (suspend () -> Unit) = {
-            sessionManager.sessions.filter { it.private == isPrivate }.forEach {
-                useCases.removeTab.invoke(it)
+            listOfSessionsToDelete.forEach {
+                sessionManager.remove(it)
             }
         }
         deleteAllSessionsJob = deleteOperation
@@ -839,10 +839,17 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         }
     }
 
-    private fun SessionManager.filteredSessions(private: Boolean, sessionFilter: (Session) -> Boolean): List<Session> {
+    private fun SessionManager.filteredSessions(
+        private: Boolean,
+        sessionFilter: ((Session) -> Boolean)? = null
+    ): List<Session> {
         return this.sessions
             .filter { private == it.private }
-            .filter(sessionFilter)
+            .also { list: List<Session> ->
+                sessionFilter?.let {
+                    list.filter(it)
+                }
+            }
     }
 
     private fun List<Session>.toTabs(): List<Tab> {
