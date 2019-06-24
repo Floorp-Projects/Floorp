@@ -53,7 +53,10 @@ def get_run_info(overrides):
     return run_info
 
 
-def update(tests, *logs):
+def update(tests, *logs, **kwargs):
+    full_update = kwargs.pop("full_update", False)
+    stability = kwargs.pop("stability", False)
+    assert not kwargs
     id_test_map, updater = create_updater(tests)
 
     for log in logs:
@@ -64,7 +67,7 @@ def update(tests, *logs):
                          {"os": ["version"], "processor": "bits"})
 
     expected_data = {}
-    metadata.load_expected = lambda _, __, test_path, *args: expected_data[test_path]
+    metadata.load_expected = lambda _, __, test_path, *args: expected_data.get(test_path)
     for test_path, test_ids, test_type, manifest_str in tests:
         expected_data[test_path] = manifestupdate.compile(BytesIO(manifest_str),
                                                           test_path,
@@ -73,7 +76,8 @@ def update(tests, *logs):
 
     return list(metadata.update_results(id_test_map,
                                         update_properties,
-                                        False))
+                                        stability,
+                                        full_update))
 
 
 def create_updater(tests, url_base="/", **kwargs):
@@ -270,7 +274,7 @@ def test_update_multiple_1():
                                         "expected": "FAIL"}),
                        ("test_end", {"test": test_id,
                                      "status": "OK"})],
-                      run_info={"debug": False, "os": "osx"})
+                      run_info={"os": "osx"})
 
     log_1 = suite_log([("test_start", {"test": test_id}),
                        ("test_status", {"test": test_id,
@@ -279,18 +283,19 @@ def test_update_multiple_1():
                                         "expected": "FAIL"}),
                        ("test_end", {"test": test_id,
                                      "status": "OK"})],
-                      run_info={"debug": False, "os": "linux"})
+                      run_info={"os": "linux"})
 
     updated = update(tests, log_0, log_1)
     new_manifest = updated[0][1]
 
     assert not new_manifest.is_empty
     run_info_1 = default_run_info.copy()
-    run_info_1.update({"debug": False, "os": "osx"})
+    run_info_1.update({"os": "osx"})
     run_info_2 = default_run_info.copy()
-    run_info_2.update({"debug": False, "os": "linux"})
+    run_info_2.update({"os": "linux"})
     run_info_3 = default_run_info.copy()
-    run_info_3.update({"debug": False, "os": "win"})
+    run_info_3.update({"os": "win"})
+
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
@@ -424,6 +429,167 @@ def test_update_ignore_existing():
         "expected", run_info_1) == "FAIL"
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", run_info_2) == "NOTRUN"
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_new_test():
+    test_id = "/path/to/test.html"
+    tests = [("path/to/test.html", [test_id], "testharness", None)]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "FAIL",
+                                        "expected": "PASS"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})])
+    updated = update(tests, log_0)
+    new_manifest = updated[0][1]
+
+    run_info_1 = default_run_info.copy()
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test("test.html") is None
+    assert len(new_manifest.get_test(test_id).children) == 1
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", run_info_1) == "FAIL"
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_duplicate():
+    test_id = "/path/to/test.htm"
+    tests = [("path/to/test.htm", [test_id], "testharness", """
+[test.htm]
+  expected: ERROR""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "PASS"})])
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "FAIL"})])
+
+    updated = update(tests, log_0, log_1)
+    new_manifest = updated[0][1]
+    run_info_1 = default_run_info.copy()
+
+    assert new_manifest.get_test(test_id).get(
+        "expected", run_info_1) == "ERROR"
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_stability():
+    test_id = "/path/to/test.htm"
+    tests = [("path/to/test.htm", [test_id], "testharness", """
+[test.htm]
+  expected: ERROR""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "PASS"})])
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "FAIL"})])
+
+    updated = update(tests, log_0, log_1, stability="Some message")
+    new_manifest = updated[0][1]
+    run_info_1 = default_run_info.copy()
+
+    assert new_manifest.get_test(test_id).get(
+        "disabled", run_info_1) == "Some message"
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_stability_conditional_instability():
+    test_id = "/path/to/test.htm"
+    tests = [("path/to/test.htm", [test_id], "testharness", """
+[test.htm]
+  expected: ERROR""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "PASS"})],
+                      run_info={"os": "linux"})
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "FAIL"})],
+                      run_info={"os": "linux"})
+    log_2 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "FAIL"})],
+                      run_info={"os": "mac"})
+
+    updated = update(tests, log_0, log_1, log_2, stability="Some message")
+    new_manifest = updated[0][1]
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"os": "linux"})
+    run_info_2 = default_run_info.copy()
+    run_info_2.update({"os": "mac"})
+
+    assert new_manifest.get_test(test_id).get(
+        "disabled", run_info_1) == "Some message"
+    with pytest.raises(KeyError):
+        assert new_manifest.get_test(test_id).get(
+            "disabled", run_info_2)
+    assert new_manifest.get_test(test_id).get(
+        "expected", run_info_2) == "FAIL"
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_full():
+    test_id = "/path/to/test.htm"
+    tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
+  [test1]
+    expected:
+      if debug: TIMEOUT
+      if not debug and os == "osx": NOTRUN
+
+  [test2]
+    expected: FAIL
+
+[test.js]
+  [test1]
+    expected: FAIL
+""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "FAIL",
+                                        "expected": "PASS"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})],
+                      run_info={"debug": False})
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "ERROR",
+                                        "expected": "PASS"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})],
+                      run_info={"debug": True})
+
+    updated = update(tests, log_0, log_1, full_update=True)
+    new_manifest = updated[0][1]
+
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"debug": False, "os": "win"})
+    run_info_2 = default_run_info.copy()
+    run_info_2.update({"debug": True, "os": "osx"})
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test("test.js") is None
+    assert len(new_manifest.get_test(test_id).children) == 1
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", run_info_1) == "FAIL"
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", run_info_2) == "ERROR"
 
 
 @pytest.mark.xfail(sys.version[0] == "3",

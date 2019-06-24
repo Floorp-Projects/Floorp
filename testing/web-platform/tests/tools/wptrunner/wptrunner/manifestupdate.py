@@ -30,7 +30,7 @@ at runtime.
 When a result for a test is to be updated set_result on the
 [Sub]TestNode is called to store the new result, alongside the
 existing conditional that result's run info matched, if any. Once all
-new results are known, coalesce_expected is called to compute the new
+new results are known, update is called to compute the new
 set of results and conditionals. The AST of the underlying parsed manifest
 is updated with the changes, and the result is serialised to a file.
 """
@@ -178,9 +178,9 @@ class ExpectedManifest(ManifestItem):
         :param result: Total number of bytes leaked"""
         self.update_properties.leak_threshold.set(run_info, result)
 
-    def update(self, stability):
+    def update(self, stability, full_update):
         for prop_update in self.update_properties:
-            prop_update.update(stability)
+            prop_update.update(stability, full_update)
 
 
 class TestNode(ManifestItem):
@@ -276,9 +276,9 @@ class TestNode(ManifestItem):
             self.append(subtest)
             return subtest
 
-    def update(self, stability):
+    def update(self, stability, full_update):
         for prop_update in self.update_properties:
-            prop_update.update(stability)
+            prop_update.update(stability, full_update)
 
 
 class SubtestNode(TestNode):
@@ -396,9 +396,10 @@ class PropertyUpdate(object):
         conditions, errors = self.update_conditions(property_tree, full_update)
 
         for e in errors:
-            if stability and e.cond:
-                self.node.set("disabled", stability or "unstable",
-                              e.cond.children[0])
+            if stability:
+                condition = e.cond.children[0] if e.cond else None
+                msg = stability if isinstance(stability, (str, unicode)) else "unstable"
+                self.node.set("disabled", msg, condition)
                 self.node.new_disabled = True
             else:
                 msg = "Conflicting metadata values for %s" % (
@@ -407,18 +408,66 @@ class PropertyUpdate(object):
                     msg += ": %s" % serialize(e.cond).strip()
                 print(msg)
 
+        # Don't set the default to the class default
+        if (conditions and
+            conditions[-1][0] is None and
+            conditions[-1][1] == self.default_value):
+            self.node.modified = True
+            conditions = conditions[:-1]
+
         if self.node.modified:
             self.node.clear(self.property_name)
 
             for condition, value in conditions:
-                if condition is None or value != self.unconditional_value:
-                    self.node.set(self.property_name,
-                                  self.to_ini_value(value),
-                                  condition
-                                  if condition is not None else None)
+                self.node.set(self.property_name,
+                              self.to_ini_value(value),
+                              condition)
 
     def update_conditions(self, property_tree, full_update):
+        # This is complicated because the expected behaviour is complex
+        # The complexity arises from the fact that there are two ways of running
+        # the tool, with a full set of runs (full_update=True) or with partial metadata
+        # (full_update=False). In the case of a full update things are relatively simple:
+        # * All existing conditionals are ignored
+        # * All created conditionals are independent of each other (i.e. order isn't
+        #   important in the created conditionals)
+        # In the case where we don't have a full set of runs, the expected behaviour
+        # is much less clear. This is of course the common case for when a developer
+        # runs the test on their own machine. In this case the assumptions above are untrue
+        # * The existing conditions may be required to handle other platforms
+        # * The order of the conditions may be important, since we don't know if they overlap
+        #   e.g. `if os == linux and version == 18.04` overlaps with `if (os != win)`.
+        # So in the case we have a full set of runs, the process is pretty simple:
+        # * Generate the conditionals for the property_tree
+        # * Pick the most common value as the default and add only those conditions
+        #   not matching the default
+        # In the case where we have a partial set of runs, things are more complex
+        # and more best-effort
+        # * For each existing conditional, see if it matches any of the run info we
+        #   have. In cases where it does match, record the new results
+        # * Where all the new results match, update the right hand side of that
+        #   conditional, otherwise remove it
+        # * If this leaves nothing existing, then proceed as with the full update
+        # * Otherwise add conditionals for the run_info that doesn't match any
+        #   remaining conditions
+        prev_default = None
+        if full_update:
+            return self._update_conditions_full(property_tree)
+
         current_conditions = self.node.get_conditions(self.property_name)
+
+        # Ignore the current default value
+        if current_conditions and current_conditions[-1].condition_node is None:
+            self.node.modified = True
+            prev_default = current_conditions[-1].value
+            current_conditions = current_conditions[:-1]
+
+        # If there aren't any current conditions, or there is just a default
+        # value for all run_info, proceed as for a full update
+        if not current_conditions:
+            return self._update_conditions_full(property_tree,
+                                                prev_default=prev_default)
+
         conditions = []
         errors = []
 
@@ -444,9 +493,8 @@ class PropertyUpdate(object):
 
             if not run_infos:
                 # Retain existing conditions that don't match anything in the update
-                if not full_update:
-                    conditions.append((condition.condition_node,
-                                       self.from_ini_value(condition.value)))
+                conditions.append((condition.condition_node,
+                                   self.from_ini_value(condition.value)))
                 continue
 
             # Set of nodes in the updated tree that match the same run_info values as the
@@ -471,38 +519,37 @@ class PropertyUpdate(object):
                 self.node.modified = True
 
         new_conditions, new_errors = self.build_tree_conditions(property_tree,
-                                                                run_info_with_condition)
+                                                                run_info_with_condition,
+                                                                prev_default)
+        if new_conditions:
+            self.node.modified = True
+
         conditions.extend(new_conditions)
         errors.extend(new_errors)
 
-        # Re-add the default if there isn't one
-        if (current_conditions and
-            current_conditions[-1].condition_node is None and
-            conditions[-1][0] is not None):
-            conditions.append((current_conditions[-1].condition_node,
-                               self.from_ini_value(current_conditions[-1].value)))
-
-        # Don't add a condition to set the default whatever the class default is
-        if (conditions and
-            conditions[-1][0] is None and
-            conditions[-1][1] == self.default_value):
-            conditions = conditions[:-1]
-
-        if full_update:
-            # Check if any new conditions match what's going to become the
-            # unconditional value
-            new_unconditional_value = (conditions[-1][1]
-                                       if conditions[-1][0] is None
-                                       else self.unconditional_value)
-
-            if any(item[1] == new_unconditional_value for item in conditions
-                   if item[0] is not None):
-                self.remove_default(run_info_index, conditions, new_unconditional_value)
         return conditions, errors
 
-    def build_tree_conditions(self, property_tree, run_info_with_condition):
+    def _update_conditions_full(self, property_tree, prev_default=None):
+        self.node.modified = True
+        conditions, errors = self.build_tree_conditions(property_tree, set(), prev_default)
+
+        return conditions, errors
+
+    def build_tree_conditions(self, property_tree, run_info_with_condition, prev_default=None):
         conditions = []
         errors = []
+
+        value_count = defaultdict(int)
+
+        def to_count_value(v):
+            if v is None:
+                return v
+            # Need to count the values in a hashable type
+            count_value = self.to_ini_value(v)
+            if isinstance(count_value, list):
+                count_value = tuple(count_value)
+            return count_value
+
 
         queue = deque([(property_tree, [])])
         while queue:
@@ -523,8 +570,19 @@ class PropertyUpdate(object):
                 else:
                     # The root node needs special handling
                     expr = None
-                    value = self.updated_value(self.unconditional_value,
-                                               value)
+                    try:
+                        value = self.updated_value(self.unconditional_value,
+                                                   value)
+                    except ConditionError:
+                        error = ConditionError(expr)
+                        # If we got an error for the root node, re-add the previous
+                        # default value
+                        if prev_default:
+                            conditions.append((None, prev_default))
+                if error is None:
+                    count_value = to_count_value(value)
+                    value_count[count_value] += len(node.run_info)
+
                 if error is None:
                     conditions.append((expr, value))
                 else:
@@ -533,27 +591,25 @@ class PropertyUpdate(object):
             for child in node.children:
                 queue.append((child, parents_and_self))
 
-        if conditions:
-            self.node.modified = True
-        return conditions[::-1], errors
+        conditions = conditions[::-1]
 
-    def remove_default(self, run_info_index, conditions, new_unconditional_value):
-        # Remove any conditions that match the default value and won't
-        # be overridden by a later conditional
-        conditions = []
-        matched_run_info = set()
-        run_infos = self.run_info_index.keys()
-        for idx, (cond, value) in enumerate(reversed(conditions)):
-            if not cond:
-                continue
-            run_info_for_cond = set(run_info for run_info in run_infos if cond(run_info))
-            if (value == new_unconditional_value and
-                not run_info_for_cond & matched_run_info):
-                pass
-            else:
-                conditions.append((cond, value))
-            matched_run_info |= run_info_for_cond
-        return conditions[::-1]
+        # If we haven't set a default condition, add one and remove all the conditions
+        # with the same value
+        if value_count and (not conditions or conditions[-1][0] is not None):
+            # Sort in order of occurence, prioritising values that match the class default
+            # or the previous default
+            cls_default = to_count_value(self.default_value)
+            prev_default = to_count_value(prev_default)
+            commonest_value = max(value_count, key=lambda x:(value_count.get(x),
+                                                             x == cls_default,
+                                                             x == prev_default))
+            if isinstance(commonest_value, tuple):
+                commonest_value = list(commonest_value)
+            commonest_value = self.from_ini_value(commonest_value)
+            conditions = [item for item in conditions if item[1] != commonest_value]
+            conditions.append((None, commonest_value))
+
+        return conditions, errors
 
 
 class ExpectedUpdate(PropertyUpdate):
