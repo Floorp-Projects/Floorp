@@ -922,6 +922,8 @@ class JS_PUBLIC_API AutoCheckCannotGC : public AutoRequireNoGC {
 } JS_HAZ_GC_INVALIDATED;
 #endif
 
+extern JS_PUBLIC_API void SetLowMemoryState(JSContext* cx, bool newState);
+
 /*
  * Internal to Firefox.
  */
