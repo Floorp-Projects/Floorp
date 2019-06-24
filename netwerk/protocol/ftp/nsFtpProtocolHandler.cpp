@@ -151,6 +151,10 @@ nsFtpProtocolHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* proxyInfo,
                                         nsIURI* proxyURI,
                                         nsILoadInfo* aLoadInfo,
                                         nsIChannel** result) {
+  if (!mEnabled) {
+    return NS_ERROR_UNKNOWN_PROTOCOL;
+  }
+
   NS_ENSURE_ARG_POINTER(uri);
   RefPtr<nsBaseChannel> channel;
   if (IsNeckoChild())
