@@ -14,7 +14,6 @@ py3:
         - dom/media/test
         - gfx
         - ipc/ipdl
-        - js/src
         - layout/reftests
         - layout/style
         - layout/tools/reftest
