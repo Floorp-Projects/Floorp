@@ -157,7 +157,7 @@
           // screen readers.
           this.aboutAddonsContent.setAttribute("aria-hidden", true);
           // Move the focus to the embedded window.
-          fm.moveFocus(abuseReport.ownerGlobal, null, fm.MOVEFOCUS_ROOT, fm.FLAG_BYKEY);
+          this.focus();
           this.dispatchEvent(new CustomEvent("abuse-report:frame-shown"));
         });
       } else {
