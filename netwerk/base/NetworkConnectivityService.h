@@ -25,13 +25,13 @@ class NetworkConnectivityService : public nsINetworkConnectivityService,
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
 
-  nsresult Init();
   static already_AddRefed<NetworkConnectivityService> GetSingleton();
 
  private:
   NetworkConnectivityService() = default;
   virtual ~NetworkConnectivityService() = default;
 
+  nsresult Init();
   // Calls all the check methods
   void PerformChecks();
 
