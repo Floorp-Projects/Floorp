@@ -210,18 +210,18 @@ class APZCPinchLockingTester : public APZCPinchTester {
 };
 
 TEST_F(APZCPinchTester, Pinch_DefaultGestures_NoTouchAction) {
-  SCOPED_GFX_PREF(layout_css_touch_action_enabled, bool, false);
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
   DoPinchTest(true);
 }
 
 TEST_F(APZCPinchGestureDetectorTester, Pinch_UseGestureDetector_NoTouchAction) {
-  SCOPED_GFX_PREF(layout_css_touch_action_enabled, bool, false);
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
   DoPinchTest(true);
 }
 
 TEST_F(APZCPinchGestureDetectorTester,
        Pinch_UseGestureDetector_TouchActionNone) {
-  SCOPED_GFX_PREF(layout_css_touch_action_enabled, bool, true);
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", true);
   nsTArray<uint32_t> behaviors = {mozilla::layers::AllowedTouchBehavior::NONE,
                                   mozilla::layers::AllowedTouchBehavior::NONE};
   DoPinchTest(false, &behaviors);
@@ -229,7 +229,7 @@ TEST_F(APZCPinchGestureDetectorTester,
 
 TEST_F(APZCPinchGestureDetectorTester,
        Pinch_UseGestureDetector_TouchActionZoom) {
-  SCOPED_GFX_PREF(layout_css_touch_action_enabled, bool, true);
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", true);
   nsTArray<uint32_t> behaviors;
   behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM);
   behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM);
@@ -238,7 +238,7 @@ TEST_F(APZCPinchGestureDetectorTester,
 
 TEST_F(APZCPinchGestureDetectorTester,
        Pinch_UseGestureDetector_TouchActionNotAllowZoom) {
-  SCOPED_GFX_PREF(layout_css_touch_action_enabled, bool, true);
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", true);
   nsTArray<uint32_t> behaviors;
   behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::NONE);
   behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM);
@@ -247,8 +247,8 @@ TEST_F(APZCPinchGestureDetectorTester,
 
 TEST_F(APZCPinchGestureDetectorTester,
        Pinch_UseGestureDetector_TouchActionNone_NoAPZZoom) {
-  SCOPED_GFX_PREF(layout_css_touch_action_enabled, bool, true);
-  SCOPED_GFX_PREF(APZAllowZooming, bool, false);
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", true);
+  SCOPED_GFX_PREF_BOOL("apz.allow_zooming", false);
 
   // Since we are preventing the pinch action via touch-action we should not be
   // sending the pinch gesture notifications that would normally be sent when
@@ -264,7 +264,7 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault) {
 }
 
 TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault_NoAPZZoom) {
-  SCOPED_GFX_PREF(APZAllowZooming, bool, false);
+  SCOPED_GFX_PREF_BOOL("apz.allow_zooming", false);
 
   // Since we are preventing the pinch action we should not be sending the pinch
   // gesture notifications that would normally be sent when APZAllowZooming is
@@ -275,7 +275,7 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault_NoAPZZoom) {
 }
 
 TEST_F(APZCPinchGestureDetectorTester, Panning_TwoFingerFling_ZoomDisabled) {
-  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+  SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
 
   apzc->SetFrameMetrics(GetPinchableFrameMetrics());
   MakeApzcUnzoomable();
@@ -291,7 +291,7 @@ TEST_F(APZCPinchGestureDetectorTester, Panning_TwoFingerFling_ZoomDisabled) {
 }
 
 TEST_F(APZCPinchGestureDetectorTester, Panning_TwoFingerFling_ZoomEnabled) {
-  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+  SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
 
   apzc->SetFrameMetrics(GetPinchableFrameMetrics());
   MakeApzcZoomable();
@@ -308,7 +308,7 @@ TEST_F(APZCPinchGestureDetectorTester, Panning_TwoFingerFling_ZoomEnabled) {
 
 TEST_F(APZCPinchGestureDetectorTester,
        Panning_TwoThenOneFingerFling_ZoomEnabled) {
-  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+  SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
 
   apzc->SetFrameMetrics(GetPinchableFrameMetrics());
   MakeApzcZoomable();
@@ -430,7 +430,7 @@ TEST_F(APZCPinchTester, Panning_Beyond_LayoutViewport) {
 }
 
 TEST_F(APZCPinchGestureDetectorTester, Pinch_APZZoom_Disabled) {
-  SCOPED_GFX_PREF(APZAllowZooming, bool, false);
+  SCOPED_GFX_PREF_BOOL("apz.allow_zooming", false);
 
   FrameMetrics originalMetrics = GetPinchableFrameMetrics();
   apzc->SetFrameMetrics(originalMetrics);
@@ -468,8 +468,8 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_APZZoom_Disabled) {
 }
 
 TEST_F(APZCPinchGestureDetectorTester, Pinch_NoSpan) {
-  SCOPED_GFX_PREF(APZAllowZooming, bool, false);
-  SCOPED_GFX_PREF(layout_css_touch_action_enabled, bool, false);
+  SCOPED_GFX_PREF_BOOL("apz.allow_zooming", false);
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
 
   FrameMetrics originalMetrics = GetPinchableFrameMetrics();
   apzc->SetFrameMetrics(originalMetrics);
@@ -543,7 +543,7 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_NoSpan) {
 
 TEST_F(APZCPinchTester, Pinch_TwoFinger_APZZoom_Disabled_Bug1354185) {
   // Set up APZ such that mZoomConstraints.mAllowZoom is false.
-  SCOPED_GFX_PREF(APZAllowZooming, bool, false);
+  SCOPED_GFX_PREF_BOOL("apz.allow_zooming", false);
   apzc->SetFrameMetrics(GetPinchableFrameMetrics());
   MakeApzcUnzoomable();
 
@@ -568,21 +568,21 @@ TEST_F(APZCPinchTester, Pinch_TwoFinger_APZZoom_Disabled_Bug1354185) {
 }
 
 TEST_F(APZCPinchLockingTester, Pinch_Locking_Free) {
-  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 0);  // PINCH_FREE
+  SCOPED_GFX_PREF_INT("apz.pinch_lock.mode", 0);  // PINCH_FREE
 
   twoFingerPan();
   EXPECT_FALSE(isPinchLockActive());
 }
 
 TEST_F(APZCPinchLockingTester, Pinch_Locking_Normal_Lock) {
-  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 1);  // PINCH_NORMAL
+  SCOPED_GFX_PREF_INT("apz.pinch_lock.mode", 1);  // PINCH_NORMAL
 
   twoFingerPan();
   EXPECT_TRUE(isPinchLockActive());
 }
 
 TEST_F(APZCPinchLockingTester, Pinch_Locking_Normal_Lock_Break) {
-  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 1);  // PINCH_NORMAL
+  SCOPED_GFX_PREF_INT("apz.pinch_lock.mode", 1);  // PINCH_NORMAL
 
   twoFingerPan();
   twoFingerZoom();
@@ -590,14 +590,14 @@ TEST_F(APZCPinchLockingTester, Pinch_Locking_Normal_Lock_Break) {
 }
 
 TEST_F(APZCPinchLockingTester, Pinch_Locking_Sticky_Lock) {
-  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 2);  // PINCH_STICKY
+  SCOPED_GFX_PREF_INT("apz.pinch_lock.mode", 2);  // PINCH_STICKY
 
   twoFingerPan();
   EXPECT_TRUE(isPinchLockActive());
 }
 
 TEST_F(APZCPinchLockingTester, Pinch_Locking_Sticky_Lock_Break) {
-  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 2);  // PINCH_STICKY
+  SCOPED_GFX_PREF_INT("apz.pinch_lock.mode", 2);  // PINCH_STICKY
 
   twoFingerPan();
   twoFingerZoom();
@@ -605,7 +605,7 @@ TEST_F(APZCPinchLockingTester, Pinch_Locking_Sticky_Lock_Break) {
 }
 
 TEST_F(APZCPinchLockingTester, Pinch_Locking_Sticky_Lock_Break_Lock) {
-  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 2);  // PINCH_STICKY
+  SCOPED_GFX_PREF_INT("apz.pinch_lock.mode", 2);  // PINCH_STICKY
 
   twoFingerPan();
   twoFingerZoom();

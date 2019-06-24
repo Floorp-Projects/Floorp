@@ -195,7 +195,7 @@ bool CheckerboardReportService::IsRecordingEnabled() const {
 }
 
 void CheckerboardReportService::SetRecordingEnabled(bool aEnabled) {
-  StaticPrefs::SetAPZRecordCheckerboarding(aEnabled);
+  Preferences::SetBool("apz.record_checkerboarding", aEnabled);
 }
 
 void CheckerboardReportService::FlushActiveReports() {

@@ -162,7 +162,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
 }
 
 TEST_F(APZCBasicTester, Fling) {
-  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+  SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
   int touchStart = 50;
   int touchEnd = 10;
   ParentLayerPoint pointOut;
@@ -181,8 +181,8 @@ TEST_F(APZCBasicTester, Fling) {
 
 TEST_F(APZCBasicTester, FlingIntoOverscroll) {
   // Enable overscrolling.
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
-  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+  SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
 
   // Scroll down by 25 px. Don't fling for simplicity.
   Pan(apzc, 50, 25, PanOptions::NoFling);
@@ -208,7 +208,7 @@ TEST_F(APZCBasicTester, FlingIntoOverscroll) {
 }
 
 TEST_F(APZCBasicTester, PanningTransformNotifications) {
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   // Scroll down by 25 px. Ensure we only get one set of
   // state change notifications.
@@ -294,7 +294,7 @@ void APZCBasicTester::TestOverscroll() {
 }
 
 TEST_F(APZCBasicTester, OverScrollPanning) {
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   TestOverscroll();
 }
@@ -302,7 +302,7 @@ TEST_F(APZCBasicTester, OverScrollPanning) {
 // Tests that an overscroll animation doesn't trigger an assertion failure
 // in the case where a sample has a velocity of zero.
 TEST_F(APZCBasicTester, OverScroll_Bug1152051a) {
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   // Doctor the prefs to make the velocity zero at the end of the first sample.
 
@@ -310,12 +310,12 @@ TEST_F(APZCBasicTester, OverScroll_Bug1152051a) {
   // a round(ish) number, 4.9 (that being the distance of the pan before
   // overscroll, which is 500 - 10 = 490 pixels, divided by the duration of
   // the pan, which is 100 ms).
-  SCOPED_GFX_PREF(APZFlingFriction, float, 0);
+  SCOPED_GFX_PREF_FLOAT("apz.fling_friction", 0);
 
   // To ensure the velocity after the first sample is 0, set the spring
   // stiffness to the incoming velocity (4.9) divided by the overscroll
   // (400 pixels) times the step duration (1 ms).
-  SCOPED_GFX_PREF(APZOverscrollSpringStiffness, float, 0.01225f);
+  SCOPED_GFX_PREF_FLOAT("apz.overscroll.spring_stiffness", 0.01225f);
 
   TestOverscroll();
 }
@@ -323,9 +323,8 @@ TEST_F(APZCBasicTester, OverScroll_Bug1152051a) {
 // Tests that ending an overscroll animation doesn't leave around state that
 // confuses the next overscroll animation.
 TEST_F(APZCBasicTester, OverScroll_Bug1152051b) {
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
-
-  SCOPED_GFX_PREF(APZOverscrollStopDistanceThreshold, float, 0.1f);
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+  SCOPED_GFX_PREF_FLOAT("apz.overscroll.stop_distance_threshold", 0.1f);
 
   // Pan sufficiently to hit overscroll behavior
   PanIntoOverscroll();
@@ -364,7 +363,7 @@ TEST_F(APZCBasicTester, OverScroll_Bug1152051b) {
 // Tests that the page doesn't get stuck in an
 // overscroll animation after a low-velocity pan.
 TEST_F(APZCBasicTester, OverScrollAfterLowVelocityPan_Bug1343775) {
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   // Pan into overscroll with a velocity less than the
   // apz.fling_min_velocity_threshold preference.
@@ -379,7 +378,7 @@ TEST_F(APZCBasicTester, OverScrollAfterLowVelocityPan_Bug1343775) {
 }
 
 TEST_F(APZCBasicTester, OverScrollAbort) {
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   // Pan sufficiently to hit overscroll behavior
   int touchStart = 500;
@@ -404,7 +403,7 @@ TEST_F(APZCBasicTester, OverScrollAbort) {
 }
 
 TEST_F(APZCBasicTester, OverScrollPanningAbort) {
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   // Pan sufficiently to hit overscroll behaviour. Keep the finger down so
   // the pan does not end.

@@ -84,7 +84,6 @@ class StaticPrefs {
   //     static int32_t sVarCache_my_varcache;
   //   public:
   //     static int32_t my_varcache();
-  //     static void Setmy_varcache(int32_t aValue);
   //     static const char* Getmy_varcachePrefName() { return "my.varcache"; }
   //     static int32_t Getmy_varcachePrefDefault() { return 99; }
   //
@@ -115,7 +114,6 @@ class StaticPrefs {
     MaybeInitOncePrefs();                                       \
     return sVarCache_##id;                                      \
   }                                                             \
-  static void Set##id(StripAtomic<cpp_type> aValue);            \
   static const char* Get##id##PrefName() { return str; }        \
   static StripAtomic<cpp_type> Get##id##PrefDefault() { return default_value; }
 
