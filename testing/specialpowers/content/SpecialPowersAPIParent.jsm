@@ -72,6 +72,33 @@ function getTestPlugin(pluginName) {
   return null;
 }
 
+const PREF_TYPES = {
+  [Ci.nsIPrefBranch.PREF_INVALID]: "INVALID",
+  [Ci.nsIPrefBranch.PREF_INT]: "INT",
+  [Ci.nsIPrefBranch.PREF_BOOL]: "BOOL",
+  [Ci.nsIPrefBranch.PREF_STRING]: "CHAR",
+  "number": "INT",
+  "boolean": "BOOL",
+  "string": "CHAR",
+};
+
+// We share a single preference environment stack between all
+// SpecialPowers instances, across all processes.
+let prefUndoStack = [];
+let inPrefEnvOp = false;
+
+function doPrefEnvOp(fn) {
+  if (inPrefEnvOp) {
+    throw new Error("Reentrant preference environment operations not supported");
+  }
+  inPrefEnvOp = true;
+  try {
+    return fn();
+  } finally {
+    inPrefEnvOp = false;
+  }
+}
+
 class SpecialPowersAPIParent extends JSWindowActorParent {
   constructor() {
     super();
@@ -245,6 +272,156 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
     });
   }
 
+  /*
+    Iterate through one atomic set of pref actions and perform sets/clears as appropriate.
+    All actions performed must modify the relevant pref.
+  */
+  _applyPrefs(actions) {
+    for (let pref of actions) {
+      if (pref.action == "set") {
+        this._setPref(pref.name, pref.type, pref.value, pref.iid);
+      } else if (pref.action == "clear") {
+        Services.prefs.clearUserPref(pref.name);
+      }
+    }
+  }
+
+  /**
+   * Take in a list of pref changes to make, pushes their current values
+   * onto the restore stack, and makes the changes.  When the test
+   * finishes, these changes are reverted.
+   *
+   * |inPrefs| must be an object with up to two properties: "set" and "clear".
+   * pushPrefEnv will set prefs as indicated in |inPrefs.set| and will unset
+   * the prefs indicated in |inPrefs.clear|.
+   *
+   * For example, you might pass |inPrefs| as:
+   *
+   *  inPrefs = {'set': [['foo.bar', 2], ['magic.pref', 'baz']],
+   *             'clear': [['clear.this'], ['also.this']] };
+   *
+   * Notice that |set| and |clear| are both an array of arrays.  In |set|, each
+   * of the inner arrays must have the form [pref_name, value] or [pref_name,
+   * value, iid].  (The latter form is used for prefs with "complex" values.)
+   *
+   * In |clear|, each inner array should have the form [pref_name].
+   *
+   * If you set the same pref more than once (or both set and clear a pref),
+   * the behavior of this method is undefined.
+   */
+  pushPrefEnv(inPrefs) {
+    return doPrefEnvOp(() => {
+      let pendingActions = [];
+      let cleanupActions = [];
+
+      for (let [action, prefs] of Object.entries(inPrefs)) {
+        for (let pref of prefs) {
+          let name = pref[0];
+          let value = null;
+          let iid = null;
+          let type = PREF_TYPES[Services.prefs.getPrefType(name)];
+          let originalValue = null;
+
+          if (pref.length == 3) {
+            value = pref[1];
+            iid = pref[2];
+          } else if (pref.length == 2) {
+            value = pref[1];
+          }
+
+
+          /* If pref is not found or invalid it doesn't exist. */
+          if (type !== "INVALID") {
+            if ((Services.prefs.prefHasUserValue(name) && action == "clear") ||
+                action == "set") {
+              originalValue = this._getPref(name, type);
+            }
+          } else if (action == "set") {
+            /* name doesn't exist, so 'clear' is pointless */
+            if (iid) {
+              type = "COMPLEX";
+            }
+          }
+
+          if (type === "INVALID") {
+            type = PREF_TYPES[typeof value];
+          }
+          if (type === "INVALID") {
+            throw new Error("Unexpected preference type");
+          }
+
+          pendingActions.push({action, type, name, value, iid});
+
+          /* Push original preference value or clear into cleanup array */
+          var cleanupTodo = {type, name, value: originalValue, iid};
+          if (originalValue == null) {
+            cleanupTodo.action = "clear";
+          } else {
+            cleanupTodo.action = "set";
+          }
+          cleanupActions.push(cleanupTodo);
+        }
+      }
+
+      prefUndoStack.push(cleanupActions);
+      this._applyPrefs(pendingActions);
+    });
+  }
+
+  async popPrefEnv() {
+    return doPrefEnvOp(() => {
+      let env = prefUndoStack.pop();
+      if (env) {
+        this._applyPrefs(env);
+        return true;
+      }
+      return false;
+    });
+  }
+
+  flushPrefEnv() {
+    while (prefUndoStack.length) {
+      this.popPrefEnv();
+    }
+  }
+
+  _setPref(name, type, value, iid) {
+    switch (type) {
+      case "BOOL":
+        return Services.prefs.setBoolPref(name, value);
+      case "INT":
+        return Services.prefs.setIntPref(name, value);
+      case "CHAR":
+        return Services.prefs.setCharPref(name, value);
+      case "COMPLEX":
+        return Services.prefs.setComplexValue(name, iid, value);
+    }
+    throw new Error(`Unexpected preference type: ${type}`);
+  }
+
+  _getPref(name, type, defaultValue, iid) {
+    switch (type) {
+      case "BOOL":
+        if (defaultValue !== undefined) {
+          return Services.prefs.getBoolPref(name, defaultValue);
+        }
+        return Services.prefs.getBoolPref(name);
+      case "INT":
+        if (defaultValue !== undefined) {
+          return Services.prefs.getIntPref(name, defaultValue);
+        }
+        return Services.prefs.getIntPref(name);
+      case "CHAR":
+        if (defaultValue !== undefined) {
+          return Services.prefs.getCharPref(name, defaultValue);
+        }
+        return Services.prefs.getCharPref(name);
+      case "COMPLEX":
+        return Services.prefs.getComplexValue(name, iid);
+    }
+    throw new Error(`Unexpected preference type: ${type}`);
+  }
+
   /**
    * messageManager callback function
    * This will get requests from our API in the window and process them in chrome for it
@@ -254,6 +431,15 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
     // doesn't trigger a flurry of warnings about "does not always return
     // a value".
     switch (aMessage.name) {
+      case "PushPrefEnv":
+        return this.pushPrefEnv(aMessage.data);
+
+      case "PopPrefEnv":
+        return this.popPrefEnv();
+
+      case "FlushPrefEnv":
+        return this.flushPrefEnv();
+
       case "SPPrefService": {
         let prefs = Services.prefs;
         let prefType = aMessage.json.prefType.toUpperCase();
@@ -266,52 +452,21 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
           // return null if the pref doesn't exist
           if (defaultValue === undefined && prefs.getPrefType(prefName) == prefs.PREF_INVALID)
             return null;
+          return this._getPref(prefName, prefType, defaultValue, iid);
         } else if (aMessage.json.op == "set") {
           if (!prefName || !prefType || prefValue === undefined)
             throw new SpecialPowersError("Invalid parameters for set in SPPrefService");
+
+          return this._setPref(prefName, prefType, prefValue, iid);
         } else if (aMessage.json.op == "clear") {
           if (!prefName)
             throw new SpecialPowersError("Invalid parameters for clear in SPPrefService");
+
+          prefs.clearUserPref(prefName);
         } else {
           throw new SpecialPowersError("Invalid operation for SPPrefService");
         }
 
-        // Now we make the call
-        switch (prefType) {
-          case "BOOL":
-            if (aMessage.json.op == "get") {
-              if (defaultValue !== undefined) {
-                return prefs.getBoolPref(prefName, defaultValue);
-              }
-              return prefs.getBoolPref(prefName);
-            }
-            return prefs.setBoolPref(prefName, prefValue);
-          case "INT":
-            if (aMessage.json.op == "get") {
-              if (defaultValue !== undefined) {
-                return prefs.getIntPref(prefName, defaultValue);
-              }
-              return prefs.getIntPref(prefName);
-            }
-            return prefs.setIntPref(prefName, prefValue);
-          case "CHAR":
-            if (aMessage.json.op == "get") {
-              if (defaultValue !== undefined) {
-                return prefs.getCharPref(prefName, defaultValue);
-              }
-              return prefs.getCharPref(prefName);
-            }
-            return prefs.setCharPref(prefName, prefValue);
-          case "COMPLEX":
-            if (aMessage.json.op == "get")
-              return prefs.getComplexValue(prefName, iid);
-            return prefs.setComplexValue(prefName, iid, prefValue);
-          case "":
-            if (aMessage.json.op == "clear") {
-              prefs.clearUserPref(prefName);
-              return undefined;
-            }
-        }
         return undefined; // See comment at the beginning of this function.
       }
 
