@@ -3,10 +3,10 @@
 //! unless you have need to name one of the iterator types.
 
 use std::collections::HashSet;
-use std::hash::{Hash, BuildHasher};
+use std::hash::{BuildHasher, Hash};
 
-use iter::*;
 use iter::plumbing::*;
+use iter::*;
 
 use vec;
 
@@ -16,16 +16,15 @@ pub struct IntoIter<T: Hash + Eq + Send> {
     inner: vec::IntoIter<T>,
 }
 
-into_par_vec!{
+into_par_vec! {
     HashSet<T, S> => IntoIter<T>,
     impl<T: Hash + Eq + Send, S: BuildHasher>
 }
 
-delegate_iterator!{
+delegate_iterator! {
     IntoIter<T> => T,
     impl<T: Hash + Eq + Send>
 }
-
 
 /// Parallel iterator over an immutable reference to a hash set
 #[derive(Debug)]
@@ -35,19 +34,20 @@ pub struct Iter<'a, T: Hash + Eq + Sync + 'a> {
 
 impl<'a, T: Hash + Eq + Sync> Clone for Iter<'a, T> {
     fn clone(&self) -> Self {
-        Iter { inner: self.inner.clone() }
+        Iter {
+            inner: self.inner.clone(),
+        }
     }
 }
 
-into_par_vec!{
+into_par_vec! {
     &'a HashSet<T, S> => Iter<'a, T>,
     impl<'a, T: Hash + Eq + Sync, S: BuildHasher>
 }
 
-delegate_iterator!{
+delegate_iterator! {
     Iter<'a, T> => &'a T,
     impl<'a, T: Hash + Eq + Sync + 'a>
 }
-
 
 // `HashSet` doesn't have a mutable `Iterator`
