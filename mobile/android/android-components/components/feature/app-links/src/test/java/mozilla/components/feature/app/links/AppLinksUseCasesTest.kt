@@ -59,7 +59,7 @@ class AppLinksUseCasesTest {
         val context = createContext()
         val subject = AppLinksUseCases(context, emptySet())
 
-        val redirect = subject.interceptedAppLinkRedirect.invoke(appUrl)
+        val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())
     }
 
@@ -69,11 +69,11 @@ class AppLinksUseCasesTest {
         val subject = AppLinksUseCases(context, emptySet())
 
         // We will not redirect to it when we click on it.
-        val redirect = subject.interceptedAppLinkRedirect.invoke(appUrl)
+        val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())
 
         // But we do from a context menu.
-        val menuRedirect = subject.appLinkRedirect.invoke(appUrl)
+        val menuRedirect = subject.appLinkRedirect(appUrl)
         assertTrue(menuRedirect.isRedirect())
     }
 
@@ -82,7 +82,7 @@ class AppLinksUseCasesTest {
         val context = createContext(appUrl to browserPackage)
         val subject = AppLinksUseCases(context, setOf(browserPackage))
 
-        val redirect = subject.interceptedAppLinkRedirect.invoke(appUrl)
+        val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())
     }
 
@@ -91,7 +91,7 @@ class AppLinksUseCasesTest {
         val context = createContext(appUrl to appPackage, appUrl to browserPackage)
         val subject = AppLinksUseCases(context, setOf(browserPackage))
 
-        val redirect = subject.appLinkRedirect.invoke(appUrl)
+        val redirect = subject.appLinkRedirect(appUrl)
         assertTrue(redirect.isRedirect())
     }
 
@@ -110,7 +110,7 @@ class AppLinksUseCasesTest {
         val context = createContext(uri to appPackage, appUrl to browserPackage)
         val subject = AppLinksUseCases(context, setOf(browserPackage))
 
-        val redirect = subject.interceptedAppLinkRedirect.invoke(uri)
+        val redirect = subject.interceptedAppLinkRedirect(uri)
         assertTrue(redirect.hasExternalApp())
         assertNotNull(redirect.appIntent)
 
@@ -124,7 +124,7 @@ class AppLinksUseCasesTest {
 
         val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end"
 
-        val redirect = subject.interceptedAppLinkRedirect.invoke(uri)
+        val redirect = subject.interceptedAppLinkRedirect(uri)
         assertFalse(redirect.hasExternalApp())
         assertFalse(redirect.hasFallback())
         assertNull(redirect.webUrl)
@@ -137,7 +137,7 @@ class AppLinksUseCasesTest {
 
         val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;S.browser_fallback_url=http%3A%2F%2Fzxing.org;end"
 
-        val redirect = subject.interceptedAppLinkRedirect.invoke(uri)
+        val redirect = subject.interceptedAppLinkRedirect(uri)
         assertFalse(redirect.hasExternalApp())
         assertTrue(redirect.hasFallback())
 
@@ -151,7 +151,7 @@ class AppLinksUseCasesTest {
         val redirect = AppLinkRedirect(appIntent, appUrl, false)
         val subject = AppLinksUseCases(context, setOf(browserPackage))
 
-        subject.openAppLink.invoke(redirect)
+        subject.openAppLink(redirect)
 
         verify(context).startActivity(any())
     }

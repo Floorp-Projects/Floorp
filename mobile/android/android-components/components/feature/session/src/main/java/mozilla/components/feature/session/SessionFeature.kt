@@ -38,7 +38,7 @@ class SessionFeature(
         } ?: sessionManager.selectedSession
 
         if (session?.canGoBack == true) {
-            sessionUseCases.goBack.invoke(session)
+            sessionUseCases.goBack(session)
             return true
         }
 

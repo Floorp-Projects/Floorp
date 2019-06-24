@@ -53,7 +53,7 @@ class SwipeRefreshFeature(
      * Called when a swipe gesture triggers a refresh.
      */
     override fun onRefresh() {
-        reloadUrlUseCase.invoke(activeSession)
+        reloadUrlUseCase(activeSession)
     }
 
     /**

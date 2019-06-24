@@ -23,7 +23,7 @@ class TabsUseCases(
          *
          * @param session The session to select.
          */
-        fun invoke(session: Session) {
+        operator fun invoke(session: Session) {
             sessionManager.select(session)
         }
     }
@@ -36,7 +36,7 @@ class TabsUseCases(
          *
          * @param session The session to remove.
          */
-        fun invoke(session: Session) {
+        operator fun invoke(session: Session) {
             sessionManager.remove(session)
         }
     }
@@ -62,7 +62,7 @@ class TabsUseCases(
          * @param startLoading True (default) if the new tab should start loading immediately.
          * @param parent the parent session to use for the newly created session.
          */
-        fun invoke(
+        operator fun invoke(
             url: String,
             selectTab: Boolean = true,
             startLoading: Boolean = true,
@@ -100,7 +100,7 @@ class TabsUseCases(
          * @param startLoading True (default) if the new tab should start loading immediately.
          * @param parent the parent session to use for the newly created session.
          */
-        fun invoke(
+        operator fun invoke(
             url: String,
             selectTab: Boolean = true,
             startLoading: Boolean = true,
@@ -120,7 +120,7 @@ class TabsUseCases(
     class RemoveAllTabsUseCase internal constructor(
         private val sessionManager: SessionManager
     ) {
-        fun invoke() {
+        operator fun invoke() {
             sessionManager.removeSessions()
         }
     }
@@ -132,7 +132,7 @@ class TabsUseCases(
          * @param private pass true if only private tabs should be removed otherwise normal tabs will be removed
          */
 
-        fun invoke(private: Boolean) {
+        operator fun invoke(private: Boolean) {
             sessionManager.sessions.filter { it.private == private }.forEach {
                 sessionManager.remove(it)
             }

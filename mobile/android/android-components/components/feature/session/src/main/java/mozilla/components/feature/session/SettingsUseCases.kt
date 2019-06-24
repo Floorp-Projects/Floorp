@@ -37,7 +37,7 @@ class SettingsUseCases(
          *
          * @param value The new setting value
          */
-        fun invoke(value: T) {
+        operator fun invoke(value: T) {
             update(engineSettings, value)
             with(sessionManager) {
                 sessions.forEach {

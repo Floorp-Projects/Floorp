@@ -82,7 +82,7 @@ class AppLinksFeature(
             return
         }
 
-        val redirect = useCases.interceptedAppLinkRedirect.invoke(url)
+        val redirect = useCases.interceptedAppLinkRedirect(url)
 
         if (redirect.isRedirect()) {
             handleRedirect(redirect, session)
@@ -98,7 +98,7 @@ class AppLinksFeature(
         }
 
         val doOpenApp = {
-            useCases.openAppLink.invoke(redirect)
+            useCases.openAppLink(redirect)
         }
 
         if (!session.private || fragmentManager == null) {

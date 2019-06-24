@@ -39,7 +39,7 @@ open class FullScreenFeature(
     override fun onBackPressed(): Boolean {
         activeSession?.let {
             if (it.fullScreenMode) {
-                sessionUseCases.exitFullscreen.invoke(it)
+                sessionUseCases.exitFullscreen(it)
                 return true
             }
         }

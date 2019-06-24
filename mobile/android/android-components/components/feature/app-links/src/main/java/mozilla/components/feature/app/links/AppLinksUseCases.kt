@@ -77,7 +77,7 @@ class AppLinksUseCases(
         private val ignoreDefaultBrowser: Boolean = false,
         private val includeInstallAppFallback: Boolean = false
     ) {
-        fun invoke(url: String): AppLinkRedirect {
+        operator fun invoke(url: String): AppLinkRedirect {
             val intents = createBrowsableIntents(url)
             val appIntent = if (includeHttpAppLinks) {
                 intents.firstOrNull { getNonBrowserActivities(it).isNotEmpty() }
@@ -153,7 +153,7 @@ class AppLinksUseCases(
     class OpenAppLinkRedirect internal constructor(
         private val context: Context
     ) {
-        fun invoke(redirect: AppLinkRedirect) {
+        operator fun invoke(redirect: AppLinkRedirect) {
             val intent = redirect.appIntent ?: return
             context.startActivity(intent)
         }

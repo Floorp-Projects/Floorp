@@ -40,7 +40,7 @@ class SessionSuggestionProvider(
                         title = session.title,
                         description = session.url,
                         icon = icons.loadLambda(session.url),
-                        onSuggestionClicked = { selectTabUseCase.invoke(session) }
+                        onSuggestionClicked = { selectTabUseCase(session) }
                     )
                 )
             }

@@ -123,12 +123,12 @@ open class DefaultComponents(private val applicationContext: Context) {
                 },
                 BrowserMenuDivider(),
                 SimpleBrowserMenuItem("Clear Data") {
-                    sessionUseCases.clearData.invoke()
+                    sessionUseCases.clearData()
                 },
                 BrowserMenuCheckbox("Request desktop site", {
                     sessionManager.selectedSessionOrThrow.desktopMode
                 }) { checked ->
-                    sessionUseCases.requestDesktopSite.invoke(checked)
+                    sessionUseCases.requestDesktopSite(checked)
                 }
         )
     }
@@ -140,7 +140,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 contentDescription = "Forward",
                 isEnabled = { sessionManager.selectedSession?.canGoForward == true }
         ) {
-            sessionUseCases.goForward.invoke()
+            sessionUseCases.goForward()
         }
 
         val refresh = BrowserMenuItemToolbar.Button(
@@ -149,14 +149,14 @@ open class DefaultComponents(private val applicationContext: Context) {
                 contentDescription = "Refresh",
                 isEnabled = { sessionManager.selectedSession?.loading != true }
         ) {
-            sessionUseCases.reload.invoke()
+            sessionUseCases.reload()
         }
 
         val stop = BrowserMenuItemToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
                 iconTintColorResource = R.color.photonBlue90,
                 contentDescription = "Stop") {
-            sessionUseCases.stopLoading.invoke()
+            sessionUseCases.stopLoading()
         }
 
         BrowserMenuItemToolbar(listOf(forward, refresh, stop))

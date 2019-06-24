@@ -52,7 +52,7 @@ class SearchUseCasesTest {
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
         whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
-        useCases.defaultSearch.invoke(searchTerms, session)
+        useCases.defaultSearch(searchTerms, session)
 
         assertEquals(searchTerms, session.searchTerms)
         verify(engineSession).loadUrl(searchUrl)
@@ -68,7 +68,7 @@ class SearchUseCasesTest {
         whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
         whenever(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
 
-        useCases.newTabSearch.invoke(searchTerms, Session.Source.NEW_TAB)
+        useCases.newTabSearch(searchTerms, Session.Source.NEW_TAB)
         verify(engineSession).loadUrl(searchUrl)
     }
 
@@ -87,7 +87,7 @@ class SearchUseCasesTest {
             Session(url).also { createdSession = it }
         }
 
-        searchUseCases.defaultSearch.invoke("test")
+        searchUseCases.defaultSearch("test")
 
         assertEquals("https://search.example.com", sessionCreatedForUrl)
         assertNotNull(createdSession)

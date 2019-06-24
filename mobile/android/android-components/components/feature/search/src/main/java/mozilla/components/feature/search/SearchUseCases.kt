@@ -50,7 +50,7 @@ class SearchUseCases(
          * is provided.
          * @param searchEngine Search Engine to use, or the default search engine if none is provided
          */
-        fun invoke(
+        operator fun invoke(
             searchTerms: String,
             session: Session? = sessionManager.selectedSession,
             searchEngine: SearchEngine? = null
@@ -92,7 +92,7 @@ class SearchUseCases(
          * @param source the source of the new session.
          * @param searchEngine Search Engine to use, or the default search engine if none is provided
          */
-        fun invoke(
+        operator fun invoke(
             searchTerms: String,
             source: Session.Source,
             selected: Boolean = true,

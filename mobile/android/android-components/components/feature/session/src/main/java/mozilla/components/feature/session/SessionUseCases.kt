@@ -43,7 +43,7 @@ class SessionUseCases(
          * @param url The URL to be loaded using the selected session.
          */
         override fun invoke(url: String) {
-            this.invoke(url, sessionManager.selectedSession)
+            invoke(url, sessionManager.selectedSession)
         }
 
         /**
@@ -54,7 +54,7 @@ class SessionUseCases(
          * @param url The URL to be loaded using the provided session.
          * @param session the session for which the URL should be loaded.
          */
-        fun invoke(url: String, session: Session? = sessionManager.selectedSession) {
+        operator fun invoke(url: String, session: Session? = sessionManager.selectedSession) {
             val loadSession = session ?: onNoSession.invoke(url)
             sessionManager.getOrCreateEngineSession(loadSession).loadUrl(url)
         }
@@ -68,7 +68,7 @@ class SessionUseCases(
          * Loads the provided data based on the mime type using the provided session (or the
          * currently selected session if none is provided).
          */
-        fun invoke(
+        operator fun invoke(
             data: String,
             mimeType: String,
             encoding: String = "UTF-8",
@@ -88,7 +88,7 @@ class SessionUseCases(
          *
          * @param session the session for which reload should be triggered.
          */
-        fun invoke(session: Session? = sessionManager.selectedSession) {
+        operator fun invoke(session: Session? = sessionManager.selectedSession) {
             if (session != null) {
                 sessionManager.getOrCreateEngineSession(session).reload()
             }
@@ -103,7 +103,7 @@ class SessionUseCases(
          *
          * @param session the session for which loading should be stopped.
          */
-        fun invoke(session: Session? = sessionManager.selectedSession) {
+        operator fun invoke(session: Session? = sessionManager.selectedSession) {
             if (session != null) {
                 sessionManager.getOrCreateEngineSession(session).stopLoading()
             }
@@ -116,7 +116,7 @@ class SessionUseCases(
         /**
          * Navigates back in the history of the currently selected session
          */
-        fun invoke(session: Session? = sessionManager.selectedSession) {
+        operator fun invoke(session: Session? = sessionManager.selectedSession) {
             if (session != null) {
                 sessionManager.getOrCreateEngineSession(session).goBack()
             }
@@ -129,7 +129,7 @@ class SessionUseCases(
         /**
          * Navigates forward in the history of the currently selected session
          */
-        fun invoke(session: Session? = sessionManager.selectedSession) {
+        operator fun invoke(session: Session? = sessionManager.selectedSession) {
             if (session != null) {
                 sessionManager.getOrCreateEngineSession(session).goForward()
             }
@@ -142,7 +142,7 @@ class SessionUseCases(
         /**
          * Requests the desktop version of the current session and reloads the page.
          */
-        fun invoke(enable: Boolean, session: Session? = sessionManager.selectedSession) {
+        operator fun invoke(enable: Boolean, session: Session? = sessionManager.selectedSession) {
             if (session != null) {
                 sessionManager.getOrCreateEngineSession(session).toggleDesktopMode(enable, true)
             }
@@ -155,7 +155,7 @@ class SessionUseCases(
         /**
          * Exits fullscreen mode of the current session.
          */
-        fun invoke(session: Session? = sessionManager.selectedSession) {
+        operator fun invoke(session: Session? = sessionManager.selectedSession) {
             if (session != null) {
                 sessionManager.getOrCreateEngineSession(session).exitFullScreenMode()
             }
@@ -168,7 +168,10 @@ class SessionUseCases(
         /**
          * Clears all user data sources available.
          */
-        fun invoke(session: Session? = sessionManager.selectedSession, data: BrowsingData = BrowsingData.all()) {
+        operator fun invoke(
+            session: Session? = sessionManager.selectedSession,
+            data: BrowsingData = BrowsingData.all()
+        ) {
             sessionManager.engine.clearData(data)
             if (session != null) {
                 sessionManager.getOrCreateEngineSession(session).clearData(data)

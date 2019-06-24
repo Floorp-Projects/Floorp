@@ -43,7 +43,7 @@ class SettingsUseCasesTest {
             }
         }
 
-        autoplaySetting.invoke(true)
+        autoplaySetting(true)
         verify(settings).allowAutoplayMedia = true
         verify(engineSessionA.settings).allowAutoplayMedia = true
         verify(engineSessionB.settings).allowAutoplayMedia = true
@@ -51,12 +51,12 @@ class SettingsUseCasesTest {
 
     @Test
     fun updateTrackingProtection() {
-        useCases.updateTrackingProtection.invoke(TrackingProtectionPolicy.none())
+        useCases.updateTrackingProtection(TrackingProtectionPolicy.none())
         verify(settings).trackingProtectionPolicy = TrackingProtectionPolicy.none()
         verify(engineSessionA).enableTrackingProtection(TrackingProtectionPolicy.none())
         verify(engineSessionB).enableTrackingProtection(TrackingProtectionPolicy.none())
 
-        useCases.updateTrackingProtection.invoke(TrackingProtectionPolicy.all())
+        useCases.updateTrackingProtection(TrackingProtectionPolicy.all())
         verify(settings).trackingProtectionPolicy = TrackingProtectionPolicy.all()
         verify(engineSessionA).enableTrackingProtection(TrackingProtectionPolicy.all())
         verify(engineSessionB).enableTrackingProtection(TrackingProtectionPolicy.all())

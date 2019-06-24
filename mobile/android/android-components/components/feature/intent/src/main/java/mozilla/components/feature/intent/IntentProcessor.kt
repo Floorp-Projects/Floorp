@@ -52,14 +52,14 @@ class IntentProcessor(
                     this.customTabConfig = CustomTabConfig.createFromIntent(safeIntent, displayMetrics)
                 }
                 sessionManager.add(session)
-                sessionUseCases.loadUrl.invoke(url, session)
+                sessionUseCases.loadUrl(url, session)
                 intent.putExtra(ACTIVE_SESSION_ID, session.id)
                 true
             }
 
             else -> {
                 val session = createSession(url, private = isPrivate, source = Source.ACTION_VIEW)
-                sessionUseCases.loadUrl.invoke(url, session)
+                sessionUseCases.loadUrl(url, session)
                 true
             }
         }
@@ -74,7 +74,7 @@ class IntentProcessor(
 
             else -> {
                 WebURLFinder(extraText).bestWebURL()?.let { url ->
-                    sessionUseCases.loadUrl.invoke(
+                    sessionUseCases.loadUrl(
                         url,
                         createSession(
                             url,
@@ -83,7 +83,7 @@ class IntentProcessor(
                         )
                     )
                 } ?: run {
-                    searchUseCases.newTabSearch.invoke(extraText, Source.ACTION_SEND, openNewTab)
+                    searchUseCases.newTabSearch(extraText, Source.ACTION_SEND, openNewTab)
                 }
                 true
             }

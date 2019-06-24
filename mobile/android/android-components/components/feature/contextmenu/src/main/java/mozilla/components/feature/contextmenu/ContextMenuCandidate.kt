@@ -66,7 +66,7 @@ data class ContextMenuCandidate(
             label = context.getString(R.string.mozac_feature_contextmenu_open_link_in_new_tab),
             showFor = { session, hitResult -> hitResult.isLink() && !session.private },
             action = { parent, hitResult ->
-                val session = tabsUseCases.addTab.invoke(
+                val session = tabsUseCases.addTab(
                     hitResult.getLink(), selectTab = false, startLoading = true, parent = parent)
 
                 snackbarDelegate.show(
@@ -75,7 +75,7 @@ data class ContextMenuCandidate(
                     duration = Snackbar.LENGTH_LONG,
                     action = R.string.mozac_feature_contextmenu_snackbar_action_switch
                 ) {
-                    tabsUseCases.selectTab.invoke(session)
+                    tabsUseCases.selectTab(session)
                 }
             }
         )
@@ -93,7 +93,7 @@ data class ContextMenuCandidate(
             label = context.getString(R.string.mozac_feature_contextmenu_open_link_in_private_tab),
             showFor = { _, hitResult -> hitResult.isLink() },
             action = { parent, hitResult ->
-                val session = tabsUseCases.addPrivateTab.invoke(
+                val session = tabsUseCases.addPrivateTab(
                     hitResult.getLink(), selectTab = false, startLoading = true, parent = parent)
 
                 snackbarDelegate.show(
@@ -102,7 +102,7 @@ data class ContextMenuCandidate(
                     Snackbar.LENGTH_LONG,
                     R.string.mozac_feature_contextmenu_snackbar_action_switch
                 ) {
-                    tabsUseCases.selectTab.invoke(session)
+                    tabsUseCases.selectTab(session)
                 }
             }
         )
@@ -121,10 +121,10 @@ data class ContextMenuCandidate(
             showFor = { _, hitResult -> hitResult.isImage() },
             action = { parent, hitResult ->
                 val session = if (parent.private) {
-                    tabsUseCases.addPrivateTab.invoke(
+                    tabsUseCases.addPrivateTab(
                         hitResult.src, selectTab = false, startLoading = true, parent = parent)
                 } else {
-                    tabsUseCases.addTab.invoke(
+                    tabsUseCases.addTab(
                         hitResult.src, selectTab = false, startLoading = true, parent = parent)
                 }
 
@@ -134,7 +134,7 @@ data class ContextMenuCandidate(
                     duration = Snackbar.LENGTH_LONG,
                     action = R.string.mozac_feature_contextmenu_snackbar_action_switch
                 ) {
-                    tabsUseCases.selectTab.invoke(session)
+                    tabsUseCases.selectTab(session)
                 }
             }
         )
