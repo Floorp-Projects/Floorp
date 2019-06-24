@@ -254,12 +254,15 @@ struct SFTKSessionContextStr {
     PRBool multi;               /* is multipart */
     PRBool rsa;                 /* is rsa */
     PRBool doPad;               /* use PKCS padding for block ciphers */
+    PRBool isXCBC;              /* xcbc, use special handling in final */
     unsigned int blockSize;     /* blocksize for padding */
     unsigned int padDataLength; /* length of the valid data in padbuf */
     /** latest incomplete block of data for block cipher */
     unsigned char padBuf[SFTK_MAX_BLOCK_SIZE];
     /** result of MAC'ing of latest full block of data with block cipher */
     unsigned char macBuf[SFTK_MAX_BLOCK_SIZE];
+    unsigned char k2[SFTK_MAX_BLOCK_SIZE];
+    unsigned char k3[SFTK_MAX_BLOCK_SIZE];
     CK_ULONG macSize; /* size of a general block cipher mac*/
     void *cipherInfo;
     void *hashInfo;
@@ -614,6 +617,7 @@ extern CK_RV SFTK_ShutdownSlot(SFTKSlot *slot);
 extern CK_RV sftk_CloseAllSessions(SFTKSlot *slot, PRBool logout);
 
 /* internal utility functions used by pkcs11.c */
+extern CK_RV sftk_MapCryptError(int error);
 extern SFTKAttribute *sftk_FindAttribute(SFTKObject *object,
                                          CK_ATTRIBUTE_TYPE type);
 extern void sftk_FreeAttribute(SFTKAttribute *attribute);
@@ -691,9 +695,35 @@ extern NSSLOWKEYPublicKey *sftk_GetPubKey(SFTKObject *object,
                                           CK_KEY_TYPE key_type, CK_RV *crvp);
 extern NSSLOWKEYPrivateKey *sftk_GetPrivKey(SFTKObject *object,
                                             CK_KEY_TYPE key_type, CK_RV *crvp);
+extern CK_RV sftk_PutPubKey(SFTKObject *publicKey, SFTKObject *privKey, CK_KEY_TYPE keyType,
+                            NSSLOWKEYPublicKey *pubKey);
 extern void sftk_FormatDESKey(unsigned char *key, int length);
 extern PRBool sftk_CheckDESKey(unsigned char *key);
 extern PRBool sftk_IsWeakKey(unsigned char *key, CK_KEY_TYPE key_type);
+
+/* ike and xcbc helpers */
+extern CK_RV sftk_ike_prf(CK_SESSION_HANDLE hSession,
+                          const SFTKAttribute *inKey,
+                          const CK_NSS_IKE_PRF_DERIVE_PARAMS *params, SFTKObject *outKey);
+extern CK_RV sftk_ike1_prf(CK_SESSION_HANDLE hSession,
+                           const SFTKAttribute *inKey,
+                           const CK_NSS_IKE1_PRF_DERIVE_PARAMS *params, SFTKObject *outKey,
+                           unsigned int keySize);
+extern CK_RV sftk_ike1_appendix_b_prf(CK_SESSION_HANDLE hSession,
+                                      const SFTKAttribute *inKey,
+                                      const CK_MECHANISM_TYPE *params, SFTKObject *outKey,
+                                      unsigned int keySize);
+extern CK_RV sftk_ike_prf_plus(CK_SESSION_HANDLE hSession,
+                               const SFTKAttribute *inKey,
+                               const CK_NSS_IKE_PRF_PLUS_DERIVE_PARAMS *params, SFTKObject *outKey,
+                               unsigned int keySize);
+extern CK_RV sftk_aes_xcbc_new_keys(CK_SESSION_HANDLE hSession,
+                                    CK_OBJECT_HANDLE hKey, CK_OBJECT_HANDLE_PTR phKey,
+                                    unsigned char *k2, unsigned char *k3);
+extern CK_RV sftk_xcbc_mac_pad(unsigned char *padBuf, unsigned int bufLen,
+                               int blockSize, const unsigned char *k2,
+                               const unsigned char *k3);
+extern SECStatus sftk_fips_IKE_PowerUpSelfTests(void);
 
 /* mechanism allows this operation */
 extern CK_RV sftk_MechAllowsOperation(CK_MECHANISM_TYPE type, CK_ATTRIBUTE_TYPE op);

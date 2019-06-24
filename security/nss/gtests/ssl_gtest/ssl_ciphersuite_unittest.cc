@@ -68,12 +68,6 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
   virtual void SetupCertificate() {
     if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
       switch (sig_scheme_) {
-        case ssl_sig_rsa_pkcs1_sha256:
-        case ssl_sig_rsa_pkcs1_sha384:
-        case ssl_sig_rsa_pkcs1_sha512:
-          Reset(TlsAgent::kServerRsaSign);
-          auth_type_ = ssl_auth_rsa_sign;
-          break;
         case ssl_sig_rsa_pss_rsae_sha256:
         case ssl_sig_rsa_pss_rsae_sha384:
           Reset(TlsAgent::kServerRsaSign);
@@ -330,6 +324,12 @@ static SSLSignatureScheme kSignatureSchemesParamsArr[] = {
     ssl_sig_rsa_pss_pss_sha256,     ssl_sig_rsa_pss_pss_sha384,
     ssl_sig_rsa_pss_pss_sha512};
 
+static SSLSignatureScheme kSignatureSchemesParamsArrTls13[] = {
+    ssl_sig_ecdsa_secp256r1_sha256, ssl_sig_ecdsa_secp384r1_sha384,
+    ssl_sig_rsa_pss_rsae_sha256,    ssl_sig_rsa_pss_rsae_sha384,
+    ssl_sig_rsa_pss_rsae_sha512,    ssl_sig_rsa_pss_pss_sha256,
+    ssl_sig_rsa_pss_pss_sha384,     ssl_sig_rsa_pss_pss_sha512};
+
 INSTANTIATE_CIPHER_TEST_P(RC4, Stream, V10ToV12, kDummyNamedGroupParams,
                           kDummySignatureSchemesParams,
                           TLS_RSA_WITH_RC4_128_SHA,
@@ -394,7 +394,7 @@ INSTANTIATE_CIPHER_TEST_P(
 #ifndef NSS_DISABLE_TLS_1_3
 INSTANTIATE_CIPHER_TEST_P(TLS13, All, V13,
                           ::testing::ValuesIn(kFasterDHEGroups),
-                          ::testing::ValuesIn(kSignatureSchemesParamsArr),
+                          ::testing::ValuesIn(kSignatureSchemesParamsArrTls13),
                           TLS_AES_128_GCM_SHA256, TLS_CHACHA20_POLY1305_SHA256,
                           TLS_AES_256_GCM_SHA384);
 INSTANTIATE_CIPHER_TEST_P(TLS13AllGroups, All, V13,

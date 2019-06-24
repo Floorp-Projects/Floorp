@@ -701,6 +701,44 @@ TEST_P(TlsConnectTls12, ClientAuthInconsistentPssSignatureScheme) {
   ConnectExpectAlert(server_, kTlsAlertIllegalParameter);
 }
 
+TEST_P(TlsConnectTls13, ClientAuthPkcs1SignatureScheme) {
+  static const SSLSignatureScheme kSignatureScheme[] = {
+      ssl_sig_rsa_pkcs1_sha256, ssl_sig_rsa_pss_rsae_sha256};
+
+  Reset(TlsAgent::kServerRsa, "rsa");
+  client_->SetSignatureSchemes(kSignatureScheme,
+                               PR_ARRAY_SIZE(kSignatureScheme));
+  server_->SetSignatureSchemes(kSignatureScheme,
+                               PR_ARRAY_SIZE(kSignatureScheme));
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+
+  auto capture_cert_verify = MakeTlsFilter<TlsHandshakeRecorder>(
+      client_, kTlsHandshakeCertificateVerify);
+  capture_cert_verify->EnableDecryption();
+
+  Connect();
+  CheckSigScheme(capture_cert_verify, 0, server_, ssl_sig_rsa_pss_rsae_sha256,
+                 1024);
+}
+
+TEST_P(TlsConnectTls13, ClientAuthPkcs1SignatureSchemeOnly) {
+  static const SSLSignatureScheme kSignatureScheme[] = {
+      ssl_sig_rsa_pkcs1_sha256};
+
+  Reset(TlsAgent::kServerRsa, "rsa");
+  client_->SetSignatureSchemes(kSignatureScheme,
+                               PR_ARRAY_SIZE(kSignatureScheme));
+  server_->SetSignatureSchemes(kSignatureScheme,
+                               PR_ARRAY_SIZE(kSignatureScheme));
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+
+  ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+}
+
 class TlsZeroCertificateRequestSigAlgsFilter : public TlsHandshakeFilter {
  public:
   TlsZeroCertificateRequestSigAlgsFilter(const std::shared_ptr<TlsAgent>& a)
@@ -933,7 +971,7 @@ TEST_P(TlsConnectTls13, InconsistentSignatureSchemeAlert) {
   client_->CheckErrorCode(SSL_ERROR_INCORRECT_SIGNATURE_ALGORITHM);
 }
 
-TEST_P(TlsConnectTls12Plus, RequestClientAuthWithSha384) {
+TEST_P(TlsConnectTls12, RequestClientAuthWithSha384) {
   server_->SetSignatureSchemes(kSignatureSchemeRsaSha384,
                                PR_ARRAY_SIZE(kSignatureSchemeRsaSha384));
   server_->RequestClientAuth(false);
@@ -1395,12 +1433,21 @@ TEST_P(TlsSignatureSchemeConfiguration, SignatureSchemeConfigBoth) {
 INSTANTIATE_TEST_CASE_P(
     SignatureSchemeRsa, TlsSignatureSchemeConfiguration,
     ::testing::Combine(
-        TlsConnectTestBase::kTlsVariantsAll, TlsConnectTestBase::kTlsV12Plus,
+        TlsConnectTestBase::kTlsVariantsAll, TlsConnectTestBase::kTlsV12,
         ::testing::Values(TlsAgent::kServerRsaSign),
         ::testing::Values(ssl_auth_rsa_sign),
         ::testing::Values(ssl_sig_rsa_pkcs1_sha256, ssl_sig_rsa_pkcs1_sha384,
                           ssl_sig_rsa_pkcs1_sha512, ssl_sig_rsa_pss_rsae_sha256,
                           ssl_sig_rsa_pss_rsae_sha384)));
+// RSASSA-PKCS1-v1_5 is not allowed to be used in TLS 1.3
+INSTANTIATE_TEST_CASE_P(
+    SignatureSchemeRsaTls13, TlsSignatureSchemeConfiguration,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                       TlsConnectTestBase::kTlsV13,
+                       ::testing::Values(TlsAgent::kServerRsaSign),
+                       ::testing::Values(ssl_auth_rsa_sign),
+                       ::testing::Values(ssl_sig_rsa_pss_rsae_sha256,
+                                         ssl_sig_rsa_pss_rsae_sha384)));
 // PSS with SHA-512 needs a bigger key to work.
 INSTANTIATE_TEST_CASE_P(
     SignatureSchemeBigRsa, TlsSignatureSchemeConfiguration,

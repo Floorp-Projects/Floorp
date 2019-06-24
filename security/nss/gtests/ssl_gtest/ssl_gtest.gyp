@@ -32,7 +32,6 @@
         'ssl_gather_unittest.cc',
         'ssl_gtest.cc',
         'ssl_hrr_unittest.cc',
-        'ssl_keylog_unittest.cc',
         'ssl_keyupdate_unittest.cc',
         'ssl_loopback_unittest.cc',
         'ssl_misc_unittest.cc',
@@ -91,6 +90,14 @@
         [ 'disable_dbm==0', {
           'dependencies': [
             '<(DEPTH)/lib/dbm/src/src.gyp:dbm',
+          ],
+        }],
+        [ 'enable_sslkeylogfile==1 and sanitizer_flags==0', {
+          'sources': [
+            'ssl_keylog_unittest.cc',
+          ],
+          'defines': [
+            'NSS_ALLOW_SSLKEYLOGFILE',
           ],
         }],
       ],

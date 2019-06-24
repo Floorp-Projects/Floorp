@@ -2063,7 +2063,10 @@ s_mp_almost_inverse(const mp_int *a, const mp_int *p, mp_int *c)
             }
         }
     if (res >= 0) {
-        while (MP_SIGN(c) != MP_ZPOS) {
+        if (mp_cmp_mag(c, p) >= 0) {
+            MP_CHECKOK(mp_div(c, p, NULL, c));
+        }
+        if (MP_SIGN(c) != MP_ZPOS) {
             MP_CHECKOK(mp_add(c, p, c));
         }
         res = k;
