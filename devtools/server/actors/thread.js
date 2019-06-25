@@ -1094,19 +1094,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         this._clearSteppingHooks();
       }
 
-      // When replaying execution in a separate process we need to explicitly
-      // notify that process when to resume execution.
-      if (this.dbg.replaying) {
-        if (resumeLimit && resumeLimit.type == "warp") {
-          this.dbg.replayTimeWarp(resumeLimit.target);
-        } else if (rewind) {
-          this.dbg.replayResumeBackward();
-        } else {
-          this.dbg.replayResumeForward();
-        }
-      }
-
-      this.doResume();
+      this.doResume({ resumeLimit, rewind });
       return {};
     } catch (error) {
       return error instanceof Error
@@ -1124,7 +1112,19 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * when we do not want to notify the front end of a resume, for example when
    * we are shutting down.
    */
-  doResume() {
+  doResume({ resumeLimit, rewind } = {}) {
+    // When replaying execution in a separate process we need to explicitly
+    // notify that process when to resume execution.
+    if (this.dbg.replaying) {
+      if (resumeLimit && resumeLimit.type == "warp") {
+        this.dbg.replayTimeWarp(resumeLimit.target);
+      } else if (rewind) {
+        this.dbg.replayResumeBackward();
+      } else {
+        this.dbg.replayResumeForward();
+      }
+    }
+
     this.maybePauseOnExceptions();
     this._state = "running";
 
