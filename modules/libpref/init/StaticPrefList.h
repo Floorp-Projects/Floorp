@@ -939,14 +939,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.ui.scroll-toolbar-threshold",
-  ToolbarScrollThreshold,
+   browser_ui_scroll_toolbar_threshold,
   RelaxedAtomicInt32, 10
 )
 
 VARCACHE_PREF(
   Live,
   "browser.ui.zoom.force-user-scalable",
-  ForceUserScalable,
+   browser_ui_zoom_force_user_scalable,
   RelaxedAtomicBool, false
 )
 
@@ -960,7 +960,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.viewport.desktopWidth",
-  DesktopViewportWidth,
+   browser_viewport_desktopWidth,
   RelaxedAtomicInt32, 980
 )
 
@@ -1517,7 +1517,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.ipc.plugins.asyncdrawing.enabled",
-  PluginAsyncDrawingEnabled,
+   dom_ipc_plugins_asyncdrawing_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -1636,7 +1636,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.meta-viewport.enabled",
-  MetaViewportEnabled,
+   dom_meta_viewport_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -2206,35 +2206,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.vr.autoactivate.enabled",
-  VRAutoActivateEnabled,
+   dom_vr_autoactivate_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "dom.vr.controller.enumerate.interval",
-  VRControllerEnumerateInterval,
+   dom_vr_controller_enumerate_interval,
   RelaxedAtomicInt32, 1000
 )
 
 VARCACHE_PREF(
   Live,
   "dom.vr.controller_trigger_threshold",
-  VRControllerTriggerThreshold,
+   dom_vr_controller_trigger_threshold,
   AtomicFloat, 0.1f
 )
 
 VARCACHE_PREF(
   Live,
   "dom.vr.display.enumerate.interval",
-  VRDisplayEnumerateInterval,
+   dom_vr_display_enumerate_interval,
   RelaxedAtomicInt32, 5000
 )
 
 VARCACHE_PREF(
   Live,
   "dom.vr.display.rafMaxDuration",
-  VRDisplayRafMaxDuration,
+   dom_vr_display_rafMaxDuration,
   RelaxedAtomicUint32, 50
 )
 
@@ -2247,7 +2247,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "dom.vr.external.enabled",
-  VRExternalEnabled,
+   dom_vr_external_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2255,28 +2255,28 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.vr.external.notdetected.timeout",
-  VRExternalNotDetectedTimeout,
+   dom_vr_external_notdetected_timeout,
   RelaxedAtomicInt32, 60000
 )
 
 VARCACHE_PREF(
   Live,
   "dom.vr.external.quit.timeout",
-  VRExternalQuitTimeout,
+   dom_vr_external_quit_timeout,
   RelaxedAtomicInt32, 10000
 )
 
 VARCACHE_PREF(
   Live,
   "dom.vr.inactive.timeout",
-  VRInactiveTimeout,
+   dom_vr_inactive_timeout,
   RelaxedAtomicInt32, 5000
 )
 
 VARCACHE_PREF(
   Live,
   "dom.vr.navigation.timeout",
-  VRNavigationTimeout,
+   dom_vr_navigation_timeout,
   RelaxedAtomicInt32, 1000
 )
 
@@ -2291,7 +2291,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "dom.vr.oculus.enabled",
-  VROculusEnabled,
+   dom_vr_oculus_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2299,22 +2299,15 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.vr.oculus.invisible.enabled",
-  VROculusInvisibleEnabled,
+   dom_vr_oculus_invisible_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "dom.vr.oculus.present.timeout",
-  VROculusPresentTimeout,
+   dom_vr_oculus_present_timeout,
   RelaxedAtomicInt32, 500
-)
-
-VARCACHE_PREF(
-  Live,
-  "dom.vr.oculus.quit.timeout",
-  VROculusQuitTimeout,
-  RelaxedAtomicInt32, 10000
 )
 
 // OpenVR device
@@ -2331,7 +2324,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "dom.vr.openvr.enabled",
-  VROpenVREnabled,
+   dom_vr_openvr_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2339,7 +2332,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "dom.vr.openvr.action_input",
-  VROpenVRActionInputEnabled,
+   dom_vr_openvr_action_input,
   bool, true
 )
 
@@ -2347,14 +2340,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "dom.vr.osvr.enabled",
-  VROSVREnabled,
+   dom_vr_osvr_enabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "dom.vr.poseprediction.enabled",
-  VRPosePredictionEnabled,
+   dom_vr_poseprediction_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -2367,7 +2360,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "dom.vr.process.enabled",
-  VRProcessEnabled,
+   dom_vr_process_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2375,21 +2368,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "dom.vr.process.startup_timeout_ms",
-  VRProcessTimeoutMs,
+   dom_vr_process_startup_timeout_ms,
   int32_t, 5000
 )
 
 VARCACHE_PREF(
   Live,
   "dom.vr.puppet.enabled",
-  VRPuppetEnabled,
+   dom_vr_puppet_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "dom.vr.puppet.submitframe",
-  VRPuppetSubmitFrame,
+   dom_vr_puppet_submitframe,
   RelaxedAtomicUint32, 0
 )
 
@@ -2404,7 +2397,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.vr.require-gesture",
-  VRRequireGesture,
+   dom_vr_require_gesture,
   RelaxedAtomicBool, true
 )
 
@@ -2413,7 +2406,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "dom.vr.service.enabled",
-  VRServiceEnabled,
+   dom_vr_service_enabled,
   bool, true
 )
 
