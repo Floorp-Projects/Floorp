@@ -328,7 +328,7 @@ marionette-media-tests:
     - mochitest-webgl1-ext
 #    - mochitest-webgl2-core
 #     - mochitest-webgl2-ext test  # timeouts
-    # - reftest
+    - reftest
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
@@ -340,7 +340,7 @@ marionette-media-tests:
 
 # macosx1014-64-qr-tests:
     - crashtest
-    # - reftest
+    - reftest
 
 macosx64-tests:
     - gtest
