@@ -1,8 +1,8 @@
 .. _test_certificates:
 
-==============
+===============================
 Adding Certificates for Testing
-==============
+===============================
 
 Sometimes we need to write tests for scenarios that require custom client, server or certificate authority (CA) certificates. For that purpose, you can generate such certificates using ``build/pgo/genpgocert.py``.
 
