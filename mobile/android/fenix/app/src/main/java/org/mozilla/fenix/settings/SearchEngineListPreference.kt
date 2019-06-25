@@ -31,7 +31,7 @@ import kotlin.coroutines.CoroutineContext
 abstract class SearchEngineListPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = android.R.attr.preferenceStyle
 ) : Preference(context, attrs, defStyleAttr), CompoundButton.OnCheckedChangeListener, CoroutineScope {
     private val job = Job()
     override val coroutineContext: CoroutineContext

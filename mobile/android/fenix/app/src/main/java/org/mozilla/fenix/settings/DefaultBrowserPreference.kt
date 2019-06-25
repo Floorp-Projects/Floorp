@@ -15,7 +15,7 @@ import org.mozilla.fenix.R
 class DefaultBrowserPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    attributeSetId: Int = 0
+    attributeSetId: Int = android.R.attr.preferenceStyle
 ) : Preference(context, attrs, attributeSetId) {
 
     private var switchView: Switch? = null

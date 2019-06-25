@@ -3,9 +3,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/relativeLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -16,45 +16,41 @@
         android:paddingBottom="@dimen/radio_button_preference_vertical"
         android:baselineAligned="false">
 
-    <LinearLayout android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:orientation="vertical">
-
-        <RadioButton
-                android:id="@+id/radio_button"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/radio_button_preference_height"
-                android:background="@android:color/transparent"
-                android:layout_gravity="start"
-                android:button="@null"
-                android:clickable="false"
-                android:focusable="false"
-                android:drawableStart="?android:attr/listChoiceIndicatorSingle"
-                android:drawablePadding="@dimen/radio_button_preference_drawable_padding"/>
-
-    </LinearLayout>
-
-    <LinearLayout
+    <RadioButton
+            android:id="@+id/radio_button"
             android:layout_width="wrap_content"
+            android:layout_height="@dimen/radio_button_preference_height"
+            android:background="@android:color/transparent"
+            android:layout_gravity="start"
+            android:button="@null"
+            android:clickable="false"
+            android:focusable="false"
+            tools:drawableStart="?android:attr/listChoiceIndicatorSingle"
+            android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+            android:id="@+id/title"
+            android:layout_width="0dp"
+            android:gravity="center|start"
+            android:layout_height="@dimen/radio_button_preference_height"
+            tools:text="Use recommended settings"
+            android:textAppearance="?android:attr/textAppearanceListItem"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/radio_button"/>
+
+    <TextView
+            android:id="@+id/widget_summary"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="?android:attr/textColorSecondary"
+            tools:text="@string/preference_recommended_settings_summary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/radio_button"
+            app:layout_constraintStart_toStartOf="@+id/title" />
 
-        <TextView
-                android:id="@+id/title"
-                android:layout_width="match_parent"
-                android:gravity="center|start"
-                android:layout_height="@dimen/radio_button_preference_height"
-                tools:text="Use recommended settings"
-                android:textAppearance="?android:attr/textAppearanceListItem"/>
-
-        <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-                  android:id="@+id/widget_summary"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:textAppearance="?android:attr/textAppearanceSmall"
-                  android:textColor="?android:attr/textColorSecondary"
-                  tools:text="@string/preference_recommended_settings_summary"/>
-
-    </LinearLayout>
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

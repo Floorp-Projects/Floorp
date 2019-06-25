@@ -98,17 +98,17 @@ fun PhoneFeature.getPreferenceKey(context: Context): String {
     }
 }
 
-/* In devices with Android 6, when we use android:button="@null" android:drawableStart doesn't work via xml
-* as a result we have to apply it programmatically. More info about this issue https://github.com/mozilla-mobile/fenix/issues/1414
-*/
+/**
+ * In devices with Android 6, when we use android:button="@null" android:drawableStart doesn't work via xml
+ * as a result we have to apply it programmatically. More info about this issue https://github.com/mozilla-mobile/fenix/issues/1414
+ */
 fun RadioButton.setStartCheckedIndicator() {
-    val attr =
-        ThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
+    val attr = ThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
     val buttonDrawable = ContextCompat.getDrawable(context, attr)
-    buttonDrawable.apply {
-        this?.setBounds(0, 0, this.intrinsicWidth, this.intrinsicHeight)
+    buttonDrawable?.apply {
+        setBounds(0, 0, this.intrinsicWidth, this.intrinsicHeight)
     }
-    this.setCompoundDrawables(buttonDrawable, null, null, null)
+    setCompoundDrawablesRelative(buttonDrawable, null, null, null)
 }
 
 fun initBlockedByAndroidView(phoneFeature: PhoneFeature, blockedByAndroidView: View) {

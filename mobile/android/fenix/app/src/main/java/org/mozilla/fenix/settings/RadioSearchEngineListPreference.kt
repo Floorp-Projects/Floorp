@@ -15,7 +15,7 @@ import org.mozilla.fenix.utils.Settings
 class RadioSearchEngineListPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = android.R.attr.preferenceStyle
 ) : SearchEngineListPreference(context, attrs, defStyleAttr) {
     override val itemResId: Int
         get() = R.layout.search_engine_radio_button

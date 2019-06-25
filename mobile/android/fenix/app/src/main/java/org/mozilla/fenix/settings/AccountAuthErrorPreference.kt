@@ -15,7 +15,7 @@ import org.mozilla.fenix.R
 class AccountAuthErrorPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    attributeSetId: Int = 0
+    attributeSetId: Int = android.R.attr.preferenceStyle
 ) : Preference(context, attrs, attributeSetId) {
     var email: String? = null
 
