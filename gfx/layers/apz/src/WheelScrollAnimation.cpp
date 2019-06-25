@@ -21,22 +21,31 @@ static ScrollAnimationBezierPhysicsSettings SettingsForDeltaType(
 
   switch (aDeltaType) {
     case ScrollWheelInput::SCROLLDELTA_PAGE:
-      maxMS = clamped(StaticPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
-      minMS = clamped(StaticPrefs::PageSmoothScrollMinDurationMs(), 0, maxMS);
+      maxMS = clamped(StaticPrefs::general_smoothScroll_pages_durationMaxMS(),
+                      0, 10000);
+      minMS = clamped(StaticPrefs::general_smoothScroll_pages_durationMinMS(),
+                      0, maxMS);
       break;
     case ScrollWheelInput::SCROLLDELTA_PIXEL:
-      maxMS = clamped(StaticPrefs::PixelSmoothScrollMaxDurationMs(), 0, 10000);
-      minMS = clamped(StaticPrefs::PixelSmoothScrollMinDurationMs(), 0, maxMS);
+      maxMS = clamped(StaticPrefs::general_smoothScroll_pixels_durationMaxMS(),
+                      0, 10000);
+      minMS = clamped(StaticPrefs::general_smoothScroll_pixels_durationMinMS(),
+                      0, maxMS);
       break;
     case ScrollWheelInput::SCROLLDELTA_LINE:
-      maxMS = clamped(StaticPrefs::WheelSmoothScrollMaxDurationMs(), 0, 10000);
-      minMS = clamped(StaticPrefs::WheelSmoothScrollMinDurationMs(), 0, maxMS);
+      maxMS =
+          clamped(StaticPrefs::general_smoothScroll_mouseWheel_durationMaxMS(),
+                  0, 10000);
+      minMS =
+          clamped(StaticPrefs::general_smoothScroll_mouseWheel_durationMinMS(),
+                  0, maxMS);
       break;
   }
 
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio
   double intervalRatio =
-      ((double)StaticPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
+      ((double)StaticPrefs::general_smoothScroll_durationToIntervalRatio()) /
+      100.0;
   intervalRatio = std::max(1.0, intervalRatio);
   return ScrollAnimationBezierPhysicsSettings{minMS, maxMS, intervalRatio};
 }

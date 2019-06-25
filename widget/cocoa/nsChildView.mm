@@ -4392,7 +4392,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     geckoChildDeathGrip->DispatchAPZWheelInputEvent(wheelEvent, false);
   } else {
     ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
-    if (StaticPrefs::SmoothScrollEnabled() && StaticPrefs::WheelSmoothScrollEnabled()) {
+    if (StaticPrefs::general_smoothScroll() && StaticPrefs::general_smoothScroll_mouseWheel()) {
       scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
     }
     ScrollWheelInput wheelEvent(eventIntervalTime, eventTimeStamp, modifiers, scrollMode,
