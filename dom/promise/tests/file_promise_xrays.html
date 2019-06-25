@@ -2,10 +2,10 @@
 <html>
   <script>
     function vendGetter(name) {
-      return function() { throw "Getting " + String(name) };
+      return function() { throw "Getting " + String(name); };
     }
     function vendSetter(name) {
-      return function() { throw "Setting " + String(name) };
+      return function() { throw "Setting " + String(name); };
     }
     var setupThrew = false;
     try {

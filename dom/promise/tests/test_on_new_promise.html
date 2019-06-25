@@ -21,7 +21,7 @@ Debugger.prototype.onNewPromise.
 </div>
 <pre id="test">
   <script type="application/javascript">
-  is(Object.prototype.toString.call(new Promise(function () {})),
+  is(Object.prototype.toString.call(new Promise(function() {})),
      "[object Promise]",
      "We should have the native DOM promise implementation.");
 
@@ -32,9 +32,9 @@ Debugger.prototype.onNewPromise.
   var dbg = new dbgGlobal.Debugger(this);
 
   var wrappedPromise;
-  dbg.onNewPromise = function (wp) { wrappedPromise = wp; };
+  dbg.onNewPromise = function(wp) { wrappedPromise = wp; };
 
-  var promise = new Promise(function () {});
+  var promise = new Promise(function() {});
   debugger;
   ok(wrappedPromise);
   is(wrappedPromise.unsafeDereference(), promise);

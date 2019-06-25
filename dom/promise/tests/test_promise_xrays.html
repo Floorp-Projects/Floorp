@@ -270,7 +270,7 @@ function testReject2() {
 
 function testThen1() {
   var p = win.Promise.resolve(5);
-  var q = p.then((x) => x*x);
+  var q = p.then((x) => x * x);
   ok(q instanceof win.Promise,
      "Promise.then should return a promise from the right global");
   q.then(
@@ -285,7 +285,7 @@ function testThen1() {
 
 function testThen2() {
   var p = win.Promise.resolve(5);
-  var q = p.then((x) => Promise.resolve(x*x));
+  var q = p.then((x) => Promise.resolve(x * x));
   ok(q instanceof win.Promise,
      "Promise.then should return a promise from the right global");
   q.then(
@@ -301,7 +301,7 @@ function testThen2() {
 function testCatch1() {
   var p = win.Promise.reject(5);
   ok(p instanceof win.Promise, "Promise.reject should return a promise");
-  var q = p.catch((x) => x*x);
+  var q = p.catch((x) => x * x);
   ok(q instanceof win.Promise,
      "Promise.catch should return a promise from the right global");
   q.then(

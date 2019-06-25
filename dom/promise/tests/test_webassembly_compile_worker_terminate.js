@@ -1,4 +1,4 @@
-const sampleURL = 'test_webassembly_compile_sample.wasm';
+const sampleURL = "test_webassembly_compile_sample.wasm";
 
 function spawnWork() {
   const N = 50;

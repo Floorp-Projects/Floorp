@@ -12,7 +12,7 @@ t.step(function() {
   p0.then = function(resolved, rejected) {
     customThenCalled = true;
     Promise.prototype.then.call(this, resolved, rejected);
-  }
+  };
   var p1 = new Promise(function(r) { r(p0); });
   delete p0.then;
   var p2 = new Promise(function(r) { r(p0); });
