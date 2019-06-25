@@ -20,10 +20,10 @@ import mozilla.components.feature.downloads.manager.AndroidDownloadManager
 import mozilla.components.feature.downloads.manager.DownloadManager
 import mozilla.components.feature.downloads.manager.OnDownloadCompleted
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.base.feature.OnNeedToRequestPermissions
+import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.ktx.android.content.isPermissionGranted
-
-typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
 
 /**
  * Feature implementation to provide download functionality for the selected
@@ -45,7 +45,7 @@ typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
  */
 class DownloadsFeature(
     private val applicationContext: Context,
-    var onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
+    override var onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
     var onDownloadCompleted: OnDownloadCompleted = { _, _ -> },
     private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext, onDownloadCompleted),
     sessionManager: SessionManager,
@@ -53,7 +53,7 @@ class DownloadsFeature(
     private val fragmentManager: FragmentManager? = null,
     @VisibleForTesting(otherwise = PRIVATE)
     internal var dialog: DownloadDialogFragment = SimpleDownloadDialogFragment.newInstance()
-) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
+) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature, PermissionsFeature {
 
     /**
      * Starts observing downloads on the selected session and sends them to the [DownloadManager]
@@ -98,10 +98,7 @@ class DownloadsFeature(
      * Notifies the feature that the permissions request was completed. It will then
      * either trigger or clear the pending download.
      */
-    fun onPermissionsResult(
-        @Suppress("UNUSED_PARAMETER") permissions: Array<String>,
-        @Suppress("UNUSED_PARAMETER") grantResults: IntArray
-    ) {
+    override fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
         if (applicationContext.isPermissionGranted(INTERNET, WRITE_EXTERNAL_STORAGE)) {
             activeSession?.let { session ->
                 session.download.consume {

@@ -32,12 +32,13 @@ import mozilla.components.concept.engine.permission.Permission.ContentVideoCaptu
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
+import mozilla.components.feature.sitepermissions.SitePermissionsFeature.DialogConfig
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.base.feature.OnNeedToRequestPermissions
+import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlin.toUri
 import java.security.InvalidParameterException
-
-typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
 
 internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
 
@@ -70,8 +71,8 @@ class SitePermissionsFeature(
     private val fragmentManager: FragmentManager,
     var promptsStyling: PromptsStyling? = null,
     private val dialogConfig: DialogConfig? = null,
-    private val onNeedToRequestPermissions: OnNeedToRequestPermissions
-) : LifecycleAwareFeature {
+    override val onNeedToRequestPermissions: OnNeedToRequestPermissions
+) : LifecycleAwareFeature, PermissionsFeature {
 
     private val observer = SitePermissionsRequestObserver(sessionManager, feature = this)
     internal val ioCoroutineScope by lazy { coroutineScopeInitializer() }
@@ -101,7 +102,7 @@ class SitePermissionsFeature(
      * @param grantResults the grant results for the corresponding permissions
      * @see [onNeedToRequestPermissions].
      */
-    fun onPermissionsResult(grantResults: IntArray) {
+    override fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
         sessionManager.runWithSessionIdOrSelected(sessionId) { session ->
             session.appPermissionRequest.consume { permissionsRequest ->
 

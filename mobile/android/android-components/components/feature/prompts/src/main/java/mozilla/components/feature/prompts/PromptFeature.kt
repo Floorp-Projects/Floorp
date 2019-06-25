@@ -34,14 +34,14 @@ import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MENU_CH
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.base.feature.OnNeedToRequestPermissions
+import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import java.security.InvalidParameterException
 import java.util.Date
 
 @VisibleForTesting(otherwise = PRIVATE)
 internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
-
-typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
 
 /**
  * Feature for displaying native dialogs for html elements like: input type
@@ -82,8 +82,8 @@ class PromptFeature(
     private val sessionManager: SessionManager,
     private var sessionId: String? = null,
     private val fragmentManager: FragmentManager,
-    private val onNeedToRequestPermissions: OnNeedToRequestPermissions
-) : LifecycleAwareFeature {
+    override val onNeedToRequestPermissions: OnNeedToRequestPermissions
+) : LifecycleAwareFeature, PermissionsFeature {
 
     init {
         if (activity == null && fragment == null) {
@@ -154,7 +154,7 @@ class PromptFeature(
      * @see [onNeedToRequestPermissions].
      */
     @Suppress("UNUSED_PARAMETER")
-    fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
+    override fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
         if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
             onPermissionsGranted()
         } else {

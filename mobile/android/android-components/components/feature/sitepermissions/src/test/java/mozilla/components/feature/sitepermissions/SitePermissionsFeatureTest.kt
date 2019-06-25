@@ -26,6 +26,7 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
+import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -645,7 +646,7 @@ class SitePermissionsFeatureTest {
 
         session.appPermissionRequest = Consumable.from(mockPermissionRequest)
 
-        sitePermissionFeature.onPermissionsResult(intArrayOf(PERMISSION_GRANTED))
+        sitePermissionFeature.onPermissionsResult(emptyArray(), intArrayOf(PERMISSION_GRANTED))
 
         verify(mockPermissionRequest).grant(emptyList())
         assertTrue(session.appPermissionRequest.isConsumed())
@@ -671,7 +672,7 @@ class SitePermissionsFeatureTest {
 
         session.appPermissionRequest = Consumable.from(mockPermissionRequest)
 
-        sitePermissionFeature.onPermissionsResult(intArrayOf(PERMISSION_GRANTED))
+        sitePermissionFeature.onPermissionsResult(emptyArray(), intArrayOf(PERMISSION_GRANTED))
 
         verify(mockPermissionRequest).grant(emptyList())
         assertTrue(session.appPermissionRequest.isConsumed())
@@ -686,7 +687,7 @@ class SitePermissionsFeatureTest {
 
         session.appPermissionRequest = Consumable.from(mockPermissionRequest)
 
-        sitePermissionFeature.onPermissionsResult(intArrayOf(PERMISSION_DENIED))
+        sitePermissionFeature.onPermissionsResult(emptyArray(), intArrayOf(PERMISSION_DENIED))
 
         verify(mockPermissionRequest).reject()
         assertTrue(session.appPermissionRequest.isConsumed())

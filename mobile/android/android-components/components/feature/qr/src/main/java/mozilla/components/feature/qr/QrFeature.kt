@@ -11,10 +11,11 @@ import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.base.feature.OnNeedToRequestPermissions
+import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 
 typealias OnScanResult = (result: String) -> Unit
-typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
 
 /**
  * Feature implementation that provides QR scanning functionality via the [QrFragment].
@@ -33,8 +34,8 @@ class QrFeature(
     private val context: Context,
     private val fragmentManager: FragmentManager,
     private val onScanResult: OnScanResult = { },
-    private val onNeedToRequestPermissions: OnNeedToRequestPermissions = { }
-) : LifecycleAwareFeature, BackHandler {
+    override val onNeedToRequestPermissions: OnNeedToRequestPermissions = { }
+) : LifecycleAwareFeature, BackHandler, PermissionsFeature {
     private var containerViewId: Int = 0
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -87,10 +88,9 @@ class QrFeature(
      * Notifies the feature that the permission request was completed. If the
      * requested permissions were granted it will open the QR scanner.
      */
-    @Suppress("UNUSED_PARAMETER")
-    fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
+    override fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
         if (context.isPermissionGranted(CAMERA)) {
-            this.scan(containerViewId)
+            scan(containerViewId)
         }
     }
 

@@ -10,6 +10,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.qr.QrFeature.Companion.QR_FRAGMENT_TAG
+import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
@@ -64,7 +65,7 @@ class QrFeatureTest {
 
         // Then
         assertFalse(scanResult)
-        verify(permissionsCallback)(arrayOf(CAMERA))
+        verify(permissionsCallback).invoke(arrayOf(CAMERA))
     }
 
     @Test
