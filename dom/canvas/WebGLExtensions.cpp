@@ -30,6 +30,24 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLExtensionBase, Release)
 
 // -
 
+WebGLExtensionExplicitPresent::WebGLExtensionExplicitPresent(WebGLContext* const webgl)
+    : WebGLExtensionBase(webgl) {
+  MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+}
+
+bool WebGLExtensionExplicitPresent::IsSupported(const WebGLContext* const webgl) {
+  return StaticPrefs::WebGLDraftExtensionsEnabled();
+}
+
+void WebGLExtensionExplicitPresent::Present() const {
+  if (mIsLost || !mContext) return;
+  mContext->PresentScreenBuffer();
+}
+
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionExplicitPresent, WEBGL_explicit_present)
+
+// -
+
 WebGLExtensionFloatBlend::WebGLExtensionFloatBlend(WebGLContext* const webgl)
     : WebGLExtensionBase(webgl) {
   MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
