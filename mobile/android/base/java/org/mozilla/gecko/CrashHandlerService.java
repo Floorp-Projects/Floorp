@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.provider.Settings;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.mozilla.gecko.notifications.NotificationHelper;
@@ -22,8 +23,12 @@ public class CrashHandlerService extends Service {
     private static final int ANDROID_Q = 29;
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (ACTION_STOP.equals(intent.getAction())) {
+    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
+        if (intent == null) {
+            // no-op
+            // The Intent may be null if the service is being restarted after its process has gone away,
+            // and it had previously returned anything except START_STICKY_COMPATIBILITY.
+        } else if (ACTION_STOP.equals(intent.getAction())) {
             dismissNotification();
         } else {
             // Notify GeckoApp that we've crashed, so it can react appropriately during the next start.
