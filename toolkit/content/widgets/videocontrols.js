@@ -322,6 +322,10 @@ this.VideoControlsImplWidget = class {
           this.setShowPictureInPictureMessage(true);
         }
 
+        // Default the Picture-in-Picture toggle button to being hidden. We might unhide it
+        // later if we determine that this video is qualified to show it.
+        this.pictureInPictureToggleButton.setAttribute("hidden", true);
+
         if (this.video.readyState >= this.video.HAVE_METADATA) {
           // According to the spec[1], at the HAVE_METADATA (or later) state, we know
           // the video duration and dimensions, which means we can calculate whether or
@@ -2669,6 +2673,10 @@ this.NoControlsDesktopImplWidget = class {
         if (this.document.fullscreenElement) {
           this.videocontrols.setAttribute("inDOMFullscreen", true);
         }
+
+        // Default the Picture-in-Picture toggle button to being hidden. We might unhide it
+        // later if we determine that this video is qualified to show it.
+        this.pictureInPictureToggleButton.setAttribute("hidden", true);
 
         if (this.video.readyState >= this.video.HAVE_METADATA) {
           // According to the spec[1], at the HAVE_METADATA (or later) state, we know
