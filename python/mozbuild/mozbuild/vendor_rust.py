@@ -185,6 +185,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             'arrayref',
             'cloudabi',
             'Inflector',
+            'mach',
         ],
         'BSD-3-Clause': [
         ]
