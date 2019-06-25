@@ -22,10 +22,11 @@ android {
 }
 
 dependencies {
+    api project(':lib-state')
+
     implementation project(':concept-engine')
     implementation project(':support-utils')
     implementation project(':support-ktx')
-    implementation project(':lib-state')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

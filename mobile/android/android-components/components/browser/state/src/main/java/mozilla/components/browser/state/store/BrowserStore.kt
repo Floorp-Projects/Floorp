@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.session.store
+package mozilla.components.browser.state.store
 
-import mozilla.components.browser.session.action.BrowserAction
-import mozilla.components.browser.session.reducer.BrowserReducers
-import mozilla.components.browser.session.state.BrowserState
+import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.reducer.BrowserStateReducer
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Store
 
@@ -19,5 +19,5 @@ class BrowserStore(
     initialState: BrowserState
 ) : Store<BrowserState, BrowserAction>(
     initialState,
-    BrowserReducers::reduce
+    BrowserStateReducer::reduce
 )

@@ -7,8 +7,8 @@ package mozilla.components.lib.state.helpers
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.TestAction
 import mozilla.components.lib.state.TestState
-import mozilla.components.lib.state.joinBlocking
 import mozilla.components.lib.state.reducer
+import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

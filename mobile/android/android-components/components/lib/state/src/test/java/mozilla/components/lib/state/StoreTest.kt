@@ -4,8 +4,7 @@
 
 package mozilla.components.lib.state
 
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
+import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -107,10 +106,6 @@ class StoreTest {
         assertEquals(23, observedValue)
         assertEquals(22, store.state.counter)
     }
-}
-
-fun Job.joinBlocking() {
-    runBlocking { join() }
 }
 
 fun reducer(state: TestState, action: TestAction): TestState = when (action) {
