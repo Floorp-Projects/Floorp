@@ -314,7 +314,7 @@ marionette-media-tests:
     - firefox-ui-functional-remote
 #    - gtest
     - jittest
-#    - jsreftest
+    - jsreftest
     - marionette
     - mochitest
     - mochitest-a11y
@@ -344,7 +344,6 @@ marionette-media-tests:
 
 macosx64-tests:
     - gtest
-    - jsreftest
     - mochitest
     - mochitest-browser-chrome
     - mochitest-chrome
