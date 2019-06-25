@@ -414,10 +414,6 @@ android-x86_64-tests:
     - web-platform-tests-reftests
     - xpcshell
 
-android-x86-tests:
-    - web-platform-tests
-    - web-platform-tests-reftests
-
 android-ccov-tests:
     - geckoview-junit
     - robocop
