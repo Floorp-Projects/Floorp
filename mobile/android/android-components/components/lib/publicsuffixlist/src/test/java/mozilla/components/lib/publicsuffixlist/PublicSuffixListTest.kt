@@ -369,4 +369,33 @@ class PublicSuffixListTest {
         assertFalse(publicSuffixList.isPublicSuffix("ork").await())
         assertFalse(publicSuffixList.isPublicSuffix("us.com.uk").await())
     }
+
+    /**
+     * Test cases inspired by Guava tests:
+     * https://github.com/google/guava/blob/master/guava-tests/test/com/google/common/net/InternetDomainNameTest.java
+     */
+    @Test
+    fun `Verify getPublicSuffix can handle obscure and invalid input`() = runBlocking {
+        assertEquals("cOM", publicSuffixList.getPublicSuffix("f-_-o.cOM").await())
+        assertEquals("com", publicSuffixList.getPublicSuffix("f11-1.com").await())
+        assertNull(publicSuffixList.getPublicSuffix("www").await())
+        assertEquals("a23", publicSuffixList.getPublicSuffix("abc.a23").await())
+        assertEquals("com", publicSuffixList.getPublicSuffix("a\u0394b.com").await())
+        assertNull(publicSuffixList.getPublicSuffix("").await())
+        assertNull(publicSuffixList.getPublicSuffix(" ").await())
+        assertNull(publicSuffixList.getPublicSuffix(".").await())
+        assertNull(publicSuffixList.getPublicSuffix("..").await())
+        assertNull(publicSuffixList.getPublicSuffix("...").await())
+        assertNull(publicSuffixList.getPublicSuffix("woo.com.").await())
+        assertNull(publicSuffixList.getPublicSuffix("::1").await())
+        assertNull(publicSuffixList.getPublicSuffix("13").await())
+
+        // The following input returns an empty string which does not seem correct:
+        // https://github.com/mozilla-mobile/android-components/issues/3541
+        assertEquals("", publicSuffixList.getPublicSuffix("foo.net.us\uFF61ocm").await())
+
+        // Technically that may be correct; but it doesn't make sense to return part of an IP as public suffix:
+        // https://github.com/mozilla-mobile/android-components/issues/3540
+        assertEquals("1", publicSuffixList.getPublicSuffix("127.0.0.1").await())
+    }
 }

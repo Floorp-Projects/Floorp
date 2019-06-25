@@ -22,12 +22,18 @@ internal class PublicSuffixListData(
         return exceptions.binarySearch(labels, labelIndex)
     }
 
+    @Suppress("ReturnCount")
     fun getPublicSuffixOffset(domain: String): PublicSuffixOffset? {
         if (domain.isEmpty()) {
             return null
         }
 
         val domainLabels = IDN.toUnicode(domain).split('.')
+        if (domainLabels.find { it.isEmpty() } != null) {
+            // At least one of the labels is empty: Bail out.
+            return null
+        }
+
         val rule = findMatchingRule(domainLabels)
 
         if (domainLabels.size == rule.size && rule[0][0] != PublicSuffixListData.EXCEPTION_MARKER) {
