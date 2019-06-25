@@ -327,7 +327,7 @@ bool RTCCertificate::WriteCertificate(JSStructuredCloneWriter* aWriter) const {
 }
 
 bool RTCCertificate::WriteStructuredClone(
-    JSStructuredCloneWriter* aWriter) const {
+    JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
   if (!mPrivateKey || !mCertificate) {
     return false;
   }
@@ -364,21 +364,33 @@ bool RTCCertificate::ReadCertificate(JSStructuredCloneReader* aReader) {
   return !!mCertificate;
 }
 
-bool RTCCertificate::ReadStructuredClone(JSStructuredCloneReader* aReader) {
+// static
+already_AddRefed<RTCCertificate> RTCCertificate::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  if (!NS_IsMainThread()) {
+    // These objects are mainthread-only.
+    return nullptr;
+  }
   uint32_t version, authType;
   if (!JS_ReadUint32Pair(aReader, &version, &authType) ||
       version != RTCCERTIFICATE_SC_VERSION) {
-    return false;
+    return nullptr;
   }
-  mAuthType = static_cast<SSLKEAType>(authType);
+  RefPtr<RTCCertificate> cert = new RTCCertificate(aGlobal);
+  cert->mAuthType = static_cast<SSLKEAType>(authType);
 
   uint32_t high, low;
   if (!JS_ReadUint32Pair(aReader, &high, &low)) {
-    return false;
+    return nullptr;
   }
-  mExpires = static_cast<PRTime>(high) << 32 | low;
+  cert->mExpires = static_cast<PRTime>(high) << 32 | low;
 
-  return ReadPrivateKey(aReader) && ReadCertificate(aReader);
+  if (!cert->ReadPrivateKey(aReader) || !cert->ReadCertificate(aReader)) {
+    return nullptr;
+  }
+
+  return cert.forget();
 }
 
 }  // namespace dom

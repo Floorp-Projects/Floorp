@@ -69,7 +69,7 @@ enum StructuredCloneTags {
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  SCTAG_DOM_RTC_CERTIFICATE,
+  SCTAG_DOM_RTCCERTIFICATE,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.

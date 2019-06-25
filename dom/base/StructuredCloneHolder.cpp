@@ -36,11 +36,6 @@
 #include "MultipartBlobImpl.h"
 #include "nsQueryObject.h"
 
-#ifdef MOZ_WEBRTC
-#  include "mozilla/dom/RTCCertificate.h"
-#  include "mozilla/dom/RTCCertificateBinding.h"
-#endif
-
 using namespace mozilla::ipc;
 
 namespace mozilla {
@@ -123,7 +118,7 @@ void AssertTagValues() {
                     SCTAG_DOM_SYSTEM_PRINCIPAL == 0xffff800c &&
                     SCTAG_DOM_CONTENT_PRINCIPAL == 0xffff800d &&
                     SCTAG_DOM_DOMQUAD == 0xffff800e &&
-                    SCTAG_DOM_RTC_CERTIFICATE == 0xffff800f &&
+                    SCTAG_DOM_RTCCERTIFICATE == 0xffff800f &&
                     SCTAG_DOM_DOMRECT == 0xffff8010 &&
                     SCTAG_DOM_DOMRECTREADONLY == 0xffff8011 &&
                     SCTAG_DOM_EXPANDED_PRINCIPAL == 0xffff8012 &&
@@ -370,31 +365,6 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
     return result.toObjectOrNull();
   }
 
-#ifdef MOZ_WEBRTC
-  if (aTag == SCTAG_DOM_RTC_CERTIFICATE) {
-    if (!NS_IsMainThread()) {
-      return nullptr;
-    }
-
-    nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
-    if (!global) {
-      return nullptr;
-    }
-
-    // Prevent the return value from being trashed by a GC during ~nsRefPtr.
-    JS::Rooted<JSObject*> result(aCx);
-    {
-      RefPtr<RTCCertificate> cert = new RTCCertificate(global);
-      if (!cert->ReadStructuredClone(aReader)) {
-        result = nullptr;
-      } else {
-        result = cert->WrapObject(aCx, nullptr);
-      }
-    }
-    return result;
-  }
-#endif
-
   if (aTag == SCTAG_DOM_STRUCTURED_CLONE_TESTER) {
     return StructuredCloneTester::ReadStructuredClone(aCx, aReader);
   }
@@ -421,18 +391,6 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
   if (domClass && domClass->mSerializer) {
     return domClass->mSerializer(aCx, aWriter, obj);
   }
-
-#ifdef MOZ_WEBRTC
-  {
-    // Handle WebRTC Certificate cloning
-    RTCCertificate* cert = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(RTCCertificate, &obj, cert))) {
-      MOZ_ASSERT(NS_IsMainThread());
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_RTC_CERTIFICATE, 0) &&
-             cert->WriteStructuredClone(aWriter);
-    }
-  }
-#endif
 
   // StructuredCloneTester - testing only
   {
