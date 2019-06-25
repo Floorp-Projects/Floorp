@@ -46,7 +46,7 @@ enum StructuredCloneTags {
   SCTAG_DOM_IMAGEDATA,
 
   SCTAG_DOM_DOMPOINT,
-  SCTAG_DOM_DOMPOINT_READONLY,
+  SCTAG_DOM_DOMPOINTREADONLY,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
