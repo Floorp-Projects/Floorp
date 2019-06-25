@@ -61,26 +61,26 @@ public class PerProfileDatabases<T extends SQLiteOpenHelper> {
         return getDatabaseHelperForProfile(profile, false);
     }
 
-    public T getDatabaseHelperForProfile(String profile, boolean isTest) {
-        // Always fall back to default profile if none has been provided.
-        if (profile == null) {
-            profile = GeckoProfile.get(mContext).getName();
-        }
-
-        synchronized (this) {
-            if (mStorages.containsKey(profile)) {
-                return mStorages.get(profile);
+    public T getDatabaseHelperForProfile(String profileName, boolean isTest) {
+        synchronized (GeckoProfile.get(mContext)) {
+            // Always fall back to default profile if none has been provided.
+            if (profileName == null) {
+                profileName = GeckoProfile.get(mContext).getName();
             }
 
-            final String databasePath = isTest ? mDatabaseName : getDatabasePathForProfile(profile);
+            if (mStorages.containsKey(profileName)) {
+                return mStorages.get(profileName);
+            }
+
+            final String databasePath = isTest ? mDatabaseName : getDatabasePathForProfile(profileName);
             if (databasePath == null) {
-                throw new IllegalStateException("Database path is null for profile: " + profile);
+                throw new IllegalStateException("Database path is null for profile: " + profileName);
             }
 
             final T helper = mHelperFactory.makeDatabaseHelper(mContext, databasePath);
             DBUtils.ensureDatabaseIsNotLocked(helper, databasePath);
 
-            mStorages.put(profile, helper);
+            mStorages.put(profileName, helper);
             return helper;
         }
     }

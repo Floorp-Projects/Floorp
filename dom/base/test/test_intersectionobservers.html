@@ -29,6 +29,7 @@ limitations under the License.
 <p id="display"></p>
 <pre id="test">
 <script type="application/javascript">
+  /* eslint "no-shadow": ["error", {"allow": ["done", "next"]}] */
   var tests = [];
   var curDescribeMsg = '';
   var curItMsg = '';
@@ -149,18 +150,18 @@ limitations under the License.
 
   var sinon = {
     spy: function () {
-      var callbacks = [];
+      var cbs = [];
       var fn = function () {
         fn.callCount++;
         fn.lastCall = { args: arguments };
-        if (callbacks.length) {
-          callbacks.shift()();
+        if (cbs.length) {
+          cbs.shift()();
         }
       };
       fn.callCount = 0;
       fn.lastCall = { args: [] };
-      fn.waitForNotification = (fn) => {
-        callbacks.push(fn);
+      fn.waitForNotification = (fn1) => {
+        cbs.push(fn1);
       };
       return fn;
     }
@@ -927,7 +928,7 @@ limitations under the License.
     });
 
     describe('observe subframe', function () {
-      
+
       it('should not trigger if target and root are not in the same document',
           function(done) {
 
@@ -944,7 +945,7 @@ limitations under the License.
         }
 
         targetEl4.src = "intersectionobserver_iframe.html";
-      
+
       });
 
       it('boundingClientRect matches target.getBoundingClientRect() for an element inside an iframe',
@@ -977,7 +978,7 @@ limitations under the License.
         targetEl4.src = "http://example.org/tests/dom/base/test/intersectionobserver_cross_domain_iframe.html";
 
       });
-    
+
     });
 
     describe('takeRecords', function() {
@@ -1002,7 +1003,7 @@ limitations under the License.
             done();
           });
         });
-        
+
       });
 
     });

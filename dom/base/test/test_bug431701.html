@@ -37,7 +37,7 @@ var docSources = [
   "iframe7_bug431701.xml",
 ];
 
-for (var i = 0; i < docSources.length; ++i) {
+for (let i = 0; i < docSources.length; ++i) {
   document.getElementsByTagName("iframe")[i].src = docSources[i];
 }
 
@@ -94,7 +94,7 @@ function startTest() {
   // sanity check
   isnot("", null, "Shouldn't be equal!");
 
-  for (var i = 0; i < tests.length; ++i) {
+  for (let i = 0; i < tests.length; ++i) {
     doTest(i);
   }
 
@@ -106,7 +106,7 @@ function startTest() {
                 .getRequestHeader("Content-Type"),
      "application/xml;charset=UTF-8", "Testing correct type on the wire");
   xhr.abort();
-                     
+
   SimpleTest.finish();
 };
 
@@ -117,4 +117,3 @@ function startTest() {
 </pre>
 </body>
 </html>
-

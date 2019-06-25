@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=682463
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=682463">Mozilla Bug 682463</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -23,10 +23,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=682463
     return document.createTextNode(s);
   }
   function div(l,r) {
-    var div = document.createElement("DIV");
-    if (l) div.appendChild(l);
-    if (r) div.appendChild(r);
-    return div;
+    var d = document.createElement("DIV");
+    if (l) d.appendChild(l);
+    if (r) d.appendChild(r);
+    return d;
   }
   function createRange(sn,so,en,eo) {
     var r = document.createRange();

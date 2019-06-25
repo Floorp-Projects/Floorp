@@ -226,6 +226,8 @@
     .bar. { background: red; color: yellow; }
   </span>
   <script><![CDATA[
+  /* eslint-disable no-shadow */
+
   window.onload = function() {
     doTest();
   }
@@ -242,13 +244,13 @@
     var cache = {};
 
     var css = document.getElementById("test").firstChild.nodeValue.split("\n");
-    for ( var i = 0; i < css.length; i++ ) {
+    for ( let i = 0; i < css.length; i++ ) {
       css[i] = css[i].replace(/\/\*.*?\*\//g, "")
         .replace(/^\s*|\s*$/g, "").split(/\s*{/);
     }
 
     var ecss = document.getElementById("error").firstChild.nodeValue.split("\n");
-    for ( var i = 0; i < ecss.length; i++ ) {
+    for ( let i = 0; i < ecss.length; i++ ) {
       ecss[i] = ecss[i].replace(/\/\*.*?\*\//g, "")
         .replace(/^\s*|\s*$/g, "").split(/\s*{/);
     }
@@ -290,14 +292,14 @@
     cacheCheck( "Fragment", fragment );
 
     root.remove( );
-    
+
     interfaceCheck(document, "Document");
     runTest( css, "Document", document, true );
     check( "Document", document, true, false );
     runTest( ecss, "SyntaxError: Document", document, false );
     jqTests("Document", document, "querySelectorAll");
     cacheCheck( "Document", document );
-    
+
     done();
 
     function interfaceCheck(obj, type){
@@ -320,7 +322,7 @@
         li.appendChild( document.createTextNode( ": " + passed + " passed, " + (tests - passed) + " failed" ) );
         r.appendChild( li );
 
-        for ( var i = 0; i < results.length; i++ ) {
+        for ( let i = 0; i < results.length; i++ ) {
               var li = document.createElement("li");
               var span = document.createElement("span");
               span.style.color = (results[i][0] === "FAIL" ? "red" : "green");
@@ -404,14 +406,14 @@
       } catch(e){ pass = true; }
       assert( pass, type + ".querySelector no value" );
 
-      for ( var i = 0; i < css.length; i++ ) {
+      for ( let i = 0; i < css.length; i++ ) {
         var test = css[i];
         if ( test.length == 2 ) {
           var query = test[0], color = test[1].match(/: ([^\s;]+)/)[1];
-  
+
           try {
             var found = root.querySelectorAll(query);
-  
+
             for ( var f = 0; f < found.length; f++ ) {
               found[f].style.backgroundColor = color;
             }
@@ -563,7 +565,7 @@
                       (e.name == "SyntaxError" && e.code == DOMException.SYNTAX_ERR));
             }
 
-            assert( pass, type + ": " + name + " Bad Resolver #" + (i+1) + " (" + nq + ")" + 
+            assert( pass, type + ": " + name + " Bad Resolver #" + (i+1) + " (" + nq + ")" +
               (pass ? "" : " Expected: " + extra(ids) + " Received: " + extra(results)) );
           }
         } else {
@@ -575,7 +577,7 @@
           } catch(e) {
             pass = e.name == "SyntaxError" && e.code == DOMException.SYNTAX_ERR;
           }
-  
+
           assert( pass, type + ": " + name + " (" + nq + ")" +
             (pass ? "" : " Expected: " + extra(ids) + " Received: " + extra(results)) );
 
@@ -588,7 +590,7 @@
 
         function hasPassed(results, ids){
           var pass = (results && results.length == ids.length) || (!results && !ids);
-  
+
           if ( ids && results ) {
             for ( var i = 0; ids && i < ids.length; i++ ) {
               if ( ids[i] !== results[i].getAttribute("id") ) {
@@ -609,7 +611,7 @@
               extra += (extra.length > 2 ? "," : "") + "'" + (results[i].id || results[i]) + "'";
             }
           }
-  
+
           extra += "]";
           return extra;
         }
@@ -672,7 +674,7 @@
       var param = query("#object1 param");
       assert( param && param.length == 2, type + ": Object/param as context" );
 
-      var l = query("#length");  
+      var l = query("#length");
       assert( l && l.length, type + ': &lt;input name="length"&gt; cannot be found under IE' );
       var lin = query("#lengthtest input");
       assert( lin && lin.length, type + ': &lt;input name="length"&gt; cannot be found under IE' );
@@ -695,18 +697,18 @@
       t( "Multiple ID selectors using UTF8", "#台北Táiběi, #台北", ["台北Táiběi","台北"] );
       t( "Descendant ID selector using UTF8", "div #台北", ["台北"] );
       t( "Child ID selector using UTF8", "form > #台北", ["台北"] );
-  
+
       t( "Escaped ID", "#foo\\:bar", ["foo:bar"] );
       t( "Escaped ID", "#test\\.foo\\[5\\]bar", ["test.foo[5]bar"] );
       t( "Descendant escaped ID", "div #foo\\:bar", ["foo:bar"] );
       t( "Descendant escaped ID", "div #test\\.foo\\[5\\]bar", ["test.foo[5]bar"] );
       t( "Child escaped ID", "form > #foo\\:bar", ["foo:bar"] );
       t( "Child escaped ID", "form > #test\\.foo\\[5\\]bar", ["test.foo[5]bar"] );
-  
+
       t( "ID Selector, child ID present", "#form > #radio1", ["radio1"] ); // bug #267
       t( "ID Selector, not an ancestor ID", "#form #first", [] );
       t( "ID Selector, not a child ID", "#form > #option1a", [] );
-      
+
       t( "All Children of ID", "#foo > *", ["sndp", "en", "sap"] );
       t( "All Children of ID with no children", "#firstUL > *", [] );
 
@@ -718,14 +720,14 @@
       t( "Class Selector", ".blog.link", ["simon"] );
       t( "Class Selector w/ Element", "a.blog", ["mark","simon"] );
       t( "Parent Class Selector", "p .blog", ["mark","simon"] );
-  
+
       t( "Class selector using UTF8", ".台北Táiběi", ["utf8class1"] );
       t( "Class selector using UTF8", ".台北", ["utf8class1","utf8class2"] );
       t( "Class selector using UTF8", ".台北Táiběi.台北", ["utf8class1"] );
       t( "Class selector using UTF8", ".台北Táiběi, .台北", ["utf8class1","utf8class2"] );
       t( "Descendant class selector using UTF8", "div .台北Táiběi", ["utf8class1"] );
       t( "Child class selector using UTF8", "form > .台北Táiběi", ["utf8class1"] );
-  
+
       t( "Escaped Class", ".foo\\:bar", ["foo:bar"] );
       t( "Escaped Class", ".test\\.foo\\[5\\]bar", ["test.foo[5]bar"] );
       t( "Descendant scaped Class", "div .foo\\:bar", ["foo:bar"] );
@@ -756,13 +758,13 @@
       t( "Adjacent", "a+a", ["groups"] );
       t( "Adjacent", "p + p", ["ap","en","sap"] );
       t( "Comma, Child, and Adjacent", "a + a, code > a", ["groups","anchor1","anchor2"] );
-      
+
       t( "First Child", "p:first-child", ["firstp","sndp"] );
       t( "Nth Child", "p:nth-child(1)", ["firstp","sndp"] );
-      
+
       t( "Last Child", "p:last-child", ["sap"] );
       t( "Last Child", "a:last-child", ["simon1","anchor1","mark","yahoo","anchor2","simon"] );
-  
+
       t( "Nth-child", "#main form#form > *:nth-child(2)", ["text2"] );
       t( "Nth-child", "#main form#form > :nth-child(2)", ["text2"] );
 
@@ -788,27 +790,27 @@
       t( "Attribute Exists", "a[title]", ["google"] );
       t( "Attribute Exists", "*[title]", ["google"] );
       t( "Attribute Exists", "[title]", ["google"] );
-      
+
       t( "Attribute Equals", "a[rel='bookmark']", ["simon1"] );
       t( "Attribute Equals", 'a[rel="bookmark"]', ["simon1"] );
       t( "Attribute Equals", "a[rel=bookmark]", ["simon1"] );
       t( "Multiple Attribute Equals", "#form input[type='hidden'],#form input[type='radio']", ['radio1','radio2','hidden1'] );
       t( "Multiple Attribute Equals", "#form input[type=\"hidden\"],#form input[type='radio']", ['radio1','radio2','hidden1'] );
       t( "Multiple Attribute Equals", "#form input[type=hidden],#form input[type=radio]", ['radio1','radio2','hidden1'] );
-  
+
       t( "Attribute selector using UTF8", "span[lang=中文]", ["台北"] );
-  
+
       t( "Attribute Begins With", "a[href ^= 'http://www']", ["google","yahoo"] );
       t( "Attribute Ends With", "a[href $= 'org/']", ["mark"] );
       t( "Attribute Contains", "a[href *= 'google']", ["google","groups"] );
-  
+
       // t("Select options via [selected]", "#select1 option[selected]", ["option1a"] );
       t("Select options via [selected]", "#select1 option[selected]", [] );
       t("Select options via [selected]", "#select2 option[selected]", ["option2d"] );
       t("Select options via [selected]", "#select3 option[selected]", ["option3b", "option3c"] );
-  
+
       t( "Grouped Form Elements", "input[name='foo[bar]']", ["hidden2"] );
-  
+
       t( ":not() Existing attribute", "#form select:not([multiple])", ["select1", "select2"]);
       t( ":not() Equals attribute", "#form select:not([name=select1])", ["select2", "select3"]);
       t( ":not() Equals quoted attribute", "#form select:not([name='select1'])", ["select2", "select3"]);
@@ -1276,7 +1278,7 @@
   <h1 id="header">jQuery Test Suite</h1>
   <h2 id="banner"></h2>
   <h2 id="userAgent"></h2>
-  
+
   <!-- Test HTML -->
   <div id="nothiddendiv" style="height:1px;background:white;">
 
@@ -1293,9 +1295,9 @@
     <p id="firstp">See <a id="simon1" href="http://simon.incutio.com/archive/2003/03/25/#getElementsBySelector" rel="bookmark">this blog entry</a> for more information.</p>
 
     <p id="ap">
-      Here are some links in a normal paragraph: <a id="google" href="http://www.google.com/" title="Google!">Google</a>, 
-      <a id="groups" href="http://groups.google.com/">Google Groups</a>. 
-      This link has <code><a href="http://smin" id="anchor1">class="blog"</a></code>: 
+      Here are some links in a normal paragraph: <a id="google" href="http://www.google.com/" title="Google!">Google</a>,
+      <a id="groups" href="http://groups.google.com/">Google Groups</a>.
+      This link has <code><a href="http://smin" id="anchor1">class="blog"</a></code>:
       <a href="http://diveintomark.org/" class="blog" hreflang="en" id="mark">diveintomark</a>
 
     </p>
@@ -1322,14 +1324,14 @@
 
       <input type="hidden" name="hidden" id="hidden1"/>
       <input type="text" style="display:none;" name="foo[bar]" id="hidden2"/>
-      
+
       <input type="text" id="name" name="name" value="name" />
-      
+
       <button id="button" name="button">Button</button>
-      
+
       <textarea id="area1" maxlength="30">foobar</textarea>
 
-      
+
       <select name="select1" id="select1">
         <option id="option1a" class="emptyopt" value="">Nothing</option>
         <option id="option1b" value="1">1</option>
@@ -1350,20 +1352,20 @@
         <option id="option3c" selected="selected" value="2">2</option>
         <option id="option3d" value="3">3</option>
       </select>
-      
+
       <object id="object1" codebase="stupid">
         <param name="p1" value="x1" />
         <param name="p2" value="x2" />
 
       </object>
-      
+
       <span id="台北Táiběi"></span>
       <span id="台北" lang="中文"></span>
       <span id="utf8class1" class="台北Táiběi 台北"></span>
       <span id="utf8class2" class="台北"></span>
       <span id="foo:bar" class="foo:bar"></span>
       <span id="test.foo[5]bar" class="test.foo[5]bar"></span>
-      
+
       <foo_bar id="foobar">test element</foo_bar>
 
     </form>
@@ -1375,27 +1377,27 @@
     </form>
     <table id="table"></table>
 
-    
+
     <div id="fx-queue">
       <div id="fadein" class='chain test'>fadeIn<div>fadeIn</div></div>
       <div id="fadeout" class='chain test out'>fadeOut<div>fadeOut</div></div>
-      
+
       <div id="show" class='chain test'>show<div>show</div></div>
       <div id="hide" class='chain test out'>hide<div>hide</div></div>
 
-      
+
       <div id="togglein" class='chain test'>togglein<div>togglein</div></div>
       <div id="toggleout" class='chain test out'>toggleout<div>toggleout</div></div>
-    
-      
+
+
       <div id="slideup" class='chain test'>slideUp<div>slideUp</div></div>
       <div id="slidedown" class='chain test out'>slideDown<div>slideDown</div></div>
-      
+
       <div id="slidetogglein" class='chain test'>slideToggleIn<div>slideToggleIn</div></div>
 
       <div id="slidetoggleout" class='chain test out'>slideToggleOut<div>slideToggleOut</div></div>
     </div>
-    
+
     <div id="fx-tests"></div>
 
     <form id="testForm" action="#" method="get">
@@ -1462,7 +1464,7 @@ Z</textarea>
     </div>
   </div>
   </dl>
-  
+
   <ol id="tests"></ol>
 </div>
 <ol id="results"></ol>
