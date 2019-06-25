@@ -268,7 +268,8 @@ void VRDisplayHost::CheckWatchDog() {
     bShouldStartFrame = true;
   } else {
     TimeDuration duration = TimeStamp::Now() - lastFrameStart;
-    if (duration.ToMilliseconds() > StaticPrefs::VRDisplayRafMaxDuration()) {
+    if (duration.ToMilliseconds() >
+        StaticPrefs::dom_vr_display_rafMaxDuration()) {
       bShouldStartFrame = true;
     }
   }

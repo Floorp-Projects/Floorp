@@ -52,7 +52,7 @@ bool IsImmersiveContentActive(const mozilla::gfx::VRBrowserState& aState) {
 already_AddRefed<VRService> VRService::Create() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!StaticPrefs::VRServiceEnabled()) {
+  if (!StaticPrefs::dom_vr_service_enabled()) {
     return nullptr;
   }
 
@@ -73,7 +73,7 @@ VRService::VRService()
 #if defined(XP_WIN)
       mMutex(NULL),
 #endif
-      mVRProcessEnabled(StaticPrefs::VRProcessEnabled()) {
+      mVRProcessEnabled(StaticPrefs::dom_vr_process_enabled()) {
   // When we have the VR process, we map the memory
   // of mAPIShmem from GPU process.
   // If we don't have the VR process, we will instantiate
@@ -292,7 +292,7 @@ void VRService::ServiceInitialize() {
     memset(&mSystemState, 0, sizeof(mSystemState));
     mSystemState.enumerationCompleted = true;
     mSystemState.displayState.minRestartInterval =
-        StaticPrefs::VRExternalNotDetectedTimeout();
+        StaticPrefs::dom_vr_external_notdetected_timeout();
     mSystemState.displayState.shutdown = true;
     PushState(mSystemState);
   }
@@ -309,7 +309,7 @@ void VRService::ServiceShutdown() {
   mSystemState.displayState.shutdown = true;
   if (mSession && mSession->ShouldQuit()) {
     mSystemState.displayState.minRestartInterval =
-        StaticPrefs::VRExternalQuitTimeout();
+        StaticPrefs::dom_vr_external_quit_timeout();
   }
   PushState(mSystemState);
   mSession = nullptr;

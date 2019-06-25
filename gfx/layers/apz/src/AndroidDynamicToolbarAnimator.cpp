@@ -200,11 +200,11 @@ nsEventStatus AndroidDynamicToolbarAnimator::ReceiveInputEvent(
           }
           mControllerLastDragDirection = direction;
         }
-        // NOTE: StaticPrefs::ToolbarScrollThreshold() returns a percentage as
-        // an int32_t. So multiply it by 0.01f to convert.
-        const uint32_t dragThreshold =
-            Abs(std::lround(0.01f * StaticPrefs::ToolbarScrollThreshold() *
-                            mControllerCompositionHeight));
+        // NOTE: StaticPrefs::browser_ui_scroll_toolbar_threshold() returns a
+        // percentage as an int32_t. So multiply it by 0.01f to convert.
+        const uint32_t dragThreshold = Abs(std::lround(
+            0.01f * StaticPrefs::browser_ui_scroll_toolbar_threshold() *
+            mControllerCompositionHeight));
         if ((Abs(mControllerTotalDistance.value) > dragThreshold) &&
             (delta != 0)) {
           mControllerDragThresholdReached = true;
