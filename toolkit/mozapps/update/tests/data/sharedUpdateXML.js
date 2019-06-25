@@ -323,6 +323,8 @@ function getUpdateString(aUpdateProps) {
   let detailsURL = "detailsURL=\"" + aUpdateProps.detailsURL + "\" ";
   let promptWaitTime = aUpdateProps.promptWaitTime ?
     "promptWaitTime=\"" + aUpdateProps.promptWaitTime + "\" " : "";
+  let disableBITS = aUpdateProps.disableBITS ?
+    "disableBITS=\"" + aUpdateProps.disableBITS + "\" " : "";
   let custom1 = aUpdateProps.custom1 ? aUpdateProps.custom1 + " " : "";
   let custom2 = aUpdateProps.custom2 ? aUpdateProps.custom2 + " " : "";
   let buildID = "buildID=\"" + aUpdateProps.buildID + "\"";
@@ -333,6 +335,7 @@ function getUpdateString(aUpdateProps) {
                       appVersion +
                       detailsURL +
                       promptWaitTime +
+                      disableBITS +
                       custom1 +
                       custom2 +
                       buildID;
