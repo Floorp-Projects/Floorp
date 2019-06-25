@@ -1428,11 +1428,6 @@ both:
     async DetachBrowsingContext(BrowsingContext aContext);
 
     /**
-     * Removes all children from 'aContext'.
-     */
-    async DetachBrowsingContextChildren(BrowsingContext aContext);
-
-    /**
      * Removes all of 'aContext'\'s children, and caches them in the
      * BrowsingContextGroup.
      */
