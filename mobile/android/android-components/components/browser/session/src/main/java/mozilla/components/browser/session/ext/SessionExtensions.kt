@@ -36,6 +36,9 @@ private fun Session.toContentState(): ContentState {
     )
 }
 
-private fun Session.SecurityInfo.toSecurityInfoState(): SecurityInfoState {
+/**
+ * Creates a matching [SecurityInfoState] from a [Session.SecurityInfo]
+ */
+fun Session.SecurityInfo.toSecurityInfoState(): SecurityInfoState {
     return SecurityInfoState(secure, host, issuer)
 }

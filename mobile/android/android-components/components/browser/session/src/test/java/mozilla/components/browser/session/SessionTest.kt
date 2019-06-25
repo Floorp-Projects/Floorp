@@ -12,7 +12,10 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
+import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -92,6 +95,19 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when URL changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+        session.url = "http://www.firefox.com"
+
+        verify(store).dispatch(ContentAction.UpdateUrlAction(session.id, session.url))
+        verifyNoMoreInteractions(store)
+    }
+
+    @Test
     fun `observer is notified when progress changes`() {
         val observer = mock(Session.Observer::class.java)
 
@@ -106,6 +122,19 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when progress changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+        session.progress = 75
+
+        verify(store).dispatch(ContentAction.UpdateProgressAction(session.id, session.progress))
+        verifyNoMoreInteractions(store)
+    }
+
+    @Test
     fun `observer is notified when loading state changes`() {
         val observer = mock(Session.Observer::class.java)
 
@@ -117,6 +146,19 @@ class SessionTest {
         assertEquals(true, session.loading)
         verify(observer).onLoadingStateChanged(eq(session), eq(true))
         verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `action is dispatched when loading state changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+        session.loading = true
+
+        verify(store).dispatch(ContentAction.UpdateLoadingStateAction(session.id, session.loading))
+        verifyNoMoreInteractions(store)
     }
 
     @Test
@@ -166,6 +208,19 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when search terms are set`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+        session.searchTerms = "mozilla android"
+
+        verify(store).dispatch(ContentAction.UpdateSearchTermsAction(session.id, session.searchTerms))
+        verifyNoMoreInteractions(store)
+    }
+
+    @Test
     fun `observer is notified when load request is triggered`() {
         val observer = mock(Session.Observer::class.java)
 
@@ -204,6 +259,19 @@ class SessionTest {
         assertEquals(true, info!!.secure)
         assertEquals("mozilla.org", info!!.host)
         assertEquals("issuer", info!!.issuer)
+    }
+
+    @Test
+    fun `action is dispatched when security info is set`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+        session.securityInfo = Session.SecurityInfo(true, "mozilla.org", "issuer")
+
+        verify(store).dispatch(ContentAction.UpdateSecurityInfo(session.id, session.securityInfo.toSecurityInfoState()))
+        verifyNoMoreInteractions(store)
     }
 
     @Test
@@ -467,6 +535,19 @@ class SessionTest {
             eq("Internet for people, not profit — Mozilla"))
 
         assertEquals("Internet for people, not profit — Mozilla", session.title)
+    }
+
+    @Test
+    fun `action is dispatched when title changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+        session.title = "Internet for people, not profit — Mozilla"
+
+        verify(store).dispatch(ContentAction.UpdateTitleAction(session.id, session.title))
+        verifyNoMoreInteractions(store)
     }
 
     @Test
