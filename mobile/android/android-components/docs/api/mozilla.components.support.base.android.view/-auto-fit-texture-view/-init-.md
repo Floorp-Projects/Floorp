@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`AutoFitTextureView(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, attrs: `[`AttributeSet`](https://developer.android.com/reference/android/util/AttributeSet.html)`? = null, defStyle: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0)`
+`AutoFitTextureView(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null, defStyle: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0)`
 
-A [TextureView](https://developer.android.com/reference/android/view/TextureView.html) that can be adjusted to a specified aspect ratio.
+A [TextureView](#) that can be adjusted to a specified aspect ratio.
 

@@ -35,7 +35,7 @@ Interface to be implemented by components that provide browser toolbar functiona
 | [addEditAction](add-edit-action.md) | `abstract fun addEditAction(action: `[`Action`](-action/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Adds an action to be displayed in edit mode. |
 | [addNavigationAction](add-navigation-action.md) | `abstract fun addNavigationAction(action: `[`Action`](-action/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Adds an action to be displayed on the far left side of the URL in display mode. |
 | [addPageAction](add-page-action.md) | `abstract fun addPageAction(action: `[`Action`](-action/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Adds an action to be displayed on the right side of the URL in display mode. |
-| [asView](as-view.md) | `open fun asView(): `[`View`](https://developer.android.com/reference/android/view/View.html)<br>Casts this toolbar to an Android View object. |
+| [asView](as-view.md) | `open fun asView(): <ERROR CLASS>`<br>Casts this toolbar to an Android View object. |
 | [displayMode](display-mode.md) | `abstract fun displayMode(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Switches to URL displaying mode (from editing mode) if supported by the toolbar implementation. |
 | [displayProgress](display-progress.md) | `abstract fun displayProgress(progress: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Displays the given loading progress. Expects values in the range [0,100](#). |
 | [editMode](edit-mode.md) | `abstract fun editMode(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Switches to URL editing mode (from displaying mode) if supported by the toolbar implementation. |
@@ -49,4 +49,4 @@ Interface to be implemented by components that provide browser toolbar functiona
 
 | Name | Summary |
 |---|---|
-| [BrowserToolbar](../../mozilla.components.browser.toolbar/-browser-toolbar/index.md) | `class BrowserToolbar : `[`ViewGroup`](https://developer.android.com/reference/android/view/ViewGroup.html)`, `[`Toolbar`](./index.md)<br>A customizable toolbar for browsers. |
+| [BrowserToolbar](../../mozilla.components.browser.toolbar/-browser-toolbar/index.md) | `class BrowserToolbar : `[`Toolbar`](./index.md)<br>A customizable toolbar for browsers. |

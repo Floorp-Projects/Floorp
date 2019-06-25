@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`ExceptionHandler(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`, defaultExceptionHandler: `[`UncaughtExceptionHandler`](https://developer.android.com/reference/java/lang/Thread/UncaughtExceptionHandler.html)`? = null)`
+`ExceptionHandler(context: <ERROR CLASS>, crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`, defaultExceptionHandler: `[`UncaughtExceptionHandler`](https://developer.android.com/reference/java/lang/Thread/UncaughtExceptionHandler.html)`? = null)`
 
 [Thread.UncaughtExceptionHandler](https://developer.android.com/reference/java/lang/Thread/UncaughtExceptionHandler.html) implementation that forwards crashes to the [CrashReporter](../../mozilla.components.lib.crash/-crash-reporter/index.md) instance.
 

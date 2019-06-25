@@ -11,4 +11,4 @@ implementation loads.
 
 | Name | Summary |
 |---|---|
-| [filter](filter.md) | `abstract fun filter(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, searchEngine: `[`SearchEngine`](../../mozilla.components.browser.search/-search-engine/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if the given search engine should be returned by the provider or false if this search engine should be ignored. |
+| [filter](filter.md) | `abstract fun filter(context: <ERROR CLASS>, searchEngine: `[`SearchEngine`](../../mozilla.components.browser.search/-search-engine/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if the given search engine should be returned by the provider or false if this search engine should be ignored. |

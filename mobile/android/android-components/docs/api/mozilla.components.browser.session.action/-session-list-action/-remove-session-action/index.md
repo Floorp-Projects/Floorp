@@ -2,7 +2,7 @@
 
 # RemoveSessionAction
 
-`data class RemoveSessionAction : `[`SessionListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L33)
+`data class RemoveSessionAction : `[`SessionListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L34)
 
 Removes the [SessionState](../../../mozilla.components.browser.session.state/-session-state/index.md) with the given [sessionId](session-id.md) from the list of sessions.
 

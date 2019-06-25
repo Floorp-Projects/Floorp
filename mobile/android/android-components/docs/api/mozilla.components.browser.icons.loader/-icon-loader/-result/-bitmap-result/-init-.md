@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`BitmapResult(bitmap: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`, source: `[`Source`](../../../../mozilla.components.browser.icons/-icon/-source/index.md)`)`
+`BitmapResult(bitmap: <ERROR CLASS>, source: `[`Source`](../../../../mozilla.components.browser.icons/-icon/-source/index.md)`)`

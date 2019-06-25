@@ -11,7 +11,7 @@ A data class representing a search engine.
 | Name | Summary |
 |---|---|
 | [canProvideSearchSuggestions](can-provide-search-suggestions.md) | `val canProvideSearchSuggestions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [icon](icon.md) | `val icon: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html) |
+| [icon](icon.md) | `val icon: <ERROR CLASS>` |
 | [identifier](identifier.md) | `val identifier: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [name](name.md) | `val name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 

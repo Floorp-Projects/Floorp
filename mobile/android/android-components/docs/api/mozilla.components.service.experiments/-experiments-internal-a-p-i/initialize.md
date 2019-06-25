@@ -2,7 +2,7 @@
 
 # initialize
 
-`fun initialize(applicationContext: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, configuration: `[`Configuration`](../-configuration/index.md)` = Configuration()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L50)
+`fun initialize(applicationContext: <ERROR CLASS>, configuration: `[`Configuration`](../-configuration/index.md)` = Configuration()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L50)
 
 Initialize the experiments library.
 
@@ -10,5 +10,5 @@ This should only be initialized once by the application.
 
 ### Parameters
 
-`applicationContext` - [Context](https://developer.android.com/reference/android/content/Context.html) to access application features, such
+`applicationContext` - [Context](#) to access application features, such
 as shared preferences.

@@ -16,5 +16,5 @@ Default JSON parsing implementation
 
 | Name | Summary |
 |---|---|
-| [fromJson](from-json.md) | `fun fromJson(jsonObject: `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)`): `[`Experiment`](../-experiment/index.md)<br>Creates an experiment from its json representation |
-| [toJson](to-json.md) | `fun toJson(experiment: `[`Experiment`](../-experiment/index.md)`): `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)<br>Converts the specified experiment to json |
+| [fromJson](from-json.md) | `fun fromJson(jsonObject: <ERROR CLASS>): `[`Experiment`](../-experiment/index.md)<br>Creates an experiment from its json representation |
+| [toJson](to-json.md) | `fun toJson(experiment: `[`Experiment`](../-experiment/index.md)`): <ERROR CLASS>`<br>Converts the specified experiment to json |

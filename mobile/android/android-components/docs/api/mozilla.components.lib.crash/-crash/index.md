@@ -17,8 +17,8 @@ Crash types that are handled by this library.
 
 | Name | Summary |
 |---|---|
-| [fromIntent](from-intent.md) | `fun fromIntent(intent: `[`Intent`](https://developer.android.com/reference/android/content/Intent.html)`): `[`Crash`](./index.md) |
-| [isCrashIntent](is-crash-intent.md) | `fun isCrashIntent(intent: `[`Intent`](https://developer.android.com/reference/android/content/Intent.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+| [fromIntent](from-intent.md) | `fun fromIntent(intent: <ERROR CLASS>): `[`Crash`](./index.md) |
+| [isCrashIntent](is-crash-intent.md) | `fun isCrashIntent(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 
 ### Inheritors
 

@@ -2,4 +2,4 @@
 
 # onStopJob
 
-`open fun onStopJob(params: `[`JobParameters`](https://developer.android.com/reference/android/app/job/JobParameters.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/schedule/jobscheduler/TelemetryJobService.java#L41)
+`open fun onStopJob(params: JobParameters): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/schedule/jobscheduler/TelemetryJobService.java#L41)

@@ -2,4 +2,4 @@
 
 # getBitmap
 
-`abstract fun getBitmap(request: `[`IconRequest`](../../../mozilla.components.browser.icons/-icon-request/index.md)`, resource: `[`Resource`](../../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`): `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/MemoryIconLoader.kt#L19)
+`abstract fun getBitmap(request: `[`IconRequest`](../../../mozilla.components.browser.icons/-icon-request/index.md)`, resource: `[`Resource`](../../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`): <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/MemoryIconLoader.kt#L19)

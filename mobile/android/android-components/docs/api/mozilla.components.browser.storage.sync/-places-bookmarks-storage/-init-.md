@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`PlacesBookmarksStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`
+`PlacesBookmarksStorage(context: <ERROR CLASS>)`
 
 Implementation of the [BookmarksStorage](../../mozilla.components.concept.storage/-bookmarks-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#).
 

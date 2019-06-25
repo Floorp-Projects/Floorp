@@ -23,7 +23,7 @@ Provides autocomplete functionality for domains based on provided list of assets
 | Name | Summary |
 |---|---|
 | [getAutocompleteSuggestion](../-base-domain-autocomplete-provider/get-autocomplete-suggestion.md) | `open fun getAutocompleteSuggestion(query: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`DomainAutocompleteResult`](../-domain-autocomplete-result/index.md)`?`<br>Computes an autocomplete suggestion for the given text, and invokes the provided callback, passing the result. |
-| [initialize](../-base-domain-autocomplete-provider/initialize.md) | `fun initialize(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [initialize](../-base-domain-autocomplete-provider/initialize.md) | `fun initialize(context: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Extension Functions
 

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SystemEngine(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, defaultSettings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)` = DefaultSettings())`
+`SystemEngine(context: <ERROR CLASS>, defaultSettings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)` = DefaultSettings())`
 
 WebView-based implementation of the Engine interface.
 

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`ActionImage(imageDrawable: `[`Drawable`](https://developer.android.com/reference/android/graphics/drawable/Drawable.html)`, contentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, padding: `[`Padding`](../../../mozilla.components.support.base.android/-padding/index.md)`? = null)`
+`ActionImage(imageDrawable: <ERROR CLASS>, contentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, padding: `[`Padding`](../../../mozilla.components.support.base.android/-padding/index.md)`? = null)`
 
 An action that just shows a static, non-clickable image.
 

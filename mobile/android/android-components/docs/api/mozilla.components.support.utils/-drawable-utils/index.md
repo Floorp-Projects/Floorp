@@ -8,4 +8,4 @@
 
 | Name | Summary |
 |---|---|
-| [loadAndTintDrawable](load-and-tint-drawable.md) | `fun loadAndTintDrawable(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, resourceId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, color: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Drawable`](https://developer.android.com/reference/android/graphics/drawable/Drawable.html)<br>Return a tinted drawable object associated with a particular resource ID. |
+| [loadAndTintDrawable](load-and-tint-drawable.md) | `fun loadAndTintDrawable(context: <ERROR CLASS>, resourceId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, color: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): <ERROR CLASS>`<br>Return a tinted drawable object associated with a particular resource ID. |

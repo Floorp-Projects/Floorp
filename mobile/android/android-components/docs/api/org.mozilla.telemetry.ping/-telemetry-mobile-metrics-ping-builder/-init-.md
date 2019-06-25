@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`TelemetryMobileMetricsPingBuilder(snapshots: `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)`, configuration: `[`TelemetryConfiguration`](../../org.mozilla.telemetry.config/-telemetry-configuration/index.md)`)`
+`TelemetryMobileMetricsPingBuilder(snapshots: JSONObject, configuration: `[`TelemetryConfiguration`](../../org.mozilla.telemetry.config/-telemetry-configuration/index.md)`)`

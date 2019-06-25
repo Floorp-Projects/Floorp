@@ -2,7 +2,7 @@
 
 # BrowserState
 
-`data class BrowserState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/state/BrowserState.kt#L13)
+`data class BrowserState : `[`State`](../../mozilla.components.lib.state/-state.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/state/BrowserState.kt#L15)
 
 Value type that represents the complete state of the browser/engine.
 

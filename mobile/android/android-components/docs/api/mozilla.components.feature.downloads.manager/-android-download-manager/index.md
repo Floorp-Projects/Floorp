@@ -10,7 +10,7 @@ Handles the interactions with the [AndroidDownloadManager](./index.md).
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AndroidDownloadManager(applicationContext: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md)` = { _, _ -> })`<br>Handles the interactions with the [AndroidDownloadManager](./index.md). |
+| [&lt;init&gt;](-init-.md) | `AndroidDownloadManager(applicationContext: <ERROR CLASS>, onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md)` = { _, _ -> })`<br>Handles the interactions with the [AndroidDownloadManager](./index.md). |
 
 ### Properties
 

@@ -10,10 +10,10 @@ View component that renders web content.
 
 | Name | Summary |
 |---|---|
-| [asView](as-view.md) | `open fun asView(): `[`View`](https://developer.android.com/reference/android/view/View.html)<br>Convenience method to cast the implementation of this interface to an Android View object. |
+| [asView](as-view.md) | `open fun asView(): <ERROR CLASS>`<br>Convenience method to cast the implementation of this interface to an Android View object. |
 | [canScrollVerticallyDown](can-scroll-vertically-down.md) | `open fun canScrollVerticallyDown(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Check if [EngineView](./index.md) can be scrolled vertically down. true if can and false otherwise. |
 | [canScrollVerticallyUp](can-scroll-vertically-up.md) | `open fun canScrollVerticallyUp(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Check if [EngineView](./index.md) can be scrolled vertically up. true if can and false otherwise. |
-| [captureThumbnail](capture-thumbnail.md) | `abstract fun captureThumbnail(onFinish: (`[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Request a screenshot of the visible portion of the web page currently being rendered. |
+| [captureThumbnail](capture-thumbnail.md) | `abstract fun captureThumbnail(onFinish: (<ERROR CLASS>?) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Request a screenshot of the visible portion of the web page currently being rendered. |
 | [onCreate](on-create.md) | `open fun onCreate(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>To be called in response to [Lifecycle.Event.ON_CREATE](#). See [EngineView](./index.md) implementations for details. |
 | [onDestroy](on-destroy.md) | `open fun onDestroy(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>To be called in response to [Lifecycle.Event.ON_DESTROY](#). See [EngineView](./index.md) implementations for details. |
 | [onPause](on-pause.md) | `open fun onPause(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>To be called in response to [Lifecycle.Event.ON_PAUSE](#). See [EngineView](./index.md) implementations for details. |
@@ -27,6 +27,6 @@ View component that renders web content.
 
 | Name | Summary |
 |---|---|
-| [GeckoEngineView](../../mozilla.components.browser.engine.gecko/-gecko-engine-view/index.md) | `class GeckoEngineView : `[`FrameLayout`](https://developer.android.com/reference/android/widget/FrameLayout.html)`, `[`EngineView`](./index.md)<br>Gecko-based EngineView implementation. |
-| [ServoEngineView](../../mozilla.components.browser.engine.servo/-servo-engine-view/index.md) | `class ServoEngineView : `[`FrameLayout`](https://developer.android.com/reference/android/widget/FrameLayout.html)`, `[`EngineView`](./index.md)<br>Servo-based implementation of EngineView. |
-| [SystemEngineView](../../mozilla.components.browser.engine.system/-system-engine-view/index.md) | `class SystemEngineView : `[`FrameLayout`](https://developer.android.com/reference/android/widget/FrameLayout.html)`, `[`EngineView`](./index.md)`, `[`OnLongClickListener`](https://developer.android.com/reference/android/view/View/OnLongClickListener.html)<br>WebView-based implementation of EngineView. |
+| [GeckoEngineView](../../mozilla.components.browser.engine.gecko/-gecko-engine-view/index.md) | `class GeckoEngineView : `[`EngineView`](./index.md)<br>Gecko-based EngineView implementation. |
+| [ServoEngineView](../../mozilla.components.browser.engine.servo/-servo-engine-view/index.md) | `class ServoEngineView : `[`EngineView`](./index.md)<br>Servo-based implementation of EngineView. |
+| [SystemEngineView](../../mozilla.components.browser.engine.system/-system-engine-view/index.md) | `class SystemEngineView : `[`EngineView`](./index.md)<br>WebView-based implementation of EngineView. |

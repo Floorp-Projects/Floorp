@@ -2,4 +2,4 @@
 
 # uploadPingsInBackground
 
-`open fun uploadPingsInBackground(task: `[`AsyncTask`](https://developer.android.com/reference/android/os/AsyncTask.html)`<`[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`>, parameters: `[`JobParameters`](https://developer.android.com/reference/android/app/job/JobParameters.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/schedule/jobscheduler/TelemetryJobService.java#L58)
+`open fun uploadPingsInBackground(task: AsyncTask, parameters: JobParameters): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/schedule/jobscheduler/TelemetryJobService.java#L58)

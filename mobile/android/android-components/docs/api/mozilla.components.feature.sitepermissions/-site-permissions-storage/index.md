@@ -16,7 +16,7 @@ A storage implementation to save [SitePermissions](../-site-permissions/index.md
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SitePermissionsStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`<br>A storage implementation to save [SitePermissions](../-site-permissions/index.md). |
+| [&lt;init&gt;](-init-.md) | `SitePermissionsStorage(context: <ERROR CLASS>)`<br>A storage implementation to save [SitePermissions](../-site-permissions/index.md). |
 
 ### Functions
 

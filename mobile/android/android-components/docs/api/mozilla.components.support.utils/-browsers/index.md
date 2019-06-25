@@ -24,12 +24,12 @@ val browsers = Browsers.forUrl(context, url)`
 
 | Name | Summary |
 |---|---|
-| [defaultBrowser](default-browser.md) | `val defaultBrowser: `[`ActivityInfo`](https://developer.android.com/reference/android/content/pm/ActivityInfo.html)`?`<br>The [ActivityInfo](https://developer.android.com/reference/android/content/pm/ActivityInfo.html) of the default browser of the user (or null if none could be found). |
-| [firefoxBrandedBrowser](firefox-branded-browser.md) | `val firefoxBrandedBrowser: `[`ActivityInfo`](https://developer.android.com/reference/android/content/pm/ActivityInfo.html)`?`<br>The [ActivityInfo](https://developer.android.com/reference/android/content/pm/ActivityInfo.html) of the installed Firefox browser (or null if none could be found). |
+| [defaultBrowser](default-browser.md) | `val defaultBrowser: <ERROR CLASS>?`<br>The [ActivityInfo](#) of the default browser of the user (or null if none could be found). |
+| [firefoxBrandedBrowser](firefox-branded-browser.md) | `val firefoxBrandedBrowser: <ERROR CLASS>?`<br>The [ActivityInfo](#) of the installed Firefox browser (or null if none could be found). |
 | [hasFirefoxBrandedBrowserInstalled](has-firefox-branded-browser-installed.md) | `val hasFirefoxBrandedBrowserInstalled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Is there a Firefox browser installed on this device? |
 | [hasMultipleThirdPartyBrowsers](has-multiple-third-party-browsers.md) | `val hasMultipleThirdPartyBrowsers: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Does this device have multiple third-party browser installed? |
 | [hasThirdPartyDefaultBrowser](has-third-party-default-browser.md) | `val hasThirdPartyDefaultBrowser: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Does this device have a default browser that is not Firefox (release) or **this** app calling the method. |
-| [installedBrowsers](installed-browsers.md) | `val installedBrowsers: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ActivityInfo`](https://developer.android.com/reference/android/content/pm/ActivityInfo.html)`>`<br>List of [ActivityInfo](https://developer.android.com/reference/android/content/pm/ActivityInfo.html) of all known installed browsers. |
+| [installedBrowsers](installed-browsers.md) | `val installedBrowsers: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<<ERROR CLASS>>`<br>List of [ActivityInfo](#) of all known installed browsers. |
 | [isDefaultBrowser](is-default-browser.md) | `val isDefaultBrowser: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Is **this** application the default browser? |
 | [isFirefoxDefaultBrowser](is-firefox-default-browser.md) | `val isFirefoxDefaultBrowser: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Is Firefox (Release, Beta, Nightly) the default browser of the user? |
 
@@ -43,5 +43,5 @@ val browsers = Browsers.forUrl(context, url)`
 
 | Name | Summary |
 |---|---|
-| [all](all.md) | `fun all(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`Browsers`](./index.md)<br>Collect information about all installed browsers and return a [Browsers](./index.md) object containing that data. |
-| [forUrl](for-url.md) | `fun forUrl(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Browsers`](./index.md)<br>Collect information about all installed browsers that can handle the specified URL and return a [Browsers](./index.md) object containing that data. |
+| [all](all.md) | `fun all(context: <ERROR CLASS>): `[`Browsers`](./index.md)<br>Collect information about all installed browsers and return a [Browsers](./index.md) object containing that data. |
+| [forUrl](for-url.md) | `fun forUrl(context: <ERROR CLASS>, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Browsers`](./index.md)<br>Collect information about all installed browsers that can handle the specified URL and return a [Browsers](./index.md) object containing that data. |

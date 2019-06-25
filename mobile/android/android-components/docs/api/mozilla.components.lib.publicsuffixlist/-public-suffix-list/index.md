@@ -19,7 +19,7 @@ https://github.com/publicsuffix/list
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `PublicSuffixList(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, dispatcher: CoroutineDispatcher = Dispatchers.IO, scope: CoroutineScope = CoroutineScope(dispatcher))`<br>API for reading and accessing the public suffix list. |
+| [&lt;init&gt;](-init-.md) | `PublicSuffixList(context: <ERROR CLASS>, dispatcher: CoroutineDispatcher = Dispatchers.IO, scope: CoroutineScope = CoroutineScope(dispatcher))`<br>API for reading and accessing the public suffix list. |
 
 ### Functions
 

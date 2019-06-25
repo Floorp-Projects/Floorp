@@ -2,7 +2,7 @@
 
 # CanGoBackAction
 
-`data class CanGoBackAction : `[`SessionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L53)
+`data class CanGoBackAction : `[`SessionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L54)
 
 Updates the "canGoBack" state of the [SessionState](../../../mozilla.components.browser.session.state/-session-state/index.md) with the given [sessionId](session-id.md).
 

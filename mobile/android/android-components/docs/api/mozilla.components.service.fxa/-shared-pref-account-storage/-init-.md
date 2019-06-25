@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`SharedPrefAccountStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`
+`SharedPrefAccountStorage(context: <ERROR CLASS>)`

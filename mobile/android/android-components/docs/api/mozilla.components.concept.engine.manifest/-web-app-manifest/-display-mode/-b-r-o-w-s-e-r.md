@@ -2,7 +2,7 @@
 
 # BROWSER
 
-`BROWSER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L84)
+`BROWSER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L86)
 
 The application opens in a conventional browser tab or new window, depending on the browser and platform.
 This is the default.

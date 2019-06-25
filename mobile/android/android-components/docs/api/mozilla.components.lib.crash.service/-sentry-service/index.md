@@ -11,7 +11,7 @@ prefixed with "ac.".
 
 ### Parameters
 
-`context` - The application [Context](https://developer.android.com/reference/android/content/Context.html).
+`context` - The application [Context](#).
 
 `dsn` - Data Source Name of the Sentry server.
 
@@ -23,7 +23,7 @@ prefixed with "ac.".
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SentryService(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, dsn: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, tags: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`> = emptyMap(), environment: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, sendEventForNativeCrashes: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, clientFactory: SentryClientFactory = AndroidSentryClientFactory(context))`<br>A [CrashReporterService](../-crash-reporter-service/index.md) implementation that uploads crash reports to a Sentry server. |
+| [&lt;init&gt;](-init-.md) | `SentryService(context: <ERROR CLASS>, dsn: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, tags: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`> = emptyMap(), environment: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, sendEventForNativeCrashes: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, clientFactory: SentryClientFactory = AndroidSentryClientFactory(context))`<br>A [CrashReporterService](../-crash-reporter-service/index.md) implementation that uploads crash reports to a Sentry server. |
 
 ### Functions
 

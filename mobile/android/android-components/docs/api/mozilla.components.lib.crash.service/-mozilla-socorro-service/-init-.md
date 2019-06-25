@@ -2,13 +2,13 @@
 
 # &lt;init&gt;
 
-`MozillaSocorroService(applicationContext: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, appName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
+`MozillaSocorroService(applicationContext: <ERROR CLASS>, appName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
 
 A [CrashReporterService](../-crash-reporter-service/index.md) implementation uploading crash reports to crash-stats.mozilla.com.
 
 ### Parameters
 
-`applicationContext` - The application [Context](https://developer.android.com/reference/android/content/Context.html).
+`applicationContext` - The application [Context](#).
 
 `appName` - A human-readable app name. This name is used on crash-stats.mozilla.com to filter crashes by app.
     The name needs to be whitelisted for the server to accept the crash.

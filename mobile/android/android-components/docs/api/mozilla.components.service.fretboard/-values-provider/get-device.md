@@ -2,7 +2,7 @@
 
 # getDevice
 
-`open fun getDevice(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/ValuesProvider.kt#L71)
+`open fun getDevice(context: <ERROR CLASS>): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/ValuesProvider.kt#L71)
 
 Provides the device model
 

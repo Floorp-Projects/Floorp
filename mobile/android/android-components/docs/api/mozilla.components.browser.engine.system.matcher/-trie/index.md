@@ -16,7 +16,7 @@ Simple implementation of a Trie, used for indexing URLs.
 
 | Name | Summary |
 |---|---|
-| [children](children.md) | `val children: `[`SparseArray`](https://developer.android.com/reference/android/util/SparseArray.html)`<`[`Trie`](./index.md)`>` |
+| [children](children.md) | `val children: <ERROR CLASS>` |
 
 ### Functions
 

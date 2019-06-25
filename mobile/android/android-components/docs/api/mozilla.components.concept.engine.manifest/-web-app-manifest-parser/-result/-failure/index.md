@@ -2,7 +2,7 @@
 
 # Failure
 
-`data class Failure : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifestParser.kt#L32)
+`data class Failure : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifestParser.kt#L34)
 
 Parsing the JSON failed.
 
@@ -10,10 +10,10 @@ Parsing the JSON failed.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Failure(exception: `[`JSONException`](https://developer.android.com/reference/org/json/JSONException.html)`)`<br>Parsing the JSON failed. |
+| [&lt;init&gt;](-init-.md) | `Failure(exception: <ERROR CLASS>)`<br>Parsing the JSON failed. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [exception](exception.md) | `val exception: `[`JSONException`](https://developer.android.com/reference/org/json/JSONException.html)<br>The exception that was thrown while parsing the manifest. |
+| [exception](exception.md) | `val exception: <ERROR CLASS>`<br>The exception that was thrown while parsing the manifest. |

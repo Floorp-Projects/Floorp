@@ -2,4 +2,4 @@
 
 # unsafe
 
-`val unsafe: `[`Intent`](https://developer.android.com/reference/android/content/Intent.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/SafeIntent.kt#L20)
+`val unsafe: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/SafeIntent.kt#L20)

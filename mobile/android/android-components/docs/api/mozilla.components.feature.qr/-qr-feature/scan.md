@@ -9,7 +9,7 @@ Starts the QR scanner fragment and listens for scan results.
 ### Parameters
 
 `containerViewId` - optional id of the container this fragment is to
-be placed in, defaults to [android.R.id.content](https://developer.android.com/reference/android/R/id.html#content).
+be placed in, defaults to [android.R.id.content](#).
 
 **Return**
 true if the scanner was started or false if permissions still

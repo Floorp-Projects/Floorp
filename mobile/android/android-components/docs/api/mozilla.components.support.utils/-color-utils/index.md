@@ -2,7 +2,7 @@
 
 # ColorUtils
 
-`object ColorUtils` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/ColorUtils.kt#L9)
+`object ColorUtils` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/ColorUtils.kt#L10)
 
 ### Functions
 

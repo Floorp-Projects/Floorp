@@ -8,7 +8,7 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `MetricsMeasurement(snapshot: `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)`)` |
+| [&lt;init&gt;](-init-.md) | `MetricsMeasurement(snapshot: JSONObject)` |
 
 ### Functions
 

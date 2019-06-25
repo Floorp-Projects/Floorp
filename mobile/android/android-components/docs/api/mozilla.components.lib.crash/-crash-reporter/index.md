@@ -30,7 +30,7 @@ crashes and forward them to the configured crash reporting services.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `CrashReporter(services: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`CrashReporterService`](../../mozilla.components.lib.crash.service/-crash-reporter-service/index.md)`>, shouldPrompt: `[`Prompt`](-prompt/index.md)` = Prompt.NEVER, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, promptConfiguration: `[`PromptConfiguration`](-prompt-configuration/index.md)` = PromptConfiguration(), nonFatalCrashIntent: `[`PendingIntent`](https://developer.android.com/reference/android/app/PendingIntent.html)`? = null)`<br>A generic crash reporter that can report crashes to multiple services. |
+| [&lt;init&gt;](-init-.md) | `CrashReporter(services: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`CrashReporterService`](../../mozilla.components.lib.crash.service/-crash-reporter-service/index.md)`>, shouldPrompt: `[`Prompt`](-prompt/index.md)` = Prompt.NEVER, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, promptConfiguration: `[`PromptConfiguration`](-prompt-configuration/index.md)` = PromptConfiguration(), nonFatalCrashIntent: <ERROR CLASS>? = null)`<br>A generic crash reporter that can report crashes to multiple services. |
 
 ### Properties
 
@@ -42,5 +42,5 @@ crashes and forward them to the configured crash reporting services.
 
 | Name | Summary |
 |---|---|
-| [install](install.md) | `fun install(applicationContext: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`CrashReporter`](./index.md)<br>Install this [CrashReporter](./index.md) instance. At this point the component will be setup to collect crash reports. |
+| [install](install.md) | `fun install(applicationContext: <ERROR CLASS>): `[`CrashReporter`](./index.md)<br>Install this [CrashReporter](./index.md) instance. At this point the component will be setup to collect crash reports. |
 | [submitReport](submit-report.md) | `fun submitReport(crash: `[`Crash`](../-crash/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Submit a crash report to all registered services. |

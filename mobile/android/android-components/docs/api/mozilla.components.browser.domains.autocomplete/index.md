@@ -17,4 +17,4 @@
 
 | Name | Summary |
 |---|---|
-| [DomainsLoader](-domains-loader.md) | `typealias DomainsLoader = (`[`Context`](https://developer.android.com/reference/android/content/Context.html)`) -> `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Domain`](../mozilla.components.browser.domains/-domain/index.md)`>` |
+| [DomainsLoader](-domains-loader.md) | `typealias DomainsLoader = (<ERROR CLASS>) -> `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Domain`](../mozilla.components.browser.domains/-domain/index.md)`>` |

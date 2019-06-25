@@ -8,11 +8,11 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `BitmapResult(bitmap: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`, source: `[`Source`](../../../../mozilla.components.browser.icons/-icon/-source/index.md)`)` |
+| [&lt;init&gt;](-init-.md) | `BitmapResult(bitmap: <ERROR CLASS>, source: `[`Source`](../../../../mozilla.components.browser.icons/-icon/-source/index.md)`)` |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [bitmap](bitmap.md) | `val bitmap: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html) |
+| [bitmap](bitmap.md) | `val bitmap: <ERROR CLASS>` |
 | [source](source.md) | `val source: `[`Source`](../../../../mozilla.components.browser.icons/-icon/-source/index.md) |

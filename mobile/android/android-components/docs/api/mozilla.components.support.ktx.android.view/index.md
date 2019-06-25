@@ -2,11 +2,27 @@
 
 ## Package mozilla.components.support.ktx.android.view
 
-### Extensions for External Classes
+### Properties
 
 | Name | Summary |
 |---|---|
-| [android.app.Activity](android.app.-activity/index.md) |  |
-| [android.view.MotionEvent](android.view.-motion-event/index.md) |  |
-| [android.view.View](android.view.-view/index.md) |  |
-| [android.view.ViewGroup](android.view.-view-group/index.md) |  |
+| [isLTR](is-l-t-r.md) | `val <ERROR CLASS>.isLTR: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Is the horizontal layout direction of this view from Left to Right? |
+| [isRTL](is-r-t-l.md) | `val <ERROR CLASS>.isRTL: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Is the horizontal layout direction of this view from Right to Left? |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [enterToImmersiveMode](enter-to-immersive-mode.md) | `fun <ERROR CLASS>.enterToImmersiveMode(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Attempts to call immersive mode using the View to hide the status bar and navigation buttons. |
+| [exitImmersiveModeIfNeeded](exit-immersive-mode-if-needed.md) | `fun <ERROR CLASS>.exitImmersiveModeIfNeeded(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Attempts to come out from immersive mode using the View. |
+| [forEach](for-each.md) | `fun <ERROR CLASS>.forEach(action: (<ERROR CLASS>) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Performs the given action on each View in this ViewGroup. |
+| [getRectWithViewLocation](get-rect-with-view-location.md) | `fun <ERROR CLASS>.getRectWithViewLocation(): <ERROR CLASS>`<br>Fills the given [Rect](#) with data about location view in the window. |
+| [hideKeyboard](hide-keyboard.md) | `fun <ERROR CLASS>.hideKeyboard(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Hides the soft input window. |
+| [isGone](is-gone.md) | `fun <ERROR CLASS>.isGone(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if this view's visibility is set to View.GONE. |
+| [isInvisible](is-invisible.md) | `fun <ERROR CLASS>.isInvisible(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if this view's visibility is set to View.INVISIBLE. |
+| [isVisible](is-visible.md) | `fun <ERROR CLASS>.isVisible(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if this view's visibility is set to View.VISIBLE. |
+| [setNavigationBarTheme](set-navigation-bar-theme.md) | `fun <ERROR CLASS>.setNavigationBarTheme(backgroundColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Colors the navigation bar black or white depending on the background color. |
+| [setPadding](set-padding.md) | `fun <ERROR CLASS>.setPadding(padding: `[`Padding`](../mozilla.components.support.base.android/-padding/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Set a padding using [Padding](../mozilla.components.support.base.android/-padding/index.md) object. |
+| [setStatusBarTheme](set-status-bar-theme.md) | `fun <ERROR CLASS>.setStatusBarTheme(themeColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Colors the status bar to match the theme color. If the color is light enough, a light status bar with dark icons will be used. |
+| [showKeyboard](show-keyboard.md) | `fun <ERROR CLASS>.showKeyboard(flags: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = InputMethodManager.SHOW_IMPLICIT): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Tries to focus this view and show the soft input window for it. |
+| [use](use.md) | `fun <R> <ERROR CLASS>.use(functionBlock: (<ERROR CLASS>) -> `[`R`](use.md#R)`): `[`R`](use.md#R)<br>Executes the given [functionBlock](use.md#mozilla.components.support.ktx.android.view$use(, kotlin.Function1((, mozilla.components.support.ktx.android.view.use.R)))/functionBlock) function on this resource and then closes it down correctly whether an exception is thrown or not. This is inspired by [java.lang.AutoCloseable.use](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/use.html). |

@@ -33,4 +33,4 @@ the top of the menu is always visible.
 
 | Name | Summary |
 |---|---|
-| [build](build.md) | `fun build(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`BrowserMenu`](../-browser-menu/index.md) |
+| [build](build.md) | `fun build(context: <ERROR CLASS>): `[`BrowserMenu`](../-browser-menu/index.md) |

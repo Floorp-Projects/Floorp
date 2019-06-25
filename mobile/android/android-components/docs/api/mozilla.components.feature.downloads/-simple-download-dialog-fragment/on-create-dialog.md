@@ -2,4 +2,4 @@
 
 # onCreateDialog
 
-`fun onCreateDialog(savedInstanceState: `[`Bundle`](https://developer.android.com/reference/android/os/Bundle.html)`?): `[`Dialog`](https://developer.android.com/reference/android/app/Dialog.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/SimpleDownloadDialogFragment.kt#L31)
+`fun onCreateDialog(savedInstanceState: <ERROR CLASS>?): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/SimpleDownloadDialogFragment.kt#L31)

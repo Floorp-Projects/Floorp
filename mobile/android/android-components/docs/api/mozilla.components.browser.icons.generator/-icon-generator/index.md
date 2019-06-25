@@ -4,14 +4,14 @@
 
 `interface IconGenerator` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/generator/IconGenerator.kt#L16)
 
-A [IconGenerator](./index.md) implementation can generate a [Bitmap](https://developer.android.com/reference/android/graphics/Bitmap.html) for an [IconRequest](../../mozilla.components.browser.icons/-icon-request/index.md). It's a fallback if no icon could be
+A [IconGenerator](./index.md) implementation can generate a [Bitmap](#) for an [IconRequest](../../mozilla.components.browser.icons/-icon-request/index.md). It's a fallback if no icon could be
 loaded for a specific URL.
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [generate](generate.md) | `abstract fun generate(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, request: `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md)`): `[`Icon`](../../mozilla.components.browser.icons/-icon/index.md) |
+| [generate](generate.md) | `abstract fun generate(context: <ERROR CLASS>, request: `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md)`): `[`Icon`](../../mozilla.components.browser.icons/-icon/index.md) |
 
 ### Inheritors
 

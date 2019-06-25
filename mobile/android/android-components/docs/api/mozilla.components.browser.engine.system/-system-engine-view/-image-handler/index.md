@@ -2,7 +2,7 @@
 
 # ImageHandler
 
-`class ImageHandler : `[`Handler`](https://developer.android.com/reference/android/os/Handler.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineView.kt#L634)
+`class ImageHandler` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineView.kt#L634)
 
 ### Constructors
 
@@ -20,4 +20,4 @@
 
 | Name | Summary |
 |---|---|
-| [handleMessage](handle-message.md) | `fun handleMessage(msg: `[`Message`](https://developer.android.com/reference/android/os/Message.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [handleMessage](handle-message.md) | `fun handleMessage(msg: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

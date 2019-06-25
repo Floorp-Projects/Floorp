@@ -8,4 +8,4 @@
 
 | Name | Summary |
 |---|---|
-| [getIconData](get-icon-data.md) | `abstract fun getIconData(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, resource: `[`Resource`](../../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`): `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`?` |
+| [getIconData](get-icon-data.md) | `abstract fun getIconData(context: <ERROR CLASS>, resource: `[`Resource`](../../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`): `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`?` |

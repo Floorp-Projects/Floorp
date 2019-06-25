@@ -10,7 +10,7 @@ A base class for concrete implementations of PlacesStorages
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `PlacesStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`<br>A base class for concrete implementations of PlacesStorages |
+| [&lt;init&gt;](-init-.md) | `PlacesStorage(context: <ERROR CLASS>)`<br>A base class for concrete implementations of PlacesStorages |
 
 ### Properties
 

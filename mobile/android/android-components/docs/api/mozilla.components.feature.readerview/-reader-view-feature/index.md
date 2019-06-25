@@ -20,7 +20,7 @@ needs to be installed prior to use (see [ReaderViewFeature.install](install.md))
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ReaderViewFeature(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, controlsView: `[`ReaderViewControlsView`](../../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md)`, onReaderViewAvailableChange: `[`OnReaderViewAvailableChange`](../-on-reader-view-available-change.md)` = { })`<br>Feature implementation that provides a reader view for the selected session. This feature is implemented as a web extension and needs to be installed prior to use (see [ReaderViewFeature.install](install.md)). |
+| [&lt;init&gt;](-init-.md) | `ReaderViewFeature(context: <ERROR CLASS>, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, controlsView: `[`ReaderViewControlsView`](../../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md)`, onReaderViewAvailableChange: `[`OnReaderViewAvailableChange`](../-on-reader-view-available-change.md)` = { })`<br>Feature implementation that provides a reader view for the selected session. This feature is implemented as a web extension and needs to be installed prior to use (see [ReaderViewFeature.install](install.md)). |
 
 ### Inherited Properties
 

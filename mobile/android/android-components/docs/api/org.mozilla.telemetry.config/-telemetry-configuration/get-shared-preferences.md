@@ -2,7 +2,7 @@
 
 # getSharedPreferences
 
-`open fun getSharedPreferences(): `[`SharedPreferences`](https://developer.android.com/reference/android/content/SharedPreferences.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/config/TelemetryConfiguration.java#L138)
+`open fun getSharedPreferences(): SharedPreferences` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/config/TelemetryConfiguration.java#L138)
 
 Get shared preference for storing telemetry related data.
 

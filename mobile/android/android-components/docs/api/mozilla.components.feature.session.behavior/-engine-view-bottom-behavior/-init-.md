@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`EngineViewBottomBehavior(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`?, attrs: `[`AttributeSet`](https://developer.android.com/reference/android/util/AttributeSet.html)`?)`
+`EngineViewBottomBehavior(context: <ERROR CLASS>?, attrs: <ERROR CLASS>?)`
 
 A [CoordinatorLayout.Behavior](#) implementation to be used with [EngineView](../../mozilla.components.concept.engine/-engine-view/index.md) when placing a toolbar at the
 bottom of the screen.

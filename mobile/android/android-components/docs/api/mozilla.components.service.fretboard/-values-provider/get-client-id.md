@@ -2,7 +2,7 @@
 
 # getClientId
 
-`open fun getClientId(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/ValuesProvider.kt#L100)
+`open fun getClientId(context: <ERROR CLASS>): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/ValuesProvider.kt#L100)
 
 Provides the client ID (UUID) used for bucketing the users.
 

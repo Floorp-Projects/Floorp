@@ -15,10 +15,10 @@ configuration from the server
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `JobSchedulerSyncScheduler(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`<br>Class used to schedule sync of experiment configuration from the server |
+| [&lt;init&gt;](-init-.md) | `JobSchedulerSyncScheduler(context: <ERROR CLASS>)`<br>Class used to schedule sync of experiment configuration from the server |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [schedule](schedule.md) | `fun schedule(jobInfo: `[`JobInfo`](https://developer.android.com/reference/android/app/job/JobInfo.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Schedule sync with the constrains specified`fun schedule(jobId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, serviceName: `[`ComponentName`](https://developer.android.com/reference/android/content/ComponentName.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Schedule sync with the default constraints (once a day) |
+| [schedule](schedule.md) | `fun schedule(jobInfo: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Schedule sync with the constrains specified`fun schedule(jobId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, serviceName: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Schedule sync with the default constraints (once a day) |

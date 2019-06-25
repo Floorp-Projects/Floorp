@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SystemEngineSession(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, defaultSettings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)`? = null)`
+`SystemEngineSession(context: <ERROR CLASS>, defaultSettings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)`? = null)`
 
 WebView-based EngineSession implementation.
 

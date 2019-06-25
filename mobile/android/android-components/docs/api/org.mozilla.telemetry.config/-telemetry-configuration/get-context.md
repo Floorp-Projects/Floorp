@@ -2,7 +2,7 @@
 
 # getContext
 
-`open fun getContext(): `[`Context`](https://developer.android.com/reference/android/content/Context.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/config/TelemetryConfiguration.java#L89)
+`open fun getContext(): Context` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/config/TelemetryConfiguration.java#L89)
 
 Application context this library is running in.
 

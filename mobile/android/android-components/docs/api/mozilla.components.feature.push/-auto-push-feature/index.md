@@ -16,7 +16,7 @@ Listen also for push messages for each registered [PushType](../-push-type/index
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AutoPushFeature(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, service: `[`PushService`](../../mozilla.components.concept.push/-push-service/index.md)`, config: `[`PushConfig`](../-push-config/index.md)`, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Executors.newSingleThreadExecutor().asCoroutineDispatcher(), connection: `[`PushConnection`](../-push-connection/index.md)` = RustPushConnection(
+| [&lt;init&gt;](-init-.md) | `AutoPushFeature(context: <ERROR CLASS>, service: `[`PushService`](../../mozilla.components.concept.push/-push-service/index.md)`, config: `[`PushConfig`](../-push-config/index.md)`, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Executors.newSingleThreadExecutor().asCoroutineDispatcher(), connection: `[`PushConnection`](../-push-connection/index.md)` = RustPushConnection(
         senderId = config.senderId,
         serverHost = config.serverHost,
         socketProtocol = config.protocol,

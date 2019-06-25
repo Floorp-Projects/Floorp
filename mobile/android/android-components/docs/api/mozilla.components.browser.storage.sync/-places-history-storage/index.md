@@ -10,7 +10,7 @@ Implementation of the [HistoryStorage](../../mozilla.components.concept.storage/
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `PlacesHistoryStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`<br>Implementation of the [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
+| [&lt;init&gt;](-init-.md) | `PlacesHistoryStorage(context: <ERROR CLASS>)`<br>Implementation of the [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
 
 ### Properties
 

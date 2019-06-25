@@ -2,7 +2,7 @@
 
 # BADGE
 
-`BADGE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L108)
+`BADGE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L110)
 
 A user agent can present this icon where space constraints and/or color requirements differ from those
 of the application icon.

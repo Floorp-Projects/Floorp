@@ -25,4 +25,4 @@ identifier corresponds to the search plugin XML file name (e.g. duckduckgo -&gt;
 
 | Name | Summary |
 |---|---|
-| [loadSearchEngines](load-search-engines.md) | `suspend fun loadSearchEngines(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`SearchEngineList`](../-search-engine-list/index.md)<br>Load search engines from this provider. |
+| [loadSearchEngines](load-search-engines.md) | `suspend fun loadSearchEngines(context: <ERROR CLASS>): `[`SearchEngineList`](../-search-engine-list/index.md)<br>Load search engines from this provider. |

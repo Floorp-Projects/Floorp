@@ -2,9 +2,9 @@
 
 # &lt;init&gt;
 
-`SafeIntent(unsafe: `[`Intent`](https://developer.android.com/reference/android/content/Intent.html)`)`
+`SafeIntent(unsafe: <ERROR CLASS>)`
 
 External applications can pass values into Intents that can cause us to crash: in defense,
-we wrap [Intent](https://developer.android.com/reference/android/content/Intent.html) and catch the exceptions they may force us to throw. See bug 1090385
+we wrap [Intent](#) and catch the exceptions they may force us to throw. See bug 1090385
 for more.
 

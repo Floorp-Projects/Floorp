@@ -6,5 +6,5 @@
 
 | Name | Summary |
 |---|---|
-| [AbstractCustomTabsService](-abstract-custom-tabs-service/index.md) | `abstract class AbstractCustomTabsService : CustomTabsService`<br>[Service](https://developer.android.com/reference/android/app/Service.html) providing Custom Tabs related functionality. |
+| [AbstractCustomTabsService](-abstract-custom-tabs-service/index.md) | `abstract class AbstractCustomTabsService : CustomTabsService`<br>[Service](#) providing Custom Tabs related functionality. |
 | [CustomTabsToolbarFeature](-custom-tabs-toolbar-feature/index.md) | `class CustomTabsToolbarFeature : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`BackHandler`](../mozilla.components.support.base.feature/-back-handler/index.md)<br>Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig. |

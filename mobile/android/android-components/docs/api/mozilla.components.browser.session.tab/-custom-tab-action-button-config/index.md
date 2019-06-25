@@ -8,12 +8,12 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `CustomTabActionButtonConfig(description: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, icon: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`, pendingIntent: `[`PendingIntent`](https://developer.android.com/reference/android/app/PendingIntent.html)`)` |
+| [&lt;init&gt;](-init-.md) | `CustomTabActionButtonConfig(description: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, icon: <ERROR CLASS>, pendingIntent: <ERROR CLASS>)` |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
 | [description](description.md) | `val description: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [icon](icon.md) | `val icon: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html) |
-| [pendingIntent](pending-intent.md) | `val pendingIntent: `[`PendingIntent`](https://developer.android.com/reference/android/app/PendingIntent.html) |
+| [icon](icon.md) | `val icon: <ERROR CLASS>` |
+| [pendingIntent](pending-intent.md) | `val pendingIntent: <ERROR CLASS>` |

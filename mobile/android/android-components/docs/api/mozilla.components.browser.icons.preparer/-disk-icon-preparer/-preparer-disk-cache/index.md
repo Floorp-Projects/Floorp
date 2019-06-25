@@ -8,4 +8,4 @@
 
 | Name | Summary |
 |---|---|
-| [getResources](get-resources.md) | `abstract fun getResources(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, request: `[`IconRequest`](../../../mozilla.components.browser.icons/-icon-request/index.md)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Resource`](../../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`>` |
+| [getResources](get-resources.md) | `abstract fun getResources(context: <ERROR CLASS>, request: `[`IconRequest`](../../../mozilla.components.browser.icons/-icon-request/index.md)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Resource`](../../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`>` |

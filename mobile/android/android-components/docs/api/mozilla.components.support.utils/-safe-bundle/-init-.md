@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SafeBundle(bundle: `[`Bundle`](https://developer.android.com/reference/android/os/Bundle.html)`)`
+`SafeBundle(bundle: <ERROR CLASS>)`
 
 See SafeIntent for more background: applications can put garbage values into Bundles. This is primarily
 experienced when there's garbage in the Intent's Bundle. However that Bundle can contain further bundles,

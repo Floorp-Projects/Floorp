@@ -2,7 +2,7 @@
 
 # createView
 
-`abstract fun createView(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, attrs: `[`AttributeSet`](https://developer.android.com/reference/android/util/AttributeSet.html)`? = null): `[`EngineView`](../-engine-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L62)
+`abstract fun createView(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null): `[`EngineView`](../-engine-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L62)
 
 Creates a new view for rendering web content.
 

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`PlacesStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`
+`PlacesStorage(context: <ERROR CLASS>)`
 
 A base class for concrete implementations of PlacesStorages
 

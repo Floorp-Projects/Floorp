@@ -12,7 +12,7 @@ session.
 
 | Name | Summary |
 |---|---|
-| [toJSON](to-j-s-o-n.md) | `abstract fun toJSON(): `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)<br>Create a JSON representation of this state that can be saved to disk. |
+| [toJSON](to-j-s-o-n.md) | `abstract fun toJSON(): <ERROR CLASS>`<br>Create a JSON representation of this state that can be saved to disk. |
 
 ### Inheritors
 

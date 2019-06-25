@@ -4,4 +4,4 @@
 
 | Name | Summary |
 |---|---|
-| [toJSON](to-j-s-o-n.md) | `fun `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>.toJSON(): `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)<br>Convert a Map&lt;String, String&gt; to a JSONObject |
+| [toJSON](to-j-s-o-n.md) | `fun `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>.toJSON(): <ERROR CLASS>`<br>Convert a Map&lt;String, String&gt; to a JSONObject |

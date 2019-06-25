@@ -8,4 +8,4 @@
 
 | Name | Summary |
 |---|---|
-| [getStatusBarHeight](get-status-bar-height.md) | `fun getStatusBarHeight(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`, block: (`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Determine the height of the status bar asynchronously. |
+| [getStatusBarHeight](get-status-bar-height.md) | `fun getStatusBarHeight(view: <ERROR CLASS>, block: (`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Determine the height of the status bar asynchronously. |

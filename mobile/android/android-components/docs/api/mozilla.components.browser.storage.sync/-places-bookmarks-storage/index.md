@@ -10,7 +10,7 @@ Implementation of the [BookmarksStorage](../../mozilla.components.concept.storag
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `PlacesBookmarksStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`<br>Implementation of the [BookmarksStorage](../../mozilla.components.concept.storage/-bookmarks-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
+| [&lt;init&gt;](-init-.md) | `PlacesBookmarksStorage(context: <ERROR CLASS>)`<br>Implementation of the [BookmarksStorage](../../mozilla.components.concept.storage/-bookmarks-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |
 
 ### Properties
 

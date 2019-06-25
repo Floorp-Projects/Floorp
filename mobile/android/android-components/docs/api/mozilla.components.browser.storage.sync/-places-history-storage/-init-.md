@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`PlacesHistoryStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`
+`PlacesHistoryStorage(context: <ERROR CLASS>)`
 
 Implementation of the [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#).
 

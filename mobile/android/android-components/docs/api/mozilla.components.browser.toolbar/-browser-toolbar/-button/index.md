@@ -24,7 +24,7 @@ An action button to be added to the toolbar.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Button(imageDrawable: `[`Drawable`](https://developer.android.com/reference/android/graphics/drawable/Drawable.html)`, contentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, visible: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { true }, background: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, padding: `[`Padding`](../../../mozilla.components.support.base.android/-padding/index.md)` = DEFAULT_PADDING, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>An action button to be added to the toolbar. |
+| [&lt;init&gt;](-init-.md) | `Button(imageDrawable: <ERROR CLASS>, contentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, visible: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { true }, background: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, padding: `[`Padding`](../../../mozilla.components.support.base.android/-padding/index.md)` = DEFAULT_PADDING, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>An action button to be added to the toolbar. |
 
 ### Properties
 
@@ -37,15 +37,15 @@ An action button to be added to the toolbar.
 | Name | Summary |
 |---|---|
 | [contentDescription](../../../mozilla.components.concept.toolbar/-toolbar/-action-button/content-description.md) | `val contentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The content description to use. |
-| [imageDrawable](../../../mozilla.components.concept.toolbar/-toolbar/-action-button/image-drawable.md) | `val imageDrawable: `[`Drawable`](https://developer.android.com/reference/android/graphics/drawable/Drawable.html)`?`<br>The drawable to be shown. |
+| [imageDrawable](../../../mozilla.components.concept.toolbar/-toolbar/-action-button/image-drawable.md) | `val imageDrawable: <ERROR CLASS>?`<br>The drawable to be shown. |
 | [visible](../../../mozilla.components.concept.toolbar/-toolbar/-action-button/visible.md) | `open val visible: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Lambda that returns true or false to indicate whether this button should be shown. |
 
 ### Inherited Functions
 
 | Name | Summary |
 |---|---|
-| [bind](../../../mozilla.components.concept.toolbar/-toolbar/-action-button/bind.md) | `open fun bind(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [createView](../../../mozilla.components.concept.toolbar/-toolbar/-action-button/create-view.md) | `open fun createView(parent: `[`ViewGroup`](https://developer.android.com/reference/android/view/ViewGroup.html)`): `[`View`](https://developer.android.com/reference/android/view/View.html) |
+| [bind](../../../mozilla.components.concept.toolbar/-toolbar/-action-button/bind.md) | `open fun bind(view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [createView](../../../mozilla.components.concept.toolbar/-toolbar/-action-button/create-view.md) | `open fun createView(parent: <ERROR CLASS>): <ERROR CLASS>` |
 
 ### Inheritors
 

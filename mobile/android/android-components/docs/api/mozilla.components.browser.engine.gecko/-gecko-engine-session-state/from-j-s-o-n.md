@@ -2,4 +2,4 @@
 
 # fromJSON
 
-`fun fromJSON(json: `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)`): `[`GeckoEngineSessionState`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSessionState.kt#L27)
+`fun fromJSON(json: <ERROR CLASS>): `[`GeckoEngineSessionState`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSessionState.kt#L27)

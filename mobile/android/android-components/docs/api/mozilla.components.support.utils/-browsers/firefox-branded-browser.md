@@ -2,9 +2,9 @@
 
 # firefoxBrandedBrowser
 
-`val firefoxBrandedBrowser: `[`ActivityInfo`](https://developer.android.com/reference/android/content/pm/ActivityInfo.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L111)
+`val firefoxBrandedBrowser: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L111)
 
-The [ActivityInfo](https://developer.android.com/reference/android/content/pm/ActivityInfo.html) of the installed Firefox browser (or null if none could be found).
+The [ActivityInfo](#) of the installed Firefox browser (or null if none could be found).
 
 If multiple Firefox browsers are installed then this will
 

@@ -2,9 +2,9 @@
 
 # BrowserAction
 
-`sealed class BrowserAction : `[`Action`](-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L14)
+`sealed class BrowserAction : `[`Action`](../mozilla.components.lib.state/-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L15)
 
-[Action](-action.md) implementation related to [BrowserState](../mozilla.components.browser.session.state/-browser-state/index.md).
+[Action](../mozilla.components.lib.state/-action.md) implementation related to [BrowserState](../mozilla.components.browser.session.state/-browser-state/index.md).
 
 ### Inheritors
 

@@ -2,7 +2,7 @@
 
 # fromJson
 
-`fun fromJson(jsonObject: `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)`): `[`Experiment`](../-experiment/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/JSONExperimentParser.kt#L26)
+`fun fromJson(jsonObject: <ERROR CLASS>): `[`Experiment`](../-experiment/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/JSONExperimentParser.kt#L26)
 
 Creates an experiment from its json representation
 

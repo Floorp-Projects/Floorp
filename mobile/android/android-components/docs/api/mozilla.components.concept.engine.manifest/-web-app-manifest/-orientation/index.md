@@ -2,7 +2,7 @@
 
 # Orientation
 
-`enum class Orientation` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L128)
+`enum class Orientation` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L130)
 
 Defines the default orientation for all the website's top level browsing contexts.
 

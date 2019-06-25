@@ -2,4 +2,4 @@
 
 # closeButtonIcon
 
-`val closeButtonIcon: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L28)
+`val closeButtonIcon: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L28)

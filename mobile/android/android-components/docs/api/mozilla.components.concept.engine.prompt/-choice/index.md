@@ -2,15 +2,9 @@
 
 # Choice
 
-`data class Choice : `[`Parcelable`](https://developer.android.com/reference/android/os/Parcelable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/Choice.kt#L20)
+`data class Choice` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/Choice.kt#L20)
 
 Value type that represents a select option, optgroup or menuitem html element.
-
-### Types
-
-| Name | Summary |
-|---|---|
-| [CREATOR](-c-r-e-a-t-o-r/index.md) | `companion object CREATOR : `[`Creator`](https://developer.android.com/reference/android/os/Parcelable/Creator.html)`<`[`Choice`](./index.md)`>` |
 
 ### Constructors
 
@@ -35,11 +29,11 @@ Value type that represents a select option, optgroup or menuitem html element.
 | Name | Summary |
 |---|---|
 | [describeContents](describe-contents.md) | `fun describeContents(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
-| [writeToParcel](write-to-parcel.md) | `fun writeToParcel(parcel: `[`Parcel`](https://developer.android.com/reference/android/os/Parcel.html)`, flags: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [writeToParcel](write-to-parcel.md) | `fun writeToParcel(parcel: <ERROR CLASS>, flags: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Companion Object Functions
 
 | Name | Summary |
 |---|---|
-| [createFromParcel](create-from-parcel.md) | `fun createFromParcel(parcel: `[`Parcel`](https://developer.android.com/reference/android/os/Parcel.html)`): `[`Choice`](./index.md) |
+| [createFromParcel](create-from-parcel.md) | `fun createFromParcel(parcel: <ERROR CLASS>): `[`Choice`](./index.md) |
 | [newArray](new-array.md) | `fun newArray(size: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`Choice`](./index.md)`?>` |

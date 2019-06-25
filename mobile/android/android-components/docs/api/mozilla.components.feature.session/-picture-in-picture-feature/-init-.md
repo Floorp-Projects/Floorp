@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`PictureInPictureFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, activity: `[`Activity`](https://developer.android.com/reference/android/app/Activity.html)`, pipChanged: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`? = null)`
+`PictureInPictureFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, activity: <ERROR CLASS>, pipChanged: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`? = null)`
 
 A simple implementation of Picture-in-picture mode if on a supported platform.
 

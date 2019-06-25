@@ -10,13 +10,13 @@ Data class for the external Intent or fallback URL a given URL encodes for.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AppLinkRedirect(appIntent: `[`Intent`](https://developer.android.com/reference/android/content/Intent.html)`?, webUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, isFallback: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`)`<br>Data class for the external Intent or fallback URL a given URL encodes for. |
+| [&lt;init&gt;](-init-.md) | `AppLinkRedirect(appIntent: <ERROR CLASS>?, webUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, isFallback: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`)`<br>Data class for the external Intent or fallback URL a given URL encodes for. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [appIntent](app-intent.md) | `val appIntent: `[`Intent`](https://developer.android.com/reference/android/content/Intent.html)`?` |
+| [appIntent](app-intent.md) | `val appIntent: <ERROR CLASS>?` |
 | [isFallback](is-fallback.md) | `val isFallback: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [webUrl](web-url.md) | `val webUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
 

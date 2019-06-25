@@ -6,4 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [EngineViewBottomBehavior](-engine-view-bottom-behavior/index.md) | `class EngineViewBottomBehavior : Behavior<`[`View`](https://developer.android.com/reference/android/view/View.html)`>`<br>A [CoordinatorLayout.Behavior](#) implementation to be used with [EngineView](../mozilla.components.concept.engine/-engine-view/index.md) when placing a toolbar at the bottom of the screen. |
+| [EngineViewBottomBehavior](-engine-view-bottom-behavior/index.md) | `class EngineViewBottomBehavior : Behavior<<ERROR CLASS>>`<br>A [CoordinatorLayout.Behavior](#) implementation to be used with [EngineView](../mozilla.components.concept.engine/-engine-view/index.md) when placing a toolbar at the bottom of the screen. |

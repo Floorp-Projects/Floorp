@@ -10,7 +10,7 @@ Feature implementation that provides QR scanning functionality via the [QrFragme
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `QrFeature(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, fragmentManager: FragmentManager, onScanResult: `[`OnScanResult`](../-on-scan-result.md)` = { }, onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../-on-need-to-request-permissions.md)` = { })`<br>Feature implementation that provides QR scanning functionality via the [QrFragment](../-qr-fragment/index.md). |
+| [&lt;init&gt;](-init-.md) | `QrFeature(context: <ERROR CLASS>, fragmentManager: FragmentManager, onScanResult: `[`OnScanResult`](../-on-scan-result.md)` = { }, onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../-on-need-to-request-permissions.md)` = { })`<br>Feature implementation that provides QR scanning functionality via the [QrFragment](../-qr-fragment/index.md). |
 
 ### Functions
 

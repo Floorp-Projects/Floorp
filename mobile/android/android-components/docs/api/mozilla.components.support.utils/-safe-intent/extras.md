@@ -2,4 +2,4 @@
 
 # extras
 
-`val extras: `[`Bundle`](https://developer.android.com/reference/android/os/Bundle.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/SafeIntent.kt#L22)
+`val extras: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/SafeIntent.kt#L22)

@@ -12,7 +12,7 @@ This feature should be initialized globally (application scope) and only once.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `RecordingDevicesNotificationFeature(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Feature for displaying an ongoing notification while recording devices (camera, microphone) are used. |
+| [&lt;init&gt;](-init-.md) | `RecordingDevicesNotificationFeature(context: <ERROR CLASS>, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Feature for displaying an ongoing notification while recording devices (camera, microphone) are used. |
 
 ### Functions
 

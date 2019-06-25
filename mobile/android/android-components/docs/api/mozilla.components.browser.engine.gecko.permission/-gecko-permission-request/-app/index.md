@@ -35,4 +35,4 @@ Represents a gecko-based application permission request.
 
 | Name | Summary |
 |---|---|
-| [permissionsMap](permissions-map.md) | `val permissionsMap: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`Permission`](../../../mozilla.components.concept.engine.permission/-permission/index.md)`>` |
+| [permissionsMap](permissions-map.md) | `val permissionsMap: <ERROR CLASS>` |

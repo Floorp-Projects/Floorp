@@ -2,7 +2,7 @@
 
 # createSaveImageCandidate
 
-`fun createSaveImageCandidate(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`ContextMenuCandidate`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L145)
+`fun createSaveImageCandidate(context: <ERROR CLASS>): `[`ContextMenuCandidate`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L145)
 
 Context Menu item: "Save image".
 

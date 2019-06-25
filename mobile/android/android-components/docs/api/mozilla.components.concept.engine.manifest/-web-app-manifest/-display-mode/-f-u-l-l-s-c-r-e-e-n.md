@@ -2,7 +2,7 @@
 
 # FULLSCREEN
 
-`FULLSCREEN` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L65)
+`FULLSCREEN` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L67)
 
 All of the available display area is used and no user agent chrome is shown.
 

@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`CustomTabMenuItem(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, pendingIntent: `[`PendingIntent`](https://developer.android.com/reference/android/app/PendingIntent.html)`)`
+`CustomTabMenuItem(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, pendingIntent: <ERROR CLASS>)`

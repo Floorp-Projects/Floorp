@@ -8,12 +8,12 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Config(prefs: `[`SharedPreferences`](https://developer.android.com/reference/android/content/SharedPreferences.html)`)` |
+| [&lt;init&gt;](-init-.md) | `Config(prefs: <ERROR CLASS>)` |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
 | [colorScheme](color-scheme.md) | `var colorScheme: `[`ColorScheme`](../-color-scheme/index.md) |
-| [fontSize](font-size.md) | `var fontSize: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [fontSize](font-size.md) | `var fontSize: <ERROR CLASS>` |
 | [fontType](font-type.md) | `var fontType: `[`FontType`](../-font-type/index.md) |

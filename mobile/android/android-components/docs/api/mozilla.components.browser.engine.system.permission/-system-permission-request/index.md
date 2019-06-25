@@ -10,13 +10,13 @@ WebView-based implementation of [PermissionRequest](../../mozilla.components.con
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SystemPermissionRequest(nativeRequest: `[`PermissionRequest`](https://developer.android.com/reference/android/webkit/PermissionRequest.html)`)`<br>WebView-based implementation of [PermissionRequest](../../mozilla.components.concept.engine.permission/-permission-request/index.md). |
+| [&lt;init&gt;](-init-.md) | `SystemPermissionRequest(nativeRequest: <ERROR CLASS>)`<br>WebView-based implementation of [PermissionRequest](../../mozilla.components.concept.engine.permission/-permission-request/index.md). |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [permissions](permissions.md) | `val permissions: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Permission`](../../mozilla.components.concept.engine.permission/-permission/index.md)`>`<br>List of requested permissions. |
+| [permissions](permissions.md) | `val permissions: <ERROR CLASS>`<br>List of requested permissions. |
 | [uri](uri.md) | `val uri: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The origin URI which caused the permissions to be requested. |
 
 ### Functions
@@ -37,4 +37,4 @@ WebView-based implementation of [PermissionRequest](../../mozilla.components.con
 
 | Name | Summary |
 |---|---|
-| [permissionsMap](permissions-map.md) | `val permissionsMap: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`Permission`](../../mozilla.components.concept.engine.permission/-permission/index.md)`>` |
+| [permissionsMap](permissions-map.md) | `val permissionsMap: <ERROR CLASS>` |

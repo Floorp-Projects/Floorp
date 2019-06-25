@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`Failure(exception: `[`JSONException`](https://developer.android.com/reference/org/json/JSONException.html)`)`
+`Failure(exception: <ERROR CLASS>)`
 
 Parsing the JSON failed.
 

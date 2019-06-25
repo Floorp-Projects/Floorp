@@ -27,7 +27,7 @@ Intents passed are guaranteed to be openable by a non-browser app.
 
 | Name | Summary |
 |---|---|
-| [onCreateDialog](on-create-dialog.md) | `fun onCreateDialog(savedInstanceState: `[`Bundle`](https://developer.android.com/reference/android/os/Bundle.html)`?): `[`Dialog`](https://developer.android.com/reference/android/app/Dialog.html) |
+| [onCreateDialog](on-create-dialog.md) | `fun onCreateDialog(savedInstanceState: <ERROR CLASS>?): <ERROR CLASS>` |
 
 ### Inherited Functions
 

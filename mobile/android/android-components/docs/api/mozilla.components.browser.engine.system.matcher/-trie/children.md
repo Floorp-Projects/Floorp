@@ -2,4 +2,4 @@
 
 # children
 
-`val children: `[`SparseArray`](https://developer.android.com/reference/android/util/SparseArray.html)`<`[`Trie`](index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/matcher/Trie.kt#L13)
+`val children: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/matcher/Trie.kt#L13)

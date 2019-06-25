@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`NestedGeckoView(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`
+`NestedGeckoView(context: <ERROR CLASS>)`
 
 geckoView that supports nested scrolls (for using in a CoordinatorLayout).
 

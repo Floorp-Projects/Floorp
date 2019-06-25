@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`PingUploadWorker(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, params: WorkerParameters)`
+`PingUploadWorker(context: <ERROR CLASS>, params: WorkerParameters)`
 
 This class is the worker class used by [WorkManager](#) to handle uploading the ping to the server.
 

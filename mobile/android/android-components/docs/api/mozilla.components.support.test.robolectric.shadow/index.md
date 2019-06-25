@@ -6,4 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [PixelCopyShadow](-pixel-copy-shadow/index.md) | `class PixelCopyShadow`<br>Shadow for [PixelCopy](https://developer.android.com/reference/android/view/PixelCopy.html) API. |
+| [PixelCopyShadow](-pixel-copy-shadow/index.md) | `class PixelCopyShadow`<br>Shadow for [PixelCopy](#) API. |

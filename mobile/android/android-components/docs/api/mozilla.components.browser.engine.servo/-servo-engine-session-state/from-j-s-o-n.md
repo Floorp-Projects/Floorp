@@ -2,4 +2,4 @@
 
 # fromJSON
 
-`fun fromJSON(json: `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)`): `[`ServoEngineSessionState`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-servo/src/main/java/mozilla/components/browser/engine/servo/ServoEngineSessionState.kt#L23)
+`fun fromJSON(json: <ERROR CLASS>): `[`ServoEngineSessionState`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-servo/src/main/java/mozilla/components/browser/engine/servo/ServoEngineSessionState.kt#L23)

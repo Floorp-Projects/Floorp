@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`SyncWorker(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, params: WorkerParameters)`
+`SyncWorker(context: <ERROR CLASS>, params: WorkerParameters)`

@@ -6,7 +6,7 @@
 
 | Name | Summary |
 |---|---|
-| [BrowserState](-browser-state/index.md) | `data class BrowserState`<br>Value type that represents the complete state of the browser/engine. |
+| [BrowserState](-browser-state/index.md) | `data class BrowserState : `[`State`](../mozilla.components.lib.state/-state.md)<br>Value type that represents the complete state of the browser/engine. |
 | [DownloadState](-download-state/index.md) | `data class DownloadState`<br>Value type that represents a Download. |
 | [SecurityInfoState](-security-info-state/index.md) | `data class SecurityInfoState`<br>A value type holding security information for a Session. |
 | [SessionState](-session-state/index.md) | `data class SessionState`<br>Value type that represents the state of a browser session ("tab"). |

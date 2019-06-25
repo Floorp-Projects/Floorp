@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`Config(prefs: `[`SharedPreferences`](https://developer.android.com/reference/android/content/SharedPreferences.html)`)`
+`Config(prefs: <ERROR CLASS>)`

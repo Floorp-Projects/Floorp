@@ -2,17 +2,11 @@
 
 # BrowserStore
 
-`class BrowserStore` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/store/BrowserStore.kt#L23)
+`class BrowserStore : `[`Store`](../../mozilla.components.lib.state/-store/index.md)`<`[`BrowserState`](../../mozilla.components.browser.session.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.session.action/-browser-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/store/BrowserStore.kt#L18)
 
 The [BrowserStore](./index.md) holds the [BrowserState](../../mozilla.components.browser.session.state/-browser-state/index.md) (state tree).
 
-The only way to change the [BrowserState](../../mozilla.components.browser.session.state/-browser-state/index.md) inside [BrowserStore](./index.md) is to dispatch an [Action](../../mozilla.components.browser.session.action/-action.md) on it.
-
-### Types
-
-| Name | Summary |
-|---|---|
-| [Subscription](-subscription/index.md) | `class Subscription`<br>A [Subscription](-subscription/index.md) is returned whenever an observer is registered via the [observe](observe.md) method. Calling [unsubscribe](-subscription/unsubscribe.md) on the [Subscription](-subscription/index.md) will unregister the observer. |
+The only way to change the [BrowserState](../../mozilla.components.browser.session.state/-browser-state/index.md) inside [BrowserStore](./index.md) is to dispatch an [Action](../../mozilla.components.lib.state/-action.md) on it.
 
 ### Constructors
 
@@ -20,21 +14,22 @@ The only way to change the [BrowserState](../../mozilla.components.browser.sessi
 |---|---|
 | [&lt;init&gt;](-init-.md) | `BrowserStore(initialState: `[`BrowserState`](../../mozilla.components.browser.session.state/-browser-state/index.md)`)`<br>The [BrowserStore](./index.md) holds the [BrowserState](../../mozilla.components.browser.session.state/-browser-state/index.md) (state tree). |
 
-### Properties
+### Inherited Properties
 
 | Name | Summary |
 |---|---|
-| [state](state.md) | `val state: `[`BrowserState`](../../mozilla.components.browser.session.state/-browser-state/index.md)<br>Returns the current state. |
+| [state](../../mozilla.components.lib.state/-store/state.md) | `val state: `[`S`](../../mozilla.components.lib.state/-store/index.md#S)<br>The current [State](../../mozilla.components.lib.state/-state.md). |
 
-### Functions
+### Inherited Functions
 
 | Name | Summary |
 |---|---|
-| [dispatch](dispatch.md) | `fun dispatch(action: `[`Action`](../../mozilla.components.browser.session.action/-action.md)`): Job`<br>Dispatch an [Action](../../mozilla.components.browser.session.action/-action.md) to the store in order to trigger a [BrowserState](../../mozilla.components.browser.session.state/-browser-state/index.md) change. |
-| [observe](observe.md) | `fun observe(receiveInitialState: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, observer: `[`Observer`](../-observer.md)`): `[`Subscription`](-subscription/index.md)<br>Registers an observer function that will be invoked whenever the state changes. |
+| [dispatch](../../mozilla.components.lib.state/-store/dispatch.md) | `fun dispatch(action: `[`A`](../../mozilla.components.lib.state/-store/index.md#A)`): Job`<br>Dispatch an [Action](../../mozilla.components.lib.state/-action.md) to the store in order to trigger a [State](../../mozilla.components.lib.state/-state.md) change. |
+| [observeManually](../../mozilla.components.lib.state/-store/observe-manually.md) | `fun observeManually(observer: `[`Observer`](../../mozilla.components.lib.state/-observer.md)`<`[`S`](../../mozilla.components.lib.state/-store/index.md#S)`>): `[`Subscription`](../../mozilla.components.lib.state/-store/-subscription/index.md)`<`[`S`](../../mozilla.components.lib.state/-store/index.md#S)`, `[`A`](../../mozilla.components.lib.state/-store/index.md#A)`>`<br>Registers an [Observer](../../mozilla.components.lib.state/-observer.md) function that will be invoked whenever the [State](../../mozilla.components.lib.state/-state.md) changes. |
 
 ### Extension Functions
 
 | Name | Summary |
 |---|---|
-| [observe](../../mozilla.components.browser.session.ext/observe.md) | `fun `[`BrowserStore`](./index.md)`.observe(owner: LifecycleOwner, receiveInitialState: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, observer: `[`Observer`](../-observer.md)`): `[`Subscription`](-subscription/index.md)<br>Registers an [Observer](../-observer.md) function that will be invoked whenever the state changes. The [BrowserStore.Subscription](-subscription/index.md) will be bound to the passed in [LifecycleOwner](#). Once the [Lifecycle](#) state changes to DESTROYED the [Observer](../-observer.md) will be unregistered automatically.`fun `[`BrowserStore`](./index.md)`.observe(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`, observer: `[`Observer`](../-observer.md)`, receiveInitialState: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true): `[`Subscription`](-subscription/index.md)<br>Registers an [Observer](../-observer.md) function that will be invoked whenever the state changes. The [BrowserStore.Subscription](-subscription/index.md) will be bound to the passed in [View](https://developer.android.com/reference/android/view/View.html). Once the [View](https://developer.android.com/reference/android/view/View.html) gets detached the [Observer](../-observer.md) will be unregistered automatically. |
+| [observe](../../mozilla.components.lib.state.ext/observe.md) | `fun <S : `[`State`](../../mozilla.components.lib.state/-state.md)`, A : `[`Action`](../../mozilla.components.lib.state/-action.md)`> `[`Store`](../../mozilla.components.lib.state/-store/index.md)`<`[`S`](../../mozilla.components.lib.state.ext/observe.md#S)`, `[`A`](../../mozilla.components.lib.state.ext/observe.md#A)`>.observe(owner: LifecycleOwner, observer: `[`Observer`](../../mozilla.components.lib.state/-observer.md)`<`[`S`](../../mozilla.components.lib.state.ext/observe.md#S)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers an [Observer](../../mozilla.components.lib.state/-observer.md) function that will be invoked whenever the state changes. The [Store.Subscription](../../mozilla.components.lib.state/-store/-subscription/index.md) will be bound to the passed in [LifecycleOwner](#). Once the [Lifecycle](#) state changes to DESTROYED the [Observer](../../mozilla.components.lib.state/-observer.md) will be unregistered automatically.`fun <S : `[`State`](../../mozilla.components.lib.state/-state.md)`, A : `[`Action`](../../mozilla.components.lib.state/-action.md)`> `[`Store`](../../mozilla.components.lib.state/-store/index.md)`<`[`S`](../../mozilla.components.lib.state.ext/observe.md#S)`, `[`A`](../../mozilla.components.lib.state.ext/observe.md#A)`>.observe(view: <ERROR CLASS>, observer: `[`Observer`](../../mozilla.components.lib.state/-observer.md)`<`[`S`](../../mozilla.components.lib.state.ext/observe.md#S)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers an [Observer](../../mozilla.components.lib.state/-observer.md) function that will be invoked whenever the state changes. The [Store.Subscription](../../mozilla.components.lib.state/-store/-subscription/index.md) will be bound to the passed in [View](#). Once the [View](#) gets detached the [Observer](../../mozilla.components.lib.state/-observer.md) will be unregistered automatically. |
+| [observeForever](../../mozilla.components.lib.state.ext/observe-forever.md) | `fun <S : `[`State`](../../mozilla.components.lib.state/-state.md)`, A : `[`Action`](../../mozilla.components.lib.state/-action.md)`> `[`Store`](../../mozilla.components.lib.state/-store/index.md)`<`[`S`](../../mozilla.components.lib.state.ext/observe-forever.md#S)`, `[`A`](../../mozilla.components.lib.state.ext/observe-forever.md#A)`>.observeForever(observer: `[`Observer`](../../mozilla.components.lib.state/-observer.md)`<`[`S`](../../mozilla.components.lib.state.ext/observe-forever.md#S)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers an [Observer](../../mozilla.components.lib.state/-observer.md) function that will observe the store indefinitely. |

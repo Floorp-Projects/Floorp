@@ -14,5 +14,5 @@
 | Name | Summary |
 |---|---|
 | [OnDownloadCompleted](-on-download-completed.md) | `typealias OnDownloadCompleted = (`[`Download`](../mozilla.components.browser.session/-download/index.md)`, `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [SystemDownloadManager](-system-download-manager.md) | `typealias SystemDownloadManager = `[`DownloadManager`](https://developer.android.com/reference/android/app/DownloadManager.html) |
-| [SystemRequest](-system-request.md) | `typealias SystemRequest = `[`Request`](https://developer.android.com/reference/android/app/DownloadManager/Request.html) |
+| [SystemDownloadManager](-system-download-manager.md) | `typealias SystemDownloadManager = <ERROR CLASS>` |
+| [SystemRequest](-system-request.md) | `typealias SystemRequest = <ERROR CLASS>` |

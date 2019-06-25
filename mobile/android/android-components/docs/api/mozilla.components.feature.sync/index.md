@@ -19,5 +19,5 @@
 
 | Name | Summary |
 |---|---|
-| [getLastSynced](get-last-synced.md) | `fun getLastSynced(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
-| [setLastSynced](set-last-synced.md) | `fun setLastSynced(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, ts: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [getLastSynced](get-last-synced.md) | `fun getLastSynced(context: <ERROR CLASS>): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
+| [setLastSynced](set-last-synced.md) | `fun setLastSynced(context: <ERROR CLASS>, ts: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

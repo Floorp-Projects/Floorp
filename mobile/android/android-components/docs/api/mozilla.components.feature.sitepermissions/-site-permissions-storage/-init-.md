@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SitePermissionsStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`
+`SitePermissionsStorage(context: <ERROR CLASS>)`
 
 A storage implementation to save [SitePermissions](../-site-permissions/index.md).
 

@@ -6,6 +6,6 @@
 
 Guess the name of the file that should be downloaded.
 
-This method is largely identical to [android.webkit.URLUtil.guessFileName](https://developer.android.com/reference/android/webkit/URLUtil.html#guessFileName(java.lang.String, java.lang.String, java.lang.String))
+This method is largely identical to [android.webkit.URLUtil.guessFileName](#)
 which unfortunately does not implement RfC 5987.
 

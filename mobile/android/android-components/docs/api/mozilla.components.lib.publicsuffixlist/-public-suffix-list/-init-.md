@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`PublicSuffixList(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, dispatcher: CoroutineDispatcher = Dispatchers.IO, scope: CoroutineScope = CoroutineScope(dispatcher))`
+`PublicSuffixList(context: <ERROR CLASS>, dispatcher: CoroutineDispatcher = Dispatchers.IO, scope: CoroutineScope = CoroutineScope(dispatcher))`
 
 API for reading and accessing the public suffix list.
 

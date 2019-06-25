@@ -2,8 +2,8 @@
 
 ## Package mozilla.components.support.ktx.android.os
 
-### Extensions for External Classes
+### Functions
 
 | Name | Summary |
 |---|---|
-| [android.os.StrictMode.ThreadPolicy](android.os.-strict-mode.-thread-policy/index.md) |  |
+| [resetAfter](reset-after.md) | `fun <R> <ERROR CLASS>.resetAfter(functionBlock: () -> `[`R`](reset-after.md#R)`): `[`R`](reset-after.md#R)<br>Runs the given [functionBlock](reset-after.md#mozilla.components.support.ktx.android.os$resetAfter(, kotlin.Function0((mozilla.components.support.ktx.android.os.resetAfter.R)))/functionBlock) and sets the ThreadPolicy after its completion. |

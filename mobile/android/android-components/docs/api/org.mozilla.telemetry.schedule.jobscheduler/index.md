@@ -7,4 +7,4 @@
 | Name | Summary |
 |---|---|
 | [JobSchedulerTelemetryScheduler](-job-scheduler-telemetry-scheduler/index.md) | `open class JobSchedulerTelemetryScheduler : `[`TelemetryScheduler`](../org.mozilla.telemetry.schedule/-telemetry-scheduler/index.md)<br>TelemetryScheduler implementation that uses Android's JobScheduler API to schedule ping uploads. |
-| [TelemetryJobService](-telemetry-job-service/index.md) | `open class TelemetryJobService : `[`JobService`](https://developer.android.com/reference/android/app/job/JobService.html) |
+| [TelemetryJobService](-telemetry-job-service/index.md) | `open class TelemetryJobService : JobService` |

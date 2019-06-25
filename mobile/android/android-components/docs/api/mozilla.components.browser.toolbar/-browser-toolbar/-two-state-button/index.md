@@ -27,7 +27,7 @@ isEnabled lambda.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `TwoStateButton(enabledImage: `[`Drawable`](https://developer.android.com/reference/android/graphics/drawable/Drawable.html)`, enabledContentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, disabledImage: `[`Drawable`](https://developer.android.com/reference/android/graphics/drawable/Drawable.html)`, disabledContentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, isEnabled: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { true }, background: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>An action that either shows an active button or an inactive button based on the provided isEnabled lambda. |
+| [&lt;init&gt;](-init-.md) | `TwoStateButton(enabledImage: <ERROR CLASS>, enabledContentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, disabledImage: <ERROR CLASS>, disabledContentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, isEnabled: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { true }, background: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>An action that either shows an active button or an inactive button based on the provided isEnabled lambda. |
 
 ### Properties
 
@@ -45,4 +45,4 @@ isEnabled lambda.
 
 | Name | Summary |
 |---|---|
-| [bind](bind.md) | `open fun bind(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [bind](bind.md) | `open fun bind(view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

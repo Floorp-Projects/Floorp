@@ -2,7 +2,7 @@
 
 # SessionListAction
 
-`sealed class SessionListAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L19)
+`sealed class SessionListAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L20)
 
 [BrowserAction](../-browser-action.md) implementations related to updating the list of [SessionState](../../mozilla.components.browser.session.state/-session-state/index.md) inside [BrowserState](../../mozilla.components.browser.session.state/-browser-state/index.md).
 

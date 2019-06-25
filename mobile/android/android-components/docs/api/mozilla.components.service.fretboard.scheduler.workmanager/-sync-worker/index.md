@@ -8,7 +8,7 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SyncWorker(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, params: WorkerParameters)` |
+| [&lt;init&gt;](-init-.md) | `SyncWorker(context: <ERROR CLASS>, params: WorkerParameters)` |
 
 ### Properties
 

@@ -2,7 +2,7 @@
 
 # AddHitResultAction
 
-`data class AddHitResultAction : `[`SessionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L63)
+`data class AddHitResultAction : `[`SessionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L64)
 
 Sets the [HitResult](../../../mozilla.components.concept.engine/-hit-result/index.md) state of the [SessionState](../../../mozilla.components.browser.session.state/-session-state/index.md) with the given [sessionId](session-id.md).
 

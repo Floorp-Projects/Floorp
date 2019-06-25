@@ -10,4 +10,4 @@ Helper for component and app code to use unique notification ids without conflic
 
 | Name | Summary |
 |---|---|
-| [getIdForTag](get-id-for-tag.md) | `fun getIdForTag(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, tag: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Get a unique notification ID for the provided unique tag. |
+| [getIdForTag](get-id-for-tag.md) | `fun getIdForTag(context: <ERROR CLASS>, tag: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Get a unique notification ID for the provided unique tag. |

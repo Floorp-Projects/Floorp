@@ -2,4 +2,4 @@
 
 # getParcelableExtra
 
-`fun <T : `[`Parcelable`](https://developer.android.com/reference/android/os/Parcelable.html)`> getParcelableExtra(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`T`](get-parcelable-extra.md#T)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/SafeIntent.kt#L72)
+`fun <T> getParcelableExtra(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`T`](get-parcelable-extra.md#T)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/SafeIntent.kt#L72)

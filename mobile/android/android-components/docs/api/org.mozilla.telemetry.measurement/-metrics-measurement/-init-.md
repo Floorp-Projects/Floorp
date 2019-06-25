@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`MetricsMeasurement(snapshot: `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)`)`
+`MetricsMeasurement(snapshot: JSONObject)`

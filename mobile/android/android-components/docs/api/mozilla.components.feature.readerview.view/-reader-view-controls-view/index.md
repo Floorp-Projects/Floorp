@@ -22,7 +22,7 @@ An interface for views that can display ReaderView appearance controls (e.g. fon
 
 | Name | Summary |
 |---|---|
-| [asView](as-view.md) | `open fun asView(): `[`View`](https://developer.android.com/reference/android/view/View.html)<br>Casts this [ReaderViewControlsView](./index.md) interface to an actual Android [View](https://developer.android.com/reference/android/view/View.html) object. |
+| [asView](as-view.md) | `open fun asView(): <ERROR CLASS>`<br>Casts this [ReaderViewControlsView](./index.md) interface to an actual Android [View](#) object. |
 | [hideControls](hide-controls.md) | `abstract fun hideControls(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Makes the UI controls invisible. |
 | [setColorScheme](set-color-scheme.md) | `abstract fun setColorScheme(scheme: `[`ColorScheme`](../../mozilla.components.feature.readerview/-reader-view-feature/-color-scheme/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the selected color scheme. |
 | [setFont](set-font.md) | `abstract fun setFont(font: `[`FontType`](../../mozilla.components.feature.readerview/-reader-view-feature/-font-type/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the selected font option. |

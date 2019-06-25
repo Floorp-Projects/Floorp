@@ -10,13 +10,13 @@ A view holder implementation for displaying an [AwesomeBar.Suggestion](../../moz
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SuggestionViewHolder(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`)`<br>A view holder implementation for displaying an [AwesomeBar.Suggestion](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.md). |
+| [&lt;init&gt;](-init-.md) | `SuggestionViewHolder(view: <ERROR CLASS>)`<br>A view holder implementation for displaying an [AwesomeBar.Suggestion](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.md). |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [view](view.md) | `val view: `[`View`](https://developer.android.com/reference/android/view/View.html) |
+| [view](view.md) | `val view: <ERROR CLASS>` |
 
 ### Functions
 

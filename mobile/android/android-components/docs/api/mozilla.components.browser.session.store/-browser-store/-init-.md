@@ -6,5 +6,5 @@
 
 The [BrowserStore](index.md) holds the [BrowserState](../../mozilla.components.browser.session.state/-browser-state/index.md) (state tree).
 
-The only way to change the [BrowserState](../../mozilla.components.browser.session.state/-browser-state/index.md) inside [BrowserStore](index.md) is to dispatch an [Action](../../mozilla.components.browser.session.action/-action.md) on it.
+The only way to change the [BrowserState](../../mozilla.components.browser.session.state/-browser-state/index.md) inside [BrowserStore](index.md) is to dispatch an [Action](../../mozilla.components.lib.state/-action.md) on it.
 

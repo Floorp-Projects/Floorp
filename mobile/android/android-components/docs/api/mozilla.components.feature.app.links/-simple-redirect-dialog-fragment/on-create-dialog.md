@@ -2,4 +2,4 @@
 
 # onCreateDialog
 
-`fun onCreateDialog(savedInstanceState: `[`Bundle`](https://developer.android.com/reference/android/os/Bundle.html)`?): `[`Dialog`](https://developer.android.com/reference/android/app/Dialog.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/SimpleRedirectDialogFragment.kt#L30)
+`fun onCreateDialog(savedInstanceState: <ERROR CLASS>?): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/app-links/src/main/java/mozilla/components/feature/app/links/SimpleRedirectDialogFragment.kt#L30)

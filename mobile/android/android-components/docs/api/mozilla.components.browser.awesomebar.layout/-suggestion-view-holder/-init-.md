@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SuggestionViewHolder(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`)`
+`SuggestionViewHolder(view: <ERROR CLASS>)`
 
 A view holder implementation for displaying an [AwesomeBar.Suggestion](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.md).
 

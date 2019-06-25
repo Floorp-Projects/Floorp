@@ -2,7 +2,7 @@
 
 # asView
 
-`fun asView(): `[`View`](https://developer.android.com/reference/android/view/View.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/BrowserTabsTray.kt#L62)
+`fun asView(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/BrowserTabsTray.kt#L62)
 
 Overrides [TabsTray.asView](../../mozilla.components.concept.tabstray/-tabs-tray/as-view.md)
 

@@ -10,7 +10,7 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `OkHttpClient(client: OkHttpClient = OkHttpClient(), context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`? = null)`<br>[Client](../../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp. |
+| [&lt;init&gt;](-init-.md) | `OkHttpClient(client: OkHttpClient = OkHttpClient(), context: <ERROR CLASS>? = null)`<br>[Client](../../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp. |
 
 ### Inherited Properties
 

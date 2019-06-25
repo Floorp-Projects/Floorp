@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SystemPermissionRequest(nativeRequest: `[`PermissionRequest`](https://developer.android.com/reference/android/webkit/PermissionRequest.html)`)`
+`SystemPermissionRequest(nativeRequest: <ERROR CLASS>)`
 
 WebView-based implementation of [PermissionRequest](../../mozilla.components.concept.engine.permission/-permission-request/index.md).
 

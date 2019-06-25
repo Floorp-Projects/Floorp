@@ -10,7 +10,7 @@ This class is the worker class used by [WorkManager](#) to handle uploading the 
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `PingUploadWorker(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, params: WorkerParameters)`<br>This class is the worker class used by [WorkManager](#) to handle uploading the ping to the server. |
+| [&lt;init&gt;](-init-.md) | `PingUploadWorker(context: <ERROR CLASS>, params: WorkerParameters)`<br>This class is the worker class used by [WorkManager](#) to handle uploading the ping to the server. |
 
 ### Functions
 

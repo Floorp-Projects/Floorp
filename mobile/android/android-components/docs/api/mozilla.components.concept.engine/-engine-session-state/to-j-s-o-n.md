@@ -2,7 +2,7 @@
 
 # toJSON
 
-`abstract fun toJSON(): `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSessionState.kt#L21)
+`abstract fun toJSON(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSessionState.kt#L21)
 
 Create a JSON representation of this state that can be saved to disk.
 

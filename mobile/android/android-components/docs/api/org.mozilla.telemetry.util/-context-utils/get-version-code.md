@@ -2,4 +2,4 @@
 
 # getVersionCode
 
-`open static fun getVersionCode(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/util/ContextUtils.java#L19)
+`open static fun getVersionCode(context: Context): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/util/ContextUtils.java#L19)

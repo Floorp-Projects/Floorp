@@ -2,7 +2,7 @@
 
 # SessionAction
 
-`sealed class SessionAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L39)
+`sealed class SessionAction : `[`BrowserAction`](../-browser-action.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L40)
 
 [BrowserAction](../-browser-action.md) implementations related to updating the a single [SessionState](../../mozilla.components.browser.session.state/-session-state/index.md) inside [BrowserState](../../mozilla.components.browser.session.state/-browser-state/index.md).
 

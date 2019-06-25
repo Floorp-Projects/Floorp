@@ -20,7 +20,7 @@ An action that just shows a static, non-clickable image.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ActionImage(imageDrawable: `[`Drawable`](https://developer.android.com/reference/android/graphics/drawable/Drawable.html)`, contentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, padding: `[`Padding`](../../../mozilla.components.support.base.android/-padding/index.md)`? = null)`<br>An action that just shows a static, non-clickable image. |
+| [&lt;init&gt;](-init-.md) | `ActionImage(imageDrawable: <ERROR CLASS>, contentDescription: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, padding: `[`Padding`](../../../mozilla.components.support.base.android/-padding/index.md)`? = null)`<br>An action that just shows a static, non-clickable image. |
 
 ### Inherited Properties
 
@@ -32,5 +32,5 @@ An action that just shows a static, non-clickable image.
 
 | Name | Summary |
 |---|---|
-| [bind](bind.md) | `open fun bind(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [createView](create-view.md) | `open fun createView(parent: `[`ViewGroup`](https://developer.android.com/reference/android/view/ViewGroup.html)`): `[`View`](https://developer.android.com/reference/android/view/View.html) |
+| [bind](bind.md) | `open fun bind(view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [createView](create-view.md) | `open fun createView(parent: <ERROR CLASS>): <ERROR CLASS>` |

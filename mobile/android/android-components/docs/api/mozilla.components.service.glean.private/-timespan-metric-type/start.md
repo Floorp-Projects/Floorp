@@ -2,15 +2,10 @@
 
 # start
 
-`fun start(timerId: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimespanMetricType.kt#L42)
+`fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimespanMetricType.kt#L43)
 
-Start tracking time for the provided metric and associated object. This
-records an error if it’s already tracking time (i.e. start was already
-called with no corresponding [stopAndSum](stop-and-sum.md)): in that case the original
+Start tracking time for the provided metric.
+This records an error if it’s already tracking time (i.e. start was already
+called with no corresponding [stop](stop.md)): in that case the original
 start time will be preserved.
 
-### Parameters
-
-`timerId` - The object to associate with this timing.  This allows
-for concurrent timing of events associated with different objects to the
-same timespan metric.

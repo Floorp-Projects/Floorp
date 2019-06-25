@@ -2,7 +2,7 @@
 
 # asView
 
-`open fun asView(): `[`View`](https://developer.android.com/reference/android/view/View.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/view/FindInPageView.kt#L37)
+`open fun asView(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/view/FindInPageView.kt#L37)
 
-Casts this [FindInPageView](index.md) interface to an actual Android [View](https://developer.android.com/reference/android/view/View.html) object.
+Casts this [FindInPageView](index.md) interface to an actual Android [View](#) object.
 

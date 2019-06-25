@@ -2,7 +2,7 @@
 
 # cancel
 
-`fun NotificationManagerCompat.cancel(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, tag: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/ids/NotificationIds.kt#L73)
+`fun NotificationManagerCompat.cancel(context: <ERROR CLASS>, tag: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/ids/NotificationIds.kt#L73)
 
 Cancel a previously shown notification.
 

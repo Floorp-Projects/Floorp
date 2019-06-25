@@ -6,11 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [BrowserStore](-browser-store/index.md) | `class BrowserStore`<br>The [BrowserStore](-browser-store/index.md) holds the [BrowserState](../mozilla.components.browser.session.state/-browser-state/index.md) (state tree). |
-
-### Type Aliases
-
-| Name | Summary |
-|---|---|
-| [Observer](-observer.md) | `typealias Observer = (`[`BrowserState`](../mozilla.components.browser.session.state/-browser-state/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [Reducer](-reducer.md) | `typealias Reducer = (`[`BrowserState`](../mozilla.components.browser.session.state/-browser-state/index.md)`, `[`Action`](../mozilla.components.browser.session.action/-action.md)`) -> `[`BrowserState`](../mozilla.components.browser.session.state/-browser-state/index.md) |
+| [BrowserStore](-browser-store/index.md) | `class BrowserStore : `[`Store`](../mozilla.components.lib.state/-store/index.md)`<`[`BrowserState`](../mozilla.components.browser.session.state/-browser-state/index.md)`, `[`BrowserAction`](../mozilla.components.browser.session.action/-browser-action.md)`>`<br>The [BrowserStore](-browser-store/index.md) holds the [BrowserState](../mozilla.components.browser.session.state/-browser-state/index.md) (state tree). |

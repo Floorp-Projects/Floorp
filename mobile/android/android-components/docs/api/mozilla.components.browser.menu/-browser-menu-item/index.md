@@ -16,15 +16,15 @@ Interface to be implemented by menu items to be shown in the browser menu.
 
 | Name | Summary |
 |---|---|
-| [bind](bind.md) | `abstract fun bind(menu: `[`BrowserMenu`](../-browser-menu/index.md)`, view: `[`View`](https://developer.android.com/reference/android/view/View.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to display the data of this item using the passed view. |
+| [bind](bind.md) | `abstract fun bind(menu: `[`BrowserMenu`](../-browser-menu/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to display the data of this item using the passed view. |
 | [getLayoutResource](get-layout-resource.md) | `abstract fun getLayoutResource(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Returns the layout resource ID of the layout to be inflated for showing a menu item of this type. |
-| [invalidate](invalidate.md) | `open fun invalidate(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to update the displayed data of this item using the passed view. |
+| [invalidate](invalidate.md) | `open fun invalidate(view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called by the browser menu to update the displayed data of this item using the passed view. |
 
 ### Inheritors
 
 | Name | Summary |
 |---|---|
-| [BrowserMenuCompoundButton](../../mozilla.components.browser.menu.item/-browser-menu-compound-button/index.md) | `abstract class BrowserMenuCompoundButton : `[`BrowserMenuItem`](./index.md)<br>A browser menu compound button. A basic sub-class would only have to provide a layout resource to satisfy [BrowserMenuItem.getLayoutResource](get-layout-resource.md) which contains a [View](https://developer.android.com/reference/android/view/View.html) that inherits from [CompoundButton](https://developer.android.com/reference/android/widget/CompoundButton.html). |
+| [BrowserMenuCompoundButton](../../mozilla.components.browser.menu.item/-browser-menu-compound-button/index.md) | `abstract class BrowserMenuCompoundButton : `[`BrowserMenuItem`](./index.md)<br>A browser menu compound button. A basic sub-class would only have to provide a layout resource to satisfy [BrowserMenuItem.getLayoutResource](get-layout-resource.md) which contains a [View](#) that inherits from [CompoundButton](#). |
 | [BrowserMenuDivider](../../mozilla.components.browser.menu.item/-browser-menu-divider/index.md) | `class BrowserMenuDivider : `[`BrowserMenuItem`](./index.md)<br>A browser menu item to display a horizontal divider. |
 | [BrowserMenuImageText](../../mozilla.components.browser.menu.item/-browser-menu-image-text/index.md) | `open class BrowserMenuImageText : `[`BrowserMenuItem`](./index.md)<br>A menu item for displaying text with an image icon. |
 | [BrowserMenuItemToolbar](../../mozilla.components.browser.menu.item/-browser-menu-item-toolbar/index.md) | `class BrowserMenuItemToolbar : `[`BrowserMenuItem`](./index.md)<br>A toolbar of buttons to show inside the browser menu. |

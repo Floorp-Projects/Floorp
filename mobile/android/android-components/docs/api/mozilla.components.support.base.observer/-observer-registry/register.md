@@ -27,7 +27,7 @@ becomes DESTROYED.
 `owner` - the lifecycle owner the provided observer is bound to.
 
 `autoPause` - whether or not the observer should automatically be
-paused/resumed with the bound lifecycle.`@Synchronized fun register(observer: `[`T`](index.md#T)`, view: `[`View`](https://developer.android.com/reference/android/view/View.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt#L65)
+paused/resumed with the bound lifecycle.`@Synchronized fun register(observer: `[`T`](index.md#T)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt#L65)
 
 Overrides [Observable.register](../-observable/register.md)
 

@@ -2,7 +2,7 @@
 
 # clearOverride
 
-`fun clearOverride(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, descriptor: `[`ExperimentDescriptor`](../-experiment-descriptor/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/Fretboard.kt#L153)
+`fun clearOverride(context: <ERROR CLASS>, descriptor: `[`ExperimentDescriptor`](../-experiment-descriptor/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/Fretboard.kt#L153)
 
 Clears an override for a specified experiment asynchronously
 

@@ -2,4 +2,4 @@
 
 # pendingIntent
 
-`val pendingIntent: `[`PendingIntent`](https://developer.android.com/reference/android/app/PendingIntent.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L196)
+`val pendingIntent: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L196)

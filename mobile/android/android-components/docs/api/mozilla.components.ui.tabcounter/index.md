@@ -6,4 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [TabCounter](-tab-counter/index.md) | `open class TabCounter : `[`RelativeLayout`](https://developer.android.com/reference/android/widget/RelativeLayout.html) |
+| [TabCounter](-tab-counter/index.md) | `open class TabCounter` |

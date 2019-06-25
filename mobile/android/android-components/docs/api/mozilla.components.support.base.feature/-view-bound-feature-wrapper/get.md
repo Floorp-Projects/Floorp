@@ -4,5 +4,5 @@
 
 `@Synchronized fun get(): `[`T`](index.md#T)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/feature/ViewBoundFeatureWrapper.kt#L106)
 
-Returns the wrapped [LifecycleAwareFeature](../-lifecycle-aware-feature/index.md) or null if the [View](https://developer.android.com/reference/android/view/View.html) was detached and the reference was cleared.
+Returns the wrapped [LifecycleAwareFeature](../-lifecycle-aware-feature/index.md) or null if the [View](#) was detached and the reference was cleared.
 

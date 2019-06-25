@@ -23,6 +23,6 @@ breaking the promise of a unique ID.
 | Name | Summary |
 |---|---|
 | [fromJSON](from-j-s-o-n.md) | `fun fromJSON(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, json: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Snapshot`](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md) |
-| [itemFromJSON](item-from-j-s-o-n.md) | `fun itemFromJSON(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, json: `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html)`): `[`Item`](../../mozilla.components.browser.session/-session-manager/-snapshot/-item/index.md) |
-| [itemToJSON](item-to-j-s-o-n.md) | `fun itemToJSON(item: `[`Item`](../../mozilla.components.browser.session/-session-manager/-snapshot/-item/index.md)`): `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html) |
+| [itemFromJSON](item-from-j-s-o-n.md) | `fun itemFromJSON(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, json: <ERROR CLASS>): `[`Item`](../../mozilla.components.browser.session/-session-manager/-snapshot/-item/index.md) |
+| [itemToJSON](item-to-j-s-o-n.md) | `fun itemToJSON(item: `[`Item`](../../mozilla.components.browser.session/-session-manager/-snapshot/-item/index.md)`): <ERROR CLASS>` |
 | [toJSON](to-j-s-o-n.md) | `fun toJSON(snapshot: `[`Snapshot`](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

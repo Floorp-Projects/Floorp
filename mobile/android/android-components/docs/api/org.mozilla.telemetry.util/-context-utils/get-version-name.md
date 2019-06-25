@@ -2,4 +2,4 @@
 
 # getVersionName
 
-`open static fun getVersionName(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/util/ContextUtils.java#L15)
+`open static fun getVersionName(context: Context): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/util/ContextUtils.java#L15)

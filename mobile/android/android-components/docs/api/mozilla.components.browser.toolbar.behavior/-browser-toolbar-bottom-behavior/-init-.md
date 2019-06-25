@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`BrowserToolbarBottomBehavior(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`?, attrs: `[`AttributeSet`](https://developer.android.com/reference/android/util/AttributeSet.html)`?)`
+`BrowserToolbarBottomBehavior(context: <ERROR CLASS>?, attrs: <ERROR CLASS>?)`
 
 A [CoordinatorLayout.Behavior](#) implementation to be used when placing [BrowserToolbar](../../mozilla.components.browser.toolbar/-browser-toolbar/index.md) at the bottom of the screen.
 

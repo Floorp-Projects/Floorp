@@ -2,12 +2,12 @@
 
 # icon
 
-`val icon: suspend (width: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, height: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`) -> `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L87)
+`val icon: suspend (width: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, height: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`) -> <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L87)
 
-A lambda that can be invoked by the [AwesomeBar](../index.md) implementation to receive an icon [Bitmap](https://developer.android.com/reference/android/graphics/Bitmap.html) for
+A lambda that can be invoked by the [AwesomeBar](../index.md) implementation to receive an icon [Bitmap](#) for
 this [Suggestion](index.md). The [AwesomeBar](../index.md) will pass in its desired width and height for the Bitmap.
 
 ### Property
 
-`icon` - A lambda that can be invoked by the [AwesomeBar](../index.md) implementation to receive an icon [Bitmap](https://developer.android.com/reference/android/graphics/Bitmap.html) for
+`icon` - A lambda that can be invoked by the [AwesomeBar](../index.md) implementation to receive an icon [Bitmap](#) for
 this [Suggestion](index.md). The [AwesomeBar](../index.md) will pass in its desired width and height for the Bitmap.

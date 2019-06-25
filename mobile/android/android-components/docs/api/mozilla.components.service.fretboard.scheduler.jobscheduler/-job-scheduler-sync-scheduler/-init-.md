@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`JobSchedulerSyncScheduler(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`
+`JobSchedulerSyncScheduler(context: <ERROR CLASS>)`
 
 Class used to schedule sync of experiment
 configuration from the server

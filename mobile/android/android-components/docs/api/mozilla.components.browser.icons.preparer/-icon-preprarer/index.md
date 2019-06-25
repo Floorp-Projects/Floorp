@@ -11,7 +11,7 @@ to rewrite the [IconRequest](../../mozilla.components.browser.icons/-icon-reques
 
 | Name | Summary |
 |---|---|
-| [prepare](prepare.md) | `abstract fun prepare(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, request: `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md)`): `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md) |
+| [prepare](prepare.md) | `abstract fun prepare(context: <ERROR CLASS>, request: `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md)`): `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md) |
 
 ### Inheritors
 

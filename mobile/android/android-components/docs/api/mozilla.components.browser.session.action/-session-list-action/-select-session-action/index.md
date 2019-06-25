@@ -2,7 +2,7 @@
 
 # SelectSessionAction
 
-`data class SelectSessionAction : `[`SessionListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L28)
+`data class SelectSessionAction : `[`SessionListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L29)
 
 Marks the [SessionState](../../../mozilla.components.browser.session.state/-session-state/index.md) with the given [sessionId](session-id.md) as selected session.
 

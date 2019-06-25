@@ -2,4 +2,4 @@
 
 # createFromParcel
 
-`fun createFromParcel(parcel: `[`Parcel`](https://developer.android.com/reference/android/os/Parcel.html)`): `[`Choice`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/Choice.kt#L55)
+`fun createFromParcel(parcel: <ERROR CLASS>): `[`Choice`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/Choice.kt#L55)

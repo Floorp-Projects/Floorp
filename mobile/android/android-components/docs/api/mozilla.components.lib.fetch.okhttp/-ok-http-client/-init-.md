@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`OkHttpClient(client: OkHttpClient = OkHttpClient(), context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`? = null)`
+`OkHttpClient(client: OkHttpClient = OkHttpClient(), context: <ERROR CLASS>? = null)`
 
 [Client](../../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp.
 

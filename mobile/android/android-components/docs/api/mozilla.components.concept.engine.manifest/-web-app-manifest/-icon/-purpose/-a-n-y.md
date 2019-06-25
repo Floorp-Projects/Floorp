@@ -2,7 +2,7 @@
 
 # ANY
 
-`ANY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L121)
+`ANY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L123)
 
 The user agent is free to display the icon in any context (this is the default value).
 

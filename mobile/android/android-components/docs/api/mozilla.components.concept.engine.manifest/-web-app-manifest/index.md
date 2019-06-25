@@ -2,7 +2,7 @@
 
 # WebAppManifest
 
-`data class WebAppManifest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L44)
+`data class WebAppManifest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L46)
 
 The web app manifest provides information about an application (such as its name, author, icon, and description).
 
@@ -50,4 +50,4 @@ https://developers.google.com/web/fundamentals/web-app-manifest/
 
 | Name | Summary |
 |---|---|
-| [asTaskDescription](../../mozilla.components.feature.pwa.ext/as-task-description.md) | `fun `[`WebAppManifest`](./index.md)`.asTaskDescription(): `[`TaskDescription`](https://developer.android.com/reference/android/app/ActivityManager/TaskDescription.html)<br>Create a [TaskDescription](https://developer.android.com/reference/android/app/ActivityManager/TaskDescription.html) for the activity manager based on the manifest. |
+| [asTaskDescription](../../mozilla.components.feature.pwa.ext/as-task-description.md) | `fun `[`WebAppManifest`](./index.md)`.asTaskDescription(): <ERROR CLASS>`<br>Create a [TaskDescription](#) for the activity manager based on the manifest. |

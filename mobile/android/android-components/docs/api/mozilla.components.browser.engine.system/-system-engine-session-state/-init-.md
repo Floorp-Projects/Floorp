@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`SystemEngineSessionState(bundle: `[`Bundle`](https://developer.android.com/reference/android/os/Bundle.html)`?)`
+`SystemEngineSessionState(bundle: <ERROR CLASS>?)`

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`LocaleSettingUpdater(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, runtime: `[`GeckoRuntime`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntime.html)`)`
+`LocaleSettingUpdater(context: <ERROR CLASS>, runtime: `[`GeckoRuntime`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntime.html)`)`
 
 Class to set the locales setting for geckoview, updating from the locale of the device.
 

@@ -8,4 +8,4 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `BrowserMenuItemViewHolder(itemView: `[`View`](https://developer.android.com/reference/android/view/View.html)`)` |
+| [&lt;init&gt;](-init-.md) | `BrowserMenuItemViewHolder(itemView: <ERROR CLASS>)` |

@@ -10,7 +10,7 @@ Class to set the locales setting for geckoview, updating from the locale of the 
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `LocaleSettingUpdater(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, runtime: `[`GeckoRuntime`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntime.html)`)`<br>Class to set the locales setting for geckoview, updating from the locale of the device. |
+| [&lt;init&gt;](-init-.md) | `LocaleSettingUpdater(context: <ERROR CLASS>, runtime: `[`GeckoRuntime`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntime.html)`)`<br>Class to set the locales setting for geckoview, updating from the locale of the device. |
 
 ### Properties
 

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`ThumbnailsFeature(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`
+`ThumbnailsFeature(context: <ERROR CLASS>, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`
 
 Feature implementation for automatically taking thumbnails of sites.
 The feature will take a screenshot when the page finishes loading,

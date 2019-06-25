@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`TabViewHolder(itemView: `[`View`](https://developer.android.com/reference/android/view/View.html)`, tabsTray: `[`BrowserTabsTray`](../-browser-tabs-tray/index.md)`)`
+`TabViewHolder(itemView: <ERROR CLASS>, tabsTray: `[`BrowserTabsTray`](../-browser-tabs-tray/index.md)`)`
 
 A RecyclerView ViewHolder implementation for "tab" items.
 

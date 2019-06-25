@@ -24,7 +24,7 @@ An awesome bar has multiple duties:
 | Name | Summary |
 |---|---|
 | [addProviders](add-providers.md) | `abstract fun addProviders(vararg providers: `[`SuggestionProvider`](-suggestion-provider/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Adds the following [SuggestionProvider](-suggestion-provider/index.md) instances to be queried for [Suggestion](-suggestion/index.md)s whenever the text changes. |
-| [asView](as-view.md) | `open fun asView(): `[`View`](https://developer.android.com/reference/android/view/View.html)<br>Casts this awesome bar to an Android View object. |
+| [asView](as-view.md) | `open fun asView(): <ERROR CLASS>`<br>Casts this awesome bar to an Android View object. |
 | [onInputCancelled](on-input-cancelled.md) | `open fun onInputCancelled(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Fired when the user has cancelled their interaction with the awesome bar. |
 | [onInputChanged](on-input-changed.md) | `abstract fun onInputChanged(text: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Fired whenever the user changes their input, after they have started interacting with the awesome bar. |
 | [onInputStarted](on-input-started.md) | `open fun onInputStarted(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Fired when the user starts interacting with the awesome bar by entering text in the toolbar. |

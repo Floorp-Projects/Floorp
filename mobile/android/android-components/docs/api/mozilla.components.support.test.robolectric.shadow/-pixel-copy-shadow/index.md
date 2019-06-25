@@ -2,24 +2,24 @@
 
 # PixelCopyShadow
 
-`@Implements(PixelCopy, 24) class PixelCopyShadow` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/test/src/main/java/mozilla/components/support/test/robolectric/shadow/PixelCopyShadow.kt#L22)
+`@Implements class PixelCopyShadow` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/test/src/main/java/mozilla/components/support/test/robolectric/shadow/PixelCopyShadow.kt#L22)
 
-Shadow for [PixelCopy](https://developer.android.com/reference/android/view/PixelCopy.html) API.
+Shadow for [PixelCopy](#) API.
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `PixelCopyShadow()`<br>Shadow for [PixelCopy](https://developer.android.com/reference/android/view/PixelCopy.html) API. |
+| [&lt;init&gt;](-init-.md) | `PixelCopyShadow()`<br>Shadow for [PixelCopy](#) API. |
 
 ### Companion Object Properties
 
 | Name | Summary |
 |---|---|
-| [copyResult](copy-result.md) | `var copyResult: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [copyResult](copy-result.md) | `var copyResult: <ERROR CLASS>` |
 
 ### Companion Object Functions
 
 | Name | Summary |
 |---|---|
-| [request](request.md) | `fun request(source: `[`Window`](https://developer.android.com/reference/android/view/Window.html)`, srcRect: `[`Rect`](https://developer.android.com/reference/android/graphics/Rect.html)`?, dest: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`, listener: `[`OnPixelCopyFinishedListener`](https://developer.android.com/reference/android/view/PixelCopy/OnPixelCopyFinishedListener.html)`, listenerThread: `[`Handler`](https://developer.android.com/reference/android/os/Handler.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [request](request.md) | `fun request(source: <ERROR CLASS>, srcRect: <ERROR CLASS>?, dest: <ERROR CLASS>, listener: <ERROR CLASS>, listenerThread: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

@@ -2,7 +2,7 @@
 
 # bind
 
-`fun bind(view: `[`View`](https://developer.android.com/reference/android/view/View.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/toolbar/TabCounterToolbarButton.kt#L47)
+`fun bind(view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/toolbar/TabCounterToolbarButton.kt#L47)
 
 Overrides [Action.bind](../../mozilla.components.concept.toolbar/-toolbar/-action/bind.md)
 

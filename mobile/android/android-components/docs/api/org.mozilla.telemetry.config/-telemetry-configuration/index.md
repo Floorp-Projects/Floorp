@@ -10,7 +10,7 @@ The TelemetryConfiguration class collects the information describing the telemet
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `TelemetryConfiguration(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)` |
+| [&lt;init&gt;](-init-.md) | `TelemetryConfiguration(context: Context)` |
 
 ### Functions
 
@@ -21,7 +21,7 @@ The TelemetryConfiguration class collects the information describing the telemet
 | [getBuildId](get-build-id.md) | `open fun getBuildId(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Get the build id of the app (e.g. 20150125030202). This value is used as one dimension when uploading telemetry to the HTTP Edge server. |
 | [getClassLoadTimestampMillis](get-class-load-timestamp-millis.md) | `open fun getClassLoadTimestampMillis(): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
 | [getConnectTimeout](get-connect-timeout.md) | `open fun getConnectTimeout(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Returns setting for connect timeout (milliseconds). A value of 0 implies that the option is disabled (i.e., timeout of infinity). |
-| [getContext](get-context.md) | `open fun getContext(): `[`Context`](https://developer.android.com/reference/android/content/Context.html)<br>Application context this library is running in. |
+| [getContext](get-context.md) | `open fun getContext(): Context`<br>Application context this library is running in. |
 | [getDataDirectory](get-data-directory.md) | `open fun getDataDirectory(): `[`File`](https://developer.android.com/reference/java/io/File.html)<br>Get the root directory where telemetry components should store data. |
 | [getInitialBackoffForUpload](get-initial-backoff-for-upload.md) | `open fun getInitialBackoffForUpload(): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>Get the interval (in milliseconds) to wait initially after a ping upload has failed. |
 | [getMaximumNumberOfEventsPerPing](get-maximum-number-of-events-per-ping.md) | `open fun getMaximumNumberOfEventsPerPing(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Get the maximum number of events per ping. |
@@ -32,7 +32,7 @@ The TelemetryConfiguration class collects the information describing the telemet
 | [getReadTimeout](get-read-timeout.md) | `open fun getReadTimeout(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Returns setting for read timeout. 0 return implies that the option is disabled (i.e., timeout of infinity). |
 | [getServerEndpoint](get-server-endpoint.md) | `open fun getServerEndpoint(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Set the server endpoint to upload telemetry pings to. |
 | [getSettingsProvider](get-settings-provider.md) | `open fun getSettingsProvider(): `[`SettingsProvider`](../../org.mozilla.telemetry.measurement/-settings-measurement/-settings-provider/index.md)<br>Get the provider for reading app settings. |
-| [getSharedPreferences](get-shared-preferences.md) | `open fun getSharedPreferences(): `[`SharedPreferences`](https://developer.android.com/reference/android/content/SharedPreferences.html)<br>Get shared preference for storing telemetry related data. |
+| [getSharedPreferences](get-shared-preferences.md) | `open fun getSharedPreferences(): SharedPreferences`<br>Get shared preference for storing telemetry related data. |
 | [getUpdateChannel](get-update-channel.md) | `open fun getUpdateChannel(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Get the update channel of the app (e.g. beta, release). This value is used as one dimension when uploading telemetry to the HTTP Edge server. |
 | [getUserAgent](get-user-agent.md) | `open fun getUserAgent(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Get the user agent used when communicating with the telemetry endpoint. |
 | [isCollectionEnabled](is-collection-enabled.md) | `open fun isCollectionEnabled(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Is collecting telemetry data enabled? |

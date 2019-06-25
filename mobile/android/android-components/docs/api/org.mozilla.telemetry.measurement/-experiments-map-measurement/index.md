@@ -14,7 +14,7 @@
 
 | Name | Summary |
 |---|---|
-| [flush](flush.md) | `fun flush(): `[`JSONObject`](https://developer.android.com/reference/org/json/JSONObject.html) |
+| [flush](flush.md) | `fun flush(): <ERROR CLASS>` |
 | [setExperiments](set-experiments.md) | `fun setExperiments(experiments: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Inherited Functions

@@ -8,13 +8,13 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SharedPrefAccountStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)` |
+| [&lt;init&gt;](-init-.md) | `SharedPrefAccountStorage(context: <ERROR CLASS>)` |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [context](context.md) | `val context: `[`Context`](https://developer.android.com/reference/android/content/Context.html) |
+| [context](context.md) | `val context: <ERROR CLASS>` |
 
 ### Functions
 

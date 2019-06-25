@@ -6,5 +6,5 @@
 
 Overrides [ReaderViewControlsView.hideControls](../-reader-view-controls-view/hide-controls.md)
 
-Updates visibility to [View.GONE](https://developer.android.com/reference/android/view/View.html#GONE) of the UI controls.
+Updates visibility to [View.GONE](#) of the UI controls.
 

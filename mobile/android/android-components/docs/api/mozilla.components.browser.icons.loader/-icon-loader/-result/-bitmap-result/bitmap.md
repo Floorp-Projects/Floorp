@@ -2,4 +2,4 @@
 
 # bitmap
 
-`val bitmap: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/IconLoader.kt#L25)
+`val bitmap: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/IconLoader.kt#L25)

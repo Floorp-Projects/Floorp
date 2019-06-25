@@ -16,12 +16,12 @@ An [Icon](./index.md) returned by [BrowserIcons](../-browser-icons/index.md) aft
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Icon(bitmap: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`, color: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`? = null, source: `[`Source`](-source/index.md)`)`<br>An [Icon](./index.md) returned by [BrowserIcons](../-browser-icons/index.md) after processing an [IconRequest](../-icon-request/index.md) |
+| [&lt;init&gt;](-init-.md) | `Icon(bitmap: <ERROR CLASS>, color: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`? = null, source: `[`Source`](-source/index.md)`)`<br>An [Icon](./index.md) returned by [BrowserIcons](../-browser-icons/index.md) after processing an [IconRequest](../-icon-request/index.md) |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [bitmap](bitmap.md) | `val bitmap: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)<br>The loaded icon as a [Bitmap](https://developer.android.com/reference/android/graphics/Bitmap.html). |
+| [bitmap](bitmap.md) | `val bitmap: <ERROR CLASS>`<br>The loaded icon as a [Bitmap](#). |
 | [color](color.md) | `val color: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`?`<br>The dominant color of the icon. Will be null if no color could be extracted. |
 | [source](source.md) | `val source: `[`Source`](-source/index.md)<br>The source of the icon. |

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`NestedWebView(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`)`
+`NestedWebView(context: <ERROR CLASS>)`
 
 WebView that supports nested scrolls (for using in a CoordinatorLayout).
 

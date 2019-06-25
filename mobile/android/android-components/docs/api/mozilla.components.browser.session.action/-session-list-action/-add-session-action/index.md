@@ -2,7 +2,7 @@
 
 # AddSessionAction
 
-`data class AddSessionAction : `[`SessionListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L23)
+`data class AddSessionAction : `[`SessionListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/session/action/BrowserAction.kt#L24)
 
 Adds a new [SessionState](../../../mozilla.components.browser.session.state/-session-state/index.md) to the list.
 

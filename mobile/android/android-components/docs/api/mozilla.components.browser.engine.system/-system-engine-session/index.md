@@ -16,14 +16,14 @@ WebView-based EngineSession implementation.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SystemEngineSession(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, defaultSettings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)`? = null)`<br>WebView-based EngineSession implementation. |
+| [&lt;init&gt;](-init-.md) | `SystemEngineSession(context: <ERROR CLASS>, defaultSettings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)`? = null)`<br>WebView-based EngineSession implementation. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
 | [settings](settings.md) | `val settings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)<br>See [EngineSession.settings](../../mozilla.components.concept.engine/-engine-session/settings.md) |
-| [webView](web-view.md) | `var webView: `[`WebView`](https://developer.android.com/reference/android/webkit/WebView.html) |
+| [webView](web-view.md) | `var webView: <ERROR CLASS>` |
 
 ### Functions
 

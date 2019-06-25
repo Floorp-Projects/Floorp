@@ -16,7 +16,7 @@ free up some [Session.thumbnail](../../mozilla.components.browser.session/-sessi
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ThumbnailsFeature(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Feature implementation for automatically taking thumbnails of sites. The feature will take a screenshot when the page finishes loading, and will add it to the [Session.thumbnail](../../mozilla.components.browser.session/-session/thumbnail.md) property. |
+| [&lt;init&gt;](-init-.md) | `ThumbnailsFeature(context: <ERROR CLASS>, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Feature implementation for automatically taking thumbnails of sites. The feature will take a screenshot when the page finishes loading, and will add it to the [Session.thumbnail](../../mozilla.components.browser.session/-session/thumbnail.md) property. |
 
 ### Functions
 

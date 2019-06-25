@@ -4,5 +4,5 @@
 
 `PixelCopyShadow()`
 
-Shadow for [PixelCopy](https://developer.android.com/reference/android/view/PixelCopy.html) API.
+Shadow for [PixelCopy](#) API.
 

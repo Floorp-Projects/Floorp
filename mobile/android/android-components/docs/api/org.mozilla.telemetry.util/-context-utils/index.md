@@ -14,6 +14,6 @@
 
 | Name | Summary |
 |---|---|
-| [getAppName](get-app-name.md) | `open static fun getAppName(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [getVersionCode](get-version-code.md) | `open static fun getVersionCode(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
-| [getVersionName](get-version-name.md) | `open static fun getVersionName(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [getAppName](get-app-name.md) | `open static fun getAppName(context: Context): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [getVersionCode](get-version-code.md) | `open static fun getVersionCode(context: Context): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [getVersionName](get-version-name.md) | `open static fun getVersionName(context: Context): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

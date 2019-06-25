@@ -6,4 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [ExperimentsDebugActivity](-experiments-debug-activity/index.md) | `class ExperimentsDebugActivity : `[`Activity`](https://developer.android.com/reference/android/app/Activity.html) |
+| [ExperimentsDebugActivity](-experiments-debug-activity/index.md) | `class ExperimentsDebugActivity` |
