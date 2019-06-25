@@ -460,7 +460,7 @@ function testCachedResultsWithExpire() {
     // install a new completer, this one should never be queried.
     var newCompleter = installCompleter("test-phish-simple", [[1, []]], []);
 
-    var expireUpdate = "n:1000\n" + "i:test-phish-simple\n" + "ad:1\n";
+    var expireUpdate = "n:1000\ni:test-phish-simple\nad:1\n";
 
     var assertions = {
       urlsDontExist: ["foo.com/a"],

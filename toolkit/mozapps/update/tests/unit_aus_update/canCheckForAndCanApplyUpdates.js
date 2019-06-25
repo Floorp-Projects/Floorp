@@ -33,7 +33,7 @@ function run_test() {
     // installation.
     Assert.ok(
       !gAUS.canApplyUpdates,
-      "should not be able to apply updates " + "when there is an update mutex"
+      "should not be able to apply updates when there is an update mutex"
     );
 
     debugDump("destroying mutex");

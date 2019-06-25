@@ -34,7 +34,7 @@ function countDeletedEntries(expected) {
 function checkTimeDeleted(guid, checkFunction) {
   return new Promise((resolve, reject) => {
     let stmt = dbConnection.createAsyncStatement(
-      "SELECT timeDeleted FROM moz_deleted_formhistory " + "WHERE guid = :guid"
+      "SELECT timeDeleted FROM moz_deleted_formhistory WHERE guid = :guid"
     );
     stmt.params.guid = guid;
     stmt.executeAsync({

@@ -376,17 +376,17 @@ add_task(async function test_windows_zoneInformation() {
   const tests = [
     {
       expectedZoneId:
-        "[ZoneTransfer]\r\nZoneId=3\r\n" + "HostUrl=" + httpSourceUrl + "\r\n",
+        "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=" + httpSourceUrl + "\r\n",
     },
     {
       targetFile: longTargetFile,
       expectedZoneId:
-        "[ZoneTransfer]\r\nZoneId=3\r\n" + "HostUrl=" + httpSourceUrl + "\r\n",
+        "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=" + httpSourceUrl + "\r\n",
     },
     {
       sourceUrl: dataSourceUrl,
       expectedZoneId:
-        "[ZoneTransfer]\r\nZoneId=3\r\n" + "HostUrl=about:internet\r\n",
+        "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=about:internet\r\n",
     },
     {
       options: { referrer: TEST_REFERRER_URL },
@@ -402,7 +402,7 @@ add_task(async function test_windows_zoneInformation() {
     {
       options: { referrer: dataSourceUrl },
       expectedZoneId:
-        "[ZoneTransfer]\r\nZoneId=3\r\n" + "HostUrl=" + httpSourceUrl + "\r\n",
+        "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=" + httpSourceUrl + "\r\n",
     },
     {
       options: { referrer: "http://example.com/a\rb\nc" },

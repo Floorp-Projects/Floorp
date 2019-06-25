@@ -361,7 +361,7 @@ function getMemoryMB() {
     }
   } catch (e) {
     Cu.reportError(
-      "Error getting system info memsize property. " + "Exception: " + e
+      "Error getting system info memsize property. Exception: " + e
     );
   }
   return memoryMB;
@@ -452,9 +452,7 @@ XPCOMUtils.defineLazyGetter(this, "gWinCPUArch", function aus_gWinCPUArch() {
           break;
       }
     } catch (e) {
-      Cu.reportError(
-        "Error getting processor architecture. " + "Exception: " + e
-      );
+      Cu.reportError("Error getting processor architecture. Exception: " + e);
     } finally {
       kernel32.close();
     }

@@ -468,7 +468,7 @@ tests.push(
       Assert.equal(
         value,
         RESULT,
-        "Resolution with a promise eventually yielded " + " the correct result"
+        "Resolution with a promise eventually yielded  the correct result"
       );
     });
   })
@@ -533,7 +533,7 @@ tests.push(
     promise = promise.catch(function onReject(reason) {
       Assert.ok(
         reason == error_2,
-        "Throwing an error altered the reason " + "as expected"
+        "Throwing an error altered the reason as expected"
       );
       return result_3;
     });

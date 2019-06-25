@@ -326,6 +326,7 @@ add_task(async function test_addBookmarkAndKeyword() {
   await PlacesUtils.bookmarks.remove(bookmark.guid);
   // the notification is synchronous but the removal process is async.
   // Unfortunately there's nothing explicit we can wait for.
+  // eslint-disable-next-line no-empty
   while (await foreign_count("http://example.com/")) {}
   // We don't get any itemChanged notification since the bookmark has been
   // removed already.
@@ -406,6 +407,7 @@ add_task(async function test_addBookmarkToURIHavingKeyword() {
   await PlacesUtils.bookmarks.remove(bookmark.guid);
   // the notification is synchronous but the removal process is async.
   // Unfortunately there's nothing explicit we can wait for.
+  // eslint-disable-next-line no-empty
   while (await foreign_count("http://example.com/")) {}
   // We don't get any itemChanged notification since the bookmark has been
   // removed already.
@@ -514,6 +516,7 @@ add_task(async function test_sameKeywordDifferentURL() {
   await PlacesUtils.bookmarks.remove(bookmark1);
   await PlacesUtils.bookmarks.remove(bookmark2);
   Assert.equal(await foreign_count("http://example1.com/"), fc1); // -1 bookmark
+  // eslint-disable-next-line no-empty
   while (await foreign_count("http://example2.com/")) {} // -1 keyword
 
   await check_no_orphans();
@@ -583,6 +586,7 @@ add_task(async function test_sameURIDifferentKeyword() {
 
   // Now remove the bookmark.
   await PlacesUtils.bookmarks.remove(bookmark);
+  // eslint-disable-next-line no-empty
   while (await foreign_count("http://example.com/")) {}
   await check_keyword(false, "http://example.com/", "keyword");
   await check_keyword(false, "http://example.com/", "keyword2");

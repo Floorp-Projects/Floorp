@@ -669,7 +669,7 @@ add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
  * Tests simpleCheckAndInstall nothing to install
  */
 add_task(async function test_simpleCheckAndInstall_nothingToInstall() {
-  let responseXML = '<?xml version="1.0"?>' + "<updates>" + "</updates>";
+  let responseXML = '<?xml version="1.0"?><updates></updates>';
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();
@@ -681,7 +681,7 @@ add_task(async function test_simpleCheckAndInstall_nothingToInstall() {
  * Tests simpleCheckAndInstall too frequent
  */
 add_task(async function test_simpleCheckAndInstall_tooFrequent() {
-  let responseXML = '<?xml version="1.0"?>' + "<updates>" + "</updates>";
+  let responseXML = '<?xml version="1.0"?><updates></updates>';
 
   overrideXHR(200, responseXML);
   let installManager = new GMPInstallManager();

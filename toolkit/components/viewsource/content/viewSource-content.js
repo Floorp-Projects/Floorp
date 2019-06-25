@@ -504,6 +504,7 @@ var ViewSourceContent = {
   findLocation(pre, lineNumber, node, offset, interlinePosition, result) {
     if (node && !pre) {
       // Look upwards to find the current pre element.
+      // eslint-disable-next-line no-empty
       for (pre = node; pre.nodeName != "PRE"; pre = pre.parentNode) {}
     }
 

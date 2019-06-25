@@ -111,6 +111,7 @@ function loadData() {
     var tokens = lines[i].split(/\s+/);
     var j = 0;
     // skip tokens until RENDERTRACE
+    // eslint-disable-next-line no-empty
     while (j < tokens.length && tokens[j++] != "RENDERTRACE") {} // empty loop body
     if (j >= tokens.length - 2) {
       log("Error parsing line: " + lines[i]);

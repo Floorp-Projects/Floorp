@@ -88,7 +88,7 @@ function validateCert(aCertificate, aCerts) {
       if (!(name in aCertificate)) {
         error = true;
         errors.push(
-          "Expected attribute '" + name + "' not present in " + "certificate."
+          "Expected attribute '" + name + "' not present in certificate."
         );
         break;
       }
@@ -116,7 +116,7 @@ function validateCert(aCertificate, aCerts) {
   if (error) {
     errors.forEach(Cu.reportError.bind(Cu));
     const certCheckErr =
-      "Certificate checks failed. See previous errors " + "for details.";
+      "Certificate checks failed. See previous errors for details.";
     Cu.reportError(certCheckErr);
     throw new Ce(certCheckErr, Cr.NS_ERROR_ILLEGAL_VALUE);
   }
@@ -169,6 +169,7 @@ function checkCert(aChannel, aAllowNonBuiltInCerts, aCerts) {
   }
 
   let issuerCert = null;
+  // eslint-disable-next-line no-empty
   for (issuerCert of secInfo.succeededCertChain.getEnumerator()) {
   }
 

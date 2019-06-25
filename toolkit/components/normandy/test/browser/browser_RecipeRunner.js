@@ -643,8 +643,8 @@ decorate_task(
 decorate_task(
   withStub(RecipeRunner, "loadRecipes"),
   async function testRunCanRunOnlyOnce(loadRecipesStub) {
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     loadRecipesStub.returns(
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
       new Promise(resolve => setTimeout(() => resolve([]), 10))
     );
 

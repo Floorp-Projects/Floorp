@@ -228,7 +228,8 @@ async function promiseAddonInstall(amoServer, extensionData) {
     addon.installTelemetryInfo,
     {
       // This is the expected source because before the HTML-based discopane,
-      // "disco" was already used to mark installs from the AMO-hosted discopane.
+      // "disco" was already used to mark installs from the AMO-hosted
+      // discopane.
       source: "disco",
     },
     "The installed add-on should have the expected telemetry info"

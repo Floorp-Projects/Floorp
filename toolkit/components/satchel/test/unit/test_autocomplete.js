@@ -316,7 +316,7 @@ add_test(function test_token_limit_DB() {
           Assert.equal(
             aResults.matchCount,
             0,
-            "All search tokens should be used with " + "previous results"
+            "All search tokens should be used with previous results"
           );
           run_next_test();
         },

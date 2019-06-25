@@ -177,7 +177,7 @@ this.test = class extends ExtensionAPI {
                 errorMatches(error, expectedError, context),
                 `Promise rejected, expecting rejection to match ${toSource(
                   expectedError
-                )}, ` + `got ${errorMessage}${msg}`
+                )}, got ${errorMessage}${msg}`
               );
             }
           );
@@ -199,7 +199,7 @@ this.test = class extends ExtensionAPI {
               errorMatches(error, expectedError, context),
               `Function threw, expecting error to match ${toSource(
                 expectedError
-              )}` + `got ${errorMessage}${msg}`
+              )}got ${errorMessage}${msg}`
             );
           }
         },

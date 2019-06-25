@@ -201,9 +201,9 @@
       // Make sure the FAYT keypress listener is attached by initializing the
       // browser property
       if (this.getAttribute("browserid")) {
-        // eslint-disable-next-line no-self-assign
         setTimeout(
           function(aSelf) {
+            // eslint-disable-next-line no-self-assign
             aSelf.browser = aSelf.browser;
           },
           0,

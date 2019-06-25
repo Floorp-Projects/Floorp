@@ -930,7 +930,7 @@ BookmarkExporter.prototype = {
     this._writeLine("     It will be read and overwritten.");
     this._writeLine("     DO NOT EDIT! -->");
     this._writeLine(
-      '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; ' + 'charset=UTF-8">'
+      '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">'
     );
     this._writeLine("<TITLE>Bookmarks</TITLE>");
   },
