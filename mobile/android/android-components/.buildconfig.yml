@@ -167,7 +167,7 @@ projects:
   browser-state:
     path: components/browser/state
     description: 'Component responsible for maintaining the centralized state of a browser engine.'
-    publish: false
+    publish: true
   browser-storage-memory:
     path: components/browser/storage-memory
     description: 'A memory-backed implementation of core data storage.'
