@@ -23,7 +23,7 @@ Debugger.prototype.onPromiseResolved.
   <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  is(Object.prototype.toString.call(new Promise(function () {})),
+  is(Object.prototype.toString.call(new Promise(function() {})),
      "[object Promise]",
      "We should have the native DOM promise implementation.");
 
@@ -34,16 +34,16 @@ Debugger.prototype.onPromiseResolved.
   var dbg = new dbgGlobal.Debugger(this);
 
   var wrappedPromise;
-  dbg.onPromiseSettled = function (wp) { wrappedPromise = wp; };
+  dbg.onPromiseSettled = function(wp) { wrappedPromise = wp; };
 
   var promise = Promise.resolve();
   promise
-    .then(function () {
+    .then(function() {
       ok(wrappedPromise);
       is(wrappedPromise.unsafeDereference(), promise);
       dbg.onPromiseSettled = undefined;
     })
-    .catch(function (e) {
+    .catch(function(e) {
       ok(false, "Got an unexpected error: " + e);
     })
     .then(SimpleTest.finish);

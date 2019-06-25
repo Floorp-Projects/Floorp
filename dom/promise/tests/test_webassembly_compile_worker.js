@@ -1,5 +1,5 @@
-const sampleURL = 'test_webassembly_compile_sample.wasm';
-const sampleExportName = 'run';
+const sampleURL = "test_webassembly_compile_sample.wasm";
+const sampleExportName = "run";
 const sampleResult = 1275;
 
 function checkSampleModule(m) {
@@ -19,21 +19,21 @@ function checkSampleInstance(i) {
     throw "wrong result";
 }
 
-const initObj = { headers: { 'Content-Type' : 'application/wasm' } };
+const initObj = { headers: { "Content-Type": "application/wasm" } };
 
 onmessage = e => {
   WebAssembly.compile(e.data)
   .then(m => checkSampleModule(m))
   .then(() => WebAssembly.instantiate(e.data))
-  .then(({module,instance}) => { checkSampleModule(module), checkSampleInstance(instance) })
+  .then(({module, instance}) => { checkSampleModule(module), checkSampleInstance(instance); })
   .then(() => WebAssembly.compileStreaming(new Response(e.data, initObj)))
   .then(m => checkSampleModule(m))
   .then(() => WebAssembly.instantiateStreaming(new Response(e.data, initObj)))
-  .then(({module,instance}) => { checkSampleModule(module), checkSampleInstance(instance) })
+  .then(({module, instance}) => { checkSampleModule(module), checkSampleInstance(instance); })
   .then(() => WebAssembly.compileStreaming(fetch(sampleURL)))
   .then(m => checkSampleModule(m))
   .then(() => WebAssembly.instantiateStreaming(fetch(sampleURL)))
-  .then(({module,instance}) => { checkSampleModule(module), checkSampleInstance(instance) })
+  .then(({module, instance}) => { checkSampleModule(module), checkSampleInstance(instance); })
   .then(() => postMessage("ok"))
   .catch(err => postMessage("fail: " + err));
-}
+};

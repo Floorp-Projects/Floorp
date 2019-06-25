@@ -19,7 +19,7 @@
 onmessage = function(evt) {
   ok(true, "finished");
   SimpleTest.finish();
-}
+};
 
 function go() {
   var script = document.createElement("script");
@@ -28,7 +28,7 @@ function go() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, go);
+SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, go);
 </script>
 </pre>
 </body>

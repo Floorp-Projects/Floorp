@@ -11,14 +11,14 @@
 <body>
 <script>
 const wasmTextToBinary = SpecialPowers.unwrap(SpecialPowers.Cu.getJSTestingFunctions().wasmTextToBinary);
-const wasmIsSupported = SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupported
+const wasmIsSupported = SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupported;
 
 // The test_webassembly_compile_sample.wasm is a medium-sized module with 100
 // functions that call each other recursively, returning a computed sum.
 // Any other non-trivial module could be generated and used.
 var sampleCode;
-const sampleURL = 'test_webassembly_compile_sample.wasm';
-const sampleExportName = 'run';
+const sampleURL = "test_webassembly_compile_sample.wasm";
+const sampleExportName = "run";
 const sampleResult = 1275;
 
 function checkSampleModule(m) {
@@ -36,13 +36,13 @@ function checkSampleInstance(i) {
 function fetchSampleModuleCode() {
   fetch(sampleURL)
   .then(response => response.arrayBuffer())
-  .then(buffer => {sampleCode = buffer; runTest()})
+  .then(buffer => { sampleCode = buffer; runTest(); })
   .catch(err => ok(false, String(err)));
 }
 
 function propertiesExist() {
   if (!wasmIsSupported()) {
-    ok(!this["WebAssembly"], "If the device doesn't support, there will be no WebAssembly object");
+    ok(!this.WebAssembly, "If the device doesn't support, there will be no WebAssembly object");
     SimpleTest.finish();
     return;
   }
@@ -54,17 +54,17 @@ function propertiesExist() {
 
 function compileFail() {
   WebAssembly.compile().then(
-    () => { ok(false, "should have failed"); runTest() }
+    () => { ok(false, "should have failed"); runTest(); }
   ).catch(
-    err => { ok(err instanceof TypeError, "empty compile failed"); runTest() }
+    err => { ok(err instanceof TypeError, "empty compile failed"); runTest(); }
   );
 }
 
 function compileSuccess() {
   WebAssembly.compile(sampleCode).then(
-    m => { checkSampleModule(m); runTest() }
+    m => { checkSampleModule(m); runTest(); }
   ).catch(
-    err => { ok(false, String(err)); runTest() }
+    err => { ok(false, String(err)); runTest(); }
   );
 }
 
@@ -77,13 +77,13 @@ function compileManySuccess() {
 
   SpecialPowers.gc();
 
-  Promise.all(arr).then (ms => {
+  Promise.all(arr).then(ms => {
     ok(ms.length === N, "got the right number");
     for (var i = 0; i < N; i++)
       checkSampleModule(ms[i]);
     runTest();
   }).catch(
-    err => { ok(false, String(err)); runTest() }
+    err => { ok(false, String(err)); runTest(); }
   );
 }
 
@@ -108,22 +108,22 @@ function terminateCompileInWorker() {
       ok(e.data === "ok", "worker finished first step");
       w.terminate();
       runTest();
-    }
+    };
 }
 
 function instantiateFail() {
   WebAssembly.instantiate().then(
-    () => { ok(false, "should have failed"); runTest() }
+    () => { ok(false, "should have failed"); runTest(); }
   ).catch(
-    err => { ok(err instanceof TypeError, "empty compile failed"); runTest() }
+    err => { ok(err instanceof TypeError, "empty compile failed"); runTest(); }
   );
 }
 
 function instantiateSuccess() {
   WebAssembly.instantiate(sampleCode).then(
-    r => { checkSampleModule(r.module); checkSampleInstance(r.instance); runTest() }
+    r => { checkSampleModule(r.module); checkSampleInstance(r.instance); runTest(); }
   ).catch(
-    err => { ok(false, String(err)); runTest() }
+    err => { ok(false, String(err)); runTest(); }
   );
 }
 
@@ -131,60 +131,60 @@ function chainSuccess() {
   WebAssembly.compile(sampleCode).then(
     m => WebAssembly.instantiate(m)
   ).then(
-    i => { checkSampleInstance(i); runTest() }
+    i => { checkSampleInstance(i); runTest(); }
   ).catch(
-    err => { ok(false, String(err)); runTest() }
+    err => { ok(false, String(err)); runTest(); }
   );
 }
 
 function compileStreamingNonResponse() {
   WebAssembly.compileStreaming({})
-  .then(() => { ok(false) })
-  .catch(err => { ok(err instanceof TypeError, "rejected {}"); runTest() });
+  .then(() => { ok(false); })
+  .catch(err => { ok(err instanceof TypeError, "rejected {}"); runTest(); });
 }
 
 function compileStreamingNoMime() {
   WebAssembly.compileStreaming(new Response(new ArrayBuffer()))
-  .then(() => { ok(false) })
-  .catch(err => { ok(err instanceof TypeError, "rejected no MIME type"); runTest() });
+  .then(() => { ok(false); })
+  .catch(err => { ok(err instanceof TypeError, "rejected no MIME type"); runTest(); });
 }
 
 function compileStreamingBadMime() {
   var badMimes = [
-    '',
-    'application/js',
-    'application/js;application/wasm',
-    'application/wasm;application/js',
-    'application/wasm;',
-    'application/wasm1'
+    "",
+    "application/js",
+    "application/js;application/wasm",
+    "application/wasm;application/js",
+    "application/wasm;",
+    "application/wasm1",
   ];
   var promises = [];
   for (let mimeType of badMimes) {
-    var init = { headers: { 'Content-Type' : mimeType } };
+    var init = { headers: { "Content-Type": mimeType } };
     promises.push(
       WebAssembly.compileStreaming(new Response(sampleCode, init))
       .then(() => Promise.reject(), err => Promise.resolve())
     );
   }
   Promise.all(promises)
-  .then(() => { ok(true, "all bad MIME types rejected"); runTest() })
+  .then(() => { ok(true, "all bad MIME types rejected"); runTest(); });
 }
 
 function compileStreamingGoodMime() {
   var badMimes = [
-    'application/wasm',
-    '   application/wasm ',
-    'application/wasm   '
+    "application/wasm",
+    "   application/wasm ",
+    "application/wasm   ",
   ];
   var promises = [];
   for (let mimeType of badMimes) {
-    var init = { headers: { 'Content-Type' : mimeType } };
+    var init = { headers: { "Content-Type": mimeType } };
     promises.push(
       WebAssembly.compileStreaming(new Response(sampleCode, init))
     );
   }
   Promise.all(promises)
-  .then(() => { ok(true, "all good MIME types accepted"); runTest() })
+  .then(() => { ok(true, "all good MIME types accepted"); runTest(); });
 }
 
 function compileStreamingDoubleUseFail() {
@@ -193,32 +193,32 @@ function compileStreamingDoubleUseFail() {
       WebAssembly.compileStreaming(response)
       .then(m => {
         checkSampleModule(m);
-        return WebAssembly.compileStreaming(response)
+        return WebAssembly.compileStreaming(response);
       })
       .then(
         () => ok(false, "should have failed on second use"),
-        err => { ok(true, "failed on second use"); runTest() }
+        err => { ok(true, "failed on second use"); runTest(); }
       );
   });
 }
 
 function compileStreamingNullBody() {
-  var init = { headers: { 'Content-Type' : 'application/wasm' } };
+  var init = { headers: { "Content-Type": "application/wasm" } };
   WebAssembly.compileStreaming(new Response(undefined, init))
-  .then(() => { ok(false) })
-  .catch(err => { ok(err instanceof WebAssembly.CompileError, "null body"); runTest() });
+  .then(() => { ok(false); })
+  .catch(err => { ok(err instanceof WebAssembly.CompileError, "null body"); runTest(); });
 }
 
 function compileStreamingFetch() {
   WebAssembly.compileStreaming(fetch(sampleURL))
   .then(m => { checkSampleModule(m); runTest(); })
-  .catch(err => { ok(false, String(err)) });
+  .catch(err => { ok(false, String(err)); });
 }
 
 function instantiateStreamingFetch() {
   WebAssembly.instantiateStreaming(fetch(sampleURL))
-  .then(({module,instance}) => { checkSampleModule(module); checkSampleInstance(instance); runTest(); })
-  .catch(err => { ok(false, String(err)) });
+  .then(({module, instance}) => { checkSampleModule(module); checkSampleInstance(instance); runTest(); })
+  .catch(err => { ok(false, String(err)); });
 }
 
 function compileManyStreamingFetch() {
@@ -230,32 +230,32 @@ function compileManyStreamingFetch() {
 
   SpecialPowers.gc();
 
-  Promise.all(arr).then (ms => {
+  Promise.all(arr).then(ms => {
     ok(ms.length === N, "got the right number");
     for (var i = 0; i < N; i++)
       checkSampleModule(ms[i]);
     runTest();
   }).catch(
-    err => { ok(false, String(err)); runTest() }
+    err => { ok(false, String(err)); runTest(); }
   );
 }
 
 function runWorkerTests() {
-  var w = new Worker('test_webassembly_compile_worker.js');
+  var w = new Worker("test_webassembly_compile_worker.js");
   w.postMessage(sampleCode);
   w.onmessage = e => {
     ok(e.data === "ok", "worker test: " + e.data);
     runTest();
-  }
+  };
 }
 
 function terminateCompileStreamingInWorker() {
-  var w = new Worker('test_webassembly_compile_worker_terminate.js');
+  var w = new Worker("test_webassembly_compile_worker_terminate.js");
   w.onmessage = e => {
     ok(e.data === "ok", "worker streaming terminate test: " + e.data);
     w.terminate();
     runTest();
-  }
+  };
 }
 
 var tests = [ propertiesExist,
@@ -276,7 +276,7 @@ var tests = [ propertiesExist,
               instantiateStreamingFetch,
               compileManyStreamingFetch,
               runWorkerTests,
-              terminateCompileStreamingInWorker
+              terminateCompileStreamingInWorker,
             ];
 
 // This initialization must always run

@@ -84,7 +84,7 @@ function nextTest() {
 
 addLoadEvent(function() {
   frames[0].label = "child";
-  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]},
+  SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]},
                             nextTest);
 });
 

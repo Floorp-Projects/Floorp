@@ -7,7 +7,7 @@
 <script>
 var t = async_test("Promise callbacks should run immediately after the setTimeout handler that enqueues them");
 var origPostMessage = window.postMessage;
-window.postMessage = function(msg) { origPostMessage.call(window, msg, "*"); }
+window.postMessage = function(msg) { origPostMessage.call(window, msg, "*"); };
 window.onmessage = t.step_func_done(function(e) {
   assert_equals(e.data, "t1start, t1end, promise, t2");
 });
