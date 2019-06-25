@@ -122,7 +122,7 @@ nsINode::nsSlots::nsSlots() : mWeakReference(nullptr) {}
 
 nsINode::nsSlots::~nsSlots() {
   if (mChildNodes) {
-    mChildNodes->DropReference();
+    mChildNodes->InvalidateCacheIfAvailable();
   }
 
   if (mWeakReference) {
@@ -137,7 +137,8 @@ void nsINode::nsSlots::Traverse(nsCycleCollectionTraversalCallback& cb) {
 
 void nsINode::nsSlots::Unlink() {
   if (mChildNodes) {
-    mChildNodes->DropReference();
+    mChildNodes->InvalidateCacheIfAvailable();
+    ImplCycleCollectionUnlink(mChildNodes);
   }
 }
 
