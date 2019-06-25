@@ -18,6 +18,45 @@ const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 XPCOMUtils.defineLazyGetter(this, "PREFS_GUID",
                             () => CommonUtils.encodeBase64URL(Services.appinfo.ID));
 
+// In bug 1538015, we decided that it isn't always safe to allow all "incoming"
+// preferences to be applied locally. So we have introduced another preference,
+// which if false (the default) will ignore all incoming preferences which don't
+// already have the "control" preference locally set. If this new
+// preference is set to true, then we continue our old behavior of allowing all
+// preferences to be updated, even those which don't already have a local
+// "control" pref.
+const PREF_SYNC_PREFS_ARBITRARY = "services.sync.prefs.dangerously_allow_arbitrary";
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "ALLOW_ARBITRARY", PREF_SYNC_PREFS_ARBITRARY);
+
+// The SUMO supplied URL we log with more information about how custom prefs can
+// continue to be synced. SUMO have told us that this URL will remain "stable".
+const PREFS_DOC_URL_TEMPLATE = "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/sync-custom-preferences";
+XPCOMUtils.defineLazyGetter(this, "PREFS_DOC_URL",
+  () => Services.urlFormatter.formatURL(PREFS_DOC_URL_TEMPLATE));
+
+
+// Check for a local control pref or PREF_SYNC_PREFS_ARBITRARY
+this.isAllowedPrefName = function(prefName) {
+  if (prefName == PREF_SYNC_PREFS_ARBITRARY) {
+    return false; // never allow this.
+  }
+  if (ALLOW_ARBITRARY) {
+    // user has set the "dangerous" pref, so everything is allowed.
+    return true;
+  }
+  // The pref must already have a control pref set, although it doesn't matter
+  // here whether that value is true or false. We can't use prefHasUserValue
+  // here because we also want to check prefs still with default values.
+  try {
+    Services.prefs.getBoolPref(PREF_SYNC_PREFS_PREFIX + prefName);
+    // pref exists!
+    return true;
+  } catch (_) {
+    return false;
+  }
+};
+
 function PrefRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
@@ -99,15 +138,26 @@ PrefStore.prototype = {
   _getSyncPrefs() {
     let syncPrefs = Services.prefs.getBranch(PREF_SYNC_PREFS_PREFIX)
                                   .getChildList("", {})
-                                  .filter(pref => !isUnsyncableURLPref(pref));
+                                  .filter(pref => isAllowedPrefName(pref) && !isUnsyncableURLPref(pref));
     // Also sync preferences that determine which prefs get synced.
     let controlPrefs = syncPrefs.map(pref => PREF_SYNC_PREFS_PREFIX + pref);
     return controlPrefs.concat(syncPrefs);
   },
 
   _isSynced(pref) {
-    return pref.startsWith(PREF_SYNC_PREFS_PREFIX) ||
-           this._prefs.get(PREF_SYNC_PREFS_PREFIX + pref, false);
+    if (pref.startsWith(PREF_SYNC_PREFS_PREFIX)) {
+      // this is an incoming control pref, which is ignored if there's not already
+      // a local control pref for the preference.
+      let controlledPref = pref.slice(PREF_SYNC_PREFS_PREFIX.length);
+      return isAllowedPrefName(controlledPref);
+    }
+
+    // This is the pref itself - it must be both allowed, and have a control
+    // pref which is true.
+    if (!this._prefs.get(PREF_SYNC_PREFS_PREFIX + pref, false)) {
+      return false;
+    }
+    return isAllowedPrefName(pref);
   },
 
   _getAllPrefs() {
@@ -129,11 +179,43 @@ PrefStore.prototype = {
     // _isSynced returns false when 'foo.pref' doesn't exist (e.g., on a new device).
     let prefs = Object.keys(values).sort(a => -a.indexOf(PREF_SYNC_PREFS_PREFIX));
     for (let pref of prefs) {
+      let value = values[pref];
       if (!this._isSynced(pref)) {
+        // An extra complication just so we can warn when we decline to sync a
+        // preference due to no local control pref.
+        if (!pref.startsWith(PREF_SYNC_PREFS_PREFIX)) {
+          // this is an incoming pref - if the incoming value is not null and
+          // there's no local control pref, then it means we would have previously
+          // applied a value, but now will decline to.
+          // We need to check this here rather than in _isSynced because the
+          // default list of prefs we sync has changed, so we don't want to report
+          // this message when we wouldn't have actually applied a value.
+          // We should probably remove all of this in ~ Firefox 80.
+          if (value !== null) { // null means "use the default value"
+            let controlPref = PREF_SYNC_PREFS_PREFIX + pref;
+            let controlPrefExists;
+            try {
+              Services.prefs.getBoolPref(controlPref);
+              controlPrefExists = true;
+            } catch (ex) {
+              controlPrefExists = false;
+            }
+            if (!controlPrefExists) {
+              // This is a long message and written to both the sync log and the
+              // console, but note that users who have not customized the control
+              // prefs will never see this.
+              let msg = `Not syncing the preference '${pref}' because it has no local ` +
+                `control preference (${PREF_SYNC_PREFS_PREFIX}${pref}) and ` +
+                `the preference ${PREF_SYNC_PREFS_ARBITRARY} isn't true. ` +
+                `See ${PREFS_DOC_URL} for more information`;
+              console.warn(msg);
+              this._log.warn(msg);
+            }
+          }
+        }
         continue;
       }
 
-      let value = values[pref];
       if (typeof value == "string" && UNSYNCABLE_URL_REGEXP.test(value)) {
         this._log.trace(`Skipping incoming unsyncable url for pref: ${pref}`);
         continue;
