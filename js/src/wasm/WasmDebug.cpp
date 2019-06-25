@@ -22,11 +22,12 @@
 
 #include "dbg/Debugger.h"
 #include "ds/Sort.h"
-#include "gc/FreeOp.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/MacroAssembler.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmValidate.h"
+
+#include "gc/FreeOp-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -187,13 +188,24 @@ void DebugState::toggleBreakpointTrap(JSRuntime* rt, uint32_t offset,
   toggleDebugTrap(debugTrapOffset, enabled);
 }
 
+WasmBreakpointSite* DebugState::getBreakpointSite(JSContext* cx,
+                                                  uint32_t offset) const {
+  WasmBreakpointSiteMap::Ptr p = breakpointSites_.lookup(offset);
+  if (!p) {
+    return nullptr;
+  }
+
+  return p->value();
+}
+
 WasmBreakpointSite* DebugState::getOrCreateBreakpointSite(JSContext* cx,
+                                                          Instance* instance,
                                                           uint32_t offset) {
   WasmBreakpointSite* site;
 
   WasmBreakpointSiteMap::AddPtr p = breakpointSites_.lookupForAdd(offset);
   if (!p) {
-    site = cx->new_<WasmBreakpointSite>(this, offset);
+    site = cx->new_<WasmBreakpointSite>(instance, offset);
     if (!site) {
       return nullptr;
     }
@@ -203,6 +215,9 @@ WasmBreakpointSite* DebugState::getOrCreateBreakpointSite(JSContext* cx,
       ReportOutOfMemory(cx);
       return nullptr;
     }
+
+    AddCellMemory(instance->object(), sizeof(WasmBreakpointSite),
+                  MemoryUse::BreakpointSite);
   } else {
     site = p->value();
   }
@@ -213,10 +228,12 @@ bool DebugState::hasBreakpointSite(uint32_t offset) {
   return breakpointSites_.has(offset);
 }
 
-void DebugState::destroyBreakpointSite(FreeOp* fop, uint32_t offset) {
+void DebugState::destroyBreakpointSite(FreeOp* fop, Instance* instance,
+                                       uint32_t offset) {
   WasmBreakpointSiteMap::Ptr p = breakpointSites_.lookup(offset);
   MOZ_ASSERT(p);
-  fop->delete_(p->value());
+  fop->delete_(instance->objectUnbarriered(), p->value(),
+               MemoryUse::BreakpointSite);
   breakpointSites_.remove(p);
 }
 
@@ -239,7 +256,7 @@ void DebugState::clearBreakpointsIn(FreeOp* fop, WasmInstanceObject* instance,
       }
     }
     if (site->isEmpty()) {
-      fop->delete_(site);
+      fop->delete_(instance, site, MemoryUse::BreakpointSite);
       e.removeFront();
     }
   }
