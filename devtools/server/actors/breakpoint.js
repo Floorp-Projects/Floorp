@@ -169,6 +169,7 @@ BreakpointActor.prototype = {
    * @param frame Debugger.Frame
    *        The stack frame that contained the breakpoint.
    */
+  /* eslint-disable complexity */
   hit: function(frame) {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
@@ -214,13 +215,19 @@ BreakpointActor.prototype = {
     if (condition) {
       const { result, message } = this.checkCondition(frame, condition);
 
-      if (result) {
-        if (message) {
-          reason.type = "breakpointConditionThrown";
-          reason.message = message;
-        }
-      } else {
+      // Don't pause if the result is falsey
+      if (!result) {
         return undefined;
+      }
+
+      if (message) {
+        // Don't pause if there is an exception message and POE is false
+        if (!this.threadActor._options.pauseOnExceptions) {
+          return undefined;
+        }
+
+        reason.type = "breakpointConditionThrown";
+        reason.message = message;
       }
     }
 
@@ -259,6 +266,7 @@ BreakpointActor.prototype = {
 
     return this.threadActor._pauseAndRespond(frame, reason);
   },
+  /* eslint-enable complexity */
 
   delete: function() {
     // Remove from the breakpoint store.
