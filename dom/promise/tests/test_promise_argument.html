@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1323324
 
   addLoadEvent(function() {
     frames[0].label = "child";
-    SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]},
+    SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]},
                               runPromiseArgumentTests.bind(undefined,
                                                            SimpleTest.finish));
   });

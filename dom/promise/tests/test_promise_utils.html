@@ -90,7 +90,7 @@ function promiseAllWaitsForAllPromises() {
     }),
     new Promise(function(resolve) {
       setTimeout(resolve.bind(undefined, 4), 20);
-    })
+    }),
   ];
 
   var p = Promise.all(arr);
@@ -121,7 +121,7 @@ function promiseAllRejectFails() {
     }),
     new Promise(function(resolve) {
       setTimeout(resolve.bind(undefined, 4), 20);
-    })
+    }),
   ];
 
   var p = Promise.all(arr);
@@ -136,7 +136,7 @@ function promiseAllRejectFails() {
 }
 
 function promiseAllCastError() {
-  var p = Promise.all([Promise.resolve(2), { then: function() { foo(); } }]);
+  var p = Promise.all([Promise.resolve(2), { then() { foo(); } }]);
   ok(p instanceof Promise, "Should cast to a Promise.");
   p.then(function(v) {
     ok(false, "promiseAllCastError: should've rejected.");
@@ -247,7 +247,7 @@ function promiseRaceReject() {
     Promise.reject(new Error("Fail bad!")),
     new Promise(function(resolve) {
       setTimeout(resolve, 0);
-    })
+    }),
   ]);
 
   p.then(function() {
@@ -268,7 +268,7 @@ function promiseRaceThrow() {
     }),
     new Promise(function(resolve) {
       setTimeout(resolve, 0);
-    })
+    }),
   ]);
 
   p.then(function() {

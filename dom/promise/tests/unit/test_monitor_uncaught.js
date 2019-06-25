@@ -45,7 +45,7 @@ add_task(async function test_observe_uncaught() {
     this.blocker = new Promise(resolve => this.resolve = resolve);
   };
   CallbackResults.prototype = {
-    observe: function(promise) {
+    observe(promise) {
       info(this.name + " observing Promise " + names.get(promise));
       Assert.equal(PromiseDebugging.getState(promise).state, "rejected",
                    this.name + " observed a rejected Promise");
@@ -55,11 +55,10 @@ add_task(async function test_observe_uncaught() {
             names.get(promise) +
             " (" + PromiseDebugging.getPromiseID(promise) +
             ", " + PromiseDebugging.getAllocationStack(promise) + ")");
-
       }
       Assert.ok(this.expected.delete(promise),
                 this.name + " observed a Promise that it expected to observe, " +
-                names.get(promise)  + " (" + PromiseDebugging.getPromiseID(promise) + ")");
+                names.get(promise) + " (" + PromiseDebugging.getPromiseID(promise) + ")");
       Assert.ok(!this.observed.has(promise),
                 this.name + " observed a Promise that it has not observed yet");
       this.observed.add(promise);
@@ -76,10 +75,10 @@ add_task(async function test_observe_uncaught() {
   let onConsumed = new CallbackResults("onConsumed");
 
   let observer = {
-    onLeftUncaught: function(promise, data) {
+    onLeftUncaught(promise, data) {
       onLeftUncaught.observe(promise);
     },
-    onConsumed: function(promise) {
+    onConsumed(promise) {
       onConsumed.observe(promise);
     },
   };
@@ -90,7 +89,7 @@ add_task(async function test_observe_uncaught() {
   let rejectLater = function(delay = 20) {
     return new Promise((resolve, reject) => setTimeout(reject, delay));
   };
-  let makeSamples = function*() {
+  let makeSamples = function* () {
     yield {
       promise: Promise.resolve(0),
       name: "Promise.resolve",
@@ -101,7 +100,7 @@ add_task(async function test_observe_uncaught() {
     };
     yield {
       promise: Promise.resolve(0).catch(null),
-      name: "`catch(null)`"
+      name: "`catch(null)`",
     };
     yield {
       promise: Promise.reject(0).catch(() => {}),
@@ -133,10 +132,10 @@ add_task(async function test_observe_uncaught() {
     yield {
       promise: Promise.all([
         Promise.resolve("Promise.all"),
-        rejectLater()
+        rejectLater(),
       ]),
       leftUncaught: true,
-      name: "Rejecting through Promise.all"
+      name: "Rejecting through Promise.all",
     };
     yield {
       promise: Promise.race([
@@ -149,7 +148,7 @@ add_task(async function test_observe_uncaught() {
     yield {
       promise: Promise.race([
         Promise.resolve(),
-        rejectLater(500)
+        rejectLater(500),
       ]),
       leftUncaught: false, // The resolution wins the race.
       name: "Resolving through Promise.race",
@@ -241,11 +240,11 @@ add_task(async function test_uninstall_observer() {
         PromiseDebugging.removeUncaughtRejectionObserver(this);
       }
     },
-    onLeftUncaught: function() {
+    onLeftUncaught() {
       Assert.ok(this._active, "This observer is active.");
       this.resolve();
     },
-    onConsumed: function() {
+    onConsumed() {
       Assert.ok(false, "We should not consume any Promise.");
     },
   };
@@ -266,7 +265,3 @@ add_task(async function test_uninstall_observer() {
   // Normally, `deactivate` should not be notified of the uncaught rejection.
   wait.active = false;
 });
-
-function run_test() {
-  run_next_test();
-}

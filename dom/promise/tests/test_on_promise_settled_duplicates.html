@@ -22,7 +22,7 @@ Bug 1084065 - Test that Debugger.prototype.onPromiseResolved doesn't get dupes.
   <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  is(Object.prototype.toString.call(new Promise(function () {})),
+  is(Object.prototype.toString.call(new Promise(function() {})),
      "[object Promise]",
      "We should have the native DOM promise implementation.");
 
@@ -33,22 +33,22 @@ Bug 1084065 - Test that Debugger.prototype.onPromiseResolved doesn't get dupes.
   var dbg = new dbgGlobal.Debugger(this);
 
   var seen = new Set();
-  dbg.onPromiseSettled = function (wp) {
+  dbg.onPromiseSettled = function(wp) {
     is(seen.has(wp), false);
     seen.add(wp);
   };
 
-  var promise = new Promise(function (fulfill, reject) {
+  var promise = new Promise(function(fulfill, reject) {
     fulfill(1);
     fulfill(2);
     fulfill(3);
   });
 
   promise
-    .then(function () {
+    .then(function() {
       dbg.onPromiseSettled = undefined;
     })
-    .catch(function (e) {
+    .catch(function(e) {
       ok(false, "Got an unexpected error: " + e);
     })
     .then(SimpleTest.finish);
