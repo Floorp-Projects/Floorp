@@ -91,12 +91,11 @@ async function captureProfile() {
   // more samples while the parent process waits for subprocess profiles.
   Services.profiler.PauseSampling();
 
-  const profile = await Services.profiler.getProfileDataAsArrayBuffer().catch(
-    e => {
-      console.error(e);
-      return {};
-    }
-  );
+  const profile = await Services.profiler.getProfileDataAsGzippedArrayBuffer()
+                                .catch(e => {
+                                  console.error(e);
+                                  return {};
+                                });
 
   receiveProfile(profile, getSymbols);
 
