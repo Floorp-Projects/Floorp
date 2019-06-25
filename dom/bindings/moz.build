@@ -50,7 +50,6 @@ EXPORTS.mozilla.dom += [
     'RootedDictionary.h',
     'SimpleGlobalObject.h',
     'SpiderMonkeyInterface.h',
-    'StructuredClone.h',
     'ToJSValue.h',
     'TypedArray.h',
     'UnionMember.h',
@@ -114,10 +113,6 @@ UNIFIED_SOURCES += [
     'SimpleGlobalObject.cpp',
     'ToJSValue.cpp',
     'WebIDLGlobalNameHash.cpp',
-]
-
-SOURCES += [
-    'StructuredClone.cpp',
 ]
 
 # Some tests, including those for for maplike and setlike, require bindings

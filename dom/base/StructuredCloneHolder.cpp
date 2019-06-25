@@ -8,6 +8,7 @@
 
 #include "ImageContainer.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/StructuredCloneBlob.h"
@@ -27,9 +28,6 @@
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
-#include "mozilla/dom/ImageData.h"
-#include "mozilla/dom/ImageDataBinding.h"
-#include "mozilla/dom/StructuredClone.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/OffscreenCanvas.h"
@@ -43,6 +41,7 @@
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/URLSearchParamsBinding.h"
 #include "mozilla/dom/WebCryptoCommon.h"
+#include "mozilla/dom/WebIDLSerializable.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -349,8 +348,15 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
     JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag) {
   AssertTagValues();
 
-  if (aTag == SCTAG_DOM_IMAGEDATA) {
-    return ReadStructuredCloneImageData(aCx, aReader);
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  if (!global) {
+    return nullptr;
+  }
+
+  WebIDLDeserializer deserializer =
+      LookupDeserializer(StructuredCloneTags(aTag));
+  if (deserializer) {
+    return deserializer(aCx, global, aReader);
   }
 
   if (aTag == SCTAG_DOM_WEBCRYPTO_KEY || aTag == SCTAG_DOM_URLSEARCHPARAMS ||
@@ -358,11 +364,6 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
       aTag == SCTAG_DOM_DOMRECT || aTag == SCTAG_DOM_DOMRECT_READONLY ||
       aTag == SCTAG_DOM_DOMQUAD || aTag == SCTAG_DOM_DOMMATRIX ||
       aTag == SCTAG_DOM_DOMMATRIX_READONLY) {
-    nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
-    if (!global) {
-      return nullptr;
-    }
-
     // Prevent the return value from being trashed by a GC during ~nsRefPtr.
     JS::Rooted<JSObject*> result(aCx);
     {
@@ -500,14 +501,16 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
     JS::Handle<JSObject*> aObj) {
   AssertTagValues();
 
-  JS::Rooted<JSObject*> obj(aCx, aObj);
+  // Window and Location are not serializable, so it's OK to just do a static
+  // unwrap here.
+  JS::Rooted<JSObject*> obj(aCx, js::CheckedUnwrapStatic(aObj));
+  if (!obj) {
+    return xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
+  }
 
-  // See if this is a ImageData object.
-  {
-    ImageData* imageData = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, &obj, imageData))) {
-      return WriteStructuredCloneImageData(aCx, aWriter, imageData);
-    }
+  const DOMJSClass* domClass = GetDOMClass(obj);
+  if (domClass && domClass->mSerializer) {
+    return domClass->mSerializer(aCx, aWriter, obj);
   }
 
   // Handle URLSearchParams cloning
