@@ -18,8 +18,6 @@
 #include "mozilla/dom/DOMMatrixBinding.h"
 #include "mozilla/dom/DOMPoint.h"
 #include "mozilla/dom/DOMPointBinding.h"
-#include "mozilla/dom/DOMQuad.h"
-#include "mozilla/dom/DOMQuadBinding.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/DOMRectBinding.h"
 #include "mozilla/dom/File.h"
@@ -362,8 +360,7 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
   if (aTag == SCTAG_DOM_WEBCRYPTO_KEY || aTag == SCTAG_DOM_URLSEARCHPARAMS ||
       aTag == SCTAG_DOM_DOMPOINT || aTag == SCTAG_DOM_DOMPOINT_READONLY ||
       aTag == SCTAG_DOM_DOMRECT || aTag == SCTAG_DOM_DOMRECT_READONLY ||
-      aTag == SCTAG_DOM_DOMQUAD || aTag == SCTAG_DOM_DOMMATRIX ||
-      aTag == SCTAG_DOM_DOMMATRIX_READONLY) {
+      aTag == SCTAG_DOM_DOMMATRIX || aTag == SCTAG_DOM_DOMMATRIX_READONLY) {
     // Prevent the return value from being trashed by a GC during ~nsRefPtr.
     JS::Rooted<JSObject*> result(aCx);
     {
@@ -408,13 +405,6 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
           result = nullptr;
         } else {
           result = domRect->WrapObject(aCx, nullptr);
-        }
-      } else if (aTag == SCTAG_DOM_DOMQUAD) {
-        RefPtr<DOMQuad> domQuad = new DOMQuad(global);
-        if (!domQuad->ReadStructuredClone(aReader)) {
-          result = nullptr;
-        } else {
-          result = domQuad->WrapObject(aCx, nullptr);
         }
       } else if (aTag == SCTAG_DOM_DOMMATRIX) {
         RefPtr<DOMMatrix> domMatrix =
@@ -580,15 +570,6 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
     if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMRectReadOnly, &obj, domRect))) {
       return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMRECT_READONLY, 0) &&
              domRect->WriteStructuredClone(aWriter);
-    }
-  }
-
-  // Handle DOMQuad cloning
-  {
-    DOMQuad* domQuad = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMQuad, &obj, domQuad))) {
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMQUAD, 0) &&
-             domQuad->WriteStructuredClone(aWriter);
     }
   }
 
