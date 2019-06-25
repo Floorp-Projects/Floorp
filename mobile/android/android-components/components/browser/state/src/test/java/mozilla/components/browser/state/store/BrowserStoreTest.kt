@@ -27,6 +27,6 @@ class BrowserStoreTest {
             .join()
 
         assertEquals(1, store.state.tabs.size)
-        assertNull(store.state.selectedTabId)
+        assertEquals(tab.id, store.state.selectedTabId)
     }
 }

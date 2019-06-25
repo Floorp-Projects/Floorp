@@ -15,9 +15,16 @@ internal object TabListReducer {
      */
     fun reduce(state: BrowserState, action: TabListAction): BrowserState {
         return when (action) {
-            is TabListAction.AddTabAction -> state.copy(
-                tabs = state.tabs + action.tab,
-                selectedTabId = if (action.select) action.tab.id else state.selectedTabId)
+            is TabListAction.AddTabAction -> {
+                state.copy(
+                    tabs = state.tabs + action.tab,
+                    selectedTabId = if (action.select || state.selectedTabId == null) {
+                        action.tab.id
+                    } else {
+                        state.selectedTabId
+                    }
+                )
+            }
 
             is TabListAction.SelectTabAction -> state.copy(selectedTabId = action.tabId)
 

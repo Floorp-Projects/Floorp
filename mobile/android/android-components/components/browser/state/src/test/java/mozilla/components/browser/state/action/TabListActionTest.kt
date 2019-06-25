@@ -15,7 +15,7 @@ import org.junit.Test
 
 class TabListActionTest {
     @Test
-    fun `AddSessionAction - Adds provided SessionState`() = runBlocking {
+    fun `AddTabAction - Adds provided SessionState`() = runBlocking {
         val state = BrowserState()
         val store = BrowserStore(state)
 
@@ -28,7 +28,7 @@ class TabListActionTest {
             .join()
 
         assertEquals(1, store.state.tabs.size)
-        assertNull(store.state.selectedTabId)
+        assertEquals(tab.id, store.state.selectedTabId)
     }
 
     @Test
@@ -54,7 +54,24 @@ class TabListActionTest {
     }
 
     @Test
-    fun `SelectSessionAction - Selects SessionState by id`() = runBlocking {
+    fun `AddTabAction - Select first tab automatically`() {
+        val existingTab = createTab("https://www.mozilla.org")
+
+        val state = BrowserState()
+        val store = BrowserStore(state)
+
+        assertEquals(0, store.state.tabs.size)
+        assertNull(existingTab.id, store.state.selectedTabId)
+
+        val newTab = createTab("https://firefox.com")
+        store.dispatch(TabListAction.AddTabAction(newTab, select = false)).joinBlocking()
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals(newTab.id, store.state.selectedTabId)
+    }
+
+    @Test
+    fun `SelectTabAction - Selects SessionState by id`() = runBlocking {
         val state = BrowserState(
             tabs = listOf(
                 createTab(id = "a", url = "https://www.mozilla.org"),
@@ -72,7 +89,7 @@ class TabListActionTest {
     }
 
     @Test
-    fun `RemoveSessionAction - Removes SessionState`() = runBlocking {
+    fun `RemoveTabAction - Removes SessionState`() = runBlocking {
         val state = BrowserState(
             tabs = listOf(
                 createTab(id = "a", url = "https://www.mozilla.org"),
@@ -89,7 +106,7 @@ class TabListActionTest {
     }
 
     @Test
-    fun `RemoveSessionAction - Noop for unknown id`() = runBlocking {
+    fun `RemoveTabAction - Noop for unknown id`() = runBlocking {
         val state = BrowserState(
             tabs = listOf(
                 createTab(id = "a", url = "https://www.mozilla.org"),
