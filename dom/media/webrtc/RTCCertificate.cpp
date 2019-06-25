@@ -11,6 +11,7 @@
 #include "jsapi.h"
 #include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/RTCCertificateBinding.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WebCryptoTask.h"
 #include "mozilla/Move.h"
@@ -311,7 +312,7 @@ bool RTCCertificate::WritePrivateKey(JSStructuredCloneWriter* aWriter) const {
   if (!jwk.ToJSON(json)) {
     return false;
   }
-  return WriteString(aWriter, json);
+  return StructuredCloneHolder::WriteString(aWriter, json);
 }
 
 bool RTCCertificate::WriteCertificate(JSStructuredCloneWriter* aWriter) const {
@@ -339,7 +340,7 @@ bool RTCCertificate::WriteStructuredClone(
 
 bool RTCCertificate::ReadPrivateKey(JSStructuredCloneReader* aReader) {
   nsString json;
-  if (!ReadString(aReader, json)) {
+  if (!StructuredCloneHolder::ReadString(aReader, json)) {
     return false;
   }
   JsonWebKey jwk;

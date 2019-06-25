@@ -511,6 +511,30 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
   return false;
 }
 
+/* static */
+bool StructuredCloneHolder::ReadString(JSStructuredCloneReader* aReader,
+                                       nsString& aString) {
+  uint32_t length, zero;
+  if (!JS_ReadUint32Pair(aReader, &length, &zero)) {
+    return false;
+  }
+
+  if (NS_WARN_IF(!aString.SetLength(length, fallible))) {
+    return false;
+  }
+  size_t charSize = sizeof(nsString::char_type);
+  return JS_ReadBytes(aReader, (void*)aString.BeginWriting(),
+                      length * charSize);
+}
+
+/* static */
+bool StructuredCloneHolder::WriteString(JSStructuredCloneWriter* aWriter,
+                                        const nsString& aString) {
+  size_t charSize = sizeof(nsString::char_type);
+  return JS_WriteUint32Pair(aWriter, aString.Length(), 0) &&
+         JS_WriteBytes(aWriter, aString.get(), aString.Length() * charSize);
+}
+
 namespace {
 
 JSObject* ReadBlob(JSContext* aCx, uint32_t aIndex,
@@ -727,7 +751,7 @@ JSObject* ReadFormData(JSContext* aCx, JSStructuredCloneReader* aReader,
     Optional<nsAString> thirdArg;
     for (uint32_t i = 0; i < aCount; ++i) {
       nsAutoString name;
-      if (!ReadString(aReader, name)) {
+      if (!StructuredCloneHolder::ReadString(aReader, name)) {
         return nullptr;
       }
 
@@ -831,7 +855,7 @@ bool WriteFormData(JSStructuredCloneWriter* aWriter, FormData* aFormData,
                       const OwningBlobOrDirectoryOrUSVString& aValue,
                       void* aClosure) {
       Closure* closure = static_cast<Closure*>(aClosure);
-      if (!WriteString(closure->mWriter, aName)) {
+      if (!StructuredCloneHolder::WriteString(closure->mWriter, aName)) {
         return false;
       }
 
