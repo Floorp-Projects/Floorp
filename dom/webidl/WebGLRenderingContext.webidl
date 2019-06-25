@@ -38,9 +38,9 @@ enum WebGLPowerPreference { "default", "low-power", "high-performance" };
 
 dictionary WebGLContextAttributes {
     // We deviate from the spec for alpha and antialias:
-    // * alpha: Historically, we might use rgb565 instead of rgb(x)8, for 
+    // * alpha: Historically, we might use rgb565 instead of rgb(x)8, for
     //          memory bandwidth optimization.
-    // * antialias: On Android, DPI is high and mem-bandwidth is low, so we 
+    // * antialias: On Android, DPI is high and mem-bandwidth is low, so we
     //              default to antialias:false if it's not set.
     GLboolean alpha; // = true; // Default is controlled by webgl.default-no-alpha.
     GLboolean depth = true;
@@ -1126,4 +1126,9 @@ interface EXT_float_blend {
 
 [NoInterfaceObject]
 interface OES_fbo_render_mipmap {
+};
+
+[NoInterfaceObject]
+interface WEBGL_explicit_present {
+    void present();
 };

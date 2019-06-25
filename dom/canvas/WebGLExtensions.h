@@ -176,6 +176,17 @@ class WebGLExtensionElementIndexUint : public WebGLExtensionBase {
   DECL_WEBGL_EXTENSION_GOOP
 };
 
+class WebGLExtensionExplicitPresent : public WebGLExtensionBase {
+ public:
+  explicit WebGLExtensionExplicitPresent(WebGLContext*);
+
+  static bool IsSupported(const WebGLContext*);
+
+  void Present() const;
+
+  DECL_WEBGL_EXTENSION_GOOP
+};
+
 class WebGLExtensionEXTColorBufferFloat : public WebGLExtensionBase {
  public:
   explicit WebGLExtensionEXTColorBufferFloat(WebGLContext*);
