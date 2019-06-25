@@ -476,7 +476,7 @@ class GitRepository(Repository):
         if not self.has_git_cinnabar:
             raise MissingVCSExtension('cinnabar')
 
-        self._run('commit', '--allow-empty', '-m', message)
+        self._run('-c', 'commit.gpgSign=false', 'commit', '--allow-empty', '-m', message)
         try:
             subprocess.check_call((self._tool,
                                    '-c',
