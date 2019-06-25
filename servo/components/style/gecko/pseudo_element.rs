@@ -186,7 +186,6 @@ impl PseudoElement {
             PseudoElement::FirstLetter => Some(PropertyFlags::APPLIES_TO_FIRST_LETTER),
             PseudoElement::FirstLine => Some(PropertyFlags::APPLIES_TO_FIRST_LINE),
             PseudoElement::Placeholder => Some(PropertyFlags::APPLIES_TO_PLACEHOLDER),
-            PseudoElement::Cue => Some(PropertyFlags::APPLIES_TO_CUE),
             _ => None,
         }
     }
