@@ -18,6 +18,7 @@
 #include <algorithm>
 
 struct nsRect;
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
@@ -68,11 +69,18 @@ class DOMRectReadOnly : public nsISupports, public nsWrapperCache {
     return std::max(y, y + h);
   }
 
-  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
+  bool WriteStructuredClone(JSContext* aCx,
+                            JSStructuredCloneWriter* aWriter) const;
 
-  bool ReadStructuredClone(JSStructuredCloneReader* aReader);
+  static already_AddRefed<DOMRectReadOnly> ReadStructuredClone(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
 
  protected:
+  // Shared implementation of ReadStructuredClone for DOMRect and
+  // DOMRectReadOnly.
+  bool ReadStructuredClone(JSStructuredCloneReader* aReader);
+
   nsCOMPtr<nsISupports> mParent;
   double mX, mY, mWidth, mHeight;
 };
@@ -92,6 +100,11 @@ class DOMRect final : public DOMRectReadOnly {
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<DOMRect> ReadStructuredClone(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
+  using DOMRectReadOnly::ReadStructuredClone;
 
   void SetRect(float aX, float aY, float aWidth, float aHeight) {
     mX = aX;
