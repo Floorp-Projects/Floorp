@@ -16,6 +16,8 @@
 
 const {GCTelemetry} = ChromeUtils.import("resource://gre/modules/GCTelemetry.jsm");
 
+const MAX_PHASES = 73;
+
 function check(entries) {
   const FIELDS = ["random", "worst"];
 
@@ -52,7 +54,8 @@ function check(entries) {
 
       ok("totals" in gc, "totals field present");
       is(typeof(gc.totals), "object", "totals is an object");
-      ok(Object.keys(gc.totals).length <= 65, "totals array is not too long");
+      ok(Object.keys(gc.totals).length <= MAX_PHASES,
+          "totals array is not too long");
 
       // Make sure we don't skip any big objects.
       for (let key in gc) {

@@ -2880,8 +2880,10 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
 
     // If we are in a remote browser, then apply scaling from ancestor browsers
     if (BrowserChild* browserChild = BrowserChild::GetFrom(presShell)) {
-      resolutionX *= browserChild->GetEffectsInfo().mScaleX;
-      resolutionY *= browserChild->GetEffectsInfo().mScaleY;
+      if (!browserChild->IsTopLevel()) {
+        resolutionX *= browserChild->GetEffectsInfo().mScaleX;
+        resolutionY *= browserChild->GetEffectsInfo().mScaleY;
+      }
     }
 
     ContainerLayerParameters containerParameters(resolutionX, resolutionY);

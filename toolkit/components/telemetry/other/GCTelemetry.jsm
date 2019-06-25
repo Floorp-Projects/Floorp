@@ -105,14 +105,17 @@ class GCData {
   }
 }
 
-// If you adjust any of the constants here (slice limit, number of keys, etc.)
-// make sure to update the JSON schema at:
-// https://github.com/mozilla-services/mozilla-pipeline-schemas/blob/master/telemetry/main.schema.json
+// NOTE: If you adjust any of the constants here (slice limit, number of
+// keys, etc.) make sure to update the JSON schema at:
+// https://github.com/mozilla-services/mozilla-pipeline-schemas/blob/dev/templates/include/telemetry/gcItem.1.schema.json
 // You should also adjust browser_TelemetryGC.js.
 const MAX_GC_KEYS = 24;
 const MAX_SLICES = 4;
 const MAX_SLICE_KEYS = 12;
-const MAX_PHASES = 65;
+// Phases are 0-based, so we need one more than the maximum reported in
+// StatsPhasesGenerated.inc. Phase 0 is probably never used by telemetry,
+// but lets allow it anyway.
+const MAX_PHASES = 73;
 const LOGGER_NAME = "Toolkit.Telemetry";
 
 function limitProperties(name, obj, count, log) {
