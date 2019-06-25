@@ -47,6 +47,7 @@ class ShareUIView(
             account_devices_recyclerview.adapter = AccountDevicesShareAdapter(view.context, actionEmitter)
         } else {
             send_tab_group.visibility = View.GONE
+            account_header.visibility = View.GONE
         }
 
         close_button.setOnClickListener { actionEmitter.onNext(ShareAction.Close) }
