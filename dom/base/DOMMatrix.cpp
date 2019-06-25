@@ -72,14 +72,15 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::Constructor(
 }
 
 already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::ReadStructuredClone(
-    nsISupports* aParent, JSStructuredCloneReader* aReader) {
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
   uint8_t is2D;
 
   if (!JS_ReadBytes(aReader, &is2D, 1)) {
     return nullptr;
   }
 
-  RefPtr<DOMMatrixReadOnly> rval = new DOMMatrixReadOnly(aParent, is2D);
+  RefPtr<DOMMatrixReadOnly> rval = new DOMMatrixReadOnly(aGlobal, is2D);
 
   if (!ReadStructuredCloneElements(aReader, rval)) {
     return nullptr;
@@ -381,7 +382,7 @@ void DOMMatrixReadOnly::Stringify(nsAString& aResult) {
 
 // https://drafts.fxtf.org/geometry/#structured-serialization
 bool DOMMatrixReadOnly::WriteStructuredClone(
-    JSStructuredCloneWriter* aWriter) const {
+    JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
 #define WriteDouble(d)                                                       \
   JS_WriteUint32Pair(aWriter, (BitwiseCast<uint64_t>(d) >> 32) & 0xffffffff, \
                      BitwiseCast<uint64_t>(d) & 0xffffffff)
@@ -550,14 +551,15 @@ already_AddRefed<DOMMatrix> DOMMatrix::Constructor(
 }
 
 already_AddRefed<DOMMatrix> DOMMatrix::ReadStructuredClone(
-    nsISupports* aParent, JSStructuredCloneReader* aReader) {
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
   uint8_t is2D;
 
   if (!JS_ReadBytes(aReader, &is2D, 1)) {
     return nullptr;
   }
 
-  RefPtr<DOMMatrix> rval = new DOMMatrix(aParent, is2D);
+  RefPtr<DOMMatrix> rval = new DOMMatrix(aGlobal, is2D);
 
   if (!ReadStructuredCloneElements(aReader, rval)) {
     return nullptr;

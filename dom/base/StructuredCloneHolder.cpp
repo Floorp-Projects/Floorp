@@ -14,8 +14,6 @@
 #include "mozilla/dom/StructuredCloneBlob.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryBinding.h"
-#include "mozilla/dom/DOMMatrix.h"
-#include "mozilla/dom/DOMMatrixBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
@@ -136,7 +134,7 @@ void AssertTagValues() {
                     SCTAG_DOM_EXPANDED_PRINCIPAL == 0xffff8012 &&
                     SCTAG_DOM_DOMMATRIX == 0xffff8013 &&
                     SCTAG_DOM_URLSEARCHPARAMS == 0xffff8014 &&
-                    SCTAG_DOM_DOMMATRIX_READONLY == 0xffff8015 &&
+                    SCTAG_DOM_DOMMATRIXREADONLY == 0xffff8015 &&
                     SCTAG_DOM_STRUCTURED_CLONE_TESTER == 0xffff8018,
                 "Something has changed the sctag values. This is wrong!");
 }
@@ -353,8 +351,7 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
     return deserializer(aCx, global, aReader);
   }
 
-  if (aTag == SCTAG_DOM_WEBCRYPTO_KEY || aTag == SCTAG_DOM_URLSEARCHPARAMS ||
-      aTag == SCTAG_DOM_DOMMATRIX || aTag == SCTAG_DOM_DOMMATRIX_READONLY) {
+  if (aTag == SCTAG_DOM_WEBCRYPTO_KEY || aTag == SCTAG_DOM_URLSEARCHPARAMS) {
     // Prevent the return value from being trashed by a GC during ~nsRefPtr.
     JS::Rooted<JSObject*> result(aCx);
     {
@@ -371,22 +368,6 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
           result = nullptr;
         } else {
           result = usp->WrapObject(aCx, nullptr);
-        }
-      } else if (aTag == SCTAG_DOM_DOMMATRIX) {
-        RefPtr<DOMMatrix> domMatrix =
-            DOMMatrix::ReadStructuredClone(global, aReader);
-        if (!domMatrix) {
-          result = nullptr;
-        } else {
-          result = domMatrix->WrapObject(aCx, nullptr);
-        }
-      } else if (aTag == SCTAG_DOM_DOMMATRIX_READONLY) {
-        RefPtr<DOMMatrixReadOnly> domMatrix =
-            DOMMatrixReadOnly::ReadStructuredClone(global, aReader);
-        if (!domMatrix) {
-          result = nullptr;
-        } else {
-          result = domMatrix->WrapObject(aCx, nullptr);
         }
       }
     }
@@ -498,26 +479,6 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
     }
   }
 #endif
-
-  // Handle DOMMatrix cloning
-  // Should be done before DOMMatrixeReadOnly check
-  // because every DOMMatrix is also a DOMMatrixReadOnly
-  {
-    DOMMatrix* domMatrix = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMMatrix, &obj, domMatrix))) {
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMMATRIX, 0) &&
-             domMatrix->WriteStructuredClone(aWriter);
-    }
-  }
-
-  // Handle DOMMatrixReadOnly cloning
-  {
-    DOMMatrixReadOnly* domMatrix = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMMatrixReadOnly, &obj, domMatrix))) {
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMMATRIX_READONLY, 0) &&
-             domMatrix->WriteStructuredClone(aWriter);
-    }
-  }
 
   // StructuredCloneTester - testing only
   {

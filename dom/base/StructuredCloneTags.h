@@ -92,7 +92,7 @@ enum StructuredCloneTags {
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  SCTAG_DOM_DOMMATRIX_READONLY,
+  SCTAG_DOM_DOMMATRIXREADONLY,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
