@@ -117,7 +117,7 @@ void DOMQuad::ToJSON(DOMQuadJSON& aInit) {
 bool DOMQuad::WriteStructuredClone(JSContext* aCx,
                                    JSStructuredCloneWriter* aWriter) const {
   for (const auto& point : mPoints) {
-    if (!point->WriteStructuredClone(aWriter)) {
+    if (!point->WriteStructuredClone(aCx, aWriter)) {
       return false;
     }
   }
@@ -130,8 +130,8 @@ already_AddRefed<DOMQuad> DOMQuad::ReadStructuredClone(
     JSStructuredCloneReader* aReader) {
   RefPtr<DOMQuad> quad = new DOMQuad(aGlobal);
   for (auto& point : quad->mPoints) {
-    point = new DOMPoint(aGlobal);
-    if (!point->ReadStructuredClone(aReader)) {
+    point = DOMPoint::ReadStructuredClone(aCx, aGlobal, aReader);
+    if (!point) {
       return nullptr;
     }
   }
