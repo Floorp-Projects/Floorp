@@ -1138,7 +1138,8 @@ bool CryptoKey::PublicKeyValid(SECKEYPublicKey* aPubKey) {
   return (rv == SECSuccess);
 }
 
-bool CryptoKey::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const {
+bool CryptoKey::WriteStructuredClone(JSContext* aCX,
+                                     JSStructuredCloneWriter* aWriter) const {
   // Write in five pieces
   // 1. Attributes
   // 2. Symmetric key as raw (if present)
@@ -1164,42 +1165,47 @@ bool CryptoKey::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const {
          WriteBuffer(aWriter, pub) && mAlgorithm.WriteStructuredClone(aWriter);
 }
 
-bool CryptoKey::ReadStructuredClone(JSStructuredCloneReader* aReader) {
+// static
+already_AddRefed<CryptoKey> CryptoKey::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
   // Ensure that NSS is initialized.
   if (!EnsureNSSInitializedChromeOrContent()) {
-    return false;
+    return nullptr;
   }
+
+  RefPtr<CryptoKey> key = new CryptoKey(aGlobal);
 
   uint32_t version;
   CryptoBuffer sym, priv, pub;
 
-  bool read = JS_ReadUint32Pair(aReader, &mAttributes, &version) &&
+  bool read = JS_ReadUint32Pair(aReader, &key->mAttributes, &version) &&
               (version == CRYPTOKEY_SC_VERSION) && ReadBuffer(aReader, sym) &&
               ReadBuffer(aReader, priv) && ReadBuffer(aReader, pub) &&
-              mAlgorithm.ReadStructuredClone(aReader);
+              key->mAlgorithm.ReadStructuredClone(aReader);
   if (!read) {
-    return false;
+    return nullptr;
   }
 
-  if (sym.Length() > 0 && !mSymKey.Assign(sym)) {
-    return false;
+  if (sym.Length() > 0 && !key->mSymKey.Assign(sym)) {
+    return nullptr;
   }
   if (priv.Length() > 0) {
-    mPrivateKey = CryptoKey::PrivateKeyFromPkcs8(priv);
+    key->mPrivateKey = CryptoKey::PrivateKeyFromPkcs8(priv);
   }
   if (pub.Length() > 0) {
-    mPublicKey = CryptoKey::PublicKeyFromSpki(pub);
+    key->mPublicKey = CryptoKey::PublicKeyFromSpki(pub);
   }
 
   // Ensure that what we've read is consistent
   // If the attributes indicate a key type, should have a key of that type
-  if (!((GetKeyType() == SECRET && mSymKey.Length() > 0) ||
-        (GetKeyType() == PRIVATE && mPrivateKey) ||
-        (GetKeyType() == PUBLIC && mPublicKey))) {
-    return false;
+  if (!((key->GetKeyType() == SECRET && key->mSymKey.Length() > 0) ||
+        (key->GetKeyType() == PRIVATE && key->mPrivateKey) ||
+        (key->GetKeyType() == PUBLIC && key->mPublicKey))) {
+    return nullptr;
   }
 
-  return true;
+  return key.forget();
 }
 
 }  // namespace dom
