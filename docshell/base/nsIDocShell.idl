@@ -377,8 +377,6 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   attribute nsILayoutHistoryState layoutHistoryState;
 
-  readonly attribute boolean shouldSaveLayoutState;
-
   /**
    * The SecureBrowserUI object for this docshell.  This is set by XUL
    * <browser> or nsWebBrowser for their root docshell.
