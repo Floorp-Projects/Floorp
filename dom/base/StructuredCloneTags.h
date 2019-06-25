@@ -51,7 +51,7 @@ enum StructuredCloneTags {
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
   // This tag is for WebCrypto keys
-  SCTAG_DOM_WEBCRYPTO_KEY,
+  SCTAG_DOM_CRYPTOKEY,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.

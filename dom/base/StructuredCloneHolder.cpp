@@ -10,7 +10,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
-#include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/StructuredCloneBlob.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryBinding.h"
@@ -28,11 +27,9 @@
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/StructuredCloneTester.h"
 #include "mozilla/dom/StructuredCloneTesterBinding.h"
-#include "mozilla/dom/SubtleCryptoBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/URLSearchParamsBinding.h"
-#include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WebIDLSerializable.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -123,7 +120,7 @@ void AssertTagValues() {
   static_assert(SCTAG_DOM_IMAGEDATA == 0xffff8007 &&
                     SCTAG_DOM_DOMPOINT == 0xffff8008 &&
                     SCTAG_DOM_DOMPOINTREADONLY == 0xffff8009 &&
-                    SCTAG_DOM_WEBCRYPTO_KEY == 0xffff800a &&
+                    SCTAG_DOM_CRYPTOKEY == 0xffff800a &&
                     SCTAG_DOM_NULL_PRINCIPAL == 0xffff800b &&
                     SCTAG_DOM_SYSTEM_PRINCIPAL == 0xffff800c &&
                     SCTAG_DOM_CONTENT_PRINCIPAL == 0xffff800d &&
@@ -351,18 +348,11 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
     return deserializer(aCx, global, aReader);
   }
 
-  if (aTag == SCTAG_DOM_WEBCRYPTO_KEY || aTag == SCTAG_DOM_URLSEARCHPARAMS) {
+  if (aTag == SCTAG_DOM_URLSEARCHPARAMS) {
     // Prevent the return value from being trashed by a GC during ~nsRefPtr.
     JS::Rooted<JSObject*> result(aCx);
     {
-      if (aTag == SCTAG_DOM_WEBCRYPTO_KEY) {
-        RefPtr<CryptoKey> key = new CryptoKey(global);
-        if (!key->ReadStructuredClone(aReader)) {
-          result = nullptr;
-        } else {
-          result = key->WrapObject(aCx, nullptr);
-        }
-      } else if (aTag == SCTAG_DOM_URLSEARCHPARAMS) {
+      if (aTag == SCTAG_DOM_URLSEARCHPARAMS) {
         RefPtr<URLSearchParams> usp = new URLSearchParams(global);
         if (!usp->ReadStructuredClone(aReader)) {
           result = nullptr;
@@ -456,15 +446,6 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
     if (NS_SUCCEEDED(UNWRAP_OBJECT(URLSearchParams, &obj, usp))) {
       return JS_WriteUint32Pair(aWriter, SCTAG_DOM_URLSEARCHPARAMS, 0) &&
              usp->WriteStructuredClone(aWriter);
-    }
-  }
-
-  // Handle Key cloning
-  {
-    CryptoKey* key = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(CryptoKey, &obj, key))) {
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_WEBCRYPTO_KEY, 0) &&
-             key->WriteStructuredClone(aWriter);
     }
   }
 
