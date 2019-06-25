@@ -43,7 +43,7 @@ var NormandyApi = {
     }
 
     const headers = {"Accept": "application/json"};
-    return fetch(url.href, {method, body, headers});
+    return fetch(url.href, {method, body, headers, credentials: "omit"});
   },
 
   get(endpoint, data) {
