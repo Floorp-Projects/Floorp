@@ -587,7 +587,9 @@ function postToControlServer(msgType, msgData = "") {
   client.setRequestHeader("Content-Type", "application/json");
   if (client.readyState == 1) {
     raptorLog("posting to control server");
-    raptorLog(`${msgData}`);
+    if (msgType != "screenshot") {
+      raptorLog(`${msgData}`);
+    }
     var data = { "type": `webext_${msgType}`, "data": msgData};
     client.send(JSON.stringify(data));
   }
