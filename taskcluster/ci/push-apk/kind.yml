@@ -10,7 +10,6 @@ transforms:
 
 kind-dependencies:
     - build-signing
-    - google-play-strings
     - push-apk-checks
 
 job-defaults:
@@ -30,7 +29,6 @@ job-defaults:
             by-release-level:
                 production: true
                 staging: false
-    requires: all-resolved
     scopes:  # see transforms
     treeherder:
         platform: Android/opt
