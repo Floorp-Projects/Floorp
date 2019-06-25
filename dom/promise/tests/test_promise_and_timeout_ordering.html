@@ -5,6 +5,7 @@
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
+/* global async_test, assert_equals */
 var t = async_test("Promise callbacks should run immediately after the setTimeout handler that enqueues them");
 var origPostMessage = window.postMessage;
 window.postMessage = function(msg) { origPostMessage.call(window, msg, "*"); };

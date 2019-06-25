@@ -79,8 +79,8 @@ function compileManySuccess() {
 
   Promise.all(arr).then(ms => {
     ok(ms.length === N, "got the right number");
-    for (var i = 0; i < N; i++)
-      checkSampleModule(ms[i]);
+    for (var j = 0; j < N; j++)
+      checkSampleModule(ms[j]);
     runTest();
   }).catch(
     err => { ok(false, String(err)); runTest(); }
@@ -232,8 +232,8 @@ function compileManyStreamingFetch() {
 
   Promise.all(arr).then(ms => {
     ok(ms.length === N, "got the right number");
-    for (var i = 0; i < N; i++)
-      checkSampleModule(ms[i]);
+    for (var j = 0; j < N; j++)
+      checkSampleModule(ms[j]);
     runTest();
   }).catch(
     err => { ok(false, String(err)); runTest(); }

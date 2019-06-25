@@ -82,7 +82,7 @@ function testRace1() {
 
 function testRace2() {
   var p = win.Promise.race(
-    new Array(win.Promise.resolve(1), win.Promise.resolve(2)));
+    [win.Promise.resolve(1), win.Promise.resolve(2)]);
   p.then(
     function(arg) {
       ok(arg == 1 || arg == 2,
@@ -140,7 +140,7 @@ function testAll1() {
 
 function testAll2() {
   var p = win.Promise.all(
-    new Array(win.Promise.resolve(1), win.Promise.resolve(2)));
+    [win.Promise.resolve(1), win.Promise.resolve(2)]);
   p.then(
     function(arg) {
       ok(arg instanceof win.Array, "Should get an Array from Promise.all (2)");

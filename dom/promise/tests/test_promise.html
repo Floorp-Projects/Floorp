@@ -24,7 +24,8 @@ function promiseResolve() {
     ok(reject, "Promise.reject exists");
 
     resolve(42);
-  }).then(function(what) {
+  });
+  promise.then(function(what) {
     ok(true, "Then - resolveCb has been called");
     is(what, 42, "ResolveCb received 42");
     runTest();
@@ -40,7 +41,8 @@ function promiseResolveNoArg() {
     ok(reject, "Promise.reject exists");
 
     resolve();
-  }).then(function(what) {
+  });
+  promise.then(function(what) {
     ok(true, "Then - resolveCb has been called");
     is(what, undefined, "ResolveCb received undefined");
     runTest();
@@ -53,7 +55,8 @@ function promiseResolveNoArg() {
 function promiseReject() {
   var promise = new Promise(function(resolve, reject) {
     reject(42);
-  }).then(function(what) {
+  });
+  promise.then(function(what) {
     ok(false, "Then - resolveCb has been called");
     runTest();
   }, function(what) {
@@ -66,7 +69,9 @@ function promiseReject() {
 function promiseRejectNoHandler() {
   // This test only checks that the code that reports unhandled errors in the
   // Promises implementation does not crash or leak.
-  var promise = new Promise(function(res, rej) {
+
+  new Promise(function(res, rej) {
+    // eslint-disable-next-line no-undef
     noSuchMethod();
   });
   runTest();
@@ -75,7 +80,8 @@ function promiseRejectNoHandler() {
 function promiseRejectNoArg() {
   var promise = new Promise(function(resolve, reject) {
     reject();
-  }).then(function(what) {
+  });
+  promise.then(function(what) {
     ok(false, "Then - resolveCb has been called");
     runTest();
   }, function(what) {
@@ -87,8 +93,10 @@ function promiseRejectNoArg() {
 
 function promiseException() {
   var promise = new Promise(function(resolve, reject) {
+    // eslint-disable-next-line no-throw-literal
     throw 42;
-  }).then(function(what) {
+  });
+  promise.then(function(what) {
     ok(false, "Then - resolveCb has been called");
     runTest();
   }, function(what) {
@@ -102,7 +110,8 @@ function promiseGC() {
   var resolve;
   var promise = new Promise(function(r1, r2) {
     resolve = r1;
-  }).then(function(what) {
+  });
+  promise.then(function(what) {
     ok(true, "Then - promise is still alive");
     runTest();
   });
@@ -219,6 +228,7 @@ function promiseThenException() {
 
   promise.then(function(what) {
     ok(true, "Then.resolve has been called");
+    // eslint-disable-next-line no-throw-literal
     throw "booh";
   }).catch(function(e) {
     ok(true, "window.onerror has been called!");
@@ -361,6 +371,7 @@ function promiseRejectThenCatchExceptionThen() {
   }, function(what) {
     ok(true, "Then.reject has been called");
     is(what, 42, "Value == 42");
+    // eslint-disable-next-line no-throw-literal
     throw (what + 1);
   }).catch(function(what) {
     ok(true, "Catch has been called");
@@ -436,9 +447,9 @@ function promiseCatchNoArg() {
 
 function promiseNestedPromise() {
   new Promise(function(resolve, reject) {
-    resolve(new Promise(function(resolve, reject) {
+    resolve(new Promise(function(res, rej) {
       ok(true, "Nested promise is executed");
-      resolve(42);
+      res(42);
     }));
   }).then(function(value) {
     is(value, 42, "Nested promise is executed and then == 42");
@@ -448,9 +459,9 @@ function promiseNestedPromise() {
 
 function promiseNestedNestedPromise() {
   new Promise(function(resolve, reject) {
-    resolve(new Promise(function(resolve, reject) {
+    resolve(new Promise(function(res, rej) {
       ok(true, "Nested promise is executed");
-      resolve(42);
+      res(42);
     }).then(function(what) { return what + 1; }));
   }).then(function(value) {
     is(value, 43, "Nested promise is executed and then == 43");
@@ -475,11 +486,11 @@ function promiseWrongNestedPromise() {
 
 function promiseLoop() {
   new Promise(function(resolve, reject) {
-    resolve(new Promise(function(r1, r2) {
+    resolve(new Promise(function(res, rej) {
       ok(true, "Nested promise is executed");
-      r1(new Promise(function(r1, r2) {
+      res(new Promise(function(resInner, rejInner) {
         ok(true, "Nested nested promise is executed");
-        r1(42);
+        resInner(42);
       }));
     }));
   }).then(function(value) {
@@ -491,7 +502,8 @@ function promiseLoop() {
 }
 
 function promiseStaticReject() {
-  var promise = Promise.reject(42).then(function(what) {
+  var promise = Promise.reject(42);
+  promise.then(function(what) {
     ok(false, "This should not be called");
   }, function(what) {
     is(what, 42, "Value == 42");
@@ -500,7 +512,8 @@ function promiseStaticReject() {
 }
 
 function promiseStaticResolve() {
-  var promise = Promise.resolve(42).then(function(what) {
+  var promise = Promise.resolve(42);
+  promise.then(function(what) {
     is(what, 42, "Value == 42");
     runTest();
   }, function() {
@@ -514,7 +527,8 @@ function promiseResolveNestedPromise() {
     r(42);
   }, function() {
     ok(false, "This should not be called");
-  })).then(function(what) {
+  }));
+  promise.then(function(what) {
     is(what, 42, "Value == 42");
     runTest();
   }, function() {
@@ -554,6 +568,8 @@ function promiseSimpleThenableReject() {
 function promiseThenableThrowsBeforeCallback() {
   var thenable = { then(resolve) {
     throw new TypeError("Hi there");
+
+    // eslint-disable-next-line no-unreachable
     resolve(5);
   }};
 
@@ -630,7 +646,7 @@ function promiseStrictHandlers() {
 }
 
 function promiseStrictExecutorThisArg() {
-  var promise = new Promise(function(resolve, reject) {
+  new Promise(function(resolve, reject) {
     "use strict";
     ok(this === undefined, "thisArg should be undefined.");
     runTest();
@@ -723,6 +739,7 @@ function promiseTestAsyncThenableResolution() {
   Promise.resolve().then(function next() {
     k--;
     if (k > 0) return Promise.resolve().then(next);
+    return undefined;
   }).then(function() {
     ok(true, "Resolution of a chain of thenables should not be synchronous.");
     runTest();
@@ -825,4 +842,3 @@ runTest();
 </pre>
 </body>
 </html>
-
