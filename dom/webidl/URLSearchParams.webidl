@@ -14,7 +14,8 @@
  */
 
 [Constructor(optional (sequence<sequence<USVString>> or record<USVString, USVString> or USVString) init = ""),
- Exposed=(Window,Worker,WorkerDebugger)]
+ Exposed=(Window,Worker,WorkerDebugger),
+ Serializable]
 interface URLSearchParams {
   void append(USVString name, USVString value);
   void delete(USVString name);
