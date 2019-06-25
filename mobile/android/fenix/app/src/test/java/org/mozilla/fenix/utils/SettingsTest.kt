@@ -224,7 +224,7 @@ class SettingsTest {
     fun showSearchSuggestions() {
         // When just created
         // Then
-        assertTrue(settings.showSearchSuggestions())
+        assertTrue(settings.showSearchSuggestions)
     }
 
     @Test
