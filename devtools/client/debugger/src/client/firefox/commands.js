@@ -377,7 +377,23 @@ async function setEventListenerBreakpoints(ids: string[]) {
 async function getEventListenerBreakpointTypes(): Promise<
   EventListenerCategoryList
 > {
-  return threadClient.getAvailableEventBreakpoints();
+  let categories;
+  try {
+    categories = await threadClient.getAvailableEventBreakpoints();
+
+    if (!Array.isArray(categories)) {
+      // When connecting to older browser that had our placeholder
+      // implementation of the 'getAvailableEventBreakpoints' endpoint, we
+      // actually get back an object with a 'value' property containing
+      // the categories. Since that endpoint wasn't actually backed with a
+      // functional implementation, we just bail here instead of storing the
+      // 'value' property into the categories.
+      categories = null;
+    }
+  } catch (err) {
+    // Event bps aren't supported on this firefox version.
+  }
+  return categories || [];
 }
 
 function pauseGrip(thread: string, func: Function): ObjectClient {
