@@ -43,8 +43,8 @@ add_task(async () => {
   info("Check whether the element displays correctly");
   const sourceList = panelWin.document.querySelector(".sources-list");
   ok(sourceList, "Source list element displays correctly");
-  ok(sourceList.textContent.includes("moz-extension"),
-     "moz-extension displays correctly");
+  ok(sourceList.textContent.includes("temporary-web-extension"),
+     "Extension name displays correctly");
 
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTemporaryExtension(EXTENSION_NAME, document);

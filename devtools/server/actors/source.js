@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
+const { Ci, Cu } = require("chrome");
 const { setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -16,6 +16,11 @@ const { sourceSpec } = require("devtools/shared/specs/source");
 
 loader.lazyRequireGetter(this, "ArrayBufferActor", "devtools/server/actors/array-buffer", true);
 loader.lazyRequireGetter(this, "LongStringActor", "devtools/server/actors/string", true);
+
+loader.lazyRequireGetter(this, "Services");
+loader.lazyGetter(this, "WebExtensionPolicy",
+  () => Cu.getGlobalForObject(Cu).WebExtensionPolicy
+);
 
 function isEvalSource(source) {
   const introType = source.introductionType;
@@ -123,6 +128,30 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return this._url;
   },
 
+  get extensionName() {
+    if (this._extensionName === undefined) {
+      this._extensionName = null;
+
+      // Cu is not available for workers and so we are not able to get a
+      // WebExtensionPolicy object
+      if (!isWorker && this.url) {
+        try {
+          const extURI = Services.io.newURI(this.url);
+          if (extURI) {
+            const policy = WebExtensionPolicy.getByURI(extURI);
+            if (policy) {
+              this._extensionName = policy.name;
+            }
+          }
+        } catch (e) {
+          // Ignore
+        }
+      }
+    }
+
+    return this._extensionName;
+  },
+
   get isCacheEnabled() {
     if (this.threadActor._parent._getCacheDisabled) {
       return !this.threadActor._parent._getCacheDisabled();
@@ -140,6 +169,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
     return {
       actor: this.actorID,
+      extensionName: this.extensionName,
       url: this.url ? this.url.split(" -> ").pop() : null,
       isBlackBoxed: this.threadActor.sources.isBlackBoxed(this.url),
       sourceMapURL: source ? source.sourceMapURL : null,

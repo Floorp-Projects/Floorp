@@ -19,6 +19,7 @@ import {
   hasPrettySource as checkHasPrettySource,
   getContext,
   getMainThread,
+  getExtensionNameBySourceUrl,
   getSourceContent,
 } from "../../selectors";
 import actions from "../../actions";
@@ -49,6 +50,7 @@ type Props = {
   debuggeeUrl: string,
   projectRoot: string,
   source: ?Source,
+  extensionName: string | null,
   item: TreeNode,
   sourceContent: SourceContent,
   depth: number,
@@ -262,7 +264,7 @@ class SourceTreeItem extends Component<Props, State> {
   }
 
   renderItemName(depth) {
-    const { item, threads } = this.props;
+    const { item, threads, extensionName } = this.props;
 
     if (depth === 0) {
       const thread = threads.find(({ actor }) => actor == item.name);
@@ -273,6 +275,10 @@ class SourceTreeItem extends Component<Props, State> {
       }
     }
 
+    if (isExtensionDirectory(depth, extensionName)) {
+      return extensionName;
+    }
+
     switch (item.name) {
       case "ng://":
         return "Angular";
@@ -281,6 +287,16 @@ class SourceTreeItem extends Component<Props, State> {
       default:
         return `${unescape(item.name)}`;
     }
+  }
+
+  renderItemTooltip() {
+    const { item, depth, extensionName } = this.props;
+
+    if (isExtensionDirectory(depth, extensionName)) {
+      return item.name;
+    }
+
+    return item.type === "source" ? unescape(item.contents.url) : "";
   }
 
   render() {
@@ -307,15 +323,13 @@ class SourceTreeItem extends Component<Props, State> {
         <span className="query">{querystring}</span>
       ) : null;
 
-    const title = item.type === "source" ? unescape(item.contents.url) : "";
-
     return (
       <div
         className={classnames("node", { focused })}
         key={item.path}
         onClick={this.onClick}
         onContextMenu={e => this.onContextMenu(e, item)}
-        title={title}
+        title={this.renderItemTooltip()}
       >
         {this.renderItemArrow()}
         {this.renderIcon(item, depth)}
@@ -341,8 +355,12 @@ function getSourceContentValue(state, source: Source) {
   return content !== null ? content.value : false;
 }
 
+function isExtensionDirectory(depth, extensionName) {
+  return extensionName && depth === 1;
+}
+
 const mapStateToProps = (state, props) => {
-  const { source } = props;
+  const { source, item } = props;
   return {
     cx: getContext(state),
     mainThread: getMainThread(state),
@@ -350,6 +368,10 @@ const mapStateToProps = (state, props) => {
     hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
     hasPrettySource: source ? checkHasPrettySource(state, source.id) : false,
     sourceContent: source ? getSourceContentValue(state, source) : false,
+    extensionName:
+      (isUrlExtension(item.name) &&
+        getExtensionNameBySourceUrl(state, item.name)) ||
+      null,
   };
 };
 

@@ -264,6 +264,7 @@ export function newOriginalSources(sourceInfo: Array<OriginalSourceData>) {
       introductionUrl: null,
       introductionType: undefined,
       isExtension: false,
+      extensionName: null,
     }));
 
     const cx = getContext(getState());
@@ -302,6 +303,7 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
           url: source.url,
           relativeUrl: source.url,
           isPrettyPrinted: false,
+          extensionName: source.extensionName,
           sourceMapURL: source.sourceMapURL,
           introductionUrl: source.introductionUrl,
           introductionType: source.introductionType,
@@ -332,9 +334,7 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
       resultIds.push(newId);
     }
 
-    const newSources: Array<Source> = (Object.values(
-      newSourcesObj
-    ): Array<any>);
+    const newSources: Array<Source> = (Object.values(newSourcesObj): any[]);
 
     const cx = getContext(getState());
     dispatch(addSources(cx, newSources));
