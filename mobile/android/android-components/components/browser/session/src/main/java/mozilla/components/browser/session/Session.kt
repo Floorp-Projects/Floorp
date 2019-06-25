@@ -9,6 +9,7 @@ import mozilla.components.browser.session.engine.EngineSessionHolder
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
@@ -38,6 +39,10 @@ class Session(
      * object.
      */
     internal val engineSessionHolder = EngineSessionHolder()
+
+    // For migration purposes every `Session` has a reference to the `BrowserStore` (if used) in order to dispatch
+    // actions to it when the `Session` changes.
+    internal var store: BrowserStore? = null
 
     /**
      * Id of parent session, usually refer to the session which created this one. The clue to indicate if this session

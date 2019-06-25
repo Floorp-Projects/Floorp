@@ -4,6 +4,12 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.browser.session.ext.syncDispatch
+import mozilla.components.browser.session.ext.toCustomTabSessionState
+import mozilla.components.browser.session.ext.toTabSessionState
+import mozilla.components.browser.state.action.CustomTabListAction
+import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -16,6 +22,7 @@ import mozilla.components.support.base.observer.Observable
 class SessionManager(
     val engine: Engine,
     val defaultSession: (() -> Session)? = null,
+    private val store: BrowserStore? = null,
     private val delegate: LegacySessionManager = LegacySessionManager(engine, defaultSession)
 ) : Observable<SessionManager.Observer> by delegate {
     /**
@@ -81,7 +88,25 @@ class SessionManager(
         engineSession: EngineSession? = null,
         parent: Session? = null
     ) {
+        // Add store to Session so that it can dispatch actions whenever it changes.
+        session.store = store
+
         delegate.add(session, selected, engineSession, parent)
+
+        if (session.isCustomTabSession()) {
+            store?.syncDispatch(
+                CustomTabListAction.AddCustomTabAction(
+                    session.toCustomTabSessionState()
+                )
+            )
+        } else {
+            store?.syncDispatch(
+                TabListAction.AddTabAction(
+                    session.toTabSessionState(),
+                    select = selected
+                )
+            )
+        }
     }
 
     /**
@@ -117,23 +142,43 @@ class SessionManager(
     fun remove(
         session: Session = selectedSessionOrThrow,
         selectParentIfExists: Boolean = false
-    ) = delegate.remove(session, selectParentIfExists)
+    ) {
+        delegate.remove(session, selectParentIfExists)
+
+        if (session.isCustomTabSession()) {
+            store?.syncDispatch(
+                CustomTabListAction.RemoveCustomTabAction(session.id)
+            )
+        } else {
+            store?.syncDispatch(
+                TabListAction.RemoveTabAction(session.id)
+            )
+        }
+    }
 
     /**
      * Removes all sessions but CustomTab sessions.
      */
-    fun removeSessions() = delegate.removeSessions()
+    fun removeSessions() {
+        delegate.removeSessions()
+    }
 
     /**
      * Removes all sessions including CustomTab sessions.
      */
-    fun removeAll() = delegate.removeAll()
+    fun removeAll() {
+        delegate.removeAll()
+    }
 
     /**
      * Marks the given session as selected.
      */
     fun select(session: Session) {
         delegate.select(session)
+
+        store?.syncDispatch(
+            TabListAction.SelectTabAction(session.id)
+        )
     }
 
     /**

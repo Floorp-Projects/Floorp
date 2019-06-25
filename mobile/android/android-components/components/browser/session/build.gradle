@@ -22,6 +22,8 @@ android {
 }
 
 dependencies {
+    api project(':browser-state')
+
     implementation project(':concept-engine')
     implementation project(':support-utils')
     implementation project(':support-ktx')
