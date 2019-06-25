@@ -393,13 +393,9 @@ static bool NeedsScriptTraverse(nsINode* aNode) {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAttrChildContentList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAttrChildContentList)
 
-// If nsAttrChildContentList is changed so that any additional fields are
-// traversed by the cycle collector, then CAN_SKIP must be updated to
-// check that the additional fields are null.
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsAttrChildContentList)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsAttrChildContentList, mNode)
 
-// nsAttrChildContentList only ever has a single child, its wrapper, so if
-// the wrapper is known-live, the list can't be part of a garbage cycle.
+// If the wrapper is known-live, the list can't be part of a garbage cycle.
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsAttrChildContentList)
   return tmp->HasKnownLiveWrapper();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
@@ -408,7 +404,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsAttrChildContentList)
   return tmp->HasKnownLiveWrapperAndDoesNotNeedTracing(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
-// CanSkipThis returns false to avoid problems with incomplete unlinking.
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsAttrChildContentList)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
