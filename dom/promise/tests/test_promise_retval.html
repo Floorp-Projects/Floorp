@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1436276.
     frames[0].label = "child";
     SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]},
                               runPromiseRetvalTests.bind(undefined,
-							 SimpleTest.finish));
+                                                         SimpleTest.finish));
   });
   </script>
 </head>

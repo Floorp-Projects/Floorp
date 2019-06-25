@@ -14,6 +14,9 @@
  * 4) A subframe (frames[0]) which can be used as a second global for creating
  *    promises.
  */
+
+/* global verifyPromiseGlobal, getPromise, isXrayArgumentTest */
+
 var label = "parent";
 
 function passBasicPromise() {

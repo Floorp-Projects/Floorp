@@ -136,7 +136,9 @@ function promiseAllRejectFails() {
 }
 
 function promiseAllCastError() {
-  var p = Promise.all([Promise.resolve(2), { then() { foo(); } }]);
+  var p = Promise.all([Promise.resolve(2), { then() {
+    throw new ReferenceError("placeholder for nonexistent function call");
+  } }]);
   ok(p instanceof Promise, "Should cast to a Promise.");
   p.then(function(v) {
     ok(false, "promiseAllCastError: should've rejected.");
@@ -152,7 +154,7 @@ function promiseAllEnumerable() {
   var p = Promise.all([1, new Date(), Promise.resolve("firefox")]);
   p.then(function(v) {
     var count = 0;
-    for (key in v) {
+    for (let key in v) {
       ++count;
       ok(v[key] === 1 || v[key] instanceof Date || v[key] === "firefox",
          "Enumerated properties don't match.");
@@ -193,14 +195,6 @@ function promiseRaceValuesArray() {
 }
 
 function promiseRacePromiseArray() {
-  function timeoutPromise(n) {
-    return new Promise(function(resolve) {
-      setTimeout(function() {
-        resolve(n);
-      }, n);
-    });
-  }
-
   var arr = [
     new Promise(function(resolve) {
       resolve("first");
@@ -264,7 +258,7 @@ function promiseRaceReject() {
 function promiseRaceThrow() {
   var p = Promise.race([
     new Promise(function(resolve) {
-      nonExistent();
+      throw new ReferenceError("placeholder for nonexistent function call");
     }),
     new Promise(function(resolve) {
       setTimeout(resolve, 0);
