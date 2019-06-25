@@ -129,7 +129,13 @@ enum class ZealMode {
   _(WasmResolveResponseClosure)            \
   _(WasmModule)                            \
   _(WasmTableTable)                        \
-  _(FileObjectFile)
+  _(FileObjectFile)                        \
+  _(Debugger)                              \
+  _(DebuggerFrameGeneratorInfo)            \
+  _(DebuggerFrameIterData)                 \
+  _(DebuggerOnStepHandler)                 \
+  _(DebuggerOnPopHandler)                  \
+  _(GlobalDebuggerVector)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
