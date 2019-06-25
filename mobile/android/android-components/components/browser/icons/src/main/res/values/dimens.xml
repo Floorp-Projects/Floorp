@@ -3,5 +3,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
+    <dimen name="mozac_browser_icons_size_default">32dp</dimen>
+    <dimen name="mozac_browser_icons_size_launcher">48dp</dimen>
+
     <dimen name="mozac_browser_icons_maximum_size">64dp</dimen>
+    <dimen name="mozac_browser_icons_generator_default_corner_radius">2dp</dimen>
 </resources>

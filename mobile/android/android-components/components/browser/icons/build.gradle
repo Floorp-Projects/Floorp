@@ -39,10 +39,10 @@ dependencies {
     implementation project(':concept-fetch')
     implementation project(':browser-session')
 
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
     implementation Dependencies.androidx_annotation
     implementation Dependencies.androidx_palette
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
     implementation Dependencies.thirdparty_disklrucache
 
     testImplementation project(':support-test')

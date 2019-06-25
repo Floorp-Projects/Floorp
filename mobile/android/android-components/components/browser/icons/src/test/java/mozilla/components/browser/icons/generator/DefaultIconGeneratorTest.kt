@@ -22,7 +22,7 @@ class DefaultIconGeneratorTest {
 
     @Test
     fun getRepresentativeCharacter() = runBlocking {
-        val generator = DefaultIconGenerator(testContext)
+        val generator = DefaultIconGenerator()
 
         assertEquals("M", generator.getRepresentativeCharacter("https://mozilla.org"))
         assertEquals("W", generator.getRepresentativeCharacter("http://wikipedia.org"))
@@ -72,28 +72,29 @@ class DefaultIconGeneratorTest {
 
     @Test
     fun pickColor() {
-        val generator = DefaultIconGenerator(testContext)
+        val generator = DefaultIconGenerator()
+        val res = testContext.resources
 
-        val color = generator.pickColor("http://m.facebook.com")
+        val color = generator.pickColor(res, "http://m.facebook.com")
 
         // Color does not change
         for (i in 0..99) {
-            assertEquals(color, generator.pickColor("http://m.facebook.com"))
+            assertEquals(color, generator.pickColor(res, "http://m.facebook.com"))
         }
 
         // Color is stable for "similar" hosts.
-        assertEquals(color, generator.pickColor("https://m.facebook.com"))
-        assertEquals(color, generator.pickColor("http://facebook.com"))
-        assertEquals(color, generator.pickColor("http://www.facebook.com"))
-        assertEquals(color, generator.pickColor("http://www.facebook.com/foo/bar/foobar?mobile=1"))
+        assertEquals(color, generator.pickColor(res, "https://m.facebook.com"))
+        assertEquals(color, generator.pickColor(res, "http://facebook.com"))
+        assertEquals(color, generator.pickColor(res, "http://www.facebook.com"))
+        assertEquals(color, generator.pickColor(res, "http://www.facebook.com/foo/bar/foobar?mobile=1"))
 
         // Returns a color for an empty string
-        assertNotEquals(0, generator.pickColor(""))
+        assertNotEquals(0, generator.pickColor(res, ""))
     }
 
     @Test
     fun generate() = runBlocking {
-        val generator = DefaultIconGenerator(testContext)
+        val generator = DefaultIconGenerator()
 
         val icon = generator.generate(testContext, IconRequest(
             url = "https://m.facebook.com"))

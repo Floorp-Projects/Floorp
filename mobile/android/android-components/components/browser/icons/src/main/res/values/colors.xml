@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <color name="mozac_browser_icons_generator_default_text_color">@android:color/white</color>
+    <!-- Mozilla's Visual Design Colour Palette: http://firefoxux.github.io/StyleGuide/#/visualDesign/colours -->
+    <array name="mozac_browser_icons_photon_palette">
+        <item>#9A4C00</item>
+        <item>#AB008D</item>
+        <item>#4C009C</item>
+        <item>#002E9C</item>
+        <item>#009EC2</item>
+        <item>#009D02</item>
+        <item>#51AB00</item>
+        <item>#36385A</item>
+    </array>
+</resources>

@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons
 
+import androidx.annotation.DimenRes
 import mozilla.components.concept.engine.manifest.Size as HtmlSize
 
 /**
@@ -23,12 +24,9 @@ data class IconRequest(
      *
      * We are trying to limit the supported sizes in order to optimize our caching strategy.
      */
-    @Suppress("MagicNumber")
-    enum class Size(
-        val value: Int
-    ) {
-        DEFAULT(32),
-        LAUNCHER(48)
+    enum class Size(@DimenRes val dimen: Int) {
+        DEFAULT(R.dimen.mozac_browser_icons_size_default),
+        LAUNCHER(R.dimen.mozac_browser_icons_size_launcher)
     }
 
     /**
