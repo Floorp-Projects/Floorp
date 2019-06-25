@@ -152,7 +152,7 @@ def bindgen_libclang_path(libclang_path, clang, library_name_info, host):
                 # To make matters complicated, clang before version 9 uses `:`
                 # separate between paths (and `;` in newer versions)
                 if pathsep in value:
-                    dirs = value.split(pathsep)
+                    candidates.extend(value.split(pathsep))
                 else:
                     for part in value.split(':'):
                         # Assume that if previous "candidate" was of length 1,
