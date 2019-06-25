@@ -5,8 +5,6 @@
 
 // Checks that html entities are escaped in bookmarks.html files.
 
-const DESCRIPTION_ANNO = "bookmarkProperties/description";
-
 add_task(async function() {
   // Removes bookmarks.html if the file already exists.
   let HTMLFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.html");
@@ -28,9 +26,6 @@ add_task(async function() {
     url,
     annotations: new Map([[PlacesUtils.CHARSET_ANNO, unescaped]]),
   });
-  PlacesUtils.annotations.setItemAnnotation(
-    await PlacesUtils.promiseItemId(bm.guid),
-    DESCRIPTION_ANNO, unescaped, 0, PlacesUtils.annotations.EXPIRE_NEVER);
 
   // Exports the bookmarks as a HTML file.
   await BookmarkHTMLUtils.exportToFile(HTMLFile);
@@ -55,7 +50,7 @@ add_task(async function() {
     xhr.send();
   });
 
-  let checksCount = 6;
+  let checksCount = 5;
   for (let current = xml; current;
     current = current.firstChild || current.nextSibling || current.parentNode.nextSibling) {
     switch (current.nodeType) {
@@ -70,7 +65,7 @@ add_task(async function() {
         }
         break;
       case current.TEXT_NODE:
-        // Check Title and description.
+        // Check Title.
         if (!current.data.startsWith("\n") && current.data.includes("test")) {
           Assert.equal(current.data.trim(), unescaped, "Text node should be complete");
           checksCount--;
