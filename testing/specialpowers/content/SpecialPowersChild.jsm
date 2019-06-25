@@ -122,8 +122,11 @@ class SpecialPowersChild extends SpecialPowersAPI {
         break;
 
       case "Spawn":
-        let {task, args, caller} = aMessage.data;
-        return this._spawnTask(task, args, caller);
+        let {task, args, caller, taskId} = aMessage.data;
+        return this._spawnTask(task, args, caller, taskId);
+
+      default:
+        return super.receiveMessage(aMessage);
     }
 
     return true;
