@@ -108,6 +108,11 @@ class UnwinderTypeCache(object):
         self.d['HeapSlot'] = gdb.lookup_type("js::HeapSlot").pointer()
         self.d['ScriptSource'] = gdb.lookup_type("js::ScriptSource").pointer()
 
+        # ProcessExecutableMemory, used to identify if a pc is in the section
+        # pre-allocated by the JIT.
+        self.d['MaxCodeBytesPerProcess'] = self.jit_value('MaxCodeBytesPerProcess')
+        self.d['execMemory'] = gdb.lookup_symbol('::execMemory')[0].value()
+
     # Compute maps related to jit frames.
     def compute_frame_info(self):
         t = gdb.lookup_type('enum js::jit::FrameType')
@@ -119,33 +124,6 @@ class UnwinderTypeCache(object):
             self.frame_enum_names[enumval] = name
             class_type = gdb.lookup_type('js::jit::' + SizeOfFramePrefix[name])
             self.frame_class_types[enumval] = class_type.pointer()
-
-
-def parse_proc_maps():
-    # gdb doesn't have a direct way to tell us if a given address is
-    # claimed by some shared library or the executable.  See
-    # https://sourceware.org/bugzilla/show_bug.cgi?id=19288
-    # In the interest of not requiring a patched gdb, instead we read
-    # /proc/.../maps.  This only works locally, but maybe could work
-    # remotely using "remote get".  FIXME.
-    mapfile = '/proc/' + str(gdb.selected_inferior().pid) + '/maps'
-    # Note we only examine executable mappings here.
-    matcher = re.compile("^([a-fA-F0-9]+)-([a-fA-F0-9]+)\s+..x.\s+\S+\s+\S+\s+\S*(.*)$")
-    mappings = []
-    with open(mapfile, "r") as inp:
-        for line in inp:
-            match = matcher.match(line)
-            if not match:
-                # Header lines and such.
-                continue
-            start = match.group(1)
-            end = match.group(2)
-            name = match.group(3).strip()
-            if name is '' or (name.startswith('[') and name is not '[vdso]'):
-                # Skip entries not corresponding to a file.
-                continue
-            mappings.append((long(start, 16), long(end, 16)))
-    return mappings
 
 
 class FrameSymbol(object):
@@ -317,11 +295,6 @@ class UnwinderState(object):
         # selected thread for later verification.
         self.thread = gdb.selected_thread()
         self.frame_map = {}
-        self.proc_mappings = None
-        try:
-            self.proc_mappings = parse_proc_maps()
-        except IOError:
-            pass
         self.typecache = typecache
 
     # If the given gdb.Frame was created by this unwinder, return the
@@ -340,36 +313,18 @@ class UnwinderState(object):
     def add_frame(self, sp, name=None, this_frame=None):
         self.frame_map[long(sp)] = {"name": name, "this_frame": this_frame}
 
-    # See whether |pc| is claimed by some text mapping.  See
-    # |parse_proc_maps| for details on how the decision is made.
-    def text_address_claimed(self, pc):
-        for (start, end) in self.proc_mappings:
-            if (pc >= start and pc <= end):
-                return True
-        return False
-
     # See whether |pc| is claimed by the Jit.
     def is_jit_address(self, pc):
-        if self.proc_mappings is not None:
-            return not self.text_address_claimed(pc)
+        execMem = self.typecache.execMemory
+        base = long(execMem['base_'])
+        length = self.typecache.MaxCodeBytesPerProcess
 
-        cx = self.get_tls_context()
-        runtime = cx['runtime_']['value']
-        if long(runtime.address) == 0:
+        # If the base pointer is null, then no memory got allocated yet.
+        if long(base) == 0:
             return False
 
-        jitRuntime = runtime['jitRuntime_']
-        if long(jitRuntime.address) == 0:
-            return False
-
-        execAllocators = [jitRuntime['execAlloc_'], jitRuntime['backedgeExecAlloc_']]
-        for execAlloc in execAllocators:
-            for pool in jsjitExecutableAllocator(execAlloc, self.typecache):
-                pages = pool['m_allocation']['pages']
-                size = pool['m_allocation']['size']
-                if pages <= pc and pc < pages + size:
-                    return True
-        return False
+        # If allocated, then we allocated MaxCodeBytesPerProcess.
+        return base <= pc and pc < base + length
 
     # Check whether |self| is valid for the selected thread.
     def check(self):
