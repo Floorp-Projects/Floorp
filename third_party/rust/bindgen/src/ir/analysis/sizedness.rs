@@ -49,7 +49,7 @@ pub enum SizednessResult {
     /// have an `_address` byte inserted.
     ///
     /// We don't properly handle this situation correctly right now:
-    /// https://github.com/rust-lang-nursery/rust-bindgen/issues/586
+    /// https://github.com/rust-lang/rust-bindgen/issues/586
     DependsOnTypeParam,
 
     /// The type is zero-sized.

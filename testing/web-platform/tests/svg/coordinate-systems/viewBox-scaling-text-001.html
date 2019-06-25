@@ -1,30 +1,25 @@
 <!DOCTYPE html>
 <head>
   <meta charset="utf-8">
+  <meta name="assert" href="1px-tall-text should be visible when scaled up via the SVG viewBox attribute">
   <title>Testcase for text scaled via SVG viewBox</title>
   <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
   <link rel="help" href="https://www.w3.org/TR/SVG/coords.html#ViewBoxAttribute">
   <link rel="match" href="support/viewBox-scaling-text-001-ref.html">
   <style>
-    body { margin: 0; }
     svg {
       width: 100px;
       height: 100px;
-      background: red;
+      background: lightgray;
+      overflow: visible;
     }
     text {
-      fill: lime;
-      font: 1px/1 Ahem;
+      font: 1px/1 monospace;
     }
   </style>
 </head>
 <body>
-  <!-- We position the <text> at y=0.8px, which is the alphabetic baseline for
-       the Ahem font. This puts the bottom of the rendered square glyph at
-       y=1px, i.e. the bottom of the SVG viewport. With that, the 1px-tall Ahem
-       square 'X' character should fully fill the SVG viewport (which is then
-       scaled up from 1x1 to 100x100). -->
   <svg viewBox="0 0 1 1">
-    <text x="0" y="0.8">X̂̂̂̂̂̂</text>
+    <text x="0" y="1">X̂̂̂̂̂̂</text>
   </svg>
 </body>

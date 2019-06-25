@@ -24,6 +24,8 @@ import android.support.v7.graphics.Palette;
 import android.util.Base64;
 import android.util.Log;
 
+import org.mozilla.gecko.GeckoAppShell;
+
 public final class BitmapUtils {
     private static final String LOGTAG = "GeckoBitmapUtils";
 
@@ -102,7 +104,12 @@ public final class BitmapUtils {
         InputStream stream = null;
 
         try {
-            stream = url.openStream();
+            if ("jar".equals(url.getProtocol())) {
+                final Context context = GeckoAppShell.getApplicationContext();
+                stream = GeckoJarReader.getStream(context, url.toString());
+            } else {
+                stream = url.openStream();
+            }
         } catch (IOException e) {
             Log.w(LOGTAG, "decodeUrl: IOException downloading " + url);
             return null;

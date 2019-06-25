@@ -45,12 +45,6 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
     check_unset("parentGuid");
   }
 
-  let expectedAnnos = await PlacesUtils.promiseAnnotationsForItem(aItem.id);
-  if (expectedAnnos.length > 0)
-    Assert.deepEqual(aItem.annos, expectedAnnos);
-  else
-    check_unset("annos");
-
   const BOOKMARK_ONLY_PROPS = ["uri", "iconuri", "tags", "charset", "keyword"];
   const FOLDER_ONLY_PROPS = ["children", "root"];
 

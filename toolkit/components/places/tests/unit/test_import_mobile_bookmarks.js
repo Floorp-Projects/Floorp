@@ -14,9 +14,6 @@ async function treeEquals(guid, expected, message) {
     if (node.children) {
       entry.children = node.children.map(nodeToEntry);
     }
-    if (node.annos) {
-      entry.annos = node.annos;
-    }
     return entry;
   }(root));
 

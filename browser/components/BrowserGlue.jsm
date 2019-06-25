@@ -89,6 +89,7 @@ let LEGACY_ACTORS = {
         "AboutLoginsDeleteLogin": {wantUntrusted: true},
         "AboutLoginsImport": {wantUntrusted: true},
         "AboutLoginsInit": {wantUntrusted: true},
+        "AboutLoginsOpenFeedback": {wantUntrusted: true},
         "AboutLoginsOpenPreferences": {wantUntrusted: true},
         "AboutLoginsOpenSite": {wantUntrusted: true},
         "AboutLoginsRecordTelemetryEvent": {wantUntrusted: true},
@@ -585,6 +586,7 @@ const listeners = {
     "AboutLogins:CreateLogin": ["AboutLoginsParent"],
     "AboutLogins:DeleteLogin": ["AboutLoginsParent"],
     "AboutLogins:Import": ["AboutLoginsParent"],
+    "AboutLogins:OpenFeedback": ["AboutLoginsParent"],
     "AboutLogins:OpenPreferences": ["AboutLoginsParent"],
     "AboutLogins:OpenSite": ["AboutLoginsParent"],
     "AboutLogins:Subscribe": ["AboutLoginsParent"],
@@ -608,6 +610,7 @@ const listeners = {
     "PasswordManager:autoCompleteLogins": ["LoginManagerParent"],
     "PasswordManager:removeLogin": ["LoginManagerParent"],
     "PasswordManager:insecureLoginFormPresent": ["LoginManagerParent"],
+    "PasswordManager:OpenFeedback": ["AboutLoginsParent"],
     "PasswordManager:OpenPreferences": ["LoginManagerParent"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
     "rtcpeer:CancelRequest": ["webrtcUI"],

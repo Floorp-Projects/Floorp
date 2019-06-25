@@ -35,6 +35,7 @@ Array [
       },
     ],
     "source": Object {
+      "extensionName": null,
       "id": "a",
       "introductionType": null,
       "introductionUrl": null,
@@ -117,6 +118,7 @@ Array [
       },
     ],
     "source": Object {
+      "extensionName": null,
       "id": "a",
       "introductionType": null,
       "introductionUrl": null,

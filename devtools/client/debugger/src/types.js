@@ -406,6 +406,7 @@ export type Source = {|
   +relativeUrl: string,
   +introductionUrl: ?string,
   +introductionType: ?string,
+  +extensionName: ?string,
   +isExtension: boolean,
   +isWasm: boolean,
 |};

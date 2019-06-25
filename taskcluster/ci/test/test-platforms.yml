@@ -355,11 +355,6 @@ android-em-4.3-arm7-api-16/pgo:
         - android-common-tests
         - android-opt-tests
 
-android-em-7.0-x86/opt:
-    build-platform: android-x86/opt
-    test-sets:
-        - android-x86-tests
-
 android-em-7.0-x86_64/opt:
     build-platform: android-x86_64/opt
     test-sets:

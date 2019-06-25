@@ -127,6 +127,13 @@
         "parameters": []
       },
       {
+        "name": "getProfileAsGzippedArrayBuffer",
+        "type": "function",
+        "description": "Gathers the profile data from the current profiling session. The returned promise resolves to an array buffer that contains a gzipped JSON string.",
+        "async": true,
+        "parameters": []
+      },
+      {
         "name": "getSymbols",
         "type": "function",
         "description": "Gets the debug symbols for a particular library.",
