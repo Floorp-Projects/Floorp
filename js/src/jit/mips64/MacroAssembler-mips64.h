@@ -221,6 +221,8 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   void mov(Address src, Register dest) { MOZ_CRASH("NYI-IC"); }
 
   void writeDataRelocation(const Value& val) {
+    // Raw GC pointer relocations and Value relocations both end up in
+    // TraceOneDataRelocation.
     if (val.isGCThing()) {
       gc::Cell* cell = val.toGCThing();
       if (cell && gc::IsInsideNursery(cell)) {
@@ -392,6 +394,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   void unboxDouble(const ValueOperand& operand, FloatRegister dest);
   void unboxDouble(Register src, Register dest);
   void unboxDouble(const Address& src, FloatRegister dest);
+  void unboxDouble(const BaseIndex& src, FloatRegister dest);
   void unboxString(const ValueOperand& operand, Register dest);
   void unboxString(Register src, Register dest);
   void unboxString(const Address& src, Register dest);
