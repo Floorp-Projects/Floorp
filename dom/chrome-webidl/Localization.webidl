@@ -4,21 +4,31 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * An object used to carry localization information from and to an
- * Element.
+ * L10nKey is an object used to carry localization tuple for message
+ * translation.
  *
  * Fields:
- *    id - identifier of a message used to localize the element.
- *  args - an optional map of arguments used to format the message.
- *         The argument will be converted to/from JSON, so can
- *         handle any value that JSON can, but in practice, the API
- *         will only use a string or a number for now.
+ *    id - identifier of a message.
+ *  args - an optional record of arguments used to format the message.
+ *         The argument will be converted to/from JSON, and the API
+ *         will only handle strings and numbers.
  */
+typedef record<DOMString, (DOMString or double)?> L10nArgs;
+
 dictionary L10nKey {
   DOMString? id = null;
-  object? args = null;
+  L10nArgs? args = null;
 };
 
+/**
+ * L10nMessage is a compound translation unit from Fluent which
+ * encodes the value and (optionall) a list of attributes used
+ * to translate a given widget.
+ *
+ * Most simple imperative translations will only use the `value`,
+ * but when building a Message for a UI widget, a combination
+ * of a value and attributes will be used.
+ */
 dictionary AttributeNameValue {
   required DOMString name;
   required DOMString value;
@@ -29,6 +39,11 @@ dictionary L10nMessage {
   sequence<AttributeNameValue>? attributes = null;
 };
 
+/**
+ * A callback function which takes a list of locales and a list
+ * of localization resources and produces an iterator over
+ * FluentBundle objects used for localization with fallbacks.
+ */
 callback GenerateMessages = Promise<any> (sequence<DOMString> aAppLocales, sequence<DOMString> aResourceIds);
 
 /**
@@ -82,7 +97,7 @@ interface Localization {
    *    let value = await document.l10n.formatValue("unread-emails", {count: 5});
    *    assert.equal(value, "You have 5 unread emails");
    */
-  [NewObject] Promise<DOMString> formatValue(DOMString aId, optional object aArgs);
+  [NewObject] Promise<DOMString> formatValue(DOMString aId, optional L10nArgs aArgs);
 
   /**
    * Formats values of a list of messages with given ids.
@@ -121,4 +136,11 @@ interface Localization {
    *    ]);
    */
   [NewObject] Promise<sequence<L10nMessage>> formatMessages(sequence<L10nKey> aKeys);
+};
+
+/**
+ * A helper dict for converting between JS Value and L10nArgs.
+ */
+dictionary L10nArgsHelperDict {
+  required L10nArgs args;
 };

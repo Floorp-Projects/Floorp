@@ -171,19 +171,22 @@ uint32_t Localization::RemoveResourceIds(
 }
 
 already_AddRefed<Promise> Localization::FormatValue(
-    JSContext* aCx, const nsAString& aId,
-    const Optional<JS::Handle<JSObject*>>& aArgs, ErrorResult& aRv) {
+    JSContext* aCx, const nsAString& aId, const Optional<L10nArgs>& aArgs,
+    ErrorResult& aRv) {
   JS::Rooted<JS::Value> args(aCx);
 
   if (aArgs.WasPassed()) {
-    args = JS::ObjectValue(*aArgs.Value());
+    ConvertL10nArgsToJSValue(aCx, aArgs.Value(), &args, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
   } else {
     args = JS::UndefinedValue();
   }
 
   RefPtr<Promise> promise;
   nsresult rv = mLocalization->FormatValue(aId, args, getter_AddRefs(promise));
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return nullptr;
   }
@@ -205,7 +208,7 @@ already_AddRefed<Promise> Localization::FormatValues(
 
   RefPtr<Promise> promise;
   aRv = mLocalization->FormatValues(jsKeys, getter_AddRefs(promise));
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
@@ -227,7 +230,7 @@ already_AddRefed<Promise> Localization::FormatMessages(
 
   RefPtr<Promise> promise;
   aRv = mLocalization->FormatMessages(jsKeys, getter_AddRefs(promise));
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
@@ -301,4 +304,34 @@ already_AddRefed<Promise> Localization::MaybeWrapPromise(
   RefPtr<PromiseResolver> resolver = new PromiseResolver(docPromise);
   aInnerPromise->AppendNativeHandler(resolver);
   return docPromise.forget();
+}
+
+void Localization::ConvertL10nArgsToJSValue(
+    JSContext* aCx, const L10nArgs& aArgs, JS::MutableHandle<JS::Value> aRetVal,
+    ErrorResult& aRv) {
+  // This method uses a temporary dictionary to automate
+  // converting an IDL Record to a JS Value via a dictionary.
+  //
+  // Once we get ToJSValue for Record, we'll switch to that.
+  L10nArgsHelperDict helperDict;
+  for (auto& entry : aArgs.Entries()) {
+    L10nArgs::EntryType* newEntry =
+        helperDict.mArgs.Entries().AppendElement(fallible);
+    if (!newEntry) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+    newEntry->mKey = entry.mKey;
+    newEntry->mValue = entry.mValue;
+  }
+  JS::Rooted<JS::Value> jsVal(aCx);
+  if (!ToJSValue(aCx, helperDict, &jsVal)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+  JS::Rooted<JSObject*> jsObj(aCx, &jsVal.toObject());
+  if (!JS_GetProperty(aCx, jsObj, "args", aRetVal)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
 }
