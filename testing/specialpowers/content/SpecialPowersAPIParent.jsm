@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
   PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
+  SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.jsm",
 });
 
 class SpecialPowersError extends Error {
@@ -99,6 +100,10 @@ function doPrefEnvOp(fn) {
   }
 }
 
+// Supplies the unique IDs for tasks created by SpecialPowers.spawn(),
+// used to bounce assertion messages back down to the correct child.
+let nextTaskID = 1;
+
 class SpecialPowersAPIParent extends JSWindowActorParent {
   constructor() {
     super();
@@ -106,6 +111,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
     this._processCrashObserversRegistered = false;
     this._chromeScriptListeners = [];
     this._extensions = new Map();
+    this._taskActors = new Map();
   }
 
   _observe(aSubject, aTopic, aData) {
@@ -564,50 +570,35 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         // Setup a chrome sandbox that has access to sendAsyncMessage
         // and {add,remove}MessageListener in order to communicate with
         // the mochitest.
-        let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-        let sandboxOptions = Object.assign({wantGlobalProperties: ["ChromeUtils"]},
-                                           aMessage.json.sandboxOptions);
-        let sb = Cu.Sandbox(systemPrincipal, sandboxOptions);
-        sb.sendAsyncMessage = (name, message) => {
-          this.sendAsyncMessage("SPChromeScriptMessage",
-                                { id, name, message });
-        };
-        sb.addMessageListener = (name, listener) => {
-          this._chromeScriptListeners.push({ id, name, listener });
-        };
-        sb.removeMessageListener = (name, listener) => {
-          let index = this._chromeScriptListeners.findIndex(function(obj) {
-            return obj.id == id && obj.name == name && obj.listener == listener;
-          });
-          if (index >= 0) {
-            this._chromeScriptListeners.splice(index, 1);
-          }
-        };
-        sb.actorParent = this.manager;
-
-        // Also expose assertion functions
-        let reporter = (err, message, stack) => {
-          // Pipe assertions back to parent process
-          this.sendAsyncMessage("SPChromeScriptAssert",
-                                { id, name: scriptName, err, message,
-                                  stack });
-        };
-        Object.defineProperty(sb, "assert", {
-          get() {
-            let scope = Cu.createObjectIn(sb);
-            Services.scriptloader.loadSubScript("resource://specialpowers/Assert.jsm",
-                                                scope);
-
-            let assert = new scope.Assert(reporter);
-            delete sb.assert;
-            return sb.assert = assert;
+        let sb = new SpecialPowersSandbox(
+          scriptName,
+          data => {
+            this.sendAsyncMessage("Assert", data);
           },
-          configurable: true,
+          aMessage.data);
+
+        Object.assign(sb.sandbox, {
+          sendAsyncMessage: (name, message) => {
+            this.sendAsyncMessage("SPChromeScriptMessage",
+                                  { id, name, message });
+          },
+          addMessageListener: (name, listener) => {
+            this._chromeScriptListeners.push({ id, name, listener });
+          },
+          removeMessageListener: (name, listener) => {
+            let index = this._chromeScriptListeners.findIndex(function(obj) {
+              return obj.id == id && obj.name == name && obj.listener == listener;
+            });
+            if (index >= 0) {
+              this._chromeScriptListeners.splice(index, 1);
+            }
+          },
+          actorParent: this.manager,
         });
 
         // Evaluate the chrome script
         try {
-          Cu.evalInSandbox(jsScript, sb, "1.8", scriptName, 1);
+          Cu.evalInSandbox(jsScript, sb.sandbox, "1.8", scriptName, 1);
         } catch (e) {
           throw new SpecialPowersError(
             "Error while executing chrome script '" + scriptName + "':\n" +
@@ -766,7 +757,21 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         let {browsingContext, task, args, caller} = aMessage.data;
 
         let spParent = browsingContext.currentWindowGlobal.getActor("SpecialPowers");
-        return spParent.sendQuery("Spawn", {task, args, caller});
+
+        let taskId = nextTaskID++;
+        spParent._taskActors.set(taskId, this);
+
+        return spParent.sendQuery("Spawn", {task, args, caller, taskId}).finally(() => {
+          spParent._taskActors.delete(taskId);
+        });
+      }
+
+      case "ProxiedAssert": {
+        let {taskId, data} = aMessage.data;
+        let actor = this._taskActors.get(taskId);
+
+        actor.sendAsyncMessage("Assert", data);
+        return undefined;
       }
 
       case "SPRemoveAllServiceWorkers": {
