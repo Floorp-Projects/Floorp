@@ -192,7 +192,9 @@
 #identity-popup-securityView-body > description,
 #identity-popup-permissions-content > description,
 #identity-popup-content-blocking-content > description,
-.protections-popup-settings-label {
+.protections-popup-settings-label,
+#protections-popup-footer > description,
+#protections-popup-footer > label {
   font-size: 110%;
   margin: 0;
 }
@@ -877,4 +879,21 @@ description#identity-popup-content-verifier,
   width: 16px;
   height: 16px;
   list-style-image: url(chrome://browser/skin/settings.svg);
+}
+
+#protections-popup-footer {
+  background-color: var(--arrowpanel-dimmed);
+  border-top: 1px solid var(--panel-separator-color);
+  min-height: 40px;
+  -moz-box-align: center;
+  /* The horizontal padding aligns the content of footer with other sections in
+     the protections panel */
+  padding: 4px calc(1em + 4px);
+}
+
+#protections-popup-trackers-blocked-counter-description {
+  font-weight: 600;
+  /* This padding is added to align the counter text with the beginning of texts
+     in other sections. */
+  padding-inline-start: 6px;
 }

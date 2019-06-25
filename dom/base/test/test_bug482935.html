@@ -26,7 +26,7 @@ function testCancelInPhase4() {
 
   // First request - should be loaded from server
   var xhr = new XMLHttpRequest();
-  xhr.addEventListener("readystatechange", function(e) {
+  xhr.addEventListener("readystatechange", function() {
     if (xhr.readyState < xhr.DONE) return;
     is(xhr.readyState, xhr.DONE, "wrong readyState");
     xhr.abort();

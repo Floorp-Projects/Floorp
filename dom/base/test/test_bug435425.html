@@ -12,14 +12,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435425
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=435425">Mozilla Bug 435425</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 435425 **/
 
-var xhr = null;
 var upload = null;
 var currentEvents = null;
 var expectedResponseText = null;
@@ -69,7 +68,7 @@ function logEvent(evt) {
   ok(evt.target instanceof currentEvents[i].target,
      "Wrong event target [" + evt.target + "," + evt.type + "]!");
 
-  // If we handled non-optional event, remove all optional events before the 
+  // If we handled non-optional event, remove all optional events before the
   // handled event and then the non-optional event from the list.
   if (!currentEvents[i].optional) {
     for (;i != -1; --i) {
@@ -102,7 +101,7 @@ function openXHR(xhr, method, url, privileged) {
 }
 
 function start(obj) {
-  xhr = new XMLHttpRequest();
+  let xhr = new XMLHttpRequest();
   upload = xhr.upload;
   currentEvents = obj.expectedEvents;
   expectedResponseText = obj.withUpload;
@@ -208,7 +207,7 @@ for (var largeLength = 0; largeLength < (0x0000FFFF + 2); ++largeLength) {
 const XHR = XMLHttpRequest;
 const UPLOAD = XMLHttpRequestUpload;
 
-var tests = 
+var tests =
   [
     { method: "GET", withUpload: none, testAbort: false, testRedirectError: false, testNetworkError: false,
       expectedEvents: [{target: XHR, type: "loadstart", optional: false},
@@ -429,4 +428,3 @@ addLoadEvent(runTest);
 </pre>
 </body>
 </html>
-

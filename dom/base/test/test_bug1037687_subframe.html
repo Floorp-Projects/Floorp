@@ -7,7 +7,6 @@
   var is = window.parent.is;
 
   var host;
-  var sr;
   var embed;
   var object;
   var iframe;
@@ -34,7 +33,7 @@
 
   function test() {
     host = document.getElementById("host");
-    sr = host.attachShadow({mode: 'open'});
+    let sr = host.attachShadow({mode: 'open'});
     embed = createResource(sr, "embed");
     object = createResource(sr, "object");
     iframe = createResource(sr, "iframe");

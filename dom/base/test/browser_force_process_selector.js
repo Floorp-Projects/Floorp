@@ -20,7 +20,7 @@ async function spawnNewAndTest(recur, pids) {
         };
         Services.obs.addObserver(observer, CONTENT_CREATED);
 
-        await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function(browser) {
+        await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function() {
           // If this new tab caused us to create a new process, the ok(false)
           // should have already happened. Therefore, if we get here, we've
           // passed. Simply remove the observer.
