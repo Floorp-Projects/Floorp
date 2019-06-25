@@ -258,6 +258,7 @@ win64-plain/opt:
 
 win32-shippable/opt:
     description: "Win32 Opt Shippable"
+    use-pgo: true
     index:
         product: firefox
         job-name: win32-opt
@@ -280,7 +281,7 @@ win32-shippable/opt:
     shipping-product: firefox
     treeherder:
         platform: windows2012-32-shippable/opt
-        symbol: B
+        symbol: Bpgo(B)
         tier: 1
     worker-type: b-win2012
     worker:
