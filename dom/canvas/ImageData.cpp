@@ -106,5 +106,34 @@ bool ImageData::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
   return ImageData_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
+// static
+already_AddRefed<ImageData> ImageData::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  // Read the information out of the stream.
+  uint32_t width, height;
+  JS::Rooted<JS::Value> dataArray(aCx);
+  if (!JS_ReadUint32Pair(aReader, &width, &height) ||
+      !JS_ReadTypedArray(aReader, &dataArray)) {
+    return nullptr;
+  }
+  MOZ_ASSERT(dataArray.isObject());
+
+  RefPtr<ImageData> imageData =
+      new ImageData(width, height, dataArray.toObject());
+  return imageData.forget();
+}
+
+bool ImageData::WriteStructuredClone(JSContext* aCx,
+                                     JSStructuredCloneWriter* aWriter) const {
+  JS::Rooted<JS::Value> arrayValue(aCx, JS::ObjectValue(*GetDataObject()));
+  if (!JS_WrapValue(aCx, &arrayValue)) {
+    return false;
+  }
+
+  return JS_WriteUint32Pair(aWriter, Width(), Height()) &&
+         JS_WriteTypedArray(aWriter, arrayValue);
+}
+
 }  // namespace dom
 }  // namespace mozilla
