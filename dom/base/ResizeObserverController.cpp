@@ -147,10 +147,7 @@ void ResizeObserverController::Notify() {
 
     nsEventStatus status = nsEventStatus_eIgnore;
 
-    nsCOMPtr<nsPIDOMWindowInner> window =
-        doc->GetWindow()->GetCurrentInnerWindow();
-
-    if (window) {
+    if (nsCOMPtr<nsPIDOMWindowInner> window = doc->GetInnerWindow()) {
       nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
       MOZ_ASSERT(sgo);
 
