@@ -1,5 +1,5 @@
-#ifndef mozilla_dom_l10n_L10nMutations_h__
-#define mozilla_dom_l10n_L10nMutations_h__
+#ifndef mozilla_dom_l10n_L10nMutations_h
+#define mozilla_dom_l10n_L10nMutations_h
 
 #include "nsRefreshDriver.h"
 #include "nsStubMutationObserver.h"
