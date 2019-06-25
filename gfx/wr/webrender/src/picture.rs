@@ -1234,9 +1234,29 @@ impl TileCacheInstance {
                         TILE_SIZE_WIDTH,
                         TILE_SIZE_HEIGHT,
                     );
+
+                    let content_origin_f = tile.world_rect.origin * frame_context.global_device_pixel_scale;
+                    let content_origin_i = content_origin_f.floor();
+
+                    // Calculate the UV coords for this tile. These are generally 0-1, but if the
+                    // local rect of the cache has fractional coordinates, then the content origin
+                    // of the tile is floor'ed, and so we need to adjust the UV rect in order to
+                    // ensure a correct 1:1 texel:pixel mapping and correct snapping.
+                    let s0 = (content_origin_f.x - content_origin_i.x) / tile.world_rect.size.width;
+                    let t0 = (content_origin_f.y - content_origin_i.y) / tile.world_rect.size.height;
+                    let s1 = 1.0;
+                    let t1 = 1.0;
+
+                    let uv_rect_kind = UvRectKind::Quad {
+                        top_left: DeviceHomogeneousVector::new(s0, t0, 0.0, 1.0),
+                        top_right: DeviceHomogeneousVector::new(s1, t0, 0.0, 1.0),
+                        bottom_left: DeviceHomogeneousVector::new(s0, t1, 0.0, 1.0),
+                        bottom_right: DeviceHomogeneousVector::new(s1, t1, 0.0, 1.0),
+                    };
                     resource_cache.texture_cache.update_picture_cache(
                         tile_size,
                         &mut tile.handle,
+                        uv_rect_kind,
                         gpu_cache,
                     );
                 }
@@ -2340,9 +2360,10 @@ impl PicturePrimitive {
                                 continue;
                             }
 
-                            // TODO(gw): Is this ever fractional? Can that cause seams?
-                            let content_origin = (tile.world_rect.origin * device_pixel_scale)
-                                .round().to_i32();
+                            // The content origin for surfaces is always an integer value (this preserves
+                            // the same snapping on a surface as would occur if drawn directly to parent).
+                            let content_origin_f = tile.world_rect.origin * device_pixel_scale;
+                            let content_origin = content_origin_f.floor().to_i32();
 
                             let cache_item = frame_state.resource_cache.texture_cache.get(&tile.handle);
 
