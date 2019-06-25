@@ -16,6 +16,8 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace intl {
 
+typedef Record<nsString, Nullable<OwningStringOrDouble>> L10nArgs;
+
 class Localization : public nsIObserver,
                      public nsSupportsWeakReference,
                      public nsWrapperCache {
@@ -49,9 +51,9 @@ class Localization : public nsIObserver,
 
   uint32_t RemoveResourceIds(const nsTArray<nsString>& aResourceIds);
 
-  already_AddRefed<Promise> FormatValue(
-      JSContext* aCx, const nsAString& aId,
-      const Optional<JS::Handle<JSObject*>>& aArgs, ErrorResult& aRv);
+  already_AddRefed<Promise> FormatValue(JSContext* aCx, const nsAString& aId,
+                                        const Optional<L10nArgs>& aArgs,
+                                        ErrorResult& aRv);
 
   already_AddRefed<Promise> FormatValues(JSContext* aCx,
                                          const Sequence<L10nKey>& aKeys,
@@ -66,6 +68,9 @@ class Localization : public nsIObserver,
   void RegisterObservers();
   void OnChange();
   already_AddRefed<Promise> MaybeWrapPromise(Promise* aInnerPromise);
+  void ConvertL10nArgsToJSValue(JSContext* aCx, const L10nArgs& aArgs,
+                                JS::MutableHandle<JS::Value> aRetVal,
+                                ErrorResult& aRv);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<mozILocalization> mLocalization;
