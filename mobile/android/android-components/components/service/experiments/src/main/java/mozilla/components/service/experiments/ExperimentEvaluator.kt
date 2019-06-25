@@ -283,7 +283,7 @@ internal class ExperimentEvaluator(
     companion object {
         private const val LOG_TAG = "experiments"
 
-        const val MAX_USER_BUCKET = 100
+        const val MAX_USER_BUCKET = 1000
         // This stores a boolean; whether an experiment is active or not.
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         const val PREF_NAME_OVERRIDES_ENABLED = "mozilla.components.service.experiments.overrides.enabled"

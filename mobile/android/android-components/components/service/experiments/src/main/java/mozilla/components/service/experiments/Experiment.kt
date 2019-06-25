@@ -42,7 +42,7 @@ internal data class Experiment(
 ) {
     /**
      * Object containing a bucket range to match users.
-     * Every user is in one of 100 buckets (0-99).
+     * Every user is in one of 1000 buckets (0-999).
      */
     data class Buckets(
         /**
@@ -50,7 +50,7 @@ internal data class Experiment(
          */
         val start: Int,
         /**
-         * The number of buckets to match from start. If (start + count >= 99), evaluation will
+         * The number of buckets to match from start. If (start + count >= 999), evaluation will
          * wrap around.
          */
         val count: Int
