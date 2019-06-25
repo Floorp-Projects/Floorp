@@ -68,7 +68,11 @@ data class EngineVersion(
          */
         @Suppress("MagicNumber", "ReturnCount")
         fun parse(version: String): EngineVersion? {
-            val regex = "(?<major>[0-9]+)\\.(?<minor>[0-9]+)(?:\\.(?<patch>[0-9]+))?(?<metadata>[^0-9].*)?".toRegex()
+            val majorRegex = "([0-9]+)"
+            val minorRegex = "\\.([0-9]+)"
+            val patchRegex = "(?:\\.([0-9]+))?"
+            val metadataRegex = "([^0-9].*)?"
+            val regex = "$majorRegex$minorRegex$patchRegex$metadataRegex".toRegex()
             val result = regex.matchEntire(version) ?: return null
 
             val major = result.groups[1]?.value ?: return null
