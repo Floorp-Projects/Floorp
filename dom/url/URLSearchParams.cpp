@@ -489,12 +489,19 @@ bool URLParams::ReadStructuredClone(JSStructuredCloneReader* aReader) {
 }
 
 bool URLSearchParams::WriteStructuredClone(
-    JSStructuredCloneWriter* aWriter) const {
+    JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
   return mParams->WriteStructuredClone(aWriter);
 }
 
-bool URLSearchParams::ReadStructuredClone(JSStructuredCloneReader* aReader) {
-  return mParams->ReadStructuredClone(aReader);
+// static
+already_AddRefed<URLSearchParams> URLSearchParams::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  RefPtr<URLSearchParams> params = new URLSearchParams(aGlobal);
+  if (!params->mParams->ReadStructuredClone(aReader)) {
+    return nullptr;
+  }
+  return params.forget();
 }
 
 // contentTypeWithCharset can be set to the contentType or

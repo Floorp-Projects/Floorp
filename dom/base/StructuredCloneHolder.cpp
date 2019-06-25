@@ -28,8 +28,6 @@
 #include "mozilla/dom/StructuredCloneTester.h"
 #include "mozilla/dom/StructuredCloneTesterBinding.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/dom/URLSearchParams.h"
-#include "mozilla/dom/URLSearchParamsBinding.h"
 #include "mozilla/dom/WebIDLSerializable.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -348,22 +346,6 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
     return deserializer(aCx, global, aReader);
   }
 
-  if (aTag == SCTAG_DOM_URLSEARCHPARAMS) {
-    // Prevent the return value from being trashed by a GC during ~nsRefPtr.
-    JS::Rooted<JSObject*> result(aCx);
-    {
-      if (aTag == SCTAG_DOM_URLSEARCHPARAMS) {
-        RefPtr<URLSearchParams> usp = new URLSearchParams(global);
-        if (!usp->ReadStructuredClone(aReader)) {
-          result = nullptr;
-        } else {
-          result = usp->WrapObject(aCx, nullptr);
-        }
-      }
-    }
-    return result;
-  }
-
   if (aTag == SCTAG_DOM_NULL_PRINCIPAL || aTag == SCTAG_DOM_SYSTEM_PRINCIPAL ||
       aTag == SCTAG_DOM_CONTENT_PRINCIPAL ||
       aTag == SCTAG_DOM_EXPANDED_PRINCIPAL) {
@@ -438,15 +420,6 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
   const DOMJSClass* domClass = GetDOMClass(obj);
   if (domClass && domClass->mSerializer) {
     return domClass->mSerializer(aCx, aWriter, obj);
-  }
-
-  // Handle URLSearchParams cloning
-  {
-    URLSearchParams* usp = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(URLSearchParams, &obj, usp))) {
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_URLSEARCHPARAMS, 0) &&
-             usp->WriteStructuredClone(aWriter);
-    }
   }
 
 #ifdef MOZ_WEBRTC
