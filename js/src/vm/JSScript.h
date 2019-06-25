@@ -489,6 +489,10 @@ struct SourceTypeTraits<char16_t> {
   }
 };
 
+// Synchronously compress the source of |script|, for testing purposes.
+extern MOZ_MUST_USE bool SynchronouslyCompressSource(
+    JSContext* cx, JS::Handle<JSScript*> script);
+
 class ScriptSourceHolder;
 
 // Retrievable source can be retrieved using the source hook (and therefore
@@ -626,6 +630,9 @@ class ScriptSource {
                        Retrievable<mozilla::Utf8Unit>, Retrievable<char16_t>,
                        Missing, BinAST>;
   SourceType data;
+
+  friend bool SynchronouslyCompressSource(JSContext* cx,
+                                          JS::Handle<JSScript*> script);
 
   // If the GC calls triggerConvertToCompressedSource with PinnedUnits present,
   // the first PinnedUnits (that is, bottom of the stack) will install the

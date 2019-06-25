@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{MixBlendMode, PipelineId, PremultipliedColorF};
-use api::{PropertyBinding, PropertyBindingId};
+use api::{PropertyBinding, PropertyBindingId, FontRenderMode};
 use api::{DebugFlags, RasterSpace, ImageKey, ColorF};
 use api::units::*;
 use crate::box_shadow::{BLUR_SAMPLE_SCALE};
@@ -523,9 +523,6 @@ pub struct TileCacheInstance {
     pub local_rect: PictureRect,
     /// Local clip rect for this tile cache.
     pub local_clip_rect: PictureRect,
-    /// If true, the entire tile cache was determined to be opaque. This allows
-    /// WR to enable subpixel AA text rendering for text runs on this slice.
-    pub is_opaque: bool,
     /// A list of tiles that are valid and visible, which should be drawn to the main scene.
     pub tiles_to_draw: Vec<TileKey>,
     /// The world space viewport that this tile cache draws into.
@@ -537,6 +534,13 @@ pub struct TileCacheInstance {
     /// The background color from the renderer. If this is set opaque, we know it's
     /// fine to clear the tiles to this and allow subpixel text on the first slice.
     pub background_color: Option<ColorF>,
+    /// The picture space rectangle that is known to be opaque. This is used
+    /// to determine where subpixel AA can be used, and where alpha blending
+    /// can be disabled.
+    pub opaque_rect: PictureRect,
+    /// The allowed subpixel mode for this surface, which depends on the detected
+    /// opacity of the background.
+    pub subpixel_mode: SubpixelMode,
 }
 
 impl TileCacheInstance {
@@ -561,21 +565,17 @@ impl TileCacheInstance {
             tile_bounds_p1: TileOffset::zero(),
             local_rect: PictureRect::zero(),
             local_clip_rect: PictureRect::zero(),
-            is_opaque: false,
             tiles_to_draw: Vec::new(),
             world_viewport_rect: WorldRect::zero(),
             surface_index: SurfaceIndex(0),
             background_color,
+            opaque_rect: PictureRect::zero(),
+            subpixel_mode: SubpixelMode::Allow,
         }
     }
 
     /// Returns true if this tile cache is considered opaque.
     pub fn is_opaque(&self) -> bool {
-        // If we detected an explicit background rect that is opaque and covers all tiles.
-        if self.is_opaque {
-            return true;
-        }
-
         // If known opaque due to background clear color and being the first slice.
         // The background_color will only be Some(..) if this is the first slice.
         match self.background_color {
@@ -620,6 +620,11 @@ impl TileCacheInstance {
         let tile_width = TILE_SIZE_WIDTH;
         let tile_height = TILE_SIZE_HEIGHT;
         self.surface_index = surface_index;
+
+        // Reset the opaque rect + subpixel mode, as they are calculated
+        // during the prim dependency checks.
+        self.opaque_rect = PictureRect::zero();
+        self.subpixel_mode = SubpixelMode::Allow;
 
         self.map_local_to_surface = SpaceMapper::new(
             self.spatial_node_index,
@@ -804,9 +809,6 @@ impl TileCacheInstance {
         for (_, tile) in &mut self.tiles {
             // Start frame assuming that the tile has the same content.
             tile.is_same_content = true;
-            // Reset the opacity of the tile to false, since it may change each frame.
-            // The primitive dependency updates will determine if it is opaque again.
-            tile.is_opaque = false;
 
             // Content has changed if any opacity bindings changed.
             for binding in tile.descriptor.opacity_bindings.items() {
@@ -876,7 +878,6 @@ impl TileCacheInstance {
         let mut clip_vertices: SmallVec<[LayoutPoint; 8]> = SmallVec::new();
         let mut image_keys: SmallVec<[ImageKey; 8]> = SmallVec::new();
         let mut clip_spatial_nodes = FastHashSet::default();
-        let mut opaque_rect = None;
         let mut prim_clip_rect = PictureRect::zero();
 
         // Some primitives can not be cached (e.g. external video images)
@@ -884,6 +885,25 @@ impl TileCacheInstance {
             &data_stores,
             resource_cache,
         );
+
+        // If there was a clip chain, add any clip dependencies to the list for this tile.
+        if let Some(prim_clip_chain) = prim_clip_chain {
+            prim_clip_rect = prim_clip_chain.pic_clip_rect;
+
+            let clip_instances = &clip_store
+                .clip_node_instances[prim_clip_chain.clips_range.to_range()];
+            for clip_instance in clip_instances {
+                clip_chain_uids.push(clip_instance.handle.uid());
+
+                // If the clip has the same spatial node, the relative transform
+                // will always be the same, so there's no need to depend on it.
+                if clip_instance.spatial_node_index != self.spatial_node_index {
+                    clip_spatial_nodes.insert(clip_instance.spatial_node_index);
+                }
+
+                clip_vertices.push(clip_instance.local_pos);
+            }
+        }
 
         // For pictures, we don't (yet) know the valid clip rect, so we can't correctly
         // use it to calculate the local bounding rect for the tiles. If we include them
@@ -936,7 +956,9 @@ impl TileCacheInstance {
 
                     if let Some(ref clip_chain) = prim_clip_chain {
                         if prim_is_opaque && same_coord_system && !clip_chain.needs_mask && on_picture_surface {
-                            opaque_rect = Some(clip_chain.pic_clip_rect);
+                            if clip_chain.pic_clip_rect.contains_rect(&self.opaque_rect) {
+                                self.opaque_rect = clip_chain.pic_clip_rect;
+                            }
                         }
                     };
                 } else {
@@ -973,7 +995,33 @@ impl TileCacheInstance {
                 // Early exit to ensure this doesn't get added as a dependency on the tile.
                 return false;
             }
-            PrimitiveInstanceKind::TextRun { .. } |
+            PrimitiveInstanceKind::TextRun { data_handle, .. } => {
+                // Only do these checks if we haven't already disabled subpx
+                // text rendering for this slice.
+                if self.subpixel_mode == SubpixelMode::Allow && !self.is_opaque() {
+                    let run_data = &data_stores.text_run[data_handle];
+
+                    // If a text run is on a child surface, the subpx mode will be
+                    // correctly determined as we recurse through pictures in take_context.
+                    let on_picture_surface = surface_index == self.surface_index;
+
+                    // Only care about text runs that have requested subpixel rendering.
+                    // This is conservative - it may still end up that a subpx requested
+                    // text run doesn't get subpx for other reasons (e.g. glyph size).
+                    let subpx_requested = match run_data.font.render_mode {
+                        FontRenderMode::Subpixel => true,
+                        FontRenderMode::Alpha | FontRenderMode::Mono => false,
+                    };
+
+                    if on_picture_surface && subpx_requested {
+                        if !self.opaque_rect.contains_rect(&prim_clip_rect) {
+                            self.subpixel_mode = SubpixelMode::Deny;
+                        }
+                    }
+                }
+
+                false
+            }
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::Clear { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
@@ -985,25 +1033,6 @@ impl TileCacheInstance {
             }
         };
 
-        // If there was a clip chain, add any clip dependencies to the list for this tile.
-        if let Some(prim_clip_chain) = prim_clip_chain {
-            prim_clip_rect = prim_clip_chain.pic_clip_rect;
-
-            let clip_instances = &clip_store
-                .clip_node_instances[prim_clip_chain.clips_range.to_range()];
-            for clip_instance in clip_instances {
-                clip_chain_uids.push(clip_instance.handle.uid());
-
-                // If the clip has the same spatial node, the relative transform
-                // will always be the same, so there's no need to depend on it.
-                if clip_instance.spatial_node_index != self.spatial_node_index {
-                    clip_spatial_nodes.insert(clip_instance.spatial_node_index);
-                }
-
-                clip_vertices.push(clip_instance.local_pos);
-            }
-        }
-
         // Normalize the tile coordinates before adding to tile dependencies.
         // For each affected tile, mark any of the primitive dependencies.
         for y in p0.y .. p1.y {
@@ -1014,15 +1043,6 @@ impl TileCacheInstance {
                     offset: TileOffset::new(x, y),
                 };
                 let tile = self.tiles.get_mut(&key).expect("bug: no tile");
-
-                // Check if this tile becomes opaque due to this primitive.
-                if !tile.is_opaque {
-                    if let Some(ref opaque_rect) = opaque_rect {
-                        if opaque_rect.contains_rect(&tile.clipped_rect) {
-                            tile.is_opaque = true;
-                        }
-                    }
-                }
 
                 // Mark if the tile is cacheable at all.
                 tile.is_same_content &= is_cacheable;
@@ -1109,13 +1129,10 @@ impl TileCacheInstance {
         self.dirty_region.clear();
         let mut dirty_region_index = 0;
 
-        // Track if all tiles are detected as opaque. Only when this occurs will
-        // we allow subpixel AA on this surface.
-        self.is_opaque = true;
-
         // Step through each tile and invalidate if the dependencies have changed.
         for (key, tile) in self.tiles.iter_mut() {
-            self.is_opaque &= tile.is_opaque;
+            // Check if this tile can be considered opaque.
+            tile.is_opaque = self.opaque_rect.contains_rect(&tile.clipped_rect);
 
             // Update tile transforms
             let mut transform_spatial_nodes: Vec<SpatialNodeIndex> = tile.transforms.drain().collect();
@@ -2448,16 +2465,16 @@ impl PicturePrimitive {
             Some(RasterConfig { ref composite_mode, .. }) => {
                 let subpixel_mode = match composite_mode {
                     PictureCompositeMode::TileCache { .. } => {
-                        // TODO(gw): Maintaining old behaviour, we know that any slice
-                        //           that was created is allowed to have subpixel text on it.
-                        //           Once we enable multiple slices, we'll need to handle this
-                        //           condition properly.
-                        SubpixelMode::Allow
+                        self.tile_cache.as_ref().unwrap().subpixel_mode
                     }
                     PictureCompositeMode::Blit(..) |
                     PictureCompositeMode::ComponentTransferFilter(..) |
                     PictureCompositeMode::Filter(..) |
                     PictureCompositeMode::MixBlend(..) => {
+                        // TODO(gw): We can take advantage of the same logic that
+                        //           exists in the opaque rect detection for tile
+                        //           caches, to allow subpixel text on other surfaces
+                        //           that can be detected as opaque.
                         SubpixelMode::Deny
                     }
                 };

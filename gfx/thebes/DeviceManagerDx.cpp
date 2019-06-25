@@ -1036,7 +1036,7 @@ bool DeviceManagerDx::GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason) {
 
   if (XRE_IsParentProcess() && NS_IsMainThread() &&
       StaticPrefs::DeviceResetForTesting()) {
-    StaticPrefs::SetDeviceResetForTesting(0);
+    Preferences::SetInt("gfx.testing.device-reset", 0);
     *aOutReason = DeviceResetReason::FORCED_RESET;
     return true;
   }
