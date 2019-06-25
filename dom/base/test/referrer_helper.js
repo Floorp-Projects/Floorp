@@ -1,3 +1,6 @@
+// This helper expects these globals to be defined.
+/* global PARAMS, SJS, testCases */
+
 /*
  * common functionality for iframe, anchor, and area referrer attribute tests
  */
@@ -80,22 +83,22 @@ var tests = (function*() {
     }
 
     var actions = testCases[j].ACTION;
-    var tests = testCases[j].TESTS;
+    var subTests = testCases[j].TESTS;
     for (var k = 0; k < actions.length; k++) {
       var actionString = actions[k];
-      for (var i = 0; i < tests.length; i++) {
+      for (var i = 0; i < subTests.length; i++) {
         yield resetState();
         var searchParams = new URLSearchParams();
         searchParams.append("ACTION", actionString);
-        searchParams.append("NAME", tests[i].NAME);
+        searchParams.append("NAME", subTests[i].NAME);
         for (var l of PARAMS) {
-          if (tests[i][l]) {
-            searchParams.append(l, tests[i][l]);
+          if (subTests[i][l]) {
+            searchParams.append(l, subTests[i][l]);
           }
         }
-        var schemeFrom = tests[i].SCHEME_FROM || "http";
+        var schemeFrom = subTests[i].SCHEME_FROM || "http";
         yield iframe.src = schemeFrom + SJS + searchParams.toString();
-        yield checkIndividualResults(tests[i].DESC, tests[i].RESULT, tests[i].NAME);
+        yield checkIndividualResults(subTests[i].DESC, subTests[i].RESULT, subTests[i].NAME);
       };
     };
   };

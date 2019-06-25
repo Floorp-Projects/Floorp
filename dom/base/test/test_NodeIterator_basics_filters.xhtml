@@ -21,7 +21,7 @@
   function compare_arrays(e, f, label) {
     var length = (e.length > f.length) ? e.length : f.length;
     for (var i = 0; i < length; i += 1) {
-      if (e[i] > 0) 
+      if (e[i] > 0)
         is(f[i], e[i], label + " - index " + i + ": ");
       else
         todo_is(f[i], -e[i], label + " - index " + i + ": ");
@@ -110,17 +110,17 @@
   compare_arrays(expect_f, found, 'filtered backward');
 
   function checkBadFilter(method, n) {
-    var iterator =
+    var iter =
       document.createNodeIterator(document, NodeFilter.SHOW_ALL,
                                   function() {
                                     if (n < 0)
-                                      iterator.detach();
+                                      iter.detach();
                                     return NodeFilter.FILTER_ACCEPT;
                                   });
     while (--n >= 0)
-      iterator.nextNode();
+      iter.nextNode();
     try {
-      iterator[method]();
+      iter[method]();
       ok(true, "Able to call " + method + " on a NodeIterator after calling no-op detach()");
     } catch (x) { ok(false, x) }
   }
@@ -131,7 +131,7 @@
     // Implementing the scenario outlined in
     // http://bugzilla.mozilla.org/show_bug.cgi?id=552110#c4
 
-    var iterator = (function(filter) {
+    var iter = (function(filt) {
       var grandparent = document.createElement("div"),
           parent = document.createElement("span");
 
@@ -141,12 +141,12 @@
 
       return document.createNodeIterator(grandparent,
                                          NodeFilter.SHOW_ALL,
-                                         filter);
-    })(function filter(n) {
+                                         filt);
+    })(function(n) {
       if (n.nodeName != "img")
         return NodeFilter.FILTER_ACCEPT;
 
-      iterator.detach();
+      iter.detach();
 
       n.parentNode.remove();
       // Drop any node references passed into this function.
@@ -162,16 +162,16 @@
       return NodeFilter.FILTER_SKIP;
     });
 
-    is(iterator.nextNode().nodeName, "div",
-       "iterator.nextNode() returned the wrong node");
-    is(iterator.nextNode().nodeName, "span",
-       "iterator.nextNode() returned the wrong node");
+    is(iter.nextNode().nodeName, "div",
+       "iter.nextNode() returned the wrong node");
+    is(iter.nextNode().nodeName, "span",
+       "iter.nextNode() returned the wrong node");
     try {
-      var p = iterator.nextNode();
-      ok(false, "iterator.nextNode() should have thrown, but instead it returned <" + p.nodeName + ">");
+      var p = iter.nextNode();
+      ok(false, "iter.nextNode() should have thrown, but instead it returned <" + p.nodeName + ">");
     } catch (x) { ok(true, x) }
   })();
-        
+
 ]]></script>
 </pre>
 </body>

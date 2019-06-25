@@ -13,8 +13,6 @@ obj*/**
 
 # dom/ exclusions which should be removed (aka ESLint enabled)
 dom/base/*.*
-dom/base/test/*.*
-dom/base/test/jsmodules/**
 dom/media/test/**
 !dom/media/test/marionette/yttest/*.js
 dom/promise/**
@@ -169,6 +167,7 @@ dom/svg/test/test_nonAnimStrings.xhtml
 dom/svg/test/test_SVG_namespace_ids.html
 
 # Strange encodings
+dom/base/test/file_bug687859-16.js
 dom/encoding/test/test_utf16_files.html
 dom/encoding/test/file_utf16_be_bom.js
 dom/encoding/test/file_utf16_le_bom.js
@@ -179,6 +178,12 @@ dom/html/test/test_bug677658.html
 
 # Intentional broken files
 dom/base/test/file_js_cache_syntax_error.js
+dom/base/test/jsmodules/test_syntaxError.html
+dom/base/test/jsmodules/test_syntaxErrorAsync.html
+dom/base/test/jsmodules/module_badSyntax.js
+dom/base/test/jsmodules/test_syntaxErrorInline.html
+dom/base/test/jsmodules/test_syntaxErrorInlineAsync.html
+dom/base/test/test_bug687859.html
 dom/media/tests/mochitest/identity/idp-bad.js
 dom/serviceworkers/test/file_js_cache_syntax_error.js
 dom/serviceworkers/test/parse_error_worker.js

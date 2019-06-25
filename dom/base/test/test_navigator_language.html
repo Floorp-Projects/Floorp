@@ -119,8 +119,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
     function* testEvents() {
       for (var i = 0; i < testValues.length; ++i) {
         var data = testValues[i];
-        setTimeout(function(data) {
-          SpecialPowers.pushPrefEnv({"set": [['intl.accept_languages', data.accept_languages]]});
+        setTimeout(function(d) {
+          SpecialPowers.pushPrefEnv({"set": [['intl.accept_languages', d.accept_languages]]});
         }, 0, data);
         expectedLanguageChanges++;
         yield undefined;
