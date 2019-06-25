@@ -136,11 +136,16 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 't-win10-64-gpu',
       'hardware': 't-win10-64-hw',
     },
-    'windows10-64-ref-hw-2017': {
+    'windows10-64-ux': {
       'virtual': 't-win10-64',
       'virtual-with-gpu': 't-win10-64-gpu',
-      'hardware': 't-win10-64-ref-hw',
+      'hardware': 't-win10-64-ux',
     },
+    # 'windows10-64-ref-hw-2017': {
+    #   'virtual': 't-win10-64',
+    #   'virtual-with-gpu': 't-win10-64-gpu',
+    #   'hardware': 't-win10-64-ref-hw',
+    # },
 }
 
 # os x worker types keyed by test-platform
@@ -1212,8 +1217,10 @@ def set_worker_type(config, tests):
             # figure out what platform the job needs to run on
             if test['virtualization'] == 'hardware':
                 # some jobs like talos and reftest run on real h/w - those are all win10
-                if test_platform.startswith('windows10-64-ref-hw-2017'):
-                    win_worker_type_platform = WINDOWS_WORKER_TYPES['windows10-64-ref-hw-2017']
+                if test_platform.startswith('windows10-64-ux'):
+                    win_worker_type_platform = WINDOWS_WORKER_TYPES['windows10-64-ux']
+                # elif test_platform.startswith('windows10-64-ref-hw-2017'):
+                #     win_worker_type_platform = WINDOWS_WORKER_TYPES['windows10-64-ref-hw-2017']
                 elif test_platform.startswith('windows10-aarch64'):
                     win_worker_type_platform = WINDOWS_WORKER_TYPES['windows10-aarch64']
                 else:

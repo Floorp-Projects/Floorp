@@ -370,7 +370,7 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{alias}'
-        t-win10-64(-hw|-ref-hw):
+        t-win10-64(-hw|-ref-hw|-ux):
             provisioner: releng-hardware
             implementation: generic-worker
             os: windows
