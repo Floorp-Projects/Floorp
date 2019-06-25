@@ -2,6 +2,12 @@
 // Copyright (C) Anders Kjersem. Licensed under the zlib/libpng license
 //
 
+// This file is intended to be compiled with MSVC's Omit Default Library Name (/Zl)
+// option enabled, in order to keep the file size low for bundling this DLL with
+// the stub installer. That means that any code requiring the C runtime will fail
+// to link. You'll see a couple of odd-looking things here for this reason; they
+// should all be called out with comments.
+
 #include "InetBgDL.h"
 
 #define USERAGENT _T("NSIS InetBgDL (Mozilla)")
@@ -39,6 +45,14 @@ TCHAR g_ServerIP[128] = { _T('\0') };
 DWORD g_ConnectTimeout = 0;
 DWORD g_ReceiveTimeout = 0;
 
+// Setup a buffer of size 256KiB to store the downloaded data.
+constexpr UINT g_cbBufXF = 262144;
+// This buffer is only needed inside TaskThreadProc(), but declaring it on
+// the stack there triggers a runtime stack size check, which is implemented
+// by a C runtime library function, so we have to avoid the compiler wanting
+// to build that check by not having any large stack buffers.
+BYTE g_bufXF[g_cbBufXF];
+
 #define NSISPI_INITGLOBALS(N_CCH, N_Vars) do { \
   g_N_CCH = N_CCH; \
   g_N_Vars = N_Vars; \
@@ -53,6 +67,26 @@ DWORD g_ReceiveTimeout = 0;
 #define StatsLock_AcquireShared() StatsLock_AcquireExclusive()
 #define StatsLock_ReleaseShared() StatsLock_ReleaseExclusive()
 #endif
+
+// Normally we would just call the C library wcstol, but since we can't use the
+// C runtime, we'll supply our own function as an understudy.
+static DWORD
+MyTStrToL(TCHAR const* str)
+{
+  if (!str) {
+    return 0;
+  }
+
+  int len = lstrlen(str);
+  DWORD place = 1;
+  DWORD rv = 0;
+  for (int i = len - 1; i >= 0; --i) {
+    int digit = str[i] - 0x30;
+    rv += digit * place;
+    place *= 10;
+  }
+  return rv;
+}
 
 PTSTR NSIS_SetRegStr(UINT Reg, LPCTSTR Value)
 {
@@ -158,7 +192,7 @@ void __stdcall InetStatusCallback(HINTERNET hInternet, DWORD_PTR dwContext,
       // PCSTR and only sometimes a PCTSTR.
       StatsLock_AcquireExclusive();
       wsprintf(g_ServerIP, _T("%S"), lpvStatusInformation);
-      if (wcslen(g_ServerIP) == 1)
+      if (lstrlen(g_ServerIP) == 1)
       {
         wsprintf(g_ServerIP, _T("%s"), lpvStatusInformation);
       }
@@ -447,8 +481,11 @@ die:
   }
 
   // Tell the server to pick up wherever we left off.
-  TCHAR headers[32] = _T("");
-  _snwprintf(headers, 32, _T("Range: bytes=%d-\r\n"), previouslyWritten);
+  TCHAR headers[32];
+  // We're skipping building the C runtime to keep the file size low, so we
+  // can't use a normal string initialization because that would call memset.
+  headers[0] = _T('\0');
+  wsprintf(headers, _T("Range: bytes=%d-\r\n"), previouslyWritten);
 
   TRACE(_T("InetBgDl: calling InternetOpenUrl with url=%s\n"), pURL->text);
   g_hInetFile = InternetOpenUrl(g_hInetSes, pURL->text,
@@ -473,13 +510,10 @@ die:
   }
   TRACE(_T("InetBgDl: file size=%d bytes\n"), cbThisFile);
 
-  // Setup a buffer of size 256KiB to store the downloaded data.
-  const UINT cbBufXF = 262144;
   // Use a 4MiB read buffer for the connection.
   // Bigger buffers will be faster.
-  // cbReadBufXF should be a multiple of cbBufXF.
+  // cbReadBufXF should be a multiple of g_cbBufXF.
   const UINT cbReadBufXF = 4194304;
-  BYTE bufXF[cbBufXF];
 
   // Up the default internal buffer size from 4096 to internalReadBufferSize.
   DWORD internalReadBufferSize = cbReadBufXF;
@@ -608,13 +642,13 @@ NSISPIEXPORTFUNC Get(HWND hwndNSIS, UINT N_CCH, TCHAR*N_Vars, NSIS::stack_t**ppS
     if (lstrcmpi(pURL->text, _T("/connecttimeout")) == 0)
     {
       NSIS::stack_t*pConnectTimeout = StackPopItem(ppST);
-      g_ConnectTimeout = _tcstol(pConnectTimeout->text, NULL, 10) * 1000;
+      g_ConnectTimeout = MyTStrToL(pConnectTimeout->text) * 1000;
       continue;
     }
     else if (lstrcmpi(pURL->text, _T("/receivetimeout")) == 0)
     {
       NSIS::stack_t*pReceiveTimeout = StackPopItem(ppST);
-      g_ReceiveTimeout = _tcstol(pReceiveTimeout->text, NULL, 10) * 1000;
+      g_ReceiveTimeout = MyTStrToL(pReceiveTimeout->text) * 1000;
       continue;
     }
     else if (lstrcmpi(pURL->text, _T("/reset")) == 0)
@@ -694,7 +728,7 @@ NSISPIEXPORTFUNC GetStats(HWND hwndNSIS, UINT N_CCH, TCHAR*N_Vars, NSIS::stack_t
   StatsLock_ReleaseShared();
 }
 
-EXTERN_C BOOL WINAPI _DllMainCRTStartup(HMODULE hInst, UINT Reason, LPVOID pCtx)
+BOOL WINAPI DllMain(HINSTANCE hInst, ULONG Reason, LPVOID pCtx)
 {
   if (DLL_PROCESS_ATTACH==Reason)
   {
@@ -702,17 +736,4 @@ EXTERN_C BOOL WINAPI _DllMainCRTStartup(HMODULE hInst, UINT Reason, LPVOID pCtx)
     InitializeCriticalSection(&g_CritLock);
   }
   return TRUE;
-}
-
-BOOL WINAPI DllMain(HINSTANCE hInst, ULONG Reason, LPVOID pCtx)
-{
-  return _DllMainCRTStartup(hInst, Reason, pCtx);
-}
-
-// For some reason VC6++ doesn't like wcsicmp and swprintf.
-// If you use them, you get a linking error about _main
-// as an unresolved external.
-int main(int argc, char**argv)
-{
-  return 0;
 }
