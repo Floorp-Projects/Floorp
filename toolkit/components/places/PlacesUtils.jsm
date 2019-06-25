@@ -94,34 +94,6 @@ async function notifyKeywordChange(url, keyword, source) {
 }
 
 /**
- * Synchonously fetches all annotations for an item, including all properties of
- * each annotation which would be required to recreate it.
- * @note The async version (PlacesUtils.promiseAnnotationsForItem) should be
- *       used, unless there's absolutely no way to make the caller async.
- * @param aItemId
- *        The identifier of the itme for which annotations are to be
- *        retrieved.
- * @return Array of objects, each containing the following properties:
- *         name, flags, expires, mimeType, type, value
- */
-function getAnnotationsForItem(aItemId) {
-  var annos = [];
-  var annoNames = PlacesUtils.annotations.getItemAnnotationNames(aItemId);
-  for (let name of annoNames) {
-    let value = {}, flags = {}, exp = {}, storageType = {};
-    PlacesUtils.annotations.getItemAnnotationInfo(aItemId, name, value,
-                                                  flags, exp, storageType);
-    annos.push({
-      name,
-      flags: flags.value,
-      expires: exp.value,
-      value: value.value,
-    });
-  }
-  return annos;
-}
-
-/**
  * Serializes the given node in JSON format.
  *
  * @param aNode
@@ -153,10 +125,6 @@ function serializeNode(aNode) {
 
     data.dateAdded = aNode.dateAdded;
     data.lastModified = aNode.lastModified;
-
-    let annos = getAnnotationsForItem(data.id);
-    if (annos.length > 0)
-      data.annos = annos;
   }
 
   if (PlacesUtils.nodeIsURI(aNode)) {
@@ -245,7 +213,6 @@ const BOOKMARK_VALIDATORS = Object.freeze({
   },
   source: simpleValidateFunc(v => Number.isInteger(v) &&
                                   Object.values(PlacesUtils.bookmarks.SOURCES).includes(v)),
-  annos: simpleValidateFunc(v => Array.isArray(v) && v.length),
   keyword: simpleValidateFunc(v => (typeof(v) == "string") && v.length),
   charset: simpleValidateFunc(v => (typeof(v) == "string") && v.length),
   postData: simpleValidateFunc(v => (typeof(v) == "string") && v.length),
@@ -1182,38 +1149,6 @@ var PlacesUtils = {
     return result;
   },
 
-  /**
-   * Fetch all annotations for an item, including all properties of each
-   * annotation which would be required to recreate it.
-   * @param itemId
-   *        The identifier of the itme for which annotations are to be
-   *        retrieved.
-   * @return Array of objects, each containing the following properties:
-   *         name, flags, expires, mimeType, type, value
-   */
-  async promiseAnnotationsForItem(itemId) {
-    let db =  await PlacesUtils.promiseDBConnection();
-    let rows = await db.executeCached(
-      `SELECT n.name, a.content, a.expiration, a.flags
-       FROM moz_items_annos a
-       JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id
-       WHERE a.item_id = :itemId
-      `, { itemId });
-
-    let result = [];
-    for (let row of rows) {
-      let anno = {
-        name: row.getResultByName("name"),
-        value: row.getResultByName("content"),
-        expires: row.getResultByName("expiration"),
-        flags: row.getResultByName("flags"),
-      };
-      result.push(anno);
-    }
-
-    return result;
-  },
-
   // Identifier getters for special folders.
   // You should use these everywhere PlacesUtils is available to avoid XPCOM
   // traversal just to get roots' ids.
@@ -1562,8 +1497,6 @@ var PlacesUtils = {
    *    the item.
    *  - lastModified (number, microseconds from the epoch): the last-modified
    *    value of the item.
-   *  - annos (see getAnnotationsForItem): the item's annotations.  This is not
-   *    set if there are no annotations set for the item).
    *  - index: the item's index under it's parent.
    *
    * The root object (i.e. the one for aItemGuid) also has the following
@@ -1617,15 +1550,6 @@ var PlacesUtils = {
       item.typeCode = type;
       if (type == Ci.nsINavBookmarksService.TYPE_BOOKMARK)
         copyProps("charset", "tags", "iconuri");
-
-      // Add annotations.
-      if (aRow.getResultByName("has_annos")) {
-        try {
-          item.annos = await PlacesUtils.promiseAnnotationsForItem(itemId);
-        } catch (ex) {
-          Cu.reportError("Unexpected error while reading annotations " + ex);
-        }
-      }
 
       switch (type) {
         case PlacesUtils.bookmarks.TYPE_BOOKMARK:
@@ -1696,8 +1620,6 @@ var PlacesUtils = {
                JOIN moz_bookmarks t ON t.id = +b2.parent AND t.parent = :tags_folder
                WHERE b2.fk = h.id
               ) AS tags,
-              EXISTS (SELECT 1 FROM moz_items_annos
-                      WHERE item_id = d.id LIMIT 1) AS has_annos,
               (SELECT a.content FROM moz_annos a
                JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id
                WHERE place_id = h.id AND n.name = :charset_anno

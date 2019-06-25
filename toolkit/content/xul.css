@@ -531,10 +531,6 @@ menulist > menupopup > .popup-internal-box > .arrowscrollbox-scrollbox {
   overflow: auto;
 }
 
-dropmarker > .dropmarker-icon {
-  pointer-events: none;
-}
-
 /********** splitter **********/
 
 .tree-splitter {

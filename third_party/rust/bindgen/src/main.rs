@@ -71,12 +71,12 @@ fn print_verbose_err() {
     println!("Bindgen unexpectedly panicked");
     println!(
         "This may be caused by one of the known-unsupported \
-              things (https://github.com/rust-lang-nursery/rust-bindgen#c), \
+              things (https://rust-lang.github.io/rust-bindgen/cpp.html), \
               please modify the bindgen flags to work around it as \
-              described in https://github.com/rust-lang-nursery/rust-bindgen#c"
+              described in https://rust-lang.github.io/rust-bindgen/cpp.html"
     );
     println!(
         "Otherwise, please file an issue at \
-              https://github.com/rust-lang-nursery/rust-bindgen/issues/new"
+              https://github.com/rust-lang/rust-bindgen/issues/new"
     );
 }

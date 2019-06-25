@@ -697,6 +697,15 @@ export function getDisplayedSourcesList(
   ): any);
 }
 
+export function getExtensionNameBySourceUrl(state: OuterState, url: string) {
+  const match = getSourceList(state).find(
+    source => source.url && source.url.startsWith(url)
+  );
+  if (match && match.extensionName) {
+    return match.extensionName;
+  }
+}
+
 export function getSourceCount(state: OuterState) {
   return getSourceList(state).length;
 }

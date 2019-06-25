@@ -2050,20 +2050,9 @@ static bool PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
   MOZ_ASSERT(context);
 
   switch (aItem->GetType()) {
-    case DisplayItemType::TYPE_SVG_WRAPPER: {
-      // XXX Why doesn't this need the scaling applied?
-      context->SetMatrix(
-          context->CurrentMatrix().PreTranslate(-aOffset.x, -aOffset.y));
-      isInvalidated = PaintByLayer(
-          aItem, aDisplayListBuilder, aManager, context, aScale, [&]() {
-            aManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
-                                     aDisplayListBuilder);
-          });
-      break;
-    }
+    case DisplayItemType::TYPE_SVG_WRAPPER:
     case DisplayItemType::TYPE_MASK: {
-      // We could handle this case with the same code as TYPE_FILTER, but it
-      // would be good to know what situations trigger it.
+      // These items should be handled by other code paths
       MOZ_RELEASE_ASSERT(0);
       break;
     }

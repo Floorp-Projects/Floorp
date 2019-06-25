@@ -17,7 +17,7 @@ import {
 import { isVisible } from "../../utils/ui";
 
 import { getHiddenTabs } from "../../utils/tabs";
-import { getFilename, isPretty } from "../../utils/source";
+import { getFilename, isPretty, getFileURL } from "../../utils/source";
 import actions from "../../actions";
 
 import { debounce } from "lodash";
@@ -143,7 +143,7 @@ class Tabs extends PureComponent<Props, State> {
 
     const onClick = () => selectSource(cx, source.id);
     return (
-      <li key={source.id} onClick={onClick}>
+      <li key={source.id} onClick={onClick} title={getFileURL(source, false)}>
         <AccessibleImage
           className={`dropdown-icon ${this.getIconClass(source)}`}
         />

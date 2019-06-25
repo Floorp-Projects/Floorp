@@ -3961,10 +3961,13 @@ Downloader.prototype = {
     this._patch.QueryInterface(Ci.nsIWritablePropertyBag);
     this.isCompleteUpdate = this._patch.type == "complete";
 
-    let canUseBits = this._canUseBits(this._patch);
+    let canUseBits = false;
     // Allow the advertised update to disable BITS.
     if (this._update.getProperty("disableBITS") != null) {
-      canUseBits = false;
+      LOG("Downloader:downloadUpdate - BITS downloads disabled by update " +
+          "advertisement");
+    } else {
+      canUseBits = this._canUseBits(this._patch);
     }
 
     this._downloaderName = canUseBits ? "bits" : "internal";

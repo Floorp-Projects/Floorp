@@ -30,6 +30,7 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "shared-libraries.h"
+#include "zlib.h"
 
 #include <string>
 #include <sstream>
@@ -359,6 +360,100 @@ nsProfiler::GetProfileDataAsArrayBuffer(double aSinceTime, JSContext* aCx,
             JSObject* typedArray = dom::ArrayBuffer::Create(
                 cx, aResult.Length(),
                 reinterpret_cast<const uint8_t*>(aResult.Data()));
+            if (typedArray) {
+              JS::RootedValue val(cx, JS::ObjectValue(*typedArray));
+              promise->MaybeResolve(val);
+            } else {
+              promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+            }
+          },
+          [promise](nsresult aRv) { promise->MaybeReject(aRv); });
+
+  promise.forget(aPromise);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProfiler::GetProfileDataAsGzippedArrayBuffer(double aSinceTime,
+                                               JSContext* aCx,
+                                               Promise** aPromise) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!profiler_is_active()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_WARN_IF(!aCx)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(globalObject, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  StartGathering(aSinceTime)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [promise](nsCString aResult) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              // We're really hosed if we can't get a JS context for some
+              // reason.
+              promise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
+              return;
+            }
+
+            // Compress a buffer via zlib (as with `compress()`), but emit a
+            // gzip header as well. Like `compress()`, this is limited to 4GB in
+            // size, but that shouldn't be an issue for our purposes.
+            uLongf outSize = compressBound(aResult.Length());
+            FallibleTArray<uint8_t> outBuff;
+            if (!outBuff.SetLength(outSize, fallible)) {
+              promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+              return;
+            }
+
+            int zerr;
+            z_stream stream;
+            stream.zalloc = nullptr;
+            stream.zfree = nullptr;
+            stream.opaque = nullptr;
+            stream.next_out = (Bytef*)outBuff.Elements();
+            stream.avail_out = outBuff.Length();
+            stream.next_in = (z_const Bytef*)aResult.Data();
+            stream.avail_in = aResult.Length();
+
+            // A windowBits of 31 is the default (15) plus 16 for emitting a
+            // gzip header; a memLevel of 8 is the default.
+            zerr = deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
+                                /* windowBits */ 31, /* memLevel */ 8,
+                                Z_DEFAULT_STRATEGY);
+            if (zerr != Z_OK) {
+              promise->MaybeReject(NS_ERROR_FAILURE);
+              return;
+            }
+
+            zerr = deflate(&stream, Z_FINISH);
+            outSize = stream.total_out;
+            deflateEnd(&stream);
+
+            if (zerr != Z_STREAM_END) {
+              promise->MaybeReject(NS_ERROR_FAILURE);
+              return;
+            }
+
+            outBuff.TruncateLength(outSize);
+
+            JSContext* cx = jsapi.cx();
+            JSObject* typedArray = dom::ArrayBuffer::Create(
+                cx, outBuff.Length(), outBuff.Elements());
             if (typedArray) {
               JS::RootedValue val(cx, JS::ObjectValue(*typedArray));
               promise->MaybeResolve(val);
