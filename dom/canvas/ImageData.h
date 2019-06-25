@@ -15,6 +15,9 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 #include "js/RootingAPI.h"
+#include "js/StructuredClone.h"
+
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
@@ -50,6 +53,13 @@ class ImageData final : public nsISupports {
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector);
+
+  //[Serializable] implementation
+  static already_AddRefed<ImageData> ReadStructuredClone(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
+  bool WriteStructuredClone(JSContext* aCx,
+                            JSStructuredCloneWriter* aWriter) const;
 
  private:
   void HoldData();
