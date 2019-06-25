@@ -11,8 +11,7 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.feature.tabs.TabsUseCases
-import mozilla.components.service.fxa.Config
-import mozilla.components.service.fxa.manager.DeviceTuple
+import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -25,6 +24,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.service.fxa.DeviceConfig
 
 // Same as the actual account manager, except we get to control how FirefoxAccountShaped instances
 // are created. This is necessary because due to some build issues (native dependencies not available
@@ -32,12 +32,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 // Instead, we express all of our account-related operations over an interface.
 class TestableFxaAccountManager(
     context: Context,
-    config: Config,
-    scopes: Array<String>,
+    config: ServerConfig,
+    scopes: Set<String>,
     val block: () -> OAuthAccount = { mock() }
-) : FxaAccountManager(context, config, scopes, DeviceTuple("test", DeviceType.MOBILE, listOf()), null) {
+) : FxaAccountManager(context, config, DeviceConfig("test", DeviceType.MOBILE, setOf()), null, scopes) {
 
-    override fun createAccount(config: Config): OAuthAccount {
+    override fun createAccount(config: ServerConfig): OAuthAccount {
         return block()
     }
 }
@@ -118,8 +118,8 @@ class FirefoxAccountsAuthFeatureTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            Config.release("dummyId", "bad://url"),
-            arrayOf("profile", "test-scope")
+            ServerConfig.release("dummyId", "bad://url"),
+            setOf("test-scope")
         ) {
             mockAccount
         }
@@ -143,8 +143,8 @@ class FirefoxAccountsAuthFeatureTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            Config.release("dummyId", "bad://url"),
-            arrayOf("profile", "test-scope")
+            ServerConfig.release("dummyId", "bad://url"),
+            setOf("test-scope")
         ) {
             mockAccount
         }

@@ -58,7 +58,7 @@ class FxaDeviceConstellation(
     override fun initDeviceAsync(
         name: String,
         type: DeviceType,
-        capabilities: List<DeviceCapability>
+        capabilities: Set<DeviceCapability>
     ): Deferred<Boolean> {
         return scope.async {
             handleFxaExceptions(logger, "initializing device") {
@@ -86,7 +86,7 @@ class FxaDeviceConstellation(
         return CompletableDeferred(false)
     }
 
-    override fun ensureCapabilitiesAsync(capabilities: List<DeviceCapability>): Deferred<Boolean> {
+    override fun ensureCapabilitiesAsync(capabilities: Set<DeviceCapability>): Deferred<Boolean> {
         return scope.async {
             handleFxaExceptions(logger, "ensuring capabilities") {
                 account.ensureCapabilities(capabilities.map { it.into() }.toSet())

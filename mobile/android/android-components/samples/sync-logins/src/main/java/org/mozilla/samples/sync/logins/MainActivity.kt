@@ -20,13 +20,13 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.concept.sync.SyncStatusObserver
-import mozilla.components.feature.sync.BackgroundSyncManager
-import mozilla.components.feature.sync.GlobalSyncableStoreProvider
-import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
-import mozilla.components.service.fxa.manager.DeviceTuple
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.DeviceConfig
+import mozilla.components.service.fxa.ServerConfig
+import mozilla.components.service.fxa.SyncConfig
+import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
+import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import mozilla.components.support.base.log.Log
@@ -46,11 +46,8 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         }
     }
 
-    private val syncManager by lazy {
+    init {
         GlobalSyncableStoreProvider.configureStore("logins" to loginsStorage)
-        BackgroundSyncManager("https://identity.mozilla.com/apps/oldsync").also {
-            it.addStore("logins")
-        }
     }
 
     private lateinit var listView: ListView
@@ -60,10 +57,9 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     private val accountManager by lazy {
         FxaAccountManager(
                 applicationContext,
-                Config.release(CLIENT_ID, REDIRECT_URL),
-                arrayOf("profile", "https://identity.mozilla.com/apps/oldsync"),
-                DeviceTuple("A-C Logins Sync Sample", DeviceType.MOBILE, listOf()),
-                syncManager
+                ServerConfig.release(CLIENT_ID, REDIRECT_URL),
+                DeviceConfig("A-C Logins Sync Sample", DeviceType.MOBILE, setOf()),
+                SyncConfig(setOf("logins"))
         )
     }
 
@@ -79,7 +75,8 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         setContentView(R.layout.activity_main)
         job = Job()
 
-        syncManager.register(this, this)
+        // Observe sync state changes.
+        accountManager.registerForSyncEvents(observer = this, owner = this, autoPause = true)
 
         listView = findViewById(R.id.logins_list_view)
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1)
@@ -108,7 +105,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         override fun onLoggedOut() {}
 
         override fun onAuthenticated(account: OAuthAccount) {
-            syncManager.syncNow()
+            accountManager.syncNowAsync()
         }
 
         @Suppress("EmptyFunctionBlock")
@@ -117,12 +114,6 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         override fun onAuthenticationProblems() {
             launch {
                 Toast.makeText(this@MainActivity, "Account auth problem", Toast.LENGTH_LONG).show()
-            }
-        }
-
-        override fun onError(error: Exception) {
-            launch {
-                Toast.makeText(this@MainActivity, "Account error: $error", Toast.LENGTH_LONG).show()
             }
         }
     }

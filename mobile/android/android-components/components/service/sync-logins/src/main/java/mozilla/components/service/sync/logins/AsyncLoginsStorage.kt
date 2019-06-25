@@ -13,7 +13,7 @@ import kotlinx.coroutines.plus
 import mozilla.appservices.logins.DatabaseLoginsStorage
 import mozilla.appservices.logins.LoginsStorage
 import mozilla.appservices.logins.MemoryLoginsStorage
-import mozilla.components.concept.sync.AuthInfo
+import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 
@@ -369,7 +369,7 @@ data class SyncableLoginsStore(
     val store: AsyncLoginsStorage,
     val key: () -> Deferred<String>
 ) : SyncableStore {
-    override suspend fun sync(authInfo: AuthInfo): SyncStatus {
+    override suspend fun sync(authInfo: SyncAuthInfo): SyncStatus {
         return try {
             withUnlocked {
                 it.sync(authInfo.into()).await()

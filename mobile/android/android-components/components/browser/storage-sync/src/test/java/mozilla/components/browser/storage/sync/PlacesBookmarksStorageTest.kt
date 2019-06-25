@@ -19,7 +19,7 @@ import mozilla.components.browser.storage.sync.GleanMetrics.Pings
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import mozilla.components.concept.sync.AuthInfo
+import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -374,7 +374,7 @@ class PlacesBookmarksStorageTest {
         }
         val storage = TestablePlacesBookmarksStorage(conn)
 
-        val result = storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        val result = storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
 
         Assert.assertTrue(result is SyncStatus.Ok)
         Assert.assertEquals(conn.pingCount, 1)
@@ -542,7 +542,7 @@ class PlacesBookmarksStorageTest {
         }
         val storage = TestablePlacesBookmarksStorage(conn)
 
-        val result = storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        val result = storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
 
         Assert.assertTrue(result is SyncStatus.Ok)
         Assert.assertEquals(6, conn.pingCount)
@@ -611,7 +611,7 @@ class PlacesBookmarksStorageTest {
         }
         val storage = TestablePlacesBookmarksStorage(conn)
 
-        val result = storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        val result = storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
 
         Assert.assertTrue(result is SyncStatus.Ok)
         Assert.assertEquals(1, conn.pingCount)

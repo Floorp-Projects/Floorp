@@ -22,7 +22,7 @@ import mozilla.components.concept.sync.Profile
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaException
-import mozilla.components.service.fxa.Config
+import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import kotlin.coroutines.CoroutineContext
@@ -125,7 +125,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             return it
         }
 
-        val config = Config(CONFIG_URL, CLIENT_ID, REDIRECT_URL)
+        val config = ServerConfig(CONFIG_URL, CLIENT_ID, REDIRECT_URL)
         return FirefoxAccount(config)
     }
 

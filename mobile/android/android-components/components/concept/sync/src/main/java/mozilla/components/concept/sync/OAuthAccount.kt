@@ -36,27 +36,6 @@ interface OAuthAccount : AutoCloseable {
     fun registerPersistenceCallback(callback: StatePersistenceCallback)
     fun deviceConstellation(): DeviceConstellation
     fun toJSONString(): String
-
-    /**
-     * Returns an [AuthInfo] instance which may be used for data synchronization.
-     *
-     * @return An [AuthInfo] which is guaranteed to have a sync key.
-     * @throws AuthException if account needs to restart the OAuth flow.
-     */
-    suspend fun authInfo(singleScope: String): AuthInfo {
-        val tokenServerURL = this.getTokenServerEndpointURL()
-        val tokenInfo = this.getAccessTokenAsync(singleScope).await()
-                ?: throw AuthException(AuthExceptionType.NO_TOKEN)
-        val keyInfo = tokenInfo.key
-                ?: throw AuthException(AuthExceptionType.KEY_INFO)
-
-        return AuthInfo(
-                kid = keyInfo.kid,
-                fxaAccessToken = tokenInfo.token,
-                syncKey = keyInfo.k,
-                tokenServerUrl = tokenServerURL
-        )
-    }
 }
 
 /**
@@ -68,16 +47,6 @@ interface StatePersistenceCallback {
      */
     fun persist(data: String)
 }
-
-/**
- * A Firefox Sync friendly auth object which can be obtained from [OAuthAccount].
- */
-data class AuthInfo(
-    val kid: String,
-    val fxaAccessToken: String,
-    val syncKey: String,
-    val tokenServerUrl: String
-)
 
 /**
  * Observer interface which lets its users monitor account state changes and major events.
@@ -104,12 +73,6 @@ interface AccountObserver {
      * Account needs to be re-authenticated (e.g. due to a password change).
      */
     fun onAuthenticationProblems()
-
-    /**
-     * Account manager encountered an error. Inspect [error] for details.
-     * @param error A specific error encountered.
-     */
-    fun onError(error: Exception)
 }
 
 data class Avatar(

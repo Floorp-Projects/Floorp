@@ -4,12 +4,12 @@
 
 package mozilla.components.service.sync.logins
 
-import mozilla.components.concept.sync.AuthInfo
+import mozilla.components.concept.sync.SyncAuthInfo
 
 /**
  * Conversion from a generic AuthInfo type into a type 'logins' lib uses at the interface boundary.
  */
-fun AuthInfo.into(): SyncUnlockInfo {
+fun SyncAuthInfo.into(): SyncUnlockInfo {
     return SyncUnlockInfo(
         kid = this.kid,
         fxaAccessToken = this.fxaAccessToken,

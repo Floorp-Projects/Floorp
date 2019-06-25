@@ -29,12 +29,12 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.DeviceEventsObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.concept.sync.SyncStatusObserver
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.Config
-import mozilla.components.feature.sync.BackgroundSyncManager
-import mozilla.components.feature.sync.GlobalSyncableStoreProvider
-import mozilla.components.service.fxa.manager.DeviceTuple
+import mozilla.components.service.fxa.DeviceConfig
+import mozilla.components.service.fxa.ServerConfig
+import mozilla.components.service.fxa.SyncConfig
+import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
+import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import java.lang.Exception
@@ -53,26 +53,21 @@ class MainActivity :
         PlacesBookmarksStorage(this)
     }
 
-    private val syncManager by lazy {
+    init {
         GlobalSyncableStoreProvider.configureStore("history" to historyStorage)
         GlobalSyncableStoreProvider.configureStore("bookmarks" to bookmarksStorage)
-        BackgroundSyncManager("https://identity.mozilla.com/apps/oldsync").also {
-            it.addStore("history")
-            it.addStore("bookmarks")
-        }
     }
 
     private val accountManager by lazy {
         FxaAccountManager(
                 this,
-                Config.release(CLIENT_ID, REDIRECT_URL),
-                arrayOf("profile", "https://identity.mozilla.com/apps/oldsync"),
-                DeviceTuple(
+                ServerConfig.release(CLIENT_ID, REDIRECT_URL),
+                DeviceConfig(
                     name = "A-C Sync Sample - ${System.currentTimeMillis()}",
                     type = DeviceType.MOBILE,
-                    capabilities = listOf(DeviceCapability.SEND_TAB)
+                    capabilities = setOf(DeviceCapability.SEND_TAB)
                 ),
-                syncManager
+                SyncConfig(setOf("history", "bookmarks"), syncPeriodInMinutes = 15L)
         )
     }
 
@@ -139,16 +134,18 @@ class MainActivity :
 
         // NB: ObserverRegistry takes care of unregistering this observer when appropriate, and
         // cleaning up any internal references to 'observer' and 'owner'.
-        syncManager.register(syncObserver, owner = this, autoPause = true)
         // Observe changes to the account and profile.
         accountManager.register(accountObserver, owner = this, autoPause = true)
+        // Observe sync state changes.
+        accountManager.registerForSyncEvents(syncObserver, owner = this, autoPause = true)
+        // Observe incoming device events.
         accountManager.registerForDeviceEvents(deviceEventsObserver, owner = this, autoPause = true)
 
         // Now that our account state observer is registered, we can kick off the account manager.
         launch { accountManager.initAsync().await() }
 
         findViewById<View>(R.id.buttonSync).setOnClickListener {
-            syncManager.syncNow()
+            accountManager.syncNowAsync()
         }
     }
 
@@ -284,13 +281,6 @@ class MainActivity :
                     R.string.signed_in_with_profile,
                     "${profile.displayName ?: ""} ${profile.email}"
                 )
-            }
-        }
-
-        override fun onError(error: Exception) {
-            launch {
-                val txtView: TextView = findViewById(R.id.fxaStatusView)
-                txtView.text = getString(R.string.account_error, error.toString())
             }
         }
     }

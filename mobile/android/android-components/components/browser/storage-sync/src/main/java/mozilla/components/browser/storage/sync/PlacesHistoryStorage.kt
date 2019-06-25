@@ -13,15 +13,13 @@ import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
-import mozilla.components.concept.sync.AuthInfo
+import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.segmentAwareDomainMatch
 
 const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
-
-typealias SyncAuthInfo = mozilla.appservices.places.SyncAuthInfo
 
 /**
  * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesApi].
@@ -172,10 +170,10 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
      * @param authInfo The authentication information to sync with.
      * @return Sync status of OK or Error
      */
-    override suspend fun sync(authInfo: AuthInfo): SyncStatus {
+    override suspend fun sync(authInfo: SyncAuthInfo): SyncStatus {
         return withContext(scope.coroutineContext) {
             syncAndHandleExceptions {
-                places.syncHistory(authInfo.into())
+                places.syncHistory(authInfo)
             }
         }
     }

@@ -21,7 +21,7 @@ import mozilla.components.browser.storage.sync.GleanMetrics.HistorySync
 import mozilla.components.browser.storage.sync.GleanMetrics.Pings
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.VisitType
-import mozilla.components.concept.sync.AuthInfo
+import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -519,11 +519,12 @@ class PlacesHistoryStorageTest {
         }
         val storage = MockingPlacesHistoryStorage(conn)
 
-        storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
 
         assertEquals("kid", passedAuthInfo!!.kid)
-        assertEquals("serverUrl", passedAuthInfo!!.tokenserverURL)
+        assertEquals("serverUrl", passedAuthInfo!!.tokenServerUrl)
         assertEquals("token", passedAuthInfo!!.fxaAccessToken)
+        assertEquals(123L, passedAuthInfo!!.fxaAccessTokenExpiresAt)
         assertEquals("key", passedAuthInfo!!.syncKey)
     }
 
@@ -550,7 +551,7 @@ class PlacesHistoryStorageTest {
         }
         val storage = MockingPlacesHistoryStorage(conn)
 
-        val result = storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        val result = storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
         assertEquals(SyncStatus.Ok, result)
     }
 
@@ -582,7 +583,7 @@ class PlacesHistoryStorageTest {
         }
         val storage = MockingPlacesHistoryStorage(conn)
 
-        val result = storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        val result = storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
 
         assertTrue(result is SyncStatus.Error)
 
@@ -725,7 +726,7 @@ class PlacesHistoryStorageTest {
         }
         val storage = MockingPlacesHistoryStorage(conn)
 
-        val result = storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        val result = storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
 
         assertTrue(result is SyncStatus.Ok)
         assertEquals(2, conn.pingCount)
@@ -902,7 +903,7 @@ class PlacesHistoryStorageTest {
         }
         val storage = MockingPlacesHistoryStorage(conn)
 
-        val result = storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        val result = storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
 
         assertTrue(result is SyncStatus.Ok)
         assertEquals(6, conn.pingCount)
@@ -971,7 +972,7 @@ class PlacesHistoryStorageTest {
         }
         val storage = MockingPlacesHistoryStorage(conn)
 
-        val result = storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        val result = storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
 
         assertTrue(result is SyncStatus.Ok)
         assertEquals(1, conn.pingCount)
@@ -1004,7 +1005,7 @@ class PlacesHistoryStorageTest {
             }
         }
         val storage = MockingPlacesHistoryStorage(conn)
-        storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
         fail()
     }
 }

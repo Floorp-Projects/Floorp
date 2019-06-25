@@ -72,10 +72,6 @@ projects:
     path: components/feature/session
     description: 'Feature implementation connecting an engine implementation with the session module.'
     publish: true
-  feature-sync:
-    path: components/feature/sync
-    description: 'Feature implementation that enables syncing of syncable components.'
-    publish: true
   feature-tabs:
     path: components/feature/tabs
     description: 'Feature implementation connecting a tabs tray implementation with the session and toolbar modules.'

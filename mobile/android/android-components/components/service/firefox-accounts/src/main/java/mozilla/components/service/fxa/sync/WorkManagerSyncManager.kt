@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.sync
+package mozilla.components.service.fxa.sync
 
 import android.content.Context
 import androidx.annotation.UiThread
@@ -20,10 +20,9 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import mozilla.components.concept.sync.AuthException
-import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.SyncStatus
-import mozilla.components.concept.sync.SyncStatusObserver
-import mozilla.components.service.fxa.SharedPrefAccountStorage
+import mozilla.components.service.fxa.SyncAuthInfoCache
+import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.manager.authErrorRegistry
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
@@ -42,6 +41,35 @@ private enum class SyncWorkerName {
     Immediate
 }
 
+private const val KEY_DATA_STORES = "stores"
+
+/**
+ * A [SyncManager] implementation which uses WorkManager APIs to schedule sync tasks.
+ *
+ * Must be initialized on the main thread.
+ */
+internal class WorkManagerSyncManager(syncConfig: SyncConfig) : SyncManager(syncConfig) {
+    override val logger = Logger("BgSyncManager")
+
+    init {
+        WorkersLiveDataObserver.init()
+
+        if (syncConfig.syncPeriodInMinutes == null) {
+            logger.info("Periodic syncing is disabled.")
+        } else {
+            logger.info("Periodic syncing enabled at a ${syncConfig.syncPeriodInMinutes} interval")
+        }
+    }
+
+    override fun createDispatcher(stores: Set<String>): SyncDispatcher {
+        return WorkManagerSyncDispatcher(stores)
+    }
+
+    override fun dispatcherUpdated(dispatcher: SyncDispatcher) {
+        WorkersLiveDataObserver.setDispatcher(dispatcher)
+    }
+}
+
 /**
  * A singleton wrapper around the the LiveData "forever" observer - i.e. an observer not bound
  * to a lifecycle owner. This observer is always active.
@@ -57,9 +85,12 @@ object WorkersLiveDataObserver {
 
     @UiThread
     fun init() {
+        // Only set our observer once.
+        if (workersLiveData.hasObservers()) return
+
+        // This must be called on the UI thread.
         workersLiveData.observeForever {
-            val isRunningOrNothing = it?.any { worker -> worker.state == WorkInfo.State.RUNNING }
-            val isRunning = when (isRunningOrNothing) {
+            val isRunning = when (it?.any { worker -> worker.state == WorkInfo.State.RUNNING }) {
                 null -> false
                 false -> false
                 true -> true
@@ -77,14 +108,18 @@ object WorkersLiveDataObserver {
 }
 
 class WorkManagerSyncDispatcher(
-    private val stores: Set<String>,
-    private val syncScope: String,
-    private val account: OAuthAccount
+    private val stores: Set<String>
 ) : SyncDispatcher, Observable<SyncStatusObserver> by ObserverRegistry(), Closeable {
     private val logger = Logger("WMSyncDispatcher")
 
     // TODO does this need to be volatile?
     private var isSyncActive = false
+
+    init {
+        // Stop any currently active periodic syncing. Consumers of this class are responsible for
+        // starting periodic syncing via [startPeriodicSync] if they need it.
+        stopPeriodicSync()
+    }
 
     override fun workersStateChanged(isRunning: Boolean) {
         if (isSyncActive && !isRunning) {
@@ -138,6 +173,10 @@ class WorkManagerSyncDispatcher(
         )
     }
 
+    /**
+     * Disables periodic syncing in the background. Currently running syncs may continue until completion.
+     * Safe to call this even if periodic syncing isn't currently enabled.
+     */
     override fun stopPeriodicSync() {
         logger.debug("Cancelling periodic syncing")
         WorkManager.getInstance().cancelUniqueWork(SyncWorkerName.Periodic.name)
@@ -175,10 +214,7 @@ class WorkManagerSyncDispatcher(
     }
 
     private fun getWorkerData(): Data {
-        val dataBuilder = Data.Builder()
-                .putString("account", account.toJSONString())
-                .putString("syncScope", syncScope)
-                .putStringArray("stores", stores.toTypedArray())
+        val dataBuilder = Data.Builder().putStringArray(KEY_DATA_STORES, stores.toTypedArray())
 
         return dataBuilder.build()
     }
@@ -199,7 +235,7 @@ class WorkManagerSyncWorker(
         return lastSyncedTs != 0L && (System.currentTimeMillis() - lastSyncedTs) < SYNC_STAGGER_BUFFER_MS
     }
 
-    @Suppress("ReturnCount", "ComplexMethod")
+    @Suppress("ReturnCount", "LongMethod")
     override suspend fun doWork(): Result {
         logger.debug("Starting sync... Tagged as: ${params.tags}")
 
@@ -212,18 +248,21 @@ class WorkManagerSyncWorker(
         }
 
         // Otherwise, proceed as normal.
-        // Read all of the data we'll need to sync: account, syncScope and a map of SyncableStore objects.
-        val accountStorage = SharedPrefAccountStorage(context)
-        val account = accountStorage.read()
-                // Account must have disappeared in the time between this task being scheduled and executed.
-                // A "logout" is expected to cancel pending sync tasks, but that isn't guaranteed.
-                ?: return Result.failure()
-        val syncScope = params.inputData.getString("syncScope")!!
-        val syncableStores = params.inputData.getStringArray("stores")!!.associate {
+        // In order to sync, we'll need:
+        // - a list of SyncableStores...
+        val syncableStores = params.inputData.getStringArray(KEY_DATA_STORES)!!.associate {
             it to GlobalSyncableStoreProvider.getStore(it)!!
+        }.ifEmpty {
+            // Short-circuit if there are no configured stores.
+            // Don't update the "last-synced" timestamp because we haven't actually synced anything.
+            return Result.success()
         }
 
-        val syncResult = StorageSync(syncableStores, syncScope).sync(account)
+        // - and a cached "sync auth info" object.
+        val syncAuthInfo = SyncAuthInfoCache(context).getCached() ?: return Result.failure()
+
+        // Sync!
+        val syncResult = StorageSync(syncableStores).sync(syncAuthInfo)
 
         val resultBuilder = Data.Builder()
         syncResult.forEach {

@@ -5,20 +5,20 @@
 @file:Suppress("MatchingDeclarationName")
 package mozilla.components.browser.storage.sync
 
+import mozilla.appservices.places.SyncAuthInfo
 import java.util.Date
 import mozilla.appservices.sync15.EngineInfo
 import mozilla.appservices.sync15.FailureReason
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
-import mozilla.components.concept.sync.AuthInfo
 
 // We have type definitions at the concept level, and "external" types defined within Places.
 // In practice these two types are largely the same, and this file is the conversion point.
 
 /**
- * Conversion from a generic AuthInfo type into a type 'places' lib uses at the interface boundary.
+ * Conversion from our SyncAuthInfo into its "native" version used at the interface boundary.
  */
-internal fun AuthInfo.into(): SyncAuthInfo {
+internal fun mozilla.components.concept.sync.SyncAuthInfo.into(): SyncAuthInfo {
     return SyncAuthInfo(
         kid = this.kid,
         fxaAccessToken = this.fxaAccessToken,

@@ -16,7 +16,7 @@ import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.BookmarksStorage
-import mozilla.components.concept.sync.AuthInfo
+import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
@@ -177,10 +177,10 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @param authInfo The authentication information to sync with.
      * @return Sync status of OK or Error
      */
-    override suspend fun sync(authInfo: AuthInfo): SyncStatus {
+    override suspend fun sync(authInfo: SyncAuthInfo): SyncStatus {
         return withContext(scope.coroutineContext) {
             syncAndHandleExceptions {
-                places.syncBookmarks(authInfo.into())
+                places.syncBookmarks(authInfo)
             }
         }
     }

@@ -5,6 +5,7 @@
 package mozilla.components.service.fxa.manager
 
 import android.content.Context
+import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CompletableDeferred
@@ -13,40 +14,38 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthException
-import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceEventsObserver
-import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
-import mozilla.components.concept.sync.SyncManager
 import mozilla.components.service.fxa.AccountStorage
-import mozilla.components.service.fxa.Config
+import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaException
 import mozilla.components.service.fxa.FxaPanicException
+import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SharedPrefAccountStorage
+import mozilla.components.service.fxa.SyncAuthInfoCache
+import mozilla.components.service.fxa.SyncConfig
+import mozilla.components.service.fxa.asSyncAuthInfo
+import mozilla.components.service.fxa.sync.SyncManager
+import mozilla.components.service.fxa.sync.SyncStatusObserver
+import mozilla.components.service.fxa.sync.WorkManagerSyncManager
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import java.io.Closeable
+import java.lang.Exception
+import java.lang.IllegalArgumentException
 import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
-
-/**
- * Propagated via [AccountObserver.onError] if we fail to load a locally stored account during
- * initialization. No action is necessary from consumers.
- * Account state has been re-initialized.
- *
- * @param cause Optional original cause of failure.
- */
-class FailedToLoadAccountException(cause: Exception?) : Exception(cause)
 
 /**
  * A global registry for propagating [AuthException] errors. Components such as [SyncManager] and
@@ -78,12 +77,8 @@ private interface OAuthObserver {
     fun onError()
 }
 
-const val PROFILE_SCOPE = "profile"
-
-/**
- * Helper data class that wraps common device initialization parameters.
- */
-data class DeviceTuple(val name: String, val type: DeviceType, val capabilities: List<DeviceCapability>)
+const val SCOPE_PROFILE = "profile"
+const val SCOPE_SYNC = "https://identity.mozilla.com/apps/oldsync"
 
 /**
  * An account manager which encapsulates various internal details of an account lifecycle and provides
@@ -94,26 +89,24 @@ data class DeviceTuple(val name: String, val type: DeviceType, val capabilities:
  * Class is 'open' to facilitate testing.
  *
  * @param context A [Context] instance that's used for internal messaging and interacting with local storage.
- * @param config A [Config] used for account initialization.
- * @param applicationScopes A list of scopes which will be requested during account authentication.
- * @param deviceTuple A description of the current device (name, type, capabilities).
+ * @param serverConfig A [ServerConfig] used for account initialization.
+ * @param deviceConfig A description of the current device (name, type, capabilities).
+ * @param syncConfig Optional, initial sync behaviour configuration. Sync will be disabled if this is `null`.
+ * @param applicationScopes A set of scopes which will be requested during account authentication.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 open class FxaAccountManager(
     private val context: Context,
-    private val config: Config,
-    private val applicationScopes: Array<String>,
-    private val deviceTuple: DeviceTuple,
-    syncManager: SyncManager? = null,
+    private val serverConfig: ServerConfig,
+    private val deviceConfig: DeviceConfig,
+    @Volatile private var syncConfig: SyncConfig?,
+    private val applicationScopes: Set<String> = emptySet(),
     // We want a single-threaded execution model for our account-related "actions" (state machine side-effects).
     // That is, we want to ensure a sequential execution flow, but on a background thread.
     private val coroutineContext: CoroutineContext = Executors
-            .newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob()
+        .newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob()
 ) : Closeable, Observable<AccountObserver> by ObserverRegistry() {
     private val logger = Logger("FirefoxAccountStateMachine")
-
-    // We always obtain a "profile" scope, in addition to whatever scopes application requested.
-    private val scopes: Set<String> = setOf(PROFILE_SCOPE).plus(applicationScopes)
 
     // This is used during 'beginAuthenticationAsync' call, which returns a Deferred<String>.
     // 'deferredAuthUrl' is set on this observer and returned, and resolved once state machine goes
@@ -144,7 +137,6 @@ open class FxaAccountManager(
     private val fxaAuthErrorObserver = FxaAuthErrorObserver(this)
 
     init {
-        syncManager?.let { this.register(SyncManagerIntegration(it)) }
         authErrorRegistry.register(fxaAuthErrorObserver)
     }
 
@@ -220,6 +212,101 @@ open class FxaAccountManager(
     private val deviceEventObserverRegistry = ObserverRegistry<DeviceEventsObserver>()
     private val deviceEventsIntegration = DeviceEventsIntegration(deviceEventObserverRegistry)
 
+    private val syncStatusObserverRegistry = ObserverRegistry<SyncStatusObserver>()
+
+    // We always obtain a "profile" scope, as that's assumed to be needed for any application integration.
+    // We obtain a sync scope only if this was requested by the application via SyncConfig.
+    // Additionally, we obtain any scopes that application requested explicitly.
+    private val scopes: Set<String>
+        get() = if (syncConfig != null) {
+            setOf(SCOPE_PROFILE, SCOPE_SYNC)
+        } else {
+            setOf(SCOPE_PROFILE)
+        }.plus(applicationScopes)
+
+    // Internal backing field for the syncManager. This will be `null` if passed in SyncConfig (either
+    // via the constructor, or via [setSyncConfig]) is also `null` - that is, sync will be disabled.
+    // Note that trying to perform a sync while account isn't authenticated will not succeed.
+    @GuardedBy("this")
+    private var syncManager: SyncManager? = null
+    private var syncManagerIntegration: AccountsToSyncIntegration? = null
+    private val internalSyncStatusObserver = SyncToAccountsIntegration(this)
+
+    init {
+        syncConfig?.let { setSyncConfigAsync(it) }
+
+        if (syncManager == null) {
+            logger.info("Sync is disabled")
+        } else {
+            logger.info("Sync is enabled")
+        }
+    }
+
+    /**
+     * Allows setting a new [SyncConfig], changing sync behaviour.
+     *
+     * @param config Sync behaviour configuration, see [SyncConfig].
+     */
+    @SuppressWarnings("LongMethod")
+    fun setSyncConfigAsync(config: SyncConfig): Deferred<Unit> = synchronized(this) {
+        logger.info("Enabling/updating sync with a new SyncConfig: $config")
+
+        syncConfig = config
+        // Let the existing manager, if it's present, clean up (cancel periodic syncing, etc).
+        syncManager?.stop()
+        syncManagerIntegration = null
+
+        val result = CompletableDeferred<Unit>()
+
+        // Initialize a new sync manager with the passed-in config.
+        if (config.syncableStores.isEmpty()) {
+            throw IllegalArgumentException("Set of stores can't be empty")
+        }
+
+        syncManager = createSyncManager(config).also { manager ->
+            // Observe account state changes.
+            syncManagerIntegration = AccountsToSyncIntegration(manager).also { accountToSync ->
+                this@FxaAccountManager.register(accountToSync)
+            }
+            // Observe sync status changes.
+            manager.registerSyncStatusObserver(internalSyncStatusObserver)
+            // If account is currently authenticated, 'enable' the sync manager.
+            if (authenticatedAccount() != null) {
+                CoroutineScope(coroutineContext).launch {
+                    // Make sure auth-info cache is populated before starting sync manager.
+                    maybeUpdateSyncAuthInfoCache()
+                    manager.start()
+                    result.complete(Unit)
+                }
+            } else {
+                result.complete(Unit)
+            }
+        }
+
+        return result
+    }
+
+    /**
+     * Request an immediate synchronization, as configured according to [syncConfig].
+     *
+     * @param startup Boolean flag indicating if sync is being requested in a startup situation.
+     */
+    fun syncNowAsync(startup: Boolean = false): Deferred<Unit> = CoroutineScope(coroutineContext).async {
+        // Make sure auth cache is populated before we try to sync.
+        maybeUpdateSyncAuthInfoCache()
+
+        // Access to syncManager is guarded by `this`.
+        synchronized(this) {
+            if (syncManager == null) {
+                throw IllegalStateException(
+                        "Sync is not configured. Construct this class with a 'syncConfig' or use 'setSyncConfig'"
+                )
+            }
+            syncManager?.now(startup)
+        }
+        Unit
+    }
+
     /**
      * Call this after registering your observers, and before interacting with this class.
      */
@@ -293,6 +380,10 @@ open class FxaAccountManager(
         deviceEventObserverRegistry.register(observer, owner, autoPause)
     }
 
+    fun registerForSyncEvents(observer: SyncStatusObserver, owner: LifecycleOwner, autoPause: Boolean) {
+        syncStatusObserverRegistry.register(observer, owner, autoPause)
+    }
+
     override fun close() {
         coroutineContext.cancel()
         account.close()
@@ -346,10 +437,7 @@ open class FxaAccountManager(
                             // Don't swallow panics from the underlying library.
                             throw e
                         } catch (e: FxaException) {
-                            logger.error("Failed to load saved account.", e)
-
-                            notifyObservers { onError(FailedToLoadAccountException(e)) }
-
+                            logger.error("Failed to load saved account. Re-initializing...", e)
                             null
                         }
 
@@ -373,15 +461,16 @@ open class FxaAccountManager(
                         account.close()
                         // Delete persisted state.
                         getAccountStorage().clear()
+                        SyncAuthInfoCache(context).clear()
                         // Re-initialize account.
-                        account = createAccount(config)
+                        account = createAccount(serverConfig)
 
                         notifyObservers { onLoggedOut() }
 
                         null
                     }
                     Event.AccountNotFound -> {
-                        account = createAccount(config)
+                        account = createAccount(serverConfig)
 
                         null
                     }
@@ -415,8 +504,10 @@ open class FxaAccountManager(
                         logger.info("Initializing device")
                         // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
                         account.deviceConstellation().initDeviceAsync(
-                            deviceTuple.name, deviceTuple.type, deviceTuple.capabilities
+                            deviceConfig.name, deviceConfig.type, deviceConfig.capabilities
                         ).await()
+
+                        maybeUpdateSyncAuthInfoCache()
 
                         notifyObservers { onAuthenticated(account) }
 
@@ -431,7 +522,7 @@ open class FxaAccountManager(
 
                         // If this is the first time ensuring our capabilities,
                         logger.info("Ensuring device capabilities...")
-                        if (account.deviceConstellation().ensureCapabilitiesAsync(deviceTuple.capabilities).await()) {
+                        if (account.deviceConstellation().ensureCapabilitiesAsync(deviceConfig.capabilities).await()) {
                             logger.info("Successfully ensured device capabilities.")
                         } else {
                             logger.warn("Failed to ensure device capabilities.")
@@ -442,6 +533,8 @@ open class FxaAccountManager(
                         // See https://github.com/mozilla-mobile/android-components/issues/3433
                         logger.info("Stopping periodic refresh of the device constellation")
                         account.deviceConstellation().stopPeriodicRefresh()
+
+                        maybeUpdateSyncAuthInfoCache()
 
                         notifyObservers { onAuthenticated(account) }
 
@@ -459,8 +552,10 @@ open class FxaAccountManager(
                         logger.info("Initializing device")
                         // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
                         account.deviceConstellation().initDeviceAsync(
-                                deviceTuple.name, deviceTuple.type, deviceTuple.capabilities
+                                deviceConfig.name, deviceConfig.type, deviceConfig.capabilities
                         ).await()
+
+                        maybeUpdateSyncAuthInfoCache()
 
                         notifyObservers { onAuthenticated(account) }
 
@@ -509,10 +604,14 @@ open class FxaAccountManager(
                         // If we fail with a 401, then we know we have a legitimate authentication problem.
                         logger.info("Hit auth problem. Trying to recover.")
 
+                        // Clear our access token cache; it'll be re-populated as part of the
+                        // regular state machine flow if we manage to recover.
+                        SyncAuthInfoCache(context).clear()
+
                         // We request an access token for a "profile" scope since that's the only
                         // scope we're guaranteed to have at this point. That is, we don't rely on
                         // passed-in application-specific scopes.
-                        when (account.checkAuthorizationStatusAsync(PROFILE_SCOPE).await()) {
+                        when (account.checkAuthorizationStatusAsync(SCOPE_PROFILE).await()) {
                             true -> {
                                 logger.info("Able to recover from an auth problem.")
 
@@ -537,7 +636,7 @@ open class FxaAccountManager(
                                 // Delete persisted state.
                                 getAccountStorage().clear()
                                 // Re-initialize account.
-                                account = createAccount(config)
+                                account = createAccount(serverConfig)
 
                                 // Finally, tell our listeners we're in a bad auth state.
                                 notifyObservers { onAuthenticationProblems() }
@@ -552,6 +651,26 @@ open class FxaAccountManager(
         }
     }
 
+    private suspend fun maybeUpdateSyncAuthInfoCache() {
+        // Update cached sync auth info only if we have a syncConfig (e.g. sync is enabled)...
+        if (syncConfig == null) {
+            return
+        }
+
+        // .. and our cache is stale.
+        val cache = SyncAuthInfoCache(context)
+        if (!cache.expired()) {
+            return
+        }
+
+        // NB: this call will inform authErrorRegistry in case an auth error is encountered.
+        account.getAccessTokenAsync(SCOPE_SYNC).await()?.let {
+            SyncAuthInfoCache(context).setToCache(
+                it.asSyncAuthInfo(account.getTokenServerEndpointURL())
+            )
+        }
+    }
+
     private suspend fun doAuthenticate(): Event? {
         val url = account.beginOAuthFlowAsync(scopes, true).await()
         if (url == null) {
@@ -563,8 +682,13 @@ open class FxaAccountManager(
     }
 
     @VisibleForTesting
-    open fun createAccount(config: Config): OAuthAccount {
+    open fun createAccount(config: ServerConfig): OAuthAccount {
         return FirefoxAccount(config)
+    }
+
+    @VisibleForTesting
+    open fun createSyncManager(config: SyncConfig): SyncManager {
+        return WorkManagerSyncManager(config)
     }
 
     @VisibleForTesting
@@ -588,27 +712,46 @@ open class FxaAccountManager(
         }
     }
 
-    private class SyncManagerIntegration(private val syncManager: SyncManager) : AccountObserver {
+    /**
+     * Account status events flowing into the sync manager.
+     */
+    private class AccountsToSyncIntegration(
+        private val syncManager: SyncManager
+    ) : AccountObserver {
         override fun onLoggedOut() {
-            syncManager.loggedOut()
+            syncManager.stop()
         }
 
         override fun onAuthenticated(account: OAuthAccount) {
-            syncManager.authenticated(account)
+            syncManager.start()
         }
 
         override fun onProfileUpdated(profile: Profile) {
-            // SyncManager doesn't care about the FxA profile.
+            // Sync currently doesn't care about the FxA profile.
             // In the future, we might kick-off an immediate sync here.
         }
 
         override fun onAuthenticationProblems() {
-            syncManager.loggedOut()
+            syncManager.stop()
+        }
+    }
+
+    /**
+     * Sync status changes flowing into account manager.
+     */
+    private class SyncToAccountsIntegration(
+        private val accountManager: FxaAccountManager
+    ) : SyncStatusObserver {
+        override fun onStarted() {
+            accountManager.syncStatusObserverRegistry.notifyObservers { onStarted() }
         }
 
-        override fun onError(error: Exception) {
-            // TODO deal with FxaUnauthorizedException this at the state machine level.
-            // This exception should cause a "logged out" transition.
+        override fun onIdle() {
+            accountManager.syncStatusObserverRegistry.notifyObservers { onIdle() }
+        }
+
+        override fun onError(error: Exception?) {
+            accountManager.syncStatusObserverRegistry.notifyObservers { onError(error) }
         }
     }
 }

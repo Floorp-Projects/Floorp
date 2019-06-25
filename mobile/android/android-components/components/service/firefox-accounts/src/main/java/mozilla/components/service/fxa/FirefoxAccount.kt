@@ -17,7 +17,6 @@ import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
-import mozilla.components.service.fxa.manager.authErrorRegistry
 import mozilla.components.support.base.log.logger.Logger
 
 typealias PersistCallback = mozilla.appservices.fxaclient.FirefoxAccount.PersistCallback
@@ -86,7 +85,7 @@ class FirefoxAccount internal constructor(
      * doing so will not cause an error).
      */
     constructor(
-        config: Config,
+        config: ServerConfig,
         persistCallback: PersistCallback? = null
     ) : this(InternalFxAcct(config, persistCallback))
 
@@ -178,7 +177,6 @@ class FirefoxAccount internal constructor(
      * Tries to fetch an access token for the given scope.
      *
      * @param singleScope Single OAuth scope (no spaces) for which the client wants access
-     * @param notifyAuthErrorRegistry Whether or not to notify [authErrorRegistry] of failures
      * @return [AccessTokenInfo] that stores the token, along with its scope, key and
      *                           expiration timestamp (in seconds) since epoch when complete
      */

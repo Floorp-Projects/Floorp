@@ -14,6 +14,7 @@ import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.components.browser.storage.sync.GleanMetrics.BookmarksSync
 import mozilla.components.browser.storage.sync.GleanMetrics.HistorySync
 import mozilla.components.browser.storage.sync.GleanMetrics.Pings
+import mozilla.components.concept.sync.SyncAuthInfo
 import java.io.Closeable
 import java.io.File
 
@@ -184,7 +185,7 @@ internal object RustPlacesConnection : Connection {
 
     override fun syncHistory(syncInfo: SyncAuthInfo) {
         check(api != null) { "must call init first" }
-        val ping = api!!.syncHistory(syncInfo)
+        val ping = api!!.syncHistory(syncInfo.into())
         assembleHistoryPing(ping)
     }
 
@@ -194,7 +195,7 @@ internal object RustPlacesConnection : Connection {
 
     override fun syncBookmarks(syncInfo: SyncAuthInfo) {
         check(api != null) { "must call init first" }
-        val ping = api!!.syncBookmarks(syncInfo)
+        val ping = api!!.syncBookmarks(syncInfo.into())
         assembleBookmarksPing(ping)
     }
 

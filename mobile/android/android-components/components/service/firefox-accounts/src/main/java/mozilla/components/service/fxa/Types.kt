@@ -10,10 +10,13 @@ import mozilla.appservices.fxaclient.Device
 import mozilla.appservices.fxaclient.Profile
 import mozilla.appservices.fxaclient.ScopedKey
 import mozilla.appservices.fxaclient.TabHistoryEntry
+import mozilla.components.concept.sync.AuthException
+import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.Avatar
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthScopedKey
+import mozilla.components.concept.sync.SyncAuthInfo
 
 // This file describes translations between fxaclient's internal type definitions and analogous
 // types defined by concept-sync. It's a little tedious, but ensures decoupling between abstract
@@ -26,6 +29,25 @@ fun AccessTokenInfo.into(): mozilla.components.concept.sync.AccessTokenInfo {
         token = this.token,
         key = this.key?.into(),
         expiresAt = this.expiresAt
+    )
+}
+
+/**
+ * Converts a generic [AccessTokenInfo] into a Firefox Sync-friendly [SyncAuthInfo] instance which
+ * may be used for data synchronization.
+ *
+ * @return An [SyncAuthInfo] which is guaranteed to have a sync key.
+ * @throws AuthException if [AccessTokenInfo] didn't have key information.
+ */
+fun mozilla.components.concept.sync.AccessTokenInfo.asSyncAuthInfo(tokenServerUrl: String): SyncAuthInfo {
+    val keyInfo = this.key ?: throw AuthException(AuthExceptionType.KEY_INFO)
+
+    return SyncAuthInfo(
+        kid = keyInfo.kid,
+        fxaAccessToken = this.token,
+        fxaAccessTokenExpiresAt = this.expiresAt,
+        syncKey = keyInfo.k,
+        tokenServerUrl = tokenServerUrl
     )
 }
 

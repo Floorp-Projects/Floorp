@@ -23,7 +23,7 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
     fun initDeviceAsync(
         name: String,
         type: DeviceType = DeviceType.MOBILE,
-        capabilities: List<DeviceCapability>
+        capabilities: Set<DeviceCapability>
     ): Deferred<Boolean>
 
     /**
@@ -43,7 +43,7 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
      * not supported.
      * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
-    fun ensureCapabilitiesAsync(capabilities: List<DeviceCapability>): Deferred<Boolean>
+    fun ensureCapabilitiesAsync(capabilities: Set<DeviceCapability>): Deferred<Boolean>
 
     /**
      * Current state of the constellation. May be missing if state was never queried.
