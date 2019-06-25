@@ -308,12 +308,12 @@ marionette-media-tests:
     - marionette-media
 
 # macosx1014-64-tests:
-#    - cppunit
+    - cppunit
 #    - crashtest
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
 #    - gtest
-#    - jittest
+    - jittest
 #    - jsreftest
     - marionette
 #    - mochitest
@@ -321,8 +321,8 @@ marionette-media-tests:
 #    - mochitest-browser-chrome
 #    - mochitest-chrome
 #    - mochitest-devtools-chrome
-#    - mochitest-devtools-webreplay
-#    - mochitest-gpu
+    - mochitest-devtools-webreplay
+    - mochitest-gpu
 #    - mochitest-media
 #    - mochitest-webgl1-core
 #    - mochitest-webgl1-ext
@@ -343,17 +343,13 @@ marionette-media-tests:
 #    - reftest
 
 macosx64-tests:
-    - cppunit
     - crashtest
     - gtest
-    - jittest
     - jsreftest
     - mochitest
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-devtools-chrome
-    - mochitest-devtools-webreplay
-    - mochitest-gpu
     - mochitest-media
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
