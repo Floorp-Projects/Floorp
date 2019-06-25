@@ -108,6 +108,8 @@ class Table : public ShareableBase<Table> {
   // about:memory reporting:
 
   size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const;
+
+  size_t gcMallocBytes() const;
 };
 
 typedef RefPtr<Table> SharedTable;

@@ -338,7 +338,15 @@ uint32_t Table::grow(uint32_t delta, JSContext* cx) {
     }
   }
 
+  if (auto object = maybeObject_.unbarrieredGet()) {
+    RemoveCellMemory(object, gcMallocBytes(), MemoryUse::WasmTableTable);
+  }
+
   length_ = newLength.value();
+
+  if (auto object = maybeObject_.unbarrieredGet()) {
+    AddCellMemory(object, gcMallocBytes(), MemoryUse::WasmTableTable);
+  }
 
   for (InstanceSet::Range r = observers_.all(); !r.empty(); r.popFront()) {
     r.front()->instance().onMovingGrowTable(this);
@@ -370,4 +378,14 @@ size_t Table::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(functions_.get());
   }
   return objects_.sizeOfExcludingThis(mallocSizeOf);
+}
+
+size_t Table::gcMallocBytes() const {
+  size_t size = sizeof(*this);
+  if (isFunction()) {
+    size += length() * sizeof(FunctionTableElem);
+  } else {
+    size += length() * sizeof(TableAnyRefVector::ElementType);
+  }
+  return size;
 }
