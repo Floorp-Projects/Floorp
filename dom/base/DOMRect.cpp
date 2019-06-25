@@ -37,7 +37,7 @@ already_AddRefed<DOMRectReadOnly> DOMRectReadOnly::Constructor(
 
 // https://drafts.fxtf.org/geometry/#structured-serialization
 bool DOMRectReadOnly::WriteStructuredClone(
-    JSStructuredCloneWriter* aWriter) const {
+    JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
 #define WriteDouble(d)                                                       \
   JS_WriteUint32Pair(aWriter, (BitwiseCast<uint64_t>(d) >> 32) & 0xffffffff, \
                      BitwiseCast<uint64_t>(d) & 0xffffffff)
@@ -46,6 +46,17 @@ bool DOMRectReadOnly::WriteStructuredClone(
          WriteDouble(mHeight);
 
 #undef WriteDouble
+}
+
+// static
+already_AddRefed<DOMRectReadOnly> DOMRectReadOnly::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  RefPtr<DOMRectReadOnly> retval = new DOMRectReadOnly(aGlobal);
+  if (!retval->ReadStructuredClone(aReader)) {
+    return nullptr;
+  }
+  return retval.forget();
 }
 
 bool DOMRectReadOnly::ReadStructuredClone(JSStructuredCloneReader* aReader) {
@@ -83,6 +94,17 @@ already_AddRefed<DOMRect> DOMRect::Constructor(const GlobalObject& aGlobal,
   RefPtr<DOMRect> obj =
       new DOMRect(aGlobal.GetAsSupports(), aX, aY, aWidth, aHeight);
   return obj.forget();
+}
+
+// static
+already_AddRefed<DOMRect> DOMRect::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  RefPtr<DOMRect> retval = new DOMRect(aGlobal);
+  if (!retval->ReadStructuredClone(aReader)) {
+    return nullptr;
+  }
+  return retval.forget();
 }
 
 // -----------------------------------------------------------------------------
