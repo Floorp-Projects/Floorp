@@ -136,7 +136,8 @@ function Inspector(toolbox) {
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onSidebarShown = this.onSidebarShown.bind(this);
   this.onSidebarToggle = this.onSidebarToggle.bind(this);
-  this.handleThreadState = this.handleThreadState.bind(this);
+  this.handleThreadPaused = this.handleThreadPaused.bind(this);
+  this.handleThreadResumed = this.handleThreadResumed.bind(this);
 
   this._target.on("will-navigate", this._onBeforeNavigate);
 }
@@ -157,8 +158,8 @@ Inspector.prototype = {
       }
       this._replayResumed = !dbg.isPaused();
 
-      this._target.threadClient.on("paused", this.handleThreadState);
-      this._target.threadClient.on("resumed", this.handleThreadState);
+      this._target.threadClient.on("paused", this.handleThreadPaused);
+      this._target.threadClient.on("resumed", this.handleThreadResumed);
     }
 
     await Promise.all([
@@ -1138,10 +1139,18 @@ Inspector.prototype = {
   },
 
   /**
-   * When replaying, reset the inspector whenever the target paused or unpauses.
+   * When replaying, reset the inspector whenever the target pauses.
    */
-  handleThreadState(packet) {
-    this._replayResumed = packet.type != "paused";
+  handleThreadPaused() {
+    this._replayResumed = false;
+    this.onNewRoot();
+  },
+
+  /**
+   * When replaying, reset the inspector whenever the target resumes.
+   */
+  handleThreadResumed() {
+    this._replayResumed = true;
     this.onNewRoot();
   },
 
@@ -1379,8 +1388,8 @@ Inspector.prototype = {
       return this._panelDestroyer;
     }
 
-    this._target.threadClient.off("paused", this.handleThreadState);
-    this._target.threadClient.off("resumed", this.handleThreadState);
+    this._target.threadClient.off("paused", this.handleThreadPaused);
+    this._target.threadClient.off("resumed", this.handleThreadResumed);
 
     if (this.walker) {
       this.walker.off("new-root", this.onNewRoot);
