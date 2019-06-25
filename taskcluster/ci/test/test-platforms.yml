@@ -276,17 +276,17 @@ windows10-64-shippable-qr/opt:
 ##
 # MacOS X platforms (matching /macosx.*/)
 
-# macosx1014-64-shippable/opt:
+macosx1014-64-shippable/opt:
 #    build-platform: macosx64-shippable/opt
 #    test-sets:
-#        - macosx1014-64-tests
-#        - macosx64-talos
-#        - desktop-screenshot-capture
-#        - awsy
-#        - raptor-chromium
-#        - raptor-firefox
-#        - raptor-profiling
-#        - marionette-media-tests
+        # - macosx1014-64-tests
+        - macosx64-talos
+        # - desktop-screenshot-capture
+        # - awsy
+        - raptor-chromium
+        - raptor-firefox
+        - raptor-profiling
+        # - marionette-media-tests
 
 # macosx1014-64/debug:
 #    build-platform: macosx64-shippable/opt
@@ -323,13 +323,9 @@ macosx1010-64/debug:
 macosx1010-64-shippable/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
-        - macosx64-talos
         - macosx64-tests
         - desktop-screenshot-capture
         - awsy
-        - raptor-chromium
-        - raptor-firefox
-        - raptor-profiling
         - marionette-media-tests
 
 macosx1010-64-devedition/opt:
