@@ -1411,12 +1411,16 @@ bool BigInt::calculateMaximumDigitsRequired(JSContext* cx, uint8_t radix,
                                             size_t charcount, size_t* result) {
   MOZ_ASSERT(2 <= radix && radix <= 36);
 
-  size_t bitsPerChar = maxBitsPerCharTable[radix];
+  uint8_t bitsPerChar = maxBitsPerCharTable[radix];
 
   MOZ_ASSERT(charcount > 0);
-  MOZ_ASSERT(charcount <= std::numeric_limits<size_t>::max() / bitsPerChar);
-  uint64_t n =
-      CeilDiv(charcount * bitsPerChar, DigitBits * bitsPerCharTableMultiplier);
+  MOZ_ASSERT(charcount <= std::numeric_limits<uint64_t>::max() / bitsPerChar);
+  static_assert(
+      MaxDigitLength < std::numeric_limits<size_t>::max(),
+      "can't safely cast calculateMaximumDigitsRequired result to size_t");
+
+  uint64_t n = CeilDiv(static_cast<uint64_t>(charcount) * bitsPerChar,
+                       DigitBits * bitsPerCharTableMultiplier);
   if (n > MaxDigitLength) {
     ReportOutOfMemory(cx);
     return false;
