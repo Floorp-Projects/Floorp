@@ -38,6 +38,7 @@ function makeMockSource(url: string = "url", id: SourceId = "source"): Source {
     introductionUrl: null,
     introductionType: undefined,
     isWasm: false,
+    extensionName: null,
     isExtension: false,
   };
 }
@@ -90,6 +91,7 @@ function makeMockWasmSource(): Source {
     introductionUrl: null,
     introductionType: undefined,
     isWasm: true,
+    extensionName: null,
     isExtension: false,
   };
 }

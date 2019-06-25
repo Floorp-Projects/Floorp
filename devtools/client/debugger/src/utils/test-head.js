@@ -146,6 +146,7 @@ function createMakeSource(): (
         introductionType: props.introductionType || null,
         introductionUrl: props.introductionUrl || null,
         isBlackBoxed: !!props.isBlackBoxed,
+        extensionName: null,
       },
     };
   };
