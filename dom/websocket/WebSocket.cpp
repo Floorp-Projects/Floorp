@@ -10,6 +10,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/net/WebSocketChannel.h"
 #include "mozilla/dom/File.h"
@@ -177,7 +178,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
 
   bool mOnCloseScheduled;
   bool mFailed;
-  bool mDisconnectingOrDisconnected;
+  Atomic<bool> mDisconnectingOrDisconnected;
 
   // Set attributes of DOM 'onclose' message
   bool mCloseEventWasClean;
@@ -232,9 +233,42 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
   }
 };
 
-NS_IMPL_ISUPPORTS(WebSocketImpl, nsIInterfaceRequestor, nsIWebSocketListener,
-                  nsIObserver, nsISupportsWeakReference, nsIRequest,
-                  nsIEventTarget)
+NS_IMPL_ADDREF(WebSocketImpl)
+NS_IMPL_QUERY_INTERFACE(WebSocketImpl, nsIInterfaceRequestor,
+                        nsIWebSocketListener, nsIObserver,
+                        nsISupportsWeakReference, nsIRequest, nsIEventTarget)
+
+NS_IMETHODIMP_(MozExternalRefCountType) WebSocketImpl::Release(void) {
+  MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
+
+  if (!mRefCnt.isThreadSafe) {
+    NS_ASSERT_OWNINGTHREAD(WebSocketImpl);
+  }
+
+  nsrefcnt count = mRefCnt - 1;
+  // If WebSocketImpl::Disconnect is not called, the last release of
+  // WebSocketImpl should be on the right thread.
+  if (count == 0 && !IsTargetThread() && !mDisconnectingOrDisconnected) {
+    DebugOnly<nsresult> rv = Dispatch(NewNonOwningRunnableMethod(
+        "dom::WebSocketImpl::Release", this, &WebSocketImpl::Release));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return count;
+  }
+
+  count = --mRefCnt;
+  NS_LOG_RELEASE(this, count, "WebSocketImpl");
+
+  if (count == 0) {
+    if (!mRefCnt.isThreadSafe) {
+      NS_ASSERT_OWNINGTHREAD(WebSocketImpl);
+    }
+
+    mRefCnt = 1; /* stabilize */
+    delete (this);
+    return 0;
+  }
+  return count;
+}
 
 class CallDispatchConnectionCloseEvents final : public CancelableRunnable {
  public:
